@@ -50,6 +50,13 @@ describe('OpenCode Adapter Task Spawning', () => {
     const defaultArgs = await buildOpencodeArgs(defaultOptions);
 
     assert.equal(defaultArgs[0], 'run');
+    const defaultPrompt = buildOpencodePrompt(defaultOptions);
+    assert.equal(defaultArgs[1], defaultPrompt);
+    for (let i = 0; i < defaultArgs.length; i++) {
+      if (defaultArgs[i] === '--file') {
+        assert.notEqual(defaultArgs[i + 1], defaultPrompt);
+      }
+    }
     assert.ok(defaultArgs.includes('--agent'));
     assert.equal(defaultArgs[defaultArgs.indexOf('--agent') + 1], 'osq-coder');
     assert.ok(defaultArgs.includes('--auto'));
@@ -265,9 +272,14 @@ None
     );
     assert.ok(prompt.includes(`7. When done, write ${resultRelPath} and exit cleanly.`));
 
-    // Verify prompt is passed as the last positional argument in buildOpencodeArgs
+    // Verify prompt is args[1] (immediately after "run") and no --file value equals the prompt
     const args = await buildOpencodeArgs(options);
-    assert.equal(args[args.length - 1], prompt);
+    assert.equal(args[1], prompt);
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--file') {
+        assert.notEqual(args[i + 1], prompt);
+      }
+    }
   });
 
   it('Fake opencode binary validates passed flags, handles non-zero exit, and respects timeout termination', async () => {
@@ -279,6 +291,17 @@ None
 import fs from 'node:fs';
 
 const argv = process.argv.slice(2);
+
+const fileIdx = argv.indexOf('--file');
+if (fileIdx !== -1) {
+  for (let i = fileIdx + 1; i < argv.length; i++) {
+    if (argv[i].startsWith('You are a coding agent')) {
+      console.error('Error: File not found: ' + argv[i]);
+      process.exit(1);
+    }
+  }
+}
+
 const recorded = {
   argv,
   subcommand: argv[0],
@@ -289,7 +312,7 @@ const recorded = {
   model: null,
   variant: null,
   files: [],
-  prompt: argv[argv.length - 1],
+  prompt: argv[1],
 };
 
 for (let i = 0; i < argv.length; i++) {

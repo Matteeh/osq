@@ -76,9 +76,11 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
 
   const agent = config?.opencode?.agent || 'osq-coder';
   const model = config?.opencode?.model || process.env.OSQ_MODEL || 'deepseek/deepseek-flash';
+  const prompt = buildOpencodePrompt(options);
 
   const args: string[] = [
     'run',
+    prompt,
     '--agent',
     agent,
     '--auto',
@@ -153,9 +155,6 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
     const featureRelPath = path.relative(projectRoot, featurePath);
     args.push('--file', featureRelPath);
   }
-
-  const prompt = buildOpencodePrompt(options);
-  args.push(prompt);
 
   return args;
 }
