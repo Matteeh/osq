@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
 import { newCommand } from './new.js';
+import { reportCommand } from './report.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
@@ -66,6 +67,14 @@ export function createProgram(): Command {
     .description('show detailed change information, tasks, and event timeline')
     .action(async (id: string) => {
       await showCommand(id);
+    });
+
+  program
+    .command('report')
+    .description('display delivery metrics and task completion report')
+    .option('--json', 'output report as raw JSON')
+    .action(async (options: { json?: boolean }) => {
+      await reportCommand(options);
     });
 
   return program;

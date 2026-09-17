@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T14:25:52.840Z","data":{"tier":"coding","taskTitle":"When osq report is invoked, task completion rate with failure breakdown is displayed","scope":["src/core/report.ts","src/cli/report.ts","src/cli/index.ts","tests/report.test.ts"],"entry":["src/core/report.ts","src/cli/report.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T14:30:15.114Z","data":{"exitCode":0}}
+{"type":"verify_ran","timestamp":"2026-09-17T14:30:15.115Z","data":{"command":"node --import tsx --test tests/report.test.ts"}}
