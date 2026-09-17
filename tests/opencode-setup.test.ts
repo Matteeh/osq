@@ -37,7 +37,7 @@ describe('OpenCode Adapter Setup', () => {
     assert.ok(stat.isDirectory(), '.opencode/agent should be a directory');
   });
 
-  it('OpencodeAdapter setup writes .opencode/agent/osq-coder.md with description and mode subagent frontmatter', async () => {
+  it('OpencodeAdapter setup writes .opencode/agent/osq-coder.md with description and mode all frontmatter', async () => {
     await adapter.setup(tmpDir, DEFAULT_CONFIG);
 
     const agentFile = path.join(tmpDir, '.opencode', 'agent', 'osq-coder.md');
@@ -50,7 +50,7 @@ describe('OpenCode Adapter Setup', () => {
     const content = await fs.readFile(agentFile, 'utf8');
     const { data } = parseFrontmatter(content);
 
-    assert.equal(data.mode, 'subagent', 'mode should be subagent');
+    assert.equal(data.mode, 'all', 'mode should be all');
     assert.ok(
       typeof data.description === 'string' && data.description.length > 0,
       'description should be a non-empty string',

@@ -54,3 +54,7 @@ When all tasks within an approved spec are marked `done`:
 
 - `osq setup`: Configures the active harness adapter (`OSQ_HARNESS`).
 - `osq watch [--once]`: Starts the reactive watcher loop (`chokidar` + heartbeat polling) to execute approved tasks in sequence.
+
+## Delta from OpenCode harness adapter
+
+Update features/watcher-and-harness.md to document the OpenCode adapter (OpencodeAdapter) implementing HarnessAdapter, configuration options (opencode: bin, model, agent, variant), setup behavior creating .opencode/agent/osq-coder.md with managed blocks and strict tool permissions, spawn invocation arguments and file attachment protocol, stdout event stream parsing to tokens events, and watcher preflight verification.

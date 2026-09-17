@@ -13,7 +13,7 @@ import {
 
 export const OPENCODE_AGENT_TEMPLATE = `---
 description: Autonomous task execution agent for osq
-mode: subagent
+mode: all
 permission:
   read: allow
   edit: allow
