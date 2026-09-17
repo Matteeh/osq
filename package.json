@@ -1,0 +1,28 @@
+{
+  "name": "osq",
+  "version": "0.1.0",
+  "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
+  "type": "module",
+  "bin": {
+    "osq": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "biome check src tests",
+    "format": "biome format --write src tests",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  },
+  "license": "MIT"
+}
