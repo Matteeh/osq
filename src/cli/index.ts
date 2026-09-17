@@ -3,6 +3,8 @@ import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
 import { newCommand } from './new.js';
+import { setupCommand } from './setup.js';
+import { watchCommand } from './watch.js';
 
 export function createProgram(): Command {
   const program = new Command();
@@ -35,10 +37,24 @@ export function createProgram(): Command {
       await approveCommand(ids);
     });
 
+  program
+    .command('watch')
+    .description('run the spec watcher loop')
+    .option('-o, --once', 'run pending tasks in queue and exit')
+    .action(async (options: { once?: boolean }) => {
+      await watchCommand(options);
+    });
+
+  program
+    .command('setup')
+    .description('configure harness environment and configuration')
+    .action(async () => {
+      await setupCommand();
+    });
+
   return program;
 }
 
-// If executed directly from CLI binary
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))) {
   const program = createProgram();
   program.parse();

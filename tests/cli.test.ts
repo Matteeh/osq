@@ -13,6 +13,8 @@ describe('osq CLI', () => {
     assert.ok(commandNames.includes('init'));
     assert.ok(commandNames.includes('new'));
     assert.ok(commandNames.includes('approve'));
+    assert.ok(commandNames.includes('watch'));
+    assert.ok(commandNames.includes('setup'));
   });
 
   it('configures new command with required argument <name>', () => {
@@ -31,5 +33,14 @@ describe('osq CLI', () => {
     assert.ok(approveCmd);
     assert.equal(approveCmd.registeredArguments[0].name(), 'ids');
     assert.equal(approveCmd.registeredArguments[0].variadic, true);
+  });
+
+  it('configures watch command with once option', () => {
+    const program = createProgram();
+    const watchCmd = program.commands.find((cmd) => cmd.name() === 'watch');
+
+    assert.ok(watchCmd);
+    const onceOption = watchCmd.options.find((o) => o.short === '-o' || o.long === '--once');
+    assert.ok(onceOption);
   });
 });
