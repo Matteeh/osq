@@ -9,7 +9,8 @@ If a fresh agent could not pick up a task from the files in the repo alone, the 
 ## Install
 
 ```sh
-npx @osq/cli init      # scaffolds the folders below, adds @osq/cli as a devDependency
+npx osq init          # scaffolds the folders below and configuration
+pnpm add -D osq       # adds osq as a devDependency (or npm i -D osq)
 pnpm osq watch        # start the watcher
 ```
 
@@ -89,7 +90,7 @@ Lint, run by `osq approve`:
 
 | Check                                       | Result |
 |---------------------------------------------|--------|
-| task `scope` expands to more than 8 files   | reject |
+| task `scope` has more than 8 patterns       | reject |
 | `features.writes` has more than 2 entries   | reject |
 | more than one table under `## Contract`     | reject |
 | task `verify` empty or chains commands      | reject |
@@ -104,14 +105,13 @@ Rules the lint can't check: title reads "when X, Y happens"; slice vertically so
 
 - State is rebuilt from `specs/` on every change. Kill it and restart it any time.
 - One agent per spec: locks are created exclusively, stale locks (dead pid or timeout) are reaped to `dead/`.
-- What runs is what was approved: `.run/approved` holds a hash of the whole folder minus `.run/`, checked before every spawn.
-- `done` means the watcher ran `verify` itself after the agent exited. The agent's claim is not enough.
+- What runs is what was approved: `.run/approved` holds a hash of the folder minus `.run/` (with `tasks.md` checkbox state normalized), checked before every spawn.
+- `done` means the watcher ran `verify` itself in a timeout-bounded process group after the agent exited. The agent's claim is not enough.
 - Feature docs are only ever changed by the watcher applying an approved delta. Agents never touch `features/`.
-- The agent's only write path into `specs/` is `.run/results/`. All markers and checkboxes are written by the watcher.
+- The agent prompt protocol restricts write paths to `.run/results/` and edits to `scope`. All markers and checkboxes are written by the watcher.
 - No result file on exit is `dead` with `reason: no_result`. Nothing disappears silently.
-- Above concurrency 1, each run gets its own git worktree and is merged on done. Conflicts are `dead` with `reason: merge_conflict`.
 
-Reasons: `verify_red`, `spec_conflict`, `missing_dep`, `missing_context`, `scope_violation`, `no_result`, `crashed`, `timeout`, `merge_conflict`.
+Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout), `spec_conflict`, `already_running`, `no_result`, `crashed`, `timeout`.
 
 ## Harnesses
 
@@ -134,9 +134,12 @@ osq report          completion rate, dead by reason, cost and time per task
 
 Decided but deliberately unbuilt until the loop has closed on real work:
 
-- Concurrency above 1, with a worktree per running task and merge on done.
-- A derived SQLite index under `~/.osq/` for `status` and `report` across projects. Files stay the source of truth; the index is gitignored and can be deleted at any time.
+- Concurrency above 1, with a worktree per running task and merge on done (`reason: merge_conflict`).
+- Hard OS/container sandbox confinement enforcing `scope` boundaries and filesystem write limits (`reason: scope_violation`).
+- Pre-spawn dependency and context verification checks (`reason: missing_dep`, `reason: missing_context`).
+- Deterministic section-level replacement for feature doc deltas (ADR 002).
 - Containerized coding agents.
+- A derived SQLite index under `~/.osq/` for `status` and `report` across projects. Files stay the source of truth; the index is gitignored and can be deleted at any time.
 - Hook shims for harnesses, and `osq import` for OpenSpec change folders.
 
 ## Status

@@ -1,17 +1,10 @@
-import { DEFAULT_CONFIG } from '../core/config.js';
+import { loadConfig } from '../core/config.js';
 import { getHarnessAdapter } from '../harness/index.js';
 
-export async function setupCommand(options: { cwd?: string } = {}): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = DEFAULT_CONFIG;
+export async function setupCommand(): Promise<void> {
+  const cwd = process.cwd();
+  const config = await loadConfig(cwd);
   const adapter = getHarnessAdapter(config.harness);
-
-  try {
-    await adapter.setup(cwd, config);
-    console.log(`Harness setup completed for "${adapter.name}".`);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(`Setup failed: ${message}`);
-    process.exit(1);
-  }
+  await adapter.setup(cwd, config);
+  console.log(`Harness '${config.harness}' setup completed successfully.`);
 }

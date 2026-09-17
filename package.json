@@ -4,18 +4,20 @@
   "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
   "type": "module",
   "bin": {
-    "osq": "./dist/cli/index.js"
+    "osq": "./dist/cli/bin.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
     "test": "node --import tsx --test tests/**/*.test.ts",
-    "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint"
+    "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
+    "jiti": "^2.7.0",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
@@ -36,5 +38,17 @@
   "license": "MIT",
   "engines": {
     "node": ">=22.0.0"
-  }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ]
 }

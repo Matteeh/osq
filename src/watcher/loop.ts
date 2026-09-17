@@ -3,7 +3,7 @@ import path from 'node:path';
 import { watch } from 'chokidar';
 import type { OsqConfig } from '../core/config.js';
 import { reapStaleLocks } from '../core/lock.js';
-import { deriveSpecState } from '../core/state.js';
+import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runTask } from './runner.js';
@@ -26,7 +26,9 @@ export async function runWatcherCycle(
     return { tasksRun: 0, specsArchived: 0 };
   }
 
-  const specFolders = entries.filter((e) => !e.startsWith('_') && e !== 'archive');
+  const specFolders = entries
+    .filter((e) => !e.startsWith('_') && e !== 'archive')
+    .sort(compareNumericPrefix);
 
   let tasksRun = 0;
   let specsArchived = 0;

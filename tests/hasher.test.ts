@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { hashChangeFolder, verifyFolderHash } from '../src/core/hasher.js';
+import { hashChangeFolder, normalizeTasksMd, verifyFolderHash } from '../src/core/hasher.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
 
@@ -41,6 +41,34 @@ describe('Folder Hasher', () => {
 
     const hashAfterMarkers = await hashChangeFolder(specFolder);
     assert.equal(initialHash, hashAfterMarkers);
+  });
+
+  it('normalizeTasksMd normalizes checked boxes to unchecked boxes', () => {
+    const input = '# Tasks\n\n- [x] 1. First\n- [X] 2. Second\n- [ ] 3. Third\n';
+    const normalized = normalizeTasksMd(input);
+    assert.equal(normalized, '# Tasks\n\n- [ ] 1. First\n- [ ] 2. Second\n- [ ] 3. Third\n');
+  });
+
+  it('ticking a task checkbox in tasks.md produces identical hash', async () => {
+    const initialHash = await hashChangeFolder(specFolder);
+
+    const tasksMdPath = path.join(specFolder, 'tasks.md');
+    const content = await fs.readFile(tasksMdPath, 'utf8');
+    const tickedContent = content.replace('- [ ] 1.', '- [x] 1.');
+    await fs.writeFile(tasksMdPath, tickedContent, 'utf8');
+
+    const hashAfterTick = await hashChangeFolder(specFolder);
+    assert.equal(initialHash, hashAfterTick);
+  });
+
+  it('deleting or modifying a task line in tasks.md changes the hash', async () => {
+    const initialHash = await hashChangeFolder(specFolder);
+
+    const tasksMdPath = path.join(specFolder, 'tasks.md');
+    await fs.appendFile(tasksMdPath, '\n- [ ] 2. Extra task line\n', 'utf8');
+
+    const modifiedHash = await hashChangeFolder(specFolder);
+    assert.notEqual(initialHash, modifiedHash);
   });
 
   it('changes hash when any task or spec file is modified', async () => {

@@ -58,6 +58,20 @@ describe('Task Runner and Verification Gate', () => {
     assert.ok(deadContent.includes('reason: no_result'));
   });
 
+  it('fails with reason: timeout if agent times out', async () => {
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    mockAdapter.setBehavior({ timedOut: true });
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, mockAdapter);
+
+    assert.equal(result.success, false);
+    assert.equal(result.reason, 'timeout');
+
+    const deadPath = path.join(specFolder, '.run', 'dead', '1.md');
+    const deadContent = await fs.readFile(deadPath, 'utf8');
+    assert.ok(deadContent.includes('reason: timeout'));
+  });
+
   it('fails with reason: verify_red if task verify fails', async () => {
     // Write task with failing verify command
     const taskPath = path.join(specFolder, 'tasks', '1.md');
@@ -84,6 +98,42 @@ describe('Task Runner and Verification Gate', () => {
     const deadPath = path.join(specFolder, '.run', 'dead', '1.md');
     const deadContent = await fs.readFile(deadPath, 'utf8');
     assert.ok(deadContent.includes('reason: verify_red'));
+  });
+
+  it('fails with reason: verify_red and timed_out: true if task verify hangs', async () => {
+    const taskPath = path.join(specFolder, 'tasks', '1.md');
+    const hangingTaskContent = [
+      '---',
+      'title: When test hangs, verify_red with timed_out is triggered',
+      'verify: node -e "setInterval(()=>{}, 1000)"',
+      'scope: []',
+      'entry: []',
+      'skills: []',
+      '---',
+      '## Acceptance',
+      '- [ ] should hang',
+    ].join('\n');
+    await fs.writeFile(taskPath, `${hangingTaskContent}\n`, 'utf8');
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    mockAdapter.resetBehavior();
+    const shortTimeoutConfig = {
+      ...DEFAULT_CONFIG,
+      timeouts: {
+        ...DEFAULT_CONFIG.timeouts,
+        verifyTimeoutSeconds: 1,
+      },
+    };
+
+    const result = await runTask(tmpDir, specFolder, '1', shortTimeoutConfig, mockAdapter);
+
+    assert.equal(result.success, false);
+    assert.equal(result.reason, 'verify_red');
+
+    const deadPath = path.join(specFolder, '.run', 'dead', '1.md');
+    const deadContent = await fs.readFile(deadPath, 'utf8');
+    assert.ok(deadContent.includes('reason: verify_red'));
+    assert.ok(deadContent.includes('timed_out: true'));
   });
 
   it('succeeds, creates .run/done/<n>, and ticks checkbox on valid task and passing verify', async () => {

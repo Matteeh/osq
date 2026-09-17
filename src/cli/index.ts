@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
@@ -78,9 +77,4 @@ export function createProgram(): Command {
     });
 
   return program;
-}
-
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))) {
-  const program = createProgram();
-  program.parse();
 }

@@ -58,6 +58,17 @@ describe('osq init', () => {
     assert.ok(content.includes('Executing a spec'));
   });
 
+  it('managed block is clean, self-contained, and contains no self-referential repo text', async () => {
+    await updateAgentsMd(tmpDir);
+
+    const agentsPath = path.join(tmpDir, 'AGENTS.md');
+    const content = await fs.readFile(agentsPath, 'utf8');
+
+    assert.equal(content.includes('This repo uses osq on itself'), false);
+    assert.equal(content.includes('Full gate once, above'), false);
+    assert.ok(content.includes("Run the task's `verify` command before exiting."));
+  });
+
   it('injects or updates the managed block in an existing AGENTS.md idempotently', async () => {
     const agentsPath = path.join(tmpDir, 'AGENTS.md');
     const initialContent = '# Custom Project\n\nCustom user instructions.\n';

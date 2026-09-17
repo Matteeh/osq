@@ -27,11 +27,14 @@ export interface SpawnTaskOptions {
   skills: string[];
   tier: 'coding' | 'smart';
   timeoutSeconds?: number;
+  config?: OsqConfig;
 }
 
 export interface SpawnResult {
   exitCode: number;
   error?: string;
+  timedOut?: boolean;
+  signal?: NodeJS.Signals | string | null;
 }
 
 export interface HarnessAdapter {

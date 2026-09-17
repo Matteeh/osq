@@ -24,6 +24,11 @@ async function collectFiles(dir: string, baseDir: string): Promise<string[]> {
   return files;
 }
 
+export function normalizeTasksMd(content: string): string {
+  const lfContent = content.replace(/\r\n/g, '\n');
+  return lfContent.replace(/^(\s*-\s*\[)[xX](\])/gm, (_m, p1, p2) => `${p1} ${p2}`);
+}
+
 export async function hashChangeFolder(folderPath: string): Promise<string> {
   const relFiles = await collectFiles(folderPath, folderPath);
   relFiles.sort();
@@ -33,7 +38,11 @@ export async function hashChangeFolder(folderPath: string): Promise<string> {
   for (const relFile of relFiles) {
     const fullPath = path.join(folderPath, relFile);
     const content = await fs.readFile(fullPath, 'utf8');
-    const normalizedContent = content.replace(/\r\n/g, '\n');
+    let normalizedContent = content.replace(/\r\n/g, '\n');
+
+    if (relFile === 'tasks.md') {
+      normalizedContent = normalizeTasksMd(normalizedContent);
+    }
 
     hash.update(relFile);
     hash.update('\0');

@@ -47,6 +47,7 @@ export class AgyAdapter implements HarnessAdapter {
       skills,
       tier,
       timeoutSeconds = 1800,
+      config,
     } = options;
 
     await appendHarnessEvent(specFolderPath, taskNumber, {
@@ -85,17 +86,17 @@ export class AgyAdapter implements HarnessAdapter {
     ].join('\n');
 
     const agyBin = await resolveAgyBinary();
-    const args = [
-      '-p',
-      taskPrompt,
-      '--model',
-      'gemini-3.8-flash-high',
-      '--mode',
-      'accept-edits',
-      '--dangerously-skip-permissions',
-    ];
+    const model = config?.agy?.model || process.env.OSQ_MODEL || 'gemini-3.8-flash-high';
+    const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions ?? true;
+
+    const args = ['-p', taskPrompt, '--model', model, '--mode', 'accept-edits'];
+
+    if (dangerouslySkipPermissions) {
+      args.push('--dangerously-skip-permissions');
+    }
 
     return new Promise((resolve) => {
+      let timedOut = false;
       const child = spawn(agyBin, args, {
         cwd: projectRoot,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -107,9 +108,17 @@ export class AgyAdapter implements HarnessAdapter {
       });
 
       let timeoutTimer: NodeJS.Timeout | null = null;
+      let killTimer: NodeJS.Timeout | null = null;
+
       if (timeoutSeconds > 0) {
         timeoutTimer = setTimeout(() => {
+          timedOut = true;
           child.kill('SIGTERM');
+          killTimer = setTimeout(() => {
+            try {
+              child.kill('SIGKILL');
+            } catch {}
+          }, 5000);
         }, timeoutSeconds * 1000);
       }
 
@@ -126,26 +135,35 @@ export class AgyAdapter implements HarnessAdapter {
 
       child.on('error', (err) => {
         if (timeoutTimer) clearTimeout(timeoutTimer);
+        if (killTimer) clearTimeout(killTimer);
         appendHarnessEvent(specFolderPath, taskNumber, {
           type: 'exited',
           timestamp: new Date().toISOString(),
           data: { exitCode: 1, error: err.message },
         }).then(() => {
-          resolve({ exitCode: 1, error: err.message });
+          resolve({ exitCode: 1, error: err.message, timedOut });
         });
       });
 
-      child.on('close', (code) => {
+      child.on('close', (code, signal) => {
         if (timeoutTimer) clearTimeout(timeoutTimer);
-        const exitCode = code ?? 0;
+        if (killTimer) clearTimeout(killTimer);
+        const exitCode = code !== null ? code : timedOut ? 124 : 1;
         appendHarnessEvent(specFolderPath, taskNumber, {
           type: 'exited',
           timestamp: new Date().toISOString(),
-          data: { exitCode },
+          data: { exitCode, signal: signal ?? undefined, timedOut },
         }).then(() => {
           resolve({
             exitCode,
-            error: exitCode !== 0 ? stderrOutput || stdoutOutput : undefined,
+            timedOut,
+            signal,
+            error:
+              exitCode !== 0
+                ? timedOut
+                  ? 'Task execution timed out'
+                  : stderrOutput || stdoutOutput
+                : undefined,
           });
         });
       });

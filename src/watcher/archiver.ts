@@ -56,11 +56,18 @@ export async function archiveSpecFolder(
   await fs.mkdir(archiveDir, { recursive: true });
 
   const folderName = path.basename(specFolderPath);
-  const targetPath = path.join(archiveDir, folderName);
+  let targetPath = path.join(archiveDir, folderName);
 
-  try {
-    await fs.rm(targetPath, { recursive: true, force: true });
-  } catch {}
+  let counter = 1;
+  while (
+    await fs
+      .stat(targetPath)
+      .then(() => true)
+      .catch(() => false)
+  ) {
+    targetPath = path.join(archiveDir, `${folderName}-${counter}`);
+    counter++;
+  }
 
   await fs.rename(specFolderPath, targetPath);
   return targetPath;

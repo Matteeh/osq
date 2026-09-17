@@ -1,11 +1,12 @@
 import { approveSpec } from '../core/approve.js';
-import { DEFAULT_CONFIG } from '../core/config.js';
+import { type OsqConfig, loadConfig } from '../core/config.js';
 
 export async function approveCommand(
   specIds: string[],
-  options: { cwd?: string } = {},
+  options: { cwd?: string; config?: OsqConfig } = {},
 ): Promise<void> {
   const cwd = options.cwd || process.cwd();
+  const config = options.config || (await loadConfig(cwd));
 
   if (!specIds || specIds.length === 0) {
     console.error('Error: specify at least one spec ID to approve (e.g. osq approve 001)');
@@ -14,7 +15,7 @@ export async function approveCommand(
 
   for (const specId of specIds) {
     try {
-      const result = await approveSpec(cwd, specId, DEFAULT_CONFIG);
+      const result = await approveSpec(cwd, specId, config);
       console.log(`Approved ${result.specId} (${result.folderName})`);
       console.log(`  Hash: ${result.hash}`);
       for (const warning of result.warnings) {

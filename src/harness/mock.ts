@@ -14,6 +14,7 @@ export interface MockBehavior {
   resultContent?: string;
   delayMs?: number;
   error?: string;
+  timedOut?: boolean;
 }
 
 export class MockAdapter implements HarnessAdapter {
@@ -72,17 +73,18 @@ export class MockAdapter implements HarnessAdapter {
       });
     }
 
-    const exitCode = this.behavior.exitCode ?? 0;
+    const exitCode = this.behavior.exitCode ?? (this.behavior.timedOut ? 124 : 0);
 
     await appendHarnessEvent(specFolderPath, taskNumber, {
       type: 'exited',
       timestamp: new Date().toISOString(),
-      data: { exitCode },
+      data: { exitCode, timedOut: this.behavior.timedOut },
     });
 
     return {
       exitCode,
       error: this.behavior.error,
+      timedOut: this.behavior.timedOut,
     };
   }
 }

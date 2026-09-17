@@ -65,6 +65,78 @@ describe('Watcher Loop and CLI', () => {
     assert.ok(await fs.stat(doneMarker));
   });
 
+  it('runWatcherOnce executes multiple tasks sequentially in a multi-task spec without hash conflict and archives', async () => {
+    const spec = await createNewSpec(tmpDir, 'Two Task Spec');
+
+    // Update tasks.md to have 2 tasks
+    const tasksMdPath = path.join(spec.folderPath, 'tasks.md');
+    await fs.writeFile(
+      tasksMdPath,
+      '# Tasks\n\n- [ ] 1. When first task runs\n- [ ] 2. When second task runs\n',
+      'utf8',
+    );
+
+    // Write task 1
+    const task1Path = path.join(spec.folderPath, 'tasks', '1.md');
+    await fs.writeFile(
+      task1Path,
+      [
+        '---',
+        'title: When first task runs',
+        'verify: node -e "process.exit(0)"',
+        'scope: []',
+        'entry: []',
+        'skills: []',
+        '---',
+        '## Acceptance',
+        '- [ ] passes',
+      ].join('\n'),
+      'utf8',
+    );
+
+    // Write task 2
+    const task2Path = path.join(spec.folderPath, 'tasks', '2.md');
+    await fs.writeFile(
+      task2Path,
+      [
+        '---',
+        'title: When second task runs',
+        'verify: node -e "process.exit(0)"',
+        'scope: []',
+        'entry: []',
+        'skills: []',
+        '---',
+        '## Acceptance',
+        '- [ ] passes',
+      ].join('\n'),
+      'utf8',
+    );
+
+    // Approve spec
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    // Run watcher in once mode
+    const summary = await runWatcherOnce(tmpDir, DEFAULT_CONFIG, mockAdapter);
+
+    assert.equal(summary.tasksRun, 2);
+    assert.equal(summary.specsArchived, 1);
+
+    // Folder is archived
+    const folderName = path.basename(spec.folderPath);
+    const archivedPath = path.join(tmpDir, 'specs', 'archive', folderName);
+    const stat = await fs.stat(archivedPath);
+    assert.ok(stat);
+
+    // Done markers for task 1 and task 2 exist in archive
+    assert.ok(await fs.stat(path.join(archivedPath, '.run', 'done', '1')));
+    assert.ok(await fs.stat(path.join(archivedPath, '.run', 'done', '2')));
+
+    // Check that tasks.md has both checkboxes ticked
+    const archivedTasksMd = await fs.readFile(path.join(archivedPath, 'tasks.md'), 'utf8');
+    assert.ok(archivedTasksMd.includes('- [x] 1.'));
+    assert.ok(archivedTasksMd.includes('- [x] 2.'));
+  });
+
   it('CLI registers watch and setup commands with expected options', () => {
     const program = createProgram();
     const commandNames = program.commands.map((c) => c.name());

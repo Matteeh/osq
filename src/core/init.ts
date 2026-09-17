@@ -7,14 +7,12 @@ export const OSQ_END_MARKER = '<!-- OSQ:END -->';
 export const MANAGED_AGENTS_BLOCK = `${OSQ_START_MARKER}
 ## Executing a spec
 
-This repo uses osq on itself. Same procedure as any consumer.
-
 1. Read your task file, its parent \`spec.md\`, then only the docs listed under \`features\`. Nothing else.
 2. Too big for one pass? Write why in \`.run/results/<n>.md\`, exit without code.
 3. Read a previous result file for this task if present. Run the task's \`verify\`. Start from what fails.
 4. Tests for each acceptance line before implementing.
 5. Minimal code to pass. Stay inside \`scope\`.
-6. Full gate once, above.
+6. Run the task's \`verify\` command before exiting.
 
 ## Exiting
 

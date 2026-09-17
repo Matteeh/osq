@@ -2,7 +2,7 @@
 
 CLI and watcher for spec-driven development with coding agents.
 
-pnpm, TypeScript strict, Node 22+. No framework. Zero runtime dependencies beyond `chokidar`, `yaml`, and `commander`; propose an ADR before adding one.
+pnpm, TypeScript strict, Node 22+. No framework. Zero runtime dependencies beyond `chokidar`, `yaml`, `commander`, and `jiti`; propose an ADR before adding one.
 
 ## Layout
 
@@ -36,14 +36,12 @@ Tests run against `fixture/`. A test that needs a real model is an integration t
 
 ## Executing a spec
 
-This repo uses osq on itself. Same procedure as any consumer.
-
 1. Read your task file, its parent `spec.md`, then only the docs listed under `features`. Nothing else.
 2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
 3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.
 4. Tests for each acceptance line before implementing.
 5. Minimal code to pass. Stay inside `scope`.
-6. Full gate once, above.
+6. Run the task's `verify` command before exiting.
 
 ## Exiting
 

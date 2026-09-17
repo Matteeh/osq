@@ -27,6 +27,19 @@ export interface SpecState {
   nextTask: TaskState | null;
 }
 
+export function compareNumericPrefix(a: string, b: string): number {
+  const matchA = a.match(/^(\d+)/);
+  const matchB = b.match(/^(\d+)/);
+  if (matchA && matchB) {
+    const numA = Number.parseInt(matchA[1], 10);
+    const numB = Number.parseInt(matchB[1], 10);
+    if (numA !== numB) {
+      return numA - numB;
+    }
+  }
+  return a.localeCompare(b);
+}
+
 export async function deriveTaskState(
   specFolderPath: string,
   taskFileName: string,
@@ -119,14 +132,7 @@ export async function deriveSpecState(
   try {
     taskEntries = (await fs.readdir(tasksDir))
       .filter((e) => e.endsWith('.md'))
-      .sort((a, b) => {
-        const numA = Number.parseInt(a, 10);
-        const numB = Number.parseInt(b, 10);
-        if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
-          return numA - numB;
-        }
-        return a.localeCompare(b);
-      });
+      .sort(compareNumericPrefix);
   } catch {}
 
   const tasks: TaskState[] = [];

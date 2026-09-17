@@ -1,14 +1,11 @@
-import { exec } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { promisify } from 'node:util';
 import type { OsqConfig } from '../core/config.js';
 import { hashChangeFolder } from '../core/hasher.js';
 import { acquireLock, releaseLock } from '../core/lock.js';
 import { parseTaskMd } from '../core/parser.js';
 import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
-
-const execAsync = promisify(exec);
 
 export type RunTaskFailureReason =
   | 'spec_conflict'
@@ -113,19 +110,34 @@ export async function runTask(
       skills: taskData.skills,
       tier: 'coding',
       timeoutSeconds: config.timeouts.taskTimeoutSeconds,
+      config,
     });
 
-    if (spawnResult.exitCode !== 0) {
+    if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
+      const failureReason: RunTaskFailureReason = spawnResult.timedOut ? 'timeout' : 'crashed';
       await fs.mkdir(deadDir, { recursive: true });
+      const deadMarkerLines = [
+        '---',
+        `reason: ${failureReason}`,
+        `exit_code: ${spawnResult.exitCode}`,
+      ];
+      if (spawnResult.signal) {
+        deadMarkerLines.push(`signal: ${spawnResult.signal}`);
+      }
+      deadMarkerLines.push('---');
+      deadMarkerLines.push(
+        `Agent ${spawnResult.timedOut ? 'timed out' : 'crashed'} with code ${spawnResult.exitCode}: ${spawnResult.error || ''}\n`,
+      );
+
       await fs.writeFile(
         path.join(deadDir, `${taskNumber}.md`),
-        `---\nreason: crashed\nexit_code: ${spawnResult.exitCode}\n---\nAgent exited with code ${spawnResult.exitCode}: ${spawnResult.error || ''}\n`,
+        deadMarkerLines.join('\n'),
         'utf8',
       );
       return {
         success: false,
-        reason: 'crashed',
-        error: `Agent exited with code ${spawnResult.exitCode}`,
+        reason: failureReason,
+        error: spawnResult.error || `Agent exited with code ${spawnResult.exitCode}`,
       };
     }
 
@@ -156,16 +168,93 @@ export async function runTask(
       data: { command: taskData.verify },
     });
 
+    const verifyTimeoutMs = (config.timeouts.verifyTimeoutSeconds ?? 600) * 1000;
+    let verifyTimedOut = false;
+
+    const verifyPromise = new Promise<void>((resolve, reject) => {
+      const child = spawn(taskData.verify, {
+        cwd: projectRoot,
+        shell: true,
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let timer: NodeJS.Timeout | null = null;
+      let killTimer: NodeJS.Timeout | null = null;
+
+      if (verifyTimeoutMs > 0) {
+        timer = setTimeout(() => {
+          verifyTimedOut = true;
+          const childPid = child.pid;
+          if (childPid) {
+            try {
+              process.kill(-childPid, 'SIGTERM');
+            } catch {
+              try {
+                child.kill('SIGTERM');
+              } catch {}
+            }
+            killTimer = setTimeout(() => {
+              try {
+                process.kill(-childPid, 'SIGKILL');
+              } catch {
+                try {
+                  child.kill('SIGKILL');
+                } catch {}
+              }
+            }, 5000);
+          }
+        }, verifyTimeoutMs);
+      }
+
+      let stderr = '';
+      let stdout = '';
+      child.stderr?.on('data', (d) => {
+        stderr += d.toString();
+      });
+      child.stdout?.on('data', (d) => {
+        stdout += d.toString();
+      });
+
+      child.on('error', (err) => {
+        if (timer) clearTimeout(timer);
+        if (killTimer) clearTimeout(killTimer);
+        reject(err);
+      });
+
+      child.on('close', (code) => {
+        if (timer) clearTimeout(timer);
+        if (killTimer) clearTimeout(killTimer);
+        if (verifyTimedOut) {
+          reject(
+            new Error(
+              `Verify command timed out after ${config.timeouts.verifyTimeoutSeconds ?? 600}s`,
+            ),
+          );
+        } else if (code !== 0) {
+          reject(new Error(stderr || stdout || `Process exited with code ${code}`));
+        } else {
+          resolve();
+        }
+      });
+    });
+
     try {
-      await execAsync(taskData.verify, { cwd: projectRoot });
+      await verifyPromise;
     } catch (verifyErr) {
       const msg = verifyErr instanceof Error ? verifyErr.message : String(verifyErr);
       await fs.mkdir(deadDir, { recursive: true });
-      await fs.writeFile(
-        path.join(deadDir, `${taskNumber}.md`),
-        `---\nreason: verify_red\ncommand: "${taskData.verify}"\n---\nWatcher independent verify failed:\n${msg}\n`,
-        'utf8',
+      const deadLines = ['---', 'reason: verify_red'];
+      if (verifyTimedOut) {
+        deadLines.push('timed_out: true');
+      }
+      deadLines.push(`command: "${taskData.verify}"`);
+      deadLines.push('---');
+      deadLines.push(
+        `Watcher independent verify ${verifyTimedOut ? 'timed out' : 'failed'}:\n${msg}\n`,
       );
+
+      await fs.writeFile(path.join(deadDir, `${taskNumber}.md`), deadLines.join('\n'), 'utf8');
       return {
         success: false,
         reason: 'verify_red',

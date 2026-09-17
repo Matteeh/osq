@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, type OsqConfig } from '../core/config.js';
+import { type OsqConfig, loadConfig } from '../core/config.js';
 import { formatMetricsReport, getMetricsReport } from '../core/report.js';
 
 export interface ReportCommandOptions {
@@ -10,7 +10,7 @@ export interface ReportCommandOptions {
 
 export async function reportCommand(options: ReportCommandOptions = {}): Promise<string> {
   const cwd = options.cwd || process.cwd();
-  const config = options.config || DEFAULT_CONFIG;
+  const config = options.config || (await loadConfig(cwd));
 
   try {
     const report = await getMetricsReport(cwd, config);

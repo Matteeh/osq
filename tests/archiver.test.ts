@@ -73,6 +73,25 @@ describe('Archiver and Delta Application', () => {
     assert.ok(stat);
   });
 
+  it('archiveSpecFolder preserves history by disambiguating if destination already exists', async () => {
+    const folderName = path.basename(specFolder);
+    const existingArchive = path.join(tmpDir, 'specs', 'archive', folderName);
+    await fs.mkdir(existingArchive, { recursive: true });
+    await fs.writeFile(path.join(existingArchive, 'history.txt'), 'pre-existing archive', 'utf8');
+
+    const archivedPath = await archiveSpecFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    // Old archive remains intact
+    assert.equal(
+      await fs.readFile(path.join(existingArchive, 'history.txt'), 'utf8'),
+      'pre-existing archive',
+    );
+
+    // New archive path is disambiguated with suffix
+    assert.equal(archivedPath, path.join(tmpDir, 'specs', 'archive', `${folderName}-1`));
+    assert.ok(await fs.stat(archivedPath));
+  });
+
   it('checkAndArchiveSpec archives only when all tasks are marked done', async () => {
     // 1. Not approved -> should return false
     let archived = await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG);
