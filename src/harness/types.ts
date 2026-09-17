@@ -41,6 +41,7 @@ export interface HarnessAdapter {
   readonly name: string;
   setup(projectRoot: string, config: OsqConfig): Promise<void>;
   spawn(options: SpawnTaskOptions): Promise<SpawnResult>;
+  preflight?(projectRoot: string, config: OsqConfig): Promise<void>;
 }
 
 export async function appendHarnessEvent(

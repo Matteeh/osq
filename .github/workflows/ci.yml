@@ -26,3 +26,12 @@ jobs:
 
       - name: Run verification gate
         run: pnpm verify
+
+      - name: OpenCode binary smoke check
+        if: env.OPENCODE_SKIP_REAL != '1'
+        run: |
+          if command -v opencode >/dev/null 2>&1; then
+            opencode --version
+          else
+            echo "OpenCode binary not present on runner; skipping smoke check"
+          fi

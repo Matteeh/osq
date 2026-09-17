@@ -1,0 +1,455 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
+import { scaffoldProject } from '../src/core/init.js';
+import { createNewSpec } from '../src/core/new.js';
+import {
+  OpencodeAdapter,
+  buildOpencodeArgs,
+  buildOpencodePrompt,
+  spawnTask,
+} from '../src/harness/opencode.js';
+import type { SpawnTaskOptions } from '../src/harness/types.js';
+
+describe('OpenCode Adapter Task Spawning', () => {
+  let tmpDir: string;
+  let specFolder: string;
+  let taskPath: string;
+  let specPath: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-opencode-spawn-test-'));
+    await scaffoldProject(tmpDir);
+    const spec = await createNewSpec(tmpDir, 'Spawn Feature');
+    specFolder = spec.folderPath;
+    specPath = path.join(specFolder, 'spec.md');
+    taskPath = path.join(specFolder, 'tasks', '1.md');
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('spawnTask constructs arguments: run --agent <agent> --auto --format json --dir <projectRoot> --model <model>', async () => {
+    const defaultOptions: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When default spawn runs',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/a.ts'],
+      entry: ['src/a.ts'],
+      skills: [],
+      tier: 'coding',
+      config: DEFAULT_CONFIG,
+    };
+
+    const defaultArgs = await buildOpencodeArgs(defaultOptions);
+
+    assert.equal(defaultArgs[0], 'run');
+    assert.ok(defaultArgs.includes('--agent'));
+    assert.equal(defaultArgs[defaultArgs.indexOf('--agent') + 1], 'osq-coder');
+    assert.ok(defaultArgs.includes('--auto'));
+    assert.ok(defaultArgs.includes('--format'));
+    assert.equal(defaultArgs[defaultArgs.indexOf('--format') + 1], 'json');
+    assert.ok(defaultArgs.includes('--dir'));
+    assert.equal(defaultArgs[defaultArgs.indexOf('--dir') + 1], tmpDir);
+    assert.ok(defaultArgs.includes('--model'));
+    assert.equal(defaultArgs[defaultArgs.indexOf('--model') + 1], 'deepseek/deepseek-flash');
+
+    // Also verify spawnTask alias exists and matches buildOpencodeArgs
+    assert.ok(typeof spawnTask === 'function');
+
+    // Customized model and agent
+    const customConfig: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        bin: 'opencode',
+        model: 'anthropic/claude-3-5-sonnet',
+        agent: 'custom-coder',
+      },
+    };
+
+    const customOptions: SpawnTaskOptions = {
+      ...defaultOptions,
+      config: customConfig,
+    };
+
+    const customArgs = await buildOpencodeArgs(customOptions);
+    assert.equal(customArgs[customArgs.indexOf('--agent') + 1], 'custom-coder');
+    assert.equal(customArgs[customArgs.indexOf('--model') + 1], 'anthropic/claude-3-5-sonnet');
+  });
+
+  it('Optional variant flag --variant <variant> is included when configured', async () => {
+    const baseOptions: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When variant is tested',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/b.ts'],
+      entry: ['src/b.ts'],
+      skills: [],
+      tier: 'coding',
+      config: DEFAULT_CONFIG,
+    };
+
+    // Variant not configured -> --variant is not present
+    const argsWithoutVariant = await buildOpencodeArgs(baseOptions);
+    assert.equal(argsWithoutVariant.includes('--variant'), false);
+
+    // Variant configured -> --variant <variant> included
+    const configWithVariant: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        ...DEFAULT_CONFIG.opencode,
+        variant: 'high',
+      },
+    };
+
+    const argsWithVariant = await buildOpencodeArgs({
+      ...baseOptions,
+      config: configWithVariant,
+    });
+
+    assert.ok(argsWithVariant.includes('--variant'));
+    const variantIndex = argsWithVariant.indexOf('--variant');
+    assert.equal(argsWithVariant[variantIndex + 1], 'high');
+  });
+
+  it('Attached files include --file <task.md>, --file <spec.md>, --file <featureDoc> for each feature named in task', async () => {
+    // Write features in task.md
+    const taskContentWithFeatures = `---
+title: When task names specific features
+verify: node -e "process.exit(0)"
+scope: [src/c.ts]
+entry: [src/c.ts]
+skills: []
+features: [feature-alpha, feature-beta]
+---
+## Acceptance
+- [ ] criterion 1
+`;
+    await fs.writeFile(taskPath, taskContentWithFeatures, 'utf8');
+
+    const options: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When task names specific features',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/c.ts'],
+      entry: ['src/c.ts'],
+      skills: [],
+      tier: 'coding',
+      config: DEFAULT_CONFIG,
+    };
+
+    const args = await buildOpencodeArgs(options);
+
+    const taskRelPath = path.relative(tmpDir, taskPath);
+    const specRelPath = path.relative(tmpDir, specPath);
+
+    // Collect all --file values in order
+    const attachedFiles: string[] = [];
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--file') {
+        attachedFiles.push(args[i + 1]);
+      }
+    }
+
+    assert.equal(attachedFiles[0], taskRelPath);
+    assert.equal(attachedFiles[1], specRelPath);
+    assert.ok(attachedFiles.includes('features/feature-alpha.md'));
+    assert.ok(attachedFiles.includes('features/feature-beta.md'));
+
+    // Fallback: when task does not specify features, use parent spec.md features
+    const taskContentWithoutFeatures = `---
+title: When task does not specify features
+verify: node -e "process.exit(0)"
+scope: [src/c.ts]
+entry: [src/c.ts]
+skills: []
+---
+## Acceptance
+- [ ] criterion 1
+`;
+    await fs.writeFile(taskPath, taskContentWithoutFeatures, 'utf8');
+
+    const specContentWithFeatures = `---
+title: Spawn Feature
+depends_on: []
+features:
+  reads: [spec-feat-read]
+  writes: [spec-feat-write]
+---
+## Goal
+Test spec features fallback.
+## Contract
+| A | B |
+|---|---|
+| 1 | 2 |
+## Non-goals
+None
+## Delta
+None
+`;
+    await fs.writeFile(specPath, specContentWithFeatures, 'utf8');
+
+    const fallbackArgs = await buildOpencodeArgs(options);
+    const fallbackAttachedFiles: string[] = [];
+    for (let i = 0; i < fallbackArgs.length; i++) {
+      if (fallbackArgs[i] === '--file') {
+        fallbackAttachedFiles.push(fallbackArgs[i + 1]);
+      }
+    }
+
+    assert.equal(fallbackAttachedFiles[0], taskRelPath);
+    assert.equal(fallbackAttachedFiles[1], specRelPath);
+    assert.ok(fallbackAttachedFiles.includes('features/spec-feat-read.md'));
+    assert.ok(fallbackAttachedFiles.includes('features/spec-feat-write.md'));
+  });
+
+  it('Positional prompt argument defines task guidelines matching AGENTS.md protocol', async () => {
+    const options: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When prompt guidelines match AGENTS.md protocol',
+      verifyCommand: 'pnpm test tests/sample.test.ts',
+      scope: ['src/core/sample.ts', 'tests/sample.test.ts'],
+      entry: ['src/core/sample.ts'],
+      skills: [],
+      tier: 'coding',
+      config: DEFAULT_CONFIG,
+    };
+
+    const prompt = buildOpencodePrompt(options);
+
+    const taskRelPath = path.relative(tmpDir, taskPath);
+    const specRelPath = path.relative(tmpDir, specPath);
+    const resultRelPath = path.relative(tmpDir, path.join(specFolder, '.run', 'results', '1.md'));
+
+    // Verify key elements matching AGENTS.md protocol
+    assert.ok(
+      prompt.includes(
+        'You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.',
+      ),
+    );
+    assert.ok(prompt.includes(`Task File: ${taskRelPath}`));
+    assert.ok(prompt.includes(`Parent Spec: ${specRelPath}`));
+    assert.ok(prompt.includes('Task Title: When prompt guidelines match AGENTS.md protocol'));
+    assert.ok(prompt.includes('Scope: src/core/sample.ts, tests/sample.test.ts'));
+    assert.ok(prompt.includes('Entry: src/core/sample.ts'));
+    assert.ok(prompt.includes('Verify Command: pnpm test tests/sample.test.ts'));
+    assert.ok(
+      prompt.includes(
+        `1. Read ${taskRelPath}, ${specRelPath}, and features docs referenced in ${specRelPath}.`,
+      ),
+    );
+    assert.ok(prompt.includes('2. Write tests for each acceptance line before implementing.'));
+    assert.ok(prompt.includes('3. Keep all edits strictly inside scope.'));
+    assert.ok(prompt.includes('4. Verify your work by running: pnpm test tests/sample.test.ts'));
+    assert.ok(
+      prompt.includes(
+        `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} documenting: changed, deviated, drift against features/, missing context, and next steps.`,
+      ),
+    );
+    assert.ok(
+      prompt.includes(
+        `6. Do not modify tasks.md, spec.md, or any file outside your scope and ${resultRelPath}.`,
+      ),
+    );
+    assert.ok(prompt.includes(`7. When done, write ${resultRelPath} and exit cleanly.`));
+
+    // Verify prompt is passed as the last positional argument in buildOpencodeArgs
+    const args = await buildOpencodeArgs(options);
+    assert.equal(args[args.length - 1], prompt);
+  });
+
+  it('Fake opencode binary validates passed flags, handles non-zero exit, and respects timeout termination', async () => {
+    const recordedArgsFile = path.join(tmpDir, 'fake-opencode-recorded.json');
+
+    // 1. Fake binary that validates flags and exits cleanly
+    const fakeValidatingBin = path.join(tmpDir, 'fake-validating-opencode.mjs');
+    const validatingScript = `#!/usr/bin/env node
+import fs from 'node:fs';
+
+const argv = process.argv.slice(2);
+const recorded = {
+  argv,
+  subcommand: argv[0],
+  agent: null,
+  auto: false,
+  format: null,
+  dir: null,
+  model: null,
+  variant: null,
+  files: [],
+  prompt: argv[argv.length - 1],
+};
+
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i] === '--agent') recorded.agent = argv[++i];
+  else if (argv[i] === '--auto') recorded.auto = true;
+  else if (argv[i] === '--format') recorded.format = argv[++i];
+  else if (argv[i] === '--dir') recorded.dir = argv[++i];
+  else if (argv[i] === '--model') recorded.model = argv[++i];
+  else if (argv[i] === '--variant') recorded.variant = argv[++i];
+  else if (argv[i] === '--file') recorded.files.push(argv[++i]);
+}
+
+fs.writeFileSync(${JSON.stringify(recordedArgsFile)}, JSON.stringify(recorded, null, 2), 'utf8');
+
+// Validate expectations
+if (recorded.subcommand !== 'run') {
+  console.error('Expected run subcommand, got: ' + recorded.subcommand);
+  process.exit(1);
+}
+if (!recorded.auto) {
+  console.error('Expected --auto flag');
+  process.exit(1);
+}
+if (recorded.format !== 'json') {
+  console.error('Expected --format json, got: ' + recorded.format);
+  process.exit(1);
+}
+if (!recorded.prompt || !recorded.prompt.includes('AGENTS.md')) {
+  console.error('Prompt missing AGENTS.md guidelines');
+  process.exit(1);
+}
+
+process.exit(0);
+`;
+    await fs.writeFile(fakeValidatingBin, validatingScript, { mode: 0o755 });
+
+    const adapter = new OpencodeAdapter();
+    const configWithFakeBin: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        bin: fakeValidatingBin,
+        model: 'custom/model-val',
+        agent: 'custom-agent-val',
+        variant: 'thinking',
+      },
+    };
+
+    const taskOptions: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When fake opencode runs',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/fake.ts'],
+      entry: ['src/fake.ts'],
+      skills: [],
+      tier: 'coding',
+      config: configWithFakeBin,
+    };
+
+    // Execute spawn
+    const successResult = await adapter.spawn(taskOptions);
+    assert.equal(successResult.exitCode, 0);
+    assert.equal(successResult.timedOut, false);
+
+    // Verify recorded flags
+    const recordedContent = await fs.readFile(recordedArgsFile, 'utf8');
+    const recorded = JSON.parse(recordedContent);
+    assert.equal(recorded.subcommand, 'run');
+    assert.equal(recorded.agent, 'custom-agent-val');
+    assert.equal(recorded.auto, true);
+    assert.equal(recorded.format, 'json');
+    assert.equal(recorded.dir, tmpDir);
+    assert.equal(recorded.model, 'custom/model-val');
+    assert.equal(recorded.variant, 'thinking');
+    assert.ok(recorded.files.length >= 2);
+    assert.ok(recorded.prompt.includes('Follow AGENTS.md strictly.'));
+
+    // Verify started and exited events logged
+    const eventFilePath = path.join(specFolder, '.run', 'events', '1.jsonl');
+    const eventsRaw = await fs.readFile(eventFilePath, 'utf8');
+    const events = eventsRaw
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    assert.equal(events[0].type, 'started');
+    assert.equal(events[events.length - 1].type, 'exited');
+    assert.equal(events[events.length - 1].data.exitCode, 0);
+
+    // 2. Fake binary that handles non-zero exit
+    const fakeFailingBin = path.join(tmpDir, 'fake-failing-opencode.mjs');
+    const failingScript = `#!/usr/bin/env node
+console.error('Simulated fatal error in opencode');
+process.exit(42);
+`;
+    await fs.writeFile(fakeFailingBin, failingScript, { mode: 0o755 });
+
+    const failingConfig: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        bin: fakeFailingBin,
+      },
+    };
+
+    const failResult = await adapter.spawn({
+      ...taskOptions,
+      taskNumber: '2',
+      config: failingConfig,
+    });
+
+    assert.equal(failResult.exitCode, 42);
+    assert.equal(failResult.timedOut, false);
+    assert.ok(failResult.error?.includes('Simulated fatal error in opencode'));
+
+    // Verify exited event logged non-zero exit code
+    const eventFileFailPath = path.join(specFolder, '.run', 'events', '2.jsonl');
+    const failEventsRaw = await fs.readFile(eventFileFailPath, 'utf8');
+    const failEvents = failEventsRaw
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    assert.equal(failEvents[failEvents.length - 1].type, 'exited');
+    assert.equal(failEvents[failEvents.length - 1].data.exitCode, 42);
+
+    // 3. Fake binary that respects timeout termination
+    const fakeHangingBin = path.join(tmpDir, 'fake-hanging-opencode.mjs');
+    const hangingScript = `#!/usr/bin/env node
+setInterval(() => {}, 1000);
+`;
+    await fs.writeFile(fakeHangingBin, hangingScript, { mode: 0o755 });
+
+    const hangingConfig: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        bin: fakeHangingBin,
+      },
+    };
+
+    const timeoutResult = await adapter.spawn({
+      ...taskOptions,
+      taskNumber: '3',
+      timeoutSeconds: 1,
+      config: hangingConfig,
+    });
+
+    assert.equal(timeoutResult.timedOut, true);
+    assert.equal(timeoutResult.exitCode, 124);
+    assert.equal(timeoutResult.signal, 'SIGTERM');
+    assert.equal(timeoutResult.error, 'Task execution timed out');
+
+    // Verify exited event logged timeout
+    const eventFileTimeoutPath = path.join(specFolder, '.run', 'events', '3.jsonl');
+    const timeoutEventsRaw = await fs.readFile(eventFileTimeoutPath, 'utf8');
+    const timeoutEvents = timeoutEventsRaw
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    assert.equal(timeoutEvents[timeoutEvents.length - 1].type, 'exited');
+    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.timedOut, true);
+    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.exitCode, 124);
+    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.signal, 'SIGTERM');
+  });
+});

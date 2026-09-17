@@ -28,6 +28,13 @@ export interface AgyConfig {
   readonly dangerouslySkipPermissions?: boolean;
 }
 
+export interface OpencodeConfig {
+  readonly bin?: string;
+  readonly model?: string;
+  readonly agent?: string;
+  readonly variant?: string;
+}
+
 export interface OsqConfig {
   readonly harness: string;
   readonly maxConcurrency: number;
@@ -35,6 +42,7 @@ export interface OsqConfig {
   readonly paths: OsqPaths;
   readonly timeouts: OsqTimeouts;
   readonly agy?: AgyConfig;
+  readonly opencode?: OpencodeConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -43,6 +51,11 @@ export const DEFAULT_CONFIG: OsqConfig = {
   agy: {
     model: 'gemini-3.8-flash-high',
     dangerouslySkipPermissions: true,
+  },
+  opencode: {
+    bin: 'opencode',
+    model: 'deepseek/deepseek-flash',
+    agent: 'osq-coder',
   },
   limits: {
     maxScopeFiles: 8,
@@ -71,6 +84,10 @@ export function defineConfig(config: Partial<OsqConfig>): OsqConfig {
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),
+    },
+    opencode: {
+      ...DEFAULT_CONFIG.opencode,
+      ...(config.opencode || {}),
     },
     limits: {
       ...DEFAULT_CONFIG.limits,
@@ -127,6 +144,10 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
 
   const harness = userConfig.harness || process.env.OSQ_HARNESS || DEFAULT_CONFIG.harness;
   const model = userConfig.agy?.model || process.env.OSQ_MODEL || DEFAULT_CONFIG.agy?.model;
+  const opencodeModel =
+    userConfig.opencode?.model ||
+    (harness === 'opencode' && process.env.OSQ_MODEL ? process.env.OSQ_MODEL : undefined) ||
+    DEFAULT_CONFIG.opencode?.model;
 
   return defineConfig({
     ...userConfig,
@@ -135,6 +156,11 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
       ...DEFAULT_CONFIG.agy,
       ...(userConfig.agy || {}),
       ...(model ? { model } : {}),
+    },
+    opencode: {
+      ...DEFAULT_CONFIG.opencode,
+      ...(userConfig.opencode || {}),
+      ...(opencodeModel ? { model: opencodeModel } : {}),
     },
   });
 }

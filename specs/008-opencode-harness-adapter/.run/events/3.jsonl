@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T19:44:45.505Z","data":{"tier":"coding","taskTitle":"When osq setup runs for opencode, the agent file is scaffolded idempotently, README auto caveat is documented","scope":["src/harness/opencode.ts","README.md","tests/opencode-setup.test.ts"],"entry":["src/harness/opencode.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T19:48:55.673Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T19:48:55.674Z","data":{"command":"node --import tsx --test tests/opencode-setup.test.ts"}}

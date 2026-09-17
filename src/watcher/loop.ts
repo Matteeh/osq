@@ -4,6 +4,7 @@ import { watch } from 'chokidar';
 import type { OsqConfig } from '../core/config.js';
 import { reapStaleLocks } from '../core/lock.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
+import { preflightOpencode } from '../harness/opencode.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runTask } from './runner.js';
@@ -96,6 +97,14 @@ export async function startWatcher(
   adapter: HarnessAdapter,
   options: { once?: boolean; pollIntervalMs?: number; signal?: AbortSignal } = {},
 ): Promise<void> {
+  if (adapter.name === 'opencode' || config.harness === 'opencode') {
+    if (adapter.preflight) {
+      await adapter.preflight(projectRoot, config);
+    } else {
+      await preflightOpencode(projectRoot, config);
+    }
+  }
+
   if (options.once) {
     await runWatcherOnce(projectRoot, config, adapter);
     return;

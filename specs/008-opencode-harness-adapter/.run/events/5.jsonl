@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T19:53:07.889Z","data":{"tier":"coding","taskTitle":"When opencode stdout emits JSON events, tokens events are emitted with input, output, cached counts while unknown event types are ignored without error","scope":["src/harness/opencode.ts","tests/opencode-events.test.ts"],"entry":["src/harness/opencode.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T19:56:11.933Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T19:56:11.934Z","data":{"command":"node --import tsx --test tests/opencode-events.test.ts"}}

@@ -117,6 +117,29 @@ Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout
 
 `OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into six events (`started`, `tokens`, `file_changed`, `verify_ran`, `result_written`, `exited`), appended to the task's `.run/events/<n>.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
 
+Available adapters:
+- `agy`: Antigravity harness adapter
+- `opencode`: OpenCode harness adapter running tasks via `opencode run`
+- `mock`: In-memory deterministic simulation for tests
+
+Configure `opencode` in `osq.config.ts`:
+
+```ts
+import { defineConfig } from 'osq';
+
+export default defineConfig({
+  harness: 'opencode',
+  opencode: {
+    bin: 'opencode',
+    model: 'deepseek/deepseek-flash',
+    agent: 'osq-coder',
+    variant: 'thinking', // optional
+  },
+});
+```
+
+Running `osq setup` with the `opencode` harness scaffolds `.opencode/agent/osq-coder.md` with restricted permissions (denying `webfetch` and `websearch`) and the managed `AGENTS.md` execution procedure. Note that the `--auto` flag approves any action the agent file does not deny.
+
 ## Commands
 
 ```

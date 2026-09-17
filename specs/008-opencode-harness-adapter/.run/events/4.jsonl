@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T19:48:55.959Z","data":{"tier":"coding","taskTitle":"When opencode adapter spawns a task, it runs opencode run with --auto, --format json, --dir, configured model, agent, attaching task.md, spec.md, named feature docs via --file","scope":["src/harness/opencode.ts","tests/opencode-spawn.test.ts"],"entry":["src/harness/opencode.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T19:53:06.513Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T19:53:06.514Z","data":{"command":"node --import tsx --test tests/opencode-spawn.test.ts"}}

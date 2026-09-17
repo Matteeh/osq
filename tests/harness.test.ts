@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
-import { AgyAdapter } from '../src/harness/agy.js';
+import { AgyAdapter, buildAgyArgs } from '../src/harness/agy.js';
 import { getHarnessAdapter } from '../src/harness/index.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { type HarnessEvent, appendHarnessEvent } from '../src/harness/types.js';
@@ -101,5 +101,32 @@ describe('Harness Adapter and Event Logging', () => {
     assert.throws(() => {
       getHarnessAdapter('unsupported-harness');
     }, /Unknown harness adapter: "unsupported-harness"/);
+  });
+
+  it('AgyAdapter includes --print-timeout <n>s in args based on config timeouts', () => {
+    const config: OsqConfig = {
+      ...DEFAULT_CONFIG,
+      timeouts: {
+        ...DEFAULT_CONFIG.timeouts,
+        taskTimeoutSeconds: 300,
+      },
+    };
+
+    const args = buildAgyArgs({
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'Agy print timeout test',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/index.ts'],
+      entry: ['src/index.ts'],
+      skills: [],
+      tier: 'coding',
+      config,
+    });
+
+    const flagIndex = args.indexOf('--print-timeout');
+    assert.notEqual(flagIndex, -1, 'Expected --print-timeout in args');
+    assert.equal(args[flagIndex + 1], '270s');
   });
 });
