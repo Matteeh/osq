@@ -12,6 +12,7 @@ describe('osq CLI', () => {
     const commandNames = program.commands.map((cmd) => cmd.name());
     assert.ok(commandNames.includes('init'));
     assert.ok(commandNames.includes('new'));
+    assert.ok(commandNames.includes('approve'));
   });
 
   it('configures new command with required argument <name>', () => {
@@ -21,5 +22,14 @@ describe('osq CLI', () => {
     assert.ok(newCmd);
     assert.equal(newCmd.registeredArguments[0].name(), 'name');
     assert.equal(newCmd.registeredArguments[0].required, true);
+  });
+
+  it('configures approve command with variadic argument <ids...>', () => {
+    const program = createProgram();
+    const approveCmd = program.commands.find((cmd) => cmd.name() === 'approve');
+
+    assert.ok(approveCmd);
+    assert.equal(approveCmd.registeredArguments[0].name(), 'ids');
+    assert.equal(approveCmd.registeredArguments[0].variadic, true);
   });
 });

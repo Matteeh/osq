@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
 import { newCommand } from './new.js';
 
@@ -25,6 +26,13 @@ export function createProgram(): Command {
     .description('new change folder from template')
     .action(async (name: string) => {
       await newCommand(name);
+    });
+
+  program
+    .command('approve <ids...>')
+    .description('lint, hash, and approve change folders')
+    .action(async (ids: string[]) => {
+      await approveCommand(ids);
     });
 
   return program;
