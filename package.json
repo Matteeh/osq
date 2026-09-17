@@ -24,6 +24,14 @@
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Matteeh/osq.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Matteeh/osq/issues"
+  },
+  "homepage": "https://github.com/Matteeh/osq#readme",
   "author": "Mathias",
   "license": "MIT",
   "engines": {
