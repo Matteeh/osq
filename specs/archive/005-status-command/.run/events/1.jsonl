@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T14:07:28.873Z","data":{"tier":"coding","taskTitle":"When osq status is invoked, change folders with task states are displayed","scope":["src/core/status.ts","src/cli/status.ts","src/cli/index.ts","tests/status.test.ts"],"entry":["src/core/status.ts","src/cli/status.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T14:10:38.714Z","data":{"exitCode":0}}
+{"type":"verify_ran","timestamp":"2026-09-17T14:10:38.715Z","data":{"command":"node --import tsx --test tests/status.test.ts"}}

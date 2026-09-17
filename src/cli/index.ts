@@ -4,6 +4,7 @@ import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
 import { newCommand } from './new.js';
 import { setupCommand } from './setup.js';
+import { statusCommand } from './status.js';
 import { watchCommand } from './watch.js';
 
 export function createProgram(): Command {
@@ -50,6 +51,13 @@ export function createProgram(): Command {
     .description('configure harness environment and configuration')
     .action(async () => {
       await setupCommand();
+    });
+
+  program
+    .command('status')
+    .description('show status overview of change folders and tasks')
+    .action(async () => {
+      await statusCommand();
     });
 
   return program;
