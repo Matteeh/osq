@@ -4,3 +4,17 @@ dist/
 .env.local
 *.log
 .DS_Store
+Thumbs.db
+
+# Ephemeral runtime lockfiles
+**/.run/running/
+*.pid
+
+# IDE & editors
+.vscode/
+.idea/
+
+# Build & test artifacts
+*.tsbuildinfo
+coverage/
+.nyc_output/
