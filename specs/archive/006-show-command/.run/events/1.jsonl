@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T14:20:13.916Z","data":{"tier":"coding","taskTitle":"When osq show is invoked, detailed change information with event timeline is displayed","scope":["src/core/show.ts","src/cli/show.ts","src/cli/index.ts","tests/show.test.ts"],"entry":["src/core/show.ts","src/cli/show.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T14:23:33.704Z","data":{"exitCode":0}}
+{"type":"verify_ran","timestamp":"2026-09-17T14:23:33.705Z","data":{"command":"node --import tsx --test tests/show.test.ts"}}

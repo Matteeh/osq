@@ -4,6 +4,7 @@ import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
 import { newCommand } from './new.js';
 import { setupCommand } from './setup.js';
+import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
 import { watchCommand } from './watch.js';
 
@@ -58,6 +59,13 @@ export function createProgram(): Command {
     .description('show status overview of change folders and tasks')
     .action(async () => {
       await statusCommand();
+    });
+
+  program
+    .command('show <id>')
+    .description('show detailed change information, tasks, and event timeline')
+    .action(async (id: string) => {
+      await showCommand(id);
     });
 
   return program;
