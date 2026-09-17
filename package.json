@@ -7,7 +7,7 @@
     "osq": "./dist/cli/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
     "test": "node --import tsx --test tests/**/*.test.ts",
