@@ -24,13 +24,12 @@ describe('osq new', () => {
     assert.equal(slugify('  multi   space  '), 'multi-space');
   });
 
-  it('getNextSpecNumber correctly increments existing spec numbers', async () => {
+  it('getNextSpecNumber correctly increments existing spec numbers including archive', async () => {
     const specsDir = path.join(tmpDir, 'specs');
-    // Initially only _template and archive exist
     const first = await getNextSpecNumber(specsDir);
     assert.equal(first, '001');
 
-    await fs.mkdir(path.join(specsDir, '001-test'));
+    await fs.mkdir(path.join(specsDir, 'archive', '001-test'), { recursive: true });
     const second = await getNextSpecNumber(specsDir);
     assert.equal(second, '002');
 

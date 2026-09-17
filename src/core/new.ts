@@ -10,20 +10,24 @@ export function slugify(text: string): string {
 }
 
 export async function getNextSpecNumber(specsDir: string): Promise<string> {
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(specsDir);
-  } catch {
-    return '001';
-  }
-
+  const dirsToScan = [specsDir, path.join(specsDir, 'archive')];
   let maxNum = 0;
-  for (const entry of entries) {
-    const match = entry.match(/^(\d+)/);
-    if (match) {
-      const num = Number.parseInt(match[1], 10);
-      if (!Number.isNaN(num) && num > maxNum) {
-        maxNum = num;
+
+  for (const dir of dirsToScan) {
+    let entries: string[] = [];
+    try {
+      entries = await fs.readdir(dir);
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const match = entry.match(/^(\d+)/);
+      if (match) {
+        const num = Number.parseInt(match[1], 10);
+        if (!Number.isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
       }
     }
   }
