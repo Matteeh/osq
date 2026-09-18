@@ -2,12 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { MANAGED_AGENTS_BLOCK, OSQ_END_MARKER, OSQ_START_MARKER } from '../core/init.js';
+import type { Logger } from '../core/logger.js';
 import { parseFrontmatter, parseSpecMd } from '../core/parser.js';
 import { type SpawnProcessResult, spawnWithTimeout } from './process.js';
 import {
   type HarnessAdapter,
   type SpawnResult,
   type SpawnTaskOptions,
+  type ToolEventData,
   appendHarnessEvent,
 } from './types.js';
 
@@ -223,10 +225,113 @@ export function extractOpencodeTokens(event: unknown): OpencodeTokensData | null
   };
 }
 
+const TOOL_SUMMARY_MAX_LENGTH = 60;
+const FILE_TOOLS = new Set(['read', 'edit', 'write', 'glob']);
+
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function resolveEventTimestamp(eventObj: Record<string, unknown>): string {
+  if (typeof eventObj.timestamp === 'number' || typeof eventObj.timestamp === 'string') {
+    const date = new Date(eventObj.timestamp);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  }
+  return new Date().toISOString();
+}
+
+export function extractToolEventSummary(toolName: string, input: unknown): string {
+  const tool = (toolName || '').toLowerCase();
+  const inputObj = asRecord(input);
+
+  if (FILE_TOOLS.has(tool)) {
+    return (
+      firstNonEmptyString(
+        inputObj?.path,
+        inputObj?.file,
+        inputObj?.filepath,
+        inputObj?.filePath,
+        inputObj?.pattern,
+      ) ?? ''
+    );
+  }
+
+  if (tool === 'bash') {
+    const command = firstNonEmptyString(inputObj?.command, inputObj?.cmd) ?? '';
+    return command.slice(0, TOOL_SUMMARY_MAX_LENGTH);
+  }
+
+  const raw = inputObj ? JSON.stringify(inputObj) : input === undefined ? '' : String(input);
+  return raw.slice(0, TOOL_SUMMARY_MAX_LENGTH);
+}
+
+export function extractOpencodeToolEvent(event: unknown): ToolEventData | null {
+  const eventObj = asRecord(event);
+  if (!eventObj) {
+    return null;
+  }
+
+  const part = asRecord(eventObj.part);
+  const isToolUse =
+    eventObj.type === 'tool_use' || part?.type === 'tool-use' || part?.type === 'tool_use';
+  if (!isToolUse) {
+    return null;
+  }
+
+  const tool = firstNonEmptyString(eventObj.tool, eventObj.name, part?.tool, part?.name);
+  if (!tool) {
+    return null;
+  }
+
+  const state = asRecord(part?.state);
+  const input =
+    eventObj.input ??
+    eventObj.parameters ??
+    part?.input ??
+    part?.parameters ??
+    state?.input ??
+    state?.parameters;
+
+  return { tool, summary: extractToolEventSummary(tool, input) };
+}
+
+/**
+ * Single code path for tool observation: the events.jsonl entry and its verbose
+ * stderr log line are always emitted together by the shared stdout handler.
+ */
+async function recordToolEvent(
+  specFolderPath: string,
+  taskNumber: string,
+  toolEvent: ToolEventData,
+  timestamp: string,
+  logger?: Logger,
+): Promise<void> {
+  await appendHarnessEvent(specFolderPath, taskNumber, {
+    type: 'tool',
+    timestamp,
+    data: { tool: toolEvent.tool, summary: toolEvent.summary },
+  });
+  logger?.verbose(`[tool] ${toolEvent.tool}: ${toolEvent.summary}`);
+}
+
 export async function processOpencodeStdoutLine(
   line: string,
   specFolderPath: string,
   taskNumber: string,
+  logger?: Logger,
 ): Promise<void> {
   const trimmed = line.trim();
   if (!trimmed) {
@@ -246,20 +351,25 @@ export async function processOpencodeStdoutLine(
   }
 
   const eventObj = event as Record<string, unknown>;
+
+  const toolEvent = extractOpencodeToolEvent(eventObj);
+  if (toolEvent) {
+    await recordToolEvent(
+      specFolderPath,
+      taskNumber,
+      toolEvent,
+      resolveEventTimestamp(eventObj),
+      logger,
+    );
+    return;
+  }
+
   if (eventObj.type === 'step_finish') {
     const tokensData = extractOpencodeTokens(eventObj);
     if (tokensData) {
-      let timestamp = new Date().toISOString();
-      if (typeof eventObj.timestamp === 'number' || typeof eventObj.timestamp === 'string') {
-        const d = new Date(eventObj.timestamp);
-        if (!Number.isNaN(d.getTime())) {
-          timestamp = d.toISOString();
-        }
-      }
-
       await appendHarnessEvent(specFolderPath, taskNumber, {
         type: 'tokens',
-        timestamp,
+        timestamp: resolveEventTimestamp(eventObj),
         data: {
           promptTokens: tokensData.promptTokens,
           candidateTokens: tokensData.candidateTokens,
@@ -269,10 +379,11 @@ export async function processOpencodeStdoutLine(
         },
       });
     }
-  } else {
-    // Unknown event types such as step_start and text are logged at debug level without throwing
-    console.debug(`[opencode] Unknown event type: ${eventObj.type}`, eventObj);
+    return;
   }
+
+  // Unknown event types such as step_start and text are logged at debug level without throwing
+  console.debug(`[opencode] Unknown event type: ${eventObj.type}`, eventObj);
 }
 
 export class OpencodeEventStreamParser {
@@ -282,6 +393,7 @@ export class OpencodeEventStreamParser {
   constructor(
     private specFolderPath: string,
     private taskNumber: string,
+    private logger?: Logger,
   ) {}
 
   feed(chunk: string): void {
@@ -291,7 +403,9 @@ export class OpencodeEventStreamParser {
 
     for (const line of lines) {
       this.pending = this.pending.then(() =>
-        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber).catch(() => {}),
+        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
+          () => {},
+        ),
       );
     }
   }
@@ -301,7 +415,9 @@ export class OpencodeEventStreamParser {
       const line = this.buffer;
       this.buffer = '';
       this.pending = this.pending.then(() =>
-        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber).catch(() => {}),
+        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
+          () => {},
+        ),
       );
     }
     await this.pending;
@@ -406,7 +522,7 @@ export class OpencodeAdapter implements HarnessAdapter {
 
     const args = await buildOpencodeArgs(options);
     const bin = await resolveOpencodeBinary(config);
-    const streamParser = new OpencodeEventStreamParser(specFolderPath, taskNumber);
+    const streamParser = new OpencodeEventStreamParser(specFolderPath, taskNumber, options.logger);
 
     const result = await spawnWithTimeout({
       command: bin,

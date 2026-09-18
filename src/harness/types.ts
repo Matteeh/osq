@@ -1,14 +1,32 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
+import type { Logger } from '../core/logger.js';
 
 export type HarnessEventType =
   | 'started'
   | 'tokens'
+  | 'tool'
   | 'file_changed'
   | 'verify_ran'
   | 'result_written'
-  | 'exited';
+  | 'exited'
+  | 'done'
+  | 'dead';
+
+export interface ToolEventData {
+  tool: string;
+  summary: string;
+}
+
+export interface DoneEventData {
+  readonly task: string;
+}
+
+export interface DeadEventData {
+  readonly task: string;
+  readonly reason: string;
+}
 
 export interface HarnessEvent {
   type: HarnessEventType;
@@ -28,6 +46,7 @@ export interface SpawnTaskOptions {
   tier: 'coding' | 'smart';
   timeoutSeconds?: number;
   config?: OsqConfig;
+  logger?: Logger;
 }
 
 export interface SpawnResult {
@@ -35,6 +54,8 @@ export interface SpawnResult {
   error?: string;
   timedOut?: boolean;
   signal?: NodeJS.Signals | string | null;
+  pid?: number;
+  elapsedMs?: number;
 }
 
 export interface HarnessAdapter {

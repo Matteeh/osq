@@ -58,3 +58,13 @@ When all tasks within an approved spec are marked `done`:
 ## Delta from OpenCode harness adapter
 
 Update features/watcher-and-harness.md to document the OpenCode adapter (OpencodeAdapter) implementing HarnessAdapter, configuration options (opencode: bin, model, agent, variant), setup behavior creating .opencode/agent/osq-coder.md with managed blocks and strict tool permissions, spawn invocation arguments and file attachment protocol, stdout event stream parsing to tokens events, and watcher preflight verification.
+
+## Delta from Watcher observability
+
+Update features/watcher-and-harness.md to document the unified stderr logger, CLI verbosity flags (--verbose, --quiet), lifecycle logging for started and exited processes, periodic execution heartbeats, the standardized { type: 'tool', data: { tool, summary } } harness event, Antigravity stream-json event translation, runner result synthesis from final text stream events with synthesized: true frontmatter, and single-line task completion and failure outcome logs.
+
+## Delta from Report fixes
+
+Update `features/metrics-and-reporting.md` to document metric derivation rules (sourcing active specs from `deriveSpecState` and archived specs from `events.jsonl`), historical failure tracking by `dead` event reasons across retries, neutral token breakdown with cache-share percentage, reported cost display rules and harness price table disclaimer, file modification extraction from `edit`/`write` tool events, and structured `--json` command output.
+
+Update `features/watcher-and-harness.md` to document the addition of `done` and `dead` events appended to `.run/events/<n>.jsonl` whenever the runner writes a `done/<n>` or `dead/<n>.md` marker file.

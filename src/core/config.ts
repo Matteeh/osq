@@ -35,6 +35,10 @@ export interface OpencodeConfig {
   readonly variant?: string;
 }
 
+export interface LogConfig {
+  readonly heartbeatSeconds?: number;
+}
+
 export interface OsqConfig {
   readonly harness: string;
   readonly maxConcurrency: number;
@@ -43,7 +47,19 @@ export interface OsqConfig {
   readonly timeouts: OsqTimeouts;
   readonly agy?: AgyConfig;
   readonly opencode?: OpencodeConfig;
+  readonly log?: LogConfig;
 }
+
+export type OsqUserConfig = Partial<
+  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'log'>
+> & {
+  readonly limits?: Partial<OsqLimits>;
+  readonly paths?: Partial<OsqPaths>;
+  readonly timeouts?: Partial<OsqTimeouts>;
+  readonly agy?: Partial<AgyConfig>;
+  readonly opencode?: Partial<OpencodeConfig>;
+  readonly log?: Partial<LogConfig>;
+};
 
 export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
@@ -56,6 +72,9 @@ export const DEFAULT_CONFIG: OsqConfig = {
     bin: 'opencode',
     model: 'deepseek/deepseek-flash',
     agent: 'osq-coder',
+  },
+  log: {
+    heartbeatSeconds: 60,
   },
   limits: {
     maxScopeFiles: 8,
@@ -77,7 +96,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   },
 };
 
-export function defineConfig(config: Partial<OsqConfig>): OsqConfig {
+export function defineConfig(config: OsqUserConfig): OsqConfig {
   return {
     ...DEFAULT_CONFIG,
     ...config,
@@ -88,6 +107,10 @@ export function defineConfig(config: Partial<OsqConfig>): OsqConfig {
     opencode: {
       ...DEFAULT_CONFIG.opencode,
       ...(config.opencode || {}),
+    },
+    log: {
+      ...DEFAULT_CONFIG.log,
+      ...(config.log || {}),
     },
     limits: {
       ...DEFAULT_CONFIG.limits,
@@ -113,7 +136,7 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
   } catch {}
 
   const configFiles = ['osq.config.ts', 'osq.config.js', 'osq.config.mjs'];
-  let userConfig: Partial<OsqConfig> = {};
+  let userConfig: OsqUserConfig = {};
 
   for (const file of configFiles) {
     const fullPath = path.join(projectRoot, file);
@@ -129,9 +152,9 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
           interopDefault: true,
         });
         const loaded = await jiti.import(fullPath);
-        const resolved = (loaded as { default?: Partial<OsqConfig> })?.default || loaded;
+        const resolved = (loaded as { default?: OsqUserConfig })?.default || loaded;
         if (typeof resolved === 'object' && resolved !== null) {
-          userConfig = resolved as Partial<OsqConfig>;
+          userConfig = resolved as OsqUserConfig;
         }
       } catch (err) {
         if (process.env.DEBUG_OSQ) {

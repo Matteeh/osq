@@ -1,0 +1,32 @@
+{"type":"started","timestamp":"2026-09-17T21:56:41.687Z","data":{"tier":"coding","taskTitle":"When the opencode adapter sees a tool_use event, a tool event is emitted to events.jsonl, logged at verbose level","scope":["src/harness/types.ts","src/harness/opencode.ts","tests/opencode-tool-events.test.ts"],"entry":["src/harness/types.ts","src/harness/opencode.ts"],"skills":[]}}
+{"type":"tokens","timestamp":"2026-09-17T21:56:45.127Z","data":{"promptTokens":3912,"candidateTokens":190,"totalTokens":10277,"cachedTokens":6144,"cost":0.000737832}}
+{"type":"tokens","timestamp":"2026-09-17T21:56:46.640Z","data":{"promptTokens":5463,"candidateTokens":206,"totalTokens":15953,"cachedTokens":10240,"cost":0.00100017}}
+{"type":"tokens","timestamp":"2026-09-17T21:56:48.461Z","data":{"promptTokens":5390,"candidateTokens":170,"totalTokens":21489,"cachedTokens":15872,"cost":0.000992316}}
+{"type":"tokens","timestamp":"2026-09-17T21:56:52.004Z","data":{"promptTokens":2168,"candidateTokens":161,"totalTokens":24397,"cachedTokens":21376,"cost":0.000901128}}
+{"type":"tokens","timestamp":"2026-09-17T21:56:54.058Z","data":{"promptTokens":5752,"candidateTokens":144,"totalTokens":30400,"cachedTokens":24320,"cost":0.00113256}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:07.502Z","data":{"promptTokens":1195,"candidateTokens":159,"totalTokens":35010,"cachedTokens":30336,"cost":0.002357658}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:16.528Z","data":{"promptTokens":1422,"candidateTokens":136,"totalTokens":38586,"cachedTokens":34944,"cost":0.001650132}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:18.541Z","data":{"promptTokens":921,"candidateTokens":214,"totalTokens":39676,"cachedTokens":38528,"cost":0.000389934}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:25.495Z","data":{"promptTokens":346,"candidateTokens":2322,"totalTokens":42220,"cachedTokens":39552,"cost":0.001563756}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:27.706Z","data":{"promptTokens":252,"candidateTokens":334,"totalTokens":42611,"cachedTokens":41984,"cost":0.000388752}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:29.188Z","data":{"promptTokens":258,"candidateTokens":135,"totalTokens":42761,"cachedTokens":42368,"cost":0.000246804}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:30.916Z","data":{"promptTokens":152,"candidateTokens":214,"totalTokens":43021,"cachedTokens":42624,"cost":0.000297672}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:32.720Z","data":{"promptTokens":156,"candidateTokens":158,"totalTokens":43278,"cachedTokens":42880,"cost":0.00029724}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:36.150Z","data":{"promptTokens":157,"candidateTokens":821,"totalTokens":44114,"cachedTokens":43136,"cost":0.000645558}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:37.987Z","data":{"promptTokens":225,"candidateTokens":86,"totalTokens":44341,"cachedTokens":43904,"cost":0.000292662}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:39.978Z","data":{"promptTokens":772,"candidateTokens":261,"totalTokens":45369,"cachedTokens":44288,"cost":0.000434064}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:42.512Z","data":{"promptTokens":200,"candidateTokens":556,"totalTokens":45940,"cachedTokens":45184,"cost":0.000499152}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:45.260Z","data":{"promptTokens":259,"candidateTokens":468,"totalTokens":46446,"cachedTokens":45696,"cost":0.000470538}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:46.809Z","data":{"promptTokens":253,"candidateTokens":128,"totalTokens":46606,"cachedTokens":46208,"cost":0.000263574}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:49.185Z","data":{"promptTokens":157,"candidateTokens":72,"totalTokens":46831,"cachedTokens":46464,"cost":0.000288942}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:51.438Z","data":{"promptTokens":393,"candidateTokens":123,"totalTokens":47263,"cachedTokens":46720,"cost":0.00028911}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:53.375Z","data":{"promptTokens":415,"candidateTokens":85,"totalTokens":47842,"cachedTokens":47232,"cost":0.000320946}}
+{"type":"tokens","timestamp":"2026-09-17T21:57:55.899Z","data":{"promptTokens":252,"candidateTokens":83,"totalTokens":47951,"cachedTokens":47616,"cost":0.000230448}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:00.656Z","data":{"promptTokens":242,"candidateTokens":120,"totalTokens":48120,"cachedTokens":47744,"cost":0.000259932}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:02.091Z","data":{"promptTokens":569,"candidateTokens":83,"totalTokens":48696,"cachedTokens":48000,"cost":0.00030555}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:04.480Z","data":{"promptTokens":2505,"candidateTokens":51,"totalTokens":51503,"cachedTokens":48640,"cost":0.00073647}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:11.212Z","data":{"promptTokens":322,"candidateTokens":1301,"totalTokens":53386,"cachedTokens":51456,"cost":0.001167468}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:13.043Z","data":{"promptTokens":154,"candidateTokens":212,"totalTokens":53614,"cachedTokens":53248,"cost":0.000310044}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:15.513Z","data":{"promptTokens":330,"candidateTokens":402,"totalTokens":54236,"cachedTokens":53504,"cost":0.000451212}}
+{"type":"exited","timestamp":"2026-09-17T21:58:15.580Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T21:58:15.581Z","data":{"command":"node --import tsx --test tests/opencode-tool-events.test.ts"}}

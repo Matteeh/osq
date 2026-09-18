@@ -2,65 +2,81 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { parseFrontmatter } from './parser.js';
+import { compareNumericPrefix, deriveSpecState } from './state.js';
 
 export interface SpecMetrics {
-  total: number;
-  active: number;
-  archived: number;
+  readonly total: number;
+  readonly active: number;
+  readonly archived: number;
 }
 
 export interface TaskMetrics {
-  total: number;
-  done: number;
-  dead: number;
-  running: number;
-  pending: number;
+  readonly total: number;
+  readonly done: number;
+  readonly dead: number;
+  readonly running: number;
+  readonly pending: number;
 }
 
 export interface DurationMetrics {
-  totalMs: number;
-  totalSeconds: number;
-  avgMs: number;
-  avgSeconds: number;
-  formattedTotal: string;
-  formattedAvg: string;
+  readonly totalMs: number;
+  readonly totalSeconds: number;
+  readonly avgMs: number;
+  readonly avgSeconds: number;
+  readonly formattedTotal: string;
+  readonly formattedAvg: string;
 }
 
 export interface TokenMetrics {
-  promptTokens: number;
-  candidateTokens: number;
-  totalTokens: number;
-  prompt: number;
-  candidate: number;
-  total: number;
+  readonly input: number;
+  readonly cached_input: number;
+  readonly output: number;
+  readonly reasoning: number;
+  readonly total: number;
+  readonly cacheSharePercent: number;
+  // Backward compatibility
+  readonly promptTokens: number;
+  readonly candidateTokens: number;
+  readonly totalTokens: number;
+  readonly prompt: number;
+  readonly candidate: number;
 }
 
 export interface FileChangeMetrics {
-  totalEvents: number;
-  totalChanges: number;
-  uniqueFiles: string[];
-  uniqueCount: number;
+  readonly totalChanges: number;
+  readonly uniqueCount: number;
+  readonly uniqueFiles: readonly string[];
+  // Backward compatibility
+  readonly totalEvents: number;
+}
+
+export interface CostMetrics {
+  readonly total: number;
+  readonly perSpec: Record<string, number>;
+  readonly formattedTotal: string;
 }
 
 export interface MetricsReport {
-  specs: SpecMetrics;
-  tasks: TaskMetrics;
-  totalSpecs: number;
-  activeSpecs: number;
-  archivedSpecs: number;
-  totalTasks: number;
-  doneTasks: number;
-  deadTasks: number;
-  runningTasks: number;
-  pendingTasks: number;
-  completionRate: number;
-  completionPercentage: number;
-  completionRatio: number;
-  deadBreakdown: Record<string, number>;
-  failureBreakdown: Record<string, number>;
-  durations: DurationMetrics;
-  tokens: TokenMetrics;
-  fileChanges: FileChangeMetrics;
+  readonly completionRate: number;
+  readonly cost?: CostMetrics;
+  readonly durations: DurationMetrics;
+  readonly failureBreakdown: Record<string, number>;
+  readonly fileChanges: FileChangeMetrics;
+  readonly specs: SpecMetrics;
+  readonly tasks: TaskMetrics;
+  readonly tokens: TokenMetrics;
+  // Backward-compatibility aliases retained for existing consumers.
+  readonly totalSpecs: number;
+  readonly activeSpecs: number;
+  readonly archivedSpecs: number;
+  readonly totalTasks: number;
+  readonly doneTasks: number;
+  readonly deadTasks: number;
+  readonly runningTasks: number;
+  readonly pendingTasks: number;
+  readonly completionPercentage: number;
+  readonly completionRatio: number;
+  readonly deadBreakdown: Record<string, number>;
 }
 
 export function formatDuration(ms: number): string {
@@ -70,6 +86,82 @@ export function formatDuration(ms: number): string {
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
   return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+}
+
+export function formatCost(total: number): string {
+  const fixed = total >= 0.01 ? total.toFixed(2) : total.toFixed(4);
+  return `$${fixed}`;
+}
+
+const FILE_CHANGE_TOOLS = new Set(['edit', 'write']);
+
+/**
+ * Trims surrounding whitespace and strips a leading `./` so paths written by
+ * different harnesses collapse to a single canonical form before deduplication.
+ */
+function normalizeFilePath(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const cleaned = trimmed.replace(/^(?:\.\/)+/, '');
+  return cleaned || null;
+}
+
+/**
+ * Extracts a file path from a tool or file_changed event payload. The summary
+ * field carries the target path for file tools such as edit and write.
+ */
+function extractFilePath(data: Record<string, unknown>): string | null {
+  for (const candidate of [data.summary, data.path, data.filePath, data.file, data.filename]) {
+    const filePath = normalizeFilePath(candidate);
+    if (filePath !== null) return filePath;
+  }
+  return null;
+}
+
+interface ArchivedTerminalEvent {
+  status: 'done' | 'dead';
+  reason?: string;
+}
+
+async function readArchivedTerminalEvents(
+  specFolderPath: string,
+): Promise<Map<string, ArchivedTerminalEvent>> {
+  const terminalEvents = new Map<string, ArchivedTerminalEvent>();
+  const eventsDir = path.join(specFolderPath, '.run', 'events');
+
+  let eventFiles: string[] = [];
+  try {
+    eventFiles = (await fs.readdir(eventsDir))
+      .filter((e) => e.endsWith('.jsonl'))
+      .sort(compareNumericPrefix);
+  } catch {
+    return terminalEvents;
+  }
+
+  for (const eventFile of eventFiles) {
+    const fallbackTask = eventFile.replace(/\.jsonl$/, '');
+    const content = await fs.readFile(path.join(eventsDir, eventFile), 'utf8').catch(() => '');
+    if (!content) continue;
+
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const event = JSON.parse(trimmed);
+        if (event.type !== 'done' && event.type !== 'dead') continue;
+        const task =
+          typeof event.data?.task === 'string' && event.data.task ? event.data.task : fallbackTask;
+        const reason =
+          typeof event.data?.reason === 'string' && event.data.reason.trim()
+            ? event.data.reason
+            : undefined;
+        terminalEvents.set(task, { status: event.type, reason });
+      } catch {}
+    }
+  }
+
+  return terminalEvents;
 }
 
 export async function getMetricsReport(
@@ -132,15 +224,21 @@ export async function getMetricsReport(
   let deadTasks = 0;
   let runningTasks = 0;
   let pendingTasks = 0;
-  const deadBreakdown: Record<string, number> = {};
+  const failureBreakdown: Record<string, number> = {};
 
   let totalDurationMs = 0;
   let tasksWithDurationCount = 0;
-  let totalPromptTokens = 0;
-  let totalCandidateTokens = 0;
+  let totalInput = 0;
+  let totalCachedInput = 0;
+  let totalOutput = 0;
+  let totalReasoning = 0;
   let totalTokens = 0;
   let totalFileChanges = 0;
   const uniqueFiles = new Set<string>();
+  let totalCost = 0;
+  const perSpecCost: Record<string, number> = {};
+
+  const archivedSet = new Set(archivedFolders);
 
   for (const folderPath of allSpecFolders) {
     const runDir = path.join(folderPath, '.run');
@@ -148,43 +246,69 @@ export async function getMetricsReport(
 
     let taskFiles: string[] = [];
     try {
-      taskFiles = (await fs.readdir(tasksDir)).filter((e) => e.endsWith('.md'));
+      taskFiles = (await fs.readdir(tasksDir))
+        .filter((e) => e.endsWith('.md'))
+        .sort(compareNumericPrefix);
     } catch {
       taskFiles = [];
     }
 
     totalTasks += taskFiles.length;
 
-    for (const taskFile of taskFiles) {
-      const taskNumber = taskFile.replace(/\.md$/, '');
-      const donePath = path.join(runDir, 'done', taskNumber);
-      const isDone = await fs
-        .stat(donePath)
-        .then(() => true)
-        .catch(() => false);
+    if (archivedSet.has(folderPath)) {
+      // Archived specs are complete. Their task states come from terminal
+      // done/dead events when present, then marker files, and finally fall
+      // back to done because an archived spec never reports pending work.
+      const terminalEvents = await readArchivedTerminalEvents(folderPath);
 
-      if (isDone) {
-        doneTasks++;
-      } else {
+      for (const taskFile of taskFiles) {
+        const taskNumber = taskFile.replace(/\.md$/, '');
+        const terminal = terminalEvents.get(taskNumber);
+
+        if (terminal) {
+          if (terminal.status === 'done') {
+            doneTasks++;
+          } else {
+            deadTasks++;
+          }
+          continue;
+        }
+
+        const donePath = path.join(runDir, 'done', taskNumber);
+        const isDone = await fs
+          .stat(donePath)
+          .then(() => true)
+          .catch(() => false);
+        if (isDone) {
+          doneTasks++;
+          continue;
+        }
+
         const deadPath = path.join(runDir, 'dead', `${taskNumber}.md`);
         const deadContent = await fs.readFile(deadPath, 'utf8').catch(() => null);
         if (deadContent !== null) {
           deadTasks++;
-          const { data } = parseFrontmatter(deadContent);
-          const reason =
-            typeof data.reason === 'string' && data.reason.trim() ? data.reason.trim() : 'unknown';
-          deadBreakdown[reason] = (deadBreakdown[reason] || 0) + 1;
-        } else {
-          const runningPath = path.join(runDir, 'running', `${taskNumber}.pid`);
-          const isRunning = await fs
-            .stat(runningPath)
-            .then(() => true)
-            .catch(() => false);
-          if (isRunning) {
+          continue;
+        }
+
+        doneTasks++;
+      }
+    } else {
+      const specState = await deriveSpecState(projectRoot, folderPath);
+      for (const task of specState.tasks) {
+        switch (task.status) {
+          case 'done':
+            doneTasks++;
+            break;
+          case 'dead':
+            deadTasks++;
+            break;
+          case 'running':
             runningTasks++;
-          } else {
+            break;
+          case 'pending':
             pendingTasks++;
-          }
+            break;
         }
       }
     }
@@ -197,6 +321,8 @@ export async function getMetricsReport(
     } catch {
       eventFiles = [];
     }
+
+    let specHasDeadEvents = false;
 
     for (const eventFile of eventFiles) {
       const eventFilePath = path.join(eventsDir, eventFile);
@@ -229,35 +355,93 @@ export async function getMetricsReport(
           }
 
           if (event.type === 'tokens' && event.data) {
-            const prompt = Number(event.data.promptTokens ?? event.data.prompt ?? 0) || 0;
-            const candidate =
+            const data = event.data;
+            const input =
+              Number(data.input ?? data.input_tokens ?? data.promptTokens ?? data.prompt ?? 0) || 0;
+            const output =
               Number(
-                event.data.candidateTokens ??
-                  event.data.candidate ??
-                  event.data.completionTokens ??
+                data.output ??
+                  data.output_tokens ??
+                  data.candidateTokens ??
+                  data.candidate ??
+                  data.completionTokens ??
                   0,
               ) || 0;
-            const total =
-              Number(event.data.totalTokens ?? event.data.total ?? prompt + candidate) || 0;
+            const reasoning =
+              Number(data.reasoning ?? data.thinking_tokens ?? data.reasoningTokens ?? 0) || 0;
 
-            totalPromptTokens += prompt;
-            totalCandidateTokens += candidate;
+            const cacheValue =
+              typeof data.cache === 'number'
+                ? data.cache
+                : typeof data.cache === 'object' &&
+                    data.cache !== null &&
+                    !Array.isArray(data.cache)
+                  ? (data.cache as Record<string, unknown>).read
+                  : undefined;
+            const reportedCachedInput =
+              Number(
+                data.cached_input ?? data.cachedTokens ?? data.cache_read_tokens ?? cacheValue ?? 0,
+              ) || 0;
+
+            const rawTotal = data.total ?? data.totalTokens;
+            const hasReportedTotal = rawTotal !== undefined && rawTotal !== null;
+            const reportedTotal = Number(rawTotal) || 0;
+
+            // A harness-reported total is authoritative. Once input, output, and
+            // reasoning are known, the remaining cached input is derived so the
+            // neutral breakdown always sums back to the reported total. Harnesses
+            // without an explicit total fall back to their own cache counters.
+            const cachedInput = hasReportedTotal
+              ? Math.max(0, reportedTotal - input - output - reasoning)
+              : reportedCachedInput;
+            const total = hasReportedTotal
+              ? reportedTotal
+              : input + cachedInput + output + reasoning;
+
+            totalInput += input;
+            totalCachedInput += cachedInput;
+            totalOutput += output;
+            totalReasoning += reasoning;
             totalTokens += total;
+          }
+
+          if (
+            event.data &&
+            typeof event.data.cost === 'number' &&
+            Number.isFinite(event.data.cost)
+          ) {
+            const reportedCost = event.data.cost;
+            totalCost += reportedCost;
+            const specKey = path.basename(folderPath);
+            perSpecCost[specKey] = (perSpecCost[specKey] ?? 0) + reportedCost;
+          }
+
+          if (event.type === 'dead') {
+            specHasDeadEvents = true;
+            const reason =
+              typeof event.data?.reason === 'string' && event.data.reason.trim()
+                ? event.data.reason.trim()
+                : 'unknown';
+            failureBreakdown[reason] = (failureBreakdown[reason] || 0) + 1;
+          }
+
+          if (event.type === 'tool' && event.data) {
+            const tool = event.data.tool;
+            if (typeof tool === 'string' && FILE_CHANGE_TOOLS.has(tool.toLowerCase())) {
+              totalFileChanges++;
+              const filePath = extractFilePath(event.data);
+              if (filePath !== null) uniqueFiles.add(filePath);
+            }
           }
 
           if (event.type === 'file_changed' && event.data) {
             totalFileChanges++;
-            if (typeof event.data.file === 'string') {
-              uniqueFiles.add(event.data.file);
-            } else if (typeof event.data.path === 'string') {
-              uniqueFiles.add(event.data.path);
-            } else if (typeof event.data.filePath === 'string') {
-              uniqueFiles.add(event.data.filePath);
-            } else if (typeof event.data.filename === 'string') {
-              uniqueFiles.add(event.data.filename);
-            } else if (Array.isArray(event.data.files)) {
+            const filePath = extractFilePath(event.data);
+            if (filePath !== null) uniqueFiles.add(filePath);
+            if (Array.isArray(event.data.files)) {
               for (const f of event.data.files) {
-                if (typeof f === 'string') uniqueFiles.add(f);
+                const normalized = normalizeFilePath(f);
+                if (normalized !== null) uniqueFiles.add(normalized);
               }
             }
           }
@@ -278,6 +462,28 @@ export async function getMetricsReport(
         }
       }
     }
+
+    // Legacy specs without any dead event in the append-only stream fall back
+    // to the current dead markers so historical reasons are still reported.
+    if (!specHasDeadEvents) {
+      const deadDir = path.join(runDir, 'dead');
+      let deadFiles: string[] = [];
+      try {
+        deadFiles = await fs.readdir(deadDir);
+      } catch {
+        deadFiles = [];
+      }
+
+      for (const deadFile of deadFiles) {
+        if (!deadFile.endsWith('.md')) continue;
+        const deadContent = await fs.readFile(path.join(deadDir, deadFile), 'utf8').catch(() => '');
+        if (!deadContent) continue;
+        const { data } = parseFrontmatter(deadContent);
+        const reason =
+          typeof data.reason === 'string' && data.reason.trim() ? data.reason.trim() : 'unknown';
+        failureBreakdown[reason] = (failureBreakdown[reason] || 0) + 1;
+      }
+    }
   }
 
   const activeSpecs = activeFolders.length;
@@ -295,6 +501,19 @@ export async function getMetricsReport(
 
   const formattedTotal = formatDuration(totalDurationMs);
   const formattedAvg = formatDuration(avgDurationMs);
+
+  const cost: CostMetrics | undefined =
+    totalCost > 0
+      ? {
+          total: totalCost,
+          perSpec: Object.fromEntries(
+            Object.entries(perSpecCost)
+              .filter(([, value]) => value > 0)
+              .sort(([a], [b]) => a.localeCompare(b)),
+          ),
+          formattedTotal: formatCost(totalCost),
+        }
+      : undefined;
 
   return {
     specs: {
@@ -320,8 +539,8 @@ export async function getMetricsReport(
     completionRate,
     completionPercentage,
     completionRatio,
-    deadBreakdown,
-    failureBreakdown: deadBreakdown,
+    deadBreakdown: failureBreakdown,
+    failureBreakdown,
     durations: {
       totalMs: totalDurationMs,
       totalSeconds,
@@ -331,13 +550,22 @@ export async function getMetricsReport(
       formattedAvg,
     },
     tokens: {
-      promptTokens: totalPromptTokens,
-      candidateTokens: totalCandidateTokens,
-      totalTokens,
-      prompt: totalPromptTokens,
-      candidate: totalCandidateTokens,
+      input: totalInput,
+      cached_input: totalCachedInput,
+      output: totalOutput,
+      reasoning: totalReasoning,
       total: totalTokens,
+      cacheSharePercent:
+        totalInput + totalCachedInput > 0
+          ? Math.round((totalCachedInput / (totalInput + totalCachedInput)) * 1000) / 10
+          : 0,
+      promptTokens: totalInput,
+      candidateTokens: totalOutput,
+      totalTokens,
+      prompt: totalInput,
+      candidate: totalOutput,
     },
+    ...(cost ? { cost } : {}),
     fileChanges: {
       totalEvents: totalFileChanges,
       totalChanges: totalFileChanges,
@@ -368,7 +596,9 @@ export function formatMetricsReport(report: MetricsReport): string {
 
   lines.push('');
   lines.push('Failure Breakdown:');
-  const failureEntries = Object.entries(report.deadBreakdown);
+  const failureEntries = Object.entries(report.failureBreakdown).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
   if (failureEntries.length === 0) {
     lines.push('  (no failures)');
   } else {
@@ -384,9 +614,19 @@ export function formatMetricsReport(report: MetricsReport): string {
 
   lines.push('');
   lines.push('Token Usage:');
-  lines.push(`  Prompt tokens: ${report.tokens.promptTokens}`);
-  lines.push(`  Candidate tokens: ${report.tokens.candidateTokens}`);
-  lines.push(`  Total tokens: ${report.tokens.totalTokens}`);
+  lines.push(`  Input: ${report.tokens.input}`);
+  lines.push(
+    `  Cached input: ${report.tokens.cached_input} (${report.tokens.cacheSharePercent}% cache share)`,
+  );
+  lines.push(`  Output: ${report.tokens.output}`);
+  lines.push(`  Reasoning: ${report.tokens.reasoning}`);
+  lines.push(`  Total tokens: ${report.tokens.total}`);
+
+  if (report.cost && report.cost.total > 0) {
+    lines.push('');
+    lines.push('Cost:');
+    lines.push(`  Reported cost: ${report.cost.formattedTotal}`);
+  }
 
   lines.push('');
   lines.push('File Changes:');

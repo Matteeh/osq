@@ -1,0 +1,30 @@
+{"type":"started","timestamp":"2026-09-17T21:58:15.963Z","data":{"tier":"coding","taskTitle":"When the agy adapter runs with stream-json format, structured stream events are translated into harness events","scope":["src/harness/agy.ts","tests/agy-stream-events.test.ts"],"entry":["src/harness/agy.ts"],"skills":[]}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:19.110Z","data":{"promptTokens":4045,"candidateTokens":139,"totalTokens":10380,"cachedTokens":6144,"cost":0.000739782}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:20.875Z","data":{"promptTokens":2794,"candidateTokens":161,"totalTokens":13345,"cachedTokens":10368,"cost":0.000560004}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:22.354Z","data":{"promptTokens":2190,"candidateTokens":155,"totalTokens":15725,"cachedTokens":13312,"cost":0.000502236}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:24.539Z","data":{"promptTokens":9880,"candidateTokens":163,"totalTokens":25728,"cachedTokens":15616,"cost":0.001668048}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:26.649Z","data":{"promptTokens":6540,"candidateTokens":153,"totalTokens":32570,"cachedTokens":25728,"cost":0.001239384}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:28.588Z","data":{"promptTokens":2494,"candidateTokens":120,"totalTokens":35202,"cachedTokens":32512,"cost":0.000589236}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:31.759Z","data":{"promptTokens":1798,"candidateTokens":93,"totalTokens":37711,"cachedTokens":35200,"cost":0.0008031}}
+{"type":"tokens","timestamp":"2026-09-17T21:58:51.310Z","data":{"promptTokens":5823,"candidateTokens":67,"totalTokens":48405,"cachedTokens":37632,"cost":0.003956346}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:03.226Z","data":{"promptTokens":702,"candidateTokens":3172,"totalTokens":52947,"cachedTokens":48384,"cost":0.002567052}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:10.380Z","data":{"promptTokens":227,"candidateTokens":282,"totalTokens":55068,"cachedTokens":52736,"cost":0.001455258}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:11.831Z","data":{"promptTokens":171,"candidateTokens":204,"totalTokens":55287,"cachedTokens":54912,"cost":0.000312786}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:17.393Z","data":{"promptTokens":134,"candidateTokens":1729,"totalTokens":57069,"cachedTokens":55168,"cost":0.001245804}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:20.196Z","data":{"promptTokens":252,"candidateTokens":342,"totalTokens":57651,"cachedTokens":56832,"cost":0.000548496}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:23.354Z","data":{"promptTokens":194,"candidateTokens":52,"totalTokens":57874,"cachedTokens":57472,"cost":0.000326316}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:25.046Z","data":{"promptTokens":160,"candidateTokens":59,"totalTokens":57947,"cachedTokens":57728,"cost":0.000232584}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:28.851Z","data":{"promptTokens":683,"candidateTokens":124,"totalTokens":59259,"cachedTokens":57856,"cost":0.000708018}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:30.918Z","data":{"promptTokens":138,"candidateTokens":59,"totalTokens":59333,"cachedTokens":59136,"cost":0.000233508}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:32.962Z","data":{"promptTokens":381,"candidateTokens":127,"totalTokens":59872,"cachedTokens":59264,"cost":0.000371142}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:38.714Z","data":{"promptTokens":239,"candidateTokens":68,"totalTokens":59995,"cachedTokens":59648,"cost":0.000279594}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:40.313Z","data":{"promptTokens":676,"candidateTokens":47,"totalTokens":60662,"cachedTokens":59904,"cost":0.000330312}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:42.814Z","data":{"promptTokens":775,"candidateTokens":286,"totalTokens":61741,"cachedTokens":60544,"cost":0.000551082}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:44.563Z","data":{"promptTokens":199,"candidateTokens":184,"totalTokens":61951,"cachedTokens":61568,"cost":0.000324954}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:47.511Z","data":{"promptTokens":142,"candidateTokens":80,"totalTokens":62046,"cachedTokens":61824,"cost":0.000254772}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:52.182Z","data":{"promptTokens":257,"candidateTokens":47,"totalTokens":62285,"cachedTokens":61952,"cost":0.000270006}}
+{"type":"tokens","timestamp":"2026-09-17T21:59:59.760Z","data":{"promptTokens":142,"candidateTokens":1567,"totalTokens":64186,"cachedTokens":62208,"cost":0.001309524}}
+{"type":"tokens","timestamp":"2026-09-17T22:00:01.415Z","data":{"promptTokens":202,"candidateTokens":59,"totalTokens":64274,"cachedTokens":64000,"cost":0.0002655}}
+{"type":"tokens","timestamp":"2026-09-17T22:00:04.083Z","data":{"promptTokens":246,"candidateTokens":360,"totalTokens":64734,"cachedTokens":64128,"cost":0.000445284}}
+{"type":"exited","timestamp":"2026-09-17T22:00:04.150Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T22:00:04.151Z","data":{"command":"node --import tsx --test tests/agy-stream-events.test.ts"}}

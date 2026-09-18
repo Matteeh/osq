@@ -21,6 +21,8 @@ export interface SpawnProcessResult {
   timedOut: boolean;
   signal?: NodeJS.Signals | string | null;
   error?: string;
+  pid?: number;
+  elapsedMs?: number;
 }
 
 export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<SpawnProcessResult> {
@@ -37,6 +39,7 @@ export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<Spaw
   } = options;
 
   return new Promise((resolve) => {
+    const startTime = Date.now();
     let timedOut = false;
     let settled = false;
     let timeoutTimer: NodeJS.Timeout | null = null;
@@ -49,6 +52,7 @@ export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<Spaw
       env,
       stdio,
     });
+    const childPid = child.pid;
 
     const cleanup = () => {
       if (timeoutTimer) {
@@ -65,7 +69,11 @@ export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<Spaw
       if (settled) return;
       settled = true;
       cleanup();
-      resolve(result);
+      resolve({
+        ...result,
+        pid: childPid,
+        elapsedMs: Date.now() - startTime,
+      });
     };
 
     if (timeoutSeconds > 0) {

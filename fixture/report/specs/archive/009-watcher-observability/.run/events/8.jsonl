@@ -1,0 +1,32 @@
+{"type":"started","timestamp":"2026-09-17T22:02:31.825Z","data":{"tier":"coding","taskTitle":"When verification completes or dead markers are written, task outcomes are logged on a single line","scope":["src/watcher/runner.ts","tests/runner-outcome-logging.test.ts"],"entry":["src/watcher/runner.ts"],"skills":[]}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:34.932Z","data":{"promptTokens":3759,"candidateTokens":142,"totalTokens":10085,"cachedTokens":6144,"cost":0.000691482}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:36.155Z","data":{"promptTokens":5498,"candidateTokens":97,"totalTokens":15625,"cachedTokens":9984,"cost":0.000940452}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:38.043Z","data":{"promptTokens":3062,"candidateTokens":110,"totalTokens":18889,"cachedTokens":15616,"cost":0.000632748}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:42.046Z","data":{"promptTokens":4310,"candidateTokens":121,"totalTokens":23992,"cachedTokens":18816,"cost":0.001222548}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:44.386Z","data":{"promptTokens":984,"candidateTokens":112,"totalTokens":25242,"cachedTokens":23936,"cost":0.000412608}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:49.705Z","data":{"promptTokens":1322,"candidateTokens":52,"totalTokens":27592,"cachedTokens":25216,"cost":0.000906348}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:54.229Z","data":{"promptTokens":2129,"candidateTokens":54,"totalTokens":30514,"cachedTokens":27520,"cost":0.00092091}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:55.785Z","data":{"promptTokens":211,"candidateTokens":76,"totalTokens":30623,"cachedTokens":30336,"cost":0.000168258}}
+{"type":"tokens","timestamp":"2026-09-17T22:02:57.024Z","data":{"promptTokens":1112,"candidateTokens":53,"totalTokens":31771,"cachedTokens":30592,"cost":0.000298776}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:01.226Z","data":{"promptTokens":1447,"candidateTokens":53,"totalTokens":33983,"cachedTokens":31744,"cost":0.000787482}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:02.764Z","data":{"promptTokens":950,"candidateTokens":51,"totalTokens":34987,"cachedTokens":33920,"cost":0.00031446}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:04.329Z","data":{"promptTokens":1353,"candidateTokens":90,"totalTokens":36464,"cachedTokens":34944,"cost":0.000407982}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:15.570Z","data":{"promptTokens":629,"candidateTokens":2584,"totalTokens":40368,"cachedTokens":36352,"cost":0.002235606}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:17.819Z","data":{"promptTokens":192,"candidateTokens":292,"totalTokens":40717,"cachedTokens":40192,"cost":0.000349176}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:19.902Z","data":{"promptTokens":156,"candidateTokens":224,"totalTokens":40983,"cachedTokens":40576,"cost":0.000295728}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:21.584Z","data":{"promptTokens":166,"candidateTokens":226,"totalTokens":41224,"cachedTokens":40832,"cost":0.000282996}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:23.397Z","data":{"promptTokens":151,"candidateTokens":210,"totalTokens":41449,"cachedTokens":41088,"cost":0.000271914}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:25.075Z","data":{"promptTokens":248,"candidateTokens":202,"totalTokens":41666,"cachedTokens":41216,"cost":0.000282048}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:26.973Z","data":{"promptTokens":209,"candidateTokens":211,"totalTokens":42029,"cachedTokens":41472,"cost":0.000364566}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:28.524Z","data":{"promptTokens":188,"candidateTokens":197,"totalTokens":42275,"cachedTokens":41856,"cost":0.000292368}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:30.097Z","data":{"promptTokens":178,"candidateTokens":192,"totalTokens":42488,"cachedTokens":42112,"cost":0.000271836}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:31.811Z","data":{"promptTokens":135,"candidateTokens":215,"totalTokens":42760,"cachedTokens":42368,"cost":0.000301554}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:35.131Z","data":{"promptTokens":151,"candidateTokens":85,"totalTokens":42932,"cachedTokens":42624,"cost":0.000244722}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:41.372Z","data":{"promptTokens":405,"candidateTokens":120,"totalTokens":43484,"cachedTokens":42880,"cost":0.00030879}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:44.121Z","data":{"promptTokens":514,"candidateTokens":51,"totalTokens":44356,"cachedTokens":43392,"cost":0.000477276}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:45.681Z","data":{"promptTokens":2220,"candidateTokens":56,"totalTokens":46643,"cachedTokens":44288,"cost":0.000546864}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:51.826Z","data":{"promptTokens":3716,"candidateTokens":1069,"totalTokens":51616,"cachedTokens":46592,"cost":0.001481976}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:54.984Z","data":{"promptTokens":176,"candidateTokens":89,"totalTokens":51743,"cachedTokens":51456,"cost":0.000247368}}
+{"type":"tokens","timestamp":"2026-09-17T22:03:57.477Z","data":{"promptTokens":224,"candidateTokens":366,"totalTokens":52174,"cachedTokens":51584,"cost":0.000407952}}
+{"type":"exited","timestamp":"2026-09-17T22:03:57.546Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T22:03:57.547Z","data":{"command":"node --import tsx --test tests/runner-outcome-logging.test.ts"}}

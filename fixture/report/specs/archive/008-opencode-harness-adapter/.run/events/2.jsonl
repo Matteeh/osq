@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-17T19:42:24.552Z","data":{"tier":"coding","taskTitle":"When opencode configuration is loaded, default options are established, adapter is registered, README is updated","scope":["src/core/config.ts","src/harness/index.ts","src/harness/opencode.ts","README.md","tests/opencode-config.test.ts"],"entry":["src/core/config.ts","src/harness/index.ts"],"skills":[]}}
+{"type":"exited","timestamp":"2026-09-17T19:44:45.173Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"verify_ran","timestamp":"2026-09-17T19:44:45.174Z","data":{"command":"node --import tsx --test tests/opencode-config.test.ts"}}

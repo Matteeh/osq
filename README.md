@@ -109,9 +109,9 @@ Rules the lint can't check: title reads "when X, Y happens"; slice vertically so
 - `done` means the watcher ran `verify` itself in a timeout-bounded process group after the agent exited. The agent's claim is not enough.
 - Feature docs are only ever changed by the watcher applying an approved delta. Agents never touch `features/`.
 - The agent prompt protocol restricts write paths to `.run/results/` and edits to `scope`. All markers and checkboxes are written by the watcher.
-- No result file on exit is `dead` with `reason: no_result`. Nothing disappears silently.
+- An agent that exits without writing `.run/results/<n>.md` is not lost: if the adapter captured a final text message, the watcher synthesizes a result file (`synthesized: true`) from it and proceeds to verify. Only an exit with neither a result file nor final text is `dead` with `reason: no_result`. Nothing disappears silently.
 
-Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout), `spec_conflict`, `already_running`, `no_result`, `crashed`, `timeout`.
+Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout), `spec_conflict`, `already_running`, `no_result` (no result file and no final text), `crashed`, `timeout`.
 
 ## Harnesses
 
@@ -152,6 +152,8 @@ osq status          every change and task with its state
 osq show <id>       spec, tasks, results, dead markers, event timeline
 osq report          completion rate, dead by reason, cost and time per task
 ```
+
+`osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. Reported cost sums the `cost` values carried by harness events. Reported cost reflects the harness's internal price table rather than the invoice.
 
 ## Not yet
 

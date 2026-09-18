@@ -1,4 +1,0 @@
-{"type":"started","timestamp":"2026-09-17T21:37:46.166Z","data":{"tier":"coding","taskTitle":"When osq.config.ts sets opencode options, defineConfig typechecks with full schema support","scope":["src/core/config.ts","src/index.ts","osq.config.ts","tests/opencode-config.test.ts"],"entry":["src/core/config.ts","src/index.ts"],"skills":[]}}
-{"type":"exited","timestamp":"2026-09-17T21:37:46.919Z","data":{"exitCode":1,"timedOut":false}}
-{"type":"started","timestamp":"2026-09-17T21:48:28.722Z","data":{"tier":"coding","taskTitle":"When osq.config.ts sets opencode options, defineConfig typechecks with full schema support","scope":["src/core/config.ts","src/index.ts","osq.config.ts","tests/opencode-config.test.ts"],"entry":["src/core/config.ts","src/index.ts"],"skills":[]}}
-{"type":"exited","timestamp":"2026-09-17T21:48:29.455Z","data":{"exitCode":1,"timedOut":false}}

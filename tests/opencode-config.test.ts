@@ -3,7 +3,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG, type OsqConfig, defineConfig, loadConfig } from '../src/core/config.js';
+import {
+  DEFAULT_CONFIG,
+  type OsqConfig,
+  type OsqUserConfig,
+  defineConfig,
+  loadConfig,
+} from '../src/core/config.js';
 import { OpencodeAdapter, getHarnessAdapter } from '../src/harness/index.js';
 
 describe('OpenCode Configuration and Adapter Registration', () => {
@@ -55,6 +61,29 @@ describe('OpenCode Configuration and Adapter Registration', () => {
     assert.equal(DEFAULT_CONFIG.opencode.model, 'deepseek/deepseek-flash');
     assert.equal(DEFAULT_CONFIG.opencode.agent, 'osq-coder');
     assert.equal(DEFAULT_CONFIG.opencode.variant, undefined);
+  });
+
+  it('OsqUserConfig accepts partial opencode fields and defineConfig merges them over DEFAULT_CONFIG', () => {
+    const userConfig: OsqUserConfig = {
+      harness: 'opencode',
+      opencode: { variant: 'thinking' },
+      log: { heartbeatSeconds: 5 },
+    };
+
+    const defined = defineConfig(userConfig);
+
+    assert.equal(defined.opencode?.bin, 'opencode');
+    assert.equal(defined.opencode?.model, 'deepseek/deepseek-flash');
+    assert.equal(defined.opencode?.agent, 'osq-coder');
+    assert.equal(defined.opencode?.variant, 'thinking');
+    assert.equal(defined.log?.heartbeatSeconds, 5);
+  });
+
+  it('DEFAULT_CONFIG defaults log.heartbeatSeconds to 60 and defineConfig preserves it', () => {
+    assert.equal(DEFAULT_CONFIG.log?.heartbeatSeconds, 60);
+
+    const empty: OsqUserConfig = {};
+    assert.equal(defineConfig(empty).log?.heartbeatSeconds, 60);
   });
 
   it('loadConfig and defineConfig permit harness setting "opencode"', async () => {

@@ -43,7 +43,9 @@ export function createProgram(): Command {
     .command('watch')
     .description('run the spec watcher loop')
     .option('-o, --once', 'run pending tasks in queue and exit')
-    .action(async (options: { once?: boolean }) => {
+    .option('--verbose', 'enable verbose logging')
+    .option('-q, --quiet', 'suppress info and verbose logging')
+    .action(async (options: { once?: boolean; verbose?: boolean; quiet?: boolean }) => {
       await watchCommand(options);
     });
 
