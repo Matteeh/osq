@@ -1,15 +1,10 @@
 import { loadConfig } from '../core/config.js';
 import { type LogLevel, createLogger } from '../core/logger.js';
 import { getHarnessAdapter } from '../harness/index.js';
+import type { WatchCommandOptions } from '../watcher/dev.js';
 import { startWatcher } from '../watcher/loop.js';
 
-export interface WatchCommandOptions {
-  once?: boolean;
-  verbose?: boolean;
-  quiet?: boolean;
-  allowStale?: boolean;
-  dev?: boolean;
-}
+export type { WatchCommandOptions };
 
 export function resolveLogLevel(options: WatchCommandOptions): LogLevel {
   if (options.quiet) return 'quiet';

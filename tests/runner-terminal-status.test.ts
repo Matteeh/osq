@@ -18,8 +18,8 @@ import {
   formatTaskStatusRow,
   formatTokens,
   relativizeToolSummary,
-  runTask,
-} from '../src/watcher/runner.js';
+} from '../src/watcher/heartbeat.js';
+import { runTask } from '../src/watcher/runner.js';
 
 /** Fast heartbeat so the 1s TTY status cadence collapses to a test-friendly tick. */
 const FAST_HEARTBEAT_CONFIG: OsqConfig = defineConfig({ log: { heartbeatSeconds: 0.05 } });

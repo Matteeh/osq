@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { scaffoldProject } from '../src/core/init.js';
 import { acquireLock, releaseLock } from '../src/core/lock.js';
 import { createNewSpec } from '../src/core/new.js';
-import { deriveSpecState, deriveTaskState } from '../src/core/state.js';
+import { parseSpecMd } from '../src/core/parser.js';
+import { type ChangeFolderSnapshot, deriveSpecState, deriveTaskState } from '../src/core/state.js';
 
 describe('State Derivation', () => {
   let tmpDir: string;
@@ -94,5 +95,25 @@ describe('State Derivation', () => {
     state = await deriveSpecState(tmpDir, specFolder);
     assert.equal(state.status, 'done');
     assert.equal(state.nextTask, null);
+  });
+
+  it('deriveSpecState from an in-memory snapshot is synchronous and preserves folderPath', () => {
+    const snapshot: ChangeFolderSnapshot = {
+      folderName: '042-pure',
+      folderPath: '/tmp/042-pure',
+      spec: parseSpecMd('---\ntitle: Pure\ndepends_on: []\n---\n'),
+      approvedHash: null,
+      taskFiles: new Map(),
+      doneMarkers: new Set(),
+      deadMarkers: new Map(),
+      runningPids: new Map(),
+      resultFiles: new Set(),
+      unmetDependencies: new Set(),
+    };
+
+    const state = deriveSpecState(snapshot);
+    assert.ok(!(state instanceof Promise), 'snapshot derivation must not return a promise');
+    assert.equal(state.folderPath, '/tmp/042-pure');
+    assert.equal(state.status, 'unapproved');
   });
 });

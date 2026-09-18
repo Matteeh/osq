@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from './config.js';
 import { hashChangeFolder } from './hasher.js';
+import { getChangesDir } from './layout.js';
 import { lintChangeFolder } from './linter.js';
 
 export async function findSpecFolder(specsDir: string, idOrPrefix: string): Promise<string> {
@@ -47,7 +48,7 @@ export async function approveSpec(
   specIdOrPrefix: string,
   config: OsqConfig,
 ): Promise<ApproveResult> {
-  const specsDir = path.join(projectRoot, config.paths.specs);
+  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   const folderPath = await findSpecFolder(specsDir, specIdOrPrefix);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] || folderName;

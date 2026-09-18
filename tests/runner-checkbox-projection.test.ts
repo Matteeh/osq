@@ -12,7 +12,8 @@ import { createNewSpec } from '../src/core/new.js';
 import { parseTaskList } from '../src/core/parser.js';
 import { deriveSpecState } from '../src/core/state.js';
 import { MockAdapter } from '../src/harness/mock.js';
-import { runTask, tickTaskCheckbox, tickTaskCheckboxContent } from '../src/watcher/runner.js';
+import { tickTaskCheckbox, tickTaskCheckboxContent } from '../src/watcher/outcome.js';
+import { runTask } from '../src/watcher/runner.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 

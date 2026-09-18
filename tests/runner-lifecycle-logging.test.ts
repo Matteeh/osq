@@ -8,8 +8,18 @@ import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createLogger } from '../src/core/logger.js';
 import { createNewSpec } from '../src/core/new.js';
+import { relativizeToolSummary } from '../src/core/summary.js';
+import { processAgyStdoutLine } from '../src/harness/agy.js';
+import { MockAdapter } from '../src/harness/mock.js';
+import { processOpencodeStdoutLine } from '../src/harness/opencode.js';
 import { type SpawnProcessResult, spawnWithTimeout } from '../src/harness/process.js';
-import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
+import type {
+  HarnessAdapter,
+  OsqEvent,
+  SpawnResult,
+  SpawnTaskOptions,
+} from '../src/harness/types.js';
+import { relativizeToolSummary as reExportedRelativize } from '../src/watcher/heartbeat.js';
 import { runTask } from '../src/watcher/runner.js';
 
 /**
@@ -231,5 +241,66 @@ describe('Runner lifecycle logging', () => {
     const events = await readEvents(specFolder, '1');
     assert.equal(events.filter((event) => event.type === 'started').length, 1);
     assert.equal(events.filter((event) => event.type === 'exited').length, 1);
+  });
+
+  it('exposes relativizeToolSummary from core and re-exports it from heartbeat', () => {
+    assert.equal(reExportedRelativize, relativizeToolSummary);
+    assert.equal(relativizeToolSummary('/root/src/a.ts', '/root'), 'src/a.ts');
+  });
+
+  it('models every event as a typed member of the OsqEvent union', () => {
+    const event: OsqEvent = { type: 'text', timestamp: 't', data: { text: 'hello' } };
+    assert.equal(event.data.text, 'hello');
+  });
+
+  it('relativizes opencode tool summaries to the project root at write time', async () => {
+    const absolute = path.join(tmpDir, 'src', 'a.ts');
+    const line = JSON.stringify({ type: 'tool_use', tool: 'read', input: { path: absolute } });
+
+    await processOpencodeStdoutLine(line, specFolder, '2', undefined, tmpDir);
+
+    const events = await readEvents(specFolder, '2');
+    assert.deepEqual(events[0].data, { tool: 'read', summary: path.join('src', 'a.ts') });
+  });
+
+  it('relativizes agy tool summaries to the project root at write time', async () => {
+    const absolute = path.join(tmpDir, 'src', 'b.ts');
+    const line = JSON.stringify({
+      event: 'step_update',
+      step_update: {
+        step_type: 'tool',
+        tool_name: 'view_file',
+        tool_info: { name: 'view_file', parameters: { AbsolutePath: absolute } },
+      },
+    });
+
+    await processAgyStdoutLine(line, specFolder, '3', undefined, tmpDir);
+
+    const events = await readEvents(specFolder, '3');
+    assert.deepEqual(events[0].data, { tool: 'view_file', summary: path.join('src', 'b.ts') });
+  });
+
+  it('records harness, model, and osqVersion on the started event', async () => {
+    const adapter = new LifecycleStubAdapter({ pid: 555, elapsedMs: 1000 });
+
+    await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+
+    const started = (await readEvents(specFolder, '1')).find((event) => event.type === 'started');
+    assert.ok(started, 'expected a started event');
+    assert.equal(started.data?.harness, 'lifecycle-stub');
+    assert.equal(started.data?.model, DEFAULT_CONFIG.agy?.model);
+    assert.equal(typeof started.data?.osqVersion, 'string');
+    assert.equal(started.data?.osqVersion, started.data?.version);
+  });
+
+  it('emits exactly one started and one exited event through MockAdapter', async () => {
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, new MockAdapter());
+    assert.equal(result.success, true);
+
+    const events = await readEvents(specFolder, '1');
+    assert.equal(events.filter((event) => event.type === 'started').length, 1);
+    assert.equal(events.filter((event) => event.type === 'exited').length, 1);
+    const started = events.find((event) => event.type === 'started');
+    assert.equal(started?.data?.harness, 'mock');
   });
 });

@@ -34,6 +34,50 @@ The CLI watch command SHALL support options to bypass stale build detection and 
 - **WHEN** user executes `osq watch --dev`
 - **THEN** CLI passes `dev: true` to the watch loop options
 
-## Delta from Watcher stale build detection, build identity recording, and dev mode
+### Requirement: Repository health diagnostics
+<!-- source: src/cli/doctor.ts, src/core/doctor.ts, tests/doctor.test.ts -->
+The CLI SHALL provide a doctor command that validates configuration, harness binary availability, managed blocks, lock states, and archive integrity.
 
-This change introduces build identity metadata, stale build preflight detection, and reactive dev mode loop execution via capability delta specifications in `specs/cli-foundation/spec.md` and `specs/watcher-and-harness/spec.md`.
+#### Scenario: Doctor passes on healthy repository
+- **WHEN** user executes `osq doctor` in a properly configured repository
+- **THEN** command prints one status line per check (`config`, `harness`, `managed-blocks`, `locks`, `archives`) and exits with code 0
+
+#### Scenario: Doctor fails on check violation
+- **WHEN** any diagnostic check fails (invalid config, missing harness binary, drift in managed blocks, orphaned locks, or invalid archives)
+- **THEN** command reports the failed check line and exits with code 1
+
+### Requirement: Planner instruction scaffolding
+<!-- source: src/core/init.ts, tests/init-planner.test.ts -->
+The project scaffolding SHALL initialize and maintain a managed instructions block in `PLANNER.md`.
+
+#### Scenario: Scaffolding creates or updates PLANNER.md
+- **WHEN** user executes `osq init` in a repository
+- **THEN** system ensures `PLANNER.md` exists and contains the current managed osq planner protocol between `<!-- OSQ:START -->` and `<!-- OSQ:END -->`
+
+### Requirement: Canonical OpenSpec path layout
+<!-- source: src/core/layout.ts, src/core/config.ts, tests/layout.test.ts -->
+The engine SHALL derive all change folder and run artifact locations through a canonical layout module anchored to `openspecRoot`, removing redundant spec and archive path configurations.
+
+#### Scenario: Layout derivation from OpenSpec root
+- **WHEN** change folders or `.run` artifact paths are resolved
+- **THEN** paths derive deterministically from `openspecRoot` without referencing independent specs or archive path overrides
+
+#### Scenario: Configuration schema excludes legacy paths
+- **WHEN** configuration is validated or loaded
+- **THEN** `paths.specs` and `paths.archive` are absent from `OsqPaths` and rejected by linting
+
+### Requirement: Complete layout consumer cut-over
+<!-- source: src/core/layout.ts, src/core/status.ts, src/core/show.ts, src/core/report.ts, src/cli/lint.ts -->
+All CLI entrypoints and core workflow commands SHALL derive change and archive directory paths strictly through `src/core/layout.ts` without reading `config.paths.specs` or `config.paths.archive`.
+
+#### Scenario: Status inspection resolves via layout
+- **WHEN** user executes `osq status`
+- **THEN** command resolves change folders from `getChangesDir(config.paths.openspecRoot, cwd)` and archive count from `getArchiveDir(config.paths.openspecRoot, cwd)`
+
+#### Scenario: Show and report commands resolve via layout
+- **WHEN** user executes `osq show` or `osq report`
+- **THEN** commands locate spec folders and completed archives using canonical layout helpers
+
+## Delta from Migrate remaining consumers to canonical layout and dual-signature state derivation
+
+This change completes consumer cut-over to canonical OpenSpec path layout in `specs/cli-foundation/spec.md`, and backward-compatible state derivation with watcher layout in `specs/watcher-and-harness/spec.md`.

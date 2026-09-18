@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { approveCommand } from './approve.js';
+import { doctorCommand } from './doctor.js';
 import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
@@ -110,6 +111,13 @@ export function createProgram(version?: string): Command {
     .option('--json', 'output report as raw JSON')
     .action(async (options: { json?: boolean }) => {
       await reportCommand(options);
+    });
+
+  program
+    .command('doctor')
+    .description('validate repository health, configuration, and archives')
+    .action(async () => {
+      await doctorCommand();
     });
 
   return program;

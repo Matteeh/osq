@@ -12,11 +12,14 @@ import { createNewSpec } from '../src/core/new.js';
 import { AgyAdapter } from '../src/harness/agy.js';
 import { OpencodeAdapter } from '../src/harness/opencode.js';
 import type { HarnessAdapter, HarnessEventType, TextEventData } from '../src/harness/types.js';
+import { runTask } from '../src/watcher/runner.js';
 import {
   extractFinalTextFromStream,
-  runTask,
+  findUndeclaredTestChanges,
+  runVerificationGate,
+  snapshotTestFiles,
   synthesizeResultFile,
-} from '../src/watcher/runner.js';
+} from '../src/watcher/verify.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -249,6 +252,64 @@ describe('Runner synthesized result', () => {
     assert.match(content, /^---\nsynthesized: true\n---\n/);
     assert.match(content, /Synthesized by the osq watcher/);
     assert.ok(content.includes('the agent final message'));
+  });
+
+  it('verify.ts exports the synthesis and gating helpers', () => {
+    assert.equal(typeof extractFinalTextFromStream, 'function');
+    assert.equal(typeof synthesizeResultFile, 'function');
+    assert.equal(typeof snapshotTestFiles, 'function');
+    assert.equal(typeof findUndeclaredTestChanges, 'function');
+    assert.equal(typeof runVerificationGate, 'function');
+  });
+
+  it('verify.ts stays under the 200 line lifecycle module budget', async () => {
+    const source = await fs.readFile(path.join(REPO_ROOT, 'src', 'watcher', 'verify.ts'), 'utf8');
+    assert.ok(source.split('\n').length < 200, 'verify.ts must be under 200 lines');
+  });
+
+  it('snapshotTestFiles and findUndeclaredTestChanges report edits and deletions but allow new files', async () => {
+    const testsDir = path.join(tmpDir, 'tests');
+    await fs.mkdir(testsDir, { recursive: true });
+    const tracked = path.join(testsDir, 'tracked.test.ts');
+    await fs.writeFile(tracked, '// original\n', 'utf8');
+
+    const snapshot = await snapshotTestFiles(tmpDir);
+    assert.equal(snapshot.has('tests/tracked.test.ts'), true);
+    assert.deepEqual(await findUndeclaredTestChanges(tmpDir, snapshot), []);
+
+    await fs.writeFile(path.join(testsDir, 'brand-new.test.ts'), '// new\n', 'utf8');
+    assert.deepEqual(await findUndeclaredTestChanges(tmpDir, snapshot), []);
+
+    await fs.writeFile(tracked, '// edited\n', 'utf8');
+    assert.deepEqual(await findUndeclaredTestChanges(tmpDir, snapshot), [
+      'tests/tracked.test.ts (modified)',
+    ]);
+
+    await fs.rm(tracked);
+    assert.deepEqual(await findUndeclaredTestChanges(tmpDir, snapshot), [
+      'tests/tracked.test.ts (deleted)',
+    ]);
+  });
+
+  it('runVerificationGate passes a zero exit and reports a non-zero diagnostic', async () => {
+    const pass = await runVerificationGate(tmpDir, 'node -e "process.exit(0)"', 30);
+    assert.deepEqual(pass, { passed: true, timedOut: false });
+
+    const fail = await runVerificationGate(
+      tmpDir,
+      'node -e "process.stderr.write(\'boom\'); process.exit(1)"',
+      30,
+    );
+    assert.equal(fail.passed, false);
+    assert.equal(fail.timedOut, false);
+    assert.match(fail.error ?? '', /boom/);
+  });
+
+  it('runVerificationGate enforces the timeout and reports timedOut', async () => {
+    const result = await runVerificationGate(tmpDir, 'node -e "setTimeout(() => {}, 30000)"', 1);
+    assert.equal(result.passed, false);
+    assert.equal(result.timedOut, true);
+    assert.match(result.error ?? '', /timed out/);
   });
 
   const harnessCases = [

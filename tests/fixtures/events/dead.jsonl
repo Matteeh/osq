@@ -1,0 +1,6 @@
+{"type":"tokens","timestamp":"[TIMESTAMP]","data":{"promptTokens":500,"candidateTokens":200}}
+{"type":"result_written","timestamp":"[TIMESTAMP]","data":{"path":"openspec/changes/001-golden-events/.run/results/1.md"}}
+{"type":"started","timestamp":"[TIMESTAMP]","data":{"harness":"mock","model":"gemini-3.8-flash-high","osqVersion":"[VERSION]","timeoutSeconds":1800,"version":"[VERSION]","commit":"[COMMIT]"}}
+{"type":"exited","timestamp":"[TIMESTAMP]","data":{"exitCode":0,"elapsedSeconds":0}}
+{"type":"verify_ran","timestamp":"[TIMESTAMP]","data":{"command":"node -e \"process.exit(1)\""}}
+{"type":"dead","timestamp":"[TIMESTAMP]","data":{"task":"1","reason":"verify_red"}}

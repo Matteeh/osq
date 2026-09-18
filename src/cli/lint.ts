@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { findSpecFolder } from '../core/approve.js';
 import { type OsqConfig, loadConfig } from '../core/config.js';
+import { getChangesDir } from '../core/layout.js';
 import { type LintResult, lintChangeFolder } from '../core/linter.js';
 import { type Logger, createLogger } from '../core/logger.js';
 
@@ -54,7 +55,7 @@ export async function lintCommand(
   const cwd = options.cwd ?? process.cwd();
   const config = options.config ?? (await loadConfig(cwd));
   const logger = options.logger ?? createLogger('normal', 'osq');
-  const specsDir = path.join(cwd, config.paths.specs);
+  const specsDir = getChangesDir(config.paths.openspecRoot, cwd);
 
   const folders =
     specIds.length > 0

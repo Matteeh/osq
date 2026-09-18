@@ -3,14 +3,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { watch } from 'chokidar';
 import type { OsqConfig } from '../core/config.js';
+import { getArchiveDir, getChangesDir } from '../core/layout.js';
 import { reapStaleLocks } from '../core/lock.js';
 import { type Logger, resolveSymbol } from '../core/logger.js';
 import { resolveChangeDoc } from '../core/parser.js';
-import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
+import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/state.js';
 import { preflightOpencode } from '../harness/opencode.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
+import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { runTask } from './runner.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
@@ -109,7 +111,7 @@ export async function findLatestArchivedSpec(
   projectRoot: string,
   config: OsqConfig,
 ): Promise<ArchivedSpecSummary | undefined> {
-  const archiveDir = path.join(projectRoot, config.paths.archive);
+  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
 
   let entries: Dirent[] = [];
   try {
@@ -156,12 +158,20 @@ export async function runWatcherCycle(
   // branch and the idle status row carry the same identity.
   const buildInfo = await resolveBuildInfo(projectRoot);
 
-  const specsDir = path.join(projectRoot, config.paths.specs);
+  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   let entries: string[] = [];
   try {
     entries = await fs.readdir(specsDir);
   } catch {
-    logger?.status(formatIdleStatus(config.paths.specs, 0, undefined, undefined, buildInfo));
+    logger?.status(
+      formatIdleStatus(
+        getChangesDir(config.paths.openspecRoot),
+        0,
+        undefined,
+        undefined,
+        buildInfo,
+      ),
+    );
     return { tasksRun: 0, specsArchived: 0 };
   }
 
@@ -198,9 +208,20 @@ export async function runWatcherCycle(
       const stat = await fs.stat(folderPath).catch(() => null);
       if (!stat || !stat.isDirectory()) continue;
 
-      await reapStaleLocks(folderPath, config.timeouts.staleLockSeconds);
+      // The reaper only detects and unlinks expired locks; the watcher owns the
+      // dead marker and event so every artifact is written through outcome.ts.
+      const runDir = path.join(folderPath, '.run');
+      const reapedLocks = await reapStaleLocks(folderPath, config.timeouts.staleLockSeconds);
+      for (const reaped of reapedLocks) {
+        await writeDeadMarker(
+          runDir,
+          reaped.taskNumber,
+          formatReapedMarker(reaped.reason, reaped.pid, reaped.startedAt),
+        );
+        await recordDeadEvent(folderPath, reaped.taskNumber, reaped.reason);
+      }
 
-      const specState = await deriveSpecState(projectRoot, folderPath);
+      const specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
 
       if (
         specState.approvedHash &&
@@ -243,7 +264,13 @@ export async function runWatcherCycle(
   if (tasksRun === 0) {
     const lastArchived = await findLatestArchivedSpec(projectRoot, config).catch(() => undefined);
     logger?.status(
-      formatIdleStatus(config.paths.specs, approvedWaiting, lastArchived, undefined, buildInfo),
+      formatIdleStatus(
+        getChangesDir(config.paths.openspecRoot),
+        approvedWaiting,
+        lastArchived,
+        undefined,
+        buildInfo,
+      ),
     );
   }
 
@@ -357,7 +384,7 @@ export async function startWatcher(
   await cycleHandler();
   if (interrupted || stopped) return;
 
-  const specsDir = path.join(projectRoot, config.paths.specs);
+  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   watcher = watch(specsDir, {
     ignoreInitial: true,
     depth: 3,

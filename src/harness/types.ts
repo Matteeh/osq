@@ -16,6 +16,30 @@ export type HarnessEventType =
   | 'done'
   | 'dead';
 
+/** Payload of the lifecycle `started` event emitted by the runner. */
+export interface StartedEventData {
+  harness: string;
+  model: string;
+  osqVersion: string;
+  commit?: string;
+  pid?: number;
+  timeoutSeconds: number;
+  version?: string;
+}
+
+/** Legacy `started` payloads emitted by adapters before the runner owned it. */
+export type StartedEventPayload = StartedEventData | Record<string, unknown>;
+
+/** Payload of a `tokens` event accumulated from the agent stream. */
+export interface TokensEventData {
+  promptTokens: number;
+  candidateTokens: number;
+  totalTokens?: number;
+  cachedTokens?: number;
+  reasoningTokens?: number;
+  cost?: number;
+}
+
 export interface ToolEventData {
   tool: string;
   summary: string;
@@ -23,6 +47,31 @@ export interface ToolEventData {
 
 export interface TextEventData {
   readonly text: string;
+}
+
+export interface FileChangedEventData {
+  path: string;
+}
+
+export interface VerifyRanEventData {
+  exitCode?: number;
+  verifyCommand?: string;
+  output?: string;
+  /** Legacy field name retained so older emitted lines still type-check. */
+  command?: string;
+}
+
+export interface ResultWrittenEventData {
+  path: string;
+  synthesized?: boolean;
+}
+
+export interface ExitedEventData {
+  exitCode: number;
+  pid?: number;
+  signal?: string;
+  timedOut?: boolean;
+  elapsedSeconds?: number;
 }
 
 export interface DoneEventData {
@@ -34,11 +83,34 @@ export interface DeadEventData {
   readonly reason: string;
 }
 
-export interface HarnessEvent {
-  type: HarnessEventType;
-  timestamp: string;
-  data?: Record<string, unknown>;
+/** Event type to payload mapping for every lifecycle and observed event. */
+export interface OsqEventData {
+  started: StartedEventPayload;
+  tokens: TokensEventData;
+  tool: ToolEventData;
+  text: TextEventData;
+  file_changed: FileChangedEventData;
+  verify_ran: VerifyRanEventData;
+  result_written: ResultWrittenEventData;
+  exited: ExitedEventData;
+  done: DoneEventData;
+  dead: DeadEventData;
 }
+
+/**
+ * Typed discriminated union over `type` with per-event payloads. Every event
+ * written to `.run/events/<n>.jsonl` must conform to one of these members.
+ */
+export type OsqEvent = {
+  [K in HarnessEventType]: {
+    type: K;
+    timestamp: string;
+    data: OsqEventData[K];
+  };
+}[HarnessEventType];
+
+/** Backwards-compatible alias for {@link OsqEvent}. */
+export type HarnessEvent = OsqEvent;
 
 export interface SpawnTaskOptions {
   projectRoot: string;

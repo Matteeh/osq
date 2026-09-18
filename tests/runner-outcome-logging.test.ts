@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
@@ -10,8 +11,17 @@ import { acquireLock } from '../src/core/lock.js';
 import { createLogger } from '../src/core/logger.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
+import type * as outcomeTypes from '../src/watcher/outcome.js';
+import {
+  formatTaskOutcomeLine,
+  recordDeadEvent,
+  recordDoneEvent,
+  recordLifecycleEvent,
+  tickTaskCheckbox,
+  tickTaskCheckboxContent,
+} from '../src/watcher/outcome.js';
 import * as runner from '../src/watcher/runner.js';
-import { formatTaskOutcomeLine, runTask } from '../src/watcher/runner.js';
+import { runTask } from '../src/watcher/runner.js';
 
 async function captureStderr(fn: () => Promise<void>): Promise<string> {
   const originalWrite = process.stderr.write;
@@ -301,5 +311,35 @@ describe('Runner outcome logging', () => {
     });
 
     assert.equal(outcomeLines(stderr, '1').length, 0);
+  });
+});
+
+describe('Outcome module shape', () => {
+  it('exposes the outcome failure types and formatter', () => {
+    const reason: outcomeTypes.RunTaskFailureReason = 'undeclared_test_change';
+    const result: outcomeTypes.RunTaskResult = { success: false, reason };
+    assert.equal(result.reason, 'undeclared_test_change');
+    assert.equal(typeof formatTaskOutcomeLine, 'function');
+  });
+
+  it('exposes the lifecycle, dead, done, and checkbox writers', () => {
+    for (const fn of [
+      recordLifecycleEvent,
+      recordDeadEvent,
+      recordDoneEvent,
+      tickTaskCheckboxContent,
+      tickTaskCheckbox,
+    ]) {
+      assert.equal(typeof fn, 'function');
+    }
+  });
+
+  it('keeps outcome.ts under 200 lines', async () => {
+    const source = await fs.readFile(
+      path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'watcher', 'outcome.ts'),
+      'utf8',
+    );
+    const lineCount = source.replace(/\n$/, '').split('\n').length;
+    assert.ok(lineCount < 200, `outcome.ts must be under 200 lines, found ${lineCount}`);
   });
 });

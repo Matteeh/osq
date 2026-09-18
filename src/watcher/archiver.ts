@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { mergeDelta, parseDelta } from '../core/delta.js';
+import { getArchiveDir } from '../core/layout.js';
 import { parseSpecMdFromFolder } from '../core/parser.js';
 import { deriveSpecState } from '../core/state.js';
 
@@ -128,9 +129,9 @@ async function ensureArchivedTasksTicked(folderPath: string): Promise<void> {
 
 /**
  * Applies the change's delta specifications, moves the completed folder to the
- * configured `paths.archive`, and ensures every archived `tasks.md` is fully
- * ticked so `openspec validate --archived` passes. The whole folder (including
- * `.run/` markers, results, and event logs) moves as one unit.
+ * canonical `<openspecRoot>/changes/archive`, and ensures every archived
+ * `tasks.md` is fully ticked so `openspec validate --archived` passes. The whole
+ * folder (including `.run/` markers, results, and event logs) moves as one unit.
  */
 export async function archiveSpecFolder(
   projectRoot: string,
@@ -139,7 +140,7 @@ export async function archiveSpecFolder(
 ): Promise<string> {
   await applyDelta(projectRoot, specFolderPath, config);
 
-  const archiveDir = path.join(projectRoot, config.paths.archive);
+  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
   await fs.mkdir(archiveDir, { recursive: true });
 
   const folderName = path.basename(specFolderPath);

@@ -34,13 +34,7 @@ export class MockAdapter implements HarnessAdapter {
   }
 
   async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
-    const { specFolderPath, taskNumber, tier } = options;
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'started',
-      timestamp: new Date().toISOString(),
-      data: { tier, mock: true },
-    });
+    const { specFolderPath, taskNumber } = options;
 
     if (this.behavior.delayMs) {
       await new Promise((resolve) => setTimeout(resolve, this.behavior.delayMs));
@@ -74,12 +68,6 @@ export class MockAdapter implements HarnessAdapter {
     }
 
     const exitCode = this.behavior.exitCode ?? (this.behavior.timedOut ? 124 : 0);
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'exited',
-      timestamp: new Date().toISOString(),
-      data: { exitCode, timedOut: this.behavior.timedOut },
-    });
 
     return {
       exitCode,

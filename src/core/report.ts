@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
+import { getArchiveDir, getChangesDir } from './layout.js';
 import { parseFrontmatter } from './parser.js';
 import { compareNumericPrefix, deriveSpecState } from './state.js';
 
@@ -148,8 +149,8 @@ export async function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<MetricsReport> {
-  let specsDir = path.join(projectRoot, config.paths.specs);
-  let archiveDir = path.join(projectRoot, config.paths.archive);
+  let specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
+  let archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
 
   const specsDirStat = await fs.stat(specsDir).catch(() => null);
   const archiveDirStat = await fs.stat(archiveDir).catch(() => null);

@@ -3,11 +3,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import { type OsqConfig, loadConfig } from './config.js';
+import { getArchiveDir, getChangesDir } from './layout.js';
 import { getNextSpecNumber } from './new.js';
 import { parseFrontmatter } from './parser.js';
-
-/** Directory that holds the OpenSpec layout when `paths.openspecRoot` is unset. */
-export const OPENSPEC_DEFAULT_ROOT = 'openspec';
 
 /** Default slug for the "next spec" placeholder created after migration. */
 export const SAMPLE_STUB_SLUG = 'sample';
@@ -65,26 +63,17 @@ async function listMarkdownFiles(dir: string): Promise<string[]> {
   return entries.filter((entry) => entry.endsWith('.md')).sort();
 }
 
-function resolveOpenSpecRoot(config: OsqConfig): string {
-  const paths = config.paths as OsqConfig['paths'] & { readonly openspecRoot?: string };
-  return paths.openspecRoot ?? OPENSPEC_DEFAULT_ROOT;
-}
-
 function resolvePaths(projectRoot: string, config: OsqConfig): MigrationPaths {
-  const openspecRoot = path.join(projectRoot, resolveOpenSpecRoot(config));
-  const changesTarget = path.join(openspecRoot, 'changes');
   const legacyFeatures =
     config.paths.features === 'openspec/specs' ? 'features' : config.paths.features;
-  const legacySpecs = config.paths.specs === 'openspec/changes' ? 'specs' : config.paths.specs;
-  const legacyArchive =
-    config.paths.archive === 'openspec/changes/archive' ? 'specs/archive' : config.paths.archive;
+  const legacySpecs = path.join(projectRoot, 'specs');
   return {
     features: path.join(projectRoot, legacyFeatures),
-    specs: path.join(projectRoot, legacySpecs),
-    archive: path.join(projectRoot, legacyArchive),
-    specsTarget: path.join(openspecRoot, 'specs'),
-    changesTarget,
-    archiveTarget: path.join(changesTarget, 'archive'),
+    specs: legacySpecs,
+    archive: path.join(legacySpecs, 'archive'),
+    specsTarget: path.join(projectRoot, config.paths.openspecRoot, 'specs'),
+    changesTarget: getChangesDir(config.paths.openspecRoot, projectRoot),
+    archiveTarget: getArchiveDir(config.paths.openspecRoot, projectRoot),
   };
 }
 

@@ -5,6 +5,13 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { acquireLock, isPidRunning, reapStaleLocks, releaseLock } from '../src/core/lock.js';
 
+async function exists(target: string): Promise<boolean> {
+  return fs
+    .stat(target)
+    .then(() => true)
+    .catch(() => false);
+}
+
 describe('Lock and Reaper', () => {
   let tmpDir: string;
   let runDir: string;
@@ -48,49 +55,63 @@ describe('Lock and Reaper', () => {
     assert.equal(isPidRunning(99999999), false);
   });
 
-  it('reapStaleLocks reaps dead pid to .run/dead/<n>.md with reason: crashed', async () => {
+  it('reapStaleLocks detects a dead pid and unlinks the lock without writing a dead marker', async () => {
     const runningDir = path.join(runDir, 'running');
     await fs.mkdir(runningDir, { recursive: true });
 
     // Lock file with dead pid (99999999) and recent timestamp
+    const startedAt = Date.now();
     await fs.writeFile(
       path.join(runningDir, '1.pid'),
-      JSON.stringify({ pid: 99999999, startedAt: Date.now() }),
+      JSON.stringify({ pid: 99999999, startedAt }),
       'utf8',
     );
 
     const reaped = await reapStaleLocks(tmpDir, 300);
     assert.equal(reaped.length, 1);
-    assert.equal(reaped[0].taskNumber, '1');
-    assert.equal(reaped[0].reason, 'crashed');
+    assert.deepEqual(reaped[0], {
+      taskNumber: '1',
+      reason: 'crashed',
+      pid: 99999999,
+      startedAt,
+    });
 
     // Verify running marker is deleted
     await assert.rejects(async () => {
       await fs.stat(path.join(runningDir, '1.pid'));
     });
 
-    // Verify dead marker is created
-    const deadContent = await fs.readFile(path.join(runDir, 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: crashed'));
+    // Detection is pure: it never creates dead markers or the dead directory.
+    assert.equal(await exists(path.join(runDir, 'dead', '1.md')), false);
+    assert.equal(await exists(path.join(runDir, 'dead')), false);
   });
 
-  it('reapStaleLocks reaps expired lock to .run/dead/<n>.md with reason: timeout', async () => {
+  it('reapStaleLocks detects an expired lock without writing a dead marker', async () => {
     const runningDir = path.join(runDir, 'running');
     await fs.mkdir(runningDir, { recursive: true });
 
     // Lock file with active pid (current process) but older than staleLockSeconds (1s)
+    const startedAt = Date.now() - 5000;
     await fs.writeFile(
       path.join(runningDir, '2.pid'),
-      JSON.stringify({ pid: process.pid, startedAt: Date.now() - 5000 }),
+      JSON.stringify({ pid: process.pid, startedAt }),
       'utf8',
     );
 
     const reaped = await reapStaleLocks(tmpDir, 1);
     assert.equal(reaped.length, 1);
-    assert.equal(reaped[0].taskNumber, '2');
-    assert.equal(reaped[0].reason, 'timeout');
+    assert.deepEqual(reaped[0], {
+      taskNumber: '2',
+      reason: 'timeout',
+      pid: process.pid,
+      startedAt,
+    });
 
-    const deadContent = await fs.readFile(path.join(runDir, 'dead', '2.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: timeout'));
+    await assert.rejects(async () => {
+      await fs.stat(path.join(runningDir, '2.pid'));
+    });
+
+    assert.equal(await exists(path.join(runDir, 'dead', '2.md')), false);
+    assert.equal(await exists(path.join(runDir, 'dead')), false);
   });
 });

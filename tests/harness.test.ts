@@ -80,9 +80,8 @@ describe('Harness Adapter and Event Logging', () => {
     // Verify events were logged
     const eventFilePath = path.join(specFolder, '.run', 'events', '1.jsonl');
     const eventContent = await fs.readFile(eventFilePath, 'utf8');
-    assert.ok(eventContent.includes('"type":"started"'));
+    assert.ok(eventContent.includes('"type":"tokens"'));
     assert.ok(eventContent.includes('"type":"result_written"'));
-    assert.ok(eventContent.includes('"type":"exited"'));
   });
 
   it('AgyAdapter initializes with correct name and can perform setup', async () => {

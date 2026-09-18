@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
+import { getArchiveDir, getChangesDir } from './layout.js';
 import { resolveChangeDoc } from './parser.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 
@@ -14,7 +15,7 @@ export async function getStatusOverview(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<StatusOverview> {
-  const specsDir = path.join(projectRoot, config.paths.specs);
+  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   let entries: string[] = [];
   try {
     entries = await fs.readdir(specsDir);
@@ -22,7 +23,7 @@ export async function getStatusOverview(
     return { specs: [], archivedCount: 0, archivedChangeFolders: 0 };
   }
 
-  const archiveDir = path.join(projectRoot, config.paths.archive);
+  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
   const archiveRel = path.relative(specsDir, archiveDir);
   const archiveFolder =
     !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)

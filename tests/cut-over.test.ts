@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
+import { getArchiveDir, getChangesDir } from '../src/core/layout.js';
 import type { Logger } from '../src/core/logger.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { extractHumanSteps, runWatcherCycle } from '../src/watcher/loop.js';
@@ -150,10 +151,24 @@ describe('Layout cut-over', () => {
   });
 
   it('switches DEFAULT_CONFIG paths to the openspec layout', () => {
-    assert.equal(DEFAULT_CONFIG.paths.specs, 'openspec/changes');
-    assert.equal(DEFAULT_CONFIG.paths.archive, 'openspec/changes/archive');
-    assert.equal(DEFAULT_CONFIG.paths.features, 'openspec/specs');
     assert.equal(DEFAULT_CONFIG.paths.openspecRoot, 'openspec');
+    assert.equal(DEFAULT_CONFIG.paths.features, 'openspec/specs');
+    assert.equal(
+      getChangesDir(DEFAULT_CONFIG.paths.openspecRoot),
+      path.join('openspec', 'changes'),
+    );
+    assert.equal(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot),
+      path.join('openspec', 'changes', 'archive'),
+    );
+    assert.equal(
+      getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      path.join(tmpDir, 'openspec', 'changes'),
+    );
+    assert.equal(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      path.join(tmpDir, 'openspec', 'changes', 'archive'),
+    );
   });
 
   it('monitors openspec/changes for approved change folders', async () => {
@@ -172,13 +187,12 @@ describe('Layout cut-over', () => {
   });
 
   it('does not pick up change folders left in the legacy specs/ directory', async () => {
-    // A legacy folder with a valid change doc but no approval would be picked
-    // up (and dead-lettered) if the watcher still scanned `specs/`.
-    await writeChange(path.join(tmpDir, 'specs'), '002', 'legacy');
-    await approveSpec(tmpDir, '002', {
-      ...DEFAULT_CONFIG,
-      paths: { ...DEFAULT_CONFIG.paths, specs: 'specs' },
-    });
+    // A legacy folder with a valid change doc and approval marker would be
+    // picked up (and dead-lettered) if the watcher still scanned `specs/`.
+    const legacyFolder = await writeChange(path.join(tmpDir, 'specs'), '002', 'legacy');
+    const legacyRunDir = path.join(legacyFolder, '.run');
+    await fs.mkdir(legacyRunDir, { recursive: true });
+    await fs.writeFile(path.join(legacyRunDir, 'approved'), 'legacy-hash\n', 'utf8');
 
     const logger = new CaptureLogger();
     const summary = await runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger);
@@ -229,12 +243,14 @@ describe('Layout cut-over', () => {
     );
     const loopSource = await fs.readFile(path.join(REPO_ROOT, 'src', 'watcher', 'loop.ts'), 'utf8');
 
-    // The runtime config no longer defaults to the legacy layout.
+    // The runtime config no longer defaults to the legacy layout and no longer
+    // carries independent specs/archive overrides.
     assert.ok(!configSource.includes("specs: 'specs'"));
     assert.ok(!configSource.includes("archive: 'specs/archive'"));
     assert.ok(!configSource.includes("features: 'features'"));
-    assert.ok(configSource.includes("specs: 'openspec/changes'"));
-    assert.ok(configSource.includes("archive: 'openspec/changes/archive'"));
+    assert.ok(!configSource.includes('specs:'));
+    assert.ok(!configSource.includes('archive:'));
+    assert.ok(configSource.includes("openspecRoot: 'openspec'"));
     assert.ok(configSource.includes("features: 'openspec/specs'"));
 
     // The watcher does not import or invoke the migration that performs the

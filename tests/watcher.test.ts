@@ -7,6 +7,7 @@ import { createProgram } from '../src/cli/index.js';
 import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
+import { getArchiveDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
@@ -56,7 +57,10 @@ describe('Watcher Loop and CLI', () => {
 
     // Folder is archived
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
+    const archivedPath = path.join(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      folderName,
+    );
     const stat = await fs.stat(archivedPath);
     assert.ok(stat);
 
@@ -123,7 +127,10 @@ describe('Watcher Loop and CLI', () => {
 
     // Folder is archived
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
+    const archivedPath = path.join(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      folderName,
+    );
     const stat = await fs.stat(archivedPath);
     assert.ok(stat);
 

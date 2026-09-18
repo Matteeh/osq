@@ -5,6 +5,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
+import { getArchiveDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 import { applyDelta, archiveSpecFolder, checkAndArchiveSpec } from '../src/watcher/archiver.js';
 
@@ -41,17 +42,11 @@ The system SHALL archive changes.
 `;
 
 /**
- * Builds an OpenSpec-flavoured config. `openspecRoot` is not part of the
- * checked-in `OsqPaths` type yet (task 1 lands it), so it is attached through a
- * variable to avoid excess-property checking while staying strict-clean.
+ * Canonical OpenSpec layout config. `DEFAULT_CONFIG.paths.openspecRoot` drives
+ * every change and archive path through `src/core/layout.ts`.
  */
 function openSpecConfig(): OsqConfig {
-  const paths = {
-    ...DEFAULT_CONFIG.paths,
-    archive: 'openspec/changes/archive',
-    openspecRoot: 'openspec',
-  };
-  return { ...DEFAULT_CONFIG, paths };
+  return DEFAULT_CONFIG;
 }
 
 describe('Archiver and Delta Application', () => {
@@ -123,7 +118,10 @@ describe('Archiver and Delta Application', () => {
     });
 
     // New folder exists in archive
-    assert.equal(archivedPath, path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName));
+    assert.equal(
+      archivedPath,
+      path.join(getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir), folderName),
+    );
     const doneMarker = path.join(archivedPath, '.run', 'done', '1');
     const stat = await fs.stat(doneMarker);
     assert.ok(stat);
@@ -162,7 +160,8 @@ describe('Archiver and Delta Application', () => {
 
   it('archiveSpecFolder preserves history by disambiguating if destination already exists', async () => {
     const folderName = path.basename(specFolder);
-    const existingArchive = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
+    const archiveDir = getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    const existingArchive = path.join(archiveDir, folderName);
     await fs.mkdir(existingArchive, { recursive: true });
     await fs.writeFile(path.join(existingArchive, 'history.txt'), 'pre-existing archive', 'utf8');
 
@@ -175,19 +174,20 @@ describe('Archiver and Delta Application', () => {
     );
 
     // New archive path is disambiguated with suffix
-    assert.equal(archivedPath, path.join(tmpDir, DEFAULT_CONFIG.paths.archive, `${folderName}-1`));
+    assert.equal(archivedPath, path.join(archiveDir, `${folderName}-1`));
     assert.ok(await fs.stat(archivedPath));
   });
 
-  it('archiveSpecFolder moves to the configured legacy archive path', async () => {
-    const legacyCfg: OsqConfig = {
+  it('archiveSpecFolder resolves the destination through a custom openspecRoot', async () => {
+    const customRoot = 'docs/changes-root';
+    const customCfg: OsqConfig = {
       ...DEFAULT_CONFIG,
-      paths: { ...DEFAULT_CONFIG.paths, archive: 'specs/archive' },
+      paths: { ...DEFAULT_CONFIG.paths, openspecRoot: customRoot },
     };
     const folderName = path.basename(specFolder);
-    const archivedPath = await archiveSpecFolder(tmpDir, specFolder, legacyCfg);
+    const archivedPath = await archiveSpecFolder(tmpDir, specFolder, customCfg);
 
-    assert.equal(archivedPath, path.join(tmpDir, 'specs', 'archive', folderName));
+    assert.equal(archivedPath, path.join(getArchiveDir(customRoot, tmpDir), folderName));
   });
 
   it('archiveSpecFolder applies delta specs inside openspec/specs and moves to the OpenSpec archive path', async () => {
@@ -240,11 +240,15 @@ describe('Archiver and Delta Application', () => {
     assert.ok(archived.includes('- [x] 2. already done'));
   });
 
-  it('archiveSpecFolder ticks tasks.md on the legacy path too', async () => {
+  it('archiveSpecFolder ticks tasks.md under the canonical archive layout', async () => {
     const tasksMd = '# Tasks\n\n- [ ] 1. pending item\n';
     await fs.writeFile(path.join(specFolder, 'tasks.md'), tasksMd, 'utf8');
 
     const archivedPath = await archiveSpecFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(
+      path.dirname(archivedPath),
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+    );
     const archived = await fs.readFile(path.join(archivedPath, 'tasks.md'), 'utf8');
     assert.ok(!archived.includes('[ ]'));
     assert.ok(archived.includes('- [x] 1. pending item'));
@@ -280,27 +284,14 @@ describe('Archiver and Delta Application', () => {
     assert.equal(archived, true);
 
     const folderName = path.basename(specFolder);
-    assert.ok(await fs.stat(path.join(tmpDir, 'openspec', 'changes', 'archive', folderName)));
+    assert.ok(
+      await fs.stat(
+        path.join(getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir), folderName),
+      ),
+    );
 
     // ADDED requirement appears exactly once despite being applied during archive.
     const merged = await fs.readFile(path.join(capabilityDir, 'spec.md'), 'utf8');
     assert.equal(merged.match(/### Requirement: Archival/g)?.length, 1);
-  });
-
-  it('checkAndArchiveSpec archives to specs/archive with the default legacy config', async () => {
-    const legacyCfg: OsqConfig = {
-      ...DEFAULT_CONFIG,
-      paths: { ...DEFAULT_CONFIG.paths, archive: 'specs/archive' },
-    };
-    const runDir = path.join(specFolder, '.run');
-    await fs.mkdir(path.join(runDir, 'done'), { recursive: true });
-    await fs.writeFile(path.join(runDir, 'approved'), 'sha256:abc\n', 'utf8');
-    await fs.writeFile(path.join(runDir, 'done', '1'), '', 'utf8');
-
-    const archived = await checkAndArchiveSpec(tmpDir, specFolder, legacyCfg);
-    assert.equal(archived, true);
-
-    const folderName = path.basename(specFolder);
-    assert.ok(await fs.stat(path.join(tmpDir, 'specs', 'archive', folderName)));
   });
 });

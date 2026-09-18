@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import type { Logger } from '../core/logger.js';
+import { relativizeToolSummary } from '../core/summary.js';
 import { spawnWithTimeout } from './process.js';
 import {
   EventStreamParser,
@@ -214,21 +215,25 @@ export function extractAgyToolEvent(event: unknown): ToolEventData | null {
 
 /**
  * Single code path for tool observation: the events.jsonl entry and its verbose
- * stderr log line are always emitted together by the shared stdout handler.
+ * stderr log line are always emitted together. The summary is relativized to the
+ * project root before it is written, so `events.jsonl` never carries absolute
+ * workspace paths.
  */
-async function recordAgyToolEvent(
+async function emitObservedToolEvent(
   specFolderPath: string,
   taskNumber: string,
   toolEvent: ToolEventData,
   timestamp: string,
+  projectRoot?: string,
   logger?: Logger,
 ): Promise<void> {
+  const summary = relativizeToolSummary(toolEvent.summary, projectRoot);
   await appendHarnessEvent(specFolderPath, taskNumber, {
     type: 'tool',
     timestamp,
-    data: { tool: toolEvent.tool, summary: toolEvent.summary },
+    data: { tool: toolEvent.tool, summary },
   });
-  logger?.verbose(`[tool] ${toolEvent.tool}: ${toolEvent.summary}`);
+  logger?.verbose(`[tool] ${toolEvent.tool}: ${summary}`);
 }
 
 export async function processAgyStdoutLine(
@@ -236,6 +241,7 @@ export async function processAgyStdoutLine(
   specFolderPath: string,
   taskNumber: string,
   logger?: Logger,
+  projectRoot?: string,
 ): Promise<void> {
   const trimmed = line.trim();
   if (!trimmed) {
@@ -260,11 +266,12 @@ export async function processAgyStdoutLine(
 
   const toolEvent = extractAgyToolEvent(eventObj);
   if (toolEvent) {
-    await recordAgyToolEvent(
+    await emitObservedToolEvent(
       specFolderPath,
       taskNumber,
       toolEvent,
       resolveEventTimestamp(eventObj),
+      projectRoot,
       logger,
     );
     return;
@@ -316,8 +323,8 @@ export async function processAgyStdoutLine(
  * and serialization logic lives entirely in the shared {@link EventStreamParser}.
  */
 export class AgyEventStreamParser extends EventStreamParser {
-  constructor(specFolderPath: string, taskNumber: string, logger?: Logger) {
-    super((line) => processAgyStdoutLine(line, specFolderPath, taskNumber, logger));
+  constructor(specFolderPath: string, taskNumber: string, logger?: Logger, projectRoot?: string) {
+    super((line) => processAgyStdoutLine(line, specFolderPath, taskNumber, logger, projectRoot));
   }
 }
 
@@ -335,7 +342,7 @@ export class AgyAdapter implements HarnessAdapter {
     const agyBin = await resolveAgyBinary();
     const args = buildAgyArgs(options);
     const streamParser = new EventStreamParser((line) =>
-      processAgyStdoutLine(line, specFolderPath, taskNumber, options.logger),
+      processAgyStdoutLine(line, specFolderPath, taskNumber, options.logger, projectRoot),
     );
 
     const result = await spawnWithTimeout({

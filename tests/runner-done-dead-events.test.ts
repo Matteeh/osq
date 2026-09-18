@@ -8,8 +8,17 @@ import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { acquireLock } from '../src/core/lock.js';
 import { createNewSpec } from '../src/core/new.js';
-import { MockAdapter } from '../src/harness/mock.js';
-import type { DeadEventData, DoneEventData, HarnessEventType } from '../src/harness/types.js';
+import { parseFrontmatter } from '../src/core/parser.js';
+import { MockAdapter, type MockBehavior } from '../src/harness/mock.js';
+import type {
+  DeadEventData,
+  DoneEventData,
+  HarnessAdapter,
+  HarnessEventType,
+  SpawnResult,
+  SpawnTaskOptions,
+} from '../src/harness/types.js';
+import type { RunTaskFailureReason } from '../src/watcher/outcome.js';
 import { runTask } from '../src/watcher/runner.js';
 
 // Compile-time acceptance: the union and payload interfaces must exist and have
@@ -19,11 +28,114 @@ const DEAD_TYPE: HarnessEventType = 'dead';
 const DONE_DATA: DoneEventData = { task: '1' };
 const DEAD_DATA: DeadEventData = { task: '1', reason: 'no_result' };
 
+/**
+ * The single source of truth for every failure outcome the runner can report.
+ * The parameterized table below must cover every member except `already_running`,
+ * which is a lock collision rather than a task failure and never writes a marker.
+ */
+const ALL_FAILURE_REASONS: readonly RunTaskFailureReason[] = [
+  'spec_conflict',
+  'already_running',
+  'no_result',
+  'verify_red',
+  'crashed',
+  'timeout',
+  'undeclared_test_change',
+];
+const DEAD_FAILURE_REASONS: readonly RunTaskFailureReason[] = ALL_FAILURE_REASONS.filter(
+  (reason) => reason !== 'already_running',
+);
+
 interface ParsedEvent {
   type: string;
   timestamp: string;
   data?: Record<string, unknown>;
 }
+
+interface ScenarioContext {
+  readonly tmpDir: string;
+  readonly specFolder: string;
+}
+
+interface DeadScenario {
+  readonly name: string;
+  readonly reason: RunTaskFailureReason;
+  readonly prepare?: (ctx: ScenarioContext) => Promise<void>;
+  readonly behavior?: MockBehavior;
+  readonly mutate?: (ctx: ScenarioContext) => Promise<void>;
+}
+
+/**
+ * Adapter that mutates the workspace while the task is "running", then delegates
+ * to the mock. This is how the undeclared_test_change scenario simulates an agent
+ * editing a preexisting test file without touching the real `tests/` tree.
+ */
+class MutatingMockAdapter extends MockAdapter {
+  constructor(private readonly mutate: (projectRoot: string) => Promise<void>) {
+    super();
+  }
+
+  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
+    await this.mutate(options.projectRoot);
+    return super.spawn(options);
+  }
+}
+
+const PASSING_VERIFY = 'node -e "process.exit(0)"';
+const FAILING_VERIFY = 'exit 1';
+const EXISTING_TEST = path.join('tests', 'existing.test.ts');
+
+const DEAD_SCENARIOS: readonly DeadScenario[] = [
+  {
+    name: 'no_result',
+    reason: 'no_result',
+    behavior: { writeResult: false },
+  },
+  {
+    name: 'crashed',
+    reason: 'crashed',
+    behavior: { exitCode: 7, error: 'boom' },
+  },
+  {
+    name: 'timeout',
+    reason: 'timeout',
+    behavior: { timedOut: true },
+  },
+  {
+    name: 'verify_red',
+    reason: 'verify_red',
+    prepare: async ({ tmpDir, specFolder }) => {
+      await writeTask(specFolder, FAILING_VERIFY);
+      await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    },
+  },
+  {
+    name: 'spec_conflict (tampered task)',
+    reason: 'spec_conflict',
+    prepare: async ({ specFolder }) => {
+      await fs.appendFile(path.join(specFolder, 'tasks', '1.md'), '\n<!-- tampered -->\n', 'utf8');
+    },
+  },
+  {
+    name: 'spec_conflict (missing approval)',
+    reason: 'spec_conflict',
+    prepare: async ({ specFolder }) => {
+      await fs.rm(path.join(specFolder, '.run', 'approved'), { force: true });
+    },
+  },
+  {
+    name: 'undeclared_test_change',
+    reason: 'undeclared_test_change',
+    prepare: async ({ tmpDir }) => {
+      const testPath = path.join(tmpDir, EXISTING_TEST);
+      await fs.mkdir(path.dirname(testPath), { recursive: true });
+      await fs.writeFile(testPath, '// preexisting test\n', 'utf8');
+    },
+    mutate: async ({ tmpDir }) => {
+      await fs.writeFile(path.join(tmpDir, EXISTING_TEST), '// modified by the agent\n', 'utf8');
+    },
+  },
+];
 
 async function readEvents(specFolder: string, taskNumber: string): Promise<ParsedEvent[]> {
   const eventFilePath = path.join(specFolder, '.run', 'events', `${taskNumber}.jsonl`);
@@ -33,6 +145,13 @@ async function readEvents(specFolder: string, taskNumber: string): Promise<Parse
     .split('\n')
     .filter(Boolean)
     .map((line) => JSON.parse(line) as ParsedEvent);
+}
+
+async function exists(target: string): Promise<boolean> {
+  return fs
+    .stat(target)
+    .then(() => true)
+    .catch(() => false);
 }
 
 async function writeTask(specFolder: string, verify: string): Promise<void> {
@@ -51,6 +170,25 @@ async function writeTask(specFolder: string, verify: string): Promise<void> {
   await fs.writeFile(taskPath, `${task}\n`, 'utf8');
 }
 
+/**
+ * Assert marker/event parity for a failure: the dead marker exists, its YAML
+ * frontmatter declares the reason, and exactly one matching dead event exists.
+ */
+async function assertDeadMarkerAndEvent(
+  specFolder: string,
+  taskNumber: string,
+  reason: RunTaskFailureReason,
+): Promise<void> {
+  const markerPath = path.join(specFolder, '.run', 'dead', `${taskNumber}.md`);
+  const content = await fs.readFile(markerPath, 'utf8');
+  const { data } = parseFrontmatter(content);
+  assert.equal(data.reason, reason, `dead marker frontmatter must declare reason ${reason}`);
+
+  const deadEvents = (await readEvents(specFolder, taskNumber)).filter((e) => e.type === 'dead');
+  assert.equal(deadEvents.length, 1, `expected exactly one dead event for ${reason}`);
+  assert.deepEqual(deadEvents[0].data, { task: taskNumber, reason });
+}
+
 describe('Runner done and dead events', () => {
   let tmpDir: string;
   let specFolder: string;
@@ -62,7 +200,7 @@ describe('Runner done and dead events', () => {
     const spec = await createNewSpec(tmpDir, 'Done Dead Events');
     specFolder = spec.folderPath;
     adapter = new MockAdapter();
-    await writeTask(specFolder, 'node -e "process.exit(0)"');
+    await writeTask(specFolder, PASSING_VERIFY);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     adapter.resetBehavior();
   });
@@ -79,12 +217,23 @@ describe('Runner done and dead events', () => {
     assert.equal(DEAD_DATA.reason, 'no_result');
   });
 
+  it('parameterizes every dead RunTaskFailureReason and isolates already_running', () => {
+    const covered = new Set(DEAD_SCENARIOS.map((scenario) => scenario.reason));
+    for (const reason of DEAD_FAILURE_REASONS) {
+      assert.ok(covered.has(reason), `missing parameterized scenario for ${reason}`);
+    }
+    assert.equal(covered.has('already_running'), false);
+  });
+
   it('appends a done event alongside the done marker on success', async () => {
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
     assert.equal(result.success, true);
 
     // The done marker exists...
     await fs.stat(path.join(specFolder, '.run', 'done', '1'));
+
+    // ...no dead marker is left behind...
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
 
     // ...and exactly one matching done event was appended.
     const doneEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'done');
@@ -93,93 +242,37 @@ describe('Runner done and dead events', () => {
     assert.ok(!Number.isNaN(Date.parse(doneEvents[0].timestamp)));
   });
 
-  it('appends a dead event alongside the dead marker for no_result', async () => {
-    adapter.setBehavior({ writeResult: false });
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'no_result');
+  for (const scenario of DEAD_SCENARIOS) {
+    it(`appends a dead event alongside the dead marker for ${scenario.name}`, async () => {
+      const ctx: ScenarioContext = { tmpDir, specFolder };
+      if (scenario.prepare) {
+        await scenario.prepare(ctx);
+      }
+      if (scenario.behavior) {
+        adapter.setBehavior(scenario.behavior);
+      }
 
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: no_result'));
+      const { mutate } = scenario;
+      const runAdapter: HarnessAdapter = mutate
+        ? new MutatingMockAdapter(() => mutate(ctx))
+        : adapter;
 
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'no_result' });
-  });
+      const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, runAdapter);
+      assert.equal(result.success, false);
+      assert.equal(result.reason, scenario.reason);
 
-  it('appends a dead event alongside the dead marker for crashed', async () => {
-    adapter.setBehavior({ exitCode: 7, error: 'boom' });
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'crashed');
+      await assertDeadMarkerAndEvent(specFolder, '1', scenario.reason);
+    });
+  }
 
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: crashed'));
-
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'crashed' });
-  });
-
-  it('appends a dead event alongside the dead marker for timeout', async () => {
-    adapter.setBehavior({ timedOut: true });
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'timeout');
-
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: timeout'));
-
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'timeout' });
-  });
-
-  it('appends a dead event alongside the dead marker for verify_red', async () => {
-    await writeTask(specFolder, 'node -e "process.exit(1)"');
-    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'verify_red');
-
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: verify_red'));
-
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'verify_red' });
-  });
-
-  it('appends a dead event alongside the dead marker for spec_conflict', async () => {
-    await fs.appendFile(path.join(specFolder, 'tasks', '1.md'), '\n<!-- tampered -->\n', 'utf8');
-
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'spec_conflict');
-
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: spec_conflict'));
-
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'spec_conflict' });
-  });
-
-  it('appends a dead event for spec_conflict when approval is missing', async () => {
-    await fs.rm(path.join(specFolder, '.run', 'approved'), { force: true });
-
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(result.reason, 'spec_conflict');
-
-    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
-    assert.ok(deadContent.includes('reason: spec_conflict'));
-
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'spec_conflict' });
-  });
-
-  it('does not append a dead event for already_running when the lock is held', async () => {
+  it('writes neither a dead marker nor a dead event for already_running', async () => {
     await acquireLock(path.join(specFolder, '.run'), '1');
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.success, false);
     assert.equal(result.reason, 'already_running');
+
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
 
     let deadEvents: ParsedEvent[] = [];
     try {

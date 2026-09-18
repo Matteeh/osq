@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_CONFIG } from './config.js';
+import { getChangesDir } from './layout.js';
 
 export const TEMPLATES_ROOT = fileURLToPath(new URL('../../templates', import.meta.url));
 
@@ -103,7 +104,9 @@ export async function createNewSpec(
     throw new Error('Spec name cannot be empty');
   }
 
-  const specsDir = path.join(projectDir, options.specsDirName || DEFAULT_CONFIG.paths.specs);
+  const specsDir = options.specsDirName
+    ? path.join(projectDir, options.specsDirName)
+    : getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, projectDir);
   const legacyTemplateDir = path.join(specsDir, '_template');
 
   const legacyTemplateExists = await fs

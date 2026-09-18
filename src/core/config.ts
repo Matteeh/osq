@@ -10,8 +10,6 @@ export interface OsqLimits {
 }
 
 export interface OsqPaths {
-  readonly specs: string;
-  readonly archive: string;
   readonly features: string;
   readonly decisions: string;
   readonly templates: string;
@@ -84,8 +82,6 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxAcceptanceLines: 7,
   },
   paths: {
-    specs: 'openspec/changes',
-    archive: 'openspec/changes/archive',
     features: 'openspec/specs',
     decisions: 'decisions',
     templates: 'templates',

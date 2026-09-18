@@ -5,6 +5,7 @@ import type { OsqConfig } from '../core/config.js';
 import { MANAGED_AGENTS_BLOCK, OSQ_END_MARKER, OSQ_START_MARKER } from '../core/init.js';
 import type { Logger } from '../core/logger.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../core/parser.js';
+import { relativizeToolSummary } from '../core/summary.js';
 import { type SpawnProcessResult, spawnWithTimeout } from './process.js';
 import {
   EventStreamParser,
@@ -309,21 +310,25 @@ export function extractOpencodeToolEvent(event: unknown): ToolEventData | null {
 
 /**
  * Single code path for tool observation: the events.jsonl entry and its verbose
- * stderr log line are always emitted together by the shared stdout handler.
+ * stderr log line are always emitted together. The summary is relativized to the
+ * project root before it is written, so `events.jsonl` never carries absolute
+ * workspace paths.
  */
-async function recordToolEvent(
+async function emitObservedToolEvent(
   specFolderPath: string,
   taskNumber: string,
   toolEvent: ToolEventData,
   timestamp: string,
+  projectRoot?: string,
   logger?: Logger,
 ): Promise<void> {
+  const summary = relativizeToolSummary(toolEvent.summary, projectRoot);
   await appendHarnessEvent(specFolderPath, taskNumber, {
     type: 'tool',
     timestamp,
-    data: { tool: toolEvent.tool, summary: toolEvent.summary },
+    data: { tool: toolEvent.tool, summary },
   });
-  logger?.verbose(`[tool] ${toolEvent.tool}: ${toolEvent.summary}`);
+  logger?.verbose(`[tool] ${toolEvent.tool}: ${summary}`);
 }
 
 export async function processOpencodeStdoutLine(
@@ -331,6 +336,7 @@ export async function processOpencodeStdoutLine(
   specFolderPath: string,
   taskNumber: string,
   logger?: Logger,
+  projectRoot?: string,
 ): Promise<void> {
   const trimmed = line.trim();
   if (!trimmed) {
@@ -353,11 +359,12 @@ export async function processOpencodeStdoutLine(
 
   const toolEvent = extractOpencodeToolEvent(eventObj);
   if (toolEvent) {
-    await recordToolEvent(
+    await emitObservedToolEvent(
       specFolderPath,
       taskNumber,
       toolEvent,
       resolveEventTimestamp(eventObj),
+      projectRoot,
       logger,
     );
     return;
@@ -407,8 +414,10 @@ export async function processOpencodeStdoutLine(
  * and serialization logic lives entirely in the shared {@link EventStreamParser}.
  */
 export class OpencodeEventStreamParser extends EventStreamParser {
-  constructor(specFolderPath: string, taskNumber: string, logger?: Logger) {
-    super((line) => processOpencodeStdoutLine(line, specFolderPath, taskNumber, logger));
+  constructor(specFolderPath: string, taskNumber: string, logger?: Logger, projectRoot?: string) {
+    super((line) =>
+      processOpencodeStdoutLine(line, specFolderPath, taskNumber, logger, projectRoot),
+    );
   }
 }
 
@@ -494,7 +503,7 @@ export class OpencodeAdapter implements HarnessAdapter {
     const args = await buildOpencodeArgs(options);
     const bin = await resolveOpencodeBinary(config);
     const streamParser = new EventStreamParser((line) =>
-      processOpencodeStdoutLine(line, specFolderPath, taskNumber, options.logger),
+      processOpencodeStdoutLine(line, specFolderPath, taskNumber, options.logger, projectRoot),
     );
 
     const result = await spawnWithTimeout({

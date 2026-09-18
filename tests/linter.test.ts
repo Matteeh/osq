@@ -293,6 +293,39 @@ None`;
     assert.ok(result.errors.some((e) => e.includes('missing change: 999')));
   });
 
+  it('accepts depends_on naming a change that lives in the archive', async () => {
+    await fs.mkdir(path.join(tmpDir, 'openspec', 'changes', 'archive', '042-archived'), {
+      recursive: true,
+    });
+    const specMdPath = path.join(specFolder, 'spec.md');
+    const content = `---
+title: Archived Dependency
+depends_on: [042]
+features:
+  reads: []
+  writes: []
+---
+## Goal
+Goal
+## Contract
+| A | B |
+|---|---|
+| 1 | 2 |
+## Non-goals
+None
+## Delta
+None`;
+    await fs.writeFile(specMdPath, content);
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true);
+    assert.equal(
+      result.errors.some((e) => e.includes('missing change')),
+      false,
+    );
+  });
+
   it('rejects acceptance checklist longer than maxAcceptanceLines', async () => {
     const taskPath = path.join(specFolder, 'tasks', '1.md');
     const items = Array.from({ length: 8 }, (_, i) => `- [ ] item ${i + 1}`).join('\n');

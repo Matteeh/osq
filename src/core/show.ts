@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
+import { getArchiveDir, getChangesDir } from './layout.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
 
@@ -69,8 +70,8 @@ export async function resolveSpecFolder(
     throw new Error('Spec ID or prefix cannot be empty');
   }
 
-  const specsDir = path.join(projectRoot, config.paths.specs);
-  const archiveDir = path.join(projectRoot, config.paths.archive);
+  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
+  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
 
   // If directly pointing to an existing folder
   if (path.isAbsolute(trimmed) || trimmed.includes(path.sep)) {

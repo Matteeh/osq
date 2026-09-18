@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
+import { getArchiveDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { OpencodeAdapter, preflightOpencode } from '../src/harness/opencode.js';
@@ -390,7 +391,10 @@ process.exit(0);
 
     // Assert that task cycle proceeded and completed the task
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
+    const archivedPath = path.join(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      folderName,
+    );
     const doneMarker = path.join(archivedPath, '.run', 'done', '1');
     const doneStat = await fs.stat(doneMarker).catch(() => null);
     assert.ok(doneStat, 'Task should have completed and done marker created');

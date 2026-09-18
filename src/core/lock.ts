@@ -60,13 +60,17 @@ export interface ReapedLock {
   startedAt: number;
 }
 
+/**
+ * Detect stale locks and unlink their pid files. Detection is pure with respect
+ * to markers: it never creates `.run/dead/<n>.md` or writes any `.run/`
+ * artifact beyond removing the expired lock. Callers (the watcher loop) own the
+ * marker and event emission for each returned descriptor.
+ */
 export async function reapStaleLocks(
   specFolderPath: string,
   staleLockSeconds: number,
 ): Promise<ReapedLock[]> {
-  const runDir = path.join(specFolderPath, '.run');
-  const runningDir = path.join(runDir, 'running');
-  const deadDir = path.join(runDir, 'dead');
+  const runningDir = path.join(specFolderPath, '.run', 'running');
 
   let entries: string[] = [];
   try {
@@ -103,20 +107,6 @@ export async function reapStaleLocks(
       try {
         await fs.unlink(lockPath);
       } catch {}
-
-      await fs.mkdir(deadDir, { recursive: true });
-      const deadPath = path.join(deadDir, `${taskNumber}.md`);
-      const deadContent = [
-        '---',
-        `reason: ${reapReason}`,
-        `pid: ${lockData.pid}`,
-        `started_at: ${new Date(lockData.startedAt).toISOString()}`,
-        `reaped_at: ${new Date(now).toISOString()}`,
-        '---',
-        `Task execution terminated by watcher reaper (${reapReason}).`,
-      ].join('\n');
-
-      await fs.writeFile(deadPath, `${deadContent}\n`, 'utf8');
 
       reaped.push({
         taskNumber,

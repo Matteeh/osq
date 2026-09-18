@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from './config.js';
 import { DeltaMergeError, mergeDelta, parseDelta } from './delta.js';
+import { getArchiveDir, getChangesDir } from './layout.js';
 import { parseFrontmatter, parseSpecMd, parseTaskMd, resolveChangeDoc } from './parser.js';
 
 /** The exact `@fission-ai/openspec` version this profile is pinned against. */
@@ -304,12 +305,12 @@ export async function validateWithOpenSpec(
 async function checkDependencyExists(
   projectRoot: string,
   depId: string,
-  specsDirName: string,
+  config: OsqConfig,
 ): Promise<boolean> {
-  const specsDir = path.join(projectRoot, specsDirName);
-  const archiveDir = path.join(specsDir, 'archive');
-
-  const dirsToCheck = [specsDir, archiveDir];
+  const dirsToCheck = [
+    getChangesDir(config.paths.openspecRoot, projectRoot),
+    getArchiveDir(config.paths.openspecRoot, projectRoot),
+  ];
   const paddedDep = depId.padStart(3, '0');
 
   for (const dir of dirsToCheck) {
@@ -537,7 +538,7 @@ export async function lintChangeFolder(
 
   // Check: depends_on exists
   for (const dep of spec.dependsOn) {
-    const exists = await checkDependencyExists(projectRoot, dep, config.paths.specs);
+    const exists = await checkDependencyExists(projectRoot, dep, config);
     if (!exists) {
       errors.push(`depends_on names missing change: ${dep}`);
     }

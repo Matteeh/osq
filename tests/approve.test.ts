@@ -7,6 +7,7 @@ import { approveSpec, findSpecFolder } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { hashChangeFolder } from '../src/core/hasher.js';
 import { scaffoldProject } from '../src/core/init.js';
+import { getChangesDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 
 describe('osq approve', () => {
@@ -25,7 +26,7 @@ describe('osq approve', () => {
   });
 
   it('findSpecFolder resolves spec folder by ID, padded number, or prefix', async () => {
-    const specsDir = path.join(tmpDir, DEFAULT_CONFIG.paths.specs);
+    const specsDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
     const byId = await findSpecFolder(specsDir, '001');
     assert.equal(byId, specFolder);
 

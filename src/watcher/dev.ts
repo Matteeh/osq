@@ -3,10 +3,24 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { watch } from 'chokidar';
-import type { WatchCommandOptions } from '../cli/watch.js';
 
 export const DEV_WORKER_ENV = 'OSQ_DEV_WORKER';
 export const EXIT_SIGINT = 130;
+
+/**
+ * Options accepted by `osq watch`. Declared here, in the watcher tier, so the
+ * CLI can consume them without the watcher importing from `src/cli`.
+ */
+export interface WatchCommandOptions {
+  once?: boolean;
+  dir?: string;
+  harness?: string;
+  verbose?: boolean;
+  quiet?: boolean;
+  symbols?: boolean;
+  allowStale?: boolean;
+  dev?: boolean;
+}
 
 /** Package root of the running osq build: `src/watcher/` or `dist/watcher/`. */
 const PACKAGE_ROOT = path.resolve(fileURLToPath(new URL('../../', import.meta.url)));

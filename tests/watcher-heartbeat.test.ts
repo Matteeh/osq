@@ -14,7 +14,9 @@ import {
   type SpawnTaskOptions,
   appendHarnessEvent,
 } from '../src/harness/types.js';
-import { computeTaskHeartbeatStats, runTask } from '../src/watcher/runner.js';
+import { computeTaskHeartbeatStats } from '../src/watcher/heartbeat.js';
+import { acquireTaskLock, releaseTaskLock } from '../src/watcher/lock.js';
+import { runTask } from '../src/watcher/runner.js';
 
 const HEARTBEAT_CONFIG = defineConfig({ log: { heartbeatSeconds: 0.05 } });
 
@@ -242,5 +244,34 @@ describe('Runner heartbeat', () => {
       atCompletion,
       'heartbeat timer kept firing after runTask resolved',
     );
+  });
+});
+
+describe('Watcher lifecycle modules', () => {
+  it('acquires and releases a task lock through the watcher wrapper', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-lock-wrapper-test-'));
+    const runDir = path.join(dir, '.run');
+    try {
+      const first = await acquireTaskLock(runDir, '1');
+      assert.equal(first.acquired, true);
+
+      const second = await acquireTaskLock(runDir, '1');
+      assert.equal(second.acquired, false);
+
+      await releaseTaskLock(runDir, '1');
+      const third = await acquireTaskLock(runDir, '1');
+      assert.equal(third.acquired, true);
+      await releaseTaskLock(runDir, '1');
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps lock.ts and heartbeat.ts under the 200 line module budget', async () => {
+    for (const file of ['lock.ts', 'heartbeat.ts']) {
+      const content = await fs.readFile(path.join(process.cwd(), 'src', 'watcher', file), 'utf8');
+      const lines = content.split('\n').length - (content.endsWith('\n') ? 1 : 0);
+      assert.ok(lines < 200, `${file} has ${lines} lines`);
+    }
   });
 });
