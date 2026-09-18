@@ -6,6 +6,7 @@ import { hashChangeFolder } from '../core/hasher.js';
 import { acquireLock, releaseLock } from '../core/lock.js';
 import type { Logger } from '../core/logger.js';
 import { parseTaskMd } from '../core/parser.js';
+import { asRecord } from '../harness/stream.js';
 import {
   type DeadEventData,
   type DoneEventData,
@@ -80,10 +81,10 @@ async function recordLifecycleEvent(
 }
 
 /**
- * Append the `dead` event that always travels with a dead marker (or, for
- * `already_running`, with the failed attempt itself). The event stream is the
- * append-only source of truth for failure history, so it must agree with the
- * marker at every exit.
+ * Append the `dead` event that always travels with a dead marker. The event
+ * stream is the append-only source of truth for failure history, so it must
+ * agree with the marker at every exit. A lock collision never writes a dead
+ * marker and therefore never records a dead event.
  */
 async function recordDeadEvent(
   specFolderPath: string,
@@ -138,10 +139,12 @@ export async function computeTaskHeartbeatStats(
 
   for (const line of lines) {
     try {
-      const event = JSON.parse(line) as HarnessEvent;
-      if (event.type === 'tokens' && event.data) {
-        totalTokens += Number(event.data.totalTokens ?? 0) || 0;
+      const event = asRecord(JSON.parse(line));
+      if (event?.type !== 'tokens') {
+        continue;
       }
+      const data = asRecord(event.data);
+      totalTokens += Number(data?.totalTokens ?? 0) || 0;
     } catch {
       // Ignore malformed lines rather than losing the whole heartbeat.
     }
@@ -150,52 +153,11 @@ export async function computeTaskHeartbeatStats(
   return { elapsedSeconds, eventCount: lines.length, totalTokens };
 }
 
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
-
-/**
- * Pull the final agent message out of a single stream event. Adapters persist
- * the harness's own text shapes (`text`, `agent_response`) as harness events,
- * but raw OpenCode and Antigravity payloads are accepted too.
- */
-function extractTextFromStreamEvent(event: unknown): string | null {
-  const eventObj = asRecord(event);
-  if (!eventObj) {
-    return null;
-  }
-
-  const data = asRecord(eventObj.data);
-  const part = asRecord(eventObj.part);
-  const stepUpdate = asRecord(eventObj.step_update);
-
-  const candidates: unknown[] = [
-    data?.text,
-    data?.text_delta,
-    data?.response,
-    data?.message,
-    eventObj.text,
-    eventObj.text_delta,
-    eventObj.response,
-    part?.text,
-    stepUpdate?.text_delta,
-    stepUpdate?.text,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.trim().length > 0) {
-      return candidate;
-    }
-  }
-
-  return null;
-}
-
 /**
  * Return the last text message emitted on the agent's event stream, or null
- * when the stream has no text at all. The stream is the append-only
+ * when the stream has no text at all. Synthesis reads exclusively from
+ * first-class `text` events carrying the completed assistant message; raw
+ * harness payload shapes are never inspected. The stream is the append-only
  * `.run/events/<n>.jsonl` file, so this survives a watcher restart.
  */
 export async function extractFinalTextFromStream(
@@ -216,14 +178,18 @@ export async function extractFinalTextFromStream(
     if (!line.trim()) {
       continue;
     }
-    let event: unknown;
+    let parsed: unknown;
     try {
-      event = JSON.parse(line);
+      parsed = JSON.parse(line);
     } catch {
       continue;
     }
-    const text = extractTextFromStreamEvent(event);
-    if (text !== null) {
+    const event = asRecord(parsed);
+    if (event?.type !== 'text') {
+      continue;
+    }
+    const text = asRecord(event.data)?.text;
+    if (typeof text === 'string' && text.trim().length > 0) {
       finalText = text;
     }
   }
@@ -322,7 +288,9 @@ export async function runTask(
 
   const lockResult = await acquireLock(runDir, taskNumber);
   if (!lockResult.acquired) {
-    await recordDeadEvent(specFolderPath, taskNumber, 'already_running');
+    // A lock collision means another process is actively running this task, not
+    // that the task failed. It writes no dead marker, so it must not append a
+    // dead event either; only a dead marker write may record a dead event.
     logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'already_running'));
     return { success: false, reason: 'already_running', error: 'Task is already running' };
   }
@@ -349,6 +317,32 @@ export async function runTask(
 
   try {
     const spawnStartMs = startTime;
+    const timeoutSeconds = config.timeouts.taskTimeoutSeconds;
+
+    // The runner alone owns lifecycle events. `started` is emitted the moment
+    // the child process exists via `onSpawn`, not after the adapter resolves.
+    let startedRecorded = false;
+    let startedPromise: Promise<void> | null = null;
+
+    const recordStarted = (pid: number | undefined): Promise<void> => {
+      if (startedRecorded) {
+        return startedPromise ?? Promise.resolve();
+      }
+      startedRecorded = true;
+      startedPromise = recordLifecycleEvent(
+        specFolderPath,
+        taskNumber,
+        {
+          type: 'started',
+          timestamp: new Date().toISOString(),
+          data: { pid, timeoutSeconds },
+        },
+        `task ${taskNumber} started (pid: ${pid ?? 'unknown'}, timeout: ${timeoutSeconds}s)`,
+        logger,
+      );
+      return startedPromise;
+    };
+
     const spawnResult = await adapter.spawn({
       projectRoot,
       specFolderPath,
@@ -359,25 +353,17 @@ export async function runTask(
       entry: taskData.entry,
       skills: taskData.skills,
       tier: 'coding',
-      timeoutSeconds: config.timeouts.taskTimeoutSeconds,
+      timeoutSeconds,
       config,
+      onSpawn: (pid) => recordStarted(pid),
     });
+
+    // Fallback: an adapter that never invokes onSpawn (or a spawn that fails
+    // before the callback) still yields exactly one `started` event.
+    await recordStarted(spawnResult.pid);
 
     const elapsedMs = spawnResult.elapsedMs ?? Date.now() - spawnStartMs;
     const elapsedSeconds = Number((elapsedMs / 1000).toFixed(1));
-    const timeoutSeconds = config.timeouts.taskTimeoutSeconds;
-
-    await recordLifecycleEvent(
-      specFolderPath,
-      taskNumber,
-      {
-        type: 'started',
-        timestamp: new Date(spawnStartMs).toISOString(),
-        data: { pid: spawnResult.pid, timeoutSeconds },
-      },
-      `task ${taskNumber} started (pid: ${spawnResult.pid ?? 'unknown'}, timeout: ${timeoutSeconds}s)`,
-      logger,
-    );
 
     await recordLifecycleEvent(
       specFolderPath,
@@ -387,6 +373,7 @@ export async function runTask(
         timestamp: new Date().toISOString(),
         data: {
           exitCode: spawnResult.exitCode,
+          pid: spawnResult.pid,
           signal: spawnResult.signal ?? undefined,
           timedOut: spawnResult.timedOut,
           elapsedSeconds,

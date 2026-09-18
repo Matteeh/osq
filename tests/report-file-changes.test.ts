@@ -72,7 +72,6 @@ describe('report file change metrics', () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
 
       assert.equal(report.fileChanges.totalChanges, 3);
-      assert.equal(report.fileChanges.totalEvents, 3);
       assert.equal(report.fileChanges.uniqueCount, 2);
       assert.deepEqual(report.fileChanges.uniqueFiles, [
         'src/harness/opencode.ts',

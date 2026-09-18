@@ -34,20 +34,12 @@ export interface TokenMetrics {
   readonly reasoning: number;
   readonly total: number;
   readonly cacheSharePercent: number;
-  // Backward compatibility
-  readonly promptTokens: number;
-  readonly candidateTokens: number;
-  readonly totalTokens: number;
-  readonly prompt: number;
-  readonly candidate: number;
 }
 
 export interface FileChangeMetrics {
   readonly totalChanges: number;
   readonly uniqueCount: number;
   readonly uniqueFiles: readonly string[];
-  // Backward compatibility
-  readonly totalEvents: number;
 }
 
 export interface CostMetrics {
@@ -65,18 +57,6 @@ export interface MetricsReport {
   readonly specs: SpecMetrics;
   readonly tasks: TaskMetrics;
   readonly tokens: TokenMetrics;
-  // Backward-compatibility aliases retained for existing consumers.
-  readonly totalSpecs: number;
-  readonly activeSpecs: number;
-  readonly archivedSpecs: number;
-  readonly totalTasks: number;
-  readonly doneTasks: number;
-  readonly deadTasks: number;
-  readonly runningTasks: number;
-  readonly pendingTasks: number;
-  readonly completionPercentage: number;
-  readonly completionRatio: number;
-  readonly deadBreakdown: Record<string, number>;
 }
 
 export function formatDuration(ms: number): string {
@@ -368,7 +348,7 @@ export async function getMetricsReport(
                   0,
               ) || 0;
             const reasoning =
-              Number(data.reasoning ?? data.thinking_tokens ?? data.reasoningTokens ?? 0) || 0;
+              Number(data.reasoningTokens ?? data.reasoning ?? data.thinking_tokens ?? 0) || 0;
 
             const cacheValue =
               typeof data.cache === 'number'
@@ -382,18 +362,24 @@ export async function getMetricsReport(
               Number(
                 data.cached_input ?? data.cachedTokens ?? data.cache_read_tokens ?? cacheValue ?? 0,
               ) || 0;
+            const hasReportedCache =
+              data.cachedTokens !== undefined ||
+              data.cached_input !== undefined ||
+              data.cache_read_tokens !== undefined ||
+              cacheValue !== undefined;
 
             const rawTotal = data.total ?? data.totalTokens;
             const hasReportedTotal = rawTotal !== undefined && rawTotal !== null;
             const reportedTotal = Number(rawTotal) || 0;
 
-            // A harness-reported total is authoritative. Once input, output, and
-            // reasoning are known, the remaining cached input is derived so the
-            // neutral breakdown always sums back to the reported total. Harnesses
-            // without an explicit total fall back to their own cache counters.
-            const cachedInput = hasReportedTotal
-              ? Math.max(0, reportedTotal - input - output - reasoning)
-              : reportedCachedInput;
+            // A harness-reported cache counter is authoritative. The remainder
+            // formula (total minus input, output, and reasoning) is a fallback
+            // used strictly when the event carries no cache field at all.
+            const cachedInput = hasReportedCache
+              ? reportedCachedInput
+              : hasReportedTotal
+                ? Math.max(0, reportedTotal - input - output - reasoning)
+                : 0;
             const total = hasReportedTotal
               ? reportedTotal
               : input + cachedInput + output + reasoning;
@@ -491,8 +477,6 @@ export async function getMetricsReport(
   const totalSpecs = activeSpecs + archivedSpecs;
 
   const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 10000) / 100 : 0;
-  const completionPercentage = completionRate;
-  const completionRatio = totalTasks > 0 ? doneTasks / totalTasks : 0;
 
   const avgDurationMs =
     tasksWithDurationCount > 0 ? Math.round(totalDurationMs / tasksWithDurationCount) : 0;
@@ -528,18 +512,7 @@ export async function getMetricsReport(
       running: runningTasks,
       pending: pendingTasks,
     },
-    totalSpecs,
-    activeSpecs,
-    archivedSpecs,
-    totalTasks,
-    doneTasks,
-    deadTasks,
-    runningTasks,
-    pendingTasks,
     completionRate,
-    completionPercentage,
-    completionRatio,
-    deadBreakdown: failureBreakdown,
     failureBreakdown,
     durations: {
       totalMs: totalDurationMs,
@@ -559,15 +532,9 @@ export async function getMetricsReport(
         totalInput + totalCachedInput > 0
           ? Math.round((totalCachedInput / (totalInput + totalCachedInput)) * 1000) / 10
           : 0,
-      promptTokens: totalInput,
-      candidateTokens: totalOutput,
-      totalTokens,
-      prompt: totalInput,
-      candidate: totalOutput,
     },
     ...(cost ? { cost } : {}),
     fileChanges: {
-      totalEvents: totalFileChanges,
       totalChanges: totalFileChanges,
       uniqueFiles: Array.from(uniqueFiles).sort(),
       uniqueCount: uniqueFiles.size,

@@ -391,16 +391,7 @@ process.exit(0);
     assert.ok(recorded.files.length >= 2);
     assert.ok(recorded.prompt.includes('Follow AGENTS.md strictly.'));
 
-    // Verify started and exited events logged
-    const eventFilePath = path.join(specFolder, '.run', 'events', '1.jsonl');
-    const eventsRaw = await fs.readFile(eventFilePath, 'utf8');
-    const events = eventsRaw
-      .trim()
-      .split('\n')
-      .map((l) => JSON.parse(l));
-    assert.equal(events[0].type, 'started');
-    assert.equal(events[events.length - 1].type, 'exited');
-    assert.equal(events[events.length - 1].data.exitCode, 0);
+    assert.ok(typeof successResult.pid === 'number' && successResult.pid > 0);
 
     // 2. Fake binary that handles non-zero exit
     const fakeFailingBin = path.join(tmpDir, 'fake-failing-opencode.mjs');
@@ -427,16 +418,6 @@ process.exit(42);
     assert.equal(failResult.timedOut, false);
     assert.ok(failResult.error?.includes('Simulated fatal error in opencode'));
 
-    // Verify exited event logged non-zero exit code
-    const eventFileFailPath = path.join(specFolder, '.run', 'events', '2.jsonl');
-    const failEventsRaw = await fs.readFile(eventFileFailPath, 'utf8');
-    const failEvents = failEventsRaw
-      .trim()
-      .split('\n')
-      .map((l) => JSON.parse(l));
-    assert.equal(failEvents[failEvents.length - 1].type, 'exited');
-    assert.equal(failEvents[failEvents.length - 1].data.exitCode, 42);
-
     // 3. Fake binary that respects timeout termination
     const fakeHangingBin = path.join(tmpDir, 'fake-hanging-opencode.mjs');
     const hangingScript = `#!/usr/bin/env node
@@ -462,17 +443,5 @@ setInterval(() => {}, 1000);
     assert.equal(timeoutResult.exitCode, 124);
     assert.equal(timeoutResult.signal, 'SIGTERM');
     assert.equal(timeoutResult.error, 'Task execution timed out');
-
-    // Verify exited event logged timeout
-    const eventFileTimeoutPath = path.join(specFolder, '.run', 'events', '3.jsonl');
-    const timeoutEventsRaw = await fs.readFile(eventFileTimeoutPath, 'utf8');
-    const timeoutEvents = timeoutEventsRaw
-      .trim()
-      .split('\n')
-      .map((l) => JSON.parse(l));
-    assert.equal(timeoutEvents[timeoutEvents.length - 1].type, 'exited');
-    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.timedOut, true);
-    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.exitCode, 124);
-    assert.equal(timeoutEvents[timeoutEvents.length - 1].data.signal, 'SIGTERM');
   });
 });

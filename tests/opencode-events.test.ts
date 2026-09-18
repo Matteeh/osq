@@ -65,8 +65,9 @@ describe('OpenCode Event Stream and Token Metrics Translation', () => {
       .split('\n')
       .map((l) => JSON.parse(l));
 
-    assert.equal(events.length, 1);
-    assert.equal(events[0].type, 'tokens');
+    assert.equal(events.length, 2);
+    assert.equal(events[0].type, 'text');
+    assert.equal(events[1].type, 'tokens');
   });
 
   it('step_finish event extracts input, output, total, and cache tokens with cost', () => {
@@ -183,6 +184,7 @@ describe('OpenCode Event Stream and Token Metrics Translation', () => {
       candidateTokens: 2,
       totalTokens: 8138,
       cachedTokens: 0,
+      reasoningTokens: 0,
       cost: 0.0012216,
     });
 
@@ -226,18 +228,17 @@ process.exit(0);
       .split('\n')
       .map((l) => JSON.parse(l));
 
-    assert.equal(task3Events.length, 3);
-    assert.equal(task3Events[0].type, 'started');
+    assert.equal(task3Events.length, 2);
+    assert.equal(task3Events[0].type, 'text');
     assert.equal(task3Events[1].type, 'tokens');
     assert.deepEqual(task3Events[1].data, {
       promptTokens: 8136,
       candidateTokens: 2,
       totalTokens: 8138,
       cachedTokens: 0,
+      reasoningTokens: 0,
       cost: 0.0012216,
     });
-    assert.equal(task3Events[2].type, 'exited');
-    assert.equal(task3Events[2].data.exitCode, 0);
   });
 
   it('Unknown event types such as step_start and text are logged at debug level without throwing', async () => {
@@ -255,13 +256,6 @@ process.exit(0);
         part: { id: 'prt_1', type: 'step-start' },
       });
 
-      const textLine = JSON.stringify({
-        type: 'text',
-        timestamp: 1789673166596,
-        sessionID: 'ses_f4f2ab168ffe8KfVG0qfEvul50',
-        part: { id: 'prt_2', type: 'text', text: 'hi' },
-      });
-
       const customLine = JSON.stringify({
         type: 'tool_call',
         name: 'grep',
@@ -270,14 +264,12 @@ process.exit(0);
       // None of these should throw
       await assert.doesNotReject(async () => {
         await processOpencodeStdoutLine(stepStartLine, specFolder, 'unknown-test');
-        await processOpencodeStdoutLine(textLine, specFolder, 'unknown-test');
         await processOpencodeStdoutLine(customLine, specFolder, 'unknown-test');
       });
 
       // Verify logged at debug level
-      assert.ok(debugLogs.length >= 3);
+      assert.ok(debugLogs.length >= 2);
       assert.ok(debugLogs.some((args) => args.some((a) => String(a).includes('step_start'))));
-      assert.ok(debugLogs.some((args) => args.some((a) => String(a).includes('text'))));
       assert.ok(debugLogs.some((args) => args.some((a) => String(a).includes('tool_call'))));
 
       // No tokens event should have been written

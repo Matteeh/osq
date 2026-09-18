@@ -185,7 +185,6 @@ describe('formatMetricsReport', () => {
         totalChanges: 42,
         uniqueCount: 3,
         uniqueFiles: ['a.ts', 'b.ts', 'c.ts'],
-        totalEvents: 42,
       },
       specs: { total: 9, active: 4, archived: 5 },
       tasks: { total: 11, done: 5, dead: 1, running: 2, pending: 3 },
@@ -196,11 +195,6 @@ describe('formatMetricsReport', () => {
         reasoning: 444,
         total: 1110,
         cacheSharePercent: 66.6,
-        promptTokens: 111,
-        candidateTokens: 333,
-        totalTokens: 1110,
-        prompt: 111,
-        candidate: 333,
       },
     } as unknown as MetricsReport;
 

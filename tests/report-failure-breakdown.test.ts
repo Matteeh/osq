@@ -77,7 +77,6 @@ describe('report failure breakdown', () => {
 
       assert.equal(report.tasks.dead, 0);
       assert.equal(report.failureBreakdown.crashed, 1);
-      assert.equal(report.deadBreakdown.crashed, 1);
     });
 
     it('formats the failure breakdown per reason', async () => {
@@ -113,7 +112,6 @@ describe('report failure breakdown', () => {
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
       assert.deepEqual(report.failureBreakdown, { crashed: 2, timeout: 1 });
-      assert.equal(report.deadBreakdown.crashed, 2);
     });
 
     it('retains dead events for tasks that are later retried and completed', async () => {

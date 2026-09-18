@@ -5,9 +5,16 @@ import type { OsqConfig } from '../core/config.js';
 import type { Logger } from '../core/logger.js';
 import { spawnWithTimeout } from './process.js';
 import {
+  EventStreamParser,
+  asRecord,
+  firstNonEmptyString,
+  resolveEventTimestamp,
+} from './stream.js';
+import {
   type HarnessAdapter,
   type SpawnResult,
   type SpawnTaskOptions,
+  type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
 } from './types.js';
@@ -98,38 +105,12 @@ export interface AgyStreamTokensData {
   candidateTokens: number;
   totalTokens: number;
   cachedTokens: number;
+  reasoningTokens: number;
   cost: number;
 }
 
 const AGY_TOOL_SUMMARY_MAX_LENGTH = 60;
 const AGY_COMMAND_TOOLS = new Set(['run_command', 'command_status', 'send_command_input']);
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
-
-function firstNonEmptyString(...values: unknown[]): string | undefined {
-  for (const value of values) {
-    if (typeof value === 'string' && value.length > 0) {
-      return value;
-    }
-  }
-  return undefined;
-}
-
-function resolveAgyTimestamp(eventObj: Record<string, unknown>): string {
-  const stepUpdate = asRecord(eventObj.step_update);
-  const candidate = eventObj.timestamp ?? stepUpdate?.timestamp;
-  if (typeof candidate === 'number' || typeof candidate === 'string') {
-    const date = new Date(candidate);
-    if (!Number.isNaN(date.getTime())) {
-      return date.toISOString();
-    }
-  }
-  return new Date().toISOString();
-}
 
 export function extractAgyTokens(event: unknown): AgyStreamTokensData | null {
   const eventObj = asRecord(event);
@@ -150,13 +131,21 @@ export function extractAgyTokens(event: unknown): AgyStreamTokensData | null {
   const promptTokens = Number(usage.input_tokens) || 0;
   const candidateTokens = Number(usage.output_tokens) || 0;
   const cachedTokens = Number(usage.cache_read_tokens) || 0;
+  const reasoningTokens = Number(usage.thinking_tokens ?? usage.reasoning_tokens ?? 0) || 0;
   const explicitTotal = Number(usage.total_tokens);
   const totalTokens =
     Number.isFinite(explicitTotal) && explicitTotal > 0
       ? explicitTotal
       : promptTokens + candidateTokens;
 
-  return { promptTokens, candidateTokens, totalTokens, cachedTokens, cost: 0 };
+  return {
+    promptTokens,
+    candidateTokens,
+    totalTokens,
+    cachedTokens,
+    reasoningTokens,
+    cost: 0,
+  };
 }
 
 export function extractAgyToolEvent(event: unknown): ToolEventData | null {
@@ -264,9 +253,24 @@ export async function processAgyStdoutLine(
       specFolderPath,
       taskNumber,
       toolEvent,
-      resolveAgyTimestamp(eventObj),
+      resolveEventTimestamp(eventObj),
       logger,
     );
+    return;
+  }
+
+  // The result payload carries the completed assistant response. Partial
+  // `text_delta` fragments from step updates are never persisted as text events.
+  const resultObj = asRecord(eventObj.result);
+  if (eventObj.event === 'result' || resultObj) {
+    const response = firstNonEmptyString(resultObj?.response);
+    if (response !== undefined) {
+      await appendHarnessEvent(specFolderPath, taskNumber, {
+        type: 'text',
+        timestamp: resolveEventTimestamp(eventObj),
+        data: { text: response } satisfies TextEventData,
+      });
+    }
     return;
   }
 
@@ -283,52 +287,25 @@ export async function processAgyStdoutLine(
 
   await appendHarnessEvent(specFolderPath, taskNumber, {
     type: 'tokens',
-    timestamp: resolveAgyTimestamp(eventObj),
+    timestamp: resolveEventTimestamp(eventObj),
     data: {
       promptTokens: tokensData.promptTokens,
       candidateTokens: tokensData.candidateTokens,
       totalTokens: tokensData.totalTokens,
       cachedTokens: tokensData.cachedTokens,
+      reasoningTokens: tokensData.reasoningTokens,
       cost: tokensData.cost,
     },
   });
 }
 
-export class AgyEventStreamParser {
-  private buffer = '';
-  private pending: Promise<void> = Promise.resolve();
-
-  constructor(
-    private specFolderPath: string,
-    private taskNumber: string,
-    private logger?: Logger,
-  ) {}
-
-  feed(chunk: string): void {
-    this.buffer += chunk;
-    const lines = this.buffer.split('\n');
-    this.buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      this.pending = this.pending.then(() =>
-        processAgyStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
-          () => {},
-        ),
-      );
-    }
-  }
-
-  async flush(): Promise<void> {
-    if (this.buffer.trim()) {
-      const line = this.buffer;
-      this.buffer = '';
-      this.pending = this.pending.then(() =>
-        processAgyStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
-          () => {},
-        ),
-      );
-    }
-    await this.pending;
+/**
+ * Compatibility subclass retained for existing callers and tests; the buffering
+ * and serialization logic lives entirely in the shared {@link EventStreamParser}.
+ */
+export class AgyEventStreamParser extends EventStreamParser {
+  constructor(specFolderPath: string, taskNumber: string, logger?: Logger) {
+    super((line) => processAgyStdoutLine(line, specFolderPath, taskNumber, logger));
   }
 }
 
@@ -341,27 +318,13 @@ export class AgyAdapter implements HarnessAdapter {
   }
 
   async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
-    const {
-      projectRoot,
-      specFolderPath,
-      taskNumber,
-      taskTitle,
-      scope,
-      entry,
-      skills,
-      tier,
-      timeoutSeconds = 1800,
-    } = options;
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'started',
-      timestamp: new Date().toISOString(),
-      data: { tier, taskTitle, scope, entry, skills },
-    });
+    const { projectRoot, specFolderPath, taskNumber, timeoutSeconds = 1800 } = options;
 
     const agyBin = await resolveAgyBinary();
     const args = buildAgyArgs(options);
-    const streamParser = new AgyEventStreamParser(specFolderPath, taskNumber, options.logger);
+    const streamParser = new EventStreamParser((line) =>
+      processAgyStdoutLine(line, specFolderPath, taskNumber, options.logger),
+    );
 
     const result = await spawnWithTimeout({
       command: agyBin,
@@ -376,25 +339,18 @@ export class AgyAdapter implements HarnessAdapter {
       onStdout: (chunk) => {
         streamParser.feed(chunk);
       },
+      onSpawn: options.onSpawn,
     });
 
     await streamParser.flush();
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'exited',
-      timestamp: new Date().toISOString(),
-      data: {
-        exitCode: result.exitCode,
-        signal: result.signal ?? undefined,
-        timedOut: result.timedOut,
-      },
-    });
 
     return {
       exitCode: result.exitCode,
       timedOut: result.timedOut,
       signal: result.signal,
       error: result.error,
+      pid: result.pid,
+      elapsedMs: result.elapsedMs,
     };
   }
 }

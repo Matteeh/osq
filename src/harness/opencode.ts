@@ -6,9 +6,16 @@ import type { Logger } from '../core/logger.js';
 import { parseFrontmatter, parseSpecMd } from '../core/parser.js';
 import { type SpawnProcessResult, spawnWithTimeout } from './process.js';
 import {
+  EventStreamParser,
+  asRecord,
+  firstNonEmptyString,
+  resolveEventTimestamp,
+} from './stream.js';
+import {
   type HarnessAdapter,
   type SpawnResult,
   type SpawnTaskOptions,
+  type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
 } from './types.js';
@@ -168,6 +175,7 @@ export interface OpencodeTokensData {
   candidateTokens: number;
   totalTokens: number;
   cachedTokens: number;
+  reasoningTokens: number;
   cost: number;
 }
 
@@ -216,42 +224,21 @@ export function extractOpencodeTokens(event: unknown): OpencodeTokensData | null
   const cost =
     typeof rawCost === 'number' && !Number.isNaN(rawCost) ? rawCost : Number(rawCost) || 0;
 
+  const reasoningTokens =
+    Number(tokensObj.reasoning ?? tokensObj.reasoningTokens ?? tokensObj.thinking ?? 0) || 0;
+
   return {
     promptTokens,
     candidateTokens,
     totalTokens,
     cachedTokens,
+    reasoningTokens,
     cost,
   };
 }
 
 const TOOL_SUMMARY_MAX_LENGTH = 60;
 const FILE_TOOLS = new Set(['read', 'edit', 'write', 'glob']);
-
-function firstNonEmptyString(...values: unknown[]): string | undefined {
-  for (const value of values) {
-    if (typeof value === 'string' && value.length > 0) {
-      return value;
-    }
-  }
-  return undefined;
-}
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
-
-function resolveEventTimestamp(eventObj: Record<string, unknown>): string {
-  if (typeof eventObj.timestamp === 'number' || typeof eventObj.timestamp === 'string') {
-    const date = new Date(eventObj.timestamp);
-    if (!Number.isNaN(date.getTime())) {
-      return date.toISOString();
-    }
-  }
-  return new Date().toISOString();
-}
 
 export function extractToolEventSummary(toolName: string, input: unknown): string {
   const tool = (toolName || '').toLowerCase();
@@ -375,6 +362,7 @@ export async function processOpencodeStdoutLine(
           candidateTokens: tokensData.candidateTokens,
           totalTokens: tokensData.totalTokens,
           cachedTokens: tokensData.cachedTokens,
+          reasoningTokens: tokensData.reasoningTokens,
           cost: tokensData.cost,
         },
       });
@@ -382,45 +370,32 @@ export async function processOpencodeStdoutLine(
     return;
   }
 
-  // Unknown event types such as step_start and text are logged at debug level without throwing
+  // A completed text part is the adapter's final assistant message. Only whole
+  // text parts become `text` events; step deltas are never persisted.
+  if (eventObj.type === 'text') {
+    const part = asRecord(eventObj.part);
+    const text = firstNonEmptyString(part?.text, eventObj.text);
+    if (text !== undefined) {
+      await appendHarnessEvent(specFolderPath, taskNumber, {
+        type: 'text',
+        timestamp: resolveEventTimestamp(eventObj),
+        data: { text } satisfies TextEventData,
+      });
+    }
+    return;
+  }
+
+  // Unknown event types such as step_start are logged at debug level without throwing
   console.debug(`[opencode] Unknown event type: ${eventObj.type}`, eventObj);
 }
 
-export class OpencodeEventStreamParser {
-  private buffer = '';
-  private pending: Promise<void> = Promise.resolve();
-
-  constructor(
-    private specFolderPath: string,
-    private taskNumber: string,
-    private logger?: Logger,
-  ) {}
-
-  feed(chunk: string): void {
-    this.buffer += chunk;
-    const lines = this.buffer.split('\n');
-    this.buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      this.pending = this.pending.then(() =>
-        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
-          () => {},
-        ),
-      );
-    }
-  }
-
-  async flush(): Promise<void> {
-    if (this.buffer.trim()) {
-      const line = this.buffer;
-      this.buffer = '';
-      this.pending = this.pending.then(() =>
-        processOpencodeStdoutLine(line, this.specFolderPath, this.taskNumber, this.logger).catch(
-          () => {},
-        ),
-      );
-    }
-    await this.pending;
+/**
+ * Compatibility subclass retained for existing callers and tests; the buffering
+ * and serialization logic lives entirely in the shared {@link EventStreamParser}.
+ */
+export class OpencodeEventStreamParser extends EventStreamParser {
+  constructor(specFolderPath: string, taskNumber: string, logger?: Logger) {
+    super((line) => processOpencodeStdoutLine(line, specFolderPath, taskNumber, logger));
   }
 }
 
@@ -501,28 +476,13 @@ export class OpencodeAdapter implements HarnessAdapter {
   }
 
   async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
-    const {
-      projectRoot,
-      specFolderPath,
-      taskNumber,
-      taskTitle,
-      scope,
-      entry,
-      skills,
-      tier,
-      timeoutSeconds = 1800,
-      config,
-    } = options;
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'started',
-      timestamp: new Date().toISOString(),
-      data: { tier, taskTitle, scope, entry, skills },
-    });
+    const { projectRoot, specFolderPath, taskNumber, timeoutSeconds = 1800, config } = options;
 
     const args = await buildOpencodeArgs(options);
     const bin = await resolveOpencodeBinary(config);
-    const streamParser = new OpencodeEventStreamParser(specFolderPath, taskNumber, options.logger);
+    const streamParser = new EventStreamParser((line) =>
+      processOpencodeStdoutLine(line, specFolderPath, taskNumber, options.logger),
+    );
 
     const result = await spawnWithTimeout({
       command: bin,
@@ -537,25 +497,18 @@ export class OpencodeAdapter implements HarnessAdapter {
       onStdout: (chunk) => {
         streamParser.feed(chunk);
       },
+      onSpawn: options.onSpawn,
     });
 
     await streamParser.flush();
-
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'exited',
-      timestamp: new Date().toISOString(),
-      data: {
-        exitCode: result.exitCode,
-        signal: result.signal ?? undefined,
-        timedOut: result.timedOut,
-      },
-    });
 
     return {
       exitCode: result.exitCode,
       timedOut: result.timedOut,
       signal: result.signal,
       error: result.error,
+      pid: result.pid,
+      elapsedMs: result.elapsedMs,
     };
   }
 }

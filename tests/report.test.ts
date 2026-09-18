@@ -98,10 +98,6 @@ skills: []
     assert.equal(report.specs.active, 1);
     assert.equal(report.specs.archived, 1);
     assert.equal(report.tasks.total, 4);
-    assert.equal(report.totalSpecs, 2);
-    assert.equal(report.activeSpecs, 1);
-    assert.equal(report.archivedSpecs, 1);
-    assert.equal(report.totalTasks, 4);
   });
 
   it('getMetricsReport calculates completion rate and dead tasks breakdown by reason', async () => {
@@ -169,11 +165,8 @@ Process terminated unexpectedly
 
     // 2 done out of 4 total = 50%
     assert.equal(report.completionRate, 50);
-    assert.equal(report.completionPercentage, 50);
 
     // Dead tasks breakdown by reason
-    assert.equal(report.deadBreakdown.verify_red, 1);
-    assert.equal(report.deadBreakdown.crashed, 1);
     assert.equal(report.failureBreakdown.verify_red, 1);
     assert.equal(report.failureBreakdown.crashed, 1);
   });
@@ -259,10 +252,10 @@ skills: []
     assert.equal(report.durations.avgMs, 15000);
     assert.equal(report.durations.avgSeconds, 15);
 
-    // Tokens: prompt = 1000, candidate = 300, total = 1300
-    assert.equal(report.tokens.promptTokens, 1000);
-    assert.equal(report.tokens.candidateTokens, 300);
-    assert.equal(report.tokens.totalTokens, 1300);
+    // Tokens: input = 1000, output = 300, total = 1300
+    assert.equal(report.tokens.input, 1000);
+    assert.equal(report.tokens.output, 300);
+    assert.equal(report.tokens.total, 1300);
 
     // File changes: 3 change events, 2 unique files ('src/core/foo.ts', 'src/cli/bar.ts')
     assert.equal(report.fileChanges.totalChanges, 3);

@@ -211,7 +211,7 @@ describe('report task states', () => {
       assert.equal(report.tasks.dead, 1);
       assert.equal(report.tasks.pending, 0);
       assert.equal(report.tasks.running, 0);
-      assert.equal(report.deadBreakdown.timeout, 1);
+      assert.equal(report.failureBreakdown.timeout, 1);
     });
 
     it('falls back to done and dead markers when no events exist', async () => {
@@ -234,7 +234,7 @@ describe('report task states', () => {
       assert.equal(report.tasks.dead, 1);
       assert.equal(report.tasks.pending, 0);
       assert.equal(report.tasks.running, 0);
-      assert.equal(report.deadBreakdown.verify_red, 1);
+      assert.equal(report.failureBreakdown.verify_red, 1);
     });
 
     it('never reports pending or running tasks when markers are absent', async () => {

@@ -5,11 +5,13 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createLogger } from '../src/core/logger.js';
 import { createNewSpec } from '../src/core/new.js';
-import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
+import { AgyAdapter } from '../src/harness/agy.js';
+import { OpencodeAdapter } from '../src/harness/opencode.js';
+import type { HarnessAdapter, HarnessEventType, TextEventData } from '../src/harness/types.js';
 import {
   extractFinalTextFromStream,
   runTask,
@@ -40,7 +42,12 @@ async function appendRawEvent(
 
 async function readEvents(specFolder: string, taskNumber: string): Promise<ParsedEvent[]> {
   const eventFilePath = path.join(specFolder, '.run', 'events', `${taskNumber}.jsonl`);
-  const raw = await fs.readFile(eventFilePath, 'utf8');
+  let raw = '';
+  try {
+    raw = await fs.readFile(eventFilePath, 'utf8');
+  } catch {
+    return [];
+  }
   return raw
     .trim()
     .split('\n')
@@ -65,30 +72,6 @@ async function captureStderr(fn: () => Promise<void>): Promise<string> {
   return stderr;
 }
 
-/**
- * Adapter that exits cleanly without writing a result file. When `finalText` is
- * provided it emits a `text` harness event, simulating an adapter that captured
- * the agent's final stream text.
- */
-class NoResultStubAdapter implements HarnessAdapter {
-  readonly name = 'no-result-stub';
-
-  constructor(private readonly finalText: string | null = null) {}
-
-  async setup(): Promise<void> {}
-
-  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
-    if (this.finalText !== null) {
-      await appendRawEvent(options.specFolderPath, options.taskNumber, {
-        type: 'text',
-        timestamp: new Date().toISOString(),
-        data: { text: this.finalText },
-      });
-    }
-    return { exitCode: 0 };
-  }
-}
-
 async function writePassingTask(specFolder: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
   const task = [
@@ -105,9 +88,51 @@ async function writePassingTask(specFolder: string): Promise<void> {
   await fs.writeFile(taskPath, `${task}\n`, 'utf8');
 }
 
+/**
+ * Real on-disk agy binary. It speaks the stream-json protocol with partial
+ * `text_delta` fragments and a final `result` payload carrying the completed
+ * response, and deliberately writes no result file so the runner must
+ * synthesize one. Nothing here is a mock adapter: the real `AgyAdapter` spawns
+ * this process through the shared `spawnWithTimeout` helper.
+ */
+const FAKE_AGY_SCRIPT = `#!/usr/bin/env node
+const lines = [
+  JSON.stringify({ event: 'init', init: { cwd: process.cwd() } }),
+  JSON.stringify({ event: 'step_update', step_update: { step_index: 1, state: 'ACTIVE', step_type: 'agent_response', text_delta: 'partial one ' } }),
+  JSON.stringify({ event: 'step_update', step_update: { step_index: 1, state: 'ACTIVE', step_type: 'agent_response', text_delta: 'partial two' } }),
+  JSON.stringify({ event: 'step_update', step_update: { step_index: 1, state: 'DONE', step_type: 'agent_response', text_delta: '\\n', usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 } } }),
+  JSON.stringify({ event: 'result', result: { status: 'SUCCESS', response: 'I finished the agy task.\\n' } }),
+];
+for (const line of lines) process.stdout.write(line + '\\n');
+process.exit(0);
+`;
+
+/**
+ * Real on-disk OpenCode binary emitting the JSON event stream with a completed
+ * `text` part, again without writing a result file.
+ */
+const FAKE_OPENCODE_SCRIPT = `#!/usr/bin/env node
+const lines = [
+  JSON.stringify({ type: 'step_start', timestamp: 1789673165771, part: { id: 'prt_1', type: 'step-start' } }),
+  JSON.stringify({ type: 'text', timestamp: 1789673166596, part: { id: 'prt_2', type: 'text', text: 'I finished the opencode task.' } }),
+  JSON.stringify({ type: 'step_finish', timestamp: 1789673166622, part: { tokens: { total: 15, input: 10, output: 5, cache: { write: 0, read: 0 } }, cost: 0 } }),
+];
+for (const line of lines) process.stdout.write(line + '\\n');
+process.exit(0);
+`;
+
+/** Real on-disk OpenCode binary that emits no assistant text at all. */
+const FAKE_OPENCODE_SILENT_SCRIPT = `#!/usr/bin/env node
+process.stdout.write(JSON.stringify({ type: 'step_start', timestamp: 1789673165771, part: { id: 'prt_1', type: 'step-start' } }) + '\\n');
+process.exit(0);
+`;
+
 describe('Runner synthesized result', () => {
   let tmpDir: string;
   let specFolder: string;
+  let fakeAgyBin: string;
+  let fakeOpencodeBin: string;
+  let originalAgyPath: string | undefined;
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-synthesized-result-test-'));
@@ -116,10 +141,56 @@ describe('Runner synthesized result', () => {
     specFolder = spec.folderPath;
     await writePassingTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    fakeAgyBin = path.join(tmpDir, 'fake-agy.mjs');
+    fakeOpencodeBin = path.join(tmpDir, 'fake-opencode.mjs');
+    await fs.writeFile(fakeAgyBin, FAKE_AGY_SCRIPT, { mode: 0o755 });
+    await fs.writeFile(fakeOpencodeBin, FAKE_OPENCODE_SCRIPT, { mode: 0o755 });
+
+    originalAgyPath = process.env.AGY_PATH;
+    process.env.AGY_PATH = fakeAgyBin;
   });
 
   afterEach(async () => {
+    if (originalAgyPath === undefined) {
+      Reflect.deleteProperty(process.env, 'AGY_PATH');
+    } else {
+      process.env.AGY_PATH = originalAgyPath;
+    }
     await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  function opencodeConfig(bin: string = fakeOpencodeBin): OsqConfig {
+    return {
+      ...DEFAULT_CONFIG,
+      opencode: {
+        ...DEFAULT_CONFIG.opencode,
+        bin,
+      },
+    };
+  }
+
+  function spawnOptions(config: OsqConfig): Parameters<HarnessAdapter['spawn']>[0] {
+    return {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When synthesis runs, the verify gate still decides',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: [],
+      entry: [],
+      skills: [],
+      tier: 'coding',
+      timeoutSeconds: 30,
+      config,
+    };
+  }
+
+  it('HarnessEventType includes text and TextEventData carries a text string', () => {
+    const eventType: HarnessEventType = 'text';
+    const data: TextEventData = { text: 'completed assistant message' };
+    assert.equal(eventType, 'text');
+    assert.equal(data.text, 'completed assistant message');
   });
 
   it('extractFinalTextFromStream returns null when no text event exists', async () => {
@@ -151,6 +222,24 @@ describe('Runner synthesized result', () => {
     assert.equal(await extractFinalTextFromStream(specFolder, '1'), 'final message');
   });
 
+  it('extractFinalTextFromStream ignores raw harness payload shapes (fallback candidate list dropped)', async () => {
+    // None of these are first-class `text` events; the old candidate list would
+    // have picked them up.
+    await appendRawEvent(specFolder, '1', {
+      type: 'step_update',
+      timestamp: new Date().toISOString(),
+      data: { text_delta: 'streamed delta', response: 'raw response' },
+      step_update: { text_delta: 'raw step delta', text: 'raw step text' },
+    });
+    await appendRawEvent(specFolder, '1', {
+      type: 'tokens',
+      timestamp: new Date().toISOString(),
+      data: { text: 'not a text event', message: 'nope' },
+    });
+
+    assert.equal(await extractFinalTextFromStream(specFolder, '1'), null);
+  });
+
   it('synthesizeResultFile writes synthesized: true frontmatter and an attribution header', async () => {
     const resultsDir = path.join(specFolder, '.run', 'results');
     const resultPath = await synthesizeResultFile(resultsDir, '1', 'the agent final message');
@@ -162,43 +251,92 @@ describe('Runner synthesized result', () => {
     assert.ok(content.includes('the agent final message'));
   });
 
-  it('case A: exit 0 with missing result and final text synthesizes a result and runs verify', async () => {
-    const adapter = new NoResultStubAdapter('I completed the task.');
-    const logger = createLogger('normal');
+  const harnessCases = [
+    {
+      label: 'AgyAdapter',
+      createAdapter: () => new AgyAdapter() as HarnessAdapter,
+      config: () => DEFAULT_CONFIG,
+      expectedText: 'I finished the agy task.\n',
+      partialFragments: ['partial one ', 'partial two', '\n'],
+    },
+    {
+      label: 'OpencodeAdapter',
+      createAdapter: () => new OpencodeAdapter() as HarnessAdapter,
+      config: () => opencodeConfig(),
+      expectedText: 'I finished the opencode task.',
+      partialFragments: [],
+    },
+  ] as const;
 
-    let success = false;
-    const stderr = await captureStderr(async () => {
-      const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter, logger);
-      success = result.success;
+  for (const harnessCase of harnessCases) {
+    it(`${harnessCase.label} emits a text event carrying the completed assistant message`, async () => {
+      const adapter = harnessCase.createAdapter();
+      const result = await adapter.spawn(spawnOptions(harnessCase.config()));
+
+      assert.equal(result.exitCode, 0);
+
+      const events = await readEvents(specFolder, '1');
+      const textEvents = events.filter((event) => event.type === 'text');
+      assert.equal(textEvents.length, 1, 'exactly one completed text event');
+      assert.deepEqual(textEvents[0].data, { text: harnessCase.expectedText });
+
+      for (const fragment of harnessCase.partialFragments) {
+        assert.ok(
+          !textEvents.some((event) => event.data?.text === fragment),
+          `partial text fragment ${JSON.stringify(fragment)} must not become a text event`,
+        );
+      }
     });
 
-    assert.equal(success, true);
+    it(`${harnessCase.label} exit 0 with no result file synthesizes from the last text event`, async () => {
+      const adapter = harnessCase.createAdapter();
+      const logger = createLogger('normal');
 
-    // Result file was synthesized with frontmatter and attribution.
-    const resultPath = path.join(specFolder, '.run', 'results', '1.md');
-    const content = await fs.readFile(resultPath, 'utf8');
-    assert.match(content, /^---\nsynthesized: true\n---\n/);
-    assert.match(content, /Synthesized by the osq watcher/);
-    assert.ok(content.includes('I completed the task.'));
+      let success = false;
+      const stderr = await captureStderr(async () => {
+        const result = await runTask(
+          tmpDir,
+          specFolder,
+          '1',
+          harnessCase.config(),
+          adapter,
+          logger,
+        );
+        success = result.success;
+      });
 
-    // A synthesized result_written event was appended.
-    const events = await readEvents(specFolder, '1');
-    const resultWritten = events.find((event) => event.type === 'result_written');
-    assert.ok(resultWritten, 'expected a result_written event');
-    assert.equal(resultWritten.data?.synthesized, true);
+      assert.equal(success, true);
 
-    // The independent verify still ran and passed, and the task is done.
-    assert.ok(events.some((event) => event.type === 'verify_ran'));
-    await fs.stat(path.join(specFolder, '.run', 'done', '1'));
+      // Result file was synthesized from the real adapter's text event.
+      const resultPath = path.join(specFolder, '.run', 'results', '1.md');
+      const content = await fs.readFile(resultPath, 'utf8');
+      assert.match(content, /^---\nsynthesized: true\n---\n/);
+      assert.match(content, /Synthesized by the osq watcher/);
+      assert.ok(content.includes(harnessCase.expectedText.trim()));
 
-    // The synthesis was logged on the shared logger.
-    assert.match(stderr, /task 1 result synthesized from agent message/);
-  });
+      const events = await readEvents(specFolder, '1');
+      const textEvents = events.filter((event) => event.type === 'text');
+      assert.equal(textEvents.length, 1, 'the adapter emitted exactly one text event');
 
-  it('case B: exit 0 with neither result file nor final text is dead with reason no_result', async () => {
-    const adapter = new NoResultStubAdapter(null);
+      const resultWritten = events.find((event) => event.type === 'result_written');
+      assert.ok(resultWritten, 'expected a result_written event');
+      assert.equal(resultWritten.data?.synthesized, true);
 
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+      // The independent verify still ran and passed, and the task is done.
+      assert.ok(events.some((event) => event.type === 'verify_ran'));
+      await fs.stat(path.join(specFolder, '.run', 'done', '1'));
+
+      assert.match(stderr, /task 1 result synthesized from agent message/);
+    });
+  }
+
+  it('case B: real adapter exit 0 with neither result file nor text is dead with reason no_result', async () => {
+    const silentBin = path.join(tmpDir, 'fake-opencode-silent.mjs');
+    await fs.writeFile(silentBin, FAKE_OPENCODE_SILENT_SCRIPT, { mode: 0o755 });
+
+    const adapter = new OpencodeAdapter();
+    const result = await runTask(tmpDir, specFolder, '1', opencodeConfig(silentBin), adapter);
+
     assert.equal(result.success, false);
     assert.equal(result.reason, 'no_result');
 

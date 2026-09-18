@@ -12,6 +12,7 @@ export interface SpawnWithTimeoutOptions {
   stdio?: StdioOptions;
   onStdout?: (data: string) => void;
   onStderr?: (data: string) => void;
+  onSpawn?: (pid: number) => void;
 }
 
 export interface SpawnProcessResult {
@@ -36,6 +37,7 @@ export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<Spaw
     stdio = ['ignore', 'pipe', 'pipe'],
     onStdout,
     onStderr,
+    onSpawn,
   } = options;
 
   return new Promise((resolve) => {
@@ -53,6 +55,10 @@ export function spawnWithTimeout(options: SpawnWithTimeoutOptions): Promise<Spaw
       stdio,
     });
     const childPid = child.pid;
+
+    if (childPid !== undefined) {
+      onSpawn?.(childPid);
+    }
 
     const cleanup = () => {
       if (timeoutTimer) {

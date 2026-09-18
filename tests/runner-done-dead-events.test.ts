@@ -175,14 +175,18 @@ describe('Runner done and dead events', () => {
     assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'spec_conflict' });
   });
 
-  it('appends a dead event for already_running when the lock is held', async () => {
+  it('does not append a dead event for already_running when the lock is held', async () => {
     await acquireLock(path.join(specFolder, '.run'), '1');
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
     assert.equal(result.reason, 'already_running');
 
-    const deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
-    assert.equal(deadEvents.length, 1);
-    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'already_running' });
+    let deadEvents: ParsedEvent[] = [];
+    try {
+      deadEvents = (await readEvents(specFolder, '1')).filter((e) => e.type === 'dead');
+    } catch {
+      // Event file may not exist if no events were appended
+    }
+    assert.equal(deadEvents.length, 0);
   });
 });

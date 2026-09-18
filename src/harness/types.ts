@@ -7,6 +7,7 @@ export type HarnessEventType =
   | 'started'
   | 'tokens'
   | 'tool'
+  | 'text'
   | 'file_changed'
   | 'verify_ran'
   | 'result_written'
@@ -17,6 +18,10 @@ export type HarnessEventType =
 export interface ToolEventData {
   tool: string;
   summary: string;
+}
+
+export interface TextEventData {
+  readonly text: string;
 }
 
 export interface DoneEventData {
@@ -47,6 +52,7 @@ export interface SpawnTaskOptions {
   timeoutSeconds?: number;
   config?: OsqConfig;
   logger?: Logger;
+  onSpawn?: (pid: number) => Promise<void> | void;
 }
 
 export interface SpawnResult {

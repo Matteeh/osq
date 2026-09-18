@@ -156,6 +156,7 @@ describe('Agy stream-json event translation', () => {
       candidateTokens: 36,
       totalTokens: 13291,
       cachedTokens: 0,
+      reasoningTokens: 0,
       cost: 0,
     });
   });
@@ -260,13 +261,14 @@ describe('Agy stream-json event translation', () => {
     // The fixture contains one agent_response step_update carrying usage; the
     // result summary must not double count.
     const events = await readEvents(specFolder, '1');
-    assert.equal(events.length, 1);
-    assert.equal(events[0].type, 'tokens');
-    assert.deepEqual(events[0].data, {
+    const tokenEvents = events.filter((e) => e.type === 'tokens');
+    assert.equal(tokenEvents.length, 1);
+    assert.deepEqual(tokenEvents[0].data, {
       promptTokens: 13255,
       candidateTokens: 36,
       totalTokens: 13291,
       cachedTokens: 0,
+      reasoningTokens: 27,
       cost: 0,
     });
 
@@ -278,8 +280,8 @@ describe('Agy stream-json event translation', () => {
     await parser.flush();
 
     const parsedEvents = await readEvents(specFolder, '2');
-    assert.equal(parsedEvents.length, 1);
-    assert.equal(parsedEvents[0].type, 'tokens');
+    const parsedTokenEvents = parsedEvents.filter((e) => e.type === 'tokens');
+    assert.equal(parsedTokenEvents.length, 1);
   });
 
   it('falls back gracefully when stdout is plain text without valid JSON', async () => {
@@ -352,7 +354,6 @@ process.exit(0);
     assert.equal(result.exitCode, 0);
 
     const events = await readEvents(specFolder, '6');
-    assert.equal(events[0].type, 'started');
     const tokenEvents = events.filter((event) => event.type === 'tokens');
     assert.equal(tokenEvents.length, 1);
     assert.deepEqual(tokenEvents[0].data, {
@@ -360,8 +361,8 @@ process.exit(0);
       candidateTokens: 36,
       totalTokens: 13291,
       cachedTokens: 0,
+      reasoningTokens: 27,
       cost: 0,
     });
-    assert.equal(events[events.length - 1].type, 'exited');
   });
 });
