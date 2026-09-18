@@ -7,6 +7,8 @@ import { parse } from 'yaml';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflowPath = path.join(repoRoot, '.github', 'workflows', 'release.yml');
+const ciWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'ci.yml');
+const packageJsonPath = path.join(repoRoot, 'package.json');
 
 interface WorkflowStep {
   name?: string;
@@ -28,6 +30,17 @@ interface WorkflowDoc {
 
 const workflowText = await fs.readFile(workflowPath, 'utf8');
 const workflow = parse(workflowText) as WorkflowDoc;
+
+const ciWorkflowText = await fs.readFile(ciWorkflowPath, 'utf8');
+const ciWorkflow = parse(ciWorkflowText) as WorkflowDoc;
+
+const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8')) as {
+  packageManager?: string;
+};
+
+function findPnpmSetupStep(steps: WorkflowStep[]): WorkflowStep | undefined {
+  return steps.find((step) => (step.uses ?? '').startsWith('pnpm/action-setup@'));
+}
 
 function releaseJob(): WorkflowJob {
   const job = workflow.jobs?.release;
@@ -153,7 +166,48 @@ describe('release workflow', () => {
       'workflow must use Node 22',
     );
 
-    const pnpmSetup = steps.find((step) => (step.uses ?? '').startsWith('pnpm/action-setup@'));
-    assert.ok(pnpmSetup?.with?.version, 'pnpm/action-setup must pin a pnpm version');
+    const pnpmSetup = findPnpmSetupStep(steps);
+    assert.equal(
+      pnpmSetup?.with?.version,
+      undefined,
+      'pnpm/action-setup must not pin a version when packageManager is set',
+    );
+  });
+});
+
+describe('pnpm setup version delegation', () => {
+  it('pins an exact pnpm version through packageManager in package.json', () => {
+    assert.match(
+      String(packageJson.packageManager ?? ''),
+      /^pnpm@\d+\.\d+\.\d+/,
+      'package.json must pin an exact pnpm version in packageManager',
+    );
+  });
+
+  it('uses pnpm/action-setup@v4 without with.version in release.yml', () => {
+    const pnpmSetup = findPnpmSetupStep(releaseSteps());
+    assert.ok(pnpmSetup, 'release.yml must set up pnpm');
+    assert.equal(
+      pnpmSetup?.uses,
+      'pnpm/action-setup@v4',
+      'release.yml must use pnpm/action-setup@v4',
+    );
+    assert.equal(
+      pnpmSetup?.with?.version,
+      undefined,
+      'release.yml must not specify with.version when packageManager is pinned',
+    );
+  });
+
+  it('uses pnpm/action-setup@v4 without with.version in ci.yml', () => {
+    const steps = ciWorkflow.jobs?.verify?.steps ?? [];
+    const pnpmSetup = findPnpmSetupStep(steps);
+    assert.ok(pnpmSetup, 'ci.yml must set up pnpm');
+    assert.equal(pnpmSetup?.uses, 'pnpm/action-setup@v4', 'ci.yml must use pnpm/action-setup@v4');
+    assert.equal(
+      pnpmSetup?.with?.version,
+      undefined,
+      'ci.yml must not specify with.version when packageManager is pinned',
+    );
   });
 });
