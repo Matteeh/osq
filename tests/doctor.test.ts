@@ -8,6 +8,7 @@ import { doctorCommand } from '../src/cli/doctor.js';
 import { type OsqConfig, loadConfig } from '../src/core/config.js';
 import { runDoctorChecks } from '../src/core/doctor.js';
 import { OSQ_END_MARKER, OSQ_START_MARKER } from '../src/core/init.js';
+import { OPENSPEC_EXPECTED_VERSION } from '../src/core/linter.js';
 
 function managedBlock(body: string): string {
   return `# Instructions\n\n${OSQ_START_MARKER}\n${body}\n${OSQ_END_MARKER}\n`;
@@ -55,6 +56,17 @@ function findCheck(report: { checks: Array<{ name: string }> }, name: string) {
     | undefined;
 }
 
+/** Installs a stub `openspec` binary so the default probe can run hermetically. */
+async function installFakeValidator(
+  root: string,
+  version: string = OPENSPEC_EXPECTED_VERSION,
+): Promise<void> {
+  const binDir = path.join(root, 'node_modules', '.bin');
+  await fs.mkdir(binDir, { recursive: true });
+  const script = `#!/usr/bin/env node\nprocess.stdout.write(${JSON.stringify(version)});\n`;
+  await fs.writeFile(path.join(binDir, 'openspec'), script, { mode: 0o755 });
+}
+
 describe('runDoctorChecks', () => {
   let tmpDir: string;
 
@@ -66,20 +78,67 @@ describe('runDoctorChecks', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('passes all five checks for a healthy repository', async () => {
+  it('passes all six checks for a healthy repository', async () => {
     await writeHealthyRepo(tmpDir);
 
-    const report = await runDoctorChecks(tmpDir);
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
 
     assert.equal(report.ok, true);
     assert.deepEqual(
       report.checks.map((check) => check.name),
-      ['config', 'harness', 'managed-blocks', 'locks', 'archives'],
+      ['config', 'harness', 'managed-blocks', 'locks', 'archives', 'validator'],
     );
     assert.ok(
       report.checks.every((check) => check.ok),
       JSON.stringify(report.checks),
     );
+  });
+
+  it('passes the validator check with the pinned version', async () => {
+    await writeHealthyRepo(tmpDir);
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => `  ${OPENSPEC_EXPECTED_VERSION}\n`,
+    });
+
+    const check = findCheck(report, 'validator');
+    assert.equal(check?.ok, true);
+    assert.equal(check?.message, `pinned ${OPENSPEC_EXPECTED_VERSION}`);
+    assert.equal(report.ok, true);
+  });
+
+  it('fails the validator check on version drift', async () => {
+    await writeHealthyRepo(tmpDir);
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => '9.9.9',
+    });
+
+    const check = findCheck(report, 'validator');
+    assert.equal(check?.ok, false);
+    assert.equal(
+      check?.message,
+      `openspec version 9.9.9 differs from pinned ${OPENSPEC_EXPECTED_VERSION}`,
+    );
+    assert.equal(report.ok, false);
+  });
+
+  it('fails the validator check when the binary is unavailable', async () => {
+    await writeHealthyRepo(tmpDir);
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => {
+        throw new Error('spawn openspec ENOENT');
+      },
+    });
+
+    const check = findCheck(report, 'validator');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /^binary unavailable: openspec \(/);
+    assert.match(check?.message ?? '', /ENOENT/);
+    assert.equal(report.ok, false);
   });
 
   it('fails the config check when config properties are invalid', async () => {
@@ -213,6 +272,7 @@ describe('doctorCommand', () => {
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-doctor-cli-'));
     await writeHealthyRepo(tmpDir);
+    await installFakeValidator(tmpDir);
   });
 
   afterEach(async () => {
@@ -229,8 +289,8 @@ describe('doctorCommand', () => {
       exit: (code) => codes.push(code),
     });
 
-    assert.equal(report.checks.length, 5);
-    assert.equal(lines.length, 5);
+    assert.equal(report.checks.length, 6);
+    assert.equal(lines.length, 6);
     assert.ok(lines.every((line) => line.startsWith('[ok]')));
     assert.equal(codes.length, 0);
 
@@ -267,16 +327,35 @@ function isBinAvailable(bin: string | null): boolean {
   }
 }
 
+function isValidatorAvailable(): boolean {
+  const local = path.join(process.cwd(), 'node_modules', '.bin', 'openspec');
+  try {
+    execFileSync(local, ['--version'], { timeout: 10_000, stdio: 'ignore' });
+    return true;
+  } catch {}
+  try {
+    execFileSync('openspec', ['--version'], { timeout: 10_000, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const activeConfig = await loadConfig(process.cwd());
-const activeCheckoutReady = isBinAvailable(resolveActiveBin(activeConfig));
+
+function validatorSkipReason(): string | false {
+  if (!isValidatorAvailable()) return 'local openspec validator is unavailable';
+  if (!isBinAvailable(resolveActiveBin(activeConfig))) {
+    return 'configured harness binary is unavailable';
+  }
+  return false;
+}
+
+const activeCheckoutSkip = validatorSkipReason();
 
 describe('active repository checkout', () => {
-  it(
-    'passes all checks on the osq repository itself',
-    { skip: activeCheckoutReady ? false : 'configured harness binary is unavailable' },
-    async () => {
-      const report = await runDoctorChecks(process.cwd());
-      assert.equal(report.ok, true, JSON.stringify(report.checks, null, 2));
-    },
-  );
+  it('passes all checks on the osq repository itself', { skip: activeCheckoutSkip }, async () => {
+    const report = await runDoctorChecks(process.cwd());
+    assert.equal(report.ok, true, JSON.stringify(report.checks, null, 2));
+  });
 });

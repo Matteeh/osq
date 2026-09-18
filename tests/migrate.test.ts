@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
 import { migrateCommand } from '../src/cli/migrate.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { getArchiveDir, getChangesDir, getSpecsDir } from '../src/core/layout.js';
 import { OPENSPEC_EXPECTED_VERSION, validateWithOpenSpec } from '../src/core/linter.js';
 import {
   convertSpecToProposal,
@@ -216,6 +217,24 @@ describe('osq migrate openspec', () => {
     assert.ok(await exists(activeTarget));
     assert.equal(await exists(path.join(tmpDir, 'specs', '016-example')), false);
     assert.equal(result.migratedChanges.length, 1);
+  });
+
+  it('resolves every migration target through the canonical layout helpers', async () => {
+    await seedLegacyProject(tmpDir);
+
+    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+
+    const specsTarget = getSpecsDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    const changesTarget = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    const archiveTarget = getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+
+    assert.equal(
+      result.migratedFeatures[0].to,
+      path.join(specsTarget, 'cli-foundation', 'spec.md'),
+    );
+    assert.equal(result.migratedChanges[0].to, path.join(changesTarget, '016-example'));
+    assert.equal(result.migratedArchives[0].to, path.join(archiveTarget, '001-old'));
+    assert.equal(result.createdStub, path.join(changesTarget, '017-sample'));
   });
 
   it('migrates archived changes to openspec/changes/archive/ preserving .run/ markers', async () => {

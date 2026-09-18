@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import { type OsqConfig, loadConfig } from './config.js';
-import { getArchiveDir, getChangesDir } from './layout.js';
+import { getArchiveDir, getChangesDir, getSpecsDir } from './layout.js';
 import { getNextSpecNumber } from './new.js';
 import { parseFrontmatter } from './parser.js';
 
@@ -71,7 +71,7 @@ function resolvePaths(projectRoot: string, config: OsqConfig): MigrationPaths {
     features: path.join(projectRoot, legacyFeatures),
     specs: legacySpecs,
     archive: path.join(legacySpecs, 'archive'),
-    specsTarget: path.join(projectRoot, config.paths.openspecRoot, 'specs'),
+    specsTarget: getSpecsDir(config.paths.openspecRoot, projectRoot),
     changesTarget: getChangesDir(config.paths.openspecRoot, projectRoot),
     archiveTarget: getArchiveDir(config.paths.openspecRoot, projectRoot),
   };

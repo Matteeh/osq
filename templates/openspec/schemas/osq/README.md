@@ -19,3 +19,12 @@ agent: it carries the task title, a `verify` command, `scope`, `entry`,
 `skills`, and an acceptance checklist. Runtime completion is derived from
 `.run/` markers and the watcher's independent verify run, while `tasks.md` is
 only a write-only checkbox projection.
+
+## Execution and archive authority
+
+Agents that load the generated OpenSpec skills must not execute tasks on their
+own. Task execution belongs exclusively to `osq watch`, which runs only after
+human approval. `tasks.md` checkboxes are a write-only projection written by
+the osq runner from its independent verification run; agents must never edit
+them. Archiving is owned exclusively by `osq` and is never performed with
+`openspec archive`.

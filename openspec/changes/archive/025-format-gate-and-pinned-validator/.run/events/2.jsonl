@@ -1,0 +1,96 @@
+{"type":"started","timestamp":"2026-09-18T22:45:32.356Z","data":{"pid":1216239,"timeoutSeconds":1800}}
+{"type":"tool","timestamp":"2026-09-18T22:45:35.453Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:45:35.538Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:35.602Z","data":{"promptTokens":4542,"candidateTokens":93,"totalTokens":10708,"cachedTokens":6016,"reasoningTokens":57,"cost":0.000789348}}
+{"type":"tool","timestamp":"2026-09-18T22:45:37.339Z","data":{"tool":"grep","summary":"{\"pattern\":\"OPENSPEC_EXPECTED_VERSION\",\"path\":\"/home/mathias"}}
+{"type":"tool","timestamp":"2026-09-18T22:45:37.399Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/cli/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:37.448Z","data":{"promptTokens":5507,"candidateTokens":110,"totalTokens":16258,"cachedTokens":10624,"reasoningTokens":17,"cost":0.000934122}}
+{"type":"tool","timestamp":"2026-09-18T22:45:38.791Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/linter.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:45:39.185Z","data":{"tool":"bash","summary":"ls /home/mathias/projects/osq/openspec/changes/025-format-ga"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:39.231Z","data":{"promptTokens":911,"candidateTokens":215,"totalTokens":17404,"cachedTokens":16256,"reasoningTokens":22,"cost":0.000327618}}
+{"type":"tool","timestamp":"2026-09-18T22:45:40.626Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/linter.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:45:40.961Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && cat openspec/changes/025-fo"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:41.008Z","data":{"promptTokens":856,"candidateTokens":204,"totalTokens":18436,"cachedTokens":17280,"reasoningTokens":96,"cost":0.00036024}}
+{"type":"tool","timestamp":"2026-09-18T22:45:43.405Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/package.json"}}
+{"type":"tool","timestamp":"2026-09-18T22:47:43.747Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && ls -la node_modules/.bin/ 2"}}
+{"type":"tokens","timestamp":"2026-09-18T22:47:43.801Z","data":{"promptTokens":1219,"candidateTokens":136,"totalTokens":20084,"cachedTokens":18432,"reasoningTokens":297,"cost":0.000497946}}
+{"type":"tool","timestamp":"2026-09-18T22:47:54.376Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && sed -n '1,80p' tests/linter"}}
+{"type":"tool","timestamp":"2026-09-18T22:47:54.481Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && grep -rn \"node_modules/.bin"}}
+{"type":"tokens","timestamp":"2026-09-18T22:47:54.554Z","data":{"promptTokens":925,"candidateTokens":115,"totalTokens":23166,"cachedTokens":19968,"reasoningTokens":2158,"cost":0.001562454}}
+{"type":"tool","timestamp":"2026-09-18T22:47:56.022Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/linter.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:47:56.180Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/linter.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:47:56.221Z","data":{"promptTokens":885,"candidateTokens":157,"totalTokens":24168,"cachedTokens":23040,"reasoningTokens":86,"cost":0.00034767}}
+{"type":"tool","timestamp":"2026-09-18T22:48:10.239Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/osq.config.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:48:10.493Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && ls node_modules/@fission-ai"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:10.544Z","data":{"promptTokens":1410,"candidateTokens":131,"totalTokens":29009,"cachedTokens":24064,"reasoningTokens":3404,"cost":0.002404692}}
+{"type":"tool","timestamp":"2026-09-18T22:48:12.135Z","data":{"tool":"bash","summary":"command -v opencode; command -v openspec; command -v agy; ec"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:12.181Z","data":{"promptTokens":683,"candidateTokens":58,"totalTokens":29760,"cachedTokens":28928,"reasoningTokens":91,"cost":0.000278634}}
+{"type":"tool","timestamp":"2026-09-18T22:48:15.383Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:15.423Z","data":{"promptTokens":228,"candidateTokens":67,"totalTokens":29914,"cachedTokens":29568,"reasoningTokens":51,"cost":0.000193704}}
+{"type":"tool","timestamp":"2026-09-18T22:48:17.727Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:17.772Z","data":{"promptTokens":331,"candidateTokens":153,"totalTokens":30471,"cachedTokens":29824,"reasoningTokens":163,"cost":0.000328722}}
+{"type":"tool","timestamp":"2026-09-18T22:48:19.275Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:19.312Z","data":{"promptTokens":150,"candidateTokens":169,"totalTokens":30664,"cachedTokens":30336,"reasoningTokens":9,"cost":0.000220308}}
+{"type":"tool","timestamp":"2026-09-18T22:48:20.708Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:20.753Z","data":{"promptTokens":215,"candidateTokens":128,"totalTokens":30816,"cachedTokens":30464,"reasoningTokens":9,"cost":0.000205842}}
+{"type":"tool","timestamp":"2026-09-18T22:48:22.355Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:22.414Z","data":{"promptTokens":239,"candidateTokens":83,"totalTokens":30984,"cachedTokens":30592,"reasoningTokens":70,"cost":0.000219426}}
+{"type":"tool","timestamp":"2026-09-18T22:48:24.481Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:24.529Z","data":{"promptTokens":397,"candidateTokens":433,"totalTokens":31835,"cachedTokens":30976,"reasoningTokens":29,"cost":0.000429678}}
+{"type":"tool","timestamp":"2026-09-18T22:48:26.069Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:26.138Z","data":{"promptTokens":234,"candidateTokens":142,"totalTokens":32039,"cachedTokens":31616,"reasoningTokens":47,"cost":0.000243348}}
+{"type":"tool","timestamp":"2026-09-18T22:48:27.502Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:27.610Z","data":{"promptTokens":182,"candidateTokens":83,"totalTokens":32154,"cachedTokens":31872,"reasoningTokens":17,"cost":0.000182916}}
+{"type":"tool","timestamp":"2026-09-18T22:48:29.105Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:29.152Z","data":{"promptTokens":231,"candidateTokens":120,"totalTokens":32479,"cachedTokens":32128,"reasoningTokens":0,"cost":0.000203034}}
+{"type":"tool","timestamp":"2026-09-18T22:48:30.309Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/doctor.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:30.358Z","data":{"promptTokens":238,"candidateTokens":83,"totalTokens":32592,"cachedTokens":32256,"reasoningTokens":15,"cost":0.000191268}}
+{"type":"tool","timestamp":"2026-09-18T22:48:32.053Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:32.092Z","data":{"promptTokens":594,"candidateTokens":184,"totalTokens":33316,"cachedTokens":32512,"reasoningTokens":26,"cost":0.000312636}}
+{"type":"tool","timestamp":"2026-09-18T22:48:34.329Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:34.388Z","data":{"promptTokens":179,"candidateTokens":335,"totalTokens":33687,"cachedTokens":33152,"reasoningTokens":21,"cost":0.000339906}}
+{"type":"tool","timestamp":"2026-09-18T22:48:36.279Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:36.326Z","data":{"promptTokens":166,"candidateTokens":337,"totalTokens":34049,"cachedTokens":33536,"reasoningTokens":10,"cost":0.000333708}}
+{"type":"tool","timestamp":"2026-09-18T22:48:38.678Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:38.738Z","data":{"promptTokens":144,"candidateTokens":479,"totalTokens":34560,"cachedTokens":33920,"reasoningTokens":17,"cost":0.00042096}}
+{"type":"tool","timestamp":"2026-09-18T22:48:41.359Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:41.406Z","data":{"promptTokens":164,"candidateTokens":479,"totalTokens":35136,"cachedTokens":34432,"reasoningTokens":61,"cost":0.000451896}}
+{"type":"tool","timestamp":"2026-09-18T22:48:42.927Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:42.973Z","data":{"promptTokens":207,"candidateTokens":179,"totalTokens":35349,"cachedTokens":34944,"reasoningTokens":19,"cost":0.000254682}}
+{"type":"tool","timestamp":"2026-09-18T22:48:44.671Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:44.718Z","data":{"promptTokens":164,"candidateTokens":162,"totalTokens":35526,"cachedTokens":35200,"reasoningTokens":0,"cost":0.0002274}}
+{"type":"tool","timestamp":"2026-09-18T22:48:46.237Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:46.287Z","data":{"promptTokens":213,"candidateTokens":84,"totalTokens":35666,"cachedTokens":35328,"reasoningTokens":41,"cost":0.000212934}}
+{"type":"tool","timestamp":"2026-09-18T22:48:50.639Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:50.705Z","data":{"promptTokens":571,"candidateTokens":683,"totalTokens":37290,"cachedTokens":35584,"reasoningTokens":452,"cost":0.000873402}}
+{"type":"tool","timestamp":"2026-09-18T22:48:53.918Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:53.979Z","data":{"promptTokens":185,"candidateTokens":481,"totalTokens":37987,"cachedTokens":37120,"reasoningTokens":201,"cost":0.00054831}}
+{"type":"tool","timestamp":"2026-09-18T22:48:56.260Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:56.316Z","data":{"promptTokens":242,"candidateTokens":242,"totalTokens":38394,"cachedTokens":37760,"reasoningTokens":150,"cost":0.00038478}}
+{"type":"tool","timestamp":"2026-09-18T22:48:59.631Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-18T22:48:59.678Z","data":{"promptTokens":137,"candidateTokens":67,"totalTokens":38632,"cachedTokens":38272,"reasoningTokens":156,"cost":0.000269166}}
+{"type":"tool","timestamp":"2026-09-18T22:49:01.368Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm biome check src/core/d"}}
+{"type":"tool","timestamp":"2026-09-18T22:49:02.826Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm tsc --noEmit 2>&1 | ta"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:02.872Z","data":{"promptTokens":546,"candidateTokens":122,"totalTokens":39287,"cachedTokens":38528,"reasoningTokens":91,"cost":0.000325284}}
+{"type":"tool","timestamp":"2026-09-18T22:49:04.800Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm biome format --write t"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:04.843Z","data":{"promptTokens":559,"candidateTokens":94,"totalTokens":39882,"cachedTokens":39168,"reasoningTokens":61,"cost":0.000294354}}
+{"type":"tool","timestamp":"2026-09-18T22:49:07.295Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:07.340Z","data":{"promptTokens":242,"candidateTokens":77,"totalTokens":40006,"cachedTokens":39680,"reasoningTokens":7,"cost":0.00020574}}
+{"type":"tool","timestamp":"2026-09-18T22:49:08.616Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tool","timestamp":"2026-09-18T22:49:08.734Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:08.790Z","data":{"promptTokens":142,"candidateTokens":158,"totalTokens":40275,"cachedTokens":39936,"reasoningTokens":39,"cost":0.000259308}}
+{"type":"tool","timestamp":"2026-09-18T22:49:10.277Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/doctor.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:10.333Z","data":{"promptTokens":1548,"candidateTokens":84,"totalTokens":41837,"cachedTokens":40192,"reasoningTokens":13,"cost":0.000410976}}
+{"type":"tool","timestamp":"2026-09-18T22:49:12.713Z","data":{"tool":"grep","summary":"{\"pattern\":\"runDoctorChecks|doctorCommand|checks\\\\.length\",\""}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:12.757Z","data":{"promptTokens":977,"candidateTokens":74,"totalTokens":43022,"cachedTokens":41728,"reasoningTokens":243,"cost":0.000461934}}
+{"type":"tool","timestamp":"2026-09-18T22:49:14.823Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && git status --short"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:14.872Z","data":{"promptTokens":434,"candidateTokens":51,"totalTokens":43688,"cachedTokens":43008,"reasoningTokens":195,"cost":0.000341724}}
+{"type":"tool","timestamp":"2026-09-18T22:49:18.955Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/openspec/changes/025-format-gate-and-pinned-validator/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:19.020Z","data":{"promptTokens":239,"candidateTokens":825,"totalTokens":44646,"cachedTokens":43520,"reasoningTokens":62,"cost":0.00069861}}
+{"type":"tool","timestamp":"2026-09-18T22:49:21.438Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:21.480Z","data":{"promptTokens":246,"candidateTokens":67,"totalTokens":44757,"cachedTokens":44416,"reasoningTokens":28,"cost":0.000227148}}
+{"type":"text","timestamp":"2026-09-18T22:49:23.467Z","data":{"text":"Done. Implemented task 2 and verified.\n\n**Changed**\n- `src/core/doctor.ts` (219 lines): imported `OPENSPEC_EXPECTED_VERSION`, added injectable `probeValidator` to `DoctorDependencies`, added `checkValidator` (local `node_modules/.bin/openspec` → PATH fallback, `--version` with 10s timeout, pinned/drift/unavailable results), and appended it as the 6th check in `runDoctorChecks`.\n- `tests/doctor.test.ts`: healthy test now asserts 6 checks in order, added pass/drift/missing-binary validator cases, CLI test exercises the default probe via a stub `openspec` binary and expects 6 lines, and the active-checkout smoke test skips when no real validator is installed.\n\n**Verification**\n- `node --import tsx --test tests/doctor.test.ts` → 16 pass, 1 skipped (no local openspec), 0 fail.\n- `pnpm tsc --noEmit` clean; `pnpm biome check` clean on both files.\n\nResults written to `openspec/changes/025-format-gate-and-pinned-validator/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-09-18T22:49:23.508Z","data":{"promptTokens":150,"candidateTokens":257,"totalTokens":45079,"cachedTokens":44672,"reasoningTokens":0,"cost":0.000310716}}
+{"type":"exited","timestamp":"2026-09-18T22:49:23.653Z","data":{"exitCode":0,"pid":1216239,"timedOut":false,"elapsedSeconds":231.3}}
+{"type":"verify_ran","timestamp":"2026-09-18T22:49:23.654Z","data":{"command":"node --import tsx --test tests/doctor.test.ts"}}
+{"type":"done","timestamp":"2026-09-18T22:49:24.726Z","data":{"task":"2"}}

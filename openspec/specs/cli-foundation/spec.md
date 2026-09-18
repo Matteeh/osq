@@ -36,15 +36,19 @@ The CLI watch command SHALL support options to bypass stale build detection and 
 
 ### Requirement: Repository health diagnostics
 <!-- source: src/cli/doctor.ts, src/core/doctor.ts, tests/doctor.test.ts -->
-The CLI SHALL provide a doctor command that validates configuration, harness binary availability, managed blocks, lock states, and archive integrity.
+The CLI SHALL provide a doctor command that validates configuration, harness binary availability, managed blocks, lock states, archive integrity, and the pinned OpenSpec validator.
 
 #### Scenario: Doctor passes on healthy repository
-- **WHEN** user executes `osq doctor` in a properly configured repository
-- **THEN** command prints one status line per check (`config`, `harness`, `managed-blocks`, `locks`, `archives`) and exits with code 0
+- **WHEN** user executes `osq doctor` in a properly configured repository with the pinned validator
+- **THEN** command prints one status line per check (`config`, `harness`, `managed-blocks`, `locks`, `archives`, `validator`) and exits with code 0
 
 #### Scenario: Doctor fails on check violation
-- **WHEN** any diagnostic check fails (invalid config, missing harness binary, drift in managed blocks, orphaned locks, or invalid archives)
+- **WHEN** any diagnostic check fails (invalid config, missing harness binary, drift in managed blocks, orphaned locks, invalid archives, or validator drift)
 - **THEN** command reports the failed check line and exits with code 1
+
+#### Scenario: Doctor fails on validator drift
+- **WHEN** the installed OpenSpec validator version differs from the pinned version
+- **THEN** command reports a failing `validator` line describing version drift and exits with code 1
 
 ### Requirement: Planner instruction scaffolding
 <!-- source: src/core/init.ts, tests/init-planner.test.ts -->
@@ -78,6 +82,22 @@ All CLI entrypoints and core workflow commands SHALL derive change and archive d
 - **WHEN** user executes `osq show` or `osq report`
 - **THEN** commands locate spec folders and completed archives using canonical layout helpers
 
-## Delta from Migrate remaining consumers to canonical layout and dual-signature state derivation
+### Requirement: Managed block coexistence
+<!-- source: src/core/init.ts, src/cli/setup.ts, tests/setup-block-coexistence.test.ts -->
+The setup command and managed block updater SHALL preserve foreign OpenSpec managed blocks in `AGENTS.md` without corruption across repeated executions.
 
-This change completes consumer cut-over to canonical OpenSpec path layout in `specs/cli-foundation/spec.md`, and backward-compatible state derivation with watcher layout in `specs/watcher-and-harness/spec.md`.
+#### Scenario: Repeated setup preserves both managed blocks
+- **WHEN** `osq setup` executes against an `AGENTS.md` containing `<!-- OPENSPEC:START -->`
+- **THEN** both `<!-- OPENSPEC:START -->` and `<!-- OSQ:START -->` blocks survive unchanged across multiple runs
+
+### Requirement: Canonical migration layout authority
+<!-- source: src/core/migrate.ts, tests/migrate.test.ts -->
+The migration engine SHALL resolve target directory paths exclusively through `src/core/layout.ts`.
+
+#### Scenario: Migration derives targets from layout module
+- **WHEN** `osq migrate openspec` resolves target specs, changes, or archive folders
+- **THEN** paths derive exclusively from `getSpecsDir`, `getChangesDir`, and `getArchiveDir`
+
+## Delta from Format gate completion: ADR 004, pinned validator diagnostics, schema hardening, and setup coexistence
+
+This change establishes ADR 004, doctor validator pin verification, schema execution authority instructions, setup block coexistence, and canonical migration layout resolution.

@@ -5,6 +5,7 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { OSQ_END_MARKER, OSQ_START_MARKER } from './init.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
+import { OPENSPEC_EXPECTED_VERSION } from './linter.js';
 import { isPidRunning } from './lock.js';
 
 export interface DoctorCheckResult {
@@ -21,6 +22,7 @@ export interface DoctorReport {
 /** Injectable seam keeps the config check hermetic under test. */
 export interface DoctorDependencies {
   loadConfig?: (projectRoot: string) => Promise<OsqConfig>;
+  probeValidator?: (projectRoot: string) => Promise<string>;
 }
 
 function make(name: string, ok: boolean, message: string): DoctorCheckResult {
@@ -90,6 +92,31 @@ async function checkHarness(projectRoot: string, config: OsqConfig): Promise<Doc
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return make('harness', false, `binary unavailable: ${bin} (${message})`);
+  }
+}
+
+async function checkValidator(
+  projectRoot: string,
+  deps: DoctorDependencies,
+): Promise<DoctorCheckResult> {
+  try {
+    const local = path.join(projectRoot, 'node_modules', '.bin', 'openspec');
+    const bin = (await exists(local)) ? local : 'openspec';
+    const raw = deps.probeValidator
+      ? await deps.probeValidator(projectRoot)
+      : await probeVersion(bin, projectRoot);
+    const version = raw.trim();
+    if (version === OPENSPEC_EXPECTED_VERSION) {
+      return make('validator', true, `pinned ${OPENSPEC_EXPECTED_VERSION}`);
+    }
+    return make(
+      'validator',
+      false,
+      `openspec version ${version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}`,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return make('validator', false, `binary unavailable: openspec (${message})`);
   }
 }
 
@@ -186,6 +213,7 @@ export async function runDoctorChecks(
     await checkManagedBlocks(projectRoot),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),
+    await checkValidator(projectRoot, deps),
   ];
   return { ok: checks.every((check) => check.ok), checks };
 }

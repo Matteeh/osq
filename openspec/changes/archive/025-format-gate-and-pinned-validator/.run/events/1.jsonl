@@ -1,0 +1,35 @@
+{"type":"started","timestamp":"2026-09-18T22:44:39.900Z","data":{"pid":1215051,"timeoutSeconds":1800}}
+{"type":"tool","timestamp":"2026-09-18T22:44:43.304Z","data":{"tool":"bash","summary":"ls -la /home/mathias/projects/osq/decisions/ 2>/dev/null; ec"}}
+{"type":"tool","timestamp":"2026-09-18T22:44:43.328Z","data":{"tool":"bash","summary":"cat /home/mathias/projects/osq/package.json"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:43.392Z","data":{"promptTokens":4571,"candidateTokens":183,"totalTokens":10816,"cachedTokens":6016,"reasoningTokens":46,"cost":0.000841098}}
+{"type":"tool","timestamp":"2026-09-18T22:44:44.833Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/decisions/README.md"}}
+{"type":"tool","timestamp":"2026-09-18T22:44:44.962Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/decisions/001-use-jiti-for-runtime-config-loading.md"}}
+{"type":"tool","timestamp":"2026-09-18T22:44:45.068Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/decisions/002-feature-doc-delta-application.md"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:45.136Z","data":{"promptTokens":1121,"candidateTokens":153,"totalTokens":12052,"cachedTokens":10752,"reasoningTokens":26,"cost":0.000307806}}
+{"type":"tool","timestamp":"2026-09-18T22:44:46.759Z","data":{"tool":"bash","summary":"ls /home/mathias/projects/osq/decisions/; echo \"---\"; grep -"}}
+{"type":"tool","timestamp":"2026-09-18T22:44:46.857Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/changelog-release-docs.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:46.926Z","data":{"promptTokens":1080,"candidateTokens":155,"totalTokens":13348,"cachedTokens":12032,"reasoningTokens":81,"cost":0.000339696}}
+{"type":"tool","timestamp":"2026-09-18T22:44:51.152Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/tests/adr-004.test.ts"}}
+{"type":"text","timestamp":"2026-09-18T22:44:51.156Z","data":{"text":"Now I'll write the test first, then implement the ADR and README entry."}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:51.215Z","data":{"promptTokens":921,"candidateTokens":962,"totalTokens":15438,"cachedTokens":13312,"reasoningTokens":243,"cost":0.000901086}}
+{"type":"tool","timestamp":"2026-09-18T22:44:55.444Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/decisions/004-pinned-openspec-validator.md"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:55.513Z","data":{"promptTokens":222,"candidateTokens":616,"totalTokens":16413,"cachedTokens":15232,"reasoningTokens":343,"cost":0.000654396}}
+{"type":"tool","timestamp":"2026-09-18T22:44:57.761Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/decisions/README.md"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:57.814Z","data":{"promptTokens":173,"candidateTokens":223,"totalTokens":16742,"cachedTokens":16256,"reasoningTokens":90,"cost":0.000262518}}
+{"type":"tool","timestamp":"2026-09-18T22:44:59.140Z","data":{"tool":"bash","summary":"node --import tsx --test tests/adr-004.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T22:44:59.186Z","data":{"promptTokens":245,"candidateTokens":75,"totalTokens":16832,"cachedTokens":16512,"reasoningTokens":0,"cost":0.000131286}}
+{"type":"tool","timestamp":"2026-09-18T22:45:02.755Z","data":{"tool":"bash","summary":"pnpm biome check tests/adr-004.test.ts 2>&1 | tail -20; echo"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:02.802Z","data":{"promptTokens":244,"candidateTokens":105,"totalTokens":17271,"cachedTokens":16768,"reasoningTokens":154,"cost":0.000242304}}
+{"type":"tool","timestamp":"2026-09-18T22:45:04.640Z","data":{"tool":"bash","summary":"pnpm biome check --write tests/adr-004.test.ts 2>&1 | tail -"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:04.681Z","data":{"promptTokens":443,"candidateTokens":102,"totalTokens":17734,"cachedTokens":17152,"reasoningTokens":37,"cost":0.000201306}}
+{"type":"tool","timestamp":"2026-09-18T22:45:06.101Z","data":{"tool":"bash","summary":"node --import tsx --test tests/adr-004.test.ts 2>&1 | tail -"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:06.141Z","data":{"promptTokens":237,"candidateTokens":83,"totalTokens":17895,"cachedTokens":17536,"reasoningTokens":39,"cost":0.000161358}}
+{"type":"tool","timestamp":"2026-09-18T22:45:07.916Z","data":{"tool":"bash","summary":"git -C /home/mathias/projects/osq status --short; echo \"---\""}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:07.959Z","data":{"promptTokens":232,"candidateTokens":71,"totalTokens":18225,"cachedTokens":17792,"reasoningTokens":130,"cost":0.000208776}}
+{"type":"tool","timestamp":"2026-09-18T22:45:27.782Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/openspec/changes/025-format-gate-and-pinned-validator/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:27.831Z","data":{"promptTokens":256,"candidateTokens":506,"totalTokens":18865,"cachedTokens":18048,"reasoningTokens":55,"cost":0.000429144}}
+{"type":"text","timestamp":"2026-09-18T22:45:31.947Z","data":{"text":"Task complete.\n\n**Changed**\n- `decisions/004-pinned-openspec-validator.md` — new Accepted ADR documenting the exact `@fission-ai/openspec@1.13.1` devDependency pin, `>=1.13.1 <2` peer range, local binary `node_modules/.bin/openspec`, execution env/flags (`OPENSPEC_TELEMETRY=0`, `--strict`, `--json`, `--no-interactive`), and `osq doctor` drift/missing-binary reporting with exit 1.\n- `decisions/README.md` — added Index referencing ADR 004 (plus existing 001/002).\n- `tests/adr-004.test.ts` — new test asserting file presence, Accepted status, pin/binary/peer details, validation semantics, doctor drift semantics, and README indexing.\n\n**Verification**\n`node --import tsx --test tests/adr-004.test.ts` → 5 pass, 0 fail. Also clean under `pnpm biome check tests/adr-004.test.ts` and `pnpm tsc --noEmit`.\n\nAll six acceptance lines are satisfied. Result recorded at `openspec/changes/025-format-gate-and-pinned-validator/.run/results/1.md`. No implementation of the doctor check itself — that belongs to a separate task in this change."}}
+{"type":"tokens","timestamp":"2026-09-18T22:45:31.985Z","data":{"promptTokens":193,"candidateTokens":293,"totalTokens":19257,"cachedTokens":18688,"reasoningTokens":83,"cost":0.000310614}}
+{"type":"exited","timestamp":"2026-09-18T22:45:32.112Z","data":{"exitCode":0,"pid":1215051,"timedOut":false,"elapsedSeconds":52.2}}
+{"type":"verify_ran","timestamp":"2026-09-18T22:45:32.133Z","data":{"command":"node --import tsx --test tests/adr-004.test.ts"}}
+{"type":"done","timestamp":"2026-09-18T22:45:32.243Z","data":{"task":"1"}}
