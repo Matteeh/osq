@@ -61,7 +61,7 @@ skills: []
 - [ ] Acceptance criterion 1
 `;
 
-const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from 'osq';
+const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from '@matteeh/osq';
 
 export default defineConfig({
   harness: process.env.OSQ_HARNESS || 'agy',

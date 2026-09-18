@@ -91,15 +91,24 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
     assert.ok(tarballPath.endsWith('.tgz'), 'packed artifact must be a .tgz tarball');
 
     const installedManifest = JSON.parse(
-      await fs.readFile(path.join(consumerDir, 'node_modules', 'osq', 'package.json'), 'utf8'),
+      await fs.readFile(
+        path.join(consumerDir, 'node_modules', '@matteeh', 'osq', 'package.json'),
+        'utf8',
+      ),
     ) as { name?: string };
-    assert.equal(installedManifest.name, 'osq', 'osq must be installed in the consumer project');
+    assert.equal(
+      installedManifest.name,
+      '@matteeh/osq',
+      '@matteeh/osq must be installed in the consumer project',
+    );
     assert.ok(
       await exists(path.join(consumerDir, 'node_modules', '.bin', 'osq')),
       'osq executable must be linked into the consumer project',
     );
     assert.equal(
-      await exists(path.join(consumerDir, 'node_modules', 'osq', 'dist', 'cli', 'bin.js')),
+      await exists(
+        path.join(consumerDir, 'node_modules', '@matteeh', 'osq', 'dist', 'cli', 'bin.js'),
+      ),
       true,
       'installed package must contain compiled CLI output',
     );

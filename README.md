@@ -9,8 +9,8 @@ If a fresh agent could not pick up a task from the files in the repo alone, the 
 ## Install
 
 ```sh
-npx osq init          # scaffolds the folders below and configuration
-pnpm add -D osq       # adds osq as a devDependency (or npm i -D osq)
+npx @matteeh/osq init          # scaffolds the folders below and configuration
+pnpm add -D @matteeh/osq       # adds osq as a devDependency (or npm i -D @matteeh/osq)
 pnpm osq watch        # start the watcher
 ```
 
@@ -125,7 +125,7 @@ Available adapters:
 Configure `opencode` in `osq.config.ts`:
 
 ```ts
-import { defineConfig } from 'osq';
+import { defineConfig } from '@matteeh/osq';
 
 export default defineConfig({
   harness: 'opencode',

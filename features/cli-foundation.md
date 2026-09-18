@@ -48,7 +48,7 @@ The `osq` CLI utilizes a unified leveled stderr logger (`createLogger`) supporti
 
 ## Distribution & Release Management
 
-`osq` is distributed as a public, standalone npm package installable globally via `npm i -g osq` or runnable on-demand via `npx osq`:
+`osq` is distributed as a public, standalone npm package installable globally via `npm i -g @matteeh/osq` or runnable on-demand via `npx @matteeh/osq`:
 
 - **Package Artifact Hygiene**: The published tarball contains exclusively compiled output (`dist/`), starter templates (`templates/`), and essential legal and usage documentation (`README.md`, `LICENSE`, `package.json`). Package manifests declare `keywords`, `packageManager`, and `sideEffects: false`, while build scripts run standard compiler invocations (`npm run build`) decoupled from specific package manager binaries on `PATH`.
 - **Runtime Executable & API Types**: The primary binary entrypoint (`dist/cli/bin.js`) preserves executable shebangs across compilation steps and resolves version identifiers dynamically from `package.json` at runtime, ensuring parity with release metadata. Programmatic TypeScript consumers receive full declaration typings through `dist/index.d.ts`.
