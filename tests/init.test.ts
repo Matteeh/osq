@@ -3,7 +3,29 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { parse as parseYaml } from 'yaml';
 import { scaffoldProject, updateAgentsMd } from '../src/core/init.js';
+
+interface ParsedArtifact {
+  id: string;
+  generates: string;
+  description: string;
+  template: string;
+  requires: string[];
+}
+
+interface ParsedSchema {
+  name: string;
+  version: number;
+  artifacts: ParsedArtifact[];
+  apply?: { requires?: string[] };
+}
+
+interface ParsedConfig {
+  schema: string;
+  context?: string;
+  rules?: Record<string, string[]>;
+}
 
 describe('osq init', () => {
   let tmpDir: string;
@@ -90,5 +112,120 @@ describe('osq init', () => {
     assert.equal(startOccurrences, 1);
     assert.equal(endOccurrences, 1);
     assert.ok(content.startsWith('# Custom Project\n\nCustom user instructions.'));
+  });
+
+  it('scaffolds openspec/config.yaml declaring the osq schema and per-artifact rules', async () => {
+    await scaffoldProject(tmpDir);
+
+    const configPath = path.join(tmpDir, 'openspec', 'config.yaml');
+    const config = parseYaml(await fs.readFile(configPath, 'utf8')) as ParsedConfig;
+
+    assert.equal(config.schema, 'osq');
+    assert.equal(typeof config.context, 'string');
+    assert.ok((config.context ?? '').trim().length > 0, 'context should not be empty');
+
+    const rules = config.rules ?? {};
+    for (const artifactId of ['proposal', 'specs', 'tasks']) {
+      assert.ok(Array.isArray(rules[artifactId]), `rules should declare ${artifactId}`);
+      assert.ok(
+        (rules[artifactId] ?? []).length > 0,
+        `rules.${artifactId} should contain at least one rule`,
+      );
+      for (const rule of rules[artifactId] ?? []) {
+        assert.equal(typeof rule, 'string');
+        assert.ok(rule.trim().length > 0);
+      }
+    }
+  });
+
+  it('scaffolds openspec/schemas/osq/schema.yaml forked from spec-driven without design', async () => {
+    await scaffoldProject(tmpDir);
+
+    const schemaPath = path.join(tmpDir, 'openspec', 'schemas', 'osq', 'schema.yaml');
+    const schema = parseYaml(await fs.readFile(schemaPath, 'utf8')) as ParsedSchema;
+
+    assert.equal(schema.name, 'osq');
+    assert.equal(typeof schema.version, 'number');
+    assert.deepEqual(
+      schema.artifacts.map((artifact) => artifact.id),
+      ['proposal', 'specs', 'tasks'],
+    );
+    assert.equal(
+      schema.artifacts.some((artifact) => artifact.id === 'design'),
+      false,
+      'the osq schema must drop the design artifact',
+    );
+
+    const declaredIds = new Set(schema.artifacts.map((artifact) => artifact.id));
+    for (const artifact of schema.artifacts) {
+      assert.ok(artifact.generates.length > 0, `${artifact.id} needs generates`);
+      assert.ok(artifact.description.length > 0, `${artifact.id} needs a description`);
+      assert.ok(artifact.template.length > 0, `${artifact.id} needs a template`);
+      for (const requirement of artifact.requires) {
+        assert.ok(
+          declaredIds.has(requirement),
+          `${artifact.id} requires unknown artifact ${requirement}`,
+        );
+      }
+    }
+
+    const specs = schema.artifacts.find((artifact) => artifact.id === 'specs');
+    const tasks = schema.artifacts.find((artifact) => artifact.id === 'tasks');
+    assert.deepEqual(specs?.requires, ['proposal']);
+    assert.deepEqual(tasks?.requires, ['specs']);
+    assert.ok(!tasks?.requires.includes('design'));
+    assert.deepEqual(schema.apply?.requires, ['tasks']);
+  });
+
+  it('schema README documents tasks/<n>.md as an osq-specific execution unit', async () => {
+    await scaffoldProject(tmpDir);
+
+    const readmePath = path.join(tmpDir, 'openspec', 'schemas', 'osq', 'README.md');
+    const readme = await fs.readFile(readmePath, 'utf8');
+
+    assert.ok(readme.includes('tasks/<n>.md'));
+    assert.ok(readme.includes('osq-specific'));
+    assert.ok(readme.includes('execution unit'));
+  });
+
+  it('refreshes the managed AGENTS.md block with OpenSpec layout instructions', async () => {
+    const agentsPath = path.join(tmpDir, 'AGENTS.md');
+    await fs.writeFile(
+      agentsPath,
+      '# Project\n\n<!-- OSQ:START -->\nstale instructions\n<!-- OSQ:END -->\n',
+    );
+
+    await updateAgentsMd(tmpDir);
+    const content = await fs.readFile(agentsPath, 'utf8');
+
+    assert.equal(content.includes('stale instructions'), false);
+    assert.ok(content.includes('openspec/specs/'));
+    assert.ok(content.includes('openspec/changes/'));
+    assert.ok(content.includes('proposal.md'));
+    assert.ok(content.includes('tasks/<n>.md'));
+    assert.equal(content.split('<!-- OSQ:START -->').length - 1, 1);
+    assert.equal(content.split('<!-- OSQ:END -->').length - 1, 1);
+  });
+
+  it('is strictly idempotent and preserves existing OpenSpec configuration', async () => {
+    const openspecConfigPath = path.join(tmpDir, 'openspec', 'config.yaml');
+    const schemaPath = path.join(tmpDir, 'openspec', 'schemas', 'osq', 'schema.yaml');
+
+    const first = await scaffoldProject(tmpDir);
+    assert.ok(first.createdDirs.includes('openspec'));
+    assert.ok(first.createdFiles.includes(path.join('openspec', 'config.yaml')));
+    assert.ok(first.createdFiles.includes(path.join('openspec', 'schemas', 'osq', 'schema.yaml')));
+
+    await fs.writeFile(openspecConfigPath, '# user owned openspec config\n');
+    await fs.writeFile(schemaPath, 'name: custom\n');
+
+    const second = await scaffoldProject(tmpDir);
+    assert.deepEqual(second.createdDirs, []);
+    assert.deepEqual(second.createdFiles, []);
+    assert.ok(second.skippedFiles.includes(path.join('openspec', 'config.yaml')));
+    assert.ok(second.skippedFiles.includes(path.join('openspec', 'schemas', 'osq', 'schema.yaml')));
+
+    assert.equal(await fs.readFile(openspecConfigPath, 'utf8'), '# user owned openspec config\n');
+    assert.equal(await fs.readFile(schemaPath, 'utf8'), 'name: custom\n');
   });
 });

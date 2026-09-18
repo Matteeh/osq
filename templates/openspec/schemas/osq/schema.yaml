@@ -1,0 +1,124 @@
+name: osq
+version: 1
+description: osq profile - proposal → specs → tasks (design dropped; tasks/<n>.md is the execution unit)
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: |
+      Create the proposal document that establishes WHY this change is needed.
+
+      Sections:
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does
+        this solve? Why now?
+      - **What Changes**: Bullet list of changes. Be specific about new
+        capabilities, modifications, or removals. Mark breaking changes with
+        **BREAKING**.
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes
+          a new `specs/<capability-path>/spec.md`. Use kebab-case for path
+          segments you introduce and follow the project's existing spec
+          organization.
+        - **Modified Capabilities**: List existing capabilities whose
+          REQUIREMENTS are changing. Each needs a delta spec file. Use the
+          exact existing path under `openspec/specs/`.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+
+      Each capability listed here needs a corresponding delta spec file under
+      `specs/<capability-path>/spec.md`. Run `openspec list --specs` to review
+      the project's capability inventory before introducing a near-duplicate.
+
+      Every change must either declare at least one capability (new or
+      modified) or explicitly set `skip_specs: true` in the change's
+      `.openspec.yaml`. Keep it concise (1-2 pages); implementation details
+      belong in the specs and tasks.
+    requires: []
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Detailed delta specifications for the change
+    template: spec.md
+    instruction: |
+      Create delta specification files that define WHAT the system should do.
+
+      Create one spec file per capability listed in the proposal's Capabilities
+      section, at `specs/<capability-path>/spec.md`. New capabilities use the
+      exact path from the proposal; modified capabilities use the exact existing
+      path from `openspec/specs/<capability-path>/`.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason**
+        and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`).
+      - Every requirement MUST have at least one scenario.
+
+      New capabilities only: the delta spec's first section is `## Purpose` -
+      one or two sentences (50+ characters) describing what the capability is
+      for. Do NOT add `## Purpose` to a delta for an existing capability.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in
+         `openspec/specs/<capability-path>/spec.md`
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all
+         scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+    requires:
+      - proposal
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with trackable tasks
+    template: tasks.md
+    instruction: |
+      Create the task list that breaks down the implementation work.
+
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. A box holding only `x` counts as done,
+      upper or lower case and with any spacing. Every other marker reads as
+      unfinished. A line with no checkbox is not tracked at all.
+
+      Guidelines:
+      - Group related tasks under ## numbered headings
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+      - Tasks should be small enough to complete in one session
+      - Order tasks by dependency (what must be done first?)
+      - Each task MUST state how to verify completion
+
+      In osq, each checklist entry is backed by a `tasks/<n>.md` execution unit
+      that carries its own `verify` command, `scope`, `entry`, `skills`, and
+      acceptance checklist. `tasks/<n>.md` is not an OpenSpec artifact; it is the
+      osq execution unit, and `tasks.md` remains a write-only projection of
+      runtime state.
+
+      Example:
+      ```
+      # Tasks
+
+      ## 1. Setup
+
+      - [ ] 1.1 Create new module structure and verify expected files are present
+      - [ ] 1.2 Add dependencies to package.json and verify package installation succeeds
+
+      ## 2. Core Implementation
+
+      - [ ] 2.1 Implement data export function and verify the export test passes
+      ```
+    requires:
+      - specs
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.

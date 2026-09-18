@@ -7,8 +7,77 @@ import { createProgram } from '../src/cli/index.js';
 import { reportCommand } from '../src/cli/report.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
-import { type MetricsReport, formatMetricsReport, getMetricsReport } from '../src/core/report.js';
+import {
+  type MetricsReport,
+  formatMetricsReport,
+  generateReport,
+  getMetricsReport,
+} from '../src/core/report.js';
+
+const CHANGE_SPECS_DIR = path.join('openspec', 'changes');
+
+function specMd(title: string): string {
+  return `---
+title: ${title}
+depends_on: []
+features:
+  reads: []
+  writes: []
+---
+## Goal
+
+${title} goal.
+`;
+}
+
+function taskMd(title: string): string {
+  return `---
+title: ${title}
+verify: node -e "process.exit(0)"
+scope: []
+entry: []
+skills: []
+---
+## Acceptance
+- [ ] ${title} criteria
+`;
+}
+
+/**
+ * Creates a change folder under the configured `openspec/changes` root by
+ * copying the scaffolded template. Metrics/report aggregation reads
+ * `paths.specs`, which is `openspec/changes` after the 016 migration.
+ */
+async function createChangeFolder(
+  root: string,
+  folderName: string,
+  title: string,
+): Promise<string> {
+  const folderPath = path.join(root, CHANGE_SPECS_DIR, folderName);
+  await fs.cp(path.join(root, 'specs', '_template'), folderPath, { recursive: true });
+  await fs.writeFile(path.join(folderPath, 'spec.md'), specMd(title), 'utf8');
+  return folderPath;
+}
+
+/** Creates a change folder under `openspec/changes/archive`. */
+async function createArchivedFolder(
+  root: string,
+  folderName: string,
+  title: string,
+  taskTitles: string[],
+): Promise<string> {
+  const folderPath = path.join(root, CHANGE_SPECS_DIR, 'archive', folderName);
+  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
+  await fs.writeFile(path.join(folderPath, 'spec.md'), specMd(title), 'utf8');
+  for (let i = 0; i < taskTitles.length; i++) {
+    await fs.writeFile(
+      path.join(folderPath, 'tasks', `${i + 1}.md`),
+      taskMd(taskTitles[i]),
+      'utf8',
+    );
+  }
+  return folderPath;
+}
 
 describe('osq report', () => {
   let tmpDir: string;
@@ -31,66 +100,14 @@ describe('osq report', () => {
     assert.equal(emptyReport.tasks.total, 0);
 
     // 2. Create active spec with 2 tasks
-    const activeSpec = await createNewSpec(tmpDir, 'Active Spec');
-    await fs.writeFile(
-      path.join(activeSpec.folderPath, 'tasks', '2.md'),
-      `---
-title: Active Task Two
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Task 2 acceptance
-`,
-      'utf8',
-    );
+    const activeFolder = await createChangeFolder(tmpDir, '001-active-spec', 'Active Spec');
+    await fs.writeFile(path.join(activeFolder, 'tasks', '2.md'), taskMd('Active Task Two'), 'utf8');
 
     // 3. Create archived spec with 2 tasks
-    const archiveDir = path.join(tmpDir, 'specs', 'archive', '000-archived-spec');
-    await fs.mkdir(path.join(archiveDir, 'tasks'), { recursive: true });
-    await fs.writeFile(
-      path.join(archiveDir, 'spec.md'),
-      `---
-title: Archived Spec
-features:
-  reads: []
-  writes: []
----
-## Goal
-Completed spec
-`,
-      'utf8',
-    );
-    await fs.writeFile(
-      path.join(archiveDir, 'tasks', '1.md'),
-      `---
-title: Archived Task One
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Arch task 1
-`,
-      'utf8',
-    );
-    await fs.writeFile(
-      path.join(archiveDir, 'tasks', '2.md'),
-      `---
-title: Archived Task Two
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Arch task 2
-`,
-      'utf8',
-    );
+    await createArchivedFolder(tmpDir, '000-archived-spec', 'Archived Spec', [
+      'Archived Task One',
+      'Archived Task Two',
+    ]);
 
     const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
@@ -101,26 +118,17 @@ skills: []
   });
 
   it('getMetricsReport calculates completion rate and dead tasks breakdown by reason', async () => {
-    const spec = await createNewSpec(tmpDir, 'Metrics Calculation Spec');
-    const tasksDir = path.join(spec.folderPath, 'tasks');
-    const runDir = path.join(spec.folderPath, '.run');
+    const folderPath = await createChangeFolder(
+      tmpDir,
+      '001-metrics-calculation-spec',
+      'Metrics Calculation Spec',
+    );
+    const tasksDir = path.join(folderPath, 'tasks');
+    const runDir = path.join(folderPath, '.run');
 
     // Create 4 tasks in total
     for (let i = 2; i <= 4; i++) {
-      await fs.writeFile(
-        path.join(tasksDir, `${i}.md`),
-        `---
-title: Task ${i}
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Criteria ${i}
-`,
-        'utf8',
-      );
+      await fs.writeFile(path.join(tasksDir, `${i}.md`), taskMd(`Task ${i}`), 'utf8');
     }
 
     // Task 1: Done
@@ -172,8 +180,12 @@ Process terminated unexpectedly
   });
 
   it('getMetricsReport aggregates event durations, token usage, and file changes', async () => {
-    const spec = await createNewSpec(tmpDir, 'Event Aggregation Spec');
-    const eventsDir = path.join(spec.folderPath, '.run', 'events');
+    const folderPath = await createChangeFolder(
+      tmpDir,
+      '001-event-aggregation-spec',
+      'Event Aggregation Spec',
+    );
+    const eventsDir = path.join(folderPath, '.run', 'events');
     await fs.mkdir(eventsDir, { recursive: true });
 
     // Task 1: duration 10s (10000ms), 600 prompt, 200 candidate tokens, 2 file change events
@@ -206,20 +218,7 @@ Process terminated unexpectedly
     await fs.writeFile(path.join(eventsDir, '1.jsonl'), `${task1Events}\n`, 'utf8');
 
     // Create task 2 with 20s (20000ms), 400 prompt, 100 candidate tokens, 1 file change event (duplicate file)
-    await fs.writeFile(
-      path.join(spec.folderPath, 'tasks', '2.md'),
-      `---
-title: Task 2
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Task 2
-`,
-      'utf8',
-    );
+    await fs.writeFile(path.join(folderPath, 'tasks', '2.md'), taskMd('Task 2'), 'utf8');
 
     const task2Events = [
       JSON.stringify({
@@ -265,9 +264,8 @@ skills: []
   });
 
   it('reportCommand prints formatted terminal report and supports raw JSON output', async () => {
-    const spec = await createNewSpec(tmpDir, 'Reporting Spec');
-    const runDir = path.join(spec.folderPath, '.run');
-    const doneDir = path.join(runDir, 'done');
+    const folderPath = await createChangeFolder(tmpDir, '001-reporting-spec', 'Reporting Spec');
+    const doneDir = path.join(folderPath, '.run', 'done');
     await fs.mkdir(doneDir, { recursive: true });
     await fs.writeFile(path.join(doneDir, '1'), '', 'utf8');
 
@@ -275,13 +273,14 @@ skills: []
     let capturedText = '';
     const textOutput = await reportCommand({
       cwd: tmpDir,
+      config: DEFAULT_CONFIG,
       stdout: (msg) => {
         capturedText = msg;
       },
     });
 
     const output = capturedText || textOutput;
-    const directFormatted = formatMetricsReport(await getMetricsReport(tmpDir, DEFAULT_CONFIG));
+    const directFormatted = formatMetricsReport(await generateReport(tmpDir, DEFAULT_CONFIG));
     assert.equal(output, directFormatted);
     assert.ok(output.includes('Specs Summary'));
     assert.ok(output.includes('Tasks & Completion'));
@@ -294,6 +293,7 @@ skills: []
     let capturedJson = '';
     const jsonOutput = await reportCommand({
       cwd: tmpDir,
+      config: DEFAULT_CONFIG,
       json: true,
       stdout: (msg) => {
         capturedJson = msg;
@@ -306,6 +306,48 @@ skills: []
     assert.equal(parsed.tasks.total, 1);
     assert.equal(parsed.tasks.done, 1);
     assert.equal(parsed.completionRate, 100);
+  });
+
+  it('aggregates undeclared_test_change in the failure breakdown for text and JSON output', async () => {
+    const folderPath = await createChangeFolder(
+      tmpDir,
+      '001-gated-report-spec',
+      'Gated Report Spec',
+    );
+    const deadDir = path.join(folderPath, '.run', 'dead');
+    await fs.mkdir(deadDir, { recursive: true });
+    await fs.writeFile(
+      path.join(deadDir, '1.md'),
+      `---
+reason: undeclared_test_change
+---
+Preexisting test files were modified or deleted without tests.modify: true:
+- tests/report.test.ts (modified)
+`,
+      'utf8',
+    );
+
+    const report = await generateReport(tmpDir, DEFAULT_CONFIG);
+    assert.equal(report.tasks.dead, 1);
+    assert.equal(report.failureBreakdown.undeclared_test_change, 1);
+
+    const formatted = formatMetricsReport(report);
+    assert.ok(formatted.includes('Failure Breakdown:'));
+    assert.ok(formatted.includes('undeclared_test_change: 1'));
+
+    let capturedJson = '';
+    const jsonOutput = await reportCommand({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+      json: true,
+      stdout: (msg) => {
+        capturedJson = msg;
+      },
+    });
+
+    const parsed = JSON.parse(capturedJson || jsonOutput) as MetricsReport;
+    assert.equal(parsed.failureBreakdown.undeclared_test_change, 1);
+    assert.equal(parsed.tasks.dead, 1);
   });
 
   it('CLI registers report command in commander program', () => {

@@ -25,7 +25,7 @@ describe('osq approve', () => {
   });
 
   it('findSpecFolder resolves spec folder by ID, padded number, or prefix', async () => {
-    const specsDir = path.join(tmpDir, 'specs');
+    const specsDir = path.join(tmpDir, DEFAULT_CONFIG.paths.specs);
     const byId = await findSpecFolder(specsDir, '001');
     assert.equal(byId, specFolder);
 

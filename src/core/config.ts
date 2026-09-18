@@ -15,6 +15,7 @@ export interface OsqPaths {
   readonly features: string;
   readonly decisions: string;
   readonly templates: string;
+  readonly openspecRoot: string;
 }
 
 export interface OsqTimeouts {
@@ -83,11 +84,12 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxAcceptanceLines: 7,
   },
   paths: {
-    specs: 'specs',
-    archive: 'specs/archive',
-    features: 'features',
+    specs: 'openspec/changes',
+    archive: 'openspec/changes/archive',
+    features: 'openspec/specs',
     decisions: 'decisions',
     templates: 'templates',
+    openspecRoot: 'openspec',
   },
   timeouts: {
     staleLockSeconds: 2700,

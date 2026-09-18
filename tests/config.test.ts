@@ -23,11 +23,12 @@ describe('OsqConfig', () => {
     assert.equal(DEFAULT_CONFIG.limits.maxContractTables, 1);
     assert.equal(DEFAULT_CONFIG.limits.maxAcceptanceLines, 7);
 
-    assert.equal(DEFAULT_CONFIG.paths.specs, 'specs');
-    assert.equal(DEFAULT_CONFIG.paths.archive, 'specs/archive');
-    assert.equal(DEFAULT_CONFIG.paths.features, 'features');
+    assert.equal(DEFAULT_CONFIG.paths.specs, 'openspec/changes');
+    assert.equal(DEFAULT_CONFIG.paths.archive, 'openspec/changes/archive');
+    assert.equal(DEFAULT_CONFIG.paths.features, 'openspec/specs');
     assert.equal(DEFAULT_CONFIG.paths.decisions, 'decisions');
     assert.equal(DEFAULT_CONFIG.paths.templates, 'templates');
+    assert.equal(DEFAULT_CONFIG.paths.openspecRoot, 'openspec');
 
     assert.equal(DEFAULT_CONFIG.timeouts.taskTimeoutSeconds, 1800);
     assert.equal(DEFAULT_CONFIG.timeouts.verifyTimeoutSeconds, 600);
@@ -55,7 +56,7 @@ describe('OsqConfig', () => {
     assert.equal(config.harness, 'mock');
     assert.equal(config.limits.maxScopeFiles, 10);
     assert.equal(config.limits.maxFeatureWrites, 3);
-    assert.equal(config.paths.specs, 'specs');
+    assert.equal(config.paths.specs, 'openspec/changes');
     assert.equal(config.timeouts.staleLockSeconds, 2700);
     assert.equal(config.timeouts.verifyTimeoutSeconds, 600);
   });

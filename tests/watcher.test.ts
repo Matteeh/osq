@@ -56,7 +56,7 @@ describe('Watcher Loop and CLI', () => {
 
     // Folder is archived
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, 'specs', 'archive', folderName);
+    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
     const stat = await fs.stat(archivedPath);
     assert.ok(stat);
 
@@ -123,7 +123,7 @@ describe('Watcher Loop and CLI', () => {
 
     // Folder is archived
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, 'specs', 'archive', folderName);
+    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
     const stat = await fs.stat(archivedPath);
     assert.ok(stat);
 

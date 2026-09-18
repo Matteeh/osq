@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
@@ -21,7 +23,8 @@ export type RunTaskFailureReason =
   | 'no_result'
   | 'verify_red'
   | 'crashed'
-  | 'timeout';
+  | 'timeout'
+  | 'undeclared_test_change';
 
 export interface RunTaskResult {
   success: boolean;
@@ -29,6 +32,57 @@ export interface RunTaskResult {
   error?: string;
 }
 
+/**
+ * Tick the checkbox for `taskNumber` inside a `tasks.md` body. Supports both
+ * checklist shapes osq accepts: a flat numbered list (`- [ ] 3. ...`) and a
+ * grouped list whose identifier lives either on the item or on the enclosing
+ * `## <n>.` section header. Returns the rewritten content, or the input
+ * unchanged when no matching pending item exists. This is the whole projection:
+ * it never consults or mutates `.run/` state and its output is normalized by
+ * the folder hasher, so ticking can never invalidate an approval hash.
+ */
+export function tickTaskCheckboxContent(content: string, taskNumber: string): string {
+  const target = Number.parseInt(taskNumber, 10);
+  if (Number.isNaN(target)) {
+    return content;
+  }
+
+  const lines = content.split('\n');
+  let sectionNumber: number | null = null;
+  let changed = false;
+
+  const updated = lines.map((line) => {
+    // Any `## ` heading resets the section scope; only a numeric heading
+    // associates unnumbered items with a task.
+    const headingMatch = line.match(/^##\s+(\S.*?)\s*$/);
+    if (headingMatch) {
+      const numeric = headingMatch[1].match(/^(\d+)[.)]?(?:\s|$)/);
+      sectionNumber = numeric ? Number.parseInt(numeric[1], 10) : null;
+      return line;
+    }
+
+    const itemMatch = line.match(/^(\s*-\s+\[)([ xX])(\]\s*)((?:(\d+)[.)]\s+)?)(.*)$/);
+    if (!itemMatch) {
+      return line;
+    }
+
+    const [, prefix, mark, close, numberedPrefix, itemNumber, rest] = itemMatch;
+    const identifier = itemNumber ? Number.parseInt(itemNumber, 10) : sectionNumber;
+    if (identifier !== target || mark.toLowerCase() === 'x') {
+      return line;
+    }
+
+    changed = true;
+    return `${prefix}x${close}${numberedPrefix}${rest}`;
+  });
+
+  return changed ? updated.join('\n') : content;
+}
+
+/**
+ * Project a passed task into `tasks.md`. Write-only: reads the checklist to
+ * locate the row, rewrites it, and never touches any `.run/` marker.
+ */
 export async function tickTaskCheckbox(specFolderPath: string, taskNumber: string): Promise<void> {
   const tasksMdPath = path.join(specFolderPath, 'tasks.md');
   let content = '';
@@ -38,9 +92,7 @@ export async function tickTaskCheckbox(specFolderPath: string, taskNumber: strin
     return;
   }
 
-  const regex = new RegExp(`^(\\s*-\\s*\\[)[ ](\\]\\s*${taskNumber}\\b.*)$`, 'm');
-  const updated = content.replace(regex, '$1x$2');
-
+  const updated = tickTaskCheckboxContent(content, taskNumber);
   if (updated !== content) {
     await fs.writeFile(tasksMdPath, updated, 'utf8');
   }
@@ -422,6 +474,73 @@ export async function synthesizeResultFile(
   return resultPath;
 }
 
+const TEST_DIR_NAME = 'tests';
+
+function hashFileContent(content: Buffer | string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Snapshot every preexisting file under `tests/` as repo-relative path ->
+ * content hash. Captured before the agent is spawned so a change or deletion
+ * can be attributed to the task. A file that does not exist yet cannot enter
+ * the snapshot, so creating a brand new test is never treated as touching an
+ * existing one.
+ */
+async function snapshotTestFiles(projectRoot: string): Promise<Map<string, string>> {
+  const snapshot = new Map<string, string>();
+
+  const walk = async (dir: string): Promise<void> => {
+    let entries: Dirent[];
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        const relative = path.relative(projectRoot, full).split(path.sep).join('/');
+        snapshot.set(relative, hashFileContent(await fs.readFile(full)));
+      }
+    }
+  };
+
+  await walk(path.join(projectRoot, TEST_DIR_NAME));
+  return snapshot;
+}
+
+/**
+ * Compare a pre-spawn `tests/` snapshot against the current tree and return a
+ * diagnostic for every preexisting test file whose contents changed or that no
+ * longer exists. Paths absent from the snapshot are ignored, so new files are
+ * always allowed.
+ */
+async function findUndeclaredTestChanges(
+  projectRoot: string,
+  snapshot: Map<string, string>,
+): Promise<string[]> {
+  const changes: string[] = [];
+
+  for (const [relative, expectedHash] of snapshot) {
+    let currentHash: string;
+    try {
+      currentHash = hashFileContent(await fs.readFile(path.join(projectRoot, relative)));
+    } catch {
+      changes.push(`${relative} (deleted)`);
+      continue;
+    }
+    if (currentHash !== expectedHash) {
+      changes.push(`${relative} (modified)`);
+    }
+  }
+
+  return changes.sort();
+}
+
 export async function runTask(
   projectRoot: string,
   specFolderPath: string,
@@ -571,6 +690,10 @@ export async function runTask(
       return startedPromise;
     };
 
+    // Fingerprint preexisting tests before the agent runs. A task that declares
+    // `tests.modify: true` is allowed to edit them, so no snapshot is taken.
+    const testSnapshot = taskData.testsModify ? null : await snapshotTestFiles(projectRoot);
+
     const spawnResult = await adapter.spawn({
       projectRoot,
       specFolderPath,
@@ -644,6 +767,33 @@ export async function runTask(
         reason: failureReason,
         error: spawnResult.error || `Agent exited with code ${spawnResult.exitCode}`,
       };
+    }
+
+    // Test modification gating: the agent may freely add new tests, but editing
+    // or deleting a preexisting test requires an explicit declaration. This is
+    // checked before the result/verify pipeline so an undeclared change halts
+    // the task without ever invoking the task's verify command.
+    if (testSnapshot) {
+      const undeclared = await findUndeclaredTestChanges(projectRoot, testSnapshot);
+      if (undeclared.length > 0) {
+        await fs.mkdir(deadDir, { recursive: true });
+        const deadLines = [
+          '---',
+          'reason: undeclared_test_change',
+          '---',
+          'Preexisting test files were modified or deleted without tests.modify: true:',
+          ...undeclared.map((file) => `- ${file}`),
+          '',
+        ];
+        await fs.writeFile(path.join(deadDir, `${taskNumber}.md`), deadLines.join('\n'), 'utf8');
+        await recordDeadEvent(specFolderPath, taskNumber, 'undeclared_test_change');
+        logOutcome(false, 'undeclared_test_change');
+        return {
+          success: false,
+          reason: 'undeclared_test_change',
+          error: `Undeclared test changes: ${undeclared.join(', ')}`,
+        };
+      }
     }
 
     const resultPath = path.join(runDir, 'results', `${taskNumber}.md`);

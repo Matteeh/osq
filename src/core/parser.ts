@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import YAML from 'yaml';
 
 export interface FrontmatterResult {
@@ -89,14 +91,117 @@ export function parseSpecMd(content: string): SpecData {
   };
 }
 
+/**
+ * Extracts the file path globs owned by a capability from a
+ * `### Requirement: Code ownership` block. Globs are read from the
+ * `<!-- source: ... -->` comment declared directly beneath the header
+ * (comma-separated). When no source comment is present, backtick-quoted
+ * path-like tokens inside the requirement block are used as a fallback.
+ * Returns an empty array when the header is absent.
+ */
+export function parseCodeOwnership(content: string): string[] {
+  const headerRegex = /^###\s+Requirement:\s*Code ownership\s*$/im;
+  const headerMatch = headerRegex.exec(content);
+  if (!headerMatch) {
+    return [];
+  }
+
+  const rest = content.slice(headerMatch.index + headerMatch[0].length);
+  const boundary = rest.search(/\n(?:###\s|##(?!#)\s)/);
+  const block = boundary === -1 ? rest : rest.slice(0, boundary);
+
+  const sourceRegex = /<!--\s*source:\s*([\s\S]*?)-->/i;
+  const sourceMatch = sourceRegex.exec(block);
+  if (sourceMatch) {
+    return sourceMatch[1]
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+  }
+
+  const globs: string[] = [];
+  const seen = new Set<string>();
+  for (const match of block.matchAll(/`([^`]+)`/g)) {
+    const token = match[1].trim();
+    if (token && /[/\\*]/.test(token) && !seen.has(token)) {
+      seen.add(token);
+      globs.push(token);
+    }
+  }
+
+  return globs;
+}
+
+export const PROPOSAL_FILENAME = 'proposal.md';
+export const SPEC_FILENAME = 'spec.md';
+
+export type ChangeDocKind = 'proposal' | 'spec';
+
+export interface ResolvedChangeDoc {
+  readonly path: string;
+  readonly kind: ChangeDocKind;
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  return fs
+    .stat(filePath)
+    .then(() => true)
+    .catch(() => false);
+}
+
+/**
+ * Resolves the change document inside a change folder, preferring the
+ * OpenSpec `proposal.md` and falling back to the legacy `spec.md`.
+ */
+export async function resolveChangeDoc(folderPath: string): Promise<ResolvedChangeDoc | null> {
+  const proposalPath = path.join(folderPath, PROPOSAL_FILENAME);
+  if (await fileExists(proposalPath)) {
+    return { path: proposalPath, kind: 'proposal' };
+  }
+
+  const specPath = path.join(folderPath, SPEC_FILENAME);
+  if (await fileExists(specPath)) {
+    return { path: specPath, kind: 'spec' };
+  }
+
+  return null;
+}
+
+/**
+ * Parses `proposal.md` when present, otherwise falls back to `spec.md`.
+ * Returns null when neither file exists in the change folder.
+ */
+export async function parseSpecMdFromFolder(folderPath: string): Promise<SpecData | null> {
+  const resolved = await resolveChangeDoc(folderPath);
+  if (!resolved) {
+    return null;
+  }
+
+  const content = await fs.readFile(resolved.path, 'utf8');
+  return parseSpecMd(content);
+}
+
 export interface TaskData {
   readonly title: string;
   readonly verify: string;
   readonly scope: string[];
   readonly entry: string[];
   readonly skills: string[];
+  readonly testsModify: boolean;
   readonly acceptance: string[];
   readonly raw: string;
+}
+
+function readTestsModify(data: Record<string, unknown>): boolean {
+  const nested = data.tests;
+  if (nested !== null && typeof nested === 'object' && !Array.isArray(nested)) {
+    const modify = (nested as Record<string, unknown>).modify;
+    if (typeof modify === 'boolean') {
+      return modify;
+    }
+  }
+
+  return data['tests.modify'] === true;
 }
 
 export function parseTaskMd(content: string): TaskData {
@@ -104,6 +209,7 @@ export function parseTaskMd(content: string): TaskData {
 
   const title = typeof data.title === 'string' ? data.title.trim() : '';
   const verify = typeof data.verify === 'string' ? data.verify.trim() : '';
+  const testsModify = readTestsModify(data);
 
   const scope = Array.isArray(data.scope) ? data.scope.map((s: unknown) => String(s).trim()) : [];
   const entry = Array.isArray(data.entry) ? data.entry.map((e: unknown) => String(e).trim()) : [];
@@ -126,7 +232,53 @@ export function parseTaskMd(content: string): TaskData {
     scope,
     entry,
     skills,
+    testsModify,
     acceptance,
     raw: content,
   };
+}
+
+export interface ChecklistItem {
+  readonly number: number | null;
+  readonly title: string;
+  readonly checked: boolean;
+  readonly section: string | null;
+  readonly line: number;
+}
+
+const SECTION_HEADING_REGEX = /^##\s+(.+?)\s*$/;
+const CHECKLIST_ITEM_REGEX = /^[-*]\s+\[([ xX])\]\s+(?:(\d+)[.)]\s+)?(.+?)\s*$/;
+
+/**
+ * Parses an OpenSpec `tasks.md` checklist. Supports flat numbered lists and
+ * grouped lists where items live under `## <section>` headers. Item numbers
+ * are optional; unnumbered items yield `number: null`.
+ */
+export function parseTaskList(content: string): ChecklistItem[] {
+  const items: ChecklistItem[] = [];
+  const lines = content.split(/\r?\n/);
+  let section: string | null = null;
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+
+    const sectionMatch = line.match(SECTION_HEADING_REGEX);
+    if (sectionMatch) {
+      section = sectionMatch[1].trim();
+      continue;
+    }
+
+    const itemMatch = line.match(CHECKLIST_ITEM_REGEX);
+    if (itemMatch) {
+      items.push({
+        number: itemMatch[2] ? Number.parseInt(itemMatch[2], 10) : null,
+        title: itemMatch[3].trim(),
+        checked: itemMatch[1].toLowerCase() === 'x',
+        section,
+        line: index + 1,
+      });
+    }
+  }
+
+  return items;
 }

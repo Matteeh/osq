@@ -43,16 +43,33 @@ describe('osq new', () => {
 
     assert.equal(result.specId, '001');
     assert.equal(result.folderName, '001-order-cancellation');
-    assert.ok(result.folderPath.endsWith(path.join('specs', '001-order-cancellation')));
+    assert.ok(
+      result.folderPath.endsWith(path.join('openspec', 'changes', '001-order-cancellation')),
+    );
 
-    const specMd = await fs.readFile(path.join(result.folderPath, 'spec.md'), 'utf8');
-    assert.ok(specMd.includes('title: Order Cancellation'));
+    const proposalMd = await fs.readFile(path.join(result.folderPath, 'proposal.md'), 'utf8');
+    assert.ok(proposalMd.includes('title: Order Cancellation'));
 
     const tasksMdExists = await fs
       .stat(path.join(result.folderPath, 'tasks.md'))
       .then(() => true)
       .catch(() => false);
     assert.equal(tasksMdExists, true);
+
+    const task1Exists = await fs
+      .stat(path.join(result.folderPath, 'tasks', '1.md'))
+      .then(() => true)
+      .catch(() => false);
+    assert.equal(task1Exists, true);
+  });
+
+  it('createNewSpec respects options.specsDirName override', async () => {
+    const result = await createNewSpec(tmpDir, 'Custom Spec', { specsDirName: 'custom-specs' });
+    assert.equal(result.specId, '001');
+    assert.ok(result.folderPath.endsWith(path.join('custom-specs', '001-custom-spec')));
+
+    const proposalMd = await fs.readFile(path.join(result.folderPath, 'proposal.md'), 'utf8');
+    assert.ok(proposalMd.includes('title: Custom Spec'));
 
     const task1Exists = await fs
       .stat(path.join(result.folderPath, 'tasks', '1.md'))

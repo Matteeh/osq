@@ -82,7 +82,7 @@ skills: []
     assert.equal(initialOverview.archivedCount, 0);
 
     // Create archived spec folders
-    const archiveDir = path.join(tmpDir, 'specs', 'archive');
+    const archiveDir = path.join(tmpDir, 'openspec', 'changes', 'archive');
     await fs.mkdir(path.join(archiveDir, '001-archived-one'), { recursive: true });
     await fs.mkdir(path.join(archiveDir, '002-archived-two'), { recursive: true });
     // Also write a dummy file that is not a directory to ensure it is ignored
@@ -96,7 +96,7 @@ skills: []
     await createNewSpec(tmpDir, 'Payment Gateway');
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
-    const archiveDir = path.join(tmpDir, 'specs', 'archive');
+    const archiveDir = path.join(tmpDir, 'openspec', 'changes', 'archive');
     await fs.mkdir(path.join(archiveDir, '000-old-spec'), { recursive: true });
 
     let capturedOutput = '';

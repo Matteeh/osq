@@ -8,8 +8,69 @@ import { showCommand } from '../src/cli/show.js';
 import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
-import { formatSpecDetails, getSpecDetails } from '../src/core/show.js';
+import { formatShowOutput, getSpecDetails } from '../src/core/show.js';
+import { deriveTaskStatus } from '../src/core/state.js';
+import { formatStatusOverview, getStatusOverview } from '../src/core/status.js';
+
+const CHANGE_SPECS_DIR = path.join('openspec', 'changes');
+
+function specMd(title: string): string {
+  return `---
+title: ${title}
+depends_on: []
+features:
+  reads: []
+  writes: []
+---
+## Goal
+
+${title} goal.
+
+## Contract
+
+| Cmd | Output |
+|---|---|
+| osq test | ok |
+
+## Non-goals
+
+- none
+
+## Delta
+
+none
+`;
+}
+
+function taskMd(title: string, verify = 'node -e "process.exit(0)"'): string {
+  return `---
+title: ${title}
+verify: ${verify}
+scope: []
+entry: []
+skills: []
+---
+## Acceptance
+- [ ] ${title} acceptance
+`;
+}
+
+/**
+ * Creates a change folder under the configured `openspec/changes` root by
+ * copying the scaffolded template. Tests that exercise show/report must live
+ * where `osq.config` resolution actually looks (`paths.specs`), not under the
+ * pre-migration `specs/` tree.
+ */
+async function createChangeFolder(
+  root: string,
+  folderName: string,
+  title: string,
+): Promise<string> {
+  const folderPath = path.join(root, CHANGE_SPECS_DIR, folderName);
+  await fs.cp(path.join(root, 'specs', '_template'), folderPath, { recursive: true });
+  await fs.writeFile(path.join(folderPath, 'spec.md'), specMd(title), 'utf8');
+  return folderPath;
+}
 
 describe('osq show', () => {
   let tmpDir: string;
@@ -24,44 +85,13 @@ describe('osq show', () => {
   });
 
   it('getSpecDetails resolves change folder across active and archived directories', async () => {
-    // 1. Create an active spec
-    await createNewSpec(tmpDir, 'Active Spec');
-    // 2. Create an archived spec directly in specs/archive
-    const archiveDir = path.join(tmpDir, 'specs', 'archive', '002-archived-spec');
-    await fs.mkdir(archiveDir, { recursive: true });
-    await fs.writeFile(
-      path.join(archiveDir, 'spec.md'),
-      `---
-title: Archived Spec
-depends_on: []
-features:
-  reads: []
-  writes: []
----
-## Goal
-An archived spec goal.
-## Contract
-| Cmd | Output |
-|---|---|
-| osq test | ok |
-`,
-      'utf8',
-    );
+    // 1. Create an active change folder
+    await createChangeFolder(tmpDir, '001-active-spec', 'Active Spec');
+    // 2. Create an archived change folder directly in the archive
+    const archiveDir = path.join(tmpDir, CHANGE_SPECS_DIR, 'archive', '002-archived-spec');
     await fs.mkdir(path.join(archiveDir, 'tasks'), { recursive: true });
-    await fs.writeFile(
-      path.join(archiveDir, 'tasks', '1.md'),
-      `---
-title: Archived Task
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] done
-`,
-      'utf8',
-    );
+    await fs.writeFile(path.join(archiveDir, 'spec.md'), specMd('Archived Spec'), 'utf8');
+    await fs.writeFile(path.join(archiveDir, 'tasks', '1.md'), taskMd('Archived Task'), 'utf8');
 
     // Resolving active spec by ID, prefix, or slug
     const activeDetails1 = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
@@ -93,11 +123,11 @@ skills: []
   });
 
   it('getSpecDetails extracts spec metadata, tasks, results, and dead markers', async () => {
-    const spec = await createNewSpec(tmpDir, 'Metadata Spec');
+    const folderPath = await createChangeFolder(tmpDir, '001-metadata-spec', 'Metadata Spec');
 
     // Update spec.md with rich content
     await fs.writeFile(
-      path.join(spec.folderPath, 'spec.md'),
+      path.join(folderPath, 'spec.md'),
       `---
 title: Metadata Spec
 depends_on: [001, 002]
@@ -128,7 +158,7 @@ Update docs
 
     // Add task 2 and 3
     await fs.writeFile(
-      path.join(spec.folderPath, 'tasks', '2.md'),
+      path.join(folderPath, 'tasks', '2.md'),
       `---
 title: Task Two
 verify: node -e "process.exit(0)"
@@ -143,7 +173,7 @@ skills: []
     );
 
     await fs.writeFile(
-      path.join(spec.folderPath, 'tasks', '3.md'),
+      path.join(folderPath, 'tasks', '3.md'),
       `---
 title: Task Three
 verify: node -e "process.exit(1)"
@@ -157,7 +187,7 @@ skills: []
       'utf8',
     );
 
-    const runDir = path.join(spec.folderPath, '.run');
+    const runDir = path.join(folderPath, '.run');
 
     // Task 1: pending (no extra files)
 
@@ -229,8 +259,8 @@ Stack trace info here.
   });
 
   it('getSpecDetails parses event timeline from .run/events/<n>.jsonl', async () => {
-    const spec = await createNewSpec(tmpDir, 'Events Spec');
-    const eventsDir = path.join(spec.folderPath, '.run', 'events');
+    const folderPath = await createChangeFolder(tmpDir, '001-events-spec', 'Events Spec');
+    const eventsDir = path.join(folderPath, '.run', 'events');
     await fs.mkdir(eventsDir, { recursive: true });
 
     // Task 1 events
@@ -284,10 +314,10 @@ Stack trace info here.
   });
 
   it('showCommand prints formatted spec inspection with results and events', async () => {
-    const spec = await createNewSpec(tmpDir, 'Inspection Spec');
+    const folderPath = await createChangeFolder(tmpDir, '001-inspection-spec', 'Inspection Spec');
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
-    const runDir = path.join(spec.folderPath, '.run');
+    const runDir = path.join(folderPath, '.run');
 
     // Add dead marker for task 1
     const deadDir = path.join(runDir, 'dead');
@@ -323,12 +353,13 @@ Diagnostic details: tests failed.
     );
 
     const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
-    const directFormatted = formatSpecDetails(details);
+    const directFormatted = formatShowOutput(details);
     assert.ok(directFormatted.includes('Inspection Spec'));
 
     let capturedOutput = '';
     const output = await showCommand('001', {
       cwd: tmpDir,
+      config: DEFAULT_CONFIG,
       stdout: (msg) => {
         capturedOutput = msg;
       },
@@ -344,6 +375,42 @@ Diagnostic details: tests failed.
     assert.ok(text.includes('added feature files'));
     assert.ok(text.includes('2026-09-17T10:00:00.000Z'));
     assert.ok(text.includes('started'));
+  });
+
+  it('formats undeclared_test_change status line and show diagnostic details', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-gated-spec', 'Gated Spec');
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const deadDir = path.join(folderPath, '.run', 'dead');
+    await fs.mkdir(deadDir, { recursive: true });
+    await fs.writeFile(
+      path.join(deadDir, '1.md'),
+      `---
+reason: undeclared_test_change
+---
+Preexisting test files were modified or deleted without tests.modify: true:
+- tests/show.test.ts (modified)
+`,
+      'utf8',
+    );
+
+    // State derivation surfaces the reason on the task.
+    const taskState = await deriveTaskStatus(folderPath, '1.md');
+    assert.equal(taskState.status, 'dead');
+    assert.equal(taskState.deadReason, 'undeclared_test_change');
+
+    // Status formatting renders the reason tag.
+    const overview = await getStatusOverview(tmpDir, DEFAULT_CONFIG);
+    const statusText = formatStatusOverview(overview);
+    assert.ok(statusText.includes('(reason: undeclared_test_change)'));
+
+    // Show output surfaces the reason and the listed test files.
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal(details.tasks[0].deadReason, 'undeclared_test_change');
+    const showText = formatShowOutput(details);
+    assert.ok(showText.includes('undeclared_test_change'));
+    assert.ok(showText.includes('Failure diagnostic:'));
+    assert.ok(showText.includes('tests/show.test.ts (modified)'));
   });
 
   it('CLI registers show <id> command in commander program', () => {

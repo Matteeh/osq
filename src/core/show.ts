@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
-import { parseFrontmatter, parseSpecMd, parseTaskMd } from './parser.js';
+import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
 
 export interface TimelineEvent {
@@ -145,9 +145,10 @@ export async function getSpecDetails(
   const idMatch = folderName.match(/^(\d+)/);
   const id = idMatch ? idMatch[1] : folderName;
 
-  const specMdPath = path.join(folderPath, 'spec.md');
-  const specContent = await fs.readFile(specMdPath, 'utf8');
-  const specData = parseSpecMd(specContent);
+  const specData = await parseSpecMdFromFolder(folderPath);
+  if (!specData) {
+    throw new Error(`Neither proposal.md nor spec.md found in ${folderPath}`);
+  }
 
   const runDir = path.join(folderPath, '.run');
   const approvedPath = path.join(runDir, 'approved');
@@ -443,3 +444,10 @@ export function formatSpecDetails(details: SpecDetails): string {
 
   return lines.join('\n');
 }
+
+/**
+ * Alias for {@link formatSpecDetails} matching the show-output name used by
+ * the status-inspection spec. Displays the dead reason (including
+ * `undeclared_test_change`) and its failure diagnostic.
+ */
+export const formatShowOutput = formatSpecDetails;

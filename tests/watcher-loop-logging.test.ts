@@ -190,7 +190,7 @@ describe('Watcher loop permanent logging', () => {
   });
 
   it('logs watcher errors at error level on permanent lines', async () => {
-    await fs.mkdir(path.join(tmpDir, 'specs', '099-broken'), { recursive: true });
+    await fs.mkdir(path.join(tmpDir, 'openspec', 'changes', '099-broken'), { recursive: true });
 
     const logger = new CaptureLogger();
     const summary = await runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger);
@@ -323,7 +323,7 @@ describe('Watcher idle status', () => {
     assert.equal(logger.statuses.length, 1);
     assert.match(
       logger.statuses[0],
-      /^watching specs · 1 approved waiting · last: 001 archived \d+s ago$/,
+      /^watching (?:specs|openspec\/changes) · 1 approved waiting · last: 001 archived \d+s ago$/,
     );
   });
 });

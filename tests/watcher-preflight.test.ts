@@ -390,7 +390,7 @@ process.exit(0);
 
     // Assert that task cycle proceeded and completed the task
     const folderName = path.basename(spec.folderPath);
-    const archivedPath = path.join(tmpDir, 'specs', 'archive', folderName);
+    const archivedPath = path.join(tmpDir, DEFAULT_CONFIG.paths.archive, folderName);
     const doneMarker = path.join(archivedPath, '.run', 'done', '1');
     const doneStat = await fs.stat(doneMarker).catch(() => null);
     assert.ok(doneStat, 'Task should have completed and done marker created');

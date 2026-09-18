@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { parseFrontmatter, parseSpecMd, parseTaskMd } from './parser.js';
+import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
 
 export type TaskStatus = 'pending' | 'running' | 'done' | 'dead';
 
@@ -106,6 +106,13 @@ export async function deriveTaskState(
   };
 }
 
+/**
+ * Alias for {@link deriveTaskState} under the name used by the status and
+ * reporting specs. Extracts the dead reason (including
+ * `undeclared_test_change`) from `.run/dead/<n>.md` frontmatter.
+ */
+export const deriveTaskStatus = deriveTaskState;
+
 export async function deriveSpecState(
   projectRoot: string,
   specFolderPath: string,
@@ -114,9 +121,10 @@ export async function deriveSpecState(
   const idMatch = folderName.match(/^(\d+)/);
   const id = idMatch ? idMatch[1] : folderName;
 
-  const specMdPath = path.join(specFolderPath, 'spec.md');
-  const specContent = await fs.readFile(specMdPath, 'utf8');
-  const specData = parseSpecMd(specContent);
+  const specData = await parseSpecMdFromFolder(specFolderPath);
+  if (!specData) {
+    throw new Error(`Neither proposal.md nor spec.md found in ${specFolderPath}`);
+  }
 
   const runDir = path.join(specFolderPath, '.run');
   const approvedPath = path.join(runDir, 'approved');

@@ -1,9 +1,10 @@
+import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { MANAGED_AGENTS_BLOCK, OSQ_END_MARKER, OSQ_START_MARKER } from '../core/init.js';
 import type { Logger } from '../core/logger.js';
-import { parseFrontmatter, parseSpecMd } from '../core/parser.js';
+import { parseFrontmatter, parseSpecMdFromFolder } from '../core/parser.js';
 import { type SpawnProcessResult, spawnWithTimeout } from './process.js';
 import {
   EventStreamParser,
@@ -18,6 +19,8 @@ import {
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
+  capabilityRuleLines,
+  resolveCapabilityRules,
 } from './types.js';
 
 export const OPENCODE_AGENT_TEMPLATE = `---
@@ -50,15 +53,20 @@ export function buildOpencodePrompt(options: SpawnTaskOptions): string {
   const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
     options;
 
+  const changeDocName = fsSync.existsSync(path.resolve(specFolderPath, 'proposal.md'))
+    ? 'proposal.md'
+    : 'spec.md';
   const taskRelPath = path.relative(
     projectRoot,
     path.resolve(specFolderPath, 'tasks', `${taskNumber}.md`),
   );
-  const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, 'spec.md'));
+  const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, changeDocName));
   const resultRelPath = path.relative(
     projectRoot,
     path.resolve(specFolderPath, '.run', 'results', `${taskNumber}.md`),
   );
+
+  const capabilityRules = resolveCapabilityRules(options);
 
   return [
     'You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.',
@@ -75,8 +83,9 @@ export function buildOpencodePrompt(options: SpawnTaskOptions): string {
     '3. Keep all edits strictly inside scope.',
     `4. Verify your work by running: ${verifyCommand}`,
     `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} documenting: changed, deviated, drift against features/, missing context, and next steps.`,
-    `6. Do not modify tasks.md, spec.md, or any file outside your scope and ${resultRelPath}.`,
+    `6. Do not modify tasks.md, ${changeDocName}, or any file outside your scope and ${resultRelPath}.`,
     `7. When done, write ${resultRelPath} and exit cleanly.`,
+    ...capabilityRuleLines(capabilityRules),
   ].join('\n');
 }
 
@@ -105,11 +114,14 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
     args.push('--variant', config.opencode.variant);
   }
 
+  const changeDocName = fsSync.existsSync(path.resolve(specFolderPath, 'proposal.md'))
+    ? 'proposal.md'
+    : 'spec.md';
   const taskRelPath = path.relative(
     projectRoot,
     path.resolve(specFolderPath, 'tasks', `${taskNumber}.md`),
   );
-  const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, 'spec.md'));
+  const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, changeDocName));
 
   args.push('--file', taskRelPath);
   args.push('--file', specRelPath);
@@ -141,11 +153,11 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
 
   if (featureNames.length === 0) {
     try {
-      const specPath = path.resolve(specFolderPath, 'spec.md');
-      const specContent = await fs.readFile(specPath, 'utf8');
-      const specData = parseSpecMd(specContent);
-      const allSpecFeatures = [...specData.features.reads, ...specData.features.writes];
-      featureNames = Array.from(new Set(allSpecFeatures.map((s) => s.trim()).filter(Boolean)));
+      const specData = await parseSpecMdFromFolder(specFolderPath);
+      if (specData) {
+        const allSpecFeatures = [...specData.features.reads, ...specData.features.writes];
+        featureNames = Array.from(new Set(allSpecFeatures.map((s) => s.trim()).filter(Boolean)));
+      }
     } catch {}
   }
 

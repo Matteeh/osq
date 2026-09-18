@@ -5,6 +5,7 @@ import { watch } from 'chokidar';
 import type { OsqConfig } from '../core/config.js';
 import { reapStaleLocks } from '../core/lock.js';
 import { type Logger, resolveSymbol } from '../core/logger.js';
+import { resolveChangeDoc } from '../core/parser.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
 import { preflightOpencode } from '../harness/opencode.js';
 import type { HarnessAdapter } from '../harness/types.js';
@@ -58,6 +59,40 @@ export function formatIdleStatus(
     ? `last: ${lastArchived.id} archived ${formatAgo(now - lastArchived.archivedAt)}`
     : 'last: none';
   return `watching ${specsDir} · ${approvedWaiting} approved waiting · ${last}`;
+}
+
+const HUMAN_STEPS_HEADING = /^##[ \t]+Human steps[ \t]*\r?$/im;
+
+/**
+ * Extract the `## Human steps` section from a change document. osq never
+ * performs these steps itself; they are printed once the change completes so
+ * the human knows which manual actions remain (for the layout cut-over: stop
+ * the watcher, run the migration, restart). Returns an empty string when the
+ * document has no such section or the section is blank.
+ */
+export function extractHumanSteps(content: string): string {
+  const match = HUMAN_STEPS_HEADING.exec(content);
+  if (!match || match.index === undefined) {
+    return '';
+  }
+  const remainder = content.slice(match.index + match[0].length);
+  const nextHeading = remainder.search(/^##[ \t]+\S/m);
+  const section = nextHeading === -1 ? remainder : remainder.slice(0, nextHeading);
+  return section.trim();
+}
+
+/**
+ * Read the `## Human steps` section from a change folder, preferring the
+ * OpenSpec `proposal.md` and falling back to a legacy `spec.md`. Never moves
+ * anything: the cut-over is always performed by the human.
+ */
+async function readHumanSteps(specFolderPath: string): Promise<string> {
+  const resolved = await resolveChangeDoc(specFolderPath);
+  if (!resolved) {
+    return '';
+  }
+  const content = await fs.readFile(resolved.path, 'utf8').catch(() => '');
+  return extractHumanSteps(content);
 }
 
 /**
@@ -128,6 +163,25 @@ export async function runWatcherCycle(
   let specsArchived = 0;
   let approvedWaiting = 0;
 
+  const archiveCompletedSpec = async (
+    folder: string,
+    folderPath: string,
+    specId: string,
+  ): Promise<void> => {
+    // Read the manual steps while the folder still exists: the archive move
+    // relocates it, and this task never performs those steps itself.
+    const humanSteps = await readHumanSteps(folderPath);
+    const archived = await checkAndArchiveSpec(projectRoot, folderPath, config);
+    if (!archived) {
+      return;
+    }
+    specsArchived++;
+    logger?.info(`${tag('✓ spec', '[archived]')} ${specId} archived (${folder})`);
+    if (humanSteps) {
+      logger?.info(`Human steps after completion:\n${humanSteps}`);
+    }
+  };
+
   for (const folder of specFolders) {
     const folderPath = path.join(specsDir, folder);
     try {
@@ -162,22 +216,14 @@ export async function runWatcherCycle(
         tasksRun++;
 
         if (taskResult.success) {
-          const archived = await checkAndArchiveSpec(projectRoot, folderPath, config);
-          if (archived) {
-            specsArchived++;
-            logger?.info(`${tag('✓ spec', '[archived]')} ${specState.id} archived (${folder})`);
-          }
+          await archiveCompletedSpec(folder, folderPath, specState.id);
         } else {
           logger?.info(
             `${tag('■ spec', '[halted]')} ${specState.id} halted (task ${taskNumber} dead)`,
           );
         }
       } else if (specState.status === 'done') {
-        const archived = await checkAndArchiveSpec(projectRoot, folderPath, config);
-        if (archived) {
-          specsArchived++;
-          logger?.info(`${tag('✓ spec', '[archived]')} ${specState.id} archived (${folder})`);
-        }
+        await archiveCompletedSpec(folder, folderPath, specState.id);
       }
     } catch (err) {
       logWatcherError(logger, useSymbols, err);

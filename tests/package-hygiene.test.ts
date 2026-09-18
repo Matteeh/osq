@@ -9,6 +9,37 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const testsDir = path.dirname(fileURLToPath(import.meta.url));
+
+const PROCESS_EXECUTION_CALLS = [
+  'execFileAsync',
+  'execFileSync',
+  'execFile',
+  'execSync',
+  'spawnSync',
+  'spawn',
+  'exec',
+  'run',
+] as const;
+
+const pnpmSpawnPattern = new RegExp(
+  `\\b(?:${PROCESS_EXECUTION_CALLS.join('|')})\\s*\\(\\s*['"]pnpm['"]`,
+  'g',
+);
+
+async function collectTestSources(dir: string): Promise<string[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return collectTestSources(fullPath);
+      }
+      return /\.(?:ts|js)$/.test(entry.name) ? [fullPath] : [];
+    }),
+  );
+  return nested.flat();
+}
 
 interface PackFile {
   path: string;
@@ -116,6 +147,27 @@ describe('package hygiene', () => {
       manifest.scripts?.prepublishOnly ?? '',
       /^npm run build$/,
       'prepublishOnly must build with npm run build',
+    );
+  });
+});
+
+describe('package manager independence', () => {
+  it('never spawns pnpm from any test under tests/', async () => {
+    const files = await collectTestSources(testsDir);
+    const offenders: string[] = [];
+
+    for (const file of files) {
+      const source = await fs.readFile(file, 'utf8');
+      for (const match of source.matchAll(pnpmSpawnPattern)) {
+        const line = source.slice(0, match.index).split('\n').length;
+        offenders.push(`${path.relative(repoRoot, file)}:${line}`);
+      }
+    }
+
+    assert.deepEqual(
+      offenders,
+      [],
+      `tests must not pass 'pnpm' as a spawn command: ${offenders.join(', ')}`,
     );
   });
 });

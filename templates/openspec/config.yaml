@@ -1,0 +1,18 @@
+schema: osq
+
+context: |
+  This project follows the osq profile of OpenSpec. Living capability specs
+  live under openspec/specs/<capability>/spec.md. In-flight changes live under
+  openspec/changes/<id>-<slug>/ with a proposal.md, delta specs, and tasks.md.
+  Runtime state is derived exclusively from .run/ markers, never from tasks.md.
+
+rules:
+  proposal:
+    - State the why and what changes; the human gate reads this before approving.
+    - List every capability the change adds or modifies under Capabilities.
+  specs:
+    - Write one delta spec per capability at specs/<capability>/spec.md.
+    - Use exactly four hashtags for #### Scenario: blocks with WHEN/THEN bullets.
+  tasks:
+    - Break work into small tasks/<n>.md execution units that each state a verify command.
+    - Keep tasks.md checkboxes as a write-only projection of runtime state.

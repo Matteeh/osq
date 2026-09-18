@@ -1,3 +1,4 @@
+import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,6 +18,8 @@ import {
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
+  capabilityRuleLines,
+  resolveCapabilityRules,
 } from './types.js';
 
 export async function resolveAgyBinary(): Promise<string> {
@@ -41,15 +44,20 @@ export function buildAgyPrompt(options: SpawnTaskOptions): string {
   const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
     options;
 
+  const changeDocName = fsSync.existsSync(path.join(specFolderPath, 'proposal.md'))
+    ? 'proposal.md'
+    : 'spec.md';
   const taskRelPath = path.relative(
     projectRoot,
     path.join(specFolderPath, 'tasks', `${taskNumber}.md`),
   );
-  const specRelPath = path.relative(projectRoot, path.join(specFolderPath, 'spec.md'));
+  const specRelPath = path.relative(projectRoot, path.join(specFolderPath, changeDocName));
   const resultRelPath = path.relative(
     projectRoot,
     path.join(specFolderPath, '.run', 'results', `${taskNumber}.md`),
   );
+
+  const capabilityRules = resolveCapabilityRules(options);
 
   return [
     'You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.',
@@ -66,8 +74,9 @@ export function buildAgyPrompt(options: SpawnTaskOptions): string {
     '3. Keep all edits strictly inside scope.',
     `4. Verify your work by running: ${verifyCommand}`,
     `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} documenting: changed, deviated, drift against features/, missing context, and next steps.`,
-    `6. Do not modify tasks.md, spec.md, or any file outside your scope and ${resultRelPath}.`,
+    `6. Do not modify tasks.md, ${changeDocName}, or any file outside your scope and ${resultRelPath}.`,
     `7. When done, write ${resultRelPath} and exit cleanly.`,
+    ...capabilityRuleLines(capabilityRules),
   ].join('\n');
 }
 

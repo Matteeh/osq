@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
+import { resolveChangeDoc } from './parser.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 
 export interface StatusOverview {
@@ -38,8 +39,8 @@ export async function getStatusOverview(
     const stat = await fs.stat(folderPath).catch(() => null);
     if (!stat || !stat.isDirectory()) continue;
 
-    const specMdStat = await fs.stat(path.join(folderPath, 'spec.md')).catch(() => null);
-    if (!specMdStat || !specMdStat.isFile()) continue;
+    const changeDoc = await resolveChangeDoc(folderPath);
+    if (!changeDoc) continue;
 
     validFolders.push(folder);
   }
@@ -82,7 +83,7 @@ export async function getStatusOverview(
   };
 }
 
-function formatTaskLine(task: TaskState): string {
+export function formatStatusLine(task: TaskState): string {
   let indicator = '[ ]';
   if (task.status === 'done') {
     indicator = '[x]';
@@ -111,7 +112,7 @@ export function formatStatusOverview(overview: StatusOverview): string {
         lines.push('  (no tasks)');
       } else {
         for (const task of spec.tasks) {
-          lines.push(formatTaskLine(task));
+          lines.push(formatStatusLine(task));
         }
       }
     }

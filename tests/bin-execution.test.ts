@@ -33,7 +33,7 @@ async function runBin(args: string[], cwd: string): Promise<string> {
 
 describe('built bin execution', () => {
   before(async () => {
-    await execFileAsync('pnpm', ['build'], { cwd: repoRoot });
+    await execFileAsync('npm', ['run', 'build'], { cwd: repoRoot });
   });
 
   it('preserves the executable shebang after compilation', async () => {

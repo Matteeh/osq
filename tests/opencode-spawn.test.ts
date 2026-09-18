@@ -25,7 +25,7 @@ describe('OpenCode Adapter Task Spawning', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Spawn Feature');
     specFolder = spec.folderPath;
-    specPath = path.join(specFolder, 'spec.md');
+    specPath = path.join(specFolder, 'proposal.md');
     taskPath = path.join(specFolder, 'tasks', '1.md');
   });
 
@@ -170,8 +170,8 @@ features: [feature-alpha, feature-beta]
 
     assert.equal(attachedFiles[0], taskRelPath);
     assert.equal(attachedFiles[1], specRelPath);
-    assert.ok(attachedFiles.includes('features/feature-alpha.md'));
-    assert.ok(attachedFiles.includes('features/feature-beta.md'));
+    assert.ok(attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-alpha.md')));
+    assert.ok(attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-beta.md')));
 
     // Fallback: when task does not specify features, use parent spec.md features
     const taskContentWithoutFeatures = `---
@@ -216,8 +216,14 @@ None
 
     assert.equal(fallbackAttachedFiles[0], taskRelPath);
     assert.equal(fallbackAttachedFiles[1], specRelPath);
-    assert.ok(fallbackAttachedFiles.includes('features/spec-feat-read.md'));
-    assert.ok(fallbackAttachedFiles.includes('features/spec-feat-write.md'));
+    assert.ok(
+      fallbackAttachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-read.md')),
+    );
+    assert.ok(
+      fallbackAttachedFiles.includes(
+        path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-write.md'),
+      ),
+    );
   });
 
   it('Positional prompt argument defines task guidelines matching AGENTS.md protocol', async () => {
@@ -267,7 +273,7 @@ None
     );
     assert.ok(
       prompt.includes(
-        `6. Do not modify tasks.md, spec.md, or any file outside your scope and ${resultRelPath}.`,
+        `6. Do not modify tasks.md, proposal.md, or any file outside your scope and ${resultRelPath}.`,
       ),
     );
     assert.ok(prompt.includes(`7. When done, write ${resultRelPath} and exit cleanly.`));

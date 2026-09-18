@@ -148,8 +148,22 @@ export async function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<MetricsReport> {
-  const specsDir = path.join(projectRoot, config.paths.specs);
-  const archiveDir = path.join(projectRoot, config.paths.archive);
+  let specsDir = path.join(projectRoot, config.paths.specs);
+  let archiveDir = path.join(projectRoot, config.paths.archive);
+
+  const specsDirStat = await fs.stat(specsDir).catch(() => null);
+  const archiveDirStat = await fs.stat(archiveDir).catch(() => null);
+
+  if (!specsDirStat && !archiveDirStat) {
+    const legacySpecs = path.join(projectRoot, 'specs');
+    const legacyArchive = path.join(projectRoot, 'specs', 'archive');
+    const legacySpecsStat = await fs.stat(legacySpecs).catch(() => null);
+    const legacyArchiveStat = await fs.stat(legacyArchive).catch(() => null);
+    if (legacySpecsStat || legacyArchiveStat) {
+      specsDir = legacySpecs;
+      archiveDir = legacyArchive;
+    }
+  }
 
   // 1. Identify active specs
   let activeEntries: string[] = [];
@@ -541,6 +555,13 @@ export async function getMetricsReport(
     },
   };
 }
+
+/**
+ * Alias for {@link getMetricsReport} matching the report-generation name used
+ * by the metrics-and-reporting spec. Aggregates failure reasons (including
+ * `undeclared_test_change`) into the failure breakdown.
+ */
+export const generateReport = getMetricsReport;
 
 export function formatMetricsReport(report: MetricsReport): string {
   const lines: string[] = [];

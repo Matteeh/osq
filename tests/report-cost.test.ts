@@ -31,7 +31,7 @@ async function reportForEvents(events: Record<string, unknown>[]): Promise<Metri
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-report-cost-'));
   tmpDirs.push(tmpDir);
 
-  const specDir = path.join(tmpDir, 'specs', 'archive', '001-cost-spec');
+  const specDir = path.join(tmpDir, 'openspec', 'changes', 'archive', '001-cost-spec');
   await fs.mkdir(path.join(specDir, 'tasks'), { recursive: true });
   await fs.writeFile(
     path.join(specDir, 'spec.md'),

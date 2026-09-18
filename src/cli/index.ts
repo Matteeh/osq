@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
+import { lintCommand } from './lint.js';
+import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { reportCommand } from './report.js';
 import { setupCommand } from './setup.js';
@@ -41,6 +43,13 @@ export function createProgram(version?: string): Command {
     });
 
   program
+    .command('lint [ids...]')
+    .description('validate change folders and OpenSpec artifacts')
+    .action(async (ids: string[]) => {
+      await lintCommand(ids);
+    });
+
+  program
     .command('approve <ids...>')
     .description('lint, hash, and approve change folders')
     .action(async (ids: string[]) => {
@@ -62,6 +71,13 @@ export function createProgram(version?: string): Command {
     .description('configure harness environment and configuration')
     .action(async () => {
       await setupCommand();
+    });
+
+  program
+    .command('migrate <target>')
+    .description('migrate a legacy layout to an OpenSpec layout')
+    .action(async (target: string) => {
+      await migrateCommand(target);
     });
 
   program

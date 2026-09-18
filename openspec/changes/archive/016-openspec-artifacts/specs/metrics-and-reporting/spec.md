@@ -1,0 +1,59 @@
+# Spec Delta: Metrics and Reporting
+
+## Purpose
+
+Collects, derives, and reports task execution metrics, token utilization, costs, failure categorizations, and file modifications across active and archived change specifications.
+
+## ADDED Requirements
+
+### Requirement: Task and specification metrics derivation
+<!-- source: features/metrics-and-reporting.md # Metric Derivation Rules, tests/report.test.ts, tests/report-task-states.test.ts -->
+The system SHALL derive metrics across active and archived specifications via `osq report`.
+
+#### Scenario: Active and archive state sourcing
+- **WHEN** `osq report` is executed
+- **THEN** active spec metrics are sourced from `deriveSpecState` and archived spec metrics from `.run/events/<n>.jsonl`
+
+### Requirement: Token consumption and cache accounting
+<!-- source: features/metrics-and-reporting.md # Token Metric Derivation, tests/report-tokens.test.ts -->
+The system SHALL calculate prompt, candidate, total, cached, and reasoning tokens with cache-share percentage.
+
+#### Scenario: Adapter-reported cache counter priority
+- **WHEN** harness event stream contains explicit `cachedTokens`
+- **THEN** metric calculation uses the reported value directly rather than remainder derivation
+
+#### Scenario: Reasoning token separation
+- **WHEN** harness reports reasoning tokens
+- **THEN** reasoning tokens are reported separately and excluded from cached token counts
+
+### Requirement: Cost reporting and price table disclaimer
+<!-- source: features/metrics-and-reporting.md # Reported Cost & Price Table Disclaimer, tests/report-cost.test.ts -->
+The system SHALL display reported costs accompanied by a price table disclaimer.
+
+#### Scenario: Disclaimer display
+- **WHEN** `osq report` renders cost summaries
+- **THEN** output includes notice that costs reflect harness price tables rather than final billing invoices
+
+### Requirement: Failure categorization by dead reason
+<!-- source: features/metrics-and-reporting.md # Failure Categorization, tests/report-failure-breakdown.test.ts -->
+The system SHALL categorize task failures across retries by dead event reasons.
+
+#### Scenario: Historical failure aggregation
+- **WHEN** tasks fail with `verify_red`, `spec_conflict`, `no_result`, `crashed`, `timeout`, or `already_running`
+- **THEN** report aggregates counts and percentages for each failure reason
+
+### Requirement: File modification extraction
+<!-- source: features/metrics-and-reporting.md # File Modification Extraction, tests/report-file-changes.test.ts -->
+The system SHALL aggregate modified files from tool events.
+
+#### Scenario: Tool event file extraction
+- **WHEN** events stream contains `edit` or `write` tool events
+- **THEN** report aggregates unique paths and modification counts
+
+### Requirement: Structured command output and JSON mode
+<!-- source: features/metrics-and-reporting.md # Structured Output, tests/report-json.test.ts -->
+The system SHALL format reports for terminal display and provide raw JSON output.
+
+#### Scenario: JSON report output
+- **WHEN** user executes `osq report --json`
+- **THEN** system emits structured JSON conforming to `MetricsReport` schema

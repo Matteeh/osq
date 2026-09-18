@@ -1,5 +1,52 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { DEFAULT_CONFIG } from './config.js';
+
+export const TEMPLATES_ROOT = fileURLToPath(new URL('../../templates', import.meta.url));
+
+const FALLBACK_PROPOSAL_MD = `---
+title: Change title
+depends_on: []
+features:
+  reads: []
+---
+## Goal
+
+What problem this change solves and why.
+
+## Contract
+
+| Input | Expected Output |
+|---|---|
+| Sample input | Sample output |
+
+## Non-goals
+
+What this change deliberately does not do.
+
+## Delta
+
+What changes in each doc under features.writes.
+`;
+
+const FALLBACK_TASKS_MD = `# Tasks
+
+## 1. Section title
+
+- [ ] 1. When initial condition, expected outcome
+`;
+
+const FALLBACK_TASK_1_MD = `---
+title: When initial condition, expected outcome
+verify: node -e "process.exit(0)"
+scope: []
+entry: []
+skills: []
+---
+## Acceptance
+- [ ] Acceptance criterion 1
+`;
 
 export function slugify(text: string): string {
   return text
@@ -56,16 +103,13 @@ export async function createNewSpec(
     throw new Error('Spec name cannot be empty');
   }
 
-  const specsDir = path.join(projectDir, options.specsDirName || 'specs');
-  const templateDir = path.join(specsDir, '_template');
+  const specsDir = path.join(projectDir, options.specsDirName || DEFAULT_CONFIG.paths.specs);
+  const legacyTemplateDir = path.join(specsDir, '_template');
 
-  const templateExists = await fs
-    .stat(templateDir)
+  const legacyTemplateExists = await fs
+    .stat(legacyTemplateDir)
     .then(() => true)
     .catch(() => false);
-  if (!templateExists) {
-    throw new Error(`Template directory not found at ${templateDir}. Run osq init first.`);
-  }
 
   const specId = await getNextSpecNumber(specsDir);
   const folderName = `${specId}-${slug}`;
@@ -79,17 +123,46 @@ export async function createNewSpec(
     throw new Error(`Spec folder already exists at ${targetDir}`);
   }
 
-  // Copy template folder recursively
-  await fs.cp(templateDir, targetDir, { recursive: true });
+  if (legacyTemplateExists) {
+    // Legacy spec folder layout
+    await fs.cp(legacyTemplateDir, targetDir, { recursive: true });
 
-  // Update spec.md title
-  const specMdPath = path.join(targetDir, 'spec.md');
-  try {
-    const specContent = await fs.readFile(specMdPath, 'utf8');
-    const updatedContent = specContent.replace(/^title:\s*.*$/m, `title: ${trimmedTitle}`);
-    await fs.writeFile(specMdPath, updatedContent, 'utf8');
-  } catch {
-    // If spec.md doesn't exist, proceed
+    const specMdPath = path.join(targetDir, 'spec.md');
+    try {
+      const specContent = await fs.readFile(specMdPath, 'utf8');
+      const updatedContent = specContent.replace(/^title:\s*.*$/m, `title: ${trimmedTitle}`);
+      await fs.writeFile(specMdPath, updatedContent, 'utf8');
+    } catch {}
+  } else {
+    // OpenSpec change folder layout
+    await fs.mkdir(path.join(targetDir, 'tasks'), { recursive: true });
+
+    let proposalContent = FALLBACK_PROPOSAL_MD;
+    try {
+      proposalContent = await fs.readFile(path.join(TEMPLATES_ROOT, 'proposal.md'), 'utf8');
+    } catch {}
+
+    const updatedProposal = proposalContent.replace(/^title:\s*.*$/m, `title: ${trimmedTitle}`);
+    await fs.writeFile(path.join(targetDir, 'proposal.md'), updatedProposal, 'utf8');
+
+    let tasksContent = FALLBACK_TASKS_MD;
+    try {
+      tasksContent = await fs.readFile(path.join(TEMPLATES_ROOT, 'tasks.md'), 'utf8');
+    } catch {}
+    await fs.writeFile(path.join(targetDir, 'tasks.md'), tasksContent, 'utf8');
+
+    let task1Content = FALLBACK_TASK_1_MD;
+    try {
+      task1Content = await fs.readFile(
+        path.join(TEMPLATES_ROOT, 'openspec', 'schemas', 'osq', 'templates', 'spec.md'),
+        'utf8',
+      );
+    } catch {}
+    // If not a task format, fallback to default task 1
+    if (!task1Content.includes('verify:')) {
+      task1Content = FALLBACK_TASK_1_MD;
+    }
+    await fs.writeFile(path.join(targetDir, 'tasks', '1.md'), task1Content, 'utf8');
   }
 
   return {

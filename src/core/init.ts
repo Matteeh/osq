@@ -1,18 +1,30 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const OSQ_START_MARKER = '<!-- OSQ:START -->';
 export const OSQ_END_MARKER = '<!-- OSQ:END -->';
 
+/** Path to the package's bundled `templates/` directory. */
+export const TEMPLATES_ROOT = fileURLToPath(new URL('../../templates', import.meta.url));
+
 export const MANAGED_AGENTS_BLOCK = `${OSQ_START_MARKER}
 ## Executing a spec
 
-1. Read your task file, its parent \`spec.md\`, then only the docs listed under \`features\`. Nothing else.
+1. Read your task file, its parent \`proposal.md\`, then only the docs listed under \`features\`. Nothing else.
 2. Too big for one pass? Write why in \`.run/results/<n>.md\`, exit without code.
 3. Read a previous result file for this task if present. Run the task's \`verify\`. Start from what fails.
 4. Tests for each acceptance line before implementing.
 5. Minimal code to pass. Stay inside \`scope\`.
 6. Run the task's \`verify\` command before exiting.
+
+## OpenSpec layout
+
+- Living capability specs live at \`openspec/specs/<capability>/spec.md\`.
+- In-flight changes live at \`openspec/changes/<id>-<slug>/\`.
+- The change document is \`proposal.md\`; its delta specs live beside it under \`specs/<capability>/spec.md\`.
+- The osq workflow schema lives at \`openspec/schemas/osq/schema.yaml\` (proposal -> specs -> tasks).
+- \`tasks/<n>.md\` is the osq-specific execution unit; \`tasks.md\` is a write-only projection of \`.run/\` state.
 
 ## Exiting
 
@@ -131,6 +143,13 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
     'specs/archive',
     'features',
     'decisions',
+    'openspec',
+    path.join('openspec', 'schemas'),
+    path.join('openspec', 'schemas', 'osq'),
+    path.join('openspec', 'schemas', 'osq', 'templates'),
+    path.join('openspec', 'specs'),
+    path.join('openspec', 'changes'),
+    path.join('openspec', 'changes', 'archive'),
   ];
 
   for (const relDir of dirsToCreate) {
@@ -152,6 +171,22 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
     { relPath: path.join('specs', '_template', 'tasks.md'), content: TEMPLATE_TASKS_MD },
     { relPath: path.join('specs', '_template', 'tasks', '1.md'), content: TEMPLATE_TASK_1_MD },
   ];
+
+  const bundledTemplates = [
+    path.join('openspec', 'config.yaml'),
+    path.join('openspec', 'schemas', 'osq', 'schema.yaml'),
+    path.join('openspec', 'schemas', 'osq', 'README.md'),
+    path.join('openspec', 'schemas', 'osq', 'templates', 'proposal.md'),
+    path.join('openspec', 'schemas', 'osq', 'templates', 'spec.md'),
+    path.join('openspec', 'schemas', 'osq', 'templates', 'tasks.md'),
+  ];
+
+  for (const relPath of bundledTemplates) {
+    filesToCreate.push({
+      relPath,
+      content: await fs.readFile(path.join(TEMPLATES_ROOT, relPath), 'utf8'),
+    });
+  }
 
   for (const file of filesToCreate) {
     const fullPath = path.join(targetDir, file.relPath);

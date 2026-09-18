@@ -40,7 +40,7 @@ async function createArchivedSpec(
   folderName: string,
   taskNumbers: string[],
 ): Promise<string> {
-  const folderPath = path.join(projectRoot, 'specs', 'archive', folderName);
+  const folderPath = path.join(projectRoot, 'openspec', 'changes', 'archive', folderName);
   await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
   await fs.writeFile(
     path.join(folderPath, 'spec.md'),
