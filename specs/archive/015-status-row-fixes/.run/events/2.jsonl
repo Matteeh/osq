@@ -1,0 +1,90 @@
+{"type":"started","timestamp":"2026-09-18T12:33:54.217Z","data":{"pid":797782,"timeoutSeconds":1800}}
+{"type":"tool","timestamp":"2026-09-18T12:33:57.212Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-18T12:33:57.443Z","data":{"tool":"bash","summary":"ls -la specs/015-status-row-fixes/.run/results/ 2>/dev/null;"}}
+{"type":"tokens","timestamp":"2026-09-18T12:33:57.490Z","data":{"promptTokens":5140,"candidateTokens":107,"totalTokens":11322,"cachedTokens":6016,"reasoningTokens":59,"cost":0.000888648}}
+{"type":"tool","timestamp":"2026-09-18T12:33:59.179Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/runner-outcome-logging.test.ts"}}
+{"type":"tool","timestamp":"2026-09-18T12:33:59.308Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/specs/015-status-row-fixes/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-09-18T12:33:59.351Z","data":{"promptTokens":8604,"candidateTokens":108,"totalTokens":20018,"cachedTokens":11264,"reasoningTokens":42,"cost":0.001414392}}
+{"type":"tool","timestamp":"2026-09-18T12:34:02.499Z","data":{"tool":"grep","summary":"{\"pattern\":\"formatTaskOutcomeSummary\"}"}}
+{"type":"tool","timestamp":"2026-09-18T12:34:02.540Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/core/logger.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:02.581Z","data":{"promptTokens":4095,"candidateTokens":83,"totalTokens":24730,"cachedTokens":19968,"reasoningTokens":584,"cost":0.001074354}}
+{"type":"tool","timestamp":"2026-09-18T12:34:12.106Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"text","timestamp":"2026-09-18T12:34:12.116Z","data":{"text":"Now let me make the runner.ts changes."}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:12.139Z","data":{"promptTokens":3512,"candidateTokens":289,"totalTokens":30623,"cachedTokens":24704,"reasoningTokens":2118,"cost":0.002045112}}
+{"type":"tool","timestamp":"2026-09-18T12:34:14.255Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:14.298Z","data":{"promptTokens":174,"candidateTokens":342,"totalTokens":30988,"cachedTokens":30464,"reasoningTokens":8,"cost":0.000327492}}
+{"type":"tool","timestamp":"2026-09-18T12:34:16.216Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:16.247Z","data":{"promptTokens":155,"candidateTokens":250,"totalTokens":31265,"cachedTokens":30848,"reasoningTokens":12,"cost":0.000272994}}
+{"type":"tool","timestamp":"2026-09-18T12:34:18.278Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:18.300Z","data":{"promptTokens":176,"candidateTokens":210,"totalTokens":31622,"cachedTokens":31104,"reasoningTokens":132,"cost":0.000324912}}
+{"type":"tool","timestamp":"2026-09-18T12:34:19.824Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:19.864Z","data":{"promptTokens":149,"candidateTokens":194,"totalTokens":31831,"cachedTokens":31488,"reasoningTokens":0,"cost":0.000233214}}
+{"type":"tool","timestamp":"2026-09-18T12:34:21.598Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:21.628Z","data":{"promptTokens":230,"candidateTokens":85,"totalTokens":31951,"cachedTokens":31616,"reasoningTokens":20,"cost":0.000192348}}
+{"type":"tool","timestamp":"2026-09-18T12:34:23.263Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:23.289Z","data":{"promptTokens":812,"candidateTokens":208,"totalTokens":32892,"cachedTokens":31872,"reasoningTokens":0,"cost":0.000342216}}
+{"type":"tool","timestamp":"2026-09-18T12:34:24.880Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:24.940Z","data":{"promptTokens":139,"candidateTokens":206,"totalTokens":33113,"cachedTokens":32768,"reasoningTokens":0,"cost":0.000242754}}
+{"type":"tool","timestamp":"2026-09-18T12:34:26.753Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:26.779Z","data":{"promptTokens":232,"candidateTokens":85,"totalTokens":33233,"cachedTokens":32896,"reasoningTokens":20,"cost":0.000196488}}
+{"type":"tool","timestamp":"2026-09-18T12:34:28.680Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:28.724Z","data":{"promptTokens":887,"candidateTokens":219,"totalTokens":34258,"cachedTokens":33152,"reasoningTokens":0,"cost":0.000363906}}
+{"type":"tool","timestamp":"2026-09-18T12:34:30.367Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:30.416Z","data":{"promptTokens":225,"candidateTokens":163,"totalTokens":34436,"cachedTokens":34048,"reasoningTokens":0,"cost":0.000233694}}
+{"type":"tool","timestamp":"2026-09-18T12:34:31.712Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:31.758Z","data":{"promptTokens":147,"candidateTokens":85,"totalTokens":34549,"cachedTokens":34304,"reasoningTokens":13,"cost":0.000183762}}
+{"type":"tool","timestamp":"2026-09-18T12:34:33.329Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:33.359Z","data":{"promptTokens":730,"candidateTokens":209,"totalTokens":35371,"cachedTokens":34432,"reasoningTokens":0,"cost":0.000338196}}
+{"type":"tool","timestamp":"2026-09-18T12:34:34.990Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:35.019Z","data":{"promptTokens":186,"candidateTokens":137,"totalTokens":35523,"cachedTokens":35200,"reasoningTokens":0,"cost":0.0002157}}
+{"type":"tool","timestamp":"2026-09-18T12:34:36.368Z","data":{"tool":"grep","summary":"{\"pattern\":\"formatTaskOutcomeSummary\",\"path\":\"/home/mathias/"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:36.413Z","data":{"promptTokens":210,"candidateTokens":67,"totalTokens":35621,"cachedTokens":35328,"reasoningTokens":16,"cost":0.000187284}}
+{"type":"tool","timestamp":"2026-09-18T12:34:37.799Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:37.840Z","data":{"promptTokens":180,"candidateTokens":85,"totalTokens":35748,"cachedTokens":35456,"reasoningTokens":27,"cost":0.000200568}}
+{"type":"tool","timestamp":"2026-09-18T12:34:41.176Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/src/harness/mock.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:41.211Z","data":{"promptTokens":411,"candidateTokens":53,"totalTokens":36640,"cachedTokens":35712,"reasoningTokens":464,"cost":0.000478986}}
+{"type":"tool","timestamp":"2026-09-18T12:34:53.234Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/tests/runner-outcome-logging.test.ts"}}
+{"type":"text","timestamp":"2026-09-18T12:34:53.238Z","data":{"text":"Now I'll rewrite the test file to match the new contract."}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:53.258Z","data":{"promptTokens":919,"candidateTokens":3141,"totalTokens":41817,"cachedTokens":36608,"reasoningTokens":1149,"cost":0.002821674}}
+{"type":"tool","timestamp":"2026-09-18T12:34:56.487Z","data":{"tool":"bash","summary":"node --import tsx --test tests/runner-outcome-logging.test.t"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:56.510Z","data":{"promptTokens":233,"candidateTokens":99,"totalTokens":41974,"cachedTokens":41600,"reasoningTokens":42,"cost":0.00024435}}
+{"type":"tool","timestamp":"2026-09-18T12:34:58.531Z","data":{"tool":"grep","summary":"{\"pattern\":\"verified \\\\(passed\\\\)|\\\\(passed\\\\)|formatTaskOut"}}
+{"type":"tool","timestamp":"2026-09-18T12:34:59.828Z","data":{"tool":"bash","summary":"pnpm tsc --noEmit 2>&1 | head -30"}}
+{"type":"tokens","timestamp":"2026-09-18T12:34:59.865Z","data":{"promptTokens":513,"candidateTokens":162,"totalTokens":42596,"cachedTokens":41856,"reasoningTokens":65,"cost":0.000338718}}
+{"type":"tool","timestamp":"2026-09-18T12:35:01.854Z","data":{"tool":"grep","summary":"{\"pattern\":\"logger\\\\?\\\\.info|logOutcome\",\"path\":\"/home/mathi"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:01.883Z","data":{"promptTokens":290,"candidateTokens":77,"totalTokens":43014,"cachedTokens":42496,"reasoningTokens":151,"cost":0.000307788}}
+{"type":"tool","timestamp":"2026-09-18T12:35:05.394Z","data":{"tool":"bash","summary":"rg -n \"verified|dead \\(reason|outcome\" tests/runner-terminal"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:05.414Z","data":{"promptTokens":375,"candidateTokens":112,"totalTokens":43911,"cachedTokens":43008,"reasoningTokens":416,"cost":0.000502074}}
+{"type":"tool","timestamp":"2026-09-18T12:35:06.791Z","data":{"tool":"grep","summary":"{\"pattern\":\"verified|dead \\\\(reason|outcome\",\"path\":\"/home/m"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:06.822Z","data":{"promptTokens":160,"candidateTokens":89,"totalTokens":44025,"cachedTokens":43776,"reasoningTokens":0,"cost":0.000208728}}
+{"type":"tool","timestamp":"2026-09-18T12:35:08.331Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/runner-already-running.test.ts"}}
+{"type":"tool","timestamp":"2026-09-18T12:35:08.508Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/runner-terminal-status.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:08.538Z","data":{"promptTokens":919,"candidateTokens":163,"totalTokens":45027,"cachedTokens":43904,"reasoningTokens":41,"cost":0.000391962}}
+{"type":"tool","timestamp":"2026-09-18T12:35:10.667Z","data":{"tool":"bash","summary":"ls specs/015-status-row-fixes/tasks/"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:10.715Z","data":{"promptTokens":1342,"candidateTokens":72,"totalTokens":46555,"cachedTokens":44928,"reasoningTokens":213,"cost":0.000507084}}
+{"type":"tool","timestamp":"2026-09-18T12:35:11.817Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/specs/015-status-row-fixes/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-18T12:35:11.916Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/specs/015-status-row-fixes/tasks/4.md"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:11.969Z","data":{"promptTokens":243,"candidateTokens":110,"totalTokens":46689,"cachedTokens":46336,"reasoningTokens":0,"cost":0.000241458}}
+{"type":"tool","timestamp":"2026-09-18T12:35:18.657Z","data":{"tool":"bash","summary":"node --import tsx --test tests/runner-already-running.test.t"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:18.672Z","data":{"promptTokens":1454,"candidateTokens":102,"totalTokens":49382,"cachedTokens":46592,"reasoningTokens":1234,"cost":0.001159476}}
+{"type":"tool","timestamp":"2026-09-18T12:35:21.375Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/package.json"}}
+{"type":"tool","timestamp":"2026-09-18T12:35:21.515Z","data":{"tool":"bash","summary":"ls src/core/ | head -40"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:21.548Z","data":{"promptTokens":515,"candidateTokens":108,"totalTokens":50228,"cachedTokens":49280,"reasoningTokens":325,"cost":0.00048489}}
+{"type":"tool","timestamp":"2026-09-18T12:35:25.833Z","data":{"tool":"bash","summary":"pnpm biome check src/watcher/runner.ts tests/runner-outcome-"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:25.857Z","data":{"promptTokens":827,"candidateTokens":107,"totalTokens":51704,"cachedTokens":50176,"reasoningTokens":594,"cost":0.000695178}}
+{"type":"tool","timestamp":"2026-09-18T12:35:27.962Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:27.994Z","data":{"promptTokens":433,"candidateTokens":150,"totalTokens":52284,"cachedTokens":51584,"reasoningTokens":117,"cost":0.000379902}}
+{"type":"tool","timestamp":"2026-09-18T12:35:31.090Z","data":{"tool":"bash","summary":"pnpm biome check src/watcher/runner.ts tests/runner-outcome-"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:31.105Z","data":{"promptTokens":203,"candidateTokens":132,"totalTokens":52431,"cachedTokens":52096,"reasoningTokens":0,"cost":0.000265938}}
+{"type":"tool","timestamp":"2026-09-18T12:35:34.158Z","data":{"tool":"bash","summary":"pnpm tsc --noEmit 2>&1 | head -20"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:34.180Z","data":{"promptTokens":232,"candidateTokens":95,"totalTokens":52766,"cachedTokens":52352,"reasoningTokens":87,"cost":0.000301056}}
+{"type":"tool","timestamp":"2026-09-18T12:35:38.757Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/specs/015-status-row-fixes/.run/results/2.md"}}
+{"type":"text","timestamp":"2026-09-18T12:35:38.765Z","data":{"text":"Now let me write the required result file."}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:38.795Z","data":{"promptTokens":197,"candidateTokens":920,"totalTokens":53806,"cachedTokens":52608,"reasoningTokens":81,"cost":0.000787974}}
+{"type":"tool","timestamp":"2026-09-18T12:35:40.132Z","data":{"tool":"bash","summary":"git status --short"}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:40.152Z","data":{"promptTokens":190,"candidateTokens":65,"totalTokens":53904,"cachedTokens":53632,"reasoningTokens":17,"cost":0.000238596}}
+{"type":"text","timestamp":"2026-09-18T12:35:43.719Z","data":{"text":"Task 2 complete.\n\n## Summary\n\n**Verify:** `node --import tsx --test tests/runner-outcome-logging.test.ts` → **15 pass / 0 fail**\n\n### Changed (`src/watcher/runner.ts`)\n- Deleted `formatTaskOutcomeSummary` entirely — grep confirms it no longer exists anywhere under `src/`.\n- Added optional `extra?: string` to `formatTaskOutcomeLine`, rendering dead lines as `✗/[dead] task N dead (reason: <reason>[, <extra>], elapsed: Ns)` and verified lines without the legacy `(passed)` suffix.\n- `logOutcome` now accepts `(success, reason?, extra?)` and forwards the detail.\n- Removed all duplicate `logger?.info(formatTaskOutcomeSummary(...))` calls across every path (both `spec_conflict` branches, task-not-found `crashed`, `already_running`, spawn `crashed`/`timeout`, `no_result`, `verify_red`, success). All outcomes route solely through `logOutcome`; `code: <exitCode>` and `timed_out: true` ride through as `extra`.\n\n### Changed (`tests/runner-outcome-logging.test.ts`)\n- Namespace-imports the runner and asserts `formatTaskOutcomeSummary` is not exported.\n- Pure-formatter tests for the verified line, unicode symbols, all six failure reasons, and detail placement.\n- End-to-end MockAdapter tests for verified + every dead path now assert **exactly one** outcome line and no `(passed)` string.\n\n### Known out-of-scope breakage (documented in the result)\n- `tests/runner-already-running.test.ts:164` still matches the old `(reason: already_running)` shape and now fails; it isn't in this task's scope nor covered by another 015 task.\n- Task 1's pre-existing `runner-terminal-status.test.ts` arity tsc error remains (owned by tasks 3/4).\n\nResult written to `specs/015-status-row-fixes/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-09-18T12:35:43.747Z","data":{"promptTokens":249,"candidateTokens":447,"totalTokens":54627,"cachedTokens":53760,"reasoningTokens":171,"cost":0.00056943}}
+{"type":"exited","timestamp":"2026-09-18T12:35:43.814Z","data":{"exitCode":0,"pid":797782,"timedOut":false,"elapsedSeconds":109.6}}
+{"type":"verify_ran","timestamp":"2026-09-18T12:35:43.815Z","data":{"command":"node --import tsx --test tests/runner-outcome-logging.test.ts"}}
+{"type":"done","timestamp":"2026-09-18T12:35:45.272Z","data":{"task":"2"}}

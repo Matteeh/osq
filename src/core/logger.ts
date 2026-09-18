@@ -31,7 +31,7 @@ export function resolveSymbol(symbol: string, word: string, enabled = symbolsEna
 }
 
 export interface LoggerOptions {
-  stream?: NodeJS.WritableStream & { isTTY?: boolean };
+  stream?: NodeJS.WritableStream & { isTTY?: boolean; columns?: number };
   isTTY?: boolean;
 }
 
@@ -53,6 +53,9 @@ const MESSAGE_RANK: Record<MessageLevel, number> = {
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 const SPINNER_INTERVAL_MS = 80;
 const CLEAR_LINE = '\r\x1b[2K';
+const ELLIPSIS = '…';
+const SPINNER_PREFIX_WIDTH = 2; // spinner frame plus a single space
+const DEFAULT_COLUMNS = 80;
 
 export function createLogger(level: LogLevel, prefix?: string, options?: LoggerOptions): Logger {
   const maxRank = LEVEL_RANK[level];
@@ -74,9 +77,21 @@ export function createLogger(level: LogLevel, prefix?: string, options?: LoggerO
     stream.write(chunk);
   };
 
+  /**
+   * Constrain status text to the terminal width minus the spinner prefix. The
+   * logger owns the `[prefix]` formatting for log lines, but status text is
+   * written raw so a prefixed row can never overflow the terminal.
+   */
+  const fitStatusText = (text: string): string => {
+    const available = (stream.columns ?? DEFAULT_COLUMNS) - SPINNER_PREFIX_WIDTH;
+    if (text.length <= available) return text;
+    if (available <= 0) return '';
+    return `${text.slice(0, available - 1)}${ELLIPSIS}`;
+  };
+
   const redraw = (): void => {
     if (statusText === null) return;
-    writeRaw(`${CLEAR_LINE}${SPINNER_FRAMES[frameIndex]} ${statusText}`);
+    writeRaw(`${CLEAR_LINE}${SPINNER_FRAMES[frameIndex]} ${fitStatusText(statusText)}`);
   };
 
   const startTimer = (): void => {
@@ -118,7 +133,7 @@ export function createLogger(level: LogLevel, prefix?: string, options?: LoggerO
     error: (msg: string) => write('error', msg),
     status: (text: string) => {
       if (!animate) return;
-      statusText = render(text);
+      statusText = text;
       startTimer();
       redraw();
     },

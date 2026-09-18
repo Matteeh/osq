@@ -8,11 +8,13 @@ const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '
 
 class FakeStream extends Writable {
   isTTY: boolean;
+  columns?: number;
   private chunks: string[] = [];
 
-  constructor(isTTY: boolean) {
+  constructor(isTTY: boolean, columns?: number) {
     super();
     this.isTTY = isTTY;
+    this.columns = columns;
   }
 
   _write(
@@ -127,13 +129,13 @@ describe('logger status on an interactive TTY sink', () => {
     const logger = createLogger('normal', 'osq', { stream });
 
     logger.status('running task 1');
-    assert.equal(stream.output, `${CLEAR}${FRAMES[0]} [osq] running task 1`);
+    assert.equal(stream.output, `${CLEAR}${FRAMES[0]} running task 1`);
 
     stream.reset();
     logger.info('milestone reached');
     assert.equal(
       stream.output,
-      `${CLEAR}[osq] milestone reached\n${CLEAR}${FRAMES[0]} [osq] running task 1`,
+      `${CLEAR}[osq] milestone reached\n${CLEAR}${FRAMES[0]} running task 1`,
     );
   });
 
@@ -144,10 +146,7 @@ describe('logger status on an interactive TTY sink', () => {
     logger.status('busy');
     stream.reset();
     logger.warn('first\nsecond');
-    assert.equal(
-      stream.output,
-      `${CLEAR}[osq] first\n[osq] second\n${CLEAR}${FRAMES[0]} [osq] busy`,
-    );
+    assert.equal(stream.output, `${CLEAR}[osq] first\n[osq] second\n${CLEAR}${FRAMES[0]} busy`);
   });
 
   it("starts an unref'd 80ms interval that advances spinner frames", () => {
@@ -165,11 +164,11 @@ describe('logger status on an interactive TTY sink', () => {
 
     stream.reset();
     timers.tick();
-    assert.equal(stream.output, `${CLEAR}${FRAMES[1]} [osq] working`);
+    assert.equal(stream.output, `${CLEAR}${FRAMES[1]} working`);
 
     stream.reset();
     timers.tick();
-    assert.equal(stream.output, `${CLEAR}${FRAMES[2]} [osq] working`);
+    assert.equal(stream.output, `${CLEAR}${FRAMES[2]} working`);
   });
 
   it('does not disturb the status row when a message is suppressed by level', () => {
@@ -212,11 +211,38 @@ describe('logger status on an interactive TTY sink', () => {
     const logger = createLogger('normal', 'osq', { stream, isTTY: true });
 
     logger.status('forced');
-    assert.equal(stream.output, `${CLEAR}${FRAMES[0]} [osq] forced`);
+    assert.equal(stream.output, `${CLEAR}${FRAMES[0]} forced`);
     assert.equal(timers.intervals.size, 1);
 
     logger.clearStatus();
     assert.equal(timers.intervals.size, 0);
+  });
+
+  it('truncates an overflowing status to columns minus the spinner prefix, with no prefix', () => {
+    const stream = new FakeStream(true, 40);
+    const logger = createLogger('normal', 'osq', { stream });
+
+    logger.status('x'.repeat(100));
+
+    // 40 columns - 2 for the "<frame> " prefix = 38; 37 text columns + "…".
+    assert.equal(stream.output, `${CLEAR}${FRAMES[0]} ${'x'.repeat(37)}…`);
+    assert.ok(!stream.output.includes('[osq]'), stream.output);
+  });
+
+  it('keeps redrawn rows within the terminal width and clear of ghost characters', () => {
+    const stream = new FakeStream(true, 40);
+    const logger = createLogger('normal', 'osq', { stream });
+
+    logger.status('x'.repeat(100));
+    const firstVisible = stream.output.replace(CLEAR, '').length;
+    assert.ok(firstVisible <= 40, `row wrapped past the terminal width: ${firstVisible}`);
+
+    stream.reset();
+    logger.status('short');
+    const lastClear = stream.output.lastIndexOf(CLEAR);
+    const tail = stream.output.slice(lastClear);
+    assert.equal(tail, `${CLEAR}${FRAMES[0]} short`);
+    assert.ok(!tail.includes('x'), tail);
   });
 });
 

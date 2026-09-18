@@ -29,25 +29,6 @@ export interface RunTaskResult {
   error?: string;
 }
 
-/**
- * Single-line, human-readable summary of a task outcome. Kept pure so the exact
- * shape can be tested without running the runner, and used directly beside every
- * marker write (`done/<n>` or `dead/<n>.md`) so the log and the marker agree.
- */
-export function formatTaskOutcomeSummary(
-  taskNumber: string,
-  success: boolean,
-  reason?: RunTaskFailureReason,
-  extra?: string,
-): string {
-  if (success) {
-    return `task ${taskNumber} verified (passed)`;
-  }
-
-  const detail = extra ? `, ${extra}` : '';
-  return `task ${taskNumber} dead (reason: ${reason}${detail})`;
-}
-
 export async function tickTaskCheckbox(specFolderPath: string, taskNumber: string): Promise<void> {
   const tasksMdPath = path.join(specFolderPath, 'tasks.md');
   let content = '';
@@ -145,14 +126,46 @@ function createHeartbeatAccumulator(): HeartbeatAccumulator {
 }
 
 /**
+ * Strip the project root the harness actually ran in from absolute paths
+ * embedded in a tool summary, so the status row reads a clean repository
+ * relative path (e.g. `specs/014-...`) rather than the full machine path. Only
+ * the rendered copy is relativized; the raw summary written to
+ * `.run/events/<n>.jsonl` is never rewritten. Falls back to the process working
+ * directory when `root` is omitted.
+ */
+export function relativizeToolSummary(summary: string, root: string = process.cwd()): string {
+  if (!summary || !root) {
+    return summary;
+  }
+
+  // Compare without a trailing separator so `${normalizedRoot}/` strips
+  // cleanly, but keep a bare filesystem root intact so it is not reduced to an
+  // empty string that would match every separator in the summary.
+  const normalizedRoot = root.length > 1 ? root.replace(/[\\/]+$/, '') : root;
+  if (!normalizedRoot || normalizedRoot === '/' || normalizedRoot === '\\') {
+    return summary;
+  }
+
+  const escapedRoot = normalizedRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const withSeparator = new RegExp(`${escapedRoot}[\\\\/]`, 'g');
+  const relativized = summary.replace(withSeparator, '');
+
+  // A summary that is exactly the root has no trailing separator to strip.
+  const exactRoot = new RegExp(`${escapedRoot}(?=$|[\\s"'()\\[\\]{},;:])`, 'g');
+  return relativized.replace(exactRoot, '.');
+}
+
+/**
  * Snapshot of task progress. Counters are maintained in memory and advanced
  * with only the bytes appended since the previous poll; the event file may not
- * exist yet, in which case counters are zero.
+ * exist yet, in which case counters are zero. Tool summaries are stored
+ * relativized to `projectRoot` for display.
  */
 export async function computeTaskHeartbeatStats(
   specFolderPath: string,
   taskNumber: string,
   startTime: number,
+  projectRoot?: string,
 ): Promise<TaskHeartbeatStats> {
   const elapsedSeconds = Number(((Date.now() - startTime) / 1000).toFixed(1));
   const eventFilePath = path.join(specFolderPath, '.run', 'events', `${taskNumber}.jsonl`);
@@ -206,7 +219,7 @@ export async function computeTaskHeartbeatStats(
         accumulator.toolCount += 1;
         const summary = data?.summary;
         if (typeof summary === 'string') {
-          accumulator.lastToolSummary = summary;
+          accumulator.lastToolSummary = relativizeToolSummary(summary, projectRoot);
         }
       }
     }
@@ -238,7 +251,6 @@ export function clearTaskHeartbeatStats(specFolderPath: string, taskNumber: stri
   heartbeatAccumulators.delete(eventFilePath);
 }
 
-const STATUS_SPINNER_PREFIX_WIDTH = 2; // spinner frame plus a single space
 const ELLIPSIS = '…';
 
 function truncateToWidth(text: string, width: number): string {
@@ -255,43 +267,50 @@ function truncateToWidth(text: string, width: number): string {
 }
 
 /**
- * Single-line running status row. The logger owns the animated spinner and
- * prepends `<frame> `, so this text is truncated to leave room for that prefix
- * while fitting `terminalWidth` columns.
+ * Compact token count for the live status row and the heartbeat line: below
+ * 1000 as an integer, below 1M as `X.Xk`, at or above 1M as `X.XM`. A value
+ * that rounds up to `1000.0k` rolls over to `1.0M` so the suffix never grows.
  */
-export function formatTaskStatusRow(
-  taskNumber: string,
-  stats: TaskHeartbeatStats,
-  terminalWidth: number = (process.stderr as unknown as { columns?: number }).columns ?? 80,
-): string {
+export function formatTokens(tokens: number): string {
+  if (tokens < 1000) {
+    return tokens.toString();
+  }
+  if (tokens < 1_000_000) {
+    const k = (tokens / 1000).toFixed(1);
+    if (k === '1000.0') {
+      return '1.0M';
+    }
+    return `${k}k`;
+  }
+  return `${(tokens / 1_000_000).toFixed(1)}M`;
+}
+
+/**
+ * Single-line running status row. The logger owns the animated spinner, the
+ * `<frame> ` prefix, and terminal-width truncation, so this assembles the full
+ * row and leaves fitting to the sink.
+ */
+export function formatTaskStatusRow(taskNumber: string, stats: TaskHeartbeatStats): string {
   const segments = [
     `task ${taskNumber}`,
     `${stats.elapsedSeconds}s`,
     `${stats.toolCount} tools`,
-    `${stats.totalTokens} tokens`,
+    `${formatTokens(stats.totalTokens)} tokens`,
   ];
   if (typeof stats.cost === 'number' && Number.isFinite(stats.cost)) {
     segments.push(`$${stats.cost.toFixed(4)}`);
   }
 
-  const budget = terminalWidth - STATUS_SPINNER_PREFIX_WIDTH;
   const base = segments.join(' · ');
-
   if (!stats.lastToolSummary) {
-    return truncateToWidth(base, budget);
+    return base;
   }
-
-  const separator = ' · ';
-  const summaryBudget = budget - base.length - separator.length;
-  if (summaryBudget <= 1) {
-    return truncateToWidth(base, budget);
-  }
-  return `${base}${separator}${truncateToWidth(stats.lastToolSummary, summaryBudget)}`;
+  return `${base} · ${stats.lastToolSummary}`;
 }
 
 /** Periodic heartbeat line shared by the 1s TTY row and the non-TTY log. */
 export function formatTaskHeartbeatLine(taskNumber: string, stats: TaskHeartbeatStats): string {
-  return `task ${taskNumber} heartbeat (elapsed: ${stats.elapsedSeconds}s, events: ${stats.eventCount}, tokens: ${stats.totalTokens})`;
+  return `task ${taskNumber} heartbeat (elapsed: ${stats.elapsedSeconds}s, events: ${stats.eventCount}, tokens: ${formatTokens(stats.totalTokens)})`;
 }
 
 /**
@@ -323,11 +342,13 @@ export function formatTaskOutcomeLine(
   reason: RunTaskFailureReason | undefined,
   elapsedSeconds: number,
   symbols: boolean,
+  extra?: string,
 ): string {
   if (success) {
     return `${resolveSymbol('✓', '[ok]', symbols)} task ${taskNumber} verified (elapsed: ${elapsedSeconds}s)`;
   }
-  return `${resolveSymbol('✗', '[dead]', symbols)} task ${taskNumber} dead (reason: ${reason}, elapsed: ${elapsedSeconds}s)`;
+  const detail = extra ? `, ${extra}` : '';
+  return `${resolveSymbol('✗', '[dead]', symbols)} task ${taskNumber} dead (reason: ${reason}${detail}, elapsed: ${elapsedSeconds}s)`;
 }
 
 /**
@@ -433,10 +454,12 @@ export async function runTask(
     logger?.clearStatus();
   };
 
-  const logOutcome = (success: boolean, reason?: RunTaskFailureReason): void => {
+  const logOutcome = (success: boolean, reason?: RunTaskFailureReason, extra?: string): void => {
     stopHeartbeat();
     const elapsedSeconds = Number(((Date.now() - startTime) / 1000).toFixed(1));
-    logger?.info(formatTaskOutcomeLine(taskNumber, success, reason, elapsedSeconds, useSymbols));
+    logger?.info(
+      formatTaskOutcomeLine(taskNumber, success, reason, elapsedSeconds, useSymbols, extra),
+    );
   };
 
   const approvedPath = path.join(runDir, 'approved');
@@ -451,7 +474,6 @@ export async function runTask(
       'utf8',
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'spec_conflict');
-    logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'spec_conflict'));
     logOutcome(false, 'spec_conflict');
     return { success: false, reason: 'spec_conflict', error: 'Missing .run/approved' };
   }
@@ -465,7 +487,6 @@ export async function runTask(
       'utf8',
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'spec_conflict');
-    logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'spec_conflict'));
     logOutcome(false, 'spec_conflict');
     return {
       success: false,
@@ -486,7 +507,6 @@ export async function runTask(
       'utf8',
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'crashed');
-    logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'crashed'));
     logOutcome(false, 'crashed');
     return { success: false, reason: 'crashed', error: 'Task file not found' };
   }
@@ -497,7 +517,6 @@ export async function runTask(
     // A lock collision means another process is actively running this task, not
     // that the task failed. It writes no dead marker, so it must not append a
     // dead event either; only a dead marker write may record a dead event.
-    logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'already_running'));
     logOutcome(false, 'already_running');
     return { success: false, reason: 'already_running', error: 'Task is already running' };
   }
@@ -505,7 +524,7 @@ export async function runTask(
   if (heartbeatIntervalMs > 0) {
     const tickIntervalMs = interactive ? Math.min(heartbeatIntervalMs, 1000) : heartbeatIntervalMs;
     heartbeatTimer = setInterval(() => {
-      computeTaskHeartbeatStats(specFolderPath, taskNumber, startTime)
+      computeTaskHeartbeatStats(specFolderPath, taskNumber, startTime, projectRoot)
         .then((stats) => {
           if (!heartbeatActive) return;
           if (interactive) {
@@ -615,15 +634,11 @@ export async function runTask(
         'utf8',
       );
       await recordDeadEvent(specFolderPath, taskNumber, failureReason);
-      logger?.info(
-        formatTaskOutcomeSummary(
-          taskNumber,
-          false,
-          failureReason,
-          failureReason === 'crashed' ? `code: ${spawnResult.exitCode}` : undefined,
-        ),
+      logOutcome(
+        false,
+        failureReason,
+        failureReason === 'crashed' ? `code: ${spawnResult.exitCode}` : undefined,
       );
-      logOutcome(false, failureReason);
       return {
         success: false,
         reason: failureReason,
@@ -657,7 +672,6 @@ export async function runTask(
           'utf8',
         );
         await recordDeadEvent(specFolderPath, taskNumber, 'no_result');
-        logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'no_result'));
         logOutcome(false, 'no_result');
         return {
           success: false,
@@ -761,15 +775,7 @@ export async function runTask(
 
       await fs.writeFile(path.join(deadDir, `${taskNumber}.md`), deadLines.join('\n'), 'utf8');
       await recordDeadEvent(specFolderPath, taskNumber, 'verify_red');
-      logger?.info(
-        formatTaskOutcomeSummary(
-          taskNumber,
-          false,
-          'verify_red',
-          verifyTimedOut ? 'timed_out: true' : undefined,
-        ),
-      );
-      logOutcome(false, 'verify_red');
+      logOutcome(false, 'verify_red', verifyTimedOut ? 'timed_out: true' : undefined);
       return {
         success: false,
         reason: 'verify_red',
@@ -784,7 +790,6 @@ export async function runTask(
     await fs.mkdir(doneDir, { recursive: true });
     await fs.writeFile(path.join(doneDir, taskNumber), `${new Date().toISOString()}\n`, 'utf8');
     await recordDoneEvent(specFolderPath, taskNumber);
-    logger?.info(formatTaskOutcomeSummary(taskNumber, true));
     logOutcome(true);
 
     await tickTaskCheckbox(specFolderPath, taskNumber);

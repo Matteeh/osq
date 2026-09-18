@@ -161,7 +161,7 @@ describe('Runner already_running lock collision', () => {
     });
 
     assert.equal(reason, 'already_running');
-    assert.match(stderr, /task 1 dead \(reason: already_running\)/);
+    assert.match(stderr, /task 1 dead \(reason: already_running/);
   });
 
   it('does not report the lock collision as a task failure in osq report', async () => {

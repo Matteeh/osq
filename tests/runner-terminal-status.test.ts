@@ -14,7 +14,10 @@ import { OpencodeAdapter } from '../src/harness/opencode.js';
 import {
   type TaskHeartbeatStats,
   computeTaskHeartbeatStats,
+  formatTaskHeartbeatLine,
   formatTaskStatusRow,
+  formatTokens,
+  relativizeToolSummary,
   runTask,
 } from '../src/watcher/runner.js';
 
@@ -178,7 +181,7 @@ describe('Runner terminal status', () => {
       assert.match(row, /task 7/);
       assert.match(row, /12\.3s/);
       assert.match(row, /3 tools/);
-      assert.match(row, /1500 tokens/);
+      assert.match(row, /1\.5k tokens/);
       assert.match(row, /\$0\.0123/);
       assert.match(row, /read src\/index\.ts/);
     });
@@ -195,13 +198,90 @@ describe('Runner terminal status', () => {
       assert.match(row, /task 7/);
     });
 
-    it('truncates the tool summary so the row plus spinner fits the terminal width', () => {
-      const width = 40;
-      const row = formatTaskStatusRow('7', { ...stats, lastToolSummary: 'x'.repeat(200) }, width);
+    it('renders the token count abbreviated in the status row', () => {
+      const row = formatTaskStatusRow('7', { ...stats, totalTokens: 1_500_000 });
+      assert.match(row, /1\.5M tokens/);
+      assert.doesNotMatch(row, /1500000 tokens/);
 
-      // The logger prepends "<frame> " (2 columns) before this text.
-      assert.ok(row.length + 2 <= width, `row ${row.length} did not fit ${width}: ${row}`);
-      assert.ok(row.endsWith('…'), `expected a truncated summary: ${row}`);
+      const kiloRow = formatTaskStatusRow('7', { ...stats, totalTokens: 1500 });
+      assert.match(kiloRow, /1\.5k tokens/);
+    });
+
+    it('assembles the full row without truncating, leaving fitting to the logger sink', () => {
+      const summary = 'x'.repeat(200);
+      const row = formatTaskStatusRow('7', { ...stats, lastToolSummary: summary });
+
+      assert.ok(row.endsWith(summary));
+      assert.doesNotMatch(row, /…/);
+    });
+  });
+
+  describe('formatTokens', () => {
+    it('abbreviates counts at the 1k and 1M boundaries', () => {
+      const cases: Array<[number, string]> = [
+        [999, '999'],
+        [1000, '1.0k'],
+        [999_949, '999.9k'],
+        [999_950, '1.0M'],
+        [1_000_000, '1.0M'],
+      ];
+
+      for (const [tokens, expected] of cases) {
+        assert.equal(formatTokens(tokens), expected, `formatTokens(${tokens})`);
+      }
+    });
+
+    it('is applied identically to the heartbeat line', () => {
+      const line = formatTaskHeartbeatLine('7', {
+        elapsedSeconds: 12.3,
+        eventCount: 7,
+        totalTokens: 1500,
+        toolCount: 3,
+      });
+      assert.match(line, /tokens: 1\.5k/);
+      assert.doesNotMatch(line, /tokens: 1500/);
+    });
+  });
+
+  describe('relativizeToolSummary', () => {
+    const root = path.join(path.sep, 'tmp', 'project');
+
+    it('strips the project root and its trailing separator from absolute paths', () => {
+      const relative = path.join('specs', '014-x', 'tasks', '4.md');
+      const summary = `read ${path.join(root, relative)}`;
+
+      const relativized = relativizeToolSummary(summary, root);
+
+      assert.equal(relativized, `read ${relative}`);
+      assert.ok(
+        !relativized.includes(`${path.sep}specs`),
+        `expected no leading slash before specs, got: ${relativized}`,
+      );
+    });
+
+    it('normalizes a trailing separator on the supplied root', () => {
+      const relative = path.join('src', 'a.ts');
+      assert.equal(
+        relativizeToolSummary(`edit ${path.join(root, relative)}`, `${root}${path.sep}`),
+        `edit ${relative}`,
+      );
+    });
+
+    it('falls back to process.cwd() when no root is supplied', () => {
+      const relative = path.join('src', 'index.ts');
+      assert.equal(
+        relativizeToolSummary(`read ${path.join(process.cwd(), relative)}`),
+        `read ${relative}`,
+      );
+    });
+
+    it('leaves absolute paths outside the project root untouched', () => {
+      const outside = path.join(path.sep, 'etc', 'hosts');
+      assert.equal(relativizeToolSummary(`read ${outside}`, root), `read ${outside}`);
+    });
+
+    it('relativizes an exact root match to a dot', () => {
+      assert.equal(relativizeToolSummary(root, root), '.');
     });
   });
 
@@ -268,6 +348,44 @@ describe('Runner terminal status', () => {
       assert.equal(stats.toolCount, 0);
       assert.equal(stats.cost, undefined);
       assert.equal(stats.lastToolSummary, undefined);
+    });
+
+    it('relativizes tool summaries against the project root but keeps the raw event intact', async () => {
+      const relative = path.join('specs', '014-status-row-fixes', 'tasks', '4.md');
+      const absolute = path.join(tmpDir, relative);
+      await appendLine({ type: 'tool', timestamp: 't', data: { tool: 'read', summary: absolute } });
+
+      const stats = await computeTaskHeartbeatStats(specFolder, '1', Date.now(), tmpDir);
+
+      assert.equal(stats.lastToolSummary, relative);
+
+      const raw = await fs.readFile(path.join(specFolder, '.run', 'events', '1.jsonl'), 'utf8');
+      assert.ok(raw.includes(absolute), 'raw events.jsonl must preserve the absolute summary');
+    });
+
+    it('falls back to process.cwd() for tool summaries when projectRoot is omitted', async () => {
+      const relative = path.join('src', 'watcher', 'runner.ts');
+      const absolute = path.join(process.cwd(), relative);
+      await appendLine({ type: 'tool', timestamp: 't', data: { tool: 'read', summary: absolute } });
+
+      const stats = await computeTaskHeartbeatStats(specFolder, '1', Date.now());
+
+      assert.equal(stats.lastToolSummary, relative);
+    });
+
+    it('renders the relativized tool path in the status row without a leading slash', async () => {
+      const relative = path.join('specs', '014-status-row-fixes', 'tasks', '4.md');
+      const absolute = path.join(tmpDir, relative);
+      await appendLine({ type: 'tool', timestamp: 't', data: { tool: 'read', summary: absolute } });
+
+      const stats = await computeTaskHeartbeatStats(specFolder, '1', Date.now(), tmpDir);
+      const row = formatTaskStatusRow('1', stats);
+
+      assert.ok(row.includes(relative), `expected relative path in row: ${row}`);
+      assert.ok(
+        !row.includes(`${path.sep}specs`),
+        `expected no leading slash before specs in row: ${row}`,
+      );
     });
   });
 
@@ -362,6 +480,45 @@ describe('Runner terminal status', () => {
       assert.match(output, /src\/watcher\/runner\.ts/);
       // The status row is rendered by the logger, which owns the spinner.
       assert.match(output, /[\u2800-\u28ff]/, `expected a spinner frame in: ${output}`);
+    });
+
+    it('redraws the status row with a repo-relative tool path from an absolute summary', async () => {
+      const absPath = path.join(tmpDir, 'src', 'watcher', 'runner.ts');
+      const script = [
+        '#!/usr/bin/env node',
+        "import fs from 'node:fs';",
+        "import path from 'node:path';",
+        'const specFolder = process.env.OSQ_SPEC_FOLDER;',
+        "const taskNumber = process.env.OSQ_TASK_NUMBER || '1';",
+        'function emit(obj) { process.stdout.write(JSON.stringify(obj) + "\\n"); }',
+        `emit({ type: 'tool_use', timestamp: Date.now(), tool: 'read', part: { state: { input: { path: ${JSON.stringify(absPath)} } } } });`,
+        "const resultsDir = path.join(specFolder, '.run', 'results');",
+        'fs.mkdirSync(resultsDir, { recursive: true });',
+        'fs.writeFileSync(path.join(resultsDir, taskNumber + ".md"), "# Result\\n\\nDone.\\n");',
+        'setTimeout(() => process.exit(0), 300);',
+        '',
+      ].join('\n');
+
+      const bin = path.join(tmpDir, 'fake-opencode-abs.mjs');
+      await fs.writeFile(bin, script, { mode: 0o755 });
+      const config: OsqConfig = {
+        ...FAST_HEARTBEAT_CONFIG,
+        opencode: { ...DEFAULT_CONFIG.opencode, bin },
+      };
+
+      const stream = new FakeTtyStream();
+      const logger = makeTtyLogger('normal', stream);
+
+      const result = await runTask(tmpDir, specFolder, '1', config, opencodeAdapter(), logger);
+
+      assert.equal(result.success, true);
+      const output = stream.text();
+      const relative = path.join('src', 'watcher', 'runner.ts');
+      assert.ok(output.includes(relative), `expected relative path in status output: ${output}`);
+      assert.ok(
+        !output.includes(`${path.sep}src${path.sep}watcher`),
+        `expected no absolute path in status output: ${output}`,
+      );
     });
 
     it('derives the non-TTY heartbeat log from the same counters', async () => {

@@ -159,11 +159,14 @@ describe('Runner heartbeat', () => {
       `expected multiple heartbeat lines, got ${heartbeats.length}: ${stderr}`,
     );
     for (const line of heartbeats) {
-      assert.match(line, /heartbeat \(elapsed: \d+(\.\d+)?s, events: \d+, tokens: \d+\)/);
+      assert.match(
+        line,
+        /heartbeat \(elapsed: \d+(\.\d+)?s, events: \d+, tokens: \d+(\.\d+)?[kM]?\)/,
+      );
     }
     // The final heartbeat must have observed all four tokens events.
     assert.ok(
-      heartbeats.some((line) => line.includes('tokens: 1000')),
+      heartbeats.some((line) => line.includes('tokens: 1.0k')),
       `expected a heartbeat with the accumulated token total: ${heartbeats.join(' | ')}`,
     );
   });
