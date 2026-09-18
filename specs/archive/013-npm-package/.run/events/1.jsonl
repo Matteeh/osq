@@ -1,0 +1,38 @@
+{"type":"started","timestamp":"2026-09-18T10:52:07.721Z","data":{"tier":"coding","taskTitle":"When npm pack runs, the tarball contains exactly the distribution assets","scope":["package.json","tests/package-hygiene.test.ts"],"entry":["package.json"],"skills":[]}}
+{"type":"tool","timestamp":"2026-09-18T10:52:10.998Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/package.json"}}
+{"type":"tool","timestamp":"2026-09-18T10:52:11.262Z","data":{"tool":"bash","summary":"ls /home/mathias/projects/osq/tests/ && ls /home/mathias/pro"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:11.289Z","data":{"promptTokens":4261,"candidateTokens":125,"totalTokens":10411,"cachedTokens":6016,"cost":0.000737598}}
+{"type":"tool","timestamp":"2026-09-18T10:52:12.539Z","data":{"tool":"read","summary":"/home/mathias/projects/osq/tests/init.test.ts"}}
+{"type":"tool","timestamp":"2026-09-18T10:52:12.768Z","data":{"tool":"bash","summary":"ls -a /home/mathias/projects/osq/ && cat /home/mathias/proje"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:12.794Z","data":{"promptTokens":945,"candidateTokens":131,"totalTokens":11466,"cachedTokens":10368,"cost":0.000264654}}
+{"type":"tool","timestamp":"2026-09-18T10:52:14.780Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && cat pnpm-workspace.yaml; ec"}}
+{"type":"tool","timestamp":"2026-09-18T10:52:14.864Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && npm pack --dry-run --json 2"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:14.907Z","data":{"promptTokens":1537,"candidateTokens":138,"totalTokens":13295,"cachedTokens":11392,"cost":0.000484326}}
+{"type":"tool","timestamp":"2026-09-18T10:52:16.551Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && find templates -type f | he"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:16.581Z","data":{"promptTokens":4604,"candidateTokens":82,"totalTokens":17963,"cachedTokens":13184,"cost":0.000835152}}
+{"type":"tool","timestamp":"2026-09-18T10:52:22.478Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/package.json"}}
+{"type":"tool","timestamp":"2026-09-18T10:52:22.689Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/package.json"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:22.759Z","data":{"promptTokens":141,"candidateTokens":305,"totalTokens":19444,"cachedTokens":17920,"cost":0.00090471}}
+{"type":"tool","timestamp":"2026-09-18T10:52:27.080Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/tests/package-hygiene.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:27.111Z","data":{"promptTokens":142,"candidateTokens":1086,"totalTokens":20576,"cachedTokens":19328,"cost":0.000742884}}
+{"type":"tool","timestamp":"2026-09-18T10:52:29.348Z","data":{"tool":"edit","summary":"/home/mathias/projects/osq/tests/package-hygiene.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:29.376Z","data":{"promptTokens":240,"candidateTokens":194,"totalTokens":20983,"cachedTokens":20352,"cost":0.000331656}}
+{"type":"tool","timestamp":"2026-09-18T10:52:31.458Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:31.478Z","data":{"promptTokens":134,"candidateTokens":84,"totalTokens":21133,"cachedTokens":20864,"cost":0.000163692}}
+{"type":"tool","timestamp":"2026-09-18T10:52:37.305Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm exec biome check tests"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:37.337Z","data":{"promptTokens":138,"candidateTokens":91,"totalTokens":21441,"cachedTokens":21120,"cost":0.00019386}}
+{"type":"tool","timestamp":"2026-09-18T10:52:39.143Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm exec biome check --wri"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:39.171Z","data":{"promptTokens":1115,"candidateTokens":66,"totalTokens":22632,"cachedTokens":21376,"cost":0.000315978}}
+{"type":"tool","timestamp":"2026-09-18T10:52:41.537Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm exec biome check tests"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:41.560Z","data":{"promptTokens":258,"candidateTokens":88,"totalTokens":22757,"cachedTokens":22400,"cost":0.0001653}}
+{"type":"tool","timestamp":"2026-09-18T10:52:45.103Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && pnpm tsc --noEmit 2>&1 | ta"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:45.133Z","data":{"promptTokens":235,"candidateTokens":100,"totalTokens":23105,"cachedTokens":22656,"cost":0.000231618}}
+{"type":"tool","timestamp":"2026-09-18T10:52:46.329Z","data":{"tool":"bash","summary":"cd /home/mathias/projects/osq && git diff package.json; mkdi"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:46.359Z","data":{"promptTokens":248,"candidateTokens":67,"totalTokens":23265,"cachedTokens":22912,"cost":0.000168936}}
+{"type":"tool","timestamp":"2026-09-18T10:52:49.582Z","data":{"tool":"write","summary":"/home/mathias/projects/osq/specs/013-npm-package/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:49.628Z","data":{"promptTokens":400,"candidateTokens":620,"totalTokens":24188,"cachedTokens":23168,"cost":0.000501504}}
+{"type":"tokens","timestamp":"2026-09-18T10:52:51.464Z","data":{"promptTokens":140,"candidateTokens":171,"totalTokens":24407,"cachedTokens":24064,"cost":0.000214992}}
+{"type":"exited","timestamp":"2026-09-18T10:52:51.571Z","data":{"exitCode":0,"timedOut":false}}
+{"type":"started","timestamp":"2026-09-18T10:52:07.720Z","data":{"timeoutSeconds":1800}}
+{"type":"exited","timestamp":"2026-09-18T10:52:51.572Z","data":{"exitCode":0,"timedOut":false,"elapsedSeconds":43.9}}
+{"type":"verify_ran","timestamp":"2026-09-18T10:52:51.573Z","data":{"command":"node --import tsx --test tests/package-hygiene.test.ts"}}

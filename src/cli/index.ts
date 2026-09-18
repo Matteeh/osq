@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { initCommand } from './init.js';
@@ -8,7 +9,14 @@ import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
 import { watchCommand } from './watch.js';
 
-export function createProgram(): Command {
+const PACKAGE_MANIFEST_URL = new URL('../../package.json', import.meta.url);
+
+export function resolvePackageVersion(): string {
+  const manifest = JSON.parse(readFileSync(PACKAGE_MANIFEST_URL, 'utf8')) as { version?: string };
+  return manifest.version ?? '0.0.0';
+}
+
+export function createProgram(version?: string): Command {
   const program = new Command();
 
   program
@@ -16,7 +24,7 @@ export function createProgram(): Command {
     .description(
       'Strict spec queue. Spec-driven development with two kinds of agent and a human gate.',
     )
-    .version('0.1.0');
+    .version(version ?? resolvePackageVersion());
 
   program
     .command('init')

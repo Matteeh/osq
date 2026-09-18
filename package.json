@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
   "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "spec-driven-development",
+    "coding-agents",
+    "agentic-engineering",
+    "watcher",
+    "cli"
+  ],
+  "packageManager": "pnpm@9.15.4",
   "bin": {
     "osq": "./dist/cli/bin.js"
   },
@@ -12,7 +21,7 @@
     "format": "biome format --write src tests",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "chokidar": "^4.0.3",

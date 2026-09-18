@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createProgram } from './index.js';
+import { createProgram, resolvePackageVersion } from './index.js';
 
-const program = createProgram();
+const program = createProgram(resolvePackageVersion());
 await program.parseAsync(process.argv);

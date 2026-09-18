@@ -155,6 +155,15 @@ osq report          completion rate, dead by reason, cost and time per task
 
 `osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. Reported cost sums the `cost` values carried by harness events. Reported cost reflects the harness's internal price table rather than the invoice.
 
+## Release Procedure
+
+To release a new version of `osq`:
+1. Bump `"version"` in `package.json`.
+2. Add a corresponding release section in `CHANGELOG.md`.
+3. Commit the changes: `git commit -am "release: v<x.y.z>"`.
+4. Create and push the release tag: `git tag v<x.y.z> && git push --tags`.
+5. GitHub Actions (`release.yml`) verifies the build and publishes to npm with provenance via trusted publishing.
+
 ## Not yet
 
 Decided but deliberately unbuilt until the loop has closed on real work:
