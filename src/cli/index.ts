@@ -62,9 +62,19 @@ export function createProgram(version?: string): Command {
     .option('-o, --once', 'run pending tasks in queue and exit')
     .option('--verbose', 'enable verbose logging')
     .option('-q, --quiet', 'suppress info and verbose logging')
-    .action(async (options: { once?: boolean; verbose?: boolean; quiet?: boolean }) => {
-      await watchCommand(options);
-    });
+    .option('--allow-stale', 'allow running when dist/ is older than src/')
+    .option('--dev', 'run through tsx from src/ and restart the loop when files change')
+    .action(
+      async (options: {
+        once?: boolean;
+        verbose?: boolean;
+        quiet?: boolean;
+        allowStale?: boolean;
+        dev?: boolean;
+      }) => {
+        await watchCommand(options);
+      },
+    );
 
   program
     .command('setup')

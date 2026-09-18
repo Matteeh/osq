@@ -293,15 +293,22 @@ describe('Watcher idle status', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('formats the watching path, approved waiting count, and last archived spec', () => {
+  it('formats the build prefix, watching path, approved waiting count, and last archived spec', () => {
     const now = 1_700_000_000_000;
+    const buildInfo = { version: '0.1.0', commit: 'abc1234' };
     assert.equal(
-      formatIdleStatus('specs', 2, { id: '011', folder: '011-x', archivedAt: now - 120_000 }, now),
-      'watching specs · 2 approved waiting · last: 011 archived 2m ago',
+      formatIdleStatus(
+        'specs',
+        2,
+        { id: '011', folder: '011-x', archivedAt: now - 120_000 },
+        now,
+        buildInfo,
+      ),
+      'osq v0.1.0 (abc1234) · watching specs · 2 approved waiting · last: 011 archived 2m ago',
     );
     assert.equal(
-      formatIdleStatus('specs', 0, undefined, now),
-      'watching specs · 0 approved waiting · last: none',
+      formatIdleStatus('specs', 0, undefined, now, buildInfo),
+      'osq v0.1.0 (abc1234) · watching specs · 0 approved waiting · last: none',
     );
   });
 
@@ -323,7 +330,7 @@ describe('Watcher idle status', () => {
     assert.equal(logger.statuses.length, 1);
     assert.match(
       logger.statuses[0],
-      /^watching (?:specs|openspec\/changes) · 1 approved waiting · last: 001 archived \d+s ago$/,
+      /^osq v\S+ \(\S+\) · watching (?:specs|openspec\/changes) · 1 approved waiting · last: 001 archived \d+s ago$/,
     );
   });
 });

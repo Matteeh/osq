@@ -10,6 +10,7 @@ import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
 import { preflightOpencode } from '../harness/opencode.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
+import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
 import { runTask } from './runner.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
@@ -25,6 +26,8 @@ export interface StartWatcherOptions {
   pollIntervalMs?: number;
   signal?: AbortSignal;
   logger?: Logger;
+  allowStale?: boolean;
+  dev?: boolean;
 }
 
 export interface ArchivedSpecSummary {
@@ -45,20 +48,23 @@ export function formatAgo(ms: number): string {
 }
 
 /**
- * Single idle status line: the watched spec directory, how many approved specs
- * are still waiting, and when the last spec was archived. Pure so the exact
- * shape is testable without a watcher.
+ * Single idle status line: the active build identity, the watched spec
+ * directory, how many approved specs are still waiting, and when the last spec
+ * was archived. Pure so the exact shape is testable without a watcher. The
+ * `osq v<version> (<commit>)` prefix is omitted when no build info is supplied.
  */
 export function formatIdleStatus(
   specsDir: string,
   approvedWaiting: number,
   lastArchived?: ArchivedSpecSummary,
   now: number = Date.now(),
+  buildInfo?: BuildInfo,
 ): string {
   const last = lastArchived
     ? `last: ${lastArchived.id} archived ${formatAgo(now - lastArchived.archivedAt)}`
     : 'last: none';
-  return `watching ${specsDir} · ${approvedWaiting} approved waiting · ${last}`;
+  const prefix = buildInfo ? `osq v${buildInfo.version} (${buildInfo.commit}) · ` : '';
+  return `${prefix}watching ${specsDir} · ${approvedWaiting} approved waiting · ${last}`;
 }
 
 const HUMAN_STEPS_HEADING = /^##[ \t]+Human steps[ \t]*\r?$/im;
@@ -146,12 +152,16 @@ export async function runWatcherCycle(
   const useSymbols = logger?.symbols === true;
   const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
 
+  // Resolved once per cycle (and cached in `build.ts`) so both the missing-specs
+  // branch and the idle status row carry the same identity.
+  const buildInfo = await resolveBuildInfo(projectRoot);
+
   const specsDir = path.join(projectRoot, config.paths.specs);
   let entries: string[] = [];
   try {
     entries = await fs.readdir(specsDir);
   } catch {
-    logger?.status(formatIdleStatus(config.paths.specs, 0));
+    logger?.status(formatIdleStatus(config.paths.specs, 0, undefined, undefined, buildInfo));
     return { tasksRun: 0, specsArchived: 0 };
   }
 
@@ -232,7 +242,9 @@ export async function runWatcherCycle(
 
   if (tasksRun === 0) {
     const lastArchived = await findLatestArchivedSpec(projectRoot, config).catch(() => undefined);
-    logger?.status(formatIdleStatus(config.paths.specs, approvedWaiting, lastArchived));
+    logger?.status(
+      formatIdleStatus(config.paths.specs, approvedWaiting, lastArchived, undefined, buildInfo),
+    );
   }
 
   return { tasksRun, specsArchived };
@@ -267,6 +279,12 @@ export async function startWatcher(
   options: StartWatcherOptions = {},
 ): Promise<void> {
   const logger = options.logger;
+
+  // A checkout running a stale compiled build is a footgun: refuse before the
+  // first cycle unless the caller opted out or is executing from source.
+  if (!options.allowStale && !options.dev) {
+    await checkStaleBuild({ allowStale: options.allowStale });
+  }
 
   if (adapter.name === 'opencode' || config.harness === 'opencode') {
     if (adapter.preflight) {

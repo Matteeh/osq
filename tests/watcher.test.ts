@@ -148,5 +148,11 @@ describe('Watcher Loop and CLI', () => {
     assert.ok(watchCmd);
     const onceOption = watchCmd.options.find((o) => o.short === '-o' || o.long === '--once');
     assert.ok(onceOption);
+
+    const allowStaleOption = watchCmd.options.find((o) => o.long === '--allow-stale');
+    assert.ok(allowStaleOption, 'watch command must register --allow-stale');
+
+    const devOption = watchCmd.options.find((o) => o.long === '--dev');
+    assert.ok(devOption, 'watch command must register --dev');
   });
 });

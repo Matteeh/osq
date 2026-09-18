@@ -16,6 +16,7 @@ import {
   type HarnessEvent,
   appendHarnessEvent,
 } from '../harness/types.js';
+import { resolveBuildInfo } from './build.js';
 
 export type RunTaskFailureReason =
   | 'spec_conflict'
@@ -676,17 +677,27 @@ export async function runTask(
         return startedPromise ?? Promise.resolve();
       }
       startedRecorded = true;
-      startedPromise = recordLifecycleEvent(
-        specFolderPath,
-        taskNumber,
-        {
-          type: 'started',
-          timestamp: new Date().toISOString(),
-          data: { pid, timeoutSeconds },
-        },
-        formatTaskStartedLine(taskNumber, taskData.title, pid, timeoutSeconds, useSymbols),
-        logger,
-      );
+      startedPromise = (async () => {
+        // Build identity is recorded with the event so a later reader can tell
+        // which osq version/commit produced this run.
+        const buildInfo = await resolveBuildInfo(projectRoot);
+        await recordLifecycleEvent(
+          specFolderPath,
+          taskNumber,
+          {
+            type: 'started',
+            timestamp: new Date().toISOString(),
+            data: {
+              pid,
+              timeoutSeconds,
+              version: buildInfo.version,
+              commit: buildInfo.commit,
+            },
+          },
+          formatTaskStartedLine(taskNumber, taskData.title, pid, timeoutSeconds, useSymbols),
+          logger,
+        );
+      })();
       return startedPromise;
     };
 

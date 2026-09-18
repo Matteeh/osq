@@ -22,6 +22,18 @@ The configuration loader SHALL define test file patterns used for test modificat
 - **WHEN** no custom test patterns are declared in `osq.config.ts`
 - **THEN** system defaults test gating matchers to `tests/**`
 
-## Delta from Fix packed tarball smoke test and decouple test suite from pnpm
+### Requirement: Watch stale build and dev mode CLI options
+<!-- source: src/cli/index.ts, src/cli/watch.ts -->
+The CLI watch command SHALL support options to bypass stale build detection and enable reactive dev execution.
 
-The release-procedure documentation does not mention offline installation; therefore, no specification delta is applied to living documents.
+#### Scenario: Stale build bypass flag
+- **WHEN** user executes `osq watch --allow-stale`
+- **THEN** CLI passes `allowStale: true` to the watch loop options
+
+#### Scenario: Reactive dev mode flag
+- **WHEN** user executes `osq watch --dev`
+- **THEN** CLI passes `dev: true` to the watch loop options
+
+## Delta from Watcher stale build detection, build identity recording, and dev mode
+
+This change introduces build identity metadata, stale build preflight detection, and reactive dev mode loop execution via capability delta specifications in `specs/cli-foundation/spec.md` and `specs/watcher-and-harness/spec.md`.

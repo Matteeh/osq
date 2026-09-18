@@ -7,6 +7,8 @@ export interface WatchCommandOptions {
   once?: boolean;
   verbose?: boolean;
   quiet?: boolean;
+  allowStale?: boolean;
+  dev?: boolean;
 }
 
 export function resolveLogLevel(options: WatchCommandOptions): LogLevel {
@@ -15,7 +17,25 @@ export function resolveLogLevel(options: WatchCommandOptions): LogLevel {
   return 'normal';
 }
 
+/**
+ * Dev mode hands control to the supervisor, which runs the watcher as a `tsx`
+ * child and restarts it on source changes. The supervised worker carries
+ * `OSQ_DEV_WORKER=1` and must start the loop rather than recurse.
+ */
+export function shouldRunDevSupervisor(
+  options: WatchCommandOptions,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return options.dev === true && env.OSQ_DEV_WORKER !== '1';
+}
+
 export async function watchCommand(options: WatchCommandOptions): Promise<void> {
+  if (shouldRunDevSupervisor(options)) {
+    const { runDevSupervisor } = await import('../watcher/dev.js');
+    await runDevSupervisor(options);
+    return;
+  }
+
   const cwd = process.cwd();
   const config = await loadConfig(cwd);
   const adapter = getHarnessAdapter(config.harness);
