@@ -241,11 +241,23 @@ process.exit(0);
     });
   });
 
-  it('Unknown event types such as step_start and text are logged at debug level without throwing', async () => {
-    const debugLogs: unknown[][] = [];
+  it('Unknown event types such as step_start and text are logged at verbose level without throwing', async () => {
+    let debugCalled = false;
     const origDebug = console.debug;
-    console.debug = (...args: unknown[]) => {
-      debugLogs.push(args);
+    console.debug = () => {
+      debugCalled = true;
+    };
+
+    const verboseLogs: string[] = [];
+    const fakeLogger = {
+      info: () => {},
+      verbose: (msg: string) => {
+        verboseLogs.push(msg);
+      },
+      warn: () => {},
+      error: () => {},
+      status: () => {},
+      clearStatus: () => {},
     };
 
     try {
@@ -263,14 +275,15 @@ process.exit(0);
 
       // None of these should throw
       await assert.doesNotReject(async () => {
-        await processOpencodeStdoutLine(stepStartLine, specFolder, 'unknown-test');
-        await processOpencodeStdoutLine(customLine, specFolder, 'unknown-test');
+        await processOpencodeStdoutLine(stepStartLine, specFolder, 'unknown-test', fakeLogger);
+        await processOpencodeStdoutLine(customLine, specFolder, 'unknown-test', fakeLogger);
       });
 
-      // Verify logged at debug level
-      assert.ok(debugLogs.length >= 2);
-      assert.ok(debugLogs.some((args) => args.some((a) => String(a).includes('step_start'))));
-      assert.ok(debugLogs.some((args) => args.some((a) => String(a).includes('tool_call'))));
+      // Verify console.debug was not called and unknown events were routed to verbose
+      assert.equal(debugCalled, false);
+      assert.ok(verboseLogs.length >= 2);
+      assert.ok(verboseLogs.some((msg) => msg.includes('step_start')));
+      assert.ok(verboseLogs.some((msg) => msg.includes('tool_call')));
 
       // No tokens event should have been written
       const eventFilePath = path.join(specFolder, '.run', 'events', 'unknown-test.jsonl');

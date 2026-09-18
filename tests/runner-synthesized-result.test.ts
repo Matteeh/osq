@@ -290,7 +290,7 @@ describe('Runner synthesized result', () => {
 
     it(`${harnessCase.label} exit 0 with no result file synthesizes from the last text event`, async () => {
       const adapter = harnessCase.createAdapter();
-      const logger = createLogger('normal');
+      const logger = createLogger('verbose');
 
       let success = false;
       const stderr = await captureStderr(async () => {

@@ -385,8 +385,9 @@ export async function processOpencodeStdoutLine(
     return;
   }
 
-  // Unknown event types such as step_start are logged at debug level without throwing
-  console.debug(`[opencode] Unknown event type: ${eventObj.type}`, eventObj);
+  // Unrecognised event types route exclusively to verbose logging so harness
+  // stdout can never leak onto the terminal.
+  logger?.verbose(`[opencode] Unknown event type: ${eventObj.type}`);
 }
 
 /**

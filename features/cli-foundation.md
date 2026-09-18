@@ -38,3 +38,10 @@ Running `osq new <name>` prepares a new change specification:
 - Kebab-cases the name into a clean directory slug.
 - Recursively copies `specs/_template/` into `specs/<id>-<slug>/`.
 - Updates `spec.md` with the supplied human-readable title.
+
+## Leveled Logging & Terminal Output
+
+The `osq` CLI utilizes a unified leveled stderr logger (`createLogger`) supporting `quiet`, `normal`, and `verbose` levels, augmented with interactive status line management:
+
+- **Interactive Status Sink**: The logger exposes `status(text)` and `clearStatus()` methods. When a status text is active on an interactive TTY, incoming log lines clear the status row (`\r\x1b[2K`), write the formatted log line above, and redraw the status row below, ensuring continuous status visibility without interleaving or garbling log records.
+- **Terminal Capabilities & Environment Detection**: Animation and terminal control sequences are automatically enabled only when stderr is an interactive TTY, `--quiet` is not specified, and `process.env.CI` is unset. When animation is inactive, status operations are safe no-ops. Color and unicode symbols automatically downgrade to plain text when `NO_COLOR` is present or TTY is absent.

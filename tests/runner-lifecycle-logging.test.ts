@@ -160,9 +160,9 @@ describe('Runner lifecycle logging', () => {
     assert.equal(started.data?.timeoutSeconds, 1800);
   });
 
-  it('logs an exited summary and records an exited event with exit code and elapsed time', async () => {
+  it('logs an exited summary at verbose level and records an exited event with exit code and elapsed time', async () => {
     const adapter = new LifecycleStubAdapter({ pid: 61604, elapsedMs: 1234 });
-    const logger = createLogger('normal');
+    const logger = createLogger('verbose');
 
     const stderr = await captureStderr(async () => {
       const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter, logger);
@@ -178,9 +178,26 @@ describe('Runner lifecycle logging', () => {
     assert.equal(exited.data?.elapsedSeconds, 1.2);
   });
 
+  it('demotes the exited summary to verbose while the started summary stays at info', async () => {
+    const adapter = new LifecycleStubAdapter({ pid: 61604, elapsedMs: 1234 });
+    const logger = createLogger('normal');
+
+    const stderr = await captureStderr(async () => {
+      const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter, logger);
+      assert.equal(result.success, true);
+    });
+
+    assert.match(stderr, /task 1 started \(pid: 61604, timeout: 1800s\)/);
+    assert.doesNotMatch(stderr, /task 1 exited/);
+
+    // The exited event itself must still be persisted regardless of log level.
+    const events = await readEvents(specFolder, '1');
+    assert.equal(events.filter((event) => event.type === 'exited').length, 1);
+  });
+
   it('emits each lifecycle log line from the same code path as its events.jsonl entry', async () => {
     const adapter = new LifecycleStubAdapter({ pid: 777, elapsedMs: 2000 });
-    const logger = createLogger('normal');
+    const logger = createLogger('verbose');
 
     const stderr = await captureStderr(async () => {
       await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter, logger);

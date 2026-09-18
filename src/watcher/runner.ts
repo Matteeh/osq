@@ -4,7 +4,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { hashChangeFolder } from '../core/hasher.js';
 import { acquireLock, releaseLock } from '../core/lock.js';
-import type { Logger } from '../core/logger.js';
+import { type Logger, resolveSymbol } from '../core/logger.js';
 import { parseTaskMd } from '../core/parser.js';
 import { asRecord } from '../harness/stream.js';
 import {
@@ -75,9 +75,14 @@ async function recordLifecycleEvent(
   event: HarnessEvent,
   summary: string,
   logger?: Logger,
+  level: 'info' | 'verbose' = 'info',
 ): Promise<void> {
   await appendHarnessEvent(specFolderPath, taskNumber, event);
-  logger?.info(summary);
+  if (level === 'verbose') {
+    logger?.verbose(summary);
+  } else {
+    logger?.info(summary);
+  }
 }
 
 /**
@@ -113,11 +118,36 @@ export interface TaskHeartbeatStats {
   elapsedSeconds: number;
   eventCount: number;
   totalTokens: number;
+  toolCount: number;
+  cost?: number;
+  lastToolSummary?: string;
 }
 
 /**
- * Snapshot of task progress read straight from the append-only event stream.
- * The event file may not exist yet, in which case counters are zero.
+ * In-memory counters accumulated as the append-only event stream grows. The
+ * byte offset lets a poll parse only the newly appended complete lines instead
+ * of re-reading and re-counting the whole file on every heartbeat tick.
+ */
+interface HeartbeatAccumulator {
+  byteOffset: number;
+  eventCount: number;
+  totalTokens: number;
+  toolCount: number;
+  cost: number;
+  hasCost: boolean;
+  lastToolSummary?: string;
+}
+
+const heartbeatAccumulators = new Map<string, HeartbeatAccumulator>();
+
+function createHeartbeatAccumulator(): HeartbeatAccumulator {
+  return { byteOffset: 0, eventCount: 0, totalTokens: 0, toolCount: 0, cost: 0, hasCost: false };
+}
+
+/**
+ * Snapshot of task progress. Counters are maintained in memory and advanced
+ * with only the bytes appended since the previous poll; the event file may not
+ * exist yet, in which case counters are zero.
  */
 export async function computeTaskHeartbeatStats(
   specFolderPath: string,
@@ -131,26 +161,173 @@ export async function computeTaskHeartbeatStats(
   try {
     content = await fs.readFile(eventFilePath, 'utf8');
   } catch {
-    return { elapsedSeconds, eventCount: 0, totalTokens: 0 };
+    heartbeatAccumulators.delete(eventFilePath);
+    return { elapsedSeconds, eventCount: 0, totalTokens: 0, toolCount: 0 };
   }
 
-  const lines = content.split('\n').filter((line) => line.trim().length > 0);
-  let totalTokens = 0;
+  let accumulator = heartbeatAccumulators.get(eventFilePath);
+  if (!accumulator || accumulator.byteOffset > content.length) {
+    accumulator = createHeartbeatAccumulator();
+  }
 
-  for (const line of lines) {
-    try {
-      const event = asRecord(JSON.parse(line));
-      if (event?.type !== 'tokens') {
+  const fresh = content.slice(accumulator.byteOffset);
+  const lastNewline = fresh.lastIndexOf('\n');
+  if (lastNewline !== -1) {
+    const complete = fresh.slice(0, lastNewline);
+    accumulator.byteOffset += lastNewline + 1;
+
+    for (const line of complete.split('\n')) {
+      if (!line.trim()) {
         continue;
       }
+      accumulator.eventCount += 1;
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(line);
+      } catch {
+        // Ignore malformed lines rather than losing the whole heartbeat.
+        continue;
+      }
+      const event = asRecord(parsed);
+      if (!event) {
+        continue;
+      }
+
       const data = asRecord(event.data);
-      totalTokens += Number(data?.totalTokens ?? 0) || 0;
-    } catch {
-      // Ignore malformed lines rather than losing the whole heartbeat.
+      if (event.type === 'tokens') {
+        accumulator.totalTokens += Number(data?.totalTokens ?? 0) || 0;
+        const cost = Number(data?.cost);
+        if (Number.isFinite(cost)) {
+          accumulator.cost += cost;
+          accumulator.hasCost = true;
+        }
+      } else if (event.type === 'tool') {
+        accumulator.toolCount += 1;
+        const summary = data?.summary;
+        if (typeof summary === 'string') {
+          accumulator.lastToolSummary = summary;
+        }
+      }
     }
   }
 
-  return { elapsedSeconds, eventCount: lines.length, totalTokens };
+  heartbeatAccumulators.set(eventFilePath, accumulator);
+
+  const stats: TaskHeartbeatStats = {
+    elapsedSeconds,
+    eventCount: accumulator.eventCount,
+    totalTokens: accumulator.totalTokens,
+    toolCount: accumulator.toolCount,
+  };
+  if (accumulator.hasCost) {
+    stats.cost = accumulator.cost;
+  }
+  if (accumulator.lastToolSummary !== undefined) {
+    stats.lastToolSummary = accumulator.lastToolSummary;
+  }
+  return stats;
+}
+
+/**
+ * Drop the in-memory counters for a finished task so the map does not grow
+ * across watcher cycles.
+ */
+export function clearTaskHeartbeatStats(specFolderPath: string, taskNumber: string): void {
+  const eventFilePath = path.join(specFolderPath, '.run', 'events', `${taskNumber}.jsonl`);
+  heartbeatAccumulators.delete(eventFilePath);
+}
+
+const STATUS_SPINNER_PREFIX_WIDTH = 2; // spinner frame plus a single space
+const ELLIPSIS = '…';
+
+function truncateToWidth(text: string, width: number): string {
+  if (width <= 0) {
+    return '';
+  }
+  if (text.length <= width) {
+    return text;
+  }
+  if (width === 1) {
+    return ELLIPSIS;
+  }
+  return `${text.slice(0, width - 1)}${ELLIPSIS}`;
+}
+
+/**
+ * Single-line running status row. The logger owns the animated spinner and
+ * prepends `<frame> `, so this text is truncated to leave room for that prefix
+ * while fitting `terminalWidth` columns.
+ */
+export function formatTaskStatusRow(
+  taskNumber: string,
+  stats: TaskHeartbeatStats,
+  terminalWidth: number = (process.stderr as unknown as { columns?: number }).columns ?? 80,
+): string {
+  const segments = [
+    `task ${taskNumber}`,
+    `${stats.elapsedSeconds}s`,
+    `${stats.toolCount} tools`,
+    `${stats.totalTokens} tokens`,
+  ];
+  if (typeof stats.cost === 'number' && Number.isFinite(stats.cost)) {
+    segments.push(`$${stats.cost.toFixed(4)}`);
+  }
+
+  const budget = terminalWidth - STATUS_SPINNER_PREFIX_WIDTH;
+  const base = segments.join(' · ');
+
+  if (!stats.lastToolSummary) {
+    return truncateToWidth(base, budget);
+  }
+
+  const separator = ' · ';
+  const summaryBudget = budget - base.length - separator.length;
+  if (summaryBudget <= 1) {
+    return truncateToWidth(base, budget);
+  }
+  return `${base}${separator}${truncateToWidth(stats.lastToolSummary, summaryBudget)}`;
+}
+
+/** Periodic heartbeat line shared by the 1s TTY row and the non-TTY log. */
+export function formatTaskHeartbeatLine(taskNumber: string, stats: TaskHeartbeatStats): string {
+  return `task ${taskNumber} heartbeat (elapsed: ${stats.elapsedSeconds}s, events: ${stats.eventCount}, tokens: ${stats.totalTokens})`;
+}
+
+/**
+ * Curated task-started line: a single info line carrying the task title
+ * truncated so the whole line fits the terminal width. The lifecycle details
+ * (pid, timeout) travel with it so the marker and the log line stay in sync.
+ */
+export function formatTaskStartedLine(
+  taskNumber: string,
+  title: string,
+  pid: number | undefined,
+  timeoutSeconds: number,
+  symbols: boolean,
+  terminalWidth: number = (process.stderr as unknown as { columns?: number }).columns ?? 80,
+): string {
+  const symbol = resolveSymbol('▶', '[task]', symbols);
+  const prefix = `${symbol} task ${taskNumber} started (pid: ${pid ?? 'unknown'}, timeout: ${timeoutSeconds}s): `;
+  const budget = Math.max(0, terminalWidth - prefix.length);
+  return `${prefix}${truncateToWidth(title, budget)}`;
+}
+
+/**
+ * Curated task-outcome line: verified or dead with the failure reason and the
+ * elapsed seconds since the task began.
+ */
+export function formatTaskOutcomeLine(
+  taskNumber: string,
+  success: boolean,
+  reason: RunTaskFailureReason | undefined,
+  elapsedSeconds: number,
+  symbols: boolean,
+): string {
+  if (success) {
+    return `${resolveSymbol('✓', '[ok]', symbols)} task ${taskNumber} verified (elapsed: ${elapsedSeconds}s)`;
+  }
+  return `${resolveSymbol('✗', '[dead]', symbols)} task ${taskNumber} dead (reason: ${reason}, elapsed: ${elapsedSeconds}s)`;
 }
 
 /**
@@ -236,6 +413,32 @@ export async function runTask(
   const deadDir = path.join(runDir, 'dead');
   const doneDir = path.join(runDir, 'done');
 
+  const startTime = Date.now();
+  const useSymbols = logger?.symbols === true;
+  const interactive = logger?.interactive === true;
+  const heartbeatSeconds = config.log?.heartbeatSeconds ?? 60;
+  const heartbeatIntervalMs = heartbeatSeconds * 1000;
+  let heartbeatTimer: NodeJS.Timeout | null = null;
+  let heartbeatActive = true;
+  let lastHeartbeatLogAt = startTime;
+
+  // One timer owns both observation modes: the 1s TTY status row and the
+  // periodic non-TTY heartbeat log. TTY heartbeats are demoted to verbose.
+  const stopHeartbeat = (): void => {
+    heartbeatActive = false;
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+    logger?.clearStatus();
+  };
+
+  const logOutcome = (success: boolean, reason?: RunTaskFailureReason): void => {
+    stopHeartbeat();
+    const elapsedSeconds = Number(((Date.now() - startTime) / 1000).toFixed(1));
+    logger?.info(formatTaskOutcomeLine(taskNumber, success, reason, elapsedSeconds, useSymbols));
+  };
+
   const approvedPath = path.join(runDir, 'approved');
   let approvedHash = '';
   try {
@@ -249,6 +452,7 @@ export async function runTask(
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'spec_conflict');
     logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'spec_conflict'));
+    logOutcome(false, 'spec_conflict');
     return { success: false, reason: 'spec_conflict', error: 'Missing .run/approved' };
   }
 
@@ -262,6 +466,7 @@ export async function runTask(
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'spec_conflict');
     logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'spec_conflict'));
+    logOutcome(false, 'spec_conflict');
     return {
       success: false,
       reason: 'spec_conflict',
@@ -282,6 +487,7 @@ export async function runTask(
     );
     await recordDeadEvent(specFolderPath, taskNumber, 'crashed');
     logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'crashed'));
+    logOutcome(false, 'crashed');
     return { success: false, reason: 'crashed', error: 'Task file not found' };
   }
   const taskData = parseTaskMd(taskContent);
@@ -292,26 +498,29 @@ export async function runTask(
     // that the task failed. It writes no dead marker, so it must not append a
     // dead event either; only a dead marker write may record a dead event.
     logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'already_running'));
+    logOutcome(false, 'already_running');
     return { success: false, reason: 'already_running', error: 'Task is already running' };
   }
 
-  const startTime = Date.now();
-  const heartbeatSeconds = config.log?.heartbeatSeconds ?? 60;
-  const heartbeatIntervalMs = heartbeatSeconds * 1000;
-  let heartbeatTimer: NodeJS.Timeout | null = null;
-  let heartbeatActive = true;
-
   if (heartbeatIntervalMs > 0) {
+    const tickIntervalMs = interactive ? Math.min(heartbeatIntervalMs, 1000) : heartbeatIntervalMs;
     heartbeatTimer = setInterval(() => {
       computeTaskHeartbeatStats(specFolderPath, taskNumber, startTime)
         .then((stats) => {
           if (!heartbeatActive) return;
-          logger?.info(
-            `task ${taskNumber} heartbeat (elapsed: ${stats.elapsedSeconds}s, events: ${stats.eventCount}, tokens: ${stats.totalTokens})`,
-          );
+          if (interactive) {
+            logger?.status(formatTaskStatusRow(taskNumber, stats));
+            const now = Date.now();
+            if (now - lastHeartbeatLogAt >= heartbeatIntervalMs) {
+              lastHeartbeatLogAt = now;
+              logger?.verbose(formatTaskHeartbeatLine(taskNumber, stats));
+            }
+          } else {
+            logger?.info(formatTaskHeartbeatLine(taskNumber, stats));
+          }
         })
         .catch(() => {});
-    }, heartbeatIntervalMs);
+    }, tickIntervalMs);
     heartbeatTimer.unref();
   }
 
@@ -337,7 +546,7 @@ export async function runTask(
           timestamp: new Date().toISOString(),
           data: { pid, timeoutSeconds },
         },
-        `task ${taskNumber} started (pid: ${pid ?? 'unknown'}, timeout: ${timeoutSeconds}s)`,
+        formatTaskStartedLine(taskNumber, taskData.title, pid, timeoutSeconds, useSymbols),
         logger,
       );
       return startedPromise;
@@ -381,6 +590,7 @@ export async function runTask(
       },
       `task ${taskNumber} exited (code: ${spawnResult.exitCode}, elapsed: ${elapsedSeconds}s)`,
       logger,
+      'verbose',
     );
 
     if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
@@ -413,6 +623,7 @@ export async function runTask(
           failureReason === 'crashed' ? `code: ${spawnResult.exitCode}` : undefined,
         ),
       );
+      logOutcome(false, failureReason);
       return {
         success: false,
         reason: failureReason,
@@ -437,7 +648,7 @@ export async function runTask(
           timestamp: new Date().toISOString(),
           data: { path: resultPath, synthesized: true },
         });
-        logger?.info(`task ${taskNumber} result synthesized from agent message`);
+        logger?.verbose(`task ${taskNumber} result synthesized from agent message`);
       } else {
         await fs.mkdir(deadDir, { recursive: true });
         await fs.writeFile(
@@ -447,6 +658,7 @@ export async function runTask(
         );
         await recordDeadEvent(specFolderPath, taskNumber, 'no_result');
         logger?.info(formatTaskOutcomeSummary(taskNumber, false, 'no_result'));
+        logOutcome(false, 'no_result');
         return {
           success: false,
           reason: 'no_result',
@@ -557,6 +769,7 @@ export async function runTask(
           verifyTimedOut ? 'timed_out: true' : undefined,
         ),
       );
+      logOutcome(false, 'verify_red');
       return {
         success: false,
         reason: 'verify_red',
@@ -572,13 +785,14 @@ export async function runTask(
     await fs.writeFile(path.join(doneDir, taskNumber), `${new Date().toISOString()}\n`, 'utf8');
     await recordDoneEvent(specFolderPath, taskNumber);
     logger?.info(formatTaskOutcomeSummary(taskNumber, true));
+    logOutcome(true);
 
     await tickTaskCheckbox(specFolderPath, taskNumber);
 
     return { success: true };
   } finally {
-    heartbeatActive = false;
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    stopHeartbeat();
+    clearTaskHeartbeatStats(specFolderPath, taskNumber);
     await releaseLock(runDir, taskNumber);
   }
 }

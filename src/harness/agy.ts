@@ -237,13 +237,15 @@ export async function processAgyStdoutLine(
   try {
     event = JSON.parse(trimmed);
   } catch {
-    // Plain text or malformed stdout is discarded silently; agy may legitimately
-    // emit non-JSON output when stream-json is unsupported.
+    // agy may legitimately emit non-JSON output when stream-json is unsupported.
+    // It is diagnostic only: verbose logging, never stdout.
+    logger?.verbose(`[agy] Unrecognised stream line: ${trimmed}`);
     return;
   }
 
   const eventObj = asRecord(event);
   if (!eventObj) {
+    logger?.verbose(`[agy] Unrecognised stream line: ${trimmed}`);
     return;
   }
 
@@ -277,6 +279,7 @@ export async function processAgyStdoutLine(
   // Only per-step usage is counted; the trailing result event repeats the final
   // totals and would otherwise double count in heartbeat accumulations.
   if (!asRecord(eventObj.step_update)) {
+    logger?.verbose(`[agy] Unknown event type: ${eventObj.event ?? eventObj.type ?? 'unknown'}`);
     return;
   }
 

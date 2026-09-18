@@ -77,3 +77,13 @@ Update `features/watcher-and-harness.md` to replace the outdated event stream de
 Document the `onSpawn(pid)` callback contract on `SpawnTaskOptions` and `spawnWithTimeout`, and document that result synthesis reads exclusively from `text` events.
 
 Update `features/metrics-and-reporting.md` to document the token metric derivation priority (preferring adapter-reported cache counters over remainder derivation, reserving remainder derivation strictly for events lacking cache fields), reasoning token propagation, and removal of deprecated compatibility aliases from `MetricsReport`.
+
+## Terminal UX & Observability
+
+`osq watch` presents an interactive, single-line status row at the bottom of the terminal alongside a curated stream of permanent log lines:
+
+- **Live Status Row**: Rendered via the logger's stderr sink when connected to an interactive TTY (`process.stderr.isTTY` is true, `--quiet` is unset, and `CI` is unset). The row animates a spinner at an 80ms interval. While running a task, it displays the spinner, task number, elapsed duration, tool invocation count, cumulative tokens, reported cost, and the most recent tool summary truncated to terminal width. While idle, it displays the spinner, watching spec directory, approved specs waiting count, and the last archived spec with its completion age.
+- **Environment & Non-TTY Fallback**: When running in non-TTY environments (pipes, redirects) or CI (`CI` environment variable set), dynamic status rendering is disabled and `status()` becomes a no-op. The watcher falls back to logging a periodic heartbeat line at 60-second intervals. Unicode status symbols (`▶`, `✓`, `✗`, `■`) are active only in interactive TTY sessions without `NO_COLOR`; plain text words are used otherwise.
+- **Curated Permanent Log Stream**: Permanent output at `info` level is strictly limited to high-signal lifecycle events: spec pick-up upon approval detection, task start with single-line truncated title, task outcome (`verified` or `dead` with failure reason and elapsed duration), spec archival, spec halt on failed tasks, and watcher errors. Diagnostic details (`exited`, synthesized result notices, and TTY-mode heartbeats) are routed exclusively to `verbose` level.
+- **Stream Event Routing**: Unrecognised or unstructured harness events are captured by stream parsers and forwarded to `logger.verbose`, emitting zero output to stdout or stderr outside the leveled logger.
+- **Signal Handling (SIGINT)**: Upon receiving SIGINT, the watcher clears the active status row, restores the terminal cursor, logs a notice that it is awaiting the active task exit, and waits for clean exit. A second SIGINT immediately forces termination.
