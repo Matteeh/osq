@@ -13,6 +13,7 @@ export type HarnessEventType =
   | 'verify_ran'
   | 'result_written'
   | 'exited'
+  | 'measures'
   | 'done'
   | 'dead';
 
@@ -74,6 +75,26 @@ export interface ExitedEventData {
   elapsedSeconds?: number;
 }
 
+/**
+ * Raw measures captured at task start and end. Values are stored as observed;
+ * no rates or aggregates are derived here.
+ */
+export interface MeasuresEventData {
+  phase: 'start' | 'end';
+  scopeFiles: number;
+  scopeLines: number;
+  repoFiles: number;
+  repoLines: number;
+  importFanIn: number;
+  proposalWords: number;
+  taskWords: number;
+  deltaRequirements: number;
+  deltaScenarios: number;
+  changedFiles?: number;
+  changedLines?: number;
+  scopeHashes?: Record<string, { before: string | null; after: string | null }>;
+}
+
 export interface DoneEventData {
   readonly task: string;
 }
@@ -93,6 +114,7 @@ export interface OsqEventData {
   verify_ran: VerifyRanEventData;
   result_written: ResultWrittenEventData;
   exited: ExitedEventData;
+  measures: MeasuresEventData;
   done: DoneEventData;
   dead: DeadEventData;
 }

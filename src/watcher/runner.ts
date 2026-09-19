@@ -12,6 +12,7 @@ import {
   formatTaskStatusRow,
 } from './heartbeat.js';
 import { acquireTaskLock, releaseTaskLock } from './lock.js';
+import { createTaskMeasures } from './measures.js';
 import {
   type RunTaskFailureReason,
   type RunTaskResult,
@@ -62,12 +63,16 @@ export async function runTask(
     );
   };
 
+  let measures: ReturnType<typeof createTaskMeasures> | null = null;
+  const finish = (result: RunTaskResult): Promise<RunTaskResult> =>
+    measures ? measures.emitEnd().then(() => result) : Promise.resolve(result);
   const fail = async (
     reason: RunTaskFailureReason,
     marker: string,
     error: string,
     extra?: string,
   ): Promise<RunTaskResult> => {
+    await measures?.emitEnd();
     await writeDeadMarker(runDir, taskNumber, marker);
     await recordDeadEvent(specFolderPath, taskNumber, reason);
     logOutcome(false, reason, extra);
@@ -102,8 +107,7 @@ export async function runTask(
 
   const lockResult = await acquireTaskLock(runDir, taskNumber);
   if (!lockResult.acquired) {
-    // A lock collision is not a task failure: it writes no dead marker and no
-    // dead event, only the already_running outcome line.
+    // A lock collision writes no marker or dead event, only the outcome line.
     logOutcome(false, 'already_running');
     return { success: false, reason: 'already_running', error: 'Task is already running' };
   }
@@ -131,9 +135,10 @@ export async function runTask(
   }
 
   try {
-    // Fingerprint preexisting tests before the agent runs. A task that declares
-    // `tests.modify: true` may edit them, so no snapshot is taken.
+    // Fingerprint preexisting tests; a `tests.modify: true` task may edit them.
     const testSnapshot = taskData.testsModify ? null : await snapshotTestFiles(projectRoot);
+    measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
+    await measures.emitStart();
     const spawnOutcome = await spawnTaskAgent({
       projectRoot,
       specFolderPath,
@@ -144,7 +149,7 @@ export async function runTask(
       logger,
       logOutcome,
     });
-    if (!spawnOutcome.ok) return spawnOutcome.result;
+    if (!spawnOutcome.ok) return finish(spawnOutcome.result);
 
     if (testSnapshot) {
       const undeclared = await findUndeclaredTestChanges(projectRoot, testSnapshot);
@@ -156,7 +161,7 @@ export async function runTask(
     }
 
     const ensured = await ensureTaskResult({ specFolderPath, taskNumber, logger, logOutcome });
-    if (!ensured.ok) return ensured.result;
+    if (!ensured.ok) return finish(ensured.result);
 
     await appendHarnessEvent(specFolderPath, taskNumber, {
       type: 'verify_ran',
@@ -180,6 +185,7 @@ export async function runTask(
     try {
       await fs.unlink(path.join(runDir, 'dead', `${taskNumber}.md`));
     } catch {}
+    await measures.emitEnd();
     await writeDoneMarker(runDir, taskNumber);
     await recordDoneEvent(specFolderPath, taskNumber);
     logOutcome(true);

@@ -4,6 +4,7 @@ import type { OsqConfig } from './config.js';
 import { hashChangeFolder } from './hasher.js';
 import { getChangesDir } from './layout.js';
 import { lintChangeFolder } from './linter.js';
+import { buildManifest, writeManifest } from './manifest.js';
 
 export async function findSpecFolder(specsDir: string, idOrPrefix: string): Promise<string> {
   let entries: string[] = [];
@@ -67,6 +68,9 @@ export async function approveSpec(
 
   const approvedPath = path.join(runDir, 'approved');
   await fs.writeFile(approvedPath, `${hash}\n`, 'utf8');
+
+  const manifest = await buildManifest(projectRoot, folderPath, config);
+  await writeManifest(runDir, manifest);
 
   return {
     specId,

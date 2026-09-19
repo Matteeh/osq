@@ -55,9 +55,22 @@ function maskEvent(event: Record<string, unknown>, projectRoot: string): Record<
     if ('version' in record) record.version = '[VERSION]';
     if ('osqVersion' in record) record.osqVersion = '[VERSION]';
     if ('elapsedSeconds' in record) record.elapsedSeconds = 0;
+    if (masked.type === 'measures') maskScopeHashes(record);
   }
 
   return masked;
+}
+
+/** Replace content-addressed hashes in a measures event with a stable token. */
+function maskScopeHashes(data: Record<string, unknown>): void {
+  const scopeHashes = data.scopeHashes;
+  if (scopeHashes === null || typeof scopeHashes !== 'object') return;
+  for (const entry of Object.values(scopeHashes as Record<string, unknown>)) {
+    if (entry === null || typeof entry !== 'object') continue;
+    const hashes = entry as Record<string, unknown>;
+    if (hashes.before !== null && hashes.before !== undefined) hashes.before = '[HASH]';
+    if (hashes.after !== null && hashes.after !== undefined) hashes.after = '[HASH]';
+  }
 }
 
 /**
@@ -151,6 +164,39 @@ describe('Golden event streams', () => {
           commit: '[COMMIT]',
           elapsedSeconds: 0,
           path: 'src/a.ts',
+        },
+      })}\n`,
+    );
+  });
+
+  it('masks measures scope hashes to stable tokens', () => {
+    const raw = `${JSON.stringify({
+      type: 'measures',
+      timestamp: '2026-01-01T00:00:00.000Z',
+      data: {
+        phase: 'end',
+        changedFiles: 1,
+        changedLines: 2,
+        scopeHashes: {
+          'src/a.ts': { before: 'sha256:aaa', after: 'sha256:bbb' },
+          'src/b.ts': { before: null, after: 'sha256:ccc' },
+        },
+      },
+    })}\n`;
+
+    assert.equal(
+      normalizeEvents(raw, tmpDir),
+      `${JSON.stringify({
+        type: 'measures',
+        timestamp: '[TIMESTAMP]',
+        data: {
+          phase: 'end',
+          changedFiles: 1,
+          changedLines: 2,
+          scopeHashes: {
+            'src/a.ts': { before: '[HASH]', after: '[HASH]' },
+            'src/b.ts': { before: null, after: '[HASH]' },
+          },
         },
       })}\n`,
     );

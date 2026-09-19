@@ -1,4 +1,0 @@
-- [ ] 1. When a change is approved, manifest.json is written alongside the approved marker
-- [ ] 2. When a task starts, a measures event is emitted with scope plus repo baselines
-- [ ] 3. When a task completes, a measures event is emitted with changed-file diffs plus content counts
-- [ ] 4. When the golden events test runs, the measures events match the checked-in fixture
