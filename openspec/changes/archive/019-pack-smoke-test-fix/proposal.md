@@ -1,10 +1,9 @@
 ---
 title: Fix packed tarball smoke test and decouple test suite from pnpm
-depends_on: ['018']
+depends_on:
+  - "018"
 features:
   reads:
-    - cli-foundation
-  writes:
     - cli-foundation
 ---
 ## Goal

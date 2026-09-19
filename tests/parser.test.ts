@@ -31,7 +31,7 @@ Some text here.`;
     assert.ok(body.includes('# Body Heading'));
   });
 
-  it('parseSpecMd extracts title, depends_on, features, and markdown sections', () => {
+  it('parseSpecMd extracts title, depends_on, reads, and markdown sections', () => {
     const raw = `---
 title: Order Cancellation
 depends_on: [001, 002]
@@ -57,7 +57,7 @@ Modify orders feature doc.`;
     assert.equal(spec.title, 'Order Cancellation');
     assert.deepEqual(spec.dependsOn, ['001', '002']);
     assert.deepEqual(spec.features.reads, ['inventory']);
-    assert.deepEqual(spec.features.writes, ['orders', 'states']);
+    assert.equal('writes' in spec.features, false);
     assert.ok(spec.goal.includes('Cancel orders cleanly.'));
     assert.equal(spec.contractTablesCount, 1);
     assert.ok(spec.nonGoals.includes('Refund handling.'));
@@ -81,7 +81,7 @@ Deriving state from checkboxes.`;
     assert.equal(spec.title, 'OpenSpec Proposal');
     assert.deepEqual(spec.dependsOn, ['015']);
     assert.deepEqual(spec.features.reads, ['spec-lint-and-approve']);
-    assert.deepEqual(spec.features.writes, []);
+    assert.equal('writes' in spec.features, false);
     assert.ok(spec.goal.includes('Read OpenSpec artifacts natively.'));
     assert.ok(spec.nonGoals.includes('Deriving state from checkboxes.'));
   });
@@ -250,7 +250,7 @@ tests:
     assert.equal(spec.title, '');
     assert.deepEqual(spec.dependsOn, []);
     assert.deepEqual(spec.features.reads, []);
-    assert.deepEqual(spec.features.writes, []);
+    assert.equal('writes' in spec.features, false);
     assert.equal(spec.contractTablesCount, 0);
     assert.deepEqual(parseTaskList(raw), []);
   });
@@ -364,7 +364,8 @@ Spec goal text.`;
 
     const parsedLegacy = await parseSpecMdFromFolder(specDir);
     assert.equal(parsedLegacy?.title, 'Spec Title');
-    assert.deepEqual(parsedLegacy?.features.writes, ['cli-foundation']);
+    assert.deepEqual(parsedLegacy?.features.reads, []);
+    assert.equal('writes' in (parsedLegacy?.features ?? {}), false);
 
     assert.equal(await parseSpecMdFromFolder(path.join(tmpDir, 'empty')), null);
   });
@@ -396,7 +397,7 @@ describe('Rewritten OpenSpec templates', () => {
     assert.equal(parsed.title, 'Change title');
     assert.deepEqual(parsed.dependsOn, []);
     assert.deepEqual(parsed.features.reads, []);
-    assert.deepEqual(parsed.features.writes, []);
+    assert.equal('writes' in parsed.features, false);
     assert.ok(parsed.goal.trim().length > 0);
     assert.ok(parsed.nonGoals.trim().length > 0);
 

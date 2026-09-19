@@ -17,6 +17,7 @@ import {
 import { computeTaskHeartbeatStats } from '../src/watcher/heartbeat.js';
 import { acquireTaskLock, releaseTaskLock } from '../src/watcher/lock.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 const HEARTBEAT_CONFIG = defineConfig({ log: { heartbeatSeconds: 0.05 } });
 
@@ -67,6 +68,7 @@ describe('Runner heartbeat', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-heartbeat-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Heartbeat Logging');
     specFolder = spec.folderPath;

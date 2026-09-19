@@ -51,43 +51,6 @@ export async function applyOpenSpecDeltas(
   }
 }
 
-export async function applyDelta(
-  projectRoot: string,
-  specFolderPath: string,
-  config: OsqConfig,
-): Promise<void> {
-  await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
-
-  const specData = await parseSpecMdFromFolder(specFolderPath);
-  if (!specData || !specData.delta.trim() || specData.features.writes.length === 0) {
-    return;
-  }
-
-  const featuresDir = path.join(projectRoot, config.paths.features);
-  await fs.mkdir(featuresDir, { recursive: true });
-
-  for (const featureName of specData.features.writes) {
-    const featurePath = path.join(featuresDir, `${featureName}.md`);
-    let existing = '';
-    try {
-      existing = await fs.readFile(featurePath, 'utf8');
-    } catch {}
-
-    let updatedContent = '';
-    if (!existing.trim()) {
-      const titleWords = featureName
-        .split('-')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-      updatedContent = `# ${titleWords}\n\n${specData.delta}\n`;
-    } else {
-      updatedContent = `${existing.trim()}\n\n## Delta from ${specData.title}\n\n${specData.delta}\n`;
-    }
-
-    await fs.writeFile(featurePath, updatedContent, 'utf8');
-  }
-}
-
 /** Rewrite every unchecked `[ ]` checkbox to `[x]`. Pure; reads no `.run/` state. */
 export function tickAllTaskCheckboxes(content: string): string {
   return content.replace(/^([ \t]*[-*][ \t]+\[)[ ](\])/gm, '$1x$2');
@@ -128,7 +91,7 @@ export async function archiveSpecFolder(
   specFolderPath: string,
   config: OsqConfig,
 ): Promise<string> {
-  await applyDelta(projectRoot, specFolderPath, config);
+  await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
 
   const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
   await fs.mkdir(archiveDir, { recursive: true });

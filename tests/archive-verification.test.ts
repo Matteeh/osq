@@ -11,6 +11,7 @@ import { parseSpecMd } from '../src/core/parser.js';
 import { AgyAdapter } from '../src/harness/agy.js';
 import { checkAndArchiveSpec } from '../src/watcher/archiver.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 interface ParsedEvent {
   type: string;
@@ -45,7 +46,6 @@ function proposal(changeVerify: string): string {
     `verify: ${changeVerify}`,
     'features:',
     '  reads: []',
-    '  writes: []',
     '---',
     '## Goal',
     'Exercise archive-time verification.',
@@ -83,6 +83,7 @@ describe('archive-time verification', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-archive-verify-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const fakeAgy = path.join(tmpDir, 'fake-agy.mjs');
     await fs.writeFile(fakeAgy, FAKE_HARNESS_SCRIPT, { mode: 0o755 });

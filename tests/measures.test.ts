@@ -30,6 +30,7 @@ import {
   snapshotScopeHashes,
 } from '../src/watcher/measures.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 /** Test adapter that edits a scoped file before reporting a successful exit. */
 class ScopeWritingAdapter implements HarnessAdapter {
@@ -407,6 +408,7 @@ describe('measures', () => {
       options: { scopeFile?: string; verify?: string } = {},
     ): Promise<{ projectRoot: string; specFolderPath: string }> {
       const projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-measures-run-'));
+      await installFakeValidator(projectRoot);
       await scaffoldProject(projectRoot);
       const spec = await createNewSpec(projectRoot, title);
       const task = [

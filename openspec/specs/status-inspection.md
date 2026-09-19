@@ -1,1 +1,0 @@
-status-inspection/spec.md

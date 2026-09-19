@@ -13,6 +13,7 @@ import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { OpencodeAdapter, preflightOpencode } from '../src/harness/opencode.js';
 import { startWatcher } from '../src/watcher/loop.js';
+import { installFakeValidator } from './helpers.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -25,6 +26,7 @@ describe('Watcher Preflight Verification', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-preflight-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
 
     originalExit = process.exit;

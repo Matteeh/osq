@@ -13,6 +13,7 @@ import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { formatIdleStatus, runWatcherCycle, startWatcher } from '../src/watcher/loop.js';
+import { installFakeValidator } from './helpers.js';
 
 class FakeStream extends Writable {
   isTTY: boolean;
@@ -139,6 +140,7 @@ describe('Watcher loop permanent logging', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-loop-logging-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     adapter = new MockAdapter();
   });
@@ -207,6 +209,7 @@ describe('Watcher loop symbol formatting', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-loop-symbols-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     adapter = new MockAdapter();
   });
@@ -285,6 +288,7 @@ describe('Watcher idle status', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-loop-idle-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     adapter = new MockAdapter();
   });
@@ -340,6 +344,7 @@ describe('Watcher SIGINT handling', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-loop-sigint-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
   });
 

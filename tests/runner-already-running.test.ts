@@ -12,6 +12,7 @@ import { createNewSpec } from '../src/core/new.js';
 import { formatMetricsReport, getMetricsReport } from '../src/core/report.js';
 import { AgyAdapter } from '../src/harness/agy.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 interface ParsedEvent {
   type: string;
@@ -102,6 +103,7 @@ describe('Runner already_running lock collision', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-already-running-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Already Running');
     specFolder = spec.folderPath;

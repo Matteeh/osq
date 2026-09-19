@@ -11,6 +11,7 @@ import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { resolveBuildInfo } from '../src/watcher/build.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 interface ParsedEvent {
   type: string;
@@ -107,6 +108,7 @@ describe('Runner build identity events', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-build-identity-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Build Identity');
     specFolder = spec.folderPath;

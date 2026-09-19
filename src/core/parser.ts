@@ -26,7 +26,20 @@ export function parseFrontmatter(content: string): FrontmatterResult {
 
 export interface SpecFeatures {
   readonly reads: string[];
-  readonly writes: string[];
+}
+
+/**
+ * Detects whether raw proposal frontmatter declares `features.writes`.
+ * The field is no longer part of the proposal schema: capability writes are
+ * declared solely by the delta spec files under `specs/<capability>/spec.md`.
+ * The linter uses this to reject any frontmatter still carrying the key.
+ */
+export function hasDeclaredWrites(data: Record<string, unknown>): boolean {
+  const features = data.features;
+  if (features === null || typeof features !== 'object' || Array.isArray(features)) {
+    return false;
+  }
+  return 'writes' in (features as Record<string, unknown>);
 }
 
 export interface SpecData {
@@ -70,9 +83,6 @@ export function parseSpecMd(content: string): SpecData {
   const reads = Array.isArray(rawFeatures.reads)
     ? rawFeatures.reads.map((r: unknown) => String(r).trim())
     : [];
-  const writes = Array.isArray(rawFeatures.writes)
-    ? rawFeatures.writes.map((w: unknown) => String(w).trim())
-    : [];
 
   const goal = extractSection(body, 'Goal');
   const contract = extractSection(body, 'Contract');
@@ -83,7 +93,7 @@ export function parseSpecMd(content: string): SpecData {
   return {
     title,
     dependsOn,
-    features: { reads, writes },
+    features: { reads },
     goal,
     contract,
     contractTablesCount: countMarkdownTables(contract),

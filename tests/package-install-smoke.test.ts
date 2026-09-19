@@ -135,12 +135,13 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
     await run('npx', ['osq', 'init'], consumerDir);
 
     const expectedDirs = [
-      'specs',
-      'specs/_template',
-      'specs/_template/tasks',
-      'specs/archive',
-      'features',
-      'decisions',
+      'openspec',
+      path.join('openspec', 'schemas'),
+      path.join('openspec', 'schemas', 'osq'),
+      path.join('openspec', 'schemas', 'osq', 'templates'),
+      path.join('openspec', 'specs'),
+      path.join('openspec', 'changes'),
+      path.join('openspec', 'changes', 'archive'),
     ];
     for (const dir of expectedDirs) {
       assert.ok(await exists(path.join(consumerDir, dir)), `missing scaffolded directory ${dir}`);
@@ -150,9 +151,12 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
       'osq.config.ts',
       '.env.example',
       'AGENTS.md',
-      'specs/_template/spec.md',
-      'specs/_template/tasks.md',
-      'specs/_template/tasks/1.md',
+      path.join('openspec', 'config.yaml'),
+      path.join('openspec', 'schemas', 'osq', 'schema.yaml'),
+      path.join('openspec', 'schemas', 'osq', 'README.md'),
+      path.join('openspec', 'schemas', 'osq', 'templates', 'proposal.md'),
+      path.join('openspec', 'schemas', 'osq', 'templates', 'spec.md'),
+      path.join('openspec', 'schemas', 'osq', 'templates', 'tasks.md'),
     ];
     for (const file of expectedFiles) {
       assert.ok(await exists(path.join(consumerDir, file)), `missing scaffolded file ${file}`);

@@ -20,6 +20,7 @@ import {
   relativizeToolSummary,
 } from '../src/watcher/heartbeat.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 /** Fast heartbeat so the 1s TTY status cadence collapses to a test-friendly tick. */
 const FAST_HEARTBEAT_CONFIG: OsqConfig = defineConfig({ log: { heartbeatSeconds: 0.05 } });
@@ -142,6 +143,7 @@ describe('Runner terminal status', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-terminal-status-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Terminal Status');
     specFolder = spec.folderPath;

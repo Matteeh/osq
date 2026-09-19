@@ -10,7 +10,7 @@ export async function initCommand(options: { cwd?: string } = {}): Promise<void>
   for (const file of result.createdFiles) {
     console.log(`  created  ${file}`);
   }
-  for (const file of result.skippedFiles) {
+  for (const file of result.existingFiles) {
     console.log(`  exists   ${file}`);
   }
   if (result.updatedAgentsMd) {

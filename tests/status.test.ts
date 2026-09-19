@@ -11,12 +11,14 @@ import { scaffoldProject } from '../src/core/init.js';
 import { acquireLock, releaseLock } from '../src/core/lock.js';
 import { createNewSpec } from '../src/core/new.js';
 import { formatStatusOverview, getStatusOverview } from '../src/core/status.js';
+import { installFakeValidator } from './helpers.js';
 
 describe('osq status', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-status-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
   });
 

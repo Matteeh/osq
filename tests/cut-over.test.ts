@@ -11,6 +11,7 @@ import { getArchiveDir, getChangesDir } from '../src/core/layout.js';
 import type { Logger } from '../src/core/logger.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { extractHumanSteps, runWatcherCycle } from '../src/watcher/loop.js';
+import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -143,6 +144,7 @@ describe('Layout cut-over', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-cut-over-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     adapter = new MockAdapter();
   });

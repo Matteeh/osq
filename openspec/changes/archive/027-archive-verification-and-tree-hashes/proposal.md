@@ -1,15 +1,13 @@
 ---
-title: "Archive-time verification and tree hashes"
-depends_on: ['026']
-verify: "pnpm tsc --noEmit && pnpm test && pnpm lint"
+title: Archive-time verification and tree hashes
+depends_on:
+  - "026"
+verify: pnpm tsc --noEmit && pnpm test && pnpm lint
 features:
   reads:
     - watcher-and-harness
     - spec-lint-and-approve
     - status-inspection
-  writes:
-    - watcher-and-harness
-    - spec-lint-and-approve
 ---
 ## Goal
 

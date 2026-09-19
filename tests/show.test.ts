@@ -11,6 +11,7 @@ import { scaffoldProject } from '../src/core/init.js';
 import { formatShowOutput, getSpecDetails } from '../src/core/show.js';
 import { deriveTaskStatus } from '../src/core/state.js';
 import { formatStatusOverview, getStatusOverview } from '../src/core/status.js';
+import { installFakeValidator } from './helpers.js';
 
 const CHANGE_SPECS_DIR = path.join('openspec', 'changes');
 
@@ -20,7 +21,6 @@ title: ${title}
 depends_on: []
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 
@@ -56,10 +56,9 @@ skills: []
 }
 
 /**
- * Creates a change folder under the configured `openspec/changes` root by
- * copying the scaffolded template. Tests that exercise show/report must live
- * where `osq.config` resolution actually looks (`paths.specs`), not under the
- * pre-migration `specs/` tree.
+ * Creates a change folder under the configured `openspec/changes` root with a
+ * change document and a task execution unit. Written capabilities are supplied
+ * by delta spec folders under `specs/`, not by frontmatter.
  */
 async function createChangeFolder(
   root: string,
@@ -67,8 +66,9 @@ async function createChangeFolder(
   title: string,
 ): Promise<string> {
   const folderPath = path.join(root, CHANGE_SPECS_DIR, folderName);
-  await fs.cp(path.join(root, 'specs', '_template'), folderPath, { recursive: true });
+  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
   await fs.writeFile(path.join(folderPath, 'spec.md'), specMd(title), 'utf8');
+  await fs.writeFile(path.join(folderPath, 'tasks', '1.md'), taskMd(title), 'utf8');
   return folderPath;
 }
 
@@ -77,6 +77,7 @@ describe('osq show', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-show-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
   });
 
@@ -133,7 +134,6 @@ title: Metadata Spec
 depends_on: [001, 002]
 features:
   reads: [cli-foundation]
-  writes: [status-inspection]
 ---
 ## Goal
 
@@ -155,6 +155,11 @@ Update docs
 `,
       'utf8',
     );
+
+    // Written capabilities are declared by delta spec folders under `specs/`.
+    const deltaDir = path.join(folderPath, 'specs', 'status-inspection');
+    await fs.mkdir(deltaDir, { recursive: true });
+    await fs.writeFile(path.join(deltaDir, 'spec.md'), '# delta\n', 'utf8');
 
     // Add task 2 and 3
     await fs.writeFile(

@@ -38,32 +38,54 @@ describe('osq init', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('scaffolds required directories and default files in a fresh repo', async () => {
+  it('scaffolds only the OpenSpec layout and default files in a fresh repo', async () => {
     const result = await scaffoldProject(tmpDir);
 
-    assert.ok(result.createdDirs.includes('specs'));
-    assert.ok(result.createdDirs.includes('features'));
-    assert.ok(result.createdDirs.includes('decisions'));
+    assert.ok(result.createdDirs.includes('openspec'));
+    assert.ok(result.createdDirs.includes(path.join('openspec', 'specs')));
+    assert.ok(result.createdDirs.includes(path.join('openspec', 'changes')));
+
+    for (const dir of result.createdDirs) {
+      assert.ok(
+        dir === 'openspec' || dir.startsWith(`openspec${path.sep}`),
+        `osq init must scaffold only openspec/ directories, got ${dir}`,
+      );
+    }
 
     const configExists = await fs
       .stat(path.join(tmpDir, 'osq.config.ts'))
       .then(() => true)
       .catch(() => false);
     assert.equal(configExists, true);
-
-    const templateSpecExists = await fs
-      .stat(path.join(tmpDir, 'specs', '_template', 'spec.md'))
-      .then(() => true)
-      .catch(() => false);
-    assert.equal(templateSpecExists, true);
+    assert.ok(result.createdFiles.includes(path.join('openspec', 'config.yaml')));
   });
 
-  it('does not overwrite existing osq.config.ts or spec templates', async () => {
+  it('does not create legacy specs/ or specs/_template/ during initialization', async () => {
+    await scaffoldProject(tmpDir);
+
+    const legacyPaths = [
+      path.join(tmpDir, 'specs'),
+      path.join(tmpDir, 'specs', '_template'),
+      path.join(tmpDir, 'specs', '_template', 'spec.md'),
+      path.join(tmpDir, 'specs', '_template', 'tasks.md'),
+      path.join(tmpDir, 'specs', '_template', 'tasks', '1.md'),
+    ];
+
+    for (const legacyPath of legacyPaths) {
+      const exists = await fs
+        .stat(legacyPath)
+        .then(() => true)
+        .catch(() => false);
+      assert.equal(exists, false, `${legacyPath} must not be scaffolded`);
+    }
+  });
+
+  it('does not overwrite existing osq.config.ts', async () => {
     const configPath = path.join(tmpDir, 'osq.config.ts');
     await fs.writeFile(configPath, '// custom user config');
 
     const result = await scaffoldProject(tmpDir);
-    assert.ok(result.skippedFiles.includes('osq.config.ts'));
+    assert.ok(result.existingFiles.includes('osq.config.ts'));
 
     const content = await fs.readFile(configPath, 'utf8');
     assert.equal(content, '// custom user config');
@@ -222,8 +244,10 @@ describe('osq init', () => {
     const second = await scaffoldProject(tmpDir);
     assert.deepEqual(second.createdDirs, []);
     assert.deepEqual(second.createdFiles, []);
-    assert.ok(second.skippedFiles.includes(path.join('openspec', 'config.yaml')));
-    assert.ok(second.skippedFiles.includes(path.join('openspec', 'schemas', 'osq', 'schema.yaml')));
+    assert.ok(second.existingFiles.includes(path.join('openspec', 'config.yaml')));
+    assert.ok(
+      second.existingFiles.includes(path.join('openspec', 'schemas', 'osq', 'schema.yaml')),
+    );
 
     assert.equal(await fs.readFile(openspecConfigPath, 'utf8'), '# user owned openspec config\n');
     assert.equal(await fs.readFile(schemaPath, 'utf8'), 'name: custom\n');

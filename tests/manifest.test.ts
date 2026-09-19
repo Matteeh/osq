@@ -9,6 +9,7 @@ import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getSpecsDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
+import { installFakeValidator } from './helpers.js';
 
 function sha256(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
@@ -20,8 +21,6 @@ verify: node -e "process.exit(0)"
 features:
   reads:
     - watcher-and-harness
-  writes:
-    - metrics-and-reporting
 ---
 ## Goal
 
@@ -54,6 +53,7 @@ describe('run manifest', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-manifest-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Manifest Probe');
     specFolder = spec.folderPath;
@@ -68,6 +68,11 @@ describe('run manifest', () => {
     await fs.writeFile(path.join(specsDir, 'watcher-and-harness', 'spec.md'), watcherSpecContent);
     await fs.mkdir(path.join(specsDir, 'metrics-and-reporting'), { recursive: true });
     await fs.writeFile(path.join(specsDir, 'metrics-and-reporting', 'spec.md'), metricsSpecContent);
+
+    // `metrics-and-reporting` is a written capability declared by a delta spec.
+    const deltaDir = path.join(specFolder, 'specs', 'metrics-and-reporting');
+    await fs.mkdir(deltaDir, { recursive: true });
+    await fs.writeFile(path.join(deltaDir, 'spec.md'), '# delta\n', 'utf8');
   });
 
   afterEach(async () => {
@@ -104,11 +109,9 @@ describe('run manifest', () => {
   });
 
   it('records null for a hashed file that does not exist', async () => {
-    const proposalWithMissing = PROPOSAL.replace(
-      '    - metrics-and-reporting',
-      '    - ghost-capability',
-    );
-    await fs.writeFile(path.join(specFolder, 'proposal.md'), proposalWithMissing, 'utf8');
+    const ghostDeltaDir = path.join(specFolder, 'specs', 'ghost-capability');
+    await fs.mkdir(ghostDeltaDir, { recursive: true });
+    await fs.writeFile(path.join(ghostDeltaDir, 'spec.md'), '# ghost\n', 'utf8');
 
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

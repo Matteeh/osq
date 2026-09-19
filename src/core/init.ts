@@ -8,10 +8,10 @@ export const OSQ_END_MARKER = '<!-- OSQ:END -->';
 /** Path to the package's bundled `templates/` directory. */
 export const TEMPLATES_ROOT = fileURLToPath(new URL('../../templates', import.meta.url));
 
-export const MANAGED_AGENTS_BLOCK = `${OSQ_START_MARKER}
+export const MANAGED_AGENTS_MD_BODY = `${OSQ_START_MARKER}
 ## Executing a spec
 
-1. Read your task file, its parent \`proposal.md\`, then only the docs listed under \`features\`. Nothing else.
+1. Read your task file, its parent \`proposal.md\`, then only the delta specs and capability docs it names. Nothing else.
 2. Too big for one pass? Write why in \`.run/results/<n>.md\`, exit without code.
 3. Read a previous result file for this task if present. Run the task's \`verify\`. Start from what fails.
 4. Tests for each acceptance line before implementing.
@@ -20,16 +20,27 @@ export const MANAGED_AGENTS_BLOCK = `${OSQ_START_MARKER}
 
 ## OpenSpec layout
 
-- Living capability specs live at \`openspec/specs/<capability>/spec.md\`.
-- In-flight changes live at \`openspec/changes/<id>-<slug>/\`.
-- The change document is \`proposal.md\`; its delta specs live beside it under \`specs/<capability>/spec.md\`.
-- The osq workflow schema lives at \`openspec/schemas/osq/schema.yaml\` (proposal -> specs -> tasks).
-- \`tasks/<n>.md\` is the osq-specific execution unit; \`tasks.md\` is a write-only projection of \`.run/\` state.
+- Living capability specs live under \`openspec/specs/\` as \`<capability>/spec.md\`.
+- In-flight changes live under \`openspec/changes/<id>-<slug>/\`.
+- The change document is \`proposal.md\`; delta specifications live beside it as \`<capability>/spec.md\`.
+- The osq workflow schema lives under \`openspec/schemas/osq/\` (proposal -> specs -> tasks).
+- \`tasks/<n>.md\` is the osq execution unit; \`tasks.md\` is a write-only projection of \`.run/\` state.
+- \`.run/\` markers track execution state: \`running/<n>.pid\`, \`done/<n>\`, \`dead/<n>.md\`, \`regressed/<n>.md\`, and \`approved\`.
+- State is derived purely from the marker files on disk; nothing depends on in-memory state.
+
+## Gates and executor permissions
+
+- Approval gate: only \`osq approve\`, run by a human, writes \`.run/approved\` after linting and hashing the change.
+- Verification gate: the watcher alone re-runs each task's \`verify\` against the final tree before writing \`done\`.
+- An agent writes only \`.run/results/<n>.md\` and files inside \`scope\`; it never edits living capability specs, \`tasks.md\`, or marker files.
 
 ## Exiting
 
-Write \`.run/results/<n>.md\` first: changed, deviated, drift against \`features/\`, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Never write to \`features/\`, \`tasks.md\`, or anything in \`specs/\` outside \`.run/results/\`. Do not ask questions.
+Write \`.run/results/<n>.md\` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
 ${OSQ_END_MARKER}`;
+
+/** @deprecated use {@link MANAGED_AGENTS_MD_BODY}; alias kept for existing importers. */
+export const MANAGED_AGENTS_BLOCK = MANAGED_AGENTS_MD_BODY;
 
 export const MANAGED_PLANNER_BLOCK = `${OSQ_START_MARKER}
 ## Planning a change
@@ -63,48 +74,6 @@ reader succeeds.
 - Anything a task must not do itself goes under \`## Human steps\`.
 ${OSQ_END_MARKER}`;
 
-const TEMPLATE_SPEC_MD = `---
-title: Change title
-depends_on: []
-features:
-  reads: []
-  writes: []
----
-## Goal
-
-What problem this change solves and why.
-
-## Contract
-
-| Input | Expected Output |
-|---|---|
-| Sample input | Sample output |
-
-## Non-goals
-
-What this change deliberately does not do.
-
-## Delta
-
-What changes in each doc under features.writes. Applied by the watcher when the last task is done.
-`;
-
-const TEMPLATE_TASKS_MD = `# Tasks
-
-- [ ] 1. When initial condition, expected outcome
-`;
-
-const TEMPLATE_TASK_1_MD = `---
-title: When initial condition, expected outcome
-verify: node -e "process.exit(0)"
-scope: []
-entry: []
-skills: []
----
-## Acceptance
-- [ ] Acceptance criterion 1
-`;
-
 const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from '@matteeh/osq';
 
 export default defineConfig({
@@ -121,7 +90,7 @@ const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=agy
 export interface InitResult {
   createdDirs: string[];
   createdFiles: string[];
-  skippedFiles: string[];
+  existingFiles: string[];
   updatedAgentsMd: boolean;
   updatedPlannerMd: boolean;
 }
@@ -179,18 +148,12 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
   const result: InitResult = {
     createdDirs: [],
     createdFiles: [],
-    skippedFiles: [],
+    existingFiles: [],
     updatedAgentsMd: false,
     updatedPlannerMd: false,
   };
 
   const dirsToCreate = [
-    'specs',
-    'specs/_template',
-    'specs/_template/tasks',
-    'specs/archive',
-    'features',
-    'decisions',
     'openspec',
     path.join('openspec', 'schemas'),
     path.join('openspec', 'schemas', 'osq'),
@@ -211,9 +174,6 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
   const filesToCreate: Array<{ relPath: string; content: string }> = [
     { relPath: 'osq.config.ts', content: DEFAULT_CONFIG_CONTENT },
     { relPath: '.env.example', content: DEFAULT_ENV_EXAMPLE },
-    { relPath: path.join('specs', '_template', 'spec.md'), content: TEMPLATE_SPEC_MD },
-    { relPath: path.join('specs', '_template', 'tasks.md'), content: TEMPLATE_TASKS_MD },
-    { relPath: path.join('specs', '_template', 'tasks', '1.md'), content: TEMPLATE_TASK_1_MD },
   ];
 
   const bundledTemplates = [
@@ -235,7 +195,7 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
   for (const file of filesToCreate) {
     const fullPath = path.join(targetDir, file.relPath);
     if (await pathExists(fullPath)) {
-      result.skippedFiles.push(file.relPath);
+      result.existingFiles.push(file.relPath);
     } else {
       await fs.mkdir(path.dirname(fullPath), { recursive: true });
       await fs.writeFile(fullPath, file.content, 'utf8');

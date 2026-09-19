@@ -180,6 +180,13 @@ describe('Spec Linter', () => {
       await fs.writeFile(specMdPath, content, 'utf8');
       await fs.rm(proposalPath, { force: true });
     }
+    // `features.writes` is retired from the proposal schema; ensure the seed
+    // document never carries it regardless of which template was copied.
+    const seeded = await fs.readFile(specMdPath, 'utf8');
+    const cleaned = seeded.replace(/^[ \t]*writes:[^\n]*\n/m, '');
+    if (cleaned !== seeded) {
+      await fs.writeFile(specMdPath, cleaned, 'utf8');
+    }
     await installFakeOpenSpec(tmpDir);
   });
 
@@ -193,10 +200,10 @@ describe('Spec Linter', () => {
     assert.equal(result.errors.length, 0);
   });
 
-  it('rejects features.writes with more than maxFeatureWrites entries', async () => {
+  it('rejects a proposal declaring features.writes in frontmatter', async () => {
     const specMdPath = path.join(specFolder, 'spec.md');
     const content = `---
-title: Over Limit
+title: Retired Writes Field
 depends_on: []
 features:
   reads: []
@@ -216,7 +223,7 @@ Updated docs.`;
 
     const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
     assert.equal(result.valid, false);
-    assert.ok(result.errors.some((e) => e.includes('features.writes')));
+    assert.ok(result.errors.some((e) => e.includes('features.writes is no longer supported')));
   });
 
   it('rejects more than one table under Contract', async () => {
@@ -226,7 +233,6 @@ title: Two Tables
 depends_on: []
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 Goal
@@ -274,7 +280,6 @@ title: Bad Dependency
 depends_on: [999]
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 Goal
@@ -303,7 +308,6 @@ title: Archived Dependency
 depends_on: [042]
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 Goal
@@ -343,32 +347,6 @@ ${items}`;
     const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
     assert.equal(result.valid, false);
     assert.ok(result.errors.some((e) => e.includes('acceptance lines')));
-  });
-
-  it('rejects empty Delta when features.writes is non-empty', async () => {
-    const specMdPath = path.join(specFolder, 'spec.md');
-    const content = `---
-title: Missing Delta
-depends_on: []
-features:
-  reads: []
-  writes: [feature-a]
----
-## Goal
-Goal
-## Contract
-| A | B |
-|---|---|
-| 1 | 2 |
-## Non-goals
-None
-## Delta
-`;
-    await fs.writeFile(specMdPath, content);
-
-    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
-    assert.equal(result.valid, false);
-    assert.ok(result.errors.some((e) => e.includes('Delta is empty')));
   });
 
   it('warns when task title contains " and "', async () => {
@@ -560,12 +538,18 @@ skills: []
     assert.equal(invocations[0].cwd, tmpDir);
   });
 
-  it('does not run openspec when no local binary is installed', async () => {
+  it('fails closed when no local openspec binary is installed', async () => {
     await fs.rm(path.join(tmpDir, 'node_modules'), { recursive: true, force: true });
 
     const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
 
-    assert.equal(result.valid, true);
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.includes('ADR 004') && error.includes('pnpm add -D @fission-ai/openspec@1.13.1'),
+      ),
+    );
     assert.equal((await readInvocations(tmpDir)).length, 0);
   });
 
@@ -598,18 +582,22 @@ skills: []
     assert.equal(result.warnings.length, 0);
   });
 
-  it('warns once when the resolved OpenSpec version differs from the pin', async () => {
+  it('fails when the resolved OpenSpec version differs from the pin', async () => {
     await installFakeOpenSpec(tmpDir, { version: '1.12.0' });
     const logger = createRecordingLogger();
 
     const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG, { logger });
 
-    const warnings = logger.entries.filter(
-      (entry) => entry.level === 'warn' && entry.message.includes('1.12.0'),
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.includes('1.12.0') &&
+          error.includes('ADR 004') &&
+          error.includes('pnpm add -D @fission-ai/openspec@1.13.1'),
+      ),
     );
-    assert.equal(warnings.length, 1);
-    assert.equal(result.valid, true);
-    assert.equal(result.warnings.filter((w) => w.includes('1.12.0')).length, 1);
+    assert.equal(result.warnings.length, 0);
   });
 
   it('verifies delta target existence against base specs', async () => {

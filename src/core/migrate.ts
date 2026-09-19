@@ -5,7 +5,7 @@ import YAML from 'yaml';
 import { type OsqConfig, loadConfig } from './config.js';
 import { getArchiveDir, getChangesDir, getSpecsDir } from './layout.js';
 import { getNextSpecNumber } from './new.js';
-import { parseFrontmatter } from './parser.js';
+import { hasDeclaredWrites, parseFrontmatter } from './parser.js';
 
 /** Default slug for the "next spec" placeholder created after migration. */
 export const SAMPLE_STUB_SLUG = 'sample';
@@ -22,7 +22,9 @@ export interface MigrateResult {
   convertedProposals: string[];
   tickedTasks: string[];
   createdStub: string | null;
-  skipped: string[];
+  existing: string[];
+  /** Archived change folders normalized by the post-016 cleanup pass. */
+  normalizedArchives: string[];
 }
 
 export interface MigrateOptions {
@@ -124,7 +126,7 @@ async function convertChangeDoc(folderPath: string, result: MigrateResult): Prom
     return;
   }
   if (await pathExists(proposalPath)) {
-    result.skipped.push(proposalPath);
+    result.existing.push(proposalPath);
     return;
   }
 
@@ -169,7 +171,7 @@ async function moveDirectory(from: string, to: string, result: MigrateResult): P
     return false;
   }
   if (await pathExists(to)) {
-    result.skipped.push(to);
+    result.existing.push(to);
     return false;
   }
 
@@ -190,7 +192,7 @@ async function migrateFeatureDocs(paths: MigrationPaths, result: MigrateResult):
     const to = path.join(targetDir, 'spec.md');
 
     if (await pathExists(to)) {
-      result.skipped.push(to);
+      result.existing.push(to);
       continue;
     }
 
@@ -225,6 +227,47 @@ async function migrateActiveChanges(paths: MigrationPaths, result: MigrateResult
     if (await moveDirectory(from, to, result)) {
       result.migratedChanges.push({ from, to });
       await convertChangeDoc(to, result);
+    }
+  }
+}
+
+/**
+ * Idempotent post-016 archive cleanup. For every change folder already under
+ * the archive:
+ * - a `spec.md` alongside `proposal.md` is redundant and removed;
+ * - `features.writes` is stripped from `proposal.md` frontmatter, leaving only
+ *   `features.reads`, because delta specs are the sole writes declaration.
+ *
+ * Running it again is a no-op because neither condition can be true after the
+ * first pass.
+ */
+async function normalizeArchivedChanges(archivePath: string, result: MigrateResult): Promise<void> {
+  for (const name of await listDirs(archivePath)) {
+    const folderPath = path.join(archivePath, name);
+    const proposalPath = path.join(folderPath, 'proposal.md');
+    const specPath = path.join(folderPath, 'spec.md');
+    const hasProposal = await pathExists(proposalPath);
+    let changed = false;
+
+    if (hasProposal && (await pathExists(specPath))) {
+      await fs.rm(specPath, { force: true });
+      changed = true;
+    }
+
+    if (hasProposal) {
+      const content = await fs.readFile(proposalPath, 'utf8');
+      const { data, body } = parseFrontmatter(content);
+      if (hasDeclaredWrites(data)) {
+        const rawFeatures = (data.features as Record<string, unknown>) || {};
+        const reads = Array.isArray(rawFeatures.reads) ? rawFeatures.reads : [];
+        const normalized: Record<string, unknown> = { ...data, features: { reads } };
+        await fs.writeFile(proposalPath, `---\n${YAML.stringify(normalized)}---\n${body}`, 'utf8');
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      result.normalizedArchives.push(folderPath);
     }
   }
 }
@@ -271,7 +314,7 @@ async function createSampleStub(
 ): Promise<void> {
   const existing = (await listDirs(paths.changesTarget)).find((name) => name.endsWith(`-${slug}`));
   if (existing) {
-    result.skipped.push(path.join(paths.changesTarget, existing));
+    result.existing.push(path.join(paths.changesTarget, existing));
     return;
   }
 
@@ -280,7 +323,7 @@ async function createSampleStub(
   const folder = path.join(paths.changesTarget, `${nextId}-${slug}`);
 
   if (await pathExists(folder)) {
-    result.skipped.push(folder);
+    result.existing.push(folder);
     return;
   }
 
@@ -302,7 +345,9 @@ async function createSampleStub(
  * (dropping `features.writes` and keeping prose deltas under
  * `## Delta (legacy)`). Archived `.run/` history moves with the folder because
  * the move is a single `rename`, and every archived `tasks.md` is fully ticked.
- * Finally a `<next-id>-sample` stub is created for next-spec verification.
+ * A final idempotent pass strips `features.writes` from every archived
+ * `proposal.md` and deletes redundant root `spec.md` files. Finally a
+ * `<next-id>-sample` stub is created for next-spec verification.
  */
 export async function migrateToOpenSpec(options: MigrateOptions = {}): Promise<MigrateResult> {
   const cwd = options.cwd ?? process.cwd();
@@ -316,7 +361,8 @@ export async function migrateToOpenSpec(options: MigrateOptions = {}): Promise<M
     convertedProposals: [],
     tickedTasks: [],
     createdStub: null,
-    skipped: [],
+    existing: [],
+    normalizedArchives: [],
   };
 
   await fs.mkdir(paths.specsTarget, { recursive: true });
@@ -326,6 +372,7 @@ export async function migrateToOpenSpec(options: MigrateOptions = {}): Promise<M
   await migrateFeatureDocs(paths, result);
   await migrateArchives(paths, result);
   await migrateActiveChanges(paths, result);
+  await normalizeArchivedChanges(paths.archiveTarget, result);
 
   if (options.sampleStub ?? true) {
     await createSampleStub(paths, result, options.sampleSlug ?? SAMPLE_STUB_SLUG);

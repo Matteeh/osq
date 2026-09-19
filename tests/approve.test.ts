@@ -10,12 +10,30 @@ import { scaffoldProject } from '../src/core/init.js';
 import { getChangesDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 
+async function installFakeValidator(projectRoot: string): Promise<void> {
+  const binDir = path.join(projectRoot, 'node_modules', '.bin');
+  await fs.mkdir(binDir, { recursive: true });
+  await fs.writeFile(
+    path.join(binDir, 'openspec'),
+    "#!/usr/bin/env node\nprocess.stdout.write('{}');\n",
+    { mode: 0o755 },
+  );
+  const manifestDir = path.join(projectRoot, 'node_modules', '@fission-ai', 'openspec');
+  await fs.mkdir(manifestDir, { recursive: true });
+  await fs.writeFile(
+    path.join(manifestDir, 'package.json'),
+    JSON.stringify({ name: '@fission-ai/openspec', version: '1.13.1' }),
+    'utf8',
+  );
+}
+
 describe('osq approve', () => {
   let tmpDir: string;
   let specFolder: string;
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-approve-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Order Flow');
     specFolder = spec.folderPath;

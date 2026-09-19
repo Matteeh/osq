@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { setupCommand } from '../src/cli/setup.js';
 import {
-  MANAGED_AGENTS_BLOCK,
+  MANAGED_AGENTS_MD_BODY,
   OSQ_END_MARKER,
   OSQ_START_MARKER,
   updateAgentsMd,
@@ -67,7 +67,7 @@ describe('AGENTS.md managed block coexistence', () => {
     assert.equal(countOccurrences(content, OSQ_START_MARKER), 1);
     assert.equal(countOccurrences(content, OSQ_END_MARKER), 1);
     assert.equal(sliceBlock(content, OPENSPEC_START_MARKER, OPENSPEC_END_MARKER), OPENSPEC_BLOCK);
-    assert.equal(sliceBlock(content, OSQ_START_MARKER, OSQ_END_MARKER), MANAGED_AGENTS_BLOCK);
+    assert.equal(sliceBlock(content, OSQ_START_MARKER, OSQ_END_MARKER), MANAGED_AGENTS_MD_BODY);
     assert.ok(content.includes('# Project AGENTS'));
     assert.ok(content.includes('Custom user notes'));
   });
@@ -121,7 +121,7 @@ describe('AGENTS.md managed block coexistence', () => {
       sliceBlock(second, OPENSPEC_START_MARKER, OPENSPEC_END_MARKER),
       openspecAfterFirst,
     );
-    assert.equal(sliceBlock(second, OSQ_START_MARKER, OSQ_END_MARKER), MANAGED_AGENTS_BLOCK);
+    assert.equal(sliceBlock(second, OSQ_START_MARKER, OSQ_END_MARKER), MANAGED_AGENTS_MD_BODY);
     assert.ok(second.includes('# Project AGENTS'));
     assert.ok(second.includes('Custom user notes'));
   });

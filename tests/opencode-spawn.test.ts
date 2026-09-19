@@ -191,7 +191,6 @@ title: Spawn Feature
 depends_on: []
 features:
   reads: [spec-feat-read]
-  writes: [spec-feat-write]
 ---
 ## Goal
 Test spec features fallback.
@@ -205,6 +204,11 @@ None
 None
 `;
     await fs.writeFile(specPath, specContentWithFeatures, 'utf8');
+
+    // Written capabilities are declared by delta spec folders under `specs/`.
+    const deltaDir = path.join(specFolder, 'specs', 'spec-feat-write');
+    await fs.mkdir(deltaDir, { recursive: true });
+    await fs.writeFile(path.join(deltaDir, 'spec.md'), '# delta\n', 'utf8');
 
     const fallbackArgs = await buildOpencodeArgs(options);
     const fallbackAttachedFiles: string[] = [];

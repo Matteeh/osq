@@ -4,10 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
+import { mergeDelta, parseDelta } from '../src/core/delta.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getArchiveDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
-import { applyDelta, archiveSpecFolder, checkAndArchiveSpec } from '../src/watcher/archiver.js';
+import {
+  applyOpenSpecDeltas,
+  archiveSpecFolder,
+  checkAndArchiveSpec,
+} from '../src/watcher/archiver.js';
 
 const BASE_CAPABILITY_SPEC = `# cli-foundation Specification
 
@@ -41,6 +46,18 @@ The system SHALL archive changes.
 - **THEN** capability spec updated
 `;
 
+const UPDATED_DELTA_SPEC = `# Spec Delta: cli-foundation
+
+## MODIFIED Requirements
+
+### Requirement: Archival
+The system SHALL archive changes deterministically.
+
+#### Scenario: Archive applies
+- **WHEN** change archived again
+- **THEN** capability spec updated in place
+`;
+
 /**
  * Canonical OpenSpec layout config. `DEFAULT_CONFIG.paths.openspecRoot` drives
  * every change and archive path through `src/core/layout.ts`.
@@ -64,44 +81,24 @@ describe('Archiver and Delta Application', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('applyDelta creates or updates feature docs specified in features.writes', async () => {
-    const specMdContent = [
-      '---',
-      'title: Archive Feature',
-      'depends_on: []',
-      'features:',
-      '  reads: []',
-      '  writes: [archived-feature]',
-      '---',
-      '## Goal',
-      'Goal text',
-      '## Contract',
-      '| In | Out |',
-      '|---|---|',
-      '| a | b |',
-      '## Non-goals',
-      'None',
-      '## Delta',
-      'Describes the behavior added by this feature.',
-    ].join('\n');
+  it('applyOpenSpecDeltas creates and then updates capability specs from delta specs', async () => {
+    const deltaDir = path.join(specFolder, 'specs', 'cli-foundation');
+    await fs.mkdir(deltaDir, { recursive: true });
+    await fs.writeFile(path.join(deltaDir, 'spec.md'), DELTA_SPEC, 'utf8');
 
-    const proposalPath = path.join(specFolder, 'proposal.md');
-    if (
-      await fs
-        .stat(proposalPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      await fs.writeFile(proposalPath, specMdContent, 'utf8');
-    } else {
-      await fs.writeFile(path.join(specFolder, 'spec.md'), specMdContent, 'utf8');
-    }
+    await applyOpenSpecDeltas(tmpDir, specFolder, DEFAULT_CONFIG);
 
-    await applyDelta(tmpDir, specFolder, DEFAULT_CONFIG);
+    const capabilityPath = path.join(tmpDir, 'openspec', 'specs', 'cli-foundation', 'spec.md');
+    const created = await fs.readFile(capabilityPath, 'utf8');
+    assert.equal(created, mergeDelta(null, 'cli-foundation', parseDelta(DELTA_SPEC)));
 
-    const featureFilePath = path.join(tmpDir, DEFAULT_CONFIG.paths.features, 'archived-feature.md');
-    const content = await fs.readFile(featureFilePath, 'utf8');
-    assert.ok(content.includes('Describes the behavior added by this feature.'));
+    await fs.writeFile(path.join(deltaDir, 'spec.md'), UPDATED_DELTA_SPEC, 'utf8');
+    await applyOpenSpecDeltas(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    const updated = await fs.readFile(capabilityPath, 'utf8');
+    assert.equal(updated.match(/### Requirement: Archival/g)?.length, 1);
+    assert.ok(updated.includes('archive changes deterministically'));
+    assert.ok(updated.includes('change archived again'));
   });
 
   it('archiveSpecFolder moves spec folder whole to archive preserving .run markers', async () => {

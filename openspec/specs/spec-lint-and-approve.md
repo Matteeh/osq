@@ -1,1 +1,0 @@
-spec-lint-and-approve/spec.md

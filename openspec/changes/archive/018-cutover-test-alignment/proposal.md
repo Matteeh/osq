@@ -1,13 +1,13 @@
 ---
 title: Align spec creation, test fixtures, and formatting with OpenSpec layout
-depends_on: ['017']
+depends_on:
+  - "017"
 features:
   reads:
     - cli-foundation
     - watcher-and-harness
     - status-inspection
     - spec-lint-and-approve
-  writes: []
 ---
 ## Goal
 

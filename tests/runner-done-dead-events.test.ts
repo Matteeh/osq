@@ -20,6 +20,7 @@ import type {
 } from '../src/harness/types.js';
 import type { RunTaskFailureReason } from '../src/watcher/outcome.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 // Compile-time acceptance: the union and payload interfaces must exist and have
 // the documented shapes. These assertions run for real, so the imports are used.
@@ -196,6 +197,7 @@ describe('Runner done and dead events', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-done-dead-events-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Done Dead Events');
     specFolder = spec.folderPath;

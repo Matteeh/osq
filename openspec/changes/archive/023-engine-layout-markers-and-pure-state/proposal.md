@@ -1,11 +1,9 @@
 ---
 title: "Safe engine architecture: layout, markers, pure state, and line budgets"
-depends_on: ['022']
+depends_on:
+  - "022"
 features:
   reads:
-    - cli-foundation
-    - watcher-and-harness
-  writes:
     - cli-foundation
     - watcher-and-harness
 ---

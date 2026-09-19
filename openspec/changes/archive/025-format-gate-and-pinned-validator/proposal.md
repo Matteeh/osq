@@ -1,11 +1,10 @@
 ---
-title: "Format gate completion: ADR 004, pinned validator diagnostics, schema hardening, and setup coexistence"
-depends_on: ['024']
+title: "Format gate completion: ADR 004, pinned validator diagnostics, schema
+  hardening, and setup coexistence"
+depends_on:
+  - "024"
 features:
   reads:
-    - cli-foundation
-    - spec-lint-and-approve
-  writes:
     - cli-foundation
     - spec-lint-and-approve
 ---

@@ -1,10 +1,9 @@
 ---
 title: Split runner.ts by lifecycle phase and freeze the import graph
-depends_on: ['020']
+depends_on:
+  - "020"
 features:
   reads:
-    - watcher-and-harness
-  writes:
     - watcher-and-harness
 ---
 ## Goal

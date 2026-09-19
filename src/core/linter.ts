@@ -5,10 +5,20 @@ import path from 'node:path';
 import type { OsqConfig } from './config.js';
 import { DeltaMergeError, mergeDelta, parseDelta } from './delta.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
-import { parseFrontmatter, parseSpecMd, parseTaskMd, resolveChangeDoc } from './parser.js';
+import {
+  hasDeclaredWrites,
+  parseFrontmatter,
+  parseSpecMd,
+  parseTaskMd,
+  resolveChangeDoc,
+} from './parser.js';
 
 /** The exact `@fission-ai/openspec` version this profile is pinned against. */
 export const OPENSPEC_EXPECTED_VERSION = '1.13.1';
+
+/** Remediation guidance citing ADR 004 for any validator pin violation. */
+const OPENSPEC_PIN_REMEDIATION =
+  'Refer to ADR 004 (decisions/004-pinned-openspec-validator.md) and run: pnpm add -D @fission-ai/openspec@1.13.1';
 
 /** Prefix applied to every finding surfaced by the OpenSpec validator. */
 export const OPENSPEC_ERROR_PREFIX = 'openspec:';
@@ -239,9 +249,10 @@ function execFileCapture(
 
 /**
  * Runs the local OpenSpec validator for changes and specs. Validation failures
- * are returned prefixed with `openspec:`; the resolved version is logged and a
- * single warning is emitted when it differs from `OPENSPEC_EXPECTED_VERSION`.
- * A missing local binary is a no-op.
+ * are returned prefixed with `openspec:`. The validator is pinned: a missing
+ * binary or a version that differs from `OPENSPEC_EXPECTED_VERSION` is an error
+ * that cites ADR 004 and the install command, so linting fails closed rather
+ * than silently degrading.
  */
 export async function validateWithOpenSpec(
   projectRoot: string,
@@ -251,20 +262,31 @@ export async function validateWithOpenSpec(
   const logger = options.logger;
   const bin = await resolveOpenSpecBin(projectRoot, config);
   if (!bin) {
-    logger?.verbose('openspec validate skipped: no local openspec binary found');
-    return { errors: [], warnings: [], ran: false, bin: null, version: null };
+    return {
+      errors: [
+        `OpenSpec validator binary is unavailable at node_modules/.bin/openspec. ${OPENSPEC_PIN_REMEDIATION}`,
+      ],
+      warnings: [],
+      ran: false,
+      bin: null,
+      version: null,
+    };
   }
 
   const version = await resolveOpenSpecVersion(projectRoot);
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  if (version) {
+  if (!version) {
+    errors.push(
+      `OpenSpec validator version could not be resolved from node_modules/@fission-ai/openspec/package.json. ${OPENSPEC_PIN_REMEDIATION}`,
+    );
+  } else {
     logger?.info(`openspec version ${version}`);
     if (version !== OPENSPEC_EXPECTED_VERSION) {
-      const message = `openspec version ${version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}`;
-      logger?.warn(message);
-      warnings.push(message);
+      errors.push(
+        `OpenSpec validator version ${version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}. ${OPENSPEC_PIN_REMEDIATION}`,
+      );
     }
   }
 
@@ -522,10 +544,10 @@ export async function lintChangeFolder(
     errors.push('proposal.md must declare a verify command in frontmatter');
   }
 
-  // Check: features.writes max entries
-  if (spec.features.writes.length > config.limits.maxFeatureWrites) {
+  // Check: features.writes is retired; delta specs are the sole writes declaration
+  if (hasDeclaredWrites(parseFrontmatter(specContent).data)) {
     errors.push(
-      `features.writes has ${spec.features.writes.length} entries (max allowed is ${config.limits.maxFeatureWrites})`,
+      'features.writes is no longer supported in proposal frontmatter; write declarations are derived strictly from delta specs under specs/<capability>/spec.md',
     );
   }
 
@@ -534,11 +556,6 @@ export async function lintChangeFolder(
     errors.push(
       `Contract has ${spec.contractTablesCount} tables (max allowed is ${config.limits.maxContractTables})`,
     );
-  }
-
-  // Check: Delta empty while features.writes is not
-  if (spec.features.writes.length > 0 && !spec.delta.trim()) {
-    errors.push('Delta is empty while features.writes contains entries');
   }
 
   // Check: depends_on exists

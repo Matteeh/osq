@@ -156,7 +156,18 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
     try {
       const specData = await parseSpecMdFromFolder(specFolderPath);
       if (specData) {
-        const allSpecFeatures = [...specData.features.reads, ...specData.features.writes];
+        // Written capabilities are declared by delta spec folders, not frontmatter.
+        let writtenCapabilities: string[] = [];
+        try {
+          writtenCapabilities = (
+            await fs.readdir(path.resolve(specFolderPath, 'specs'), {
+              withFileTypes: true,
+            })
+          )
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name);
+        } catch {}
+        const allSpecFeatures = [...specData.features.reads, ...writtenCapabilities];
         featureNames = Array.from(new Set(allSpecFeatures.map((s) => s.trim()).filter(Boolean)));
       }
     } catch {}
@@ -164,20 +175,24 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
 
   const featuresDirName = config?.paths?.features || 'features';
   for (const feature of featureNames) {
-    const featureFileName = feature.endsWith('.md') ? feature : `${feature}.md`;
+    const candidateOpenSpec = path.resolve(projectRoot, featuresDirName, feature, 'spec.md');
     let featurePath: string;
-    if (
-      featureFileName.startsWith('features/') ||
-      featureFileName.startsWith(`${featuresDirName}/`)
-    ) {
-      featurePath = path.resolve(projectRoot, featureFileName);
+    if (fsSync.existsSync(candidateOpenSpec)) {
+      featurePath = candidateOpenSpec;
     } else {
-      featurePath = path.resolve(projectRoot, featuresDirName, featureFileName);
+      const featureFileName = feature.endsWith('.md') ? feature : `${feature}.md`;
+      if (
+        featureFileName.startsWith('features/') ||
+        featureFileName.startsWith(`${featuresDirName}/`)
+      ) {
+        featurePath = path.resolve(projectRoot, featureFileName);
+      } else {
+        featurePath = path.resolve(projectRoot, featuresDirName, featureFileName);
+      }
     }
     const featureRelPath = path.relative(projectRoot, featurePath);
     args.push('--file', featureRelPath);
   }
-
   return args;
 }
 

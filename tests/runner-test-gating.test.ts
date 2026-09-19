@@ -8,6 +8,7 @@ import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { type RunTaskFailureReason, runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 interface ParsedEvent {
   type: string;
@@ -21,7 +22,6 @@ depends_on: []
 verify: node -e "process.exit(0)"
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 
@@ -121,6 +121,7 @@ describe('Runner test modification gating', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-test-gating-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
 
     existingTestPath = path.join(tmpDir, 'tests', 'existing.test.ts');

@@ -22,6 +22,7 @@ import {
 } from '../src/watcher/outcome.js';
 import * as runner from '../src/watcher/runner.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 async function captureStderr(fn: () => Promise<void>): Promise<string> {
   const originalWrite = process.stderr.write;
@@ -77,6 +78,7 @@ describe('Runner outcome logging', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-outcome-log-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Outcome Logging');
     specFolder = spec.folderPath;

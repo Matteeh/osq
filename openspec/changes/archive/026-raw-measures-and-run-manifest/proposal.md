@@ -1,13 +1,11 @@
 ---
-title: "Raw measures and a run manifest"
-depends_on: ['025']
+title: Raw measures and a run manifest
+depends_on:
+  - "025"
 features:
   reads:
     - watcher-and-harness
     - spec-lint-and-approve
-  writes:
-    - watcher-and-harness
-    - metrics-and-reporting
 ---
 ## Goal
 

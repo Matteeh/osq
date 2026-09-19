@@ -1,11 +1,9 @@
 ---
 title: Make the engine safe to grow
-depends_on: ['021']
+depends_on:
+  - "021"
 features:
   reads:
-    - cli-foundation
-    - watcher-and-harness
-  writes:
     - cli-foundation
     - watcher-and-harness
 ---

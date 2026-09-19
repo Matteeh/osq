@@ -10,6 +10,7 @@ import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 const FIXTURES_DIR = fileURLToPath(new URL('./fixtures/events/', import.meta.url));
 const VERIFIED_FIXTURE = path.join(FIXTURES_DIR, 'verified.jsonl');
@@ -130,6 +131,7 @@ describe('Golden event streams', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-golden-events-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Golden Events');
     specFolder = spec.folderPath;

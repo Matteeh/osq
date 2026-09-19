@@ -1,11 +1,9 @@
 ---
 title: Watcher stale build detection, build identity recording, and dev mode
-depends_on: ['019']
+depends_on:
+  - "019"
 features:
   reads:
-    - cli-foundation
-    - watcher-and-harness
-  writes:
     - cli-foundation
     - watcher-and-harness
 ---

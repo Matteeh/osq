@@ -1,10 +1,54 @@
-# Spec Lint and Approve
+# spec-lint-and-approve Specification
 
 ## Purpose
 
-Validates change specifications against structural limits and OpenSpec standards, hashes approved changes deterministically, and seals approved specifications for autonomous execution.
+Governs the human gate: parsing change specifications, validating limits and OpenSpec conventions, computing deterministic SHA-256 folder hashes, and sealing approved changes.
 
 ## Requirements
+
+### Requirement: Change folder structure and parsing
+<!-- source: features/spec-lint-and-approve.md # Spec Format & Parsing, tests/parser.test.ts -->
+The system SHALL parse change proposals, delta specs, and task definitions.
+
+#### Scenario: Proposal frontmatter extraction
+- **WHEN** change folder contains `proposal.md` with YAML frontmatter
+- **THEN** system extracts `title`, `depends_on`, and `features.reads`
+
+#### Scenario: Task definition parsing
+- **WHEN** task markdown under `tasks/<n>.md` is parsed
+- **THEN** system extracts `title`, `verify`, `scope`, `entry`, `skills`, and `acceptance` criteria
+
+### Requirement: Specification lint rules and limits
+<!-- source: features/spec-lint-and-approve.md # Lint Rules, tests/linter.test.ts -->
+The system SHALL validate change folders against configured operational limits.
+
+#### Scenario: Enforcing limits
+- **WHEN** a change folder is linted
+- **THEN** system rejects folders exceeding `maxScopeFiles`, chaining verify commands, referencing missing `depends_on`, or exceeding `maxAcceptanceLines`
+
+### Requirement: OpenSpec strict validation integration
+<!-- source: tests/linter.test.ts -->
+The system SHALL execute OpenSpec CLI validation under strict mode during change linting.
+
+#### Scenario: Pinned validator execution
+- **WHEN** `osq lint` or `osq approve` executes
+- **THEN** system executes `openspec validate --changes --strict --json --no-interactive` and `openspec validate --specs --strict --json --no-interactive` with `OPENSPEC_TELEMETRY=0` and surfaces findings prefixed with `openspec:`
+
+### Requirement: Deterministic change folder hashing
+<!-- source: features/spec-lint-and-approve.md # Folder Hashing, tests/hasher.test.ts -->
+The system SHALL compute a deterministic SHA-256 digest of change folder contents.
+
+#### Scenario: Folder hash computation
+- **WHEN** `hashChangeFolder` is invoked
+- **THEN** files excluding `.run/`, `.git/`, and `.DS_Store` are lexicographically sorted, normalized for line endings and task checkboxes, and hashed with a `sha256:` prefix
+
+### Requirement: Human approval sealing
+<!-- source: features/spec-lint-and-approve.md # Approval, tests/approve.test.ts -->
+The system SHALL record approval hashes in change folders upon human approval.
+
+#### Scenario: Sealing approved spec
+- **WHEN** user executes `osq approve <id>` on a spec passing lint
+- **THEN** system writes the computed folder hash to `.run/approved`
 
 ### Requirement: Code ownership
 <!-- source: src/core/parser.ts, src/core/linter.ts, src/core/approve.ts, src/core/hasher.ts, src/core/delta.ts, src/core/migrate.ts, src/cli/lint.ts, src/cli/migrate.ts -->
@@ -62,6 +106,30 @@ The linter and parser SHALL require that change proposals declare an executable 
 - **WHEN** `proposal.md` declares a non-empty `verify` string command in frontmatter
 - **THEN** `osq lint` accepts the proposal structure
 
-## Delta from Archive-time verification and tree hashes
+### Requirement: Pinned OpenSpec validator failure gating
+<!-- source: src/core/linter.ts, src/core/approve.ts, tests/validator-missing.test.ts, tests/no-skipped-in-src.test.ts -->
+The linter and approval engine SHALL require that `@fission-ai/openspec` is installed and matches the pinned version `1.13.1`. If the binary is missing or the version differs from `1.13.1`, `osq lint` and `osq approve` SHALL fail with exit code 1, reporting an error citing ADR 004 and the install command `pnpm add -D @fission-ai/openspec@1.13.1`. Zero checks report skipped, and the word "skipped" SHALL NOT appear in `src/`.
 
-This change adds change-level verify linting, done-marker scope hashes, pre-spawn regression detection, regressed status and lifecycle events, and archive-time verification re-runs to `watcher-and-harness` and `spec-lint-and-approve`.
+#### Scenario: Missing validator binary causes lint and approval failure
+- **WHEN** `node_modules/.bin/openspec` is missing or unavailable
+- **THEN** `osq lint` and `osq approve` fail reporting an error citing ADR 004 and `pnpm add -D @fission-ai/openspec@1.13.1`
+
+#### Scenario: Version drift causes lint and approval failure
+- **WHEN** `openspec` reports a version differing from `1.13.1`
+- **THEN** `osq lint` and `osq approve` fail reporting version drift citing ADR 004 and `pnpm add -D @fission-ai/openspec@1.13.1`
+
+#### Scenario: Zero checks report skipped and word absent from src
+- **WHEN** validation and diagnostic checks execute across the project
+- **THEN** no check reports a skipped status and `grep -ri "skipped" src/` finds zero matches
+
+### Requirement: Proposal schema writes rejection
+<!-- source: src/core/parser.ts, src/core/linter.ts, templates/openspec/schemas/osq/schema.yaml, tests/proposal-writes-schema.test.ts -->
+The parser and linter SHALL reject any change proposal declaring `features.writes` in YAML frontmatter. Capability writes SHALL be derived exclusively from the set of delta specification files under `specs/<capability>/spec.md`.
+
+#### Scenario: Linter rejects proposal with features.writes
+- **WHEN** `proposal.md` declares `features.writes` in YAML frontmatter
+- **THEN** `osq lint` rejects the change folder with a validation error
+
+#### Scenario: Delta specifications serve as sole writes declaration
+- **WHEN** a change folder declares delta specification files under `specs/`
+- **THEN** system derives written capabilities exclusively from the present delta files without frontmatter declaration

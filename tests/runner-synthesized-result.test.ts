@@ -20,6 +20,7 @@ import {
   snapshotTestFiles,
   synthesizeResultFile,
 } from '../src/watcher/verify.js';
+import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -139,6 +140,7 @@ describe('Runner synthesized result', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-synthesized-result-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Synthesized Result');
     specFolder = spec.folderPath;

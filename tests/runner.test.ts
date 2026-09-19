@@ -9,6 +9,7 @@ import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 describe('Task Runner and Verification Gate', () => {
   let tmpDir: string;
@@ -17,6 +18,7 @@ describe('Task Runner and Verification Gate', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-runner-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Runner Spec');
     specFolder = spec.folderPath;

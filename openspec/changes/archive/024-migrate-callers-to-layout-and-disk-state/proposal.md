@@ -1,11 +1,10 @@
 ---
-title: "Migrate remaining consumers to canonical layout and dual-signature state derivation"
-depends_on: ['023']
+title: Migrate remaining consumers to canonical layout and dual-signature state
+  derivation
+depends_on:
+  - "023"
 features:
   reads:
-    - cli-foundation
-    - watcher-and-harness
-  writes:
     - cli-foundation
     - watcher-and-harness
 ---

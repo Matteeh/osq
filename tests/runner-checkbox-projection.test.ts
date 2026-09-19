@@ -14,6 +14,7 @@ import { deriveSpecState } from '../src/core/state.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { tickTaskCheckbox, tickTaskCheckboxContent } from '../src/watcher/outcome.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -142,6 +143,7 @@ describe('Runner checkbox projection', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-checkbox-projection-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Checkbox Projection');
     specFolder = spec.folderPath;

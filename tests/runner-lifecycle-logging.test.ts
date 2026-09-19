@@ -21,6 +21,7 @@ import type {
 } from '../src/harness/types.js';
 import { relativizeToolSummary as reExportedRelativize } from '../src/watcher/heartbeat.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 /**
  * Minimal adapter that writes a result file and returns an explicit pid/elapsedMs
@@ -95,6 +96,7 @@ describe('Runner lifecycle logging', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-lifecycle-log-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Lifecycle Logging');
     specFolder = spec.folderPath;

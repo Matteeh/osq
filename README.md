@@ -26,12 +26,12 @@ openspec/
   specs/           living capability specifications (e.g. cli-foundation/spec.md)
   changes/
     042-order-cancellation/
-      proposal.md  parent spec: goal, contract, non-goals, reads/writes
+      proposal.md  parent spec: goal, contract, non-goals, reads
       tasks.md     high-level task checklist, ticked by the watcher
       tasks/1.md   unit of work: acceptance, verify, scope, entry, tests.modify
       tasks/2.md
       specs/       delta specifications applied per capability
-      .run/        approved (hash), manifest.json, running/, done/, dead/, results/, events/
+      .run/        approved (hash), manifest.json, running/, done/, dead/, regressed/, results/, events/
     archive/       finished change folders, moved whole
   schemas/osq/     workflow schema and templates
   config.yaml      OpenSpec project configuration
@@ -55,6 +55,13 @@ you                 next time            ->  osq status, look at dead
 
 Smart models author specs and never execute them. Cheap models execute specs and never author them.
 
+## Gates and permissions
+
+- **Approval gate.** Nothing runs until a human runs `osq approve`. It lints the change, hashes the folder, and writes `.run/approved` plus `.run/manifest.json`.
+- **Verification gate.** The watcher never trusts the agent's claim. It runs each task's `verify` in its own process after the agent exits and writes `.run/done/<n>` only on exit 0; a non-zero exit becomes `.run/dead/<n>.md`. Before archiving it re-runs every task's `verify` and the proposal's change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
+- **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
+- **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files; all markers and checkboxes are written by the watcher.
+
 ## Change folder
 
 `proposal.md` is written for humans and the smart model:
@@ -66,13 +73,13 @@ depends_on: ['041']
 features:
   reads:
     - inventory-reservation
-  writes:
-    - order-state-machine
 ---
 ## Goal
 ## Contract
 ## Non-goals
 ```
+
+Capability writes are not declared in frontmatter: the set of delta specs under `specs/<capability>/spec.md` is the authoritative declaration of what the change writes.
 
 Delta specs under `specs/<capability>/spec.md` describe exact capability requirements:
 
@@ -104,19 +111,18 @@ skills: []
 - [ ] each line is a test in disguise, max 7
 ```
 
-Tasks run in order. The agent reads its task, the parent `proposal.md`, the docs under `features.reads` and `features.writes`, `AGENTS.md`, and a previous result file for that task if there is one. The runner also injects capability-specific constraints and code ownership rules extracted from living capability specs. The delta is applied by the watcher, so the agent never edits living specs under `openspec/specs/`.
+Tasks run in order. The agent reads its task, the parent `proposal.md`, the delta specs and capability docs the proposal names, `AGENTS.md`, and a previous result file for that task if there is one. The runner also injects capability-specific constraints and code ownership rules extracted from living capability specs. The delta is applied by the watcher, so the agent never edits living specs under `openspec/specs/`.
 
 Lint, run by `osq approve` and `osq lint`:
 
 | Check                                       | Result |
 |---------------------------------------------|--------|
 | task `scope` has more than 8 patterns       | reject |
-| `features.writes` has more than 2 entries   | reject |
+| proposal declares `features.writes`         | reject |
 | more than one table under `## Contract`     | reject |
 | task `verify` empty or chains commands      | reject |
 | `depends_on` names a missing change         | reject |
 | task acceptance longer than 7 lines         | reject |
-| delta specs empty while `features.writes` is not | reject |
 | task title contains " and "                 | warn   |
 | OpenSpec schema or validator drift          | reject |
 
@@ -136,7 +142,7 @@ Rules the lint can't check: title reads "when X, Y happens"; slice vertically so
 - **Restricted agent protocol**: The agent prompt protocol restricts write paths to `.run/results/` and edits to `scope`. All markers and checkboxes are written by the watcher.
 - **Synthesized results**: An agent that exits without writing `.run/results/<n>.md` is not lost: if the adapter captured a final text message, the watcher synthesizes a result file (`synthesized: true`) from it and proceeds to verify. Only an exit with neither a result file nor final text is `dead` with `reason: no_result`. Nothing disappears silently.
 
-Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout), `spec_conflict`, `already_running`, `no_result` (no result file and no final text), `crashed`, `timeout`, `undeclared_test_change`.
+Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout), `spec_conflict`, `already_running`, `no_result` (no result file and no final text), `crashed`, `timeout`, `undeclared_test_change`. A previously completed task whose scoped files no longer match their recorded hash is recorded under `.run/regressed/<n>.md` (and the change-level `verify` under `.run/regressed/change.md`), which stops the run before the next task spawns.
 
 ## Harnesses
 
@@ -178,7 +184,7 @@ osq status               overview of all changes, tasks, and runtime states
 osq show <id>            change details, tasks, results, dead markers, and event timeline
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq doctor               validate repository health, harness availability, and pinned validator
-osq migrate openspec     migrate legacy features/ and specs/ layout to canonical openspec/
+osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
 ```
 
 ### Watcher options

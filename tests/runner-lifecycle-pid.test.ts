@@ -12,6 +12,7 @@ import { AgyAdapter } from '../src/harness/agy.js';
 import { OpencodeAdapter } from '../src/harness/opencode.js';
 import type { HarnessAdapter } from '../src/harness/types.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 interface ParsedEvent {
   type: string;
@@ -99,6 +100,7 @@ describe('Runner lifecycle PID ownership', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-lifecycle-pid-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Lifecycle Pid');
     specFolder = spec.folderPath;

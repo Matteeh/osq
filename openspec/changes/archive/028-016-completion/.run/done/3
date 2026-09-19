@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:18c078811de3f29cc05b820c23bfcb5875a92e6d3d73c3c346e2bac09d248cab"
+build_stamp: "a0fda09"
+exit_code: 0
+scope_files: {"openspec/changes/archive/**":null,"src/core/linter.ts":"sha256:94fc6a62e6b725e1d1054842d579679d10e6e0481c230a29b433fd907dcaccba","src/core/manifest.ts":"sha256:0be99d0930b23e41328f636e926b84367ac7af698227eb3866c93951767cb033","src/core/migrate.ts":"sha256:8f242d7f518ca364c72994b729cec4afb366ce0282f4f5b128ab8b45c5c7a7a6","src/core/parser.ts":"sha256:276495dca98e5c204b255e4cbeb1c872d5357cfe0eb850fa833823d345f5f871","src/core/show.ts":"sha256:c1ff2b33cee4b57537ec270ef4fd23915c3bc7bf00eccf1771d07030163110b8","templates/**":null,"tests/**":null}
+---
+2026-09-19T10:02:40.488Z

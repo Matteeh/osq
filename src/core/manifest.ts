@@ -108,10 +108,14 @@ export async function buildManifest(
     config: configPath ? await hashFileContent(configPath) : null,
   };
 
-  const features = new Set<string>([
-    ...(spec?.features.reads ?? []),
-    ...(spec?.features.writes ?? []),
-  ]);
+  // Capability writes are declared solely by delta spec folders under `specs/`.
+  const deltasDir = path.join(specFolderPath, 'specs');
+  const writtenCapabilities = (await fs.readdir(deltasDir, { withFileTypes: true }).catch(() => []))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+
+  const features = new Set<string>([...(spec?.features.reads ?? []), ...writtenCapabilities]);
   for (const name of features) {
     hashes[name] = await hashFileContent(path.join(specsDir, name, 'spec.md'));
   }

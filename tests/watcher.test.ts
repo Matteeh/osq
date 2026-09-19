@@ -11,6 +11,7 @@ import { getArchiveDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
+import { installFakeValidator } from './helpers.js';
 
 describe('Watcher Loop and CLI', () => {
   let tmpDir: string;
@@ -18,6 +19,7 @@ describe('Watcher Loop and CLI', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-watcher-test-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     mockAdapter = new MockAdapter();
   });

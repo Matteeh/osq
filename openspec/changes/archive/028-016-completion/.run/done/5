@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:1b0d398de2e1f6c75aed1499a99e469d725b004bca91b442b99f6a8ed8b3c9aa"
+build_stamp: "a0fda09"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:9b165c126179f744d98e253a82a5afb7c53a941aa1caff7366687dc063943c8b","README.md":"sha256:2b3ae5ea09853f2900ba26b7671f18efb18dbc1e69bd4fa1ab0fbbb1eb990a83","src/core/init.ts":"sha256:fd1de0155e811dee268f8c77810b1fefcfe3e262fb51e8040fa0f9f51d794c7a","tests/doctor.test.ts":"sha256:0612451c57bf7ca48373a5776ea335ffeb1f84d56dadae24f43df5bbd6cc0aed","tests/managed-blocks.test.ts":"sha256:0299a57046f62082fa35efebfb1a8cbc32940d284ddd584c13fdeb94208dd873","tests/setup-block-coexistence.test.ts":"sha256:19ff36c7761ef5381ec854a375050c41fdfe9fb1d5bd65ae1118fd604b00dd62"}
+---
+2026-09-19T10:08:00.150Z

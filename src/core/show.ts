@@ -151,6 +151,13 @@ export async function getSpecDetails(
     throw new Error(`Neither proposal.md nor spec.md found in ${folderPath}`);
   }
 
+  // Capability writes are declared solely by delta spec folders under `specs/`.
+  const deltasDir = path.join(folderPath, 'specs');
+  const writtenCapabilities = (await fs.readdir(deltasDir, { withFileTypes: true }).catch(() => []))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+
   const runDir = path.join(folderPath, '.run');
   const approvedPath = path.join(runDir, 'approved');
 
@@ -329,7 +336,7 @@ export async function getSpecDetails(
     status,
     approvedHash,
     dependsOn: specData.dependsOn,
-    features: specData.features,
+    features: { reads: specData.features.reads, writes: writtenCapabilities },
     goal: specData.goal,
     contract: specData.contract,
     nonGoals: specData.nonGoals,

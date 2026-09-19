@@ -13,7 +13,7 @@ import {
   parseRequirement,
   parseScenario,
 } from '../src/core/delta.js';
-import { applyDelta, applyOpenSpecDeltas } from '../src/watcher/archiver.js';
+import { applyOpenSpecDeltas } from '../src/watcher/archiver.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHANGE_FOLDER_NAME = '017-ownership-and-test-gating';
@@ -402,23 +402,23 @@ describe('Archiver OpenSpec delta application', () => {
     await fs.writeFile(path.join(capabilityDir, 'spec.md'), content, 'utf8');
   }
 
-  it('applyDelta creates and then updates capability specs from delta specs', async () => {
+  it('applyOpenSpecDeltas creates and then updates capability specs from delta specs', async () => {
     await writeDelta(INITIAL_DELTA);
-    await applyDelta(tmpDir, changeFolder, DEFAULT_CONFIG);
+    await applyOpenSpecDeltas(tmpDir, changeFolder, DEFAULT_CONFIG);
 
     const targetPath = path.join(tmpDir, 'openspec', 'specs', 'cli-foundation', 'spec.md');
     const created = await fs.readFile(targetPath, 'utf8');
     assert.equal(created, mergeDelta(null, 'cli-foundation', parseDelta(INITIAL_DELTA)));
 
     await writeDelta(ALL_OPERATIONS_DELTA);
-    await applyDelta(tmpDir, changeFolder, DEFAULT_CONFIG);
+    await applyOpenSpecDeltas(tmpDir, changeFolder, DEFAULT_CONFIG);
 
     const updated = await fs.readFile(targetPath, 'utf8');
     assert.equal(updated, GOLDEN_SPEC);
   });
 
-  it('applyDelta ignores change folders without OpenSpec delta specs', async () => {
-    await applyDelta(tmpDir, changeFolder, DEFAULT_CONFIG);
+  it('applyOpenSpecDeltas ignores change folders without OpenSpec delta specs', async () => {
+    await applyOpenSpecDeltas(tmpDir, changeFolder, DEFAULT_CONFIG);
 
     const specsDir = path.join(tmpDir, 'openspec', 'specs');
     const exists = await fs

@@ -54,8 +54,14 @@ async function createChangeFolder(
   title: string,
 ): Promise<string> {
   const folderPath = path.join(root, CHANGE_SPECS_DIR, folderName);
-  await fs.cp(path.join(root, 'specs', '_template'), folderPath, { recursive: true });
-  await fs.writeFile(path.join(folderPath, 'spec.md'), specMd(title), 'utf8');
+  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
+  await fs.writeFile(path.join(folderPath, 'tasks.md'), '# Tasks\n\n- [ ] 1. Task 1\n', 'utf8');
+  await fs.writeFile(
+    path.join(folderPath, 'tasks', '1.md'),
+    '---\ntitle: Task 1\nverify: node -e "process.exit(0)"\nscope: []\nentry: []\nskills: []\n---\n## Acceptance\n- [ ] done\n',
+    'utf8',
+  );
+  await fs.writeFile(path.join(folderPath, 'proposal.md'), specMd(title), 'utf8');
   return folderPath;
 }
 

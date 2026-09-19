@@ -12,6 +12,7 @@ import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harne
 import { writeDoneMarker } from '../src/watcher/outcome.js';
 import { checkDoneTasksScopeHashes, computeTaskScopeHash } from '../src/watcher/regression.js';
 import { runTask } from '../src/watcher/runner.js';
+import { installFakeValidator } from './helpers.js';
 
 const PASSING_VERIFY = 'node -e "process.exit(0)"';
 
@@ -21,7 +22,6 @@ depends_on: []
 verify: node -e "process.exit(0)"
 features:
   reads: []
-  writes: []
 ---
 ## Goal
 
@@ -174,6 +174,7 @@ describe('Pre-spawn scope comparison', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-pre-spawn-scope-'));
+    await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
     await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
