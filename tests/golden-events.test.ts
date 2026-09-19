@@ -55,6 +55,7 @@ function maskEvent(event: Record<string, unknown>, projectRoot: string): Record<
     if ('version' in record) record.version = '[VERSION]';
     if ('osqVersion' in record) record.osqVersion = '[VERSION]';
     if ('elapsedSeconds' in record) record.elapsedSeconds = 0;
+    if ('duration' in record) record.duration = 0;
     if (masked.type === 'measures') maskScopeHashes(record);
   }
 
@@ -165,6 +166,23 @@ describe('Golden event streams', () => {
           elapsedSeconds: 0,
           path: 'src/a.ts',
         },
+      })}\n`,
+    );
+  });
+
+  it('masks verify_ran duration to zero while preserving exit code and command', () => {
+    const raw = `${JSON.stringify({
+      type: 'verify_ran',
+      timestamp: '2026-01-01T00:00:00.000Z',
+      data: { command: 'node -e "process.exit(0)"', exitCode: 0, duration: 1.23 },
+    })}\n`;
+
+    assert.equal(
+      normalizeEvents(raw, tmpDir),
+      `${JSON.stringify({
+        type: 'verify_ran',
+        timestamp: '[TIMESTAMP]',
+        data: { command: 'node -e "process.exit(0)"', exitCode: 0, duration: 0 },
       })}\n`,
     );
   });

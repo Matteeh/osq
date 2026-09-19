@@ -4,19 +4,17 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { mergeDelta, parseDelta } from '../core/delta.js';
 import { getArchiveDir } from '../core/layout.js';
-import { parseSpecMdFromFolder } from '../core/parser.js';
-import { deriveSpecState } from '../core/state.js';
+import { parseSpecMdFromFolder, parseTaskMd } from '../core/parser.js';
+import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
+import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
+import { runVerificationGate } from './verify.js';
 
 function resolveOpenSpecRoot(config: OsqConfig): string {
   const paths = config.paths as OsqConfig['paths'] & { readonly openspecRoot?: string };
   return paths.openspecRoot ?? 'openspec';
 }
 
-/**
- * Applies every OpenSpec delta spec in `<change>/specs/<capability>/spec.md`
- * into `openspec/specs/<capability>/spec.md` using the deterministic merge
- * engine. No-op when the change carries no delta specs.
- */
+/** Merge every delta spec into `openspec/specs/`. */
 export async function applyOpenSpecDeltas(
   projectRoot: string,
   specFolderPath: string,
@@ -90,10 +88,7 @@ export async function applyDelta(
   }
 }
 
-/**
- * Rewrites every unchecked `[ ]` checkbox to `[x]` while preserving bullet
- * style, numbering, and indentation. Purely textual: no `.run/` state is read.
- */
+/** Rewrite every unchecked `[ ]` checkbox to `[x]`. Pure; reads no `.run/` state. */
 export function tickAllTaskCheckboxes(content: string): string {
   return content.replace(/^([ \t]*[-*][ \t]+\[)[ ](\])/gm, '$1x$2');
 }
@@ -127,12 +122,7 @@ async function ensureArchivedTasksTicked(folderPath: string): Promise<void> {
   }
 }
 
-/**
- * Applies the change's delta specifications, moves the completed folder to the
- * canonical `<openspecRoot>/changes/archive`, and ensures every archived
- * `tasks.md` is fully ticked so `openspec validate --archived` passes. The whole
- * folder (including `.run/` markers, results, and event logs) moves as one unit.
- */
+/** Apply deltas, move the folder to the canonical archive, and tick every `tasks.md`. */
 export async function archiveSpecFolder(
   projectRoot: string,
   specFolderPath: string,
@@ -162,6 +152,60 @@ export async function archiveSpecFolder(
   return targetPath;
 }
 
+/** Re-run one command through the shared gate; record a regressed marker/event on failure. */
+async function verifyArchiveStep(
+  projectRoot: string,
+  specFolderPath: string,
+  runDir: string,
+  config: OsqConfig,
+  target: string,
+  command: string,
+): Promise<boolean> {
+  const gate = await runVerificationGate(
+    projectRoot,
+    command,
+    config.timeouts.verifyTimeoutSeconds ?? 600,
+    { specFolderPath, taskNumber: target },
+  );
+  if (gate.passed) return true;
+
+  // The shared gate is the sole `verify_ran` writer; recover its payload.
+  const raw = await fs
+    .readFile(path.join(specFolderPath, '.run', 'events', `${target}.jsonl`), 'utf8')
+    .catch(() => '');
+  let exitCode = 1;
+  let duration = 0;
+  let output = '';
+  for (const line of raw.split('\n')) {
+    if (!line.includes('"verify_ran"')) continue;
+    const data = (JSON.parse(line) as { data?: Record<string, unknown> }).data ?? {};
+    exitCode = typeof data.exitCode === 'number' ? data.exitCode : 1;
+    duration = typeof data.duration === 'number' ? data.duration : 0;
+    output = typeof data.output === 'string' ? data.output : '';
+  }
+
+  const label = target === 'change' ? 'change-level' : `task ${target}`;
+  const content = [
+    '---',
+    'reason: verify_red',
+    `command: ${JSON.stringify(command)}`,
+    `exit_code: ${exitCode}`,
+    '---',
+    `Archive-time ${label} verification failed.`,
+    output.trim() || '(no output)',
+    '',
+  ].join('\n');
+  await writeRegressedMarker(runDir, target, content);
+  await recordRegressedEvent(specFolderPath, target, {
+    exitCode,
+    duration,
+    command,
+    reason: 'verify_red',
+  });
+  return false;
+}
+
+/** Re-run every task verify, then the change-level verify, before archiving. */
 export async function checkAndArchiveSpec(
   projectRoot: string,
   specFolderPath: string,
@@ -172,7 +216,30 @@ export async function checkAndArchiveSpec(
     return false;
   }
 
-  // `archiveSpecFolder` applies deltas exactly once before moving the folder.
+  const runDir = path.join(specFolderPath, '.run');
+  const tasksDir = path.join(specFolderPath, 'tasks');
+  const taskFiles = (await fs.readdir(tasksDir).catch((): string[] => []))
+    .filter((entry) => entry.endsWith('.md'))
+    .sort(compareNumericPrefix);
+
+  for (const entry of taskFiles) {
+    const target = entry.replace(/\.md$/, '');
+    const command = parseTaskMd(await fs.readFile(path.join(tasksDir, entry), 'utf8')).verify;
+    if (!command) continue;
+    if (!(await verifyArchiveStep(projectRoot, specFolderPath, runDir, config, target, command))) {
+      return false;
+    }
+  }
+
+  const specData = await parseSpecMdFromFolder(specFolderPath);
+  const changeCommand = specData?.verify ?? '';
+  if (
+    changeCommand &&
+    !(await verifyArchiveStep(projectRoot, specFolderPath, runDir, config, 'change', changeCommand))
+  ) {
+    return false;
+  }
+
   await archiveSpecFolder(projectRoot, specFolderPath, config);
   return true;
 }

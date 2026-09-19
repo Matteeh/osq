@@ -517,6 +517,11 @@ export async function lintChangeFolder(
   const specContent = await fs.readFile(resolvedDoc.path, 'utf8');
   const spec = parseSpecMd(specContent);
 
+  // Check: proposals must declare a change-level verify command
+  if (resolvedDoc.kind === 'proposal' && !spec.verify) {
+    errors.push('proposal.md must declare a verify command in frontmatter');
+  }
+
   // Check: features.writes max entries
   if (spec.features.writes.length > config.limits.maxFeatureWrites) {
     errors.push(

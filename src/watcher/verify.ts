@@ -4,6 +4,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { asRecord } from '../harness/stream.js';
+import { appendHarnessEvent } from '../harness/types.js';
 
 /** Last first-class `text` event on the agent stream, or null when absent. */
 export async function extractFinalTextFromStream(
@@ -113,83 +114,84 @@ export async function findUndeclaredTestChanges(
   return changes.sort();
 }
 
-/** Run the verify command detached with timeout and process-group cleanup. */
+function killTree(child: ReturnType<typeof spawn>, signal: NodeJS.Signals): void {
+  const pid = child.pid ?? Number.NaN;
+  try {
+    process.kill(-pid, signal);
+  } catch {
+    child.kill(signal);
+  }
+}
+
+/** Run the verify command, capture its outcome, and emit `verify_ran`. */
 export async function runVerificationGate(
   projectRoot: string,
   verifyCommand: string,
   verifyTimeoutSeconds: number,
+  context?: { specFolderPath: string; taskNumber: string },
 ): Promise<{ passed: boolean; timedOut: boolean; error?: string }> {
+  const startMs = Date.now();
   const verifyTimeoutMs = verifyTimeoutSeconds * 1000;
   let timedOut = false;
+  let exitCode = 1;
+  let output = '';
 
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const child = spawn(verifyCommand, {
-        cwd: projectRoot,
-        shell: true,
-        detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      let timer: NodeJS.Timeout | null = null;
-      let killTimer: NodeJS.Timeout | null = null;
-      const clearTimers = (): void => {
-        if (timer) clearTimeout(timer);
-        if (killTimer) clearTimeout(killTimer);
-      };
-
-      if (verifyTimeoutMs > 0) {
-        timer = setTimeout(() => {
-          timedOut = true;
-          const childPid = child.pid;
-          if (!childPid) return;
-          try {
-            process.kill(-childPid, 'SIGTERM');
-          } catch {
-            try {
-              child.kill('SIGTERM');
-            } catch {}
-          }
-          killTimer = setTimeout(() => {
-            try {
-              process.kill(-childPid, 'SIGKILL');
-            } catch {
-              try {
-                child.kill('SIGKILL');
-              } catch {}
-            }
-          }, 5000);
-        }, verifyTimeoutMs);
-      }
-
-      let stderr = '';
-      let stdout = '';
-      child.stderr?.on('data', (d) => {
-        stderr += d.toString();
-      });
-      child.stdout?.on('data', (d) => {
-        stdout += d.toString();
-      });
-      child.on('error', (err) => {
-        clearTimers();
-        reject(err);
-      });
-      child.on('close', (code) => {
-        clearTimers();
-        if (timedOut) {
-          reject(new Error(`Verify command timed out after ${verifyTimeoutSeconds}s`));
-        } else if (code !== 0) {
-          reject(new Error(stderr || stdout || `Process exited with code ${code}`));
-        } else {
-          resolve();
-        }
-      });
+  const outcome = await new Promise<{ passed: boolean; error?: string }>((resolve) => {
+    const child = spawn(verifyCommand, {
+      cwd: projectRoot,
+      shell: true,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
-    return { passed: true, timedOut: false };
-  } catch (err) {
-    return {
-      passed: false,
-      timedOut,
-      error: err instanceof Error ? err.message : String(err),
-    };
+    let timer: NodeJS.Timeout | null = null;
+    let killTimer: NodeJS.Timeout | null = null;
+
+    if (verifyTimeoutMs > 0) {
+      timer = setTimeout(() => {
+        timedOut = true;
+        killTree(child, 'SIGTERM');
+        killTimer = setTimeout(() => killTree(child, 'SIGKILL'), 5000);
+      }, verifyTimeoutMs);
+    }
+
+    child.stderr?.on('data', (d) => {
+      output += d.toString();
+    });
+    child.stdout?.on('data', (d) => {
+      output += d.toString();
+    });
+    child.on('error', (err) => {
+      if (timer) clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
+      resolve({ passed: false, error: err.message });
+    });
+    child.on('close', (code) => {
+      if (timer) clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
+      exitCode = timedOut ? 1 : (code ?? 1);
+      if (timedOut) {
+        resolve({
+          passed: false,
+          error: `Verify command timed out after ${verifyTimeoutSeconds}s`,
+        });
+      } else if (code !== 0) {
+        resolve({ passed: false, error: output || `Process exited with code ${code}` });
+      } else {
+        resolve({ passed: true });
+      }
+    });
+  });
+  if (context) {
+    await appendHarnessEvent(context.specFolderPath, context.taskNumber, {
+      type: 'verify_ran',
+      timestamp: new Date().toISOString(),
+      data: {
+        command: verifyCommand,
+        exitCode,
+        duration: Number(((Date.now() - startMs) / 1000).toFixed(2)),
+        ...(output.trim() ? { output } : {}),
+      },
+    });
   }
+  return { passed: outcome.passed, timedOut, ...(outcome.error ? { error: outcome.error } : {}) };
 }

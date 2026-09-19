@@ -50,6 +50,18 @@ The OpenSpec schema template SHALL instruct agents that tasks are executed solel
 - **WHEN** an agent reads schema instructions for tasks or apply actions
 - **THEN** instructions explicitly prohibit direct task execution or `openspec archive`, delegating execution exclusively to `osq watch`
 
-## Delta from Format gate completion: ADR 004, pinned validator diagnostics, schema hardening, and setup coexistence
+### Requirement: Proposal change-level verify command declaration
+<!-- source: src/core/parser.ts, src/core/linter.ts, tests/linter.test.ts -->
+The linter and parser SHALL require that change proposals declare an executable change-level `verify` command in YAML frontmatter.
 
-This change establishes ADR 004, doctor validator pin verification, schema execution authority instructions, setup block coexistence, and canonical migration layout resolution.
+#### Scenario: Linter requires verify command on proposal
+- **WHEN** `proposal.md` lacks a `verify` frontmatter field or provides an empty string
+- **THEN** `osq lint` rejects the change folder with a validation error
+
+#### Scenario: Linter accepts valid verify command
+- **WHEN** `proposal.md` declares a non-empty `verify` string command in frontmatter
+- **THEN** `osq lint` accepts the proposal structure
+
+## Delta from Archive-time verification and tree hashes
+
+This change adds change-level verify linting, done-marker scope hashes, pre-spawn regression detection, regressed status and lifecycle events, and archive-time verification re-runs to `watcher-and-harness` and `spec-lint-and-approve`.

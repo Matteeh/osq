@@ -14,6 +14,7 @@ const SPECS_DIR = 'specs';
 const TASKS_DIR = 'tasks';
 const DONE_DIR = 'done';
 const DEAD_DIR = 'dead';
+const REGRESSED_DIR = 'regressed';
 const EVENTS_DIR = 'events';
 const RUNNING_DIR = 'running';
 const RESULTS_DIR = 'results';
@@ -67,6 +68,11 @@ export function getResultPath(changeFolder: string, task: string): string {
 /** `<changeFolder>/.run/dead/<task>.md`. */
 export function getDeadMarkerPath(changeFolder: string, task: string): string {
   return path.join(changeFolder, RUN_DIR, DEAD_DIR, `${task}.md`);
+}
+
+/** `<changeFolder>/.run/regressed/<target>.md`. */
+export function getRegressedMarkerPath(changeFolder: string, target: string): string {
+  return path.join(changeFolder, RUN_DIR, REGRESSED_DIR, `${target}.md`);
 }
 
 /** `<changeFolder>/.run/events/<task>.jsonl`. */

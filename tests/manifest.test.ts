@@ -16,6 +16,7 @@ function sha256(content: string): string {
 
 const PROPOSAL = `---
 title: Manifest Probe
+verify: node -e "process.exit(0)"
 features:
   reads:
     - watcher-and-harness

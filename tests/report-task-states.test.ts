@@ -138,7 +138,7 @@ describe('report task states', () => {
       await fs.writeFile(path.join(runDir, 'running', '3.pid'), '1234\n', 'utf8');
 
       const specState = await deriveSpecState(tmpDir, spec.folderPath);
-      const expected = { done: 0, dead: 0, running: 0, pending: 0 };
+      const expected = { done: 0, dead: 0, running: 0, pending: 0, regressed: 0 };
       for (const task of specState.tasks) {
         expected[task.status] += 1;
       }

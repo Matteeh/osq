@@ -90,7 +90,7 @@ export function formatStatusLine(task: TaskState): string {
     indicator = '[x]';
   } else if (task.status === 'running') {
     indicator = '[>]';
-  } else if (task.status === 'dead') {
+  } else if (task.status === 'dead' || task.status === 'regressed') {
     indicator = '[!]';
   }
 

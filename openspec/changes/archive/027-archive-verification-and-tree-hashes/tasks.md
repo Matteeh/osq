@@ -1,0 +1,4 @@
+- [x] 1. When task verification executes, verify_ran events record exitCode with duration via unified emission path matching golden fixtures
+- [x] 2. When a task completes, the done marker records scope hash frontmatter with earlier done scopes compared before spawning the next task
+- [x] 3. When scope comparison or verification fails, the engine writes regressed markers, emits regressed events, reporting regressed status
+- [x] 4. When a change is ready to archive, the archiver re-runs task with change verifications while linter enforces change verify command

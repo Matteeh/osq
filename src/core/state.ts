@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as layout from './layout.js';
 import { type SpecData, parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
 
-export type TaskStatus = 'pending' | 'running' | 'done' | 'dead';
+export type TaskStatus = 'pending' | 'running' | 'done' | 'dead' | 'regressed';
 
 export interface TaskState {
   taskNumber: string;
@@ -15,8 +15,14 @@ export interface TaskState {
   resultFile?: string;
 }
 
-export type SpecStatus = 'unapproved' | 'blocked' | 'dead' | 'running' | 'pending' | 'done';
-
+export type SpecStatus =
+  | 'unapproved'
+  | 'blocked'
+  | 'dead'
+  | 'running'
+  | 'pending'
+  | 'done'
+  | 'regressed';
 export interface SpecState {
   id: string;
   folderName: string;
@@ -28,10 +34,7 @@ export interface SpecState {
   nextTask: TaskState | null;
 }
 
-/**
- * Immutable in-memory view of a change folder. Everything {@link deriveSpecState}
- * needs is captured here by {@link readChangeFolder}, so evaluation performs no I/O.
- */
+/** Immutable change-folder view; {@link readChangeFolder} captures everything, so derivation is pure. */
 export interface ChangeFolderSnapshot {
   readonly folderName: string;
   readonly folderPath: string;
@@ -40,11 +43,11 @@ export interface ChangeFolderSnapshot {
   readonly taskFiles: ReadonlyMap<string, string>;
   readonly doneMarkers: ReadonlySet<string>;
   readonly deadMarkers: ReadonlyMap<string, string>;
+  readonly regressedMarkers?: ReadonlyMap<string, string>;
   readonly runningPids: ReadonlyMap<string, string>;
   readonly resultFiles: ReadonlySet<string>;
   readonly unmetDependencies: ReadonlySet<string>;
 }
-
 export function compareNumericPrefix(a: string, b: string): number {
   const matchA = a.match(/^(\d+)/);
   const matchB = b.match(/^(\d+)/);
@@ -57,8 +60,7 @@ export function compareNumericPrefix(a: string, b: string): number {
   }
   return a.localeCompare(b);
 }
-
-/** Pure task evaluation: markers win done > dead > running > pending. */
+/** Pure task evaluation: markers win regressed > done > dead > running > pending. */
 function deriveTaskStateFromSnapshot(
   snapshot: ChangeFolderSnapshot,
   taskFileName: string,
@@ -71,6 +73,9 @@ function deriveTaskStateFromSnapshot(
     title: taskData.title,
     verify: taskData.verify,
   };
+  if (snapshot.regressedMarkers?.has(taskNumber)) {
+    return { ...base, status: 'regressed' };
+  }
   if (snapshot.doneMarkers.has(taskNumber)) {
     return { ...base, status: 'done' };
   }
@@ -89,7 +94,6 @@ function deriveTaskStateFromSnapshot(
   }
   return { ...base, status: 'pending' };
 }
-
 /** Snapshot derivation is pure; `(projectRoot, folderPath)` reads from disk. */
 export function deriveSpecState(snapshot: ChangeFolderSnapshot): SpecState;
 export function deriveSpecState(projectRoot: string, folderPath: string): Promise<SpecState>;
@@ -105,11 +109,15 @@ export function deriveSpecState(
   const tasks = [...snapshotOrRoot.taskFiles.keys()]
     .sort(compareNumericPrefix)
     .map((fileName) => deriveTaskStateFromSnapshot(snapshotOrRoot, fileName));
-
   let status: SpecStatus = 'pending';
   let nextTask: TaskState | null = null;
   if (!snapshotOrRoot.approvedHash) {
     status = 'unapproved';
+  } else if (
+    tasks.some((t) => t.status === 'regressed') ||
+    snapshotOrRoot.regressedMarkers?.has('change')
+  ) {
+    status = 'regressed';
   } else if (tasks.some((t) => t.status === 'dead')) {
     status = 'dead';
   } else if (tasks.some((t) => t.status === 'running')) {
@@ -122,7 +130,6 @@ export function deriveSpecState(
     nextTask = tasks.find((t) => t.status === 'pending') || null;
     status = nextTask ? 'pending' : 'done';
   }
-
   return {
     id,
     folderName,
@@ -134,16 +141,13 @@ export function deriveSpecState(
     nextTask,
   };
 }
-
 async function listDir(dir: string): Promise<string[]> {
   return fs.readdir(dir).catch(() => []);
 }
-
 async function findFolder(parent: string, prefix: string): Promise<string | null> {
   const entries = await listDir(parent);
   return entries.find((entry) => entry === prefix || entry.startsWith(`${prefix}-`)) ?? null;
 }
-
 async function isDependencyDone(changesDir: string, dependency: string): Promise<boolean> {
   const padded = dependency.padStart(3, '0');
   if (await findFolder(path.join(changesDir, 'archive'), padded)) {
@@ -163,7 +167,6 @@ async function isDependencyDone(changesDir: string, dependency: string): Promise
   const done = new Set(await listDir(path.join(dependencyFolder, '.run', 'done')));
   return taskFiles.every((entry) => done.has(entry.replace(/\.md$/, '')));
 }
-
 async function resolveUnmetDependencies(
   projectRoot: string,
   folderPath: string,
@@ -178,7 +181,6 @@ async function resolveUnmetDependencies(
   }
   return unmet;
 }
-
 /** Read a change folder into an in-memory snapshot: the only I/O boundary. */
 export async function readChangeFolder(
   projectRoot: string,
@@ -211,7 +213,6 @@ export async function readChangeFolder(
   const approved = await fs
     .readFile(layout.getApprovedMarkerPath(folderPath), 'utf8')
     .catch(() => null);
-
   return {
     folderName: path.basename(folderPath),
     folderPath,
@@ -220,6 +221,7 @@ export async function readChangeFolder(
     taskFiles,
     doneMarkers: new Set(await listDir(path.join(runDir, 'done'))),
     deadMarkers: await readMarkerMap(path.join(runDir, 'dead'), '.md'),
+    regressedMarkers: await readMarkerMap(path.join(runDir, 'regressed'), '.md'),
     runningPids: await readMarkerMap(path.join(runDir, 'running'), '.pid'),
     resultFiles: new Set(
       (await listDir(path.join(runDir, 'results'))).map((entry) => entry.replace(/\.md$/, '')),
@@ -227,7 +229,6 @@ export async function readChangeFolder(
     unmetDependencies: await resolveUnmetDependencies(projectRoot, folderPath, spec.dependsOn),
   };
 }
-
 /** Async disk-backed task derivation for callers outside the watcher. */
 export async function deriveTaskState(
   specFolderPath: string,

@@ -32,6 +32,7 @@ function baseSnapshot(overrides: Partial<ChangeFolderSnapshot> = {}): ChangeFold
     taskFiles: new Map([['1.md', taskFile('Task one')]]),
     doneMarkers: new Set<string>(),
     deadMarkers: new Map<string, string>(),
+    regressedMarkers: new Map<string, string>(),
     runningPids: new Map<string, string>(),
     resultFiles: new Set<string>(),
     unmetDependencies: new Set<string>(),
@@ -116,5 +117,46 @@ describe('deriveSpecState from in-memory snapshots', () => {
     const state = deriveSpecState(baseSnapshot({ unmetDependencies: new Set(['022']) }));
     assert.equal(state.status, 'blocked');
     assert.equal(state.nextTask, null);
+  });
+
+  it('derives a regressed task and spec from a regressed marker', () => {
+    const state = deriveSpecState(
+      baseSnapshot({
+        regressedMarkers: new Map([['1', '---\nreason: scope_regression\n---\n']]),
+      }),
+    );
+    assert.equal(state.tasks[0].status, 'regressed');
+    assert.equal(state.status, 'regressed');
+    assert.equal(state.nextTask, null);
+  });
+
+  it('prefers a regressed marker over a stale done marker', () => {
+    const state = deriveSpecState(
+      baseSnapshot({
+        doneMarkers: new Set(['1']),
+        regressedMarkers: new Map([['1', '---\nreason: verify_regression\n---\n']]),
+      }),
+    );
+    assert.equal(state.tasks[0].status, 'regressed');
+    assert.equal(state.status, 'regressed');
+  });
+
+  it('derives a regressed spec from a change-level regressed marker', () => {
+    const state = deriveSpecState(
+      baseSnapshot({
+        doneMarkers: new Set(['1']),
+        regressedMarkers: new Map([['change', '---\nreason: verify_regression\n---\n']]),
+      }),
+    );
+    assert.equal(state.status, 'regressed');
+    assert.equal(state.tasks[0].status, 'done');
+  });
+
+  it('ignores regressed markers that match no task or the change', () => {
+    const state = deriveSpecState(
+      baseSnapshot({ regressedMarkers: new Map([['9', '---\nreason: scope_regression\n---\n']]) }),
+    );
+    assert.equal(state.tasks[0].status, 'pending');
+    assert.equal(state.status, 'pending');
   });
 });

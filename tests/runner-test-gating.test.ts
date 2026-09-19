@@ -18,6 +18,7 @@ interface ParsedEvent {
 const PROPOSAL = `---
 title: Test gating
 depends_on: []
+verify: node -e "process.exit(0)"
 features:
   reads: []
   writes: []

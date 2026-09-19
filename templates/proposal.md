@@ -1,6 +1,7 @@
 ---
 title: Change title
 depends_on: []
+verify: node -e "process.exit(0)"
 features:
   reads: []
 ---

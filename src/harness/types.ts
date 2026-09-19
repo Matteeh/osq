@@ -15,7 +15,8 @@ export type HarnessEventType =
   | 'exited'
   | 'measures'
   | 'done'
-  | 'dead';
+  | 'dead'
+  | 'regressed';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -55,11 +56,12 @@ export interface FileChangedEventData {
 }
 
 export interface VerifyRanEventData {
-  exitCode?: number;
+  command: string;
+  exitCode: number;
+  duration: number;
+  /** Legacy field name retained so older emitted lines still type-check. */
   verifyCommand?: string;
   output?: string;
-  /** Legacy field name retained so older emitted lines still type-check. */
-  command?: string;
 }
 
 export interface ResultWrittenEventData {
@@ -104,6 +106,16 @@ export interface DeadEventData {
   readonly reason: string;
 }
 
+/** Payload of a `regressed` event recording a scope or verification regression. */
+export interface RegressedEventData {
+  task?: string;
+  exitCode?: number;
+  duration?: number;
+  command?: string;
+  differingPaths?: string[];
+  reason?: string;
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -117,6 +129,7 @@ export interface OsqEventData {
   measures: MeasuresEventData;
   done: DoneEventData;
   dead: DeadEventData;
+  regressed: RegressedEventData;
 }
 
 /**

@@ -78,6 +78,7 @@ function proposalMd(title: string, humanSteps?: string): string {
     '---',
     `title: ${title}`,
     'depends_on: []',
+    'verify: node -e "process.exit(0)"',
     'features:',
     '  reads: []',
     '---',

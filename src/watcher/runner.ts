@@ -4,7 +4,7 @@ import type { OsqConfig } from '../core/config.js';
 import { hashChangeFolder } from '../core/hasher.js';
 import type { Logger } from '../core/logger.js';
 import { parseTaskMd } from '../core/parser.js';
-import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
+import type { HarnessAdapter } from '../harness/types.js';
 import {
   clearTaskHeartbeatStats,
   computeTaskHeartbeatStats,
@@ -23,6 +23,7 @@ import {
   writeDeadMarker,
   writeDoneMarker,
 } from './outcome.js';
+import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
 import { findUndeclaredTestChanges, runVerificationGate, snapshotTestFiles } from './verify.js';
 
@@ -107,7 +108,6 @@ export async function runTask(
 
   const lockResult = await acquireTaskLock(runDir, taskNumber);
   if (!lockResult.acquired) {
-    // A lock collision writes no marker or dead event, only the outcome line.
     logOutcome(false, 'already_running');
     return { success: false, reason: 'already_running', error: 'Task is already running' };
   }
@@ -135,7 +135,12 @@ export async function runTask(
   }
 
   try {
-    // Fingerprint preexisting tests; a `tests.modify: true` task may edit them.
+    const regression = await guardScopeRegression(projectRoot, specFolderPath, taskNumber);
+    if (regression) {
+      logOutcome(false, 'regressed', regression.error);
+      return regression;
+    }
+
     const testSnapshot = taskData.testsModify ? null : await snapshotTestFiles(projectRoot);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
     await measures.emitStart();
@@ -163,30 +168,25 @@ export async function runTask(
     const ensured = await ensureTaskResult({ specFolderPath, taskNumber, logger, logOutcome });
     if (!ensured.ok) return finish(ensured.result);
 
-    await appendHarnessEvent(specFolderPath, taskNumber, {
-      type: 'verify_ran',
-      timestamp: new Date().toISOString(),
-      data: { command: taskData.verify },
-    });
     const verifyResult = await runVerificationGate(
       projectRoot,
       taskData.verify,
       config.timeouts.verifyTimeoutSeconds ?? 600,
+      { specFolderPath, taskNumber },
     );
     if (!verifyResult.passed) {
       const msg = verifyResult.error ?? 'Verify command failed';
       const timeoutLine = verifyResult.timedOut ? 'timed_out: true\n' : '';
       const marker = `---\nreason: verify_red\n${timeoutLine}command: "${taskData.verify}"\n---\nWatcher independent verify ${verifyResult.timedOut ? 'timed out' : 'failed'}:\n${msg}\n`;
-      const error = `Verify failed: ${msg}`;
       const extra = verifyResult.timedOut ? 'timed_out: true' : undefined;
-      return fail('verify_red', marker, error, extra);
+      return fail('verify_red', marker, `Verify failed: ${msg}`, extra);
     }
 
     try {
       await fs.unlink(path.join(runDir, 'dead', `${taskNumber}.md`));
     } catch {}
     await measures.emitEnd();
-    await writeDoneMarker(runDir, taskNumber);
+    await writeDoneMarker(runDir, taskNumber, await buildDoneMetadata(projectRoot, taskData.scope));
     await recordDoneEvent(specFolderPath, taskNumber);
     logOutcome(true);
     await tickTaskCheckbox(specFolderPath, taskNumber);

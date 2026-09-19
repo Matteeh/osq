@@ -38,6 +38,7 @@ export interface SpecData {
   readonly contractTablesCount: number;
   readonly nonGoals: string;
   readonly delta: string;
+  readonly verify: string;
   readonly raw: string;
 }
 
@@ -77,6 +78,7 @@ export function parseSpecMd(content: string): SpecData {
   const contract = extractSection(body, 'Contract');
   const nonGoals = extractSection(body, 'Non-goals');
   const delta = extractSection(body, 'Delta');
+  const verify = typeof data.verify === 'string' ? data.verify.trim() : '';
 
   return {
     title,
@@ -87,6 +89,7 @@ export function parseSpecMd(content: string): SpecData {
     contractTablesCount: countMarkdownTables(contract),
     nonGoals,
     delta,
+    verify,
     raw: content,
   };
 }

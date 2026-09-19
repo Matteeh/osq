@@ -411,6 +411,32 @@ skills: []
     assert.ok(result.errors.some((e) => e.includes('proposal.md')));
   });
 
+  it('rejects a proposal.md lacking a verify command', async () => {
+    const specPath = path.join(specFolder, 'spec.md');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const content = (await fs.readFile(specPath, 'utf8')).replace(/^verify:.*$/m, '');
+    await fs.rm(specPath);
+    await fs.writeFile(proposalPath, content, 'utf8');
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((e) => e.includes('verify command in frontmatter')));
+  });
+
+  it('accepts a proposal.md declaring a verify command', async () => {
+    const specPath = path.join(specFolder, 'spec.md');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const content = await fs.readFile(specPath, 'utf8');
+    await fs.rm(specPath);
+    await fs.writeFile(proposalPath, content, 'utf8');
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true);
+    assert.equal(result.errors.length, 0);
+  });
+
   it('rejects a non-boolean nested tests.modify declaration', async () => {
     await writeTaskFile(
       specFolder,

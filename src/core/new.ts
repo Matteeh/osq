@@ -9,6 +9,7 @@ export const TEMPLATES_ROOT = fileURLToPath(new URL('../../templates', import.me
 const FALLBACK_PROPOSAL_MD = `---
 title: Change title
 depends_on: []
+verify: node -e "process.exit(0)"
 features:
   reads: []
 ---
