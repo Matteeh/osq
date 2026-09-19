@@ -182,9 +182,6 @@ export async function runTask(
       return fail('verify_red', marker, `Verify failed: ${msg}`, extra);
     }
 
-    try {
-      await fs.unlink(path.join(runDir, 'dead', `${taskNumber}.md`));
-    } catch {}
     await measures.emitEnd();
     await writeDoneMarker(runDir, taskNumber, await buildDoneMetadata(projectRoot, taskData.scope));
     await recordDoneEvent(specFolderPath, taskNumber);

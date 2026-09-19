@@ -58,6 +58,7 @@ reader succeeds.
 ### Before you write a task
 
 - Grep for what already exists; verify every version, flag, or API before use.
+- Write files with the file tool, never through a shell echo.
 
 ### Tasks
 

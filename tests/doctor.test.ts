@@ -40,6 +40,12 @@ async function writeArchive(
   }
 }
 
+async function writeActiveChange(root: string, name: string): Promise<string> {
+  const changeDir = path.join(root, 'openspec', 'changes', name);
+  await fs.mkdir(path.join(changeDir, '.run', 'done'), { recursive: true });
+  return changeDir;
+}
+
 async function writeLock(root: string, change: string, task: string, pid: number): Promise<void> {
   const lockDir = path.join(root, 'openspec', 'changes', change, '.run', 'running');
   await fs.mkdir(lockDir, { recursive: true });
@@ -78,7 +84,7 @@ describe('runDoctorChecks', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('passes all six checks for a healthy repository', async () => {
+  it('passes all checks for a healthy repository', async () => {
     await writeHealthyRepo(tmpDir);
 
     const report = await runDoctorChecks(tmpDir, {
@@ -88,7 +94,7 @@ describe('runDoctorChecks', () => {
     assert.equal(report.ok, true);
     assert.deepEqual(
       report.checks.map((check) => check.name),
-      ['config', 'harness', 'managed-blocks', 'locks', 'archives', 'validator'],
+      ['config', 'harness', 'managed-blocks', 'locks', 'archives', 'done-markers', 'validator'],
     );
     assert.ok(
       report.checks.every((check) => check.ok),
@@ -264,6 +270,74 @@ describe('runDoctorChecks', () => {
 
     assert.equal(findCheck(report, 'archives')?.ok, true);
   });
+
+  it('fails the done-markers check when a marker lacks valid frontmatter', async () => {
+    await writeHealthyRepo(tmpDir);
+    const changeDir = await writeActiveChange(tmpDir, '007-hand-placed');
+    await fs.writeFile(path.join(changeDir, '.run', 'done', '1'), 'hand written\n', 'utf8');
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
+
+    const check = findCheck(report, 'done-markers');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /unverified done marker placed by hand/);
+    assert.match(check?.message ?? '', /007-hand-placed/);
+    assert.equal(report.ok, false);
+  });
+
+  it('passes the done-markers check for automated and manual markers', async () => {
+    await writeHealthyRepo(tmpDir);
+    const changeDir = await writeActiveChange(tmpDir, '007-valid-markers');
+    await fs.writeFile(
+      path.join(changeDir, '.run', 'done', '1'),
+      '---\nscope_hash: "sha256:abc"\nexit_code: 0\n---\n2026-01-01T00:00:00.000Z\n',
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(changeDir, '.run', 'done', '2'),
+      '---\nmanual: true\nreason: "peer review"\n---\n2026-01-01T00:00:00.000Z\n',
+      'utf8',
+    );
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
+
+    const check = findCheck(report, 'done-markers');
+    assert.equal(check?.ok, true);
+    assert.equal(report.ok, true);
+  });
+
+  it('fails the done-markers check when a manual marker has no reason', async () => {
+    await writeHealthyRepo(tmpDir);
+    const changeDir = await writeActiveChange(tmpDir, '007-no-reason');
+    await fs.writeFile(
+      path.join(changeDir, '.run', 'done', '1'),
+      '---\nmanual: true\n---\n2026-01-01T00:00:00.000Z\n',
+      'utf8',
+    );
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
+
+    assert.equal(findCheck(report, 'done-markers')?.ok, false);
+  });
+
+  it('ignores archived done markers when checking active changes', async () => {
+    await writeHealthyRepo(tmpDir);
+    const archived = path.join(tmpDir, 'openspec', 'changes', 'archive', '001-old');
+    await fs.mkdir(path.join(archived, '.run', 'done'), { recursive: true });
+    await fs.writeFile(path.join(archived, '.run', 'done', '1'), 'hand written\n', 'utf8');
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
+
+    assert.equal(findCheck(report, 'done-markers')?.ok, true);
+  });
 });
 
 describe('doctorCommand', () => {
@@ -289,8 +363,8 @@ describe('doctorCommand', () => {
       exit: (code) => codes.push(code),
     });
 
-    assert.equal(report.checks.length, 6);
-    assert.equal(lines.length, 6);
+    assert.equal(report.checks.length, 7);
+    assert.equal(lines.length, 7);
     assert.ok(lines.every((line) => line.startsWith('[ok]')));
     assert.equal(codes.length, 0);
 

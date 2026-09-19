@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:0a5842900c4d8845b271c6ca2929de935a7ff43d95e220e451fbbcb25372ed32"
+build_stamp: "9c3b03b"
+exit_code: 0
+scope_files: {"PLANNER.md":"sha256:ce8e34bb4415523d72a604aa2e28bcb651c4a00aa4df17cc79d2904eea1bbc2c","src/core/init.ts":"sha256:274d2a369a3b690488208f9981e71fb9eb3075a598a91a823ff3488fe83c2d7f","src/core/linter.ts":"sha256:5229c1521eb169a492ad68d5a62c0475ec903e93eb40e62736724980841477b7","tests/init-planner.test.ts":"sha256:08615b23778e17f2bbdf05e200b1b8618e39c4dbd20d596cee040e40759b1699","tests/mangled-lint.test.ts":"sha256:f2409b6ae473a7e90f5fb3498bae139f42ab65b146f30932c2da9fc1d1cb32c0"}
+---
+2026-09-19T10:40:41.157Z

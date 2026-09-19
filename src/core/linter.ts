@@ -29,6 +29,73 @@ export interface LintLogger {
   warn(msg: string): void;
 }
 
+/**
+ * Directories and files excluded from change-folder artifact scanning. Mirrors
+ * the hasher's ignore set so linting and hashing agree on the folder's authored
+ * content.
+ */
+const CHANGE_FOLDER_IGNORES = new Set(['.run', '.git', '.DS_Store']);
+
+/**
+ * ASCII control characters prohibited in authored change-folder files. Newline
+ * (`\n`, 0x0A) and tab (`\t`, 0x09) are permitted as structural Markdown
+ * whitespace; every other control character indicates a mangled write.
+ */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional control character detector
+const PROHIBITED_CONTROL_REGEX = /[\x00-\x08\x0B-\x1F\x7F]/;
+
+/** Acceptance checkbox pattern; two or more on one line indicates fused lines. */
+const ACCEPTANCE_CHECKBOX_REGEX = /[-*]\s*\[[ xX]\]/g;
+
+/**
+ * Recursively list repository-folders' files relative to `baseDir`, skipping
+ * `.run`, `.git`, and `.DS_Store` so generated state is never linted as
+ * authored content.
+ */
+async function collectArtifactFiles(dir: string, baseDir: string): Promise<string[]> {
+  let entries: Dirent[];
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const files: string[] = [];
+  for (const entry of entries) {
+    if (CHANGE_FOLDER_IGNORES.has(entry.name)) {
+      continue;
+    }
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectArtifactFiles(fullPath, baseDir)));
+    } else if (entry.isFile()) {
+      files.push(path.relative(baseDir, fullPath).split(path.sep).join('/'));
+    }
+  }
+  return files;
+}
+
+/** Report the first prohibited control character found in `content`. */
+function scanControlCharacters(relPath: string, content: string, errors: string[]): void {
+  const match = PROHIBITED_CONTROL_REGEX.exec(content);
+  if (!match) {
+    return;
+  }
+  const code = match[0].charCodeAt(0).toString(16).toUpperCase().padStart(2, '0');
+  errors.push(`File ${relPath} contains prohibited control character (0x${code})`);
+}
+
+/** Report any task line carrying two or more acceptance checkbox items. */
+function scanFusedAcceptance(taskFile: string, content: string, errors: string[]): void {
+  const lines = content.split('\n');
+  lines.forEach((line, index) => {
+    const count = line.match(ACCEPTANCE_CHECKBOX_REGEX)?.length ?? 0;
+    if (count > 1) {
+      errors.push(`Task in ${taskFile} contains fused acceptance lines on line ${index + 1}`);
+    }
+  });
+}
+
 export interface LintResult {
   readonly valid: boolean;
   readonly errors: string[];
@@ -141,7 +208,7 @@ function levelOf(value: unknown): 'error' | 'warning' {
       const candidate = record[key];
       if (typeof candidate === 'string') {
         const lowered = candidate.toLowerCase();
-        if (lowered.includes('warn')) {
+        if (lowered.includes('warn') || lowered.includes('info')) {
           return 'warning';
         }
         if (lowered.includes('error') || lowered.includes('fail')) {
@@ -530,6 +597,12 @@ export async function lintChangeFolder(
   const errors: string[] = [];
   const warnings: string[] = [];
 
+  // Check: no authored change-folder file contains prohibited control characters
+  for (const relPath of await collectArtifactFiles(folderPath, folderPath)) {
+    const content = await fs.readFile(path.join(folderPath, relPath), 'utf8');
+    scanControlCharacters(relPath, content, errors);
+  }
+
   const resolvedDoc = await resolveChangeDoc(folderPath);
   if (!resolvedDoc) {
     errors.push('proposal.md (or legacy spec.md) not found in change folder');
@@ -592,6 +665,9 @@ export async function lintChangeFolder(
     const taskContent = await fs.readFile(taskPath, 'utf8');
     const task = parseTaskMd(taskContent);
 
+    // Check: acceptance items must each occupy their own line
+    scanFusedAcceptance(taskFile, taskContent, errors);
+
     // Check: tests.modify, when declared, must be a boolean
     const testsModify = readTestsModifyDeclaration(taskContent);
     if (testsModify.present && !testsModify.valid) {
@@ -608,11 +684,6 @@ export async function lintChangeFolder(
           `Task in ${taskFile} scope touches existing test files (${touched.join(', ')}) without tests.modify: true`,
         );
       }
-    }
-
-    // Warning: task title contains " and "
-    if (task.title.toLowerCase().includes(' and ')) {
-      warnings.push(`Task in ${taskFile} title contains " and ": "${task.title}"`);
     }
 
     // Check: verify command empty or chains commands

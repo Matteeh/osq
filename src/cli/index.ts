@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { approveCommand } from './approve.js';
 import { doctorCommand } from './doctor.js';
+import { doneCommand } from './done.js';
 import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
@@ -55,6 +56,14 @@ export function createProgram(version?: string): Command {
     .description('lint, hash, and approve change folders')
     .action(async (ids: string[]) => {
       await approveCommand(ids);
+    });
+
+  program
+    .command('done <id> <task>')
+    .description('mark a task done manually with required justification')
+    .requiredOption('--manual <reason>', 'reason for manual completion')
+    .action(async (id: string, task: string, options: { manual: string }) => {
+      await doneCommand(id, task, options);
     });
 
   program

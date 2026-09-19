@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:af01bf9e2dffdb6d57db1d756656c536a84445153dba1d00be535c33d7e96cc0"
+build_stamp: "9c3b03b"
+exit_code: 0
+scope_files: {"src/core/approve.ts":"sha256:60627f1f66605f5e281990f4712c55b88cbaafe7f5215c0885485294308c8457","src/watcher/runner.ts":"sha256:3eccbc8fcd5d47ce9095b995bfb09a095bd57a89018bd88a436161429327e1cb","tests/dead-marker-retention.test.ts":"sha256:ef21fe7a235c27c416fec6bf2b1725dcbc36779183168402077cf89482f9fc24"}
+---
+2026-09-19T10:42:12.170Z

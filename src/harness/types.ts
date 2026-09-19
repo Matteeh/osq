@@ -15,6 +15,7 @@ export type HarnessEventType =
   | 'exited'
   | 'measures'
   | 'done'
+  | 'done_manual'
   | 'dead'
   | 'regressed';
 
@@ -101,6 +102,11 @@ export interface DoneEventData {
   readonly task: string;
 }
 
+export interface DoneManualEventData {
+  readonly task: string;
+  readonly reason: string;
+}
+
 export interface DeadEventData {
   readonly task: string;
   readonly reason: string;
@@ -128,6 +134,7 @@ export interface OsqEventData {
   exited: ExitedEventData;
   measures: MeasuresEventData;
   done: DoneEventData;
+  done_manual: DoneManualEventData;
   dead: DeadEventData;
   regressed: RegressedEventData;
 }

@@ -14,6 +14,12 @@ export interface SpecMetrics {
 export interface TaskMetrics {
   readonly total: number;
   readonly done: number;
+  /**
+   * Done tasks split by completion path. Present whenever at least one manual
+   * completion exists so reports with manual work expose distinct counts.
+   */
+  readonly verified?: number;
+  readonly manual?: number;
   readonly dead: number;
   readonly running: number;
   readonly pending: number;
@@ -103,6 +109,7 @@ function extractFilePath(data: Record<string, unknown>): string | null {
 interface ArchivedTerminalEvent {
   status: 'done' | 'dead';
   reason?: string;
+  manual?: boolean;
 }
 
 async function readArchivedTerminalEvents(
@@ -130,19 +137,33 @@ async function readArchivedTerminalEvents(
       if (!trimmed) continue;
       try {
         const event = JSON.parse(trimmed);
-        if (event.type !== 'done' && event.type !== 'dead') continue;
+        if (event.type !== 'done' && event.type !== 'dead' && event.type !== 'done_manual') {
+          continue;
+        }
         const task =
           typeof event.data?.task === 'string' && event.data.task ? event.data.task : fallbackTask;
         const reason =
           typeof event.data?.reason === 'string' && event.data.reason.trim()
             ? event.data.reason
             : undefined;
-        terminalEvents.set(task, { status: event.type, reason });
+        const manual = event.type === 'done_manual' || event.data?.manual === true;
+        terminalEvents.set(task, {
+          status: event.type === 'dead' ? 'dead' : 'done',
+          reason,
+          manual,
+        });
       } catch {}
     }
   }
 
   return terminalEvents;
+}
+
+/** A done marker declares manual completion when its frontmatter has `manual: true`. */
+async function doneMarkerIsManual(markerPath: string): Promise<boolean> {
+  const content = await fs.readFile(markerPath, 'utf8').catch(() => null);
+  if (content === null) return false;
+  return parseFrontmatter(content).data.manual === true;
 }
 
 export async function getMetricsReport(
@@ -216,6 +237,8 @@ export async function getMetricsReport(
 
   let totalTasks = 0;
   let doneTasks = 0;
+  let verifiedTasks = 0;
+  let manualTasks = 0;
   let deadTasks = 0;
   let runningTasks = 0;
   let pendingTasks = 0;
@@ -263,6 +286,8 @@ export async function getMetricsReport(
         if (terminal) {
           if (terminal.status === 'done') {
             doneTasks++;
+            if (terminal.manual) manualTasks++;
+            else verifiedTasks++;
           } else {
             deadTasks++;
           }
@@ -276,6 +301,8 @@ export async function getMetricsReport(
           .catch(() => false);
         if (isDone) {
           doneTasks++;
+          if (await doneMarkerIsManual(donePath)) manualTasks++;
+          else verifiedTasks++;
           continue;
         }
 
@@ -287,14 +314,21 @@ export async function getMetricsReport(
         }
 
         doneTasks++;
+        verifiedTasks++;
       }
     } else {
       const specState = await deriveSpecState(projectRoot, folderPath);
       for (const task of specState.tasks) {
         switch (task.status) {
-          case 'done':
+          case 'done': {
             doneTasks++;
+            if (await doneMarkerIsManual(path.join(runDir, 'done', task.taskNumber))) {
+              manualTasks++;
+            } else {
+              verifiedTasks++;
+            }
             break;
+          }
           case 'dead':
             deadTasks++;
             break;
@@ -526,6 +560,7 @@ export async function getMetricsReport(
       dead: deadTasks,
       running: runningTasks,
       pending: pendingTasks,
+      ...(manualTasks > 0 ? { verified: verifiedTasks, manual: manualTasks } : {}),
     },
     completionRate,
     failureBreakdown,
@@ -578,6 +613,8 @@ export function formatMetricsReport(report: MetricsReport): string {
   lines.push('Tasks & Completion:');
   lines.push(`  Total tasks: ${report.tasks.total}`);
   lines.push(`  Done: ${report.tasks.done}`);
+  lines.push(`  Verified done: ${report.tasks.verified ?? 0}`);
+  lines.push(`  Manual done: ${report.tasks.manual ?? 0}`);
   lines.push(`  Dead: ${report.tasks.dead}`);
   lines.push(`  Running: ${report.tasks.running}`);
   lines.push(`  Pending: ${report.tasks.pending}`);

@@ -349,7 +349,7 @@ ${items}`;
     assert.ok(result.errors.some((e) => e.includes('acceptance lines')));
   });
 
-  it('warns when task title contains " and "', async () => {
+  it('permits task title containing " and " without warning', async () => {
     const taskPath = path.join(specFolder, 'tasks', '1.md');
     const content = `---
 title: When order is cancelled and refund issued
@@ -364,7 +364,10 @@ skills: []
 
     const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
     assert.equal(result.valid, true);
-    assert.ok(result.warnings.some((w) => w.includes('contains " and "')));
+    assert.equal(
+      result.warnings.some((w) => w.includes('contains " and "')),
+      false,
+    );
   });
 
   it('resolves proposal.md as the change document when spec.md is absent', async () => {

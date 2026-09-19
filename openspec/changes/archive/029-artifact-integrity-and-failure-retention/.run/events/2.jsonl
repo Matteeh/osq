@@ -1,0 +1,82 @@
+{"type":"measures","timestamp":"2026-09-19T10:40:41.388Z","data":{"phase":"start","scopeFiles":2,"scopeLines":283,"repoFiles":405,"repoLines":39465,"importFanIn":3,"proposalWords":943,"taskWords":272,"deltaRequirements":10,"deltaScenarios":15}}
+{"type":"started","timestamp":"2026-09-19T10:40:41.391Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.1.0","pid":1730640,"timeoutSeconds":1800,"version":"0.1.0","commit":"9c3b03b"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:44.614Z","data":{"tool":"read","summary":"src/core/approve.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:44.717Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:44.796Z","data":{"tool":"read","summary":"src/core/layout.ts"}}
+{"type":"text","timestamp":"2026-09-19T10:40:44.829Z","data":{"text":"I'll start by exploring the in-scope files and related infrastructure."}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:44.897Z","data":{"promptTokens":16592,"candidateTokens":149,"totalTokens":23083,"cachedTokens":6272,"reasoningTokens":70,"cost":0.002639016}}
+{"type":"tool","timestamp":"2026-09-19T10:40:46.237Z","data":{"tool":"read","summary":"tests/approve.test.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:46.347Z","data":{"tool":"glob","summary":"tests/*dead*"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:46.389Z","data":{"tool":"glob","summary":"tests/*.test.ts"}}
+{"type":"text","timestamp":"2026-09-19T10:40:46.404Z","data":{"text":"Now let me look at existing tests for patterns and fixtures."}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:46.452Z","data":{"promptTokens":4315,"candidateTokens":125,"totalTokens":27503,"cachedTokens":23040,"reasoningTokens":23,"cost":0.00080517}}
+{"type":"tool","timestamp":"2026-09-19T10:40:48.071Z","data":{"tool":"read","summary":"tests/runner-done-dead-events.test.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:48.156Z","data":{"tool":"read","summary":"tests/runner.test.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:48.506Z","data":{"tool":"bash","summary":"ls -la openspec/changes/029-artif"}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:48.556Z","data":{"promptTokens":2893,"candidateTokens":202,"totalTokens":30525,"cachedTokens":27392,"reasoningTokens":38,"cost":0.000660126}}
+{"type":"tool","timestamp":"2026-09-19T10:40:50.042Z","data":{"tool":"read","summary":"openspec/changes/029-artifact-integrity-and-failure-retention/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:50.141Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:50.247Z","data":{"tool":"read","summary":"src/watcher/outcome.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:50.313Z","data":{"promptTokens":5465,"candidateTokens":156,"totalTokens":36117,"cachedTokens":30464,"reasoningTokens":32,"cost":0.001023942}}
+{"type":"tool","timestamp":"2026-09-19T10:40:55.839Z","data":{"tool":"grep","summary":"{\"pattern\":\"dead.*1\\\\.md|unlink.*dead|dead.*unlink\",\"include"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:56.011Z","data":{"tool":"bash","summary":"cd . && rg -n \"dead\" tests/golden-e"}}
+{"type":"text","timestamp":"2026-09-19T10:40:56.020Z","data":{"text":"Let me check for tests that depend on the runner deleting dead markers."}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:56.063Z","data":{"promptTokens":3134,"candidateTokens":151,"totalTokens":40436,"cachedTokens":36096,"reasoningTokens":1055,"cost":0.001301988}}
+{"type":"tool","timestamp":"2026-09-19T10:40:57.716Z","data":{"tool":"read","summary":"tests/runner-test-gating.test.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:40:57.885Z","data":{"tool":"read","summary":"tests/runner-already-running.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:40:57.969Z","data":{"promptTokens":1275,"candidateTokens":164,"totalTokens":41808,"cachedTokens":40320,"reasoningTokens":49,"cost":0.00044001}}
+{"type":"tool","timestamp":"2026-09-19T10:41:03.759Z","data":{"tool":"read","summary":"src/core/hasher.ts"}}
+{"type":"tool","timestamp":"2026-09-19T10:41:03.856Z","data":{"tool":"read","summary":"src/harness/mock.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:03.923Z","data":{"promptTokens":1864,"candidateTokens":95,"totalTokens":44844,"cachedTokens":41728,"reasoningTokens":1157,"cost":0.001155984}}
+{"type":"tool","timestamp":"2026-09-19T10:41:15.169Z","data":{"tool":"write","summary":"tests/dead-marker-retention.test.ts"}}
+{"type":"text","timestamp":"2026-09-19T10:41:15.189Z","data":{"text":"Now I have enough context. Let me write the test file first (TDD)."}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:15.247Z","data":{"promptTokens":1476,"candidateTokens":1433,"totalTokens":49821,"cachedTokens":44800,"reasoningTokens":2112,"cost":0.0024828}}
+{"type":"tool","timestamp":"2026-09-19T10:41:17.363Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:17.425Z","data":{"promptTokens":173,"candidateTokens":89,"totalTokens":49940,"cachedTokens":49664,"reasoningTokens":14,"cost":0.000236742}}
+{"type":"tool","timestamp":"2026-09-19T10:41:21.064Z","data":{"tool":"edit","summary":"src/core/approve.ts"}}
+{"type":"text","timestamp":"2026-09-19T10:41:21.076Z","data":{"text":"Tests fail as expected. Now let me implement in `approve.ts`."}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:21.120Z","data":{"promptTokens":418,"candidateTokens":409,"totalTokens":51137,"cachedTokens":49920,"reasoningTokens":390,"cost":0.00069186}}
+{"type":"tool","timestamp":"2026-09-19T10:41:22.737Z","data":{"tool":"edit","summary":"src/core/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:22.788Z","data":{"promptTokens":208,"candidateTokens":180,"totalTokens":51332,"cachedTokens":50944,"reasoningTokens":0,"cost":0.000292032}}
+{"type":"tool","timestamp":"2026-09-19T10:41:24.834Z","data":{"tool":"edit","summary":"src/watcher/runner.ts"}}
+{"type":"text","timestamp":"2026-09-19T10:41:24.850Z","data":{"text":"Now remove the dead marker deletion from `runner.ts`."}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:24.892Z","data":{"promptTokens":147,"candidateTokens":187,"totalTokens":51534,"cachedTokens":51200,"reasoningTokens":0,"cost":0.00028785}}
+{"type":"tool","timestamp":"2026-09-19T10:41:26.981Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:27.025Z","data":{"promptTokens":221,"candidateTokens":89,"totalTokens":51643,"cachedTokens":51328,"reasoningTokens":5,"cost":0.000243534}}
+{"type":"text","timestamp":"2026-09-19T10:41:29.291Z","data":{"text":"All pass. Now let me run typecheck and related test suites to check for regressions."}}
+{"type":"tool","timestamp":"2026-09-19T10:41:31.006Z","data":{"tool":"bash","summary":"cd . && pnpm tsc --noEmit 2>&1 | ta"}}
+{"type":"tool","timestamp":"2026-09-19T10:41:31.349Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:31.406Z","data":{"promptTokens":231,"candidateTokens":215,"totalTokens":52118,"cachedTokens":51584,"reasoningTokens":88,"cost":0.000371202}}
+{"type":"tool","timestamp":"2026-09-19T10:41:34.053Z","data":{"tool":"read","summary":"tests/golden-events.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:34.121Z","data":{"promptTokens":1521,"candidateTokens":87,"totalTokens":54000,"cachedTokens":52096,"reasoningTokens":296,"cost":0.000614238}}
+{"type":"tool","timestamp":"2026-09-19T10:41:36.612Z","data":{"tool":"bash","summary":"cd . && git status --short && echo "}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:36.653Z","data":{"promptTokens":1115,"candidateTokens":140,"totalTokens":55282,"cachedTokens":53888,"reasoningTokens":139,"cost":0.000496314}}
+{"type":"text","timestamp":"2026-09-19T10:41:41.197Z","data":{"text":"The golden-events failure is pre-existing (persists with my changes stashed), caused by task 1's `PLANNER.md` line addition. Let me confirm the other related tests pass and get the full summary."}}
+{"type":"tool","timestamp":"2026-09-19T10:41:43.082Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:43.122Z","data":{"promptTokens":1121,"candidateTokens":189,"totalTokens":57194,"cachedTokens":55168,"reasoningTokens":716,"cost":0.000876654}}
+{"type":"tool","timestamp":"2026-09-19T10:41:45.655Z","data":{"tool":"bash","summary":"cd . && git diff --stat && echo \"--"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:45.702Z","data":{"promptTokens":252,"candidateTokens":100,"totalTokens":57671,"cachedTokens":57088,"reasoningTokens":231,"cost":0.000407664}}
+{"type":"tool","timestamp":"2026-09-19T10:41:47.449Z","data":{"tool":"bash","summary":"cd . && git diff src/core/approve.t"}}
+{"type":"tool","timestamp":"2026-09-19T10:41:47.543Z","data":{"tool":"bash","summary":"cd . && cat package.json | grep -A1"}}
+{"type":"text","timestamp":"2026-09-19T10:41:47.546Z","data":{"text":"Let me review the final diff and run the linter on changed files."}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:47.593Z","data":{"promptTokens":307,"candidateTokens":124,"totalTokens":58132,"cachedTokens":57600,"reasoningTokens":101,"cost":0.00035385}}
+{"type":"tool","timestamp":"2026-09-19T10:41:49.334Z","data":{"tool":"bash","summary":"cd . && pnpm exec biome check src/c"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:49.387Z","data":{"promptTokens":952,"candidateTokens":100,"totalTokens":59243,"cachedTokens":58112,"reasoningTokens":79,"cost":0.000424536}}
+{"type":"tool","timestamp":"2026-09-19T10:41:51.266Z","data":{"tool":"bash","summary":"cd . && wc -l src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-19T10:41:51.314Z","data":{"promptTokens":260,"candidateTokens":73,"totalTokens":59398,"cachedTokens":59008,"reasoningTokens":57,"cost":0.000294024}}
+{"type":"text","timestamp":"2026-09-19T10:41:53.249Z","data":{"text":"Let me run the full test suite to catch any other regressions from my change."}}
+{"type":"tool","timestamp":"2026-09-19T10:42:00.927Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:42:00.982Z","data":{"promptTokens":181,"candidateTokens":121,"totalTokens":59703,"cachedTokens":59264,"reasoningTokens":137,"cost":0.000359742}}
+{"type":"tool","timestamp":"2026-09-19T10:42:06.674Z","data":{"tool":"write","summary":"openspec/changes/029-artifact-integrity-and-failure-retention/.run/results/2.md"}}
+{"type":"text","timestamp":"2026-09-19T10:42:06.687Z","data":{"text":"All acceptance lines are met; only the two pre-existing golden-events failures remain (caused by task 1's `PLANNER.md` line). Let me write the result file."}}
+{"type":"tokens","timestamp":"2026-09-19T10:42:06.727Z","data":{"promptTokens":140,"candidateTokens":912,"totalTokens":60987,"cachedTokens":59648,"reasoningTokens":287,"cost":0.000919344}}
+{"type":"tool","timestamp":"2026-09-19T10:42:09.263Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-19T10:42:09.315Z","data":{"promptTokens":203,"candidateTokens":101,"totalTokens":61145,"cachedTokens":60800,"reasoningTokens":41,"cost":0.00029805}}
+{"type":"text","timestamp":"2026-09-19T10:42:11.325Z","data":{"text":"Task 2 complete.\n\n## Summary\n\n**Changed** (strictly within scope):\n- `src/core/approve.ts` — added `retainDeadMarkers(runDir)`, called before writing `.run/approved`. It renames each active `dead/<n>.md` to `dead/<n>.<attempt>.md`, where attempt is `1` if none exist, else `max(existing) + 1`.\n- `src/watcher/runner.ts` — removed the success-path `fs.unlink` of `dead/<n>.md`; the runner no longer deletes markers under `.run/`.\n- `tests/dead-marker-retention.test.ts` — new tests covering rename to `.1` then `.2`, coexistence of `dead/1.1.md` with `done/1`, and marker survival on a successful run without re-approval.\n\n**Verification**: task verify passes (3/3). `tsc --noEmit` clean, biome clean, related suites 33/33. Full suite is 648/650; the 2 failures are pre-existing golden-events fixture staleness caused by task 1's `PLANNER.md` line addition (confirmed by stashing my changes), which I documented as drift/next step since the fixtures are outside scope.\n\nResult written to `.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-09-19T10:42:11.377Z","data":{"promptTokens":247,"candidateTokens":287,"totalTokens":61462,"cachedTokens":60928,"reasoningTokens":0,"cost":0.000392034}}
+{"type":"exited","timestamp":"2026-09-19T10:42:11.536Z","data":{"exitCode":0,"pid":1730640,"timedOut":false,"elapsedSeconds":90.1}}
+{"type":"verify_ran","timestamp":"2026-09-19T10:42:12.166Z","data":{"command":"node --import tsx --test tests/dead-marker-retention.test.ts","exitCode":0,"duration":0.63,"output":"▶ Dead marker retention across re-approval\n  ✔ renames dead/1.md to dead/1.1.md then dead/1.2.md across re-approvals (227.52288ms)\n  ✔ retains dead/1.1.md alongside done/1 after a successful rerun (162.021384ms)\n  ✔ preserves an active dead marker when a task succeeds without re-approval (89.602783ms)\n✔ Dead marker retention across re-approval (480.177575ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 605.54467\n"}}
+{"type":"measures","timestamp":"2026-09-19T10:42:12.168Z","data":{"phase":"end","scopeFiles":2,"scopeLines":283,"repoFiles":405,"repoLines":39465,"importFanIn":3,"proposalWords":943,"taskWords":272,"deltaRequirements":10,"deltaScenarios":15,"changedFiles":3,"changedLines":161,"scopeHashes":{"src/core/approve.ts":{"before":"sha256:fd48d45483fedddd126e5f3c8537eabd533beef35b8a7c47937dd31909caeb38","after":"sha256:60627f1f66605f5e281990f4712c55b88cbaafe7f5215c0885485294308c8457"},"src/watcher/runner.ts":{"before":"sha256:fc1786d0ce0da060b1b58010b3b21f9a41de1ad0a19d8a6046a5ada5ea35e765","after":"sha256:3eccbc8fcd5d47ce9095b995bfb09a095bd57a89018bd88a436161429327e1cb"},"tests/dead-marker-retention.test.ts":{"before":null,"after":"sha256:ef21fe7a235c27c416fec6bf2b1725dcbc36779183168402077cf89482f9fc24"}}}}
+{"type":"done","timestamp":"2026-09-19T10:42:12.170Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-09-19T10:48:43.727Z","data":{"command":"node --import tsx --test tests/dead-marker-retention.test.ts","exitCode":0,"duration":0.65,"output":"▶ Dead marker retention across re-approval\n  ✔ renames dead/1.md to dead/1.1.md then dead/1.2.md across re-approvals (224.942878ms)\n  ✔ retains dead/1.1.md alongside done/1 after a successful rerun (169.209721ms)\n  ✔ preserves an active dead marker when a task succeeds without re-approval (91.64488ms)\n✔ Dead marker retention across re-approval (486.784449ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 622.894386\n"}}
+{"type":"verify_ran","timestamp":"2026-09-19T10:50:24.456Z","data":{"command":"node --import tsx --test tests/dead-marker-retention.test.ts","exitCode":0,"duration":0.62,"output":"▶ Dead marker retention across re-approval\n  ✔ renames dead/1.md to dead/1.1.md then dead/1.2.md across re-approvals (223.0177ms)\n  ✔ retains dead/1.1.md alongside done/1 after a successful rerun (160.255428ms)\n  ✔ preserves an active dead marker when a task succeeds without re-approval (89.231822ms)\n✔ Dead marker retention across re-approval (473.484199ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 599.918717\n"}}

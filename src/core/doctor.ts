@@ -7,6 +7,7 @@ import { OSQ_END_MARKER, OSQ_START_MARKER } from './init.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
 import { OPENSPEC_EXPECTED_VERSION } from './linter.js';
 import { isPidRunning } from './lock.js';
+import { parseFrontmatter } from './parser.js';
 
 export interface DoctorCheckResult {
   name: string;
@@ -202,6 +203,33 @@ async function checkArchives(projectRoot: string, config: OsqConfig): Promise<Do
     : make('archives', true, 'all archives valid');
 }
 
+/** Active change done markers must be automated (`scope_hash`) or manual. */
+async function checkDoneMarkers(
+  projectRoot: string,
+  config: OsqConfig,
+): Promise<DoctorCheckResult> {
+  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
+  const invalid: string[] = [];
+  for (const changeDir of await listDirs(changesDir)) {
+    const name = path.basename(changeDir);
+    if (name === 'archive' || name.startsWith('_') || name.startsWith('.')) continue;
+    const doneDir = path.join(changeDir, '.run', 'done');
+    for (const marker of await fs.readdir(doneDir).catch(() => [])) {
+      const markerPath = path.join(doneDir, marker);
+      const { data } = parseFrontmatter(await fs.readFile(markerPath, 'utf8').catch(() => ''));
+      const automated = typeof data.scope_hash === 'string';
+      const manual = data.manual === true && typeof data.reason === 'string';
+      if (!automated && !manual) invalid.push(path.relative(projectRoot, markerPath));
+    }
+  }
+  if (invalid.length === 0) return make('done-markers', true, 'all done markers verified');
+  return make(
+    'done-markers',
+    false,
+    `unverified done marker placed by hand: ${invalid.join(', ')}`,
+  );
+}
+
 export async function runDoctorChecks(
   projectRoot: string,
   deps: DoctorDependencies = {},
@@ -213,6 +241,7 @@ export async function runDoctorChecks(
     await checkManagedBlocks(projectRoot),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),
+    await checkDoneMarkers(projectRoot, config),
     await checkValidator(projectRoot, deps),
   ];
   return { ok: checks.every((check) => check.ok), checks };
