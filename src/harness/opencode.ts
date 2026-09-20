@@ -1,7 +1,8 @@
+import { spawn } from 'node:child_process';
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
+import { type OsqConfig, loadConfig } from '../core/config.js';
 import { MANAGED_AGENTS_BLOCK, OSQ_END_MARKER, OSQ_START_MARKER } from '../core/init.js';
 import type { Logger } from '../core/logger.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../core/parser.js';
@@ -15,6 +16,7 @@ import {
 } from './stream.js';
 import {
   type HarnessAdapter,
+  type InteractiveSessionOptions,
   type SpawnResult,
   type SpawnTaskOptions,
   type TextEventData,
@@ -23,6 +25,25 @@ import {
   capabilityRuleLines,
   resolveCapabilityRules,
 } from './types.js';
+
+export const OPENCODE_PLANNER_AGENT_TEMPLATE = `---
+description: Interactive planning agent for osq
+mode: all
+permission:
+  read: allow
+  write: allow
+  edit: allow
+  glob: allow
+  grep: allow
+  bash: deny
+  git: deny
+  webfetch: deny
+  websearch: deny
+---
+
+Follow PLANNER.md strictly for change planning rules and procedure.
+Writes are expected only under openspec/changes/<id>/.
+`;
 
 export const OPENCODE_AGENT_TEMPLATE = `---
 description: Autonomous task execution agent for osq
@@ -489,26 +510,36 @@ export class OpencodeAdapter implements HarnessAdapter {
 
     if (!exists) {
       await fs.writeFile(agentPath, OPENCODE_AGENT_TEMPLATE, 'utf8');
-      return;
+    } else {
+      const currentContent = await fs.readFile(agentPath, 'utf8');
+      const startIndex = currentContent.indexOf(OSQ_START_MARKER);
+      const endIndex = currentContent.indexOf(OSQ_END_MARKER);
+
+      if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
+        const before = currentContent.slice(0, startIndex);
+        const after = currentContent.slice(endIndex + OSQ_END_MARKER.length);
+        const updated = `${before}${MANAGED_AGENTS_BLOCK}${after}`;
+        await fs.writeFile(agentPath, updated, 'utf8');
+      } else {
+        const separator = currentContent.endsWith('\n\n')
+          ? ''
+          : currentContent.endsWith('\n')
+            ? '\n'
+            : '\n\n';
+        const updated = `${currentContent}${separator}${MANAGED_AGENTS_BLOCK}\n`;
+        await fs.writeFile(agentPath, updated, 'utf8');
+      }
     }
 
-    const currentContent = await fs.readFile(agentPath, 'utf8');
-    const startIndex = currentContent.indexOf(OSQ_START_MARKER);
-    const endIndex = currentContent.indexOf(OSQ_END_MARKER);
+    const plannerAgentName = config.planner?.agent || 'osq-planner';
+    const plannerAgentPath = path.join(agentDir, `${plannerAgentName}.md`);
+    const plannerExists = await fs
+      .stat(plannerAgentPath)
+      .then(() => true)
+      .catch(() => false);
 
-    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
-      const before = currentContent.slice(0, startIndex);
-      const after = currentContent.slice(endIndex + OSQ_END_MARKER.length);
-      const updated = `${before}${MANAGED_AGENTS_BLOCK}${after}`;
-      await fs.writeFile(agentPath, updated, 'utf8');
-    } else {
-      const separator = currentContent.endsWith('\n\n')
-        ? ''
-        : currentContent.endsWith('\n')
-          ? '\n'
-          : '\n\n';
-      const updated = `${currentContent}${separator}${MANAGED_AGENTS_BLOCK}\n`;
-      await fs.writeFile(agentPath, updated, 'utf8');
+    if (!plannerExists) {
+      await fs.writeFile(plannerAgentPath, OPENCODE_PLANNER_AGENT_TEMPLATE, 'utf8');
     }
   }
 
@@ -547,5 +578,33 @@ export class OpencodeAdapter implements HarnessAdapter {
       pid: result.pid,
       elapsedMs: result.elapsedMs,
     };
+  }
+
+  async spawnInteractive(options: InteractiveSessionOptions): Promise<number> {
+    const { prompt, cwd, model, agent } = options;
+    const config = await loadConfig(cwd).catch(() => undefined);
+    const bin = await resolveOpencodeBinary(config);
+
+    const args: string[] = [prompt, '--dir', cwd];
+    if (model) {
+      args.push('--model', model);
+    }
+    if (agent) {
+      args.push('--agent', agent);
+    }
+    if (config?.opencode?.variant) {
+      args.push('--variant', config.opencode.variant);
+    }
+
+    const child = spawn(bin, args, {
+      cwd,
+      env: process.env,
+      stdio: 'inherit',
+    });
+
+    return new Promise<number>((resolve) => {
+      child.on('error', () => resolve(1));
+      child.on('close', (code) => resolve(code ?? 0));
+    });
   }
 }

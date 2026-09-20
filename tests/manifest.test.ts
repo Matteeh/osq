@@ -100,6 +100,7 @@ describe('run manifest', () => {
     assert.ok((manifest.osqVersion as string).length > 0);
     assert.equal(manifest.harness, DEFAULT_CONFIG.harness);
     assert.equal(typeof manifest.model, 'string');
+    assert.equal(manifest.planner, null);
     assert.equal(manifest.effort, null);
 
     assert.equal(typeof manifest.createdAt, 'string');

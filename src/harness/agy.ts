@@ -1,8 +1,9 @@
+import { spawn } from 'node:child_process';
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
+import { type OsqConfig, loadConfig } from '../core/config.js';
 import type { Logger } from '../core/logger.js';
 import { relativizeToolSummary } from '../core/summary.js';
 import { spawnWithTimeout } from './process.js';
@@ -14,6 +15,7 @@ import {
 } from './stream.js';
 import {
   type HarnessAdapter,
+  type InteractiveSessionOptions,
   type SpawnResult,
   type SpawnTaskOptions,
   type TextEventData,
@@ -371,5 +373,34 @@ export class AgyAdapter implements HarnessAdapter {
       pid: result.pid,
       elapsedMs: result.elapsedMs,
     };
+  }
+
+  async spawnInteractive(options: InteractiveSessionOptions): Promise<number> {
+    const { prompt, cwd, model, agent } = options;
+    const config = await loadConfig(cwd).catch(() => undefined);
+    const agyBin = await resolveAgyBinary();
+
+    const args: string[] = ['-i', prompt];
+    if (model) {
+      args.push('--model', model);
+    }
+    if (agent) {
+      args.push('--agent', agent);
+    }
+    const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions ?? true;
+    if (dangerouslySkipPermissions) {
+      args.push('--dangerously-skip-permissions');
+    }
+
+    const child = spawn(agyBin, args, {
+      cwd,
+      env: process.env,
+      stdio: 'inherit',
+    });
+
+    return new Promise<number>((resolve) => {
+      child.on('error', () => resolve(1));
+      child.on('close', (code) => resolve(code ?? 0));
+    });
   }
 }

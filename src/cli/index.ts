@@ -7,6 +7,7 @@ import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
+import { planCommand } from './plan.js';
 import { reportCommand } from './report.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
@@ -42,6 +43,15 @@ export function createProgram(version?: string): Command {
     .description('new change folder from template')
     .action(async (name: string) => {
       await newCommand(name);
+    });
+
+  program
+    .command('plan <name>')
+    .description('initialize change, write brief, and open interactive planner session')
+    .option('--brief <file>', 'brief file path or - for stdin')
+    .option('-p, --print', 'output opening prompt strictly to stdout without launching session')
+    .action(async (name: string, options: { brief?: string; print?: boolean }) => {
+      await planCommand(name, options);
     });
 
   program
@@ -128,6 +138,23 @@ export function createProgram(version?: string): Command {
     .action(async () => {
       await doctorCommand();
     });
+
+  const origParse = program.parse.bind(program);
+  program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
+    const raw = argv || process.argv;
+    const normalized = raw.map((arg) => (arg === '-print' ? '--print' : arg));
+    return origParse(normalized, parseOptions);
+  };
+
+  const origParseAsync = program.parseAsync.bind(program);
+  program.parseAsync = async (
+    argv?: readonly string[],
+    parseOptions?: Parameters<Command['parseAsync']>[1],
+  ) => {
+    const raw = argv || process.argv;
+    const normalized = raw.map((arg) => (arg === '-print' ? '--print' : arg));
+    return await origParseAsync(normalized, parseOptions);
+  };
 
   return program;
 }

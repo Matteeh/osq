@@ -38,6 +38,12 @@ export interface LogConfig {
   readonly heartbeatSeconds?: number;
 }
 
+export interface PlannerConfig {
+  readonly harness: string;
+  readonly model: string;
+  readonly agent?: string;
+}
+
 export interface OsqConfig {
   readonly harness: string;
   readonly maxConcurrency: number;
@@ -47,10 +53,11 @@ export interface OsqConfig {
   readonly agy?: AgyConfig;
   readonly opencode?: OpencodeConfig;
   readonly log?: LogConfig;
+  readonly planner?: PlannerConfig;
 }
 
 export type OsqUserConfig = Partial<
-  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'log'>
+  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'log' | 'planner'>
 > & {
   readonly limits?: Partial<OsqLimits>;
   readonly paths?: Partial<OsqPaths>;
@@ -58,6 +65,7 @@ export type OsqUserConfig = Partial<
   readonly agy?: Partial<AgyConfig>;
   readonly opencode?: Partial<OpencodeConfig>;
   readonly log?: Partial<LogConfig>;
+  readonly planner?: Partial<PlannerConfig>;
 };
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -94,10 +102,49 @@ export const DEFAULT_CONFIG: OsqConfig = {
   },
 };
 
+const VALID_PLANNER_HARNESSES = new Set(['agy', 'opencode', 'mock']);
+
+export function validatePlannerConfig(planner: unknown): PlannerConfig {
+  if (!planner || typeof planner !== 'object') {
+    throw new Error('planner configuration must be an object');
+  }
+  const p = planner as Record<string, unknown>;
+  if (typeof p.harness !== 'string' || !p.harness.trim()) {
+    throw new Error('planner.harness must be a non-empty string');
+  }
+  const harness = p.harness.trim();
+  if (!VALID_PLANNER_HARNESSES.has(harness)) {
+    throw new Error(
+      `Unsupported planner harness: "${harness}". Must be one of: ${Array.from(VALID_PLANNER_HARNESSES).join(', ')}`,
+    );
+  }
+  if (typeof p.model !== 'string' || !p.model.trim()) {
+    throw new Error('planner.model must be a non-empty string');
+  }
+  const model = p.model.trim();
+  if (p.agent !== undefined && (typeof p.agent !== 'string' || !p.agent.trim())) {
+    throw new Error('planner.agent must be a non-empty string if provided');
+  }
+  const agent = typeof p.agent === 'string' && p.agent.trim() ? p.agent.trim() : undefined;
+
+  return {
+    harness,
+    model,
+    ...(agent ? { agent } : {}),
+  };
+}
+
 export function defineConfig(config: OsqUserConfig): OsqConfig {
+  const { planner, ...restConfig } = config;
+  let validatedPlanner: PlannerConfig | undefined;
+  if (planner !== undefined) {
+    validatedPlanner = validatePlannerConfig(planner);
+  }
+
   return {
     ...DEFAULT_CONFIG,
-    ...config,
+    ...restConfig,
+    ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),
@@ -183,5 +230,6 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
       ...(userConfig.opencode || {}),
       ...(opencodeModel ? { model: opencodeModel } : {}),
     },
+    ...(userConfig.planner ? { planner: userConfig.planner } : {}),
   });
 }

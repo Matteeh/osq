@@ -8,5 +8,9 @@ export async function setupCommand(): Promise<void> {
   await updateAgentsMd(cwd);
   const adapter = getHarnessAdapter(config.harness);
   await adapter.setup(cwd, config);
+  if (config.planner?.harness && config.planner.harness !== config.harness) {
+    const plannerAdapter = getHarnessAdapter(config.planner.harness);
+    await plannerAdapter.setup(cwd, config);
+  }
   console.log(`Harness '${config.harness}' setup completed successfully.`);
 }

@@ -18,6 +18,7 @@ export interface ManifestData {
   osqVersion: string;
   harness: string;
   model: string;
+  planner: string | null;
   effort: string | null;
   createdAt: string;
   approvedAt: string;
@@ -125,6 +126,7 @@ export async function buildManifest(
     osqVersion: await resolveOsqVersion(),
     harness: config.harness,
     model: resolveModel(config),
+    planner: config.planner?.model ?? null,
     effort: null,
     createdAt: await resolveCreatedAt(specFolderPath),
     approvedAt: new Date().toISOString(),

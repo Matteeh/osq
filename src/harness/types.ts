@@ -180,10 +180,18 @@ export interface SpawnResult {
   elapsedMs?: number;
 }
 
+export interface InteractiveSessionOptions {
+  prompt: string;
+  cwd: string;
+  model?: string;
+  agent?: string;
+}
+
 export interface HarnessAdapter {
   readonly name: string;
   setup(projectRoot: string, config: OsqConfig): Promise<void>;
   spawn(options: SpawnTaskOptions): Promise<SpawnResult>;
+  spawnInteractive?(options: InteractiveSessionOptions): Promise<number>;
   preflight?(projectRoot: string, config: OsqConfig): Promise<void>;
 }
 

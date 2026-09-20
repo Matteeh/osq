@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import {
   type HarnessAdapter,
+  type InteractiveSessionOptions,
   type SpawnResult,
   type SpawnTaskOptions,
   appendHarnessEvent,
@@ -25,8 +26,19 @@ export class MockAdapter implements HarnessAdapter {
     this.behavior = behavior;
   }
 
+  static recordedInteractiveSpawns: InteractiveSessionOptions[] = [];
+  recordedInteractiveSpawns: InteractiveSessionOptions[] = [];
+
   resetBehavior(): void {
     this.behavior = {};
+    this.recordedInteractiveSpawns = [];
+    MockAdapter.recordedInteractiveSpawns = [];
+  }
+
+  async spawnInteractive(options: InteractiveSessionOptions): Promise<number> {
+    this.recordedInteractiveSpawns.push(options);
+    MockAdapter.recordedInteractiveSpawns.push(options);
+    return this.behavior.exitCode ?? 0;
   }
 
   async setup(_projectRoot: string, _config: OsqConfig): Promise<void> {
