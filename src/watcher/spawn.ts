@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
+import { resolveExecutorIdentity } from '../core/harness-catalog.js';
 import { type Logger, resolveSymbol } from '../core/logger.js';
 import type { TaskData } from '../core/parser.js';
 import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
@@ -70,8 +71,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     startedRecorded = true;
     startedPromise = (async () => {
       const buildInfo = await resolveBuildInfo(projectRoot);
-      const harness = config.harness === 'opencode' ? config.opencode : config.agy;
-      const model = harness?.model ?? config.agy?.model ?? 'default';
+      const { model } = resolveExecutorIdentity(config);
       await recordLifecycleEvent(
         specFolderPath,
         taskNumber,

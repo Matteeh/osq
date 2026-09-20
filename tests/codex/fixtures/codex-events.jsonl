@@ -1,0 +1,10 @@
+{"type":"thread.started","thread_id":"t1"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"i1","type":"reasoning","text":"thinking"}}
+{"type":"item.updated","item":{"id":"i1","type":"reasoning","text":"thinking more"}}
+{"type":"item.completed","item":{"id":"i1","type":"reasoning","text":"thinking final"}}
+{"type":"item.completed","item":{"id":"i2","type":"agent_message","text":"Implemented the change."}}
+{"type":"item.completed","item":{"id":"i3","type":"command_execution","command":"pnpm test","aggregated_output":"ok","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"i4","type":"mcp_call","server":"fs","tool":"read_file","arguments":{"path":"src/a.ts"}}}
+{"type":"item.completed","item":{"id":"i5","type":"file_change","status":"completed","changes":[{"path":"src/a.ts","kind":"update"},{"path":"src/b.ts","kind":"create"}]}}
+{"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":40,"output_tokens":25,"reasoning_output_tokens":7}}

@@ -80,7 +80,7 @@ The metrics subsystem SHALL define typed interfaces for `ManifestData` and `Meas
 
 #### Scenario: Typed manifest interface
 - **WHEN** manifest data is produced or consumed
-- **THEN** `ManifestData` interface declares `hashes`, `osqVersion`, `harness`, `model`, `effort`, `createdAt`, and `approvedAt`
+- **THEN** `ManifestData` interface declares `hashes`, `osqVersion`, `harness`, `model`, `planner`, `effort`, `createdAt`, and `approvedAt`
 
 #### Scenario: Typed measures event interface
 - **WHEN** measures event data is produced or consumed

@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:4f8a790110d8c9e98a89938078592481794dcdc47f85a4fa6ec82b833f287b74"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:bd515bec8a7fce04e6bbbf1d98231e2eaedf8751b52081cc5ff318567affe387","src/core/doctor.ts":"sha256:36c8f15223e1b975ab7f2c3d0bbab044ae9974065702e064a0dc414c917accfc","src/core/manifest.ts":"sha256:d4ca1c209b72f4dd6a77cada3108d6c195f8f0116af621c8d1e06db98f3a5809","src/watcher/loop.ts":"sha256:e095e569d312a493a1e00fd83f4ff0bc7a2ed11a64f8dd01f1521b36b62c9904","src/watcher/spawn.ts":"sha256:a64f36c9a7e9399a29d53237c7b6aef49f9d47f624854a658bdba8e95c95076e","tests/harness-architecture.test.ts":"sha256:fef0ccdb6db833d04be1bf368d269d4a4b6a30e6a236918184bbdaa869cd2694","tests/harness-generic-workflows.test.ts":"sha256:f3ab98a49dcb94b1226c1b862759587eb461859169eb88619b8b39728b4259bc"}
+---
+2026-09-20T19:43:31.715Z

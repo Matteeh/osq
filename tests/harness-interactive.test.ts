@@ -1,11 +1,66 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { AgyAdapter } from '../src/harness/agy.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { OpencodeAdapter } from '../src/harness/opencode.js';
+
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+interface SubprocessResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * Runs an adapter's `spawnInteractive` in a child Node process whose stdio is
+ * piped by this test. Because the adapter spawns the fake harness with
+ * `stdio: 'inherit'`, the fake binary's stdout/stderr land directly on the
+ * child process pipes; anything the adapter captured instead would be missing.
+ */
+function runInteractiveInSubprocess(options: {
+  adapterExport: 'OpencodeAdapter' | 'AgyAdapter';
+  adapterModule: string;
+  envVar: string;
+  fakeBin: string;
+  cwd: string;
+}): Promise<SubprocessResult> {
+  const runnerPath = path.join(options.cwd, 'interactive-runner.mts');
+  const adapterPath = path.join(PROJECT_ROOT, options.adapterModule);
+  const runner = [
+    `import { ${options.adapterExport} } from ${JSON.stringify(adapterPath)};`,
+    `const code = await new ${options.adapterExport}().spawnInteractive({ prompt: 'stdout-probe', cwd: ${JSON.stringify(
+      options.cwd,
+    )} });`,
+    'process.exit(code);',
+    '',
+  ].join('\n');
+
+  return fs.writeFile(runnerPath, runner, 'utf8').then(
+    () =>
+      new Promise<SubprocessResult>((resolve, reject) => {
+        const child = spawn(process.execPath, ['--import', 'tsx', runnerPath], {
+          cwd: PROJECT_ROOT,
+          env: { ...process.env, [options.envVar]: options.fakeBin },
+        });
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', (chunk: Buffer) => {
+          stdout += chunk.toString();
+        });
+        child.stderr.on('data', (chunk: Buffer) => {
+          stderr += chunk.toString();
+        });
+        child.on('error', reject);
+        child.on('close', (status) => resolve({ status, stdout, stderr }));
+      }),
+  );
+}
 
 describe('HarnessAdapter spawnInteractive', () => {
   let tmpDir: string;
@@ -108,6 +163,66 @@ process.exit(0);
     } finally {
       process.env.AGY_PATH = originalPath;
     }
+  });
+
+  it('OpencodeAdapter inherits child stdout and stderr without capturing them', async () => {
+    const stdoutToken = 'OSQ_OPENCODE_STDOUT_TOKEN';
+    const stderrToken = 'OSQ_OPENCODE_STDERR_TOKEN';
+    const fakeBin = path.join(tmpDir, 'fake-opencode-echo.mjs');
+    const fakeScript = `#!/usr/bin/env node
+process.stdout.write('${stdoutToken}\\n');
+process.stderr.write('${stderrToken}\\n');
+process.exit(0);
+`;
+    await fs.writeFile(fakeBin, fakeScript, { mode: 0o755 });
+
+    const result = await runInteractiveInSubprocess({
+      adapterExport: 'OpencodeAdapter',
+      adapterModule: 'src/harness/opencode.ts',
+      envVar: 'OPENCODE_PATH',
+      fakeBin,
+      cwd: tmpDir,
+    });
+
+    assert.equal(result.status, 0);
+    assert.ok(
+      result.stdout.includes(stdoutToken),
+      `inherited stdout should surface the child write; got: ${result.stdout}`,
+    );
+    assert.ok(
+      result.stderr.includes(stderrToken),
+      `inherited stderr should surface the child write; got: ${result.stderr}`,
+    );
+  });
+
+  it('AgyAdapter inherits child stdout and stderr without capturing them', async () => {
+    const stdoutToken = 'OSQ_AGY_STDOUT_TOKEN';
+    const stderrToken = 'OSQ_AGY_STDERR_TOKEN';
+    const fakeBin = path.join(tmpDir, 'fake-agy-echo.mjs');
+    const fakeScript = `#!/usr/bin/env node
+process.stdout.write('${stdoutToken}\\n');
+process.stderr.write('${stderrToken}\\n');
+process.exit(0);
+`;
+    await fs.writeFile(fakeBin, fakeScript, { mode: 0o755 });
+
+    const result = await runInteractiveInSubprocess({
+      adapterExport: 'AgyAdapter',
+      adapterModule: 'src/harness/agy.ts',
+      envVar: 'AGY_PATH',
+      fakeBin,
+      cwd: tmpDir,
+    });
+
+    assert.equal(result.status, 0);
+    assert.ok(
+      result.stdout.includes(stdoutToken),
+      `inherited stdout should surface the child write; got: ${result.stdout}`,
+    );
+    assert.ok(
+      result.stderr.includes(stderrToken),
+      `inherited stderr should surface the child write; got: ${result.stderr}`,
+    );
   });
 
   it('MockAdapter records interactive spawns and returns configured exit code', async () => {

@@ -1,7 +1,7 @@
-import { execFile } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { OSQ_END_MARKER, OSQ_START_MARKER } from './init.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
@@ -66,29 +66,12 @@ async function checkConfig(
   }
 }
 
-function harnessBinary(config: OsqConfig): string | null {
-  if (typeof config.harness !== 'string' || config.harness.trim() === '') return null;
-  const name = config.harness.toLowerCase();
-  if (name === 'mock') return null;
-  if (name === 'agy') return process.env.AGY_PATH || 'agy';
-  if (name === 'opencode') return process.env.OPENCODE_PATH || config.opencode?.bin || 'opencode';
-  return name;
-}
-
-function probeVersion(bin: string, projectRoot: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    execFile(bin, ['--version'], { cwd: projectRoot, timeout: 10_000 }, (error, stdout, stderr) => {
-      if (error) return reject(error);
-      resolve((stdout || stderr).trim().split('\n')[0].trim());
-    });
-  });
-}
-
 async function checkHarness(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
   const bin = harnessBinary(config);
-  if (bin === null) return make('harness', true, 'mock harness requires no binary');
+  if (bin === null) return make('harness', true, 'no external executable required');
   try {
-    const version = await probeVersion(bin, projectRoot);
+    const timeoutSeconds = config.timeouts.harnessPreflightSeconds ?? 10;
+    const version = await probeVersion(bin, projectRoot, timeoutSeconds);
     return make('harness', true, `${bin} ${version}`.trim());
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

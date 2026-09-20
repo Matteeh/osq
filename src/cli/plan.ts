@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { findSpecFolder } from '../core/approve.js';
+import { resolvePlannerSelection } from '../core/config-codex.js';
 import { loadConfig } from '../core/config.js';
 import { getChangesDir, getSpecsDir } from '../core/layout.js';
 import { buildManifest, writeManifest } from '../core/manifest.js';
@@ -114,6 +115,7 @@ export async function planCommand(
 ): Promise<void> {
   const cwd = options.cwd || process.cwd();
   const config = await loadConfig(cwd);
+  const plannerSelection = resolvePlannerSelection(config);
   const changesDir = getChangesDir(config.paths.openspecRoot, cwd);
 
   let folderPath: string | null = null;
@@ -143,12 +145,8 @@ export async function planCommand(
     }
 
     const rawBrief = await readBriefInput(options.brief);
-    const plannerModel =
-      config.planner?.model ||
-      (config.harness === 'opencode' ? config.opencode?.model : config.agy?.model) ||
-      '';
     const today = new Date().toISOString().split('T')[0];
-    const formattedBrief = formatBriefContent(rawBrief, plannerModel, today);
+    const formattedBrief = formatBriefContent(rawBrief, plannerSelection.briefModel, today);
 
     const briefPath = path.join(folderPath, 'brief.md');
     await fs.writeFile(briefPath, formattedBrief, 'utf8');
@@ -189,20 +187,17 @@ export async function planCommand(
     return;
   }
 
-  const harnessName = config.planner?.harness || config.harness;
-  const model =
-    config.planner?.model || (harnessName === 'agy' ? config.agy?.model : config.opencode?.model);
-  const agent = config.planner?.agent || (harnessName === 'opencode' ? 'osq-planner' : undefined);
-
-  const adapter = options.adapter || getHarnessAdapter(harnessName);
+  const adapter = options.adapter || getHarnessAdapter(plannerSelection.harness);
   if (!adapter.spawnInteractive) {
-    throw new Error(`Harness adapter for '${harnessName}' does not support interactive sessions.`);
+    throw new Error(
+      `Harness adapter for '${plannerSelection.harness}' does not support interactive sessions.`,
+    );
   }
   const exitCode = await adapter.spawnInteractive({
     prompt: openingPrompt,
     cwd,
-    model,
-    agent,
+    model: plannerSelection.model,
+    agent: plannerSelection.agent,
   });
 
   if (exitCode !== 0) {

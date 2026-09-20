@@ -1,0 +1,2 @@
+{"type":"item.completed","item":{"id":"i2","type":"agent_message","text":"partial work before failure"}}
+{"type":"turn.failed","error":{"message":"codex exploded mid-turn"}}

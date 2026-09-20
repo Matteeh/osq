@@ -1,6 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
+import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
+import { HARNESS_CATALOG } from './harness-catalog.js';
+
+export type { CodexConfig } from './config-codex.js';
 
 export interface OsqLimits {
   readonly maxScopeFiles: number;
@@ -20,6 +24,10 @@ export interface OsqTimeouts {
   readonly staleLockSeconds: number;
   readonly taskTimeoutSeconds: number;
   readonly verifyTimeoutSeconds: number;
+  /** Preflight `--version` probe deadline; defaults to 10 seconds. */
+  readonly harnessPreflightSeconds?: number;
+  /** Kill grace after SIGTERM before SIGKILL; defaults to 5000 milliseconds. */
+  readonly harnessKillGracePeriodMs?: number;
 }
 
 export interface AgyConfig {
@@ -52,18 +60,23 @@ export interface OsqConfig {
   readonly timeouts: OsqTimeouts;
   readonly agy?: AgyConfig;
   readonly opencode?: OpencodeConfig;
+  readonly codex?: CodexConfig;
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
 }
 
 export type OsqUserConfig = Partial<
-  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'log' | 'planner'>
+  Omit<
+    OsqConfig,
+    'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'codex' | 'log' | 'planner'
+  >
 > & {
   readonly limits?: Partial<OsqLimits>;
   readonly paths?: Partial<OsqPaths>;
   readonly timeouts?: Partial<OsqTimeouts>;
   readonly agy?: Partial<AgyConfig>;
   readonly opencode?: Partial<OpencodeConfig>;
+  readonly codex?: Partial<CodexConfig>;
   readonly log?: Partial<LogConfig>;
   readonly planner?: Partial<PlannerConfig>;
 };
@@ -99,40 +112,10 @@ export const DEFAULT_CONFIG: OsqConfig = {
     staleLockSeconds: 2700,
     taskTimeoutSeconds: 1800,
     verifyTimeoutSeconds: 600,
+    harnessPreflightSeconds: 10,
+    harnessKillGracePeriodMs: 5000,
   },
 };
-
-const VALID_PLANNER_HARNESSES = new Set(['agy', 'opencode', 'mock']);
-
-export function validatePlannerConfig(planner: unknown): PlannerConfig {
-  if (!planner || typeof planner !== 'object') {
-    throw new Error('planner configuration must be an object');
-  }
-  const p = planner as Record<string, unknown>;
-  if (typeof p.harness !== 'string' || !p.harness.trim()) {
-    throw new Error('planner.harness must be a non-empty string');
-  }
-  const harness = p.harness.trim();
-  if (!VALID_PLANNER_HARNESSES.has(harness)) {
-    throw new Error(
-      `Unsupported planner harness: "${harness}". Must be one of: ${Array.from(VALID_PLANNER_HARNESSES).join(', ')}`,
-    );
-  }
-  if (typeof p.model !== 'string' || !p.model.trim()) {
-    throw new Error('planner.model must be a non-empty string');
-  }
-  const model = p.model.trim();
-  if (p.agent !== undefined && (typeof p.agent !== 'string' || !p.agent.trim())) {
-    throw new Error('planner.agent must be a non-empty string if provided');
-  }
-  const agent = typeof p.agent === 'string' && p.agent.trim() ? p.agent.trim() : undefined;
-
-  return {
-    harness,
-    model,
-    ...(agent ? { agent } : {}),
-  };
-}
 
 export function defineConfig(config: OsqUserConfig): OsqConfig {
   const { planner, ...restConfig } = config;
@@ -140,6 +123,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
   }
+  const codex = validateCodexConfig(config.codex);
 
   return {
     ...DEFAULT_CONFIG,
@@ -153,6 +137,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
       ...DEFAULT_CONFIG.opencode,
       ...(config.opencode || {}),
     },
+    codex,
     log: {
       ...DEFAULT_CONFIG.log,
       ...(config.log || {}),
@@ -170,6 +155,34 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
       ...(config.timeouts || {}),
     },
   };
+}
+
+/**
+ * Apply OSQ_MODEL to each catalogued harness section that accepts it. An
+ * explicitly configured model always wins; the default harness additionally
+ * receives the environment model even when it is not the selected executor.
+ * Sections are returned as partial config overrides so `defineConfig` still
+ * owns default merging and validation.
+ */
+function applyHarnessModelEnv(
+  userConfig: OsqUserConfig,
+  selectedHarness: string,
+  envModel: string,
+): Partial<OsqConfig> {
+  const selected = selectedHarness.trim().toLowerCase();
+  const overrides: Record<string, unknown> = {};
+  for (const entry of HARNESS_CATALOG) {
+    if (!entry.configKey) continue;
+    if (!entry.envModelWhenUnselected && entry.name !== selected) continue;
+    const sections = userConfig as unknown as Record<string, { model?: string } | undefined>;
+    const section = sections[entry.configKey];
+    if (section?.model) continue;
+    const defaults = (DEFAULT_CONFIG as unknown as Record<string, object | undefined>)[
+      entry.configKey
+    ];
+    overrides[entry.configKey] = { ...(defaults ?? {}), ...(section ?? {}), model: envModel };
+  }
+  return overrides as Partial<OsqConfig>;
 }
 
 export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
@@ -211,25 +224,13 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
   }
 
   const harness = userConfig.harness || process.env.OSQ_HARNESS || DEFAULT_CONFIG.harness;
-  const model = userConfig.agy?.model || process.env.OSQ_MODEL || DEFAULT_CONFIG.agy?.model;
-  const opencodeModel =
-    userConfig.opencode?.model ||
-    (harness === 'opencode' && process.env.OSQ_MODEL ? process.env.OSQ_MODEL : undefined) ||
-    DEFAULT_CONFIG.opencode?.model;
+  const envModel = process.env.OSQ_MODEL?.trim();
+  const envOverrides = envModel ? applyHarnessModelEnv(userConfig, harness, envModel) : {};
 
   return defineConfig({
     ...userConfig,
     harness,
-    agy: {
-      ...DEFAULT_CONFIG.agy,
-      ...(userConfig.agy || {}),
-      ...(model ? { model } : {}),
-    },
-    opencode: {
-      ...DEFAULT_CONFIG.opencode,
-      ...(userConfig.opencode || {}),
-      ...(opencodeModel ? { model: opencodeModel } : {}),
-    },
+    ...envOverrides,
     ...(userConfig.planner ? { planner: userConfig.planner } : {}),
   });
 }

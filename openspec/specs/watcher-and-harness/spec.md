@@ -79,12 +79,12 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
 
 ### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts -->
-The Watcher and Harness capability SHALL own the reactive watch loop, runner, process execution, and agent harnesses.
+<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts -->
+The Watcher and Harness capability SHALL own the reactive watch loop, runner, process execution, agent harnesses, adapter registration, and execution manifest construction.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for watcher or harness execution
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, and `src/core/lock.ts` to `watcher-and-harness`
+- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, and `src/core/manifest.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
 <!-- source: src/harness/agy.ts, src/harness/opencode.ts, tests/harness-prompt-injection.test.ts -->
@@ -361,3 +361,119 @@ The harness event stream SHALL support a typed `done_manual` event recording hum
 #### Scenario: Typed done_manual event emission
 - **WHEN** a task is marked done manually
 - **THEN** system appends an event to `.run/events/<n>.jsonl` with `type: "done_manual"` and payload containing `task` and `reason`
+
+### Requirement: Interactive harness adapter spawning
+<!-- source: src/harness/types.ts, src/harness/opencode.ts, src/harness/agy.ts, src/harness/mock.ts, tests/harness-interactive.test.ts -->
+Harness adapters SHALL implement `spawnInteractive` inheriting terminal stdio and returning the process exit code.
+
+#### Scenario: Opencode interactive session spawning
+- **WHEN** `OpencodeAdapter.spawnInteractive` executes
+- **THEN** adapter executes binary with inherited stdio, passing prompt, working directory, and optional model and agent flags
+
+#### Scenario: Agy interactive session spawning
+- **WHEN** `AgyAdapter.spawnInteractive` executes
+- **THEN** adapter executes binary with inherited stdio, passing prompt via `-i`, and optional model and agent flags
+
+### Requirement: Codex task execution
+<!-- source: src/harness/codex*.ts, src/harness/index.ts, src/watcher/loop.ts, tests/codex/** -->
+The Codex adapter SHALL implement the existing HarnessAdapter port without new methods and SHALL run each task in a fresh noninteractive process in the project root. It SHALL use literal argv, exec JSONL output, workspace-write sandboxing, approval policy never, disabled web search and workspace shell network access, and optional model/effort overrides. It SHALL retain native authentication/config loading without modifying it or bypassing enforced policies.
+
+#### Scenario: Executor prompt
+- **WHEN** an approved task is spawned
+- **THEN** Codex receives task/proposal/delta/living capability paths, prior-result guidance, scope, entry files, verification command, result destination, capability rules, and the one-attempt execution procedure
+
+#### Scenario: Process controls
+- **WHEN** the adapter starts a task
+- **THEN** it reuses shared process execution with configured task timeout and kill grace, preserves PID/signal/elapsed diagnostics, uses a literal prompt argument, and does not use shell interpolation, full-auto, permission bypass flags, or session resume
+
+#### Scenario: Watcher preflight
+- **WHEN** the watcher starts with Codex
+- **THEN** it invokes the adapter's existing preflight port to probe the resolved binary with --version under the configured preflight deadline, and a failed probe prevents task-agent spawn
+
+### Requirement: Codex stream observations
+<!-- source: src/harness/codex*.ts, src/harness/stream.ts, tests/codex/** -->
+The adapter SHALL use shared ordered JSONL buffering to translate completed Codex observations into existing osq events, without emitting watcher lifecycle or verification events.
+
+#### Scenario: Completed item translation
+- **WHEN** item.completed supplies a non-empty assistant message, command/MCP observation, or successful file change
+- **THEN** the adapter emits text, tool, or file_changed respectively, uses project-relative paths, excludes reasoning text from results, and does not count file changes again as edit/write tool events
+
+#### Scenario: Usage translation
+- **WHEN** turn.completed contains usage
+- **THEN** input_tokens becomes promptTokens, output_tokens becomes candidateTokens, cached_input_tokens becomes cachedTokens, and reported reasoning_output_tokens becomes reasoningTokens; totalTokens is input plus output, and absent optional counters and cost are omitted
+
+#### Scenario: Chunked and unfamiliar output
+- **WHEN** stdout contains fragmented records, an unterminated final record, malformed JSON, unknown events, or item lifecycle updates
+- **THEN** valid observations remain ordered, the parser flushes before spawn returns, malformed/unknown records do not abort parsing, and only completed stages emit completed observations
+
+### Requirement: Codex failure and result handling
+<!-- source: src/harness/codex*.ts, src/watcher/spawn.ts, src/watcher/verify.ts, tests/codex/** -->
+The adapter SHALL return terminal Codex failures to the existing watcher lifecycle. The watcher SHALL own results, markers, checkboxes, and independent verification.
+
+#### Scenario: Terminal turn failure
+- **WHEN** Codex reports turn.failed even if its process exits zero
+- **THEN** spawn returns a failed outcome carrying diagnostic text and the watcher records crashed
+
+#### Scenario: Process failure and recovery
+- **WHEN** Codex exits unsuccessfully or times out
+- **THEN** the watcher records crashed or timeout through existing outcomes; a recoverable error event followed by a successful turn does not alone cause terminal failure
+
+#### Scenario: Result fallback
+- **WHEN** Codex exits successfully without a result file
+- **THEN** the watcher synthesizes a result from the last completed non-empty assistant text, or records no_result when no such text exists
+
+#### Scenario: Independent verification
+- **WHEN** a successful Codex process supplies a result or final text
+- **THEN** the watcher writes done only after its own verification passes and records verify_red when verification fails
+
+### Requirement: Codex execution attribution
+<!-- source: src/core/manifest.ts, src/core/config*.ts, src/watcher/spawn.ts, tests/codex/** -->
+Execution manifests and started events SHALL record the selected Codex model without another harness's fallback. Native model selection SHALL be represented as default rather than a guessed model. The manifest SHALL record configured Codex effort or null while preserving explicit planner.model-or-null semantics.
+
+#### Scenario: Explicit settings
+- **WHEN** Codex execution has a selected model and effort
+- **THEN** process arguments, started metadata, and execution manifest agree on the model and the manifest records that effort
+
+#### Scenario: Native model
+- **WHEN** no Codex model override applies
+- **THEN** the CLI model flag is omitted and execution metadata records default without an agy or OpenCode model
+
+### Requirement: Codex interactive sessions
+<!-- source: src/harness/codex*.ts, src/cli/plan.ts, tests/codex/** -->
+The adapter SHALL implement the existing spawnInteractive port using Codex's interactive CLI with inherited stdio, project cwd, the supplied opening prompt, optional selected model, workspace-write sandboxing, and on-request approvals. It SHALL use native planner effort defaults and reject unsupported agent arguments.
+
+#### Scenario: Interactive launch
+- **WHEN** osq plan invokes the registered Codex adapter
+- **THEN** the interactive process receives the existing ordered prompt without exec/JSON flags or executor effort overrides
+
+#### Scenario: Interactive termination
+- **WHEN** the interactive process exits nonzero, is terminated by a signal, or cannot spawn
+- **THEN** the adapter returns a nonzero outcome that the planning command propagates
+
+### Requirement: Exhaustive adapter registration and generic preflight
+<!-- source: src/harness/index.ts, src/watcher/loop.ts, tests/harness-catalog.test.ts, tests/harness-generic-workflows.test.ts -->
+The harness subsystem SHALL provide one adapter factory for every canonical catalog entry and no unlisted factory. Watcher startup SHALL invoke the selected adapter's optional preflight port before task execution without testing the adapter's name, and SHALL continue normally when the port is absent.
+
+#### Scenario: Adapter with preflight
+- **WHEN** watcher startup receives any registered adapter implementing preflight
+- **THEN** it invokes preflight before the first execution cycle and propagates failure without spawning a task
+
+#### Scenario: Adapter without preflight
+- **WHEN** watcher startup receives a registered adapter without preflight
+- **THEN** it enters the execution cycle without a harness-specific fallback
+
+### Requirement: Shared selected-harness attribution
+<!-- source: src/core/harness-catalog.ts, src/core/manifest.ts, src/cli/plan.ts, src/watcher/spawn.ts, tests/harness-generic-workflows.test.ts -->
+Approval manifests, task-start events, planning briefs, and interactive planning arguments SHALL consume shared selected-harness resolution. Executor identity SHALL contain the selected harness, its effective model or `default`, and applicable effort or null. Planner selection SHALL remain independent when its harness differs from the executor.
+
+#### Scenario: Consistent executor identity
+- **WHEN** a registered harness executes an approved task
+- **THEN** its process selection, approval manifest, and started event agree on harness and model attribution, and effort is recorded only when applicable
+
+#### Scenario: Mixed executor and planner harnesses
+- **WHEN** executor and planner select different registered harnesses
+- **THEN** planning brief and invocation values come only from the planner selection while manifest execution fields and started events come only from the executor selection
+
+#### Scenario: Native model selection
+- **WHEN** the selected harness leaves model choice to its native default
+- **THEN** metadata records `default`, the native invocation receives no invented model override, and no other harness's configured model is used

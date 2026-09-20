@@ -3,12 +3,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { watch } from 'chokidar';
 import type { OsqConfig } from '../core/config.js';
+import { findHarness } from '../core/harness-catalog.js';
 import { getArchiveDir, getChangesDir } from '../core/layout.js';
 import { reapStaleLocks } from '../core/lock.js';
 import { type Logger, resolveSymbol } from '../core/logger.js';
 import { resolveChangeDoc } from '../core/parser.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/state.js';
-import { preflightOpencode } from '../harness/opencode.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
@@ -313,12 +313,14 @@ export async function startWatcher(
     await checkStaleBuild({ allowStale: options.allowStale });
   }
 
-  if (adapter.name === 'opencode' || config.harness === 'opencode') {
-    if (adapter.preflight) {
-      await adapter.preflight(projectRoot, config);
-    } else {
-      await preflightOpencode(projectRoot, config);
-    }
+  // Invoke the selected adapter's optional preflight port directly. There is no
+  // harness-name gate and no adapter-specific fallback: the adapter either owns
+  // its preflight or the watcher proceeds. Catalogued harnesses that declare no
+  // external executable have no process to probe, so their port is not invoked
+  // even when a caller supplies a preflight implementation.
+  const selected = findHarness(config.harness);
+  if (adapter.preflight && selected && selected.executable(config) !== null) {
+    await adapter.preflight(projectRoot, config);
   }
 
   if (options.once) {

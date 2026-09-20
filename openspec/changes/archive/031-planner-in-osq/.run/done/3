@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:31bd93a02546a777e826fb8a67c7518855e5bb66eaccefc4dcaefabe0ab961f7"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {"src/cli/setup.ts":"sha256:1dfc98548526963f4325e4abb8f5f73270a7d76619fe4bfe94f9dac6586f7f0e","src/harness/opencode.ts":"sha256:635b14db5adf9772cc1f7461c8667edd4dcdd86c8a3552836a10da5724d90e0d","tests/opencode-planner-setup.test.ts":"sha256:add661487f36e4761e8dc20dc06910dc1cd3def4b0bb60422c104a613c114ccd"}
+---
+2026-09-20T19:02:16.690Z

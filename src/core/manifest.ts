@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { OsqConfig } from './config.js';
+import { resolveExecutorIdentity } from './harness-catalog.js';
 import { getSpecsDir } from './layout.js';
 import { parseSpecMdFromFolder, resolveChangeDoc } from './parser.js';
 
@@ -68,17 +69,6 @@ async function resolveOsqVersion(): Promise<string> {
   return version ?? 'unknown';
 }
 
-/** Model configured for the active harness. */
-function resolveModel(config: OsqConfig): string {
-  if (config.harness === 'opencode') {
-    return config.opencode?.model ?? '';
-  }
-  if (config.harness === 'agy') {
-    return config.agy?.model ?? '';
-  }
-  return config.opencode?.model ?? config.agy?.model ?? '';
-}
-
 /** ISO timestamp of the change document's last modification, or now. */
 async function resolveCreatedAt(specFolderPath: string): Promise<string> {
   const resolved = await resolveChangeDoc(specFolderPath);
@@ -121,13 +111,15 @@ export async function buildManifest(
     hashes[name] = await hashFileContent(path.join(specsDir, name, 'spec.md'));
   }
 
+  const identity = resolveExecutorIdentity(config);
+
   return {
     hashes,
     osqVersion: await resolveOsqVersion(),
-    harness: config.harness,
-    model: resolveModel(config),
+    harness: identity.harness,
+    model: identity.model,
     planner: config.planner?.model ?? null,
-    effort: null,
+    effort: identity.effort,
     createdAt: await resolveCreatedAt(specFolderPath),
     approvedAt: new Date().toISOString(),
   };

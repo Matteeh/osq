@@ -2,7 +2,7 @@
 title: "Planner in OSQ: interactive planning sessions, brief writer, and planner config"
 depends_on:
   - "030"
-verify: "osq plan smoke --brief tests/fixtures/brief.md"
+verify: "pnpm verify"
 features:
   reads:
     - cli-foundation
@@ -29,7 +29,7 @@ Run the planner inside `osq`. `osq plan <name>` creates the change folder, write
 
 ## Verify
 
-`osq plan smoke --brief tests/fixtures/brief.md`
+`pnpm verify`
 
 ## Non-goals
 

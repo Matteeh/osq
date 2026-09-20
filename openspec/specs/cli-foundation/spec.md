@@ -59,12 +59,12 @@ The system SHALL package exclusively compiled artifacts and legal metadata for n
 - **THEN** system dynamically reads version from `package.json` matching release metadata
 
 ### Requirement: Code ownership
-<!-- source: osq.config.ts, src/cli/**, src/core/config.ts, src/core/init.ts, src/core/logger.ts, templates/** -->
-The CLI Foundation capability SHALL own CLI entrypoints, configuration, logger, initialization, and templates.
+<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/index.ts, templates/**, README.md, .env.example -->
+The CLI Foundation capability SHALL own CLI entrypoints, configuration and shared harness capability resolution, doctor diagnostics, logger, initialization, public configuration exports, templates, and consumer guidance.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for CLI or configuration files
-- **THEN** system maps `src/cli/**`, `src/core/config.ts`, `src/core/init.ts`, `src/core/logger.ts`, `templates/**`, and `osq.config.ts` to `cli-foundation`
+- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/index.ts`, `templates/**`, `README.md`, and `.env.example` to cli-foundation
 
 ### Requirement: Test gating configuration
 <!-- source: src/core/config.ts, tests/config.test.ts -->
@@ -217,3 +217,143 @@ The managed planner block in `PLANNER.md`, `templates/PLANNER.md`, and `src/core
 #### Scenario: Byte-equality test for planner templates
 - **WHEN** `tests/init-planner.test.ts` executes
 - **THEN** it asserts byte-for-byte equality between `PLANNER.md` managed block, `templates/PLANNER.md`, and `MANAGED_PLANNER_BLOCK` in `src/core/init.ts`
+
+### Requirement: Planner configuration validation
+<!-- source: src/core/config.ts, tests/config-planner.test.ts -->
+The configuration subsystem SHALL support and validate an optional `planner` block defining `harness`, `model`, and optional `agent`.
+
+#### Scenario: Rejection of invalid planner configuration
+- **WHEN** `planner` is configured with an empty string or unrecognized harness
+- **THEN** `defineConfig` throws a descriptive validation error
+
+### Requirement: Opencode planner agent configuration
+<!-- source: src/harness/opencode.ts, tests/opencode-planner-setup.test.ts -->
+The setup command for the opencode harness SHALL generate `.opencode/agent/osq-planner.md` with restricted planning tool permissions.
+
+#### Scenario: Planner agent permissions and idempotence
+- **WHEN** `osq setup` executes with `opencode` harness configured
+- **THEN** system generates `.opencode/agent/osq-planner.md` permitting `read`, `write`, `edit`, `glob`, `grep`, denying `bash`, `git`, `webfetch`, `websearch`, and repeated runs remain byte-identical
+
+### Requirement: Interactive planning command
+<!-- source: src/cli/plan.ts, src/cli/index.ts, tests/plan.test.ts -->
+The CLI SHALL provide `osq plan <name> [--brief <file> | -] [-print]` to initialize changes, record briefs, and launch interactive planner sessions.
+
+#### Scenario: New change interactive planning session
+- **WHEN** user executes `osq plan <name>`
+- **THEN** system creates change folder, writes `brief.md` with planner and date metadata, formats prompt with 4 ordered sections (`PLANNER.md`, change ID/title, capability spec paths, `brief.md`), and spawns an interactive session
+
+#### Scenario: Resuming existing change planning session
+- **WHEN** user executes `osq plan <id>` on an existing change folder with `brief.md`
+- **THEN** system skips folder creation and launches an interactive session for the existing change
+
+#### Scenario: Print mode outputs prompt to stdout
+- **WHEN** user executes `osq plan <name> -print`
+- **THEN** opening prompt is written exclusively to stdout without launching an interactive process
+
+### Requirement: Codex configuration and resolution
+<!-- source: src/core/config*.ts, src/index.ts, tests/codex/** -->
+The configuration subsystem SHALL support harness codex and publicly exported CodexConfig with optional non-empty bin, model, and effort strings, preserving existing harness defaults. Codex binary resolution SHALL use explicit codex.bin, then CODEX_PATH, then codex. Executor model resolution SHALL use explicit codex.model, then OSQ_MODEL only for a Codex executor, then native Codex defaults. Effort SHALL use explicit codex.effort or native defaults.
+
+#### Scenario: Explicit configuration wins
+- **WHEN** explicit Codex settings and environment fallbacks both exist
+- **THEN** osq uses explicit settings without borrowing another harness's model
+
+#### Scenario: Native defaults
+- **WHEN** Codex model and effort have no applicable configuration
+- **THEN** osq omits their CLI overrides and does not invent a resolved model
+
+### Requirement: Codex setup and diagnostics
+<!-- source: src/cli/setup.ts, src/core/doctor.ts, src/core/config*.ts, src/harness/codex*.ts, tests/codex/** -->
+The system SHALL support Codex setup through the shared managed AGENTS procedure without generating harness-specific configuration or credentials. Doctor SHALL probe the configured Codex execution binary with --version, resolving it identically to the adapter. Optional harnessPreflightSeconds and harnessKillGracePeriodMs timeout fields SHALL preserve existing timeout-object compatibility and use centrally configured defaults.
+
+#### Scenario: Idempotent mixed-harness setup
+- **WHEN** Codex is the executor, planner, or both and setup runs repeatedly
+- **THEN** shared instructions and foreign managed blocks coexist, consumer Codex files remain intact, no Codex files are created, and the other selected adapter is also set up where applicable
+
+#### Scenario: Failed binary probe
+- **WHEN** the resolved Codex executable is missing, returns nonzero, or exceeds its configured preflight deadline
+- **THEN** doctor reports an actionable failing harness check and exits unsuccessfully
+
+### Requirement: Codex planning selection
+<!-- source: src/core/config*.ts, src/cli/plan.ts, tests/codex/** -->
+Planner configuration SHALL accept codex with the existing required non-empty planner.model and SHALL reject planner.agent for Codex. The planning command SHALL use the selected planner harness's model consistently in brief metadata and process arguments, including when falling back to a Codex executor. Explicit Codex planners SHALL use native effort defaults rather than executor-specific effort.
+
+#### Scenario: Independent planner model
+- **WHEN** executor and planner use different harnesses and the planner is Codex
+- **THEN** the brief and invocation use planner.model and do not inherit the executor's model, OSQ_MODEL fallback, or effort
+
+#### Scenario: Implicit Codex planner
+- **WHEN** no planner block exists and the execution harness is Codex
+- **THEN** planning uses the Codex executor's selected model, or writes default in brief metadata and omits the CLI model flag when native selection is used
+
+#### Scenario: Unsupported planner agent
+- **WHEN** planner.harness is codex and planner.agent is supplied
+- **THEN** configuration fails with a clear unsupported-setting error rather than silently ignoring the agent
+
+#### Scenario: Existing-change and print paths
+- **WHEN** planning reopens an existing change with a brief or uses the existing print option
+- **THEN** the existing change is reused for a fresh file-seeded session, while print mode emits the ordered opening prompt without launching Codex
+
+### Requirement: Codex consumer guidance
+<!-- source: README.md, .env.example, src/core/init.ts, tests/codex-guidance.test.ts -->
+The README and scaffolded environment example SHALL describe Codex selection, independent planning configuration, optional model/effort, precedence, setup and authentication prerequisites, permissions, diagnostics, fresh sessions, watcher verification, and observed-only metrics. Examples SHALL preserve the current default harness and contain no credentials or hard-coded recommended model.
+
+#### Scenario: Scaffold preservation
+- **WHEN** a clean project is scaffolded and later scaffolded again after its environment example is edited
+- **THEN** the original generated example includes commented Codex guidance and the repeat run preserves consumer edits
+
+#### Scenario: Honest support boundaries
+- **WHEN** a consumer reads the Codex guidance
+- **THEN** it distinguishes task scope from sandbox permissions, leaves unreported cost unestimated, and describes optional live validation without claiming an untested minimum CLI version
+
+### Requirement: Canonical harness capability catalog
+<!-- source: src/core/harness-catalog.ts, src/core/config*.ts, src/harness/index.ts, src/index.ts, tests/harness-catalog.test.ts -->
+The configuration subsystem SHALL maintain one immutable catalog of supported harness names and shared capabilities for executable resolution, execution identity, effort attribution, and planner-agent support. Supported-name validation, available-name diagnostics, and shared harness resolution SHALL derive from this catalog without independent harness-name sets. Adapter factories SHALL be statically exhaustive over the catalog-derived harness name type.
+
+#### Scenario: Consistent registered harness lookup
+- **WHEN** a registered executor or planner harness is resolved with supported casing
+- **THEN** configuration validation, adapter lookup, available names, and shared metadata identify the same catalog entry
+
+#### Scenario: Catalog and adapter factory parity
+- **WHEN** a catalog entry lacks an adapter factory or a factory lacks a catalog entry
+- **THEN** type checking or registry contract tests fail
+
+### Requirement: Capability-driven planner validation
+<!-- source: src/core/harness-catalog.ts, src/core/config*.ts, src/cli/plan.ts, tests/config-planner-catalog.test.ts -->
+Planner validation SHALL derive supported harness names and optional-setting support from the canonical harness catalog while requiring a non-empty planner model. Planner selection SHALL use explicit planner configuration when present and otherwise the selected executor's catalog entry, without borrowing model, effort, or agent values from another harness.
+
+#### Scenario: Supported planner configuration
+- **WHEN** planner configuration supplies only settings supported by its selected catalog entry
+- **THEN** validation returns normalized planner configuration and planning uses that harness's model and agent selection
+
+#### Scenario: Unsupported planner setting
+- **WHEN** planner configuration supplies an optional setting unsupported by its selected harness
+- **THEN** validation fails with an error naming the harness and unsupported setting
+
+#### Scenario: Implicit planner selection
+- **WHEN** no planner block is configured
+- **THEN** planning uses the selected executor's planner capabilities, records `default` for native model attribution when applicable, and passes no invented model override
+
+### Requirement: Catalog-driven harness diagnostics
+<!-- source: src/core/doctor.ts, src/core/harness-catalog.ts, tests/harness-generic-workflows.test.ts -->
+Repository health diagnostics SHALL resolve the selected executor's external executable through the canonical harness catalog and probe it with the configured deadline. A catalogued harness that declares no external executable SHALL pass the harness diagnostic without spawning a process.
+
+#### Scenario: External harness diagnostic
+- **WHEN** doctor checks a registered harness with an external executable
+- **THEN** it probes the catalog-resolved command and reports its version or an actionable missing, nonzero, or timeout failure
+
+#### Scenario: No-binary harness diagnostic
+- **WHEN** doctor checks a registered harness declaring no external executable
+- **THEN** the harness check succeeds without a process probe
+
+### Requirement: Generic harness consumer guardrails
+<!-- source: tests/harness-architecture.test.ts -->
+Generic configuration, diagnostics, planning, manifest, and watcher consumers SHALL NOT select behavior through comparisons or fallback expressions naming individual first-party harnesses. Architecture validation SHALL derive forbidden generic-consumer name branches from the canonical catalog rather than a separately maintained harness list.
+
+#### Scenario: Harness-specific generic branch
+- **WHEN** a generic consumer introduces a semantic branch or cross-harness fallback naming a catalogued harness
+- **THEN** architecture validation fails
+
+#### Scenario: Future first-party harness
+- **WHEN** a future first-party harness is added
+- **THEN** generic consumers require no harness-specific branch changes

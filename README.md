@@ -150,6 +150,7 @@ Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout
 
 Available adapters:
 - `agy`: Antigravity harness adapter
+- `codex`: Codex CLI harness adapter running tasks via `codex exec` and planning via the Codex TUI
 - `opencode`: OpenCode harness adapter running tasks via `opencode run`
 - `mock`: In-memory deterministic simulation for tests
 
@@ -170,6 +171,63 @@ export default defineConfig({
 ```
 
 Running `osq setup` with the `opencode` harness scaffolds `.opencode/agent/osq-coder.md` with restricted permissions (denying `webfetch` and `websearch`) and the managed `AGENTS.md` execution procedure. Note that the `--auto` flag approves any action the agent file does not deny. The agent file must have mode `all` or `primary`; a subagent cannot be selected with --agent and OpenCode silently falls back to an unrestricted default. `webfetch` and `websearch` are denied at the tool level, but `bash` is allowed and unrestricted, so the agent can reach the network through the shell. Network isolation requires a sandbox and is listed under "Not yet".
+
+### Codex CLI
+
+Select Codex as the executor in `osq.config.ts`:
+
+```ts
+import { defineConfig } from '@matteeh/osq';
+
+export default defineConfig({
+  harness: 'codex',
+  codex: {
+    // All fields are optional; omit any of them to use Codex's native value.
+    // bin: '/path/to/codex',   // codex.bin -> CODEX_PATH -> `codex`
+    // model: '<your-model>',   // codex.model -> OSQ_MODEL (Codex executor only) -> native
+    // effort: '<your-effort>', // codex.effort -> native default
+  },
+});
+```
+
+Setting `OSQ_HARNESS=codex` in the environment or `.env` also selects Codex, but an explicit `harness` in `osq.config.ts` wins over that fallback. Binary precedence is `codex.bin`, then `CODEX_PATH`, then `codex` on `PATH`. Model precedence is `codex.model`, then `OSQ_MODEL` only when Codex is the executor, then Codex's native default; `effort` is `codex.effort` or the native default. With no model configured, osq records `default` rather than guessing one.
+
+Planning can use a different harness and model from execution:
+
+```ts
+export default defineConfig({
+  harness: 'opencode',
+  planner: {
+    harness: 'codex',
+    model: '<your-planner-model>', // required, must be non-empty
+    // agent is unsupported for codex; config validation rejects it.
+  },
+});
+```
+
+Codex has no planner-agent concept, so `planner.agent` is unsupported and `defineConfig` rejects it with a clear error rather than ignoring it. An explicit `planner` block never inherits the executor's `OSQ_MODEL` or effort; when planning falls back to a Codex executor, the brief records `default` and no model flag is passed to Codex.
+
+#### Codex setup and prerequisites
+
+Install the Codex CLI and authenticate it in the same host environment where osq runs. osq reuses Codex's native authentication and configuration; it never reads, writes, or manages your credentials or bypasses Codex policies. `osq setup` for Codex generates no Codex-specific files: it only maintains the shared managed `AGENTS.md` block and preserves foreign blocks, because Codex uses the same executor protocol as every other harness.
+
+`osq doctor` probes the configured binary with `--version` using the same resolution as the adapter, and the watcher runs the same preflight before the first task. A missing, nonzero, or timed-out probe fails clearly before any task executes.
+
+#### Codex permissions
+
+Executor tasks run a fresh noninteractive process per task in the project root with `--ask-for-approval never` and `--sandbox workspace-write`, web search disabled, and workspace shell network access disabled. There is no session resume, `--auto`, or permission-bypass flag, and the prompt is passed as one literal argument.
+
+Interactive planning launches the Codex TUI with `--ask-for-approval on-request` and `--sandbox workspace-write`, using Codex's native reasoning-effort default rather than the executor's `codex.effort`.
+
+As with every harness, scope is a protocol, not hard confinement: the prompt and the watcher's checks restrict the agent to its declared files, but they do not sandbox the filesystem or network beyond what the harness itself enforces. Hard OS/container confinement remains under "Not yet".
+
+#### Codex observations and costs
+
+Each task is a fresh Codex session; osq never resumes a prior conversation. The watcher, not the adapter, owns result files, markers, checkboxes, and independent verification: if Codex exits without writing a result, the watcher synthesizes one from the final completed assistant message and still runs `verify` itself before writing `done`. Token counts come only from usage Codex actually reports (`turn.completed`), broken down into observed input, output, cached, and reasoning tokens; osq does not estimate usage or cost, and it reports cost only when the harness supplies it.
+
+#### Live Codex smoke check (optional, human-owned)
+
+Offline tests use a deterministic fake Codex executable and require no authentication, network access, or model. A separate optional live check, after installing and authenticating the real CLI, is to run one harmless approved fixture task and one interactive planning session, then confirm the watcher's verification, the emitted events and result file, harness/model attribution, and clean exits. Record the CLI version you tested; the offline suite does not establish a minimum supported Codex release.
 
 ## Commands
 

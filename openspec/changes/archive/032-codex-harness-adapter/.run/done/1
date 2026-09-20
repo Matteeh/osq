@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:81fabe1214675d5231a39312e8cdb728a8cc9efa50e526a2596daa488028a7fe"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:bd515bec8a7fce04e6bbbf1d98231e2eaedf8751b52081cc5ff318567affe387","src/core/config*.ts":null,"src/core/doctor.ts":"sha256:7e81b06d8cd1f71af7ae6bf31d4aa48d7e7e4716ef49b604bf58c8f6fe079be2","src/core/manifest.ts":"sha256:68fc24fbb95cb5549409e9ec5de0c27abb96fb2c0dcb828c0a30c26c3533564d","src/harness/**":null,"src/index.ts":"sha256:25313e48907518396617ab062c2a423070376a02fa7d81ae905d93d3c6026b4a","src/watcher/**":null,"tests/codex/**":null}
+---
+2026-09-20T19:17:29.013Z

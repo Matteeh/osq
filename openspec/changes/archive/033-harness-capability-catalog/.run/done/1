@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:c5d284abcfc1c0bb7b02e00bbeaf24ae944a837a633d2c89f62f17c94649da5e"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {"src/core/config*.ts":null,"src/core/harness-catalog.ts":"sha256:e2cad577b37ffdd45efcbe8e8dece9189b2b89309816228f3fbe6850c0555a93","src/harness/index.ts":"sha256:cfab56c436b57135c3fb2666aba534e2a8bf908de882a607bf4aa9ca0a9b14df","src/index.ts":"sha256:4aa9cd26f5ce2adb71e524ca3a983eae337743d600b4d4def8f718ff24707614","tests/config-planner-catalog.test.ts":"sha256:33ef65f558ebfba4ce2d2b38c712992057eda7876a605d9194222b973f477046","tests/harness-catalog.test.ts":"sha256:7520b80ba6363b98726935e493f3c1cbb8a9c84aaca19476e80a05b1e75dc5b7"}
+---
+2026-09-20T19:37:09.636Z

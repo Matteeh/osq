@@ -400,7 +400,7 @@ export class AgyAdapter implements HarnessAdapter {
 
     return new Promise<number>((resolve) => {
       child.on('error', () => resolve(1));
-      child.on('close', (code) => resolve(code ?? 0));
+      child.on('close', (code) => resolve(code ?? 1));
     });
   }
 }

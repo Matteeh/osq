@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:11fcf5d8d6944cda92bc1b42837e9d1bd822b8b713c412db3ba0d7d714e80063"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {".env.example":"sha256:264e6e859e03c22aef9b079f1d00b07e1b86c2679df4ce8d645ba3fd9e92d5e2","README.md":"sha256:76c18840d139b9dba4de53f6f39467a3536af56dcfbfa2b6f307a6ed14767270","src/core/init.ts":"sha256:ee3b4fa5598175c15ac6b95468927eb7f1383d43126ca3f8b14b108f069849e5","tests/codex-guidance.test.ts":"sha256:02804c7d069d5c601db829419b48aa18de6320f21fb1504762811968ceeeb4ab"}
+---
+2026-09-20T19:19:11.487Z

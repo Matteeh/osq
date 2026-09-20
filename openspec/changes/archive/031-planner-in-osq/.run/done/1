@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:d8f32323550ca880817ada65eb6d3ec4648a6dc1ed57f8a18b1b6b160ab38170"
+build_stamp: "e51fa90"
+exit_code: 0
+scope_files: {"src/core/config.ts":"sha256:f3697f3aff581848d761477412fc82ab08c7642fd7344433024bfecec0c679c0","src/core/manifest.ts":"sha256:061ad24367aac9153a58689d3dde3b1feac5fe1d7293a42bc4565cf7bdb7b4c6","tests/config-planner.test.ts":"sha256:6019cf5afef1d08bcf08e0e419286b4f38bc1d4575674feae592938efd601dc1","tests/manifest.test.ts":"sha256:c966d442e93ad0273e46126d92813d54f79578256705b9d198252a5a8e3047e9"}
+---
+2026-09-20T19:00:24.035Z

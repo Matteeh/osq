@@ -1,0 +1,3 @@
+{"type":"error","message":"transient recoverable error"}
+{"type":"item.completed","item":{"id":"i2","type":"agent_message","text":"recovered successfully"}}
+{"type":"turn.completed","usage":{"input_tokens":11,"output_tokens":5}}
