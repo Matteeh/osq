@@ -65,11 +65,20 @@ reader succeeds.
 - One task per coherent unit. Title is "When X, Y".
 - Every task names its \`scope\`, \`verify\` (no TTY, no network), and the test
   files it may modify. Tests not listed are frozen.
+- Every task's \`verify\` exercises its slice through the real entry point, wiring
+  included. If closing the loop requires a file outside the task's \`scope\`, the
+  scope is wrong; widen it or merge the task. An executor result that says the
+  work is outside its scope is a planning failure.
+- Task bodies carry acceptance lines and the names of existing code to reuse,
+  without signature blocks, numbered implementation steps, or line numbers. Write
+  full signatures only for ports.
 - Refer to functions and files by name, never by line number.
 
 ### Parent spec
 
-- \`## Goal\`, \`## Non-goals\`, and the contract as requirements with scenarios.
+- \`## Goal\`, then the change-level \`verify\` every proposal declares as the first
+  thing written after the goal, then \`## Non-goals\` and the contract as
+  requirements with scenarios.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
 - Anything a task must not do itself goes under \`## Human steps\`.

@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:bbfacdff376484356c4423085b73056aeba863ca8d8300fdc2335e0e1e7c3a3c"
+build_stamp: "9c3b03b"
+exit_code: 0
+scope_files: {"src/core/linter.ts":"sha256:f136d77a1de182ee8abb6212ff354d07962e3d2b6cd509d9eca997e1f48f21ff","tests/instruction-delta-lint.test.ts":"sha256:a8867b96ac2c2bf4829aae0bc2f84e5d622ccbce2dcfc4357b435927d9bca62f","tests/linter.test.ts":"sha256:82734bacf538bc558cc11d743727fc9b8da0c392f763a7625b00b803cd9fcc1b"}
+---
+2026-09-19T11:05:03.043Z

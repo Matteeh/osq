@@ -11,6 +11,16 @@ import {
   updatePlannerMd,
 } from '../src/core/init.js';
 
+/** Slice the managed planner block out of a document, markers included. */
+function extractManagedBlock(content: string): string {
+  const startIndex = content.indexOf(OSQ_START_MARKER);
+  const endIndex = content.indexOf(OSQ_END_MARKER);
+
+  assert.ok(startIndex !== -1, 'content should contain OSQ_START_MARKER');
+  assert.ok(endIndex > startIndex, 'OSQ_END_MARKER should follow OSQ_START_MARKER');
+  return content.slice(startIndex, endIndex + OSQ_END_MARKER.length);
+}
+
 describe('osq init PLANNER.md', () => {
   let tmpDir: string;
 
@@ -71,6 +81,26 @@ describe('osq init PLANNER.md', () => {
     );
   });
 
+  it('managed block encodes the slicing rule', () => {
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('real entry point'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('widen it or merge the task'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('outside its scope is a planning failure'));
+  });
+
+  it('managed block encodes the detail rule', () => {
+    assert.ok(
+      MANAGED_PLANNER_BLOCK.includes(
+        'without signature blocks, numbered implementation steps, or line numbers',
+      ),
+    );
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('full signatures only for ports'));
+  });
+
+  it('managed block encodes the change-level verify rule', () => {
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('change-level `verify`'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('written after the goal'));
+  });
+
   it('repository PLANNER.md carries the file-tool instruction', async () => {
     const content = await fs.readFile(path.join(process.cwd(), 'PLANNER.md'), 'utf8');
 
@@ -84,15 +114,14 @@ describe('osq init PLANNER.md', () => {
     const content = await fs.readFile(path.join(tmpDir, 'PLANNER.md'), 'utf8');
     assert.ok(content.includes(OSQ_START_MARKER));
     assert.ok(content.includes(OSQ_END_MARKER));
+    assert.equal(extractManagedBlock(content), MANAGED_PLANNER_BLOCK);
   });
 
-  it('repository PLANNER.md contains the current managed block between markers', async () => {
-    const content = await fs.readFile(path.join(process.cwd(), 'PLANNER.md'), 'utf8');
-    const startIndex = content.indexOf(OSQ_START_MARKER);
-    const endIndex = content.indexOf(OSQ_END_MARKER);
+  it('PLANNER.md, MANAGED_PLANNER_BLOCK, and templates/PLANNER.md are byte-for-byte equal', async () => {
+    const planner = await fs.readFile(path.join(process.cwd(), 'PLANNER.md'), 'utf8');
+    const template = await fs.readFile(path.join(process.cwd(), 'templates', 'PLANNER.md'), 'utf8');
 
-    assert.ok(startIndex !== -1, 'PLANNER.md should contain OSQ_START_MARKER');
-    assert.ok(endIndex > startIndex, 'OSQ_END_MARKER should follow OSQ_START_MARKER');
-    assert.ok(content.includes(MANAGED_PLANNER_BLOCK));
+    assert.equal(extractManagedBlock(planner), MANAGED_PLANNER_BLOCK);
+    assert.equal(template, MANAGED_PLANNER_BLOCK);
   });
 });

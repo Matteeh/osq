@@ -635,6 +635,102 @@ skills: []
     assert.equal(result.errors.length, 0);
   });
 
+  it('rejects an added delta requirement named with "Update"', async () => {
+    await writeDelta(
+      specFolder,
+      'sample',
+      `# Spec Delta: sample
+
+## Purpose
+
+Sample capability.
+
+## ADDED Requirements
+
+### Requirement: Update configuration loading
+The system SHALL load configuration.
+
+#### Scenario: Works
+- **WHEN** invoked
+- **THEN** works
+`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some(
+        (e) =>
+          e.startsWith('openspec:') &&
+          e.includes('sample') &&
+          e.includes('Update configuration loading') &&
+          e.includes('instruction-shaped'),
+      ),
+      result.errors.join('\n'),
+    );
+  });
+
+  it('rejects an added delta requirement named with "Document"', async () => {
+    await writeDelta(
+      specFolder,
+      'sample',
+      `# Spec Delta: sample
+
+## Purpose
+
+Sample capability.
+
+## ADDED Requirements
+
+### Requirement: Document release process
+The system SHALL describe the release process.
+
+#### Scenario: Works
+- **WHEN** invoked
+- **THEN** works
+`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some(
+        (e) =>
+          e.startsWith('openspec:') && e.includes('"document"') && e.includes('instruction-shaped'),
+      ),
+      result.errors.join('\n'),
+    );
+  });
+
+  it('accepts a declarative added delta requirement with zero errors', async () => {
+    await writeDelta(
+      specFolder,
+      'sample',
+      `# Spec Delta: sample
+
+## Purpose
+
+Sample capability.
+
+## ADDED Requirements
+
+### Requirement: Configuration loading
+The system SHALL load configuration.
+
+#### Scenario: Works
+- **WHEN** invoked
+- **THEN** works
+`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(result.errors.length, 0);
+  });
+
   it('registers the lint command in the CLI', () => {
     const program = createProgram();
     const commandNames = program.commands.map((cmd) => cmd.name());

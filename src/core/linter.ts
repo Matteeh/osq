@@ -3,7 +3,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from './config.js';
-import { DeltaMergeError, mergeDelta, parseDelta } from './delta.js';
+import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
 import {
   hasDeclaredWrites,
@@ -46,6 +46,13 @@ const PROHIBITED_CONTROL_REGEX = /[\x00-\x08\x0B-\x1F\x7F]/;
 
 /** Acceptance checkbox pattern; two or more on one line indicates fused lines. */
 const ACCEPTANCE_CHECKBOX_REGEX = /[-*]\s*\[[ xX]\]/g;
+
+/**
+ * Requirement names that begin with an imperative instruction verb. A living
+ * capability spec declares observable state; a delta requirement whose name
+ * starts with "update" or "document" is an instruction and is rejected.
+ */
+const INSTRUCTION_SHAPED_REQUIREMENT_REGEX = /^(?:update|document)/i;
 
 /**
  * Recursively list repository-folders' files relative to `baseDir`, skipping
@@ -418,6 +425,34 @@ async function checkDependencyExists(
   return false;
 }
 
+/** Returns the leading instruction verb in a requirement name, else null. */
+function instructionVerbOf(name: string): string | null {
+  const match = name.trim().match(INSTRUCTION_SHAPED_REQUIREMENT_REGEX);
+  return match ? match[0].toLowerCase() : null;
+}
+
+/**
+ * Reports delta requirements whose names are instruction-shaped. Deltas must
+ * define living capability requirements, so names starting with an imperative
+ * verb such as "update" or "document" are rejected with the capability and the
+ * offending requirement title.
+ */
+function scanInstructionShapedRequirements(
+  capability: string,
+  requirements: DeltaRequirement[],
+  errors: string[],
+): void {
+  for (const requirement of requirements) {
+    const verb = instructionVerbOf(requirement.name);
+    if (!verb) {
+      continue;
+    }
+    errors.push(
+      `${OPENSPEC_ERROR_PREFIX} ${capability}: requirement "${requirement.name}" is instruction-shaped ("${verb}"); delta specs must define living capability requirements, not instructions`,
+    );
+  }
+}
+
 /**
  * Verifies that every delta operation targeting a requirement resolves against
  * the living base spec at `openspec/specs/<capability>/spec.md`. Applying the
@@ -461,8 +496,15 @@ export async function verifyDeltaTargets(
       .readFile(path.join(specsRoot, capability, 'spec.md'), 'utf8')
       .catch(() => null);
 
+    const delta = parseDelta(deltaContent);
+    scanInstructionShapedRequirements(
+      capability,
+      [...delta.added, ...delta.modified, ...delta.removed],
+      errors,
+    );
+
     try {
-      mergeDelta(baseContent, capability, parseDelta(deltaContent));
+      mergeDelta(baseContent, capability, delta);
     } catch (error) {
       if (error instanceof DeltaMergeError) {
         errors.push(`${OPENSPEC_ERROR_PREFIX} ${capability}: ${error.message}`);

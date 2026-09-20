@@ -1,5 +1,3 @@
-# Planning a change for osq
-
 <!-- OSQ:START -->
 ## Planning a change
 
