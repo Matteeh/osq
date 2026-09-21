@@ -77,4 +77,22 @@ describe('osq CLI', () => {
     program.commands.find((cmd) => cmd.name() === 'reject')?.exitOverride();
     await assert.rejects(() => program.parseAsync(['node', 'osq', 'reject', '001']));
   });
+
+  it('gives the root command an action and a --json inbox option', () => {
+    const program = createProgram();
+
+    assert.ok(program.options.some((option) => option.long === '--json'));
+    assert.equal(
+      typeof (program as unknown as { _actionHandler?: unknown })._actionHandler,
+      'function',
+      'bare osq should run the inbox instead of Commander help',
+    );
+  });
+
+  it('keeps report --json scoped to the report subcommand', () => {
+    const program = createProgram();
+    const report = program.commands.find((cmd) => cmd.name() === 'report');
+
+    assert.ok(report?.options.some((option) => option.long === '--json'));
+  });
 });

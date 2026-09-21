@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:6c63c05253dfefc0140dd06a77588360fa1be54cc5f3d24eb47e7450328b1087"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"fixture/inbox/**":null,"src/cli/inbox.ts":"sha256:cd79e6a467670805006abf2213da358b99b47d8f9725349d637aacd70f21511e","src/cli/index.ts":"sha256:66f216b8f19cbed2d5fb889165018ea6a0732b6e8cb9aa169605673f508bf0f9","src/core/inbox.ts":"sha256:43017c4f8145e3c3a7ff2ff58633ab49e06d5af923d39b08b64021fb21f81d8a","src/core/state.ts":"sha256:54041d7810372d272787c541885f525b639d842e073725248f17ec83d667c6e1","src/core/status.ts":"sha256:753b0051ecde1658ab678cb5d76fd12224aca3a87646cee02d482dd76e2181d7","tests/cli.test.ts":"sha256:04e26c5577d3d97e73bfc44810ee0a574aebc2761087b1081eac89596c9ca054","tests/inbox.test.ts":"sha256:77410aeb778ca6bb3b769c5eae7aee8aa4c3630352ce6e7e134db874aa17adb4"}
+---
+2026-09-21T12:55:32.409Z

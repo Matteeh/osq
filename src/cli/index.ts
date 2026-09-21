@@ -3,6 +3,7 @@ import { Command, InvalidArgumentError } from 'commander';
 import { approveCommand } from './approve.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
+import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
@@ -33,13 +34,20 @@ function parseRejectReason(value: string): string {
 
 export function createProgram(version?: string): Command {
   const program = new Command();
+  // Keep root options (notably `--json`) from shadowing the identically named
+  // option on subcommands such as `report --json`.
+  program.enablePositionalOptions();
 
   program
     .name('osq')
     .description(
       'Strict spec queue. Spec-driven development with two kinds of agent and a human gate.',
     )
-    .version(version ?? resolvePackageVersion());
+    .version(version ?? resolvePackageVersion())
+    .option('--json', 'print the human attention inbox as JSON')
+    .action(async (options: { json?: boolean }) => {
+      await inboxCommand({ json: options.json });
+    });
 
   program
     .command('init')

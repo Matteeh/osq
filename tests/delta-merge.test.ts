@@ -12,6 +12,7 @@ import {
   parseDelta,
   parseRequirement,
   parseScenario,
+  serializeCapabilitySpec,
 } from '../src/core/delta.js';
 import { applyOpenSpecDeltas } from '../src/watcher/archiver.js';
 
@@ -75,8 +76,19 @@ async function readCapabilityDelta(capability: string): Promise<string> {
   return fs.readFile(path.join(deltaRoot, capability, 'spec.md'), 'utf8');
 }
 
+function stripOwnership(content: string): string {
+  const parsed = parseCapabilitySpec(content);
+  return serializeCapabilitySpec({
+    ...parsed,
+    requirements: parsed.requirements.filter(
+      (requirement) => requirement.name !== 'Code ownership',
+    ),
+  });
+}
+
 async function readLivingSpec(capability: string): Promise<string> {
-  return fs.readFile(path.join(LIVING_SPEC_ROOT, capability, 'spec.md'), 'utf8');
+  const content = await fs.readFile(path.join(LIVING_SPEC_ROOT, capability, 'spec.md'), 'utf8');
+  return stripOwnership(content);
 }
 
 const INITIAL_DELTA = `# Spec Delta: cli-foundation
@@ -541,9 +553,10 @@ The sample capability SHALL own sample code.
 
         const livingDir = path.join(tmpDir, 'openspec', 'specs', capability);
         await fs.mkdir(livingDir, { recursive: true });
-        await fs.copyFile(
-          path.join(LIVING_SPEC_ROOT, capability, 'spec.md'),
+        await fs.writeFile(
           path.join(livingDir, 'spec.md'),
+          await readLivingSpec(capability),
+          'utf8',
         );
       }
 

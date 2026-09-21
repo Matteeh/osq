@@ -2,9 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import * as layout from './layout.js';
 import { type SpecData, parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
-
 export type TaskStatus = 'pending' | 'running' | 'done' | 'dead' | 'regressed';
-
 export interface TaskState {
   taskNumber: string;
   fileName: string;
@@ -13,8 +11,8 @@ export interface TaskState {
   verify: string;
   deadReason?: string;
   resultFile?: string;
+  lock?: { readonly pid: number; readonly startedAt: number };
 }
-
 export type SpecStatus =
   | 'unapproved'
   | 'blocked'
@@ -32,8 +30,9 @@ export interface SpecState {
   approvedHash: string | null;
   tasks: TaskState[];
   nextTask: TaskState | null;
+  changeRegressed?: boolean;
+  hasProposal?: boolean;
 }
-
 /** Immutable change-folder view; {@link readChangeFolder} captures everything, so derivation is pure. */
 export interface ChangeFolderSnapshot {
   readonly folderName: string;
@@ -60,7 +59,18 @@ export function compareNumericPrefix(a: string, b: string): number {
   }
   return a.localeCompare(b);
 }
-/** Pure task evaluation: markers win regressed > done > dead > running > pending. */
+function parseRunningLock(
+  content: string | undefined,
+): { pid: number; startedAt: number } | undefined {
+  try {
+    const raw = JSON.parse(content ?? '') as { pid?: unknown; startedAt?: unknown };
+    if (typeof raw.pid !== 'number' || typeof raw.startedAt !== 'number') return undefined;
+    if (!Number.isFinite(raw.pid) || !Number.isFinite(raw.startedAt)) return undefined;
+    return { pid: raw.pid, startedAt: raw.startedAt };
+  } catch {
+    return undefined;
+  }
+}
 function deriveTaskStateFromSnapshot(
   snapshot: ChangeFolderSnapshot,
   taskFileName: string,
@@ -86,7 +96,8 @@ function deriveTaskStateFromSnapshot(
     return { ...base, status: 'dead', deadReason: reason };
   }
   if (snapshot.runningPids.has(taskNumber)) {
-    return { ...base, status: 'running' };
+    const lock = parseRunningLock(snapshot.runningPids.get(taskNumber));
+    return lock ? { ...base, status: 'running', lock } : { ...base, status: 'running' };
   }
   if (snapshot.resultFiles.has(taskNumber)) {
     const resultFile = layout.getResultPath(snapshot.folderPath, taskNumber);
@@ -109,14 +120,12 @@ export function deriveSpecState(
   const tasks = [...snapshotOrRoot.taskFiles.keys()]
     .sort(compareNumericPrefix)
     .map((fileName) => deriveTaskStateFromSnapshot(snapshotOrRoot, fileName));
+  const changeRegressed = snapshotOrRoot.regressedMarkers?.has('change') ?? false;
   let status: SpecStatus = 'pending';
   let nextTask: TaskState | null = null;
   if (!snapshotOrRoot.approvedHash) {
     status = 'unapproved';
-  } else if (
-    tasks.some((t) => t.status === 'regressed') ||
-    snapshotOrRoot.regressedMarkers?.has('change')
-  ) {
+  } else if (tasks.some((t) => t.status === 'regressed') || changeRegressed) {
     status = 'regressed';
   } else if (tasks.some((t) => t.status === 'dead')) {
     status = 'dead';
@@ -139,6 +148,7 @@ export function deriveSpecState(
     approvedHash: snapshotOrRoot.approvedHash,
     tasks,
     nextTask,
+    changeRegressed,
   };
 }
 async function listDir(dir: string): Promise<string[]> {
@@ -151,8 +161,6 @@ async function findFolder(parent: string, prefix: string): Promise<string | null
 async function isDependencyDone(changesDir: string, dependency: string): Promise<boolean> {
   const padded = dependency.padStart(3, '0');
   if (await findFolder(path.join(changesDir, 'archive'), padded)) return true;
-  // A rejected change is auditable but never satisfies a dependency, even when
-  // its preserved folder contains done markers or approval.
   if (await findFolder(path.join(changesDir, 'rejected'), padded)) return false;
   const active = await findFolder(changesDir, padded);
   if (!active) return false;
@@ -187,7 +195,6 @@ export async function readChangeFolder(
   if (!spec) {
     throw new Error(`Neither proposal.md nor spec.md found in ${folderPath}`);
   }
-
   const runDir = layout.getChangeRunDir(folderPath);
   const tasksDir = layout.getChangeTasksDir(folderPath);
   const taskFiles = new Map<string, string>();
@@ -196,7 +203,6 @@ export async function readChangeFolder(
     .sort(compareNumericPrefix)) {
     taskFiles.set(entry, await fs.readFile(path.join(tasksDir, entry), 'utf8'));
   }
-
   const readMarkerMap = async (dir: string, suffix: string): Promise<Map<string, string>> => {
     const markers = new Map<string, string>();
     for (const entry of await listDir(dir)) {
@@ -206,7 +212,6 @@ export async function readChangeFolder(
     }
     return markers;
   };
-
   const approved = await fs
     .readFile(layout.getApprovedMarkerPath(folderPath), 'utf8')
     .catch(() => null);
@@ -233,10 +238,8 @@ export async function deriveTaskState(
 ): Promise<TaskState> {
   return deriveTaskStateFromSnapshot(await readChangeFolder('', specFolderPath), taskFileName);
 }
-
 /** Alias for {@link deriveTaskState} used by status and reporting specs. */
 export const deriveTaskStatus = deriveTaskState;
-
 /** Backward-compatible async wrapper: read a change folder, then derive purely. */
 export async function deriveSpecStateFromDisk(
   projectRoot: string,

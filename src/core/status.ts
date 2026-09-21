@@ -104,6 +104,7 @@ export async function getStatusOverview(
   );
 
   const validFolders: string[] = [];
+  const proposals = new Map<string, boolean>();
   for (const folder of candidateFolders) {
     const folderPath = path.join(specsDir, folder);
     const stat = await fs.stat(folderPath).catch(() => null);
@@ -113,6 +114,7 @@ export async function getStatusOverview(
     if (!changeDoc) continue;
 
     validFolders.push(folder);
+    proposals.set(folder, changeDoc.kind === 'proposal');
   }
 
   validFolders.sort((a, b) => {
@@ -128,6 +130,7 @@ export async function getStatusOverview(
   for (const folder of validFolders) {
     const folderPath = path.join(specsDir, folder);
     const specState = await deriveSpecState(projectRoot, folderPath);
+    specState.hasProposal = proposals.get(folder) ?? false;
     specs.push(specState);
   }
 
