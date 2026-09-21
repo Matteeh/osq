@@ -13,7 +13,7 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
-    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test": "node --import tsx --test 'tests/**/*.test.ts'",
     "test:golden": "node --import tsx --test tests/golden-events.test.ts",
     "verify": "pnpm tsc --noEmit \u0026\u0026 pnpm test \u0026\u0026 pnpm lint",
     "prepublishOnly": "npm run build"
