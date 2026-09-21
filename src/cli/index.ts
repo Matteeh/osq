@@ -9,6 +9,7 @@ import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { planCommand } from './plan.js';
+import { queueCommand } from './queue.js';
 import { rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
 import { retryCommand } from './retry.js';
@@ -64,19 +65,39 @@ export function createProgram(version?: string): Command {
     });
 
   program
-    .command('plan <name>')
+    .command('plan [name]')
     .description('initialize change, write brief, and open interactive planner session')
     .option('--brief <file>', 'brief file path or - for stdin')
     .option('-p, --print', 'output opening prompt strictly to stdout without launching session')
-    .action(async (name: string, options: { brief?: string; print?: boolean }) => {
-      await planCommand(name, options);
-    });
+    .option('--next', 'plan the next eligible brief-queue item')
+    .option('--replan', 'allow replanning a rejected first eligible queue item')
+    .action(
+      async (
+        name: string | undefined,
+        options: { brief?: string; print?: boolean; next?: boolean; replan?: boolean },
+      ) => {
+        try {
+          await planCommand(name, options);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`Error: ${message}`);
+          process.exitCode = 1;
+        }
+      },
+    );
 
   program
     .command('lint [ids...]')
     .description('validate change folders and OpenSpec artifacts')
     .action(async (ids: string[]) => {
       await lintCommand(ids);
+    });
+
+  program
+    .command('queue')
+    .description('print the read-only brief queue projection')
+    .action(async () => {
+      await queueCommand();
     });
 
   program

@@ -5,13 +5,22 @@ import path from 'node:path';
 import { findSpecFolder } from '../core/approve.js';
 import { resolvePlannerSelection } from '../core/config-codex.js';
 import { loadConfig } from '../core/config.js';
-import { getChangesDir, getSpecsDir } from '../core/layout.js';
-import { buildManifest, writeManifest } from '../core/manifest.js';
-import { createNewSpec } from '../core/new.js';
+import { getChangesDir } from '../core/layout.js';
 import { parseFrontmatter } from '../core/parser.js';
 import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/planning.js';
+import type { QueuePlanSelection } from '../core/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import {
+  buildOpeningPrompt,
+  createChange,
+  createQueueChange,
+  prepareQueueSelection,
+  validatePlanModeOptions,
+  writeBriefAndManifest,
+} from './plan-queue.js';
+
+export { buildOpeningPrompt, formatBriefContent } from './plan-queue.js';
 
 export async function readBriefInput(briefOption?: string): Promise<string> {
   if (briefOption === '-') {
@@ -55,107 +64,70 @@ export async function readBriefInput(briefOption?: string): Promise<string> {
   throw new Error('No brief provided. Specify --brief <file> or set $EDITOR.');
 }
 
-export function formatBriefContent(body: string, plannerModel: string, today: string): string {
-  const trimmed = body.trim();
-  const parsed = parseFrontmatter(trimmed);
-  const frontmatterData = {
-    ...parsed.data,
-    planner: plannerModel,
-    date: today,
-  };
-
-  const yamlLines = Object.entries(frontmatterData).map(([k, v]) => `${k}: ${v}`);
-  const fm = `---\n${yamlLines.join('\n')}\n---\n\n`;
-  const cleanBody = parsed.body.trim();
-
-  return `${fm}${cleanBody}\n`;
-}
-
-export async function buildOpeningPrompt(options: {
-  projectRoot: string;
-  folderPath: string;
-  specId: string;
-  specTitle: string;
-  briefContent: string;
-  openspecRoot: string;
-}): Promise<string> {
-  const { projectRoot, folderPath, specId, specTitle, briefContent, openspecRoot } = options;
-
-  let plannerMd = '';
-  try {
-    plannerMd = await fs.readFile(path.join(projectRoot, 'PLANNER.md'), 'utf8');
-  } catch {
-    plannerMd = '# Planning a change for osq\n';
-  }
-
-  const changeHeader = `# Change: ${specId} - ${specTitle}\nChange ID: ${specId}\nChange Folder: ${path.basename(folderPath)}`;
-
-  const specsDir = getSpecsDir(openspecRoot, projectRoot);
-  const specPaths: string[] = [];
-  try {
-    const entries = await fs.readdir(specsDir, { withFileTypes: true });
-    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      if (entry.isDirectory()) {
-        const rel = path.relative(projectRoot, path.join(specsDir, entry.name, 'spec.md'));
-        specPaths.push(rel);
-      }
-    }
-  } catch {}
-  const specsHeader = `## Capability Specs\n\n${specPaths.map((p) => `- ${p}`).join('\n')}`;
-
-  const briefHeader = `## Brief\n\n${briefContent.trim()}`;
-
-  return [plannerMd.trim(), changeHeader.trim(), specsHeader.trim(), briefHeader.trim()].join(
-    '\n\n',
-  );
+export interface PlanCommandOptions {
+  brief?: string;
+  print?: boolean;
+  next?: boolean;
+  replan?: boolean;
+  cwd?: string;
+  adapter?: HarnessAdapter;
 }
 
 export async function planCommand(
-  nameOrId: string,
-  options: { brief?: string; print?: boolean; cwd?: string; adapter?: HarnessAdapter } = {},
+  nameOrId: string | undefined,
+  options: PlanCommandOptions = {},
 ): Promise<void> {
+  const name = (nameOrId ?? '').trim();
+  validatePlanModeOptions(name, options);
+
   const cwd = options.cwd || process.cwd();
   const config = await loadConfig(cwd);
   const plannerSelection = resolvePlannerSelection(config);
   const changesDir = getChangesDir(config.paths.openspecRoot, cwd);
 
+  let queueSelection: QueuePlanSelection | null = null;
   let folderPath: string | null = null;
   let specId: string | null = null;
   let isResumed = false;
 
-  try {
-    folderPath = await findSpecFolder(changesDir, nameOrId);
-    const briefExists = await fs
-      .stat(path.join(folderPath, 'brief.md'))
-      .then(() => true)
-      .catch(() => false);
-    if (briefExists) {
-      isResumed = true;
-      const folderName = path.basename(folderPath);
-      specId = folderName.match(/^(\d+)/)?.[1] || folderName;
-    }
-  } catch {}
+  if (options.next) {
+    const selection = await prepareQueueSelection(cwd, config, {
+      replan: options.replan,
+      print: options.print,
+    });
+    if (!selection) return;
+    queueSelection = selection;
+  } else {
+    try {
+      folderPath = await findSpecFolder(changesDir, name);
+      const briefExists = await fs
+        .stat(path.join(folderPath, 'brief.md'))
+        .then(() => true)
+        .catch(() => false);
+      if (briefExists) {
+        isResumed = true;
+        const folderName = path.basename(folderPath);
+        specId = folderName.match(/^(\d+)/)?.[1] || folderName;
+      }
+    } catch {}
+  }
 
-  if (!isResumed) {
-    const newResult = await createNewSpec(cwd, nameOrId);
-    folderPath = newResult.folderPath;
-    specId = newResult.specId;
-    if (!options.print) {
-      console.log(`Created spec ${specId}: ${newResult.folderName}`);
-      console.log(`  Path: ${folderPath}`);
-    }
-
+  if (queueSelection) {
+    const created = await createQueueChange(
+      cwd,
+      config,
+      options.print,
+      queueSelection,
+      plannerSelection.briefModel,
+    );
+    folderPath = created.folderPath;
+    specId = created.specId;
+  } else if (!isResumed) {
+    const created = await createChange(cwd, options.print, name, {});
+    folderPath = created.folderPath;
+    specId = created.specId;
     const rawBrief = await readBriefInput(options.brief);
-    const today = new Date().toISOString().split('T')[0];
-    const formattedBrief = formatBriefContent(rawBrief, plannerSelection.briefModel, today);
-
-    const briefPath = path.join(folderPath, 'brief.md');
-    await fs.writeFile(briefPath, formattedBrief, 'utf8');
-
-    const runDir = path.join(folderPath, '.run');
-    await fs.mkdir(runDir, { recursive: true });
-    const manifest = await buildManifest(cwd, folderPath, config);
-    await writeManifest(runDir, manifest);
+    await writeBriefAndManifest(cwd, config, folderPath, plannerSelection.briefModel, rawBrief);
   }
 
   if (!folderPath || !specId) {
@@ -165,7 +137,7 @@ export async function planCommand(
   const briefPath = path.join(folderPath, 'brief.md');
   const briefContent = await fs.readFile(briefPath, 'utf8');
 
-  let specTitle = nameOrId;
+  let specTitle = name;
   try {
     const proposalContent = await fs.readFile(path.join(folderPath, 'proposal.md'), 'utf8');
     const parsed = parseFrontmatter(proposalContent);
@@ -181,6 +153,7 @@ export async function planCommand(
     specTitle,
     briefContent,
     openspecRoot: config.paths.openspecRoot,
+    dependencyPaths: queueSelection?.landedDependencies.map((dep) => dep.archivePath),
   });
 
   if (options.print) {

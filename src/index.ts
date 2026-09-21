@@ -9,6 +9,7 @@ export type {
   OsqPaths,
   OsqTimeouts,
   OsqUserConfig,
+  QueueConfig,
 } from './core/config.js';
 export {
   resolveCodexBinary,

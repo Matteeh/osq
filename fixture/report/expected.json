@@ -246,6 +246,19 @@
       "010-report-history-state": 30
     }
   },
+  "queue": {
+    "configured": false,
+    "failures": [],
+    "items": [],
+    "landed": 0,
+    "planning": {
+      "cost": 0,
+      "costCoverageComplete": false,
+      "sessions": 0
+    },
+    "rejections": [],
+    "total": 0
+  },
   "specs": {
     "active": 0,
     "archived": 3,

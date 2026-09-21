@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:3b0053d5c9dc5d196c8151d00dc9f73e5493d051395fc79dde0d97eec0f9571b"
+build_stamp: "dc3b613"
+exit_code: 0
+scope_files: {"fixture/report/**":null,"src/cli/report.ts":"sha256:1e548574c5b5dc79723b225c9928f8878d0a50000c6515cb48a247ef8bc9ffbf","src/core/queue-report*.ts":null,"src/core/report.ts":"sha256:50f8716be3871b85eec65135fb23eead251ffd214682f05437d01640da0af256","tests/report-json.test.ts":"sha256:1fae4835d89562aa28572368e55ecff609d88e7abc43dcf76120aaed67f1d249","tests/report-queue.test.ts":"sha256:cf80ccff847b0c092ccff3a3e862817d03b4e980435b4f029e1992439abbfb17"}
+---
+2026-09-21T20:11:36.273Z

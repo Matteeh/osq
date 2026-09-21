@@ -4,6 +4,7 @@ import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { parseFrontmatter } from './parser.js';
 import { readPlanningSessions } from './planning.js';
+import { type QueueReport, readQueueReport } from './queue-report.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from './state.js';
 
 export interface SpecMetrics {
@@ -126,6 +127,7 @@ export interface MetricsReport {
   readonly history: HistoryMetrics;
   readonly now: NowMetrics;
   readonly planning: PlanningMetrics;
+  readonly queue: QueueReport;
   readonly specs: SpecMetrics;
   readonly tokens: TokenMetrics;
 }
@@ -926,6 +928,8 @@ export async function getMetricsReport(
   const formattedTotal = formatDuration(totalDurationMs);
   const formattedAvg = formatDuration(avgDurationMs);
 
+  const queue = await readQueueReport(projectRoot, config);
+
   const perSpec: Record<string, number> = {};
   for (const [spec, value] of Object.entries(perSpecCost)) {
     if (value > 0) perSpec[spec] = value;
@@ -1035,6 +1039,7 @@ export async function getMetricsReport(
         totalSessions: planningSessions,
       },
     },
+    queue,
   };
 }
 
@@ -1142,6 +1147,50 @@ export function formatMetricsReport(report: MetricsReport): string {
     lines.push(
       `  ${label}: total ${formatDuration(phase.totalSeconds * 1000)}, average ${formatDuration(phase.averageSeconds * 1000)} (${phase.coveredChanges} of ${phase.totalChanges} archived changes)`,
     );
+  }
+
+  lines.push('');
+  lines.push('Queue:');
+  const queue = report.queue;
+  if (!queue?.configured) {
+    lines.push('  (not configured)');
+  } else {
+    lines.push(`  Landed: ${queue.landed} of ${queue.total} items`);
+    lines.push(
+      `  Planning sessions: ${queue.planning.sessions}, recorded cost: ${formatCost(queue.planning.cost)}`,
+    );
+    lines.push(
+      `  Cost coverage: ${queue.planning.costCoverageComplete ? 'complete' : 'incomplete'}`,
+    );
+    lines.push('  Covered item wall times:');
+    const timedItems = queue.items.filter((item) => item.plannedToLandedSeconds !== null);
+    if (timedItems.length === 0) {
+      lines.push('    (none)');
+    } else {
+      for (const item of timedItems) {
+        lines.push(
+          `    ${item.slug}: ${formatDuration((item.plannedToLandedSeconds as number) * 1000)}`,
+        );
+      }
+    }
+    lines.push('  Active failures:');
+    if (queue.failures.length === 0) {
+      lines.push('    (none)');
+    } else {
+      for (const failure of queue.failures) {
+        lines.push(`    ${failure.change} ${failure.target} (reason: ${failure.reason})`);
+      }
+    }
+    lines.push('  Retained rejections:');
+    if (queue.rejections.length === 0) {
+      lines.push('    (none)');
+    } else {
+      for (const rejection of queue.rejections) {
+        lines.push(
+          `    ${rejection.slug} ${rejection.change} (reason: ${rejection.reason}, at: ${rejection.timestamp ?? 'unavailable'})`,
+        );
+      }
+    }
   }
 
   lines.push('');

@@ -2,9 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
+import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { HARNESS_CATALOG } from './harness-catalog.js';
 
 export type { CodexConfig } from './config-codex.js';
+export type { QueueConfig } from './config-queue.js';
 
 export interface OsqLimits {
   readonly maxScopeFiles: number;
@@ -63,12 +65,13 @@ export interface OsqConfig {
   readonly codex?: CodexConfig;
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
+  readonly queue?: QueueConfig;
 }
 
 export type OsqUserConfig = Partial<
   Omit<
     OsqConfig,
-    'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'codex' | 'log' | 'planner'
+    'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'codex' | 'log' | 'planner' | 'queue'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -79,6 +82,7 @@ export type OsqUserConfig = Partial<
   readonly codex?: Partial<CodexConfig>;
   readonly log?: Partial<LogConfig>;
   readonly planner?: Partial<PlannerConfig>;
+  readonly queue?: Partial<QueueConfig>;
 };
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -118,17 +122,19 @@ export const DEFAULT_CONFIG: OsqConfig = {
 };
 
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const { planner, ...restConfig } = config;
+  const { planner, queue: rawQueue, ...restConfig } = config;
   let validatedPlanner: PlannerConfig | undefined;
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
   }
+  const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const codex = validateCodexConfig(config.codex);
 
   return {
     ...DEFAULT_CONFIG,
     ...restConfig,
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
+    ...(queue ? { queue } : {}),
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),

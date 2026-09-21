@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:3081da874050e224ffa26a8635337c19d547736e1f96209a41cbed776413d0c2"
+build_stamp: "dc3b613"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:44ba017e8c4d89b3736147b08e94bfb30ed295fb076c1b06c7900629359c2971","src/core/config.ts":"sha256:06144aa69155cc9d481e5f3aa76884ff29f6c362a226fb54b54bfad0a3df5582","src/core/queue.ts":"sha256:2b7d48ecbc7fdac2c2da14ba190897f537228287ee08bdf1eb38a5d415a1d147","src/index.ts":"sha256:4af58ae9b91e1928944f20eeee4144105d820f50011049d3cc1d1d9febba80e7","tests/config-queue.test.ts":"sha256:53640bdaeca41dcf0ecc8a0de96dd1b1eb89049681e59901aaf8ad0d7051d16e","tests/queue-budget.test.ts":"sha256:2f1bc3c7106008bffd4c09bc2c4fbb4221d6edeedcb159c13b091b149ef34f63"}
+---
+2026-09-21T19:58:05.272Z

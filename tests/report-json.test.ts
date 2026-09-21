@@ -23,6 +23,7 @@ const STABLE_TOP_LEVEL_KEYS = [
   'history',
   'now',
   'planning',
+  'queue',
   'specs',
   'tokens',
 ] as const;
@@ -209,6 +210,20 @@ describe('report --json', () => {
       'coveredChanges',
       'totalChanges',
       'totalSeconds',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.queue as object), [
+      'configured',
+      'failures',
+      'items',
+      'landed',
+      'planning',
+      'rejections',
+      'total',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.queue.planning as object), [
+      'cost',
+      'costCoverageComplete',
+      'sessions',
     ]);
 
     // The replaced projections are gone from the machine-readable output.

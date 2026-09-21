@@ -112,6 +112,36 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       cost: { ...report.planning.cost },
       coverage: { ...report.planning.coverage },
     },
+    queue: {
+      configured: report.queue.configured,
+      failures: report.queue.failures.map((failure) => ({
+        change: failure.change,
+        reason: failure.reason,
+        target: failure.target,
+      })),
+      items: report.queue.items.map((item) => ({
+        change: item.change,
+        changedSincePlanned: item.changedSincePlanned,
+        plannedToLandedSeconds: item.plannedToLandedSeconds,
+        rejectionCount: item.rejectionCount,
+        slug: item.slug,
+        state: item.state,
+        title: item.title,
+      })),
+      landed: report.queue.landed,
+      planning: {
+        cost: report.queue.planning.cost,
+        costCoverageComplete: report.queue.planning.costCoverageComplete,
+        sessions: report.queue.planning.sessions,
+      },
+      rejections: report.queue.rejections.map((rejection) => ({
+        change: rejection.change,
+        reason: rejection.reason,
+        slug: rejection.slug,
+        timestamp: rejection.timestamp,
+      })),
+      total: report.queue.total,
+    },
     specs: { ...report.specs },
     tokens: {
       input: report.tokens.input,

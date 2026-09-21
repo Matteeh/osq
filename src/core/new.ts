@@ -59,7 +59,9 @@ export function slugify(text: string): string {
 }
 
 export async function getNextSpecNumber(specsDir: string): Promise<string> {
-  const dirsToScan = [specsDir, path.join(specsDir, 'archive')];
+  // Rejected attempts are numbered too, so a rejection followed by a replan
+  // never reuses an identifier.
+  const dirsToScan = [specsDir, path.join(specsDir, 'archive'), path.join(specsDir, 'rejected')];
   let maxNum = 0;
 
   for (const dir of dirsToScan) {
@@ -90,17 +92,31 @@ export interface NewSpecResult {
   folderPath: string;
 }
 
+/**
+ * Replace only the proposal title and, when queue dependencies are supplied,
+ * the `depends_on` line. The template body and every other frontmatter key
+ * stay intact.
+ */
+function seedProposal(content: string, title: string, dependsOn?: readonly string[]): string {
+  let seeded = content.replace(/^title:\s*.*$/m, `title: ${title}`);
+  if (dependsOn !== undefined) {
+    const value = `[${dependsOn.map((id) => JSON.stringify(id)).join(', ')}]`;
+    seeded = seeded.replace(/^depends_on:\s*.*$/m, `depends_on: ${value}`);
+  }
+  return seeded;
+}
+
 export async function createNewSpec(
   projectDir: string,
   title: string,
-  options: { specsDirName?: string } = {},
+  options: { specsDirName?: string; slug?: string; dependsOn?: readonly string[] } = {},
 ): Promise<NewSpecResult> {
   const trimmedTitle = title.trim();
   if (!trimmedTitle) {
     throw new Error('Spec name cannot be empty');
   }
 
-  const slug = slugify(trimmedTitle);
+  const slug = options.slug?.trim() || slugify(trimmedTitle);
   if (!slug) {
     throw new Error('Spec name cannot be empty');
   }
@@ -146,7 +162,7 @@ export async function createNewSpec(
       proposalContent = await fs.readFile(path.join(TEMPLATES_ROOT, 'proposal.md'), 'utf8');
     } catch {}
 
-    const updatedProposal = proposalContent.replace(/^title:\s*.*$/m, `title: ${trimmedTitle}`);
+    const updatedProposal = seedProposal(proposalContent, trimmedTitle, options.dependsOn);
     await fs.writeFile(path.join(targetDir, 'proposal.md'), updatedProposal, 'utf8');
 
     let tasksContent = FALLBACK_TASKS_MD;
