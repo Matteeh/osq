@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:41474686864540a087cd3b03f228ebd03315aac1e0f5fd4d887c0bcb4f7c7cad"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"fixture/report/**":null,"src/cli/report.ts":"sha256:c620700d06e46c9f0d7b99fbd28f880f18c51ce5c1fa6dcfb4ac051b5a52ebbc","src/core/report.ts":"sha256:b717e30cff76a98f9c8414eb0afe409c9008726f7c7c4f7ce7b476fcda0750fb","tests/report*.test.ts":null}
+---
+2026-09-21T10:16:22.852Z

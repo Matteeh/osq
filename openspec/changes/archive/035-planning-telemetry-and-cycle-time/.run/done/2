@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:4881f84f5648d814a6485aa94fd3bc826d30a620586c0e75fd286f82c4816b96"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"src/core/manifest.ts":"sha256:665bbf9ca15b2e07198e80988e469ee58c699952b0b621949398a5b2c0baeb01","tests/manifest.test.ts":"sha256:015845a01d84d8187728fe56a2b6f6c5e68fbf2b4473973bb3d99284b9e03357"}
+---
+2026-09-21T10:56:11.727Z

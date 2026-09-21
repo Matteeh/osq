@@ -6,8 +6,17 @@ import { mergeDelta, parseDelta } from '../core/delta.js';
 import { getArchiveDir } from '../core/layout.js';
 import { parseSpecMdFromFolder, parseTaskMd } from '../core/parser.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
+import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 import { runVerificationGate } from './verify.js';
+
+/**
+ * Payload of the change-level `archived` event. The event timestamp is the
+ * authoritative archive time for cycle metrics.
+ */
+export interface ArchivedEventData {
+  readonly archivePath: string;
+}
 
 function resolveOpenSpecRoot(config: OsqConfig): string {
   const paths = config.paths as OsqConfig['paths'] & { readonly openspecRoot?: string };
@@ -112,6 +121,16 @@ export async function archiveSpecFolder(
 
   await fs.rename(specFolderPath, targetPath);
   await ensureArchivedTasksTicked(targetPath);
+
+  // Only after the folder is relocated and its tasks are projected do we stamp
+  // the authoritative archive time. The event is always change-level; it never
+  // lands in a numbered task event file.
+  await appendHarnessEvent(targetPath, 'change', {
+    type: 'archived',
+    timestamp: new Date().toISOString(),
+    data: { archivePath: targetPath } satisfies ArchivedEventData,
+  } as unknown as HarnessEvent);
+
   return targetPath;
 }
 

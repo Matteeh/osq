@@ -17,13 +17,17 @@ export type HarnessEventType =
   | 'done'
   | 'done_manual'
   | 'dead'
-  | 'regressed';
+  | 'regressed'
+  | 'retry'
+  | 'rejected';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
   harness: string;
   model: string;
   osqVersion: string;
+  /** Target-wide execution attempt; initial execution is 1. */
+  attempt: number;
   commit?: string;
   pid?: number;
   timeoutSeconds: number;
@@ -122,6 +126,26 @@ export interface RegressedEventData {
   reason?: string;
 }
 
+/**
+ * Payload of a `retry` event recording an explicit retry transition. `attempt`
+ * is the following execution attempt, so the next `started` event for the
+ * target carries the same number.
+ */
+export interface RetryEventData {
+  readonly target: string;
+  readonly reason: string;
+  readonly attempt: number;
+}
+
+/**
+ * Payload of a `rejected` event recording a change moved into rejected history.
+ * The event's top-level timestamp is the authoritative rejection time; the data
+ * carries the same non-empty reason persisted to `.run/rejected.md`.
+ */
+export interface RejectedEventData {
+  readonly reason: string;
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -137,6 +161,8 @@ export interface OsqEventData {
   done_manual: DoneManualEventData;
   dead: DeadEventData;
   regressed: RegressedEventData;
+  retry: RetryEventData;
+  rejected: RejectedEventData;
 }
 
 /**
@@ -169,6 +195,10 @@ export interface SpawnTaskOptions {
   logger?: Logger;
   onSpawn?: (pid: number) => Promise<void> | void;
   capabilityRules?: string[];
+  /** Target-wide execution attempt; initial execution is 1, post-retry is 2+. */
+  attempt?: number;
+  /** Failure reason carried from the preceding retry transition, when any. */
+  priorFailureReason?: string;
 }
 
 export interface SpawnResult {
@@ -187,11 +217,45 @@ export interface InteractiveSessionOptions {
   agent?: string;
 }
 
+/**
+ * Observed-only usage for one interactive planning session. Every field is
+ * independently nullable: missing artifacts, malformed data, ambiguous matches,
+ * or absent harness support yield `null` rather than an estimate.
+ */
+export interface InteractiveUsage {
+  readonly inputTokens: number | null;
+  readonly outputTokens: number | null;
+  readonly cachedTokens: number | null;
+  readonly reasoningTokens: number | null;
+  readonly cost: number | null;
+}
+
+/** Explicit all-null value for harnesses without a confirmed usage artifact. */
+export const NULL_INTERACTIVE_USAGE: InteractiveUsage = Object.freeze({
+  inputTokens: null,
+  outputTokens: null,
+  cachedTokens: null,
+  reasoningTokens: null,
+  cost: null,
+});
+
+export interface ReadInteractiveUsageOptions {
+  readonly cwd: string;
+  readonly startedAt: string;
+  readonly endedAt: string;
+}
+
 export interface HarnessAdapter {
   readonly name: string;
   setup(projectRoot: string, config: OsqConfig): Promise<void>;
   spawn(options: SpawnTaskOptions): Promise<SpawnResult>;
   spawnInteractive?(options: InteractiveSessionOptions): Promise<number>;
+  /**
+   * Optional post-session usage observation. Receives the project working
+   * directory and the observed session interval and never changes the planner
+   * process exit result.
+   */
+  readInteractiveUsage?(options: ReadInteractiveUsageOptions): Promise<InteractiveUsage>;
   preflight?(projectRoot: string, config: OsqConfig): Promise<void>;
 }
 
@@ -291,6 +355,32 @@ export function capabilityRuleLines(rules: readonly string[]): string[] {
     return [];
   }
   return ['', 'Capability Rules:', ...rules.map((rule) => `- ${rule}`)];
+}
+
+export interface PriorContext {
+  readonly attempt?: number;
+  readonly reason?: string;
+  readonly resultPath?: string;
+}
+
+/**
+ * Shared prior-context block for every textual executor prompt. It is rendered
+ * when a retry supplied an attempt or failure reason, or when a prior result
+ * file still exists, so a fresh process reconstructs why it is running again.
+ */
+export function priorContextLines(context: PriorContext): string[] {
+  const attempt = context.attempt ?? 1;
+  if (attempt <= 1 && !context.reason && !context.resultPath) {
+    return [];
+  }
+  const lines = ['', 'Prior Context:', `- Prior Attempt: ${attempt}`];
+  if (context.reason) {
+    lines.push(`- Prior Failure: ${context.reason}`);
+  }
+  if (context.resultPath) {
+    lines.push(`- Prior Result: ${context.resultPath}`);
+  }
+  return lines;
 }
 
 export async function appendHarnessEvent(

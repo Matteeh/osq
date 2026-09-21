@@ -6,6 +6,7 @@ import type { OsqConfig } from './config.js';
 import { resolveExecutorIdentity } from './harness-catalog.js';
 import { getSpecsDir } from './layout.js';
 import { parseSpecMdFromFolder, resolveChangeDoc } from './parser.js';
+import { readPlanRecords } from './planning.js';
 
 /**
  * Package root of the running osq build: `src/core/` when executed through
@@ -23,6 +24,8 @@ export interface ManifestData {
   effort: string | null;
   createdAt: string;
   approvedAt: string;
+  /** Count of valid `plan_started` records present at manifest build time. */
+  planningSessions: number;
 }
 
 async function hashFileContent(filePath: string): Promise<string | null> {
@@ -112,6 +115,9 @@ export async function buildManifest(
   }
 
   const identity = resolveExecutorIdentity(config);
+  const planningSessions = (await readPlanRecords(specFolderPath)).filter(
+    (record) => record.type === 'plan_started',
+  ).length;
 
   return {
     hashes,
@@ -122,6 +128,7 @@ export async function buildManifest(
     effort: identity.effort,
     createdAt: await resolveCreatedAt(specFolderPath),
     approvedAt: new Date().toISOString(),
+    planningSessions,
   };
 }
 

@@ -7,6 +7,7 @@ import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
+import { retrySpec } from '../src/core/retry.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
@@ -18,7 +19,7 @@ async function writeTask(specFolder: string, verify: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
   const task = [
     '---',
-    'title: When a task fails and is re-approved, diagnostics are retained',
+    'title: When a task fails and is retried, diagnostics are retained',
     `verify: ${verify}`,
     'scope: []',
     'entry: []',
@@ -37,7 +38,7 @@ async function exists(target: string): Promise<boolean> {
     .catch(() => false);
 }
 
-describe('Dead marker retention across re-approval', () => {
+describe('Failure marker retention across approval and retry', () => {
   let tmpDir: string;
   let specFolder: string;
   let adapter: MockAdapter;
@@ -55,7 +56,7 @@ describe('Dead marker retention across re-approval', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('renames dead/1.md to dead/1.1.md then dead/1.2.md across re-approvals', async () => {
+  it('leaves active dead and regressed markers untouched when approval re-seals', async () => {
     await writeTask(specFolder, FAILING_VERIFY);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     adapter.resetBehavior();
@@ -65,33 +66,34 @@ describe('Dead marker retention across re-approval', () => {
     assert.equal(first.reason, 'verify_red');
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), true);
 
-    // First re-approval renames the active marker to attempt 1.
-    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.1.md')), true);
-    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
+    const regressedDir = path.join(specFolder, '.run', 'regressed');
+    await fs.mkdir(regressedDir, { recursive: true });
+    await fs.writeFile(
+      path.join(regressedDir, '1.md'),
+      '---\nreason: verify_red\n---\nprior regression\n',
+      'utf8',
+    );
 
-    // Second failure recreates the active marker; the next re-approval derives attempt 2.
-    const second = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
-    assert.equal(second.success, false);
+    // Re-approval refreshes the seal and manifest but never retires failures.
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), true);
-
-    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.2.md')), true);
-    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.1.md')), true);
-    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.1.md')), false);
+    assert.equal(await exists(path.join(specFolder, '.run', 'regressed', '1.md')), true);
   });
 
-  it('retains dead/1.1.md alongside done/1 after a successful rerun', async () => {
+  it('retains dead/1.1.md alongside done/1 after an explicit retry and successful rerun', async () => {
     await writeTask(specFolder, FAILING_VERIFY);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     adapter.resetBehavior();
 
     const failed = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
     assert.equal(failed.success, false);
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), true);
 
-    // Re-approve with a passing verify so the rerun can complete.
+    // The rerun needs a passing verify, so re-seal; retry retires the marker.
     await writeTask(specFolder, PASSING_VERIFY);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    await retrySpec(tmpDir, '001', '1', DEFAULT_CONFIG);
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.1.md')), true);
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
 

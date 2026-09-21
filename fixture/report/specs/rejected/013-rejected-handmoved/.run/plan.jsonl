@@ -1,0 +1,2 @@
+{"type":"plan_started","sessionId":"013-p1","timestamp":"2026-09-13T00:00:00.000Z","data":{"harness":"codex","model":"gpt","osqVersion":"0.0.0","briefHash":"sha256:fixture-013"}}
+{"type":"plan_exited","sessionId":"013-p1","timestamp":"2026-09-13T00:00:30.000Z","data":{"exitCode":0,"wallSeconds":30,"usage":{"inputTokens":10,"outputTokens":5,"cachedTokens":0,"reasoningTokens":0,"cost":0.1}}}

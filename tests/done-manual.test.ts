@@ -158,10 +158,10 @@ describe('report manual vs verified accounting', () => {
     it('counts verified and manual completions separately', async () => {
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, 3);
-      assert.equal(report.tasks.done, 3);
-      assert.equal(report.tasks.verified, 1);
-      assert.equal(report.tasks.manual, 2);
+      assert.equal(report.now.total, 3);
+      assert.equal(report.now.done, 3);
+      assert.equal(report.now.verified, 1);
+      assert.equal(report.now.manual, 2);
 
       const text = formatMetricsReport(report);
       assert.ok(text.includes('Done: 3'));
@@ -175,11 +175,11 @@ describe('report manual vs verified accounting', () => {
         stdout: () => {},
       });
       const parsed = JSON.parse(json) as {
-        tasks: { done: number; verified: number; manual: number };
+        now: { done: number; verified: number; manual: number };
       };
-      assert.equal(parsed.tasks.done, 3);
-      assert.equal(parsed.tasks.verified, 1);
-      assert.equal(parsed.tasks.manual, 2);
+      assert.equal(parsed.now.done, 3);
+      assert.equal(parsed.now.verified, 1);
+      assert.equal(parsed.now.manual, 2);
     });
   });
 
@@ -195,7 +195,7 @@ describe('report manual vs verified accounting', () => {
       await fs.rm(tmpDir, { recursive: true, force: true });
     });
 
-    it('counts done_manual events and manual markers as manual', async () => {
+    it('counts manual done markers as manual', async () => {
       const folderPath = path.join(tmpDir, 'openspec', 'changes', 'archive', '001-archived');
       await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
       await fs.writeFile(
@@ -218,6 +218,11 @@ describe('report manual vs verified accounting', () => {
       );
       await fs.mkdir(path.join(folderPath, '.run', 'done'), { recursive: true });
       await fs.writeFile(
+        path.join(folderPath, '.run', 'done', '1'),
+        '---\nmanual: true\nreason: "manual marker"\n---\n2026-01-01T00:00:00.000Z\n',
+        'utf8',
+      );
+      await fs.writeFile(
         path.join(folderPath, '.run', 'done', '2'),
         '---\nmanual: true\nreason: "manual marker"\n---\n2026-01-01T00:00:00.000Z\n',
         'utf8',
@@ -225,10 +230,10 @@ describe('report manual vs verified accounting', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, 2);
-      assert.equal(report.tasks.done, 2);
-      assert.equal(report.tasks.verified, 0);
-      assert.equal(report.tasks.manual, 2);
+      assert.equal(report.now.total, 2);
+      assert.equal(report.now.done, 2);
+      assert.equal(report.now.verified, 0);
+      assert.equal(report.now.manual, 2);
     });
   });
 });

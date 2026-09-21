@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import { approveCommand } from './approve.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
@@ -8,7 +8,9 @@ import { lintCommand } from './lint.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { planCommand } from './plan.js';
+import { rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
+import { retryCommand } from './retry.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
@@ -19,6 +21,14 @@ const PACKAGE_MANIFEST_URL = new URL('../../package.json', import.meta.url);
 export function resolvePackageVersion(): string {
   const manifest = JSON.parse(readFileSync(PACKAGE_MANIFEST_URL, 'utf8')) as { version?: string };
   return manifest.version ?? '0.0.0';
+}
+
+/** Commander-level guard rejecting an empty or whitespace-only rejection reason. */
+function parseRejectReason(value: string): string {
+  if (!value || !value.trim()) {
+    throw new InvalidArgumentError('a non-empty rejection reason is required');
+  }
+  return value;
 }
 
 export function createProgram(version?: string): Command {
@@ -66,6 +76,21 @@ export function createProgram(version?: string): Command {
     .description('lint, hash, and approve change folders')
     .action(async (ids: string[]) => {
       await approveCommand(ids);
+    });
+
+  program
+    .command('retry <id> <target>')
+    .description('retry a dead or regressed task or change without deleting diagnostics')
+    .action(async (id: string, target: string) => {
+      await retryCommand(id, target);
+    });
+
+  program
+    .command('reject <id>')
+    .description('move an eligible active change intact into rejected history')
+    .requiredOption('--reason <text>', 'reason for rejecting the change', parseRejectReason)
+    .action(async (id: string, options: { reason: string }) => {
+      await rejectCommand(id, options);
     });
 
   program

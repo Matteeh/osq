@@ -33,8 +33,30 @@ export function serializeSortedJson(data: unknown): string {
  * backward-compatibility aliases so the machine-readable output stays fixed.
  */
 function toStableMetrics(report: MetricsReport): Record<string, unknown> {
-  const stable: Record<string, unknown> = {
+  return {
     completionRate: report.completionRate,
+    coverage: {
+      withEvents: report.coverage.withEvents,
+      withoutEvents: report.coverage.withoutEvents,
+      byChange: Object.fromEntries(
+        Object.entries(report.coverage.byChange).map(([change, entry]) => [
+          change,
+          {
+            withEvents: [...entry.withEvents],
+            withoutEvents: [...entry.withoutEvents],
+          },
+        ]),
+      ),
+    },
+    cycle: {
+      phases: {
+        briefToApproval: { ...report.cycle.phases.briefToApproval },
+        approvalToFirstTask: { ...report.cycle.phases.approvalToFirstTask },
+        firstTaskToArchive: { ...report.cycle.phases.firstTaskToArchive },
+        total: { ...report.cycle.phases.total },
+      },
+      byChange: report.cycle.byChange.map((row) => ({ ...row })),
+    },
     durations: {
       totalMs: report.durations.totalMs,
       totalSeconds: report.durations.totalSeconds,
@@ -43,14 +65,54 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       formattedTotal: report.durations.formattedTotal,
       formattedAvg: report.durations.formattedAvg,
     },
-    failureBreakdown: { ...report.failureBreakdown },
     fileChanges: {
       totalChanges: report.fileChanges.totalChanges,
       uniqueCount: report.fileChanges.uniqueCount,
       uniqueFiles: [...report.fileChanges.uniqueFiles],
     },
+    history: {
+      attempts: {
+        total: report.history.attempts.total,
+        byTask: { ...report.history.attempts.byTask },
+        multipleAttempts: [...report.history.attempts.multipleAttempts],
+      },
+      deadByReason: { ...report.history.deadByReason },
+      unexplainedReruns: {
+        total: report.history.unexplainedReruns.total,
+        byTask: { ...report.history.unexplainedReruns.byTask },
+      },
+      verifyRuns: {
+        total: report.history.verifyRuns.total,
+        missingExitCode: report.history.verifyRuns.missingExitCode,
+        byTask: Object.fromEntries(
+          Object.entries(report.history.verifyRuns.byTask).map(([task, codes]) => [
+            task,
+            [...codes],
+          ]),
+        ),
+      },
+      cost: {
+        total: report.history.cost.total,
+        perSpec: { ...report.history.cost.perSpec },
+        formattedTotal: report.history.cost.formattedTotal,
+        provenance: report.history.cost.provenance,
+        coverage: { ...report.history.cost.coverage },
+      },
+      rejections: {
+        total: report.history.rejections.total,
+        byPlannerModel: { ...report.history.rejections.byPlannerModel },
+      },
+    },
+    now: { ...report.now },
+    planning: {
+      sessions: report.planning.sessions,
+      wallSeconds: report.planning.wallSeconds,
+      wallSecondsByChange: { ...report.planning.wallSecondsByChange },
+      tokens: { ...report.planning.tokens },
+      cost: { ...report.planning.cost },
+      coverage: { ...report.planning.coverage },
+    },
     specs: { ...report.specs },
-    tasks: { ...report.tasks },
     tokens: {
       input: report.tokens.input,
       cached_input: report.tokens.cached_input,
@@ -60,16 +122,6 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       cacheSharePercent: report.tokens.cacheSharePercent,
     },
   };
-
-  if (report.cost) {
-    stable.cost = {
-      total: report.cost.total,
-      perSpec: { ...report.cost.perSpec },
-      formattedTotal: report.cost.formattedTotal,
-    };
-  }
-
-  return stable;
 }
 
 export async function reportCommand(options: ReportCommandOptions = {}): Promise<string> {

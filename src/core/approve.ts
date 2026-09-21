@@ -36,39 +36,6 @@ export async function findSpecFolder(specsDir: string, idOrPrefix: string): Prom
   throw new Error(`Spec "${idOrPrefix}" not found in ${specsDir}`);
 }
 
-/**
- * Rename active `.run/dead/<n>.md` markers to `dead/<n>.<attempt>.md` so a
- * re-approved change preserves prior failure diagnostics. `<attempt>` is one
- * past the highest existing attempt, or 1 when no prior attempts exist.
- */
-async function retainDeadMarkers(runDir: string): Promise<void> {
-  const deadDir = path.join(runDir, 'dead');
-  let entries: string[];
-  try {
-    entries = await fs.readdir(deadDir);
-  } catch {
-    return;
-  }
-
-  for (const entry of entries) {
-    const active = entry.match(/^(\d+)\.md$/);
-    if (!active) continue;
-
-    const taskNumber = active[1];
-    const attemptPattern = new RegExp(`^${taskNumber}\\.(\\d+)\\.md$`);
-    const attempts = entries
-      .map((name) => name.match(attemptPattern))
-      .filter((match): match is RegExpMatchArray => match !== null)
-      .map((match) => Number.parseInt(match[1], 10));
-    const nextAttempt = attempts.length === 0 ? 1 : Math.max(...attempts) + 1;
-
-    await fs.rename(
-      path.join(deadDir, entry),
-      path.join(deadDir, `${taskNumber}.${nextAttempt}.md`),
-    );
-  }
-}
-
 export interface ApproveResult {
   specId: string;
   folderName: string;
@@ -96,9 +63,10 @@ export async function approveSpec(
 
   const hash = await hashChangeFolder(folderPath);
 
+  // Approval only refreshes the seal. It never retires failure markers: that is
+  // the exclusive job of an explicit `osq retry`.
   const runDir = path.join(folderPath, '.run');
   await fs.mkdir(runDir, { recursive: true });
-  await retainDeadMarkers(runDir);
 
   const approvedPath = path.join(runDir, 'approved');
   await fs.writeFile(approvedPath, `${hash}\n`, 'utf8');

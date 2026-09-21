@@ -6,7 +6,7 @@ import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import {
-  type CostMetrics,
+  type CostHistory,
   type MetricsReport,
   formatMetricsReport,
   getMetricsReport,
@@ -57,47 +57,66 @@ async function reportForEvents(events: Record<string, unknown>[]): Promise<Metri
 
 describe('report cost metrics', () => {
   describe('fixture/report', () => {
-    it('sums cost reported in event data per spec and in total', async () => {
+    it('sums cost reported in event data per spec and in total under history', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
+      const cost = report.history.cost;
 
-      assert.ok(report.cost, 'cost metrics should be present when events carry cost');
       assert.ok(
-        Math.abs(report.cost.total - 0.1533) <= 0.0001,
-        `expected total of ~0.1533, got ${report.cost.total}`,
+        Math.abs(cost.total - 0.1533) <= 0.0001,
+        `expected total of ~0.1533, got ${cost.total}`,
       );
-      assert.equal(typeof report.cost.perSpec['009-watcher-observability'], 'number');
+      assert.equal(typeof cost.perSpec['009-watcher-observability'], 'number');
       assert.ok(
-        Math.abs(report.cost.perSpec['009-watcher-observability'] - 0.1533) <= 0.0001,
-        `expected 009 per-spec cost of ~0.1533, got ${report.cost.perSpec['009-watcher-observability']}`,
+        Math.abs(cost.perSpec['009-watcher-observability'] - 0.1533) <= 0.0001,
+        `expected 009 per-spec cost of ~0.1533, got ${cost.perSpec['009-watcher-observability']}`,
       );
       // Specs whose events never report cost are left out of the breakdown.
-      assert.equal(report.cost.perSpec['008-opencode-harness-adapter'], undefined);
+      assert.equal(cost.perSpec['008-opencode-harness-adapter'], undefined);
 
-      const perSpecSum = Object.values(report.cost.perSpec).reduce((sum, value) => sum + value, 0);
-      assert.ok(Math.abs(perSpecSum - report.cost.total) <= 0.0001);
+      const perSpecSum = Object.values(cost.perSpec).reduce((sum, value) => sum + value, 0);
+      assert.ok(Math.abs(perSpecSum - cost.total) <= 0.0001);
+    });
+
+    it('identifies harness-reported provenance and attempt coverage', async () => {
+      const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
+      const cost = report.history.cost;
+
+      assert.equal(cost.provenance, 'harness-reported');
+      assert.equal(cost.coverage.reportedAttempts, 8);
+      assert.equal(cost.coverage.totalAttempts, report.history.attempts.total);
+      assert.equal(cost.coverage.totalAttempts, 19);
     });
 
     it('formats the total as a currency string', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
 
-      assert.equal(report.cost?.formattedTotal, '$0.15');
+      assert.equal(report.history.cost.formattedTotal, '$0.15');
     });
 
-    it('exposes total, perSpec, and formattedTotal on CostMetrics', async () => {
+    it('exposes total, perSpec, formattedTotal, provenance, and coverage on CostHistory', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
-      const cost = report.cost as CostMetrics;
+      const cost = report.history.cost as CostHistory;
 
-      assert.deepEqual(Object.keys(cost).sort(), ['formattedTotal', 'perSpec', 'total']);
+      assert.deepEqual(Object.keys(cost).sort(), [
+        'coverage',
+        'formattedTotal',
+        'perSpec',
+        'provenance',
+        'total',
+      ]);
       assert.equal(typeof cost.total, 'number');
       assert.equal(typeof cost.formattedTotal, 'string');
       assert.equal(typeof cost.perSpec, 'object');
     });
 
-    it('prints the reported cost line when events carry cost', async () => {
+    it('prints the harness-reported cost line with attempt coverage', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
       const formatted = formatMetricsReport(report);
 
-      assert.ok(formatted.includes('Reported cost: $0.15'), formatted);
+      assert.ok(
+        formatted.includes('Harness-reported cost: $0.15 (8 of 19 attempts reported cost)'),
+        formatted,
+      );
     });
   });
 
@@ -111,26 +130,58 @@ describe('report cost metrics', () => {
         },
       ]);
 
-      assert.ok(report.cost);
-      assert.equal(report.cost.total, 0.0012);
-      assert.equal(report.cost.formattedTotal, '$0.0012');
+      assert.equal(report.history.cost.total, 0.0012);
+      assert.equal(report.history.cost.formattedTotal, '$0.0012');
+    });
+
+    it('counts an attempt at most once even when several events report cost', async () => {
+      const report = await reportForEvents([
+        { type: 'started', timestamp: '2026-09-17T00:00:00.000Z', data: {} },
+        {
+          type: 'tokens',
+          timestamp: '2026-09-17T00:00:01.000Z',
+          data: { input: 10, cost: 0.001 },
+        },
+        {
+          type: 'tokens',
+          timestamp: '2026-09-17T00:00:02.000Z',
+          data: { input: 10, cost: 0.002 },
+        },
+        { type: 'started', timestamp: '2026-09-17T00:00:03.000Z', data: {} },
+      ]);
+
+      assert.equal(report.history.cost.total, 0.003);
+      assert.equal(report.history.cost.coverage.reportedAttempts, 1);
+      assert.equal(report.history.cost.coverage.totalAttempts, 2);
     });
   });
 
   describe('cost-free project', () => {
-    it('omits cost metrics and the reported cost line when no event carries cost', async () => {
+    it('reports zero cost and zero coverage without estimating', async () => {
       const report = await reportForEvents([
         {
-          type: 'tokens',
+          type: 'started',
           timestamp: '2026-09-17T00:00:00.000Z',
+          data: {},
+        },
+        {
+          type: 'tokens',
+          timestamp: '2026-09-17T00:00:01.000Z',
           data: { input: 100, output: 20 },
         },
       ]);
 
-      assert.equal(report.cost, undefined);
+      assert.equal(report.history.cost.total, 0);
+      assert.equal(report.history.cost.formattedTotal, '$0.0000');
+      assert.deepEqual(report.history.cost.perSpec, {});
+      assert.equal(report.history.cost.coverage.reportedAttempts, 0);
+      assert.equal(report.history.cost.coverage.totalAttempts, 1);
 
       const formatted = formatMetricsReport(report);
-      assert.ok(!formatted.includes('Reported cost'), formatted);
+      assert.ok(
+        formatted.includes('Harness-reported cost: $0.0000 (0 of 1 attempts reported cost)'),
+        formatted,
+      );
       assert.ok(!formatted.includes('Cost:'), formatted);
     });
   });

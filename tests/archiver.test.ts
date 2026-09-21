@@ -66,6 +66,25 @@ function openSpecConfig(): OsqConfig {
   return DEFAULT_CONFIG;
 }
 
+interface ParsedEvent {
+  type: string;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
+function parseJsonl(content: string): ParsedEvent[] {
+  return content
+    .split('\n')
+    .filter((line) => line.trim().length > 0)
+    .map((line) => JSON.parse(line) as ParsedEvent);
+}
+
+/** Read and parse an event stream, treating a missing file as an empty stream. */
+async function readEvents(eventsPath: string): Promise<ParsedEvent[]> {
+  const content = await fs.readFile(eventsPath, 'utf8').catch(() => '');
+  return parseJsonl(content);
+}
+
 describe('Archiver and Delta Application', () => {
   let tmpDir: string;
   let specFolder: string;
@@ -249,6 +268,99 @@ describe('Archiver and Delta Application', () => {
     const archived = await fs.readFile(path.join(archivedPath, 'tasks.md'), 'utf8');
     assert.ok(!archived.includes('[ ]'));
     assert.ok(archived.includes('- [x] 1. pending item'));
+  });
+
+  it('archiveSpecFolder appends exactly one archived event to the archived change stream after relocation', async () => {
+    const before = Date.now();
+    const archivedPath = await archiveSpecFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+    const after = Date.now();
+
+    const eventsDir = path.join(archivedPath, '.run', 'events');
+    // Only the change-level stream carries the event; no numbered task file does.
+    assert.deepEqual((await fs.readdir(eventsDir)).sort(), ['change.jsonl']);
+
+    const events = await readEvents(path.join(eventsDir, 'change.jsonl'));
+    assert.equal(events.length, 1);
+    const archivedEvent = events[0];
+    assert.equal(archivedEvent.type, 'archived');
+    assert.equal(archivedEvent.data.archivePath, archivedPath);
+
+    const stamp = Date.parse(archivedEvent.timestamp);
+    assert.ok(!Number.isNaN(stamp), `expected ISO archive time, got ${archivedEvent.timestamp}`);
+    assert.ok(stamp >= before && stamp <= after, 'archive time falls inside the relocation window');
+
+    // The event is only in the archive, never in the pre-move folder.
+    await assert.rejects(fs.stat(path.join(specFolder, '.run', 'events', 'change.jsonl')));
+  });
+
+  it('archiveSpecFolder emits no archived event when relocation fails', async () => {
+    const missingFolder = path.join(tmpDir, 'openspec', 'changes', '999-missing');
+    await assert.rejects(archiveSpecFolder(tmpDir, missingFolder, DEFAULT_CONFIG));
+
+    const archiveDir = getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    assert.deepEqual(await fs.readdir(archiveDir).catch((): string[] => []), []);
+  });
+
+  it('checkAndArchiveSpec emits no archived event when change-level verification fails', async () => {
+    const failingProposal = `---
+title: Archive Feature
+depends_on: []
+verify: node -e "process.exit(1)"
+features:
+  reads: []
+---
+## Goal
+
+Blocks archive.
+`;
+    await fs.writeFile(path.join(specFolder, 'proposal.md'), failingProposal, 'utf8');
+
+    const runDir = path.join(specFolder, '.run');
+    await fs.mkdir(path.join(runDir, 'done'), { recursive: true });
+    await fs.writeFile(path.join(runDir, 'approved'), 'sha256:abc\n', 'utf8');
+    await fs.writeFile(path.join(runDir, 'done', '1'), '', 'utf8');
+
+    const archived = await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(archived, false);
+
+    // Change stays active with retained regressed diagnostics.
+    assert.ok(await fs.stat(specFolder));
+    const regressed = await fs.readFile(path.join(runDir, 'regressed', 'change.md'), 'utf8');
+    assert.ok(regressed.includes('reason: verify_red'));
+
+    const events = await readEvents(path.join(runDir, 'events', 'change.jsonl'));
+    assert.ok(events.some((event) => event.type === 'verify_ran' && event.data.exitCode === 1));
+    assert.ok(events.some((event) => event.type === 'regressed'));
+    assert.ok(!events.some((event) => event.type === 'archived'));
+  });
+
+  it('checkAndArchiveSpec records change-level verify_ran before the archived event', async () => {
+    const runDir = path.join(specFolder, '.run');
+    await fs.mkdir(path.join(runDir, 'done'), { recursive: true });
+    await fs.writeFile(path.join(runDir, 'approved'), 'sha256:abc\n', 'utf8');
+    await fs.writeFile(path.join(runDir, 'done', '1'), '', 'utf8');
+
+    const archived = await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(archived, true);
+
+    const archivedPath = path.join(
+      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
+      path.basename(specFolder),
+    );
+    const events = await readEvents(path.join(archivedPath, '.run', 'events', 'change.jsonl'));
+    assert.deepEqual(
+      events.map((event) => event.type),
+      ['verify_ran', 'archived'],
+    );
+
+    const [verifyRan, archivedEvent] = events;
+    assert.equal(verifyRan.data.exitCode, 0);
+    assert.ok(typeof verifyRan.data.command === 'string');
+    assert.equal(archivedEvent.data.archivePath, archivedPath);
+    assert.ok(
+      Date.parse(verifyRan.timestamp) <= Date.parse(archivedEvent.timestamp),
+      'archive time is stamped after the change-level verification',
+    );
   });
 
   it('checkAndArchiveSpec applies deltas once then archives only when all tasks are marked done', async () => {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -15,12 +16,14 @@ const fixtureReportRoot = path.resolve(
 
 const STABLE_TOP_LEVEL_KEYS = [
   'completionRate',
-  'cost',
+  'coverage',
+  'cycle',
   'durations',
-  'failureBreakdown',
   'fileChanges',
+  'history',
+  'now',
+  'planning',
   'specs',
-  'tasks',
   'tokens',
 ] as const;
 
@@ -86,10 +89,23 @@ describe('report --json', () => {
 
     let previous = -1;
     for (const key of [...STABLE_TOP_LEVEL_KEYS].sort()) {
-      const index = raw.indexOf(`"${key}"`);
+      // Top-level keys are the only ones indented exactly two spaces.
+      const index = raw.indexOf(`\n  "${key}"`);
       assert.ok(index > previous, `${key} should appear after the previous sorted key`);
       previous = index;
     }
+  });
+
+  it('matches the checked-in fixture byte for byte through the real report command', async () => {
+    const raw = await reportCommand({
+      cwd: fixtureReportRoot,
+      json: true,
+      stdout: () => {},
+    });
+    // The CLI prints the document with a trailing newline; compare that exact
+    // stdout byte sequence against the checked-in expected JSON.
+    const expected = await fs.readFile(path.join(fixtureReportRoot, 'expected.json'), 'utf8');
+    assert.equal(`${raw}\n`, expected);
   });
 
   it('matches the structured MetricsReport shape without compatibility aliases', async () => {
@@ -101,7 +117,42 @@ describe('report --json', () => {
     const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
 
     assert.deepEqual(sortedKeys(parsed.specs), ['active', 'archived', 'total']);
-    assert.deepEqual(sortedKeys(parsed.tasks), ['dead', 'done', 'pending', 'running', 'total']);
+    assert.deepEqual(sortedKeys(parsed.now), [
+      'dead',
+      'done',
+      'manual',
+      'pending',
+      'regressed',
+      'running',
+      'total',
+      'verified',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.coverage), ['byChange', 'withEvents', 'withoutEvents']);
+    assert.deepEqual(sortedKeys(parsed.history), [
+      'attempts',
+      'cost',
+      'deadByReason',
+      'rejections',
+      'unexplainedReruns',
+      'verifyRuns',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.history.attempts as object), [
+      'byTask',
+      'multipleAttempts',
+      'total',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.history.verifyRuns as object), [
+      'byTask',
+      'missingExitCode',
+      'total',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.history.cost as object), [
+      'coverage',
+      'formattedTotal',
+      'perSpec',
+      'provenance',
+      'total',
+    ]);
     assert.deepEqual(sortedKeys(parsed.durations), [
       'avgMs',
       'avgSeconds',
@@ -123,7 +174,47 @@ describe('report --json', () => {
       'reasoning',
       'total',
     ]);
-    assert.deepEqual(sortedKeys(parsed.cost), ['formattedTotal', 'perSpec', 'total']);
+    assert.deepEqual(sortedKeys(parsed.planning), [
+      'cost',
+      'coverage',
+      'sessions',
+      'tokens',
+      'wallSeconds',
+      'wallSecondsByChange',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.planning.tokens as object), [
+      'cached',
+      'input',
+      'output',
+      'reasoning',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.planning.cost as object), [
+      'formattedTotal',
+      'provenance',
+      'total',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.planning.coverage as object), [
+      'reportedSessions',
+      'totalSessions',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.cycle), ['byChange', 'phases']);
+    assert.deepEqual(sortedKeys(parsed.cycle.phases as object), [
+      'approvalToFirstTask',
+      'briefToApproval',
+      'firstTaskToArchive',
+      'total',
+    ]);
+    assert.deepEqual(sortedKeys((parsed.cycle.phases as Record<string, object>).total), [
+      'averageSeconds',
+      'coveredChanges',
+      'totalChanges',
+      'totalSeconds',
+    ]);
+
+    // The replaced projections are gone from the machine-readable output.
+    for (const replacedKey of ['tasks', 'failureBreakdown', 'cost']) {
+      assert.equal(replacedKey in parsed, false, `${replacedKey} should not be serialized`);
+    }
 
     // No legacy aliases leak into the machine-readable output.
     for (const legacyKey of [
@@ -172,6 +263,45 @@ describe('formatMetricsReport', () => {
   it('renders exclusively from the values held by the MetricsReport object', () => {
     const report = {
       completionRate: 12.5,
+      coverage: {
+        withEvents: 2,
+        withoutEvents: 1,
+        byChange: {
+          '001-spec': { withEvents: ['1'], withoutEvents: ['2'] },
+        },
+      },
+      cycle: {
+        phases: {
+          briefToApproval: {
+            totalSeconds: 10,
+            averageSeconds: 5,
+            coveredChanges: 2,
+            totalChanges: 3,
+          },
+          approvalToFirstTask: {
+            totalSeconds: 20,
+            averageSeconds: 10,
+            coveredChanges: 2,
+            totalChanges: 3,
+          },
+          firstTaskToArchive: {
+            totalSeconds: 30,
+            averageSeconds: 15,
+            coveredChanges: 2,
+            totalChanges: 3,
+          },
+          total: { totalSeconds: 60, averageSeconds: 30, coveredChanges: 2, totalChanges: 3 },
+        },
+        byChange: [
+          {
+            change: '001-spec',
+            briefToApprovalSeconds: 10,
+            approvalToFirstTaskSeconds: 20,
+            firstTaskToArchiveSeconds: 30,
+            totalSeconds: 60,
+          },
+        ],
+      },
       durations: {
         totalMs: 1234,
         totalSeconds: 1,
@@ -180,14 +310,47 @@ describe('formatMetricsReport', () => {
         formattedTotal: 'TOTAL-X',
         formattedAvg: 'AVG-Y',
       },
-      failureBreakdown: { 'reason-z': 7 },
       fileChanges: {
         totalChanges: 42,
         uniqueCount: 3,
         uniqueFiles: ['a.ts', 'b.ts', 'c.ts'],
       },
+      history: {
+        attempts: { total: 7, byTask: { '001-spec/1': 7 }, multipleAttempts: ['001-spec/1'] },
+        deadByReason: { 'reason-z': 7 },
+        unexplainedReruns: { total: 2, byTask: { '001-spec/1': 2 } },
+        verifyRuns: { total: 3, missingExitCode: 1, byTask: { '001-spec/1': [0, null, 1] } },
+        cost: {
+          total: 0.5,
+          perSpec: { '001-spec': 0.5 },
+          formattedTotal: 'COST-X',
+          provenance: 'harness-reported',
+          coverage: { reportedAttempts: 4, totalAttempts: 7 },
+        },
+        rejections: {
+          total: 2,
+          byPlannerModel: { 'opencode/big-pickle': 1, unknown: 1 },
+        },
+      },
+      now: {
+        total: 11,
+        done: 5,
+        verified: 4,
+        manual: 1,
+        dead: 1,
+        regressed: 1,
+        running: 2,
+        pending: 1,
+      },
+      planning: {
+        sessions: 9,
+        wallSeconds: 660,
+        wallSecondsByChange: { '001-spec': 660 },
+        tokens: { input: 11, output: 22, cached: 33, reasoning: 44 },
+        cost: { total: 0.75, formattedTotal: 'PLAN-COST', provenance: 'harness-reported' },
+        coverage: { reportedSessions: 3, totalSessions: 9 },
+      },
       specs: { total: 9, active: 4, archived: 5 },
-      tasks: { total: 11, done: 5, dead: 1, running: 2, pending: 3 },
       tokens: {
         input: 111,
         cached_input: 222,
@@ -202,7 +365,30 @@ describe('formatMetricsReport', () => {
 
     assert.ok(formatted.includes('Total specs: 9 (4 active, 5 archived)'));
     assert.ok(formatted.includes('Completion rate: 12.5%'));
+    assert.ok(formatted.includes('Now:'));
+    assert.ok(formatted.includes('Verified done: 4'));
+    assert.ok(formatted.includes('Manual done: 1'));
+    assert.ok(formatted.includes('Regressed: 1'));
+    assert.ok(formatted.includes('History:'));
     assert.ok(formatted.includes('reason-z: 7'));
+    assert.ok(formatted.includes('Rejections: 2'));
+    assert.ok(formatted.includes('Rejections by planner model:'));
+    assert.ok(formatted.includes('opencode/big-pickle: 1'));
+    assert.ok(formatted.includes('unknown: 1'));
+    assert.ok(formatted.includes('Harness-reported cost: COST-X (4 of 7 attempts reported cost)'));
+    assert.ok(formatted.includes('Coverage:'));
+    assert.ok(formatted.includes('Tasks with event files: 2'));
+    assert.ok(formatted.includes('Tasks without event files: 1'));
+    assert.ok(formatted.includes('Planning:'));
+    assert.ok(formatted.includes('Sessions: 9'));
+    assert.ok(formatted.includes('Total wall time: 11m'));
+    assert.ok(formatted.includes('Input tokens: 11'));
+    assert.ok(formatted.includes('Harness-reported cost: PLAN-COST'));
+    assert.ok(formatted.includes('3 of 9 sessions reported usage'));
+    assert.ok(formatted.includes('Cycle:'));
+    assert.ok(
+      formatted.includes('Brief to approval: total 10s, average 5s (2 of 3 archived changes)'),
+    );
     assert.ok(formatted.includes('Total duration: TOTAL-X'));
     assert.ok(formatted.includes('Average duration: AVG-Y'));
     assert.ok(formatted.includes('Input: 111'));
@@ -212,7 +398,93 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Total tokens: 1110'));
     assert.ok(formatted.includes('Total change events: 42'));
     assert.ok(formatted.includes('Unique files modified: 3'));
-    assert.ok(!formatted.includes('Cost:'));
+  });
+
+  it('always renders the historical cost line, including at zero', () => {
+    const report = {
+      completionRate: 0,
+      coverage: { withEvents: 0, withoutEvents: 0, byChange: {} },
+      cycle: {
+        phases: {
+          briefToApproval: {
+            totalSeconds: 0,
+            averageSeconds: 0,
+            coveredChanges: 0,
+            totalChanges: 0,
+          },
+          approvalToFirstTask: {
+            totalSeconds: 0,
+            averageSeconds: 0,
+            coveredChanges: 0,
+            totalChanges: 0,
+          },
+          firstTaskToArchive: {
+            totalSeconds: 0,
+            averageSeconds: 0,
+            coveredChanges: 0,
+            totalChanges: 0,
+          },
+          total: { totalSeconds: 0, averageSeconds: 0, coveredChanges: 0, totalChanges: 0 },
+        },
+        byChange: [],
+      },
+      durations: {
+        totalMs: 0,
+        totalSeconds: 0,
+        avgMs: 0,
+        avgSeconds: 0,
+        formattedTotal: '0s',
+        formattedAvg: '0s',
+      },
+      fileChanges: { totalChanges: 0, uniqueCount: 0, uniqueFiles: [] },
+      history: {
+        attempts: { total: 0, byTask: {}, multipleAttempts: [] },
+        deadByReason: {},
+        unexplainedReruns: { total: 0, byTask: {} },
+        verifyRuns: { total: 0, missingExitCode: 0, byTask: {} },
+        cost: {
+          total: 0,
+          perSpec: {},
+          formattedTotal: '$0.0000',
+          provenance: 'harness-reported',
+          coverage: { reportedAttempts: 0, totalAttempts: 0 },
+        },
+        rejections: { total: 0, byPlannerModel: {} },
+      },
+      now: {
+        total: 0,
+        done: 0,
+        verified: 0,
+        manual: 0,
+        dead: 0,
+        regressed: 0,
+        running: 0,
+        pending: 0,
+      },
+      planning: {
+        sessions: 0,
+        wallSeconds: 0,
+        wallSecondsByChange: {},
+        tokens: { input: 0, output: 0, cached: 0, reasoning: 0 },
+        cost: { total: 0, formattedTotal: '$0.0000', provenance: 'harness-reported' },
+        coverage: { reportedSessions: 0, totalSessions: 0 },
+      },
+      specs: { total: 0, active: 0, archived: 0 },
+      tokens: {
+        input: 0,
+        cached_input: 0,
+        output: 0,
+        reasoning: 0,
+        total: 0,
+        cacheSharePercent: 0,
+      },
+    } as unknown as MetricsReport;
+
+    const formatted = formatMetricsReport(report);
+    assert.ok(
+      formatted.includes('Harness-reported cost: $0.0000 (0 of 0 attempts reported cost)'),
+      formatted,
+    );
   });
 });
 

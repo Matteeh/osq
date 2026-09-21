@@ -1,0 +1,4 @@
+{"type":"plan_started","sessionId":"009-p1","timestamp":"2026-09-17T19:00:00.000Z","data":{"harness":"opencode","model":"oc-planner","agent":"osq-planner","osqVersion":"0.0.0","briefHash":"sha256:fixture-009"}}
+{"type":"plan_exited","sessionId":"009-p1","timestamp":"2026-09-17T19:05:00.000Z","data":{"exitCode":0,"wallSeconds":300,"usage":{"inputTokens":1000,"outputTokens":200,"cachedTokens":500,"reasoningTokens":50,"cost":0.25}}}
+{"type":"plan_started","sessionId":"009-p2","timestamp":"2026-09-17T19:10:00.000Z","data":{"harness":"agy","model":"agy-planner","osqVersion":"0.0.0","briefHash":"sha256:fixture-009"}}
+{"type":"plan_exited","sessionId":"009-p2","timestamp":"2026-09-17T19:12:30.000Z","data":{"exitCode":0,"wallSeconds":150,"usage":{"inputTokens":null,"outputTokens":null,"cachedTokens":null,"reasoningTokens":null,"cost":null}}}

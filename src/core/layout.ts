@@ -10,6 +10,7 @@ import path from 'node:path';
 const RUN_DIR = '.run';
 const CHANGES_DIR = 'changes';
 const ARCHIVE_DIR = 'archive';
+const REJECTED_DIR = 'rejected';
 const SPECS_DIR = 'specs';
 const TASKS_DIR = 'tasks';
 const DONE_DIR = 'done';
@@ -28,6 +29,11 @@ export function getChangesDir(openspecRoot: string, projectRoot = ''): string {
 /** `<openspecRoot>/changes/archive`, optionally anchored to a project root. */
 export function getArchiveDir(openspecRoot: string, projectRoot = ''): string {
   return path.join(projectRoot, openspecRoot, CHANGES_DIR, ARCHIVE_DIR);
+}
+
+/** `<openspecRoot>/changes/rejected`, optionally anchored to a project root. */
+export function getRejectedDir(openspecRoot: string, projectRoot = ''): string {
+  return path.join(projectRoot, openspecRoot, CHANGES_DIR, REJECTED_DIR);
 }
 
 /** `<openspecRoot>/specs`, optionally anchored to a project root. */
@@ -78,4 +84,9 @@ export function getRegressedMarkerPath(changeFolder: string, target: string): st
 /** `<changeFolder>/.run/events/<task>.jsonl`. */
 export function getEventsPath(changeFolder: string, task: string): string {
   return path.join(changeFolder, RUN_DIR, EVENTS_DIR, `${task}.jsonl`);
+}
+
+/** `<changeFolder>/.run/rejected.md`. */
+export function getRejectedMarkerPath(changeFolder: string): string {
+  return path.join(changeFolder, RUN_DIR, 'rejected.md');
 }

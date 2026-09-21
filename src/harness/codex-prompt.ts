@@ -2,7 +2,12 @@ import fsSync from 'node:fs';
 import path from 'node:path';
 import { resolveCodexEffort, resolveCodexModel } from '../core/config-codex.js';
 import { parseSpecMdFromFolder } from '../core/parser.js';
-import { type SpawnTaskOptions, capabilityRuleLines, resolveCapabilityRules } from './types.js';
+import {
+  type SpawnTaskOptions,
+  capabilityRuleLines,
+  priorContextLines,
+  resolveCapabilityRules,
+} from './types.js';
 
 function changeDocName(specFolderPath: string): string {
   return fsSync.existsSync(path.resolve(specFolderPath, 'proposal.md')) ? 'proposal.md' : 'spec.md';
@@ -83,7 +88,11 @@ export async function buildCodexPrompt(options: SpawnTaskOptions): Promise<strin
     `Entry: ${entry.join(', ')}`,
     `Verify Command: ${verifyCommand}`,
     `Result Destination: ${resultRel}`,
-    ...(priorResult ? [`Prior Result: ${priorResult}`] : []),
+    ...priorContextLines({
+      attempt: options.attempt,
+      reason: options.priorFailureReason,
+      resultPath: priorResult,
+    }),
     ...(deltas.length > 0 ? ['Delta Specs:', ...deltas.map((p) => `- ${p}`)] : []),
     ...(living.length > 0 ? ['Living Capability Specs:', ...living.map((p) => `- ${p}`)] : []),
     '',

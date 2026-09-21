@@ -43,4 +43,38 @@ describe('osq CLI', () => {
     const onceOption = watchCmd.options.find((o) => o.short === '-o' || o.long === '--once');
     assert.ok(onceOption);
   });
+
+  it('configures reject command with required id argument and required reason option', () => {
+    const program = createProgram();
+    const rejectCmd = program.commands.find((cmd) => cmd.name() === 'reject');
+
+    assert.ok(rejectCmd);
+    assert.equal(rejectCmd.registeredArguments[0].name(), 'id');
+    assert.equal(rejectCmd.registeredArguments[0].required, true);
+
+    const reasonOption = rejectCmd.options.find((o) => o.long === '--reason');
+    assert.ok(reasonOption);
+    assert.equal(reasonOption.required, true);
+  });
+
+  it('rejects an empty or whitespace-only reason at the CLI boundary', async () => {
+    const whitespace = createProgram();
+    whitespace.exitOverride();
+    whitespace.commands.find((cmd) => cmd.name() === 'reject')?.exitOverride();
+    await assert.rejects(() =>
+      whitespace.parseAsync(['node', 'osq', 'reject', '001', '--reason', '   ']),
+    );
+
+    const empty = createProgram();
+    empty.exitOverride();
+    empty.commands.find((cmd) => cmd.name() === 'reject')?.exitOverride();
+    await assert.rejects(() => empty.parseAsync(['node', 'osq', 'reject', '001', '--reason', '']));
+  });
+
+  it('requires the reject reason option to be supplied', async () => {
+    const program = createProgram();
+    program.exitOverride();
+    program.commands.find((cmd) => cmd.name() === 'reject')?.exitOverride();
+    await assert.rejects(() => program.parseAsync(['node', 'osq', 'reject', '001']));
+  });
 });

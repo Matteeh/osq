@@ -2,9 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { resolveExecutorIdentity } from '../core/harness-catalog.js';
-import { type Logger, resolveSymbol } from '../core/logger.js';
+import type { Logger } from '../core/logger.js';
 import type { TaskData } from '../core/parser.js';
 import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
+import { formatTaskStartedLine, readRetryContext } from './attempt.js';
 import { resolveBuildInfo } from './build.js';
 import {
   type RunTaskFailureReason,
@@ -14,27 +15,6 @@ import {
   writeDeadMarker,
 } from './outcome.js';
 import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
-
-const ELLIPSIS = '…';
-function truncateToWidth(text: string, width: number): string {
-  if (width <= 0) return '';
-  if (text.length <= width) return text;
-  if (width === 1) return ELLIPSIS;
-  return `${text.slice(0, width - 1)}${ELLIPSIS}`;
-}
-/** Curated task-started line: prefix plus the title truncated to terminal width. */
-export function formatTaskStartedLine(
-  taskNumber: string,
-  title: string,
-  pid: number | undefined,
-  timeoutSeconds: number,
-  symbols: boolean,
-  terminalWidth: number = (process.stderr as unknown as { columns?: number }).columns ?? 80,
-): string {
-  const symbol = resolveSymbol('▶', '[task]', symbols);
-  const prefix = `${symbol} task ${taskNumber} started (pid: ${pid ?? 'unknown'}, timeout: ${timeoutSeconds}s): `;
-  return `${prefix}${truncateToWidth(title, Math.max(0, terminalWidth - prefix.length))}`;
-}
 
 export interface SpawnTaskAgentOptions {
   projectRoot: string;
@@ -63,6 +43,9 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
   const runDir = path.join(specFolderPath, '.run');
   const timeoutSeconds = config.timeouts.taskTimeoutSeconds;
   const useSymbols = logger?.symbols === true;
+  // Reconstruct retry context from append-only state before any spawn so a
+  // watcher restart still carries the attempt and prior failure reason.
+  const retryContext = await readRetryContext(specFolderPath, taskNumber);
 
   let startedRecorded = false;
   let startedPromise: Promise<void> | null = null;
@@ -82,6 +65,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
             harness: adapter.name,
             model,
             osqVersion: buildInfo.version,
+            attempt: retryContext.attempt,
             pid,
             timeoutSeconds,
             ...buildInfo,
@@ -106,6 +90,8 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     tier: 'coding',
     timeoutSeconds,
     config,
+    attempt: retryContext.attempt,
+    priorFailureReason: retryContext.reason,
     onSpawn: (pid) => recordStarted(pid),
   });
   await recordStarted(spawnResult.pid);

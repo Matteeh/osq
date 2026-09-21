@@ -1,0 +1,2 @@
+{"type":"plan_started","sessionId":"011-p1","timestamp":"2026-09-09T18:00:00.000Z","data":{"harness":"opencode","model":"oc-planner","osqVersion":"0.0.0","briefHash":"sha256:fixture-011"}}
+{"type":"plan_exited","sessionId":"011-p1","timestamp":"2026-09-09T18:00:30.000Z","data":{"exitCode":0,"wallSeconds":30,"usage":{"inputTokens":10,"outputTokens":5,"cachedTokens":0,"reasoningTokens":0,"cost":0.1}}}

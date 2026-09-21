@@ -59,12 +59,15 @@ The system SHALL package exclusively compiled artifacts and legal metadata for n
 - **THEN** system dynamically reads version from `package.json` matching release metadata
 
 ### Requirement: Code ownership
-<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/index.ts, templates/**, README.md, .env.example -->
-The CLI Foundation capability SHALL own CLI entrypoints, configuration and shared harness capability resolution, doctor diagnostics, logger, initialization, public configuration exports, templates, and consumer guidance.
+<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/core/retry.ts, src/core/reject.ts, src/index.ts, templates/**, README.md, .env.example -->
+The CLI Foundation capability SHALL own CLI entrypoints, retry and rejection
+commands, configuration and shared harness capability resolution, doctor
+diagnostics, logger, initialization, public configuration exports, templates,
+and consumer guidance.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for CLI or configuration files
-- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/index.ts`, `templates/**`, `README.md`, and `.env.example` to cli-foundation
+- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/core/retry.ts`, `src/core/reject.ts`, `src/index.ts`, `templates/**`, `README.md`, and `.env.example` to cli-foundation
 
 ### Requirement: Test gating configuration
 <!-- source: src/core/config.ts, tests/config.test.ts -->
@@ -357,3 +360,71 @@ Generic configuration, diagnostics, planning, manifest, and watcher consumers SH
 #### Scenario: Future first-party harness
 - **WHEN** a future first-party harness is added
 - **THEN** generic consumers require no harness-specific branch changes
+
+### Requirement: Append-only planning session lifecycle
+<!-- source: src/cli/plan.ts, src/core/planning.ts, tests/plan-telemetry.test.ts -->
+Every non-print `osq plan` invocation SHALL append one `plan_started` and one
+`plan_exited` record to `<change>/.run/plan.jsonl`, including invocations that
+open an existing change. Both records SHALL carry a generated planning-session
+identifier so pairs remain unambiguous in an append-only log.
+
+`plan_started` SHALL be written before the interactive process is spawned and
+contain the selected harness and model, selected agent when one exists, the osq
+package version, and a SHA-256 hash of the exact `brief.md` bytes. `plan_exited`
+SHALL contain the process exit code, non-negative wall seconds, and nullable
+input, output, cached, and reasoning token counts plus nullable cost.
+
+#### Scenario: New and resumed planning sessions
+- **WHEN** interactive planning starts for a new or existing change and the process later exits
+- **THEN** the change's append-only planning log contains one correlated lifecycle pair with exact identity, timing, outcome, and observed usage fields
+
+#### Scenario: Failed planning process
+- **WHEN** the interactive process cannot spawn or exits unsuccessfully
+- **THEN** `plan_exited` records the non-zero outcome and elapsed wall time before existing failure propagation continues
+
+#### Scenario: Print mode
+- **WHEN** `osq plan -print` builds and emits an opening prompt without launching a process
+- **THEN** no planning lifecycle record is appended
+
+### Requirement: Explicit retry command
+<!-- source: src/cli/retry.ts, src/core/retry.ts, src/cli/index.ts, tests/retry*.test.ts -->
+The CLI SHALL provide `osq retry <id> <target>` for an active change, where the
+target is a numeric task or the literal `change`. Retry SHALL require matching
+approval, an active dead or regressed marker, and no running marker for the
+target. It SHALL refuse all invalid states without mutation and SHALL direct a
+missing or stale approval to `osq approve <id>` without approving on the
+caller's behalf.
+
+#### Scenario: Retrying a failed task
+- **WHEN** a user retries an approved dead or regressed numeric task that is not running
+- **THEN** the CLI performs the retry transition and reports its next execution attempt
+
+#### Scenario: Retrying a change-level regression
+- **WHEN** a user runs `osq retry <id> change` for an approved change with `.run/regressed/change.md` and nothing running
+- **THEN** the CLI clears the active regression through the preserving retry transition
+
+#### Scenario: Approval remediation
+- **WHEN** the approval marker is missing or its hash differs from the authored change folder
+- **THEN** retry exits non-zero without mutation and names `osq approve <id>` as the next step
+
+### Requirement: Explicit rejection command
+<!-- source: src/cli/reject.ts, src/core/reject.ts, src/cli/index.ts, tests/reject.test.ts -->
+The CLI SHALL provide `osq reject <id> --reason <text>` for moving an eligible
+active change intact to
+`openspec/changes/rejected/<original-folder-name>/`. A non-empty reason is
+required. An unapproved change is eligible; an approved change is eligible only
+with an active dead or regressed target and no running task. The command SHALL
+refuse healthy approved, complete, running, archived, already rejected, missing,
+or destination-colliding changes.
+
+#### Scenario: Rejecting an unapproved change
+- **WHEN** a user rejects an unapproved active change with a non-empty reason
+- **THEN** its complete folder moves to the canonical rejected directory
+
+#### Scenario: Rejecting an approved failed change
+- **WHEN** a user rejects an approved change with an active dead or regressed target and nothing running
+- **THEN** its complete folder moves without applying deltas or changing task checkboxes
+
+#### Scenario: Rejecting an ineligible change
+- **WHEN** a user targets a healthy approved, complete, running, archived, already rejected, missing, or colliding change
+- **THEN** rejection exits non-zero and does not move or overwrite a folder

@@ -418,6 +418,277 @@ Preexisting test files were modified or deleted without tests.modify: true:
     assert.ok(showText.includes('tests/show.test.ts (modified)'));
   });
 
+  it('getSpecDetails correlates planning sessions in start order for active and archived changes', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-planning-spec', 'Planning Spec');
+
+    // Session B starts earliest, then A, then an unmatched start (C). A
+    // malformed line and an unknown record type must be skipped silently.
+    const planLog = [
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'session-b',
+        timestamp: '2026-09-17T09:00:00.000Z',
+        data: {
+          harness: 'codex',
+          model: 'gpt-5',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:bbb',
+        },
+      }),
+      JSON.stringify({
+        type: 'plan_exited',
+        sessionId: 'session-b',
+        timestamp: '2026-09-17T09:00:03.000Z',
+        data: {
+          exitCode: 1,
+          wallSeconds: 3,
+          usage: {
+            inputTokens: 987654,
+            outputTokens: null,
+            cachedTokens: null,
+            reasoningTokens: null,
+            cost: null,
+          },
+        },
+      }),
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'session-a',
+        timestamp: '2026-09-17T10:00:00.000Z',
+        data: {
+          harness: 'opencode',
+          model: 'claude-x',
+          agent: 'osq-planner',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:aaa',
+        },
+      }),
+      'this is not valid json',
+      JSON.stringify({
+        type: 'plan_paused',
+        sessionId: 'session-d',
+        timestamp: '2026-09-17T10:05:00.000Z',
+        data: {},
+      }),
+      JSON.stringify({
+        type: 'plan_exited',
+        sessionId: 'session-a',
+        timestamp: '2026-09-17T10:00:12.500Z',
+        data: {
+          exitCode: 0,
+          wallSeconds: 12.5,
+          usage: {
+            inputTokens: null,
+            outputTokens: null,
+            cachedTokens: null,
+            reasoningTokens: null,
+            cost: null,
+          },
+        },
+      }),
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'session-c',
+        timestamp: '2026-09-17T11:00:00.000Z',
+        data: {
+          harness: 'agy',
+          model: 'agy-default',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:ccc',
+        },
+      }),
+    ].join('\n');
+    await fs.mkdir(path.join(folderPath, '.run'), { recursive: true });
+    await fs.writeFile(path.join(folderPath, '.run', 'plan.jsonl'), `${planLog}\n`, 'utf8');
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    const sessions = details.planningSessions;
+
+    assert.equal(sessions.length, 3);
+    assert.deepEqual(
+      sessions.map((s) => s.sessionId),
+      ['session-b', 'session-a', 'session-c'],
+    );
+
+    assert.equal(sessions[0].startTime, '2026-09-17T09:00:00.000Z');
+    assert.equal(sessions[0].harness, 'codex');
+    assert.equal(sessions[0].model, 'gpt-5');
+    assert.equal(sessions[0].exitCode, 1);
+    assert.equal(sessions[0].wallSeconds, 3);
+    assert.equal(sessions[0].agent, undefined);
+
+    assert.equal(sessions[1].harness, 'opencode');
+    assert.equal(sessions[1].model, 'claude-x');
+    assert.equal(sessions[1].agent, 'osq-planner');
+    assert.equal(sessions[1].exitCode, 0);
+    assert.equal(sessions[1].wallSeconds, 12.5);
+
+    // Unmatched start retains identity but renders unavailable outcome.
+    assert.equal(sessions[2].harness, 'agy');
+    assert.equal(sessions[2].exitCode, null);
+    assert.equal(sessions[2].wallSeconds, null);
+
+    // Token data and artifact hashes stay out of the inspection surface.
+    for (const session of sessions) {
+      assert.equal('inputTokens' in session, false);
+      assert.equal('usage' in session, false);
+      assert.equal('briefHash' in session, false);
+    }
+    assert.equal(JSON.stringify(sessions).includes('987654'), false);
+    assert.equal(JSON.stringify(sessions).includes('sha256:'), false);
+
+    // Archived changes resolve planning sessions through the same path.
+    const archiveFolder = path.join(tmpDir, CHANGE_SPECS_DIR, 'archive', '003-archived-planning');
+    await fs.mkdir(path.join(archiveFolder, 'tasks'), { recursive: true });
+    await fs.writeFile(path.join(archiveFolder, 'spec.md'), specMd('Archived Planning'), 'utf8');
+    await fs.writeFile(
+      path.join(archiveFolder, 'tasks', '1.md'),
+      taskMd('Archived Planning Task'),
+      'utf8',
+    );
+    await fs.mkdir(path.join(archiveFolder, '.run'), { recursive: true });
+    await fs.writeFile(
+      path.join(archiveFolder, '.run', 'plan.jsonl'),
+      `${JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'archived-1',
+        timestamp: '2026-09-18T08:00:00.000Z',
+        data: {
+          harness: 'codex',
+          model: 'gpt-5',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:ddd',
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const archived = await getSpecDetails(tmpDir, '003', DEFAULT_CONFIG);
+    assert.equal(archived.isArchived, true);
+    assert.deepEqual(
+      archived.planningSessions.map((s) => s.sessionId),
+      ['archived-1'],
+    );
+    assert.equal(archived.planningSessions[0].exitCode, null);
+    assert.equal(archived.planningSessions[0].wallSeconds, null);
+  });
+
+  it('renders Planning Sessions before the event timeline without exposing usage', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-render-spec', 'Render Spec');
+    await fs.mkdir(path.join(folderPath, '.run', 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(folderPath, '.run', 'events', '1.jsonl'),
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T10:00:00.000Z' })}\n`,
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(folderPath, '.run', 'plan.jsonl'),
+      `${[
+        JSON.stringify({
+          type: 'plan_started',
+          sessionId: 'render-a',
+          timestamp: '2026-09-17T10:00:00.000Z',
+          data: {
+            harness: 'opencode',
+            model: 'claude-x',
+            agent: 'osq-planner',
+            osqVersion: '0.1.0',
+            briefHash: 'sha256:aaa',
+          },
+        }),
+        JSON.stringify({
+          type: 'plan_exited',
+          sessionId: 'render-a',
+          timestamp: '2026-09-17T10:00:12.500Z',
+          data: {
+            exitCode: 0,
+            wallSeconds: 12.5,
+            usage: {
+              inputTokens: 987654,
+              outputTokens: null,
+              cachedTokens: null,
+              reasoningTokens: null,
+              cost: null,
+            },
+          },
+        }),
+        JSON.stringify({
+          type: 'plan_started',
+          sessionId: 'render-b',
+          timestamp: '2026-09-17T11:00:00.000Z',
+          data: {
+            harness: 'agy',
+            model: 'agy-default',
+            osqVersion: '0.1.0',
+            briefHash: 'sha256:bbb',
+          },
+        }),
+      ].join('\n')}\n`,
+      'utf8',
+    );
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    const text = formatShowOutput(details);
+
+    const planningIndex = text.indexOf('Planning Sessions:');
+    const timelineIndex = text.indexOf('Event Timeline:');
+    assert.ok(planningIndex >= 0, 'Planning Sessions section should render');
+    assert.ok(timelineIndex >= 0, 'Event Timeline section should render');
+    assert.ok(
+      planningIndex < timelineIndex,
+      'Planning Sessions should appear before Event Timeline',
+    );
+
+    assert.ok(text.includes('opencode/claude-x'));
+    assert.ok(text.includes('agent: osq-planner'));
+    assert.ok(text.includes('exit: 0'));
+    assert.ok(text.includes('wall: 13s'));
+    assert.ok(text.includes('agy/agy-default'));
+    assert.ok(text.includes('exit: unavailable'));
+    assert.ok(text.includes('wall: unavailable'));
+
+    assert.equal(text.includes('987654'), false);
+    assert.equal(text.includes('inputTokens'), false);
+    assert.equal(text.includes('sha256:'), false);
+
+    let capturedOutput = '';
+    await showCommand('001', {
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+      stdout: (msg) => {
+        capturedOutput = msg;
+      },
+    });
+    assert.ok(capturedOutput.includes('Planning Sessions:'));
+  });
+
+  it('missing and malformed planning logs leave task details and timeline intact', async () => {
+    // No plan.log at all.
+    const folderPath = await createChangeFolder(tmpDir, '001-missing-plan', 'Missing Plan');
+    await fs.mkdir(path.join(folderPath, '.run', 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(folderPath, '.run', 'events', '1.jsonl'),
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T10:00:00.000Z' })}\n`,
+      'utf8',
+    );
+    const withoutLog = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.deepEqual(withoutLog.planningSessions, []);
+    assert.equal(withoutLog.tasks.length, 1);
+    assert.equal(withoutLog.timeline.length, 1);
+
+    // Entirely malformed planning log.
+    await fs.writeFile(
+      path.join(folderPath, '.run', 'plan.jsonl'),
+      'not json\nalso not json\n',
+      'utf8',
+    );
+    const malformed = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.deepEqual(malformed.planningSessions, []);
+    assert.equal(malformed.tasks.length, 1);
+    assert.equal(malformed.timeline.length, 1);
+    assert.ok(formatShowOutput(malformed).includes('(no planning sessions)'));
+  });
+
   it('CLI registers show <id> command in commander program', () => {
     const program = createProgram();
     const showCmd = program.commands.find((cmd) => cmd.name() === 'show');

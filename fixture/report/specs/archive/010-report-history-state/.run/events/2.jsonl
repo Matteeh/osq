@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-09-18T00:00:00.000Z","data":{"tier":"coding","taskTitle":"When a task restarts without a recorded failure, the report flags an unexplained re-run","scope":[],"entry":[],"skills":[]}}
+{"type":"started","timestamp":"2026-09-18T00:05:00.000Z","data":{"tier":"coding","taskTitle":"When a task restarts without a recorded failure, the report flags an unexplained re-run","scope":[],"entry":[],"skills":[]}}
+{"type":"verify_ran","timestamp":"2026-09-18T00:10:00.000Z","data":{"command":"node -e \"process.exit(0)\"","exitCode":0}}

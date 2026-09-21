@@ -9,10 +9,44 @@ import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getSpecsDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
+import { type PlanRecord, appendPlanRecord, getPlanLogPath } from '../src/core/planning.js';
 import { installFakeValidator } from './helpers.js';
 
 function sha256(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
+}
+
+function planStarted(sessionId: string): PlanRecord {
+  return {
+    type: 'plan_started',
+    sessionId,
+    timestamp: new Date().toISOString(),
+    data: {
+      harness: 'opencode',
+      model: 'test-model',
+      osqVersion: '0.0.0-test',
+      briefHash: 'sha256:brief',
+    },
+  };
+}
+
+function planExited(sessionId: string): PlanRecord {
+  return {
+    type: 'plan_exited',
+    sessionId,
+    timestamp: new Date().toISOString(),
+    data: {
+      exitCode: 0,
+      wallSeconds: 1,
+      usage: {
+        inputTokens: null,
+        outputTokens: null,
+        cachedTokens: null,
+        reasoningTokens: null,
+        cost: null,
+      },
+    },
+  };
 }
 
 const PROPOSAL = `---
@@ -107,6 +141,8 @@ describe('run manifest', () => {
     assert.ok(!Number.isNaN(Date.parse(manifest.createdAt as string)));
     assert.equal(typeof manifest.approvedAt, 'string');
     assert.ok(!Number.isNaN(Date.parse(manifest.approvedAt as string)));
+
+    assert.equal(manifest.planningSessions, 0);
   });
 
   it('records null for a hashed file that does not exist', async () => {
@@ -119,5 +155,59 @@ describe('run manifest', () => {
     const manifest = await readManifest();
     const hashes = manifest.hashes as Record<string, string | null>;
     assert.equal(hashes['ghost-capability'], null);
+  });
+
+  it('counts valid plan_started records, including resumed sessions without exits', async () => {
+    await appendPlanRecord(specFolder, planStarted('new-session'));
+    await appendPlanRecord(specFolder, planStarted('resumed-session'));
+    await appendPlanRecord(specFolder, planExited('resumed-session'));
+    // An exit without a matching start is not a session.
+    await appendPlanRecord(specFolder, planExited('orphan-exit'));
+
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const manifest = await readManifest();
+    assert.equal(manifest.planningSessions, 2);
+    assert.equal(typeof manifest.planningSessions, 'number');
+  });
+
+  it('tolerates a missing, empty, or partially malformed planning log', async () => {
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 0);
+
+    const planLog = getPlanLogPath(specFolder);
+    await fs.mkdir(path.dirname(planLog), { recursive: true });
+    await fs.writeFile(planLog, '', 'utf8');
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 0);
+
+    const malformed = [
+      JSON.stringify(planStarted('valid-only')),
+      '',
+      '{ not json',
+      JSON.stringify({ type: 'mystery', sessionId: 'x', timestamp: new Date().toISOString() }),
+      JSON.stringify({ type: 'plan_started', sessionId: '', timestamp: '' }),
+      JSON.stringify(planExited('never-started')),
+      '   ',
+    ].join('\n');
+    await fs.writeFile(planLog, `${malformed}\n`, 'utf8');
+
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 1);
+  });
+
+  it('changes planningSessions when only the plan log changes, keeping the approved hash', async () => {
+    const first = await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 0);
+
+    await appendPlanRecord(specFolder, planStarted('first-session'));
+    const second = await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 1);
+    assert.equal(second.hash, first.hash);
+
+    await appendPlanRecord(specFolder, planStarted('second-session'));
+    const third = await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal((await readManifest()).planningSessions, 2);
+    assert.equal(third.hash, first.hash);
   });
 });

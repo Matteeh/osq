@@ -3,6 +3,8 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
+import { readPlanningSessions } from './planning.js';
+import { formatDuration } from './report.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
 
 export interface TimelineEvent {
@@ -28,6 +30,21 @@ export interface TaskDetail {
   events: TimelineEvent[];
 }
 
+/**
+ * One correlated planning lifecycle pair for display. Only lifecycle
+ * identity, timing, and outcome are exposed; token usage and artifact paths
+ * stay in the append-only log.
+ */
+export interface PlanningSessionDetail {
+  sessionId: string;
+  startTime: string;
+  harness: string;
+  model: string;
+  agent?: string;
+  exitCode: number | null;
+  wallSeconds: number | null;
+}
+
 export interface SpecDetails {
   id: string;
   folderName: string;
@@ -46,6 +63,7 @@ export interface SpecDetails {
   nonGoals: string;
   delta: string;
   tasks: TaskDetail[];
+  planningSessions: PlanningSessionDetail[];
   timeline: TimelineEvent[];
 }
 
@@ -166,6 +184,26 @@ export async function getSpecDetails(
     const hashContent = await fs.readFile(approvedPath, 'utf8');
     approvedHash = hashContent.trim() || null;
   } catch {}
+
+  // Correlated planning lifecycle pairs in start order. A malformed or missing
+  // log yields an empty list and never blocks the remaining details.
+  const planningSessions: PlanningSessionDetail[] = (
+    await readPlanningSessions(folderPath)
+  ).flatMap((session) => {
+    const started = session.started;
+    if (!started) return [];
+    return [
+      {
+        sessionId: session.sessionId,
+        startTime: started.timestamp,
+        harness: started.data.harness,
+        model: started.data.model,
+        ...(started.data.agent ? { agent: started.data.agent } : {}),
+        exitCode: session.exited?.data.exitCode ?? null,
+        wallSeconds: session.exited?.data.wallSeconds ?? null,
+      },
+    ];
+  });
 
   const tasksDir = path.join(folderPath, 'tasks');
   let taskEntries: string[] = [];
@@ -342,6 +380,7 @@ export async function getSpecDetails(
     nonGoals: specData.nonGoals,
     delta: specData.delta,
     tasks,
+    planningSessions,
     timeline,
   };
 }
@@ -436,6 +475,22 @@ export function formatSpecDetails(details: SpecDetails): string {
           lines.push(`        ${rLine}`);
         }
       }
+    }
+  }
+
+  lines.push('');
+  lines.push('Planning Sessions:');
+  if (details.planningSessions.length === 0) {
+    lines.push('  (no planning sessions)');
+  } else {
+    for (const session of details.planningSessions) {
+      const agent = session.agent ? ` agent: ${session.agent}` : '';
+      const exit = session.exitCode === null ? 'unavailable' : String(session.exitCode);
+      const wall =
+        session.wallSeconds === null ? 'unavailable' : formatDuration(session.wallSeconds * 1000);
+      lines.push(
+        `  ${session.startTime} ${session.harness}/${session.model}${agent} exit: ${exit} wall: ${wall}`,
+      );
     }
   }
 

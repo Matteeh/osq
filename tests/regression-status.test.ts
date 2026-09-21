@@ -47,6 +47,7 @@ describe('regressed status formatting', () => {
   it('formats an active spec overview with a regressed indicator', () => {
     const overview: StatusOverview = {
       specs: [regressedSpec()],
+      rejected: [],
       archivedCount: 0,
       archivedChangeFolders: 0,
     };

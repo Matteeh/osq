@@ -7,6 +7,7 @@ import { MANAGED_AGENTS_BLOCK, OSQ_END_MARKER, OSQ_START_MARKER } from '../core/
 import type { Logger } from '../core/logger.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../core/parser.js';
 import { relativizeToolSummary } from '../core/summary.js';
+import { readOpencodeInteractiveUsage } from './opencode-usage.js';
 import { type SpawnProcessResult, spawnWithTimeout } from './process.js';
 import {
   EventStreamParser,
@@ -17,12 +18,15 @@ import {
 import {
   type HarnessAdapter,
   type InteractiveSessionOptions,
+  type InteractiveUsage,
+  type ReadInteractiveUsageOptions,
   type SpawnResult,
   type SpawnTaskOptions,
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
   capabilityRuleLines,
+  priorContextLines,
   resolveCapabilityRules,
 } from './types.js';
 
@@ -83,10 +87,9 @@ export function buildOpencodePrompt(options: SpawnTaskOptions): string {
     path.resolve(specFolderPath, 'tasks', `${taskNumber}.md`),
   );
   const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, changeDocName));
-  const resultRelPath = path.relative(
-    projectRoot,
-    path.resolve(specFolderPath, '.run', 'results', `${taskNumber}.md`),
-  );
+  const resultAbsPath = path.resolve(specFolderPath, '.run', 'results', `${taskNumber}.md`);
+  const resultRelPath = path.relative(projectRoot, resultAbsPath);
+  const priorResult = fsSync.existsSync(resultAbsPath) ? resultRelPath : undefined;
 
   const capabilityRules = resolveCapabilityRules(options);
 
@@ -98,6 +101,11 @@ export function buildOpencodePrompt(options: SpawnTaskOptions): string {
     `Scope: ${scope.join(', ')}`,
     `Entry: ${entry.join(', ')}`,
     `Verify Command: ${verifyCommand}`,
+    ...priorContextLines({
+      attempt: options.attempt,
+      reason: options.priorFailureReason,
+      resultPath: priorResult,
+    }),
     '',
     'Rules:',
     `1. Read ${taskRelPath}, ${specRelPath}, and features docs referenced in ${specRelPath}.`,
@@ -606,5 +614,11 @@ export class OpencodeAdapter implements HarnessAdapter {
       child.on('error', () => resolve(1));
       child.on('close', (code) => resolve(code ?? 1));
     });
+  }
+
+  async readInteractiveUsage(options: ReadInteractiveUsageOptions): Promise<InteractiveUsage> {
+    const config = await loadConfig(options.cwd).catch(() => undefined);
+    const bin = await resolveOpencodeBinary(config);
+    return await readOpencodeInteractiveUsage(options, bin);
   }
 }

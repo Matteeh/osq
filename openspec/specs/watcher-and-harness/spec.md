@@ -79,12 +79,14 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
 
 ### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts -->
-The Watcher and Harness capability SHALL own the reactive watch loop, runner, process execution, agent harnesses, adapter registration, and execution manifest construction.
+<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts, tests/retry*.test.ts, tests/reject.test.ts -->
+The Watcher and Harness capability SHALL own the reactive watch loop, runner,
+process execution, agent harnesses, adapter registration, execution manifest
+construction, and append-only execution lifecycle event contracts.
 
 #### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for watcher or harness execution
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, and `src/core/manifest.ts` to watcher-and-harness
+- **WHEN** file ownership is resolved for watcher, harness execution, or retry and rejection lifecycle events
+- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, `src/core/manifest.ts`, `tests/retry*.test.ts`, and `tests/reject.test.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
 <!-- source: src/harness/agy.ts, src/harness/opencode.ts, tests/harness-prompt-injection.test.ts -->
@@ -179,12 +181,19 @@ The codebase SHALL enforce strict directional import boundaries across packages,
 - **THEN** no module in `src/watcher` imports from `src/cli`
 
 ### Requirement: Typed event hygiene and single emission path
-<!-- source: src/harness/types.ts, src/core/summary.ts, src/harness/opencode.ts, src/harness/agy.ts, src/watcher/spawn.ts -->
-The harness and watcher SHALL record lifecycle and tool events using a typed discriminated union, with tool summaries relativized to the project root at write time, single code path emission per event type, and build metadata on task initiation.
+<!-- source: src/harness/types.ts, src/core/summary.ts, src/core/retry.ts, src/core/reject.ts, src/harness/opencode.ts, src/harness/agy.ts, src/watcher/spawn.ts -->
+The harness and watcher SHALL record lifecycle, retry, rejection, and tool
+events using a typed discriminated union, with tool summaries relativized to
+the project root at write time and a single code path for each event type.
+Every new started event SHALL include build identity and execution attempt.
 
 #### Scenario: Task started event metadata
 - **WHEN** a task execution starts
-- **THEN** the single `started` event emitted by the runner includes `harness`, `model`, and `osqVersion` under event data
+- **THEN** the single `started` event emitted by the runner includes `harness`, `model`, `osqVersion`, and `attempt` under event data
+
+#### Scenario: Retry and rejection event typing
+- **WHEN** retry or rejection succeeds
+- **THEN** its event is appended through the shared event writer with the payload defined for that discriminant
 
 #### Scenario: Write-time tool summary relativization
 - **WHEN** an agent executes a tool call targeting workspace files
@@ -235,12 +244,22 @@ The state derivation subsystem SHALL support overloaded invocation for both in-m
 - **THEN** archive destination path is determined using `getArchiveDir` from `src/core/layout.ts`
 
 ### Requirement: Run manifest at approval
-<!-- source: src/core/approve.ts, src/core/manifest.ts -->
-The approve command SHALL write `.run/manifest.json` containing content-addressed hashes of `AGENTS.md`, `PLANNER.md`, the config file, and each capability spec the change reads or writes, plus the osq version, harness, model, effort setting, and timestamps for creation and approval.
+<!-- source: src/core/approve.ts, src/core/manifest.ts, tests/manifest.test.ts -->
+The approve command SHALL write `.run/manifest.json` containing content-addressed
+hashes of `AGENTS.md`, `PLANNER.md`, the config file, and each capability spec
+the change reads or writes; the osq version, harness, model, effort setting, and
+timestamps for creation and approval; and `planningSessions`, the count of valid
+`plan_started` records already present in `.run/plan.jsonl`. A missing or empty
+planning log SHALL produce zero. Because the log lives below `.run/`, it SHALL
+NOT affect approval hashing.
 
 #### Scenario: Manifest written on approval
 - **WHEN** `osq approve` seals a change
-- **THEN** `.run/manifest.json` is written containing SHA-256 hashes of `AGENTS.md`, `PLANNER.md`, the resolved config file, and each capability spec referenced by `features.reads` and `features.writes`, plus `osqVersion`, `harness`, `model`, `effort`, `createdAt`, and `approvedAt`
+- **THEN** `.run/manifest.json` contains content hashes, execution identity, creation and approval timestamps, and the recorded planning-session count
+
+#### Scenario: Approval after multiple planning sessions
+- **WHEN** a change with new and resumed planning sessions is approved
+- **THEN** the manifest counts every valid `plan_started` record while the approved content hash remains independent of the planning log
 
 #### Scenario: Manifest hashes are content-addressed
 - **WHEN** manifest input files are hashed
@@ -347,12 +366,20 @@ The archiver SHALL apply delta specifications into `openspec/specs/<capability>/
 - **THEN** the identifier `applyDelta` is completely absent from `src/`
 
 ### Requirement: Marker retention under run directory
-<!-- source: src/watcher/runner.ts, tests/dead-marker-retention.test.ts -->
-The task runner and watcher loop SHALL NOT delete any marker under `.run/` upon successful task completion or rerun. Prior diagnostic markers remain intact.
+<!-- source: src/watcher/runner.ts, src/core/retry.ts, tests/dead-marker-retention.test.ts, tests/retry*.test.ts -->
+The task runner, watcher loop, and approval command SHALL NOT delete, rename, or
+otherwise retire active or historical failure markers under `.run/`. Only an
+explicit successful retry may rename active dead, regressed, and associated
+done markers into attempt-suffixed history. Successful reruns SHALL write new
+active done markers without removing historical diagnostics.
 
 #### Scenario: Successful task run leaves prior dead markers untouched
-- **WHEN** a task with an existing `.run/dead/<n>.<attempt>.md` marker completes successfully
-- **THEN** runner writes `.run/done/<n>` without removing the historical dead marker
+- **WHEN** a retried task with attempt-suffixed failure markers completes successfully
+- **THEN** runner writes `.run/done/<n>` without removing or rewriting historical markers
+
+#### Scenario: Approval leaves failure active
+- **WHEN** a failed change is reapproved after authored edits
+- **THEN** watcher still observes the active failure until explicit retry
 
 ### Requirement: Manual task completion lifecycle event
 <!-- source: src/harness/types.ts, src/core/done.ts, tests/done-manual.test.ts -->
@@ -477,3 +504,127 @@ Approval manifests, task-start events, planning briefs, and interactive planning
 #### Scenario: Native model selection
 - **WHEN** the selected harness leaves model choice to its native default
 - **THEN** metadata records `default`, the native invocation receives no invented model override, and no other harness's configured model is used
+
+### Requirement: Observed-only interactive usage port
+<!-- source: src/harness/types.ts, src/harness/agy.ts, src/harness/opencode*.ts, src/harness/codex*.ts, tests/plan-telemetry.test.ts -->
+`HarnessAdapter` SHALL offer this optional post-session usage port:
+
+```ts
+readInteractiveUsage?(options: {
+  cwd: string;
+  startedAt: string;
+  endedAt: string;
+}): Promise<{
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cachedTokens: number | null;
+  reasoningTokens: number | null;
+  cost: number | null;
+}>;
+```
+
+Missing readers, missing fields, malformed artifacts, read failures, and
+ambiguous session matches SHALL yield null fields and SHALL NOT change the
+planner process exit result.
+
+OpenCode SHALL read the one local session database row created for the working
+directory during the observed interval, using its stored input, output,
+reasoning, cache-read, cache-write, and cost columns. Codex SHALL read the one
+new rollout JSONL session whose `session_meta` matches the working directory and
+use the last cumulative `token_usage_record.payload.thread_token_usage` values.
+Codex cost SHALL remain null because its local rollout record does not carry
+cost. AGY SHALL participate in the same generic lifecycle recording and return
+all-null usage because no confirmed local AGY usage artifact is in scope.
+Neither reader SHALL inspect or retain transcript content.
+
+#### Scenario: Exact OpenCode usage
+- **WHEN** exactly one matching OpenCode session row exposes usage and cost
+- **THEN** the reader returns those stored values, with cached tokens equal to the harness's reported cache-read plus cache-write counters
+
+#### Scenario: Exact Codex usage
+- **WHEN** exactly one matching Codex rollout exposes cumulative thread usage
+- **THEN** the reader returns its input, output, cached-input, and reasoning-output counters and a null cost
+
+#### Scenario: AGY usage unavailable
+- **WHEN** AGY completes an interactive planning session
+- **THEN** its reader returns null for input, output, cached, reasoning, and cost while generic lifecycle timing remains recorded
+
+#### Scenario: Usage unavailable or ambiguous
+- **WHEN** no unique matching local artifact supplies a usage field
+- **THEN** that field is null and osq performs no estimation or transcript parsing
+
+### Requirement: Explicit archive timestamp
+<!-- source: src/watcher/archiver.ts, src/harness/types.ts, tests/archiver.test.ts -->
+After successful archive-time verification and relocation, the watcher SHALL
+append one typed `archived` event to `.run/events/change.jsonl` in the archived
+folder. The event timestamp is the authoritative archive time for cycle metrics
+and SHALL NOT be emitted to any task event file.
+
+#### Scenario: Successful archive
+- **WHEN** a completed change is successfully moved into the archive
+- **THEN** its change-level event stream contains one `archived` event timestamped after the move
+
+#### Scenario: Blocked archive
+- **WHEN** archive verification or relocation fails
+- **THEN** no `archived` event is recorded
+
+### Requirement: Preserving retry transition
+<!-- source: src/core/retry.ts, src/core/layout.ts, src/watcher/**, tests/retry*.test.ts -->
+Retry SHALL be the sole transition that retires an active dead or regressed
+marker. It SHALL rename rather than delete the active marker, using the next
+target-wide ordinal across retained dead and regressed failures. A task-level
+regression SHALL also preserve its active done marker under an inactive
+attempt-suffixed name so the retried task derives as pending. A change-level
+retry SHALL accept the literal target `change` and make archive verification
+eligible to run again.
+
+#### Scenario: Dead marker retained
+- **WHEN** a task's first active dead marker is retried
+- **THEN** `dead/<n>.md` becomes `dead/<n>.1.md` and the task becomes pending without deleting diagnostics
+
+#### Scenario: Regressed completion retained
+- **WHEN** a regressed numeric task has an active done marker
+- **THEN** retry retains both failure and completion markers under inactive attempt names before the task runs again
+
+#### Scenario: Change regression retained
+- **WHEN** the change target is retried
+- **THEN** `regressed/change.md` becomes its next attempt-suffixed historical marker
+
+### Requirement: Retry attempt lifecycle events
+<!-- source: src/harness/types.ts, src/core/retry.ts, src/watcher/spawn.ts, tests/retry*.test.ts, tests/golden-events.test.ts -->
+The lifecycle event union SHALL include a typed `retry` event carrying target,
+reason, and next execution attempt. Every newly emitted `started` event SHALL
+carry its execution attempt. Initial execution is attempt 1, and the first
+start after retry SHALL match the attempt in the preceding retry event. Legacy
+started events without attempt SHALL remain readable.
+
+#### Scenario: Initial attempt
+- **WHEN** the runner spawns a task without retained failure history
+- **THEN** its started event contains `attempt: 1`
+
+#### Scenario: Retried attempt
+- **WHEN** retry records the next attempt and the watcher later spawns the task
+- **THEN** the target event stream contains retry followed by started with the same attempt
+
+### Requirement: Retried executor context
+<!-- source: src/harness/types.ts, src/harness/agy.ts, src/harness/opencode.ts, src/harness/codex-prompt.ts, src/watcher/spawn.ts, tests/harness-prompt-injection.test.ts -->
+The runner SHALL reconstruct retry context from append-only state and pass the
+attempt and failure reason through shared spawn options. Every textual harness
+prompt SHALL identify the prior failure reason and the existing prior result
+file in one prior-context section. Retry SHALL NOT remove the result before
+spawn.
+
+#### Scenario: Fresh process receives retry context
+- **WHEN** the watcher restarts after retry and then spawns the target
+- **THEN** the executor prompt identifies the retry attempt, retained failure reason, and prior result path
+
+### Requirement: Rejection lifecycle record
+<!-- source: src/core/reject.ts, src/harness/types.ts, tests/reject.test.ts -->
+A successful rejection SHALL write `.run/rejected.md` in the moved folder and
+append one typed `rejected` event to `.run/events/change.jsonl`. Both artifacts
+SHALL record the same non-empty reason and ISO timestamp while all pre-existing
+events and run artifacts remain intact.
+
+#### Scenario: Rejection is recorded after relocation
+- **WHEN** an eligible change moves to the rejected directory
+- **THEN** its destination contains a matching rejection marker and change-level event after all previous event bytes

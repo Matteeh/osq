@@ -1,14 +1,77 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
-import { getArchiveDir, getChangesDir } from './layout.js';
-import { resolveChangeDoc } from './parser.js';
-import { type SpecState, type TaskState, deriveSpecState } from './state.js';
+import { getArchiveDir, getChangesDir, getRejectedDir, getRejectedMarkerPath } from './layout.js';
+import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from './parser.js';
+import { type SpecState, type TaskState, compareNumericPrefix, deriveSpecState } from './state.js';
+
+/**
+ * A change retained under `rejected/`. Rejection is a terminal location, not a
+ * task state, so it is summarized separately from active {@link SpecState}
+ * entries and never contributes to active or archived counts.
+ */
+export interface RejectedSpecSummary {
+  readonly folderName: string;
+  readonly title: string;
+  readonly reason: string | null;
+  readonly timestamp: string | null;
+}
 
 export interface StatusOverview {
   specs: SpecState[];
+  rejected: RejectedSpecSummary[];
   archivedCount: number;
   archivedChangeFolders: number;
+}
+
+/** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
+async function readRejectedSummary(
+  folderPath: string,
+  folderName: string,
+): Promise<RejectedSpecSummary> {
+  const spec = await parseSpecMdFromFolder(folderPath).catch(() => null);
+  const title = spec?.title || folderName;
+
+  const content = await fs.readFile(getRejectedMarkerPath(folderPath), 'utf8').catch(() => null);
+  let reason: string | null = null;
+  let timestamp: string | null = null;
+  if (content !== null) {
+    const { data } = parseFrontmatter(content);
+    if (typeof data.reason === 'string' && data.reason.trim()) reason = data.reason.trim();
+    if (typeof data.timestamp === 'string' && data.timestamp.trim()) {
+      timestamp = data.timestamp.trim();
+    }
+  }
+  return { folderName, title, reason, timestamp };
+}
+
+/** Discover rejected changes under the canonical rejected directory. */
+async function readRejectedSummaries(
+  projectRoot: string,
+  config: OsqConfig,
+): Promise<RejectedSpecSummary[]> {
+  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
+  let entries: string[] = [];
+  try {
+    entries = await fs.readdir(rejectedDir);
+  } catch {
+    return [];
+  }
+
+  const folders: string[] = [];
+  for (const entry of entries) {
+    if (entry.startsWith('.') || entry.startsWith('_')) continue;
+    const fullPath = path.join(rejectedDir, entry);
+    const stat = await fs.stat(fullPath).catch(() => null);
+    if (stat?.isDirectory()) folders.push(entry);
+  }
+  folders.sort(compareNumericPrefix);
+
+  const summaries: RejectedSpecSummary[] = [];
+  for (const folder of folders) {
+    summaries.push(await readRejectedSummary(path.join(rejectedDir, folder), folder));
+  }
+  return summaries;
 }
 
 export async function getStatusOverview(
@@ -20,7 +83,7 @@ export async function getStatusOverview(
   try {
     entries = await fs.readdir(specsDir);
   } catch {
-    return { specs: [], archivedCount: 0, archivedChangeFolders: 0 };
+    entries = [];
   }
 
   const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
@@ -29,9 +92,15 @@ export async function getStatusOverview(
     !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
       ? archiveRel.split(path.sep)[0]
       : 'archive';
+  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
+  const rejectedRel = path.relative(specsDir, rejectedDir);
+  const rejectedFolder =
+    !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
+      ? rejectedRel.split(path.sep)[0]
+      : 'rejected';
 
   const candidateFolders = entries.filter(
-    (e) => !e.startsWith('_') && !e.startsWith('.') && e !== archiveFolder,
+    (e) => !e.startsWith('_') && !e.startsWith('.') && e !== archiveFolder && e !== rejectedFolder,
   );
 
   const validFolders: string[] = [];
@@ -77,8 +146,11 @@ export async function getStatusOverview(
     archivedCount = 0;
   }
 
+  const rejected = await readRejectedSummaries(projectRoot, config);
+
   return {
     specs,
+    rejected,
     archivedCount,
     archivedChangeFolders: archivedCount,
   };
@@ -121,6 +193,20 @@ export function formatStatusOverview(overview: StatusOverview): string {
 
   lines.push('');
   lines.push(`Archived specs: ${overview.archivedCount}`);
+
+  lines.push('');
+  lines.push('Rejected specs:');
+  if (overview.rejected.length === 0) {
+    lines.push('  (none)');
+  } else {
+    for (const rejected of overview.rejected) {
+      const reason = rejected.reason ?? 'unavailable';
+      const timestamp = rejected.timestamp ?? 'unavailable';
+      lines.push(
+        `${rejected.folderName}: ${rejected.title} [rejected] (reason: ${reason}, at: ${timestamp})`,
+      );
+    }
+  }
 
   return lines.join('\n');
 }

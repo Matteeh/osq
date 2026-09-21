@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:ea7a97d21c05e70ccaf7aa52dfcbeee0b7a3a1dabe7c29afb8c22ec5d20ac836"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"src/watcher/archiver.ts":"sha256:8aa3241bee100b4135c695c05d25fda0a3728e9537bf342178470925aeb9e069","tests/archiver.test.ts":"sha256:0627d8977ce5e27e674c74f7f48ccbe7b42aea8149a2305c637d50263c9e42af"}
+---
+2026-09-21T10:59:41.396Z

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from './config.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
-import { getArchiveDir, getChangesDir } from './layout.js';
+import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import {
   hasDeclaredWrites,
   parseFrontmatter,
@@ -406,6 +406,9 @@ async function checkDependencyExists(
   const dirsToCheck = [
     getChangesDir(config.paths.openspecRoot, projectRoot),
     getArchiveDir(config.paths.openspecRoot, projectRoot),
+    // A rejected change is a historical change: the reference stays auditable
+    // even though it never satisfies dependency completion.
+    getRejectedDir(config.paths.openspecRoot, projectRoot),
   ];
   const paddedDep = depId.padStart(3, '0');
 

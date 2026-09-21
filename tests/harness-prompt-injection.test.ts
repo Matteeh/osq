@@ -4,8 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { buildAgyPrompt } from '../src/harness/agy.js';
+import { buildCodexPrompt } from '../src/harness/codex-prompt.js';
 import { buildOpencodePrompt } from '../src/harness/opencode.js';
-import { type SpawnTaskOptions, extractCapabilityRules } from '../src/harness/types.js';
+import {
+  type SpawnTaskOptions,
+  extractCapabilityRules,
+  priorContextLines,
+} from '../src/harness/types.js';
 
 const ALPHA_DELTA = `# Spec Delta: Alpha
 
@@ -144,5 +149,44 @@ describe('Harness capability rule prompt injection', () => {
         prompt.includes('- alpha: Alpha gating — The Alpha capability SHALL gate alpha actions.'),
       );
     }
+  });
+
+  it('renders one prior-context section naming attempt, failure reason, and prior result', async () => {
+    const resultsDir = path.join(changeFolder, '.run', 'results');
+    await fs.mkdir(resultsDir, { recursive: true });
+    await fs.writeFile(path.join(resultsDir, '3.md'), '# prior\n', 'utf8');
+    const priorResult = path.relative(tmpDir, path.join(resultsDir, '3.md'));
+
+    const retryOptions = options({ attempt: 2, priorFailureReason: 'verify_red' });
+    const prompts = [
+      buildAgyPrompt(retryOptions),
+      buildOpencodePrompt(retryOptions),
+      await buildCodexPrompt(retryOptions),
+    ];
+
+    for (const prompt of prompts) {
+      assert.ok(prompt.includes('Prior Context:'));
+      assert.ok(prompt.includes('- Prior Attempt: 2'));
+      assert.ok(prompt.includes('- Prior Failure: verify_red'));
+      assert.ok(prompt.includes(`- Prior Result: ${priorResult}`));
+    }
+  });
+
+  it('omits the prior-context section on a fresh first attempt without a prior result', () => {
+    const prompts = [buildAgyPrompt(options()), buildOpencodePrompt(options())];
+
+    for (const prompt of prompts) {
+      assert.ok(!prompt.includes('Prior Context:'));
+    }
+  });
+
+  it('treats an explicit prior result as prior context even before a retry', () => {
+    assert.deepEqual(priorContextLines({ attempt: 1 }), []);
+    assert.deepEqual(priorContextLines({ attempt: 2, reason: 'crashed' }), [
+      '',
+      'Prior Context:',
+      '- Prior Attempt: 2',
+      '- Prior Failure: crashed',
+    ]);
   });
 });

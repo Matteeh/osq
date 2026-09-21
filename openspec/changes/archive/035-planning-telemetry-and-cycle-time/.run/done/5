@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:3dbbd159b2c6bd8f14592e3019fb89777aba4daeec349af18cf827b0384d8a2d"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"fixture/report/**":null,"src/cli/report.ts":"sha256:9be5d189940de0f0164d6d375bc1cf7bfe3649f0ccc786a7b780877cbdf545c6","src/core/report.ts":"sha256:2c8a7c03c2c8a135744a05a1cfd54e0f4293effdebec989e0c8c99f6694eaf1e","tests/planning-integration.test.ts":"sha256:d103932a3709dde6328f346ffb5b2dcba1fff86f42f7bdc3849b26fb58d625ec","tests/report-cycle.test.ts":"sha256:141ab9dc488c5119c99f4e7f6313169ef02a6e02531370ace941804eef2f44ec","tests/report-json.test.ts":"sha256:ed6ebb4ced15765b634fc224f1a22355de49b75f660f6eca91c41f23839fae87","tests/report-planning.test.ts":"sha256:22a5beb4894de750d71fd4fdec9a2560344464f990b5ae67a47efa31efa8cdda"}
+---
+2026-09-21T11:06:32.178Z

@@ -16,12 +16,16 @@ import {
 import {
   type HarnessAdapter,
   type InteractiveSessionOptions,
+  type InteractiveUsage,
+  NULL_INTERACTIVE_USAGE,
+  type ReadInteractiveUsageOptions,
   type SpawnResult,
   type SpawnTaskOptions,
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
   capabilityRuleLines,
+  priorContextLines,
   resolveCapabilityRules,
 } from './types.js';
 
@@ -55,10 +59,9 @@ export function buildAgyPrompt(options: SpawnTaskOptions): string {
     path.join(specFolderPath, 'tasks', `${taskNumber}.md`),
   );
   const specRelPath = path.relative(projectRoot, path.join(specFolderPath, changeDocName));
-  const resultRelPath = path.relative(
-    projectRoot,
-    path.join(specFolderPath, '.run', 'results', `${taskNumber}.md`),
-  );
+  const resultAbsPath = path.join(specFolderPath, '.run', 'results', `${taskNumber}.md`);
+  const resultRelPath = path.relative(projectRoot, resultAbsPath);
+  const priorResult = fsSync.existsSync(resultAbsPath) ? resultRelPath : undefined;
 
   const capabilityRules = resolveCapabilityRules(options);
 
@@ -70,6 +73,11 @@ export function buildAgyPrompt(options: SpawnTaskOptions): string {
     `Scope: ${scope.join(', ')}`,
     `Entry: ${entry.join(', ')}`,
     `Verify Command: ${verifyCommand}`,
+    ...priorContextLines({
+      attempt: options.attempt,
+      reason: options.priorFailureReason,
+      resultPath: priorResult,
+    }),
     '',
     'Rules:',
     `1. Read ${taskRelPath}, ${specRelPath}, and features docs referenced in ${specRelPath}.`,
@@ -402,5 +410,10 @@ export class AgyAdapter implements HarnessAdapter {
       child.on('error', () => resolve(1));
       child.on('close', (code) => resolve(code ?? 1));
     });
+  }
+
+  async readInteractiveUsage(_options: ReadInteractiveUsageOptions): Promise<InteractiveUsage> {
+    // AGY has no confirmed local usage artifact in scope; timing is still exact.
+    return NULL_INTERACTIVE_USAGE;
   }
 }

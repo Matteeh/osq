@@ -61,9 +61,35 @@ Archived spec
   return folderPath;
 }
 
+async function writeMarker(
+  specFolderPath: string,
+  kind: 'done' | 'dead' | 'regressed' | 'running',
+  taskNumber: string,
+): Promise<void> {
+  if (kind === 'done') {
+    await fs.mkdir(path.join(specFolderPath, '.run', 'done'), { recursive: true });
+    await fs.writeFile(path.join(specFolderPath, '.run', 'done', taskNumber), '', 'utf8');
+    return;
+  }
+  if (kind === 'running') {
+    await fs.mkdir(path.join(specFolderPath, '.run', 'running'), { recursive: true });
+    await fs.writeFile(
+      path.join(specFolderPath, '.run', 'running', `${taskNumber}.pid`),
+      '1',
+      'utf8',
+    );
+    return;
+  }
+  const dir = kind === 'dead' ? 'dead' : 'regressed';
+  await fs.mkdir(path.join(specFolderPath, '.run', dir), { recursive: true });
+  const body =
+    kind === 'dead' ? '---\nreason: verify_red\n---\nfailed\n' : '---\nreason: regressed\n---\n';
+  await fs.writeFile(path.join(specFolderPath, '.run', dir, `${taskNumber}.md`), body, 'utf8');
+}
+
 describe('report task states', () => {
   describe('fixture/report', () => {
-    it('contains archived specs 008 and 009 with a dead-then-retried task in 009 events', async () => {
+    it('contains archived specs 008, 009, and 010 with the expected event shapes', async () => {
       const spec8 = path.join(
         fixtureReportRoot,
         'specs',
@@ -71,9 +97,11 @@ describe('report task states', () => {
         '008-opencode-harness-adapter',
       );
       const spec9 = path.join(fixtureReportRoot, 'specs', 'archive', '009-watcher-observability');
+      const spec10 = path.join(fixtureReportRoot, 'specs', 'archive', '010-report-history-state');
 
       assert.ok((await fs.stat(spec8)).isDirectory());
       assert.ok((await fs.stat(spec9)).isDirectory());
+      assert.ok((await fs.stat(spec10)).isDirectory());
 
       const events = await fs.readFile(path.join(spec9, '.run', 'events', '1.jsonl'), 'utf8');
       const types = events
@@ -86,20 +114,42 @@ describe('report task states', () => {
       assert.notEqual(deadIndex, -1, 'task 1 should have a dead event');
       assert.notEqual(doneIndex, -1, 'task 1 should have a done event');
       assert.ok(deadIndex < doneIndex, 'dead event should precede the done retry event');
+
+      // Missing coverage for task 1, an unexplained re-run for task 2, and a
+      // historical dead event for task 3.
+      assert.equal(
+        await fs
+          .stat(path.join(spec10, '.run', 'events', '1.jsonl'))
+          .then(() => true)
+          .catch(() => false),
+        false,
+      );
+      const rerun = await fs.readFile(path.join(spec10, '.run', 'events', '2.jsonl'), 'utf8');
+      const rerunTypes = rerun
+        .split('\n')
+        .filter((line) => line.trim())
+        .map((line) => JSON.parse(line).type as string);
+      assert.deepEqual(rerunTypes, ['started', 'started', 'verify_ran']);
+
+      const dead = await fs.readFile(path.join(spec10, '.run', 'events', '3.jsonl'), 'utf8');
+      assert.ok(dead.includes('"type":"dead"'));
     });
 
-    it('reports 14 total tasks and 14 done with no pending or running tasks', async () => {
+    it('reports 17 total tasks with current state derived from markers', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
 
-      assert.equal(report.specs.total, 2);
+      assert.equal(report.specs.total, 3);
       assert.equal(report.specs.active, 0);
-      assert.equal(report.specs.archived, 2);
+      assert.equal(report.specs.archived, 3);
 
-      assert.equal(report.tasks.total, 14);
-      assert.equal(report.tasks.done, 14);
-      assert.equal(report.tasks.dead, 0);
-      assert.equal(report.tasks.running, 0);
-      assert.equal(report.tasks.pending, 0);
+      assert.equal(report.now.total, 17);
+      assert.equal(report.now.done, 17);
+      assert.equal(report.now.verified, 17);
+      assert.equal(report.now.manual, 0);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.now.regressed, 0);
+      assert.equal(report.now.running, 0);
+      assert.equal(report.now.pending, 0);
       assert.equal(report.completionRate, 100);
     });
   });
@@ -123,6 +173,7 @@ describe('report task states', () => {
       await writeTask(spec.folderPath, '2');
       await writeTask(spec.folderPath, '3');
       await writeTask(spec.folderPath, '4');
+      await writeTask(spec.folderPath, '5');
 
       await fs.mkdir(path.join(runDir, 'done'), { recursive: true });
       await fs.writeFile(path.join(runDir, 'done', '1'), '', 'utf8');
@@ -137,6 +188,13 @@ describe('report task states', () => {
       await fs.mkdir(path.join(runDir, 'running'), { recursive: true });
       await fs.writeFile(path.join(runDir, 'running', '3.pid'), '1234\n', 'utf8');
 
+      await fs.mkdir(path.join(runDir, 'regressed'), { recursive: true });
+      await fs.writeFile(
+        path.join(runDir, 'regressed', '5.md'),
+        '---\nreason: regressed\n---\n',
+        'utf8',
+      );
+
       const specState = await deriveSpecState(tmpDir, spec.folderPath);
       const expected = { done: 0, dead: 0, running: 0, pending: 0, regressed: 0 };
       for (const task of specState.tasks) {
@@ -145,15 +203,17 @@ describe('report task states', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, specState.tasks.length);
-      assert.equal(report.tasks.done, expected.done);
-      assert.equal(report.tasks.dead, expected.dead);
-      assert.equal(report.tasks.running, expected.running);
-      assert.equal(report.tasks.pending, expected.pending);
-      assert.equal(report.tasks.done, 1);
-      assert.equal(report.tasks.dead, 1);
-      assert.equal(report.tasks.running, 1);
-      assert.equal(report.tasks.pending, 1);
+      assert.equal(report.now.total, specState.tasks.length);
+      assert.equal(report.now.done, expected.done);
+      assert.equal(report.now.dead, expected.dead);
+      assert.equal(report.now.running, expected.running);
+      assert.equal(report.now.regressed, expected.regressed);
+      assert.equal(report.now.pending, expected.pending);
+      assert.equal(report.now.done, 1);
+      assert.equal(report.now.dead, 1);
+      assert.equal(report.now.running, 1);
+      assert.equal(report.now.regressed, 1);
+      assert.equal(report.now.pending, 1);
     });
   });
 
@@ -169,7 +229,7 @@ describe('report task states', () => {
       await fs.rm(tmpDir, { recursive: true, force: true });
     });
 
-    it('derives task status from done and dead events in events.jsonl', async () => {
+    it('derives current state from markers, not terminal events', async () => {
       const folderPath = await createArchivedSpec(tmpDir, '001-events-spec', ['1', '2']);
       const eventsDir = path.join(folderPath, '.run', 'events');
       await fs.mkdir(eventsDir, { recursive: true });
@@ -206,55 +266,46 @@ describe('report task states', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, 2);
-      assert.equal(report.tasks.done, 1);
-      assert.equal(report.tasks.dead, 1);
-      assert.equal(report.tasks.pending, 0);
-      assert.equal(report.tasks.running, 0);
-      assert.equal(report.failureBreakdown.timeout, 1);
+      // No markers exist, so current state is pending despite terminal events.
+      assert.equal(report.now.total, 2);
+      assert.equal(report.now.done, 0);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.now.pending, 2);
+
+      // History still records the events.
+      assert.equal(report.history.deadByReason.timeout, 1);
+      assert.equal(report.history.deadByReason.crashed, 1);
     });
 
-    it('falls back to done and dead markers when no events exist', async () => {
+    it('derives archived task status from done and dead markers', async () => {
       const folderPath = await createArchivedSpec(tmpDir, '002-markers-spec', ['1', '2']);
-
-      await fs.mkdir(path.join(folderPath, '.run', 'done'), { recursive: true });
-      await fs.writeFile(path.join(folderPath, '.run', 'done', '1'), '', 'utf8');
-
-      await fs.mkdir(path.join(folderPath, '.run', 'dead'), { recursive: true });
-      await fs.writeFile(
-        path.join(folderPath, '.run', 'dead', '2.md'),
-        '---\nreason: verify_red\n---\nfailed\n',
-        'utf8',
-      );
+      await writeMarker(folderPath, 'done', '1');
+      await writeMarker(folderPath, 'dead', '2');
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, 2);
-      assert.equal(report.tasks.done, 1);
-      assert.equal(report.tasks.dead, 1);
-      assert.equal(report.tasks.pending, 0);
-      assert.equal(report.tasks.running, 0);
-      assert.equal(report.failureBreakdown.verify_red, 1);
+      assert.equal(report.now.total, 2);
+      assert.equal(report.now.done, 1);
+      assert.equal(report.now.dead, 1);
+      assert.equal(report.now.pending, 0);
+      assert.equal(report.now.running, 0);
+      assert.deepEqual(report.history.deadByReason, {});
     });
 
-    it('never reports pending or running tasks when markers are absent', async () => {
-      const folderPath = await createArchivedSpec(tmpDir, '003-legacy-spec', ['1', '2']);
-
-      // A stale running lock must not make an archived spec report a running task.
-      await fs.mkdir(path.join(folderPath, '.run', 'running'), { recursive: true });
-      await fs.writeFile(path.join(folderPath, '.run', 'running', '1.pid'), '999999\n', 'utf8');
+    it('reports archived tasks with no markers as pending', async () => {
+      await createArchivedSpec(tmpDir, '003-legacy-spec', ['1', '2']);
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.total, 2);
-      assert.equal(report.tasks.done, 2);
-      assert.equal(report.tasks.dead, 0);
-      assert.equal(report.tasks.running, 0);
-      assert.equal(report.tasks.pending, 0);
-      assert.equal(report.completionRate, 100);
+      assert.equal(report.now.total, 2);
+      assert.equal(report.now.done, 0);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.now.running, 0);
+      assert.equal(report.now.pending, 2);
+      assert.equal(report.completionRate, 0);
     });
 
-    it('counts a task with a done event as done even when no markers exist', async () => {
+    it('does not count a done event as a current completion', async () => {
       const folderPath = await createArchivedSpec(tmpDir, '004-event-only-spec', ['1']);
       const eventsDir = path.join(folderPath, '.run', 'events');
       await fs.mkdir(eventsDir, { recursive: true });
@@ -270,10 +321,9 @@ describe('report task states', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.done, 1);
-      assert.equal(report.tasks.dead, 0);
-      assert.equal(report.tasks.pending, 0);
-      assert.equal(report.tasks.running, 0);
+      assert.equal(report.now.done, 0);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.now.pending, 1);
     });
   });
 });

@@ -1,0 +1,2 @@
+{"type":"started","timestamp":"2026-09-18T00:20:00.000Z","data":{"tier":"coding","taskTitle":"When a task dies, the historical report retains the dead reason","scope":[],"entry":[],"skills":[]}}
+{"type":"dead","timestamp":"2026-09-18T00:25:00.000Z","data":{"task":"3","reason":"verify_red"}}

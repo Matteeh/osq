@@ -1,0 +1,14 @@
+{
+  "rows": [
+    {
+      "directory": "__CWD__",
+      "time_created": "__NOW_MS__",
+      "tokens_input": 1111,
+      "tokens_output": 222,
+      "tokens_reasoning": 33,
+      "tokens_cache_read": 444,
+      "tokens_cache_write": 55,
+      "cost": 0.125
+    }
+  ]
+}

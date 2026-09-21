@@ -3,11 +3,14 @@ import { resolveCodexBinary } from '../core/config-codex.js';
 import { type OsqConfig, loadConfig } from '../core/config.js';
 import { buildCodexArgs, buildCodexInteractiveArgs } from './codex-prompt.js';
 import { createCodexStreamState, processCodexStdoutLine } from './codex-stream.js';
+import { readCodexInteractiveUsage } from './codex-usage.js';
 import { spawnWithTimeout } from './process.js';
 import { EventStreamParser } from './stream.js';
 import type {
   HarnessAdapter,
   InteractiveSessionOptions,
+  InteractiveUsage,
+  ReadInteractiveUsageOptions,
   SpawnResult,
   SpawnTaskOptions,
 } from './types.js';
@@ -111,5 +114,9 @@ export class CodexAdapter implements HarnessAdapter {
       child.on('error', () => resolve(1));
       child.on('close', (code) => resolve(code ?? 1));
     });
+  }
+
+  async readInteractiveUsage(options: ReadInteractiveUsageOptions): Promise<InteractiveUsage> {
+    return await readCodexInteractiveUsage(options);
   }
 }

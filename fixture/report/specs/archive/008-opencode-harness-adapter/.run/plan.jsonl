@@ -1,0 +1,5 @@
+{"type":"plan_started","sessionId":"008-p1","timestamp":"2026-09-17T10:00:00.000Z","data":{"harness":"opencode","model":"oc-planner","agent":"osq-planner","osqVersion":"0.0.0","briefHash":"sha256:fixture-008"}}
+{"type":"plan_exited","sessionId":"008-p1","timestamp":"2026-09-17T10:01:00.000Z","data":{"exitCode":0,"wallSeconds":60,"usage":{"inputTokens":250,"outputTokens":null,"cachedTokens":null,"reasoningTokens":null,"cost":0.1}}}
+{"type":"plan_started","sessionId":"008-p2","timestamp":"2026-09-17T10:30:00.000Z","data":{"harness":"codex","model":"gpt-x","osqVersion":"0.0.0","briefHash":"sha256:fixture-008"}}
+{"type":"plan_exited","sessionId":"008-p2","timestamp":"2026-09-17T10:32:00.000Z","data":{"exitCode":0,"wallSeconds":120,"usage":{"inputTokens":null,"outputTokens":null,"cachedTokens":null,"reasoningTokens":null,"cost":null}}}
+{"type":"plan_started","sessionId":"008-p3","timestamp":"2026-09-17T11:00:00.000Z","data":{"harness":"agy","model":"agy-planner","osqVersion":"0.0.0","briefHash":"sha256:fixture-008"}}

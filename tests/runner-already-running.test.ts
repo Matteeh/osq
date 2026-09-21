@@ -174,8 +174,8 @@ describe('Runner already_running lock collision', () => {
 
     const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-    assert.equal(report.tasks.dead, 0);
-    assert.equal(report.failureBreakdown.already_running, undefined);
+    assert.equal(report.now.dead, 0);
+    assert.equal(report.history.deadByReason.already_running, undefined);
     assert.ok(!formatMetricsReport(report).includes('already_running'));
   });
 

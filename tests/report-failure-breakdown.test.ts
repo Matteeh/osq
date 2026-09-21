@@ -75,15 +75,16 @@ describe('report failure breakdown', () => {
     it('retains the historical crashed failure of a retried task while reporting zero current dead tasks', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.dead, 0);
-      assert.equal(report.failureBreakdown.crashed, 1);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.history.deadByReason.crashed, 1);
     });
 
-    it('formats the failure breakdown per reason', async () => {
+    it('formats the historical dead reasons per reason', async () => {
       const report = await getMetricsReport(fixtureReportRoot, DEFAULT_CONFIG);
       const formatted = formatMetricsReport(report);
 
-      assert.ok(formatted.includes('Failure Breakdown:\n  crashed: 1'), formatted);
+      assert.ok(formatted.includes('History:'), formatted);
+      assert.ok(formatted.includes('Dead by reason:\n    crashed: 1'), formatted);
     });
   });
 
@@ -111,7 +112,7 @@ describe('report failure breakdown', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.deepEqual(report.failureBreakdown, { crashed: 2, timeout: 1 });
+      assert.deepEqual(report.history.deadByReason, { crashed: 2, timeout: 1 });
     });
 
     it('retains dead events for tasks that are later retried and completed', async () => {
@@ -136,9 +137,9 @@ describe('report failure breakdown', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.tasks.done, 1);
-      assert.equal(report.tasks.dead, 0);
-      assert.equal(report.failureBreakdown.crashed, 2);
+      assert.equal(report.now.done, 1);
+      assert.equal(report.now.dead, 0);
+      assert.equal(report.history.deadByReason.crashed, 2);
     });
 
     it('defaults a dead event without a reason to unknown', async () => {
@@ -153,11 +154,11 @@ describe('report failure breakdown', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.deepEqual(report.failureBreakdown, { unknown: 1 });
+      assert.deepEqual(report.history.deadByReason, { unknown: 1 });
     });
   });
 
-  describe('marker fallback', () => {
+  describe('marker independence', () => {
     let tmpDir: string;
 
     beforeEach(async () => {
@@ -169,7 +170,7 @@ describe('report failure breakdown', () => {
       await fs.rm(tmpDir, { recursive: true, force: true });
     });
 
-    it('falls back to dead markers when a spec has no dead events', async () => {
+    it('counts dead markers in current state without inventing history', async () => {
       const spec = await createNewSpec(tmpDir, 'Legacy Spec');
       await writeTask(spec.folderPath, '1');
       await writeTask(spec.folderPath, '2');
@@ -179,10 +180,11 @@ describe('report failure breakdown', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.deepEqual(report.failureBreakdown, { timeout: 1, verify_red: 1 });
+      assert.equal(report.now.dead, 2);
+      assert.deepEqual(report.history.deadByReason, {});
     });
 
-    it('ignores dead markers when the spec already has dead events', async () => {
+    it('ignores dead markers even when some tasks have dead events', async () => {
       const spec = await createNewSpec(tmpDir, 'Mixed Spec');
       await writeTask(spec.folderPath, '1');
       await writeTask(spec.folderPath, '2');
@@ -192,8 +194,9 @@ describe('report failure breakdown', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      assert.equal(report.failureBreakdown.verify_red, undefined);
-      assert.deepEqual(report.failureBreakdown, { crashed: 1 });
+      assert.equal(report.history.deadByReason.verify_red, undefined);
+      assert.deepEqual(report.history.deadByReason, { crashed: 1 });
+      assert.equal(report.now.dead, 1);
     });
   });
 
@@ -209,12 +212,12 @@ describe('report failure breakdown', () => {
       await fs.rm(tmpDir, { recursive: true, force: true });
     });
 
-    it('prints (no failures) when there are no dead events', async () => {
+    it('prints (none) when there are no dead events', async () => {
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
       const formatted = formatMetricsReport(report);
 
-      assert.deepEqual(report.failureBreakdown, {});
-      assert.ok(formatted.includes('Failure Breakdown:\n  (no failures)'), formatted);
+      assert.deepEqual(report.history.deadByReason, {});
+      assert.ok(formatted.includes('Dead by reason:\n    (none)'), formatted);
     });
   });
 });

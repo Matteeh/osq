@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:1781faad739c2f7472c55866977a19bf1af20a0159f0940c30b2a251663652f1"
+build_stamp: "c976800"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:e46b8ace1210ac6fcfa518941e30f9b31c36db87a7d1a5a4c95ce5d619129f44","src/core/planning.ts":"sha256:8f96b6d967a3886f53d793dd5111e04c464e9159c37ab3a70dd6db7ad8493d8f","src/harness/agy.ts":"sha256:ad21f36b2c5574e5ec6698b90ac586b3dc56fd44e7828d629ea68f932510f8bd","src/harness/codex*.ts":null,"src/harness/opencode*.ts":null,"src/harness/types.ts":"sha256:f8a955f6fe04c7cb1872553624ab1f10c2fd78e621c89f7bae5770801c68b388","tests/fixtures/planning/**":null,"tests/plan-telemetry.test.ts":"sha256:ffcfc1e59848089d84f3f027fb36f98466f5908b2e368f916eaf629b9d8d31b0"}
+---
+2026-09-21T10:55:03.572Z

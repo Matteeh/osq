@@ -103,7 +103,7 @@ describe('osq report', () => {
     assert.equal(emptyReport.specs.total, 0);
     assert.equal(emptyReport.specs.active, 0);
     assert.equal(emptyReport.specs.archived, 0);
-    assert.equal(emptyReport.tasks.total, 0);
+    assert.equal(emptyReport.now.total, 0);
 
     // 2. Create active spec with 2 tasks
     const activeFolder = await createChangeFolder(tmpDir, '001-active-spec', 'Active Spec');
@@ -120,10 +120,10 @@ describe('osq report', () => {
     assert.equal(report.specs.total, 2);
     assert.equal(report.specs.active, 1);
     assert.equal(report.specs.archived, 1);
-    assert.equal(report.tasks.total, 4);
+    assert.equal(report.now.total, 4);
   });
 
-  it('getMetricsReport calculates completion rate and dead tasks breakdown by reason', async () => {
+  it('getMetricsReport calculates completion rate and current dead tasks from markers', async () => {
     const folderPath = await createChangeFolder(
       tmpDir,
       '001-metrics-calculation-spec',
@@ -171,18 +171,18 @@ Process terminated unexpectedly
 
     const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-    assert.equal(report.tasks.total, 4);
-    assert.equal(report.tasks.done, 2);
-    assert.equal(report.tasks.dead, 2);
-    assert.equal(report.tasks.running, 0);
-    assert.equal(report.tasks.pending, 0);
+    assert.equal(report.now.total, 4);
+    assert.equal(report.now.done, 2);
+    assert.equal(report.now.dead, 2);
+    assert.equal(report.now.regressed, 0);
+    assert.equal(report.now.running, 0);
+    assert.equal(report.now.pending, 0);
 
     // 2 done out of 4 total = 50%
     assert.equal(report.completionRate, 50);
 
-    // Dead tasks breakdown by reason
-    assert.equal(report.failureBreakdown.verify_red, 1);
-    assert.equal(report.failureBreakdown.crashed, 1);
+    // History ignores dead markers; it is derived only from event files.
+    assert.deepEqual(report.history.deadByReason, {});
   });
 
   it('getMetricsReport aggregates event durations, token usage, and file changes', async () => {
@@ -289,7 +289,9 @@ Process terminated unexpectedly
     const directFormatted = formatMetricsReport(await generateReport(tmpDir, DEFAULT_CONFIG));
     assert.equal(output, directFormatted);
     assert.ok(output.includes('Specs Summary'));
-    assert.ok(output.includes('Tasks & Completion'));
+    assert.ok(output.includes('Now:'));
+    assert.ok(output.includes('History:'));
+    assert.ok(output.includes('Coverage:'));
     assert.ok(output.includes('Completion rate: 100'));
     assert.ok(output.includes('Execution Durations'));
     assert.ok(output.includes('Token Usage'));
@@ -309,12 +311,14 @@ Process terminated unexpectedly
     const jsonStr = capturedJson || jsonOutput;
     const parsed = JSON.parse(jsonStr) as MetricsReport;
     assert.equal(parsed.specs.total, 1);
-    assert.equal(parsed.tasks.total, 1);
-    assert.equal(parsed.tasks.done, 1);
+    assert.equal(parsed.now.total, 1);
+    assert.equal(parsed.now.done, 1);
+    assert.equal(parsed.now.verified, 1);
+    assert.equal(parsed.now.manual, 0);
     assert.equal(parsed.completionRate, 100);
   });
 
-  it('aggregates undeclared_test_change in the failure breakdown for text and JSON output', async () => {
+  it('aggregates undeclared_test_change in the historical failure breakdown for text and JSON output', async () => {
     const folderPath = await createChangeFolder(
       tmpDir,
       '001-gated-report-spec',
@@ -333,12 +337,24 @@ Preexisting test files were modified or deleted without tests.modify: true:
       'utf8',
     );
 
+    const eventsDir = path.join(folderPath, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${JSON.stringify({
+        type: 'dead',
+        timestamp: '2026-09-17T00:00:00.000Z',
+        data: { task: '1', reason: 'undeclared_test_change' },
+      })}\n`,
+      'utf8',
+    );
+
     const report = await generateReport(tmpDir, DEFAULT_CONFIG);
-    assert.equal(report.tasks.dead, 1);
-    assert.equal(report.failureBreakdown.undeclared_test_change, 1);
+    assert.equal(report.now.dead, 1);
+    assert.equal(report.history.deadByReason.undeclared_test_change, 1);
 
     const formatted = formatMetricsReport(report);
-    assert.ok(formatted.includes('Failure Breakdown:'));
+    assert.ok(formatted.includes('History:'));
     assert.ok(formatted.includes('undeclared_test_change: 1'));
 
     let capturedJson = '';
@@ -352,8 +368,8 @@ Preexisting test files were modified or deleted without tests.modify: true:
     });
 
     const parsed = JSON.parse(capturedJson || jsonOutput) as MetricsReport;
-    assert.equal(parsed.failureBreakdown.undeclared_test_change, 1);
-    assert.equal(parsed.tasks.dead, 1);
+    assert.equal(parsed.history.deadByReason.undeclared_test_change, 1);
+    assert.equal(parsed.now.dead, 1);
   });
 
   it('CLI registers report command in commander program', () => {

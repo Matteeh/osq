@@ -9,6 +9,7 @@ import { getChangesDir, getSpecsDir } from '../core/layout.js';
 import { buildManifest, writeManifest } from '../core/manifest.js';
 import { createNewSpec } from '../core/new.js';
 import { parseFrontmatter } from '../core/parser.js';
+import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/planning.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 
@@ -188,19 +189,46 @@ export async function planCommand(
   }
 
   const adapter = options.adapter || getHarnessAdapter(plannerSelection.harness);
-  if (!adapter.spawnInteractive) {
-    throw new Error(
-      `Harness adapter for '${plannerSelection.harness}' does not support interactive sessions.`,
-    );
-  }
-  const exitCode = await adapter.spawnInteractive({
-    prompt: openingPrompt,
-    cwd,
-    model: plannerSelection.model,
-    agent: plannerSelection.agent,
+  const started = await recordPlanStarted(folderPath, {
+    harness: plannerSelection.harness,
+    model: plannerSelection.model || plannerSelection.briefModel || 'default',
+    ...(plannerSelection.agent ? { agent: plannerSelection.agent } : {}),
+    briefPath,
   });
 
-  if (exitCode !== 0) {
-    process.exitCode = exitCode;
+  // Timing brackets the child: the reader runs only after it has closed.
+  let exitCode = 1;
+  let spawnError: unknown;
+  try {
+    if (!adapter.spawnInteractive) {
+      throw new Error(
+        `Harness adapter for '${plannerSelection.harness}' does not support interactive sessions.`,
+      );
+    }
+    exitCode = await adapter.spawnInteractive({
+      prompt: openingPrompt,
+      cwd,
+      model: plannerSelection.model,
+      agent: plannerSelection.agent,
+    });
+  } catch (error) {
+    spawnError = error;
   }
+
+  const endedAtMs = Date.now();
+  const usage = await readPlanningUsage(adapter.readInteractiveUsage, {
+    cwd,
+    startedAt: started.timestamp,
+    endedAt: new Date(endedAtMs).toISOString(),
+  });
+  await recordPlanExited(folderPath, {
+    sessionId: started.sessionId,
+    startedAtMs: started.startedAtMs,
+    endedAtMs,
+    exitCode,
+    usage,
+  });
+
+  if (spawnError) throw spawnError;
+  if (exitCode !== 0) process.exitCode = exitCode;
 }
