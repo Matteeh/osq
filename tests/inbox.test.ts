@@ -370,11 +370,17 @@ async function copyFixture(): Promise<string> {
 
 async function setLiveLock(projectRoot: string): Promise<number> {
   const startedAt = Date.now() - 12_000;
-  await fs.writeFile(
-    path.join(projectRoot, 'openspec', 'changes', '005-running-mixed', '.run', 'running', '1.pid'),
-    JSON.stringify({ pid: process.pid, startedAt }),
-    'utf8',
+  const lockPath = path.join(
+    projectRoot,
+    'openspec',
+    'changes',
+    '005-running-mixed',
+    '.run',
+    'running',
+    '1.pid',
   );
+  await fs.mkdir(path.dirname(lockPath), { recursive: true });
+  await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, startedAt }), 'utf8');
   return startedAt;
 }
 
@@ -476,6 +482,37 @@ describe('bare osq CLI inbox integration', () => {
       assert.deepEqual(Object.keys(item), ['change', 'archivedAt', 'command']);
       assert.ok(Number.isFinite(Date.parse(item.archivedAt)));
     }
+  });
+
+  it('materializes the missing runtime lock directory from clean tracked fixture state', async () => {
+    const { project, home } = await fixtureWithHome();
+    const runningDir = path.join(
+      project,
+      'openspec',
+      'changes',
+      '005-running-mixed',
+      '.run',
+      'running',
+    );
+    // A clean checkout has no tracked directory for ignored runtime locks.
+    await fs.rm(runningDir, { recursive: true, force: true });
+
+    const startedAt = await setLiveLock(project);
+
+    // Setup recreates the directory recursively and keeps the existing payload.
+    const lock = JSON.parse(await fs.readFile(path.join(runningDir, '1.pid'), 'utf8')) as {
+      pid: number;
+      startedAt: number;
+    };
+    assert.equal(lock.pid, process.pid);
+    assert.equal(lock.startedAt, startedAt);
+
+    const result = await runBin(project, home, ['--json']);
+    assert.equal(result.code, 0, result.stderr);
+    const parsed = JSON.parse(result.stdout) as Inbox;
+    assert.equal(parsed.running.length, 1);
+    assert.equal(parsed.running[0].change.id, '005');
+    assert.equal(parsed.running[0].pid, process.pid);
   });
 
   it('prints exactly Inbox empty. for an empty project', async () => {

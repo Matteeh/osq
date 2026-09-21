@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:2d0583552c3056f8c9e80c10b68c4685b951f6d3740dc43dcaa9ec6121a802f0"
+build_stamp: "f39e418"
+exit_code: 0
+scope_files: {"tests/inbox.test.ts":"sha256:72f0c94aa0ff50ec241a31e6b7238644e5f4fed03c8f2ee55071ea966dca6c90"}
+---
+2026-09-21T14:37:17.569Z
