@@ -4,7 +4,13 @@
   "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
   "type": "module",
   "sideEffects": false,
-  "keywords": ["spec-driven-development", "coding-agents", "agentic-engineering", "watcher", "cli"],
+  "keywords": [
+    "spec-driven-development",
+    "coding-agents",
+    "agentic-engineering",
+    "watcher",
+    "cli"
+  ],
   "packageManager": "pnpm@9.15.4",
   "bin": {
     "osq": "dist/cli/bin.js"
@@ -15,7 +21,7 @@
     "format": "biome format --write src tests",
     "test": "node --import tsx --test 'tests/**/*.test.ts'",
     "test:golden": "node --import tsx --test tests/golden-events.test.ts",
-    "verify": "pnpm tsc --noEmit \u0026\u0026 pnpm test \u0026\u0026 pnpm lint",
+    "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -42,7 +48,7 @@
   "author": "Mathias",
   "license": "MIT",
   "engines": {
-    "node": "\u003e=22.0.0"
+    "node": ">=22.0.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -52,11 +58,14 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "templates"],
+  "files": [
+    "dist",
+    "templates"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "peerDependencies": {
-    "@fission-ai/openspec": "\u003e=1.13.1 \u003c2"
+    "@fission-ai/openspec": ">=1.13.1 <2"
   }
 }

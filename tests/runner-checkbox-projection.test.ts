@@ -235,10 +235,7 @@ describe('Runner checkbox projection', () => {
 
 describe('Archived task checkboxes', () => {
   it('all fifteen (or more) archived tasks.md files are fully ticked', async () => {
-    const candidates = [
-      path.join(REPO_ROOT, 'openspec', 'changes', 'archive'),
-      path.join(REPO_ROOT, 'specs', 'archive'),
-    ];
+    const candidates = [path.join(REPO_ROOT, 'openspec', 'changes', 'archive')];
     let archiveDir: string | null = null;
     for (const candidate of candidates) {
       if (await exists(candidate)) {

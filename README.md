@@ -33,6 +33,7 @@ openspec/
       specs/       delta specifications applied per capability
       .run/        approved (hash), manifest.json, running/, done/, dead/, regressed/, results/, events/
     archive/       finished change folders, moved whole
+    rejected/      rejected change folders, preserved with audit reason
   schemas/osq/     workflow schema and templates
   config.yaml      OpenSpec project configuration
 decisions/         ADRs, superseded not edited
@@ -44,13 +45,14 @@ A change folder is a feature. A task is one unit of work for one agent. After ap
 ## The loop
 
 ```
-you + smart model   write change folder  ->  openspec/changes/042-x/ with proposal.md, tasks/, specs/
+you + smart model   plan change folder   ->  osq plan <name> -> openspec/changes/042-x/ with proposal.md, tasks/, specs/
 you                 lint / approve       ->  osq approve -> .run/approved, .run/manifest.json
 watcher             spawn per task       ->  cheap agent, fresh context, capability rules injected
 agent               work, write result   ->  .run/results/1.md, exit
 watcher             verify, tick box     ->  .run/done/1  or  .run/dead/1.md
 watcher             last task done       ->  apply delta merges to openspec/specs/, archive folder
-you                 next time            ->  osq status, look at dead
+you                 next time            ->  osq (inbox) -> needsYou, running, landed since last look
+you                 fix / triage         ->  osq retry <id> <task|change>  or  osq reject <id> --reason <text>
 ```
 
 Smart models author specs and never execute them. Cheap models execute specs and never author them.
@@ -69,7 +71,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 ```yaml
 ---
 title: Order cancellation
-depends_on: ['041']
+depends_on: ["041"]
 features:
   reads:
     - inventory-reservation
@@ -87,10 +89,13 @@ Delta specs under `specs/<capability>/spec.md` describe exact capability require
 # Delta: Order State Machine
 
 ### Requirement: Cancellation handling
+
 <!-- source: src/orders/cancel.ts -->
+
 When an order is in PENDING state, cancellation SHALL release its reservation.
 
 #### Scenario: Successful cancellation
+
 - **WHEN** user requests cancellation for a pending order
 - **THEN** status transitions to CANCELLED and reservation is released
 ```
@@ -115,16 +120,16 @@ Tasks run in order. The agent reads its task, the parent `proposal.md`, the delt
 
 Lint, run by `osq approve` and `osq lint`:
 
-| Check                                       | Result |
-|---------------------------------------------|--------|
-| task `scope` has more than 8 patterns       | reject |
-| proposal declares `features.writes`         | reject |
-| more than one table under `## Contract`     | reject |
-| task `verify` empty or chains commands      | reject |
-| `depends_on` names a missing change         | reject |
-| task acceptance longer than 7 lines         | reject |
-| task title contains " and "                 | warn   |
-| OpenSpec schema or validator drift          | reject |
+| Check                                   | Result |
+| --------------------------------------- | ------ |
+| task `scope` has more than 8 patterns   | reject |
+| proposal declares `features.writes`     | reject |
+| more than one table under `## Contract` | reject |
+| task `verify` empty or chains commands  | reject |
+| `depends_on` names a missing change     | reject |
+| task acceptance longer than 7 lines     | reject |
+| task title contains " and "             | warn   |
+| OpenSpec schema or validator drift      | reject |
 
 Rules the lint can't check: title reads "when X, Y happens"; slice vertically so every spec leaves `main` green on its own; no "investigate" or "decide" in a spec (that's a spike, whose output is a paragraph in a capability spec or an ADR); default to a parent with children and approve the list before writing any child in full.
 
@@ -149,6 +154,7 @@ Reasons emitted: `verify_red` (with `timed_out: true` if verify exceeded timeout
 `OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `verify_ran`, `result_written`, `measures`, `exited`, `done`, `dead`), appended to the task's `.run/events/<n>.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
 
 Available adapters:
+
 - `agy`: Antigravity harness adapter
 - `codex`: Codex CLI harness adapter running tasks via `codex exec` and planning via the Codex TUI
 - `opencode`: OpenCode harness adapter running tasks via `opencode run`
@@ -232,17 +238,50 @@ Offline tests use a deterministic fake Codex executable and require no authentic
 ## Commands
 
 ```
+osq                      human attention inbox: needsYou, running, landed since last look
+osq --json               print human attention inbox as stable JSON
 osq init                 scaffold openspec layout, config, AGENTS.md, and PLANNER.md
 osq setup                write harness config for OSQ_HARNESS
 osq new <name>           new change folder from template in openspec/changes/
+osq plan <name>          initialize change, write brief, and open interactive planner session
 osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints
-osq approve <id>..       lint, hash, approve change; write .run/approved and .run/manifest.json
+osq approve <ids...>     lint, hash, approve change; write .run/approved and .run/manifest.json
+osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
+osq reject <id>          move an unapproved or failed change intact into rejected history
+osq done <id> <task>     mark a task done manually with required justification (--manual)
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq show <id>            change details, tasks, results, dead markers, and event timeline
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq doctor               validate repository health, harness availability, and pinned validator
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
+```
+
+### Human Attention Inbox
+
+Running bare `osq` serves as the entrypoint for human attention:
+
+- **Needs you**: unapproved proposals, active dead tasks, active regressed tasks, and change-level regressions, each ending with its exact action command (`osq approve <id>`, `osq retry <id> <n>`, or `osq reject <id> --reason <text>`).
+- **Running**: actively executing tasks with verified live PID, start time, and elapsed duration.
+- **Landed since last look**: changes archived strictly after your project's previous look (tracked per project in `~/.osq/last-look/`), or the newest 10 on first look.
+
+Use `osq --json` to consume this contract programmatically without extra terminal formatting.
+
+### Planning
+
+```sh
+osq plan <name>                 # interactive planning session with configured planner
+osq plan <name> --brief <file>  # initialize from an existing brief document (or - for stdin)
+osq plan <name> -p, --print     # emit the opening prompt to stdout without launching a session
+```
+
+### Retry & Rejection
+
+```sh
+osq retry <id> <task>           # retry a dead or regressed task (e.g. osq retry 042 1)
+osq retry <id> change           # clear an active change-level regression after fixing root cause
+osq reject <id> --reason <text> # move an unapproved or failed change to openspec/changes/rejected/
+osq done <id> <task> --manual "<reason>" # manually satisfy a task with required reason
 ```
 
 ### Watcher options
@@ -268,6 +307,7 @@ osq report --json        # raw JSON report for scripting and CI pipelines
 ## Diagnostics & Health
 
 Run `osq doctor` to verify repository health:
+
 - `config`: confirms `osq.config.ts` is valid and well-formed
 - `harness`: checks that the configured harness binary (e.g. `opencode`, `agy`) exists and is executable
 - `managed-blocks`: verifies `AGENTS.md` and `PLANNER.md` managed sections are up to date
@@ -278,6 +318,7 @@ Run `osq doctor` to verify repository health:
 ## Release Procedure
 
 To release a new version of `osq`:
+
 1. Bump `"version"` in `package.json`.
 2. Add a corresponding release section in `CHANGELOG.md`.
 3. Commit the changes: `git commit -am "release: v<x.y.z>"`.

@@ -121,7 +121,7 @@ async function seedArchivedCopies(root: string): Promise<void> {
   const sources = [
     path.join(repoRoot, 'fixture', 'report', 'specs', 'archive', '008-opencode-harness-adapter'),
     path.join(repoRoot, 'fixture', 'report', 'specs', 'archive', '009-watcher-observability'),
-    path.join(repoRoot, 'specs', 'archive', '002-spec-lint-and-approve'),
+    path.join(repoRoot, 'openspec', 'changes', 'archive', '002-spec-lint-and-approve'),
   ];
 
   for (const source of sources) {
@@ -184,7 +184,10 @@ process.exit(0);
   await fs.mkdir(manifestDir, { recursive: true });
   await fs.writeFile(
     path.join(manifestDir, 'package.json'),
-    JSON.stringify({ name: '@fission-ai/openspec', version: OPENSPEC_EXPECTED_VERSION }),
+    JSON.stringify({
+      name: '@fission-ai/openspec',
+      version: OPENSPEC_EXPECTED_VERSION,
+    }),
     'utf8',
   );
 
@@ -205,7 +208,10 @@ describe('osq migrate openspec', () => {
   it('moves features/ to openspec/specs/ and specs/ to openspec/changes/', async () => {
     await seedLegacyProject(tmpDir);
 
-    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+    const result = await migrateToOpenSpec({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+    });
 
     const featureTarget = path.join(tmpDir, 'openspec', 'specs', 'cli-foundation', 'spec.md');
     assert.ok(await exists(featureTarget));
@@ -222,7 +228,10 @@ describe('osq migrate openspec', () => {
   it('resolves every migration target through the canonical layout helpers', async () => {
     await seedLegacyProject(tmpDir);
 
-    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+    const result = await migrateToOpenSpec({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+    });
 
     const specsTarget = getSpecsDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
     const changesTarget = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
@@ -240,7 +249,10 @@ describe('osq migrate openspec', () => {
   it('migrates archived changes to openspec/changes/archive/ preserving .run/ markers', async () => {
     await seedLegacyProject(tmpDir);
 
-    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+    const result = await migrateToOpenSpec({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+    });
 
     const archivedTarget = path.join(tmpDir, 'openspec', 'changes', 'archive', '001-old');
     assert.ok(await exists(archivedTarget));
@@ -286,7 +298,10 @@ describe('osq migrate openspec', () => {
     await seedLegacyProject(tmpDir);
     await seedArchivedCopies(tmpDir);
 
-    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+    const result = await migrateToOpenSpec({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+    });
 
     const source = path.join(tmpDir, 'specs', 'archive', '001-old', 'tasks.md');
     assert.ok(result.tickedTasks.some((file) => file.endsWith(path.join('001-old', 'tasks.md'))));
@@ -349,7 +364,10 @@ describe('osq migrate openspec', () => {
   it('creates the 017 stub change folder under openspec/changes/017-sample/', async () => {
     await seedLegacyProject(tmpDir);
 
-    const result = await migrateToOpenSpec({ cwd: tmpDir, config: DEFAULT_CONFIG });
+    const result = await migrateToOpenSpec({
+      cwd: tmpDir,
+      config: DEFAULT_CONFIG,
+    });
 
     const stub = path.join(tmpDir, 'openspec', 'changes', '017-sample');
     assert.equal(result.createdStub, stub);
