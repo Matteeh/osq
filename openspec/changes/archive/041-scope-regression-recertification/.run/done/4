@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:1c182d1256a96f1557eeb41c1f01bc117c21048adbf3cf1862414c3c2fcdb985"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:da540f7618191246ddc09fcb94df2c2025acf4b402898ccd2519ccbafc94eafc","README.md":"sha256:943c045978106d2cd05383d85de307198ad5845a9a68e11cd9b09de000194e76","fixture/**/*.md":null,"fixture/**/verify.*":null,"src/core/linter.ts":"sha256:94c4c61a6dbf02434b2e9b7ad684b334ef95da7870858a4b7c8fc1299dc14955","tests/fixtures/**/*.md":null,"tests/fixtures/**/verify.*":null,"tests/linter.test.ts":"sha256:aaa3f300453c9bac4b033348c27864993d70ae78f7e5abcba7debee907eca365"}
+---
+2026-09-21T21:55:07.041Z

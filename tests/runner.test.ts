@@ -11,6 +11,31 @@ import { MockAdapter } from '../src/harness/mock.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/** Replace the seeded planning sentinel in the proposal and task 1. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
+
 describe('Task Runner and Verification Gate', () => {
   let tmpDir: string;
   let specFolder: string;
@@ -22,6 +47,7 @@ describe('Task Runner and Verification Gate', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Runner Spec');
     specFolder = spec.folderPath;
+    await installLocalVerifier(tmpDir, specFolder);
     mockAdapter = new MockAdapter();
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
   });
@@ -144,7 +170,7 @@ describe('Task Runner and Verification Gate', () => {
     const passingTaskContent = [
       '---',
       'title: When test passes, done is recorded',
-      'verify: node -e "process.exit(0)"',
+      `verify: ${PASSING_VERIFY}`,
       'scope: []',
       'entry: []',
       'skills: []',

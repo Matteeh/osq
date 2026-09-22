@@ -10,6 +10,13 @@ import { OPENSPEC_EXPECTED_VERSION, lintChangeFolder } from '../src/core/linter.
 
 const CHANGE_ID = '001-mangled';
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 /**
  * Install a fake project-local OpenSpec binary pinned to the expected version,
  * so artifact linting reaches the mangled-file checks instead of failing closed
@@ -37,7 +44,7 @@ process.exit(0);
 const VALID_PROPOSAL = `---
 title: Mangled Test Change
 depends_on: []
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 features:
   reads: []
 ---
@@ -62,7 +69,7 @@ None.
 
 const VALID_TASK = `---
 title: Valid task
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 scope: []
 entry: []
 skills: []
@@ -78,6 +85,7 @@ describe('mangled change folder linting', () => {
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-mangled-'));
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     changeFolder = path.join(tmpDir, 'openspec', 'changes', CHANGE_ID);
     await fs.mkdir(path.join(changeFolder, 'tasks'), { recursive: true });
     await fs.writeFile(path.join(changeFolder, 'proposal.md'), VALID_PROPOSAL, 'utf8');

@@ -59,12 +59,20 @@ async function captureStderr(fn: () => Promise<void>): Promise<string> {
   return stderr;
 }
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 async function writePassingTask(specFolder: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
   const task = [
     '---',
     'title: When a lock collision occurs, no dead marker is written',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${PASSING_VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -107,6 +115,16 @@ describe('Runner already_running lock collision', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Already Running');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     await writePassingTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

@@ -15,6 +15,13 @@ import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 class CaptureLogger implements Logger {
   readonly infos: string[] = [];
   readonly errors: string[] = [];
@@ -79,7 +86,7 @@ function proposalMd(title: string, humanSteps?: string): string {
     '---',
     `title: ${title}`,
     'depends_on: []',
-    'verify: node -e "process.exit(0)"',
+    'verify: node verify.cjs',
     'features:',
     '  reads: []',
     '---',
@@ -125,7 +132,7 @@ async function writeChange(
     [
       '---',
       'title: When cut-over is performed, runtime switches',
-      'verify: node -e "process.exit(0)"',
+      'verify: node verify.cjs',
       'scope: []',
       'entry: []',
       'skills: []',
@@ -146,6 +153,7 @@ describe('Layout cut-over', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-cut-over-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     adapter = new MockAdapter();
   });
 

@@ -18,6 +18,31 @@ import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/** Replace the seeded planning sentinel in the proposal and task 1. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
+
 async function writeTask(specFolder: string, taskNumber: string, verify: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', `${taskNumber}.md`);
   const task = [
@@ -147,6 +172,7 @@ describe('Runner checkbox projection', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Checkbox Projection');
     specFolder = spec.folderPath;
+    await installLocalVerifier(tmpDir, specFolder);
   });
 
   afterEach(async () => {
@@ -216,7 +242,7 @@ describe('Runner checkbox projection', () => {
   });
 
   it('writes .run/done/<n> and ticks tasks.md after an independent verify pass', async () => {
-    await writeTask(specFolder, '1', 'node -e "process.exit(0)"');
+    await writeTask(specFolder, '1', PASSING_VERIFY);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
     const adapter = new MockAdapter();

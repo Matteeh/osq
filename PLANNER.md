@@ -27,6 +27,12 @@ reader succeeds.
   included. If closing the loop requires a file outside the task's `scope`, the
   scope is wrong; widen it or merge the task. An executor result that says the
   work is outside its scope is a planning failure.
+- Every task's `verify` must stay re-runnable against the final tree of the
+  completed change, because the watcher and archive recertification run it there
+  after later tasks land. A command that passes only mid-change is a planning
+  failure.
+- A file belongs to one task. A later task may extend it only when it must; order
+  that later task after the owner and name the shared file in the proposal.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.

@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { hashChangeFolder } from '../src/core/hasher.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
 import { MockAdapter } from '../src/harness/mock.js';
@@ -107,6 +107,18 @@ async function assertGolden(actual: string, fixturePath: string): Promise<void> 
 
   const expected = await fs.readFile(fixturePath, 'utf8');
   assert.equal(actual, expected);
+}
+
+/**
+ * Seal the change folder without linting. The golden fixtures pin the exact
+ * `verify_ran` command byte-for-byte, so the sentinel must stay in this inert
+ * event payload; writing the approval marker directly exercises the runner's
+ * zero-trust gate without submitting the sentinel to approval lint.
+ */
+async function sealApproval(specFolder: string): Promise<void> {
+  const runDir = path.join(specFolder, '.run');
+  await fs.mkdir(runDir, { recursive: true });
+  await fs.writeFile(path.join(runDir, 'approved'), await hashChangeFolder(specFolder), 'utf8');
 }
 
 async function writeTask(specFolder: string, title: string, verify: string): Promise<void> {
@@ -228,7 +240,7 @@ describe('Golden event streams', () => {
       'When the mock task verifies, the emitted events are golden',
       'node -e "process.exit(0)"',
     );
-    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    await sealApproval(specFolder);
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, new MockAdapter());
     assert.equal(result.success, true);
@@ -242,7 +254,7 @@ describe('Golden event streams', () => {
       'When the mock task fails, the emitted events are golden',
       'node -e "process.exit(1)"',
     );
-    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    await sealApproval(specFolder);
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, new MockAdapter());
     assert.equal(result.reason, 'verify_red');

@@ -54,6 +54,259 @@ const ACCEPTANCE_CHECKBOX_REGEX = /[-*]\s*\[[ xX]\]/g;
  */
 const INSTRUCTION_SHAPED_REQUIREMENT_REGEX = /^(?:update|document)/i;
 
+/** The exact template verify sentinel planning must replace before approval. */
+const PLACEHOLDER_VERIFY_COMMAND = 'node -e "process.exit(0)"';
+
+/** Package managers whose direct or `run` invocations reference a script. */
+const PACKAGE_MANAGER_BINARIES = new Set(['pnpm', 'npm', 'yarn', 'bun']);
+
+/** Package-script verbs that introduce the referenced script name. */
+const PACKAGE_RUN_VERBS = new Set(['run', 'run-script']);
+
+/**
+ * Package-manager subcommands that are not package scripts. Recognizing these
+ * as scripts would turn an ordinary package-manager command into a spurious
+ * missing-script error, so they fall through to the generic path analysis.
+ */
+const PACKAGE_MANAGER_SUBCOMMANDS = new Set([
+  'add',
+  'audit',
+  'bin',
+  'cache',
+  'config',
+  'create',
+  'dedupe',
+  'dlx',
+  'doctor',
+  'env',
+  'exec',
+  'import',
+  'init',
+  'install',
+  'licenses',
+  'link',
+  'list',
+  'login',
+  'logout',
+  'ls',
+  'outdated',
+  'pack',
+  'patch',
+  'prune',
+  'publish',
+  'rebuild',
+  'remove',
+  'root',
+  'setup',
+  'store',
+  'unlink',
+  'uninstall',
+  'update',
+  'upgrade',
+  'version',
+  'whoami',
+  'why',
+  'workspace',
+  'workspaces',
+]);
+
+/** A URL scheme prefix; such a token is never a repository-relative path. */
+const URL_SCHEME_REGEX = /^[a-z][a-z0-9+.-]*:\/\//i;
+
+/**
+ * The outcome of analyzing one verify command. Every field is derived without
+ * executing or shell-expanding the command.
+ */
+export interface VerifyCommandAnalysis {
+  /** The command is the template sentinel or a normalized equivalent. */
+  readonly placeholder: boolean;
+  /** The recognized package script name, when the command invokes one. */
+  readonly packageScript: string | null;
+  /** The recognized package script name that the root manifest lacks. */
+  readonly missingScript: string | null;
+  /** No existing repository path and no recognized package script was named. */
+  readonly unresolved: boolean;
+}
+
+/**
+ * Split a command into conservative tokens, honoring single and double quotes
+ * so a quoted operand stays one token. This never expands shell syntax; it only
+ * separates whitespace-delimited operands.
+ */
+function tokenizeVerifyCommand(command: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let quote: string | null = null;
+  let hasContent = false;
+
+  for (const char of command) {
+    if (quote !== null) {
+      if (char === quote) {
+        quote = null;
+      } else {
+        current += char;
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      hasContent = true;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      if (hasContent) {
+        tokens.push(current);
+        current = '';
+        hasContent = false;
+      }
+      continue;
+    }
+
+    current += char;
+    hasContent = true;
+  }
+
+  if (hasContent) {
+    tokens.push(current);
+  }
+
+  return tokens;
+}
+
+/**
+ * Recognize the template sentinel under the narrow normalizations the spec
+ * allows: surrounding and repeated ASCII whitespace, single or double quotes
+ * around the expression, `-e` or `--eval`, and an optional trailing semicolon.
+ */
+function isPlaceholderVerify(tokens: string[]): boolean {
+  if (tokens.length !== 3 || tokens[0] !== 'node') {
+    return false;
+  }
+  if (tokens[1] !== '-e' && tokens[1] !== '--eval') {
+    return false;
+  }
+  const expression = tokens[2].trim().replace(/;+$/, '').replace(/\s+/g, '');
+  return expression === 'process.exit(0)';
+}
+
+/** A shell chain operator; lint already rejects these for task verifies. */
+function chainsVerifyCommand(command: string): boolean {
+  return command.includes('&&') || command.includes(';') || command.includes('|');
+}
+
+/** Extract the referenced package script name from a recognized invocation. */
+function extractPackageScript(tokens: string[]): string | null {
+  const [bin, first, second] = tokens;
+  if (bin === undefined || !PACKAGE_MANAGER_BINARIES.has(bin)) {
+    return null;
+  }
+  if (first === undefined || first.startsWith('-')) {
+    return null;
+  }
+  if (PACKAGE_RUN_VERBS.has(first)) {
+    if (second === undefined || second.startsWith('-')) {
+      return null;
+    }
+    return second;
+  }
+  if (PACKAGE_MANAGER_SUBCOMMANDS.has(first)) {
+    return null;
+  }
+  return first;
+}
+
+/** True when any non-option operand resolves beneath `projectRoot`. */
+async function namesExistingRepositoryPath(
+  projectRoot: string,
+  tokens: string[],
+): Promise<boolean> {
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (!token || token.startsWith('-') || token.startsWith('/')) {
+      continue;
+    }
+    if (token.includes('=') || URL_SCHEME_REGEX.test(token)) {
+      continue;
+    }
+    // A bare first token is the command binary, not a behavioral path; a
+    // path-shaped first token is itself the local behavior being invoked.
+    if (index === 0 && !token.includes('/') && !token.includes('\\')) {
+      continue;
+    }
+    if (await pathExists(path.join(projectRoot, token))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Analyze one verify command read-only: detect the template sentinel, resolve a
+ * recognized package script against the root manifest, or fall back to an
+ * unresolved-target warning when no existing path or script is named.
+ */
+export async function analyzeVerifyCommand(
+  projectRoot: string,
+  command: string,
+  packageScripts: ReadonlySet<string>,
+): Promise<VerifyCommandAnalysis> {
+  const tokens = tokenizeVerifyCommand(command);
+
+  if (isPlaceholderVerify(tokens)) {
+    return { placeholder: true, packageScript: null, missingScript: null, unresolved: false };
+  }
+
+  const packageScript = extractPackageScript(tokens);
+  if (packageScript !== null) {
+    return {
+      placeholder: false,
+      packageScript,
+      missingScript: packageScripts.has(packageScript) ? null : packageScript,
+      unresolved: false,
+    };
+  }
+
+  return {
+    placeholder: false,
+    packageScript: null,
+    missingScript: null,
+    unresolved: !(await namesExistingRepositoryPath(projectRoot, tokens)),
+  };
+}
+
+/**
+ * Read the root manifest's `scripts` keys once. A missing or malformed manifest
+ * deterministically yields an empty set rather than throwing, and the command
+ * itself is never executed.
+ */
+async function readRootPackageScripts(projectRoot: string): Promise<ReadonlySet<string>> {
+  try {
+    const raw = await fs.readFile(path.join(projectRoot, 'package.json'), 'utf8');
+    const parsed = JSON.parse(raw) as { scripts?: unknown };
+    const scripts = parsed.scripts;
+    if (scripts !== null && typeof scripts === 'object' && !Array.isArray(scripts)) {
+      return new Set(Object.keys(scripts as Record<string, unknown>));
+    }
+  } catch {
+    // Missing or malformed manifest: no known scripts.
+  }
+  return new Set();
+}
+
+function placeholderVerifyError(label: string): string {
+  return `${label} verify is the template placeholder ${PLACEHOLDER_VERIFY_COMMAND}; replace it with a real command that verifies the completed change's final tree`;
+}
+
+function missingPackageScriptError(label: string, script: string): string {
+  return `${label} verify references package script "${script}" that is not defined in the root package.json`;
+}
+
+function unresolvedVerifyWarning(label: string, command: string): string {
+  return `${label} verify names neither an existing repository path nor a package script: "${command}"`;
+}
+
 /**
  * Recursively list repository-folders' files relative to `baseDir`, skipping
  * `.run`, `.git`, and `.DS_Store` so generated state is never linted as
@@ -641,6 +894,7 @@ export async function lintChangeFolder(
 ): Promise<LintResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const packageScripts = await readRootPackageScripts(projectRoot);
 
   // Check: no authored change-folder file contains prohibited control characters
   for (const relPath of await collectArtifactFiles(folderPath, folderPath)) {
@@ -660,6 +914,21 @@ export async function lintChangeFolder(
   // Check: proposals must declare a change-level verify command
   if (resolvedDoc.kind === 'proposal' && !spec.verify) {
     errors.push('proposal.md must declare a verify command in frontmatter');
+  }
+
+  // Check: the change-level verify participates in the same trust analysis
+  if (spec.verify) {
+    const docLabel = path.basename(resolvedDoc.path);
+    const analysis = await analyzeVerifyCommand(projectRoot, spec.verify, packageScripts);
+    if (analysis.placeholder) {
+      errors.push(placeholderVerifyError(docLabel));
+    } else if (!chainsVerifyCommand(spec.verify)) {
+      if (analysis.missingScript !== null) {
+        errors.push(missingPackageScriptError(docLabel, analysis.missingScript));
+      } else if (analysis.unresolved) {
+        warnings.push(unresolvedVerifyWarning(docLabel, spec.verify));
+      }
+    }
   }
 
   // Check: features.writes is retired; delta specs are the sole writes declaration
@@ -731,15 +1000,21 @@ export async function lintChangeFolder(
       }
     }
 
-    // Check: verify command empty or chains commands
+    // Check: verify command empty, placeholder, chained, missing script, or unresolved
     if (!task.verify) {
       errors.push(`Task in ${taskFile} verify command is empty`);
-    } else if (
-      task.verify.includes('&&') ||
-      task.verify.includes(';') ||
-      task.verify.includes('|')
-    ) {
-      errors.push(`Task in ${taskFile} verify chains commands ("${task.verify}")`);
+    } else {
+      const taskLabel = `Task in ${taskFile}`;
+      const analysis = await analyzeVerifyCommand(projectRoot, task.verify, packageScripts);
+      if (analysis.placeholder) {
+        errors.push(placeholderVerifyError(taskLabel));
+      } else if (chainsVerifyCommand(task.verify)) {
+        errors.push(`Task in ${taskFile} verify chains commands ("${task.verify}")`);
+      } else if (analysis.missingScript !== null) {
+        errors.push(missingPackageScriptError(taskLabel, analysis.missingScript));
+      } else if (analysis.unresolved) {
+        warnings.push(unresolvedVerifyWarning(taskLabel, task.verify));
+      }
     }
 
     // Check: acceptance checklist length

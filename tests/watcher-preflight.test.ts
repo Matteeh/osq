@@ -17,6 +17,31 @@ import { installFakeValidator } from './helpers.js';
 
 const execFileAsync = promisify(execFile);
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/** Replace the seeded planning sentinel in the proposal and task 1. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
+
 describe('Watcher Preflight Verification', () => {
   let tmpDir: string;
   let originalExit: typeof process.exit;
@@ -28,6 +53,7 @@ describe('Watcher Preflight Verification', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-preflight-test-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
 
     originalExit = process.exit;
     originalExitCode = process.exitCode;
@@ -126,13 +152,14 @@ process.exit(0);
 
     // Create an approved spec with a pending task
     const spec = await createNewSpec(tmpDir, 'Sequenced Spec');
+    await installLocalVerifier(tmpDir, spec.folderPath);
     const taskPath = path.join(spec.folderPath, 'tasks', '1.md');
     await fs.writeFile(
       taskPath,
       [
         '---',
         'title: When task runs after preflight',
-        'verify: node -e "process.exit(0)"',
+        `verify: ${PASSING_VERIFY}`,
         'scope: []',
         'entry: []',
         'skills: []',
@@ -184,13 +211,14 @@ process.exit(0);
 
     // Create an approved spec that should never be dispatched
     const spec = await createNewSpec(tmpDir, 'Undispatched Spec');
+    await installLocalVerifier(tmpDir, spec.folderPath);
     const taskPath = path.join(spec.folderPath, 'tasks', '1.md');
     await fs.writeFile(
       taskPath,
       [
         '---',
         'title: Task should not run',
-        'verify: node -e "process.exit(0)"',
+        `verify: ${PASSING_VERIFY}`,
         'scope: []',
         'entry: []',
         'skills: []',
@@ -351,13 +379,14 @@ process.exit(0);
 
     // Create an approved spec with a task
     const spec = await createNewSpec(tmpDir, 'Success Spec');
+    await installLocalVerifier(tmpDir, spec.folderPath);
     const taskPath = path.join(spec.folderPath, 'tasks', '1.md');
     await fs.writeFile(
       taskPath,
       [
         '---',
         'title: When preflight succeeds and runs task',
-        'verify: node -e "process.exit(0)"',
+        `verify: ${PASSING_VERIFY}`,
         'scope: []',
         'entry: []',
         'skills: []',

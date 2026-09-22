@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:31e24f4a1132f09e46c2e10a39ed440430c025dda02f8671f8da4b473c0cbbf2"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:0f611e53d0c0aa73a8ce3e1d63e723f3093fd9119a0a7f947415893ad390c109","tests/plan.test.ts":"sha256:e987e7d11478aeb1445bd7adb4471bf8ad87e4e1893532987f8ada1d87f58f92"}
+---
+2026-09-21T20:31:31.791Z

@@ -92,6 +92,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     config,
     attempt: retryContext.attempt,
     priorFailureReason: retryContext.reason,
+    ...(retryContext.output ? { priorFailureOutput: retryContext.output } : {}),
     onSpawn: (pid) => recordStarted(pid),
   });
   await recordStarted(spawnResult.pid);

@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-09-01T00:30:00.000Z","data":{"phase":"start","scopeFiles":8,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"started","timestamp":"2026-09-01T00:30:01.000Z","data":{"tier":"coding","taskTitle":"x","scope":[],"entry":[],"skills":[]}}
+{"type":"measures","timestamp":"2026-09-01T00:30:20.000Z","data":{"phase":"end","scopeFiles":8,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":0,"changedLines":0}}
+{"type":"done","timestamp":"2026-09-01T00:30:21.000Z","data":{"task":"1"}}

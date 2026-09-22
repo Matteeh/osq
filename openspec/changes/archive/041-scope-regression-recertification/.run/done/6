@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:d018985cc5b16d026c29374aee826719505e823c1f083944c4657e9a2b40f5be"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"fixture/report/expected.json":"sha256:9dcaa3c3825a7000944e3d6f82a118c94a67fedcf1cec85fa36ae009bc7acf42","src/cli/report.ts":"sha256:7cbb08933af5e44593eb20c1b2c0c09be3e9e7e675b4dc7b54034e2f0d13853a","src/core/report.ts":"sha256:24e451368b628e4ed585c31edeadee3e00870c9aee13c1001a937c9b243ac7ff","tests/report-json.test.ts":"sha256:462757ec619eef16c694b030336f5032ff8f0b9bd69c161470e40ab5700d697e","tests/report-scope-regressions.test.ts":"sha256:0ffb96b70fd491373919e5529b53d741dbb1794afc40c2b0a6e19695be94f04b"}
+---
+2026-09-21T21:59:13.542Z

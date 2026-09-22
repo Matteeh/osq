@@ -102,6 +102,14 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         total: report.history.rejections.total,
         byPlannerModel: { ...report.history.rejections.byPlannerModel },
       },
+      sizes: {
+        byScopeFiles: report.history.sizes.byScopeFiles.map((row) => ({ ...row })),
+        byAcceptanceLines: report.history.sizes.byAcceptanceLines.map((row) => ({ ...row })),
+        largestFirstAttemptPass: report.history.sizes.largestFirstAttemptPass
+          ? { ...report.history.sizes.largestFirstAttemptPass }
+          : null,
+      },
+      scopeRegressions: { ...report.history.scopeRegressions },
     },
     now: { ...report.now },
     planning: {
@@ -162,7 +170,7 @@ export async function reportCommand(options: ReportCommandOptions = {}): Promise
     const report = await getMetricsReport(cwd, config);
     const output = options.json
       ? serializeSortedJson(toStableMetrics(report))
-      : formatMetricsReport(report);
+      : formatMetricsReport(report, config);
 
     if (options.stdout) {
       options.stdout(output);

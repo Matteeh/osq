@@ -1,8 +1,8 @@
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { type VerificationResult, runVerificationCommand } from '../core/verification.js';
 import { asRecord } from '../harness/stream.js';
 import { appendHarnessEvent } from '../harness/types.js';
 
@@ -114,84 +114,64 @@ export async function findUndeclaredTestChanges(
   return changes.sort();
 }
 
-function killTree(child: ReturnType<typeof spawn>, signal: NodeJS.Signals): void {
-  const pid = child.pid ?? Number.NaN;
-  try {
-    process.kill(-pid, signal);
-  } catch {
-    child.kill(signal);
-  }
+/** Full verification outcome plus the pass/fail projection callers branch on. */
+export interface VerificationGateResult extends VerificationResult {
+  passed: boolean;
 }
 
-/** Run the verify command, capture its outcome, and emit `verify_ran`. */
-export async function runVerificationGate(
+/**
+ * Run the verify command through the shared core executor, then append exactly
+ * one `verify_ran` event. This is the single watcher verification entrypoint;
+ * every watcher gate delegates here so event emission stays on one path.
+ */
+export async function runVerificationGateResult(
   projectRoot: string,
   verifyCommand: string,
   verifyTimeoutSeconds: number,
   context?: { specFolderPath: string; taskNumber: string },
-): Promise<{ passed: boolean; timedOut: boolean; error?: string }> {
-  const startMs = Date.now();
-  const verifyTimeoutMs = verifyTimeoutSeconds * 1000;
-  let timedOut = false;
-  let exitCode = 1;
-  let output = '';
-
-  const outcome = await new Promise<{ passed: boolean; error?: string }>((resolve) => {
-    const child = spawn(verifyCommand, {
-      cwd: projectRoot,
-      shell: true,
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    let timer: NodeJS.Timeout | null = null;
-    let killTimer: NodeJS.Timeout | null = null;
-
-    if (verifyTimeoutMs > 0) {
-      timer = setTimeout(() => {
-        timedOut = true;
-        killTree(child, 'SIGTERM');
-        killTimer = setTimeout(() => killTree(child, 'SIGKILL'), 5000);
-      }, verifyTimeoutMs);
-    }
-
-    child.stderr?.on('data', (d) => {
-      output += d.toString();
-    });
-    child.stdout?.on('data', (d) => {
-      output += d.toString();
-    });
-    child.on('error', (err) => {
-      if (timer) clearTimeout(timer);
-      if (killTimer) clearTimeout(killTimer);
-      resolve({ passed: false, error: err.message });
-    });
-    child.on('close', (code) => {
-      if (timer) clearTimeout(timer);
-      if (killTimer) clearTimeout(killTimer);
-      exitCode = timedOut ? 1 : (code ?? 1);
-      if (timedOut) {
-        resolve({
-          passed: false,
-          error: `Verify command timed out after ${verifyTimeoutSeconds}s`,
-        });
-      } else if (code !== 0) {
-        resolve({ passed: false, error: output || `Process exited with code ${code}` });
-      } else {
-        resolve({ passed: true });
-      }
-    });
-  });
+): Promise<VerificationGateResult> {
+  const result = await runVerificationCommand(projectRoot, verifyCommand, verifyTimeoutSeconds);
+  const error = result.timedOut
+    ? `Verify command timed out after ${verifyTimeoutSeconds}s`
+    : (result.error ??
+      (result.exitCode !== 0
+        ? result.output || `Process exited with code ${result.exitCode}`
+        : undefined));
   if (context) {
     await appendHarnessEvent(context.specFolderPath, context.taskNumber, {
       type: 'verify_ran',
       timestamp: new Date().toISOString(),
       data: {
         command: verifyCommand,
-        exitCode,
-        duration: Number(((Date.now() - startMs) / 1000).toFixed(2)),
-        ...(output.trim() ? { output } : {}),
+        exitCode: result.exitCode,
+        duration: result.duration,
+        ...(result.output.trim() ? { output: result.output } : {}),
       },
     });
   }
-  return { passed: outcome.passed, timedOut, ...(outcome.error ? { error: outcome.error } : {}) };
+  return {
+    ...result,
+    passed: result.exitCode === 0 && !result.error,
+    ...(error ? { error } : {}),
+  };
+}
+
+/** Compatibility projection retaining the established `runVerificationGate` shape. */
+export async function runVerificationGate(
+  projectRoot: string,
+  verifyCommand: string,
+  verifyTimeoutSeconds: number,
+  context?: { specFolderPath: string; taskNumber: string },
+): Promise<{ passed: boolean; timedOut: boolean; error?: string }> {
+  const result = await runVerificationGateResult(
+    projectRoot,
+    verifyCommand,
+    verifyTimeoutSeconds,
+    context,
+  );
+  return {
+    passed: result.passed,
+    timedOut: result.timedOut,
+    ...(result.error ? { error: result.error } : {}),
+  };
 }

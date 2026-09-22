@@ -25,6 +25,14 @@ import { installFakeValidator } from './helpers.js';
 /** Fast heartbeat so the 1s TTY status cadence collapses to a test-friendly tick. */
 const FAST_HEARTBEAT_CONFIG: OsqConfig = defineConfig({ log: { heartbeatSeconds: 0.05 } });
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 /**
  * A minimal terminal so `logger.status()` actually renders. It records every
  * escape-coded chunk so a test can inspect the live status row byte stream.
@@ -72,7 +80,7 @@ function terminalWidth(): number {
 async function writeTask(
   specFolder: string,
   title: string,
-  verify = 'node -e "process.exit(0)"',
+  verify = PASSING_VERIFY,
 ): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
   const task = [
@@ -147,6 +155,16 @@ describe('Runner terminal status', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Terminal Status');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     await writeTask(specFolder, 'When a task runs the status row shows live counters');
 
     fakeOpencodeBin = path.join(tmpDir, 'fake-opencode.mjs');

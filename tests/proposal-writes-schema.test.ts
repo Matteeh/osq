@@ -13,6 +13,13 @@ import { getSpecDetails } from '../src/core/show.js';
 
 const RECORD_FILE = 'openspec-invocations.json';
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 async function installFakeOpenSpec(projectRoot: string): Promise<void> {
   const binDir = path.join(projectRoot, 'node_modules', '.bin');
   await fs.mkdir(binDir, { recursive: true });
@@ -48,7 +55,7 @@ function proposal(writes?: string[]): string {
   return `---
 title: Writes Schema Probe
 depends_on: []
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 ${features}
 ---
 ## Goal
@@ -73,7 +80,7 @@ Delta specs declare the written capabilities.
 
 const TASK = `---
 title: When the probe runs, it passes
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 scope: []
 entry: []
 skills: []
@@ -128,6 +135,7 @@ describe('proposal writes schema', () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-writes-schema-'));
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
   });
 
   afterEach(async () => {

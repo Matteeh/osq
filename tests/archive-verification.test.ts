@@ -9,6 +9,7 @@ import { scaffoldProject } from '../src/core/init.js';
 import { getArchiveDir } from '../src/core/layout.js';
 import { parseSpecMd } from '../src/core/parser.js';
 import { AgyAdapter } from '../src/harness/agy.js';
+import { appendHarnessEvent } from '../src/harness/types.js';
 import { checkAndArchiveSpec } from '../src/watcher/archiver.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
@@ -18,8 +19,16 @@ interface ParsedEvent {
   data?: Record<string, unknown>;
 }
 
-const PASSING = 'node -e "process.exit(0)"';
-const FAILING = 'node -e "process.exit(1)"';
+const PASSING = 'node verify-pass.cjs';
+const FAILING = 'node verify-fail.cjs';
+
+/**
+ * Deterministic local verification scripts written into the execution root.
+ * They replace the planning sentinel with real, re-runnable fixture commands
+ * that approve-time lint accepts and the archive verifier executes.
+ */
+const PASS_SCRIPT = 'process.exit(0);\n';
+const FAIL_SCRIPT = 'process.exit(1);\n';
 
 /**
  * Real on-disk harness binary executed by the actual `AgyAdapter`. It writes the
@@ -85,6 +94,8 @@ describe('archive-time verification', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-archive-verify-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify-pass.cjs'), PASS_SCRIPT, 'utf8');
+    await fs.writeFile(path.join(tmpDir, 'verify-fail.cjs'), FAIL_SCRIPT, 'utf8');
     const fakeAgy = path.join(tmpDir, 'fake-agy.mjs');
     await fs.writeFile(fakeAgy, FAKE_HARNESS_SCRIPT, { mode: 0o755 });
     originalAgyPath = process.env.AGY_PATH;
@@ -144,6 +155,13 @@ describe('archive-time verification', () => {
 
   function verifyRanEvents(events: ParsedEvent[]): ParsedEvent[] {
     return events.filter((event) => event.type === 'verify_ran');
+  }
+
+  async function writeScopedSources(files: string[]): Promise<void> {
+    await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
+    for (const file of files) {
+      await fs.writeFile(path.join(tmpDir, file), 'export const value = 1;\n', 'utf8');
+    }
   }
 
   it('extracts a proposal verify command into SpecData', () => {
@@ -228,7 +246,7 @@ describe('archive-time verification', () => {
       path.join(specFolder, '.run', 'regressed', 'change.md'),
       'utf8',
     );
-    assert.match(marker, /command: .*process\.exit\(1\)/);
+    assert.match(marker, /command: .*verify-fail\.cjs/);
     assert.match(marker, /exit_code: 1/);
     assert.match(marker, /Archive-time change-level verification failed/);
 
@@ -242,5 +260,123 @@ describe('archive-time verification', () => {
     // Every task verify was re-run and passed before the change-level gate.
     assert.equal(verifyRanEvents(await readEvents(specFolder, '1')).length, 2);
     assert.equal(verifyRanEvents(await readEvents(specFolder, '2')).length, 2);
+  });
+
+  it('halts archival and records final-task drift before the archive verifier runs', async () => {
+    await writeScopedSources(['src/a.ts', 'src/b.ts', 'src/c.ts']);
+    await writeChange(PASSING, [
+      { verify: PASSING, scope: ['src/a.ts'] },
+      { verify: PASSING, scope: ['src/b.ts'] },
+      { verify: PASSING, scope: ['src/c.ts'] },
+    ]);
+    const adapter = new AgyAdapter();
+    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal((await runTask(tmpDir, specFolder, '2', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal((await runTask(tmpDir, specFolder, '3', DEFAULT_CONFIG, adapter)).success, true);
+
+    // The final task records and changes task 1's file.
+    await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const value = 2;\n', 'utf8');
+    await appendHarnessEvent(specFolder, '3', {
+      type: 'file_changed',
+      timestamp: new Date().toISOString(),
+      data: { path: 'src/a.ts' },
+    });
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+
+    // Archival halted: the folder stays active and emits no archived event.
+    assert.equal(await exists(specFolder), true);
+    assert.equal(await exists(archivedPath), false);
+
+    const marker = await fs.readFile(path.join(specFolder, '.run', 'regressed', '1.md'), 'utf8');
+    assert.match(marker, /reason: scope_regression/);
+    assert.match(marker, /exit_code: 0/);
+    assert.match(marker, /verification_passed: true/);
+    assert.match(marker, /src\/a\.ts \(modified\)/);
+
+    const task1 = await readEvents(specFolder, '1');
+    const regressed = task1.filter((event) => event.type === 'regressed');
+    assert.equal(regressed.length, 1);
+    assert.equal(regressed[0].data?.reason, 'scope_regression');
+    assert.deepEqual(regressed[0].data?.differingPaths, ['src/a.ts (modified)']);
+    assert.deepEqual(regressed[0].data?.attribution, [
+      { path: 'src/a.ts (modified)', attribution: '3' },
+    ]);
+
+    // The audit's detection verify is task 1's only extra verify_ran and lands
+    // after the task completed. No ordinary archive verify runs afterward.
+    assert.equal(verifyRanEvents(task1).length, 2);
+    const doneIndex = task1.findIndex((event) => event.type === 'done');
+    const detectionIndex = task1.findIndex(
+      (event, index) => index > doneIndex && event.type === 'verify_ran',
+    );
+    assert.ok(detectionIndex > doneIndex, 'detection verify runs after the completed task');
+    assert.equal(verifyRanEvents(await readEvents(specFolder, '2')).length, 1);
+    assert.equal(verifyRanEvents(await readEvents(specFolder, '3')).length, 1);
+    const changeEvents = await readEvents(specFolder, 'change');
+    assert.equal(verifyRanEvents(changeEvents).length, 0);
+    assert.equal(
+      changeEvents.some((event) => event.type === 'archived'),
+      false,
+    );
+  });
+
+  it('records every stale done task in one archive audit without stopping at the first', async () => {
+    await writeScopedSources(['src/a.ts', 'src/b.ts', 'src/c.ts']);
+    await writeChange(PASSING, [
+      { verify: PASSING, scope: ['src/a.ts'] },
+      { verify: PASSING, scope: ['src/b.ts'] },
+      { verify: PASSING, scope: ['src/c.ts'] },
+    ]);
+    const adapter = new AgyAdapter();
+    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal((await runTask(tmpDir, specFolder, '2', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal((await runTask(tmpDir, specFolder, '3', DEFAULT_CONFIG, adapter)).success, true);
+
+    // Two earlier completions drift before the archive attempt.
+    await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const value = 2;\n', 'utf8');
+    await fs.writeFile(path.join(tmpDir, 'src', 'b.ts'), 'export const value = 2;\n', 'utf8');
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+
+    for (const number of ['1', '2']) {
+      const marker = await fs.readFile(
+        path.join(specFolder, '.run', 'regressed', `${number}.md`),
+        'utf8',
+      );
+      assert.match(marker, /reason: scope_regression/);
+      const events = await readEvents(specFolder, number);
+      assert.equal(events.filter((event) => event.type === 'regressed').length, 1);
+      assert.equal(verifyRanEvents(events).length, 2);
+    }
+    assert.equal(await exists(path.join(specFolder, '.run', 'regressed', '3.md')), false);
+    assert.equal(await exists(archivedPath), false);
+    assert.equal(
+      (await readEvents(specFolder, 'change')).some((event) => event.type === 'archived'),
+      false,
+    );
+  });
+
+  it('repeatedly halts without adding verification, marker, or event duplicates', async () => {
+    await writeScopedSources(['src/a.ts', 'src/b.ts']);
+    await writeChange(PASSING, [
+      { verify: PASSING, scope: ['src/a.ts'] },
+      { verify: PASSING, scope: ['src/b.ts'] },
+    ]);
+    const adapter = new AgyAdapter();
+    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal((await runTask(tmpDir, specFolder, '2', DEFAULT_CONFIG, adapter)).success, true);
+    await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const value = 2;\n', 'utf8');
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+    const markerPath = path.join(specFolder, '.run', 'regressed', '1.md');
+    const markerBefore = await fs.readFile(markerPath, 'utf8');
+    const eventsBefore = await readEvents(specFolder, '1');
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+
+    assert.equal(await fs.readFile(markerPath, 'utf8'), markerBefore);
+    assert.equal((await readEvents(specFolder, '1')).length, eventsBefore.length);
+    assert.equal(await exists(archivedPath), false);
   });
 });

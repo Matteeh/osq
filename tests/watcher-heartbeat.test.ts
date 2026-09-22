@@ -21,6 +21,14 @@ import { installFakeValidator } from './helpers.js';
 
 const HEARTBEAT_CONFIG = defineConfig({ log: { heartbeatSeconds: 0.05 } });
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 /**
  * Adapter that writes several tokens events while "working", so a periodic
  * heartbeat has something to count. It sleeps long enough for the 50ms
@@ -72,12 +80,22 @@ describe('Runner heartbeat', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Heartbeat Logging');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
 
     const taskPath = path.join(specFolder, 'tasks', '1.md');
     const task = [
       '---',
       'title: When a task runs, periodic heartbeats log progress',
-      'verify: node -e "process.exit(0)"',
+      `verify: ${PASSING_VERIFY}`,
       'scope: []',
       'entry: []',
       'skills: []',

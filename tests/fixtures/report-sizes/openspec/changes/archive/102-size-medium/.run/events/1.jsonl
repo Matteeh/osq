@@ -1,0 +1,8 @@
+{"type":"measures","timestamp":"2026-09-01T00:10:00.000Z","data":{"phase":"start","scopeFiles":3,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"started","timestamp":"2026-09-01T00:10:01.000Z","data":{"tier":"coding","taskTitle":"x","scope":[],"entry":[],"skills":[]}}
+{"type":"measures","timestamp":"2026-09-01T00:11:40.000Z","data":{"phase":"end","scopeFiles":3,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":0,"changedLines":0}}
+{"type":"dead","timestamp":"2026-09-01T00:11:41.000Z","data":{"task":"1","reason":"verify_red"}}
+{"type":"measures","timestamp":"2026-09-01T00:20:00.000Z","data":{"phase":"start","scopeFiles":3,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"started","timestamp":"2026-09-01T00:20:01.000Z","data":{"tier":"coding","taskTitle":"x","scope":[],"entry":[],"skills":[]}}
+{"type":"measures","timestamp":"2026-09-01T00:20:50.000Z","data":{"phase":"end","scopeFiles":3,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":0,"changedLines":0}}
+{"type":"done","timestamp":"2026-09-01T00:20:51.000Z","data":{"task":"1"}}

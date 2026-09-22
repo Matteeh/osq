@@ -59,15 +59,15 @@ The system SHALL package exclusively compiled artifacts and legal metadata for n
 - **THEN** system dynamically reads version from `package.json` matching release metadata
 
 ### Requirement: Code ownership
-<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/core/retry.ts, src/core/reject.ts, src/index.ts, templates/**, README.md, .env.example -->
+<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/core/retry.ts, src/core/reject.ts, src/index.ts, templates/**, AGENTS.md, PLANNER.md, README.md, .env.example -->
 The CLI Foundation capability SHALL own CLI entrypoints, retry and rejection
 commands, configuration and shared harness capability resolution, doctor
-diagnostics, logger, initialization, public configuration exports, templates,
-and consumer guidance.
+diagnostics, logger, initialization, public configuration exports, managed
+agent and planner instructions, templates, and consumer guidance.
 
 #### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for CLI or configuration files
-- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/core/retry.ts`, `src/core/reject.ts`, `src/index.ts`, `templates/**`, `README.md`, and `.env.example` to cli-foundation
+- **WHEN** file ownership is resolved for CLI, configuration, retry, scaffolding, or managed guidance files
+- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/core/retry.ts`, `src/core/reject.ts`, `src/index.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
 
 ### Requirement: Test gating configuration
 <!-- source: src/core/config.ts, tests/config.test.ts -->
@@ -211,15 +211,23 @@ The managed planner instructions block in `PLANNER.md` and `src/core/init.ts` SH
 
 ### Requirement: Planner protocol rules in documentation and templates
 <!-- source: PLANNER.md, templates/PLANNER.md, src/core/init.ts, tests/init-planner.test.ts -->
-The managed planner block in `PLANNER.md`, `templates/PLANNER.md`, and `src/core/init.ts` SHALL encode slicing, detail, file tool, and change-level verify rules.
+The managed planner block in `PLANNER.md`, `templates/PLANNER.md`, and
+`src/core/init.ts` SHALL encode slicing, detail, file tool, change-level verify,
+final-tree verification, and task file-ownership rules.
+
+Every task verify SHALL exercise its complete slice through a real entrypoint
+and remain safely re-runnable against the final tree of the completed change.
+A file SHALL belong to one task unless a later task must extend it; that later
+task SHALL be ordered after the first owner and the proposal SHALL identify the
+shared file.
 
 #### Scenario: Managed block encodes planner discipline
 - **WHEN** `PLANNER.md` or `MANAGED_PLANNER_BLOCK` is inspected
-- **THEN** it requires task verify commands to exercise complete slices through real entry points, forbids out-of-scope executor excuses, mandates acceptance lines and reuse names without signatures or numbered steps, requires file tool usage, and mandates change-level verify immediately following the goal
+- **THEN** it requires complete real-entrypoint and final-tree verifies, forbids out-of-scope executor excuses, mandates acceptance lines and reuse names without signatures or numbered steps, requires single-task file ownership with ordered documented extensions, requires file tool usage, and places change-level verify immediately after the goal
 
 #### Scenario: Byte-equality test for planner templates
 - **WHEN** `tests/init-planner.test.ts` executes
-- **THEN** it asserts byte-for-byte equality between `PLANNER.md` managed block, `templates/PLANNER.md`, and `MANAGED_PLANNER_BLOCK` in `src/core/init.ts`
+- **THEN** it asserts byte-for-byte equality between the `PLANNER.md` managed block, `templates/PLANNER.md`, and `MANAGED_PLANNER_BLOCK` in `src/core/init.ts`
 
 ### Requirement: Planner configuration validation
 <!-- source: src/core/config.ts, tests/config-planner.test.ts -->
@@ -238,20 +246,39 @@ The setup command for the opencode harness SHALL generate `.opencode/agent/osq-p
 - **THEN** system generates `.opencode/agent/osq-planner.md` permitting `read`, `write`, `edit`, `glob`, `grep`, denying `bash`, `git`, `webfetch`, `websearch`, and repeated runs remain byte-identical
 
 ### Requirement: Interactive planning command
-<!-- source: src/cli/plan.ts, src/cli/index.ts, tests/plan.test.ts -->
-The CLI SHALL provide `osq plan <name> [--brief <file> | -] [-print]` to initialize changes, record briefs, and launch interactive planner sessions.
+<!-- source: src/cli/plan.ts, src/cli/index.ts, src/core/report.ts, tests/plan.test.ts -->
+The CLI SHALL provide `osq plan <name> [--brief <file> | -] [-print]` to
+initialize changes, record briefs, and launch interactive planner sessions.
+
+Every opening prompt SHALL contain five ordered sections: the complete
+`PLANNER.md`, change id and title, capability spec paths, the complete brief,
+and `This repository's record`. The fifth section SHALL use the shared report
+derivation over the 20 most recent archived changes and contain only
+first-attempt pass rate, at most ten dead-event lines as change, task title, and
+reason, the largest first-attempt pass with scope-file and acceptance-line
+sizes, and median task duration.
+
+When fewer than five tasks in that archive window have valid start measures,
+the fifth section SHALL contain exactly `This repository's measured record is
+too small (fewer than 5 tasks).` after its heading and contain no partial
+record. Ordinary new, resumed, queue-selected, interactive, and print planning
+paths SHALL use the same prompt bytes.
 
 #### Scenario: New change interactive planning session
-- **WHEN** user executes `osq plan <name>`
-- **THEN** system creates change folder, writes `brief.md` with planner and date metadata, formats prompt with 4 ordered sections (`PLANNER.md`, change ID/title, capability spec paths, `brief.md`), and spawns an interactive session
+- **WHEN** user executes `osq plan <name>` with at least five recently archived measured tasks
+- **THEN** system creates the change and brief, builds the five ordered prompt sections with the bounded repository record after the brief, and spawns an interactive session
 
 #### Scenario: Resuming existing change planning session
 - **WHEN** user executes `osq plan <id>` on an existing change folder with `brief.md`
-- **THEN** system skips folder creation and launches an interactive session for the existing change
+- **THEN** system skips folder creation and launches a fresh interactive session with the same five-section prompt contract
+
+#### Scenario: Small repository record
+- **WHEN** fewer than five measured tasks exist in the recent archive window
+- **THEN** the fifth section contains only the record-too-small explanation after its heading
 
 #### Scenario: Print mode outputs prompt to stdout
 - **WHEN** user executes `osq plan <name> -print`
-- **THEN** opening prompt is written exclusively to stdout without launching an interactive process
+- **THEN** the same five-section opening prompt is written exclusively to stdout without launching an interactive process or recording planning telemetry
 
 ### Requirement: Codex configuration and resolution
 <!-- source: src/core/config*.ts, src/index.ts, tests/codex/** -->
@@ -389,15 +416,29 @@ input, output, cached, and reasoning token counts plus nullable cost.
 ### Requirement: Explicit retry command
 <!-- source: src/cli/retry.ts, src/core/retry.ts, src/cli/index.ts, tests/retry*.test.ts -->
 The CLI SHALL provide `osq retry <id> <target>` for an active change, where the
-target is a numeric task or the literal `change`. Retry SHALL require matching
+target is a numeric task or literal `change`. Retry SHALL require matching
 approval, an active dead or regressed marker, and no running marker for the
-target. It SHALL refuse all invalid states without mutation and SHALL direct a
-missing or stale approval to `osq approve <id>` without approving on the
-caller's behalf.
+target. It SHALL refuse invalid states without mutation and direct missing or
+stale approval to `osq approve <id>` without approving for the caller.
+
+A numeric task carrying `reason: scope_regression` and an automated done marker
+SHALL be recertified by running its verify command without spawning an agent.
+A pass SHALL refresh canonical done and report recertification without advancing
+execution attempts. A failure SHALL requeue the task and report that agent work
+is pending. Dead tasks, other regression reasons, and change-level regressions
+SHALL retain their established retry behavior. No new retry flag SHALL exist.
 
 #### Scenario: Retrying a failed task
-- **WHEN** a user retries an approved dead or regressed numeric task that is not running
-- **THEN** the CLI performs the retry transition and reports its next execution attempt
+- **WHEN** a user retries an approved dead or non-scope-regressed numeric task that is not running
+- **THEN** the CLI performs the existing preserving retry transition and reports its next execution attempt
+
+#### Scenario: Recertifying a scope-regressed task
+- **WHEN** a user retries an approved numeric task with an active scope regression and automated done marker
+- **THEN** the CLI reports either successful human recertification or requeue after running verification under the configured timeout
+
+#### Scenario: Retrying another task regression
+- **WHEN** a user retries an approved numeric task with a non-scope regression
+- **THEN** the CLI performs the existing preserving retry transition without recertification verification
 
 #### Scenario: Retrying a change-level regression
 - **WHEN** a user runs `osq retry <id> change` for an approved change with `.run/regressed/change.md` and nothing running
@@ -523,3 +564,19 @@ folder creation, planning-log append, or harness spawn.
 #### Scenario: Incomplete cost coverage
 - **WHEN** any counted planning session lacks finite recorded cost
 - **THEN** planning prints that the cost ceiling is not enforced while retaining the session gate
+
+### Requirement: Verification placeholder guidance
+<!-- source: AGENTS.md, README.md, fixture/**, tests/fixtures/** -->
+Consumer guidance SHALL identify the generated
+`node -e "process.exit(0)"` verify value as a planning sentinel that must be
+replaced before approval. Checked-in executable fixtures SHALL use deterministic
+local verification commands backed by their own fixture files rather than the
+sentinel, network access, a TTY, or the repository's full verification suite.
+
+#### Scenario: Generated placeholder is documented
+- **WHEN** a planner or consumer reads repository guidance after creating a change
+- **THEN** the guidance states that placeholder verification is rejected by lint and must be replaced with a final-tree command
+
+#### Scenario: Checked-in fixture verification
+- **WHEN** fixture change artifacts are inspected or executed from their fixture root
+- **THEN** every verify command invokes real deterministic local behavior available within that fixture

@@ -24,6 +24,14 @@ import { installFakeValidator } from './helpers.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 interface ParsedEvent {
   type: string;
   timestamp: string;
@@ -81,7 +89,7 @@ async function writePassingTask(specFolder: string): Promise<void> {
   const task = [
     '---',
     'title: When synthesis runs, the verify gate still decides',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${PASSING_VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -144,6 +152,16 @@ describe('Runner synthesized result', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Synthesized Result');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     await writePassingTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

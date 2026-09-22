@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:7ec4fa0fe93348e057ed82d4e11a3fb33aeb84b0ef91329a36172962c45737e4"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"tests/*.test.ts":null,"tests/codex/*.test.ts":null}
+---
+2026-09-21T23:10:32.869Z

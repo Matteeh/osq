@@ -58,12 +58,20 @@ if (specFolder && taskNumber) {
 process.exit(0);
 `;
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 async function writeTask(specFolder: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
   const task = [
     '---',
     'title: When a task is spawned, onSpawn records started with pid',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${PASSING_VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -104,6 +112,16 @@ describe('Runner lifecycle PID ownership', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Lifecycle Pid');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     await writeTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

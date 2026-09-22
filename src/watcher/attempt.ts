@@ -29,12 +29,16 @@ export function formatTaskStartedLine(
 export interface RetryContext {
   readonly attempt: number;
   readonly reason?: string;
+  /** Failed verification output retained by the latest requeued recertification. */
+  readonly output?: string;
 }
 
 /**
- * Reconstruct the target-wide execution attempt and prior failure reason from
- * the append-only event stream. The latest `retry` event wins, so a watcher
- * restart loses neither the attempt nor the reason. Without any retry event the
+ * Reconstruct the target-wide execution attempt, prior failure reason, and
+ * failed verification output from the append-only event stream. The latest
+ * `retry` transition or requeued `recertification` wins, so a watcher restart
+ * loses neither the attempt nor the failure context. A passed recertification
+ * is not a transition and never advances attempts. Without either event the
  * target starts at attempt 1.
  */
 export async function readRetryContext(
@@ -45,6 +49,7 @@ export async function readRetryContext(
   const content = await fs.readFile(eventPath, 'utf8').catch(() => '');
   let attempt = 1;
   let reason: string | undefined;
+  let output: string | undefined;
   for (const line of content.split('\n')) {
     if (!line.trim()) continue;
     let parsed: unknown;
@@ -54,14 +59,33 @@ export async function readRetryContext(
       continue;
     }
     const event = asRecord(parsed);
-    if (event?.type !== 'retry') continue;
+    if (event?.type === 'retry') {
+      const data = asRecord(event.data);
+      if (typeof data?.attempt === 'number' && Number.isInteger(data.attempt)) {
+        attempt = data.attempt;
+      }
+      if (typeof data?.reason === 'string' && data.reason) {
+        reason = data.reason;
+      }
+      output = undefined;
+      continue;
+    }
+    if (event?.type !== 'recertification') continue;
     const data = asRecord(event.data);
-    if (typeof data?.attempt === 'number' && Number.isInteger(data.attempt)) {
+    if (data?.outcome !== 'requeued') continue;
+    if (typeof data.attempt === 'number' && Number.isInteger(data.attempt)) {
       attempt = data.attempt;
     }
-    if (typeof data?.reason === 'string' && data.reason) {
+    if (typeof data.reason === 'string' && data.reason) {
       reason = data.reason;
     }
+    if (typeof data.output === 'string') {
+      output = data.output;
+    }
   }
-  return reason ? { attempt, reason } : { attempt };
+  return {
+    attempt,
+    ...(reason ? { reason } : {}),
+    ...(output ? { output } : {}),
+  };
 }

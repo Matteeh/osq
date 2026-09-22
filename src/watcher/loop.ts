@@ -8,11 +8,13 @@ import { getArchiveDir, getChangesDir } from '../core/layout.js';
 import { reapStaleLocks } from '../core/lock.js';
 import { type Logger, resolveSymbol } from '../core/logger.js';
 import { resolveChangeDoc } from '../core/parser.js';
+import type { StaleTaskAudit } from '../core/scope-hash.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
+import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
@@ -21,6 +23,12 @@ const EXIT_SIGINT = 130;
 export interface WatcherSummary {
   tasksRun: number;
   specsArchived: number;
+  /** Changes whose pre-dispatch scope audit found newly stale tasks. */
+  blockedByRegression: {
+    readonly id: string;
+    readonly outcome: 'blocked_by_regression';
+    readonly tasks: readonly string[];
+  }[];
 }
 
 export interface StartWatcherOptions {
@@ -145,6 +153,14 @@ function logWatcherError(logger: Logger | undefined, useSymbols: boolean, err: u
   logger?.error(`${resolveSymbol('✗', '[error]', useSymbols)} watcher error: ${errorMessage(err)}`);
 }
 
+/** Permanent stale-task log line: task number plus compact per-path attribution. */
+function formatScopeRegressionLine(stale: StaleTaskAudit, symbols: boolean): string {
+  const detail = stale.attribution
+    .map((entry) => `${entry.path} -> ${entry.attribution}`)
+    .join(', ');
+  return `${resolveSymbol('?', '[regressed]', symbols)} task ${stale.taskNumber} regressed (reason: scope_regression, attribution: ${detail || 'none'})`;
+}
+
 export async function runWatcherCycle(
   projectRoot: string,
   config: OsqConfig,
@@ -172,7 +188,7 @@ export async function runWatcherCycle(
         buildInfo,
       ),
     );
-    return { tasksRun: 0, specsArchived: 0 };
+    return { tasksRun: 0, specsArchived: 0, blockedByRegression: [] };
   }
 
   const specFolders = entries
@@ -182,6 +198,11 @@ export async function runWatcherCycle(
   let tasksRun = 0;
   let specsArchived = 0;
   let approvedWaiting = 0;
+  const blockedByRegression: {
+    id: string;
+    outcome: 'blocked_by_regression';
+    tasks: readonly string[];
+  }[] = [];
 
   const archiveCompletedSpec = async (
     folder: string,
@@ -236,6 +257,36 @@ export async function runWatcherCycle(
         const taskNumber = specState.nextTask.taskNumber;
         logger?.info(`${tag('▶ spec', '[spec]')} ${specState.id} picked up (${folder})`);
 
+        // Pre-dispatch scope audit runs before any lock: every earlier
+        // automated done task is compared in one pass, stale tasks are
+        // verified and recorded, and the upcoming task stays untouched.
+        const earlier = specState.tasks
+          .map((task) => task.taskNumber)
+          .filter((number) => Number.parseInt(number, 10) < Number.parseInt(taskNumber, 10));
+        const audit = await auditScopeRegressions({
+          projectRoot,
+          specFolderPath: folderPath,
+          eligibleTaskNumbers: earlier,
+          verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+        });
+        if (audit.stale.length > 0) {
+          const staleNumbers = audit.stale
+            .map((stale) => stale.taskNumber)
+            .sort(compareNumericPrefix);
+          for (const stale of audit.stale) {
+            logger?.info(formatScopeRegressionLine(stale, useSymbols));
+          }
+          logger?.info(
+            `${resolveSymbol('■', '[halted]', useSymbols)} spec ${specState.id} halted: tasks ${staleNumbers.join(', ')} require recertification`,
+          );
+          blockedByRegression.push({
+            id: specState.id,
+            outcome: 'blocked_by_regression',
+            tasks: staleNumbers,
+          });
+          continue;
+        }
+
         const taskResult = await runTask(
           projectRoot,
           folderPath,
@@ -274,7 +325,7 @@ export async function runWatcherCycle(
     );
   }
 
-  return { tasksRun, specsArchived };
+  return { tasksRun, specsArchived, blockedByRegression };
 }
 
 export async function runWatcherOnce(
@@ -285,18 +336,24 @@ export async function runWatcherOnce(
 ): Promise<WatcherSummary> {
   let totalTasksRun = 0;
   let totalSpecsArchived = 0;
+  const blockedByRegression: {
+    id: string;
+    outcome: 'blocked_by_regression';
+    tasks: readonly string[];
+  }[] = [];
 
   while (true) {
     const cycle = await runWatcherCycle(projectRoot, config, adapter, logger);
     totalTasksRun += cycle.tasksRun;
     totalSpecsArchived += cycle.specsArchived;
+    blockedByRegression.push(...cycle.blockedByRegression);
 
     if (cycle.tasksRun === 0) {
       break;
     }
   }
 
-  return { tasksRun: totalTasksRun, specsArchived: totalSpecsArchived };
+  return { tasksRun: totalTasksRun, specsArchived: totalSpecsArchived, blockedByRegression };
 }
 
 export async function startWatcher(

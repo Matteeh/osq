@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:1902d39deec1653b9e715c72d49b48eda3da38a27afd9a56f261165e8c8b4da1"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"src/cli/retry.ts":"sha256:316d3c0718d8f7e2e940e7640882d3bb4d65594c5f56df4c96032b9d12f9e7c6","src/core/retry.ts":"sha256:dc8d51e3811a8d05ba29b23b5c498dc09b0df5a2e1c877138a6a8cb1cdc4ed8d","src/harness/*.ts":null,"src/harness/types.ts":"sha256:324a35a39f73a3758019b2b949786c0dff5a3ea4e9696ed2897f327acfed13d1","src/watcher/attempt.ts":"sha256:f8b15508091c35c4adefc81fbd19ba058cc88ab1625c18d0b7acb2eb2e76d1c6","src/watcher/spawn.ts":"sha256:9cee5368149dfe9528ae7c420dcddbf067f803cfc1a5f03dc2174a450dae43ec","tests/harness-prompt-injection.test.ts":"sha256:58ec81dc9546def824d12d5e7d44c726d59579d6e99b5b21c3124ce605bf9054","tests/retry-recertification.test.ts":"sha256:f4c90b23859c38b640ca55906d0e4c0c892fcebc620a7ac131d44feb511c237f"}
+---
+2026-09-21T22:49:42.095Z

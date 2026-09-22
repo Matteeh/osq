@@ -4,15 +4,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { findSpecFolder } from '../core/approve.js';
 import { resolvePlannerSelection } from '../core/config-codex.js';
-import { loadConfig } from '../core/config.js';
+import { type OsqConfig, loadConfig } from '../core/config.js';
 import { getChangesDir } from '../core/layout.js';
 import { parseFrontmatter } from '../core/parser.js';
 import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/planning.js';
 import type { QueuePlanSelection } from '../core/queue.js';
+import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import {
-  buildOpeningPrompt,
+  buildOpeningPrompt as buildBaseOpeningPrompt,
   createChange,
   createQueueChange,
   prepareQueueSelection,
@@ -20,7 +21,40 @@ import {
   writeBriefAndManifest,
 } from './plan-queue.js';
 
-export { buildOpeningPrompt, formatBriefContent } from './plan-queue.js';
+export { formatBriefContent } from './plan-queue.js';
+
+/** Exact heading of the fifth ordered planning-prompt section. */
+export const REPOSITORY_RECORD_HEADING = "## This repository's record";
+
+export interface OpeningPromptOptions {
+  projectRoot: string;
+  folderPath: string;
+  specId: string;
+  specTitle: string;
+  briefContent: string;
+  openspecRoot: string;
+  dependencyPaths?: readonly string[];
+  config?: OsqConfig;
+  recordBody?: string;
+}
+
+/**
+ * Compose the opening prompt with the repository record as the fifth ordered
+ * section. The record body comes from the shared report derivation over the 20
+ * most recent canonical archives, or from a caller-supplied preformatted body.
+ */
+export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise<string> {
+  const base = await buildBaseOpeningPrompt(options);
+  const recordBody =
+    options.recordBody ??
+    formatRepositoryRecordBody(
+      await getRepositoryRecord(
+        options.projectRoot,
+        options.config ?? (await loadConfig(options.projectRoot)),
+      ),
+    );
+  return `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
+}
 
 export async function readBriefInput(briefOption?: string): Promise<string> {
   if (briefOption === '-') {
@@ -154,6 +188,7 @@ export async function planCommand(
     briefContent,
     openspecRoot: config.paths.openspecRoot,
     dependencyPaths: queueSelection?.landedDependencies.map((dep) => dep.archivePath),
+    config,
   });
 
   if (options.print) {

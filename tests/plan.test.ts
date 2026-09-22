@@ -3,8 +3,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
-import { planCommand } from '../src/cli/plan.js';
+import { buildOpeningPrompt, planCommand } from '../src/cli/plan.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getChangesDir, getSpecsDir } from '../src/core/layout.js';
@@ -19,6 +20,45 @@ async function pathExists(target: string): Promise<boolean> {
     .stat(target)
     .then(() => true)
     .catch(() => false);
+}
+
+const SIZES_FIXTURE = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  'fixtures',
+  'report-sizes',
+);
+
+const RECORD_HEADING = "## This repository's record";
+
+/** Copy the checked-in measured archive into a fresh project as canonical history. */
+async function copyMeasuredArchive(root: string): Promise<void> {
+  await fs.cp(
+    path.join(SIZES_FIXTURE, 'openspec', 'changes', 'archive'),
+    path.join(root, 'openspec', 'changes', 'archive'),
+    { recursive: true },
+  );
+}
+
+/** Everything after the fifth section heading, trimmed, with no surrounding blank lines. */
+function recordSection(prompt: string): string {
+  const index = prompt.indexOf(RECORD_HEADING);
+  assert.notEqual(index, -1, 'prompt must contain the repository record heading');
+  return prompt.slice(index + RECORD_HEADING.length).trim();
+}
+
+async function captureStdout(run: () => Promise<void>): Promise<string> {
+  let output = '';
+  const original = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: string | Buffer) => {
+    output += chunk.toString();
+    return true;
+  }) as typeof process.stdout.write;
+  try {
+    await run();
+  } finally {
+    process.stdout.write = original;
+  }
+  return output;
 }
 
 /**
@@ -242,6 +282,164 @@ describe('osq plan command', () => {
     assert.ok(stdoutOutput.includes('# Change: 001 - cli-print'));
     assert.ok(stdoutOutput.includes('## Capability Specs'));
     assert.ok(stdoutOutput.includes('## Brief'));
+  });
+
+  it('builds five ordered sections with the sufficient repository record after the brief', async () => {
+    await copyMeasuredArchive(tmpDir);
+
+    const prompt = await buildOpeningPrompt({
+      projectRoot: tmpDir,
+      folderPath: path.join(tmpDir, 'openspec', 'changes', '001-record-probe'),
+      specId: '001',
+      specTitle: 'Record Probe',
+      briefContent: '# Record Probe\n\nBrief body.\n',
+      openspecRoot: DEFAULT_CONFIG.paths.openspecRoot,
+    });
+
+    const plannerContent = await fs.readFile(path.join(tmpDir, 'PLANNER.md'), 'utf8');
+    assert.ok(prompt.startsWith(`${plannerContent.trim()}\n\n`), 'complete PLANNER.md first');
+
+    const positions = [
+      prompt.indexOf('# Change: 001 - Record Probe'),
+      prompt.indexOf('## Capability Specs'),
+      prompt.indexOf('## Brief'),
+      prompt.indexOf(RECORD_HEADING),
+    ];
+    positions.forEach((position, index) => {
+      assert.notEqual(position, -1, `section ${index + 1} must be present`);
+    });
+    assert.deepEqual(
+      positions,
+      [...positions].sort((a, b) => a - b),
+      'sections stay ordered',
+    );
+
+    const section = recordSection(prompt);
+    assert.ok(section.includes('First-attempt pass rate: 0.63'), section);
+    assert.ok(
+      section.includes(
+        'Largest first-attempt pass: 102-size-medium/2 "Tied largest A" (scope files: 8, acceptance lines: 7)',
+      ),
+      section,
+    );
+    assert.ok(section.includes('Median task duration: 35s'), section);
+    assert.ok(section.includes('- 103-size-large, Large dead task, crashed'), section);
+    assert.ok(section.includes('- 102-size-medium, Medium retry task, verify_red'), section);
+    assert.ok(
+      section.split('\n').filter((line) => line.startsWith('- ')).length <= 10,
+      'at most ten dead outcome lines',
+    );
+  });
+
+  it('emits only the too-small record sentence below five measured tasks', async () => {
+    const prompt = await buildOpeningPrompt({
+      projectRoot: tmpDir,
+      folderPath: path.join(tmpDir, 'openspec', 'changes', '001-thin-probe'),
+      specId: '001',
+      specTitle: 'Thin Probe',
+      briefContent: '# Thin Probe\n',
+      openspecRoot: DEFAULT_CONFIG.paths.openspecRoot,
+    });
+
+    const section = recordSection(prompt);
+    assert.equal(section, "This repository's measured record is too small (fewer than 5 tasks).");
+    for (const forbidden of [
+      'First-attempt pass rate',
+      'Dead outcomes',
+      'Largest first-attempt pass',
+      'Median task duration',
+      'result',
+      'diff',
+    ]) {
+      assert.ok(!section.includes(forbidden), `too-small section must omit ${forbidden}`);
+    }
+  });
+
+  it('uses one five-section prompt for interactive, resumed, and print planning', async () => {
+    await copyMeasuredArchive(tmpDir);
+    const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    const adapter = new InspectingAdapter(changesDir, 'record-probe');
+
+    await planCommand('record-probe', { brief: briefFixture, cwd: tmpDir, adapter });
+    assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
+    const interactivePrompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
+    assert.ok(recordSection(interactivePrompt).includes('First-attempt pass rate: 0.63'));
+
+    const folderName = (await fs.readdir(changesDir)).find((entry) =>
+      entry.endsWith('-record-probe'),
+    );
+    assert.ok(folderName, 'created change folder should exist');
+    const specId = folderName.match(/^(\d+)/)?.[1];
+    assert.ok(specId, 'created change folder should carry a numeric id');
+
+    const mock = getHarnessAdapter('mock') as MockAdapter;
+    mock.resetBehavior();
+    await planCommand(specId, { cwd: tmpDir, adapter });
+    assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
+    const resumedPrompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
+    assert.ok(recordSection(resumedPrompt).includes('Median task duration: 35s'));
+
+    const planLogPath = path.join(changesDir, folderName, '.run', 'plan.jsonl');
+    const telemetryBefore = await fs.readFile(planLogPath, 'utf8');
+
+    const stdout = await captureStdout(() => planCommand(specId, { print: true, cwd: tmpDir }));
+
+    assert.equal(stdout, `${resumedPrompt}\n`, 'print mode emits the exact interactive bytes');
+    assert.equal(await fs.readFile(planLogPath, 'utf8'), telemetryBefore, 'no telemetry appended');
+  });
+
+  it('emits the five-section prompt through the -print CLI alias', async () => {
+    await copyMeasuredArchive(tmpDir);
+    const originalCwd = process.cwd();
+    const stdout = await captureStdout(async () => {
+      process.chdir(tmpDir);
+      try {
+        const program = createProgram();
+        await program.parseAsync(['plan', 'alias-record', '--brief', briefFixture, '-print'], {
+          from: 'user',
+        });
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
+    assert.equal(MockAdapter.recordedInteractiveSpawns.length, 0);
+    assert.ok(recordSection(stdout).includes('First-attempt pass rate: 0.63'));
+  });
+
+  it('puts the repository record in a queue-selected planning prompt', async () => {
+    await copyMeasuredArchive(tmpDir);
+    await fs.writeFile(
+      path.join(tmpDir, 'osq.config.ts'),
+      `export default {
+  harness: "mock",
+  planner: { harness: "mock", model: "mock-planner-model", agent: "mock-planner" },
+  queue: { maxPlanningSessions: 10, maxPlanningCost: 100 }
+};\n`,
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'openspec', 'queue.md'),
+      '## [alpha] Queue Alpha\nDepends on: nothing\n\nBrief body for alpha.\n',
+      'utf8',
+    );
+
+    await planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() });
+
+    assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
+    const prompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
+    assert.ok(prompt.includes('Queue Alpha'), 'queue item title seeded');
+    assert.ok(recordSection(prompt).includes('First-attempt pass rate: 0.63'));
+
+    const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
+    const entries = (await fs.readdir(changesDir)).filter(
+      (entry) => entry !== 'archive' && entry !== 'rejected',
+    );
+    assert.equal(entries.length, 1, 'one queue change created');
+    assert.ok(
+      await pathExists(path.join(changesDir, entries[0], '.run', 'plan.jsonl')),
+      'queue planning records telemetry',
+    );
   });
 });
 

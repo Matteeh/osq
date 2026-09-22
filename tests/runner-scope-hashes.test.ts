@@ -14,12 +14,18 @@ import { checkDoneTasksScopeHashes, computeTaskScopeHash } from '../src/watcher/
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
 
-const PASSING_VERIFY = 'node -e "process.exit(0)"';
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
 
 const PROPOSAL = `---
 title: Scope hashes
 depends_on: []
-verify: node -e "process.exit(0)"
+verify: ${PASSING_VERIFY}
 features:
   reads: []
 ---
@@ -176,6 +182,7 @@ describe('Pre-spawn scope comparison', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-pre-spawn-scope-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
     await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
     await fs.writeFile(path.join(tmpDir, 'src', 'b.ts'), 'export const b = 2;\n', 'utf8');

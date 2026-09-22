@@ -189,4 +189,47 @@ describe('Harness capability rule prompt injection', () => {
       '- Prior Failure: crashed',
     ]);
   });
+
+  it('renders a failed verification output block inside the prior context', () => {
+    assert.deepEqual(
+      priorContextLines({ attempt: 3, reason: 'scope_regression', output: 'line one\nline two' }),
+      [
+        '',
+        'Prior Context:',
+        '- Prior Attempt: 3',
+        '- Prior Failure: scope_regression',
+        '- Prior Failure Output:',
+        '  line one',
+        '  line two',
+      ],
+    );
+  });
+
+  it('bounds an oversized prior failure output deterministically', () => {
+    const output = 'x'.repeat(5000);
+    const block = priorContextLines({ attempt: 2, output }).join('\n');
+    assert.ok(block.length < output.length);
+    assert.ok(block.endsWith('…'));
+  });
+
+  it('renders the same failed-output block in every textual prompt', async () => {
+    const retryOptions = options({
+      attempt: 2,
+      priorFailureReason: 'scope_regression',
+      priorFailureOutput: 'boom output',
+    });
+    const prompts = [
+      buildAgyPrompt(retryOptions),
+      buildOpencodePrompt(retryOptions),
+      await buildCodexPrompt(retryOptions),
+    ];
+
+    for (const prompt of prompts) {
+      assert.ok(prompt.includes('Prior Context:'));
+      assert.ok(prompt.includes('- Prior Attempt: 2'));
+      assert.ok(prompt.includes('- Prior Failure: scope_regression'));
+      assert.ok(prompt.includes('- Prior Failure Output:'));
+      assert.ok(prompt.includes('  boom output'));
+    }
+  });
 });

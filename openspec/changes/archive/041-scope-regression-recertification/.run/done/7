@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:704e7a1ad3d5b64edeb636153c2155414272ab166dc21d4c669f072fe0debb49"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"src/core/show.ts":"sha256:2436a650e5c06560f9d7efa0edbe1f03d110709c6f4bf19b1a6ed78f706fbfb4","tests/show.test.ts":"sha256:54f66948a2b34660397fd57ca40e4ca9628d55afc81ad16e889995cb1df2ef9c"}
+---
+2026-09-21T22:01:51.413Z

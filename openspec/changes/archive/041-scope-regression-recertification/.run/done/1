@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:965a3e5e5eee2d930f676810b11bd358faee66c1e15eadaff1640bb2f467e194"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"tests/runner-scope-hashes.test.ts":"sha256:b5fe66becd587b6834664d4bce40d2be7da2962605f99d3c17a9762ced2fcfe4","tests/scope-recertification.test.ts":"sha256:3fd557b2fa7e0cbebd768eb924aeec45977a02f78563430cbbbcbe27663837b4","tests/watcher-loop-logging.test.ts":"sha256:5eba655b8f028f344211b84dff611a220425534dbecd9739bb3fc9f5946751aa"}
+---
+2026-09-21T22:26:50.405Z

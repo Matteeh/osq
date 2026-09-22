@@ -12,7 +12,13 @@ import { parseFrontmatter } from '../src/core/parser.js';
 import { rejectSpec } from '../src/core/reject.js';
 import { installFakeValidator } from './helpers.js';
 
-const VERIFY = 'node -e "process.exit(0)"';
+const VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
 
 async function writeTask(specFolder: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
@@ -74,6 +80,16 @@ describe('explicit rejection transition', () => {
     const spec = await createNewSpec(tmpDir, 'Reject Target');
     specFolder = spec.folderPath;
     folderName = spec.folderName;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, 'verify: node verify.cjs'),
+        'utf8',
+      );
+    }
     await writeTask(specFolder);
   });
 

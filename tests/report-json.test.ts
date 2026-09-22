@@ -134,8 +134,29 @@ describe('report --json', () => {
       'cost',
       'deadByReason',
       'rejections',
+      'scopeRegressions',
+      'sizes',
       'unexplainedReruns',
       'verifyRuns',
+    ]);
+    assert.deepEqual(sortedKeys(parsed.history.scopeRegressions as object), [
+      'detected',
+      'recertifiedByHuman',
+      'requeuedForAgent',
+      'verificationFailedAtDetection',
+      'verificationPassedAtDetection',
+    ]);
+    assert.deepEqual(parsed.history.scopeRegressions, {
+      detected: 0,
+      verificationPassedAtDetection: 0,
+      verificationFailedAtDetection: 0,
+      recertifiedByHuman: 0,
+      requeuedForAgent: 0,
+    });
+    assert.deepEqual(sortedKeys(parsed.history.sizes as object), [
+      'byAcceptanceLines',
+      'byScopeFiles',
+      'largestFirstAttemptPass',
     ]);
     assert.deepEqual(sortedKeys(parsed.history.attempts as object), [
       'byTask',
@@ -346,6 +367,26 @@ describe('formatMetricsReport', () => {
           total: 2,
           byPlannerModel: { 'opencode/big-pickle': 1, unknown: 1 },
         },
+        sizes: {
+          byScopeFiles: [
+            {
+              bucket: '1-2',
+              tasks: 2,
+              firstAttemptPassRate: 0.5,
+              meanAttempts: 1.5,
+              medianDurationSeconds: 30,
+            },
+          ],
+          byAcceptanceLines: [],
+          largestFirstAttemptPass: null,
+        },
+        scopeRegressions: {
+          detected: 4,
+          verificationPassedAtDetection: 1,
+          verificationFailedAtDetection: 2,
+          recertifiedByHuman: 1,
+          requeuedForAgent: 1,
+        },
       },
       now: {
         total: 11,
@@ -413,6 +454,15 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Total tokens: 1110'));
     assert.ok(formatted.includes('Total change events: 42'));
     assert.ok(formatted.includes('Unique files modified: 3'));
+    assert.ok(formatted.includes('Size by scope files:'));
+    assert.ok(formatted.includes('Size by acceptance lines:'));
+    assert.ok(formatted.includes('1-2'));
+    assert.ok(formatted.includes('Scope regressions:'));
+    assert.ok(formatted.includes('Detected: 4'));
+    assert.ok(formatted.includes('Verification passed at detection: 1'));
+    assert.ok(formatted.includes('Verification failed at detection: 2'));
+    assert.ok(formatted.includes('Recertified by human: 1'));
+    assert.ok(formatted.includes('Requeued for agent: 1'));
   });
 
   it('always renders the historical cost line, including at zero', () => {
@@ -465,6 +515,14 @@ describe('formatMetricsReport', () => {
           coverage: { reportedAttempts: 0, totalAttempts: 0 },
         },
         rejections: { total: 0, byPlannerModel: {} },
+        sizes: { byScopeFiles: [], byAcceptanceLines: [], largestFirstAttemptPass: null },
+        scopeRegressions: {
+          detected: 0,
+          verificationPassedAtDetection: 0,
+          verificationFailedAtDetection: 0,
+          recertifiedByHuman: 0,
+          requeuedForAgent: 0,
+        },
       },
       now: {
         total: 0,
@@ -500,6 +558,12 @@ describe('formatMetricsReport', () => {
       formatted.includes('Harness-reported cost: $0.0000 (0 of 0 attempts reported cost)'),
       formatted,
     );
+    assert.ok(formatted.includes('Scope regressions:'), formatted);
+    assert.ok(formatted.includes('Detected: 0'), formatted);
+    assert.ok(formatted.includes('Verification passed at detection: 0'), formatted);
+    assert.ok(formatted.includes('Verification failed at detection: 0'), formatted);
+    assert.ok(formatted.includes('Recertified by human: 0'), formatted);
+    assert.ok(formatted.includes('Requeued for agent: 0'), formatted);
   });
 });
 

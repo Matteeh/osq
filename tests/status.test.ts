@@ -13,6 +13,31 @@ import { createNewSpec } from '../src/core/new.js';
 import { formatStatusOverview, getStatusOverview } from '../src/core/status.js';
 import { installFakeValidator } from './helpers.js';
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/** Replace the seeded planning sentinel in the proposal and task 1. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
+
 describe('osq status', () => {
   let tmpDir: string;
 
@@ -28,14 +53,16 @@ describe('osq status', () => {
 
   it('getStatusOverview returns all active specs with derived spec and task states', async () => {
     const spec1 = await createNewSpec(tmpDir, 'First Spec');
-    await createNewSpec(tmpDir, 'Second Spec');
+    const spec2 = await createNewSpec(tmpDir, 'Second Spec');
+    await installLocalVerifier(tmpDir, spec1.folderPath);
+    await installLocalVerifier(tmpDir, spec2.folderPath);
 
     // Add a second task to spec1
     await fs.writeFile(
       path.join(spec1.folderPath, 'tasks', '2.md'),
       `---
 title: Task Two
-verify: node -e "process.exit(0)"
+verify: ${PASSING_VERIFY}
 scope: []
 entry: []
 skills: []
@@ -95,7 +122,8 @@ skills: []
   });
 
   it('statusCommand prints formatted status overview with state indicators', async () => {
-    await createNewSpec(tmpDir, 'Payment Gateway');
+    const spec = await createNewSpec(tmpDir, 'Payment Gateway');
+    await installLocalVerifier(tmpDir, spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
     const archiveDir = path.join(tmpDir, 'openspec', 'changes', 'archive');
@@ -127,6 +155,7 @@ skills: []
 
   it('status output clearly distinguishes pending, running, done, and dead tasks', async () => {
     const spec = await createNewSpec(tmpDir, 'Task Lifecycle Spec');
+    await installLocalVerifier(tmpDir, spec.folderPath);
 
     // Create tasks 2, 3, 4
     for (let i = 2; i <= 4; i++) {
@@ -134,7 +163,7 @@ skills: []
         path.join(spec.folderPath, 'tasks', `${i}.md`),
         `---
 title: Task Number ${i}
-verify: node -e "process.exit(0)"
+verify: ${PASSING_VERIFY}
 scope: []
 entry: []
 skills: []

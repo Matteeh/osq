@@ -1,0 +1,17 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:9b165c126179f744d98e253a82a5afb7c53a941aa1caff7366687dc063943c8b",
+    "PLANNER.md": "sha256:646112445e2c578b3db62566c409462e73596061bf0fd4cc26c6bbfc636b9b59",
+    "config": "sha256:e819053c6a36d4d8f7b5a0524d01140dc106f79ac460b69ed30b232cae4847c4",
+    "cli-foundation": "sha256:118e8cf8624f1564ce871072fb686646968145f4a7f5f9b8b2df38f766b00e1b",
+    "metrics-and-reporting": "sha256:3f5e5b4c4962aa50c7b375378df439035546424a142e52f59d55bcd7131a55ea"
+  },
+  "osqVersion": "0.1.0",
+  "harness": "opencode",
+  "model": "deepseek/deepseek-flash",
+  "planner": null,
+  "effort": null,
+  "createdAt": "2026-09-21T19:12:51.158Z",
+  "approvedAt": "2026-09-21T20:24:18.602Z",
+  "planningSessions": 0
+}

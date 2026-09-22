@@ -10,6 +10,31 @@ import { scaffoldProject } from '../src/core/init.js';
 import { getChangesDir } from '../src/core/layout.js';
 import { createNewSpec } from '../src/core/new.js';
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/** Replace the seeded planning sentinel with a real local verifier. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
+
 async function installFakeValidator(projectRoot: string): Promise<void> {
   const binDir = path.join(projectRoot, 'node_modules', '.bin');
   await fs.mkdir(binDir, { recursive: true });
@@ -37,6 +62,7 @@ describe('osq approve', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Order Flow');
     specFolder = spec.folderPath;
+    await installLocalVerifier(tmpDir, specFolder);
   });
 
   afterEach(async () => {

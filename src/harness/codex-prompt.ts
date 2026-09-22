@@ -91,6 +91,7 @@ export async function buildCodexPrompt(options: SpawnTaskOptions): Promise<strin
     ...priorContextLines({
       attempt: options.attempt,
       reason: options.priorFailureReason,
+      output: options.priorFailureOutput,
       resultPath: priorResult,
     }),
     ...(deltas.length > 0 ? ['Delta Specs:', ...deltas.map((p) => `- ${p}`)] : []),

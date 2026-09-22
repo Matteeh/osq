@@ -12,6 +12,13 @@ import { createNewSpec } from '../src/core/new.js';
 import { type PlanRecord, appendPlanRecord, getPlanLogPath } from '../src/core/planning.js';
 import { installFakeValidator } from './helpers.js';
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 function sha256(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
 }
@@ -51,7 +58,7 @@ function planExited(sessionId: string): PlanRecord {
 
 const PROPOSAL = `---
 title: Manifest Probe
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 features:
   reads:
     - watcher-and-harness
@@ -91,6 +98,16 @@ describe('run manifest', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Manifest Probe');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededTaskPath = path.join(specFolder, 'tasks', '1.md');
+    const seededTask = await fs.readFile(seededTaskPath, 'utf8').catch(() => null);
+    if (seededTask !== null) {
+      await fs.writeFile(
+        seededTaskPath,
+        seededTask.replace(/^verify:.*$/m, 'verify: node verify.cjs'),
+        'utf8',
+      );
+    }
 
     await fs.writeFile(path.join(specFolder, 'proposal.md'), PROPOSAL, 'utf8');
     await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), agentsContent, 'utf8');

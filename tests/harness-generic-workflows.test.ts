@@ -26,10 +26,18 @@ import { startWatcher } from '../src/watcher/loop.js';
 import { runTask } from '../src/watcher/runner.js';
 import { FAKE_CODEX, createScaffoldedProject } from './codex/support.js';
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 const TASK_MD = [
   '---',
   'title: When a generic workflow task runs',
-  'verify: node -e "process.exit(0)"',
+  `verify: ${PASSING_VERIFY}`,
   'scope: []',
   'entry: []',
   'skills: []',
@@ -38,6 +46,23 @@ const TASK_MD = [
   '- [ ] generic workflow passes',
   '',
 ].join('\n');
+
+/** Replace the seeded planning sentinel in the proposal and task 1. */
+async function installLocalVerifier(root: string, folderPath: string): Promise<void> {
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  for (const rel of ['proposal.md', path.join('tasks', '1.md')]) {
+    const target = path.join(folderPath, rel);
+    const content = await fs.readFile(target, 'utf8').catch(() => null);
+    if (content === null) {
+      continue;
+    }
+    await fs.writeFile(
+      target,
+      content.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+}
 
 const ENV_KEYS = ['AGY_PATH', 'OPENCODE_PATH', 'CODEX_PATH', 'OSQ_MODEL'] as const;
 const SAVED_ENV = new Map(ENV_KEYS.map((key) => [key, process.env[key]]));
@@ -107,6 +132,7 @@ async function createApprovedChange(
   title: string,
 ): Promise<string> {
   const spec = await createNewSpec(root, title);
+  await installLocalVerifier(root, spec.folderPath);
   await fs.writeFile(path.join(spec.folderPath, 'tasks', '1.md'), TASK_MD, 'utf8');
   await approveSpec(root, spec.specId, config);
   return spec.folderPath;
@@ -324,6 +350,7 @@ describe('approval manifest uses the shared executor identity', () => {
       planner: { harness: 'mock', model: 'planner-m' },
     });
     const spec = await createNewSpec(root, 'Approved Identity');
+    await installLocalVerifier(root, spec.folderPath);
     await fs.writeFile(path.join(spec.folderPath, 'tasks', '1.md'), TASK_MD, 'utf8');
     await approveSpec(root, spec.specId, config);
 

@@ -156,6 +156,76 @@
       },
       "total": 2
     },
+    "scopeRegressions": {
+      "detected": 0,
+      "recertifiedByHuman": 0,
+      "requeuedForAgent": 0,
+      "verificationFailedAtDetection": 0,
+      "verificationPassedAtDetection": 0
+    },
+    "sizes": {
+      "byAcceptanceLines": [
+        {
+          "bucket": "1-2",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "3-4",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "5-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "over-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        }
+      ],
+      "byScopeFiles": [
+        {
+          "bucket": "1-2",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "3-4",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "5-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        },
+        {
+          "bucket": "over-8",
+          "firstAttemptPassRate": 0,
+          "meanAttempts": 0,
+          "medianDurationSeconds": null,
+          "tasks": 0
+        }
+      ],
+      "largestFirstAttemptPass": null
+    },
     "unexplainedReruns": {
       "byTask": {
         "009-watcher-observability/1": 1,

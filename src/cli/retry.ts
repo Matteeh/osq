@@ -17,7 +17,15 @@ export async function retryCommand(
   try {
     const result = await retrySpec(cwd, specId, target, config);
     const label = result.target === 'change' ? 'change' : `task ${result.target}`;
-    console.log(`Retried ${result.specId} ${label} (next attempt: ${result.attempt})`);
+    if (result.recertification === 'passed') {
+      console.log(`Recertified ${result.specId} ${label} (scope regression cleared)`);
+    } else if (result.recertification === 'requeued') {
+      console.log(
+        `Requeued ${result.specId} ${label} for agent work (next attempt: ${result.attempt})`,
+      );
+    } else {
+      console.log(`Retried ${result.specId} ${label} (next attempt: ${result.attempt})`);
+    }
     console.log(`  Reason: ${result.reason}`);
     for (const marker of result.retainedMarkers) {
       console.log(`  Retained: ${marker}`);

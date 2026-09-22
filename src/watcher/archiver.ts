@@ -5,9 +5,11 @@ import type { OsqConfig } from '../core/config.js';
 import { mergeDelta, parseDelta } from '../core/delta.js';
 import { getArchiveDir } from '../core/layout.js';
 import { parseSpecMdFromFolder, parseTaskMd } from '../core/parser.js';
+import { listCanonicalDoneNumbers } from '../core/scope-hash.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
+import { auditScopeRegressions } from './regression.js';
 import { runVerificationGate } from './verify.js';
 
 /**
@@ -199,6 +201,21 @@ export async function checkAndArchiveSpec(
   }
 
   const runDir = path.join(specFolderPath, '.run');
+
+  // Archive scope recertification gate: audit every automated canonical done
+  // task in one pass before any archive-time verification runs. The shared
+  // pre-dispatch audit owns detection verification, markers, events, and
+  // attribution; any stale task halts archival and leaves the folder active.
+  const audit = await auditScopeRegressions({
+    projectRoot,
+    specFolderPath,
+    eligibleTaskNumbers: await listCanonicalDoneNumbers(runDir),
+    verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+  });
+  if (audit.stale.length > 0) {
+    return false;
+  }
+
   const tasksDir = path.join(specFolderPath, 'tasks');
   const taskFiles = (await fs.readdir(tasksDir).catch((): string[] => []))
     .filter((entry) => entry.endsWith('.md'))

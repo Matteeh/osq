@@ -32,6 +32,13 @@ import {
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 /** Test adapter that edits a scoped file before reporting a successful exit. */
 class ScopeWritingAdapter implements HarnessAdapter {
   readonly name = 'scope-writer';
@@ -401,7 +408,7 @@ describe('measures', () => {
   });
 
   describe('runner integration', () => {
-    const successVerify = 'node -e "process.exit(0)"';
+    const successVerify = 'node verify.cjs';
 
     async function setupProject(
       title: string,
@@ -411,6 +418,16 @@ describe('measures', () => {
       await installFakeValidator(projectRoot);
       await scaffoldProject(projectRoot);
       const spec = await createNewSpec(projectRoot, title);
+      await fs.writeFile(path.join(projectRoot, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+      const seededProposalPath = path.join(spec.folderPath, 'proposal.md');
+      const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+      if (seededProposal !== null) {
+        await fs.writeFile(
+          seededProposalPath,
+          seededProposal.replace(/^verify:.*$/m, 'verify: node verify.cjs'),
+          'utf8',
+        );
+      }
       const task = [
         '---',
         `title: ${title}`,

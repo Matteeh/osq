@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
@@ -107,7 +108,14 @@ async function writeTaskFile(
   await fs.writeFile(taskPath, `---\n${frontmatter}\n---\n## Acceptance\n${acceptance}\n`);
 }
 
-const PASSING_VERIFY = 'node -e "process.exit(0)"';
+const PASSING_VERIFY = 'node verify.cjs';
+const PLACEHOLDER_VERIFY = 'node -e "process.exit(0)"';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
 
 const MODIFIED_DELTA = `# Spec Delta: sample
 
@@ -164,6 +172,9 @@ describe('Spec Linter', () => {
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-lint-test-'));
     await scaffoldProject(tmpDir);
+    // A real local verifier so the seeded template sentinel can be replaced
+    // with a command that resolves inside the temporary project root.
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     // `createNewSpec` seeds from `specs/_template`, but the configured change
     // root is `openspec/changes`; relocate so directory scans resolve it.
     const spec = await createNewSpec(tmpDir, 'Test Feature');
@@ -183,9 +194,21 @@ describe('Spec Linter', () => {
     // `features.writes` is retired from the proposal schema; ensure the seed
     // document never carries it regardless of which template was copied.
     const seeded = await fs.readFile(specMdPath, 'utf8');
-    const cleaned = seeded.replace(/^[ \t]*writes:[^\n]*\n/m, '');
+    const cleaned = seeded
+      .replace(/^[ \t]*writes:[^\n]*\n/m, '')
+      .replace(/^verify:[^\n]*$/m, `verify: ${PASSING_VERIFY}`);
     if (cleaned !== seeded) {
       await fs.writeFile(specMdPath, cleaned, 'utf8');
+    }
+    // The seeded task carries the same sentinel; swap it for the local verifier.
+    const seededTaskPath = path.join(specFolder, 'tasks', '1.md');
+    const seededTask = await fs.readFile(seededTaskPath, 'utf8').catch(() => null);
+    if (seededTask !== null) {
+      await fs.writeFile(
+        seededTaskPath,
+        seededTask.replace(/^verify:[^\n]*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
     }
     await installFakeOpenSpec(tmpDir);
   });
@@ -367,7 +390,7 @@ None`;
     const items = Array.from({ length: 8 }, (_, i) => `- [ ] item ${i + 1}`).join('\n');
     const content = `---
 title: Too many acceptance lines
-verify: pnpm test
+verify: ${PASSING_VERIFY}
 scope: []
 entry: []
 skills: []
@@ -385,7 +408,7 @@ ${items}`;
     const taskPath = path.join(specFolder, 'tasks', '1.md');
     const content = `---
 title: When order is cancelled and refund issued
-verify: pnpm test
+verify: ${PASSING_VERIFY}
 scope: []
 entry: []
 skills: []
@@ -761,6 +784,270 @@ The system SHALL load configuration.
 
     assert.equal(result.valid, true, result.errors.join('\n'));
     assert.equal(result.errors.length, 0);
+  });
+
+  it('rejects the template placeholder in a proposal verify', async () => {
+    const specMdPath = path.join(specFolder, 'spec.md');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const content = (await fs.readFile(specMdPath, 'utf8')).replace(
+      /^verify:[^\n]*$/m,
+      `verify: ${PLACEHOLDER_VERIFY}`,
+    );
+    await fs.rm(specMdPath);
+    await fs.writeFile(proposalPath, content, 'utf8');
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some((e) => e.includes('proposal.md') && e.includes('final tree')),
+      result.errors.join('\n'),
+    );
+  });
+
+  it('rejects the template placeholder in a task verify with one message', async () => {
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: Valid title\nverify: ${PLACEHOLDER_VERIFY}\nscope: []\nentry: []\nskills: []`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    const placeholderErrors = result.errors.filter((e) => e.includes('final tree'));
+    assert.equal(placeholderErrors.length, 1, result.errors.join('\n'));
+    assert.ok(placeholderErrors[0].includes('Task in 1.md'));
+  });
+
+  it('rejects normalized placeholder equivalents', async () => {
+    const variants = [
+      'node   -e    "process.exit(0)"',
+      "node -e 'process.exit(0)'",
+      'node --eval "process.exit(0)"',
+      'node -e "process.exit(0);"',
+      "node  --eval  'process.exit(0);'",
+    ];
+
+    for (const variant of variants) {
+      await writeTaskFile(
+        specFolder,
+        '1',
+        `title: Valid title\nverify: ${variant}\nscope: []\nentry: []\nskills: []`,
+      );
+      const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+      assert.equal(result.valid, false, variant);
+      assert.ok(
+        result.errors.some((e) => e.includes('final tree')),
+        `${variant}: ${result.errors.join('\n')}`,
+      );
+    }
+  });
+
+  it('rejects package-script invocations whose script is absent', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'tmp', scripts: { test: 'node --test' } }),
+      'utf8',
+    );
+    const forms: Array<[string, string]> = [
+      ['pnpm build', 'build'],
+      ['pnpm run deploy', 'deploy'],
+      ['npm run release', 'release'],
+      ['yarn package-lib', 'package-lib'],
+      ['yarn run ship', 'ship'],
+      ['bun run bundle', 'bundle'],
+    ];
+
+    for (const [command, script] of forms) {
+      await writeTaskFile(
+        specFolder,
+        '1',
+        `title: Valid title\nverify: ${command}\nscope: []\nentry: []\nskills: []`,
+      );
+      const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+      assert.equal(result.valid, false, command);
+      assert.ok(
+        result.errors.some((e) => e.includes(`"${script}"`) && e.includes('package.json')),
+        `${command}: ${result.errors.join('\n')}`,
+      );
+    }
+  });
+
+  it('accepts a present package script without a path warning', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'tmp', scripts: { verify: 'node verify.cjs' } }),
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: pnpm verify\nscope: []\nentry: []\nskills: []',
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(
+      result.warnings.some((w) => w.includes('names neither')),
+      false,
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('warns when a task verify names no path or package script', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'tmp', scripts: {} }),
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: mystery-runner --check\nscope: []\nentry: []\nskills: []',
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.ok(
+      result.warnings.some((w) => w.includes('Task in 1.md') && w.includes('mystery-runner')),
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('warns when a proposal verify names no path or package script', async () => {
+    const specMdPath = path.join(specFolder, 'spec.md');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const content = (await fs.readFile(specMdPath, 'utf8')).replace(
+      /^verify:[^\n]*$/m,
+      'verify: mystery-runner --check',
+    );
+    await fs.rm(specMdPath);
+    await fs.writeFile(proposalPath, content, 'utf8');
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.ok(
+      result.warnings.some((w) => w.includes('proposal.md') && w.includes('mystery-runner')),
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('does not warn when a verify names an existing repository path', async () => {
+    await fs.mkdir(path.join(tmpDir, 'scripts'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'scripts', 'check.mjs'), 'process.exit(0);\n', 'utf8');
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: node scripts/check.mjs\nscope: []\nentry: []\nskills: []',
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(result.warnings.length, 0, result.warnings.join('\n'));
+  });
+
+  it('accepts a path-shaped binary that exists', async () => {
+    await fs.mkdir(path.join(tmpDir, 'bin'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'bin', 'verify.sh'), '#!/bin/sh\nexit 0\n', {
+      mode: 0o755,
+    });
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: bin/verify.sh\nscope: []\nentry: []\nskills: []',
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(result.warnings.length, 0, result.warnings.join('\n'));
+  });
+
+  it('handles a missing or malformed root package manifest deterministically', async () => {
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: pnpm test\nscope: []\nentry: []\nskills: []',
+    );
+
+    const missing = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(missing.valid, false);
+    assert.ok(missing.errors.some((e) => e.includes('"test"') && e.includes('package.json')));
+
+    await fs.writeFile(path.join(tmpDir, 'package.json'), '{ not valid json', 'utf8');
+    const malformed = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(malformed.valid, false);
+    assert.ok(malformed.errors.some((e) => e.includes('"test"') && e.includes('package.json')));
+  });
+
+  it('retains the chaining diagnostic without reinterpreting it', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'tmp', scripts: {} }),
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      'title: Valid title\nverify: pnpm missing-a && pnpm missing-b\nscope: []\nentry: []\nskills: []',
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((e) => e.includes('chains commands')));
+    assert.equal(
+      result.errors.some((e) => e.includes('package script')),
+      false,
+      result.errors.join('\n'),
+    );
+  });
+
+  it('keeps checked-in fixture verification local and free of the placeholder', async () => {
+    const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+    const bases = [path.join(repoRoot, 'fixture'), path.join(repoRoot, 'tests', 'fixtures')];
+    const violations: string[] = [];
+
+    const visit = async (dir: string, base: string): Promise<void> => {
+      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await visit(full, base);
+          continue;
+        }
+        if (!entry.isFile() || !entry.name.endsWith('.md')) {
+          continue;
+        }
+        const content = await fs.readFile(full, 'utf8');
+        if (!/^verify:/m.test(content)) {
+          continue;
+        }
+        const rel = path.relative(repoRoot, full);
+        if (content.includes(PLACEHOLDER_VERIFY)) {
+          violations.push(`${rel} still uses the template placeholder`);
+        }
+        const rootName = path.relative(base, full).split(path.sep)[0];
+        const fixtureRoot = path.join(base, rootName);
+        const verifier = await fs
+          .stat(path.join(fixtureRoot, 'verify.cjs'))
+          .then(() => true)
+          .catch(() => false);
+        if (!verifier) {
+          violations.push(`${rel} has no verify.cjs in ${path.relative(repoRoot, fixtureRoot)}`);
+        }
+      }
+    };
+
+    for (const base of bases) {
+      await visit(base, base);
+    }
+
+    assert.deepEqual(violations, []);
   });
 
   it('registers the lint command in the CLI', () => {

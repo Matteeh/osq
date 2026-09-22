@@ -104,6 +104,7 @@ export function buildOpencodePrompt(options: SpawnTaskOptions): string {
     ...priorContextLines({
       attempt: options.attempt,
       reason: options.priorFailureReason,
+      output: options.priorFailureOutput,
       resultPath: priorResult,
     }),
     '',

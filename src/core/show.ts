@@ -14,6 +14,28 @@ export interface TimelineEvent {
   data?: Record<string, unknown>;
 }
 
+/** One differing path paired with its recorded later-task attribution. */
+export interface RecertificationAttribution {
+  path: string;
+  attribution: string;
+}
+
+/**
+ * One human recertification decision projected from a typed `recertification`
+ * event. Every optional field is independently nullable so malformed event data
+ * renders as unavailable without dropping the decision.
+ */
+export interface RecertificationDetail {
+  taskNumber: string;
+  timestamp: string | null;
+  outcome: 'passed' | 'requeued' | null;
+  differingPaths: string[];
+  attribution: RecertificationAttribution[];
+  verify: string | null;
+  exitCode: number | null;
+  timedOut: boolean | null;
+}
+
 export interface TaskDetail {
   taskNumber: string;
   fileName: string;
@@ -64,6 +86,7 @@ export interface SpecDetails {
   delta: string;
   tasks: TaskDetail[];
   planningSessions: PlanningSessionDetail[];
+  recertifications: RecertificationDetail[];
   timeline: TimelineEvent[];
 }
 
@@ -76,6 +99,86 @@ function matchesFolder(folderName: string, query: string): boolean {
   if (folderName.startsWith(`${trimmed}-`) || folderName.startsWith(`${padded}-`)) return true;
   if (folderName.endsWith(`-${trimmed}`)) return true;
   return false;
+}
+
+function numericTaskTarget(value: unknown): string | null {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+    return String(value);
+  }
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    return value.trim();
+  }
+  return null;
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')
+    .map((entry) => entry.trim());
+}
+
+function attributionEntries(value: unknown): RecertificationAttribution[] {
+  if (!Array.isArray(value)) return [];
+  const entries: RecertificationAttribution[] = [];
+  for (const entry of value) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const { path: rawPath, attribution: rawAttribution } = entry as {
+      path?: unknown;
+      attribution?: unknown;
+    };
+    if (typeof rawPath !== 'string' || rawPath.trim() === '') continue;
+    const attribution =
+      typeof rawAttribution === 'string' && rawAttribution.trim() !== ''
+        ? rawAttribution.trim()
+        : typeof rawAttribution === 'number' && Number.isFinite(rawAttribution)
+          ? String(rawAttribution)
+          : 'unknown';
+    entries.push({ path: rawPath.trim(), attribution });
+  }
+  return entries;
+}
+
+/**
+ * Projects one typed `recertification` event into a display row. Only explicit,
+ * well-formed values are surfaced; everything else is unavailable. The row is
+ * built solely from the already parsed event, never from marker files.
+ */
+function buildRecertification(taskNumber: string, event: TimelineEvent): RecertificationDetail {
+  const data = event.data ?? {};
+  const differingPaths = [...new Set(stringList(data.differingPaths))].sort();
+  const recorded = attributionEntries(data.attribution);
+  const byPath = new Map<string, string>();
+  for (const entry of recorded) {
+    if (!byPath.has(entry.path)) byPath.set(entry.path, entry.attribution);
+  }
+  const allPaths = [...new Set([...differingPaths, ...recorded.map((entry) => entry.path)])].sort();
+  const attribution = allPaths.map((path) => ({
+    path,
+    attribution: byPath.get(path) ?? 'unknown',
+  }));
+
+  const rawTimestamp = typeof event.timestamp === 'string' ? event.timestamp.trim() : '';
+  const timestamp =
+    rawTimestamp && !Number.isNaN(new Date(rawTimestamp).getTime()) ? rawTimestamp : null;
+  const outcome: 'passed' | 'requeued' | null =
+    data.outcome === 'passed' ? 'passed' : data.outcome === 'requeued' ? 'requeued' : null;
+  const verify =
+    typeof data.command === 'string' && data.command.trim() !== '' ? data.command.trim() : null;
+  const exitCode =
+    typeof data.exitCode === 'number' && Number.isFinite(data.exitCode) ? data.exitCode : null;
+  const timedOut = typeof data.timedOut === 'boolean' ? data.timedOut : null;
+
+  return {
+    taskNumber,
+    timestamp,
+    outcome,
+    differingPaths,
+    attribution,
+    verify,
+    exitCode,
+    timedOut,
+  };
 }
 
 export async function resolveSpecFolder(
@@ -238,6 +341,10 @@ export async function getSpecDetails(
 
   const taskEventsMap = new Map<string, TimelineEvent[]>();
   const timeline: TimelineEvent[] = [];
+  // Typed recertification decisions from numbered task streams only, kept with
+  // their original stream order so ties break deterministically.
+  const recertificationEvents: { seq: number; streamTask: string; event: TimelineEvent }[] = [];
+  let eventSeq = 0;
 
   for (const eventFile of eventFiles) {
     const taskNum = path.basename(eventFile, '.jsonl');
@@ -262,6 +369,10 @@ export async function getSpecDetails(
           };
           taskEvents.push(event);
           timeline.push(event);
+          if (event.type === 'recertification' && /^\d+$/.test(taskNum)) {
+            recertificationEvents.push({ seq: eventSeq, streamTask: taskNum, event });
+          }
+          eventSeq++;
         } catch {}
       }
       taskEventsMap.set(taskNum, taskEvents);
@@ -277,6 +388,26 @@ export async function getSpecDetails(
     }
     return a.timestamp.localeCompare(b.timestamp);
   });
+
+  const recertifications = recertificationEvents
+    .map(({ seq, streamTask, event }) => ({
+      seq,
+      row: buildRecertification(numericTaskTarget(event.data?.task) ?? streamTask, event),
+    }))
+    .sort((a, b) => {
+      const timeA = a.row.timestamp ? new Date(a.row.timestamp).getTime() : null;
+      const timeB = b.row.timestamp ? new Date(b.row.timestamp).getTime() : null;
+      if (timeA !== null && timeB !== null && timeA !== timeB) {
+        return timeA - timeB;
+      }
+      const numA = Number.parseInt(a.row.taskNumber, 10);
+      const numB = Number.parseInt(b.row.taskNumber, 10);
+      if (numA !== numB) {
+        return numA - numB;
+      }
+      return a.seq - b.seq;
+    })
+    .map((entry) => entry.row);
 
   const tasks: TaskDetail[] = [];
   for (const taskFileName of taskEntries) {
@@ -381,6 +512,7 @@ export async function getSpecDetails(
     delta: specData.delta,
     tasks,
     planningSessions,
+    recertifications,
     timeline,
   };
 }
@@ -491,6 +623,37 @@ export function formatSpecDetails(details: SpecDetails): string {
       lines.push(
         `  ${session.startTime} ${session.harness}/${session.model}${agent} exit: ${exit} wall: ${wall}`,
       );
+    }
+  }
+
+  // Derived, append-only recertification view. It is rendered only when typed
+  // decisions exist and never replaces the raw event timeline below.
+  if (details.recertifications.length > 0) {
+    lines.push('');
+    lines.push('Recertifications:');
+    for (const row of details.recertifications) {
+      const label =
+        row.outcome === 'passed'
+          ? 'recertified'
+          : row.outcome === 'requeued'
+            ? 'requeued for agent work'
+            : 'unavailable';
+      lines.push(`  Task ${row.taskNumber} ${row.timestamp ?? 'unavailable'} [${label}]`);
+      lines.push(`      Verify: ${row.verify ?? 'unavailable'}`);
+      lines.push(`      Exit code: ${row.exitCode ?? 'unavailable'}`);
+      lines.push(
+        `      Timed out: ${row.timedOut === null ? 'unavailable' : row.timedOut ? 'yes' : 'no'}`,
+      );
+      if (row.attribution.length > 0) {
+        lines.push('      Differing paths:');
+        for (const entry of row.attribution) {
+          const attribution =
+            entry.attribution === 'ambiguous' || entry.attribution === 'unknown'
+              ? entry.attribution
+              : `attributed to task ${entry.attribution}`;
+          lines.push(`        - ${entry.path} — ${attribution}`);
+        }
+      }
     }
   }
 

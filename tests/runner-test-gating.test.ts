@@ -16,10 +16,17 @@ interface ParsedEvent {
   data?: Record<string, unknown>;
 }
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 const PROPOSAL = `---
 title: Test gating
 depends_on: []
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 features:
   reads: []
 ---
@@ -33,7 +40,7 @@ const TASKS_MD = `# Tasks
 - [ ] 1. When test gating applies, undeclared changes halt the task
 `;
 
-const PASSING_VERIFY = 'node -e "process.exit(0)"';
+const PASSING_VERIFY = 'node verify.cjs';
 const FAILING_VERIFY = 'node -e "process.exit(1)"';
 
 /**
@@ -123,6 +130,7 @@ describe('Runner test modification gating', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-test-gating-test-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
 
     existingTestPath = path.join(tmpDir, 'tests', 'existing.test.ts');
     await fs.mkdir(path.dirname(existingTestPath), { recursive: true });

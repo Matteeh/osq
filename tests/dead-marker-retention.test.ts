@@ -12,8 +12,14 @@ import { MockAdapter } from '../src/harness/mock.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
 
-const PASSING_VERIFY = 'node -e "process.exit(0)"';
+const PASSING_VERIFY = 'node verify.cjs';
 const FAILING_VERIFY = 'node -e "process.exit(1)"';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
 
 async function writeTask(specFolder: string, verify: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
@@ -49,6 +55,16 @@ describe('Failure marker retention across approval and retry', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Dead Retention');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     adapter = new MockAdapter();
   });
 

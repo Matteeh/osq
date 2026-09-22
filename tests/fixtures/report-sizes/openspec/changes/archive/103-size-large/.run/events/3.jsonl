@@ -1,0 +1,3 @@
+{"type":"measures","timestamp":"2026-09-01T01:20:00.000Z","data":{"phase":"start","scopeFiles":1,"scopeLines":0,"repoFiles":0,"repoLines":0,"importFanIn":0,"proposalWords":0,"taskWords":0,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"started","timestamp":"2026-09-01T01:20:01.000Z","data":{"tier":"coding","taskTitle":"x","scope":[],"entry":[],"skills":[]}}
+{"type":"dead","timestamp":"2026-09-01T01:20:02.000Z","data":{}}

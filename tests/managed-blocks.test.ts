@@ -1,9 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { MANAGED_AGENTS_MD_BODY } from '../src/core/init.js';
+import {
+  MANAGED_AGENTS_MD_BODY,
+  OSQ_END_MARKER,
+  OSQ_START_MARKER,
+  updatePlannerMd,
+} from '../src/core/init.js';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const agentsMdPath = path.join(repoRoot, 'AGENTS.md');
@@ -82,5 +88,61 @@ describe('managed instructions block OpenSpec protocol', () => {
     assert.match(text, /proposal\.md/);
     assert.match(text, /\.run\/results\/<n>\.md/);
     assert.match(text, /regressed/);
+  });
+});
+
+describe('planner managed block coexistence', () => {
+  const OPENSPEC_START = '<!-- OPENSPEC:START -->';
+  const OPENSPEC_END = '<!-- OPENSPEC:END -->';
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-managed-blocks-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('preserves foreign text and blocks across repeated initialization', async () => {
+    const plannerPath = path.join(tmpDir, 'PLANNER.md');
+    await fs.writeFile(
+      plannerPath,
+      `# House rules\n\n${OPENSPEC_START}\nforeign planner protocol\n${OPENSPEC_END}\n\nKeep this epilogue.\n`,
+      'utf8',
+    );
+
+    await updatePlannerMd(tmpDir);
+    await updatePlannerMd(tmpDir);
+
+    const content = await fs.readFile(plannerPath, 'utf8');
+    assert.equal(content.split(OPENSPEC_START).length - 1, 1);
+    assert.equal(content.split(OPENSPEC_END).length - 1, 1);
+    assert.ok(content.includes('foreign planner protocol'));
+    assert.ok(content.includes('Keep this epilogue.'));
+    assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+    assert.ok(content.includes('re-runnable against the final tree'));
+    assert.ok(content.includes('A file belongs to one task'));
+  });
+
+  it('updates only the osq-managed block beside a foreign block', async () => {
+    const plannerPath = path.join(tmpDir, 'PLANNER.md');
+    await fs.writeFile(
+      plannerPath,
+      `# House rules\n\n${OPENSPEC_START}\nforeign planner protocol\n${OPENSPEC_END}\n\n${OSQ_START_MARKER}\nstale osq block\n${OSQ_END_MARKER}\n\nEpilogue.\n`,
+      'utf8',
+    );
+
+    await updatePlannerMd(tmpDir);
+
+    const content = await fs.readFile(plannerPath, 'utf8');
+    assert.equal(content.includes('stale osq block'), false);
+    assert.ok(content.includes('foreign planner protocol'));
+    assert.ok(content.includes('Epilogue.'));
+    assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+    assert.ok(content.includes('re-runnable against the final tree'));
+    assert.ok(content.includes('name the shared file in the proposal'));
   });
 });

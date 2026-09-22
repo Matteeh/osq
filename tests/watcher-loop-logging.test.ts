@@ -15,6 +15,30 @@ import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harne
 import { formatIdleStatus, runWatcherCycle, startWatcher } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
+/**
+ * Seed the deterministic local verifier and point a freshly created change's
+ * proposal at it. `createNewSpec` intentionally seeds the template planning
+ * sentinel, which the verify-command trust lint rejects at approval.
+ */
+async function useLocalVerifier(projectRoot: string, specFolder: string): Promise<void> {
+  await fs.writeFile(path.join(projectRoot, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  const proposalPath = path.join(specFolder, 'proposal.md');
+  const proposal = await fs.readFile(proposalPath, 'utf8');
+  await fs.writeFile(
+    proposalPath,
+    proposal.replace(/^verify:\s*.*$/m, `verify: ${PASSING_VERIFY}`),
+    'utf8',
+  );
+}
+
 class FakeStream extends Writable {
   isTTY: boolean;
   private chunks: string[] = [];
@@ -123,7 +147,7 @@ async function writeTask1(specFolder: string): Promise<void> {
   const task = [
     '---',
     'title: When a spec is processed, the loop logs one line',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${PASSING_VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -151,6 +175,7 @@ describe('Watcher loop permanent logging', () => {
 
   it('logs a single pick-up line when an approved spec is detected', async () => {
     const spec = await createNewSpec(tmpDir, 'Pick Up Logging');
+    await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
@@ -164,6 +189,7 @@ describe('Watcher loop permanent logging', () => {
 
   it('logs a single archive line when a completed spec is archived', async () => {
     const spec = await createNewSpec(tmpDir, 'Archive Logging');
+    await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
@@ -177,6 +203,7 @@ describe('Watcher loop permanent logging', () => {
 
   it('logs a single halt line when a task dies', async () => {
     const spec = await createNewSpec(tmpDir, 'Halt Logging');
+    await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     adapter.setBehavior({ exitCode: 1 });
@@ -220,6 +247,7 @@ describe('Watcher loop symbol formatting', () => {
 
   async function setupApprovedSpec(): Promise<void> {
     const spec = await createNewSpec(tmpDir, 'Symbol Logging');
+    await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
   }
@@ -318,11 +346,13 @@ describe('Watcher idle status', () => {
 
   it('sets an idle status with the waiting count and last archived spec', async () => {
     const first = await createNewSpec(tmpDir, 'First Spec');
+    await useLocalVerifier(tmpDir, first.folderPath);
     await writeTask1(first.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     await runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter);
 
     const second = await createNewSpec(tmpDir, 'Second Spec');
+    await useLocalVerifier(tmpDir, second.folderPath);
     await writeTask1(second.folderPath);
     await approveSpec(tmpDir, '002', DEFAULT_CONFIG);
     await acquireLock(path.join(second.folderPath, '.run'), '1');
@@ -354,6 +384,7 @@ describe('Watcher SIGINT handling', () => {
 
   it('clears status, restores the cursor, logs waiting, then exits on second SIGINT', async () => {
     const spec = await createNewSpec(tmpDir, 'Sigint Spec');
+    await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

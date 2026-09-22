@@ -1,6 +1,6 @@
 ---
 title: Rejected change with a recorded planner
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 ---
 ## Goal
 

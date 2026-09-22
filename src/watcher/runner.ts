@@ -106,6 +106,11 @@ export async function runTask(
   }
   const taskData = parseTaskMd(taskContent);
 
+  const regression = await guardScopeRegression(projectRoot, specFolderPath, taskNumber, config);
+  if (regression) {
+    logOutcome(false, 'regressed', regression.error);
+    return regression;
+  }
   const lockResult = await acquireTaskLock(runDir, taskNumber);
   if (!lockResult.acquired) {
     logOutcome(false, 'already_running');
@@ -135,12 +140,6 @@ export async function runTask(
   }
 
   try {
-    const regression = await guardScopeRegression(projectRoot, specFolderPath, taskNumber);
-    if (regression) {
-      logOutcome(false, 'regressed', regression.error);
-      return regression;
-    }
-
     const testSnapshot = taskData.testsModify ? null : await snapshotTestFiles(projectRoot);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
     await measures.emitStart();

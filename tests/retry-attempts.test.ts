@@ -13,6 +13,14 @@ import { readRetryContext } from '../src/watcher/attempt.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
 
+const VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 class RecordingAdapter extends MockAdapter {
   readonly spawns: SpawnTaskOptions[] = [];
 
@@ -27,7 +35,7 @@ async function writeTask(specFolder: string): Promise<void> {
   const task = [
     '---',
     'title: When a task is retried, the next start carries the attempt',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -57,6 +65,14 @@ describe('retry attempt numbering', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Retry Attempts');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const proposal = await fs.readFile(proposalPath, 'utf8');
+    await fs.writeFile(
+      proposalPath,
+      proposal.replace(/^verify:\s*.*$/m, `verify: ${VERIFY}`),
+      'utf8',
+    );
     await writeTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
   });

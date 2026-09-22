@@ -3,6 +3,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import type { Logger } from '../core/logger.js';
+import type { ScopePathAttribution } from '../core/scope-hash.js';
+
+export type { ScopePathAttribution } from '../core/scope-hash.js';
 
 export type HarnessEventType =
   | 'started'
@@ -19,6 +22,7 @@ export type HarnessEventType =
   | 'dead'
   | 'regressed'
   | 'retry'
+  | 'recertification'
   | 'rejected';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
@@ -124,6 +128,13 @@ export interface RegressedEventData {
   command?: string;
   differingPaths?: string[];
   reason?: string;
+  /** Structured per-path attribution detected by the scope recertification audit. */
+  attribution?: ScopePathAttribution[];
+  recordedHash?: string;
+  currentHash?: string;
+  output?: string;
+  timedOut?: boolean;
+  verificationPassed?: boolean;
 }
 
 /**
@@ -135,6 +146,31 @@ export interface RetryEventData {
   readonly target: string;
   readonly reason: string;
   readonly attempt: number;
+}
+
+/**
+ * Payload of a `recertification` event recording a human retry of an active
+ * scope regression. `passed` refreshes the trusted done record without an agent
+ * or execution attempt; `requeued` retains both markers and carries the next
+ * attempt and failed output so a restarted watcher can rebuild the executor
+ * context from append-only state alone.
+ */
+export interface RecertificationEventData {
+  readonly task: string;
+  readonly outcome: 'passed' | 'requeued';
+  readonly differingPaths: string[];
+  readonly attribution: ScopePathAttribution[];
+  readonly command: string;
+  readonly exitCode: number;
+  readonly output: string;
+  readonly timedOut: boolean;
+  /** Recorded hash before the change, or the original trusted hash. */
+  readonly recordedHash: string;
+  readonly currentHash: string;
+  /** Next execution attempt; present only for a requeue. */
+  readonly attempt?: number;
+  /** Failure reason carried to the next executor; present only for a requeue. */
+  readonly reason?: string;
 }
 
 /**
@@ -162,6 +198,7 @@ export interface OsqEventData {
   dead: DeadEventData;
   regressed: RegressedEventData;
   retry: RetryEventData;
+  recertification: RecertificationEventData;
   rejected: RejectedEventData;
 }
 
@@ -199,6 +236,8 @@ export interface SpawnTaskOptions {
   attempt?: number;
   /** Failure reason carried from the preceding retry transition, when any. */
   priorFailureReason?: string;
+  /** Failed verification output carried from a requeued recertification, when any. */
+  priorFailureOutput?: string;
 }
 
 export interface SpawnResult {
@@ -360,22 +399,42 @@ export function capabilityRuleLines(rules: readonly string[]): string[] {
 export interface PriorContext {
   readonly attempt?: number;
   readonly reason?: string;
+  /** Failed verification output to bound and render inside the prior context. */
+  readonly output?: string;
   readonly resultPath?: string;
+}
+
+/** Bounded failed-output length kept identical across every textual harness prompt. */
+const PRIOR_CONTEXT_OUTPUT_MAX_LENGTH = 2000;
+
+function boundedPriorOutput(output: string): string {
+  return output.length <= PRIOR_CONTEXT_OUTPUT_MAX_LENGTH
+    ? output
+    : `${output.slice(0, PRIOR_CONTEXT_OUTPUT_MAX_LENGTH)}…`;
 }
 
 /**
  * Shared prior-context block for every textual executor prompt. It is rendered
- * when a retry supplied an attempt or failure reason, or when a prior result
- * file still exists, so a fresh process reconstructs why it is running again.
+ * when a retry or requeued recertification supplied an attempt, failure reason,
+ * or failed output, or when a prior result file still exists, so a fresh process
+ * reconstructs why it is running again.
  */
 export function priorContextLines(context: PriorContext): string[] {
   const attempt = context.attempt ?? 1;
-  if (attempt <= 1 && !context.reason && !context.resultPath) {
+  const output = typeof context.output === 'string' ? context.output : '';
+  const hasOutput = output.trim().length > 0;
+  if (attempt <= 1 && !context.reason && !context.resultPath && !hasOutput) {
     return [];
   }
   const lines = ['', 'Prior Context:', `- Prior Attempt: ${attempt}`];
   if (context.reason) {
     lines.push(`- Prior Failure: ${context.reason}`);
+  }
+  if (hasOutput) {
+    lines.push('- Prior Failure Output:');
+    for (const line of boundedPriorOutput(output).split('\n')) {
+      lines.push(`  ${line}`);
+    }
   }
   if (context.resultPath) {
     lines.push(`- Prior Result: ${context.resultPath}`);

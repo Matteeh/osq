@@ -126,10 +126,15 @@ Lint, run by `osq approve` and `osq lint`:
 | proposal declares `features.writes`     | reject |
 | more than one table under `## Contract` | reject |
 | task `verify` empty or chains commands  | reject |
+| `verify` is the template placeholder    | reject |
+| `verify` names an absent package script | reject |
+| `verify` names no existing path or package script | warn |
 | `depends_on` names a missing change     | reject |
 | task acceptance longer than 7 lines     | reject |
 | task title contains " and "             | warn   |
 | OpenSpec schema or validator drift      | reject |
+
+`osq init` and `osq new` seed `verify: node -e "process.exit(0)"`. That is a planning sentinel, not trusted coverage: replace it before approval with a command that verifies the completed change's final tree. Checked-in fixtures use a local `node verify.cjs` verifier backed by files in their own execution root, never the sentinel, the network, a TTY, or this repository's full verification suite.
 
 Rules the lint can't check: title reads "when X, Y happens"; slice vertically so every spec leaves `main` green on its own; no "investigate" or "decide" in a spec (that's a spike, whose output is a paragraph in a capability spec or an ADR); default to a parent with children and approve the list before writing any child in full.
 

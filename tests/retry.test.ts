@@ -12,7 +12,13 @@ import { retrySpec } from '../src/core/retry.js';
 import { deriveSpecState } from '../src/core/state.js';
 import { installFakeValidator } from './helpers.js';
 
-const VERIFY = 'node -e "process.exit(0)"';
+const VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
 
 async function writeTask(specFolder: string): Promise<void> {
   const taskPath = path.join(specFolder, 'tasks', '1.md');
@@ -69,6 +75,14 @@ describe('explicit retry transition', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Retry Target');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const proposalPath = path.join(specFolder, 'proposal.md');
+    const proposal = await fs.readFile(proposalPath, 'utf8');
+    await fs.writeFile(
+      proposalPath,
+      proposal.replace(/^verify:\s*.*$/m, `verify: ${VERIFY}`),
+      'utf8',
+    );
     await writeTask(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
   });

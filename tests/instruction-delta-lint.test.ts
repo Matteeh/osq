@@ -11,10 +11,17 @@ import { installFakeValidator } from './helpers.js';
 
 const CHANGE_ID = '001-instruction-delta';
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 const PROPOSAL = `---
 title: Instruction Delta
 depends_on: []
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 features:
   reads: []
 ---
@@ -39,7 +46,7 @@ Delta specs live beside the proposal.
 
 const TASK = `---
 title: Valid task
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 scope: []
 entry: []
 skills: []
@@ -84,6 +91,7 @@ describe('instruction-shaped delta linting', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-instruction-delta-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     changeFolder = path.join(tmpDir, 'openspec', 'changes', CHANGE_ID);
     await fs.mkdir(path.join(changeFolder, 'tasks'), { recursive: true });
     await fs.writeFile(path.join(changeFolder, 'proposal.md'), PROPOSAL, 'utf8');

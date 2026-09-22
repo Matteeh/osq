@@ -1,16 +1,30 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { parseFrontmatter, parseTaskMd } from '../core/parser.js';
-import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
+import type { OsqConfig } from '../core/config.js';
+import { parseTaskMd } from '../core/parser.js';
+import {
+  type StaleTaskAudit,
+  attributeScopePaths,
+  buildScopeRegressionMarker,
+  computeTaskScopeHash,
+  findDifferingPaths,
+  listCanonicalDoneNumbers,
+  parseActiveStaleTask,
+  readDoneMarker,
+  readFileChangedPaths,
+} from '../core/scope-hash.js';
+import { compareNumericPrefix } from '../core/state.js';
 import { resolveBuildInfo } from './build.js';
-import type { DoneMarkerMetadata, RunTaskResult } from './outcome.js';
+import {
+  type DoneMarkerMetadata,
+  type RunTaskResult,
+  recordRegressedEvent,
+  writeRegressedMarker,
+} from './outcome.js';
+import { runVerificationGateResult } from './verify.js';
 
-/** Per-file content hashes plus a single combined digest for a task scope. */
-export interface ScopeHashResult {
-  hash: string;
-  fileHashes: Record<string, string | null>;
-}
+export { computeTaskScopeHash } from '../core/scope-hash.js';
+export type { ScopeHashResult } from '../core/scope-hash.js';
 
 /** Outcome of comparing a previously completed task's scope to the tree. */
 export interface ScopeRegressionResult {
@@ -21,112 +35,149 @@ export interface ScopeRegressionResult {
   currentHash: string;
 }
 
-function sha256(content: string): string {
-  return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
+export interface ScopeAuditOptions {
+  projectRoot: string;
+  specFolderPath: string;
+  eligibleTaskNumbers: readonly string[];
+  verifyTimeoutSeconds: number;
+  /** When false, detect and attribute only; never verify or write artifacts. */
+  record?: boolean;
 }
 
-function relativePosix(projectRoot: string, filePath: string): string {
-  return path.relative(projectRoot, filePath).split(path.sep).join('/');
-}
-
-/**
- * Content-address a task scope. Every scoped file's UTF-8 SHA-256 (or `null`
- * when missing) is keyed by project-relative POSIX path, then folded into one
- * deterministic digest over the sorted `path:hash` entries.
- */
-export async function computeTaskScopeHash(
-  projectRoot: string,
-  scope: string[],
-): Promise<ScopeHashResult> {
-  const fileHashes: Record<string, string | null> = {};
-  const keys = scope
-    .map((entry) => relativePosix(projectRoot, path.resolve(projectRoot, entry)))
-    .sort();
-  for (const key of keys) {
-    const content = await fs.readFile(path.resolve(projectRoot, key), 'utf8').catch(() => null);
-    fileHashes[key] = content === null ? null : `sha256:${sha256(content)}`;
-  }
-  const canonical = Object.keys(fileHashes)
-    .map((key) => `${key}:${fileHashes[key] ?? ''}`)
-    .join('\n');
-  return { hash: `sha256:${sha256(canonical)}`, fileHashes };
-}
-
-/** Read the recorded per-file hash map out of a done marker's frontmatter. */
-function readRecordedFiles(value: unknown): Record<string, string | null> {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return {};
-  }
-  const map: Record<string, string | null> = {};
-  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-    map[key] = typeof entry === 'string' ? entry : null;
-  }
-  return map;
-}
-
-/** Classify each scoped path whose recorded hash no longer matches the tree. */
-function findDifferingPaths(
-  recorded: Record<string, string | null>,
-  current: Record<string, string | null>,
-): string[] {
-  const paths = new Set([...Object.keys(recorded), ...Object.keys(current)]);
-  const differing: string[] = [];
-  for (const key of [...paths].sort()) {
-    const before = recorded[key] ?? null;
-    const after = current[key] ?? null;
-    if (before === after) continue;
-    if (before === null) differing.push(`${key} (added)`);
-    else if (after === null) differing.push(`${key} (deleted)`);
-    else differing.push(`${key} (modified)`);
-  }
-  return differing;
+export interface ScopeAuditResult {
+  stale: StaleTaskAudit[];
 }
 
 /**
- * Compare every earlier completed task's recorded scope hash against the
- * current tree. Returns the first regression found, or `null` when all match.
+ * Pre-lock scope recertification audit. Compares every eligible automated done
+ * marker's recorded literal scope hash against the current tree in one pass,
+ * verifies each stale task under the configured timeout, and records one
+ * regression marker and typed event per stale task. Already-active regressions
+ * are reported without re-verification or duplicate writes.
  */
+export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
+  const { projectRoot, specFolderPath, eligibleTaskNumbers, verifyTimeoutSeconds } = options;
+  const record = options.record ?? true;
+  const runDir = path.join(specFolderPath, '.run');
+
+  const doneInfo = new Map<string, Awaited<ReturnType<typeof readDoneMarker>>>();
+  const changesByPath = new Map<string, Set<string>>();
+  const completionHashes = new Map<string, Record<string, string | null>>();
+  for (const number of await listCanonicalDoneNumbers(runDir)) {
+    const info = await readDoneMarker(runDir, number);
+    if (!info) continue;
+    doneInfo.set(number, info);
+    completionHashes.set(number, info.scopeFiles);
+    for (const filePath of await readFileChangedPaths(specFolderPath, number)) {
+      const tasks = changesByPath.get(filePath) ?? new Set<string>();
+      tasks.add(number);
+      changesByPath.set(filePath, tasks);
+    }
+  }
+
+  const stale: StaleTaskAudit[] = [];
+  for (const taskNumber of [...new Set(eligibleTaskNumbers)].sort(compareNumericPrefix)) {
+    const recorded = doneInfo.get(taskNumber);
+    if (!recorded) continue;
+    const taskContent = await fs
+      .readFile(path.join(specFolderPath, 'tasks', `${taskNumber}.md`), 'utf8')
+      .catch(() => null);
+    if (taskContent === null) continue;
+    const taskData = parseTaskMd(taskContent);
+    const current = await computeTaskScopeHash(projectRoot, taskData.scope);
+    if (current.hash === recorded.scopeHash) continue;
+
+    const differing = findDifferingPaths(recorded.scopeFiles, current.fileHashes);
+    const base = {
+      differingPaths: differing.map((entry) => entry.display),
+      attribution: attributeScopePaths(
+        taskNumber,
+        differing,
+        current.fileHashes,
+        changesByPath,
+        completionHashes,
+      ),
+      recordedHash: recorded.scopeHash,
+      currentHash: current.hash,
+    };
+
+    const active = await fs
+      .readFile(path.join(runDir, 'regressed', `${taskNumber}.md`), 'utf8')
+      .catch(() => null);
+    if (active !== null) {
+      stale.push(parseActiveStaleTask(taskNumber, active, base));
+      continue;
+    }
+    const gate = record
+      ? await runVerificationGateResult(projectRoot, taskData.verify, verifyTimeoutSeconds, {
+          specFolderPath,
+          taskNumber,
+        })
+      : null;
+    const audit: StaleTaskAudit = {
+      taskNumber,
+      ...base,
+      verifyCommand: taskData.verify,
+      exitCode: gate?.exitCode ?? 1,
+      duration: gate?.duration ?? 0,
+      output: gate?.output ?? '',
+      timedOut: gate?.timedOut ?? false,
+      verificationPassed: gate?.passed ?? false,
+      alreadyActive: false,
+    };
+    if (gate) {
+      await writeRegressedMarker(runDir, taskNumber, buildScopeRegressionMarker(audit));
+      await recordRegressedEvent(specFolderPath, taskNumber, {
+        reason: 'scope_regression',
+        differingPaths: audit.differingPaths,
+        attribution: audit.attribution,
+        recordedHash: audit.recordedHash,
+        currentHash: audit.currentHash,
+        command: audit.verifyCommand,
+        exitCode: audit.exitCode,
+        duration: audit.duration,
+        output: audit.output,
+        timedOut: audit.timedOut,
+        verificationPassed: audit.verificationPassed,
+      });
+    }
+    stale.push(audit);
+  }
+  return { stale };
+}
+
+async function eligibleEarlierTasks(runDir: string, currentTask: number): Promise<string[]> {
+  return (await listCanonicalDoneNumbers(runDir)).filter(
+    (number) => Number.parseInt(number, 10) < currentTask,
+  );
+}
+
+/** Legacy first-match detection export: detection only, never writes artifacts. */
 export async function checkDoneTasksScopeHashes(
   projectRoot: string,
   specFolderPath: string,
   currentTaskNumber: string,
 ): Promise<ScopeRegressionResult | null> {
   const currentTask = Number.parseInt(currentTaskNumber, 10);
-  if (Number.isNaN(currentTask)) {
-    return null;
-  }
-  const runDir = path.join(specFolderPath, '.run');
-
-  for (let number = 1; number < currentTask; number++) {
-    const taskNumber = String(number);
-    const marker = await fs
-      .readFile(path.join(runDir, 'done', taskNumber), 'utf8')
-      .catch(() => null);
-    if (marker === null) continue;
-
-    const { data } = parseFrontmatter(marker);
-    const recordedHash = typeof data.scope_hash === 'string' ? data.scope_hash : null;
-    if (!recordedHash) continue;
-
-    const taskContent = await fs
-      .readFile(path.join(specFolderPath, 'tasks', `${taskNumber}.md`), 'utf8')
-      .catch(() => null);
-    if (taskContent === null) continue;
-
-    const taskData = parseTaskMd(taskContent);
-    const current = await computeTaskScopeHash(projectRoot, taskData.scope);
-    if (current.hash === recordedHash) continue;
-
-    return {
-      regressed: true,
-      taskNumber,
-      differingPaths: findDifferingPaths(readRecordedFiles(data.scope_files), current.fileHashes),
-      recordedHash,
-      currentHash: current.hash,
-    };
-  }
-
-  return null;
+  if (Number.isNaN(currentTask)) return null;
+  const eligible = await eligibleEarlierTasks(path.join(specFolderPath, '.run'), currentTask);
+  const audit = await auditScopeRegressions({
+    projectRoot,
+    specFolderPath,
+    eligibleTaskNumbers: eligible,
+    verifyTimeoutSeconds: 0,
+    record: false,
+  });
+  const first = audit.stale[0];
+  return first
+    ? {
+        regressed: true,
+        taskNumber: first.taskNumber,
+        differingPaths: first.differingPaths,
+        recordedHash: first.recordedHash,
+        currentHash: first.currentHash,
+      }
+    : null;
 }
 
 /** Resolve the metadata written to the done marker after a passing task. */
@@ -146,62 +197,32 @@ export async function buildDoneMetadata(
   };
 }
 
-/** Record a scope regression under `.run/regressed/` and its typed event. */
-export async function recordScopeRegression(
-  specFolderPath: string,
-  result: ScopeRegressionResult,
-): Promise<void> {
-  const regressedDir = path.join(specFolderPath, '.run', 'regressed');
-  await fs.mkdir(regressedDir, { recursive: true });
-  const content = [
-    '---',
-    'reason: scope_regression',
-    `task: ${result.taskNumber}`,
-    `recorded_hash: "${result.recordedHash}"`,
-    `current_hash: "${result.currentHash}"`,
-    '---',
-    `Task ${result.taskNumber} scope changed after completion:`,
-    ...result.differingPaths.map((entry) => `- ${entry}`),
-    '',
-  ].join('\n');
-  await fs.writeFile(path.join(regressedDir, `${result.taskNumber}.md`), content, 'utf8');
-
-  // `regressed` joins the event union in the sibling regressed-status change;
-  // the cast keeps this writer on the single append path until then.
-  await appendHarnessEvent(specFolderPath, result.taskNumber, {
-    type: 'regressed',
-    timestamp: new Date().toISOString(),
-    data: {
-      task: result.taskNumber,
-      differingPaths: result.differingPaths,
-      recordedHash: result.recordedHash,
-      currentHash: result.currentHash,
-    },
-  } as unknown as HarnessEvent);
-}
-
 /**
- * Pre-spawn guard: detect and record a scope regression for task n+1. Returns a
- * failure result without spawning, or `null` when every earlier scope matches.
+ * Defensive pre-spawn guard for direct `runTask` callers: record and report
+ * every stale earlier task without spawning. The watcher cycle audits before
+ * `runTask`; this keeps direct calls safe.
  */
 export async function guardScopeRegression(
   projectRoot: string,
   specFolderPath: string,
   currentTaskNumber: string,
+  config: OsqConfig,
 ): Promise<RunTaskResult | null> {
-  const regression = await checkDoneTasksScopeHashes(
+  const currentTask = Number.parseInt(currentTaskNumber, 10);
+  if (Number.isNaN(currentTask)) return null;
+  const eligible = await eligibleEarlierTasks(path.join(specFolderPath, '.run'), currentTask);
+  const audit = await auditScopeRegressions({
     projectRoot,
     specFolderPath,
-    currentTaskNumber,
-  );
-  if (!regression) {
-    return null;
-  }
-  await recordScopeRegression(specFolderPath, regression);
-  const detail = regression.differingPaths.join(', ');
-  return {
-    success: false,
-    reason: 'regressed',
-    error: `Scope of task ${regression.taskNumber} changed: ${detail}`,
-  };
+    eligibleTaskNumbers: eligible,
+    verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+  });
+  const first = audit.stale[0];
+  return first
+    ? {
+        success: false,
+        reason: 'regressed',
+        error: `Scope of task ${first.taskNumber} changed: ${first.differingPaths.join(', ')}`,
+      }
+    : null;
 }

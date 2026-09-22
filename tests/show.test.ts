@@ -42,7 +42,7 @@ none
 `;
 }
 
-function taskMd(title: string, verify = 'node -e "process.exit(0)"'): string {
+function taskMd(title: string, verify = 'node verify.cjs'): string {
   return `---
 title: ${title}
 verify: ${verify}
@@ -79,6 +79,9 @@ describe('osq show', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-show-test-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    // A deterministic local verifier so scaffolded tasks lint without the
+    // planning-time placeholder sentinel.
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), 'process.exit(0);\n', 'utf8');
   });
 
   afterEach(async () => {
@@ -166,7 +169,7 @@ Update docs
       path.join(folderPath, 'tasks', '2.md'),
       `---
 title: Task Two
-verify: node -e "process.exit(0)"
+verify: node verify.cjs
 scope: [src/core/show.ts]
 entry: [src/core/show.ts]
 skills: []
@@ -698,5 +701,332 @@ Preexisting test files were modified or deleted without tests.modify: true:
     assert.equal(showCmd.registeredArguments.length, 1);
     assert.equal(showCmd.registeredArguments[0].name(), 'id');
     assert.equal(showCmd.registeredArguments[0].required, true);
+  });
+
+  it('derives ordered recertification rows with attribution from typed events', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-recert-spec', 'Recert Spec');
+    await fs.writeFile(path.join(folderPath, 'tasks', '2.md'), taskMd('Second Task'), 'utf8');
+    const eventsDir = path.join(folderPath, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+
+    const passed = {
+      type: 'recertification',
+      timestamp: '2026-09-17T10:00:00.000Z',
+      data: {
+        task: '1',
+        outcome: 'passed',
+        differingPaths: ['src/b.ts (modified)', 'src/a.ts (added)'],
+        attribution: [
+          { path: 'src/a.ts (added)', attribution: '2' },
+          { path: 'src/b.ts (modified)', attribution: 'ambiguous' },
+        ],
+        command: 'node verify.cjs',
+        exitCode: 0,
+        output: 'ok',
+        timedOut: false,
+        recordedHash: 'sha256:old',
+        currentHash: 'sha256:new',
+      },
+    };
+    const requeued = {
+      type: 'recertification',
+      timestamp: '2026-09-17T11:00:00.000Z',
+      data: {
+        task: '2',
+        outcome: 'requeued',
+        differingPaths: ['src/c.ts (deleted)'],
+        attribution: [{ path: 'src/c.ts (deleted)', attribution: 'unknown' }],
+        command: 'node verify.cjs',
+        exitCode: 1,
+        output: 'boom',
+        timedOut: false,
+        recordedHash: 'sha256:x',
+        currentHash: 'sha256:y',
+        attempt: 3,
+        reason: 'scope_regression',
+      },
+    };
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${JSON.stringify(passed)}\n${JSON.stringify({
+        type: 'regressed',
+        timestamp: '2026-09-17T09:00:00.000Z',
+        data: { reason: 'scope_regression' },
+      })}\n`,
+      'utf8',
+    );
+    await fs.writeFile(path.join(eventsDir, '2.jsonl'), `${JSON.stringify(requeued)}\n`, 'utf8');
+    // A change-level stream must never contribute a task recertification row.
+    await fs.writeFile(path.join(eventsDir, 'change.jsonl'), `${JSON.stringify(passed)}\n`, 'utf8');
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+
+    assert.equal(details.recertifications.length, 2);
+    const [first, second] = details.recertifications;
+    assert.equal(first.taskNumber, '1');
+    assert.equal(first.timestamp, '2026-09-17T10:00:00.000Z');
+    assert.equal(first.outcome, 'passed');
+    assert.deepEqual(first.differingPaths, ['src/a.ts (added)', 'src/b.ts (modified)']);
+    assert.deepEqual(first.attribution, [
+      { path: 'src/a.ts (added)', attribution: '2' },
+      { path: 'src/b.ts (modified)', attribution: 'ambiguous' },
+    ]);
+    assert.equal(first.verify, 'node verify.cjs');
+    assert.equal(first.exitCode, 0);
+    assert.equal(first.timedOut, false);
+
+    assert.equal(second.taskNumber, '2');
+    assert.equal(second.timestamp, '2026-09-17T11:00:00.000Z');
+    assert.equal(second.outcome, 'requeued');
+    assert.equal(second.verify, 'node verify.cjs');
+    assert.equal(second.exitCode, 1);
+    assert.equal(second.timedOut, false);
+    assert.deepEqual(second.attribution, [{ path: 'src/c.ts (deleted)', attribution: 'unknown' }]);
+
+    // The raw append-only timeline is untouched by the derived projection.
+    assert.equal(details.timeline.length, 4);
+    assert.equal(
+      details.timeline.some((event) => event.type === 'regressed'),
+      true,
+    );
+  });
+
+  it('derives recertification rows for archived changes', async () => {
+    const archiveFolder = path.join(tmpDir, CHANGE_SPECS_DIR, 'archive', '050-archived-recert');
+    await fs.mkdir(path.join(archiveFolder, 'tasks'), { recursive: true });
+    await fs.writeFile(path.join(archiveFolder, 'spec.md'), specMd('Archived Recert'), 'utf8');
+    await fs.writeFile(
+      path.join(archiveFolder, 'tasks', '1.md'),
+      taskMd('Archived Recert Task'),
+      'utf8',
+    );
+    const eventsDir = path.join(archiveFolder, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${JSON.stringify({
+        type: 'recertification',
+        timestamp: '2026-09-18T08:00:00.000Z',
+        data: {
+          task: '1',
+          outcome: 'passed',
+          differingPaths: ['src/a.ts (modified)'],
+          attribution: [{ path: 'src/a.ts (modified)', attribution: 'ambiguous' }],
+          command: 'node verify.cjs',
+          exitCode: 0,
+          output: '',
+          timedOut: false,
+          recordedHash: 'sha256:old',
+          currentHash: 'sha256:new',
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const details = await getSpecDetails(tmpDir, '050', DEFAULT_CONFIG);
+    assert.equal(details.isArchived, true);
+    assert.equal(details.recertifications.length, 1);
+    assert.equal(details.recertifications[0].outcome, 'passed');
+    assert.equal(details.recertifications[0].attribution[0].attribution, 'ambiguous');
+  });
+
+  it('orders recertification rows by valid timestamp then numeric task and event order', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-order-spec', 'Order Spec');
+    const eventsDir = path.join(folderPath, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+
+    const make = (task: string, outcome: 'passed' | 'requeued', timestamp: string) =>
+      JSON.stringify({
+        type: 'recertification',
+        timestamp,
+        data: {
+          task,
+          outcome,
+          differingPaths: [],
+          attribution: [],
+          command: 'node verify.cjs',
+          exitCode: 0,
+          output: '',
+          timedOut: false,
+          recordedHash: 'sha256:old',
+          currentHash: 'sha256:new',
+        },
+      });
+
+    // Two same-timestamp events for task 1, a same-timestamp task 2, and an
+    // earlier task 3.
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${make('1', 'passed', '2026-09-17T10:00:00.000Z')}\n${make('1', 'requeued', '2026-09-17T10:00:00.000Z')}\n`,
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(eventsDir, '2.jsonl'),
+      `${make('2', 'passed', '2026-09-17T10:00:00.000Z')}\n`,
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(eventsDir, '3.jsonl'),
+      `${make('3', 'requeued', '2026-09-17T09:00:00.000Z')}\n`,
+      'utf8',
+    );
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.deepEqual(
+      details.recertifications.map((row) => [row.taskNumber, row.outcome]),
+      [
+        ['3', 'requeued'],
+        ['1', 'passed'],
+        ['1', 'requeued'],
+        ['2', 'passed'],
+      ],
+    );
+  });
+
+  it('renders malformed recertification data as unavailable without hiding other output', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-malformed-spec', 'Malformed Spec');
+    const eventsDir = path.join(folderPath, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(eventsDir, '4.jsonl'),
+      `${JSON.stringify({
+        type: 'recertification',
+        timestamp: 'not-a-date',
+        data: {
+          outcome: 'other',
+          differingPaths: 'not-an-array',
+          attribution: [null, 42, { path: 'src/x.ts (modified)' }, { path: 'src/y.ts' }],
+          command: 123,
+          exitCode: 'nope',
+          timedOut: 'yes',
+        },
+      })}\n${JSON.stringify({ type: 'recertification', timestamp: null })}\n`,
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T10:00:00.000Z' })}\n`,
+      'utf8',
+    );
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.equal(details.recertifications.length, 2);
+
+    const malformed = details.recertifications[0];
+    assert.equal(malformed.taskNumber, '4');
+    assert.equal(malformed.timestamp, null);
+    assert.equal(malformed.outcome, null);
+    assert.deepEqual(malformed.differingPaths, []);
+    assert.deepEqual(malformed.attribution, [
+      { path: 'src/x.ts (modified)', attribution: 'unknown' },
+      { path: 'src/y.ts', attribution: 'unknown' },
+    ]);
+    assert.equal(malformed.verify, null);
+    assert.equal(malformed.exitCode, null);
+    assert.equal(malformed.timedOut, null);
+
+    const noData = details.recertifications[1];
+    assert.equal(noData.taskNumber, '4');
+    assert.equal(noData.timestamp, null);
+    assert.equal(noData.outcome, null);
+    assert.deepEqual(noData.differingPaths, []);
+
+    // Proposal, task, and timeline output still render.
+    const text = formatShowOutput(details);
+    assert.ok(text.includes('Malformed Spec'));
+    assert.ok(text.includes('Tasks:'));
+    assert.ok(text.includes('Event Timeline:'));
+    assert.ok(text.includes('2026-09-17T10:00:00.000Z'));
+    assert.ok(text.includes('Recertifications:'));
+    assert.ok(text.includes('unavailable'));
+    const recertSection = text.slice(
+      text.indexOf('Recertifications:'),
+      text.indexOf('Event Timeline:'),
+    );
+    assert.equal(recertSection.includes('[object Object]'), false);
+  });
+
+  it('renders and labels the Recertifications section only when rows exist', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-render-recert', 'Render Recert');
+    const eventsDir = path.join(folderPath, '.run', 'events');
+    await fs.mkdir(eventsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(eventsDir, '1.jsonl'),
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T09:00:00.000Z' })}\n`,
+      'utf8',
+    );
+
+    const withoutRows = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.deepEqual(withoutRows.recertifications, []);
+    const noSection = formatShowOutput(withoutRows);
+    assert.equal(noSection.includes('Recertifications:'), false);
+    assert.equal(noSection.includes('recertified'), false);
+
+    const append = async (event: unknown) => {
+      await fs.appendFile(path.join(eventsDir, '1.jsonl'), `${JSON.stringify(event)}\n`, 'utf8');
+    };
+    await append({
+      type: 'recertification',
+      timestamp: '2026-09-17T10:00:00.000Z',
+      data: {
+        task: '1',
+        outcome: 'passed',
+        differingPaths: ['src/a.ts (modified)'],
+        attribution: [{ path: 'src/a.ts (modified)', attribution: '2' }],
+        command: 'node verify.cjs',
+        exitCode: 0,
+        output: '',
+        timedOut: false,
+        recordedHash: 'sha256:old',
+        currentHash: 'sha256:new',
+      },
+    });
+    await append({
+      type: 'recertification',
+      timestamp: '2026-09-17T11:00:00.000Z',
+      data: {
+        task: '1',
+        outcome: 'requeued',
+        differingPaths: ['src/b.ts (modified)'],
+        attribution: [{ path: 'src/b.ts (modified)', attribution: 'unknown' }],
+        command: 'node verify.cjs',
+        exitCode: 1,
+        output: '',
+        timedOut: true,
+        recordedHash: 'sha256:old',
+        currentHash: 'sha256:new',
+      },
+    });
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    const text = formatShowOutput(details);
+    assert.ok(text.includes('Recertifications:'));
+    assert.ok(text.includes('recertified'));
+    assert.ok(text.includes('requeued for agent work'));
+    assert.ok(text.includes('attributed to task 2'));
+    assert.ok(text.includes('unknown'));
+    assert.ok(text.includes('Timed out: yes'));
+    assert.ok(text.indexOf('Recertifications:') < text.indexOf('Event Timeline:'));
+    assert.ok(text.indexOf('Planning Sessions:') < text.indexOf('Recertifications:'));
+  });
+
+  it('does not infer recertification history from done marker metadata', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-marker-only', 'Marker Only');
+    const doneDir = path.join(folderPath, '.run', 'done');
+    await fs.mkdir(doneDir, { recursive: true });
+    await fs.writeFile(
+      path.join(doneDir, '1'),
+      `---
+scope_hash: sha256:abc
+recertified_at: 2026-09-17T10:00:00.000Z
+recertification_count: 2
+---
+`,
+      'utf8',
+    );
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    assert.deepEqual(details.recertifications, []);
+    assert.equal(formatShowOutput(details).includes('Recertifications:'), false);
   });
 });

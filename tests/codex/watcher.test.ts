@@ -32,6 +32,14 @@ const FAKE_ENV_KEYS = [
 
 const SAVED_ENV = new Map(FAKE_ENV_KEYS.map((key) => [key, process.env[key]]));
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 function restoreFakeEnv(): void {
   for (const [key, value] of SAVED_ENV) {
     if (value === undefined) Reflect.deleteProperty(process.env, key);
@@ -49,7 +57,17 @@ async function approveTask(
   config: OsqConfig,
   verify?: string,
 ): Promise<void> {
-  await writeCodexTask(specFolder, verify ? { verify } : {});
+  await fs.writeFile(path.join(root, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+  const proposalPath = path.join(specFolder, 'proposal.md');
+  const proposal = await fs.readFile(proposalPath, 'utf8').catch(() => null);
+  if (proposal !== null) {
+    await fs.writeFile(
+      proposalPath,
+      proposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+      'utf8',
+    );
+  }
+  await writeCodexTask(specFolder, { verify: verify ?? PASSING_VERIFY });
   await approveSpec(root, '001', config);
 }
 

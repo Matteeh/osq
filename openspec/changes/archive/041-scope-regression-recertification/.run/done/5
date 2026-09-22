@@ -1,0 +1,7 @@
+---
+scope_hash: "sha256:78ca42947f8c47387a3179b0e61a0297fa0723c82e958fea8416681fdda1f44a"
+build_stamp: "6c003cb"
+exit_code: 0
+scope_files: {"PLANNER.md":"sha256:2e8b4a640658138899189538a508ac96b3763cbc4d9f02b6f1c95fb2599a0b2c","src/core/init.ts":"sha256:bea186d55c372a4d39f17910c73ecf7a26f9f6289a31a30afbf99e20b34de789","templates/PLANNER.md":"sha256:26a45712e8ac13cd479b03b1e3f64ab1e76c1b6da2c782a3126f7f1edc166223","tests/init-planner.test.ts":"sha256:2be1c88456b457f16190a74f73652035af17559348b9a019d1f0da296d78cd29","tests/managed-blocks.test.ts":"sha256:e9dc759741207edbaf94f7d086032ea01c7778449f69b37e37281572affa0522"}
+---
+2026-09-21T21:56:27.715Z

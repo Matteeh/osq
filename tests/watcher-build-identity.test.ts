@@ -29,11 +29,19 @@ async function readEvents(specFolder: string, taskNumber: string): Promise<Parse
     .map((line) => JSON.parse(line) as ParsedEvent);
 }
 
+const PASSING_VERIFY = 'node verify.cjs';
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 async function writeTask1(specFolder: string): Promise<void> {
   const task = [
     '---',
     'title: When a task runs, its build identity is recorded',
-    'verify: node -e "process.exit(0)"',
+    `verify: ${PASSING_VERIFY}`,
     'scope: []',
     'entry: []',
     'skills: []',
@@ -112,6 +120,16 @@ describe('Runner build identity events', () => {
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Build Identity');
     specFolder = spec.folderPath;
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    const seededProposalPath = path.join(specFolder, 'proposal.md');
+    const seededProposal = await fs.readFile(seededProposalPath, 'utf8').catch(() => null);
+    if (seededProposal !== null) {
+      await fs.writeFile(
+        seededProposalPath,
+        seededProposal.replace(/^verify:.*$/m, `verify: ${PASSING_VERIFY}`),
+        'utf8',
+      );
+    }
     await writeTask1(specFolder);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
   });

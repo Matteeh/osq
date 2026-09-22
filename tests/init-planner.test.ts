@@ -21,6 +21,16 @@ function extractManagedBlock(content: string): string {
   return content.slice(startIndex, endIndex + OSQ_END_MARKER.length);
 }
 
+/** Slice the `### Tasks` planning guidance out of the managed block. */
+function tasksGuidance(block: string): string {
+  const startIndex = block.indexOf('### Tasks');
+  const endIndex = block.indexOf('### Parent spec');
+
+  assert.ok(startIndex !== -1, 'block should contain the Tasks guidance');
+  assert.ok(endIndex > startIndex, 'Parent spec should follow the Tasks guidance');
+  return block.slice(startIndex, endIndex);
+}
+
 describe('osq init PLANNER.md', () => {
   let tmpDir: string;
 
@@ -60,6 +70,8 @@ describe('osq init PLANNER.md', () => {
     assert.ok(content.includes('## Appendix\n\nKeep this too.'));
     assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
     assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+    assert.ok(content.includes('re-runnable against the final tree'));
+    assert.ok(content.includes('name the shared file in the proposal'));
   });
 
   it('appends the managed block when markers are absent', async () => {
@@ -101,6 +113,21 @@ describe('osq init PLANNER.md', () => {
     assert.ok(MANAGED_PLANNER_BLOCK.includes('written after the goal'));
   });
 
+  it('managed block requires final-tree verification inside the Tasks guidance', () => {
+    const tasks = tasksGuidance(MANAGED_PLANNER_BLOCK);
+
+    assert.ok(tasks.includes('re-runnable against the final tree'));
+    assert.ok(tasks.includes('watcher and archive recertification'));
+  });
+
+  it('managed block requires ordered shared-file ownership inside the Tasks guidance', () => {
+    const tasks = tasksGuidance(MANAGED_PLANNER_BLOCK);
+
+    assert.ok(tasks.includes('A file belongs to one task'));
+    assert.ok(tasks.includes('later task after the owner'));
+    assert.ok(tasks.includes('name the shared file in the proposal'));
+  });
+
   it('repository PLANNER.md carries the file-tool instruction', async () => {
     const content = await fs.readFile(path.join(process.cwd(), 'PLANNER.md'), 'utf8');
 
@@ -115,6 +142,8 @@ describe('osq init PLANNER.md', () => {
     assert.ok(content.includes(OSQ_START_MARKER));
     assert.ok(content.includes(OSQ_END_MARKER));
     assert.equal(extractManagedBlock(content), MANAGED_PLANNER_BLOCK);
+    assert.ok(content.includes('re-runnable against the final tree'));
+    assert.ok(content.includes('A file belongs to one task'));
   });
 
   it('PLANNER.md, MANAGED_PLANNER_BLOCK, and templates/PLANNER.md are byte-for-byte equal', async () => {
@@ -123,5 +152,7 @@ describe('osq init PLANNER.md', () => {
 
     assert.equal(extractManagedBlock(planner), MANAGED_PLANNER_BLOCK);
     assert.equal(template, MANAGED_PLANNER_BLOCK);
+    assert.ok(extractManagedBlock(planner).includes('re-runnable against the final tree'));
+    assert.ok(extractManagedBlock(planner).includes('A file belongs to one task'));
   });
 });

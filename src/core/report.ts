@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
-import { parseFrontmatter } from './parser.js';
+import { parseFrontmatter, parseTaskMd } from './parser.js';
 import { readPlanningSessions } from './planning.js';
 import { type QueueReport, readQueueReport } from './queue-report.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from './state.js';
@@ -86,6 +86,44 @@ export interface CostHistory {
   };
 }
 
+/** One ordered size bucket with first-attempt outcome aggregates. */
+export interface SizeBucketRow {
+  readonly bucket: string;
+  readonly tasks: number;
+  readonly firstAttemptPassRate: number;
+  readonly meanAttempts: number;
+  readonly medianDurationSeconds: number | null;
+}
+
+/** The first-attempt pass with the greatest observed scope size. */
+export interface LargestFirstAttemptPass {
+  readonly change: string;
+  readonly task: string;
+  readonly title: string;
+  readonly scopeFiles: number;
+  readonly acceptanceLines: number;
+}
+
+/** Size-against-outcome buckets plus the largest passing task. */
+export interface SizeMetrics {
+  readonly byScopeFiles: readonly SizeBucketRow[];
+  readonly byAcceptanceLines: readonly SizeBucketRow[];
+  readonly largestFirstAttemptPass: LargestFirstAttemptPass | null;
+}
+
+/**
+ * Scope-regression detection and recertification counters derived only from
+ * typed events in numbered task streams. Legacy scope detections without a
+ * finite exit code remain visible in `detected` without guessed pass/fail.
+ */
+export interface ScopeRegressionHistory {
+  readonly detected: number;
+  readonly verificationPassedAtDetection: number;
+  readonly verificationFailedAtDetection: number;
+  readonly recertifiedByHuman: number;
+  readonly requeuedForAgent: number;
+}
+
 /** Execution history derived exclusively from append-only task event files. */
 export interface HistoryMetrics {
   readonly attempts: AttemptMetrics;
@@ -94,6 +132,8 @@ export interface HistoryMetrics {
   readonly verifyRuns: VerifyRunMetrics;
   readonly cost: CostHistory;
   readonly rejections: RejectionHistory;
+  readonly sizes: SizeMetrics;
+  readonly scopeRegressions: ScopeRegressionHistory;
 }
 
 /**
@@ -268,6 +308,245 @@ function asData(event: Record<string, unknown>): Record<string, unknown> | null 
     return data as Record<string, unknown>;
   }
   return null;
+}
+
+const SIZE_BUCKETS = ['1-2', '3-4', '5-8', 'over-8'] as const;
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/** Ordered bucket label for a non-negative size observation. */
+function bucketForSize(value: number): string {
+  if (value <= 2) return '1-2';
+  if (value <= 4) return '3-4';
+  if (value <= 8) return '5-8';
+  return 'over-8';
+}
+
+/** Event timestamp in epoch milliseconds, or null when missing or invalid. */
+function eventTimestampMs(event: Record<string, unknown>): number | null {
+  if (typeof event.timestamp !== 'string') return null;
+  const ms = Date.parse(event.timestamp);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+/**
+ * One measured task: the unit shared by bucket aggregation, largest selection,
+ * and the recent archive record. Title and acceptance lines come from task
+ * metadata; size, attempts, outcome, and duration come only from task events.
+ */
+interface MeasuredTask {
+  readonly change: string;
+  readonly task: string;
+  readonly title: string;
+  readonly scopeFiles: number;
+  readonly acceptanceLines: number;
+  readonly attempts: number;
+  readonly firstAttemptPass: boolean;
+  readonly durationSeconds: number | null;
+}
+
+/** Title and acceptance-line count from a task file; missing files yield empties. */
+async function readTaskMetadata(
+  folderPath: string,
+  taskNumber: string,
+): Promise<{ title: string; acceptanceLines: number }> {
+  const content = await fs
+    .readFile(path.join(folderPath, 'tasks', `${taskNumber}.md`), 'utf8')
+    .catch(() => null);
+  if (content === null) return { title: '', acceptanceLines: 0 };
+  const task = parseTaskMd(content);
+  return { title: task.title, acceptanceLines: task.acceptance.length };
+}
+
+/**
+ * Projects one task's event stream. A task contributes only with a valid first
+ * `measures` start carrying a finite `scopeFiles`. Attempts count `started`
+ * events; the first attempt passes only when a typed `done` arrives before the
+ * next `started`, `dead`, or `regressed` outcome. Duration sums valid measures
+ * start-to-end pairs and is null when no pair completes.
+ */
+function deriveMeasuredTask(
+  change: string,
+  task: string,
+  events: readonly Record<string, unknown>[],
+): Omit<MeasuredTask, 'title' | 'acceptanceLines'> | null {
+  let scopeFiles: number | null = null;
+  let attempts = 0;
+  let firstAttemptActive = false;
+  let firstAttemptResolved = false;
+  let firstAttemptPass = false;
+  let pendingStartMs: number | null = null;
+  let coveredMs = 0;
+  let hasDuration = false;
+
+  for (const event of events) {
+    if (event.type === 'measures') {
+      const data = asData(event);
+      if (data?.phase === 'start') {
+        const rawScopeFiles = data.scopeFiles;
+        if (
+          scopeFiles === null &&
+          typeof rawScopeFiles === 'number' &&
+          Number.isFinite(rawScopeFiles) &&
+          rawScopeFiles >= 0
+        ) {
+          scopeFiles = rawScopeFiles;
+        }
+        pendingStartMs = eventTimestampMs(event);
+      } else if (data?.phase === 'end') {
+        const endMs = eventTimestampMs(event);
+        if (pendingStartMs !== null && endMs !== null && endMs >= pendingStartMs) {
+          coveredMs += endMs - pendingStartMs;
+          hasDuration = true;
+        }
+        pendingStartMs = null;
+      }
+      continue;
+    }
+
+    if (event.type === 'started') {
+      attempts++;
+      if (firstAttemptActive) {
+        firstAttemptResolved = true;
+        firstAttemptActive = false;
+      } else if (!firstAttemptResolved) {
+        firstAttemptActive = true;
+      }
+      continue;
+    }
+
+    if (event.type === 'done') {
+      if (firstAttemptActive && !firstAttemptResolved) {
+        firstAttemptPass = true;
+        firstAttemptResolved = true;
+        firstAttemptActive = false;
+      }
+      continue;
+    }
+
+    if (event.type === 'dead' || event.type === 'regressed') {
+      if (firstAttemptActive && !firstAttemptResolved) {
+        firstAttemptResolved = true;
+        firstAttemptActive = false;
+      }
+    }
+  }
+
+  if (scopeFiles === null) return null;
+
+  return {
+    change,
+    task,
+    scopeFiles,
+    attempts,
+    firstAttemptPass,
+    durationSeconds: hasDuration ? coveredMs / 1000 : null,
+  };
+}
+
+/** Every measured task across the given change folders, in stable folder order. */
+async function projectMeasuredTasks(folders: readonly string[]): Promise<MeasuredTask[]> {
+  const measured: MeasuredTask[] = [];
+  for (const folderPath of folders) {
+    const change = path.basename(folderPath);
+    const tasksDir = path.join(folderPath, 'tasks');
+    let taskFiles: string[] = [];
+    try {
+      taskFiles = (await fs.readdir(tasksDir))
+        .filter((entry) => entry.endsWith('.md'))
+        .sort(compareNumericPrefix);
+    } catch {
+      continue;
+    }
+
+    for (const taskFile of taskFiles) {
+      const taskNumber = taskFile.replace(/\.md$/, '');
+      const eventContent = await fs
+        .readFile(path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
+        .catch(() => null);
+      if (eventContent === null) continue;
+      const derived = deriveMeasuredTask(change, taskNumber, parseEventLines(eventContent));
+      if (!derived) continue;
+      const metadata = await readTaskMetadata(folderPath, taskNumber);
+      measured.push({
+        ...derived,
+        title: metadata.title,
+        acceptanceLines: metadata.acceptanceLines,
+      });
+    }
+  }
+  return measured;
+}
+
+/** Ordinary sorted median rounded to two decimals, or null for no values. */
+function medianSeconds(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const median =
+    sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+  return round2(median);
+}
+
+/** Ordered bucket rows for one size key; empty buckets report zero and null. */
+function aggregateSizeBuckets(
+  tasks: readonly MeasuredTask[],
+  key: 'scopeFiles' | 'acceptanceLines',
+): SizeBucketRow[] {
+  return SIZE_BUCKETS.map((bucket) => {
+    const rows = tasks.filter((task) => bucketForSize(task[key]) === bucket);
+    const count = rows.length;
+    const passed = rows.filter((task) => task.firstAttemptPass).length;
+    const durations = rows
+      .map((task) => task.durationSeconds)
+      .filter((value): value is number => value !== null);
+    return {
+      bucket,
+      tasks: count,
+      firstAttemptPassRate: count > 0 ? round2(passed / count) : 0,
+      meanAttempts:
+        count > 0 ? round2(rows.reduce((sum, task) => sum + task.attempts, 0) / count) : 0,
+      medianDurationSeconds: medianSeconds(durations),
+    };
+  });
+}
+
+/** The first-attempt pass with the greatest scope files, then acceptance lines. */
+function selectLargestFirstAttemptPass(
+  tasks: readonly MeasuredTask[],
+): LargestFirstAttemptPass | null {
+  const passing = tasks.filter((task) => task.firstAttemptPass);
+  if (passing.length === 0) return null;
+  const [top] = [...passing].sort((a, b) => {
+    if (b.scopeFiles !== a.scopeFiles) return b.scopeFiles - a.scopeFiles;
+    if (b.acceptanceLines !== a.acceptanceLines) return b.acceptanceLines - a.acceptanceLines;
+    const byChange = compareNumericPrefix(a.change, b.change);
+    return byChange !== 0 ? byChange : compareNumericPrefix(a.task, b.task);
+  });
+  return {
+    change: top.change,
+    task: top.task,
+    title: top.title,
+    scopeFiles: top.scopeFiles,
+    acceptanceLines: top.acceptanceLines,
+  };
+}
+
+/** Rows printed for one size-against-outcome table. */
+function formatSizeBucketLines(rows: readonly SizeBucketRow[]): string[] {
+  const lines = ['    bucket     tasks  first-attempt pass rate  mean attempts  median duration'];
+  for (const row of rows) {
+    const median =
+      row.medianDurationSeconds === null
+        ? 'unavailable'
+        : formatDuration(row.medianDurationSeconds * 1000);
+    lines.push(
+      `    ${row.bucket.padEnd(10)} ${String(row.tasks).padEnd(6)} ${String(row.firstAttemptPassRate).padEnd(23)} ${String(row.meanAttempts).padEnd(14)} ${median}`,
+    );
+  }
+  return lines;
 }
 
 /** Parses a `brief.md` frontmatter `date` value into epoch milliseconds. */
@@ -601,6 +880,11 @@ export async function getMetricsReport(
   let totalCost = 0;
   const perSpecCost: Record<string, number> = {};
   let reportedCostAttempts = 0;
+  let scopeDetected = 0;
+  let scopeVerificationPassed = 0;
+  let scopeVerificationFailed = 0;
+  let scopeRecertifiedByHuman = 0;
+  let scopeRequeuedForAgent = 0;
 
   let withEventsCount = 0;
   let withoutEventsCount = 0;
@@ -654,6 +938,17 @@ export async function getMetricsReport(
         deadByReason[reason] = (deadByReason[reason] ?? 0) + 1;
       } else if (type === 'regressed') {
         gapExplained = true;
+        if (data?.reason === 'scope_regression') {
+          scopeDetected++;
+          const rawExit = data.exitCode;
+          if (typeof rawExit === 'number' && Number.isFinite(rawExit)) {
+            if (rawExit === 0) scopeVerificationPassed++;
+            else scopeVerificationFailed++;
+          }
+        }
+      } else if (type === 'recertification') {
+        if (data?.outcome === 'passed') scopeRecertifiedByHuman++;
+        else if (data?.outcome === 'requeued') scopeRequeuedForAgent++;
       } else if (type === 'verify_ran') {
         verifyTotal++;
         const rawExit = data?.exitCode;
@@ -930,6 +1225,13 @@ export async function getMetricsReport(
 
   const queue = await readQueueReport(projectRoot, config);
 
+  const measuredTasks = await projectMeasuredTasks(allSpecFolders);
+  const sizes: SizeMetrics = {
+    byScopeFiles: aggregateSizeBuckets(measuredTasks, 'scopeFiles'),
+    byAcceptanceLines: aggregateSizeBuckets(measuredTasks, 'acceptanceLines'),
+    largestFirstAttemptPass: selectLargestFirstAttemptPass(measuredTasks),
+  };
+
   const perSpec: Record<string, number> = {};
   for (const [spec, value] of Object.entries(perSpecCost)) {
     if (value > 0) perSpec[spec] = value;
@@ -984,6 +1286,14 @@ export async function getMetricsReport(
       rejections: {
         total: rejectionTotal,
         byPlannerModel: rejectionsByPlannerModel,
+      },
+      sizes,
+      scopeRegressions: {
+        detected: scopeDetected,
+        verificationPassedAtDetection: scopeVerificationPassed,
+        verificationFailedAtDetection: scopeVerificationFailed,
+        recertifiedByHuman: scopeRecertifiedByHuman,
+        requeuedForAgent: scopeRequeuedForAgent,
       },
     },
     coverage: {
@@ -1049,7 +1359,170 @@ export async function getMetricsReport(
  */
 export const generateReport = getMetricsReport;
 
-export function formatMetricsReport(report: MetricsReport): string {
+/** One historical dead outcome rendered in the repository record. */
+export interface RepositoryDeadOutcome {
+  readonly change: string;
+  readonly title: string;
+  readonly reason: string;
+}
+
+/** Bounded repository record derived only from recent archived changes. */
+export interface RepositoryRecord {
+  readonly measuredTasks: number;
+  readonly firstAttemptPassRate: number;
+  readonly medianDurationSeconds: number | null;
+  readonly largestFirstAttemptPass: LargestFirstAttemptPass | null;
+  readonly deadOutcomes: readonly RepositoryDeadOutcome[];
+}
+
+export const REPOSITORY_RECORD_MIN_MEASURED_TASKS = 5;
+export const REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES = 20;
+export const REPOSITORY_RECORD_MAX_DEAD_OUTCOMES = 10;
+
+function numericPrefix(name: string): number | null {
+  const match = name.match(/^(\d+)/);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+/** Canonical archive folders, newest numeric first, hidden entries excluded. */
+async function listRecentArchiveFolders(archiveDir: string, limit: number): Promise<string[]> {
+  let entries: string[] = [];
+  try {
+    entries = await fs.readdir(archiveDir);
+  } catch {
+    return [];
+  }
+  const folders: string[] = [];
+  for (const entry of entries) {
+    if (entry.startsWith('.') || entry.startsWith('_')) continue;
+    const fullPath = path.join(archiveDir, entry);
+    const stat = await fs.stat(fullPath).catch(() => null);
+    if (stat?.isDirectory()) folders.push(fullPath);
+  }
+  folders.sort((a, b) => {
+    const nameA = path.basename(a);
+    const nameB = path.basename(b);
+    const numA = numericPrefix(nameA);
+    const numB = numericPrefix(nameB);
+    if (numA !== null && numB !== null) {
+      if (numA !== numB) return numB - numA;
+      return nameA.localeCompare(nameB);
+    }
+    if (numA !== null) return -1;
+    if (numB !== null) return 1;
+    return nameA.localeCompare(nameB);
+  });
+  return folders.slice(0, limit);
+}
+
+/** Every typed `dead` event in the window, in change/task/event order. */
+async function collectDeadOutcomes(folders: readonly string[]): Promise<RepositoryDeadOutcome[]> {
+  const outcomes: RepositoryDeadOutcome[] = [];
+  for (const folderPath of folders) {
+    const change = path.basename(folderPath);
+    const tasksDir = path.join(folderPath, 'tasks');
+    let taskFiles: string[] = [];
+    try {
+      taskFiles = (await fs.readdir(tasksDir))
+        .filter((entry) => entry.endsWith('.md'))
+        .sort(compareNumericPrefix);
+    } catch {
+      continue;
+    }
+
+    for (const taskFile of taskFiles) {
+      const taskNumber = taskFile.replace(/\.md$/, '');
+      const eventContent = await fs
+        .readFile(path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
+        .catch(() => null);
+      if (eventContent === null) continue;
+      const metadata = await readTaskMetadata(folderPath, taskNumber);
+      for (const event of parseEventLines(eventContent)) {
+        if (event.type !== 'dead') continue;
+        const rawReason = asData(event)?.reason;
+        const reason =
+          typeof rawReason === 'string' && rawReason.trim() ? rawReason.trim() : 'unknown';
+        outcomes.push({ change, title: metadata.title, reason });
+      }
+    }
+  }
+  return outcomes;
+}
+
+/**
+ * Shared bounded repository record: at most the 20 newest canonical archived
+ * changes by numeric id, with measured outcomes and up to ten dead rows.
+ */
+export async function getRepositoryRecord(
+  projectRoot: string,
+  config: OsqConfig = DEFAULT_CONFIG,
+): Promise<RepositoryRecord> {
+  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
+  const folders = await listRecentArchiveFolders(
+    archiveDir,
+    REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES,
+  );
+  const measured = await projectMeasuredTasks(folders);
+  const deadOutcomes = await collectDeadOutcomes(folders);
+  const passed = measured.filter((task) => task.firstAttemptPass).length;
+  const durations = measured
+    .map((task) => task.durationSeconds)
+    .filter((value): value is number => value !== null);
+
+  return {
+    measuredTasks: measured.length,
+    firstAttemptPassRate: measured.length > 0 ? round2(passed / measured.length) : 0,
+    medianDurationSeconds: medianSeconds(durations),
+    largestFirstAttemptPass: selectLargestFirstAttemptPass(measured),
+    deadOutcomes: deadOutcomes.slice(0, REPOSITORY_RECORD_MAX_DEAD_OUTCOMES),
+  };
+}
+
+/**
+ * Body of the planning prompt's repository-record section. The caller owns the
+ * heading. Fewer than five measured tasks print only the too-small sentence.
+ */
+export function formatRepositoryRecordBody(record: RepositoryRecord): string {
+  if (record.measuredTasks < REPOSITORY_RECORD_MIN_MEASURED_TASKS) {
+    return `This repository's measured record is too small (fewer than ${REPOSITORY_RECORD_MIN_MEASURED_TASKS} tasks).`;
+  }
+
+  const lines: string[] = [];
+  lines.push(`First-attempt pass rate: ${record.firstAttemptPassRate}`);
+
+  const largest = record.largestFirstAttemptPass;
+  if (largest) {
+    lines.push(
+      `Largest first-attempt pass: ${largest.change}/${largest.task} "${largest.title}" (scope files: ${largest.scopeFiles}, acceptance lines: ${largest.acceptanceLines})`,
+    );
+  } else {
+    lines.push('Largest first-attempt pass: unavailable');
+  }
+
+  lines.push(
+    `Median task duration: ${
+      record.medianDurationSeconds === null
+        ? 'unavailable'
+        : formatDuration(record.medianDurationSeconds * 1000)
+    }`,
+  );
+
+  lines.push('Dead outcomes:');
+  if (record.deadOutcomes.length === 0) {
+    lines.push('  (none)');
+  } else {
+    for (const outcome of record.deadOutcomes) {
+      lines.push(`- ${outcome.change}, ${outcome.title}, ${outcome.reason}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+export function formatMetricsReport(
+  report: MetricsReport,
+  config: OsqConfig = DEFAULT_CONFIG,
+): string {
   const lines: string[] = [];
 
   lines.push('osq Delivery Metrics Report');
@@ -1103,6 +1576,42 @@ export function formatMetricsReport(report: MetricsReport): string {
   } else {
     for (const [model, count] of rejectionEntries) {
       lines.push(`    ${model}: ${count}`);
+    }
+  }
+
+  lines.push('  Scope regressions:');
+  lines.push(`    Detected: ${report.history.scopeRegressions.detected}`);
+  lines.push(
+    `    Verification passed at detection: ${report.history.scopeRegressions.verificationPassedAtDetection}`,
+  );
+  lines.push(
+    `    Verification failed at detection: ${report.history.scopeRegressions.verificationFailedAtDetection}`,
+  );
+  lines.push(`    Recertified by human: ${report.history.scopeRegressions.recertifiedByHuman}`);
+  lines.push(`    Requeued for agent: ${report.history.scopeRegressions.requeuedForAgent}`);
+
+  lines.push('  Size by scope files:');
+  lines.push(...formatSizeBucketLines(report.history.sizes.byScopeFiles));
+  lines.push('  Size by acceptance lines:');
+  lines.push(...formatSizeBucketLines(report.history.sizes.byAcceptanceLines));
+
+  const largestPass = report.history.sizes.largestFirstAttemptPass;
+  if (largestPass) {
+    const matching: string[] = [];
+    if (Math.abs(config.limits.maxScopeFiles - largestPass.scopeFiles) <= 1) {
+      matching.push(
+        `scope files ${largestPass.scopeFiles} is within 1 of configured maxScopeFiles ${config.limits.maxScopeFiles}`,
+      );
+    }
+    if (Math.abs(config.limits.maxAcceptanceLines - largestPass.acceptanceLines) <= 1) {
+      matching.push(
+        `acceptance lines ${largestPass.acceptanceLines} is within 1 of configured maxAcceptanceLines ${config.limits.maxAcceptanceLines}`,
+      );
+    }
+    if (matching.length > 0) {
+      lines.push(
+        `  Size hint: largest first-attempt pass ${largestPass.change}/${largestPass.task} — ${matching.join('; ')}`,
+      );
     }
   }
 

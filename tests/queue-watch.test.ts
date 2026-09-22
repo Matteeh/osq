@@ -20,6 +20,13 @@ const OPENSPEC = 'openspec';
 const CHANGES = path.join(OPENSPEC, 'changes');
 const ARCHIVE = path.join(CHANGES, 'archive');
 
+const LOCAL_VERIFIER = `const fs = require('node:fs');
+if (!fs.existsSync('openspec')) {
+  process.exit(1);
+}
+process.exit(0);
+`;
+
 const QUEUE = [
   '## [alpha] Queue Alpha',
   'Depends on: nothing',
@@ -71,7 +78,7 @@ function proposalMd(title: string, dependsOn: string[]): string {
     '---',
     `title: ${title}`,
     `depends_on: ${deps}`,
-    'verify: node -e "process.exit(0)"',
+    'verify: node verify.cjs',
     'features:',
     '  reads: []',
     '---',
@@ -146,6 +153,7 @@ describe('brief queue planning through the real CLI and mock harness', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-queue-watch-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
     await fs.writeFile(
       path.join(tmpDir, 'osq.config.ts'),
       "export default { harness: 'mock' };\n",
@@ -173,7 +181,7 @@ describe('brief queue planning through the real CLI and mock harness', () => {
     assert.match(waiting.stderr, /No queue item is eligible to plan/);
     assert.deepEqual(await activeFolders(tmpDir), ['001-alpha']);
 
-    await authorChange(tmpDir, '001-alpha', 'Queue Alpha', [], 'node -e "process.exit(0)"');
+    await authorChange(tmpDir, '001-alpha', 'Queue Alpha', [], 'node verify.cjs');
     assert.equal(
       (await deriveSpecState(tmpDir, path.join(tmpDir, CHANGES, '001-alpha'))).status,
       'unapproved',
@@ -234,7 +242,7 @@ describe('brief queue planning through the real CLI and mock harness', () => {
       '003-gamma',
       'Queue Gamma',
       ['002'],
-      'node -e "process.exit(0)"',
+      'node verify.cjs',
     );
     assert.match(
       await fs.readFile(path.join(gammaFolder, 'proposal.md'), 'utf8'),
