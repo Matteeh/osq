@@ -12,6 +12,8 @@ import {
   parseTaskMd,
   resolveChangeDoc,
 } from './parser.js';
+import { resolveScope } from './scope.js';
+import { compareNumericPrefix } from './state.js';
 
 /** The exact `@fission-ai/openspec` version this profile is pinned against. */
 export const OPENSPEC_EXPECTED_VERSION = '1.13.1';
@@ -774,85 +776,48 @@ export async function verifyDeltaTargets(
 }
 
 /**
- * Translate a task scope glob into an anchored regular expression. Supports `*`
- * (within one path segment), `**` (across segments), and `?`; a trailing `/`
- * expands to that directory's recursive contents.
+ * One task's resolved existing scope files, collected during linting so later
+ * cross-task analysis reuses the resolver projection instead of re-walking.
  */
-function globToRegExp(glob: string): RegExp {
-  let normalized = glob.trim().replace(/\\/g, '/').replace(/^\.\//, '');
-  if (normalized.endsWith('/')) {
-    normalized = `${normalized}**`;
-  }
-  normalized = normalized.replace(/\/+$/, '');
-
-  let source = '^';
-  let index = 0;
-  while (index < normalized.length) {
-    const char = normalized[index];
-    if (char === '*') {
-      if (normalized[index + 1] === '*') {
-        index += 2;
-        if (normalized[index] === '/') {
-          index += 1;
-          source += '(?:.*/)?';
-        } else {
-          source += '.*';
-        }
-      } else {
-        index += 1;
-        source += '[^/]*';
-      }
-    } else if (char === '?') {
-      index += 1;
-      source += '[^/]';
-    } else {
-      source += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      index += 1;
-    }
-  }
-
-  return new RegExp(`${source}$`);
+interface ResolvedTaskScope {
+  readonly taskFile: string;
+  readonly taskNumber: string;
+  readonly existingPaths: readonly string[];
 }
 
 /**
- * List repository-relative POSIX paths of every file under `tests/`. Only
- * preexisting files are returned, so a task that creates a brand new test file
- * never looks like it is touching an existing one.
+ * Compares each pair of tasks' resolved existing files and returns one
+ * deterministic warning per shared task-pair/file. Tasks are ordered by numeric
+ * filename with the established stable fallback, and paths within a pair are
+ * sorted, so directory enumeration order never affects the diagnostics.
+ * Declarations that resolve to no existing file are already excluded from
+ * `existingPaths`; the shared resolver deduplicated them per task, so a task
+ * never warns against itself.
  */
-async function listExistingTestFiles(projectRoot: string): Promise<string[]> {
-  const files: string[] = [];
+function collectOverlapWarnings(scopes: readonly ResolvedTaskScope[]): string[] {
+  const ordered = [...scopes].sort((a, b) => compareNumericPrefix(a.taskFile, b.taskFile));
+  const warnings: string[] = [];
 
-  const walk = async (dir: string): Promise<void> => {
-    let entries: Dirent[];
-    try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await walk(full);
-      } else if (entry.isFile()) {
-        files.push(path.relative(projectRoot, full).split(path.sep).join('/'));
+  for (let left = 0; left < ordered.length; left += 1) {
+    for (let right = left + 1; right < ordered.length; right += 1) {
+      const other = new Set(ordered[right].existingPaths);
+      const shared = ordered[left].existingPaths
+        .filter((relativePath) => other.has(relativePath))
+        .sort();
+      for (const relativePath of shared) {
+        warnings.push(
+          `Tasks ${ordered[left].taskNumber} and ${ordered[right].taskNumber} share resolved scope file ${relativePath}`,
+        );
       }
     }
-  };
+  }
 
-  await walk(path.join(projectRoot, 'tests'));
-  return files;
+  return warnings;
 }
 
-function touchedTestFiles(scope: string[], testFiles: string[]): string[] {
-  const matchers = scope.map(globToRegExp);
-  const touched = new Set<string>();
-  for (const file of testFiles) {
-    if (matchers.some((matcher) => matcher.test(file))) {
-      touched.add(file);
-    }
-  }
-  return [...touched].sort();
+/** Test files governed by the `tests.modify` gate; mirrors the `tests/**` default. */
+function isTestFilePath(relativePath: string): boolean {
+  return relativePath === 'tests' || relativePath.startsWith('tests/');
 }
 
 interface TestsModifyDeclaration {
@@ -966,13 +931,7 @@ export async function lintChangeFolder(
     errors.push('No task files found under tasks/');
   }
 
-  let existingTestFiles: string[] | null = null;
-  const getExistingTestFiles = async (): Promise<string[]> => {
-    if (existingTestFiles === null) {
-      existingTestFiles = await listExistingTestFiles(projectRoot);
-    }
-    return existingTestFiles;
-  };
+  const resolvedTaskScopes: ResolvedTaskScope[] = [];
 
   for (const taskFile of taskEntries) {
     const taskPath = path.join(tasksDir, taskFile);
@@ -990,9 +949,16 @@ export async function lintChangeFolder(
       );
     }
 
+    // Resolve the declared scope once through the shared deterministic resolver.
+    const resolved = task.scope.length > 0 ? await resolveScope(projectRoot, task.scope) : [];
+    const existingPaths = resolved
+      .filter((entry) => entry.absolutePath !== null)
+      .map((entry) => entry.relativePath);
+    resolvedTaskScopes.push({ taskFile, taskNumber: taskFile.replace(/\.md$/, ''), existingPaths });
+
     // Check: touching an existing test file requires tests.modify: true
-    if (!task.testsModify && task.scope.length > 0) {
-      const touched = touchedTestFiles(task.scope, await getExistingTestFiles());
+    if (!task.testsModify && existingPaths.length > 0) {
+      const touched = existingPaths.filter(isTestFilePath).sort();
       if (touched.length > 0) {
         errors.push(
           `Task in ${taskFile} scope touches existing test files (${touched.join(', ')}) without tests.modify: true`,
@@ -1031,6 +997,9 @@ export async function lintChangeFolder(
       );
     }
   }
+
+  // Check: shared resolved files across tasks are reported as non-failing warnings
+  warnings.push(...collectOverlapWarnings(resolvedTaskScopes));
 
   // Check: delta targets resolve against living base specs before approval
   errors.push(...(await verifyDeltaTargets(projectRoot, folderPath, config)));

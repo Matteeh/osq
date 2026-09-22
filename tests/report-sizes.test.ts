@@ -23,16 +23,38 @@ const fixtureRoot = path.resolve(
 const BASE_MS = Date.UTC(2026, 8, 1, 0, 0, 0);
 const iso = (sec: number): string => new Date(BASE_MS + sec * 1000).toISOString();
 
-const mStart = (sec: number, scopeFiles: number): Record<string, unknown> => ({
+const mStart = (
+  sec: number,
+  scopeFiles: number,
+  scopeResolver?: unknown,
+): Record<string, unknown> => ({
   type: 'measures',
   timestamp: iso(sec),
-  data: { phase: 'start', scopeFiles },
+  data:
+    scopeResolver === undefined
+      ? { phase: 'start', scopeFiles }
+      : { phase: 'start', scopeFiles, scopeResolver },
 });
 const mEnd = (sec: number, scopeFiles: number): Record<string, unknown> => ({
   type: 'measures',
   timestamp: iso(sec),
   data: { phase: 'end', scopeFiles },
 });
+
+/** Empty ordered bucket rows for a series with no measured tasks. */
+const EMPTY_BUCKETS = ['1-2', '3-4', '5-8', 'over-8'].map((bucket) => ({
+  bucket,
+  tasks: 0,
+  firstAttemptPassRate: 0,
+  meanAttempts: 0,
+  medianDurationSeconds: null,
+}));
+
+function series(report: Awaited<ReturnType<typeof getMetricsReport>>, resolver: string) {
+  const found = report.history.sizes.scopeFileSeries.find((entry) => entry.resolver === resolver);
+  assert.ok(found, `expected a ${resolver} scope-file series`);
+  return found;
+}
 const started = (sec: number): Record<string, unknown> => ({
   type: 'started',
   timestamp: iso(sec),
@@ -107,10 +129,13 @@ async function tempRoot(): Promise<string> {
 }
 
 describe('report sizes over the checked-in fixture', () => {
-  it('exposes ordered bucket rows for scope files and acceptance lines', async () => {
+  it('exposes ordered legacy scope buckets and an empty resolver-2 series', async () => {
     const report = await getMetricsReport(fixtureRoot, DEFAULT_CONFIG);
+    const legacy = series(report, 'legacy');
+    const resolver2 = series(report, 'resolver-2');
 
-    assert.deepEqual(report.history.sizes.byScopeFiles, [
+    assert.equal(legacy.startsAtChange, null);
+    assert.deepEqual(legacy.byScopeFiles, [
       {
         bucket: '1-2',
         tasks: 3,
@@ -140,6 +165,15 @@ describe('report sizes over the checked-in fixture', () => {
         medianDurationSeconds: 10,
       },
     ]);
+
+    // No resolver-2 measure exists in this fixture: a null boundary and empty
+    // buckets, never a fallback that reuses legacy scope counts.
+    assert.deepEqual(resolver2, {
+      resolver: 'resolver-2',
+      startsAtChange: null,
+      byScopeFiles: EMPTY_BUCKETS,
+      largestFirstAttemptPass: null,
+    });
 
     assert.deepEqual(report.history.sizes.byAcceptanceLines, [
       {
@@ -173,10 +207,18 @@ describe('report sizes over the checked-in fixture', () => {
     ]);
   });
 
-  it('selects the largest first-attempt pass with deterministic tie-breaks', async () => {
+  it('orders the scope series legacy first then resolver-2', async () => {
+    const report = await getMetricsReport(fixtureRoot, DEFAULT_CONFIG);
+    assert.deepEqual(
+      report.history.sizes.scopeFileSeries.map((entry) => entry.resolver),
+      ['legacy', 'resolver-2'],
+    );
+  });
+
+  it('selects the largest first-attempt pass within the legacy series', async () => {
     const report = await getMetricsReport(fixtureRoot, DEFAULT_CONFIG);
 
-    assert.deepEqual(report.history.sizes.largestFirstAttemptPass, {
+    assert.deepEqual(series(report, 'legacy').largestFirstAttemptPass, {
       change: '102-size-medium',
       task: '2',
       title: 'Tied largest A',
@@ -185,10 +227,12 @@ describe('report sizes over the checked-in fixture', () => {
     });
   });
 
-  it('emits size tables and exactly one near-limit hint line in text', async () => {
+  it('emits labeled size tables, the boundary, and exactly one near-limit hint line', async () => {
     const output = await reportCommand({ cwd: fixtureRoot, stdout: () => {} });
 
-    assert.ok(output.includes('Size by scope files:'), output);
+    assert.ok(output.includes('Size by scope files (legacy):'), output);
+    assert.ok(output.includes('Size by scope files (resolver-2):'), output);
+    assert.ok(output.includes('Resolver 2 starts at: unavailable'), output);
     assert.ok(output.includes('Size by acceptance lines:'), output);
     assert.ok(output.includes('bucket'), output);
 
@@ -207,14 +251,29 @@ describe('report sizes over the checked-in fixture', () => {
     assert.ok(!output.includes('Size hint:'), output);
   });
 
-  it('renders stable JSON with ordered history.sizes', async () => {
+  it('renders stable JSON with ordered scope series and acceptance buckets', async () => {
     const raw = await reportCommand({ cwd: fixtureRoot, json: true, stdout: () => {} });
     const parsed = JSON.parse(raw) as {
-      history: { sizes: { byScopeFiles: { bucket: string }[]; byAcceptanceLines: unknown[] } };
+      history: {
+        sizes: {
+          scopeFileSeries: {
+            resolver: string;
+            startsAtChange: string | null;
+            byScopeFiles: { bucket: string }[];
+          }[];
+          byAcceptanceLines: unknown[];
+        };
+      };
     };
 
     assert.deepEqual(
-      parsed.history.sizes.byScopeFiles.map((row) => row.bucket),
+      parsed.history.sizes.scopeFileSeries.map((entry) => entry.resolver),
+      ['legacy', 'resolver-2'],
+    );
+    assert.equal(parsed.history.sizes.scopeFileSeries[0].startsAtChange, null);
+    assert.equal(parsed.history.sizes.scopeFileSeries[1].startsAtChange, null);
+    assert.deepEqual(
+      parsed.history.sizes.scopeFileSeries[0].byScopeFiles.map((row) => row.bucket),
       ['1-2', '3-4', '5-8', 'over-8'],
     );
     assert.deepEqual(
@@ -275,9 +334,13 @@ describe('measured task projection', () => {
     );
 
     const report = await getMetricsReport(rootPath, DEFAULT_CONFIG);
-    assert.equal(report.history.sizes.largestFirstAttemptPass, null);
+    const sizes = report.history.sizes;
+    assert.ok(sizes.scopeFileSeries.every((entry) => entry.largestFirstAttemptPass === null));
     assert.equal(
-      report.history.sizes.byScopeFiles.reduce((sum, row) => sum + row.tasks, 0),
+      sizes.scopeFileSeries.reduce(
+        (sum, entry) => sum + entry.byScopeFiles.reduce((inner, row) => inner + row.tasks, 0),
+        0,
+      ),
       0,
     );
   });
@@ -303,7 +366,7 @@ describe('measured task projection', () => {
     ]);
 
     const report = await getMetricsReport(rootPath, DEFAULT_CONFIG);
-    const bucket = report.history.sizes.byScopeFiles.find((row) => row.bucket === '3-4');
+    const bucket = series(report, 'legacy').byScopeFiles.find((row) => row.bucket === '3-4');
     assert.ok(bucket);
     assert.equal(bucket.tasks, 1);
     assert.equal(bucket.firstAttemptPassRate, 0);
@@ -327,7 +390,7 @@ describe('measured task projection', () => {
     ]);
 
     const report = await getMetricsReport(rootPath, DEFAULT_CONFIG);
-    const bucket = report.history.sizes.byScopeFiles.find((row) => row.bucket === '1-2');
+    const bucket = series(report, 'legacy').byScopeFiles.find((row) => row.bucket === '1-2');
     assert.ok(bucket);
     assert.equal(bucket.tasks, 2);
     assert.equal(bucket.firstAttemptPassRate, 0.5);
@@ -344,7 +407,7 @@ describe('measured task projection', () => {
     ]);
 
     const report = await getMetricsReport(rootPath, DEFAULT_CONFIG);
-    const bucket = report.history.sizes.byScopeFiles.find((row) => row.bucket === '1-2');
+    const bucket = series(report, 'legacy').byScopeFiles.find((row) => row.bucket === '1-2');
     assert.ok(bucket);
     assert.equal(bucket.tasks, 1);
     assert.equal(bucket.medianDurationSeconds, null);
@@ -388,6 +451,7 @@ describe('repository record derivation', () => {
       scopeFiles: 8,
       acceptanceLines: 7,
     });
+    assert.equal(record.scopeFileResolver, 'legacy');
     assert.deepEqual(record.deadOutcomes, [
       { change: '103-size-large', title: 'Large dead task', reason: 'crashed' },
       { change: '103-size-large', title: 'Unknown reason task', reason: 'unknown' },
@@ -418,6 +482,76 @@ describe('repository record derivation', () => {
     assert.deepEqual(record.deadOutcomes, []);
     assert.equal(record.largestFirstAttemptPass?.change, '022-change-21');
     assert.equal(record.largestFirstAttemptPass?.scopeFiles, 9);
+  });
+
+  it('uses resolver-2 scope evidence for the record when the window has any', async () => {
+    const rootPath = await root();
+    // Legacy declares the larger scope count; resolver-2 must win the unit and
+    // the larger legacy count must never be compared against it.
+    await writeArchivedChange(rootPath, '100-legacy', [
+      {
+        title: 'Legacy large',
+        acceptanceLines: 1,
+        events: [mStart(0, 90), started(1), mEnd(2, 90), done(3)],
+      },
+    ]);
+    await writeArchivedChange(rootPath, '101-resolver', [
+      {
+        title: 'Resolver small',
+        acceptanceLines: 4,
+        events: [mStart(0, 3, 2), started(1), mEnd(2, 3), done(3)],
+      },
+      {
+        title: 'Resolver larger',
+        acceptanceLines: 2,
+        events: [mStart(10, 5, 2), started(11), mEnd(12, 5), done(13)],
+      },
+    ]);
+
+    const record = await getRepositoryRecord(rootPath, DEFAULT_CONFIG);
+    assert.equal(record.scopeFileResolver, 'resolver-2');
+    assert.equal(record.largestFirstAttemptPass?.change, '101-resolver');
+    assert.equal(record.largestFirstAttemptPass?.task, '2');
+    assert.equal(record.largestFirstAttemptPass?.scopeFiles, 5);
+    // Measured count and pass rate still span both generations.
+    assert.equal(record.measuredTasks, 3);
+  });
+
+  it('labels the legacy fallback when no resolver-2 evidence exists', async () => {
+    const rootPath = await root();
+    const tasks: TaskSpec[] = Array.from({ length: 5 }, (_, i) => ({
+      title: `Legacy ${i}`,
+      acceptanceLines: 1,
+      events: [mStart(0, 4), started(1), mEnd(2, 4), done(3)],
+    }));
+    await writeArchivedChange(rootPath, '100-legacy', tasks);
+
+    const record = await getRepositoryRecord(rootPath, DEFAULT_CONFIG);
+    assert.equal(record.scopeFileResolver, 'legacy');
+    assert.equal(record.largestFirstAttemptPass?.scopeFiles, 4);
+    assert.ok(formatRepositoryRecordBody(record).includes('[legacy scope]'));
+
+    const resolverBody = formatRepositoryRecordBody({
+      ...record,
+      scopeFileResolver: 'resolver-2',
+    });
+    assert.ok(resolverBody.includes('[resolver 2 scope]'), resolverBody);
+  });
+
+  it('derives no largest pass when every measured task has a malformed resolver', async () => {
+    const rootPath = await root();
+    await writeArchivedChange(rootPath, '100-malformed', [
+      {
+        title: 'Malformed version',
+        acceptanceLines: 1,
+        events: [mStart(0, 7, '2'), started(1), mEnd(2, 7), done(3)],
+      },
+    ]);
+
+    const record = await getRepositoryRecord(rootPath, DEFAULT_CONFIG);
+    assert.equal(record.measuredTasks, 1);
+    assert.equal(record.scopeFileResolver, null);
+    assert.equal(record.largestFirstAttemptPass, null);
   });
 
   it('truncates dead outcomes to ten in change, task, event order', async () => {
@@ -507,6 +641,7 @@ describe('formatRepositoryRecordBody', () => {
         scopeFiles: 8,
         acceptanceLines: 7,
       },
+      scopeFileResolver: 'legacy',
       deadOutcomes: [
         { change: '103-size-large', title: 'Large dead task', reason: 'crashed' },
         { change: '103-size-large', title: 'Unknown reason task', reason: 'unknown' },
@@ -516,6 +651,7 @@ describe('formatRepositoryRecordBody', () => {
     const body = formatRepositoryRecordBody(record);
     assert.ok(body.includes('First-attempt pass rate: 0.5'), body);
     assert.ok(body.includes('Largest first-attempt pass:'), body);
+    assert.ok(body.includes('[legacy scope]'), body);
     assert.ok(body.includes('Median task duration: 30s'), body);
     assert.ok(body.includes('Dead outcomes:'), body);
     assert.ok(body.includes('- 103-size-large, Large dead task, crashed'), body);
@@ -528,6 +664,7 @@ describe('formatRepositoryRecordBody', () => {
       firstAttemptPassRate: 0,
       medianDurationSeconds: null,
       largestFirstAttemptPass: null,
+      scopeFileResolver: null,
       deadOutcomes: [],
     };
 
@@ -535,5 +672,107 @@ describe('formatRepositoryRecordBody', () => {
       formatRepositoryRecordBody(record),
       "This repository's measured record is too small (fewer than 5 tasks).",
     );
+  });
+});
+
+describe('mixed resolver generations', () => {
+  const roots: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })));
+  });
+
+  /** One archive window with conflicting legacy and resolver-2 scope evidence. */
+  async function mixedRoot(): Promise<string> {
+    const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-report-mixed-'));
+    roots.push(rootPath);
+    await writeArchivedChange(rootPath, '100-legacy-conflict', [
+      {
+        title: 'Legacy conflict',
+        acceptanceLines: 2,
+        events: [mStart(0, 3), started(1), mEnd(2, 3), done(3)],
+      },
+    ]);
+    await writeArchivedChange(rootPath, '101-resolver-first', [
+      {
+        title: 'Resolver first',
+        acceptanceLines: 3,
+        events: [mStart(0, 2, 2), started(1), mEnd(2, 2), done(3)],
+      },
+    ]);
+    await writeArchivedChange(rootPath, '102-resolver-conflict', [
+      {
+        title: 'Resolver conflict',
+        acceptanceLines: 7,
+        events: [mStart(0, 8, 2), started(1), mEnd(2, 8), done(3)],
+      },
+    ]);
+    await writeArchivedChange(rootPath, '103-malformed', [
+      {
+        title: 'Malformed version',
+        acceptanceLines: 1,
+        events: [mStart(0, 11, '3'), started(1), mEnd(2, 11), done(3)],
+      },
+    ]);
+    return rootPath;
+  }
+
+  it('keeps legacy and resolver-2 scope buckets and largest passes separate', async () => {
+    const report = await getMetricsReport(await mixedRoot(), DEFAULT_CONFIG);
+    const legacy = series(report, 'legacy');
+    const resolver2 = series(report, 'resolver-2');
+
+    // The legacy task has the smaller scope count; the resolver-2 task the
+    // larger. Each generation selects from its own tasks only.
+    assert.equal(legacy.largestFirstAttemptPass?.change, '100-legacy-conflict');
+    assert.equal(legacy.largestFirstAttemptPass?.scopeFiles, 3);
+    assert.equal(resolver2.largestFirstAttemptPass?.change, '102-resolver-conflict');
+    assert.equal(resolver2.largestFirstAttemptPass?.scopeFiles, 8);
+    assert.equal(resolver2.startsAtChange, '101-resolver-first');
+
+    // Malformed resolver versions enter neither scope-file series.
+    assert.equal(
+      legacy.byScopeFiles.reduce((sum, row) => sum + row.tasks, 0),
+      1,
+    );
+    assert.equal(
+      resolver2.byScopeFiles.reduce((sum, row) => sum + row.tasks, 0),
+      2,
+    );
+  });
+
+  it('aggregates acceptance sizes across generations in one combined series', async () => {
+    const report = await getMetricsReport(await mixedRoot(), DEFAULT_CONFIG);
+    const total = report.history.sizes.byAcceptanceLines.reduce((sum, row) => sum + row.tasks, 0);
+    // Legacy, both resolver-2 tasks, and the malformed version all contribute.
+    assert.equal(total, 4);
+  });
+
+  it('labels both series, marks the boundary, and hints from resolver-2 only', async () => {
+    const rootPath = await mixedRoot();
+    const report = await getMetricsReport(rootPath, DEFAULT_CONFIG);
+    const output = formatMetricsReport(report, DEFAULT_CONFIG);
+
+    assert.ok(output.includes('Size by scope files (legacy):'), output);
+    assert.ok(output.includes('Size by scope files (resolver-2):'), output);
+    assert.ok(output.includes('Resolver 2 starts at: 101-resolver-first'), output);
+
+    const hintLines = output.split('\n').filter((line) => line.includes('Size hint:'));
+    assert.equal(hintLines.length, 1, output);
+    assert.ok(hintLines[0].includes('102-resolver-conflict/1'), hintLines[0]);
+    assert.ok(hintLines[0].includes('maxScopeFiles 8'), hintLines[0]);
+
+    const raw = await reportCommand({ cwd: rootPath, json: true, stdout: () => {} });
+    const parsed = JSON.parse(raw) as {
+      history: {
+        sizes: { scopeFileSeries: { resolver: string; startsAtChange: string | null }[] };
+      };
+    };
+    assert.deepEqual(
+      parsed.history.sizes.scopeFileSeries.map((entry) => entry.resolver),
+      ['legacy', 'resolver-2'],
+    );
+    assert.equal(parsed.history.sizes.scopeFileSeries[0].startsAtChange, null);
+    assert.equal(parsed.history.sizes.scopeFileSeries[1].startsAtChange, '101-resolver-first');
   });
 });

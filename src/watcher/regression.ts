@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { parseTaskMd } from '../core/parser.js';
 import {
+  SCOPE_RESOLVER_VERSION,
   type StaleTaskAudit,
   attributeScopePaths,
   buildScopeRegressionMarker,
@@ -50,10 +51,10 @@ export interface ScopeAuditResult {
 
 /**
  * Pre-lock scope recertification audit. Compares every eligible automated done
- * marker's recorded literal scope hash against the current tree in one pass,
- * verifies each stale task under the configured timeout, and records one
- * regression marker and typed event per stale task. Already-active regressions
- * are reported without re-verification or duplicate writes.
+ * marker's recorded resolver-aware scope hash and version against the current
+ * tree in one pass, verifies each stale task under the configured timeout, and
+ * records one regression marker and typed event per stale task. Already-active
+ * regressions are reported without re-verification or duplicate writes.
  */
 export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
   const { projectRoot, specFolderPath, eligibleTaskNumbers, verifyTimeoutSeconds } = options;
@@ -85,9 +86,16 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
     if (taskContent === null) continue;
     const taskData = parseTaskMd(taskContent);
     const current = await computeTaskScopeHash(projectRoot, taskData.scope);
-    if (current.hash === recorded.scopeHash) continue;
+    if (current.hash === recorded.scopeHash && recorded.scopeResolver === SCOPE_RESOLVER_VERSION) {
+      continue;
+    }
 
-    const differing = findDifferingPaths(recorded.scopeFiles, current.fileHashes);
+    // A matching aggregate hash is a version-only upgrade: report no differing
+    // path from the legacy per-file projection rather than inventing one.
+    const differing =
+      current.hash === recorded.scopeHash
+        ? []
+        : findDifferingPaths(recorded.scopeFiles, current.fileHashes);
     const base = {
       differingPaths: differing.map((entry) => entry.display),
       attribution: attributeScopePaths(
@@ -126,7 +134,11 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       alreadyActive: false,
     };
     if (gate) {
-      await writeRegressedMarker(runDir, taskNumber, buildScopeRegressionMarker(audit));
+      const marker = buildScopeRegressionMarker(audit).replace(
+        '\n---\n',
+        `\nrecorded_resolver: ${JSON.stringify(recorded.scopeResolver)}\ncurrent_resolver: ${SCOPE_RESOLVER_VERSION}\n---\n`,
+      );
+      await writeRegressedMarker(runDir, taskNumber, marker);
       await recordRegressedEvent(specFolderPath, taskNumber, {
         reason: 'scope_regression',
         differingPaths: audit.differingPaths,
@@ -139,6 +151,8 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
         output: audit.output,
         timedOut: audit.timedOut,
         verificationPassed: audit.verificationPassed,
+        recordedResolver: recorded.scopeResolver,
+        currentResolver: SCOPE_RESOLVER_VERSION,
       });
     }
     stale.push(audit);
@@ -194,6 +208,7 @@ export async function buildDoneMetadata(
     buildStamp: buildInfo.commit,
     exitCode: 0,
     fileHashes: scopeHash.fileHashes,
+    scopeResolver: SCOPE_RESOLVER_VERSION,
   };
 }
 

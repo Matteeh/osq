@@ -80,6 +80,7 @@ function sha256(content: string): string {
 function startMeasureData(overrides: Partial<MeasuresEventData> = {}): MeasuresEventData {
   return {
     phase: 'start',
+    scopeResolver: 2,
     scopeFiles: 2,
     scopeLines: 10,
     repoFiles: 100,
@@ -129,6 +130,23 @@ describe('measures', () => {
 
     it('returns zeros when no scoped file exists', async () => {
       assert.deepEqual(await gatherScopeCounts(tmpDir, ['ghost.ts']), { files: 0, lines: 0 });
+    });
+
+    it('counts each file a glob resolves and zero for an unmatched glob', async () => {
+      await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
+      await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'one\ntwo', 'utf8');
+      await fs.writeFile(path.join(tmpDir, 'src', 'b.ts'), 'three', 'utf8');
+
+      const counts = await gatherScopeCounts(tmpDir, [
+        'src/*.ts',
+        'src/b.ts',
+        'absent/*.ts',
+        'missing.ts',
+      ]);
+
+      // One glob matching two files, one exact duplicate, one unmatched glob,
+      // and one exact missing path: exactly the two resolved files count.
+      assert.deepEqual(counts, { files: 2, lines: 3 });
     });
   });
 
@@ -207,6 +225,25 @@ describe('measures', () => {
 
       assert.equal(fanIn, 0);
     });
+
+    it('resolves a glob into its real import targets instead of the literal glob text', async () => {
+      await fs.mkdir(path.join(tmpDir, 'src', 'core'), { recursive: true });
+      await fs.mkdir(path.join(tmpDir, 'src', 'other'), { recursive: true });
+      await fs.writeFile(
+        path.join(tmpDir, 'src', 'core', 'foo.ts'),
+        'export const foo = 1;\n',
+        'utf8',
+      );
+      await fs.writeFile(
+        path.join(tmpDir, 'src', 'other', 'baz.ts'),
+        "import { foo } from '../core/foo.js';\n",
+        'utf8',
+      );
+
+      const fanIn = await countImportFanIn(tmpDir, ['src/core/*.ts']);
+
+      assert.equal(fanIn, 1);
+    });
   });
 
   describe('countDeltaRequirementsAndScenarios', () => {
@@ -262,6 +299,17 @@ describe('measures', () => {
     it('hashFileForMeasures returns null for an absent file', async () => {
       assert.equal(await hashFileForMeasures(path.join(tmpDir, 'nope.ts')), null);
     });
+
+    it('keeps an exact missing path as null and omits unmatched globs', async () => {
+      await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
+      await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'content', 'utf8');
+
+      const hashes = await snapshotScopeHashes(tmpDir, ['src/*.ts', 'src/missing.ts', 'gone/*.ts']);
+
+      assert.deepEqual(Object.keys(hashes).sort(), ['src/a.ts', 'src/missing.ts']);
+      assert.equal(hashes['src/a.ts'], sha256('content'));
+      assert.equal(hashes['src/missing.ts'], null);
+    });
   });
 
   describe('gatherEndMeasures', () => {
@@ -289,6 +337,40 @@ describe('measures', () => {
       assert.deepEqual(end.scopeHashes?.['src/deleted.ts'], {
         before: sha256('x\ny\nz\nw'),
         after: null,
+      });
+    });
+
+    it('re-resolves a glob at end so added, modified, and deleted matches are visible', async () => {
+      await fs.mkdir(path.join(tmpDir, 'src'), { recursive: true });
+      await fs.writeFile(path.join(tmpDir, 'src', 'kept.ts'), 'same', 'utf8');
+      await fs.writeFile(path.join(tmpDir, 'src', 'modified.ts'), 'a\nb', 'utf8');
+      await fs.writeFile(path.join(tmpDir, 'src', 'deleted.ts'), 'x\ny\nz', 'utf8');
+      const scope = ['src/*.ts'];
+      const before = await snapshotScope(tmpDir, scope);
+
+      await fs.writeFile(path.join(tmpDir, 'src', 'kept.ts'), 'same', 'utf8');
+      await fs.writeFile(path.join(tmpDir, 'src', 'modified.ts'), 'a\nb\nc\nd', 'utf8');
+      await fs.rm(path.join(tmpDir, 'src', 'deleted.ts'));
+      await fs.writeFile(path.join(tmpDir, 'src', 'added.ts'), 'new', 'utf8');
+
+      const end = await gatherEndMeasures(startMeasureData(), before, tmpDir, scope);
+
+      assert.equal(end.changedFiles, 3);
+      assert.equal(end.changedLines, 6);
+      assert.deepEqual(Object.keys(end.scopeHashes ?? {}).sort(), [
+        'src/added.ts',
+        'src/deleted.ts',
+        'src/kept.ts',
+        'src/modified.ts',
+      ]);
+      assert.deepEqual(end.scopeHashes?.['src/added.ts'], { before: null, after: sha256('new') });
+      assert.deepEqual(end.scopeHashes?.['src/deleted.ts'], {
+        before: sha256('x\ny\nz'),
+        after: null,
+      });
+      assert.deepEqual(end.scopeHashes?.['src/kept.ts'], {
+        before: sha256('same'),
+        after: sha256('same'),
       });
     });
 
@@ -396,6 +478,7 @@ describe('measures', () => {
       const measures = await gatherStartMeasures(tmpDir, specFolder, parseTaskMd(taskContent));
 
       assert.equal(measures.phase, 'start');
+      assert.equal(measures.scopeResolver, 2);
       assert.equal(measures.scopeFiles, 1);
       assert.equal(measures.scopeLines, 3);
       assert.equal(measures.importFanIn, 0);
@@ -468,6 +551,10 @@ describe('measures', () => {
         assert.deepEqual(
           measures.map((data) => data.phase),
           ['start', 'end'],
+        );
+        assert.deepEqual(
+          measures.map((data) => data.scopeResolver),
+          [2, 2],
         );
         assert.equal(measures[1].changedFiles, 0);
         assert.equal(measures[1].changedLines, 0);

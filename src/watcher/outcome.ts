@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { type Logger, resolveSymbol } from '../core/logger.js';
+import { SCOPE_RESOLVER_VERSION } from '../core/scope.js';
 import {
   type DeadEventData,
   type DoneEventData,
@@ -158,6 +159,8 @@ export interface DoneMarkerMetadata {
   buildStamp: string;
   exitCode: number;
   fileHashes?: Record<string, string | null>;
+  /** Recorded deterministic resolver version; defaults to the current version. */
+  scopeResolver?: number;
 }
 export async function writeDoneMarker(
   runDir: string,
@@ -168,7 +171,7 @@ export async function writeDoneMarker(
   await fs.mkdir(doneDir, { recursive: true });
   const stamp = `${new Date().toISOString()}\n`;
   const frontmatter = metadata
-    ? `---\nscope_hash: "${metadata.scopeHash}"\nbuild_stamp: "${metadata.buildStamp}"\nexit_code: ${metadata.exitCode}\nscope_files: ${JSON.stringify(metadata.fileHashes ?? {})}\n---\n`
+    ? `---\nscope_resolver: ${metadata.scopeResolver ?? SCOPE_RESOLVER_VERSION}\nscope_hash: "${metadata.scopeHash}"\nbuild_stamp: "${metadata.buildStamp}"\nexit_code: ${metadata.exitCode}\nscope_files: ${JSON.stringify(metadata.fileHashes ?? {})}\n---\n`
     : '';
   await fs.writeFile(path.join(doneDir, taskNumber), `${frontmatter}${stamp}`, 'utf8');
 }

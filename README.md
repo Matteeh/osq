@@ -16,6 +16,10 @@ pnpm osq watch                 # start the watcher
 
 `init` is idempotent. Run it again after upgrading to refresh the managed blocks in `AGENTS.md` and `PLANNER.md`; it never touches anything else you've edited and preserves foreign managed blocks.
 
+## Upgrading
+
+Resolver 2 changes the automated done-marker hashes for active changes. On the first watcher cycle after upgrading, a completed task in an active change whose `.run/done/<n>` lacks `scope_resolver: 2` is detected even when its recorded aggregate hash still matches. This is a one-time recertification wave: the watcher runs each affected task's `verify` at detection, writes one idempotent `.run/regressed/<n>.md` scope-regression marker carrying the recorded and current resolver versions, and halts the change. Review each marker and run `osq retry <id> <task>` to recertify that task explicitly; a passing verification refreshes the marker with resolver-2 hashes. Markers inside `openspec/changes/archive/` are not rewritten or audited by this migration.
+
 ## What it puts in your repo
 
 ```

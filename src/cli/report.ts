@@ -103,11 +103,15 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         byPlannerModel: { ...report.history.rejections.byPlannerModel },
       },
       sizes: {
-        byScopeFiles: report.history.sizes.byScopeFiles.map((row) => ({ ...row })),
         byAcceptanceLines: report.history.sizes.byAcceptanceLines.map((row) => ({ ...row })),
-        largestFirstAttemptPass: report.history.sizes.largestFirstAttemptPass
-          ? { ...report.history.sizes.largestFirstAttemptPass }
-          : null,
+        scopeFileSeries: report.history.sizes.scopeFileSeries.map((series) => ({
+          resolver: series.resolver,
+          startsAtChange: series.startsAtChange,
+          byScopeFiles: series.byScopeFiles.map((row) => ({ ...row })),
+          largestFirstAttemptPass: series.largestFirstAttemptPass
+            ? { ...series.largestFirstAttemptPass }
+            : null,
+        })),
       },
       scopeRegressions: { ...report.history.scopeRegressions },
     },

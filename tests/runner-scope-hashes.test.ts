@@ -7,6 +7,7 @@ import { approveSpec } from '../src/core/approve.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { parseFrontmatter } from '../src/core/parser.js';
+import { findDifferingPaths } from '../src/core/scope-hash.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { writeDoneMarker } from '../src/watcher/outcome.js';
@@ -171,6 +172,67 @@ describe('computeTaskScopeHash', () => {
   it('records null for a missing scoped file', async () => {
     const result = await computeTaskScopeHash(tmpDir, ['src/missing.ts']);
     assert.equal(result.fileHashes['src/missing.ts'], null);
+  });
+
+  it('classifies added, modified, and deleted glob matches through the resolver', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'core'), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-report.ts'),
+      'export const base = 1;\n',
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-report-extra.ts'),
+      'export const extra = 2;\n',
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-summary.ts'),
+      'export const other = 0;\n',
+      'utf8',
+    );
+
+    const before = await computeTaskScopeHash(tmpDir, ['src/core/queue-report*.ts']);
+    assert.deepEqual(Object.keys(before.fileHashes).sort(), [
+      'src/core/queue-report-extra.ts',
+      'src/core/queue-report.ts',
+    ]);
+
+    // Add a matching file, modify another, and delete a third.
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-report-new.ts'),
+      'export const fresh = 3;\n',
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-report.ts'),
+      'export const base = 99;\n',
+      'utf8',
+    );
+    await fs.rm(path.join(tmpDir, 'src', 'core', 'queue-report-extra.ts'));
+    // A non-matching file change must not affect the glob aggregate.
+    await fs.writeFile(
+      path.join(tmpDir, 'src', 'core', 'queue-summary.ts'),
+      'export const other = 1;\n',
+      'utf8',
+    );
+
+    const after = await computeTaskScopeHash(tmpDir, ['src/core/queue-report*.ts']);
+    assert.notEqual(before.hash, after.hash);
+    assert.deepEqual(Object.keys(after.fileHashes).sort(), [
+      'src/core/queue-report-new.ts',
+      'src/core/queue-report.ts',
+    ]);
+
+    const differing = findDifferingPaths(before.fileHashes, after.fileHashes);
+    assert.deepEqual(
+      differing.map((entry) => entry.display),
+      [
+        'src/core/queue-report-extra.ts (deleted)',
+        'src/core/queue-report-new.ts (added)',
+        'src/core/queue-report.ts (modified)',
+      ],
+    );
   });
 });
 

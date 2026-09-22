@@ -79,15 +79,15 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
 
 ### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts, src/core/scope-hash.ts, src/core/verification.ts, tests/retry*.test.ts, tests/reject.test.ts -->
+<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts, src/core/scope.ts, src/core/scope-hash.ts, src/core/verification.ts, tests/retry*.test.ts, tests/reject.test.ts -->
 The Watcher and Harness capability SHALL own the reactive watch loop, runner,
-process execution, literal scope hashing, shared verification execution, agent
-harnesses, adapter registration, execution manifest construction, and
-append-only execution lifecycle event contracts.
+process execution, deterministic task-scope resolution and hashing, shared
+verification execution, agent harnesses, adapter registration, execution
+manifest construction, and append-only execution lifecycle event contracts.
 
 #### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for watcher, verification, harness execution, or retry and rejection lifecycle events
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, `src/core/manifest.ts`, `src/core/scope-hash.ts`, `src/core/verification.ts`, `tests/retry*.test.ts`, and `tests/reject.test.ts` to watcher-and-harness
+- **WHEN** file ownership is resolved for watcher, scope, verification, harness execution, or retry and rejection lifecycle events
+- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, `src/core/manifest.ts`, `src/core/scope.ts`, `src/core/scope-hash.ts`, `src/core/verification.ts`, `tests/retry*.test.ts`, and `tests/reject.test.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
 <!-- source: src/harness/agy.ts, src/harness/opencode.ts, tests/harness-prompt-injection.test.ts -->
@@ -267,20 +267,27 @@ NOT affect approval hashing.
 - **THEN** each hash is `sha256:<hex>`, computed from the UTF-8 content, or `null` when the file does not exist
 
 ### Requirement: Raw measures events on task lifecycle
-<!-- source: src/watcher/measures.ts, src/harness/types.ts -->
-The runner SHALL emit a `measures` event at task start and task end carrying raw file and line counts for scope, changed files, repo totals, import fan-in, content word counts, and delta requirement and scenario counts.
+<!-- source: src/core/scope.ts, src/watcher/measures.ts, src/harness/types.ts -->
+The runner SHALL emit a `measures` event at task start and task end carrying
+resolver version 2, raw file and line counts for resolved scope files, changed
+files, repository totals, import fan-in, content word counts, and delta
+requirement and scenario counts.
 
 #### Scenario: Measures event at task start
-- **WHEN** a task begins execution after the `started` event
-- **THEN** runner emits a `measures` event with `phase: "start"`, `scopeFiles`, `scopeLines`, `repoFiles`, `repoLines`, `importFanIn`, `proposalWords`, `taskWords`, `deltaRequirements`, and `deltaScenarios`
+- **WHEN** runner begins a task whose scope contains exact paths and globs
+- **THEN** it emits `phase: "start"`, `scopeResolver: 2`, and scope counts derived from existing resolved files
 
 #### Scenario: Measures event at task end
-- **WHEN** a task reaches done or dead outcome
-- **THEN** runner emits a `measures` event with `phase: "end"`, all start-phase fields, plus `changedFiles`, `changedLines`, and `scopeHashes` (before/after SHA-256 per scoped file, no git)
+- **WHEN** runner finishes an attempt after matching files were added, modified, or deleted
+- **THEN** it emits `phase: "end"` with resolver version 2, start fields, changed counts, and before/after hashes over the union of both resolved snapshots
 
 #### Scenario: Single emission path
-- **WHEN** measures events are emitted
+- **WHEN** resolver-versioned measures events are emitted
 - **THEN** exactly one code path (`emitMeasures`) produces both start and end events
+
+#### Scenario: Raw-only storage
+- **WHEN** measures events are emitted
+- **THEN** event data contains observed counts and hashes only, with rates and aggregates deferred to reporting
 
 ### Requirement: Emitted verify_ran event exit code and duration
 <!-- source: src/core/verification.ts, src/harness/types.ts, src/watcher/verify.ts, src/watcher/runner.ts -->
@@ -303,25 +310,26 @@ SHALL NOT import watcher or harness modules.
 - **THEN** both use the same timeout-bounded core process implementation without violating core import isolation
 
 ### Requirement: Done marker scope hash frontmatter
-<!-- source: src/watcher/outcome.ts, src/core/scope-hash.ts, src/core/retry.ts -->
+<!-- source: src/watcher/outcome.ts, src/core/scope.ts, src/core/scope-hash.ts, src/core/retry.ts -->
 The engine SHALL record YAML frontmatter in `.run/done/<n>` markers comprising
-the post-task content-addressed aggregate scope hash, per-file scope hashes,
-active build stamp, and verification exit code. Human recertification SHALL
-preserve completion and build metadata while retaining the first trusted hash
-as `original_scope_hash`, refreshing `scope_hash` and `scope_files`, recording
-`recertified_at`, and incrementing `recertification_count`.
+`scope_resolver: 2`, the post-task aggregate hash over resolved scope files,
+per-file scope hashes, active build stamp, and verification exit code. Human
+recertification SHALL preserve completion and build metadata while retaining
+the first trusted hash as `original_scope_hash`, refreshing `scope_hash` and
+`scope_files`, recording resolver version 2 and `recertified_at`, and
+incrementing `recertification_count`.
 
 #### Scenario: Done marker frontmatter emission
 - **WHEN** a task successfully verifies and finishes
-- **THEN** `.run/done/<n>` contains `scope_hash`, `scope_files`, `build_stamp`, and `exit_code: 0`, followed by the ISO completion timestamp
+- **THEN** `.run/done/<n>` contains `scope_resolver: 2`, `scope_hash`, `scope_files`, `build_stamp`, and `exit_code: 0`, followed by the ISO completion timestamp
 
 #### Scenario: Passing recertification
 - **WHEN** human retry verification passes for a scope-regressed task
-- **THEN** canonical done metadata retains its original completion and build values, preserves the first original hash, and records current hashes plus recertification time and count
+- **THEN** canonical done metadata retains its original completion and build values, preserves the first original hash, and records resolver-2 current hashes plus recertification time and count
 
 #### Scenario: Scope hash stability across task completions
-- **WHEN** declared literal scope entries are fingerprinted at completion or recertification
-- **THEN** the aggregate hash derives deterministically from sorted project-relative paths and their UTF-8 SHA-256 content digests without glob expansion
+- **WHEN** equivalent exact and glob declarations are fingerprinted at completion or recertification
+- **THEN** the aggregate hash derives deterministically from sorted resolved project-relative paths and their UTF-8 SHA-256 content digests
 
 ### Requirement: Pre-spawn scope comparison and regression detection
 <!-- source: src/watcher/regression.ts, src/watcher/loop.ts, src/watcher/runner.ts -->
@@ -663,29 +671,34 @@ events and run artifacts remain intact.
 - **THEN** its destination contains a matching rejection marker and change-level event after all previous event bytes
 
 ### Requirement: Scope recertification audit
-<!-- source: src/core/scope-hash.ts, src/core/verification.ts, src/watcher/regression.ts, src/watcher/loop.ts, src/harness/types.ts, tests/scope-recertification.test.ts -->
+<!-- source: src/core/scope.ts, src/core/scope-hash.ts, src/core/verification.ts, src/watcher/regression.ts, src/watcher/loop.ts, src/harness/types.ts, tests/scope-recertification.test.ts, tests/scope-resolver-upgrade.test.ts -->
 Before locking an upcoming task, the watcher SHALL compare every earlier
-automated done task's recorded literal scope hash with the current tree in one
-audit. Every stale task SHALL run its own verify command under the configured
-verify timeout, then receive an active regression marker and typed regression
-event containing sorted differing paths, verification command and result,
-recorded and current scope hashes, and per-path attribution whether
-verification passed or failed.
+automated done task's recorded resolver-aware scope hash and resolver version
+with the current tree in one audit. Every stale task SHALL run its own verify
+command under the configured verify timeout, then receive an active regression
+marker and typed regression event containing sorted differing paths,
+verification command and result, recorded and current scope hashes, resolver
+upgrade context, and per-path attribution whether verification passed or
+failed.
 
 A differing path SHALL be attributed to a later done task only when exactly one
-later task's recorded file-change events name the path and the current file
-hash agrees with that task's completion hash when available. Multiple
-qualifying tasks SHALL be `ambiguous`; absence of a trustworthy candidate SHALL
-be `unknown`.
+later task's normalized file-change events name a resolver-produced path and
+the current file hash agrees with that task's resolver-produced completion hash
+when available. Multiple qualifying tasks SHALL be `ambiguous`; absence of a
+trustworthy candidate SHALL be `unknown`.
 
 An active regression marker SHALL make later audits idempotent. Any newly stale
-task SHALL return `blocked_by_regression` without locking, running, counting,
-or writing failure state for the upcoming task. Logging SHALL contain one
+task SHALL return `blocked_by_regression` without locking, running, counting, or
+writing failure state for the upcoming task. Logging SHALL contain one
 stale-task line followed by one numerically ordered change summary.
 
 #### Scenario: More than one completed task is stale
-- **WHEN** multiple earlier done tasks differ from their recorded literal scopes before another task is due
+- **WHEN** multiple earlier done tasks differ from their recorded resolved scopes before another task is due
 - **THEN** every stale task is verified and recorded in one audit while the upcoming task remains unlocked and excluded from `tasksRun`
+
+#### Scenario: Resolver version is stale
+- **WHEN** an automated active done marker lacks `scope_resolver: 2` even though its aggregate hash matches
+- **THEN** detection verification runs once and records a scope regression with resolver-upgrade context and no invented differing file path
 
 #### Scenario: Detection verification times out
 - **WHEN** a stale task's verify command exceeds `verifyTimeoutSeconds`
@@ -696,7 +709,7 @@ stale-task line followed by one numerically ordered change summary.
 - **THEN** it writes no duplicate markers or events and does not re-run detection verification
 
 #### Scenario: Later edit attribution
-- **WHEN** recorded file-change and completion evidence identifies one later done task for a differing path
+- **WHEN** normalized file-change and resolver-produced completion evidence identifies one later done task for a differing path
 - **THEN** the marker and event name that task, otherwise recording `ambiguous` or `unknown` according to the evidence
 
 ### Requirement: Archive scope recertification audit
@@ -735,3 +748,28 @@ executor.
 #### Scenario: Human recertification requeues
 - **WHEN** explicit retry verification exits non-zero or times out
 - **THEN** one `recertification` event records `outcome: requeued` and preserves the next attempt and failing output for a later agent spawn
+
+### Requirement: Deterministic task scope resolution
+<!-- source: src/core/scope.ts, src/core/scope-hash.ts, tests/scope-resolver.test.ts, tests/runner-scope-hashes.test.ts -->
+Every subsystem that interprets task scope against the project tree SHALL use
+one core resolver. The resolver SHALL support exact paths and the established
+`*`, `**`, `?`, and trailing-directory glob forms without negative patterns or
+a runtime glob dependency.
+
+Results SHALL contain deduplicated, sorted project-relative POSIX paths. An
+existing regular file SHALL resolve to a readable file path, a missing exact
+entry SHALL remain represented with null, and a glob with no existing matches
+SHALL contribute no entry. Resolution SHALL remain inside the project root and
+be deterministic for the same declarations and tree.
+
+#### Scenario: Exact and glob scope overlap
+- **WHEN** multiple declarations resolve to the same existing file
+- **THEN** the resolver returns the normalized file once in lexical order
+
+#### Scenario: Missing exact and unmatched glob
+- **WHEN** one exact path is absent and one glob matches no file
+- **THEN** the absent exact path is retained with null and the glob contributes no path
+
+#### Scenario: Glob hash membership changes
+- **WHEN** matching files are added, modified, and deleted between two hashes
+- **THEN** aggregate comparison reports each normalized path as added, modified, or deleted

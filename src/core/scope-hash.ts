@@ -2,7 +2,10 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontmatter } from './parser.js';
+import { resolveScope } from './scope.js';
 import { compareNumericPrefix } from './state.js';
+
+export { SCOPE_RESOLVER_VERSION } from './scope.js';
 
 /** Per-file content hashes plus a single combined digest for a task scope. */
 export interface ScopeHashResult {
@@ -50,23 +53,24 @@ export function relativePosix(projectRoot: string, filePath: string): string {
 }
 
 /**
- * Content-address a task scope. Every declared literal scope entry is resolved
- * exactly as written — this deliberately does not expand globs. Each entry's
- * UTF-8 SHA-256 (or `null` when missing) is keyed by project-relative POSIX
- * path, then folded into one deterministic digest over the sorted `path:hash`
- * entries.
+ * Content-address a task scope through the shared deterministic resolver. Each
+ * resolved entry's UTF-8 SHA-256 (or `null` when the declared exact file is
+ * missing) is keyed by project-relative POSIX path, then folded into one
+ * deterministic digest over the sorted `path:hash` entries.
  */
 export async function computeTaskScopeHash(
   projectRoot: string,
   scope: string[],
 ): Promise<ScopeHashResult> {
   const fileHashes: Record<string, string | null> = {};
-  const keys = scope
-    .map((entry) => relativePosix(projectRoot, path.resolve(projectRoot, entry)))
-    .sort();
-  for (const key of keys) {
-    const content = await fs.readFile(path.resolve(projectRoot, key), 'utf8').catch(() => null);
-    fileHashes[key] = content === null ? null : `sha256:${sha256(content)}`;
+  const resolved = await resolveScope(projectRoot, scope);
+  for (const entry of resolved) {
+    if (entry.absolutePath === null) {
+      fileHashes[entry.relativePath] = null;
+      continue;
+    }
+    const content = await fs.readFile(entry.absolutePath, 'utf8').catch(() => null);
+    fileHashes[entry.relativePath] = content === null ? null : `sha256:${sha256(content)}`;
   }
   const canonical = Object.keys(fileHashes)
     .map((key) => `${key}:${fileHashes[key] ?? ''}`)
@@ -189,6 +193,8 @@ export function parseActiveStaleTask(
 export interface DoneMarkerInfo {
   scopeHash: string;
   scopeFiles: Record<string, string | null>;
+  /** Recorded resolver version, or null when absent or malformed. */
+  scopeResolver: number | null;
 }
 
 /** Canonical done markers are automated; manual and malformed markers are excluded. */
@@ -203,7 +209,9 @@ export async function readDoneMarker(
   const { data } = parseFrontmatter(content);
   const scopeHash = typeof data.scope_hash === 'string' ? data.scope_hash : null;
   if (!scopeHash) return null;
-  return { scopeHash, scopeFiles: readRecordedFiles(data.scope_files) };
+  const resolver = data.scope_resolver;
+  const scopeResolver = typeof resolver === 'number' && Number.isFinite(resolver) ? resolver : null;
+  return { scopeHash, scopeFiles: readRecordedFiles(data.scope_files), scopeResolver };
 }
 
 /** Active canonical done task numbers, numerically ordered. */

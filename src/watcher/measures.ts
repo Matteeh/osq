@@ -3,6 +3,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { type TaskData, resolveChangeDoc } from '../core/parser.js';
+import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/scope.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
 
 const IGNORED_DIRS = new Set(
@@ -29,16 +30,14 @@ export interface ScopeState {
   lines: Record<string, number>;
 }
 
-/** Snapshot every scoped file's content hash and line count in one pass. */
+/** Snapshot every resolved scoped file's content hash and line count in one pass. */
 export async function snapshotScope(projectRoot: string, scope: string[]): Promise<ScopeState> {
   const hashes: Record<string, string | null> = {};
   const lines: Record<string, number> = {};
-  for (const entry of scope) {
-    const resolved = path.resolve(projectRoot, entry);
-    const key = relativePosix(projectRoot, resolved);
-    const content = await fs.readFile(resolved, 'utf8').catch(() => null);
-    hashes[key] = content === null ? null : hashContent(content);
-    lines[key] = content === null ? 0 : countLines(content);
+  for (const { relativePath, absolutePath } of await resolveScope(projectRoot, scope)) {
+    const content = absolutePath ? await fs.readFile(absolutePath, 'utf8').catch(() => null) : null;
+    hashes[relativePath] = content === null ? null : hashContent(content);
+    lines[relativePath] = content === null ? 0 : countLines(content);
   }
   return { hashes, lines };
 }
@@ -95,12 +94,12 @@ function importSpecifier(fromDir: string, targetPath: string): string {
   return relative.startsWith('.') ? relative : `./${relative}`;
 }
 
-/** Count of non-scoped `src/**` TypeScript files that import at least one scoped file. */
+/** Count of non-scoped `src/**` TypeScript files that import at least one resolved scoped file. */
 export async function countImportFanIn(projectRoot: string, scope: string[]): Promise<number> {
   const srcDir = path.join(projectRoot, 'src');
-  const scopePaths = scope
-    .map((entry) => path.resolve(projectRoot, entry))
-    .filter((resolved) => resolved === srcDir || resolved.startsWith(`${srcDir}${path.sep}`));
+  const scopePaths = (await resolveScope(projectRoot, scope))
+    .map((entry) => entry.absolutePath)
+    .filter((resolved): resolved is string => resolved?.startsWith(srcDir + path.sep) === true);
   const scoped = new Set(scopePaths.map((resolved) => relativePosix(projectRoot, resolved)));
   let importers = 0;
   for (const file of await listTsFiles(srcDir)) {
@@ -190,6 +189,7 @@ export async function gatherStartMeasures(
   ]);
   return {
     phase: 'start',
+    scopeResolver: SCOPE_RESOLVER_VERSION,
     scopeFiles: scopeCounts.files,
     scopeLines: scopeCounts.lines,
     repoFiles: repoCounts.files,

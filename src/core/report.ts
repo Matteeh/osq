@@ -104,11 +104,22 @@ export interface LargestFirstAttemptPass {
   readonly acceptanceLines: number;
 }
 
-/** Size-against-outcome buckets plus the largest passing task. */
-export interface SizeMetrics {
+/** Size-against-outcome buckets for one scope-file resolver generation. */
+export interface ScopeFileSeries {
+  readonly resolver: 'legacy' | 'resolver-2';
+  readonly startsAtChange: string | null;
   readonly byScopeFiles: readonly SizeBucketRow[];
-  readonly byAcceptanceLines: readonly SizeBucketRow[];
   readonly largestFirstAttemptPass: LargestFirstAttemptPass | null;
+}
+
+/**
+ * Acceptance-line buckets plus the ordered legacy and resolver-2 scope-file
+ * series. Scope-file counts never compare across resolver generations; the
+ * acceptance-line unit did not change, so it stays one combined series.
+ */
+export interface SizeMetrics {
+  readonly scopeFileSeries: readonly ScopeFileSeries[];
+  readonly byAcceptanceLines: readonly SizeBucketRow[];
 }
 
 /**
@@ -340,11 +351,20 @@ interface MeasuredTask {
   readonly change: string;
   readonly task: string;
   readonly title: string;
+  /** Raw first start measure resolver field: legacy, version 2, or malformed. */
+  readonly scopeResolver: unknown;
   readonly scopeFiles: number;
   readonly acceptanceLines: number;
   readonly attempts: number;
   readonly firstAttemptPass: boolean;
   readonly durationSeconds: number | null;
+}
+
+/** Resolver generation for scope-file evidence; malformed versions fit neither. */
+function scopeFileGeneration(task: MeasuredTask): 'legacy' | 'resolver-2' | null {
+  if (task.scopeResolver === undefined) return 'legacy';
+  if (task.scopeResolver === 2) return 'resolver-2';
+  return null;
 }
 
 /** Title and acceptance-line count from a task file; missing files yield empties. */
@@ -373,6 +393,7 @@ function deriveMeasuredTask(
   events: readonly Record<string, unknown>[],
 ): Omit<MeasuredTask, 'title' | 'acceptanceLines'> | null {
   let scopeFiles: number | null = null;
+  let scopeResolver: unknown;
   let attempts = 0;
   let firstAttemptActive = false;
   let firstAttemptResolved = false;
@@ -393,6 +414,7 @@ function deriveMeasuredTask(
           rawScopeFiles >= 0
         ) {
           scopeFiles = rawScopeFiles;
+          scopeResolver = data.scopeResolver;
         }
         pendingStartMs = eventTimestampMs(event);
       } else if (data?.phase === 'end') {
@@ -439,6 +461,7 @@ function deriveMeasuredTask(
   return {
     change,
     task,
+    scopeResolver,
     scopeFiles,
     attempts,
     firstAttemptPass,
@@ -532,6 +555,44 @@ function selectLargestFirstAttemptPass(
     scopeFiles: top.scopeFiles,
     acceptanceLines: top.acceptanceLines,
   };
+}
+
+/** The smallest change id by stable numeric ordering, or null for no tasks. */
+function earliestChange(tasks: readonly MeasuredTask[]): string | null {
+  let earliest: string | null = null;
+  for (const task of tasks) {
+    if (earliest === null || compareNumericPrefix(task.change, earliest) < 0) {
+      earliest = task.change;
+    }
+  }
+  return earliest;
+}
+
+/** Build one resolver generation's scope-file bucket and largest-pass evidence. */
+function buildScopeFileSeries(
+  tasks: readonly MeasuredTask[],
+  resolver: 'legacy' | 'resolver-2',
+): ScopeFileSeries {
+  return {
+    resolver,
+    startsAtChange: resolver === 'resolver-2' ? earliestChange(tasks) : null,
+    byScopeFiles: aggregateSizeBuckets(tasks, 'scopeFiles'),
+    largestFirstAttemptPass: selectLargestFirstAttemptPass(tasks),
+  };
+}
+
+/** Ordered legacy then resolver-2 scope-file series, excluding malformed versions. */
+function deriveScopeFileSeries(tasks: readonly MeasuredTask[]): ScopeFileSeries[] {
+  const legacy = tasks.filter((task) => scopeFileGeneration(task) === 'legacy');
+  const resolver2 = tasks.filter((task) => scopeFileGeneration(task) === 'resolver-2');
+  return [buildScopeFileSeries(legacy, 'legacy'), buildScopeFileSeries(resolver2, 'resolver-2')];
+}
+
+/** The scope-file series whose largest pass drives the near-limit hint. */
+function selectHintSeries(series: readonly ScopeFileSeries[]): ScopeFileSeries | undefined {
+  const resolver2 = series.find((entry) => entry.resolver === 'resolver-2');
+  if (resolver2?.byScopeFiles.some((row) => row.tasks > 0)) return resolver2;
+  return series.find((entry) => entry.resolver === 'legacy');
 }
 
 /** Rows printed for one size-against-outcome table. */
@@ -1227,9 +1288,8 @@ export async function getMetricsReport(
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
-    byScopeFiles: aggregateSizeBuckets(measuredTasks, 'scopeFiles'),
+    scopeFileSeries: deriveScopeFileSeries(measuredTasks),
     byAcceptanceLines: aggregateSizeBuckets(measuredTasks, 'acceptanceLines'),
-    largestFirstAttemptPass: selectLargestFirstAttemptPass(measuredTasks),
   };
 
   const perSpec: Record<string, number> = {};
@@ -1372,6 +1432,8 @@ export interface RepositoryRecord {
   readonly firstAttemptPassRate: number;
   readonly medianDurationSeconds: number | null;
   readonly largestFirstAttemptPass: LargestFirstAttemptPass | null;
+  /** Resolver generation behind the largest scope pass, or null when none. */
+  readonly scopeFileResolver: 'legacy' | 'resolver-2' | null;
   readonly deadOutcomes: readonly RepositoryDeadOutcome[];
 }
 
@@ -1469,11 +1531,22 @@ export async function getRepositoryRecord(
     .map((task) => task.durationSeconds)
     .filter((value): value is number => value !== null);
 
+  // Scope-sized evidence uses exactly one resolver generation: resolver-2 when
+  // the archive window has any, otherwise the labeled legacy fallback. Malformed
+  // resolver versions never contribute a cross-generation comparison.
+  const resolver2Tasks = measured.filter((task) => scopeFileGeneration(task) === 'resolver-2');
+  const legacyTasks = measured.filter((task) => scopeFileGeneration(task) === 'legacy');
+  const useResolver2 = resolver2Tasks.length > 0;
+  const scopeTasks = useResolver2 ? resolver2Tasks : legacyTasks;
+  const scopeFileResolver: 'legacy' | 'resolver-2' | null =
+    scopeTasks.length > 0 ? (useResolver2 ? 'resolver-2' : 'legacy') : null;
+
   return {
     measuredTasks: measured.length,
     firstAttemptPassRate: measured.length > 0 ? round2(passed / measured.length) : 0,
     medianDurationSeconds: medianSeconds(durations),
-    largestFirstAttemptPass: selectLargestFirstAttemptPass(measured),
+    largestFirstAttemptPass: selectLargestFirstAttemptPass(scopeTasks),
+    scopeFileResolver,
     deadOutcomes: deadOutcomes.slice(0, REPOSITORY_RECORD_MAX_DEAD_OUTCOMES),
   };
 }
@@ -1492,8 +1565,14 @@ export function formatRepositoryRecordBody(record: RepositoryRecord): string {
 
   const largest = record.largestFirstAttemptPass;
   if (largest) {
+    const scopeLabel =
+      record.scopeFileResolver === 'legacy'
+        ? ' [legacy scope]'
+        : record.scopeFileResolver === 'resolver-2'
+          ? ' [resolver 2 scope]'
+          : '';
     lines.push(
-      `Largest first-attempt pass: ${largest.change}/${largest.task} "${largest.title}" (scope files: ${largest.scopeFiles}, acceptance lines: ${largest.acceptanceLines})`,
+      `Largest first-attempt pass: ${largest.change}/${largest.task} "${largest.title}" (scope files: ${largest.scopeFiles}, acceptance lines: ${largest.acceptanceLines})${scopeLabel}`,
     );
   } else {
     lines.push('Largest first-attempt pass: unavailable');
@@ -1590,12 +1669,19 @@ export function formatMetricsReport(
   lines.push(`    Recertified by human: ${report.history.scopeRegressions.recertifiedByHuman}`);
   lines.push(`    Requeued for agent: ${report.history.scopeRegressions.requeuedForAgent}`);
 
-  lines.push('  Size by scope files:');
-  lines.push(...formatSizeBucketLines(report.history.sizes.byScopeFiles));
+  const scopeSeries = report.history.sizes.scopeFileSeries;
+  const legacySeries = scopeSeries.find((entry) => entry.resolver === 'legacy');
+  const resolver2Series = scopeSeries.find((entry) => entry.resolver === 'resolver-2');
+
+  lines.push('  Size by scope files (legacy):');
+  lines.push(...formatSizeBucketLines(legacySeries?.byScopeFiles ?? []));
+  lines.push('  Size by scope files (resolver-2):');
+  lines.push(...formatSizeBucketLines(resolver2Series?.byScopeFiles ?? []));
+  lines.push(`  Resolver 2 starts at: ${resolver2Series?.startsAtChange ?? 'unavailable'}`);
   lines.push('  Size by acceptance lines:');
   lines.push(...formatSizeBucketLines(report.history.sizes.byAcceptanceLines));
 
-  const largestPass = report.history.sizes.largestFirstAttemptPass;
+  const largestPass = selectHintSeries(scopeSeries)?.largestFirstAttemptPass ?? null;
   if (largestPass) {
     const matching: string[] = [];
     if (Math.abs(config.limits.maxScopeFiles - largestPass.scopeFiles) <= 1) {

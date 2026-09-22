@@ -7,6 +7,7 @@ import { hashChangeFolder } from './hasher.js';
 import { getChangeRunDir, getChangesDir } from './layout.js';
 import { parseFrontmatter, parseTaskMd } from './parser.js';
 import { type ScopePathAttribution, computeTaskScopeHash, readDoneMarker } from './scope-hash.js';
+import { SCOPE_RESOLVER_VERSION } from './scope.js';
 import { runVerificationCommand } from './verification.js';
 
 // Retry renames active failure markers into attempt-suffixed history; a numeric
@@ -191,6 +192,7 @@ export async function retrySpec(
       }
       merged.scope_hash = current.hash;
       merged.scope_files = current.fileHashes;
+      merged.scope_resolver = SCOPE_RESOLVER_VERSION;
       merged.recertified_at = new Date().toISOString();
       const count = data.recertification_count;
       merged.recertification_count =

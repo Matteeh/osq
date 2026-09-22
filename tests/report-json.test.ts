@@ -155,8 +155,7 @@ describe('report --json', () => {
     });
     assert.deepEqual(sortedKeys(parsed.history.sizes as object), [
       'byAcceptanceLines',
-      'byScopeFiles',
-      'largestFirstAttemptPass',
+      'scopeFileSeries',
     ]);
     assert.deepEqual(sortedKeys(parsed.history.attempts as object), [
       'byTask',
@@ -368,17 +367,29 @@ describe('formatMetricsReport', () => {
           byPlannerModel: { 'opencode/big-pickle': 1, unknown: 1 },
         },
         sizes: {
-          byScopeFiles: [
+          scopeFileSeries: [
             {
-              bucket: '1-2',
-              tasks: 2,
-              firstAttemptPassRate: 0.5,
-              meanAttempts: 1.5,
-              medianDurationSeconds: 30,
+              resolver: 'legacy',
+              startsAtChange: null,
+              byScopeFiles: [
+                {
+                  bucket: '1-2',
+                  tasks: 2,
+                  firstAttemptPassRate: 0.5,
+                  meanAttempts: 1.5,
+                  medianDurationSeconds: 30,
+                },
+              ],
+              largestFirstAttemptPass: null,
+            },
+            {
+              resolver: 'resolver-2',
+              startsAtChange: '001-spec',
+              byScopeFiles: [],
+              largestFirstAttemptPass: null,
             },
           ],
           byAcceptanceLines: [],
-          largestFirstAttemptPass: null,
         },
         scopeRegressions: {
           detected: 4,
@@ -454,7 +465,9 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Total tokens: 1110'));
     assert.ok(formatted.includes('Total change events: 42'));
     assert.ok(formatted.includes('Unique files modified: 3'));
-    assert.ok(formatted.includes('Size by scope files:'));
+    assert.ok(formatted.includes('Size by scope files (legacy):'));
+    assert.ok(formatted.includes('Size by scope files (resolver-2):'));
+    assert.ok(formatted.includes('Resolver 2 starts at: 001-spec'));
     assert.ok(formatted.includes('Size by acceptance lines:'));
     assert.ok(formatted.includes('1-2'));
     assert.ok(formatted.includes('Scope regressions:'));
@@ -515,7 +528,23 @@ describe('formatMetricsReport', () => {
           coverage: { reportedAttempts: 0, totalAttempts: 0 },
         },
         rejections: { total: 0, byPlannerModel: {} },
-        sizes: { byScopeFiles: [], byAcceptanceLines: [], largestFirstAttemptPass: null },
+        sizes: {
+          scopeFileSeries: [
+            {
+              resolver: 'legacy',
+              startsAtChange: null,
+              byScopeFiles: [],
+              largestFirstAttemptPass: null,
+            },
+            {
+              resolver: 'resolver-2',
+              startsAtChange: null,
+              byScopeFiles: [],
+              largestFirstAttemptPass: null,
+            },
+          ],
+          byAcceptanceLines: [],
+        },
         scopeRegressions: {
           detected: 0,
           verificationPassedAtDetection: 0,

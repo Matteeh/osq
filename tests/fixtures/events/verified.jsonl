@@ -1,8 +1,8 @@
-{"type":"measures","timestamp":"[TIMESTAMP]","data":{"phase":"start","scopeFiles":0,"scopeLines":0,"repoFiles":13,"repoLines":436,"importFanIn":0,"proposalWords":247,"taskWords":31,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"measures","timestamp":"[TIMESTAMP]","data":{"phase":"start","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":13,"repoLines":439,"importFanIn":0,"proposalWords":247,"taskWords":31,"deltaRequirements":0,"deltaScenarios":0}}
 {"type":"tokens","timestamp":"[TIMESTAMP]","data":{"promptTokens":500,"candidateTokens":200}}
 {"type":"result_written","timestamp":"[TIMESTAMP]","data":{"path":"openspec/changes/001-golden-events/.run/results/1.md"}}
 {"type":"started","timestamp":"[TIMESTAMP]","data":{"harness":"mock","model":"gemini-3.8-flash-high","osqVersion":"[VERSION]","attempt":1,"timeoutSeconds":1800,"version":"[VERSION]","commit":"[COMMIT]"}}
 {"type":"exited","timestamp":"[TIMESTAMP]","data":{"exitCode":0,"elapsedSeconds":0}}
 {"type":"verify_ran","timestamp":"[TIMESTAMP]","data":{"command":"node -e \"process.exit(0)\"","exitCode":0,"duration":0}}
-{"type":"measures","timestamp":"[TIMESTAMP]","data":{"phase":"end","scopeFiles":0,"scopeLines":0,"repoFiles":13,"repoLines":436,"importFanIn":0,"proposalWords":247,"taskWords":31,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":0,"changedLines":0,"scopeHashes":{}}}
+{"type":"measures","timestamp":"[TIMESTAMP]","data":{"phase":"end","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":13,"repoLines":439,"importFanIn":0,"proposalWords":247,"taskWords":31,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":0,"changedLines":0,"scopeHashes":{}}}
 {"type":"done","timestamp":"[TIMESTAMP]","data":{"task":"1"}}

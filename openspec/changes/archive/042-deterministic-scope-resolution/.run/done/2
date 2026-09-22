@@ -1,0 +1,17 @@
+---
+scope_hash: sha256:9c24f1ecd9c465d3cb788571b7a76e1e0f31a313837ec7c18e179fe3f8b8661b
+build_stamp: 6f3864b
+exit_code: 0
+scope_files:
+  README.md: sha256:2f51aa6a7997d0bf29c757fb7616fb9a75827c3389e2b4838ecc9f508ea48ba0
+  src/core/retry.ts: sha256:7f22e89b0f3a804263d3c615ccf5704203e39032c3cb62760cc0e61df8620099
+  src/harness/types.ts: sha256:0ea9cfc7d97dc21890ea25533dfc0d698dad1e5e1c767510a607183e74442900
+  src/watcher/outcome.ts: sha256:5dd63bc57136cebdd0fe71bc95d1465a4b694c12d0fbad8a24ec4fb7950e82c0
+  src/watcher/regression.ts: sha256:0778f8d9514e4495a69eeb39cde6c0acf0660f8b1bb644f1c99bb91fedc0a6ed
+  tests/scope-resolver-upgrade.test.ts: sha256:9cbce91df9ca6c845a26e496deafda04e669af48e482403c81a857a2a9d5d2a2
+original_scope_hash: sha256:15f286467c357c5b7ed5ab9e093c257d5c4329854a663d2c030135243b0de3ae
+scope_resolver: 2
+recertified_at: 2026-09-22T06:45:32.397Z
+recertification_count: 2
+---
+2026-09-22T06:20:13.252Z

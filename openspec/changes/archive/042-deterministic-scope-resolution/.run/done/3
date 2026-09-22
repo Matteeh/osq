@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:90ce03037135ebed833a002ec1eea3d6f19aad9fa22b8bcbf85aba6bbeaa0e5b"
+build_stamp: "6f3864b"
+exit_code: 0
+scope_files: {"src/core/linter.ts":"sha256:a1930ce3f35dfe8b977ded357f8d16f2425d190400822063536f61677ac88ac8","tests/scope-lint.test.ts":"sha256:9ba4998d70d6feace175830add80dd8ec64f613d9eed26d6870847224cd23b32"}
+---
+2026-09-22T06:24:42.740Z

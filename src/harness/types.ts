@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import type { Logger } from '../core/logger.js';
 import type { ScopePathAttribution } from '../core/scope-hash.js';
+import type { SCOPE_RESOLVER_VERSION } from '../core/scope.js';
 
 export type { ScopePathAttribution } from '../core/scope-hash.js';
 
@@ -92,6 +93,8 @@ export interface ExitedEventData {
  */
 export interface MeasuresEventData {
   phase: 'start' | 'end';
+  /** Deterministic scope resolver version that produced the scope-derived fields. */
+  scopeResolver: typeof SCOPE_RESOLVER_VERSION;
   scopeFiles: number;
   scopeLines: number;
   repoFiles: number;
@@ -132,6 +135,9 @@ export interface RegressedEventData {
   attribution?: ScopePathAttribution[];
   recordedHash?: string;
   currentHash?: string;
+  /** Recorded resolver version (null when legacy or malformed) and current version. */
+  recordedResolver?: number | null;
+  currentResolver?: number;
   output?: string;
   timedOut?: boolean;
   verificationPassed?: boolean;

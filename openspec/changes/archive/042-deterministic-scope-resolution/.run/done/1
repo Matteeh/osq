@@ -1,0 +1,16 @@
+---
+scope_hash: sha256:f804045113283fd1ac3711f164fde4f8c4b678bddcd6d9d3f284ca0c782f03f2
+build_stamp: 6f3864b
+exit_code: 0
+scope_files:
+  src/core/linter.ts: sha256:a1930ce3f35dfe8b977ded357f8d16f2425d190400822063536f61677ac88ac8
+  src/core/scope-hash.ts: sha256:1e0e6b276bad6488511e90b75f2c31ccb56d6d5be2f05d367e5d9b61e25608ab
+  src/core/scope.ts: sha256:c4b14a9db289fa6a1345855510a6a073d64e98fedf654e2a4e91058c8b225220
+  tests/runner-scope-hashes.test.ts: sha256:096368c4a3dc5fb54efe37c4bf82523f983995215067d7c6bf11ba451442da77
+  tests/scope-resolver.test.ts: sha256:efaa8fdbbe498647d216e607176d07ecf1ef606f91e18c933b9ff05eb730d540
+original_scope_hash: sha256:19690a558f009007361fb0da33089a452df2b869a01d59fc00519b4820625958
+scope_resolver: 2
+recertified_at: 2026-09-22T06:35:30.861Z
+recertification_count: 2
+---
+2026-09-22T06:15:05.596Z
