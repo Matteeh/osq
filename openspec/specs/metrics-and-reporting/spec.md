@@ -71,25 +71,31 @@ The system SHALL aggregate modified files from tool events.
 - **THEN** report aggregates unique paths and modification counts
 
 ### Requirement: Structured command output and JSON mode
-<!-- source: src/core/report.ts, src/cli/report.ts, tests/report-json.test.ts, tests/report-sizes.test.ts -->
-The system SHALL format reports for terminal display and provide deterministic
-raw JSON output. Text output SHALL contain sections named `Now`, `History`,
-`Coverage`, `Planning`, `Cycle`, and `Queue`. History text SHALL label legacy
-and resolver-2 scope-file series separately and print the first resolver-2
-change or unavailable. JSON SHALL expose the same ordered scope series and
-boundary while preserving established non-size report fields.
+<!-- source: src/core/report.ts, src/cli/report.ts, tests/report-json.test.ts, tests/report-planning.test.ts, fixture/report/** -->
+The system SHALL format reports for terminal display and deterministic raw JSON.
+The planning section in both forms SHALL state the count of changes with a
+valid owned or observed planning start while preserving every established
+planning and non-planning report field.
 
 #### Scenario: JSON report output
-- **WHEN** user executes `osq report --json`
-- **THEN** system emits one deterministically sorted document with separate scope resolver series and all established non-size metrics
+- **WHEN** a user executes `osq report --json`
+- **THEN** the deterministic document preserves all established fields and includes the planning-record change count
 
 #### Scenario: Text report output
-- **WHEN** user executes `osq report` without JSON mode
-- **THEN** it labels both scope-file generations, the resolver-2 boundary, acceptance sizes, planning, cycle, coverage, and queue data
+- **WHEN** a user executes `osq report` without JSON mode
+- **THEN** every established section remains and Planning states how many changes have a planning record
 
 #### Scenario: Checked-in fixture output
 - **WHEN** the built report CLI runs against `fixture/report`
-- **THEN** its output including resolver-versioned size history matches the checked-in expected JSON byte for byte
+- **THEN** its output, including planning coverage, matches the checked-in expected JSON byte for byte
+
+#### Scenario: Planning coverage is reported
+- **WHEN** report data contains valid planning starts
+- **THEN** text and stable JSON agree on the distinct covered-change count
+
+#### Scenario: No planning record exists
+- **WHEN** no active or archived change has a valid planning start
+- **THEN** both formats report zero covered changes without inventing usage or planner attribution
 
 ### Requirement: Code ownership
 <!-- source: src/core/report.ts, src/core/planning.ts, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
@@ -172,25 +178,34 @@ The reporting subsystem SHALL derive event-file coverage from the presence of `.
 
 ### Requirement: Planning metrics report
 <!-- source: src/core/planning.ts, src/core/report.ts, src/cli/report.ts, tests/report-planning.test.ts, fixture/report/** -->
-`osq report` SHALL expose a top-level `planning` block derived only from
-`.run/plan.jsonl` across active and archived changes. It SHALL include session
-count, total wall seconds, wall seconds grouped by change, aggregate input,
-output, cached, and reasoning tokens, aggregate harness-reported cost, and
-numeric usage coverage. A session counts as covered when at least one token or
-cost field in its matched `plan_exited` record is a finite harness-reported
-number, including zero.
+`osq report` SHALL expose a top-level planning block derived only from valid
+owned and observed `.run/plan.jsonl` records across active and archived
+changes. Legacy records without source SHALL remain readable as owned. The
+block SHALL preserve the established valid-start session count, wall seconds,
+per-change wall time, observed token and cost sums, incomplete-session handling,
+and numeric usage coverage.
 
-Text output SHALL render the exact phrase
-`n of m sessions reported usage`. Null usage values contribute nothing to sums
-and SHALL remain distinguishable from observed zero values in the source log.
+The block SHALL additionally report how many distinct changes contain at least
+one valid `plan_started` record of either source. Multiple sessions for one
+change SHALL count once; malformed lines and exit-only records SHALL not make a
+change covered. Null values SHALL contribute nothing and observed zero SHALL
+remain distinct from unavailable data.
 
 #### Scenario: Mixed planning usage coverage
-- **WHEN** planning logs contain sessions with complete, partial, and unavailable usage
-- **THEN** report totals only finite recorded values and coverage counts each session with any reported usage once
+- **WHEN** owned and observed logs contain sessions with complete, partial, and unavailable usage
+- **THEN** report totals only finite recorded values and counts each session with any reported usage once
 
 #### Scenario: Per-change planning wall time
-- **WHEN** planning sessions exist for more than one change
-- **THEN** JSON and text output show total wall time and deterministic per-change wall-time sums
+- **WHEN** planning sessions of either source exist for more than one change
+- **THEN** JSON and text preserve deterministic total and per-change wall-time sums
+
+#### Scenario: Mixed planning sources
+- **WHEN** valid owned and observed sessions occur across active and archived changes
+- **THEN** existing planning aggregates include both sources without changing incomplete-session semantics and the planning-change count includes each change once
+
+#### Scenario: Incomplete planning history
+- **WHEN** a change has only malformed lines or exit records without a valid start
+- **THEN** it contributes neither a session nor a covered change while the rest of the report renders
 
 ### Requirement: Archived change cycle metrics
 <!-- source: src/core/report.ts, src/cli/report.ts, tests/report-cycle.test.ts, fixture/report/** -->

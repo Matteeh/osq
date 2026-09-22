@@ -66,15 +66,22 @@ export function createProgram(version?: string): Command {
 
   program
     .command('plan [name]')
-    .description('initialize change, write brief, and open interactive planner session')
+    .description('prepare a change and hand off its opening prompt to your planning tool')
     .option('--brief <file>', 'brief file path or - for stdin')
     .option('-p, --print', 'output opening prompt strictly to stdout without launching session')
+    .option('--session', 'launch the configured interactive planner session instead of handing off')
     .option('--next', 'plan the next eligible brief-queue item')
     .option('--replan', 'allow replanning a rejected first eligible queue item')
     .action(
       async (
         name: string | undefined,
-        options: { brief?: string; print?: boolean; next?: boolean; replan?: boolean },
+        options: {
+          brief?: string;
+          print?: boolean;
+          session?: boolean;
+          next?: boolean;
+          replan?: boolean;
+        },
       ) => {
         try {
           await planCommand(name, options);

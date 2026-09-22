@@ -1,4 +1,6 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import type { OsqConfig } from '../core/config.js';
 import { getSpecsDir } from '../core/layout.js';
@@ -9,7 +11,7 @@ import { type QueuePlanSelection, prepareQueuePlan } from '../core/queue.js';
 
 export function formatBriefContent(
   body: string,
-  plannerModel: string,
+  plannerModel: string | null,
   today: string,
   metadata: Record<string, string> = {},
 ): string {
@@ -29,7 +31,8 @@ export function formatBriefContent(
   return `${fm}${cleanBody}\n`;
 }
 
-export async function buildOpeningPrompt(options: {
+/** The first four ordered prompt sections; the repository record is appended by `plan.ts`. */
+export async function buildBaseOpeningPrompt(options: {
   projectRoot: string;
   folderPath: string;
   specId: string;
@@ -78,11 +81,71 @@ export async function buildOpeningPrompt(options: {
   );
 }
 
+export async function readBriefInput(briefOption?: string): Promise<string> {
+  if (briefOption === '-') {
+    return new Promise<string>((resolve, reject) => {
+      let data = '';
+      process.stdin.setEncoding('utf8');
+      process.stdin.on('data', (chunk) => {
+        data += chunk;
+      });
+      process.stdin.on('end', () => resolve(data));
+      process.stdin.on('error', reject);
+    });
+  }
+
+  if (briefOption) {
+    return await fs.readFile(briefOption, 'utf8');
+  }
+
+  const editor = process.env.VISUAL || process.env.EDITOR;
+  if (editor) {
+    const tempFile = path.join(os.tmpdir(), `osq-brief-${Date.now()}.md`);
+    await fs.writeFile(
+      tempFile,
+      '# Feature Brief\n\nDescribe the goal, background, and requirements here.\n',
+      'utf8',
+    );
+    try {
+      const parts = editor.trim().split(/\s+/);
+      const res = spawnSync(parts[0], [...parts.slice(1), tempFile], {
+        stdio: 'inherit',
+      });
+      if (res.error || res.status !== 0) {
+        throw new Error(`Editor ${editor} exited with code ${res.status}`);
+      }
+      return await fs.readFile(tempFile, 'utf8');
+    } finally {
+      await fs.rm(tempFile, { force: true }).catch(() => {});
+    }
+  }
+
+  throw new Error('No brief provided. Specify --brief <file> or set $EDITOR.');
+}
+
+/**
+ * Default handoff: persist the transient prompt beside the change and name the
+ * exact change an available planning tool should pick up.
+ */
+export async function writePromptHandoff(folderPath: string, openingPrompt: string): Promise<void> {
+  await fs.writeFile(path.join(folderPath, 'plan-prompt.md'), openingPrompt, 'utf8');
+  console.log(`${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)}`);
+}
+
 /** Reject ordinary and queue mode combinations before any file is touched. */
 export function validatePlanModeOptions(
   name: string,
-  options: { next?: boolean; replan?: boolean; brief?: string },
+  options: {
+    next?: boolean;
+    replan?: boolean;
+    brief?: string;
+    print?: boolean;
+    session?: boolean;
+  },
 ): void {
+  if (options.session && options.print) {
+    throw new Error('`--session` cannot be combined with `--print`');
+  }
   if (options.next) {
     if (name) throw new Error('`plan --next` cannot be combined with a change name');
     if (options.brief) throw new Error('`plan --next` cannot be combined with --brief');
@@ -118,7 +181,7 @@ export async function prepareQueueSelection(
 
 export async function createChange(
   projectRoot: string,
-  print: boolean | undefined,
+  quiet: boolean | undefined,
   title: string,
   options: { slug?: string; dependsOn?: readonly string[] },
 ): Promise<{ folderPath: string; specId: string }> {
@@ -126,7 +189,7 @@ export async function createChange(
     slug: options.slug,
     dependsOn: options.dependsOn,
   });
-  if (!print) {
+  if (!quiet) {
     console.log(`Created spec ${newResult.specId}: ${newResult.folderName}`);
     console.log(`  Path: ${newResult.folderPath}`);
   }
@@ -137,7 +200,7 @@ export async function writeBriefAndManifest(
   projectRoot: string,
   config: OsqConfig,
   folderPath: string,
-  plannerModel: string,
+  plannerModel: string | null,
   briefBody: string,
   metadata?: Record<string, string>,
 ): Promise<void> {
@@ -156,11 +219,11 @@ export async function writeBriefAndManifest(
 export async function createQueueChange(
   projectRoot: string,
   config: OsqConfig,
-  print: boolean | undefined,
+  quiet: boolean | undefined,
   selection: QueuePlanSelection,
-  plannerModel: string,
+  plannerModel: string | null,
 ): Promise<{ folderPath: string; specId: string }> {
-  const created = await createChange(projectRoot, print, selection.item.title, {
+  const created = await createChange(projectRoot, quiet, selection.item.title, {
     slug: selection.item.slug,
     dependsOn: selection.landedDependencies.map((dep) => dep.changeId),
   });

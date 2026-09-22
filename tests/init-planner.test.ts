@@ -93,6 +93,13 @@ describe('osq init PLANNER.md', () => {
     );
   });
 
+  it('managed block states the handoff read, write-boundary, lint, and no-approval rules', () => {
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('plan-prompt.md'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('Write only inside that change folder'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('osq lint <slug>'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('Never run `osq approve`'));
+  });
+
   it('managed block encodes the slicing rule', () => {
     assert.ok(MANAGED_PLANNER_BLOCK.includes('real entry point'));
     assert.ok(MANAGED_PLANNER_BLOCK.includes('widen it or merge the task'));

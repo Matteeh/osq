@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from './config.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
+import { isExcludedChangePath } from './hasher.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import {
   hasDeclaredWrites,
@@ -30,13 +31,6 @@ export interface LintLogger {
   verbose(msg: string): void;
   warn(msg: string): void;
 }
-
-/**
- * Directories and files excluded from change-folder artifact scanning. Mirrors
- * the hasher's ignore set so linting and hashing agree on the folder's authored
- * content.
- */
-const CHANGE_FOLDER_IGNORES = new Set(['.run', '.git', '.DS_Store']);
 
 /**
  * ASCII control characters prohibited in authored change-folder files. Newline
@@ -310,9 +304,10 @@ function unresolvedVerifyWarning(label: string, command: string): string {
 }
 
 /**
- * Recursively list repository-folders' files relative to `baseDir`, skipping
- * `.run`, `.git`, and `.DS_Store` so generated state is never linted as
- * authored content.
+ * Recursively list a change folder's authored files relative to `baseDir`,
+ * applying the shared root-relative exclusion predicate. `.run`, `.git`, and
+ * `.DS_Store` are excluded at any depth while the transient root
+ * `plan-prompt.md` is excluded without hiding a nested same-named authored file.
  */
 async function collectArtifactFiles(dir: string, baseDir: string): Promise<string[]> {
   let entries: Dirent[];
@@ -324,14 +319,15 @@ async function collectArtifactFiles(dir: string, baseDir: string): Promise<strin
 
   const files: string[] = [];
   for (const entry of entries) {
-    if (CHANGE_FOLDER_IGNORES.has(entry.name)) {
+    const fullPath = path.join(dir, entry.name);
+    const relPath = path.relative(baseDir, fullPath).split(path.sep).join('/');
+    if (isExcludedChangePath(relPath)) {
       continue;
     }
-    const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await collectArtifactFiles(fullPath, baseDir)));
     } else if (entry.isFile()) {
-      files.push(path.relative(baseDir, fullPath).split(path.sep).join('/'));
+      files.push(relPath);
     }
   }
   return files;

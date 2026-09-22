@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
-import { OSQ_END_MARKER, OSQ_START_MARKER } from './init.js';
+import { checkManagedBlocks } from './doctor-managed.js';
 import { getArchiveDir, getChangesDir } from './layout.js';
 import { OPENSPEC_EXPECTED_VERSION } from './linter.js';
 import { isPidRunning } from './lock.js';
@@ -104,35 +104,11 @@ async function checkValidator(
   }
 }
 
-// PLANNER.md is osq-owned and must carry a block. AGENTS.md is often
-// hand-authored: no markers means unmanaged, a partial/reversed pair is drift.
-async function checkManagedBlocks(projectRoot: string): Promise<DoctorCheckResult> {
-  const failures: string[] = [];
-  let agentsManaged = true;
-  for (const file of ['AGENTS.md', 'PLANNER.md']) {
-    const fullPath = path.join(projectRoot, file);
-    if (!(await exists(fullPath))) {
-      failures.push(`${file} missing`);
-      continue;
-    }
-    const content = await fs.readFile(fullPath, 'utf8');
-    const start = content.indexOf(OSQ_START_MARKER);
-    const end = content.indexOf(OSQ_END_MARKER);
-    if (start === -1 && end === -1) {
-      if (file === 'PLANNER.md') failures.push(`${file} missing managed block`);
-      else agentsManaged = false;
-    } else if (start === -1 || end === -1 || end < start) {
-      failures.push(`${file} has a malformed managed block`);
-    }
-  }
-  if (failures.length > 0) {
-    return make('managed-blocks', false, failures.join('; '));
-  }
-  return make(
-    'managed-blocks',
-    true,
-    agentsManaged ? 'managed blocks valid' : 'managed blocks valid (AGENTS.md unmanaged)',
-  );
+// PLANNER.md, AGENTS.md, and the Claude command all carry canonical osq
+// managed blocks; doctor compares bytes, not marker presence.
+async function checkManaged(projectRoot: string): Promise<DoctorCheckResult> {
+  const result = await checkManagedBlocks(projectRoot);
+  return make('managed-blocks', result.ok, result.message);
 }
 
 async function listDirs(root: string): Promise<string[]> {
@@ -221,7 +197,7 @@ export async function runDoctorChecks(
   const checks = [
     configCheck,
     await checkHarness(projectRoot, config),
-    await checkManagedBlocks(projectRoot),
+    await checkManaged(projectRoot),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),
     await checkDoneMarkers(projectRoot, config),

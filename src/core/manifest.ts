@@ -6,7 +6,7 @@ import type { OsqConfig } from './config.js';
 import { resolveExecutorIdentity } from './harness-catalog.js';
 import { getSpecsDir } from './layout.js';
 import { parseSpecMdFromFolder, resolveChangeDoc } from './parser.js';
-import { readPlanRecords } from './planning.js';
+import { type PlanRecord, planningRecordSource, readPlanRecords } from './planning.js';
 
 /**
  * Package root of the running osq build: `src/core/` when executed through
@@ -83,6 +83,30 @@ async function resolveCreatedAt(specFolderPath: string): Promise<string> {
 }
 
 /**
+ * Manifest planner attribution: the model from the most recent observed session
+ * that reports one, then the most recent owned `--session` record that reports
+ * one, else null. Configuration alone never supplies attribution.
+ */
+function resolvePlanningAttribution(records: readonly PlanRecord[]): string | null {
+  const latestModel = (source: 'owned' | 'observed'): string | null => {
+    let bestTimestamp = '';
+    let bestModel: string | null = null;
+    for (const record of records) {
+      if (record.type !== 'plan_started') continue;
+      if (planningRecordSource(record) !== source) continue;
+      const model = record.data.model;
+      if (!model) continue;
+      if (bestModel === null || record.timestamp > bestTimestamp) {
+        bestTimestamp = record.timestamp;
+        bestModel = model;
+      }
+    }
+    return bestModel;
+  };
+  return latestModel('observed') ?? latestModel('owned');
+}
+
+/**
  * Builds the approval manifest for a change: content-addressed hashes of the
  * agent and planner docs, the resolved config, and every capability spec the
  * change reads or writes, plus build and harness identity.
@@ -115,16 +139,15 @@ export async function buildManifest(
   }
 
   const identity = resolveExecutorIdentity(config);
-  const planningSessions = (await readPlanRecords(specFolderPath)).filter(
-    (record) => record.type === 'plan_started',
-  ).length;
+  const planRecords = await readPlanRecords(specFolderPath);
+  const planningSessions = planRecords.filter((record) => record.type === 'plan_started').length;
 
   return {
     hashes,
     osqVersion: await resolveOsqVersion(),
     harness: identity.harness,
     model: identity.model,
-    planner: config.planner?.model ?? null,
+    planner: resolvePlanningAttribution(planRecords),
     effort: identity.effort,
     createdAt: await resolveCreatedAt(specFolderPath),
     approvedAt: new Date().toISOString(),

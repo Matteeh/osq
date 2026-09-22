@@ -7,11 +7,28 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { doctorCommand } from '../src/cli/doctor.js';
 import { type OsqConfig, loadConfig } from '../src/core/config.js';
 import { runDoctorChecks } from '../src/core/doctor.js';
-import { OSQ_END_MARKER, OSQ_START_MARKER } from '../src/core/init.js';
+import {
+  MANAGED_AGENTS_MD_BODY,
+  MANAGED_CLAUDE_PLAN_COMMAND,
+  MANAGED_PLANNER_BLOCK,
+  OSQ_END_MARKER,
+  OSQ_START_MARKER,
+  scaffoldProject,
+} from '../src/core/init.js';
 import { OPENSPEC_EXPECTED_VERSION } from '../src/core/linter.js';
 
 function managedBlock(body: string): string {
-  return `# Instructions\n\n${OSQ_START_MARKER}\n${body}\n${OSQ_END_MARKER}\n`;
+  return `${OSQ_START_MARKER}\n${body}\n${OSQ_END_MARKER}`;
+}
+
+async function writeClaudeCommand(root: string, block: string): Promise<void> {
+  const commandDir = path.join(root, '.claude', 'commands');
+  await fs.mkdir(commandDir, { recursive: true });
+  await fs.writeFile(
+    path.join(commandDir, 'osq-plan.md'),
+    `# Plan a change with osq\n\n${block}\n`,
+    'utf8',
+  );
 }
 
 async function writeHealthyRepo(root: string): Promise<void> {
@@ -21,8 +38,17 @@ async function writeHealthyRepo(root: string): Promise<void> {
     "export default { harness: 'mock' };\n",
     'utf8',
   );
-  await fs.writeFile(path.join(root, 'AGENTS.md'), managedBlock('agents'), 'utf8');
-  await fs.writeFile(path.join(root, 'PLANNER.md'), managedBlock('planner'), 'utf8');
+  await fs.writeFile(
+    path.join(root, 'AGENTS.md'),
+    `# Instructions\n\n${MANAGED_AGENTS_MD_BODY}\n`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(root, 'PLANNER.md'),
+    `# Instructions\n\n${MANAGED_PLANNER_BLOCK}\n`,
+    'utf8',
+  );
+  await writeClaudeCommand(root, MANAGED_CLAUDE_PLAN_COMMAND);
 }
 
 async function writeArchive(
@@ -219,6 +245,106 @@ describe('runDoctorChecks', () => {
     const report = await runDoctorChecks(tmpDir);
 
     assert.equal(findCheck(report, 'managed-blocks')?.ok, false);
+  });
+
+  it('fails the managed-blocks check when AGENTS.md has no managed block', async () => {
+    await writeHealthyRepo(tmpDir);
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# Notes\n\nNo markers.\n');
+
+    const report = await runDoctorChecks(tmpDir);
+
+    const check = findCheck(report, 'managed-blocks');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /AGENTS\.md/);
+    assert.match(check?.message ?? '', /missing its managed block/);
+  });
+
+  it('fails the managed-blocks check when the Claude command is missing', async () => {
+    await writeHealthyRepo(tmpDir);
+    await fs.rm(path.join(tmpDir, '.claude', 'commands', 'osq-plan.md'));
+
+    const report = await runDoctorChecks(tmpDir);
+
+    const check = findCheck(report, 'managed-blocks');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /osq-plan\.md/);
+    assert.match(check?.message ?? '', /missing/);
+  });
+
+  it('fails the managed-blocks check when the Claude command is stale', async () => {
+    await writeHealthyRepo(tmpDir);
+    await writeClaudeCommand(tmpDir, managedBlock('stale plan command'));
+
+    const report = await runDoctorChecks(tmpDir);
+
+    const check = findCheck(report, 'managed-blocks');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /osq-plan\.md/);
+    assert.match(check?.message ?? '', /stale managed block/);
+  });
+
+  it('fails the managed-blocks check on duplicate managed blocks', async () => {
+    await writeHealthyRepo(tmpDir);
+    await fs.writeFile(
+      path.join(tmpDir, 'PLANNER.md'),
+      `${MANAGED_PLANNER_BLOCK}\n\n${MANAGED_PLANNER_BLOCK}\n`,
+    );
+
+    const report = await runDoctorChecks(tmpDir);
+
+    const check = findCheck(report, 'managed-blocks');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /PLANNER\.md/);
+    assert.match(check?.message ?? '', /duplicate managed blocks/);
+  });
+
+  it('fails the managed-blocks check on reversed markers', async () => {
+    await writeHealthyRepo(tmpDir);
+    await fs.writeFile(
+      path.join(tmpDir, 'AGENTS.md'),
+      `# Instructions\n\n${OSQ_END_MARKER}\nreversed\n${OSQ_START_MARKER}\n`,
+    );
+
+    const report = await runDoctorChecks(tmpDir);
+
+    const check = findCheck(report, 'managed-blocks');
+    assert.equal(check?.ok, false);
+    assert.match(check?.message ?? '', /AGENTS\.md/);
+    assert.match(check?.message ?? '', /reversed managed block/);
+  });
+
+  it('scaffoldProject repairs drifted managed blocks without disturbing foreign content', async () => {
+    await writeHealthyRepo(tmpDir);
+    const foreignAgents =
+      '# House rules\n\n<!-- OPENSPEC:START -->\nforeign block\n<!-- OPENSPEC:END -->\n\nEpilogue.\n';
+    await fs.writeFile(
+      path.join(tmpDir, 'AGENTS.md'),
+      `${foreignAgents}${managedBlock('stale agents')}\n`,
+      'utf8',
+    );
+    await fs.writeFile(path.join(tmpDir, 'PLANNER.md'), '# No markers here\n', 'utf8');
+    await writeClaudeCommand(tmpDir, `${OSQ_END_MARKER}\nreversed\n${OSQ_START_MARKER}`);
+
+    await scaffoldProject(tmpDir);
+
+    const agents = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    assert.ok(agents.includes('# House rules'));
+    assert.ok(agents.includes('foreign block'));
+    assert.ok(agents.includes('Epilogue.'));
+    assert.equal(agents.includes('stale agents'), false);
+    assert.equal(agents.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(agents.split(OSQ_END_MARKER).length - 1, 1);
+
+    const planner = await fs.readFile(path.join(tmpDir, 'PLANNER.md'), 'utf8');
+    assert.ok(planner.includes('# No markers here'));
+    assert.equal(planner.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(planner.split(OSQ_END_MARKER).length - 1, 1);
+
+    const report = await runDoctorChecks(tmpDir, {
+      probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    });
+    assert.equal(findCheck(report, 'managed-blocks')?.ok, true);
+    assert.equal(report.ok, true, JSON.stringify(report.checks, null, 2));
   });
 
   it('fails the locks check when an orphaned lock exists', async () => {

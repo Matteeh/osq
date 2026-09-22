@@ -118,6 +118,7 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
     now: { ...report.now },
     planning: {
       sessions: report.planning.sessions,
+      changesWithPlanningRecords: report.planning.changesWithPlanningRecords,
       wallSeconds: report.planning.wallSeconds,
       wallSecondsByChange: { ...report.planning.wallSecondsByChange },
       tokens: { ...report.planning.tokens },

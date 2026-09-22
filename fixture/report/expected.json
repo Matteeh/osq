@@ -334,6 +334,7 @@
     "verified": 17
   },
   "planning": {
+    "changesWithPlanningRecords": 3,
     "cost": {
       "formattedTotal": "$0.35",
       "provenance": "harness-reported",

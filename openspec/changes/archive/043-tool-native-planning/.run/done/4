@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:46f5266a4acd63f1b5b2f936e6e231329847c392d7c0a0229d5c02d49d84c8f8"
+build_stamp: "fc5033f"
+exit_code: 0
+scope_files: {"src/core/hasher.ts":"sha256:361a1176440b27c2fb1302a4793af6c85b9e0b46eb8a67d1e6795456fab8ef12","src/core/linter.ts":"sha256:5b582190fedad0cb3c52e2bddbfee81b26ef01de4fce8bb9a900ef3ac43e4c97","src/watcher/archiver.ts":"sha256:e5325393d0875a88136502dc3d37bb6e210801393d97d327cff2156b9a252a11","tests/archive-verification.test.ts":"sha256:0040dd7f58065a7c2a315aab5106e31fe68d7735f6c6e2538646d31d730dd5a2","tests/hasher.test.ts":"sha256:b8bdf2f0502e5d8bdc3400d1b2b18bcbaafb28bd69db962b3b2421cabd248d8f","tests/linter.test.ts":"sha256:bae4c388dbbb4fbe64e1debc4dae146a9a6e562f808382c0017f7284094ab62c","tests/plan-prompt-lifecycle.test.ts":"sha256:23692e41a7f00aa358cc1ae47bfed199f3e346aa931aa0ee0d16c030b6b53f24"}
+---
+2026-09-22T13:28:28.283Z

@@ -196,6 +196,7 @@ describe('report --json', () => {
       'total',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning), [
+      'changesWithPlanningRecords',
       'cost',
       'coverage',
       'sessions',
@@ -411,6 +412,7 @@ describe('formatMetricsReport', () => {
       },
       planning: {
         sessions: 9,
+        changesWithPlanningRecords: 4,
         wallSeconds: 660,
         wallSecondsByChange: { '001-spec': 660 },
         tokens: { input: 11, output: 22, cached: 33, reasoning: 44 },
@@ -452,6 +454,7 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Input tokens: 11'));
     assert.ok(formatted.includes('Harness-reported cost: PLAN-COST'));
     assert.ok(formatted.includes('3 of 9 sessions reported usage'));
+    assert.ok(formatted.includes('4 changes have a planning record'));
     assert.ok(formatted.includes('Cycle:'));
     assert.ok(
       formatted.includes('Brief to approval: total 10s, average 5s (2 of 3 archived changes)'),
@@ -565,6 +568,7 @@ describe('formatMetricsReport', () => {
       },
       planning: {
         sessions: 0,
+        changesWithPlanningRecords: 0,
         wallSeconds: 0,
         wallSecondsByChange: {},
         tokens: { input: 0, output: 0, cached: 0, reasoning: 0 },
@@ -593,6 +597,7 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Verification failed at detection: 0'), formatted);
     assert.ok(formatted.includes('Recertified by human: 0'), formatted);
     assert.ok(formatted.includes('Requeued for agent: 0'), formatted);
+    assert.ok(formatted.includes('0 changes have a planning record'), formatted);
   });
 });
 

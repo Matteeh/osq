@@ -455,13 +455,14 @@ describe('queue rejection gate', () => {
 });
 
 describe('plan command modes', () => {
-  it('registers the plan command with --next and --replan', () => {
+  it('registers the plan command with --next, --replan, and --session', () => {
     const program = createProgram();
     const planCmd = program.commands.find((command) => command.name() === 'plan');
     assert.ok(planCmd, 'plan command should be registered');
     assert.equal(planCmd.registeredArguments[0].name(), 'name');
     assert.ok(planCmd.options.find((option) => option.long === '--next'));
     assert.ok(planCmd.options.find((option) => option.long === '--replan'));
+    assert.ok(planCmd.options.find((option) => option.long === '--session'));
   });
 
   it('rejects missing and conflicting modes before any file is written', async () => {
@@ -501,5 +502,70 @@ describe('plan command modes', () => {
     assert.equal(parsed.data.queue_hash, sectionHash(content, 'alpha'));
     assert.match(stdout, /# Change: 001 - Queue Alpha/);
     assert.ok(!stdout.includes('queue.md'), 'prompt must not embed the queue file');
+  });
+
+  it('default plan --next hands off the prompt file and marks exactly one item planned', async () => {
+    const content = queueContent([
+      { slug: 'alpha', title: 'Alpha' },
+      { slug: 'beta', title: 'Beta', depends: 'alpha' },
+    ]);
+    await writeQueue(tmpDir, content);
+    await fs.writeFile(
+      path.join(tmpDir, 'osq.config.ts'),
+      `export default { harness: 'mock', queue: { maxPlanningSessions: 10, maxPlanningCost: 100 } };\n`,
+      'utf8',
+    );
+    await createQueuedChange(tmpDir, 'archive', '020-alpha', {
+      slug: 'alpha',
+      hash: sectionHash(content, 'alpha'),
+    });
+
+    const spawnedBefore = MockAdapter.recordedInteractiveSpawns.length;
+    let stdout = '';
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string | Buffer) => {
+      stdout += chunk.toString();
+      return true;
+    }) as typeof process.stdout.write;
+
+    try {
+      await planCommand(undefined, { next: true, cwd: tmpDir });
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+
+    assert.equal(MockAdapter.recordedInteractiveSpawns.length, spawnedBefore);
+    assert.deepEqual(await activeFolders(tmpDir), ['021-beta']);
+
+    const folder = path.join(activeRoot(tmpDir), '021-beta');
+    const parsed = parseFrontmatter(await fs.readFile(path.join(folder, 'brief.md'), 'utf8'));
+    assert.equal(parsed.data.planner, null);
+    assert.equal(parsed.data.queue_item, 'beta');
+    assert.equal(parsed.data.queue_hash, sectionHash(content, 'beta'));
+
+    const prompt = await fs.readFile(path.join(folder, 'plan-prompt.md'), 'utf8');
+    assert.ok(prompt.includes('# Change: 021 - Beta'), 'prompt names the selected change');
+    assert.ok(
+      prompt.includes('Landed dependencies:\n- openspec/changes/archive/020-alpha'),
+      'prompt carries landed dependency archive paths',
+    );
+    assert.ok(!prompt.includes('queue.md'), 'prompt must not embed the queue file');
+
+    await assert.rejects(fs.stat(path.join(folder, '.run', 'plan.jsonl')));
+    assert.equal(stdout.trim().split('\n').length, 1, 'exactly one handoff line');
+    assert.ok(stdout.includes('ask your planning tool to plan change 021-beta'));
+
+    const projection = await projectQueue(tmpDir, DEFAULT_CONFIG);
+    const beta = projection.items.find((item) => item.slug === 'beta');
+    assert.equal(beta?.state, 'planned');
+    assert.equal(beta?.changeId, '021');
+  });
+
+  it('rejects session combined with print before any mutation', async () => {
+    await assert.rejects(
+      () => planCommand('alpha', { session: true, print: true, cwd: tmpDir }),
+      /--session.*--print/,
+    );
+    assert.deepEqual(await activeFolders(tmpDir), []);
   });
 });

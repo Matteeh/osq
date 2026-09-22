@@ -14,7 +14,7 @@ pnpm add -D @matteeh/osq       # adds osq as a devDependency (or npm i -D @matte
 pnpm osq watch                 # start the watcher
 ```
 
-`init` is idempotent. Run it again after upgrading to refresh the managed blocks in `AGENTS.md` and `PLANNER.md`; it never touches anything else you've edited and preserves foreign managed blocks.
+`init` is idempotent. Run it again after upgrading to refresh the managed blocks in `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md`; it never touches anything else you've edited and preserves foreign managed blocks.
 
 ## Upgrading
 
@@ -23,8 +23,9 @@ Resolver 2 changes the automated done-marker hashes for active changes. On the f
 ## What it puts in your repo
 
 ```
-AGENTS.md          your existing file, plus a managed block with the coding agent procedure
+AGENTS.md          your existing file, plus a managed block with the coding agent procedure and Codex planning entry point
 PLANNER.md         guidelines for the planner model to scaffold cohesive changes
+.claude/commands/  osq-plan.md, the Claude Code planning command (slug as $ARGUMENTS)
 osq.config.ts      limits, paths, test gating, and harness configuration
 openspec/
   specs/           living capability specifications (e.g. cli-foundation/spec.md)
@@ -49,7 +50,7 @@ A change folder is a feature. A task is one unit of work for one agent. After ap
 ## The loop
 
 ```
-you + smart model   plan change folder   ->  osq plan <name> -> openspec/changes/042-x/ with proposal.md, tasks/, specs/
+you + smart model   plan change folder   ->  osq plan <name> -> openspec/changes/042-x/ with plan-prompt.md, proposal.md, tasks/, specs/
 you                 lint / approve       ->  osq approve -> .run/approved, .run/manifest.json
 watcher             spawn per task       ->  cheap agent, fresh context, capability rules injected
 agent               work, write result   ->  .run/results/1.md, exit
@@ -249,10 +250,10 @@ Offline tests use a deterministic fake Codex executable and require no authentic
 ```
 osq                      human attention inbox: needsYou, running, landed since last look
 osq --json               print human attention inbox as stable JSON
-osq init                 scaffold openspec layout, config, AGENTS.md, and PLANNER.md
+osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
 osq setup                write harness config for OSQ_HARNESS
 osq new <name>           new change folder from template in openspec/changes/
-osq plan <name>          initialize change, write brief, and open interactive planner session
+osq plan <name>          initialize change, write plan-prompt.md, and hand off to your planning tool
 osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints
 osq approve <ids...>     lint, hash, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
@@ -278,11 +279,50 @@ Use `osq --json` to consume this contract programmatically without extra termina
 
 ### Planning
 
+Planning is prompt handoff by default: osq writes the complete five-section
+opening prompt to `plan-prompt.md` in the change folder and hands off to the
+tool you already use.
+
 ```sh
-osq plan <name>                 # interactive planning session with configured planner
-osq plan <name> --brief <file>  # initialize from an existing brief document (or - for stdin)
-osq plan <name> -p, --print     # emit the opening prompt to stdout without launching a session
+osq plan <name> --brief <file>  # create the change, write plan-prompt.md, and print the handoff line
+osq plan --next                 # same handoff for the first eligible queue item
 ```
+
+The default path constructs and spawns no harness: it writes an exact prompt
+file, records `planner: null` in `brief.md`, and prints one line containing the
+folder path and `ask your planning tool to plan change <slug>`. Ask that tool to
+plan the change.
+
+`init` installs the planning entry points that consume the prompt:
+
+- Claude Code reads `.claude/commands/osq-plan.md`, which takes the change slug
+  as its `$ARGUMENTS` argument.
+- Codex reads the `Planning a change` section of the managed `AGENTS.md` block.
+
+Both, and the managed `PLANNER.md` block, tell the tool to read and follow
+`plan-prompt.md`, write only inside the change folder, run `osq lint <slug>` and
+fix every finding, and never run `osq approve`.
+
+Model choice belongs to the planning tool unless osq is explicitly asked to
+launch the session, so the generated `osq.config.ts` contains no required
+planner model. Explicit session and print modes remain available:
+
+```sh
+osq plan <name> --brief <file> --session  # launch the configured planner in the terminal
+osq plan <name> -p, --print               # emit the prompt to stdout only; no file, process, or record
+```
+
+`--session` restores the osq-owned interactive planner: it selects the
+configured planner exactly as before, attributes the brief to that model, and
+records the owned lifecycle and usage. Planner `harness`, `model`, and `agent`
+validation applies only there. `--print` emits the same prompt bytes to stdout
+without writing `plan-prompt.md`, spawning a process, or recording telemetry.
+
+When you run `osq approve <id>`, osq observes local Codex, OpenCode, and Claude
+Code sessions whose file edits fall inside the change folder during its
+lifetime and records any matches as observed planning sessions. It never
+estimates missing values, never retains transcript content, and never sends
+anything off the machine.
 
 ### Retry & Rejection
 
@@ -319,7 +359,7 @@ Run `osq doctor` to verify repository health:
 
 - `config`: confirms `osq.config.ts` is valid and well-formed
 - `harness`: checks that the configured harness binary (e.g. `opencode`, `agy`) exists and is executable
-- `managed-blocks`: verifies `AGENTS.md` and `PLANNER.md` managed sections are up to date
+- `managed-blocks`: verifies the `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md` managed sections match the installed osq version (run `osq init` to repair drift)
 - `locks`: checks for orphaned `.run/running/*.pid` locks and processes
 - `archives`: validates integrity of archived change folders
 - `validator`: ensures `@fission-ai/openspec` is installed and matches the pinned version (`1.13.1`)

@@ -7,6 +7,7 @@ import { DEFAULT_CONFIG, defineConfig, loadConfig } from '../src/core/config.js'
 import { scaffoldProject } from '../src/core/init.js';
 import { buildManifest } from '../src/core/manifest.js';
 import { createNewSpec } from '../src/core/new.js';
+import { type PlanRecord, appendPlanRecord } from '../src/core/planning.js';
 import { installFakeValidator } from './helpers.js';
 
 describe('planner configuration and manifest attribution', () => {
@@ -103,23 +104,39 @@ describe('planner configuration and manifest attribution', () => {
     });
   });
 
-  it('buildManifest populates manifest.planner from config', async () => {
+  it('never populates manifest.planner from configuration alone', async () => {
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     const spec = await createNewSpec(tmpDir, 'Planner Manifest Probe');
 
-    // Without planner in config
-    const manifestWithoutPlanner = await buildManifest(tmpDir, spec.folderPath, DEFAULT_CONFIG);
-    assert.equal(manifestWithoutPlanner.planner, null);
-
-    // With planner configured
     const configWithPlanner = defineConfig({
       planner: {
         harness: 'opencode',
         model: 'deepseek/deepseek-planner',
       },
     });
-    const manifestWithPlanner = await buildManifest(tmpDir, spec.folderPath, configWithPlanner);
-    assert.equal(manifestWithPlanner.planner, 'deepseek/deepseek-planner');
+
+    // Configuration alone never supplies manifest attribution.
+    assert.equal((await buildManifest(tmpDir, spec.folderPath, DEFAULT_CONFIG)).planner, null);
+    assert.equal((await buildManifest(tmpDir, spec.folderPath, configWithPlanner)).planner, null);
+
+    // A recorded planning start supplies attribution instead.
+    const record: PlanRecord = {
+      type: 'plan_started',
+      sessionId: 'owned-1',
+      timestamp: new Date().toISOString(),
+      source: 'owned',
+      data: {
+        harness: 'opencode',
+        model: 'owned-parser',
+        osqVersion: '0.0.0',
+        briefHash: 'sha256:b',
+      },
+    };
+    await appendPlanRecord(spec.folderPath, record);
+    assert.equal(
+      (await buildManifest(tmpDir, spec.folderPath, configWithPlanner)).planner,
+      'owned-parser',
+    );
   });
 });

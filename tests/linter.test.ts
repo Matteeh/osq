@@ -1100,4 +1100,34 @@ skills: []
     assert.equal(result.valid, true);
     assert.deepEqual(exitCodes, []);
   });
+
+  it('excludes a root plan-prompt.md from artifact scanning without changing findings', async () => {
+    const baseline = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+    assert.equal(baseline.valid, true, baseline.errors.join('\n'));
+
+    // Prohibited control characters inside the transient prompt must not become
+    // a lint finding, and no other diagnostic may shift.
+    await fs.writeFile(path.join(specFolder, 'plan-prompt.md'), 'prompt\x07bytes', 'utf8');
+    const withPrompt = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(withPrompt.valid, true, withPrompt.errors.join('\n'));
+    assert.deepEqual(withPrompt.errors, baseline.errors);
+    assert.deepEqual(withPrompt.warnings, baseline.warnings);
+  });
+
+  it('still scans and rejects a nested plan-prompt.md as authored content', async () => {
+    const nested = path.join(specFolder, 'notes', 'plan-prompt.md');
+    await fs.mkdir(path.dirname(nested), { recursive: true });
+    await fs.writeFile(nested, 'authored\x07bytes', 'utf8');
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.errors.some(
+        (error) => error.includes('notes/plan-prompt.md') && error.includes('control character'),
+      ),
+      result.errors.join('\n'),
+    );
+  });
 });

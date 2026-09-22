@@ -61,7 +61,8 @@ export interface PlanningSessionDetail {
   sessionId: string;
   startTime: string;
   harness: string;
-  model: string;
+  /** Null when neither the owned nor the observed record reported a model. */
+  model: string | null;
   agent?: string;
   exitCode: number | null;
   wallSeconds: number | null;
@@ -617,11 +618,12 @@ export function formatSpecDetails(details: SpecDetails): string {
   } else {
     for (const session of details.planningSessions) {
       const agent = session.agent ? ` agent: ${session.agent}` : '';
+      const model = session.model ?? 'unavailable';
       const exit = session.exitCode === null ? 'unavailable' : String(session.exitCode);
       const wall =
         session.wallSeconds === null ? 'unavailable' : formatDuration(session.wallSeconds * 1000);
       lines.push(
-        `  ${session.startTime} ${session.harness}/${session.model}${agent} exit: ${exit} wall: ${wall}`,
+        `  ${session.startTime} ${session.harness}/${model}${agent} exit: ${exit} wall: ${wall}`,
       );
     }
   }

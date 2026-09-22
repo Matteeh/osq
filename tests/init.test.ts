@@ -4,7 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { parse as parseYaml } from 'yaml';
-import { scaffoldProject, updateAgentsMd } from '../src/core/init.js';
+import {
+  MANAGED_AGENTS_MD_BODY,
+  OSQ_END_MARKER,
+  OSQ_START_MARKER,
+  scaffoldProject,
+  updateAgentsMd,
+} from '../src/core/init.js';
 
 interface ParsedArtifact {
   id: string;
@@ -100,6 +106,16 @@ describe('osq init', () => {
     assert.ok(content.includes('<!-- OSQ:START -->'));
     assert.ok(content.includes('<!-- OSQ:END -->'));
     assert.ok(content.includes('Executing a spec'));
+  });
+
+  it('managed AGENTS block carries the planning entry point without weakening the executor protocol', () => {
+    assert.match(MANAGED_AGENTS_MD_BODY, /## Planning a change/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /`plan-prompt\.md`/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /Write only inside that change folder/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /`osq lint <slug>`/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /Never run `osq approve`/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /## Executing a spec/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /## Exiting/);
   });
 
   it('managed block is clean, self-contained, and contains no self-referential repo text', async () => {
@@ -251,5 +267,68 @@ describe('osq init', () => {
 
     assert.equal(await fs.readFile(openspecConfigPath, 'utf8'), '# user owned openspec config\n');
     assert.equal(await fs.readFile(schemaPath, 'utf8'), 'name: custom\n');
+  });
+
+  it('creates the Claude plan command and classifies it in InitResult', async () => {
+    const rel = path.join('.claude', 'commands', 'osq-plan.md');
+
+    const first = await scaffoldProject(tmpDir);
+    assert.equal(first.updatedClaudePlanCommand, true);
+    assert.ok(first.createdFiles.includes(rel), JSON.stringify(first.createdFiles));
+
+    const content = await fs.readFile(path.join(tmpDir, rel), 'utf8');
+    assert.ok(content.includes('$ARGUMENTS'));
+    assert.ok(content.includes('`plan-prompt.md`'));
+    assert.ok(content.includes('Write only inside that change folder'));
+    assert.ok(content.includes('osq lint $ARGUMENTS'));
+    assert.ok(content.includes('Never run `osq approve`'));
+    assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+
+    const second = await scaffoldProject(tmpDir);
+    assert.equal(second.updatedClaudePlanCommand, true);
+    assert.ok(second.existingFiles.includes(rel), JSON.stringify(second.existingFiles));
+    assert.deepEqual(second.createdFiles, []);
+    assert.deepEqual(second.createdDirs, []);
+  });
+
+  it('refreshes a stale Claude command while preserving surrounding content', async () => {
+    const rel = path.join('.claude', 'commands', 'osq-plan.md');
+    const commandPath = path.join(tmpDir, rel);
+    await fs.mkdir(path.dirname(commandPath), { recursive: true });
+    await fs.writeFile(
+      commandPath,
+      `# House command\n\nKeep this preamble.\n\n<!-- OPENSPEC:START -->\nforeign command block\n<!-- OPENSPEC:END -->\n\n${OSQ_START_MARKER}\nstale command\n${OSQ_END_MARKER}\n\nKeep this epilogue.\n`,
+      'utf8',
+    );
+
+    await scaffoldProject(tmpDir);
+
+    const content = await fs.readFile(commandPath, 'utf8');
+    assert.equal(content.includes('stale command'), false);
+    assert.ok(content.includes('Keep this preamble.'));
+    assert.ok(content.includes('foreign command block'));
+    assert.ok(content.includes('Keep this epilogue.'));
+    assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+  });
+
+  it('does not rewrite existing config, environment, schema, or unrelated files', async () => {
+    const openspecConfigPath = path.join(tmpDir, 'openspec', 'config.yaml');
+    const schemaPath = path.join(tmpDir, 'openspec', 'schemas', 'osq', 'schema.yaml');
+    const envExamplePath = path.join(tmpDir, '.env.example');
+    const sentinelPath = path.join(tmpDir, 'NOTES.md');
+    await fs.mkdir(path.dirname(schemaPath), { recursive: true });
+    await fs.writeFile(openspecConfigPath, '# custom openspec config\n');
+    await fs.writeFile(schemaPath, 'name: custom\n');
+    await fs.writeFile(envExamplePath, '# custom env\n');
+    await fs.writeFile(sentinelPath, 'keep me\n');
+
+    await scaffoldProject(tmpDir);
+
+    assert.equal(await fs.readFile(openspecConfigPath, 'utf8'), '# custom openspec config\n');
+    assert.equal(await fs.readFile(schemaPath, 'utf8'), 'name: custom\n');
+    assert.equal(await fs.readFile(envExamplePath, 'utf8'), '# custom env\n');
+    assert.equal(await fs.readFile(sentinelPath, 'utf8'), 'keep me\n');
   });
 });

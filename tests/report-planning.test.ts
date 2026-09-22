@@ -39,12 +39,19 @@ function nullUsage(): PlanningUsage {
   };
 }
 
-function started(sessionId: string, timestamp: string, harness = 'opencode'): string {
+function started(
+  sessionId: string,
+  timestamp: string,
+  harness = 'opencode',
+  source?: 'owned' | 'observed',
+  model: string | null = 'model',
+): string {
   return JSON.stringify({
     type: 'plan_started',
     sessionId,
     timestamp,
-    data: { harness, model: 'model', osqVersion: '0.0.0', briefHash: 'sha256:x' },
+    ...(source ? { source } : {}),
+    data: { harness, model, osqVersion: '0.0.0', briefHash: 'sha256:x' },
   });
 }
 
@@ -53,11 +60,13 @@ function exited(
   timestamp: string,
   wallSeconds: number,
   usage: Partial<PlanningUsage> = {},
+  source?: 'owned' | 'observed',
 ): string {
   return JSON.stringify({
     type: 'plan_exited',
     sessionId,
     timestamp,
+    ...(source ? { source } : {}),
     data: { exitCode: 0, wallSeconds, usage: { ...nullUsage(), ...usage } },
   });
 }
@@ -105,6 +114,8 @@ describe('report planning metrics', () => {
         reportedSessions: 3,
         totalSessions: 6,
       });
+      // Three distinct archived changes carry a planning start.
+      assert.equal(report.planning.changesWithPlanningRecords, 3);
     });
 
     it('renders the planning totals and the exact coverage phrase in text', async () => {
@@ -120,6 +131,7 @@ describe('report planning metrics', () => {
       assert.ok(text.includes('Reasoning tokens: 50'), text);
       assert.ok(text.includes('Harness-reported cost: $0.35'), text);
       assert.ok(text.includes('3 of 6 sessions reported usage'), text);
+      assert.ok(text.includes('3 changes have a planning record'), text);
     });
   });
 
@@ -203,6 +215,71 @@ describe('report planning metrics', () => {
     });
   });
 
+  describe('mixed sources', () => {
+    it('treats observed, explicit owned, and source-less legacy starts identically', async () => {
+      const root = await makeProject();
+      await writePlanLog(root, 'active', '001-mixed', [
+        // Legacy record without a source field reads as owned.
+        started('legacy', '2026-01-01T00:00:00.000Z'),
+        exited('legacy', '2026-01-01T00:01:00.000Z', 60, { inputTokens: 10 }),
+        // Explicit owned record.
+        started('owned', '2026-01-01T00:02:00.000Z', 'opencode', 'owned'),
+        exited('owned', '2026-01-01T00:02:30.000Z', 30, { outputTokens: 20 }, 'owned'),
+        // Observed record with a nullable model.
+        started('observed', '2026-01-01T00:03:00.000Z', 'claude', 'observed', null),
+        exited(
+          'observed',
+          '2026-01-01T00:03:20.000Z',
+          20,
+          { cachedTokens: 30, cost: 0.5 },
+          'observed',
+        ),
+      ]);
+      await writePlanLog(root, 'archive', '002-observed', [
+        started('observed-2', '2026-01-02T00:00:00.000Z', 'codex', 'observed', 'gpt'),
+        exited('observed-2', '2026-01-02T00:00:15.000Z', 15, { reasoningTokens: 40 }, 'observed'),
+      ]);
+
+      const report = await getMetricsReport(root, DEFAULT_CONFIG);
+
+      assert.equal(report.planning.sessions, 4);
+      assert.equal(report.planning.wallSeconds, 125);
+      assert.deepEqual(report.planning.tokens, {
+        input: 10,
+        output: 20,
+        cached: 30,
+        reasoning: 40,
+      });
+      assert.ok(Math.abs(report.planning.cost.total - 0.5) <= 1e-9);
+      assert.deepEqual(report.planning.coverage, {
+        reportedSessions: 4,
+        totalSessions: 4,
+      });
+      // Two distinct changes each carry at least one valid start.
+      assert.equal(report.planning.changesWithPlanningRecords, 2);
+    });
+
+    it('counts each covered change once and excludes exit-only and malformed lines', async () => {
+      const root = await makeProject();
+      await writePlanLog(root, 'active', '001-multi', [
+        started('a', '2026-01-01T00:00:00.000Z', 'opencode', 'owned'),
+        exited('a', '2026-01-01T00:00:30.000Z', 30, {}, 'owned'),
+        // Incomplete owned start with no matched exit still covers the change.
+        started('b', '2026-01-01T00:01:00.000Z', 'opencode', 'owned'),
+      ]);
+      await writePlanLog(root, 'active', '002-exit-only', [
+        exited('orphan', '2026-01-01T02:00:00.000Z', 10, { cost: 1 }, 'observed'),
+        '{ not json',
+      ]);
+      await writePlanLog(root, 'archive', '003-malformed', ['not json at all']);
+
+      const report = await getMetricsReport(root, DEFAULT_CONFIG);
+
+      assert.equal(report.planning.sessions, 2);
+      assert.equal(report.planning.changesWithPlanningRecords, 1);
+    });
+  });
+
   describe('reportCommand JSON', () => {
     it('exposes the planning block deterministically through the report command', async () => {
       const raw = await reportCommand({
@@ -213,6 +290,7 @@ describe('report planning metrics', () => {
       const parsed = JSON.parse(raw) as MetricsReport;
 
       assert.deepEqual(Object.keys(parsed.planning).sort(), [
+        'changesWithPlanningRecords',
         'cost',
         'coverage',
         'sessions',
@@ -221,6 +299,7 @@ describe('report planning metrics', () => {
         'wallSecondsByChange',
       ]);
       assert.equal(parsed.planning.sessions, 6);
+      assert.equal(parsed.planning.changesWithPlanningRecords, 3);
       assert.ok(Math.abs(parsed.planning.cost.total - 0.35) <= 1e-9);
       assert.equal(
         JSON.stringify(parsed.planning.wallSecondsByChange),

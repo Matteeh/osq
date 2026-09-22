@@ -31,6 +31,32 @@ export function buildOpencodeSessionQuery(cwd: string): string {
   return `SELECT ${SESSION_COLUMNS.join(', ')} FROM session WHERE directory = '${escaped}'`;
 }
 
+/**
+ * Build a read-only session+part query for approval-time observation. It joins
+ * the two tables and projects only edit metadata through SQLite `json_extract`,
+ * so raw `part.data`, prompts, output, old/new strings, and write content never
+ * enter osq.
+ */
+export function buildOpencodeObservationQuery(): string {
+  const columns = [
+    'session.id AS session_id',
+    'session.directory AS directory',
+    'session.time_created AS time_created',
+    'session.time_updated AS time_updated',
+    'session.model AS model',
+    'session.tokens_input AS tokens_input',
+    'session.tokens_output AS tokens_output',
+    'session.tokens_reasoning AS tokens_reasoning',
+    'session.tokens_cache_read AS tokens_cache_read',
+    'session.tokens_cache_write AS tokens_cache_write',
+    'session.cost AS cost',
+    "json_extract(part.data, '$.tool') AS edit_tool",
+    "json_extract(part.data, '$.state.input.filePath') AS edit_path",
+    'part.time_created AS edit_time',
+  ];
+  return `SELECT ${columns.join(', ')} FROM session JOIN part ON part.sessionID = session.id WHERE json_extract(part.data, '$.type') = 'tool' AND json_extract(part.data, '$.tool') IN ('write', 'edit') AND json_extract(part.data, '$.state.status') = 'completed'`;
+}
+
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -44,7 +70,7 @@ function finiteNonNegative(value: unknown): number | null {
   return value;
 }
 
-function parseTimeMs(value: unknown): number | null {
+export function parseTimeMs(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value > 1e11 ? value : value * 1000;
   }
@@ -60,7 +86,7 @@ function parseTimeMs(value: unknown): number | null {
 }
 
 /** Coerce `db --format json` output into object rows, tolerating both shapes. */
-function parseRows(stdout: string): Record<string, unknown>[] {
+export function parseRows(stdout: string): Record<string, unknown>[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(stdout);
@@ -106,7 +132,7 @@ function sameDirectory(value: unknown, cwd: string): boolean {
   }
 }
 
-function mapUsage(row: Record<string, unknown>): InteractiveUsage {
+export function mapUsage(row: Record<string, unknown>): InteractiveUsage {
   const cacheRead = finiteNonNegative(row.tokens_cache_read);
   const cacheWrite = finiteNonNegative(row.tokens_cache_write);
   // Cache is the sum of the harness's stored read and write counters; it is

@@ -11,6 +11,14 @@ reader succeeds.
    this change will write, and any `## Human steps`. Stop there.
 3. Write task bodies only after the human approves the list.
 
+### Working from the handoff
+
+- Your complete prompt is `plan-prompt.md` in the selected change folder; read
+  it and follow it exactly.
+- Write only inside that change folder.
+- Run `osq lint <slug>` and fix every finding before you finish.
+- Never run `osq approve`; a human owns that gate.
+
 ### Before you write a task
 
 - Grep for what already exists; verify every version, flag, or API before use.

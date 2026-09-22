@@ -1,6 +1,4 @@
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { findSpecFolder } from '../core/approve.js';
 import { resolvePlannerSelection } from '../core/config-codex.js';
@@ -13,15 +11,18 @@ import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report.
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import {
-  buildOpeningPrompt as buildBaseOpeningPrompt,
+  buildBaseOpeningPrompt,
   createChange,
   createQueueChange,
   prepareQueueSelection,
+  readBriefInput,
   validatePlanModeOptions,
   writeBriefAndManifest,
+  writePromptHandoff,
 } from './plan-queue.js';
 
 export { formatBriefContent } from './plan-queue.js';
+export { readBriefInput };
 
 /** Exact heading of the fifth ordered planning-prompt section. */
 export const REPOSITORY_RECORD_HEADING = "## This repository's record";
@@ -56,51 +57,10 @@ export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise
   return `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
 }
 
-export async function readBriefInput(briefOption?: string): Promise<string> {
-  if (briefOption === '-') {
-    return new Promise<string>((resolve, reject) => {
-      let data = '';
-      process.stdin.setEncoding('utf8');
-      process.stdin.on('data', (chunk) => {
-        data += chunk;
-      });
-      process.stdin.on('end', () => resolve(data));
-      process.stdin.on('error', reject);
-    });
-  }
-
-  if (briefOption) {
-    return await fs.readFile(briefOption, 'utf8');
-  }
-
-  const editor = process.env.VISUAL || process.env.EDITOR;
-  if (editor) {
-    const tempFile = path.join(os.tmpdir(), `osq-brief-${Date.now()}.md`);
-    await fs.writeFile(
-      tempFile,
-      '# Feature Brief\n\nDescribe the goal, background, and requirements here.\n',
-      'utf8',
-    );
-    try {
-      const parts = editor.trim().split(/\s+/);
-      const res = spawnSync(parts[0], [...parts.slice(1), tempFile], {
-        stdio: 'inherit',
-      });
-      if (res.error || res.status !== 0) {
-        throw new Error(`Editor ${editor} exited with code ${res.status}`);
-      }
-      return await fs.readFile(tempFile, 'utf8');
-    } finally {
-      await fs.rm(tempFile, { force: true }).catch(() => {});
-    }
-  }
-
-  throw new Error('No brief provided. Specify --brief <file> or set $EDITOR.');
-}
-
 export interface PlanCommandOptions {
   brief?: string;
   print?: boolean;
+  session?: boolean;
   next?: boolean;
   replan?: boolean;
   cwd?: string;
@@ -116,8 +76,14 @@ export async function planCommand(
 
   const cwd = options.cwd || process.cwd();
   const config = await loadConfig(cwd);
-  const plannerSelection = resolvePlannerSelection(config);
   const changesDir = getChangesDir(config.paths.openspecRoot, cwd);
+
+  // The planner is resolved only for an explicit owned session; the default
+  // prompt handoff and print modes never need planner configuration.
+  const isSession = options.session === true;
+  const plannerSelection = isSession ? resolvePlannerSelection(config) : null;
+  const briefModel = plannerSelection?.briefModel ?? null;
+  const quiet = !isSession;
 
   let queueSelection: QueuePlanSelection | null = null;
   let folderPath: string | null = null;
@@ -147,21 +113,15 @@ export async function planCommand(
   }
 
   if (queueSelection) {
-    const created = await createQueueChange(
-      cwd,
-      config,
-      options.print,
-      queueSelection,
-      plannerSelection.briefModel,
-    );
+    const created = await createQueueChange(cwd, config, quiet, queueSelection, briefModel);
     folderPath = created.folderPath;
     specId = created.specId;
   } else if (!isResumed) {
-    const created = await createChange(cwd, options.print, name, {});
+    const created = await createChange(cwd, quiet, name, {});
     folderPath = created.folderPath;
     specId = created.specId;
     const rawBrief = await readBriefInput(options.brief);
-    await writeBriefAndManifest(cwd, config, folderPath, plannerSelection.briefModel, rawBrief);
+    await writeBriefAndManifest(cwd, config, folderPath, briefModel, rawBrief);
   }
 
   if (!folderPath || !specId) {
@@ -193,6 +153,11 @@ export async function planCommand(
 
   if (options.print) {
     process.stdout.write(`${openingPrompt}\n`);
+    return;
+  }
+
+  if (!plannerSelection) {
+    await writePromptHandoff(folderPath, openingPrompt);
     return;
   }
 

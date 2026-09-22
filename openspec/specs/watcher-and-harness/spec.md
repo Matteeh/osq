@@ -245,26 +245,37 @@ The state derivation subsystem SHALL support overloaded invocation for both in-m
 - **THEN** archive destination path is determined using `getArchiveDir` from `src/core/layout.ts`
 
 ### Requirement: Run manifest at approval
-<!-- source: src/core/approve.ts, src/core/manifest.ts, tests/manifest.test.ts -->
-The approve command SHALL write `.run/manifest.json` containing content-addressed
-hashes of `AGENTS.md`, `PLANNER.md`, the config file, and each capability spec
-the change reads or writes; the osq version, harness, model, effort setting, and
-timestamps for creation and approval; and `planningSessions`, the count of valid
-`plan_started` records already present in `.run/plan.jsonl`. A missing or empty
-planning log SHALL produce zero. Because the log lives below `.run/`, it SHALL
-NOT affect approval hashing.
+<!-- source: src/core/approve.ts, src/core/manifest.ts, src/core/planning.ts, tests/manifest.test.ts, tests/planning-observed.test.ts -->
+The approve command SHALL write `.run/manifest.json` containing
+content-addressed instruction, config, and capability hashes; execution
+identity and timestamps; `planningSessions`, the number of valid owned and
+observed `plan_started` records; and nullable `planner` attribution. An owned
+start without an exit SHALL retain its established count.
+
+`planner` SHALL use the model from the most recent observed session that reports
+one, then the most recent owned `--session` record that reports one, else null.
+Configuration alone SHALL never populate it. Planning logs remain below
+`.run/` and SHALL NOT affect the approved content hash.
 
 #### Scenario: Manifest written on approval
 - **WHEN** `osq approve` seals a change
-- **THEN** `.run/manifest.json` contains content hashes, execution identity, creation and approval timestamps, and the recorded planning-session count
+- **THEN** `.run/manifest.json` contains content hashes, execution identity, timestamps, planning-session count, and observed planner attribution
 
 #### Scenario: Approval after multiple planning sessions
-- **WHEN** a change with new and resumed planning sessions is approved
-- **THEN** the manifest counts every valid `plan_started` record while the approved content hash remains independent of the planning log
+- **WHEN** a change with valid owned and observed starts is approved
+- **THEN** the manifest counts every valid start while the approved content hash remains independent of the planning log
 
 #### Scenario: Manifest hashes are content-addressed
 - **WHEN** manifest input files are hashed
-- **THEN** each hash is `sha256:<hex>`, computed from the UTF-8 content, or `null` when the file does not exist
+- **THEN** each hash is `sha256:<hex>` from UTF-8 content or null when the file does not exist
+
+#### Scenario: Observed and owned sessions precede approval
+- **WHEN** valid observed and owned lifecycle pairs exist
+- **THEN** the manifest counts both and attributes planner to the most recent reported observed model
+
+#### Scenario: No session reports a model
+- **WHEN** neither observed nor owned planning history supplies a model
+- **THEN** the manifest records `planner: null` regardless of configured planner values
 
 ### Requirement: Raw measures events on task lifecycle
 <!-- source: src/core/scope.ts, src/watcher/measures.ts, src/harness/types.ts -->
@@ -362,20 +373,32 @@ The engine SHALL record regression failures under `.run/regressed/`, emit typed 
 - **THEN** status output displays `[!] <task>. <title> [regressed]` and marks the spec overview as `[regressed]`
 
 ### Requirement: Archive-time verification re-run
-<!-- source: src/watcher/archiver.ts, src/watcher/verify.ts -->
-Before archiving a completed change, the archiver SHALL re-run every task's verification command followed by the proposal's change-level verification command against the final working tree under the runner timeout and TTY-free environment.
+<!-- source: src/watcher/archiver.ts, src/watcher/verify.ts, tests/archive-verification.test.ts, tests/plan-prompt-lifecycle.test.ts -->
+Before archiving, the watcher SHALL re-run every task verification and the
+change-level verification against the final tree after scope recertification.
+When all gates pass, it SHALL delete root-level `plan-prompt.md`, apply deltas,
+relocate the folder, project completed checkboxes, and record the archive event.
+The transient prompt SHALL not participate in any archive tree hash.
 
 #### Scenario: Archive verification passes and seals change
-- **WHEN** all task verification commands and the change-level verify command exit with code 0 against the final tree
-- **THEN** archiver applies deltas and relocates the change folder to `openspec/changes/archive/`
+- **WHEN** every task verification and the change-level verify command pass against the final tree
+- **THEN** the archiver removes the transient prompt, applies deltas, and relocates the change to the archive
 
 #### Scenario: Task verification regression blocks archive
 - **WHEN** any task verification command fails during archive preflight
-- **THEN** archiver halts, writes `.run/regressed/<n>.md`, appends a `regressed` event to `.run/events/<n>.jsonl`, and leaves the change unarchived
+- **THEN** the watcher records the established task regression and leaves the change and prompt unarchived
 
 #### Scenario: Change-level verification regression blocks archive
 - **WHEN** the change-level verify command fails during archive preflight
-- **THEN** archiver halts, writes `.run/regressed/change.md`, appends a `regressed` event to `.run/events/change.jsonl`, and leaves the change unarchived
+- **THEN** the watcher records the established change regression and leaves the change and prompt unarchived
+
+#### Scenario: Archive succeeds with a prompt file
+- **WHEN** every final-tree verification passes and `plan-prompt.md` exists
+- **THEN** the archived change omits the prompt while retaining authored artifacts and runtime records
+
+#### Scenario: Archive verification fails
+- **WHEN** a task or change-level final verification fails
+- **THEN** the active change and its prompt remain available for diagnosis and no archive event is written
 
 ### Requirement: Deterministic delta spec archival and appender removal
 <!-- source: src/watcher/archiver.ts, tests/archiver.test.ts, tests/living-specs-delta-equivalence.test.ts -->
@@ -531,51 +554,33 @@ Approval manifests, task-start events, planning briefs, and interactive planning
 
 ### Requirement: Observed-only interactive usage port
 <!-- source: src/harness/types.ts, src/harness/agy.ts, src/harness/opencode*.ts, src/harness/codex*.ts, tests/plan-telemetry.test.ts -->
-`HarnessAdapter` SHALL offer this optional post-session usage port:
-
-```ts
-readInteractiveUsage?(options: {
-  cwd: string;
-  startedAt: string;
-  endedAt: string;
-}): Promise<{
-  inputTokens: number | null;
-  outputTokens: number | null;
-  cachedTokens: number | null;
-  reasoningTokens: number | null;
-  cost: number | null;
-}>;
-```
-
-Missing readers, missing fields, malformed artifacts, read failures, and
-ambiguous session matches SHALL yield null fields and SHALL NOT change the
-planner process exit result.
-
-OpenCode SHALL read the one local session database row created for the working
-directory during the observed interval, using its stored input, output,
-reasoning, cache-read, cache-write, and cost columns. Codex SHALL read the one
-new rollout JSONL session whose `session_meta` matches the working directory and
-use the last cumulative `token_usage_record.payload.thread_token_usage` values.
-Codex cost SHALL remain null because its local rollout record does not carry
-cost. AGY SHALL participate in the same generic lifecycle recording and return
-all-null usage because no confirmed local AGY usage artifact is in scope.
-Neither reader SHALL inspect or retain transcript content.
+The optional osq-owned interactive usage port SHALL continue to read the one
+session created during an explicit `--session` interval and return independently
+nullable token and cost fields without changing process outcome. Codex and
+OpenCode implementations SHALL share their confirmed local parsing and usage
+mapping with approval-time discovery while applying the caller's distinct
+working-directory or edit-path and time-window predicates. AGY SHALL retain
+all-null owned usage until a confirmed local artifact exists.
 
 #### Scenario: Exact OpenCode usage
 - **WHEN** exactly one matching OpenCode session row exposes usage and cost
-- **THEN** the reader returns those stored values, with cached tokens equal to the harness's reported cache-read plus cache-write counters
+- **THEN** the reader returns stored values with cached tokens equal to cache-read plus cache-write counters
 
 #### Scenario: Exact Codex usage
 - **WHEN** exactly one matching Codex rollout exposes cumulative thread usage
-- **THEN** the reader returns its input, output, cached-input, and reasoning-output counters and a null cost
+- **THEN** the reader returns input, output, cached-input, and reasoning-output counters with null cost when none is recorded
 
 #### Scenario: AGY usage unavailable
-- **WHEN** AGY completes an interactive planning session
-- **THEN** its reader returns null for input, output, cached, reasoning, and cost while generic lifecycle timing remains recorded
+- **WHEN** AGY completes an explicit interactive planning session
+- **THEN** its reader returns null usage and cost while generic lifecycle timing remains recorded
+
+#### Scenario: Explicit session usage is available
+- **WHEN** exactly one owned interactive session exposes confirmed usage in its launch interval
+- **THEN** its lifecycle record contains the existing observed token and cost mapping
 
 #### Scenario: Usage unavailable or ambiguous
-- **WHEN** no unique matching local artifact supplies a usage field
-- **THEN** that field is null and osq performs no estimation or transcript parsing
+- **WHEN** no unique owned-session artifact supplies a usage field
+- **THEN** that field remains null and osq performs no estimation
 
 ### Requirement: Explicit archive timestamp
 <!-- source: src/watcher/archiver.ts, src/harness/types.ts, tests/archiver.test.ts -->
@@ -773,3 +778,53 @@ be deterministic for the same declarations and tree.
 #### Scenario: Glob hash membership changes
 - **WHEN** matching files are added, modified, and deleted between two hashes
 - **THEN** aggregate comparison reports each normalized path as added, modified, or deleted
+
+### Requirement: Approval-time local planning observation
+<!-- source: src/core/planning.ts, src/core/approve.ts, src/harness/types.ts, src/harness/codex-usage.ts, src/harness/opencode-usage.ts, src/harness/claude-usage.ts, tests/planning-observed.test.ts -->
+`findPlanningSessions` SHALL ask every available Codex, OpenCode, and Claude
+Code local reader for sessions containing at least one observed file-edit tool
+call whose normalized target is within the selected change folder and whose edit
+timestamp is inclusively between folder creation and observation time. Path
+matching SHALL be segment-aware and reject sibling prefixes and escapes.
+
+Each match SHALL carry harness, nullable model, observed start and end, and
+independently nullable input, output, cached, and reasoning tokens and cost.
+Readers SHALL degrade missing stores, unreadable or malformed records,
+unsupported fields, and local read failures to no match or null without failing
+approval. They SHALL inspect only metadata, usage, timestamps, tool names, and
+file-path arguments required for matching and SHALL never retain transcript
+content or send data off the machine.
+
+Codex and OpenCode SHALL extend their confirmed local readers with edit-path and
+window filtering. Claude Code SHALL read session JSONL below
+`~/.claude/projects/` using the locally confirmed model, usage, timestamp, and
+file-edit tool-call fields. No reader SHALL estimate a missing value.
+
+#### Scenario: Supported session edits the change
+- **WHEN** one local session has an in-window edit under the change and another does not
+- **THEN** discovery returns exactly the matching session with observed fields and nulls for absent fields
+
+#### Scenario: Local artifacts are unavailable
+- **WHEN** stores are absent, malformed, unreadable, or contain no qualifying edit
+- **THEN** discovery returns no match without changing approval success
+
+### Requirement: Mixed-source planning lifecycle records
+<!-- source: src/core/planning.ts, tests/planning-observed.test.ts -->
+Observed matches SHALL be appended to `.run/plan.jsonl` as correlated existing
+`PlanRecord` lifecycle pairs carrying `source: observed`. Explicit
+`--session` lifecycle records SHALL carry `source: owned`, and legacy records
+without source SHALL remain readable as owned.
+
+Observed session identity SHALL be stable across repeated approval, already
+recorded native sessions SHALL not be appended twice, and new records SHALL use
+deterministic reader and session order. Start and exit timestamps, wall time,
+usage, model, and cost SHALL come only from observed local values, with null
+retained where the shape allows no observation.
+
+#### Scenario: First approval observes a session
+- **WHEN** discovery returns a native session not present in the planning log
+- **THEN** one correlated observed lifecycle pair is appended with its stable identity and observed values
+
+#### Scenario: Reapproval observes the same session
+- **WHEN** the same native session is returned again
+- **THEN** the append-only log remains byte-identical and planning session count is unchanged

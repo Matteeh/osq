@@ -329,18 +329,51 @@ describe('approval manifest uses the shared executor identity', () => {
     assert.equal(explicit.effort, 'high');
   });
 
-  it('keeps planner.model-or-null independent of the executor identity', async () => {
+  it('never borrows manifest.planner from configuration or the executor identity', async () => {
     const mixed = await manifestFor(
       'Mixed Identity',
       defineConfig({ harness: 'codex', planner: { harness: 'agy', model: 'planner-model-x' } }),
     );
     assert.equal(mixed.harness, 'codex');
     assert.equal(mixed.model, 'default');
-    assert.equal(mixed.planner, 'planner-model-x');
+    assert.equal(mixed.planner, null);
     assert.equal(mixed.effort, null);
 
     const none = await manifestFor('No Planner', defineConfig({ harness: 'mock' }));
     assert.equal(none.planner, null);
+  });
+
+  it('attributes manifest.planner only from a recorded planning session', async () => {
+    const config = defineConfig({
+      harness: 'codex',
+      codex: { model: 'executor-model' },
+      planner: { harness: 'agy', model: 'configured-planner' },
+    });
+    const spec = await createNewSpec(root, 'Recorded Planner');
+    const runDir = path.join(spec.folderPath, '.run');
+    await fs.mkdir(runDir, { recursive: true });
+    await fs.writeFile(
+      path.join(runDir, 'plan.jsonl'),
+      `${JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'recorded-session',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        source: 'observed',
+        data: {
+          harness: 'claude',
+          model: 'recorded-model',
+          osqVersion: '1.0.0',
+          briefHash: 'sha256:brief',
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    const manifest = await buildManifest(root, spec.folderPath, config);
+    assert.equal(manifest.planner, 'recorded-model');
+    assert.notEqual(manifest.planner, 'configured-planner');
+    assert.notEqual(manifest.planner, 'executor-model');
+    assert.equal(manifest.planningSessions, 1);
   });
 
   it('approveSpec writes the same identity through the real approval path', async () => {
@@ -360,7 +393,7 @@ describe('approval manifest uses the shared executor identity', () => {
     assert.equal(written.harness, 'codex');
     assert.equal(written.model, 'gpt-5-1');
     assert.equal(written.effort, 'low');
-    assert.equal(written.planner, 'planner-m');
+    assert.equal(written.planner, null);
   });
 });
 
@@ -520,7 +553,7 @@ describe('planCommand uses the shared planner selection', () => {
   async function runPlan(name: string, configSource: string): Promise<InteractiveSessionOptions> {
     await fs.writeFile(path.join(root, 'osq.config.ts'), configSource, 'utf8');
     const adapter = new MockAdapter();
-    await planCommand(name, { brief, cwd: root, adapter });
+    await planCommand(name, { brief, session: true, cwd: root, adapter });
     assert.equal(adapter.recordedInteractiveSpawns.length, 1, 'one interactive session');
     return adapter.recordedInteractiveSpawns[0];
   }

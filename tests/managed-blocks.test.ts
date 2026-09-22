@@ -6,13 +6,27 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   MANAGED_AGENTS_MD_BODY,
+  MANAGED_CLAUDE_PLAN_COMMAND,
+  MANAGED_PLANNER_BLOCK,
   OSQ_END_MARKER,
   OSQ_START_MARKER,
+  updateClaudePlanCommand,
   updatePlannerMd,
 } from '../src/core/init.js';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const agentsMdPath = path.join(repoRoot, 'AGENTS.md');
+const plannerMdPath = path.join(repoRoot, 'PLANNER.md');
+const claudeCommandPath = path.join(repoRoot, '.claude', 'commands', 'osq-plan.md');
+
+/** Slice the single managed block, markers included, out of a document. */
+function extractManagedBlock(content: string): string {
+  const start = content.indexOf(OSQ_START_MARKER);
+  const end = content.indexOf(OSQ_END_MARKER);
+  assert.notEqual(start, -1, 'document should contain OSQ_START_MARKER');
+  assert.ok(end > start, 'OSQ_END_MARKER should follow OSQ_START_MARKER');
+  return content.slice(start, end + OSQ_END_MARKER.length);
+}
 
 const FEATURES_PATH = 'features/';
 const DRIFT_AGAINST_FEATURES = /drift against features/i;
@@ -91,6 +105,26 @@ describe('managed instructions block OpenSpec protocol', () => {
   });
 });
 
+describe('repository managed instructions', () => {
+  it('AGENTS.md managed block matches the installed constant', async () => {
+    const content = await fs.readFile(agentsMdPath, 'utf8');
+    assert.equal(extractManagedBlock(content), MANAGED_AGENTS_MD_BODY);
+  });
+
+  it('PLANNER.md managed block matches the installed constant', async () => {
+    const content = await fs.readFile(plannerMdPath, 'utf8');
+    assert.equal(extractManagedBlock(content), MANAGED_PLANNER_BLOCK);
+  });
+
+  it('Claude command managed block matches the installed constant', async () => {
+    const content = await fs.readFile(claudeCommandPath, 'utf8');
+    assert.equal(extractManagedBlock(content), MANAGED_CLAUDE_PLAN_COMMAND);
+    assert.ok(content.includes('$ARGUMENTS'));
+    assert.ok(content.includes('osq lint $ARGUMENTS'));
+    assert.ok(content.includes('Never run `osq approve`'));
+  });
+});
+
 describe('planner managed block coexistence', () => {
   const OPENSPEC_START = '<!-- OPENSPEC:START -->';
   const OPENSPEC_END = '<!-- OPENSPEC:END -->';
@@ -144,5 +178,29 @@ describe('planner managed block coexistence', () => {
     assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
     assert.ok(content.includes('re-runnable against the final tree'));
     assert.ok(content.includes('name the shared file in the proposal'));
+  });
+
+  it('refreshes only the osq block in the Claude command across repeated init', async () => {
+    const commandDir = path.join(tmpDir, '.claude', 'commands');
+    const commandPath = path.join(commandDir, 'osq-plan.md');
+    await fs.mkdir(commandDir, { recursive: true });
+    await fs.writeFile(
+      commandPath,
+      `# House command\n\n${OPENSPEC_START}\nforeign command protocol\n${OPENSPEC_END}\n\n${OSQ_START_MARKER}\nstale osq command\n${OSQ_END_MARKER}\n\nEpilogue.\n`,
+      'utf8',
+    );
+
+    await updateClaudePlanCommand(tmpDir);
+    await updateClaudePlanCommand(tmpDir);
+
+    const content = await fs.readFile(commandPath, 'utf8');
+    assert.equal(content.includes('stale osq command'), false);
+    assert.ok(content.includes('foreign command protocol'));
+    assert.ok(content.includes('Epilogue.'));
+    assert.equal(content.split(OPENSPEC_START).length - 1, 1);
+    assert.equal(content.split(OPENSPEC_END).length - 1, 1);
+    assert.equal(content.split(OSQ_START_MARKER).length - 1, 1);
+    assert.equal(content.split(OSQ_END_MARKER).length - 1, 1);
+    assert.ok(content.includes('osq lint $ARGUMENTS'));
   });
 });

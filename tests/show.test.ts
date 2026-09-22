@@ -665,31 +665,184 @@ Preexisting test files were modified or deleted without tests.modify: true:
     assert.ok(capturedOutput.includes('Planning Sessions:'));
   });
 
-  it('missing and malformed planning logs leave task details and timeline intact', async () => {
-    // No plan.log at all.
-    const folderPath = await createChangeFolder(tmpDir, '001-missing-plan', 'Missing Plan');
+  it('lists observed records through the same fields and ordering as owned records', async () => {
+    const folderPath = await createChangeFolder(tmpDir, '001-mixed-source', 'Mixed Source');
     await fs.mkdir(path.join(folderPath, '.run', 'events'), { recursive: true });
     await fs.writeFile(
       path.join(folderPath, '.run', 'events', '1.jsonl'),
-      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T10:00:00.000Z' })}\n`,
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T09:00:00.000Z' })}\n`,
       'utf8',
     );
+
+    const planLog = [
+      // Source-less legacy record: reads as owned and stays readable.
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'legacy-1',
+        timestamp: '2026-09-17T08:00:00.000Z',
+        data: {
+          harness: 'codex',
+          model: 'gpt-legacy',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:legacy',
+        },
+      }),
+      JSON.stringify({
+        type: 'plan_exited',
+        sessionId: 'legacy-1',
+        timestamp: '2026-09-17T08:00:05.000Z',
+        data: {
+          exitCode: 0,
+          wallSeconds: 5,
+          usage: {
+            inputTokens: 111,
+            outputTokens: null,
+            cachedTokens: null,
+            reasoningTokens: null,
+            cost: null,
+          },
+        },
+      }),
+      // Explicit owned record with an agent.
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'owned-1',
+        timestamp: '2026-09-17T09:00:00.000Z',
+        source: 'owned',
+        data: {
+          harness: 'opencode',
+          model: 'oc-owned',
+          agent: 'osq-planner',
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:owned',
+        },
+      }),
+      JSON.stringify({
+        type: 'plan_exited',
+        sessionId: 'owned-1',
+        timestamp: '2026-09-17T09:00:12.500Z',
+        source: 'owned',
+        data: {
+          exitCode: 1,
+          wallSeconds: 12.5,
+          usage: {
+            inputTokens: null,
+            outputTokens: null,
+            cachedTokens: null,
+            reasoningTokens: null,
+            cost: null,
+          },
+        },
+      }),
+      // Observed record with a nullable model and no matched exit.
+      JSON.stringify({
+        type: 'plan_started',
+        sessionId: 'observed-1',
+        timestamp: '2026-09-17T10:00:00.000Z',
+        source: 'observed',
+        data: {
+          harness: 'claude',
+          model: null,
+          osqVersion: '0.1.0',
+          briefHash: 'sha256:observed',
+        },
+      }),
+      'not json',
+    ].join('\n');
+    await fs.writeFile(path.join(folderPath, '.run', 'plan.jsonl'), `${planLog}\n`, 'utf8');
+
+    const details = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
+    const sessions = details.planningSessions;
+
+    assert.equal(sessions.length, 3);
+    assert.deepEqual(
+      sessions.map((session) => session.sessionId),
+      ['legacy-1', 'owned-1', 'observed-1'],
+    );
+
+    // Legacy, owned, and observed rows expose the same fields.
+    assert.deepEqual(
+      sessions.map((session) => [session.harness, session.model, session.exitCode]),
+      [
+        ['codex', 'gpt-legacy', 0],
+        ['opencode', 'oc-owned', 1],
+        ['claude', null, null],
+      ],
+    );
+    assert.equal(sessions[1].agent, 'osq-planner');
+    assert.equal(sessions[2].wallSeconds, null);
+    assert.equal(sessions[2].agent, undefined);
+
+    // No usage, transcript, or artifact hashes leak into the projection.
+    for (const session of sessions) {
+      assert.equal('inputTokens' in session, false);
+      assert.equal('usage' in session, false);
+      assert.equal('briefHash' in session, false);
+    }
+    assert.equal(JSON.stringify(sessions).includes('111'), false);
+    assert.equal(JSON.stringify(sessions).includes('sha256:'), false);
+
+    const text = formatShowOutput(details);
+    assert.ok(text.includes('codex/gpt-legacy'));
+    assert.ok(text.includes('opencode/oc-owned'));
+    // A null observed model renders as unavailable like any missing value.
+    assert.ok(text.includes('claude/unavailable'));
+    assert.ok(text.includes('exit: unavailable'));
+    assert.ok(text.includes('wall: unavailable'));
+    assert.equal(text.includes('111'), false);
+    assert.equal(text.includes('sha256:'), false);
+    // The timeline still renders after the planning projection.
+    assert.ok(text.indexOf('Planning Sessions:') < text.indexOf('Event Timeline:'));
+  });
+
+  it('missing and malformed planning logs leave task details and timeline intact', async () => {
+    // No plan.log at all.
+    const folderPath = await createChangeFolder(tmpDir, '001-missing-plan', 'Missing Plan');
+    const runDir = path.join(folderPath, '.run');
+    await fs.mkdir(path.join(runDir, 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(runDir, 'events', '1.jsonl'),
+      `${JSON.stringify({ type: 'started', timestamp: '2026-09-17T10:00:00.000Z' })}\n${JSON.stringify(
+        {
+          type: 'recertification',
+          timestamp: '2026-09-17T10:05:00.000Z',
+          data: {
+            task: '1',
+            outcome: 'passed',
+            differingPaths: [],
+            attribution: [],
+            command: 'node verify.cjs',
+            exitCode: 0,
+            output: '',
+            timedOut: false,
+          },
+        },
+      )}\n`,
+      'utf8',
+    );
+    await fs.mkdir(path.join(runDir, 'results'), { recursive: true });
+    await fs.writeFile(path.join(runDir, 'results', '1.md'), '## Changed\n- kept\n', 'utf8');
+
     const withoutLog = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
     assert.deepEqual(withoutLog.planningSessions, []);
     assert.equal(withoutLog.tasks.length, 1);
-    assert.equal(withoutLog.timeline.length, 1);
+    assert.ok(withoutLog.tasks[0].resultContent?.includes('kept'));
+    assert.equal(withoutLog.recertifications.length, 1);
+    assert.equal(withoutLog.timeline.length, 2);
 
     // Entirely malformed planning log.
-    await fs.writeFile(
-      path.join(folderPath, '.run', 'plan.jsonl'),
-      'not json\nalso not json\n',
-      'utf8',
-    );
+    await fs.writeFile(path.join(runDir, 'plan.jsonl'), 'not json\nalso not json\n', 'utf8');
     const malformed = await getSpecDetails(tmpDir, '001', DEFAULT_CONFIG);
     assert.deepEqual(malformed.planningSessions, []);
     assert.equal(malformed.tasks.length, 1);
-    assert.equal(malformed.timeline.length, 1);
-    assert.ok(formatShowOutput(malformed).includes('(no planning sessions)'));
+    assert.ok(malformed.tasks[0].resultContent?.includes('kept'));
+    assert.equal(malformed.recertifications.length, 1);
+    assert.equal(malformed.timeline.length, 2);
+    const text = formatShowOutput(malformed);
+    assert.ok(text.includes('(no planning sessions)'));
+    assert.ok(text.includes('kept'));
+    assert.ok(text.includes('Recertifications:'));
+    assert.ok(text.includes('Event Timeline:'));
   });
 
   it('CLI registers show <id> command in commander program', () => {

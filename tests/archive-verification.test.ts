@@ -379,4 +379,34 @@ describe('archive-time verification', () => {
     assert.equal((await readEvents(specFolder, '1')).length, eventsBefore.length);
     assert.equal(await exists(archivedPath), false);
   });
+
+  it('removes the transient plan-prompt.md from a successful archive', async () => {
+    await writeChange(PASSING, [{ verify: PASSING }]);
+    const adapter = new AgyAdapter();
+    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    await fs.writeFile(path.join(specFolder, 'plan-prompt.md'), 'transient prompt\n', 'utf8');
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), true);
+
+    assert.equal(await exists(path.join(archivedPath, 'plan-prompt.md')), false);
+    assert.equal(await exists(path.join(archivedPath, 'proposal.md')), true);
+    assert.equal(await exists(path.join(archivedPath, 'tasks', '1.md')), true);
+    assert.equal(await exists(path.join(archivedPath, '.run', 'done', '1')), true);
+  });
+
+  it('leaves the transient plan-prompt.md in place when archive verification fails', async () => {
+    await writeChange(FAILING, [{ verify: PASSING }]);
+    const adapter = new AgyAdapter();
+    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    await fs.writeFile(path.join(specFolder, 'plan-prompt.md'), 'transient prompt\n', 'utf8');
+
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+
+    assert.equal(await exists(specFolder), true);
+    assert.equal(await exists(archivedPath), false);
+    assert.equal(
+      await fs.readFile(path.join(specFolder, 'plan-prompt.md'), 'utf8'),
+      'transient prompt\n',
+    );
+  });
 });

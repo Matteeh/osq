@@ -38,7 +38,7 @@ function finiteNonNegative(value: unknown): number | null {
   return value;
 }
 
-async function listRolloutFiles(dir: string): Promise<string[]> {
+export async function listRolloutFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
   const files: string[] = [];
   for (const entry of entries) {

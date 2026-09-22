@@ -1,0 +1,1 @@
+{"type":"assistant","sessionId":"claude-session-outside","cwd":"__CWD__","timestamp":"__NOW_ISO__","message":{"role":"assistant","model":"claude-out","content":[{"type":"tool_use","id":"tu-outside","name":"Write","input":{"file_path":"__OUTSIDE_PATH__"}}]}}

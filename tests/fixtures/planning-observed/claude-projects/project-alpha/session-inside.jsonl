@@ -1,0 +1,2 @@
+{"type":"assistant","sessionId":"claude-session-inside","cwd":"__CWD__","timestamp":"__NOW_ISO__","message":{"role":"assistant","model":"claude-x","content":[{"type":"tool_use","id":"tu-inside","name":"Edit","input":{"file_path":"__INSIDE_PATH__"}}]}}
+{"type":"cost-state","sessionId":"claude-session-inside","startTime":__START_MS__,"totalDuration":12000,"totalCostUSD":0.42,"modelUsage":{"claude-x":{"input_tokens":100,"output_tokens":50,"thinking_tokens":10,"cache_read_input_tokens":20,"cache_creation_input_tokens":5}}}

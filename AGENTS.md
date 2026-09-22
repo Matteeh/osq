@@ -61,3 +61,42 @@ Write `.run/results/<n>.md` first: changed, deviated, missing context, and for u
 ## Writing specs
 
 Interactive sessions only. Read recent archived changes first. Use the templates. Rules are in README.md. Approval is `pnpm osq approve`, run by a human.
+
+<!-- OSQ:START -->
+## Executing a spec
+
+1. Read your task file, its parent `proposal.md`, then only the delta specs and capability docs it names. Nothing else.
+2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
+3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.
+4. Tests for each acceptance line before implementing.
+5. Minimal code to pass. Stay inside `scope`.
+6. Run the task's `verify` command before exiting.
+
+## OpenSpec layout
+
+- Living capability specs live under `openspec/specs/` as `<capability>/spec.md`.
+- In-flight changes live under `openspec/changes/<id>-<slug>/`.
+- The change document is `proposal.md`; delta specifications live beside it as `<capability>/spec.md`.
+- The osq workflow schema lives under `openspec/schemas/osq/` (proposal -> specs -> tasks).
+- `tasks/<n>.md` is the osq execution unit; `tasks.md` is a write-only projection of `.run/` state.
+- `.run/` markers track execution state: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`.
+- State is derived purely from the marker files on disk; nothing depends on in-memory state.
+
+## Gates and executor permissions
+
+- Approval gate: only `osq approve`, run by a human, writes `.run/approved` after linting and hashing the change.
+- Verification gate: the watcher alone re-runs each task's `verify` against the final tree before writing `done`.
+- An agent writes only `.run/results/<n>.md` and files inside `scope`; it never edits living capability specs, `tasks.md`, or marker files.
+
+## Planning a change
+
+- When asked to plan a change, read `plan-prompt.md` in the selected change
+  folder and follow it exactly.
+- Write only inside that change folder.
+- Run `osq lint <slug>` and fix every finding before you finish.
+- Never run `osq approve`; approval belongs to a human.
+
+## Exiting
+
+Write `.run/results/<n>.md` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
+<!-- OSQ:END -->

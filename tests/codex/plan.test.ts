@@ -29,7 +29,7 @@ function runPlanInSubprocess(options: {
   const runnerPath = path.join(options.root, `plan-runner-${Date.now()}.mts`);
   const runner = [
     `import { planCommand } from ${JSON.stringify(path.join(PROJECT_ROOT, 'src/cli/plan.js'))};`,
-    `await planCommand(${JSON.stringify(options.name)}, { brief: ${JSON.stringify(options.brief)}, cwd: ${JSON.stringify(options.root)} });`,
+    `await planCommand(${JSON.stringify(options.name)}, { brief: ${JSON.stringify(options.brief)}, session: true, cwd: ${JSON.stringify(options.root)} });`,
     '',
   ].join('\n');
 

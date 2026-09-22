@@ -65,7 +65,7 @@ describe('planning to report integration', () => {
     process.env.AGY_PATH = FAKE_PLANNER;
     process.env.OSQ_FAKE_DELAY_MS = '150';
 
-    await planCommand('integration-plan', { brief, cwd: tmp });
+    await planCommand('integration-plan', { brief, session: true, cwd: tmp });
 
     const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmp);
     const entries = await fs.readdir(changesDir);

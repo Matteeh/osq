@@ -229,6 +229,7 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-oc', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
 
@@ -273,6 +274,7 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-exit', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
 
@@ -293,6 +295,7 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-nospawn', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
 
@@ -314,13 +317,14 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-resume', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
       const folder = await changeFolder(tmp, 'telemetry-resume');
       const briefBefore = await fs.readFile(path.join(folder, 'brief.md'), 'utf8');
       const hashBefore = await hashChangeFolder(folder);
 
-      await planCommand('001', { cwd: tmp });
+      await planCommand('001', { session: true, cwd: tmp });
 
       assert.equal(await fs.readFile(path.join(folder, 'brief.md'), 'utf8'), briefBefore);
       assert.equal(await hashChangeFolder(folder), hashBefore);
@@ -366,6 +370,7 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-agy', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
 
@@ -393,6 +398,7 @@ describe('planning telemetry', () => {
 
       await planCommand('telemetry-codex', {
         brief: path.join(tmp, 'brief-source.md'),
+        session: true,
         cwd: tmp,
       });
 

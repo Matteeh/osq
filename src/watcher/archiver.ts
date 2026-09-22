@@ -104,6 +104,11 @@ export async function archiveSpecFolder(
 ): Promise<string> {
   await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
 
+  // The planning prompt is transient local context, not authored content. Remove
+  // it once deltas are applied and only after every verification gate has
+  // already passed, idempotently, and before the archived folder is exposed.
+  await fs.rm(path.join(specFolderPath, 'plan-prompt.md'), { force: true });
+
   const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
   await fs.mkdir(archiveDir, { recursive: true });
 

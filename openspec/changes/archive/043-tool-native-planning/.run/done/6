@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:51027d91d4e2e3b91e3036ff29e7c5fd19045af1b4fb75649dac3484886c7fa9"
+build_stamp: "fc5033f"
+exit_code: 0
+scope_files: {"tests/fixtures/events/dead.jsonl":"sha256:252464b8ce4727a4207f82af3680ec74fd9be1a082d7702f386d9849ffdf1a8e","tests/fixtures/events/verified.jsonl":"sha256:e57a1676af7c94ad41bde7795a71088d50ac3223b2655abc3bbd155bcebadc0d","tests/harness-generic-workflows.test.ts":"sha256:f4b379e8f11214e030badbb071fcc0a6f7b4d804cd39e0c6528fefac1b7da04d"}
+---
+2026-09-22T13:36:07.005Z

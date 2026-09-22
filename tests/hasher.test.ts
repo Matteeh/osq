@@ -98,4 +98,39 @@ describe('Folder Hasher', () => {
     assert.equal(await verifyFolderHash(specFolder, hash), true);
     assert.equal(await verifyFolderHash(specFolder, 'sha256:invalid'), false);
   });
+
+  it('ignores additions, edits, and removals of the root plan-prompt.md', async () => {
+    const initialHash = await hashChangeFolder(specFolder);
+    const promptPath = path.join(specFolder, 'plan-prompt.md');
+
+    await fs.writeFile(promptPath, 'opening prompt bytes\n', 'utf8');
+    assert.equal(
+      await hashChangeFolder(specFolder),
+      initialHash,
+      'adding the prompt leaves the hash',
+    );
+
+    await fs.writeFile(promptPath, 'refreshed prompt bytes\n', 'utf8');
+    assert.equal(
+      await hashChangeFolder(specFolder),
+      initialHash,
+      'editing the prompt leaves the hash',
+    );
+
+    await fs.rm(promptPath);
+    assert.equal(
+      await hashChangeFolder(specFolder),
+      initialHash,
+      'removing the prompt leaves the hash',
+    );
+  });
+
+  it('covers a nested plan-prompt.md as authored content', async () => {
+    const initialHash = await hashChangeFolder(specFolder);
+    const nested = path.join(specFolder, 'notes', 'plan-prompt.md');
+    await fs.mkdir(path.dirname(nested), { recursive: true });
+    await fs.writeFile(nested, 'authored note\n', 'utf8');
+
+    assert.notEqual(await hashChangeFolder(specFolder), initialHash);
+  });
 });

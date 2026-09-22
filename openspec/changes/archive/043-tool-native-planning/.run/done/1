@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ec423db62e0197e27758808475b59a17744a1d154b2bb5e658bf21ad358873a5"
+build_stamp: "fc5033f"
+exit_code: 0
+scope_files: {"src/cli/index.ts":"sha256:21ea153b7aadca9b49d572962f6826d7e81a6f7cc140a1e6467d5582da8266bd","src/cli/plan-queue.ts":"sha256:d19ed11b67eba90e3038acc2019cd9a93040465d80641bb637c6eecd4a855ce8","src/cli/plan.ts":"sha256:2aedc0daca37bfc2881f54ce8d55a32b9cdc99ccdbed009bfb062951ac71b512","tests/codex/plan.test.ts":"sha256:8eadbb04aecb86b96504215275a2df662c04dc06284194ce2075962a856a3d93","tests/plan-handoff.test.ts":"sha256:db36426e17961d32c67041ab8db54846e140dc5007295df6ae205957231c226f","tests/plan-telemetry.test.ts":"sha256:137801d05c23c484e48ae968a0bae53ae392f59dd39fc673e4cb2de8f62c67d7","tests/plan.test.ts":"sha256:145d0c203267d0f29fd710f96352a733eb4c20f6cd607f65bb3f47a0dea7ef88","tests/planning-integration.test.ts":"sha256:c5afdc189d5268c3a13782adba8235b61f1dd320383e1a4c26bcd7c65ca532e7","tests/queue-plan.test.ts":"sha256:d3983a993ef89e9750fc6ade7dab8842bafdf04cae533f22439a3801ec342417"}
+---
+2026-09-22T12:42:01.391Z

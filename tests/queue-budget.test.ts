@@ -416,7 +416,12 @@ describe('planCommand budget refusals', () => {
     const before = await snapshotTree(tmpDir);
 
     const stderr = await captureStderr(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
 
     assert.equal(process.exitCode, 1);
@@ -457,7 +462,12 @@ describe('planCommand budget refusals', () => {
     });
 
     await captureStdout(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
 
     assert.equal(process.exitCode, undefined);
@@ -482,7 +492,12 @@ describe('planCommand budget refusals', () => {
     const before = await snapshotTree(tmpDir);
 
     const stderr = await captureStderr(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
 
     assert.equal(process.exitCode, 1);
@@ -496,7 +511,12 @@ describe('planCommand budget refusals', () => {
     await writeAt(tmpDir, QUEUE_PATH, QUEUE);
     const zeroBefore = await snapshotTree(tmpDir);
     const zeroStderr = await captureStderr(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
     assert.equal(process.exitCode, 1);
     assert.match(zeroStderr, /session limit reached/);
@@ -513,7 +533,12 @@ describe('planCommand budget refusals', () => {
     });
     const costBefore = await snapshotTree(tmpDir);
     const costStderr = await captureStderr(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
     assert.equal(process.exitCode, 1);
     assert.match(costStderr, /cost limit reached/);
@@ -530,7 +555,12 @@ describe('planCommand budget refusals', () => {
     });
 
     const stderr = await captureStderr(() =>
-      planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() }),
+      planCommand(undefined, {
+        next: true,
+        session: true,
+        cwd: tmpDir,
+        adapter: new MockAdapter(),
+      }),
     );
 
     assert.equal(process.exitCode, undefined);

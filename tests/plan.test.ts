@@ -136,7 +136,7 @@ describe('osq plan command', () => {
     const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
     const adapter = new InspectingAdapter(changesDir, 'smoke');
 
-    await planCommand('smoke', { brief: briefFixture, cwd: tmpDir, adapter });
+    await planCommand('smoke', { brief: briefFixture, session: true, cwd: tmpDir, adapter });
 
     // Acceptance: folder and brief.md exist before the session opens.
     assert.equal(adapter.folderExistedAtSpawn, true, 'change folder must exist before spawn');
@@ -229,6 +229,11 @@ describe('osq plan command', () => {
     const folder = entries.find((entry) => entry.includes('print-probe'));
     assert.ok(folder, 'print mode should create the change folder');
     assert.ok(await pathExists(path.join(changesDir, folder, 'brief.md')));
+    assert.equal(
+      await pathExists(path.join(changesDir, folder, 'plan-prompt.md')),
+      false,
+      'print mode must not leave a prompt file behind',
+    );
   });
 
   it('resumes an existing change with brief.md without creating a new change folder', async () => {
@@ -236,7 +241,7 @@ describe('osq plan command', () => {
     const adapter = new InspectingAdapter(changesDir, 'resume-probe');
 
     // First plan run creates folder and brief.
-    await planCommand('resume-probe', { brief: briefFixture, cwd: tmpDir, adapter });
+    await planCommand('resume-probe', { brief: briefFixture, session: true, cwd: tmpDir, adapter });
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
 
     const briefPath = path.join(changesDir, '001-resume-probe', 'brief.md');
@@ -246,7 +251,7 @@ describe('osq plan command', () => {
     mock.resetBehavior();
 
     // Second plan run on change ID 001 resumes the existing folder.
-    await planCommand('001', { cwd: tmpDir });
+    await planCommand('001', { session: true, cwd: tmpDir });
 
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     assert.ok(MockAdapter.recordedInteractiveSpawns[0].prompt.includes('resume-probe'));
@@ -360,7 +365,7 @@ describe('osq plan command', () => {
     const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
     const adapter = new InspectingAdapter(changesDir, 'record-probe');
 
-    await planCommand('record-probe', { brief: briefFixture, cwd: tmpDir, adapter });
+    await planCommand('record-probe', { brief: briefFixture, session: true, cwd: tmpDir, adapter });
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     const interactivePrompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
     assert.ok(recordSection(interactivePrompt).includes('First-attempt pass rate: 0.63'));
@@ -374,7 +379,7 @@ describe('osq plan command', () => {
 
     const mock = getHarnessAdapter('mock') as MockAdapter;
     mock.resetBehavior();
-    await planCommand(specId, { cwd: tmpDir, adapter });
+    await planCommand(specId, { session: true, cwd: tmpDir, adapter });
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     const resumedPrompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
     assert.ok(recordSection(resumedPrompt).includes('Median task duration: 35s'));
@@ -424,7 +429,12 @@ describe('osq plan command', () => {
       'utf8',
     );
 
-    await planCommand(undefined, { next: true, cwd: tmpDir, adapter: new MockAdapter() });
+    await planCommand(undefined, {
+      next: true,
+      session: true,
+      cwd: tmpDir,
+      adapter: new MockAdapter(),
+    });
 
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     const prompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
@@ -444,7 +454,7 @@ describe('osq plan command', () => {
 });
 
 describe('osq plan command registration', () => {
-  it('registers plan <name> with --brief and --print options', () => {
+  it('registers plan <name> with --brief, --print, and --session options', () => {
     const program = createProgram();
     const planCmd = program.commands.find((command) => command.name() === 'plan');
 
@@ -452,5 +462,6 @@ describe('osq plan command registration', () => {
     assert.equal(planCmd.registeredArguments[0].name(), 'name');
     assert.ok(planCmd.options.find((option) => option.long === '--brief'));
     assert.ok(planCmd.options.find((option) => option.long === '--print'));
+    assert.ok(planCmd.options.find((option) => option.long === '--session'));
   });
 });

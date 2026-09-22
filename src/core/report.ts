@@ -186,6 +186,12 @@ export interface MetricsReport {
 /** Aggregate planning usage derived only from `.run/plan.jsonl` lifecycle pairs. */
 export interface PlanningMetrics {
   readonly sessions: number;
+  /**
+   * Distinct active and archived changes carrying at least one valid
+   * `plan_started` record of either source. Exit-only and malformed lines do
+   * not cover a change, and repeated sessions for one change count once.
+   */
+  readonly changesWithPlanningRecords: number;
   readonly wallSeconds: number;
   readonly wallSecondsByChange: Record<string, number>;
   readonly tokens: {
@@ -1182,6 +1188,7 @@ export async function getMetricsReport(
   // 7. Planning telemetry: correlated `.run/plan.jsonl` pairs across every
   // active and archived change. Only a valid start counts as a session.
   let planningSessions = 0;
+  let changesWithPlanningRecords = 0;
   let planningWallSeconds = 0;
   const planningWallByChange: Record<string, number> = {};
   let planningInput = 0;
@@ -1193,9 +1200,11 @@ export async function getMetricsReport(
 
   for (const folderPath of allSpecFolders) {
     const changeId = path.basename(folderPath);
+    let changeHasPlanningRecord = false;
     for (const session of await readPlanningSessions(folderPath)) {
       if (!session.started) continue;
       planningSessions++;
+      changeHasPlanningRecord = true;
       planningWallByChange[changeId] ??= 0;
 
       const exited = session.exited;
@@ -1227,6 +1236,7 @@ export async function getMetricsReport(
       }
       if (reported) planningReportedSessions++;
     }
+    if (changeHasPlanningRecord) changesWithPlanningRecords++;
   }
 
   const planningWallSecondsByChange = Object.fromEntries(
@@ -1391,6 +1401,7 @@ export async function getMetricsReport(
     },
     planning: {
       sessions: planningSessions,
+      changesWithPlanningRecords,
       wallSeconds: planningWallSeconds,
       wallSecondsByChange: planningWallSecondsByChange,
       tokens: {
@@ -1729,6 +1740,7 @@ export function formatMetricsReport(
   lines.push(
     `  ${report.planning.coverage.reportedSessions} of ${report.planning.coverage.totalSessions} sessions reported usage`,
   );
+  lines.push(`  ${report.planning.changesWithPlanningRecords} changes have a planning record`);
 
   lines.push('');
   lines.push('Cycle:');
