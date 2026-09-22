@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getArchiveDir } from '../src/core/layout.js';
 import { parseSpecMd } from '../src/core/parser.js';
@@ -29,6 +29,16 @@ const FAILING = 'node verify-fail.cjs';
  */
 const PASS_SCRIPT = 'process.exit(0);\n';
 const FAIL_SCRIPT = 'process.exit(1);\n';
+
+/**
+ * Local opt-out for scenarios whose subject is strictly archive-time failure or
+ * scope-audit ordering. Deriving it from `DEFAULT_CONFIG` keeps every unrelated
+ * default (including the default-on task gate) intact.
+ */
+const ARCHIVE_ONLY_CONFIG: OsqConfig = Object.freeze({
+  ...DEFAULT_CONFIG,
+  gates: { changeVerifyAfterTask: false },
+});
 
 /**
  * Real on-disk harness binary executed by the actual `AgyAdapter`. It writes the
@@ -190,11 +200,15 @@ describe('archive-time verification', () => {
     assert.equal(verifyRanEvents(await readEvents(archivedPath, '1')).length, 2);
     assert.equal(verifyRanEvents(await readEvents(archivedPath, '2')).length, 2);
 
+    // The default-on task gate appends one change-target verify after each of
+    // the two tasks; archive verification appends the established third.
     const changeEvents = verifyRanEvents(await readEvents(archivedPath, 'change'));
-    assert.equal(changeEvents.length, 1);
-    assert.equal(changeEvents[0].data?.command, PASSING);
-    assert.equal(changeEvents[0].data?.exitCode, 0);
-    assert.equal(typeof changeEvents[0].data?.duration, 'number');
+    assert.equal(changeEvents.length, 3);
+    for (const event of changeEvents) {
+      assert.equal(event.data?.command, PASSING);
+      assert.equal(event.data?.exitCode, 0);
+      assert.equal(typeof event.data?.duration, 'number');
+    }
   });
 
   it('refuses task 2 before spawning when an earlier done scope was modified', async () => {
@@ -234,10 +248,16 @@ describe('archive-time verification', () => {
   it('blocks archiving when the change-level verify fails', async () => {
     await writeChange(FAILING, [{ verify: PASSING }, { verify: PASSING }]);
     const adapter = new AgyAdapter();
-    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
-    assert.equal((await runTask(tmpDir, specFolder, '2', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '1', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '2', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
 
-    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, ARCHIVE_ONLY_CONFIG), false);
 
     assert.equal(await exists(specFolder), true);
     assert.equal(await exists(archivedPath), false);
@@ -270,9 +290,18 @@ describe('archive-time verification', () => {
       { verify: PASSING, scope: ['src/c.ts'] },
     ]);
     const adapter = new AgyAdapter();
-    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
-    assert.equal((await runTask(tmpDir, specFolder, '2', DEFAULT_CONFIG, adapter)).success, true);
-    assert.equal((await runTask(tmpDir, specFolder, '3', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '1', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '2', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '3', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
 
     // The final task records and changes task 1's file.
     await fs.writeFile(path.join(tmpDir, 'src', 'a.ts'), 'export const value = 2;\n', 'utf8');
@@ -282,7 +311,7 @@ describe('archive-time verification', () => {
       data: { path: 'src/a.ts' },
     });
 
-    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, ARCHIVE_ONLY_CONFIG), false);
 
     // Archival halted: the folder stays active and emits no archived event.
     assert.equal(await exists(specFolder), true);
@@ -397,10 +426,13 @@ describe('archive-time verification', () => {
   it('leaves the transient plan-prompt.md in place when archive verification fails', async () => {
     await writeChange(FAILING, [{ verify: PASSING }]);
     const adapter = new AgyAdapter();
-    assert.equal((await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter)).success, true);
+    assert.equal(
+      (await runTask(tmpDir, specFolder, '1', ARCHIVE_ONLY_CONFIG, adapter)).success,
+      true,
+    );
     await fs.writeFile(path.join(specFolder, 'plan-prompt.md'), 'transient prompt\n', 'utf8');
 
-    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, ARCHIVE_ONLY_CONFIG), false);
 
     assert.equal(await exists(specFolder), true);
     assert.equal(await exists(archivedPath), false);

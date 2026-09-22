@@ -572,6 +572,121 @@ skills: []
     assert.equal(result.errors.length, 0);
   });
 
+  it('warns without failing when harness scope omits the event fixture folder', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'harness'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'src', 'harness', 'mock.ts'), 'export {};\n', 'utf8');
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: Harness scope\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts]\nentry: []\nskills: []`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.ok(
+      result.warnings.some((w) => w.includes('tests/fixtures/events/')),
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('does not warn when an exact fixture file covers the event fixtures', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'harness'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'src', 'harness', 'mock.ts'), 'export {};\n', 'utf8');
+    await fs.mkdir(path.join(tmpDir, 'tests', 'fixtures', 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, 'tests', 'fixtures', 'events', 'verified.jsonl'),
+      '{}\n',
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: Harness scope\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts, tests/fixtures/events/verified.jsonl]\nentry: []\nskills: []\ntests:\n  modify: true`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(
+      result.warnings.some((w) => w.includes('tests/fixtures/events/')),
+      false,
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('does not warn when a fixture directory declaration covers the event fixtures', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'harness'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'src', 'harness', 'mock.ts'), 'export {};\n', 'utf8');
+    await fs.mkdir(path.join(tmpDir, 'tests', 'fixtures', 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, 'tests', 'fixtures', 'events', 'dead.jsonl'),
+      '{}\n',
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: Harness scope\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts, tests/fixtures/events/]\nentry: []\nskills: []\ntests:\n  modify: true`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(
+      result.warnings.some((w) => w.includes('tests/fixtures/events/')),
+      false,
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('does not warn when a fixture glob declaration covers the event fixtures', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'harness'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'src', 'harness', 'mock.ts'), 'export {};\n', 'utf8');
+    await fs.mkdir(path.join(tmpDir, 'tests', 'fixtures', 'events'), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, 'tests', 'fixtures', 'events', 'verified.jsonl'),
+      '{}\n',
+      'utf8',
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: Harness scope\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts, tests/fixtures/events/**]\nentry: []\nskills: []\ntests:\n  modify: true`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    assert.equal(result.valid, true, result.errors.join('\n'));
+    assert.equal(
+      result.warnings.some((w) => w.includes('tests/fixtures/events/')),
+      false,
+      result.warnings.join('\n'),
+    );
+  });
+
+  it('emits one harness fixture warning per affected task in task order', async () => {
+    await fs.mkdir(path.join(tmpDir, 'src', 'harness'), { recursive: true });
+    await fs.writeFile(path.join(tmpDir, 'src', 'harness', 'mock.ts'), 'export {};\n', 'utf8');
+    await writeTaskFile(
+      specFolder,
+      '2',
+      `title: Second\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts]\nentry: []\nskills: []`,
+    );
+    await writeTaskFile(
+      specFolder,
+      '1',
+      `title: First\nverify: ${PASSING_VERIFY}\nscope: [src/harness/mock.ts]\nentry: []\nskills: []`,
+    );
+
+    const result = await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
+
+    const harnessWarnings = result.warnings.filter((w) => w.includes('tests/fixtures/events/'));
+    assert.equal(harnessWarnings.length, 2, result.warnings.join('\n'));
+    assert.ok(harnessWarnings[0].includes('Task in 1.md'));
+    assert.ok(harnessWarnings[1].includes('Task in 2.md'));
+  });
+
   it('executes local openspec validate for changes and specs under OPENSPEC_TELEMETRY=0', async () => {
     await lintChangeFolder(tmpDir, specFolder, DEFAULT_CONFIG);
 

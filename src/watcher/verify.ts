@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { resolveScope } from '../core/scope.js';
 import { type VerificationResult, runVerificationCommand } from '../core/verification.js';
 import { asRecord } from '../harness/stream.js';
 import { appendHarnessEvent } from '../harness/types.js';
@@ -93,23 +94,40 @@ export async function snapshotTestFiles(projectRoot: string): Promise<Map<string
   return snapshot;
 }
 
+/** Pre-spawn test gate: preexisting `tests/**` hashes plus resolved scope authorization. */
+export async function captureTestGate(
+  projectRoot: string,
+  scope: readonly string[],
+  testsModify: boolean,
+): Promise<{ snapshot: Map<string, string>; testsModify: boolean; authorized: Set<string> }> {
+  const snapshot = await snapshotTestFiles(projectRoot);
+  const authorized = new Set<string>();
+  for (const entry of await resolveScope(projectRoot, scope)) {
+    if (entry.absolutePath !== null) authorized.add(entry.relativePath);
+  }
+  return { snapshot, testsModify, authorized };
+}
+
 /** Diagnostics for preexisting test files changed or deleted since `snapshot`. */
 export async function findUndeclaredTestChanges(
   projectRoot: string,
   snapshot: Map<string, string>,
+  options?: { readonly testsModify: boolean; readonly authorized: ReadonlySet<string> },
 ): Promise<string[]> {
   const changes: string[] = [];
   for (const [relative, expectedHash] of snapshot) {
-    let currentHash: string;
+    let state: 'modified' | 'deleted' | null = null;
     try {
-      currentHash = hashFileContent(await fs.readFile(path.join(projectRoot, relative)));
+      const hash = hashFileContent(await fs.readFile(path.join(projectRoot, relative)));
+      if (hash !== expectedHash) state = 'modified';
     } catch {
-      changes.push(`${relative} (deleted)`);
-      continue;
+      state = 'deleted';
     }
-    if (currentHash !== expectedHash) {
-      changes.push(`${relative} (modified)`);
-    }
+    const authorized = options?.testsModify === true && options.authorized.has(relative);
+    if (state === null || authorized) continue;
+    changes.push(
+      options ? `${relative} (${state}); authorizing scope: ${relative}` : `${relative} (${state})`,
+    );
   }
   return changes.sort();
 }

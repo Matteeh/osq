@@ -23,10 +23,22 @@ if (!fs.existsSync('openspec')) {
 process.exit(0);
 `;
 
-const PROPOSAL = `---
+const CHANGE_VERIFY_PASS = `const fs = require('node:fs');
+fs.appendFileSync('change-verify-ran.txt', 'ran\\n');
+process.exit(0);
+`;
+
+const CHANGE_VERIFY_FAIL = `const fs = require('node:fs');
+fs.appendFileSync('change-verify-ran.txt', 'ran\\n');
+console.error('change verify exploded');
+process.exit(3);
+`;
+
+function proposalFor(verify: string): string {
+  return `---
 title: Test gating
 depends_on: []
-verify: node verify.cjs
+verify: ${verify}
 features:
   reads: []
 ---
@@ -34,6 +46,7 @@ features:
 
 Exercise undeclared test change gating.
 `;
+}
 
 const TASKS_MD = `# Tasks
 
@@ -42,6 +55,9 @@ const TASKS_MD = `# Tasks
 
 const PASSING_VERIFY = 'node verify.cjs';
 const FAILING_VERIFY = 'node -e "process.exit(1)"';
+const CHANGE_PASSING_VERIFY = 'node change-verify-pass.cjs';
+const CHANGE_FAILING_VERIFY = 'node change-verify-fail.cjs';
+const CHANGE_MARKER = 'change-verify-ran.txt';
 
 /**
  * Adapter that performs an arbitrary filesystem mutation while the task is
@@ -73,13 +89,13 @@ class FileMutatingAdapter implements HarnessAdapter {
 
 async function writeTask(
   specFolder: string,
-  options: { verify: string; testsModify?: boolean },
+  options: { verify: string; testsModify?: boolean; scope?: string[] },
 ): Promise<void> {
   const lines = [
     '---',
     'title: When test gating applies, undeclared changes halt the task',
     `verify: ${options.verify}`,
-    'scope: []',
+    `scope: [${(options.scope ?? []).join(', ')}]`,
     'entry: []',
     'skills: []',
   ];
@@ -119,10 +135,10 @@ describe('Runner test modification gating', () => {
   let specFolder: string;
   let existingTestPath: string;
 
-  async function writeChangeFolder(): Promise<void> {
+  async function writeChangeFolder(proposalVerify: string = PASSING_VERIFY): Promise<void> {
     specFolder = path.join(tmpDir, 'openspec', 'changes', '001-test-gating');
     await fs.mkdir(path.join(specFolder, 'tasks'), { recursive: true });
-    await fs.writeFile(path.join(specFolder, 'proposal.md'), PROPOSAL, 'utf8');
+    await fs.writeFile(path.join(specFolder, 'proposal.md'), proposalFor(proposalVerify), 'utf8');
     await fs.writeFile(path.join(specFolder, 'tasks.md'), TASKS_MD, 'utf8');
   }
 
@@ -131,6 +147,8 @@ describe('Runner test modification gating', () => {
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     await fs.writeFile(path.join(tmpDir, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
+    await fs.writeFile(path.join(tmpDir, 'change-verify-pass.cjs'), CHANGE_VERIFY_PASS, 'utf8');
+    await fs.writeFile(path.join(tmpDir, 'change-verify-fail.cjs'), CHANGE_VERIFY_FAIL, 'utf8');
 
     existingTestPath = path.join(tmpDir, 'tests', 'existing.test.ts');
     await fs.mkdir(path.dirname(existingTestPath), { recursive: true });
@@ -163,6 +181,7 @@ describe('Runner test modification gating', () => {
     const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
     assert.match(deadContent, /reason: undeclared_test_change/);
     assert.match(deadContent, /tests\/existing\.test\.ts \(deleted\)/);
+    assert.match(deadContent, /authorizing scope: tests\/existing\.test\.ts/);
   });
 
   it('a modified preexisting test writes the dead marker and dead event, and skips verify', async () => {
@@ -180,6 +199,7 @@ describe('Runner test modification gating', () => {
     const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
     assert.match(deadContent, /reason: undeclared_test_change/);
     assert.match(deadContent, /tests\/existing\.test\.ts \(modified\)/);
+    assert.match(deadContent, /authorizing scope: tests\/existing\.test\.ts/);
 
     const events = await readEvents(specFolder, '1');
     const deadEvents = events.filter((event) => event.type === 'dead');
@@ -220,8 +240,12 @@ describe('Runner test modification gating', () => {
     );
   });
 
-  it('tests.modify: true permits editing a preexisting test file', async () => {
-    await writeTask(specFolder, { verify: PASSING_VERIFY, testsModify: true });
+  it('tests.modify: true permits editing a preexisting test file in resolved scope', async () => {
+    await writeTask(specFolder, {
+      verify: PASSING_VERIFY,
+      testsModify: true,
+      scope: ['tests/existing.test.ts'],
+    });
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 
     const adapter = new FileMutatingAdapter(async () => {
@@ -243,5 +267,162 @@ describe('Runner test modification gating', () => {
       events.some((event) => event.type === 'verify_ran'),
       true,
     );
+  });
+
+  it('tests.modify: true authorizes an in-scope deletion of a preexisting test', async () => {
+    await writeTask(specFolder, {
+      verify: PASSING_VERIFY,
+      testsModify: true,
+      scope: ['tests/existing.test.ts'],
+    });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {
+      await fs.rm(existingTestPath);
+    });
+
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.success, true);
+    assert.equal(await exists(path.join(specFolder, '.run', 'done', '1')), true);
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
+  });
+
+  it('tests.modify: true still forbids a preexisting test outside the resolved scope', async () => {
+    await writeTask(specFolder, {
+      verify: FAILING_VERIFY,
+      testsModify: true,
+      scope: ['tests/other.test.ts'],
+    });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {
+      await fs.writeFile(existingTestPath, '// edited out of scope\n', 'utf8');
+    });
+
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.success, false);
+    assert.equal(result.reason, 'undeclared_test_change');
+
+    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
+    assert.match(deadContent, /tests\/existing\.test\.ts \(modified\)/);
+    assert.match(deadContent, /authorizing scope: tests\/existing\.test\.ts/);
+
+    const events = await readEvents(specFolder, '1');
+    assert.equal(
+      events.some((event) => event.type === 'verify_ran'),
+      false,
+    );
+  });
+
+  it('sorts unauthorized diagnostics by test path and names each required scope entry', async () => {
+    const aPath = path.join(tmpDir, 'tests', 'a.test.ts');
+    const zPath = path.join(tmpDir, 'tests', 'z.test.ts');
+    await fs.writeFile(aPath, '// a\n', 'utf8');
+    await fs.writeFile(zPath, '// z\n', 'utf8');
+    await writeTask(specFolder, { verify: FAILING_VERIFY });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {
+      await fs.writeFile(zPath, '// z edited\n', 'utf8');
+      await fs.rm(aPath);
+    });
+
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.reason, 'undeclared_test_change');
+
+    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
+    const aIndex = deadContent.indexOf('tests/a.test.ts (deleted)');
+    const zIndex = deadContent.indexOf('tests/z.test.ts (modified)');
+    assert.ok(aIndex !== -1 && zIndex !== -1, deadContent);
+    assert.ok(aIndex < zIndex, 'diagnostics must be sorted by project-relative path');
+    assert.match(deadContent, /authorizing scope: tests\/a\.test\.ts/);
+    assert.match(deadContent, /authorizing scope: tests\/z\.test\.ts/);
+  });
+
+  it('runs the enabled proposal verify after task verification and attributes its event to change', async () => {
+    await writeChangeFolder(CHANGE_PASSING_VERIFY);
+    await writeTask(specFolder, { verify: PASSING_VERIFY });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {});
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.success, true);
+    assert.equal(await exists(path.join(tmpDir, CHANGE_MARKER)), true);
+    assert.equal(await exists(path.join(specFolder, '.run', 'done', '1')), true);
+
+    const changeEvents = await readEvents(specFolder, 'change');
+    const verifyEvents = changeEvents.filter((event) => event.type === 'verify_ran');
+    assert.equal(verifyEvents.length, 1);
+    assert.equal(verifyEvents[0].data?.command, CHANGE_PASSING_VERIFY);
+    assert.equal(verifyEvents[0].data?.exitCode, 0);
+  });
+
+  it('a failing proposal verify kills the task with change_verify_red and full evidence', async () => {
+    await writeChangeFolder(CHANGE_FAILING_VERIFY);
+    await writeTask(specFolder, { verify: PASSING_VERIFY });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {});
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.success, false);
+    assert.equal(result.reason, 'change_verify_red');
+
+    assert.equal(await exists(path.join(specFolder, '.run', 'done', '1')), false);
+    const deadContent = await fs.readFile(path.join(specFolder, '.run', 'dead', '1.md'), 'utf8');
+    assert.match(deadContent, /reason: change_verify_red/);
+    assert.match(deadContent, /command: "node change-verify-fail\.cjs"/);
+    assert.match(deadContent, /exit_code: 3/);
+    assert.match(deadContent, /change verify exploded/);
+
+    const taskEvents = await readEvents(specFolder, '1');
+    assert.equal(
+      taskEvents.some((event) => event.type === 'done'),
+      false,
+    );
+    const deadEvents = taskEvents.filter((event) => event.type === 'dead');
+    assert.equal(deadEvents.length, 1);
+    assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'change_verify_red' });
+
+    const changeEvents = await readEvents(specFolder, 'change');
+    const verifyEvents = changeEvents.filter((event) => event.type === 'verify_ran');
+    assert.equal(verifyEvents.length, 1);
+    assert.equal(verifyEvents[0].data?.exitCode, 3);
+  });
+
+  it('disabling changeVerifyAfterTask skips the proposal verifier and completes', async () => {
+    await writeChangeFolder(CHANGE_FAILING_VERIFY);
+    await writeTask(specFolder, { verify: PASSING_VERIFY });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+    const disabledConfig = {
+      ...DEFAULT_CONFIG,
+      gates: { changeVerifyAfterTask: false },
+    };
+
+    const adapter = new FileMutatingAdapter(async () => {});
+    const result = await runTask(tmpDir, specFolder, '1', disabledConfig, adapter);
+    assert.equal(result.success, true);
+    assert.equal(await exists(path.join(tmpDir, CHANGE_MARKER)), false);
+    assert.equal(await exists(path.join(specFolder, '.run', 'done', '1')), true);
+    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
+
+    const changeEvents = await readEvents(specFolder, 'change');
+    assert.equal(
+      changeEvents.some((event) => event.type === 'verify_ran'),
+      false,
+    );
+  });
+
+  it('a failing task verify stays verify_red and never runs the proposal verifier', async () => {
+    await writeChangeFolder(CHANGE_PASSING_VERIFY);
+    await writeTask(specFolder, { verify: FAILING_VERIFY });
+    await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
+
+    const adapter = new FileMutatingAdapter(async () => {});
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    assert.equal(result.reason, 'verify_red');
+    assert.equal(await exists(path.join(tmpDir, CHANGE_MARKER)), false);
+
+    const changeEvents = await readEvents(specFolder, 'change');
+    assert.equal(changeEvents.length, 0);
   });
 });

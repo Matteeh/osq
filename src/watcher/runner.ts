@@ -5,6 +5,7 @@ import { hashChangeFolder } from '../core/hasher.js';
 import type { Logger } from '../core/logger.js';
 import { parseTaskMd } from '../core/parser.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { runChangeVerifyGate } from './change-verify.js';
 import {
   clearTaskHeartbeatStats,
   computeTaskHeartbeatStats,
@@ -25,7 +26,7 @@ import {
 } from './outcome.js';
 import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
-import { findUndeclaredTestChanges, runVerificationGate, snapshotTestFiles } from './verify.js';
+import { captureTestGate, findUndeclaredTestChanges, runVerificationGate } from './verify.js';
 
 export type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 
@@ -140,7 +141,7 @@ export async function runTask(
   }
 
   try {
-    const testSnapshot = taskData.testsModify ? null : await snapshotTestFiles(projectRoot);
+    const testGate = await captureTestGate(projectRoot, taskData.scope, taskData.testsModify);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
     await measures.emitStart();
     const spawnOutcome = await spawnTaskAgent({
@@ -155,13 +156,11 @@ export async function runTask(
     });
     if (!spawnOutcome.ok) return finish(spawnOutcome.result);
 
-    if (testSnapshot) {
-      const undeclared = await findUndeclaredTestChanges(projectRoot, testSnapshot);
-      if (undeclared.length > 0) {
-        const marker = `---\nreason: undeclared_test_change\n---\nPreexisting test files were modified or deleted without tests.modify: true:\n${undeclared.map((file) => `- ${file}`).join('\n')}\n`;
-        const error = `Undeclared test changes: ${undeclared.join(', ')}`;
-        return fail('undeclared_test_change', marker, error);
-      }
+    const undeclared = await findUndeclaredTestChanges(projectRoot, testGate.snapshot, testGate);
+    if (undeclared.length > 0) {
+      const marker = `---\nreason: undeclared_test_change\n---\nPreexisting test files were modified or deleted without both tests.modify: true and an authorizing scope entry:\n${undeclared.map((file) => `- ${file}`).join('\n')}\n`;
+      const error = `Undeclared test changes: ${undeclared.join(', ')}`;
+      return fail('undeclared_test_change', marker, error);
     }
 
     const ensured = await ensureTaskResult({ specFolderPath, taskNumber, logger, logOutcome });
@@ -180,6 +179,9 @@ export async function runTask(
       const extra = verifyResult.timedOut ? 'timed_out: true' : undefined;
       return fail('verify_red', marker, `Verify failed: ${msg}`, extra);
     }
+
+    const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config);
+    if (!gate.ok) return fail('change_verify_red', gate.marker, gate.error, gate.extra);
 
     await measures.emitEnd();
     await writeDoneMarker(runDir, taskNumber, await buildDoneMetadata(projectRoot, taskData.scope));

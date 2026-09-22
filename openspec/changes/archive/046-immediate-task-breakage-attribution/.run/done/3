@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:19fa7e7484b1b22348e9d2cb1f0001b193509137a44c4ed20525e59fff1a4cbf"
+build_stamp: "b5e7098"
+exit_code: 0
+scope_files: {"tests/archive-verification.test.ts":"sha256:70183328bde1b23334f01c6640104889a1c5c1e6ae20b1ed4aeb79c48c7e2d89","tests/plan-prompt-lifecycle.test.ts":"sha256:c8975194a28ab72adc573d49a10182e45394fa32a62fdfca9d36d4c807b81fe3"}
+---
+2026-09-22T21:16:45.265Z

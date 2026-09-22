@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
 import { hashChangeFolder } from '../src/core/hasher.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { getArchiveDir } from '../src/core/layout.js';
@@ -26,6 +26,15 @@ const FAILING = 'node verify-fail.cjs';
 const PASS_SCRIPT = 'process.exit(0);\n';
 const FAIL_SCRIPT = 'process.exit(1);\n';
 const PROMPT_BYTES = 'transient opening prompt\n';
+
+/**
+ * Local opt-out for the case whose subject is strictly archive-time failure.
+ * Deriving it from `DEFAULT_CONFIG` keeps every unrelated default intact.
+ */
+const ARCHIVE_ONLY_CONFIG: OsqConfig = Object.freeze({
+  ...DEFAULT_CONFIG,
+  gates: { changeVerifyAfterTask: false },
+});
 
 /**
  * Real on-disk harness binary for the actual `AgyAdapter`. It writes the result
@@ -192,9 +201,9 @@ describe('transient plan-prompt lifecycle', () => {
     }
   }
 
-  async function runSingleTask(): Promise<void> {
+  async function runSingleTask(config: OsqConfig = DEFAULT_CONFIG): Promise<void> {
     const adapter = new AgyAdapter();
-    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
+    const result = await runTask(tmpDir, specFolder, '1', config, adapter);
     assert.equal(result.success, true, JSON.stringify(result));
   }
 
@@ -283,9 +292,9 @@ describe('transient plan-prompt lifecycle', () => {
   it('failing archive verification leaves the active prompt untouched', async () => {
     await createChange({ changeVerify: FAILING, withPrompt: true });
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-    await runSingleTask();
+    await runSingleTask(ARCHIVE_ONLY_CONFIG);
 
-    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, DEFAULT_CONFIG), false);
+    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, ARCHIVE_ONLY_CONFIG), false);
 
     assert.equal(await exists(specFolder), true);
     assert.equal(await exists(archivedPath), false);

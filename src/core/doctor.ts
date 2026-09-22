@@ -43,7 +43,8 @@ function validConfig(config: OsqConfig): boolean {
     !!config.limits &&
     !!config.paths &&
     typeof config.paths.openspecRoot === 'string' &&
-    !!config.timeouts
+    !!config.timeouts &&
+    typeof config.gates?.changeVerifyAfterTask === 'boolean'
   );
 }
 

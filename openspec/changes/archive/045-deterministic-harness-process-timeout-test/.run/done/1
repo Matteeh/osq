@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:bf20a18a2884dc11683007fc72b2c0c1cdb426df4136cf01e3aa9a8dbdd9d27e"
+build_stamp: "b5e7098"
+exit_code: 0
+scope_files: {"tests/harness-process.test.ts":"sha256:bdbe40fa5ffa0f693c52b8ae3d5a99130806045e8429cc01c3a97d9b3a721d32"}
+---
+2026-09-22T20:35:37.490Z

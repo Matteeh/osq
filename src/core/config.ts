@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
+import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
 import { HARNESS_CATALOG } from './harness-catalog.js';
@@ -69,13 +70,11 @@ export interface OsqConfig {
   readonly planner?: PlannerConfig;
   readonly queue?: QueueConfig;
   readonly serve?: Partial<ServeConfig>;
+  readonly gates?: GatesConfig;
 }
 
 export type OsqUserConfig = Partial<
-  Omit<
-    OsqConfig,
-    'limits' | 'paths' | 'timeouts' | 'agy' | 'opencode' | 'codex' | 'log' | 'planner' | 'queue'
-  >
+  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'codex' | 'log' | 'planner' | 'queue' | 'gates'>
 > & {
   readonly limits?: Partial<OsqLimits>;
   readonly paths?: Partial<OsqPaths>;
@@ -86,12 +85,14 @@ export type OsqUserConfig = Partial<
   readonly log?: Partial<LogConfig>;
   readonly planner?: Partial<PlannerConfig>;
   readonly queue?: Partial<QueueConfig>;
+  readonly gates?: Partial<GatesConfig>;
 };
 
 export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
+  gates: DEFAULT_GATES_CONFIG,
   agy: {
     model: 'gemini-3.8-flash-high',
     dangerouslySkipPermissions: true,
@@ -139,6 +140,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     ...DEFAULT_CONFIG,
     ...restConfig,
     serve,
+    gates: validateGatesConfig(config.gates),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     agy: {
@@ -169,13 +171,8 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   };
 }
 
-/**
- * Apply OSQ_MODEL to each catalogued harness section that accepts it. An
- * explicitly configured model always wins; the default harness additionally
- * receives the environment model even when it is not the selected executor.
- * Sections are returned as partial config overrides so `defineConfig` still
- * owns default merging and validation.
- */
+// Apply OSQ_MODEL to catalogued harness sections that accept it; explicit
+// models still win and `defineConfig` owns default merging and validation.
 function applyHarnessModelEnv(
   userConfig: OsqUserConfig,
   selectedHarness: string,

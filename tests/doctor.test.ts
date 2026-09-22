@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { doctorCommand } from '../src/cli/doctor.js';
-import { type OsqConfig, loadConfig } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from '../src/core/config.js';
 import { runDoctorChecks } from '../src/core/doctor.js';
 import {
   MANAGED_AGENTS_MD_BODY,
@@ -208,6 +208,22 @@ describe('runDoctorChecks', () => {
 
     assert.equal(findCheck(report, 'config')?.ok, false);
     assert.equal(report.ok, false);
+  });
+
+  it('fails the config check when the resolved gates value is missing or non-boolean', async () => {
+    await writeHealthyRepo(tmpDir);
+    const missingGates = { ...DEFAULT_CONFIG, gates: undefined } as unknown as OsqConfig;
+
+    const missingReport = await runDoctorChecks(tmpDir, {
+      loadConfig: async () => missingGates,
+    });
+    assert.equal(findCheck(missingReport, 'config')?.ok, false);
+
+    const nonBooleanReport = await runDoctorChecks(tmpDir, {
+      loadConfig: async () =>
+        ({ ...DEFAULT_CONFIG, gates: { changeVerifyAfterTask: 'yes' } }) as unknown as OsqConfig,
+    });
+    assert.equal(findCheck(nonBooleanReport, 'config')?.ok, false);
   });
 
   it('fails the harness check when the configured binary is unavailable', async () => {

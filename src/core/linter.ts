@@ -811,6 +811,28 @@ function collectOverlapWarnings(scopes: readonly ResolvedTaskScope[]): string[] 
   return warnings;
 }
 
+/**
+ * Warns once per task whose resolved scope contains a `src/harness/` file but
+ * no resolved file under `tests/fixtures/events/`. Reuses the resolver
+ * projection already collected for overlap analysis instead of re-walking.
+ */
+function collectHarnessFixtureWarnings(scopes: readonly ResolvedTaskScope[]): string[] {
+  const ordered = [...scopes].sort((a, b) => compareNumericPrefix(a.taskFile, b.taskFile));
+  const warnings: string[] = [];
+  for (const scope of ordered) {
+    const hasHarness = scope.existingPaths.some((entry) => entry.startsWith('src/harness/'));
+    const hasFixtures = scope.existingPaths.some(
+      (entry) => entry === 'tests/fixtures/events' || entry.startsWith('tests/fixtures/events/'),
+    );
+    if (hasHarness && !hasFixtures) {
+      warnings.push(
+        `Task in ${scope.taskFile} resolves src/harness/ scope but no file under tests/fixtures/events/`,
+      );
+    }
+  }
+  return warnings;
+}
+
 /** Test files governed by the `tests.modify` gate; mirrors the `tests/**` default. */
 function isTestFilePath(relativePath: string): boolean {
   return relativePath === 'tests' || relativePath.startsWith('tests/');
@@ -993,6 +1015,9 @@ export async function lintChangeFolder(
       );
     }
   }
+
+  // Check: harness scope should cover the event fixtures without failing lint
+  warnings.push(...collectHarnessFixtureWarnings(resolvedTaskScopes));
 
   // Check: shared resolved files across tasks are reported as non-failing warnings
   warnings.push(...collectOverlapWarnings(resolvedTaskScopes));

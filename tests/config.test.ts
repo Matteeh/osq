@@ -126,3 +126,47 @@ describe('serve configuration', () => {
     }
   });
 });
+
+describe('gates configuration', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-gates-config-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('defaults changeVerifyAfterTask to true', () => {
+    assert.equal(DEFAULT_CONFIG.gates?.changeVerifyAfterTask, true);
+    assert.equal(defineConfig({}).gates?.changeVerifyAfterTask, true);
+  });
+
+  it('preserves the incremental verification opt-out while keeping unrelated defaults', () => {
+    const config = defineConfig({ gates: { changeVerifyAfterTask: false } });
+    assert.equal(config.gates?.changeVerifyAfterTask, false);
+    assert.equal(config.timeouts.verifyTimeoutSeconds, 600);
+  });
+
+  it('rejects a non-boolean changeVerifyAfterTask', () => {
+    assert.throws(
+      () => defineConfig({ gates: { changeVerifyAfterTask: 'yes' } } as never),
+      /gates\.changeVerifyAfterTask/,
+    );
+  });
+
+  it('rejects a non-object gates block', () => {
+    assert.throws(() => defineConfig({ gates: 42 } as never), /gates configuration/);
+  });
+
+  it('loadConfig reads a gates block from osq.config.ts', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'osq.config.ts'),
+      'export default { gates: { changeVerifyAfterTask: false } };',
+      'utf8',
+    );
+    const config = await loadConfig(tmpDir);
+    assert.equal(config.gates?.changeVerifyAfterTask, false);
+  });
+});

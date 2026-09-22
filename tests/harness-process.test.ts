@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
 import { scaffoldProject } from '../src/core/init.js';
 import { createNewSpec } from '../src/core/new.js';
@@ -68,54 +68,28 @@ describe('Shared Process Execution and Timeout Helper', () => {
     assert.equal(result.signal, 'SIGTERM');
   });
 
-  it('spawnWithTimeout forces SIGKILL after 5000ms grace period if SIGTERM fails to terminate', async () => {
+  it('DEFAULT_KILL_GRACE_PERIOD_MS remains 5000', () => {
     assert.equal(DEFAULT_KILL_GRACE_PERIOD_MS, 5000);
+  });
 
-    mock.timers.enable({ apis: ['setTimeout'] });
-    try {
-      let isReady = false;
-      let resolveReady: () => void;
-      const readyPromise = new Promise<void>((r) => {
-        resolveReady = r;
-      });
+  it('spawnWithTimeout forces SIGKILL when SIGTERM fails to terminate', async () => {
+    // Child traps and ignores SIGTERM. Register the handler before writing
+    // READY so readiness proves the handler can receive the parent's signal.
+    const script = `
+      process.on('SIGTERM', () => {});
+      process.stdout.write('READY\\n');
+      setInterval(() => {}, 1000);
+    `;
 
-      // Child script traps and ignores SIGTERM
-      const script = `
-        process.stdout.write('READY\\n');
-        process.on('SIGTERM', () => {});
-        setInterval(() => {}, 1000);
-      `;
+    const result = await spawnWithTimeout({
+      command: process.execPath,
+      args: ['-e', script],
+      timeoutSeconds: 1,
+      killGracePeriodMs: 100,
+    });
 
-      const processPromise = spawnWithTimeout({
-        command: process.execPath,
-        args: ['-e', script],
-        timeoutSeconds: 1,
-        onStdout: (chunk) => {
-          if (chunk.includes('READY')) {
-            isReady = true;
-            resolveReady();
-          }
-        },
-      });
-
-      await readyPromise;
-      assert.equal(isReady, true);
-
-      // Advance timer by 1s (1000ms) to trigger timeout and send SIGTERM
-      mock.timers.tick(1000);
-
-      // Advance timer by 4999ms (within the 5000ms grace period) - should not have sent SIGKILL yet
-      mock.timers.tick(4999);
-
-      // Advance by 1ms (completing the 5000ms grace period) - triggers SIGKILL
-      mock.timers.tick(1);
-
-      const result = await processPromise;
-      assert.equal(result.timedOut, true);
-      assert.equal(result.signal, 'SIGKILL');
-    } finally {
-      mock.timers.reset();
-    }
+    assert.equal(result.timedOut, true);
+    assert.equal(result.signal, 'SIGKILL');
   });
 
   it('spawnWithTimeout marks timedOut true and returns non-zero exit code on timeout', async () => {
