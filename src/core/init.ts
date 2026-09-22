@@ -65,6 +65,9 @@ reader succeeds.
 - One task per coherent unit. Title is "When X, Y".
 - Every task names its \`scope\`, \`verify\` (no TTY, no network), and the test
   files it may modify. Tests not listed are frozen.
+- \`osq init\` and \`osq new\` seed \`verify: node -e "process.exit(0)"\` as a
+  planning sentinel, not trusted coverage. \`osq lint\` rejects it; replace it
+  before approval with a command that verifies the completed change's final tree.
 - Every task's \`verify\` exercises its slice through the real entry point, wiring
   included. If closing the loop requires a file outside the task's \`scope\`, the
   scope is wrong; widen it or merge the task. An executor result that says the

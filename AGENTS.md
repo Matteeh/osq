@@ -34,7 +34,7 @@ pnpm tsc --noEmit && pnpm test && pnpm lint
 
 Tests run against `fixture/`. A test that needs a real model is an integration test, marked and skipped by default.
 
-`osq init` and `osq new` seed `verify: node -e "process.exit(0)"`. That value is a planning sentinel, not trusted coverage: `osq lint` rejects it. Replace it before approval with a command that verifies the completed change's final tree. Checked-in fixtures use a local `node verify.cjs` verifier backed by files in their own execution root, never the sentinel, the network, a TTY, or this repository's full verification suite.
+Tests that submit fixture changes to lint or approval use a local `node verify.cjs` verifier backed by files in their own execution root, never the planning sentinel, the network, a TTY, or this repository's full verification suite.
 
 ## OpenSpec layout
 

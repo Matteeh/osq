@@ -116,6 +116,9 @@ describe('osq init PLANNER.md', () => {
   it('managed block requires final-tree verification inside the Tasks guidance', () => {
     const tasks = tasksGuidance(MANAGED_PLANNER_BLOCK);
 
+    assert.ok(tasks.includes('verify: node -e "process.exit(0)"'));
+    assert.ok(tasks.includes('planning sentinel, not trusted coverage'));
+    assert.ok(tasks.includes('before approval'));
     assert.ok(tasks.includes('re-runnable against the final tree'));
     assert.ok(tasks.includes('watcher and archive recertification'));
   });
