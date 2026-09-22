@@ -105,16 +105,17 @@ describe('osq init', () => {
 
     assert.ok(content.includes('<!-- OSQ:START -->'));
     assert.ok(content.includes('<!-- OSQ:END -->'));
-    assert.ok(content.includes('Executing a spec'));
+    assert.ok(content.includes('## Executing a task'));
   });
 
   it('managed AGENTS block carries the planning entry point without weakening the executor protocol', () => {
     assert.match(MANAGED_AGENTS_MD_BODY, /## Planning a change/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /PLANNER\.md/);
     assert.match(MANAGED_AGENTS_MD_BODY, /`plan-prompt\.md`/);
     assert.match(MANAGED_AGENTS_MD_BODY, /Write only inside that change folder/);
     assert.match(MANAGED_AGENTS_MD_BODY, /`osq lint <slug>`/);
     assert.match(MANAGED_AGENTS_MD_BODY, /Never run `osq approve`/);
-    assert.match(MANAGED_AGENTS_MD_BODY, /## Executing a spec/);
+    assert.match(MANAGED_AGENTS_MD_BODY, /## Executing a task/);
     assert.match(MANAGED_AGENTS_MD_BODY, /## Exiting/);
   });
 

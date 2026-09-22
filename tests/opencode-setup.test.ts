@@ -92,8 +92,8 @@ describe('OpenCode Adapter Setup', () => {
 
     const managedContent = body.slice(startIndex, endIndex + OSQ_END_MARKER.length);
     assert.ok(
-      managedContent.includes('## Executing a spec'),
-      'managed block should contain "## Executing a spec"',
+      managedContent.includes('## Executing a task'),
+      'managed block should contain "## Executing a task"',
     );
     assert.ok(managedContent.includes('## Exiting'), 'managed block should contain "## Exiting"');
     assert.ok(
@@ -179,8 +179,8 @@ describe('OpenCode Adapter Setup', () => {
       'custom notes should be preserved',
     );
     assert.ok(
-      refreshedBody.includes('## Executing a spec'),
-      'managed block should be refreshed with spec procedure',
+      refreshedBody.includes('## Executing a task'),
+      'managed block should be refreshed with task procedure',
     );
     assert.equal(
       refreshedBody.includes('Old procedure that should be replaced'),

@@ -1,34 +1,39 @@
 <!-- OSQ:START -->
 ## Planning a change
 
-You write the change folder; a cheaper coding agent executes it one task at a
-time and cannot see anything you did not write down. Plan so a literal, narrow
-reader succeeds.
+You write the change folder; a cheaper executor runs it one task at a time,
+sees only what you wrote, and reads it literally.
+
+### Interactive planning
+
+When a human is in the session:
 
 1. Read `AGENTS.md`, the capability specs this change touches, and one recent
    archived change end to end.
 2. Reply with the parent spec, the task list (titles only), the capability specs
    this change will write, and any `## Human steps`. Stop there.
-3. Write task bodies only after the human approves the list.
+3. Write the change folder only after the human approves the list.
 
 ### Working from the handoff
 
-- Your complete prompt is `plan-prompt.md` in the selected change folder; read
-  it and follow it exactly.
+When `osq plan` started you, `plan-prompt.md` in the selected change folder is
+your complete prompt; read it and follow it exactly.
+
+### Either way
+
 - Write only inside that change folder.
 - Run `osq lint <slug>` and fix every finding before you finish.
 - Never run `osq approve`; a human owns that gate.
-
-### Before you write a task
-
 - Grep for what already exists; verify every version, flag, or API before use.
 - Write files with the file tool, never through a shell echo.
 
 ### Tasks
 
 - One task per coherent unit. Title is "When X, Y".
-- Every task names its `scope`, `verify` (no TTY, no network), and the test
-  files it may modify. Tests not listed are frozen.
+- Every task names its `scope` and `verify` (no TTY, no network). A task that
+  changes a preexisting test sets `tests.modify: true` and lists that test in
+  `scope`; every other preexisting test is frozen. `osq lint` enforces the
+  configured limits on scope patterns and acceptance lines.
 - `osq init` and `osq new` seed `verify: node -e "process.exit(0)"` as a
   planning sentinel, not trusted coverage. `osq lint` rejects it; replace it
   before approval with a command that verifies the completed change's final tree.
@@ -40,8 +45,15 @@ reader succeeds.
   completed change, because the watcher and archive recertification run it there
   after later tasks land. A command that passes only mid-change is a planning
   failure.
-- A file belongs to one task. A later task may extend it only when it must; order
-  that later task after the owner and name the shared file in the proposal.
+- By default the watcher also runs the change-level `verify` after each task, and
+  a red result kills that task. Every task must leave it green; tasks that pass
+  only together are one task.
+- A file belongs to one task. Before each later task, the watcher re-hashes the
+  resolved `scope` of every done task; any change halts the change until a human
+  runs `osq retry`. Globs resolve again at every audit, so a broad glob also
+  captures files that later tasks create. When a later task must extend a file,
+  order that later task after the owner, name the shared file in the proposal,
+  and list the expected `osq retry` under `## Human steps`.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.

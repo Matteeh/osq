@@ -64,40 +64,34 @@ Tests run against `fixture/`. A test that needs a real model is an integration t
 Tests that submit fixture changes to lint or approval use a local `node verify.cjs` verifier backed by files in their own execution root, never the planning sentinel, the network, a TTY, or this repository's full verification suite.
 
 <!-- OSQ:START -->
-## Executing a spec
+## Executing a task
 
-1. Read your task file, its parent `proposal.md`, then only the delta specs and capability docs it names. Nothing else.
+You were handed one task, `tasks/<n>.md`, from a change under `openspec/changes/`.
+
+1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.
 2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
 3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.
 4. Tests for each acceptance line before implementing.
-5. Minimal code to pass. Stay inside `scope`.
-6. Run the task's `verify` command before exiting.
-
-## OpenSpec layout
-
-- Living capability specs live under `openspec/specs/` as `<capability>/spec.md`.
-- In-flight changes live under `openspec/changes/<id>-<slug>/`.
-- The change document is `proposal.md`; delta specifications live beside it as `<capability>/spec.md`.
-- The osq workflow schema lives under `openspec/schemas/osq/` (proposal -> specs -> tasks).
-- `tasks/<n>.md` is the osq execution unit; `tasks.md` is a write-only projection of `.run/` state.
-- `.run/` markers track execution state: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`.
-- State is derived purely from the marker files on disk; nothing depends on in-memory state.
-
-## Gates and executor permissions
-
-- Approval gate: only `osq approve`, run by a human, writes `.run/approved` after linting and hashing the change.
-- Verification gate: the watcher alone re-runs each task's `verify` against the final tree before writing `done`.
-- An agent writes only `.run/results/<n>.md` and files inside `scope`; it never edits living capability specs, `tasks.md`, or marker files.
-
-## Planning a change
-
-- When asked to plan a change, read `plan-prompt.md` in the selected change
-  folder and follow it exactly.
-- Write only inside that change folder.
-- Run `osq lint <slug>` and fix every finding before you finish.
-- Never run `osq approve`; approval belongs to a human.
+5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.
+6. New test files are always allowed. Change a preexisting test only when the task sets `tests.modify: true` and the file is inside `scope`; any other test change kills the task.
+7. Run the task's `verify` command before exiting. Then run the proposal's `verify`; the watcher runs both itself and kills the task if either fails.
 
 ## Exiting
 
 Write `.run/results/<n>.md` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
+
+## Where things live
+
+- Living capability specs live under `openspec/specs/` as `<capability>/spec.md`. Never edit them; the watcher applies approved deltas at archive.
+- In-flight changes live under `openspec/changes/<id>-<slug>/`: `proposal.md`, delta specs as `specs/<capability>/spec.md`, and one `tasks/<n>.md` per task.
+- `tasks.md` and every file under `.run/` except your result file belong to the watcher and the human. Never edit them.
+- Approval gate: only `osq approve`, run by a human, writes `.run/approved`. Verification gate: only the watcher's own `verify` run marks a task done.
+
+## Planning a change
+
+Planners follow `PLANNER.md`. When `osq plan` started you, `plan-prompt.md` in the selected change folder is your complete prompt; read it and follow it exactly.
+
+- Write only inside that change folder.
+- Run `osq lint <slug>` and fix every finding before you finish.
+- Never run `osq approve`; approval belongs to a human.
 <!-- OSQ:END -->

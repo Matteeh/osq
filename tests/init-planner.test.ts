@@ -120,6 +120,20 @@ describe('osq init PLANNER.md', () => {
     assert.ok(MANAGED_PLANNER_BLOCK.includes('written after the goal'));
   });
 
+  it('managed block states the between-task watcher rules inside the Tasks guidance', () => {
+    const tasks = tasksGuidance(MANAGED_PLANNER_BLOCK);
+
+    assert.ok(tasks.includes('change-level `verify`'));
+    assert.ok(tasks.includes('osq retry'));
+    assert.ok(tasks.includes('Globs resolve again'));
+    assert.ok(tasks.includes('tests.modify: true'));
+  });
+
+  it('managed block separates interactive planning from the osq plan handoff', () => {
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('### Interactive planning'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('### Working from the handoff'));
+  });
+
   it('managed block requires final-tree verification inside the Tasks guidance', () => {
     const tasks = tasksGuidance(MANAGED_PLANNER_BLOCK);
 

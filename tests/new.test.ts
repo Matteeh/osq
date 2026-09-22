@@ -63,6 +63,36 @@ describe('osq new', () => {
     assert.equal(task1Exists, true);
   });
 
+  it('createNewSpec seeds the planner sections in order without a table or features.writes', async () => {
+    const result = await createNewSpec(tmpDir, 'Order Cancellation');
+
+    const proposalMd = await fs.readFile(path.join(result.folderPath, 'proposal.md'), 'utf8');
+
+    const sections = [
+      '## Goal',
+      '## Verify',
+      '## Non-goals',
+      '## Contract',
+      '## Human steps',
+      '## Delta',
+    ];
+    const indexes = sections.map((section) => {
+      const index = proposalMd.indexOf(section);
+      assert.ok(index >= 0, `proposal is missing ${section}`);
+      return index;
+    });
+    for (let i = 1; i < indexes.length; i++) {
+      assert.ok(indexes[i] > indexes[i - 1], `${sections[i]} must follow ${sections[i - 1]}`);
+    }
+
+    const contract = proposalMd.slice(indexes[3]);
+    assert.ok(contract.includes('### Requirement:'));
+    assert.ok(contract.includes('#### Scenario:'));
+
+    assert.ok(!/^\s*\|.*\|\s*$/m.test(proposalMd), 'proposal must not contain a table row');
+    assert.ok(!proposalMd.includes('features.writes'), 'proposal must not mention features.writes');
+  });
+
   it('createNewSpec respects options.specsDirName override', async () => {
     const result = await createNewSpec(tmpDir, 'Custom Spec', { specsDirName: 'custom-specs' });
     assert.equal(result.specId, '001');

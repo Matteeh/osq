@@ -1,0 +1,22 @@
+---
+scope_resolver: 2
+scope_hash: sha256:c806e98080cd70c789934ce8fd6457a89ca9a379d3237850a25930c7e9a1829d
+build_stamp: ba6a70d
+exit_code: 0
+scope_files:
+  AGENTS.md: sha256:f23d7de798ab07bc4768dd1431edfe7d971bc17b73ed404ed53a067f4ce36d9a
+  PLANNER.md: sha256:e3cd1ca7aeb2cefe9040483cd7d71fad1904dcd54ceb5342eabcfe406e810f36
+  src/core/foundation/init-blocks.ts: sha256:27b5d391011c9e92e8b9e23ab95467b8d3771361afb59dd258d76fbc78f1a0d6
+  templates/PLANNER.md: sha256:b9ade53717bea47f99087ed02989059c00fb5dfe41cde84490d21110bce71bf4
+  tests/fixtures/events/dead.jsonl: sha256:0c82f3bd7e8906af2565e23da30f2807c482861ce10a8ddf07bed0bf086c1efa
+  tests/fixtures/events/verified.jsonl: sha256:434417193a792f2eb0a2d896addac0d874a8351863c06fdbec0edae12756fa8e
+  tests/init-planner.test.ts: sha256:6376532baf513b49528d05403810db72da85e9af691c94769e12e2996559c612
+  tests/init-planning-guidance.test.ts: sha256:68edcb40fba3844733ff0d9978f98abba97eb9c92e741abb397ca7a408d3f6ef
+  tests/init.test.ts: sha256:adee645d29843324cd7320a0b8d89d42acfd938973aa3e90a44eafa6c2b16516
+  tests/managed-blocks.test.ts: sha256:a3b9ee37d79796a99410d554726745c44d07d46609966cdfdc425d036364d403
+  tests/opencode-setup.test.ts: sha256:a1ae8849eb8827c31207616af24cb88b90cc7947c8380ec671241d1cbfd8868c
+original_scope_hash: sha256:b1fbf8eef950992e81efd0ecb69b9572d848a6381c43b0351ab8aff106986391
+recertified_at: 2026-09-22T22:38:21.558Z
+recertification_count: 1
+---
+2026-09-22T22:34:14.869Z

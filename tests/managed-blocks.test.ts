@@ -74,34 +74,32 @@ describe('managed instructions block retired paths', () => {
   }
 });
 
-describe('managed instructions block OpenSpec protocol', () => {
-  it('documents the OpenSpec layout, markers, gates, and permissions', () => {
+describe('managed instructions block executor protocol', () => {
+  it('documents the executor protocol and the gates that kill a task', () => {
     const text = MANAGED_AGENTS_MD_BODY;
 
+    assert.match(text, /## Executing a task/);
     assert.match(text, /proposal\.md/);
     assert.match(text, /\.run\/results\/<n>\.md/);
-    assert.match(text, /`verify`/);
     assert.match(text, /`scope`/);
-    assert.match(text, /delta/i);
-    assert.match(text, /running\/<n>\.pid/);
-    assert.match(text, /done\/<n>/);
-    assert.match(text, /dead\/<n>\.md/);
-    assert.match(text, /regressed\/<n>\.md/);
-    assert.match(text, /approved/);
-    assert.match(text, /approval gate/i);
-    assert.match(text, /verification gate/i);
-    assert.match(text, /derived purely from the marker files on disk/i);
+    assert.match(text, /tests\.modify: true/);
+    assert.match(text, /the proposal's `verify`/);
+    assert.match(text, /the task's `scope` wins over any other ownership rule/);
+    assert.match(text, /Approval gate:/);
+    assert.match(text, /Verification gate:/);
     assert.match(text, /openspec\/specs\//);
     assert.match(text, /openspec\/changes\//);
+    assert.equal(text.includes('derived purely from the marker files on disk'), false);
+    assert.equal(text.includes('Executing a spec'), false);
   });
 
   it('is mirrored by the repository AGENTS.md guidance', () => {
     const text = documents[1].text;
 
-    assert.match(text, /Executing a spec/);
+    assert.match(text, /## Executing a task/);
     assert.match(text, /proposal\.md/);
     assert.match(text, /\.run\/results\/<n>\.md/);
-    assert.match(text, /regressed/);
+    assert.match(text, /tests\.modify: true/);
   });
 });
 

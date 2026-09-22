@@ -9,28 +9,18 @@ features:
 
 What problem this change solves and why.
 
-## Contract
+## Verify
 
-| Input | Expected Output |
-|---|---|
-| Sample input | Sample output |
+`node -e "process.exit(0)"`
+
+Replace this planning sentinel, here and in the frontmatter, with the command
+that verifies the completed change's final tree, and say what it proves.
 
 ## Non-goals
 
-What this change deliberately does not do.
+- What this change deliberately does not do.
 
-## Delta
-
-Delta specs live beside the proposal at `specs/<capability>/spec.md`. Write one file per capability using `### Requirement:` blocks with `#### Scenario:` WHEN/THEN bullets, grouped under one of the OpenSpec operation headings:
-
-```markdown
-# Spec Delta: <capability>
-
-## Purpose
-
-Why this capability exists.
-
-## ADDED Requirements
+## Contract
 
 ### Requirement: <requirement name>
 
@@ -40,31 +30,22 @@ The system SHALL <observable behavior>.
 - **WHEN** <condition>
 - **THEN** <outcome>
 
-## MODIFIED Requirements
+## Human steps
 
-### Requirement: <requirement name>
+- Review the proposal, delta specs, and task bodies, then run `osq approve <id>`
+  yourself.
 
-The system SHALL <updated behavior>.
+## Delta
 
-#### Scenario: <scenario name>
-- **WHEN** <condition>
-- **THEN** <outcome>
+Delta specs live beside the proposal as `specs/<capability>/spec.md`. Each holds
+the exact text the capability spec will contain after the change, under
+`## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`,
+or `## RENAMED Requirements`; a modified requirement repeats its full text. List
+each delta here in one line and name any file two tasks share.
 
-## REMOVED Requirements
-
-### Requirement: <requirement name>
-
-#### Scenario: <scenario name>
-- **WHEN** <condition>
-- **THEN** <outcome>
-
-## RENAMED Requirements
-
-- FROM: `<old requirement name>`
-- TO: `<new requirement name>`
-```
-
-Every capability delta must also declare which repository files it owns. Add a `### Requirement: Code ownership` block whose `<!-- source: ... -->` comment lists the owned path globs, comma-separated. The ownership boundary scenario restates the same globs in its THEN bullet:
+A delta that introduces a new capability also declares the files it owns in a
+`### Requirement: Code ownership` block. Its `<!-- source: ... -->` comment lists
+the owned path globs, comma-separated, and its scenario restates them:
 
 ```markdown
 ### Requirement: Code ownership

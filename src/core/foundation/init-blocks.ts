@@ -4,42 +4,36 @@ export const OSQ_START_MARKER = '<!-- OSQ:START -->';
 export const OSQ_END_MARKER = '<!-- OSQ:END -->';
 
 export const MANAGED_AGENTS_MD_BODY = `${OSQ_START_MARKER}
-## Executing a spec
+## Executing a task
 
-1. Read your task file, its parent \`proposal.md\`, then only the delta specs and capability docs it names. Nothing else.
+You were handed one task, \`tasks/<n>.md\`, from a change under \`openspec/changes/\`.
+
+1. Read your task file, its parent \`proposal.md\`, then only the delta specs and capability specs it names. Nothing else.
 2. Too big for one pass? Write why in \`.run/results/<n>.md\`, exit without code.
 3. Read a previous result file for this task if present. Run the task's \`verify\`. Start from what fails.
 4. Tests for each acceptance line before implementing.
-5. Minimal code to pass. Stay inside \`scope\`.
-6. Run the task's \`verify\` command before exiting.
-
-## OpenSpec layout
-
-- Living capability specs live under \`openspec/specs/\` as \`<capability>/spec.md\`.
-- In-flight changes live under \`openspec/changes/<id>-<slug>/\`.
-- The change document is \`proposal.md\`; delta specifications live beside it as \`<capability>/spec.md\`.
-- The osq workflow schema lives under \`openspec/schemas/osq/\` (proposal -> specs -> tasks).
-- \`tasks/<n>.md\` is the osq execution unit; \`tasks.md\` is a write-only projection of \`.run/\` state.
-- \`.run/\` markers track execution state: \`running/<n>.pid\`, \`done/<n>\`, \`dead/<n>.md\`, \`regressed/<n>.md\`, and \`approved\`.
-- State is derived purely from the marker files on disk; nothing depends on in-memory state.
-
-## Gates and executor permissions
-
-- Approval gate: only \`osq approve\`, run by a human, writes \`.run/approved\` after linting and hashing the change.
-- Verification gate: the watcher alone re-runs each task's \`verify\` against the final tree before writing \`done\`.
-- An agent writes only \`.run/results/<n>.md\` and files inside \`scope\`; it never edits living capability specs, \`tasks.md\`, or marker files.
-
-## Planning a change
-
-- When asked to plan a change, read \`plan-prompt.md\` in the selected change
-  folder and follow it exactly.
-- Write only inside that change folder.
-- Run \`osq lint <slug>\` and fix every finding before you finish.
-- Never run \`osq approve\`; approval belongs to a human.
+5. Minimal code to pass. Write only \`.run/results/<n>.md\` and files inside the task's \`scope\`; the task's \`scope\` wins over any other ownership rule you were given.
+6. New test files are always allowed. Change a preexisting test only when the task sets \`tests.modify: true\` and the file is inside \`scope\`; any other test change kills the task.
+7. Run the task's \`verify\` command before exiting. Then run the proposal's \`verify\`; the watcher runs both itself and kills the task if either fails.
 
 ## Exiting
 
 Write \`.run/results/<n>.md\` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
+
+## Where things live
+
+- Living capability specs live under \`openspec/specs/\` as \`<capability>/spec.md\`. Never edit them; the watcher applies approved deltas at archive.
+- In-flight changes live under \`openspec/changes/<id>-<slug>/\`: \`proposal.md\`, delta specs as \`specs/<capability>/spec.md\`, and one \`tasks/<n>.md\` per task.
+- \`tasks.md\` and every file under \`.run/\` except your result file belong to the watcher and the human. Never edit them.
+- Approval gate: only \`osq approve\`, run by a human, writes \`.run/approved\`. Verification gate: only the watcher's own \`verify\` run marks a task done.
+
+## Planning a change
+
+Planners follow \`PLANNER.md\`. When \`osq plan\` started you, \`plan-prompt.md\` in the selected change folder is your complete prompt; read it and follow it exactly.
+
+- Write only inside that change folder.
+- Run \`osq lint <slug>\` and fix every finding before you finish.
+- Never run \`osq approve\`; approval belongs to a human.
 ${OSQ_END_MARKER}`;
 
 /** @deprecated use {@link MANAGED_AGENTS_MD_BODY}; alias kept for existing importers. */
@@ -48,34 +42,39 @@ export const MANAGED_AGENTS_BLOCK = MANAGED_AGENTS_MD_BODY;
 export const MANAGED_PLANNER_BLOCK = `${OSQ_START_MARKER}
 ## Planning a change
 
-You write the change folder; a cheaper coding agent executes it one task at a
-time and cannot see anything you did not write down. Plan so a literal, narrow
-reader succeeds.
+You write the change folder; a cheaper executor runs it one task at a time,
+sees only what you wrote, and reads it literally.
+
+### Interactive planning
+
+When a human is in the session:
 
 1. Read \`AGENTS.md\`, the capability specs this change touches, and one recent
    archived change end to end.
 2. Reply with the parent spec, the task list (titles only), the capability specs
    this change will write, and any \`## Human steps\`. Stop there.
-3. Write task bodies only after the human approves the list.
+3. Write the change folder only after the human approves the list.
 
 ### Working from the handoff
 
-- Your complete prompt is \`plan-prompt.md\` in the selected change folder; read
-  it and follow it exactly.
+When \`osq plan\` started you, \`plan-prompt.md\` in the selected change folder is
+your complete prompt; read it and follow it exactly.
+
+### Either way
+
 - Write only inside that change folder.
 - Run \`osq lint <slug>\` and fix every finding before you finish.
 - Never run \`osq approve\`; a human owns that gate.
-
-### Before you write a task
-
 - Grep for what already exists; verify every version, flag, or API before use.
 - Write files with the file tool, never through a shell echo.
 
 ### Tasks
 
 - One task per coherent unit. Title is "When X, Y".
-- Every task names its \`scope\`, \`verify\` (no TTY, no network), and the test
-  files it may modify. Tests not listed are frozen.
+- Every task names its \`scope\` and \`verify\` (no TTY, no network). A task that
+  changes a preexisting test sets \`tests.modify: true\` and lists that test in
+  \`scope\`; every other preexisting test is frozen. \`osq lint\` enforces the
+  configured limits on scope patterns and acceptance lines.
 - \`osq init\` and \`osq new\` seed \`verify: node -e "process.exit(0)"\` as a
   planning sentinel, not trusted coverage. \`osq lint\` rejects it; replace it
   before approval with a command that verifies the completed change's final tree.
@@ -87,8 +86,15 @@ reader succeeds.
   completed change, because the watcher and archive recertification run it there
   after later tasks land. A command that passes only mid-change is a planning
   failure.
-- A file belongs to one task. A later task may extend it only when it must; order
-  that later task after the owner and name the shared file in the proposal.
+- By default the watcher also runs the change-level \`verify\` after each task, and
+  a red result kills that task. Every task must leave it green; tasks that pass
+  only together are one task.
+- A file belongs to one task. Before each later task, the watcher re-hashes the
+  resolved \`scope\` of every done task; any change halts the change until a human
+  runs \`osq retry\`. Globs resolve again at every audit, so a broad glob also
+  captures files that later tasks create. When a later task must extend a file,
+  order that later task after the owner, name the shared file in the proposal,
+  and list the expected \`osq retry\` under \`## Human steps\`.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.
