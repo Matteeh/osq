@@ -102,7 +102,7 @@ export async function buildCodexPrompt(options: SpawnTaskOptions): Promise<strin
     '2. Write tests for each acceptance line before implementing.',
     '3. Keep all edits strictly inside scope.',
     `4. Run the task verify command first and start from what fails: ${verifyCommand}`,
-    `5. CRITICAL: Before exiting, you MUST write ${resultRel} documenting: changed, deviated, drift against features/, missing context, and next steps.`,
+    `5. CRITICAL: Before exiting, you MUST write ${resultRel} following the Exiting section of AGENTS.md: changed, deviated, missing context, and for unfinished work which acceptance line is next.`,
     `6. Do not modify tasks.md, ${changeDoc}, or any file outside your scope and ${resultRel}.`,
     `7. When done, write ${resultRel} and exit cleanly.`,
     '',

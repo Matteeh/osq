@@ -328,7 +328,7 @@ None
     assert.ok(prompt.includes('Verify Command: pnpm test tests/sample.test.ts'));
     assert.ok(
       prompt.includes(
-        `1. Read ${taskRelPath}, ${specRelPath}, and features docs referenced in ${specRelPath}.`,
+        `1. Read ${taskRelPath}, ${specRelPath}, then only the delta specs and capability specs the task names.`,
       ),
     );
     assert.ok(prompt.includes('2. Write tests for each acceptance line before implementing.'));
@@ -336,7 +336,7 @@ None
     assert.ok(prompt.includes('4. Verify your work by running: pnpm test tests/sample.test.ts'));
     assert.ok(
       prompt.includes(
-        `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} documenting: changed, deviated, drift against features/, missing context, and next steps.`,
+        `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} following the Exiting section of AGENTS.md: changed, deviated, missing context, and for unfinished work which acceptance line is next.`,
       ),
     );
     assert.ok(

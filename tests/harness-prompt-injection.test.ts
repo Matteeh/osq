@@ -126,6 +126,20 @@ describe('Harness capability rule prompt injection', () => {
     }
   });
 
+  it('points every adapter at the AGENTS.md Exiting section and no retired features/ docs', async () => {
+    const prompts = [
+      buildAgyPrompt(options()),
+      buildOpencodePrompt(options()),
+      await buildCodexPrompt(options()),
+    ];
+
+    for (const prompt of prompts) {
+      assert.ok(prompt.includes('following the Exiting section of AGENTS.md'));
+      assert.ok(!prompt.includes('features/'));
+      assert.ok(!prompt.includes('features docs'));
+    }
+  });
+
   it('treats an explicit empty capabilityRules array as no capability rules', () => {
     const agyPrompt = buildAgyPrompt(options({ capabilityRules: [] }));
     const opencodePrompt = buildOpencodePrompt(options({ capabilityRules: [] }));
