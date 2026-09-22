@@ -8,6 +8,8 @@ If a fresh agent could not pick up a task from the files in the repo alone, the 
 
 ## Install
 
+osq requires Node.js 24 LTS or newer (`engines.node: >=24.0.0`).
+
 ```sh
 npx @matteeh/osq init          # scaffolds the folders below and configuration
 pnpm add -D @matteeh/osq       # adds osq as a devDependency (or npm i -D @matteeh/osq)
@@ -263,6 +265,7 @@ osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq show <id>            change details, tasks, results, dead markers, and event timeline
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
+osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
 osq doctor               validate repository health, harness availability, and pinned validator
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
 ```
@@ -352,6 +355,33 @@ osq report --json        # raw JSON report for scripting and CI pipelines
 ```
 
 `osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. Reported cost sums the `cost` values carried by harness events. Reported cost reflects the harness's internal price table rather than the invoice.
+
+### Delivery Dashboard
+
+```sh
+osq serve                 # local dashboard at the configured serve.port, default http://127.0.0.1:4173/
+osq serve --port 0        # ask the OS for an ephemeral loopback port
+osq serve --open          # launch the printed URL in the default browser
+```
+
+`osq serve` starts a Node HTTP server bound only to `127.0.0.1` and prints its
+exact URL. The CLI `--port` option overrides `serve.port` from `osq.config.ts`;
+`--port 0` requests an operating-system-assigned port, and only integers from 0
+through 65535 are accepted. `--open` launches the printed URL through the
+platform's default browser without adding a runtime dependency.
+
+The dashboard is one hash-routed read-only page: `#/report` renders delivery
+charts, `#/graph` renders the capability archive graph, and `#/changes/<key>`
+renders detailed change evidence. Every request recomputes its document from
+the current filesystem and keeps no cache, and the page treats filesystem
+notifications only as a signal to refetch. It uses system fonts, same-origin
+requests, and no external asset, and respects `prefers-color-scheme`.
+
+`osq serve` is for local inspection only. It has no write endpoint, no
+authentication, no remote binding, and no hosting story; it never starts the
+execution watcher or writes project, cursor, or marker files. SIGINT and SIGTERM
+close the HTTP listener and its filesystem watcher. Startup failures such as an
+address already in use print one actionable error and exit nonzero.
 
 ## Diagnostics & Health
 

@@ -64,7 +64,20 @@ const isAllowedPath = (filePath: string): boolean =>
   filePath === 'LICENSE' ||
   filePath === 'package.json' ||
   filePath.startsWith('dist/') ||
-  filePath.startsWith('templates/');
+  filePath.startsWith('templates/') ||
+  filePath.startsWith('ui/dist/');
+
+/** The exact runtime dependency set the published CLI is permitted to ship. */
+const PERMITTED_RUNTIME_DEPENDENCIES = ['chokidar', 'commander', 'jiti', 'yaml'];
+
+/** Frontend packages that must stay private-workspace build dependencies. */
+const PRIVATE_BUILD_DEPENDENCIES = [
+  'react',
+  'react-dom',
+  '@types/react',
+  '@types/react-dom',
+  'vite',
+];
 
 describe('package hygiene', () => {
   it('packs only distribution assets', async () => {
@@ -87,17 +100,33 @@ describe('package hygiene', () => {
       [...paths].some((filePath) => filePath.startsWith('templates/')),
       'tarball is missing templates/',
     );
+
+    assert.ok(paths.has('ui/dist/index.html'), 'tarball is missing ui/dist/index.html');
+    const uiAssets = [...paths].filter((filePath) => filePath.startsWith('ui/dist/assets/'));
+    assert.ok(
+      uiAssets.some((filePath) => /-[A-Za-z0-9_]{8,}\.(?:js|css)$/.test(filePath)),
+      `tarball is missing a fingerprinted UI asset: ${uiAssets.join(', ')}`,
+    );
   });
 
   it('excludes source, tests, configs, workflows, and specs', async () => {
     const files = await npmPackDryRun();
     const paths = files.map((file) => file.path);
 
-    const forbiddenPrefixes = ['src/', 'tests/', '.github/', 'specs/', 'fixture/'];
+    const forbiddenPrefixes = ['src/', 'tests/', '.github/', 'specs/', 'fixture/', 'packages/'];
     for (const prefix of forbiddenPrefixes) {
       const leaked = paths.filter((filePath) => filePath.startsWith(prefix));
       assert.deepEqual(leaked, [], `tarball leaked files under ${prefix}: ${leaked.join(', ')}`);
     }
+
+    const strayUi = paths.filter(
+      (filePath) => filePath.startsWith('ui/') && !filePath.startsWith('ui/dist/'),
+    );
+    assert.deepEqual(
+      strayUi,
+      [],
+      `tarball leaked unstaged UI source or workspace paths: ${strayUi.join(', ')}`,
+    );
 
     const rootSources = paths.filter(
       (filePath) => filePath.endsWith('.ts') && !filePath.endsWith('.d.ts'),
@@ -143,6 +172,7 @@ describe('package hygiene', () => {
     );
     assert.ok(manifest.files?.includes('dist'), 'files must include dist');
     assert.ok(manifest.files?.includes('templates'), 'files must include templates');
+    assert.ok(manifest.files?.includes('ui'), 'files must include the staged ui directory');
     assert.match(
       manifest.scripts?.prepublishOnly ?? '',
       /^npm run build$/,
@@ -169,5 +199,74 @@ describe('package manager independence', () => {
       [],
       `tests must not pass 'pnpm' as a spawn command: ${offenders.join(', ')}`,
     );
+  });
+});
+
+describe('runtime dependency boundary', () => {
+  it('keeps frontend tooling in the private workspace, out of installed runtime dependencies', async () => {
+    const root = JSON.parse(await fs.readFile(path.join(repoRoot, 'package.json'), 'utf8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    const ui = JSON.parse(
+      await fs.readFile(path.join(repoRoot, 'packages', 'ui', 'package.json'), 'utf8'),
+    ) as {
+      private?: boolean;
+      devDependencies?: Record<string, string>;
+    };
+
+    assert.deepEqual(
+      Object.keys(root.dependencies ?? {}).sort(),
+      [...PERMITTED_RUNTIME_DEPENDENCIES].sort(),
+      'published runtime dependency set must stay within its permitted categories',
+    );
+
+    assert.equal(ui.private, true, 'the UI workspace must remain private');
+    for (const name of PRIVATE_BUILD_DEPENDENCIES) {
+      assert.equal(
+        root.dependencies?.[name],
+        undefined,
+        `${name} must not be a runtime dependency`,
+      );
+      assert.equal(
+        root.devDependencies?.[name],
+        undefined,
+        `${name} must not be a root dependency`,
+      );
+      assert.ok(ui.devDependencies?.[name], `${name} must be a private workspace devDependency`);
+    }
+  });
+});
+
+describe('node baseline', () => {
+  it('aligns package metadata, CI, and guidance on Node 24 LTS', async () => {
+    const root = JSON.parse(await fs.readFile(path.join(repoRoot, 'package.json'), 'utf8')) as {
+      engines?: { node?: string };
+      devDependencies?: Record<string, string>;
+    };
+    const ui = JSON.parse(
+      await fs.readFile(path.join(repoRoot, 'packages', 'ui', 'package.json'), 'utf8'),
+    ) as { engines?: { node?: string } };
+
+    assert.equal(root.engines?.node, '>=24.0.0', 'root package must require Node 24');
+    assert.match(
+      root.devDependencies?.['@types/node'] ?? '',
+      /^\^?24\./,
+      'root Node type declarations must track the maintained 24.x line',
+    );
+    assert.equal(ui.engines?.node, '>=24.0.0', 'the UI workspace must require Node 24');
+
+    for (const workflow of ['ci.yml', 'release.yml']) {
+      const text = await fs.readFile(path.join(repoRoot, '.github', 'workflows', workflow), 'utf8');
+      assert.match(
+        text,
+        /node-version:\s*24\b/,
+        `${workflow} must select the maintained Node 24 line`,
+      );
+      assert.doesNotMatch(text, /node-version:\s*22\b/, `${workflow} must not retain Node 22`);
+    }
+
+    const readme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
+    assert.match(readme, /Node(?:\.js)? 24 LTS/, 'README must name the Node 24 LTS baseline');
   });
 });

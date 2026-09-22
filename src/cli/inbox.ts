@@ -1,39 +1,12 @@
-import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { type OsqConfig, loadConfig } from '../core/config.js';
-import { type Inbox, collectLandedItems, formatInboxText, projectInbox } from '../core/inbox.js';
-import { getArchiveDir } from '../core/layout.js';
-import { getStatusOverview } from '../core/status.js';
+import { readLastLook, resolveLastLookPath } from '../core/inbox-cursor.js';
+import { readInbox } from '../core/inbox-projection.js';
+import { type Inbox, formatInboxText } from '../core/inbox.js';
 
-/** Per-project cursor path: `~/.osq/last-look/<sha256(realpath(root))>.json`. */
-export async function resolveLastLookPath(
-  projectRoot: string,
-  home = os.homedir(),
-): Promise<string> {
-  const real = await fs.realpath(projectRoot).catch(() => path.resolve(projectRoot));
-  const hash = createHash('sha256').update(real, 'utf8').digest('hex');
-  return path.join(home, '.osq', 'last-look', `${hash}.json`);
-}
-
-/** Read the cursor as epoch milliseconds; missing, malformed, or invalid => null. */
-export async function readLastLook(
-  projectRoot: string,
-  home = os.homedir(),
-): Promise<number | null> {
-  const cursorPath = await resolveLastLookPath(projectRoot, home);
-  const content = await fs.readFile(cursorPath, 'utf8').catch(() => null);
-  if (content === null) return null;
-  try {
-    const parsed = JSON.parse(content) as { lastLook?: unknown };
-    if (typeof parsed.lastLook !== 'string') return null;
-    const ms = Date.parse(parsed.lastLook);
-    return Number.isFinite(ms) ? ms : null;
-  } catch {
-    return null;
-  }
-}
+export { readLastLook, resolveLastLookPath };
 
 /** Advance the cursor to `timestamp`; never writes inside a change folder. */
 export async function writeLastLook(
@@ -58,8 +31,8 @@ export interface InboxCommandOptions {
 }
 
 /**
- * Read the per-project cursor, project the status snapshot into the inbox,
- * advance the cursor once, then print text or the stable JSON object.
+ * Read the read-only inbox projection, advance the cursor once, then print text
+ * or the stable JSON object. Only this command advances last-look state.
  */
 export async function inboxCommand(options: InboxCommandOptions = {}): Promise<Inbox> {
   const cwd = options.cwd || process.cwd();
@@ -67,12 +40,7 @@ export async function inboxCommand(options: InboxCommandOptions = {}): Promise<I
   const now = options.now ?? new Date();
 
   try {
-    const overview = await getStatusOverview(cwd, config);
-    const lastLookMs = await readLastLook(cwd, options.home);
-    const archiveDir = getArchiveDir(config.paths.openspecRoot, cwd);
-    const landed = await collectLandedItems(archiveDir, lastLookMs);
-    const inbox = projectInbox(overview, landed, now.getTime());
-
+    const inbox = await readInbox(cwd, { config, now, home: options.home });
     await writeLastLook(cwd, now.toISOString(), options.home);
 
     const output = options.json ? JSON.stringify(inbox, null, 2) : formatInboxText(inbox);

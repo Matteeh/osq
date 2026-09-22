@@ -1,0 +1,26 @@
+---
+scope_resolver: 2
+scope_hash: sha256:8139d337874dee6b0426c386dc14cfaaf3fb69a374672fd831bb71dd2d67cc21
+build_stamp: e20a5d2
+exit_code: 0
+scope_files:
+  packages/ui/src/app.tsx: sha256:988759fcbfdf484ea7061598671854e6d5a8c825f71dfaaf2f884e86b2c69d36
+  packages/ui/src/graph/CapabilityPanel.tsx: sha256:981263030cb1b016f076663c330b03132c8d344254cd357146f1b42c5c803445
+  packages/ui/src/graph/ChangeMark.tsx: sha256:56a70e1228d9617d5e6adae5f7c0f7effb3c357d609bc7e922965fdf87cabd75
+  packages/ui/src/graph/GraphCanvas.tsx: sha256:fa7e16f5a53ddf02bf5af15b1a77ea07b834085f29bb6779e6d48c09fd72f574
+  packages/ui/src/graph/GraphControlsBar.tsx: sha256:e46e8ee344bf9199860b76a9caa3f00eeed304d1baf64d8add81b4916474d8ee
+  packages/ui/src/graph/GraphView.tsx: sha256:1afb7178030fdbdabffc814beecc8cdadc3d682f6434477943be07befdd14975
+  packages/ui/src/graph/controls.ts: sha256:29be6914fb1fde7311e6a615432fc8bcfe9180e7287d055ea7c3e1ea72271135
+  packages/ui/src/graph/fill.ts: sha256:9211709bddfd292f206719bebc9741912b88377493017b7531ded983eb3f899b
+  packages/ui/src/graph/format.ts: sha256:31d38f58dde3f54aa82f543dee2996f8e28369403afc02ba6e7ebbb76442b19a
+  packages/ui/src/graph/index.ts: sha256:057ada73b7443503c55aa473239a222515934cb7ac73c529dd2338bbe1884cb5
+  packages/ui/src/graph/interaction.ts: sha256:69fe44262ebf741bfc0b8afad7f1d3e72b9d3acc6f40458823281fe74f8a86dc
+  packages/ui/src/graph/layout.ts: sha256:8527e503b4b48af3fecd6c2acc05e018e0a21f9617a0e93a79061b47306c89da
+  packages/ui/src/graph/relationships.ts: sha256:e53118b8491103e13c0fb0ba9e56279adb8b6d3c52fa1bfdd7cd03d3565fd28d
+  packages/ui/src/graph/types.ts: sha256:f923f2b5e9c04a9df2a3b021b9846a737d9813dab118a8947aee60fe35f33981
+  tests/ui-graph.test.tsx: sha256:980df1a3214d25e91ddc089f91aa93a23d11b9e0a7f0dcddbdd38f951012d331
+original_scope_hash: sha256:6b031523300531af6c67fd1a2fc4348c82ebb62af1f6f3a3cac4295988cd68eb
+recertified_at: 2026-09-22T20:01:29.571Z
+recertification_count: 1
+---
+2026-09-22T18:07:13.029Z

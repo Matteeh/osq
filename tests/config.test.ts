@@ -85,4 +85,44 @@ describe('OsqConfig', () => {
     assert.equal(config.limits.maxScopeFiles, 12);
     assert.equal(config.limits.maxFeatureWrites, 2);
   });
+
+  it('loadConfig reads a serve block from osq.config.ts', async () => {
+    await fs.writeFile(
+      path.join(tmpDir, 'osq.config.ts'),
+      'export default { serve: { port: 0, eventDebounceMs: 5 } };',
+      'utf8',
+    );
+    const config = await loadConfig(tmpDir);
+    assert.deepEqual(config.serve, { port: 0, eventDebounceMs: 5 });
+  });
+});
+
+describe('serve configuration', () => {
+  it('defaults the dashboard port and debounce interval', () => {
+    assert.deepEqual(DEFAULT_CONFIG.serve, { port: 4173, eventDebounceMs: 100 });
+    assert.deepEqual(defineConfig({}).serve, { port: 4173, eventDebounceMs: 100 });
+  });
+
+  it('merges a partial serve block over the defaults', () => {
+    assert.deepEqual(defineConfig({ serve: { port: 0 } }).serve, {
+      port: 0,
+      eventDebounceMs: 100,
+    });
+    assert.deepEqual(defineConfig({ serve: { eventDebounceMs: 250 } }).serve, {
+      port: 4173,
+      eventDebounceMs: 250,
+    });
+  });
+
+  it('rejects non-finite, fractional, negative, and out-of-range ports', () => {
+    for (const port of [-1, 1.5, 65536, Number.NaN, Number.POSITIVE_INFINITY]) {
+      assert.throws(() => defineConfig({ serve: { port } }), /serve\.port/);
+    }
+  });
+
+  it('rejects non-finite and negative debounce values', () => {
+    for (const eventDebounceMs of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      assert.throws(() => defineConfig({ serve: { eventDebounceMs } }), /serve\.eventDebounceMs/);
+    }
+  });
 });

@@ -1,4 +1,6 @@
 export { DEFAULT_CONFIG, defineConfig, loadConfig } from './core/config.js';
+export { DEFAULT_SERVE_CONFIG, isValidPort, validateServeConfig } from './core/config-serve.js';
+export type { ServeConfig } from './core/config-serve.js';
 export type {
   AgyConfig,
   CodexConfig,

@@ -330,14 +330,15 @@ consumer can start `osq serve` without React or Vite in runtime dependencies.
 
 ## Human steps
 
-- Let dependency 043 finish and archive before approving or executing this
-  change; task bodies will be written against 043's final planning and show
-  contracts, not its in-progress worktree.
-- Confirm `4173` as the default dashboard port and `ui/dist` as a shipped npm
-  package path. The proposed CLI runtime dependency set remains unchanged.
-- Confirm the repository-wide Node baseline update from 22 to the Node 24 LTS
-  line. The current verified LTS release at planning time is 24.21.0; task
-  bodies will align package engines, CI, documentation, and UI tooling.
+- Dependency 043 is archived. These task bodies use its final planning, show,
+  report, scope-recertification, and package-hygiene contracts.
+- The delivery choices are `4173` as the default dashboard port and `ui/dist`
+  as the shipped npm package path. The CLI runtime dependency set remains
+  unchanged.
+- The repository-wide baseline moves from Node 22 to the Node 24 LTS line.
+  Node's official release index reports 24.21.0 as the current v24 LTS patch at
+  planning time; package engines, CI, documentation, types, and UI tooling are
+  aligned by the final distribution task.
 - Review this parent contract, delta specs, and task titles. After task bodies
   are added and lint is clean, run `pnpm osq approve 044` yourself. Neither the
   planner nor an executor approves the change.
@@ -350,7 +351,8 @@ consumer can start `osq serve` without React or Vite in runtime dependencies.
   and SSE transport, the shared UI data boundary, three views, and frontend
   architecture and budget rules.
 
-The later task bodies will identify `package.json`, `pnpm-lock.yaml`,
-`pnpm-workspace.yaml`, `src/cli/index.ts`, the UI application shell, and the
-server composition root as intentionally shared files, with every extension
-ordered after the task that first owns the file.
+Tasks 2 and 3 intentionally share `src/core/web-server.ts`. Tasks 4 and 8
+intentionally share `package.json`, `pnpm-lock.yaml`, and
+`pnpm-workspace.yaml`. Tasks 4 through 7 intentionally share
+`packages/ui/src/app.tsx`, with each route replacing only its preceding
+placeholder in order. No other production file is intentionally shared.

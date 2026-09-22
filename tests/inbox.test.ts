@@ -7,8 +7,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { readLastLook, resolveLastLookPath, writeLastLook } from '../src/cli/inbox.js';
+import { writeLastLook } from '../src/cli/inbox.js';
 import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { readLastLook, resolveLastLookPath } from '../src/core/inbox-cursor.js';
+import { readInbox } from '../src/core/inbox-projection.js';
 import {
   type Inbox,
   collectLandedItems,
@@ -540,5 +542,33 @@ describe('bare osq CLI inbox integration', () => {
 
     const cursorPath = await resolveLastLookPath(project, home);
     await assert.rejects(() => fs.stat(cursorPath));
+  });
+
+  it('reads the inbox through a core helper without advancing the cursor', async () => {
+    const { project, home } = await fixtureWithHome();
+    await setLiveLock(project);
+    const cursorPath = await resolveLastLookPath(project, home);
+    await assert.rejects(() => fs.stat(cursorPath));
+
+    const projected = await readInbox(project, { now: new Date(), home });
+    await assert.rejects(() => fs.stat(cursorPath));
+
+    const result = await runBin(project, home, ['--json']);
+    assert.equal(result.code, 0, result.stderr);
+    const cli = JSON.parse(result.stdout) as Inbox;
+
+    assert.deepEqual(projected.needsYou, cli.needsYou);
+    assert.deepEqual(projected.landed, cli.landed);
+    assert.equal(projected.running.length, cli.running.length);
+    for (let index = 0; index < projected.running.length; index++) {
+      assert.equal(projected.running[index].pid, cli.running[index].pid);
+      assert.ok(
+        Math.abs(projected.running[index].elapsedSeconds - cli.running[index].elapsedSeconds) <= 2,
+      );
+    }
+
+    // Only the CLI invocation advances the cursor.
+    const cursor = JSON.parse(await fs.readFile(cursorPath, 'utf8')) as { lastLook: string };
+    assert.ok(Number.isFinite(Date.parse(cursor.lastLook)));
   });
 });

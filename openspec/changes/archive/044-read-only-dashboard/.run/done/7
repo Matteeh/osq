@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:be05daca5835831617866f63a1929e5e77c892d58e8f9373e6d24b14638317a7"
+build_stamp: "e20a5d2"
+exit_code: 0
+scope_files: {"packages/ui/src/app.tsx":"sha256:988759fcbfdf484ea7061598671854e6d5a8c825f71dfaaf2f884e86b2c69d36","packages/ui/src/change/BriefPanel.tsx":"sha256:4a568af016cfd174dd56c64b9ccfa328d8d9b91b5fb9fa87b1def8ca6792d9e6","packages/ui/src/change/ChangeHeader.tsx":"sha256:a575d9053ba49c2a43af87ab1e711f94d847b388a01509a8bbeadb5dcb57ad24","packages/ui/src/change/ChangeView.tsx":"sha256:85c60347bd4536f6b4453bfa57de77cc8684e4a73c75768c4b4230ad4dc26ee3","packages/ui/src/change/Recertifications.tsx":"sha256:b226eaaeda259dab0cdab754bf3d21a417e0e86bf6eebd43797b2f24fcd8f9fe","packages/ui/src/change/ResultDisclosure.tsx":"sha256:9a4add2924c70eb87e6f5daa027eaed4a1dd73430a867926d73dcffe74f11f18","packages/ui/src/change/TaskEvidence.tsx":"sha256:c7d899d334bef3d785ae286fb483836d6b4279e906f3e52b434f6d03f7c3e7d5","packages/ui/src/change/TaskTable.tsx":"sha256:7dda730e50c3cf2a24f4aa142df987851fa12cb4fb0d9d35ec7ffaf876c28c63","packages/ui/src/change/format.ts":"sha256:f8cf241bbb8b6031cf226b294818b4ee8c0d494b450a8afec504394f2dbfd116","packages/ui/src/change/index.ts":"sha256:bd22984f0ec2ece943c6e64a659080bcc727c8c56f1073a39a68a80d8909840b","tests/ui-change.test.tsx":"sha256:b6954342681af50b78c5f920088024481151ddbf92365b9474bfbb6bccbd2e92"}
+---
+2026-09-22T18:16:26.601Z

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+packages/ui/dist/
+ui/dist/
 .env
 .env.local
 *.log

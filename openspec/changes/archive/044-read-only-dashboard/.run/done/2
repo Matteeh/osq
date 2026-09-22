@@ -1,0 +1,23 @@
+---
+scope_resolver: 2
+scope_hash: sha256:d2e65f7e2b0e50a30ce26afcf9269cb5f50738de3110dcfa3ec15d320edbc75b
+build_stamp: e20a5d2
+exit_code: 0
+scope_files:
+  src/cli/index.ts: sha256:cf96e4705e90241f9c254245008fb1702da84f1faa98befec8696e759da29b62
+  src/cli/serve.ts: sha256:c14dfce01ecd5d58d7b09a996386e27553fc1cb04d6b3d573f702aba78ac0d90
+  src/core/config-codex.ts: sha256:b55da2d0fc0894e9103d23cb91dbb1f99f27202827695d2834f60cb182b2a2ca
+  src/core/config-doctor.ts: sha256:128410eeabb9ecc7b0408e804d374fbbfa413a2c234bcc1b7ae559f5b683c280
+  src/core/config-queue.ts: sha256:836d097a822d420d1058aa6e37299d4bc7de8a5e13dad45a8e50d3b6ee183d19
+  src/core/config-serve.ts: sha256:b582974aecdfaafbe3936d77cdfd9b52067c49ded991b34218840dd8b9614aca
+  src/core/config.ts: sha256:5f8a222bc0008302468d98fea7f96438cadd9c5ea02306f02d284520c06bc81b
+  src/core/web-server.ts: sha256:0aa64f2fc01cbcefbcfcd4f7f1680931e53f06edc23afcf080ba8763eaa00857
+  src/core/web-static.ts: sha256:16ce99e94837c0dffd7cc3b98a4eef3319356a4151caeabcf29796386e518c3a
+  src/index.ts: sha256:1b9c66420adfc9b4595e1b347b3a430b67627a6349a9ecd540370a6d2b814bd9
+  tests/config.test.ts: sha256:c985199a5306f12ee04e5dfbecab9bc76460d50a2c057ded92d9c52a63914d0e
+  tests/serve.test.ts: sha256:3d4f319235182f77f3230a4566cca6781f82b113387ed6e64a423592b8d45d26
+original_scope_hash: sha256:17abc534291f2a423a6f1309662da8302dc322252afcb9c08fc7888378ecb6a4
+recertified_at: 2026-09-22T17:30:43.855Z
+recertification_count: 1
+---
+2026-09-22T17:17:30.573Z

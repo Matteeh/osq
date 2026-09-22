@@ -13,6 +13,7 @@ import { queueCommand } from './queue.js';
 import { rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
 import { retryCommand } from './retry.js';
+import { parsePortArgument, serveCommand } from './serve.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
@@ -198,6 +199,21 @@ export function createProgram(version?: string): Command {
     .description('validate repository health, configuration, and archives')
     .action(async () => {
       await doctorCommand();
+    });
+
+  program
+    .command('serve')
+    .description('serve the read-only delivery dashboard on loopback')
+    .option('--port <n>', 'loopback port from 0 through 65535', parsePortArgument)
+    .option('--open', 'open the dashboard URL in the default browser')
+    .action(async (options: { port?: number; open?: boolean }) => {
+      try {
+        await serveCommand(options);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`Error: ${message}`);
+        process.exitCode = 1;
+      }
     });
 
   const origParse = program.parse.bind(program);

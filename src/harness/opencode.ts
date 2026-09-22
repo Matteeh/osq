@@ -157,6 +157,37 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
   args.push('--file', taskRelPath);
   args.push('--file', specRelPath);
 
+  const attachedFiles = new Set([taskRelPath, specRelPath]);
+  const attachExistingFile = (absolutePath: string): void => {
+    let isFile = false;
+    try {
+      isFile = fsSync.statSync(absolutePath).isFile();
+    } catch {}
+    if (!isFile) return;
+    const relativePath = path.relative(projectRoot, absolutePath);
+    if (attachedFiles.has(relativePath)) return;
+    attachedFiles.add(relativePath);
+    args.push('--file', relativePath);
+  };
+
+  // Delta specifications are authored inputs even when they introduce a new
+  // capability with no living spec yet. Attach them directly and never invent
+  // a living-spec path for the OpenCode CLI to reject.
+  let writtenCapabilities: string[] = [];
+  try {
+    writtenCapabilities = (
+      await fs.readdir(path.resolve(specFolderPath, 'specs'), {
+        withFileTypes: true,
+      })
+    )
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+  } catch {}
+  for (const capability of writtenCapabilities) {
+    attachExistingFile(path.resolve(specFolderPath, 'specs', capability, 'spec.md'));
+  }
+
   let featureNames: string[] = [];
   try {
     const taskPath = path.resolve(specFolderPath, 'tasks', `${taskNumber}.md`);
@@ -186,17 +217,6 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
     try {
       const specData = await parseSpecMdFromFolder(specFolderPath);
       if (specData) {
-        // Written capabilities are declared by delta spec folders, not frontmatter.
-        let writtenCapabilities: string[] = [];
-        try {
-          writtenCapabilities = (
-            await fs.readdir(path.resolve(specFolderPath, 'specs'), {
-              withFileTypes: true,
-            })
-          )
-            .filter((entry) => entry.isDirectory())
-            .map((entry) => entry.name);
-        } catch {}
         const allSpecFeatures = [...specData.features.reads, ...writtenCapabilities];
         featureNames = Array.from(new Set(allSpecFeatures.map((s) => s.trim()).filter(Boolean)));
       }
@@ -204,24 +224,19 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
   }
 
   const featuresDirName = config?.paths?.features || 'features';
-  for (const feature of featureNames) {
+  for (const feature of [...new Set(featureNames)].sort()) {
     const candidateOpenSpec = path.resolve(projectRoot, featuresDirName, feature, 'spec.md');
-    let featurePath: string;
     if (fsSync.existsSync(candidateOpenSpec)) {
-      featurePath = candidateOpenSpec;
-    } else {
-      const featureFileName = feature.endsWith('.md') ? feature : `${feature}.md`;
-      if (
-        featureFileName.startsWith('features/') ||
-        featureFileName.startsWith(`${featuresDirName}/`)
-      ) {
-        featurePath = path.resolve(projectRoot, featureFileName);
-      } else {
-        featurePath = path.resolve(projectRoot, featuresDirName, featureFileName);
-      }
+      attachExistingFile(candidateOpenSpec);
+      continue;
     }
-    const featureRelPath = path.relative(projectRoot, featurePath);
-    args.push('--file', featureRelPath);
+
+    const featureFileName = feature.endsWith('.md') ? feature : `${feature}.md`;
+    const legacyPath =
+      featureFileName.startsWith('features/') || featureFileName.startsWith(`${featuresDirName}/`)
+        ? path.resolve(projectRoot, featureFileName)
+        : path.resolve(projectRoot, featuresDirName, featureFileName);
+    attachExistingFile(legacyPath);
   }
   return args;
 }

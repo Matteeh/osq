@@ -1,0 +1,26 @@
+---
+scope_resolver: 2
+scope_hash: sha256:10f94920c0021c6f37517dc13dd2be2309207765cb9f33cbbc44dc182ccb9fb4
+build_stamp: e20a5d2
+exit_code: 0
+scope_files:
+  packages/ui/src/app.tsx: sha256:988759fcbfdf484ea7061598671854e6d5a8c825f71dfaaf2f884e86b2c69d36
+  packages/ui/src/report/CostChart.tsx: sha256:b8ef47d126622439ba44bdcac15d3dd7b887382679509d6cb2c9d5b42face201
+  packages/ui/src/report/DurationChart.tsx: sha256:9f901dc8996ca50b391ffe9d735697d9cb1ed5c8bbb0b5ee1c733a32aceb7072
+  packages/ui/src/report/Figure.tsx: sha256:7ef134e072926208abbc6d9cfcc4a25c6ceb560e6da415827aa5a55baf59a34f
+  packages/ui/src/report/PassChart.tsx: sha256:65b8ea1244de70c0bd5264aeaac3359d75f9e53c44398489ac22a2f2e6e71601
+  packages/ui/src/report/ReportView.tsx: sha256:1922a9c49249f54a018348b31de0c59d7e95292b34fa09cdef6bb80466ebd2e5
+  packages/ui/src/report/RepositoryTotals.tsx: sha256:04c84cdde4c2d39cf698b943720e00194b8abf634946ae7bd1e089040fdda4da
+  packages/ui/src/report/ScopePanel.tsx: sha256:5dcf477f1ba40b4594b5967f1c501ec0315b140e887ec29377dc7bdd3554ab67
+  packages/ui/src/report/TokenChart.tsx: sha256:e36c46e4f8beea57a4f4371530d710d4cf2cc17e1e15b157ee79fa00bc8f0dda
+  packages/ui/src/report/WritesChart.tsx: sha256:ce0978ebe9a35b06a5dc4f7137d969bf84580b0fbc0708f25bac90fb3696b7fd
+  packages/ui/src/report/format.ts: sha256:1cab16ee489269c4a3332a31989bf24283db70d40a7b85024142519649d4cc15
+  packages/ui/src/report/index.ts: sha256:b45fa8dbde0866efba3a9018efe4e5a8bba89921409c35fad524d0d61ec14827
+  packages/ui/src/report/landed.ts: sha256:fd02ee881ead7471065cc772d3aac0ff879a4fbfecd2ad4d3c7a310db4ab4d20
+  packages/ui/src/report/scales.ts: sha256:93d28073574c348ff48d3d41a069da2bed88707d9f7e2ff7b3bceb93ceac79d9
+  tests/ui-report.test.tsx: sha256:a687276129f0b5c7a603f1dc16468ebe29ba25be6eb58d01a74254f974d5843a
+original_scope_hash: sha256:f87f25c77f7dd2e922cfa74c46336ce0a02dc049aefd595d5289e6bc10907404
+recertified_at: 2026-09-22T20:01:05.874Z
+recertification_count: 2
+---
+2026-09-22T17:53:53.647Z

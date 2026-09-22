@@ -144,7 +144,7 @@ describe('release workflow', () => {
     assert.doesNotMatch(workflowText, /\.npmrc/, 'workflow must not create .npmrc auth files');
   });
 
-  it('sets up the runner with checkout, pnpm, and Node 22', () => {
+  it('sets up the runner with checkout, pnpm, and Node 24', () => {
     const steps = releaseSteps();
     const uses = steps.map((step) => step.uses ?? '');
 
@@ -162,8 +162,8 @@ describe('release workflow', () => {
     assert.ok(setupNodeIndex >= 0, 'workflow must set up Node.js');
     assert.equal(
       String((steps[setupNodeIndex] as WorkflowStep).with?.['node-version']),
-      '22',
-      'workflow must use Node 22',
+      '24',
+      'workflow must use Node 24',
     );
 
     const pnpmSetup = findPnpmSetupStep(steps);

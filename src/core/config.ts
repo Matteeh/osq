@@ -3,10 +3,12 @@ import path from 'node:path';
 import { createJiti } from 'jiti';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
+import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
 import { HARNESS_CATALOG } from './harness-catalog.js';
 
 export type { CodexConfig } from './config-codex.js';
 export type { QueueConfig } from './config-queue.js';
+export type { ServeConfig } from './config-serve.js';
 
 export interface OsqLimits {
   readonly maxScopeFiles: number;
@@ -66,6 +68,7 @@ export interface OsqConfig {
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
   readonly queue?: QueueConfig;
+  readonly serve?: Partial<ServeConfig>;
 }
 
 export type OsqUserConfig = Partial<
@@ -88,6 +91,7 @@ export type OsqUserConfig = Partial<
 export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
+  serve: DEFAULT_SERVE_CONFIG,
   agy: {
     model: 'gemini-3.8-flash-high',
     dangerouslySkipPermissions: true,
@@ -129,10 +133,12 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   }
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const codex = validateCodexConfig(config.codex);
+  const serve = validateServeConfig(config.serve);
 
   return {
     ...DEFAULT_CONFIG,
     ...restConfig,
+    serve,
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     agy: {

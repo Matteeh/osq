@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
-import { getArchiveDir, getChangesDir } from './layout.js';
+import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from './parser.js';
 import { readPlanningSessions } from './planning.js';
 import { formatDuration } from './report.js';
@@ -48,6 +48,8 @@ export interface TaskDetail {
   acceptance: string[];
   deadReason?: string;
   deadDiagnostic?: string;
+  regressedReason?: string;
+  regressedDiagnostic?: string;
   resultContent?: string;
   events: TimelineEvent[];
 }
@@ -73,6 +75,7 @@ export interface SpecDetails {
   folderName: string;
   folderPath: string;
   isArchived: boolean;
+  location: 'active' | 'archived' | 'rejected';
   title: string;
   status: SpecStatus;
   approvedHash: string | null;
@@ -186,7 +189,11 @@ export async function resolveSpecFolder(
   projectRoot: string,
   idOrPrefix: string,
   config: OsqConfig = DEFAULT_CONFIG,
-): Promise<{ folderPath: string; isArchived: boolean }> {
+): Promise<{
+  folderPath: string;
+  isArchived: boolean;
+  location: 'active' | 'archived' | 'rejected';
+}> {
   const trimmed = idOrPrefix.trim();
   if (!trimmed) {
     throw new Error('Spec ID or prefix cannot be empty');
@@ -194,15 +201,20 @@ export async function resolveSpecFolder(
 
   const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
+  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
 
   // If directly pointing to an existing folder
   if (path.isAbsolute(trimmed) || trimmed.includes(path.sep)) {
     const candidatePath = path.isAbsolute(trimmed) ? trimmed : path.resolve(projectRoot, trimmed);
     const stat = await fs.stat(candidatePath).catch(() => null);
     if (stat?.isDirectory()) {
-      const isArchived =
-        candidatePath === archiveDir || candidatePath.startsWith(`${archiveDir}${path.sep}`);
-      return { folderPath: candidatePath, isArchived };
+      const location =
+        candidatePath === archiveDir || candidatePath.startsWith(`${archiveDir}${path.sep}`)
+          ? 'archived'
+          : candidatePath === rejectedDir || candidatePath.startsWith(`${rejectedDir}${path.sep}`)
+            ? 'rejected'
+            : 'active';
+      return { folderPath: candidatePath, isArchived: location === 'archived', location };
     }
   }
 
@@ -219,42 +231,67 @@ export async function resolveSpecFolder(
     !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
       ? archiveRel.split(path.sep)[0]
       : 'archive';
+  const rejectedRel = path.relative(specsDir, rejectedDir);
+  const rejectedFolder =
+    !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
+      ? rejectedRel.split(path.sep)[0]
+      : 'rejected';
 
   for (const entry of activeEntries) {
-    if (entry.startsWith('.') || entry.startsWith('_') || entry === archiveFolder) {
+    if (
+      entry.startsWith('.') ||
+      entry.startsWith('_') ||
+      entry === archiveFolder ||
+      entry === rejectedFolder
+    ) {
       continue;
     }
     if (matchesFolder(entry, trimmed)) {
       const fullPath = path.join(specsDir, entry);
       const stat = await fs.stat(fullPath).catch(() => null);
       if (stat?.isDirectory()) {
-        return { folderPath: fullPath, isArchived: false };
+        return { folderPath: fullPath, isArchived: false, location: 'active' };
       }
     }
   }
 
   // 2. Search archive directory
-  let archiveEntries: string[] = [];
+  const archived = await searchFolder(archiveDir, trimmed, 'archived');
+  if (archived) return archived;
+
+  // 3. Search rejected directory
+  const rejected = await searchFolder(rejectedDir, trimmed, 'rejected');
+  if (rejected) return rejected;
+
+  throw new Error(`Spec "${idOrPrefix}" not found in specs or archive`);
+}
+
+/** Search one canonical location directory for a folder matching the query. */
+async function searchFolder(
+  dir: string,
+  query: string,
+  location: 'archived' | 'rejected',
+): Promise<{ folderPath: string; isArchived: boolean; location: 'archived' | 'rejected' } | null> {
+  let entries: string[] = [];
   try {
-    archiveEntries = await fs.readdir(archiveDir);
+    entries = await fs.readdir(dir);
   } catch {
-    archiveEntries = [];
+    return null;
   }
 
-  for (const entry of archiveEntries) {
+  for (const entry of entries) {
     if (entry.startsWith('.') || entry.startsWith('_')) {
       continue;
     }
-    if (matchesFolder(entry, trimmed)) {
-      const fullPath = path.join(archiveDir, entry);
+    if (matchesFolder(entry, query)) {
+      const fullPath = path.join(dir, entry);
       const stat = await fs.stat(fullPath).catch(() => null);
       if (stat?.isDirectory()) {
-        return { folderPath: fullPath, isArchived: true };
+        return { folderPath: fullPath, isArchived: location === 'archived', location };
       }
     }
   }
-
-  throw new Error(`Spec "${idOrPrefix}" not found in specs or archive`);
+  return null;
 }
 
 export async function getSpecDetails(
@@ -262,7 +299,30 @@ export async function getSpecDetails(
   specIdOrPrefix: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<SpecDetails> {
-  const { folderPath, isArchived } = await resolveSpecFolder(projectRoot, specIdOrPrefix, config);
+  const { folderPath, location } = await resolveSpecFolder(projectRoot, specIdOrPrefix, config);
+  return buildSpecDetails(projectRoot, folderPath, location, config);
+}
+
+/**
+ * Builds the complete change detail for an already resolved folder in any of
+ * the three canonical locations. Selector discovery stays with the caller.
+ */
+export async function getSpecDetailsFromFolder(
+  projectRoot: string,
+  folderPath: string,
+  location: 'active' | 'archived' | 'rejected',
+  config: OsqConfig = DEFAULT_CONFIG,
+): Promise<SpecDetails> {
+  return buildSpecDetails(projectRoot, folderPath, location, config);
+}
+
+async function buildSpecDetails(
+  projectRoot: string,
+  folderPath: string,
+  location: 'active' | 'archived' | 'rejected',
+  _config: OsqConfig,
+): Promise<SpecDetails> {
+  const isArchived = location === 'archived';
 
   const folderName = path.basename(folderPath);
   const idMatch = folderName.match(/^(\d+)/);
@@ -428,8 +488,18 @@ export async function getSpecDetails(
     const deadPath = path.join(runDir, 'dead', `${taskNumber}.md`);
     let deadReason: string | undefined;
     let deadDiagnostic: string | undefined;
+    let regressedReason: string | undefined;
+    let regressedDiagnostic: string | undefined;
+    const regressedPath = path.join(runDir, 'regressed', `${taskNumber}.md`);
+    const regressedContent = await fs.readFile(regressedPath, 'utf8').catch(() => null);
     const deadContent = await fs.readFile(deadPath, 'utf8').catch(() => null);
-    if (deadContent !== null) {
+    if (regressedContent !== null) {
+      status = 'regressed';
+      const parsedRegressed = parseFrontmatter(regressedContent);
+      regressedReason =
+        typeof parsedRegressed.data.reason === 'string' ? parsedRegressed.data.reason : undefined;
+      regressedDiagnostic = parsedRegressed.body.trim() || undefined;
+    } else if (deadContent !== null) {
       status = 'dead';
       const parsedDead = parseFrontmatter(deadContent);
       deadReason = typeof parsedDead.data.reason === 'string' ? parsedDead.data.reason : undefined;
@@ -471,6 +541,8 @@ export async function getSpecDetails(
       acceptance: taskData.acceptance,
       deadReason,
       deadDiagnostic,
+      regressedReason,
+      regressedDiagnostic,
       resultContent,
       events: taskEvents,
     });
@@ -482,6 +554,8 @@ export async function getSpecDetails(
     status = 'done';
   } else if (!approvedHash) {
     status = 'unapproved';
+  } else if (tasks.some((t) => t.status === 'regressed')) {
+    status = 'regressed';
   } else if (tasks.some((t) => t.status === 'dead')) {
     status = 'dead';
   } else if (tasks.some((t) => t.status === 'running')) {
@@ -502,6 +576,7 @@ export async function getSpecDetails(
     folderName,
     folderPath,
     isArchived,
+    location,
     title: specData.title,
     status,
     approvedHash,

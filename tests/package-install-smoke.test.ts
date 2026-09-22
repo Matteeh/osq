@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -57,6 +57,49 @@ async function exists(filePath: string): Promise<boolean> {
     .stat(filePath)
     .then(() => true)
     .catch(() => false);
+}
+
+/** Wait for `osq serve` to print its one loopback URL, under a hard timeout. */
+function waitForServeUrl(child: ChildProcess, timeoutMs = 20000): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let buffer = '';
+    const timer = setTimeout(() => {
+      finish(new Error(`serve did not report a URL within ${timeoutMs}ms; stdout: ${buffer}`));
+    }, timeoutMs);
+    const onData = (chunk: Buffer | string) => {
+      buffer += chunk.toString();
+      const match = buffer.match(/http:\/\/127\.0\.0\.1:(\d+)\//);
+      if (match) finish(null, match[0]);
+    };
+    const onExit = (code: number | null) => {
+      finish(new Error(`serve exited with code ${code} before reporting a URL; stdout: ${buffer}`));
+    };
+    const finish = (error: Error | null, url?: string) => {
+      clearTimeout(timer);
+      child.stdout?.off('data', onData);
+      child.off('exit', onExit);
+      if (error) reject(error);
+      else resolve(url ?? '');
+    };
+    child.stdout?.on('data', onData);
+    child.once('exit', onExit);
+  });
+}
+
+/** Send SIGTERM and resolve the exit code, rejecting if it does not exit promptly. */
+function stopServe(child: ChildProcess, timeoutMs = 10000): Promise<number | null> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve(child.exitCode);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`serve did not exit within ${timeoutMs}ms after SIGTERM`)),
+      timeoutMs,
+    );
+    child.once('exit', (code) => {
+      clearTimeout(timer);
+      resolve(code);
+    });
+    child.kill('SIGTERM');
+  });
 }
 
 describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
@@ -180,5 +223,66 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
 
     const specMd = await fs.readFile(path.join(specDir, 'proposal.md'), 'utf8');
     assert.match(specMd, /^title: smoke$/m, 'proposal.md must carry the requested title');
+  });
+
+  it('serves the packaged dashboard on an ephemeral loopback port and shuts down cleanly', async () => {
+    assert.ok(setupComplete, 'Smoke test setup did not complete');
+
+    const installedPackage = path.join(consumerDir, 'node_modules', '@matteeh', 'osq');
+    const installedManifest = JSON.parse(
+      await fs.readFile(path.join(installedPackage, 'package.json'), 'utf8'),
+    ) as { dependencies?: Record<string, string> };
+    for (const name of ['react', 'react-dom', '@types/react', '@types/react-dom', 'vite']) {
+      assert.equal(
+        installedManifest.dependencies?.[name],
+        undefined,
+        `${name} must not appear in the installed runtime dependencies`,
+      );
+    }
+    assert.ok(
+      await exists(path.join(installedPackage, 'ui', 'dist', 'index.html')),
+      'installed package must ship ui/dist/index.html',
+    );
+
+    const executable = path.join(installedPackage, 'dist', 'cli', 'bin.js');
+    const child = spawn(process.execPath, [executable, 'serve', '--port', '0'], {
+      cwd: consumerDir,
+      env: smokeEnv,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    try {
+      const url = await waitForServeUrl(child);
+      const parsed = new URL(url);
+      assert.equal(parsed.hostname, '127.0.0.1', 'serve must bind loopback only');
+      assert.notEqual(parsed.port, '', 'serve must report its bound port');
+
+      const index = await fetch(url);
+      assert.equal(index.status, 200, 'packaged index must respond 200');
+      assert.match(
+        index.headers.get('content-type') ?? '',
+        /text\/html/,
+        'packaged index must be served as HTML',
+      );
+      const html = await index.text();
+      const assetPath = html.match(/src="(\/assets\/[^"]+)"/)?.[1];
+      assert.ok(assetPath, 'packaged index must reference a fingerprinted asset');
+
+      const asset = await fetch(new URL(assetPath, url));
+      assert.equal(asset.status, 200, 'packaged asset must respond 200');
+      assert.match(
+        asset.headers.get('content-type') ?? '',
+        /javascript/,
+        'packaged asset must be served with a script content type',
+      );
+      assert.ok((await asset.text()).length > 0, 'packaged asset must not be empty');
+
+      const exitCode = await stopServe(child);
+      assert.equal(exitCode, 0, 'serve must exit cleanly after SIGTERM');
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill('SIGKILL');
+      }
+    }
   });
 });

@@ -16,12 +16,18 @@
     "osq": "dist/cli/bin.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "lint": "biome check src tests",
-    "format": "biome format --write src tests",
-    "test": "node --import tsx --test 'tests/**/*.test.ts'",
+    "build": "pnpm build:ui && pnpm stage:ui && pnpm build:cli",
+    "build:cli": "tsc -p tsconfig.build.json",
+    "build:ui": "pnpm --filter @osq/ui build",
+    "stage:ui": "node scripts/stage-ui.mjs",
+    "clean:ui": "node scripts/stage-ui.mjs --clean",
+    "lint": "biome check src tests packages/ui/src",
+    "format": "biome format --write src tests packages/ui/src",
+    "test": "node --import tsx --test 'tests/**/*.test.ts' && TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.json node --import tsx --test 'tests/**/*.test.tsx'",
     "test:golden": "node --import tsx --test tests/golden-events.test.ts",
-    "verify": "pnpm tsc --noEmit && pnpm test && pnpm lint",
+    "typecheck:cli": "tsc --noEmit -p packages/ui/tsconfig.cli.json",
+    "typecheck:ui": "pnpm --filter @osq/ui typecheck",
+    "verify": "pnpm typecheck:cli && pnpm typecheck:ui && pnpm build && pnpm test && pnpm lint",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -33,7 +39,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@fission-ai/openspec": "1.13.1",
-    "@types/node": "^22.13.9",
+    "@types/node": "^24.13.6",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   },
@@ -48,7 +54,7 @@
   "author": "Mathias",
   "license": "MIT",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -60,7 +66,8 @@
   },
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "ui"
   ],
   "publishConfig": {
     "access": "public"

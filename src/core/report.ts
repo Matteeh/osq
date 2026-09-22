@@ -5,6 +5,14 @@ import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { parseFrontmatter, parseTaskMd } from './parser.js';
 import { readPlanningSessions } from './planning.js';
 import { type QueueReport, readQueueReport } from './queue-report.js';
+import {
+  asData,
+  eventTimestampMs,
+  observeAttempts,
+  observeTaskStream,
+  parseEventLines,
+  parseTokenEvent,
+} from './report-events.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from './state.js';
 
 export interface SpecMetrics {
@@ -303,30 +311,6 @@ interface DiscoveredTask {
   readonly status: TaskStatus;
 }
 
-/** Parse one append-only jsonl stream, skipping blank and malformed lines defensively. */
-function parseEventLines(content: string): Record<string, unknown>[] {
-  const events: Record<string, unknown>[] = [];
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        events.push(parsed as Record<string, unknown>);
-      }
-    } catch {}
-  }
-  return events;
-}
-
-function asData(event: Record<string, unknown>): Record<string, unknown> | null {
-  const data = event.data;
-  if (data && typeof data === 'object' && !Array.isArray(data)) {
-    return data as Record<string, unknown>;
-  }
-  return null;
-}
-
 const SIZE_BUCKETS = ['1-2', '3-4', '5-8', 'over-8'] as const;
 
 function round2(value: number): number {
@@ -339,13 +323,6 @@ function bucketForSize(value: number): string {
   if (value <= 4) return '3-4';
   if (value <= 8) return '5-8';
   return 'over-8';
-}
-
-/** Event timestamp in epoch milliseconds, or null when missing or invalid. */
-function eventTimestampMs(event: Record<string, unknown>): number | null {
-  if (typeof event.timestamp !== 'string') return null;
-  const ms = Date.parse(event.timestamp);
-  return Number.isFinite(ms) ? ms : null;
 }
 
 /**
@@ -400,69 +377,38 @@ function deriveMeasuredTask(
 ): Omit<MeasuredTask, 'title' | 'acceptanceLines'> | null {
   let scopeFiles: number | null = null;
   let scopeResolver: unknown;
-  let attempts = 0;
-  let firstAttemptActive = false;
-  let firstAttemptResolved = false;
-  let firstAttemptPass = false;
   let pendingStartMs: number | null = null;
   let coveredMs = 0;
   let hasDuration = false;
 
   for (const event of events) {
-    if (event.type === 'measures') {
-      const data = asData(event);
-      if (data?.phase === 'start') {
-        const rawScopeFiles = data.scopeFiles;
-        if (
-          scopeFiles === null &&
-          typeof rawScopeFiles === 'number' &&
-          Number.isFinite(rawScopeFiles) &&
-          rawScopeFiles >= 0
-        ) {
-          scopeFiles = rawScopeFiles;
-          scopeResolver = data.scopeResolver;
-        }
-        pendingStartMs = eventTimestampMs(event);
-      } else if (data?.phase === 'end') {
-        const endMs = eventTimestampMs(event);
-        if (pendingStartMs !== null && endMs !== null && endMs >= pendingStartMs) {
-          coveredMs += endMs - pendingStartMs;
-          hasDuration = true;
-        }
-        pendingStartMs = null;
+    if (event.type !== 'measures') continue;
+    const data = asData(event);
+    if (data?.phase === 'start') {
+      const rawScopeFiles = data.scopeFiles;
+      if (
+        scopeFiles === null &&
+        typeof rawScopeFiles === 'number' &&
+        Number.isFinite(rawScopeFiles) &&
+        rawScopeFiles >= 0
+      ) {
+        scopeFiles = rawScopeFiles;
+        scopeResolver = data.scopeResolver;
       }
-      continue;
-    }
-
-    if (event.type === 'started') {
-      attempts++;
-      if (firstAttemptActive) {
-        firstAttemptResolved = true;
-        firstAttemptActive = false;
-      } else if (!firstAttemptResolved) {
-        firstAttemptActive = true;
+      pendingStartMs = eventTimestampMs(event);
+    } else if (data?.phase === 'end') {
+      const endMs = eventTimestampMs(event);
+      if (pendingStartMs !== null && endMs !== null && endMs >= pendingStartMs) {
+        coveredMs += endMs - pendingStartMs;
+        hasDuration = true;
       }
-      continue;
-    }
-
-    if (event.type === 'done') {
-      if (firstAttemptActive && !firstAttemptResolved) {
-        firstAttemptPass = true;
-        firstAttemptResolved = true;
-        firstAttemptActive = false;
-      }
-      continue;
-    }
-
-    if (event.type === 'dead' || event.type === 'regressed') {
-      if (firstAttemptActive && !firstAttemptResolved) {
-        firstAttemptResolved = true;
-        firstAttemptActive = false;
-      }
+      pendingStartMs = null;
     }
   }
 
   if (scopeFiles === null) return null;
+
+  const { attempts, firstAttemptPass } = observeAttempts(events);
 
   return {
     change,
@@ -976,69 +922,30 @@ export async function getMetricsReport(
       ? await fs.readFile(task.eventFilePath, 'utf8').catch(() => '')
       : '';
 
-    let taskAttempts = 0;
-    let hasPriorStarted = false;
-    let gapExplained = true;
-    let attemptReportedCost = false;
-    let taskUnexplained = 0;
-    const verifyCodes: (number | null)[] = [];
-
-    for (const event of parseEventLines(content)) {
-      const data = asData(event);
-      const type = event.type;
-
-      if (type === 'started') {
-        taskAttempts++;
-        attemptsTotal++;
-        if (hasPriorStarted && !gapExplained) {
-          taskUnexplained++;
-          unexplainedTotal++;
-        }
-        hasPriorStarted = true;
-        gapExplained = false;
-        attemptReportedCost = false;
-      } else if (type === 'dead') {
-        gapExplained = true;
-        const rawReason = data?.reason;
-        const reason =
-          typeof rawReason === 'string' && rawReason.trim() ? rawReason.trim() : 'unknown';
-        deadByReason[reason] = (deadByReason[reason] ?? 0) + 1;
-      } else if (type === 'regressed') {
-        gapExplained = true;
-        if (data?.reason === 'scope_regression') {
-          scopeDetected++;
-          const rawExit = data.exitCode;
-          if (typeof rawExit === 'number' && Number.isFinite(rawExit)) {
-            if (rawExit === 0) scopeVerificationPassed++;
-            else scopeVerificationFailed++;
-          }
-        }
-      } else if (type === 'recertification') {
-        if (data?.outcome === 'passed') scopeRecertifiedByHuman++;
-        else if (data?.outcome === 'requeued') scopeRequeuedForAgent++;
-      } else if (type === 'verify_ran') {
-        verifyTotal++;
-        const rawExit = data?.exitCode;
-        const exitCode = typeof rawExit === 'number' && Number.isFinite(rawExit) ? rawExit : null;
-        if (exitCode === null) verifyMissingExitCode++;
-        verifyCodes.push(exitCode);
-      }
-
-      const rawCost = data?.cost;
-      if (typeof rawCost === 'number' && Number.isFinite(rawCost)) {
-        totalCost += rawCost;
-        perSpecCost[task.changeId] = (perSpecCost[task.changeId] ?? 0) + rawCost;
-        if (hasPriorStarted && !attemptReportedCost) {
-          attemptReportedCost = true;
-          reportedCostAttempts++;
-        }
-      }
+    const observation = observeTaskStream(parseEventLines(content));
+    const taskAttempts = observation.attempts;
+    attemptsTotal += taskAttempts;
+    unexplainedTotal += observation.unexplained;
+    for (const [reason, count] of Object.entries(observation.deadByReason)) {
+      deadByReason[reason] = (deadByReason[reason] ?? 0) + count;
     }
+    verifyTotal += observation.verifyCodes.length;
+    verifyMissingExitCode += observation.verifyCodes.filter((code) => code === null).length;
+    for (const value of observation.costValues) {
+      totalCost += value;
+      perSpecCost[task.changeId] = (perSpecCost[task.changeId] ?? 0) + value;
+    }
+    reportedCostAttempts += observation.costReportedAttempts;
+    scopeDetected += observation.scopeDetected;
+    scopeVerificationPassed += observation.scopeVerificationPassed;
+    scopeVerificationFailed += observation.scopeVerificationFailed;
+    scopeRecertifiedByHuman += observation.scopeRecertifiedByHuman;
+    scopeRequeuedForAgent += observation.scopeRequeuedForAgent;
 
     attemptsByTask[task.id] = taskAttempts;
     if (taskAttempts > 1) multipleAttempts.push(task.id);
-    if (taskUnexplained > 0) unexplainedByTask[task.id] = taskUnexplained;
-    if (verifyCodes.length > 0) verifyByTask[task.id] = verifyCodes;
+    if (observation.unexplained > 0) unexplainedByTask[task.id] = observation.unexplained;
+    if (observation.verifyCodes.length > 0) verifyByTask[task.id] = [...observation.verifyCodes];
   }
 
   for (const changeCoverage of Object.values(coverageByChange)) {
@@ -1096,55 +1003,12 @@ export async function getMetricsReport(
         }
 
         if (event.type === 'tokens' && data) {
-          const input =
-            Number(data.input ?? data.input_tokens ?? data.promptTokens ?? data.prompt ?? 0) || 0;
-          const output =
-            Number(
-              data.output ??
-                data.output_tokens ??
-                data.candidateTokens ??
-                data.candidate ??
-                data.completionTokens ??
-                0,
-            ) || 0;
-          const reasoning =
-            Number(data.reasoningTokens ?? data.reasoning ?? data.thinking_tokens ?? 0) || 0;
-
-          const cacheValue =
-            typeof data.cache === 'number'
-              ? data.cache
-              : typeof data.cache === 'object' && data.cache !== null && !Array.isArray(data.cache)
-                ? (data.cache as Record<string, unknown>).read
-                : undefined;
-          const reportedCachedInput =
-            Number(
-              data.cached_input ?? data.cachedTokens ?? data.cache_read_tokens ?? cacheValue ?? 0,
-            ) || 0;
-          const hasReportedCache =
-            data.cachedTokens !== undefined ||
-            data.cached_input !== undefined ||
-            data.cache_read_tokens !== undefined ||
-            cacheValue !== undefined;
-
-          const rawTotal = data.total ?? data.totalTokens;
-          const hasReportedTotal = rawTotal !== undefined && rawTotal !== null;
-          const reportedTotal = Number(rawTotal) || 0;
-
-          // A harness-reported cache counter is authoritative. The remainder
-          // formula (total minus input, output, and reasoning) is a fallback
-          // used strictly when the event carries no cache field at all.
-          const cachedInput = hasReportedCache
-            ? reportedCachedInput
-            : hasReportedTotal
-              ? Math.max(0, reportedTotal - input - output - reasoning)
-              : 0;
-          const total = hasReportedTotal ? reportedTotal : input + cachedInput + output + reasoning;
-
-          totalInput += input;
-          totalCachedInput += cachedInput;
-          totalOutput += output;
-          totalReasoning += reasoning;
-          totalTokens += total;
+          const delta = parseTokenEvent(data);
+          totalInput += delta.input;
+          totalCachedInput += delta.cachedInput;
+          totalOutput += delta.output;
+          totalReasoning += delta.reasoning;
+          totalTokens += delta.total;
         }
 
         if (event.type === 'tool' && data) {

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2f333ec914225a1543ad775e22b0110de67a509323f59cd5beac66cac2b343b4"
+build_stamp: "e20a5d2"
+exit_code: 0
+scope_files: {".github/workflows/ci.yml":"sha256:15289a990973359cb419ce9ad8af1e70a3a1cfcce4551aedf77e1b7b67146c13",".github/workflows/release.yml":"sha256:b5b536e4524f9239954f7d5f71c3483d528effa627fad2c3115bee9e22dc2a16","README.md":"sha256:554539b902ff2da901af94170b7b90dc0ff69449076864a4ece3a476548236cc","package.json":"sha256:3f78ba11a91eef75f4baec3960e911b63e257856ef454f6117257a34a5629413","pnpm-lock.yaml":"sha256:d0b55789092b5b9b098c2a9e70eb3b4952183ec87763d773ebf3a9256d786b0c","pnpm-workspace.yaml":"sha256:29b84d1411777563c65df817cca1c1cbab4e6ea1b5073dd3610f0516e4a45e4f","scripts/stage-ui.mjs":"sha256:8bc3be45fd0cbf47424dd882e8ced417332e7cda273618bbe202153c4db14c74","tests/line-budget.test.ts":"sha256:6a3a763e2ce57b8f2dc12df52198cabe184c76b18e5a7fdcbd96a9b5ab851ad6","tests/package-hygiene.test.ts":"sha256:cbfef5ae06dc6085a339afde3f59c6bc6a477a72131680328701eb52b97b958a","tests/package-install-smoke.test.ts":"sha256:9e6b8c40d8c173c1823c19e1326ce54b85899cb4f6ab5fd7fc4c9700ad3dce06","tests/package-ui-budget.test.ts":"sha256:039eeba2281afa6ab573b2c80d365e9d71c9032b4bc2e634ea8bc4d36d24913e","tsconfig.build.json":"sha256:049b5bb03fbe0f7edafdf863e2436cf92b42c462054e9ee9a3ed12a4e1e644e7","tsconfig.json":"sha256:381019d080d463bbe7f29c5bb688d7483c9745a5a60b0e5271f1f36bfdaad7b6"}
+---
+2026-09-22T20:08:16.480Z

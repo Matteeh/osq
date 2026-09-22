@@ -1,0 +1,29 @@
+---
+scope_resolver: 2
+scope_hash: sha256:26e2565328a6e63b355fb111a33e518ed6f6ca2e9c2e8d64e0ea17d35d384597
+build_stamp: e20a5d2
+exit_code: 0
+scope_files:
+  .gitignore: sha256:74e5efd5a6de667cf0ec89df73a80448e316a5e0bfa70e04068c82575de70d53
+  package.json: sha256:3f78ba11a91eef75f4baec3960e911b63e257856ef454f6117257a34a5629413
+  packages/ui/index.html: sha256:068994aaa4c5f3f1f164ddff99d926abd3e8138b86687b8bdade54368ae0385b
+  packages/ui/package.json: sha256:ab92cc862a65c7ded19267e6fe19f2d494a633ba4c9b4265513ecb0b2a2422a8
+  packages/ui/src/app.tsx: sha256:988759fcbfdf484ea7061598671854e6d5a8c825f71dfaaf2f884e86b2c69d36
+  packages/ui/src/contracts.ts: sha256:9627673c88704c0c609e3d7f5ff499b755b628d73f1a1dd079681f41c492f1dd
+  packages/ui/src/data.ts: sha256:5dec8c2f6e1b2f5b743b73d7b131f887b93dd0de8313b58867b5faee9f52e1c7
+  packages/ui/src/main.tsx: sha256:1c8204100055858c3b93e06040337bed5a1aec41aebeaf3ce61866c0cff344b2
+  packages/ui/src/router.ts: sha256:993eb70479147b576324026c29cd4cd82cd8d93ef6350bf0da42f054be09bd12
+  packages/ui/src/styles.css: sha256:d12e0a17440c76e7db415a3a6dafd9aa5e55429bc4cff1d3ca639fdaf48d1e87
+  packages/ui/tsconfig.cli.json: sha256:49e4513819175f3908a203bc696adc6ba17e3ce3088015ecccbdff1dae6a6f22
+  packages/ui/tsconfig.json: sha256:ba772a7ba3d766c025f551074c40b9c1acb4bf83643d2691b6ad115dbb108e17
+  packages/ui/tsconfig.runtime.json: sha256:dc4a1b755810a60d8cb708367f8bc490e7fbc1a54b4f111eb83c7e9f47e04eec
+  packages/ui/vite.config.ts: sha256:38e44b86a4d29038997a324b9cd1a31961beb36c4666a63606472462e92f4fba
+  pnpm-lock.yaml: sha256:d0b55789092b5b9b098c2a9e70eb3b4952183ec87763d773ebf3a9256d786b0c
+  pnpm-workspace.yaml: sha256:29b84d1411777563c65df817cca1c1cbab4e6ea1b5073dd3610f0516e4a45e4f
+  tests/import-graph.test.ts: sha256:2dfbb5bdcff1eef9db518b7df004f3c49863cc1ce772e4aaaf20bfd673eeb83d
+  tests/ui-data.test.tsx: sha256:8033a71cc0dd80141d6f5c3ec835fc83307302513609839bbda1cd34e608dd98
+original_scope_hash: sha256:f715214bff2fda442b8284a1bdc578843f18b06a106c9b6d8bd7626bcb538d67
+recertified_at: 2026-09-22T20:12:04.822Z
+recertification_count: 4
+---
+2026-09-22T17:44:44.190Z

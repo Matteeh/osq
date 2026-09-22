@@ -127,7 +127,7 @@ describe('OpenCode Adapter Task Spawning', () => {
     assert.equal(argsWithVariant[variantIndex + 1], 'high');
   });
 
-  it('Attached files include --file <task.md>, --file <spec.md>, --file <featureDoc> for each feature named in task', async () => {
+  it('attaches task, proposal, and existing living specs named by the task', async () => {
     // Write features in task.md
     const taskContentWithFeatures = `---
 title: When task names specific features
@@ -141,6 +141,11 @@ features: [feature-alpha, feature-beta]
 - [ ] criterion 1
 `;
     await fs.writeFile(taskPath, taskContentWithFeatures, 'utf8');
+    for (const capability of ['feature-alpha', 'feature-beta']) {
+      const capabilityDir = path.join(tmpDir, DEFAULT_CONFIG.paths.features, capability);
+      await fs.mkdir(capabilityDir, { recursive: true });
+      await fs.writeFile(path.join(capabilityDir, 'spec.md'), `# ${capability}\n`, 'utf8');
+    }
 
     const options: SpawnTaskOptions = {
       projectRoot: tmpDir,
@@ -170,8 +175,40 @@ features: [feature-alpha, feature-beta]
 
     assert.equal(attachedFiles[0], taskRelPath);
     assert.equal(attachedFiles[1], specRelPath);
-    assert.ok(attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-alpha.md')));
-    assert.ok(attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-beta.md')));
+    assert.ok(
+      attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-alpha', 'spec.md')),
+    );
+    assert.ok(
+      attachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'feature-beta', 'spec.md')),
+    );
+
+    for (const attached of attachedFiles) {
+      assert.equal(
+        await fs
+          .stat(path.join(tmpDir, attached))
+          .then((stat) => stat.isFile())
+          .catch(() => false),
+        true,
+        `attached path must be an existing file: ${attached}`,
+      );
+    }
+  });
+
+  it('attaches a new capability delta without fabricating a living spec path', async () => {
+    const options: SpawnTaskOptions = {
+      projectRoot: tmpDir,
+      specFolderPath: specFolder,
+      taskNumber: '1',
+      taskTitle: 'When a change introduces a capability',
+      verifyCommand: 'node -e "process.exit(0)"',
+      scope: ['src/c.ts'],
+      entry: ['src/c.ts'],
+      skills: [],
+      tier: 'coding',
+      config: DEFAULT_CONFIG,
+    };
+    const taskRelPath = path.relative(tmpDir, taskPath);
+    const specRelPath = path.relative(tmpDir, specPath);
 
     // Fallback: when task does not specify features, use parent spec.md features
     const taskContentWithoutFeatures = `---
@@ -205,6 +242,10 @@ None
 `;
     await fs.writeFile(specPath, specContentWithFeatures, 'utf8');
 
+    const readCapabilityDir = path.join(tmpDir, DEFAULT_CONFIG.paths.features, 'spec-feat-read');
+    await fs.mkdir(readCapabilityDir, { recursive: true });
+    await fs.writeFile(path.join(readCapabilityDir, 'spec.md'), '# read capability\n', 'utf8');
+
     // Written capabilities are declared by delta spec folders under `specs/`.
     const deltaDir = path.join(specFolder, 'specs', 'spec-feat-write');
     await fs.mkdir(deltaDir, { recursive: true });
@@ -221,13 +262,36 @@ None
     assert.equal(fallbackAttachedFiles[0], taskRelPath);
     assert.equal(fallbackAttachedFiles[1], specRelPath);
     assert.ok(
-      fallbackAttachedFiles.includes(path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-read.md')),
+      fallbackAttachedFiles.includes(
+        path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-read', 'spec.md'),
+      ),
     );
     assert.ok(
+      fallbackAttachedFiles.includes(path.relative(tmpDir, path.join(deltaDir, 'spec.md'))),
+    );
+    assert.equal(
       fallbackAttachedFiles.includes(
         path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-write.md'),
       ),
+      false,
     );
+    assert.equal(
+      fallbackAttachedFiles.includes(
+        path.join(DEFAULT_CONFIG.paths.features, 'spec-feat-write', 'spec.md'),
+      ),
+      false,
+    );
+
+    for (const attached of fallbackAttachedFiles) {
+      assert.equal(
+        await fs
+          .stat(path.join(tmpDir, attached))
+          .then((stat) => stat.isFile())
+          .catch(() => false),
+        true,
+        `attached path must be an existing file: ${attached}`,
+      );
+    }
   });
 
   it('Positional prompt argument defines task guidelines matching AGENTS.md protocol', async () => {
