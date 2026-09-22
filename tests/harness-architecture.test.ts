@@ -3,19 +3,19 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { HARNESS_CATALOG, HARNESS_NAMES } from '../src/core/harness-catalog.js';
+import { HARNESS_CATALOG, HARNESS_NAMES } from '../src/core/foundation/harness-catalog.js';
 
 const PROJECT_ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 /**
  * Generic workflow consumers. These modules must never select behavior by
  * naming a first-party harness: they either use the canonical catalog or the
- * existing adapter ports. `src/core/config*.ts` is expanded from disk so a new
- * configuration module is covered automatically.
+ * existing adapter ports. `src/core/foundation/config*.ts` is expanded from
+ * disk so a new configuration module is covered automatically.
  */
 const GENERIC_CONSUMER_PATHS = [
-  'src/core/doctor.ts',
-  'src/core/manifest.ts',
+  'src/core/foundation/doctor.ts',
+  'src/core/run/manifest.ts',
   'src/cli/plan.ts',
   'src/watcher/loop.ts',
   'src/watcher/spawn.ts',
@@ -80,11 +80,11 @@ function findHarnessBranches(
 }
 
 async function genericConsumerPaths(): Promise<string[]> {
-  const coreDir = path.join(PROJECT_ROOT, 'src', 'core');
+  const coreDir = path.join(PROJECT_ROOT, 'src', 'core', 'foundation');
   const entries = await fs.readdir(coreDir);
   const configModules = entries
     .filter((entry) => /^config.*\.ts$/.test(entry))
-    .map((entry) => `src/core/${entry}`);
+    .map((entry) => `src/core/foundation/${entry}`);
   return [...GENERIC_CONSUMER_PATHS, ...configModules].sort();
 }
 
@@ -123,7 +123,7 @@ describe('generic harness consumer architecture', () => {
 
   it('covers every generic consumer and derives forbidden names from the catalog', async () => {
     const paths = await genericConsumerPaths();
-    assert.ok(paths.includes('src/core/config-doctor.ts'));
+    assert.ok(paths.includes('src/core/foundation/config-doctor.ts'));
     assert.ok(paths.includes('src/watcher/loop.ts'));
     assert.ok(paths.includes('src/watcher/spawn.ts'));
     assert.ok(HARNESS_NAMES.length > 0);

@@ -2,8 +2,8 @@ import crypto from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { type TaskData, resolveChangeDoc } from '../core/parser.js';
-import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/scope.js';
+import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/run/scope.js';
+import { type TaskData, resolveChangeDoc } from '../core/spec/parser.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
 
 const IGNORED_DIRS = new Set(

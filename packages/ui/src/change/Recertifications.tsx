@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { WebTask } from '../../../../src/core/web-data-types.js';
+import type { WebTask } from '../../../../src/core/web/web-data-types.js';
 import { UNAVAILABLE, formatExitCode, formatTimeout, formatTimestamp } from './format.js';
 
 export interface RecertificationsProps {

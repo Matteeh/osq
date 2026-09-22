@@ -1,5 +1,5 @@
-import { loadConfig } from '../core/config.js';
-import { updateAgentsMd } from '../core/init.js';
+import { loadConfig } from '../core/foundation/config.js';
+import { updateAgentsMd } from '../core/foundation/init.js';
 import { getHarnessAdapter } from '../harness/index.js';
 
 export async function setupCommand(): Promise<void> {

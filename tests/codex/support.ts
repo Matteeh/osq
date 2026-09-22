@@ -2,9 +2,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type OsqConfig, defineConfig } from '../../src/core/config.js';
-import { scaffoldProject } from '../../src/core/init.js';
-import { createNewSpec } from '../../src/core/new.js';
+import { type OsqConfig, defineConfig } from '../../src/core/foundation/config.js';
+import { scaffoldProject } from '../../src/core/foundation/init.js';
+import { createNewSpec } from '../../src/core/foundation/new.js';
 import { installFakeValidator } from '../helpers.js';
 
 export const FAKE_CODEX = fileURLToPath(new URL('./fake-codex.mjs', import.meta.url));

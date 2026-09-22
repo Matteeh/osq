@@ -4,11 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getArchiveDir, getChangesDir } from '../src/core/layout.js';
-import type { Logger } from '../src/core/logger.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import type { Logger } from '../src/core/foundation/logger.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { getArchiveDir, getChangesDir } from '../src/core/status/layout.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { extractHumanSteps, runWatcherCycle } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
@@ -249,7 +249,7 @@ describe('Layout cut-over', () => {
 
   it('removes obsolete legacy path identifiers from the runtime units', async () => {
     const configSource = await fs.readFile(
-      path.join(REPO_ROOT, 'src', 'core', 'config.ts'),
+      path.join(REPO_ROOT, 'src', 'core', 'foundation', 'config.ts'),
       'utf8',
     );
     const loopSource = await fs.readFile(path.join(REPO_ROOT, 'src', 'watcher', 'loop.ts'), 'utf8');

@@ -9,7 +9,7 @@ import {
   OSQ_START_MARKER,
   scaffoldProject,
   updatePlannerMd,
-} from '../src/core/init.js';
+} from '../src/core/foundation/init.js';
 
 /** Slice the managed planner block out of a document, markers included. */
 function extractManagedBlock(content: string): string {

@@ -3,9 +3,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { createLogger } from '../src/core/logger.js';
-import { processAgyStdoutLine } from '../src/harness/agy.js';
-import { processOpencodeStdoutLine } from '../src/harness/opencode.js';
+import { createLogger } from '../src/core/foundation/logger.js';
+import { processAgyStdoutLine } from '../src/harness/agy/agy.js';
+import { processOpencodeStdoutLine } from '../src/harness/opencode/opencode.js';
 
 interface CapturedOutput {
   stdout: string;

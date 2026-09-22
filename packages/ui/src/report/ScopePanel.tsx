@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { SizeBucketRow } from '../../../../src/core/report.js';
+import type { SizeBucketRow } from '../../../../src/core/report/report.js';
 import type { MetricsReport } from '../contracts.js';
 import { DataTable } from './Figure.js';
 import { formatCount, formatDurationSeconds, formatPercent } from './format.js';

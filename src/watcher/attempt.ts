@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { resolveSymbol } from '../core/logger.js';
+import { resolveSymbol } from '../core/foundation/logger.js';
 import { asRecord } from '../harness/stream.js';
 
 const ELLIPSIS = '…';

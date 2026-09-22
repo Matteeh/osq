@@ -1,6 +1,6 @@
-import type { Inbox } from '../../../src/core/inbox.js';
-import type { MetricsReport } from '../../../src/core/report.js';
-import type { WebChange, WebGraph } from '../../../src/core/web-data.js';
+import type { MetricsReport } from '../../../src/core/report/report.js';
+import type { Inbox } from '../../../src/core/status/inbox.js';
+import type { WebChange, WebGraph } from '../../../src/core/web/web-data.js';
 
 export type { Inbox, MetricsReport, WebChange, WebGraph };
 

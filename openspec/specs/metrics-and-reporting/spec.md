@@ -98,14 +98,14 @@ planning and non-planning report field.
 - **THEN** both formats report zero covered changes without inventing usage or planner attribution
 
 ### Requirement: Code ownership
-<!-- source: src/core/report.ts, src/core/planning.ts, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
+<!-- source: src/core/report/**, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
 The Metrics and Reporting capability SHALL own planning-log parsing, metrics
 aggregation including rejection history, report generation, report CLI
 formatting, report tests, and the deterministic report fixture.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for planning records or delivery reporting
-- **THEN** system maps `src/core/planning.ts`, `src/core/report.ts`, `src/cli/report.ts`, `tests/report*.test.ts`, and `fixture/report/**` to `metrics-and-reporting`
+- **THEN** system maps `src/core/report/**`, `src/cli/report.ts`, `tests/report*.test.ts`, and `fixture/report/**` to `metrics-and-reporting`
 
 ### Requirement: Undeclared test change failure metrics
 <!-- source: src/core/report.ts, tests/report.test.ts -->

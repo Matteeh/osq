@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
 import { reportCommand, serializeSortedJson } from '../src/cli/report.js';
-import { type MetricsReport, formatMetricsReport } from '../src/core/report.js';
+import { type MetricsReport, formatMetricsReport } from '../src/core/report/report.js';
 
 const fixtureReportRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

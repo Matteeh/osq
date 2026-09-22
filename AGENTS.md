@@ -8,13 +8,26 @@ pnpm, TypeScript strict, Node 22+. No framework. Zero runtime dependencies beyon
 
 ```
 src/cli/         one file per command. thin: parse args, call core, print.
-src/core/        state derivation, transitions, lint, lock, reaper. pure where possible.
+src/core/        code grouped by the capability that owns it:
+  foundation/    cli-foundation
+  lifecycle/     watcher-and-harness
+  run/           watcher-and-harness
+  spec/          spec-lint-and-approve
+  report/        metrics-and-reporting
+  status/        status-inspection
+  web/           web-inspection
 src/watcher/     event loop. calls core, owns all marker writes.
 src/harness/     one adapter per harness. spawn + setup + event translation only.
+  agy/ claude/ codex/ opencode/
+  index.ts mock.ts process.ts stream.ts types.ts
 templates/       files `init` copies. owned by the consumer after copy.
 fixture/         tiny fake repo used by tests. Each fixture root has a local `verify.cjs`.
 tests/
 ```
+
+A file lives in the folder of the capability that owns it.
+`tests/line-budget.test.ts` caps source files at 250 lines; only its explicit allow list is exempt.
+`tests/function-budget.test.ts` caps functions at 80 lines; only its explicit grandfather list is exempt.
 
 ## Principles
 

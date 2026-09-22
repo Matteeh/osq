@@ -1,0 +1,18 @@
+---
+scope_resolver: 2
+scope_hash: sha256:229471cf423e368b4a83f3c64370bfa47ec3b8f8ea0187c1c3c610a0f65e8ae0
+build_stamp: b4741f1
+exit_code: 0
+scope_files:
+  src/core/init.ts: null
+  src/core/manifest.ts: null
+  src/core/new.ts: null
+  src/core/package-root.ts: null
+  src/core/planning.ts: null
+  src/core/web-static.ts: null
+  tests/package-root.test.ts: sha256:31637d0050c75c85f929210229a3757e035f32fd8533eab7f0eee14e4f6e9174
+original_scope_hash: sha256:f8e3ebcb78fb0c475d7a445f4ec3c97c0642e5aa2b9dc18dff9336d1eeb29a45
+recertified_at: 2026-09-22T22:06:03.389Z
+recertification_count: 1
+---
+2026-09-22T21:47:28.158Z

@@ -5,13 +5,13 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { planCommand } from '../src/cli/plan.js';
 import { queueCommand } from '../src/cli/queue.js';
-import { type OsqConfig, defineConfig } from '../src/core/config.js';
+import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import {
   type QueuePlanningUsage,
   evaluateQueueBudget,
   prepareQueuePlan,
   readQueuePlanningUsage,
-} from '../src/core/queue.js';
+} from '../src/core/status/queue.js';
 import { MockAdapter } from '../src/harness/mock.js';
 
 const OPENSPEC = 'openspec';

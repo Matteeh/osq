@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { reportCommand } from '../../src/cli/report.js';
-import { approveSpec } from '../../src/core/approve.js';
-import { type OsqConfig, defineConfig } from '../../src/core/config.js';
-import { getArchiveDir } from '../../src/core/layout.js';
-import { CodexAdapter } from '../../src/harness/codex.js';
+import { type OsqConfig, defineConfig } from '../../src/core/foundation/config.js';
+import { approveSpec } from '../../src/core/spec/approve.js';
+import { getArchiveDir } from '../../src/core/status/layout.js';
+import { CodexAdapter } from '../../src/harness/codex/codex.js';
 import { startWatcher } from '../../src/watcher/loop.js';
 import { runTask } from '../../src/watcher/runner.js';
 import {

@@ -1,5 +1,9 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { type MetricsReport, formatMetricsReport, getMetricsReport } from '../core/report.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import {
+  type MetricsReport,
+  formatMetricsReport,
+  getMetricsReport,
+} from '../core/report/report.js';
 
 export interface ReportCommandOptions {
   cwd?: string;

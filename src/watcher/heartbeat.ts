@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { relativizeToolSummary } from '../core/summary.js';
+import { relativizeToolSummary } from '../core/run/summary.js';
 import { asRecord } from '../harness/stream.js';
 
 // Re-exported from core so existing watcher/status consumers keep importing it

@@ -6,8 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { type FSWatcher, watch as chokidarWatch } from 'chokidar';
-import { defineConfig } from '../src/core/config.js';
-import { getArchiveDir, getChangesDir, getRejectedDir } from '../src/core/layout.js';
+import { defineConfig } from '../src/core/foundation/config.js';
+import { getArchiveDir, getChangesDir, getRejectedDir } from '../src/core/status/layout.js';
 import {
   type InvalidationBatch,
   type ScheduleFn,
@@ -18,12 +18,12 @@ import {
   classifyChangePath,
   createInvalidationHub,
   formatChangedEvent,
-} from '../src/core/web-events.js';
+} from '../src/core/web/web-events.js';
 import {
   type WebServerHandle,
   type WebServerOptions,
   startWebServer,
-} from '../src/core/web-server.js';
+} from '../src/core/web/web-server.js';
 import { buildWebFixture } from './fixtures/web/build.js';
 
 let tmpDir: string;

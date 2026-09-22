@@ -10,7 +10,7 @@ import {
   OSQ_START_MARKER,
   scaffoldProject,
   updateAgentsMd,
-} from '../src/core/init.js';
+} from '../src/core/foundation/init.js';
 
 interface ParsedArtifact {
   id: string;

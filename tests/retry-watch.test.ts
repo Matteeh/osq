@@ -7,10 +7,10 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { approveSpec } from '../src/core/spec/approve.js';
 import { installFakeValidator } from './helpers.js';
 
 const execFileAsync = promisify(execFile);

@@ -103,7 +103,7 @@ LTS patch is 24.21.0.
 - **THEN** each names the Node 24 LTS baseline without retaining a Node 22-only setup
 
 ### Requirement: Code ownership
-<!-- source: osq.config.ts, src/cli/**, src/core/config*.ts, src/core/doctor.ts, src/core/harness-catalog.ts, src/core/init.ts, src/core/logger.ts, src/core/retry.ts, src/core/reject.ts, src/index.ts, templates/**, AGENTS.md, PLANNER.md, README.md, .env.example -->
+<!-- source: src/core/foundation/**, src/cli/**, src/index.ts, osq.config.ts, templates/**, AGENTS.md, PLANNER.md, README.md, .env.example -->
 The CLI Foundation capability SHALL own CLI entrypoints, retry and rejection
 commands, configuration and shared harness capability resolution, doctor
 diagnostics, logger, initialization, public configuration exports, managed
@@ -111,7 +111,7 @@ agent and planner instructions, templates, and consumer guidance.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for CLI, configuration, retry, scaffolding, or managed guidance files
-- **THEN** system maps `osq.config.ts`, `src/cli/**`, `src/core/config*.ts`, `src/core/doctor.ts`, `src/core/harness-catalog.ts`, `src/core/init.ts`, `src/core/logger.ts`, `src/core/retry.ts`, `src/core/reject.ts`, `src/index.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
+- **THEN** system maps `src/core/foundation/**`, `src/cli/**`, `src/index.ts`, `osq.config.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
 
 ### Requirement: Test gating configuration
 <!-- source: src/core/config.ts, tests/config.test.ts -->

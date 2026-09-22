@@ -1,4 +1,4 @@
-import type { WebChangeNode, WebCoverage } from '../../../../src/core/web-data-types.js';
+import type { WebChangeNode, WebCoverage } from '../../../../src/core/web/web-data-types.js';
 import type { GraphFill } from './controls.js';
 import type { GraphFillValue } from './types.js';
 

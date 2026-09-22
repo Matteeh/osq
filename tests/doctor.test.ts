@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { doctorCommand } from '../src/cli/doctor.js';
-import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from '../src/core/config.js';
-import { runDoctorChecks } from '../src/core/doctor.js';
+import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from '../src/core/foundation/config.js';
+import { runDoctorChecks } from '../src/core/foundation/doctor.js';
 import {
   MANAGED_AGENTS_MD_BODY,
   MANAGED_CLAUDE_PLAN_COMMAND,
@@ -14,8 +14,8 @@ import {
   OSQ_END_MARKER,
   OSQ_START_MARKER,
   scaffoldProject,
-} from '../src/core/init.js';
-import { OPENSPEC_EXPECTED_VERSION } from '../src/core/linter.js';
+} from '../src/core/foundation/init.js';
+import { OPENSPEC_EXPECTED_VERSION } from '../src/core/spec/linter.js';
 
 function managedBlock(body: string): string {
   return `${OSQ_START_MARKER}\n${body}\n${OSQ_END_MARKER}`;

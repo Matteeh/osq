@@ -9,13 +9,13 @@ import {
   resolveCodexModel,
   resolveHarnessEffort,
   resolveHarnessModel,
-} from '../../src/core/config-codex.js';
+} from '../../src/core/foundation/config-codex.js';
 import {
   type CodexConfig,
   DEFAULT_CONFIG,
   defineConfig,
   loadConfig,
-} from '../../src/core/config.js';
+} from '../../src/core/foundation/config.js';
 import * as publicApi from '../../src/index.js';
 
 const SAVED_ENV = { CODEX_PATH: process.env.CODEX_PATH, OSQ_MODEL: process.env.OSQ_MODEL };

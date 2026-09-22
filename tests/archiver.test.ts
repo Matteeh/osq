@@ -3,11 +3,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
-import { mergeDelta, parseDelta } from '../src/core/delta.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getArchiveDir } from '../src/core/layout.js';
-import { createNewSpec } from '../src/core/new.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
+import { getArchiveDir } from '../src/core/status/layout.js';
 import {
   applyOpenSpecDeltas,
   archiveSpecFolder,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { type SpecData, parseSpecMd } from '../src/core/parser.js';
-import { type ChangeFolderSnapshot, deriveSpecState } from '../src/core/state.js';
+import { type SpecData, parseSpecMd } from '../src/core/spec/parser.js';
+import { type ChangeFolderSnapshot, deriveSpecState } from '../src/core/status/state.js';
 
 function taskFile(title: string): string {
   return [

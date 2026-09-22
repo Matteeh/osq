@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec, getNextSpecNumber, slugify } from '../src/core/new.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec, getNextSpecNumber, slugify } from '../src/core/foundation/new.js';
 
 describe('osq new', () => {
   let tmpDir: string;

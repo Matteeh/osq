@@ -8,18 +8,18 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
 import { browserCommand, parsePortArgument, serveCommand } from '../src/cli/serve.js';
-import { defineConfig } from '../src/core/config.js';
-import { readInbox } from '../src/core/inbox-projection.js';
-import { getMetricsReport } from '../src/core/report.js';
-import { getWebChange } from '../src/core/web-data-change.js';
-import { getWebGraph } from '../src/core/web-data-graph.js';
+import { defineConfig } from '../src/core/foundation/config.js';
+import { getMetricsReport } from '../src/core/report/report.js';
+import { readInbox } from '../src/core/status/inbox-projection.js';
+import { getWebChange } from '../src/core/web/web-data-change.js';
+import { getWebGraph } from '../src/core/web/web-data-graph.js';
 import {
   type WebServerHandle,
   type WebServerOptions,
   serializeWebJson,
   startWebServer,
-} from '../src/core/web-server.js';
-import { UI_CONTENT_SECURITY_POLICY, resolveUiDir } from '../src/core/web-static.js';
+} from '../src/core/web/web-server.js';
+import { UI_CONTENT_SECURITY_POLICY, resolveUiDir } from '../src/core/web/web-static.js';
 import { buildWebFixture, writeRunningLock } from './fixtures/web/build.js';
 
 let tmpDir: string;
@@ -422,8 +422,12 @@ describe('loopback read-only API', () => {
   });
 
   it('keeps process termination out of core server, static, and config modules', async () => {
-    for (const file of ['web-server.ts', 'web-static.ts', 'config-serve.ts']) {
-      const source = await fs.readFile(path.join(REPO_ROOT, 'src', 'core', file), 'utf8');
+    for (const file of [
+      'src/core/web/web-server.ts',
+      'src/core/web/web-static.ts',
+      'src/core/foundation/config-serve.ts',
+    ]) {
+      const source = await fs.readFile(path.join(REPO_ROOT, file), 'utf8');
       assert.doesNotMatch(source, /process\.exit/, file);
     }
   });

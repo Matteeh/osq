@@ -3,12 +3,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { approveSpec, findSpecFolder } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { hashChangeFolder } from '../src/core/hasher.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getChangesDir } from '../src/core/layout.js';
-import { createNewSpec } from '../src/core/new.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { approveSpec, findSpecFolder } from '../src/core/spec/approve.js';
+import { hashChangeFolder } from '../src/core/spec/hasher.js';
+import { getChangesDir } from '../src/core/status/layout.js';
 
 const PASSING_VERIFY = 'node verify.cjs';
 const LOCAL_VERIFIER = `const fs = require('node:fs');

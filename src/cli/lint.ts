@@ -1,11 +1,11 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { findSpecFolder } from '../core/approve.js';
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { getChangesDir } from '../core/layout.js';
-import { type LintResult, lintChangeFolder } from '../core/linter.js';
-import { type Logger, createLogger } from '../core/logger.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { type Logger, createLogger } from '../core/foundation/logger.js';
+import { findSpecFolder } from '../core/spec/approve.js';
+import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
+import { getChangesDir } from '../core/status/layout.js';
 
 export interface LintCommandEntry {
   readonly folder: string;

@@ -1,5 +1,5 @@
-import type { OsqConfig } from '../core/config.js';
-import { parseSpecMdFromFolder } from '../core/parser.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import { parseSpecMdFromFolder } from '../core/spec/parser.js';
 import { type VerificationGateResult, runVerificationGateResult } from './verify.js';
 
 /** Failure evidence for a red change gate; the runner writes it through `fail`. */

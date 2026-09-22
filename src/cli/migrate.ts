@@ -1,6 +1,6 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { type Logger, createLogger } from '../core/logger.js';
-import { type MigrateResult, migrateToOpenSpec } from '../core/migrate.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { type Logger, createLogger } from '../core/foundation/logger.js';
+import { type MigrateResult, migrateToOpenSpec } from '../core/spec/migrate.js';
 
 export interface MigrateCommandOptions {
   readonly cwd?: string;

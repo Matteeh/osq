@@ -84,14 +84,14 @@ planning record was found.
 - **THEN** approval succeeds with null planner attribution and prints the one-line notice
 
 ### Requirement: Code ownership
-<!-- source: src/core/parser.ts, src/core/linter.ts, src/core/approve.ts, src/core/hasher.ts, src/core/delta.ts, src/core/migrate.ts, src/cli/lint.ts, src/cli/migrate.ts -->
+<!-- source: src/core/spec/**, src/cli/lint.ts, src/cli/migrate.ts -->
 The Spec Lint and Approve capability SHALL own specification parsing, linting,
 approval sealing without failure-state transitions, hashing, dependency
 existence validation, and migration logic.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for spec validation and parsing
-- **THEN** system maps `src/core/parser.ts`, `src/core/linter.ts`, `src/core/approve.ts`, `src/core/hasher.ts`, `src/core/delta.ts`, `src/core/migrate.ts`, `src/cli/lint.ts`, and `src/cli/migrate.ts` to `spec-lint-and-approve`
+- **THEN** system maps `src/core/spec/**`, `src/cli/lint.ts`, and `src/cli/migrate.ts` to `spec-lint-and-approve`
 
 ### Requirement: Capability code ownership parsing
 <!-- source: src/core/parser.ts, tests/parser.test.ts -->

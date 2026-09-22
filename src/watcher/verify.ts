@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { resolveScope } from '../core/scope.js';
-import { type VerificationResult, runVerificationCommand } from '../core/verification.js';
+import { resolveScope } from '../core/run/scope.js';
+import { type VerificationResult, runVerificationCommand } from '../core/run/verification.js';
 import { asRecord } from '../harness/stream.js';
 import { appendHarnessEvent } from '../harness/types.js';
 

@@ -3,9 +3,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { getRegressedMarkerPath } from '../src/core/layout.js';
-import type { SpecState, TaskState } from '../src/core/state.js';
-import { type StatusOverview, formatStatusLine, formatStatusOverview } from '../src/core/status.js';
+import { getRegressedMarkerPath } from '../src/core/status/layout.js';
+import type { SpecState, TaskState } from '../src/core/status/state.js';
+import {
+  type StatusOverview,
+  formatStatusLine,
+  formatStatusOverview,
+} from '../src/core/status/status.js';
 import type { RegressedEventData } from '../src/harness/types.js';
 import {
   formatTaskOutcomeLine,

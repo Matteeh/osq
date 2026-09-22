@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { WebCapabilityNode } from '../../../../src/core/web-data-types.js';
+import type { WebCapabilityNode } from '../../../../src/core/web/web-data-types.js';
 
 export interface CapabilityPanelProps {
   readonly capabilities: readonly WebCapabilityNode[];

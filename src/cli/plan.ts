@@ -1,13 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { findSpecFolder } from '../core/approve.js';
-import { resolvePlannerSelection } from '../core/config-codex.js';
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { getChangesDir } from '../core/layout.js';
-import { parseFrontmatter } from '../core/parser.js';
-import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/planning.js';
-import type { QueuePlanSelection } from '../core/queue.js';
-import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report.js';
+import { resolvePlannerSelection } from '../core/foundation/config-codex.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/report/planning.js';
+import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report/report.js';
+import { findSpecFolder } from '../core/spec/approve.js';
+import { parseFrontmatter } from '../core/spec/parser.js';
+import { getChangesDir } from '../core/status/layout.js';
+import type { QueuePlanSelection } from '../core/status/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import {

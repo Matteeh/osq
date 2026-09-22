@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { lintChangeFolder } from '../src/core/linter.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { lintChangeFolder } from '../src/core/spec/linter.js';
 import { installFakeValidator } from './helpers.js';
 
 const CHANGE_ID = '001-instruction-delta';

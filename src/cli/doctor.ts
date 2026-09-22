@@ -1,4 +1,4 @@
-import { type DoctorReport, runDoctorChecks } from '../core/doctor.js';
+import { type DoctorReport, runDoctorChecks } from '../core/foundation/doctor.js';
 
 export interface DoctorCommandOptions {
   readonly cwd?: string;

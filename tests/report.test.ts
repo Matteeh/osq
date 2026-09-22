@@ -5,14 +5,14 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createProgram } from '../src/cli/index.js';
 import { reportCommand } from '../src/cli/report.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
 import {
   type MetricsReport,
   formatMetricsReport,
   generateReport,
   getMetricsReport,
-} from '../src/core/report.js';
+} from '../src/core/report/report.js';
 
 const CHANGE_SPECS_DIR = path.join('openspec', 'changes');
 

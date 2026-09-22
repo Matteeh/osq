@@ -5,11 +5,11 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { planCommand } from '../../src/cli/plan.js';
-import { resolvePlannerSelection } from '../../src/core/config-codex.js';
-import { defineConfig } from '../../src/core/config.js';
-import { parseFrontmatter } from '../../src/core/parser.js';
-import { buildCodexInteractiveArgs } from '../../src/harness/codex-prompt.js';
-import { CodexAdapter } from '../../src/harness/codex.js';
+import { resolvePlannerSelection } from '../../src/core/foundation/config-codex.js';
+import { defineConfig } from '../../src/core/foundation/config.js';
+import { parseFrontmatter } from '../../src/core/spec/parser.js';
+import { buildCodexInteractiveArgs } from '../../src/harness/codex/codex-prompt.js';
+import { CodexAdapter } from '../../src/harness/codex/codex.js';
 import { FAKE_CODEX, createScaffoldedProject } from './support.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');

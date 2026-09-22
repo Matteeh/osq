@@ -4,13 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { Writable } from 'node:stream';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createLogger } from '../src/core/logger.js';
-import { createNewSpec } from '../src/core/new.js';
+import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createLogger } from '../src/core/foundation/logger.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { approveSpec } from '../src/core/spec/approve.js';
 import { MockAdapter } from '../src/harness/mock.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 import {
   type TaskHeartbeatStats,
   computeTaskHeartbeatStats,

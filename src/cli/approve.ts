@@ -1,10 +1,10 @@
-import { approveSpec } from '../core/approve.js';
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { resolveHarnessExecutable } from '../core/harness-catalog.js';
-import type { PlanningSessionReader } from '../core/planning-observed.js';
-import { readClaudePlanningSessions } from '../harness/claude-usage.js';
-import { readCodexPlanningSessions } from '../harness/codex-observe-usage.js';
-import { readOpencodePlanningSessions } from '../harness/opencode-observe-usage.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
+import type { PlanningSessionReader } from '../core/report/planning-observed.js';
+import { approveSpec } from '../core/spec/approve.js';
+import { readClaudePlanningSessions } from '../harness/claude/claude-usage.js';
+import { readCodexPlanningSessions } from '../harness/codex/codex-observe-usage.js';
+import { readOpencodePlanningSessions } from '../harness/opencode/opencode-observe-usage.js';
 
 export interface ApproveCommandOptions {
   cwd?: string;

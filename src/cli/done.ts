@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { markTaskDoneManual } from '../core/done.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { markTaskDoneManual } from '../core/lifecycle/done.js';
 
 export interface DoneCommandOptions {
   readonly manual?: string;

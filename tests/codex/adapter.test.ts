@@ -4,12 +4,12 @@ import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { doctorCommand } from '../../src/cli/doctor.js';
 import { setupCommand } from '../../src/cli/setup.js';
-import { type OsqConfig, defineConfig, loadConfig } from '../../src/core/config.js';
-import { runDoctorChecks } from '../../src/core/doctor.js';
-import { OPENSPEC_EXPECTED_VERSION } from '../../src/core/linter.js';
-import { buildManifest } from '../../src/core/manifest.js';
-import { buildCodexArgs, buildCodexPrompt } from '../../src/harness/codex-prompt.js';
-import { CodexAdapter, preflightCodex } from '../../src/harness/codex.js';
+import { type OsqConfig, defineConfig, loadConfig } from '../../src/core/foundation/config.js';
+import { runDoctorChecks } from '../../src/core/foundation/doctor.js';
+import { buildManifest } from '../../src/core/run/manifest.js';
+import { OPENSPEC_EXPECTED_VERSION } from '../../src/core/spec/linter.js';
+import { buildCodexArgs, buildCodexPrompt } from '../../src/harness/codex/codex-prompt.js';
+import { CodexAdapter, preflightCodex } from '../../src/harness/codex/codex.js';
 import { getHarnessAdapter } from '../../src/harness/index.js';
 import type { SpawnTaskOptions } from '../../src/harness/types.js';
 import {

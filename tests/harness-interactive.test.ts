@@ -5,9 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { AgyAdapter } from '../src/harness/agy.js';
+import { AgyAdapter } from '../src/harness/agy/agy.js';
 import { MockAdapter } from '../src/harness/mock.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -178,7 +178,7 @@ process.exit(0);
 
     const result = await runInteractiveInSubprocess({
       adapterExport: 'OpencodeAdapter',
-      adapterModule: 'src/harness/opencode.ts',
+      adapterModule: 'src/harness/opencode/opencode.ts',
       envVar: 'OPENCODE_PATH',
       fakeBin,
       cwd: tmpDir,
@@ -208,7 +208,7 @@ process.exit(0);
 
     const result = await runInteractiveInSubprocess({
       adapterExport: 'AgyAdapter',
-      adapterModule: 'src/harness/agy.ts',
+      adapterModule: 'src/harness/agy/agy.ts',
       envVar: 'AGY_PATH',
       fakeBin,
       cwd: tmpDir,

@@ -4,12 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { lintCommand } from '../src/cli/lint.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { OPENSPEC_EXPECTED_VERSION, lintChangeFolder } from '../src/core/linter.js';
-import { buildManifest } from '../src/core/manifest.js';
-import { migrateToOpenSpec } from '../src/core/migrate.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { getSpecDetails } from '../src/core/show.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { buildManifest } from '../src/core/run/manifest.js';
+import { OPENSPEC_EXPECTED_VERSION, lintChangeFolder } from '../src/core/spec/linter.js';
+import { migrateToOpenSpec } from '../src/core/spec/migrate.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
+import { getSpecDetails } from '../src/core/status/show.js';
 
 const RECORD_FILE = 'openspec-invocations.json';
 

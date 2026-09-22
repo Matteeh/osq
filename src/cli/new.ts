@@ -1,4 +1,4 @@
-import { createNewSpec } from '../core/new.js';
+import { createNewSpec } from '../core/foundation/new.js';
 
 export async function newCommand(name: string, options: { cwd?: string } = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();

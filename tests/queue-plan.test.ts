@@ -6,10 +6,14 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createProgram } from '../src/cli/index.js';
 import { buildOpeningPrompt, formatBriefContent, planCommand } from '../src/cli/plan.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { createNewSpec, getNextSpecNumber } from '../src/core/new.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { findActiveQueueFailures, prepareQueuePlan, projectQueue } from '../src/core/queue.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { createNewSpec, getNextSpecNumber } from '../src/core/foundation/new.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
+import {
+  findActiveQueueFailures,
+  prepareQueuePlan,
+  projectQueue,
+} from '../src/core/status/queue.js';
 import { MockAdapter } from '../src/harness/mock.js';
 
 const OPENSPEC = 'openspec';

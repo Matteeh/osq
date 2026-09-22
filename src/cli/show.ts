@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { formatSpecDetails, getSpecDetails } from '../core/show.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { formatSpecDetails, getSpecDetails } from '../core/status/show.js';
 
 export async function showCommand(
   specId: string,

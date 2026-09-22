@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { rejectSpec } from '../core/reject.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { rejectSpec } from '../core/lifecycle/reject.js';
 
 export interface RejectCommandOptions {
   cwd?: string;

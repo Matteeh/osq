@@ -3,9 +3,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { hashChangeFolder, normalizeTasksMd, verifyFolderHash } from '../src/core/hasher.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { hashChangeFolder, normalizeTasksMd, verifyFolderHash } from '../src/core/spec/hasher.js';
 
 describe('Folder Hasher', () => {
   let tmpDir: string;

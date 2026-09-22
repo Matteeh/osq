@@ -5,10 +5,9 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { approveCommand } from '../src/cli/approve.js';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
 import {
   type ObservedPlanningSession,
   appendObservedSessions,
@@ -17,7 +16,7 @@ import {
   normalizeObservedTarget,
   observedSessionId,
   resolveChangeCreationTime,
-} from '../src/core/planning-observed.js';
+} from '../src/core/report/planning-observed.js';
 import {
   NULL_PLANNING_USAGE,
   getPlanLogPath,
@@ -25,14 +24,18 @@ import {
   planningRecordSource,
   readPlanRecords,
   recordPlanStarted,
-} from '../src/core/planning.js';
-import { parseClaudeSession, readClaudePlanningSessions } from '../src/harness/claude-usage.js';
+} from '../src/core/report/planning.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import {
+  parseClaudeSession,
+  readClaudePlanningSessions,
+} from '../src/harness/claude/claude-usage.js';
 import {
   parseCodexObservation,
   readCodexPlanningSessions,
-} from '../src/harness/codex-observe-usage.js';
-import { readOpencodePlanningSessions } from '../src/harness/opencode-observe-usage.js';
-import { buildOpencodeObservationQuery } from '../src/harness/opencode-usage.js';
+} from '../src/harness/codex/codex-observe-usage.js';
+import { readOpencodePlanningSessions } from '../src/harness/opencode/opencode-observe-usage.js';
+import { buildOpencodeObservationQuery } from '../src/harness/opencode/opencode-usage.js';
 import { installFakeValidator } from './helpers.js';
 
 const TESTS_DIR = path.dirname(fileURLToPath(import.meta.url));

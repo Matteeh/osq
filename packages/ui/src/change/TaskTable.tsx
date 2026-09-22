@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { WebTask } from '../../../../src/core/web-data-types.js';
+import type { WebTask } from '../../../../src/core/web/web-data-types.js';
 import { TaskEvidence } from './TaskEvidence.js';
 import {
   UNAVAILABLE,

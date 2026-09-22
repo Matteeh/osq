@@ -9,7 +9,7 @@ import {
   type OsqUserConfig,
   defineConfig,
   loadConfig,
-} from '../src/core/config.js';
+} from '../src/core/foundation/config.js';
 import { OpencodeAdapter, getHarnessAdapter } from '../src/harness/index.js';
 
 describe('OpenCode Configuration and Adapter Registration', () => {

@@ -4,16 +4,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { retrySpec } from '../src/core/retry.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { retrySpec } from '../src/core/lifecycle/retry.js';
 import {
   SCOPE_RESOLVER_VERSION,
   computeTaskScopeHash,
   readDoneMarker,
-} from '../src/core/scope-hash.js';
+} from '../src/core/run/scope-hash.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import { checkAndArchiveSpec } from '../src/watcher/archiver.js';
 import { runWatcherCycle } from '../src/watcher/loop.js';

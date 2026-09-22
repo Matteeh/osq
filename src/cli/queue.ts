@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { formatQueue, projectQueue } from '../core/queue.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { formatQueue, projectQueue } from '../core/status/queue.js';
 
 export interface QueueCommandOptions {
   cwd?: string;

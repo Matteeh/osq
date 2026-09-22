@@ -20,15 +20,15 @@ import {
   orderedArchived,
 } from '../packages/ui/src/graph/index.js';
 import { routeToHash } from '../packages/ui/src/router.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import type {
   WebCapabilityNode,
   WebChangeNode,
   WebGraph,
   WebGraphEdge,
   WebMetricObservation,
-} from '../src/core/web-data-types.js';
-import { getWebGraph } from '../src/core/web-data.js';
+} from '../src/core/web/web-data-types.js';
+import { getWebGraph } from '../src/core/web/web-data.js';
 import { buildWebFixture } from './fixtures/web/build.js';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));

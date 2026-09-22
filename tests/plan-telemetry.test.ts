@@ -6,10 +6,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { planCommand } from '../src/cli/plan.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { hashChangeFolder } from '../src/core/hasher.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getChangesDir } from '../src/core/layout.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
 import {
   NULL_PLANNING_USAGE,
   correlatePlanSessions,
@@ -19,10 +17,12 @@ import {
   readPlanRecords,
   readPlanningSessions,
   resolveOsqPackageVersion,
-} from '../src/core/planning.js';
-import { AgyAdapter } from '../src/harness/agy.js';
-import { CodexAdapter } from '../src/harness/codex.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+} from '../src/core/report/planning.js';
+import { hashChangeFolder } from '../src/core/spec/hasher.js';
+import { getChangesDir } from '../src/core/status/layout.js';
+import { AgyAdapter } from '../src/harness/agy/agy.js';
+import { CodexAdapter } from '../src/harness/codex/codex.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 import { NULL_INTERACTIVE_USAGE } from '../src/harness/types.js';
 import { installFakeValidator } from './helpers.js';
 

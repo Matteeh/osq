@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/config.js';
+import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import {
   HARNESS_CATALOG,
   HARNESS_NAMES,
@@ -10,7 +10,7 @@ import {
   normalizeHarnessName,
   resolveExecutorIdentity,
   resolveHarnessExecutable,
-} from '../src/core/harness-catalog.js';
+} from '../src/core/foundation/harness-catalog.js';
 import { getHarnessAdapter, harnessAdapterFactories } from '../src/harness/index.js';
 import * as publicApi from '../src/index.js';
 

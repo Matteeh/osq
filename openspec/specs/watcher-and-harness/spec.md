@@ -103,7 +103,7 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
 
 ### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/lock.ts, src/core/manifest.ts, src/core/scope.ts, src/core/scope-hash.ts, src/core/verification.ts, tests/retry*.test.ts, tests/reject.test.ts -->
+<!-- source: src/watcher/**, src/harness/**, src/core/run/**, src/core/lifecycle/**, tests/retry*.test.ts, tests/reject.test.ts, tests/done-manual.test.ts -->
 The Watcher and Harness capability SHALL own the reactive watch loop, runner,
 process execution, deterministic task-scope resolution and hashing, shared
 verification execution, agent harnesses, adapter registration, execution
@@ -111,7 +111,7 @@ manifest construction, and append-only execution lifecycle event contracts.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for watcher, scope, verification, harness execution, or retry and rejection lifecycle events
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/lock.ts`, `src/core/manifest.ts`, `src/core/scope.ts`, `src/core/scope-hash.ts`, `src/core/verification.ts`, `tests/retry*.test.ts`, and `tests/reject.test.ts` to watcher-and-harness
+- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/run/**`, `src/core/lifecycle/**`, `tests/retry*.test.ts`, `tests/reject.test.ts`, and `tests/done-manual.test.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
 <!-- source: src/harness/agy.ts, src/harness/opencode.ts, tests/harness-prompt-injection.test.ts -->

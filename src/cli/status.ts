@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { formatStatusOverview, getStatusOverview } from '../core/status.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { formatStatusOverview, getStatusOverview } from '../core/status/status.js';
 
 export async function statusCommand(
   options: { cwd?: string; stdout?: (msg: string) => void; config?: OsqConfig } = {},

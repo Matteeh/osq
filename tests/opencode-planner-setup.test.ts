@@ -3,9 +3,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 
 describe('OpencodeAdapter planner agent setup', () => {
   let tmpDir: string;

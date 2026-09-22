@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/config.js';
-import { OSQ_END_MARKER, OSQ_START_MARKER } from '../src/core/init.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
+import { OSQ_END_MARKER, OSQ_START_MARKER } from '../src/core/foundation/init.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 
 describe('OpenCode Adapter Setup', () => {
   let tmpDir: string;

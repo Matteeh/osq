@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Writable } from 'node:stream';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { createLogger } from '../src/core/logger.js';
+import { createLogger } from '../src/core/foundation/logger.js';
 
 const CLEAR = '\r\x1b[2K';
 const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { mergeDelta, parseDelta } from '../src/core/delta.js';
+import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHIVE_DIR = path.join(REPO_ROOT, 'openspec', 'changes', 'archive');

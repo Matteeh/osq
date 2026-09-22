@@ -3,7 +3,7 @@ import type {
   WebChangeNode,
   WebCoverage,
   WebLocation,
-} from '../../../../src/core/web-data-types.js';
+} from '../../../../src/core/web/web-data-types.js';
 import type { GraphFill } from './controls.js';
 
 /** Fixed geometry for the archive graph. No number is read from configuration. */

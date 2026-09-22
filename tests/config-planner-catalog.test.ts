@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { resolvePlannerSelection, validatePlannerConfig } from '../src/core/config-codex.js';
-import { DEFAULT_CONFIG, defineConfig } from '../src/core/config.js';
-import { HARNESS_CATALOG, HARNESS_NAMES } from '../src/core/harness-catalog.js';
+import {
+  resolvePlannerSelection,
+  validatePlannerConfig,
+} from '../src/core/foundation/config-codex.js';
+import { DEFAULT_CONFIG, defineConfig } from '../src/core/foundation/config.js';
+import { HARNESS_CATALOG, HARNESS_NAMES } from '../src/core/foundation/harness-catalog.js';
 import * as publicApi from '../src/index.js';
 
 const SAVED_OSQ_MODEL = process.env.OSQ_MODEL;

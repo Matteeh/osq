@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { acquireLock, isPidRunning, reapStaleLocks, releaseLock } from '../src/core/lock.js';
+import { acquireLock, isPidRunning, reapStaleLocks, releaseLock } from '../src/core/run/lock.js';
 
 async function exists(target: string): Promise<boolean> {
   return fs

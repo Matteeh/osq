@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:09ab9848001cbbb8301570ea35d48bb137fdf58ebdca90fc15e7905e717012d5"
+build_stamp: "b4741f1"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:bb187e75f8f9e9672034008e057463bcb091cdb3c377af5fb55d541c879660f8","tests/function-budget.test.ts":"sha256:f5cc42a592cfab672f4f5f8791b30091fcee84ffaed6abd3e3e9239868842605"}
+---
+2026-09-22T22:07:56.072Z

@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { reportCommand } from '../src/cli/report.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { formatMetricsReport, getMetricsReport } from '../src/core/report.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { formatMetricsReport, getMetricsReport } from '../src/core/report/report.js';
 
 const TASK = `---
 title: Task One

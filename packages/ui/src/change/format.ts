@@ -1,4 +1,4 @@
-import type { WebCoverage } from '../../../../src/core/web-data-types.js';
+import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
 
 /** The single explicit label for absent or non-finite evidence. */
 export const UNAVAILABLE = 'unavailable';

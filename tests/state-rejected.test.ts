@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { scaffoldProject } from '../src/core/init.js';
-import { deriveSpecState, readChangeFolder } from '../src/core/state.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { deriveSpecState, readChangeFolder } from '../src/core/status/state.js';
 
 const TASK = `---
 title: Task One

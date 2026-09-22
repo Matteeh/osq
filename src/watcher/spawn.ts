@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import { resolveExecutorIdentity } from '../core/harness-catalog.js';
-import type { Logger } from '../core/logger.js';
-import type { TaskData } from '../core/parser.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import { resolveExecutorIdentity } from '../core/foundation/harness-catalog.js';
+import type { Logger } from '../core/foundation/logger.js';
+import type { TaskData } from '../core/spec/parser.js';
 import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
 import { formatTaskStartedLine, readRetryContext } from './attempt.js';
 import { resolveBuildInfo } from './build.js';

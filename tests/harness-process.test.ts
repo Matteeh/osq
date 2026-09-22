@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
-import { AgyAdapter } from '../src/harness/agy.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { AgyAdapter } from '../src/harness/agy/agy.js';
 import { DEFAULT_KILL_GRACE_PERIOD_MS, spawnWithTimeout } from '../src/harness/process.js';
 
 describe('Shared Process Execution and Timeout Helper', () => {

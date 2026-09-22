@@ -1,8 +1,12 @@
-import { type HarnessName, availableHarnessNames, lookupHarness } from '../core/harness-catalog.js';
-import { AgyAdapter } from './agy.js';
-import { CodexAdapter } from './codex.js';
+import {
+  type HarnessName,
+  availableHarnessNames,
+  lookupHarness,
+} from '../core/foundation/harness-catalog.js';
+import { AgyAdapter } from './agy/agy.js';
+import { CodexAdapter } from './codex/codex.js';
 import { MockAdapter } from './mock.js';
-import { OpencodeAdapter } from './opencode.js';
+import { OpencodeAdapter } from './opencode/opencode.js';
 import type { HarnessAdapter } from './types.js';
 
 /**
@@ -33,6 +37,6 @@ export function getHarnessAdapter(name: string): HarnessAdapter {
 
 export * from './types.js';
 export * from './mock.js';
-export * from './agy.js';
-export * from './opencode.js';
-export * from './codex.js';
+export * from './agy/agy.js';
+export * from './opencode/opencode.js';
+export * from './codex/codex.js';

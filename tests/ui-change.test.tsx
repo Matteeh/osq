@@ -29,10 +29,10 @@ import {
   type FetchResponseLike,
   createDashboardData,
 } from '../packages/ui/src/data.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { getMetricsReport } from '../src/core/report.js';
-import type { WebChange, WebRecertification, WebTask } from '../src/core/web-data-types.js';
-import { getWebChange, getWebGraph } from '../src/core/web-data.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { getMetricsReport } from '../src/core/report/report.js';
+import type { WebChange, WebRecertification, WebTask } from '../src/core/web/web-data-types.js';
+import { getWebChange, getWebGraph } from '../src/core/web/web-data.js';
 import { buildWebFixture, writeRunningLock } from './fixtures/web/build.js';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));

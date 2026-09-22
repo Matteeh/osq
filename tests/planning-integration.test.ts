@@ -6,11 +6,11 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { planCommand } from '../src/cli/plan.js';
 import { reportCommand } from '../src/cli/report.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getChangesDir } from '../src/core/layout.js';
-import { readPlanRecords } from '../src/core/planning.js';
-import { formatMetricsReport, getMetricsReport } from '../src/core/report.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { readPlanRecords } from '../src/core/report/planning.js';
+import { formatMetricsReport, getMetricsReport } from '../src/core/report/report.js';
+import { getChangesDir } from '../src/core/status/layout.js';
 import { installFakeValidator } from './helpers.js';
 
 const TESTS_DIR = path.dirname(fileURLToPath(import.meta.url));

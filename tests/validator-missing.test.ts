@@ -4,9 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { lintCommand } from '../src/cli/lint.js';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { OPENSPEC_EXPECTED_VERSION, validateWithOpenSpec } from '../src/core/linter.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { OPENSPEC_EXPECTED_VERSION, validateWithOpenSpec } from '../src/core/spec/linter.js';
 
 const ADR_FRAGMENT = 'ADR 004 (decisions/004-pinned-openspec-validator.md)';
 const INSTALL_COMMAND = 'pnpm add -D @fission-ai/openspec@1.13.1';

@@ -16,9 +16,9 @@ import {
   createDashboardData,
 } from '../packages/ui/src/data.js';
 import { parseHash, resolveRoute, routeToHash } from '../packages/ui/src/router.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { getMetricsReport } from '../src/core/report.js';
-import { getWebChange, getWebGraph } from '../src/core/web-data.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { getMetricsReport } from '../src/core/report/report.js';
+import { getWebChange, getWebGraph } from '../src/core/web/web-data.js';
 import { buildWebFixture } from './fixtures/web/build.js';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));

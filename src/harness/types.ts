@@ -1,12 +1,12 @@
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import type { Logger } from '../core/logger.js';
-import type { ScopePathAttribution } from '../core/scope-hash.js';
-import type { SCOPE_RESOLVER_VERSION } from '../core/scope.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import type { Logger } from '../core/foundation/logger.js';
+import type { ScopePathAttribution } from '../core/run/scope-hash.js';
+import type { SCOPE_RESOLVER_VERSION } from '../core/run/scope.js';
 
-export type { ScopePathAttribution } from '../core/scope-hash.js';
+export type { ScopePathAttribution } from '../core/run/scope-hash.js';
 
 export type HarnessEventType =
   | 'started'

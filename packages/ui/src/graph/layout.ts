@@ -1,4 +1,8 @@
-import type { WebChangeNode, WebGraph, WebLocation } from '../../../../src/core/web-data-types.js';
+import type {
+  WebChangeNode,
+  WebGraph,
+  WebLocation,
+} from '../../../../src/core/web/web-data-types.js';
 import type { GraphControls } from './controls.js';
 import { fillValue } from './fill.js';
 import { projectRelationships } from './relationships.js';

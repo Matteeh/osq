@@ -4,14 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { lintCommand } from '../src/cli/lint.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
 import {
   type LintLogger,
   OPENSPEC_EXPECTED_VERSION,
   lintChangeFolder,
-} from '../src/core/linter.js';
-import { createNewSpec } from '../src/core/new.js';
+} from '../src/core/spec/linter.js';
 
 const RECORD_FILE = 'openspec-invocations.json';
 

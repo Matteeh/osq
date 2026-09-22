@@ -7,7 +7,7 @@ import {
   CodexEventStreamParser,
   createCodexStreamState,
   processCodexStdoutLine,
-} from '../../src/harness/codex-stream.js';
+} from '../../src/harness/codex/codex-stream.js';
 import { FIXTURE_EVENTS, FIXTURE_RECOVERABLE } from './support.js';
 
 interface ParsedEvent {

@@ -1,4 +1,4 @@
-import { scaffoldProject } from '../core/init.js';
+import { scaffoldProject } from '../core/foundation/init.js';
 
 export async function initCommand(options: { cwd?: string } = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();

@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { computeTaskScopeHash } from '../src/core/scope-hash.js';
-import { SCOPE_RESOLVER_VERSION, resolveScope } from '../src/core/scope.js';
+import { computeTaskScopeHash } from '../src/core/run/scope-hash.js';
+import { SCOPE_RESOLVER_VERSION, resolveScope } from '../src/core/run/scope.js';
 
 const SRC_DIR = path.resolve(fileURLToPath(new URL('../src', import.meta.url)));
 
@@ -205,7 +205,7 @@ describe('SCOPE_RESOLVER_VERSION', () => {
 
 describe('linter resolver cut-over', () => {
   it('removes the legacy glob matcher and its private tree walker', async () => {
-    const source = await fs.readFile(path.join(SRC_DIR, 'core', 'linter.ts'), 'utf8');
+    const source = await fs.readFile(path.join(SRC_DIR, 'core', 'spec', 'linter.ts'), 'utf8');
 
     assert.doesNotMatch(source, /globToRegExp/);
     assert.doesNotMatch(source, /listExistingTestFiles/);

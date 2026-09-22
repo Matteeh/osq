@@ -12,9 +12,9 @@ import {
   getDoneMarkerPath,
   getEventsPath,
   getSpecsDir,
-} from '../src/core/layout.js';
+} from '../src/core/status/layout.js';
 
-const LAYOUT_SRC = fileURLToPath(new URL('../src/core/layout.ts', import.meta.url));
+const LAYOUT_SRC = fileURLToPath(new URL('../src/core/status/layout.ts', import.meta.url));
 
 describe('layout path derivation', () => {
   it('derives the changes directory from a relative openspecRoot', () => {
@@ -80,6 +80,6 @@ describe('layout path derivation', () => {
 
   it('keeps the layout module under 200 lines', async () => {
     const source = await fs.readFile(LAYOUT_SRC, 'utf8');
-    assert.ok(source.split('\n').length <= 200, 'src/core/layout.ts exceeds 200 lines');
+    assert.ok(source.split('\n').length <= 200, 'src/core/status/layout.ts exceeds 200 lines');
   });
 });

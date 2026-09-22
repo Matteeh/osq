@@ -12,7 +12,7 @@ import {
   OSQ_START_MARKER,
   updateClaudePlanCommand,
   updatePlannerMd,
-} from '../src/core/init.js';
+} from '../src/core/foundation/init.js';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const agentsMdPath = path.join(repoRoot, 'AGENTS.md');

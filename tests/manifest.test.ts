@@ -4,12 +4,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { getSpecsDir } from '../src/core/layout.js';
-import { createNewSpec } from '../src/core/new.js';
-import { type PlanRecord, appendPlanRecord, getPlanLogPath } from '../src/core/planning.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { type PlanRecord, appendPlanRecord, getPlanLogPath } from '../src/core/report/planning.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { getSpecsDir } from '../src/core/status/layout.js';
 import { installFakeValidator } from './helpers.js';
 
 const LOCAL_VERIFIER = `const fs = require('node:fs');

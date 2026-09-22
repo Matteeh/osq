@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import { hashChangeFolder } from '../core/hasher.js';
-import type { Logger } from '../core/logger.js';
-import { parseTaskMd } from '../core/parser.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import type { Logger } from '../core/foundation/logger.js';
+import { hashChangeFolder } from '../core/spec/hasher.js';
+import { parseTaskMd } from '../core/spec/parser.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { runChangeVerifyGate } from './change-verify.js';
 import {

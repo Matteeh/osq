@@ -1,5 +1,5 @@
-import { loadConfig } from '../core/config.js';
-import { type LogLevel, createLogger } from '../core/logger.js';
+import { loadConfig } from '../core/foundation/config.js';
+import { type LogLevel, createLogger } from '../core/foundation/logger.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { WatchCommandOptions } from '../watcher/dev.js';
 import { startWatcher } from '../watcher/loop.js';

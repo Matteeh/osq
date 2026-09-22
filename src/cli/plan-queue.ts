@@ -2,12 +2,12 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import { getSpecsDir } from '../core/layout.js';
-import { buildManifest, writeManifest } from '../core/manifest.js';
-import { createNewSpec } from '../core/new.js';
-import { parseFrontmatter } from '../core/parser.js';
-import { type QueuePlanSelection, prepareQueuePlan } from '../core/queue.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import { createNewSpec } from '../core/foundation/new.js';
+import { buildManifest, writeManifest } from '../core/run/manifest.js';
+import { parseFrontmatter } from '../core/spec/parser.js';
+import { getSpecsDir } from '../core/status/layout.js';
+import { type QueuePlanSelection, prepareQueuePlan } from '../core/status/queue.js';
 
 export function formatBriefContent(
   body: string,

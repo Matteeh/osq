@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import { parseTaskMd } from '../core/parser.js';
+import type { OsqConfig } from '../core/foundation/config.js';
 import {
   SCOPE_RESOLVER_VERSION,
   type StaleTaskAudit,
@@ -13,8 +12,9 @@ import {
   parseActiveStaleTask,
   readDoneMarker,
   readFileChangedPaths,
-} from '../core/scope-hash.js';
-import { compareNumericPrefix } from '../core/state.js';
+} from '../core/run/scope-hash.js';
+import { parseTaskMd } from '../core/spec/parser.js';
+import { compareNumericPrefix } from '../core/status/state.js';
 import { resolveBuildInfo } from './build.js';
 import {
   type DoneMarkerMetadata,
@@ -24,8 +24,8 @@ import {
 } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
 
-export { computeTaskScopeHash } from '../core/scope-hash.js';
-export type { ScopeHashResult } from '../core/scope-hash.js';
+export { computeTaskScopeHash } from '../core/run/scope-hash.js';
+export type { ScopeHashResult } from '../core/run/scope-hash.js';
 
 /** Outcome of comparing a previously completed task's scope to the tree. */
 export interface ScopeRegressionResult {

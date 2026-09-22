@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createProgram } from '../src/cli/index.js';
-import { type LogLevel, createLogger } from '../src/core/logger.js';
+import { type LogLevel, createLogger } from '../src/core/foundation/logger.js';
 
 interface CapturedOutput {
   stderr: string;

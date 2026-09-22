@@ -1,4 +1,4 @@
-import type { WebCoverage } from '../../../../src/core/web-data-types.js';
+import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
 import type { GraphFillValue, GraphMark } from './types.js';
 
 /** A cost value, or explicit `unavailable` when no finite observation exists. */

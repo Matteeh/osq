@@ -1,5 +1,5 @@
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { retrySpec } from '../core/retry.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { retrySpec } from '../core/lifecycle/retry.js';
 
 export interface RetryCommandOptions {
   cwd?: string;

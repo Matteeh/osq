@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 import { InvalidArgumentError } from 'commander';
-import { DEFAULT_SERVE_CONFIG, isValidPort } from '../core/config-serve.js';
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { startWebServer } from '../core/web-server.js';
+import { DEFAULT_SERVE_CONFIG, isValidPort } from '../core/foundation/config-serve.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { startWebServer } from '../core/web/web-server.js';
 
 /** Injectable inputs so tests never bind a fixed port, open a browser, or wait on signals. */
 export interface ServeCommandOptions {

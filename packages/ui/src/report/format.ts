@@ -1,4 +1,4 @@
-import type { WebCoverage } from '../../../../src/core/web-data-types.js';
+import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
 import { round } from './scales.js';
 
 /** Reported cost, or explicit `unavailable` when there is no finite value. */

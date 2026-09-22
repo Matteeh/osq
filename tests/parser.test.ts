@@ -12,7 +12,7 @@ import {
   parseTaskList,
   parseTaskMd,
   resolveChangeDoc,
-} from '../src/core/parser.js';
+} from '../src/core/spec/parser.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 

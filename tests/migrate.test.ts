@@ -6,15 +6,15 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { createProgram } from '../src/cli/index.js';
 import { migrateCommand } from '../src/cli/migrate.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { getArchiveDir, getChangesDir, getSpecsDir } from '../src/core/layout.js';
-import { OPENSPEC_EXPECTED_VERSION, validateWithOpenSpec } from '../src/core/linter.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { OPENSPEC_EXPECTED_VERSION, validateWithOpenSpec } from '../src/core/spec/linter.js';
 import {
   convertSpecToProposal,
   migrateToOpenSpec,
   tickAllCheckboxes,
-} from '../src/core/migrate.js';
-import { parseFrontmatter, parseTaskMd } from '../src/core/parser.js';
+} from '../src/core/spec/migrate.js';
+import { parseFrontmatter, parseTaskMd } from '../src/core/spec/parser.js';
+import { getArchiveDir, getChangesDir, getSpecsDir } from '../src/core/status/layout.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RECORD_FILE = 'openspec-invocations.json';

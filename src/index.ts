@@ -1,6 +1,10 @@
-export { DEFAULT_CONFIG, defineConfig, loadConfig } from './core/config.js';
-export { DEFAULT_SERVE_CONFIG, isValidPort, validateServeConfig } from './core/config-serve.js';
-export type { ServeConfig } from './core/config-serve.js';
+export { DEFAULT_CONFIG, defineConfig, loadConfig } from './core/foundation/config.js';
+export {
+  DEFAULT_SERVE_CONFIG,
+  isValidPort,
+  validateServeConfig,
+} from './core/foundation/config-serve.js';
+export type { ServeConfig } from './core/foundation/config-serve.js';
 export type {
   AgyConfig,
   CodexConfig,
@@ -12,7 +16,7 @@ export type {
   OsqTimeouts,
   OsqUserConfig,
   QueueConfig,
-} from './core/config.js';
+} from './core/foundation/config.js';
 export {
   resolveCodexBinary,
   resolveCodexEffort,
@@ -20,7 +24,7 @@ export {
   resolveHarnessEffort,
   resolveHarnessModel,
   validatePlannerConfig,
-} from './core/config-codex.js';
+} from './core/foundation/config-codex.js';
 export {
   HARNESS_CATALOG,
   HARNESS_NAMES,
@@ -31,11 +35,11 @@ export {
   resolveExecutorIdentity,
   resolveHarnessExecutable,
   resolvePlannerSelection,
-} from './core/harness-catalog.js';
+} from './core/foundation/harness-catalog.js';
 export type {
   ExecutorIdentity,
   HarnessCatalogEntry,
   HarnessName,
   PlannerCapability,
   PlannerSelection,
-} from './core/harness-catalog.js';
+} from './core/foundation/harness-catalog.js';

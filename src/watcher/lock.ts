@@ -1,4 +1,4 @@
-import { type LockResult, acquireLock, releaseLock } from '../core/lock.js';
+import { type LockResult, acquireLock, releaseLock } from '../core/run/lock.js';
 
 /**
  * Acquire the exclusive running lock for a task's `.run` directory. Thin

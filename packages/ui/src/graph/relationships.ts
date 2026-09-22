@@ -1,4 +1,4 @@
-import type { WebGraph } from '../../../../src/core/web-data-types.js';
+import type { WebGraph } from '../../../../src/core/web/web-data-types.js';
 import type { GraphControls } from './controls.js';
 import {
   GRAPH_GEOMETRY,

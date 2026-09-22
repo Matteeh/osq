@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { type MetricsReport, getMetricsReport } from '../src/core/report.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { type MetricsReport, getMetricsReport } from '../src/core/report/report.js';
 
 const fixtureReportRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

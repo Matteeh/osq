@@ -8,9 +8,10 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { writeLastLook } from '../src/cli/inbox.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { readLastLook, resolveLastLookPath } from '../src/core/inbox-cursor.js';
-import { readInbox } from '../src/core/inbox-projection.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { formatDuration } from '../src/core/report/report.js';
+import { readLastLook, resolveLastLookPath } from '../src/core/status/inbox-cursor.js';
+import { readInbox } from '../src/core/status/inbox-projection.js';
 import {
   type Inbox,
   collectLandedItems,
@@ -18,9 +19,8 @@ import {
   projectInbox,
   projectNeedsYou,
   projectRunning,
-} from '../src/core/inbox.js';
-import { formatDuration } from '../src/core/report.js';
-import { getStatusOverview } from '../src/core/status.js';
+} from '../src/core/status/inbox.js';
+import { getStatusOverview } from '../src/core/status/status.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURE_INBOX = path.join(PROJECT_ROOT, 'fixture', 'inbox');

@@ -1,12 +1,12 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
-import { mergeDelta, parseDelta } from '../core/delta.js';
-import { getArchiveDir } from '../core/layout.js';
-import { parseSpecMdFromFolder, parseTaskMd } from '../core/parser.js';
-import { listCanonicalDoneNumbers } from '../core/scope-hash.js';
-import { compareNumericPrefix, deriveSpecState } from '../core/state.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import { listCanonicalDoneNumbers } from '../core/run/scope-hash.js';
+import { mergeDelta, parseDelta } from '../core/spec/delta.js';
+import { parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
+import { getArchiveDir } from '../core/status/layout.js';
+import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';

@@ -27,7 +27,7 @@ events rather than current or retained marker files.
 - **THEN** system resolves the folder across active and archive paths, displaying frontmatter, task execution table, recertification history when present, and the complete event timeline
 
 ### Requirement: Code ownership
-<!-- source: src/core/status.ts, src/core/show.ts, src/core/state.ts, src/core/layout.ts, src/core/inbox.ts, src/core/queue*.ts, tests/queue*.test.ts -->
+<!-- source: src/core/status/**, tests/queue*.test.ts -->
 The Status Inspection capability SHALL own execution queue overview formatting,
 detailed change inspection, state derivation, rejected-change presentation,
 runtime dependency completion resolution, human attention projection, and
@@ -35,7 +35,7 @@ read-only brief queue parsing and state projection.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for status, inbox, or brief queue inspection
-- **THEN** system maps `src/core/status.ts`, `src/core/show.ts`, `src/core/state.ts`, `src/core/layout.ts`, `src/core/inbox.ts`, `src/core/queue*.ts`, and `tests/queue*.test.ts` to status-inspection
+- **THEN** system maps `src/core/status/**` and `tests/queue*.test.ts` to status-inspection
 
 ### Requirement: Undeclared test change status inspection
 <!-- source: src/core/status.ts, src/core/show.ts, tests/show.test.ts -->

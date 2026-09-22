@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { scaffoldProject } from '../src/core/init.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoEnvExamplePath = path.join(repoRoot, '.env.example');

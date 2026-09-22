@@ -9,7 +9,7 @@ import {
   OSQ_END_MARKER,
   OSQ_START_MARKER,
   updateAgentsMd,
-} from '../src/core/init.js';
+} from '../src/core/foundation/init.js';
 
 const OPENSPEC_START_MARKER = '<!-- OPENSPEC:START -->';
 const OPENSPEC_END_MARKER = '<!-- OPENSPEC:END -->';

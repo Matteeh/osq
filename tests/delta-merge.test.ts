@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import {
   DeltaMergeError,
   mergeDelta,
@@ -13,7 +13,7 @@ import {
   parseRequirement,
   parseScenario,
   serializeCapabilitySpec,
-} from '../src/core/delta.js';
+} from '../src/core/spec/delta.js';
 import { applyOpenSpecDeltas } from '../src/watcher/archiver.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

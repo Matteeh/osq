@@ -300,7 +300,7 @@ labels, controls, and text in addition to color.
 - **THEN** navigation, controls, tables, and horizontally scrollable SVG views remain readable and usable
 
 ### Requirement: Code ownership
-<!-- source: src/core/web*.ts, packages/ui/**, tests/serve*.test.ts, tests/web*.test.ts, tests/ui*.test.ts, tests/fixtures/web/** -->
+<!-- source: src/core/web/**, packages/ui/**, tests/serve*.test.ts, tests/web*.test.ts, tests/ui*.test.ts, tests/fixtures/web/** -->
 The Web Inspection capability SHALL own read-only web document composition,
 HTTP routing and static delivery, SSE invalidation, the browser application,
 and their focused fixtures and tests. CLI command registration, public
@@ -311,4 +311,4 @@ contracts and SHALL not depend on Web Inspection.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** ownership is resolved for dashboard core or browser files
-- **THEN** `src/core/web*.ts`, `packages/ui/**`, focused web tests, and web fixtures map to web-inspection while existing core capabilities retain their dependency direction
+- **THEN** `src/core/web/**`, `packages/ui/**`, focused web tests, and web fixtures map to web-inspection while existing core capabilities retain their dependency direction

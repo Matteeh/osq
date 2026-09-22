@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { type Logger, resolveSymbol } from '../core/logger.js';
-import { SCOPE_RESOLVER_VERSION } from '../core/scope.js';
+import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
+import { SCOPE_RESOLVER_VERSION } from '../core/run/scope.js';
 import {
   type DeadEventData,
   type DoneEventData,

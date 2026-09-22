@@ -1,4 +1,8 @@
-import type { WebCoverage, WebGraph, WebTokenGroup } from '../../../../src/core/web-data-types.js';
+import type {
+  WebCoverage,
+  WebGraph,
+  WebTokenGroup,
+} from '../../../../src/core/web/web-data-types.js';
 import { round } from './scales.js';
 
 /** One landed change with its ordered, change-level chart observations. */

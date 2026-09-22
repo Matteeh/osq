@@ -3,10 +3,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
-import { formatStatusOverview, getStatusOverview } from '../src/core/status.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { formatStatusOverview, getStatusOverview } from '../src/core/status/status.js';
 
 function rejectedDir(root: string): string {
   return path.join(root, 'openspec', 'changes', 'rejected');

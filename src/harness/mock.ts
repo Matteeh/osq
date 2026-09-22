@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/config.js';
+import type { OsqConfig } from '../core/foundation/config.js';
 import {
   type HarnessAdapter,
   type InteractiveSessionOptions,

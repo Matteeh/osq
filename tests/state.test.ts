@@ -3,11 +3,15 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { scaffoldProject } from '../src/core/init.js';
-import { acquireLock, releaseLock } from '../src/core/lock.js';
-import { createNewSpec } from '../src/core/new.js';
-import { parseSpecMd } from '../src/core/parser.js';
-import { type ChangeFolderSnapshot, deriveSpecState, deriveTaskState } from '../src/core/state.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { acquireLock, releaseLock } from '../src/core/run/lock.js';
+import { parseSpecMd } from '../src/core/spec/parser.js';
+import {
+  type ChangeFolderSnapshot,
+  deriveSpecState,
+  deriveTaskState,
+} from '../src/core/status/state.js';
 
 describe('State Derivation', () => {
   let tmpDir: string;

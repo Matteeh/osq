@@ -6,12 +6,12 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { doneCommand } from '../src/cli/done.js';
 import { createProgram } from '../src/cli/index.js';
 import { reportCommand } from '../src/cli/report.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { markTaskDoneManual } from '../src/core/done.js';
-import { scaffoldProject } from '../src/core/init.js';
-import { createNewSpec } from '../src/core/new.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { formatMetricsReport, getMetricsReport } from '../src/core/report.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { scaffoldProject } from '../src/core/foundation/init.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { markTaskDoneManual } from '../src/core/lifecycle/done.js';
+import { formatMetricsReport, getMetricsReport } from '../src/core/report/report.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
 
 const TASKS_MD = `# Tasks
 

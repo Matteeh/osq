@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createProgram } from '../src/cli/index.js';
-import { DEFAULT_CONFIG } from '../src/core/config.js';
-import { formatQueue, parseQueue, projectQueue, readQueue } from '../src/core/queue.js';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { formatQueue, parseQueue, projectQueue, readQueue } from '../src/core/status/queue.js';
 
 const OPENSPEC = 'openspec';
 const QUEUE_PATH = 'openspec/queue.md';

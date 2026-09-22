@@ -4,19 +4,19 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { doctorCommand } from '../src/cli/doctor.js';
 import { planCommand } from '../src/cli/plan.js';
-import { approveSpec } from '../src/core/approve.js';
-import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/config.js';
-import { type DoctorReport, runDoctorChecks } from '../src/core/doctor.js';
-import { resolveExecutorIdentity } from '../src/core/harness-catalog.js';
-import { getChangesDir } from '../src/core/layout.js';
-import { OPENSPEC_EXPECTED_VERSION } from '../src/core/linter.js';
-import { buildManifest } from '../src/core/manifest.js';
-import { createNewSpec } from '../src/core/new.js';
-import { parseFrontmatter } from '../src/core/parser.js';
-import { AgyAdapter } from '../src/harness/agy.js';
-import { CodexAdapter } from '../src/harness/codex.js';
+import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
+import { type DoctorReport, runDoctorChecks } from '../src/core/foundation/doctor.js';
+import { resolveExecutorIdentity } from '../src/core/foundation/harness-catalog.js';
+import { createNewSpec } from '../src/core/foundation/new.js';
+import { buildManifest } from '../src/core/run/manifest.js';
+import { approveSpec } from '../src/core/spec/approve.js';
+import { OPENSPEC_EXPECTED_VERSION } from '../src/core/spec/linter.js';
+import { parseFrontmatter } from '../src/core/spec/parser.js';
+import { getChangesDir } from '../src/core/status/layout.js';
+import { AgyAdapter } from '../src/harness/agy/agy.js';
+import { CodexAdapter } from '../src/harness/codex/codex.js';
 import { MockAdapter } from '../src/harness/mock.js';
-import { OpencodeAdapter } from '../src/harness/opencode.js';
+import { OpencodeAdapter } from '../src/harness/opencode/opencode.js';
 import type {
   HarnessAdapter,
   InteractiveSessionOptions,

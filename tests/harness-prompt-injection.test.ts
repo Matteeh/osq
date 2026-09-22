@@ -3,9 +3,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { buildAgyPrompt } from '../src/harness/agy.js';
-import { buildCodexPrompt } from '../src/harness/codex-prompt.js';
-import { buildOpencodePrompt } from '../src/harness/opencode.js';
+import { buildAgyPrompt } from '../src/harness/agy/agy.js';
+import { buildCodexPrompt } from '../src/harness/codex/codex-prompt.js';
+import { buildOpencodePrompt } from '../src/harness/opencode/opencode.js';
 import {
   type SpawnTaskOptions,
   extractCapabilityRules,

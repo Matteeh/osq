@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { DEFAULT_CONFIG, defineConfig, loadConfig } from '../src/core/config.js';
+import { DEFAULT_CONFIG, defineConfig, loadConfig } from '../src/core/foundation/config.js';
 import type { QueueConfig } from '../src/index.js';
 
 describe('queue configuration', () => {

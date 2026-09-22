@@ -5,14 +5,14 @@ import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { reportCommand } from '../src/cli/report.js';
-import { DEFAULT_CONFIG, defineConfig } from '../src/core/config.js';
+import { DEFAULT_CONFIG, defineConfig } from '../src/core/foundation/config.js';
 import {
   type RepositoryRecord,
   formatMetricsReport,
   formatRepositoryRecordBody,
   getMetricsReport,
   getRepositoryRecord,
-} from '../src/core/report.js';
+} from '../src/core/report/report.js';
 
 const fixtureRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

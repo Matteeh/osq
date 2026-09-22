@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { type OsqConfig, loadConfig } from '../core/config.js';
-import { readLastLook, resolveLastLookPath } from '../core/inbox-cursor.js';
-import { readInbox } from '../core/inbox-projection.js';
-import { type Inbox, formatInboxText } from '../core/inbox.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { readLastLook, resolveLastLookPath } from '../core/status/inbox-cursor.js';
+import { readInbox } from '../core/status/inbox-projection.js';
+import { type Inbox, formatInboxText } from '../core/status/inbox.js';
 
 export { readLastLook, resolveLastLookPath };
 
