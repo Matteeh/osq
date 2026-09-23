@@ -33,7 +33,8 @@ async function runBin(args: string[], cwd: string): Promise<string> {
 
 describe('built bin execution', () => {
   before(async () => {
-    await execFileAsync('npm', ['run', 'build'], { cwd: repoRoot });
+    const stat = await fs.stat(binPath).catch(() => null);
+    assert.ok(stat?.isFile(), 'dist/cli/bin.js is missing; run pnpm build before verifying');
   });
 
   it('preserves the executable shebang after compilation', async () => {

@@ -27,6 +27,25 @@ const pnpmSpawnPattern = new RegExp(
   'g',
 );
 
+// Build commands are assembled from fragments so this scanner's own source does
+// not contain the literal argument shapes it looks for.
+const STAGE_UI_SCRIPT = `${['stage', 'ui'].join('-')}.mjs`;
+
+const buildSpawnPatterns: readonly RegExp[] = [
+  new RegExp(
+    `\\b(?:${PROCESS_EXECUTION_CALLS.join('|')})\\s*\\([^);]*['"]run['"]\\s*,\\s*['"]build['"]`,
+    'g',
+  ),
+  new RegExp(
+    `\\b(?:${PROCESS_EXECUTION_CALLS.join('|')})\\s*\\([^);]*['"]vite['"][^);]*['"]build['"]`,
+    'g',
+  ),
+  new RegExp(
+    `\\b(?:${PROCESS_EXECUTION_CALLS.join('|')})\\s*\\([^);]*${STAGE_UI_SCRIPT.replace(/\./g, '\\.')}`,
+    'g',
+  ),
+];
+
 async function collectTestSources(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const nested = await Promise.all(
@@ -35,10 +54,28 @@ async function collectTestSources(dir: string): Promise<string[]> {
       if (entry.isDirectory()) {
         return collectTestSources(fullPath);
       }
-      return /\.(?:ts|js)$/.test(entry.name) ? [fullPath] : [];
+      return /\.(?:ts|tsx|js)$/.test(entry.name) ? [fullPath] : [];
     }),
   );
   return nested.flat();
+}
+
+/** Names every test-source line where any pattern matches. */
+async function collectSpawnOffenders(patterns: readonly RegExp[]): Promise<string[]> {
+  const files = await collectTestSources(testsDir);
+  const offenders: string[] = [];
+
+  for (const file of files) {
+    const source = await fs.readFile(file, 'utf8');
+    for (const pattern of patterns) {
+      for (const match of source.matchAll(pattern)) {
+        const line = source.slice(0, match.index).split('\n').length;
+        offenders.push(`${path.relative(repoRoot, file)}:${line}`);
+      }
+    }
+  }
+
+  return offenders;
 }
 
 interface PackFile {
@@ -199,6 +236,12 @@ describe('package manager independence', () => {
       [],
       `tests must not pass 'pnpm' as a spawn command: ${offenders.join(', ')}`,
     );
+  });
+
+  it('never runs a build command from any test under tests/', async () => {
+    const offenders = await collectSpawnOffenders(buildSpawnPatterns);
+
+    assert.deepEqual(offenders, [], `tests must not run a build command: ${offenders.join(', ')}`);
   });
 });
 

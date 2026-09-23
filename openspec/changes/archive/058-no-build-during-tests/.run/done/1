@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c97ed31491d1766f49b26c095d524cce55220af1fee1fecd23a1d42e45be3adf"
+build_stamp: "d990bab"
+exit_code: 0
+scope_files: {"tests/bin-execution.test.ts":"sha256:0a80776933c055a0e589ceb499ba9d8e07faa673fbd7e25fc6913039c4c725b2","tests/package-hygiene.test.ts":"sha256:c75d9b9d1a5013dd77d53cc2a2457e1bc7ec48005c62baab4b0d305f8b188d78","tests/package-install-smoke.test.ts":"sha256:fe8d05c7ba2cc5dffec74e3cfabb3733453410b24dec450d13490ef58405e262"}
+---
+2026-09-23T08:10:45.921Z

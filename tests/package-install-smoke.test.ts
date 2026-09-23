@@ -122,8 +122,13 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
     if (tarballOverride) {
       tarballPath = tarballOverride;
     } else {
-      // Build fresh output, then pack the local tarball into the temp workspace.
-      await run('npm', ['run', 'build'], repoRoot);
+      // `pnpm verify` builds before running tests; pack that verified output.
+      for (const relative of ['dist/cli/bin.js', 'ui/dist/index.html']) {
+        assert.ok(
+          await exists(path.join(repoRoot, relative)),
+          `${relative} is missing; run pnpm build before verifying`,
+        );
+      }
       const packStdout = await run(
         'npm',
         ['pack', '--json', '--pack-destination', workDir],
