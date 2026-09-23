@@ -8,6 +8,12 @@ import { type PlanRecord, planningRecordSource, readPlanRecords } from '../repor
 import { parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { getSpecsDir } from '../status/layout.js';
 
+/** Recorded approval flags: the distinct sorted ids and how they were handled. */
+export interface ApprovalFlagsData {
+  ids: string[];
+  mode: 'shown' | 'confirmed';
+}
+
 /** Content-addressed hashes plus the exact inputs an approval was produced with. */
 export interface ManifestData {
   hashes: Record<string, string | null>;
@@ -20,6 +26,12 @@ export interface ManifestData {
   approvedAt: string;
   /** Count of valid `plan_started` records present at manifest build time. */
   planningSessions: number;
+  /**
+   * The approval's distinct flag ids and whether they were confirmed. Only the
+   * approval path records it; a planning-only manifest omits the field so the
+   * report can tell an approval apart from a queued plan.
+   */
+  approvalFlags?: ApprovalFlagsData;
 }
 
 async function hashFileContent(filePath: string): Promise<string | null> {
@@ -109,6 +121,7 @@ export async function buildManifest(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
+  approvalFlags?: { ids: readonly string[]; mode: 'shown' | 'confirmed' },
 ): Promise<ManifestData> {
   const spec = await parseSpecMdFromFolder(specFolderPath);
   const configPath = await resolveConfigPath(projectRoot);
@@ -136,7 +149,7 @@ export async function buildManifest(
   const planRecords = await readPlanRecords(specFolderPath);
   const planningSessions = planRecords.filter((record) => record.type === 'plan_started').length;
 
-  return {
+  const manifest: ManifestData = {
     hashes,
     osqVersion: await resolveOsqVersion(),
     harness: identity.harness,
@@ -147,6 +160,13 @@ export async function buildManifest(
     approvedAt: new Date().toISOString(),
     planningSessions,
   };
+  if (approvalFlags) {
+    manifest.approvalFlags = {
+      ids: [...new Set(approvalFlags.ids)].sort(),
+      mode: approvalFlags.mode,
+    };
+  }
+  return manifest;
 }
 
 /** Writes `manifest.json` under `runDir` as indented JSON. */

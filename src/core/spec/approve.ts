@@ -10,6 +10,12 @@ import {
 import { hashBriefBytes, resolveOsqPackageVersion } from '../report/planning.js';
 import { buildManifest, writeManifest } from '../run/manifest.js';
 import { getChangesDir } from '../status/layout.js';
+import {
+  type ApprovalDigest,
+  type ApprovalFlag,
+  buildApprovalDigest,
+  summarizeApprovalFlags,
+} from './digest.js';
 import { hashChangeFolder } from './hasher.js';
 import { lintChangeFolder } from './linter.js';
 
@@ -51,6 +57,19 @@ export interface ApproveResult {
   warnings: string[];
   /** Number of local planning sessions matched at approval time. */
   planningMatches: number;
+  /** The digest built for this approval, flags included. */
+  digest: ApprovalDigest;
+}
+
+/** How an optional approver review resolved before the seal was written. */
+export type ApprovalReview = 'proceed' | 'confirmed' | 'declined';
+
+/** Thrown when an approver declined a flagged approval; nothing is written. */
+export class ApprovalDeclinedError extends Error {
+  constructor(flags: readonly ApprovalFlag[]) {
+    super(`Approval declined: ${summarizeApprovalFlags(flags)}`);
+    this.name = 'ApprovalDeclinedError';
+  }
 }
 
 export interface ApproveOptions {
@@ -58,6 +77,8 @@ export interface ApproveOptions {
   planningReaders?: readonly PlanningSessionReader[];
   /** Single observation end; defaults to the current time. */
   now?: Date | string;
+  /** Optional port between the CLI and core for digest review and confirmation. */
+  review?: (digest: ApprovalDigest) => Promise<ApprovalReview>;
 }
 
 function toIso(value: Date | string | undefined): string | null {
@@ -93,6 +114,18 @@ export async function approveSpec(
     );
   }
 
+  // Build the digest after lint and before any observation write, then let the
+  // optional review port decide whether a flagged approval may proceed.
+  const digest = await buildApprovalDigest(projectRoot, folderPath, config);
+  let mode: 'shown' | 'confirmed' = 'shown';
+  if (options.review) {
+    const review = await options.review(digest);
+    if (review === 'declined') {
+      throw new ApprovalDeclinedError(digest.flags);
+    }
+    mode = review === 'confirmed' ? 'confirmed' : 'shown';
+  }
+
   // Discover local planning sessions after lint so a failed change is never
   // recorded, then append observed pairs before the manifest is built.
   const observations = await findPlanningSessions(folderPath, {
@@ -117,7 +150,10 @@ export async function approveSpec(
   const approvedPath = path.join(runDir, 'approved');
   await fs.writeFile(approvedPath, `${hash}\n`, 'utf8');
 
-  const manifest = await buildManifest(projectRoot, folderPath, config);
+  const manifest = await buildManifest(projectRoot, folderPath, config, {
+    ids: digest.flags.map((flag) => flag.id),
+    mode,
+  });
   await writeManifest(runDir, manifest);
 
   return {
@@ -127,5 +163,6 @@ export async function approveSpec(
     hash,
     warnings: lintResult.warnings,
     planningMatches: observations.length,
+    digest,
   };
 }

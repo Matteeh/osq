@@ -115,8 +115,9 @@ export function createProgram(version?: string): Command {
   program
     .command('approve <ids...>')
     .description('lint, hash, and approve change folders')
-    .action(async (ids: string[]) => {
-      await approveCommand(ids);
+    .option('--confirm', 'ask about approval flags before sealing')
+    .action(async (ids: string[], options: { confirm?: boolean }) => {
+      await approveCommand(ids, { confirm: options.confirm });
     });
 
   program
@@ -186,8 +187,9 @@ export function createProgram(version?: string): Command {
   program
     .command('show <id>')
     .description('show detailed change information, tasks, and event timeline')
-    .action(async (id: string) => {
-      await showCommand(id);
+    .option('--json', 'print change details and digest as JSON')
+    .action(async (id: string, options: { json?: boolean }) => {
+      await showCommand(id, { json: options.json });
     });
 
   program

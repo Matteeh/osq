@@ -1,9 +1,19 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import {
+  buildApprovalDigest,
+  formatApprovalDigest,
+  formatApprovalFlags,
+} from '../core/spec/digest.js';
 import { formatSpecDetails, getSpecDetails } from '../core/status/show.js';
 
 export async function showCommand(
   specId: string,
-  options: { cwd?: string; stdout?: (msg: string) => void; config?: OsqConfig } = {},
+  options: {
+    cwd?: string;
+    stdout?: (msg: string) => void;
+    config?: OsqConfig;
+    json?: boolean;
+  } = {},
 ): Promise<string> {
   const cwd = options.cwd || process.cwd();
   const config = options.config || (await loadConfig(cwd));
@@ -15,7 +25,25 @@ export async function showCommand(
 
   try {
     const details = await getSpecDetails(cwd, specId, config);
-    const formatted = formatSpecDetails(details);
+    // Only an unapproved change carries a digest; an approved one reports null.
+    const digest =
+      details.approvedHash === null
+        ? await buildApprovalDigest(cwd, details.folderPath, config)
+        : null;
+
+    let formatted: string;
+    if (options.json) {
+      formatted = JSON.stringify({ ...details, digest }, null, 2);
+    } else {
+      formatted = formatSpecDetails(details);
+      if (digest) {
+        formatted += `\n${formatApprovalDigest(digest)}`;
+        for (const line of formatApprovalFlags(digest.flags)) {
+          formatted += `\n${line}`;
+        }
+      }
+    }
+
     if (options.stdout) {
       options.stdout(formatted);
     } else {

@@ -15,6 +15,7 @@ const fixtureReportRoot = path.resolve(
 );
 
 const STABLE_TOP_LEVEL_KEYS = [
+  'approvalFlags',
   'completionRate',
   'coverage',
   'cycle',
@@ -118,6 +119,16 @@ describe('report --json', () => {
     const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
 
     assert.deepEqual(sortedKeys(parsed.specs), ['active', 'archived', 'total']);
+    assert.deepEqual(sortedKeys(parsed.approvalFlags as object), ['byFlag', 'changes']);
+    assert.deepEqual(sortedKeys((parsed.approvalFlags as Record<string, object>).byFlag), [
+      'none',
+      'removed_requirement',
+      'sensitive_path',
+      'shared_file',
+      'unknown_capability',
+      'verify_without_test',
+    ]);
+    assert.deepEqual((parsed.approvalFlags as Record<string, unknown>).changes, 0);
     assert.deepEqual(sortedKeys(parsed.now), [
       'dead',
       'done',
@@ -302,6 +313,15 @@ describe('report --json', () => {
 describe('formatMetricsReport', () => {
   it('renders exclusively from the values held by the MetricsReport object', () => {
     const report = {
+      approvalFlags: {
+        changes: 3,
+        byFlag: {
+          shared_file: {
+            shown: { fired: 2, troubled: 1 },
+            confirmed: { fired: 1, troubled: 0 },
+          },
+        },
+      },
       completionRate: 12.5,
       coverage: {
         withEvents: 2,
@@ -501,10 +521,23 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Verification failed at detection: 2'));
     assert.ok(formatted.includes('Recertified by human: 1'));
     assert.ok(formatted.includes('Requeued for agent: 1'));
+    assert.ok(formatted.includes('Approval flags:'));
+    assert.ok(formatted.includes('3 approved changes recorded flags'));
+    assert.ok(
+      formatted.includes(
+        'shared_file: fired 3 (shown 2, confirmed 1), later trouble 1 (shown 1, confirmed 0)',
+      ),
+    );
+    assert.ok(
+      formatted.includes(
+        'none: fired 0 (shown 0, confirmed 0), later trouble 0 (shown 0, confirmed 0)',
+      ),
+    );
   });
 
   it('always renders the historical cost line, including at zero', () => {
     const report = {
+      approvalFlags: { changes: 0, byFlag: {} },
       completionRate: 0,
       coverage: { withEvents: 0, withoutEvents: 0, byChange: {} },
       cycle: {
@@ -626,6 +659,13 @@ describe('formatMetricsReport', () => {
     assert.ok(formatted.includes('Verification failed at detection: 0'), formatted);
     assert.ok(formatted.includes('Recertified by human: 0'), formatted);
     assert.ok(formatted.includes('Requeued for agent: 0'), formatted);
+    assert.ok(formatted.includes('0 approved changes recorded flags'), formatted);
+    assert.ok(
+      formatted.includes(
+        'none: fired 0 (shown 0, confirmed 0), later trouble 0 (shown 0, confirmed 0)',
+      ),
+      formatted,
+    );
     assert.ok(formatted.includes('0 changes have a planning record'), formatted);
   });
 });

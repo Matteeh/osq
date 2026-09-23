@@ -6,6 +6,11 @@ import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.j
 import { type QueueReport, readQueueReport } from '../status/queue-report.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from '../status/state.js';
 import {
+  type ApprovalFlagOutcomes,
+  collectApprovalFlagOutcomes,
+  formatApprovalFlagOutcomes,
+} from './approval-flags.js';
+import {
   type PlanningChangeEconomics,
   type PlanningComparison,
   buildPlanningComparison,
@@ -197,6 +202,7 @@ export interface CoverageMetrics {
 }
 
 export interface MetricsReport {
+  readonly approvalFlags: ApprovalFlagOutcomes;
   readonly completionRate: number;
   readonly coverage: CoverageMetrics;
   readonly cycle: CycleMetrics;
@@ -1239,6 +1245,8 @@ export async function getMetricsReport(
 
   const queue = await readQueueReport(projectRoot, config);
 
+  const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders);
+
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
     scopeFileSeries: deriveScopeFileSeries(measuredTasks),
@@ -1254,6 +1262,7 @@ export async function getMetricsReport(
   );
 
   return {
+    approvalFlags,
     specs: {
       total: totalSpecs,
       active: activeSpecs,
@@ -1755,6 +1764,10 @@ export function formatMetricsReport(
       `  Cost: planning ${formatComparisonCost(planningSide.cost)}, execution ${formatComparisonCost(executionSide.cost)}`,
     );
   }
+
+  lines.push('');
+  lines.push('Approval flags:');
+  lines.push(...formatApprovalFlagOutcomes(report.approvalFlags));
 
   lines.push('');
   lines.push('Cycle:');

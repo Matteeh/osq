@@ -291,12 +291,13 @@ The state derivation subsystem SHALL support overloaded invocation for both in-m
 - **THEN** archive destination path is determined using `getArchiveDir` from `src/core/layout.ts`
 
 ### Requirement: Run manifest at approval
-<!-- source: src/core/approve.ts, src/core/manifest.ts, src/core/planning.ts, tests/manifest.test.ts, tests/planning-observed.test.ts -->
+<!-- source: src/core/spec/approve.ts, src/core/run/manifest.ts, src/core/report/planning.ts, tests/manifest.test.ts, tests/planning-observed-approve.test.ts, tests/approve-confirm.test.ts -->
 The approve command SHALL write `.run/manifest.json` containing
 content-addressed instruction, config, and capability hashes; execution
 identity and timestamps; `planningSessions`, the number of valid owned and
-observed `plan_started` records; and nullable `planner` attribution. An owned
-start without an exit SHALL retain its established count.
+observed `plan_started` records; nullable `planner` attribution; and
+`approvalFlags` with the distinct sorted flag `ids` of this approval and a
+`mode` of `confirmed` when they were confirmed at a prompt, else `shown`.
 
 `planner` SHALL use the model from the most recent observed session that reports
 one, then the most recent owned `--session` record that reports one, else null.
@@ -305,7 +306,7 @@ Configuration alone SHALL never populate it. Planning logs remain below
 
 #### Scenario: Manifest written on approval
 - **WHEN** `osq approve` seals a change
-- **THEN** `.run/manifest.json` contains content hashes, execution identity, timestamps, planning-session count, and observed planner attribution
+- **THEN** `.run/manifest.json` contains content hashes, execution identity, timestamps, planning-session count, observed planner attribution, and approval flags
 
 #### Scenario: Approval after multiple planning sessions
 - **WHEN** a change with valid owned and observed starts is approved
@@ -322,6 +323,10 @@ Configuration alone SHALL never populate it. Planning logs remain below
 #### Scenario: No session reports a model
 - **WHEN** neither observed nor owned planning history supplies a model
 - **THEN** the manifest records `planner: null` regardless of configured planner values
+
+#### Scenario: Approval without flags
+- **WHEN** a change that trips no flag is approved
+- **THEN** the manifest records `approvalFlags` with empty `ids` and mode `shown`
 
 ### Requirement: Raw measures events on task lifecycle
 <!-- source: src/core/scope.ts, src/watcher/measures.ts, src/harness/types.ts -->

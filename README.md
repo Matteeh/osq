@@ -73,6 +73,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 ## Gates and permissions
 
 - **Approval gate.** Nothing runs until a human runs `osq approve`. It lints the change, hashes the folder, and writes `.run/approved` plus `.run/manifest.json`.
+- **Approval digest.** Before sealing, `osq approve` prints a short digest: the goal, one line per task with its resolved-scope file count, and the requirements each delta adds, modifies, or removes. It then flags five things worth a human look: `shared_file` (a path two tasks share), `sensitive_path` (a package manifest, lockfile, CI workflow, osq or OpenSpec config, managed instruction file, or env file in scope), `verify_without_test` (a verify naming no test file or runner), `removed_requirement` (a delta that removes requirements), and `unknown_capability` (a delta for a capability with no living spec). Flags never block by default: they print last, as information, and the approval line names them (`Approved <id> with N flags: ...`). Add `--confirm` to stop and ask about them instead.
 - **Verification gate.** The watcher never trusts the agent's claim. It runs each task's `verify` in its own process after the agent exits and writes `.run/done/<n>` only on exit 0; a non-zero exit becomes `.run/dead/<n>.md`.
 - **Change verification after every task.** When the task's `verify` passes, the watcher also runs the proposal's change-level `verify` (`gates.changeVerifyAfterTask`, on by default). A red result kills the task with `change_verify_red`, so every task must leave the whole change green.
 - **Pre-spawn verify check.** Before a task's first attempt, the watcher runs that task's `verify` once and expects it to fail: a verify already green before any agent work means the work is done or the verify does not exercise the task. A task declares its expected start with `verify_starts` — `red` by default, `green` for work like a refactor that should already pass, or `any` when either is fine. A mismatch warns by default and the task continues; `gates.preSpawnVerify: fail` kills the task with `verify_precondition` before the agent spawns, and `off` disables the check. A mismatch shows in the task's `verify_ran` event, `osq show`, and `osq report`. The check adds one extra verify per task, on its first attempt only.
@@ -315,19 +316,33 @@ osq new <name>           new change folder from template in openspec/changes/
 osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool
 osq queue                print the read-only brief queue from openspec/queue.md
 osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints
-osq approve <ids...>     lint, hash, approve change; write .run/approved and .run/manifest.json
+osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
 osq reject <id>          move an unapproved or failed change intact into rejected history
 osq done <id> <task>     mark a task done manually with required justification (--manual)
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
-osq show <id>            change details, tasks, results, dead markers, and event timeline
+osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
 osq serve --export <dir> write a static dashboard snapshot to <dir> and exit
 osq doctor               validate repository health, harness availability, and pinned validator
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
 ```
+
+### Approval
+
+```sh
+osq approve <id> --confirm   # show the digest, then ask about any flags before sealing
+osq show <id> --json         # details, tasks, events, and the digest as JSON
+```
+
+By default `osq approve` prints the digest and its flags, then approves without
+asking; flags never block. `--confirm` asks only when flags fire, defaults to no,
+and refuses without a terminal rather than waiting. A declined or refused approval
+writes nothing, and `--confirm` on a flag-free change approves without a prompt.
+`osq show <id> --json` prints the same details as JSON, with the digest and flags
+for an unapproved change and a null digest once it is approved.
 
 ### Human Attention Inbox
 
@@ -443,7 +458,7 @@ osq report               # formatted terminal report
 osq report --json        # raw JSON report for scripting and CI pipelines
 ```
 
-`osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. The `Planning by change` section shows each change's sessions, tokens by kind, cost, active minutes, spec words, changed lines, and spec words per changed line, plus the minutes from its last planning edit to approval; active minutes sum the gaps between a slice's turns and leave out any gap longer than `planning.idleGapMinutes`. The `Planning vs execution` section compares planning and executor tokens and cost. Reported cost sums the `cost` values carried by harness events, and any cost that no attempt or session reported reads `not reported` instead of a dollar amount. Reported cost reflects the harness's internal price table rather than the invoice.
+`osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. The `Planning by change` section shows each change's sessions, tokens by kind, cost, active minutes, spec words, changed lines, and spec words per changed line, plus the minutes from its last planning edit to approval; active minutes sum the gaps between a slice's turns and leave out any gap longer than `planning.idleGapMinutes`. The `Planning vs execution` section compares planning and executor tokens and cost. Reported cost sums the `cost` values carried by harness events, and any cost that no attempt or session reported reads `not reported` instead of a dollar amount. Reported cost reflects the harness's internal price table rather than the invoice. The `Approval flags` section counts, per flag and for changes that recorded none, how many changes fired it and how many later had trouble (a dead task or a regression), split by whether the flags were only shown or confirmed with `--confirm`; it counts only changes approved after this release, because older manifests carry no recorded flags and are skipped.
 
 ### Delivery Dashboard
 

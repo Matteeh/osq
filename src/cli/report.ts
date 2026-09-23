@@ -38,6 +38,18 @@ export function serializeSortedJson(data: unknown): string {
  */
 function toStableMetrics(report: MetricsReport): Record<string, unknown> {
   return {
+    approvalFlags: {
+      changes: report.approvalFlags.changes,
+      byFlag: Object.fromEntries(
+        Object.entries(report.approvalFlags.byFlag).map(([key, outcome]) => [
+          key,
+          {
+            shown: { ...outcome.shown },
+            confirmed: { ...outcome.confirmed },
+          },
+        ]),
+      ),
+    },
     completionRate: report.completionRate,
     coverage: {
       withEvents: report.coverage.withEvents,

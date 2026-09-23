@@ -55,7 +55,7 @@ export interface SpecData {
   readonly raw: string;
 }
 
-function extractSection(body: string, heading: string): string {
+export function extractSection(body: string, heading: string): string {
   const regex = new RegExp(`##\\s+${heading}\\s*\\n([\\s\\S]*?)(?=(?:\\n##\\s+|$))`, 'i');
   const match = body.match(regex);
   return match ? match[1].trim() : '';

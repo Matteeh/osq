@@ -1,4 +1,69 @@
 {
+  "approvalFlags": {
+    "byFlag": {
+      "none": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
+      "removed_requirement": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
+      "sensitive_path": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
+      "shared_file": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
+      "unknown_capability": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
+      "verify_without_test": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      }
+    },
+    "changes": 0
+  },
   "completionRate": 100,
   "coverage": {
     "byChange": {
