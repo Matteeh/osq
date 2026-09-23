@@ -32,24 +32,24 @@ your complete prompt; read it and follow it exactly.
 ### Tasks
 
 - One task per coherent unit. Title is "When X, Y".
-- Every task names its `scope` and `verify` (no TTY, no network). A task that
-  changes a preexisting test sets `tests.modify: true` and lists that test in
-  `scope`; every other preexisting test is frozen. `osq lint` enforces the
-  configured limits on scope patterns and acceptance lines.
+- Every task names its `scope` and `verify` (no TTY, no network). A task that changes a preexisting
+  test sets `tests.modify: true` and lists that test in `scope`; every other preexisting test is
+  frozen. `osq lint` enforces the configured limits on scope patterns and acceptance lines.
 - `osq init` and `osq new` seed `verify: node -e "process.exit(0)"` as a
   planning sentinel, not trusted coverage. `osq lint` rejects it; replace it
   before approval with a command that verifies the completed change's final tree.
-- Every task's `verify` exercises its slice through the real entry point, wiring
-  included. If closing the loop requires a file outside the task's `scope`, the
-  scope is wrong; widen it or merge the task. An executor result that says the
-  work is outside its scope is a planning failure.
+- Every task's `verify` exercises its slice through the real entry point, wiring included. If closing
+  the loop requires a file outside the task's `scope`, the scope is wrong; widen it or merge the task.
+  An executor result that says the work is outside its scope is a planning failure.
 - Every task's `verify` must stay re-runnable against the final tree of the
-  completed change, because the watcher and archive recertification run it there
-  after later tasks land. A command that passes only mid-change is a planning
-  failure.
+  completed change, because the watcher and archive recertification run it there after
+  later tasks land. A command that passes only mid-change is a planning failure.
 - By default the watcher also runs the change-level `verify` after each task, and
   a red result kills that task. Every task must leave it green; tasks that pass
   only together are one task.
+- The watcher runs each task's `verify` once before the first attempt and expects
+  it to fail. A task whose `verify` should already pass before any change, such as
+  a refactor, declares `verify_starts: green`; use `any` when either start is fine.
 - A file belongs to one task. Before each later task, the watcher re-hashes the
   resolved `scope` of every done task; any change halts the change until a human
   runs `osq retry`. Globs resolve again at every audit, so a broad glob also

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7b56b05d6292d687aeccbcb5f42b41423d95bd511cf9119a2fa48da30672f1d0"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:bd08a88be59bfa29792bcabf2b7a99d56c89ac84c3e16ea533eba9aaec365210","src/watcher/outcome.ts":"sha256:f4fa291da7ee14c56c7423592dff534896f55ce320cdd09189796066db079521","src/watcher/runner.ts":"sha256:9507e625ab17536f9baa22aa6aa810e5dfb1dab7aeff80ffa07ae1b1a8fe3549","src/watcher/task-verify.ts":"sha256:1dcec258b498e28538b4845e7d21de0dd1c8d33ee9fe2251da654146b3a4700c","src/watcher/verify.ts":"sha256:f425abdaa17a96439b03eef88954a87772be3642091fb74135e8ceca3bd5ee41","tests/fixtures/events/dead.jsonl":"sha256:8ac54157766ca2391bc59ec695b50732c39b2a91951fa441c201a4dd3f07a33a","tests/fixtures/events/verified.jsonl":"sha256:e148d0e133c984bbf8c3f492ec30a884cbe9c1ba4f37185eeaf14419fa2f1667"}
+---
+2026-09-23T12:43:52.627Z

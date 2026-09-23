@@ -166,7 +166,9 @@ describe('archive-time verification', () => {
   }
 
   function verifyRanEvents(events: ParsedEvent[]): ParsedEvent[] {
-    return events.filter((event) => event.type === 'verify_ran');
+    return events.filter(
+      (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
+    );
   }
 
   async function writeScopedSources(files: string[]): Promise<void> {

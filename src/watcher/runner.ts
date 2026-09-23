@@ -26,6 +26,7 @@ import {
 } from './outcome.js';
 import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
+import { runPreSpawnVerify, verifyRedFailure } from './task-verify.js';
 import { captureTestGate, findUndeclaredTestChanges, runVerificationGate } from './verify.js';
 
 export type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
@@ -142,6 +143,9 @@ export async function runTask(
 
   try {
     const testGate = await captureTestGate(projectRoot, taskData.scope, taskData.testsModify);
+    const verifyCtx = { projectRoot, specFolderPath, taskNumber, taskData, config, logger };
+    const preSpawn = await runPreSpawnVerify(verifyCtx);
+    if (!preSpawn.ok) return fail('verify_precondition', preSpawn.marker, preSpawn.error);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
     await measures.emitStart();
     const spawnOutcome = await spawnTaskAgent({
@@ -173,11 +177,7 @@ export async function runTask(
       { specFolderPath, taskNumber },
     );
     if (!verifyResult.passed) {
-      const msg = verifyResult.error ?? 'Verify command failed';
-      const timeoutLine = verifyResult.timedOut ? 'timed_out: true\n' : '';
-      const marker = `---\nreason: verify_red\n${timeoutLine}command: "${taskData.verify}"\n---\nWatcher independent verify ${verifyResult.timedOut ? 'timed out' : 'failed'}:\n${msg}\n`;
-      const extra = verifyResult.timedOut ? 'timed_out: true' : undefined;
-      return fail('verify_red', marker, `Verify failed: ${msg}`, extra);
+      return verifyRedFailure(taskData.verify, verifyResult, fail);
     }
 
     const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config);

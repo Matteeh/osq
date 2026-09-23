@@ -150,10 +150,22 @@ export interface HistoryMetrics {
   readonly deadByReason: Record<string, number>;
   readonly unexplainedReruns: UnexplainedReruns;
   readonly verifyRuns: VerifyRunMetrics;
+  readonly preSpawnVerify: PreSpawnVerifyHistory;
   readonly cost: CostHistory;
   readonly rejections: RejectionHistory;
   readonly sizes: SizeMetrics;
   readonly scopeRegressions: ScopeRegressionHistory;
+}
+
+/**
+ * Pre-spawn verify runs and mismatches, counted apart from verification gates.
+ * `mismatchedTasks` lists the change-and-task references of tasks with at least
+ * one mismatch, in the same form as `verifyRuns.byTask` keys.
+ */
+export interface PreSpawnVerifyHistory {
+  readonly runs: number;
+  readonly mismatches: number;
+  readonly mismatchedTasks: readonly string[];
 }
 
 /**
@@ -920,6 +932,9 @@ export async function getMetricsReport(
   let verifyTotal = 0;
   let verifyMissingExitCode = 0;
   const verifyByTask: Record<string, (number | null)[]> = {};
+  let preSpawnRuns = 0;
+  let preSpawnMismatches = 0;
+  const preSpawnMismatchedTasks: string[] = [];
   let totalCost = 0;
   const perSpecCost: Record<string, number> = {};
   let reportedCostAttempts = 0;
@@ -961,6 +976,9 @@ export async function getMetricsReport(
     }
     verifyTotal += observation.verifyCodes.length;
     verifyMissingExitCode += observation.verifyCodes.filter((code) => code === null).length;
+    preSpawnRuns += observation.preSpawnRuns;
+    preSpawnMismatches += observation.preSpawnMismatches;
+    if (observation.preSpawnMismatches > 0) preSpawnMismatchedTasks.push(task.id);
     for (const value of observation.costValues) {
       totalCost += value;
       perSpecCost[task.changeId] = (perSpecCost[task.changeId] ?? 0) + value;
@@ -983,6 +1001,7 @@ export async function getMetricsReport(
     changeCoverage.withoutEvents.sort(compareNumericPrefix);
   }
   multipleAttempts.sort();
+  preSpawnMismatchedTasks.sort();
 
   // 6. Unrelated aggregate metrics still read every event stream, including
   // legacy `change.jsonl`, exactly as before. The change-level stream is
@@ -1237,6 +1256,11 @@ export async function getMetricsReport(
         total: verifyTotal,
         missingExitCode: verifyMissingExitCode,
         byTask: verifyByTask,
+      },
+      preSpawnVerify: {
+        runs: preSpawnRuns,
+        mismatches: preSpawnMismatches,
+        mismatchedTasks: preSpawnMismatchedTasks,
       },
       cost: {
         total: totalCost,
@@ -1537,6 +1561,9 @@ export function formatMetricsReport(
   lines.push(`  Unexplained re-runs: ${report.history.unexplainedReruns.total}`);
   lines.push(`  Verification runs: ${report.history.verifyRuns.total}`);
   lines.push(`  Verification runs missing exit code: ${report.history.verifyRuns.missingExitCode}`);
+  lines.push(
+    `  Pre-spawn verify mismatches: ${report.history.preSpawnVerify.mismatches} of ${report.history.preSpawnVerify.runs} runs`,
+  );
   lines.push(
     `  Harness-reported cost: ${report.history.cost.formattedTotal} (${report.history.cost.coverage.reportedAttempts} of ${report.history.cost.coverage.totalAttempts} attempts reported cost)`,
   );

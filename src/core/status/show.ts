@@ -593,6 +593,35 @@ async function buildSpecDetails(
   };
 }
 
+/**
+ * Projects the latest pre-spawn `verify_ran` event of one task into the
+ * `Pre-spawn verify:` show line. Returns null when the task recorded no
+ * pre-spawn result, so output for every other task stays unchanged. Only the
+ * already parsed event stream is read; missing or malformed values render as
+ * unavailable rather than being guessed.
+ */
+function formatPreSpawnVerify(events: TimelineEvent[]): string | null {
+  let latest: TimelineEvent | undefined;
+  for (const event of events) {
+    if (event.type === 'verify_ran' && event.data?.phase === 'pre_spawn') {
+      latest = event;
+    }
+  }
+  if (!latest) return null;
+
+  const data = latest.data ?? {};
+  const exitCode =
+    typeof data.exitCode === 'number' && Number.isFinite(data.exitCode)
+      ? String(data.exitCode)
+      : 'unavailable';
+  const expected =
+    typeof data.expected === 'string' && data.expected.trim() !== ''
+      ? data.expected.trim()
+      : 'unavailable';
+  const outcome = data.mismatch === true ? 'mismatch' : 'matched';
+  return `      Pre-spawn verify: exit ${exitCode}, expected ${expected}, ${outcome}`;
+}
+
 function formatEventData(data?: Record<string, unknown>): string {
   if (!data || Object.keys(data).length === 0) return '';
   const entries = Object.entries(data).map(([k, v]) => `${k}: ${v}`);
@@ -658,6 +687,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       lines.push(`  ${indicator} ${task.taskNumber}. ${task.title} [${task.status}]${deadTag}`);
       if (task.verify) {
         lines.push(`      Verify: ${task.verify}`);
+      }
+      const preSpawnVerify = formatPreSpawnVerify(task.events);
+      if (preSpawnVerify) {
+        lines.push(preSpawnVerify);
       }
       if (task.scope.length > 0) {
         lines.push(`      Scope: ${task.scope.join(', ')}`);

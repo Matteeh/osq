@@ -149,6 +149,11 @@
       "crashed": 1,
       "verify_red": 1
     },
+    "preSpawnVerify": {
+      "mismatchedTasks": [],
+      "mismatches": 0,
+      "runs": 0
+    },
     "rejections": {
       "byPlannerModel": {
         "opencode/big-pickle": 1,

@@ -148,13 +148,13 @@ The metrics and reporting subsystem SHALL distinguish manual task completions fr
 
 ### Requirement: Execution history
 <!-- source: src/core/report.ts, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
-The reporting subsystem SHALL derive execution history only from numbered task
-event files. Task references SHALL identify both their change and task number.
-History SHALL contain attempts, tasks with multiple attempts, unexplained
-re-runs, verification exit codes and missing exit codes, historical dead
-reasons, scope-regression detection and recertification counts, repository size
-evidence, and harness-reported cost with attempt coverage. Change-level streams
-and active or retained markers SHALL NOT invent task execution history.
+Reporting SHALL derive execution history only from numbered task event files,
+with task references naming change and task. History SHALL contain attempts,
+multi-attempt tasks, unexplained re-runs, verification exit codes and
+missing exit codes, pre-spawn verify runs and mismatches, dead reasons,
+scope-regression and recertification counts, repository size evidence, and
+harness-reported cost with attempt coverage. Change-level streams and markers
+SHALL NOT invent task execution history.
 
 #### Scenario: Attempt accounting
 - **WHEN** task event streams contain `started` events
@@ -165,8 +165,12 @@ and active or retained markers SHALL NOT invent task execution history.
 - **THEN** history counts the transition as an unexplained re-run and identifies the change and task
 
 #### Scenario: Verification history
-- **WHEN** task event streams contain `verify_ran` events
+- **WHEN** task event streams contain `verify_ran` events without `phase: "pre_spawn"`
 - **THEN** history retains their ordered numeric exit codes or explicit missing values and reports the number lacking an exit code
+
+#### Scenario: Pre-spawn verify history
+- **WHEN** task event streams contain `verify_ran` events with `phase: "pre_spawn"`
+- **THEN** `history.preSpawnVerify` counts them as `runs`, counts those with `mismatch: true` as `mismatches`, lists the mismatched task references in sorted order as `mismatchedTasks`, the text report prints `Pre-spawn verify mismatches: <mismatches> of <runs> runs`, and none of them enter verification history
 
 #### Scenario: Scope recertification is not execution
 - **WHEN** scope detection verification or human recertification occurs without an agent start

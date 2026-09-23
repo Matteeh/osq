@@ -68,7 +68,7 @@ describe('retry through the real watcher CLI with the mock harness', () => {
     await scaffoldProject(tmpDir);
     await fs.writeFile(
       path.join(tmpDir, 'osq.config.ts'),
-      "export default { harness: 'mock' };\n",
+      "export default { harness: 'mock', gates: { preSpawnVerify: 'off' } };\n",
       'utf8',
     );
     await fs.writeFile(path.join(tmpDir, 'verify.cjs'), VERIFY_SCRIPT, 'utf8');

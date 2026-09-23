@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b3f016d32988d34de96bc8888a966736ab1b3658228422b3a5b04a3635f05f16"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/core/foundation/config-gates.ts":"sha256:39f98bb7a3f30a14ec88d5fa7729bf96cef129c7c86bb17cd5e89529b031b4a3","src/core/spec/parser.ts":"sha256:6025e2fd177dc9ff2a06531000aa4f3463cb2d0f6564c65ab02d725282d51a58","tests/archive-verification.test.ts":"sha256:9eca3f31664af36b2fbfa612f481a50b19ed67f5d712b41db05c1680a25d705e","tests/retry-watch.test.ts":"sha256:294b6b632f044fe088433a505d382cd3aeebf4522b8aad7fd662a72835139066","tests/runner-test-gating.test.ts":"sha256:4110c7e4b89a98d7ddc3b3a519e43e750da3284dda002134f1080be6a8962a71"}
+---
+2026-09-23T12:36:13.847Z

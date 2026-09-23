@@ -212,7 +212,7 @@ describe('Runner test modification gating', () => {
 
     // The zero-trust verify gate is never reached.
     assert.equal(
-      events.some((event) => event.type === 'verify_ran'),
+      events.some((event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn'),
       false,
       'verify must not run when undeclared test changes are detected',
     );
@@ -235,7 +235,7 @@ describe('Runner test modification gating', () => {
 
     const events = await readEvents(specFolder, '1');
     assert.equal(
-      events.some((event) => event.type === 'verify_ran'),
+      events.some((event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn'),
       true,
     );
     assert.equal(
@@ -268,7 +268,7 @@ describe('Runner test modification gating', () => {
       false,
     );
     assert.equal(
-      events.some((event) => event.type === 'verify_ran'),
+      events.some((event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn'),
       true,
     );
   });
@@ -313,7 +313,7 @@ describe('Runner test modification gating', () => {
 
     const events = await readEvents(specFolder, '1');
     assert.equal(
-      events.some((event) => event.type === 'verify_ran'),
+      events.some((event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn'),
       false,
     );
   });
@@ -355,7 +355,9 @@ describe('Runner test modification gating', () => {
     assert.equal(await exists(path.join(specFolder, '.run', 'done', '1')), true);
 
     const changeEvents = await readEvents(specFolder, 'change');
-    const verifyEvents = changeEvents.filter((event) => event.type === 'verify_ran');
+    const verifyEvents = changeEvents.filter(
+      (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
+    );
     assert.equal(verifyEvents.length, 1);
     assert.equal(verifyEvents[0].data?.command, CHANGE_PASSING_VERIFY);
     assert.equal(verifyEvents[0].data?.exitCode, 0);
@@ -388,7 +390,9 @@ describe('Runner test modification gating', () => {
     assert.deepEqual(deadEvents[0].data, { task: '1', reason: 'change_verify_red' });
 
     const changeEvents = await readEvents(specFolder, 'change');
-    const verifyEvents = changeEvents.filter((event) => event.type === 'verify_ran');
+    const verifyEvents = changeEvents.filter(
+      (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
+    );
     assert.equal(verifyEvents.length, 1);
     assert.equal(verifyEvents[0].data?.exitCode, 3);
   });
@@ -411,7 +415,9 @@ describe('Runner test modification gating', () => {
 
     const changeEvents = await readEvents(specFolder, 'change');
     assert.equal(
-      changeEvents.some((event) => event.type === 'verify_ran'),
+      changeEvents.some(
+        (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
+      ),
       false,
     );
   });

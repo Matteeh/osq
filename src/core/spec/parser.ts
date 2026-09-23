@@ -194,6 +194,8 @@ export async function parseSpecMdFromFolder(folderPath: string): Promise<SpecDat
   return parseSpecMd(content);
 }
 
+export type VerifyStarts = 'red' | 'green' | 'any';
+
 export interface TaskData {
   readonly title: string;
   readonly verify: string;
@@ -201,8 +203,14 @@ export interface TaskData {
   readonly entry: string[];
   readonly skills: string[];
   readonly testsModify: boolean;
+  readonly verifyStarts: VerifyStarts;
   readonly acceptance: string[];
   readonly raw: string;
+}
+
+function readVerifyStarts(data: Record<string, unknown>): VerifyStarts {
+  const value = data.verify_starts;
+  return value === 'green' || value === 'any' ? value : 'red';
 }
 
 function readTestsModify(data: Record<string, unknown>): boolean {
@@ -223,6 +231,7 @@ export function parseTaskMd(content: string): TaskData {
   const title = typeof data.title === 'string' ? data.title.trim() : '';
   const verify = typeof data.verify === 'string' ? data.verify.trim() : '';
   const testsModify = readTestsModify(data);
+  const verifyStarts = readVerifyStarts(data);
 
   const scope = Array.isArray(data.scope) ? data.scope.map((s: unknown) => String(s).trim()) : [];
   const entry = Array.isArray(data.entry) ? data.entry.map((e: unknown) => String(e).trim()) : [];
@@ -246,6 +255,7 @@ export function parseTaskMd(content: string): TaskData {
     entry,
     skills,
     testsModify,
+    verifyStarts,
     acceptance,
     raw: content,
   };

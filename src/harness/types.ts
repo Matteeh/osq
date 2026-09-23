@@ -79,6 +79,10 @@ export interface VerifyRanEventData {
   /** Legacy field name retained so older emitted lines still type-check. */
   verifyCommand?: string;
   output?: string;
+  /** Present only on pre-spawn runs: the declared start state and verdict. */
+  phase?: 'pre_spawn';
+  expected?: 'red' | 'green' | 'any';
+  mismatch?: boolean;
 }
 
 export interface ResultWrittenEventData {

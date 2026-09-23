@@ -134,6 +134,7 @@ describe('report --json', () => {
       'attempts',
       'cost',
       'deadByReason',
+      'preSpawnVerify',
       'rejections',
       'scopeRegressions',
       'sizes',
@@ -357,6 +358,7 @@ describe('formatMetricsReport', () => {
         deadByReason: { 'reason-z': 7 },
         unexplainedReruns: { total: 2, byTask: { '001-spec/1': 2 } },
         verifyRuns: { total: 3, missingExitCode: 1, byTask: { '001-spec/1': [0, null, 1] } },
+        preSpawnVerify: { runs: 2, mismatches: 1, mismatchedTasks: ['001-spec/1'] },
         cost: {
           total: 0.5,
           perSpec: { '001-spec': 0.5 },
@@ -525,6 +527,7 @@ describe('formatMetricsReport', () => {
         deadByReason: {},
         unexplainedReruns: { total: 0, byTask: {} },
         verifyRuns: { total: 0, missingExitCode: 0, byTask: {} },
+        preSpawnVerify: { runs: 0, mismatches: 0, mismatchedTasks: [] },
         cost: {
           total: 0,
           perSpec: {},

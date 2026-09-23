@@ -136,6 +136,8 @@ export async function findUndeclaredTestChanges(
 export interface VerificationGateResult extends VerificationResult {
   passed: boolean;
 }
+/** Extra `verify_ran` data derived from the completed result (e.g. pre-spawn fields). */
+export type VerifyEventDataFn = (result: VerificationResult) => Record<string, unknown>;
 
 /**
  * Run the verify command through the shared core executor, then append exactly
@@ -146,7 +148,7 @@ export async function runVerificationGateResult(
   projectRoot: string,
   verifyCommand: string,
   verifyTimeoutSeconds: number,
-  context?: { specFolderPath: string; taskNumber: string },
+  context?: { specFolderPath: string; taskNumber: string; extraData?: VerifyEventDataFn },
 ): Promise<VerificationGateResult> {
   const result = await runVerificationCommand(projectRoot, verifyCommand, verifyTimeoutSeconds);
   const error = result.timedOut
@@ -164,6 +166,7 @@ export async function runVerificationGateResult(
         exitCode: result.exitCode,
         duration: result.duration,
         ...(result.output.trim() ? { output: result.output } : {}),
+        ...(context.extraData ? context.extraData(result) : {}),
       },
     });
   }

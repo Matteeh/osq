@@ -7,7 +7,7 @@ Governs the human gate: parsing change specifications, validating limits and Ope
 ## Requirements
 
 ### Requirement: Change folder structure and parsing
-<!-- source: features/spec-lint-and-approve.md # Spec Format & Parsing, tests/parser.test.ts -->
+<!-- source: features/spec-lint-and-approve.md # Spec Format & Parsing, tests/parser.test.ts, tests/pre-spawn-config.test.ts -->
 The system SHALL parse change proposals, delta specs, and task definitions.
 
 #### Scenario: Proposal frontmatter extraction
@@ -16,7 +16,11 @@ The system SHALL parse change proposals, delta specs, and task definitions.
 
 #### Scenario: Task definition parsing
 - **WHEN** task markdown under `tasks/<n>.md` is parsed
-- **THEN** system extracts `title`, `verify`, `scope`, `entry`, `skills`, and `acceptance` criteria
+- **THEN** system extracts `title`, `verify`, `scope`, `entry`, `skills`, `verify_starts`, and `acceptance` criteria
+
+#### Scenario: Task start state
+- **WHEN** task frontmatter declares `verify_starts` as `green` or `any`
+- **THEN** the parsed task carries that start state, and an absent or unrecognized value parses as `red`
 
 ### Requirement: Specification lint rules and limits
 <!-- source: src/core/linter.ts, tests/plan-prompt-lifecycle.test.ts -->

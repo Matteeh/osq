@@ -1,8 +1,4 @@
-/**
- * Pure event-stream observation helpers shared by the terminal report and the
- * read-only web documents. Extracting them here keeps attempt, cost, token,
- * duration, and first-attempt semantics in one place; callers own all I/O.
- */
+/** Pure event-stream observation helpers shared by the terminal report and web documents. */
 
 /** Parse one append-only jsonl stream, skipping blank and malformed lines. */
 export function parseEventLines(content: string): Record<string, unknown>[] {
@@ -46,9 +42,8 @@ export interface ObservedTokenDelta {
 }
 
 /**
- * Parses the token counters of one `tokens` event. A harness-reported cache
- * counter is authoritative; the remainder formula is a fallback used strictly
- * when the event carries no cache field at all.
+ * Parses one `tokens` event. A harness-reported cache counter is authoritative;
+ * the remainder formula is a fallback used when the event carries no cache field.
  */
 export function parseTokenEvent(data: Record<string, unknown>): ObservedTokenDelta {
   const input =
@@ -100,12 +95,7 @@ export interface AttemptObservation {
   readonly firstAttemptPass: boolean;
 }
 
-/**
- * Counts `started` events and decides whether the first attempt passed. The
- * first attempt passes only when a typed `done` arrives before the next
- * `started`, `dead`, or `regressed` outcome. Measures and change-level events
- * never influence attempt counting.
- */
+/** Counts `started` events and whether a typed `done` resolved the first attempt. */
 export function observeAttempts(events: readonly Record<string, unknown>[]): AttemptObservation {
   let attempts = 0;
   let firstAttemptActive = false;
@@ -138,12 +128,29 @@ export function observeAttempts(events: readonly Record<string, unknown>[]): Att
   return { attempts, firstAttemptPass };
 }
 
+/** Pre-spawn verify runs and mismatches counted apart from verification gates. */
+function recordVerifyRun(
+  data: Record<string, unknown> | null,
+  verifyCodes: (number | null)[],
+  preSpawn: { runs: number; mismatches: number },
+): void {
+  if (data?.phase === 'pre_spawn') {
+    preSpawn.runs++;
+    if (data.mismatch === true) preSpawn.mismatches++;
+    return;
+  }
+  const rawExit = data?.exitCode;
+  verifyCodes.push(typeof rawExit === 'number' && Number.isFinite(rawExit) ? rawExit : null);
+}
+
 /** Every history-relevant observation of one numbered task event stream. */
 export interface TaskStreamObservation {
   readonly attempts: number;
   readonly unexplained: number;
   readonly deadByReason: Record<string, number>;
   readonly verifyCodes: readonly (number | null)[];
+  readonly preSpawnRuns: number;
+  readonly preSpawnMismatches: number;
   /** Ordered finite cost values, one per reporting event, for exact sums. */
   readonly costValues: readonly number[];
   /** Attempts that contained at least one finite cost value. */
@@ -167,6 +174,7 @@ export function observeTaskStream(
   let unexplained = 0;
   const deadByReason: Record<string, number> = {};
   const verifyCodes: (number | null)[] = [];
+  const preSpawn = { runs: 0, mismatches: 0 };
   const costValues: number[] = [];
   let costReportedAttempts = 0;
   let scopeDetected = 0;
@@ -209,8 +217,7 @@ export function observeTaskStream(
       if (data?.outcome === 'passed') scopeRecertifiedByHuman++;
       else if (data?.outcome === 'requeued') scopeRequeuedForAgent++;
     } else if (type === 'verify_ran') {
-      const rawExit = data?.exitCode;
-      verifyCodes.push(typeof rawExit === 'number' && Number.isFinite(rawExit) ? rawExit : null);
+      recordVerifyRun(data, verifyCodes, preSpawn);
     }
 
     const rawCost = data?.cost;
@@ -228,6 +235,8 @@ export function observeTaskStream(
     unexplained,
     deadByReason,
     verifyCodes,
+    preSpawnRuns: preSpawn.runs,
+    preSpawnMismatches: preSpawn.mismatches,
     costValues,
     costReportedAttempts,
     scopeDetected,

@@ -44,7 +44,7 @@ openspec/
       proposal.md  parent spec: goal, verify, non-goals, contract, human steps, delta
       plan-prompt.md  the planning prompt `osq plan` writes; removed at archive
       tasks.md     task checklist, ticked by the watcher
-      tasks/1.md   unit of work: acceptance, verify, scope, entry, tests.modify
+      tasks/1.md   unit of work: acceptance, verify, scope, entry, tests.modify, verify_starts
       tasks/2.md
       specs/       delta specifications, one per capability the change writes
       .run/        approved (hash), manifest.json, running/, done/, dead/, regressed/, results/, events/
@@ -75,6 +75,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 - **Approval gate.** Nothing runs until a human runs `osq approve`. It lints the change, hashes the folder, and writes `.run/approved` plus `.run/manifest.json`.
 - **Verification gate.** The watcher never trusts the agent's claim. It runs each task's `verify` in its own process after the agent exits and writes `.run/done/<n>` only on exit 0; a non-zero exit becomes `.run/dead/<n>.md`.
 - **Change verification after every task.** When the task's `verify` passes, the watcher also runs the proposal's change-level `verify` (`gates.changeVerifyAfterTask`, on by default). A red result kills the task with `change_verify_red`, so every task must leave the whole change green.
+- **Pre-spawn verify check.** Before a task's first attempt, the watcher runs that task's `verify` once and expects it to fail: a verify already green before any agent work means the work is done or the verify does not exercise the task. A task declares its expected start with `verify_starts` — `red` by default, `green` for work like a refactor that should already pass, or `any` when either is fine. A mismatch warns by default and the task continues; `gates.preSpawnVerify: fail` kills the task with `verify_precondition` before the agent spawns, and `off` disables the check. A mismatch shows in the task's `verify_ran` event, `osq show`, and `osq report`. The check adds one extra verify per task, on its first attempt only.
 - **Scope recertification.** Before each task and again before archiving, the watcher re-hashes the resolved `scope` of every done task. If a later task changed any of those files, it re-runs that task's `verify`, writes `.run/regressed/<n>.md`, and halts the change until you run `osq retry <id> <n>`.
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
 - **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
@@ -178,7 +179,7 @@ The rules lint can't check live in the managed `PLANNER.md` block: titles read "
 - **Deterministic spec merges**: Capability specs are only ever changed by the watcher applying an approved delta merge (ADR 002). Agents never touch `openspec/specs/`.
 - **Synthesized results**: An agent that exits without writing `.run/results/<n>.md` is not lost: if the adapter captured a final text message, the watcher synthesizes a result file (`synthesized: true`) from it and proceeds to verify. Only an exit with neither a result file nor final text is `dead` with `reason: no_result`. Nothing disappears silently.
 
-Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `undeclared_test_change`, `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns.
+Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `verify_precondition`, `undeclared_test_change`, `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns.
 
 ## Harnesses
 
