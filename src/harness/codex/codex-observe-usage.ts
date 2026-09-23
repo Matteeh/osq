@@ -4,15 +4,17 @@ import type {
   ObservedPlanningSession,
   PlanningSessionEdit,
 } from '../../core/report/planning-observed.js';
-import { type InteractiveUsage, NULL_INTERACTIVE_USAGE } from '../types.js';
+import type { PlanningTurn } from '../../core/report/planning-slice.js';
+import { NULL_INTERACTIVE_USAGE } from '../types.js';
 import { listRolloutFiles, resolveCodexDataHome } from './codex-usage.js';
 
 /**
- * Approval-time Codex rollout observation. A rollout is read defensively and
- * only `session_meta`, `turn_context`, successful `apply_patch` custom calls,
- * cumulative token counters, and valid record timestamps contribute. Arbitrary
- * shell command text is never interpreted as an edit and missing fields stay
- * null. Prompt, response, and patch content are never retained.
+ * Approval-time Codex rollout observation. Only `session_meta`, `turn_context`,
+ * successful `apply_patch` calls, successful `patch_apply_end` events,
+ * per-response `last_token_usage` counters, and valid timestamps contribute.
+ * A `token_count` repeating the previous total adds no turn, `token_usage_record`
+ * duplicates add none, missing fields stay null, change bodies are never read,
+ * and prompt, response, and patch content are never retained.
  */
 
 const PATCH_HEADER = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+?)\s*$/;
@@ -36,16 +38,6 @@ function finiteNonNegative(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
-function usageFromCounters(counters: Record<string, unknown>): InteractiveUsage {
-  return {
-    inputTokens: finiteNonNegative(counters.input_tokens),
-    outputTokens: finiteNonNegative(counters.output_tokens),
-    cachedTokens: finiteNonNegative(counters.cached_input_tokens),
-    reasoningTokens: finiteNonNegative(counters.reasoning_output_tokens),
-    cost: null,
-  };
-}
-
 function extractPatchPaths(patch: string): string[] {
   const paths: string[] = [];
   for (const line of patch.split('\n')) {
@@ -67,15 +59,144 @@ function patchText(payload: Record<string, unknown>): string | null {
   return text(payload.input) ?? text(payload.arguments);
 }
 
+/** Edited paths of a successful `patch_apply_end`; its change bodies stay unread. */
+function patchApplyEndPaths(payload: Record<string, unknown>): string[] {
+  if (payload.type !== 'patch_apply_end' || payload.success !== true) return [];
+  const changes = asRecord(payload.changes);
+  if (!changes) return [];
+  return Object.keys(changes).filter((target) => target.length > 0);
+}
+
+/** A normalized signature of cumulative counters, so an exact repeat adds no turn. */
+function totalSignature(counters: Record<string, unknown> | undefined): string | null {
+  if (!counters) return null;
+  return JSON.stringify([
+    finiteNonNegative(counters.input_tokens),
+    finiteNonNegative(counters.output_tokens),
+    finiteNonNegative(counters.cached_input_tokens),
+    finiteNonNegative(counters.cache_write_input_tokens),
+    finiteNonNegative(counters.reasoning_output_tokens),
+  ]);
+}
+
+/** One response's usage: input excludes cached input and never goes below zero. */
+function turnUsage(counters: Record<string, unknown>) {
+  const input = finiteNonNegative(counters.input_tokens);
+  const cached = finiteNonNegative(counters.cached_input_tokens);
+  return {
+    inputTokens: input === null ? null : Math.max(0, input - (cached ?? 0)),
+    outputTokens: finiteNonNegative(counters.output_tokens),
+    cacheReadTokens: cached,
+    cacheWriteTokens: finiteNonNegative(counters.cache_write_input_tokens),
+    reasoningTokens: finiteNonNegative(counters.reasoning_output_tokens),
+    cost: null,
+  };
+}
+
+/** Mutable accumulator for one rollout parse. */
+interface CodexState {
+  sessionId: string | null;
+  cwd: string | null;
+  model: string | null;
+  harnessVersion: string | null;
+  previousTotal: string | null;
+  turns: PlanningTurn[];
+  pendingEdits: string[];
+  pendingEditAt: string | null;
+}
+
+function queueEdit(state: CodexState, target: string, timestamp: string): void {
+  state.pendingEdits.push(target);
+  state.pendingEditAt = timestamp;
+}
+
+function absorbTokenCount(
+  state: CodexState,
+  payload: Record<string, unknown>,
+  timestamp: string | null,
+): void {
+  const info = asRecord(payload.info);
+  const last = asRecord(info?.last_token_usage);
+  const total = asRecord(info?.total_token_usage);
+  const signature = totalSignature(total);
+  const duplicate = signature !== null && signature === state.previousTotal;
+  if (signature !== null) state.previousTotal = signature;
+  if (!last || duplicate || timestamp === null) return;
+  state.turns.push({
+    timestamp,
+    model: state.model,
+    ...turnUsage(last),
+    edits: state.pendingEdits,
+  });
+  state.pendingEdits = [];
+  state.pendingEditAt = null;
+}
+
+/** Fold one parsed rollout record into the accumulator. */
+function absorbRecord(
+  state: CodexState,
+  event: Record<string, unknown>,
+  payload: Record<string, unknown>,
+): void {
+  const timestamp = validIso(event.timestamp) ?? validIso(payload.timestamp);
+  if (event.type === 'session_meta') {
+    state.sessionId = state.sessionId ?? text(payload.id) ?? text(payload.session_id);
+    state.cwd = state.cwd ?? text(payload.cwd);
+    state.model = text(payload.model) ?? state.model;
+    state.harnessVersion = text(payload.cli_version) ?? state.harnessVersion;
+    return;
+  }
+  if (event.type === 'turn_context') {
+    state.cwd = state.cwd ?? text(payload.cwd);
+    state.model = text(payload.model) ?? state.model;
+    return;
+  }
+  if (event.type === 'token_usage_record') return;
+  if (event.type === 'event_msg' && payload.type === 'token_count') {
+    absorbTokenCount(state, payload, timestamp);
+    return;
+  }
+  if (event.type === 'response_item' && isSuccessfulApplyPatch(payload) && timestamp) {
+    const patch = patchText(payload);
+    if (!patch) return;
+    for (const target of extractPatchPaths(patch)) queueEdit(state, target, timestamp);
+    return;
+  }
+  if (event.type === 'event_msg' && payload.type === 'patch_apply_end' && timestamp) {
+    for (const target of patchApplyEndPaths(payload)) queueEdit(state, target, timestamp);
+  }
+}
+
+/** Edits after the last turn become one final turn with null usage. */
+function flushPendingEdits(state: CodexState): void {
+  if (state.pendingEdits.length === 0 || state.pendingEditAt === null) return;
+  state.turns.push({
+    timestamp: state.pendingEditAt,
+    model: state.model,
+    inputTokens: null,
+    outputTokens: null,
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    reasoningTokens: null,
+    cost: null,
+    edits: state.pendingEdits,
+  });
+  state.pendingEdits = [];
+  state.pendingEditAt = null;
+}
+
 /** Parse one Codex rollout JSONL body into an observation candidate. */
 export function parseCodexObservation(content: string): ObservedPlanningSession | null {
-  let sessionId: string | null = null;
-  let cwd: string | null = null;
-  let model: string | null = null;
-  let startedAt: string | null = null;
-  let endedAt: string | null = null;
-  let usage: InteractiveUsage = NULL_INTERACTIVE_USAGE;
-  const edits: PlanningSessionEdit[] = [];
+  const state: CodexState = {
+    sessionId: null,
+    cwd: null,
+    model: null,
+    harnessVersion: null,
+    previousTotal: null,
+    turns: [],
+    pendingEdits: [],
+    pendingEditAt: null,
+  };
 
   for (const line of content.split('\n')) {
     if (!line.trim()) continue;
@@ -87,54 +208,25 @@ export function parseCodexObservation(content: string): ObservedPlanningSession 
     }
     const event = asRecord(parsed);
     const payload = asRecord(event?.payload);
-    if (!event || !payload) continue;
+    if (event && payload) absorbRecord(state, event, payload);
+  }
+  flushPendingEdits(state);
 
-    const timestamp = validIso(event.timestamp) ?? validIso(payload.timestamp);
-    if (timestamp) {
-      if (startedAt === null || timestamp < startedAt) startedAt = timestamp;
-      if (endedAt === null || timestamp > endedAt) endedAt = timestamp;
-    }
-
-    if (event.type === 'session_meta') {
-      sessionId = sessionId ?? text(payload.id) ?? text(payload.session_id);
-      cwd = cwd ?? text(payload.cwd);
-      model = model ?? text(payload.model);
-      continue;
-    }
-    if (event.type === 'turn_context') {
-      cwd = cwd ?? text(payload.cwd);
-      model = model ?? text(payload.model);
-      continue;
-    }
-    if (event.type === 'token_usage_record') {
-      const counters = asRecord(payload.thread_token_usage);
-      if (counters) usage = usageFromCounters(counters);
-      continue;
-    }
-    if (event.type === 'event_msg' && payload.type === 'token_count') {
-      const info = asRecord(payload.info);
-      const counters = asRecord(info?.total_token_usage);
-      if (counters) usage = usageFromCounters(counters);
-      continue;
-    }
-    if (event.type === 'response_item' && isSuccessfulApplyPatch(payload) && timestamp) {
-      const patch = patchText(payload);
-      if (!patch) continue;
-      for (const target of extractPatchPaths(patch)) {
-        edits.push({ path: target, timestamp });
-      }
-    }
+  const edits: PlanningSessionEdit[] = [];
+  for (const turn of state.turns) {
+    for (const raw of turn.edits) edits.push({ path: raw, timestamp: turn.timestamp });
   }
 
-  if (!sessionId) return null;
+  if (!state.sessionId) return null;
   return {
     harness: 'codex',
-    nativeSessionId: sessionId,
-    sessionDir: cwd,
-    model,
-    startedAt,
-    endedAt,
-    usage,
+    nativeSessionId: state.sessionId,
+    sessionDir: state.cwd,
+    model: state.model,
+    harnessVersion: state.harnessVersion,
+    sessionCost: null,
+    usage: NULL_INTERACTIVE_USAGE,
+    turns: state.turns,
     edits,
   };
 }

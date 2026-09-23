@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:090d3b2d960a9c22473266cd21871dc7a97501b429ec7e68f795ef69da27bf96"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/core/report/planning-observed.ts":"sha256:c87be0b009cd0140ba6256256008568be9bd2b78eca79854343e885c86de9dfa","src/core/report/planning-records.ts":"sha256:6134927cec42e90e936fdb990cc791b7be2135603b51aff5e709af2c3401bc97","src/core/report/planning-slice-lookup.ts":"sha256:cdec8766178450b5249d8457f051db1666ceae62d10ed891f3f892fbcb3ebb7f","src/core/report/planning-slice-measures.ts":"sha256:ef3da996dd391b44fb730444e6bd686df25d724da32a2b7a1aec528bdf8eeff5","src/core/report/planning-slice-record.ts":"sha256:f7a87c3b9231aeef97e3920415a9d8fbadee2cb87d6e681577cd47d1675c4db2","src/core/report/planning-slice-turns.ts":"sha256:29cc63956fa53705f1eb3c712fc58469b078c76858a7cd098e55826f2e4b7ee1","src/core/report/planning-slice.ts":"sha256:439ade60d46a3d893ccbe3535eb54279bf3aeae8ee27e63ca11421f70f10d7f2","src/core/spec/approve.ts":"sha256:68585d92bc0b056b91400a3a354b49a256128faacba62c8d7083772f31436b75","tests/planning-observed-approve.test.ts":"sha256:1f75725698072765208becacbcf8432832741ce8d9ef6c47650b6c4d176eb905","tests/planning-observed-match.test.ts":"sha256:5120bc0d988ce02c4b4072a3ac0e2c89e8946ce725d079829d07e37c09219e8b"}
+---
+2026-09-23T13:19:21.400Z

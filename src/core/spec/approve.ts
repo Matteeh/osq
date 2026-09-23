@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../foundation/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import {
   type PlanningSessionReader,
   appendObservedSessions,
@@ -98,6 +98,8 @@ export async function approveSpec(
   const observations = await findPlanningSessions(folderPath, {
     createdAt: await resolveChangeCreationTime(folderPath),
     observedAt: toIso(options.now) ?? new Date().toISOString(),
+    changesDir: specsDir,
+    planning: config.planning ?? DEFAULT_CONFIG.planning,
     readers: options.planningReaders ?? [],
   });
   await appendObservedSessions(folderPath, observations, {

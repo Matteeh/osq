@@ -198,7 +198,9 @@ describe('report --json', () => {
       'total',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning), [
+      'byChange',
       'changesWithPlanningRecords',
+      'comparison',
       'cost',
       'coverage',
       'sessions',
@@ -422,6 +424,22 @@ describe('formatMetricsReport', () => {
         tokens: { input: 11, output: 22, cached: 33, reasoning: 44 },
         cost: { total: 0.75, formattedTotal: 'PLAN-COST', provenance: 'harness-reported' },
         coverage: { reportedSessions: 3, totalSessions: 9 },
+        byChange: {
+          '001-spec': {
+            sessions: 9,
+            tokens: { input: 11, output: 22, cacheRead: 33, cacheWrite: 44, reasoning: 55 },
+            activeMinutes: 6,
+            cost: 0.75,
+            specWords: 100,
+            changedLines: 40,
+            specWordsPerChangedLine: 2.5,
+            minutesLastEditToApproval: 12.5,
+          },
+        },
+        comparison: {
+          planning: { input: 11, output: 22, cached: 33, reasoning: 44, cost: 0.75 },
+          execution: { input: 111, output: 333, cached: 222, reasoning: 444, cost: 0.5 },
+        },
       },
       specs: { total: 9, active: 4, archived: 5 },
       tokens: {
@@ -580,6 +598,11 @@ describe('formatMetricsReport', () => {
         tokens: { input: 0, output: 0, cached: 0, reasoning: 0 },
         cost: { total: 0, formattedTotal: 'not reported', provenance: 'harness-reported' },
         coverage: { reportedSessions: 0, totalSessions: 0 },
+        byChange: {},
+        comparison: {
+          planning: { input: 0, output: 0, cached: 0, reasoning: 0, cost: null },
+          execution: { input: 0, output: 0, cached: 0, reasoning: 0, cost: null },
+        },
       },
       specs: { total: 0, active: 0, archived: 0 },
       tokens: {

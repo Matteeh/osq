@@ -385,9 +385,36 @@ without writing `plan-prompt.md`, spawning a process, or recording telemetry.
 
 When you run `osq approve <id>`, osq observes local Codex, OpenCode, and Claude
 Code sessions whose file edits fall inside the change folder during its
-lifetime and records any matches as observed planning sessions. It never
-estimates missing values, never retains transcript content, and never sends
-anything off the machine.
+lifetime and records any matches as observed planning sessions. Each session is
+cut into per-turn slices, so one long session planning several changes is no
+longer counted once per change. Every turn goes to exactly one change: a turn
+that edits a change folder belongs to it, and any other turn goes to the next
+change edited before the next approval, or else to the change approved next.
+Per-turn tokens are what each reader actually reports — Claude Code message
+usage, Codex `token_count`, and OpenCode messages — and input excludes cached
+input. A Claude `cost-state` cost counts only for a slice that holds the whole
+session. osq never estimates missing values, never retains transcript content,
+and never sends anything off the machine.
+
+The `planning.idleGapMinutes` and `planning.prices` keys are configured in
+`osq.config.ts`:
+
+```ts
+import { defineConfig } from '@matteeh/osq';
+
+export default defineConfig({
+  planning: {
+    idleGapMinutes: 10, // a longer gap between turns is not active planning
+    prices: {
+      // USD per million tokens; osq ships no price table of its own.
+      '<provider>/<model>': { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    },
+  },
+});
+```
+
+A slice gets a price-table cost only when every turn's model is priced and
+reported input and output tokens.
 
 ### Retry & Rejection
 
@@ -416,7 +443,7 @@ osq report               # formatted terminal report
 osq report --json        # raw JSON report for scripting and CI pipelines
 ```
 
-`osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. Reported cost sums the `cost` values carried by harness events. Reported cost reflects the harness's internal price table rather than the invoice.
+`osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. The `Planning by change` section shows each change's sessions, tokens by kind, cost, active minutes, spec words, changed lines, and spec words per changed line, plus the minutes from its last planning edit to approval; active minutes sum the gaps between a slice's turns and leave out any gap longer than `planning.idleGapMinutes`. The `Planning vs execution` section compares planning and executor tokens and cost. Reported cost sums the `cost` values carried by harness events, and any cost that no attempt or session reported reads `not reported` instead of a dollar amount. Reported cost reflects the harness's internal price table rather than the invoice.
 
 ### Delivery Dashboard
 

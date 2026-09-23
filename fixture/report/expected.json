@@ -340,7 +340,73 @@
     "verified": 17
   },
   "planning": {
+    "byChange": {
+      "008-opencode-harness-adapter": {
+        "activeMinutes": null,
+        "changedLines": null,
+        "cost": 0.1,
+        "minutesLastEditToApproval": null,
+        "sessions": 3,
+        "specWords": null,
+        "specWordsPerChangedLine": null,
+        "tokens": {
+          "cacheRead": null,
+          "cacheWrite": null,
+          "input": 250,
+          "output": null,
+          "reasoning": null
+        }
+      },
+      "009-watcher-observability": {
+        "activeMinutes": null,
+        "changedLines": null,
+        "cost": 0.25,
+        "minutesLastEditToApproval": null,
+        "sessions": 2,
+        "specWords": null,
+        "specWordsPerChangedLine": null,
+        "tokens": {
+          "cacheRead": null,
+          "cacheWrite": null,
+          "input": 1000,
+          "output": 200,
+          "reasoning": 50
+        }
+      },
+      "010-report-history-state": {
+        "activeMinutes": null,
+        "changedLines": null,
+        "cost": 0,
+        "minutesLastEditToApproval": null,
+        "sessions": 1,
+        "specWords": null,
+        "specWordsPerChangedLine": null,
+        "tokens": {
+          "cacheRead": null,
+          "cacheWrite": null,
+          "input": 0,
+          "output": 0,
+          "reasoning": 0
+        }
+      }
+    },
     "changesWithPlanningRecords": 3,
+    "comparison": {
+      "execution": {
+        "cached": 8958336,
+        "cost": 0.15332035800000005,
+        "input": 290061,
+        "output": 60368,
+        "reasoning": 0
+      },
+      "planning": {
+        "cached": 500,
+        "cost": 0.35,
+        "input": 1250,
+        "output": 200,
+        "reasoning": 50
+      }
+    },
     "cost": {
       "formattedTotal": "$0.35",
       "provenance": "harness-reported",

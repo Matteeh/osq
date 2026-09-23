@@ -32,29 +32,37 @@ export function buildOpencodeSessionQuery(cwd: string): string {
 }
 
 /**
- * Build a read-only session+part query for approval-time observation. It joins
- * the two tables and projects only edit metadata through SQLite `json_extract`,
- * so raw `part.data`, prompts, output, old/new strings, and write content never
- * enter osq.
+ * Build a read-only message+part query for approval-time observation. It joins
+ * `message` to `session` on `message.session_id` and left-joins `part` on
+ * `part.message_id` with the completed write/edit filters, keeping only rows
+ * that carry such a part. Every usage, model, and edit field is projected
+ * through SQLite `json_extract`, so raw `message.data`, `part.data`, prompts,
+ * output, old/new strings, and write content never enter osq. It never names
+ * the old `part.sessionID` column.
  */
 export function buildOpencodeObservationQuery(): string {
   const columns = [
-    'session.id AS session_id',
+    'message.session_id AS session_id',
     'session.directory AS directory',
-    'session.time_created AS time_created',
-    'session.time_updated AS time_updated',
-    'session.model AS model',
-    'session.tokens_input AS tokens_input',
-    'session.tokens_output AS tokens_output',
-    'session.tokens_reasoning AS tokens_reasoning',
-    'session.tokens_cache_read AS tokens_cache_read',
-    'session.tokens_cache_write AS tokens_cache_write',
-    'session.cost AS cost',
-    "json_extract(part.data, '$.tool') AS edit_tool",
+    'session.version AS version',
+    'message.id AS message_id',
+    'message.time_created AS message_time',
+    "json_extract(message.data, '$.modelID') AS model",
+    "json_extract(message.data, '$.tokens.input') AS tokens_input",
+    "json_extract(message.data, '$.tokens.output') AS tokens_output",
+    "json_extract(message.data, '$.tokens.reasoning') AS tokens_reasoning",
+    "json_extract(message.data, '$.tokens.cache.read') AS tokens_cache_read",
+    "json_extract(message.data, '$.tokens.cache.write') AS tokens_cache_write",
+    "json_extract(message.data, '$.cost') AS cost",
     "json_extract(part.data, '$.state.input.filePath') AS edit_path",
     'part.time_created AS edit_time',
   ];
-  return `SELECT ${columns.join(', ')} FROM session JOIN part ON part.sessionID = session.id WHERE json_extract(part.data, '$.type') = 'tool' AND json_extract(part.data, '$.tool') IN ('write', 'edit') AND json_extract(part.data, '$.state.status') = 'completed'`;
+  const partFilters = [
+    "json_extract(part.data, '$.type') = 'tool'",
+    "json_extract(part.data, '$.tool') IN ('write', 'edit')",
+    "json_extract(part.data, '$.state.status') = 'completed'",
+  ];
+  return `SELECT ${columns.join(', ')} FROM message JOIN session ON session.id = message.session_id LEFT JOIN part ON part.message_id = message.id AND ${partFilters.join(' AND ')} WHERE json_extract(message.data, '$.role') = 'assistant' AND part.message_id IS NOT NULL`;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -63,7 +71,7 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
-function finiteNonNegative(value: unknown): number | null {
+export function finiteNonNegative(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
     return null;
   }

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:17067818ea23fc5179151116f075f0d14b7c0eb6064dc4d106abb648e228a473"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/harness/codex/codex-observe-usage.ts":"sha256:793c366b1a6d746c7645b87260f68741396fba624bdffd27d6969314abc6eff9","tests/planning-observed-codex.test.ts":"sha256:5526ba8b7fafb183178cb829dc2075789068d444e9d6364c04573f74a3763a8a"}
+---
+2026-09-23T13:29:16.764Z

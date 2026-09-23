@@ -133,6 +133,16 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       tokens: { ...report.planning.tokens },
       cost: { ...report.planning.cost },
       coverage: { ...report.planning.coverage },
+      byChange: Object.fromEntries(
+        Object.entries(report.planning.byChange).map(([change, entry]) => [
+          change,
+          { ...entry, tokens: { ...entry.tokens } },
+        ]),
+      ),
+      comparison: {
+        planning: { ...report.planning.comparison.planning },
+        execution: { ...report.planning.comparison.execution },
+      },
     },
     queue: {
       configured: report.queue.configured,

@@ -331,15 +331,20 @@ contracts and SHALL not depend on Web Inspection.
 - **THEN** `src/core/web/**`, `packages/ui/**`, focused web tests, and web fixtures map to web-inspection while existing core capabilities retain their dependency direction
 
 ### Requirement: Unreported web cost
-<!-- source: src/core/web/web-data-observations.ts, tests/web-data-unreported.test.ts -->
+<!-- source: src/core/web/web-data-observations.ts, tests/web-data-unreported.test.ts, tests/web-planning-cost.test.ts -->
 A change node's execution cost and planning cost, and a task's observed cost,
 SHALL be null when no counted attempt or session reported a cost, even if
-attempts or sessions exist. Coverage SHALL still report `0 of N`. A partially
+attempts or sessions exist or reported tokens. Planning cost coverage SHALL
+count only sessions that reported a cost, out of all sessions. A partially
 reported cost SHALL remain the sum of reported values.
 
 #### Scenario: Sessions without cost
 - **WHEN** a change has planning sessions and none reported a cost
 - **THEN** its planning cost is null and its coverage is `{ reported: 0, total: N }`
+
+#### Scenario: Sessions with tokens but no cost
+- **WHEN** a change's planning sessions reported tokens and none reported a cost
+- **THEN** its planning cost is null, its coverage is `{ reported: 0, total: N }`, and the dashboard shows `not reported`
 
 ### Requirement: Honest dashboard labels
 <!-- source: packages/ui/src/format.ts, packages/ui/src/report/format.ts, packages/ui/src/graph/format.ts, packages/ui/src/change/format.ts, packages/ui/src/change/BriefPanel.tsx, packages/ui/src/report/RepositoryTotals.tsx, tests/ui-change.test.tsx, tests/ui-report.test.tsx -->

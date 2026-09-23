@@ -1,7 +1,19 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { DEFAULT_PLANNING_CONFIG, type PlanningConfig } from '../foundation/config-planning.js';
 import { type PlanRecord, type PlanningUsage, readPlanRecords } from './planning-records.js';
+import { resolveChangeApprovalTime } from './planning-slice-lookup.js';
+import {
+  firstMatchingEdit,
+  lastTurnModel,
+  parseMs,
+  sessionEdits,
+  sessionTurns,
+} from './planning-slice-turns.js';
+import { type PlanningSlice, type PlanningTurn, sliceChangeOwnership } from './planning-slice.js';
 import { appendPlanRecord } from './planning.js';
+
+export type { PlanningSlice, PlanningTurn } from './planning-slice.js';
+export { isSegmentContained, normalizeObservedTarget } from './planning-slice.js';
+export { resolveChangeApprovalTime, resolveChangeCreationTime } from './planning-slice-lookup.js';
 
 export interface PlanningSessionEdit {
   /** Path exactly as reported by the native tool call, absolute or relative. */
@@ -9,21 +21,29 @@ export interface PlanningSessionEdit {
   readonly timestamp: string;
 }
 
+/** The reader port every harness returns; turn and session fields may be absent. */
 export interface ObservedPlanningSession {
   readonly harness: string;
   readonly nativeSessionId: string;
   readonly sessionDir: string | null;
   readonly model: string | null;
-  readonly startedAt: string | null;
-  readonly endedAt: string | null;
+  /** Harness version when the transcript records one. */
+  readonly harnessVersion?: string | null;
+  /** Whole-session reported cost when the harness records one. */
+  readonly sessionCost?: number | null;
+  readonly startedAt?: string | null;
+  readonly endedAt?: string | null;
   readonly usage: PlanningUsage;
+  /** One entry per native model response; absent on legacy readers. */
+  readonly turns?: readonly PlanningTurn[];
+  /** Legacy edit list used only when `turns` is absent. */
   readonly edits: readonly PlanningSessionEdit[];
 }
 
 /** Independent local reader for one harness. Failure degrades to no matches. */
 export type PlanningSessionReader = () => Promise<readonly ObservedPlanningSession[]>;
 
-/** A session that matched the change folder and the inclusive observation window. */
+/** A session reduced to the turns the selected change owns. */
 export interface PlanningObservation {
   readonly harness: string;
   readonly nativeSessionId: string;
@@ -32,6 +52,7 @@ export interface PlanningObservation {
   readonly startedAt: string;
   readonly endedAt: string;
   readonly usage: PlanningUsage;
+  readonly slice: PlanningSlice;
 }
 
 export interface FindPlanningSessionsOptions {
@@ -39,6 +60,10 @@ export interface FindPlanningSessionsOptions {
   readonly createdAt: string | null;
   /** Single captured observation end. */
   readonly observedAt: string;
+  /** Directory holding the session's change folders and their `archive/`. */
+  readonly changesDir?: string;
+  /** Resolved planning measurement settings. */
+  readonly planning?: PlanningConfig;
   readonly readers: readonly PlanningSessionReader[];
 }
 
@@ -56,64 +81,9 @@ function harnessRank(harness: string): number {
   return index === -1 ? HARNESS_ORDER.length : index;
 }
 
-function validIso(value: string | null | undefined): string | null {
-  if (typeof value !== 'string' || value.length === 0) return null;
-  return Number.isFinite(Date.parse(value)) ? value : null;
-}
-
-function parseMs(value: string | null): number | null {
-  const iso = validIso(value);
-  return iso === null ? null : Date.parse(iso);
-}
-
-/** Segment-aware containment: a sibling prefix or `..` escape is never inside. */
-export function isSegmentContained(folder: string, target: string): boolean {
-  const relative = path.relative(path.resolve(folder), path.resolve(target));
-  return (
-    relative !== '' &&
-    relative !== '..' &&
-    !relative.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(relative)
-  );
-}
-
-/**
- * Resolve one raw tool path against its recorded session directory, then
- * require segment containment by the change folder.
- */
-export function normalizeObservedTarget(
-  raw: string,
-  sessionDir: string | null,
-  changeFolder: string,
-): string | null {
-  if (!raw) return null;
-  const base = path.isAbsolute(raw) ? raw : sessionDir ? path.resolve(sessionDir, raw) : null;
-  if (!base) return null;
-  const normalized = path.resolve(base);
-  return isSegmentContained(changeFolder, normalized) ? normalized : null;
-}
-
 /** Stable observed session id derived from reader name and native id. */
 export function observedSessionId(harness: string, nativeSessionId: string): string {
   return `observed:${harness}:${nativeSessionId}`;
-}
-
-function firstMatchingEdit(
-  session: ObservedPlanningSession,
-  changeFolder: string,
-  createdMs: number,
-  observedMs: number,
-): PlanningSessionEdit | null {
-  const edits = [...session.edits].sort(
-    (a, b) => a.timestamp.localeCompare(b.timestamp) || a.path.localeCompare(b.path),
-  );
-  for (const edit of edits) {
-    const editMs = parseMs(edit.timestamp);
-    if (editMs === null || editMs < createdMs || editMs > observedMs) continue;
-    if (normalizeObservedTarget(edit.path, session.sessionDir, changeFolder) === null) continue;
-    return edit;
-  }
-  return null;
 }
 
 function compareObservations(a: PlanningObservation, b: PlanningObservation): number {
@@ -132,6 +102,9 @@ export async function findPlanningSessions(
   const createdMs = parseMs(options.createdAt);
   const observedMs = parseMs(options.observedAt);
   if (createdMs === null || observedMs === null || observedMs < createdMs) return [];
+  const approvedAt = options.observedAt;
+  const planning = options.planning ?? DEFAULT_PLANNING_CONFIG;
+  const approvalCache = new Map<string, string | null>();
 
   const bySessionId = new Map<string, PlanningObservation>();
   for (const reader of options.readers) {
@@ -147,20 +120,41 @@ export async function findPlanningSessions(
     );
     for (const candidate of ordered) {
       if (!candidate?.harness || !candidate?.nativeSessionId) continue;
-      const edit = firstMatchingEdit(candidate, changeFolder, createdMs, observedMs);
+      const sessionDir = candidate.sessionDir ?? null;
+      const edit = firstMatchingEdit(
+        sessionEdits(candidate),
+        sessionDir,
+        changeFolder,
+        createdMs,
+        observedMs,
+      );
       if (!edit) continue;
       const sessionId = observedSessionId(candidate.harness, candidate.nativeSessionId);
       if (bySessionId.has(sessionId)) continue;
-      const startedAt = validIso(candidate.startedAt) ?? edit.timestamp;
-      const endedAt = validIso(candidate.endedAt) ?? edit.timestamp;
+      const result = await sliceChangeOwnership({
+        changeFolder,
+        changesDir: options.changesDir ?? null,
+        sessionId,
+        sessionDir,
+        approvedAt,
+        turns: sessionTurns(candidate),
+        sessionCost: candidate.sessionCost ?? candidate.usage?.cost ?? null,
+        sessionUsage: candidate.turns === undefined ? (candidate.usage ?? null) : null,
+        idleGapMinutes: planning.idleGapMinutes,
+        ...(planning.prices ? { prices: planning.prices } : {}),
+        resolveApproval: (folder, id) => resolveChangeApprovalTime(folder, id, approvalCache),
+      });
+      if (!result) continue;
+      const sessionModel = candidate.model && candidate.model.length > 0 ? candidate.model : null;
       bySessionId.set(sessionId, {
         harness: candidate.harness,
         nativeSessionId: candidate.nativeSessionId,
         sessionId,
-        model: candidate.model && candidate.model.length > 0 ? candidate.model : null,
-        startedAt,
-        endedAt,
-        usage: candidate.usage,
+        model: lastTurnModel(result.ownedTurns) ?? sessionModel,
+        startedAt: result.slice.start,
+        endedAt: result.slice.end,
+        usage: result.usage,
+        slice: result.slice,
       });
     }
   }
@@ -211,34 +205,10 @@ export async function appendObservedSessions(
         exitCode: null,
         wallSeconds: observedWallSeconds(observation.startedAt, observation.endedAt),
         usage: observation.usage,
+        slice: observation.slice,
       },
     });
     appended++;
   }
   return appended;
-}
-
-/**
- * Persisted change creation time: the initial `.run/manifest.json` `createdAt`
- * written with the change, with the folder's valid birth time as fallback.
- */
-export async function resolveChangeCreationTime(changeFolder: string): Promise<string | null> {
-  try {
-    const raw = await fs.readFile(path.join(changeFolder, '.run', 'manifest.json'), 'utf8');
-    const createdAt = (JSON.parse(raw) as { createdAt?: unknown }).createdAt;
-    const valid = validIso(typeof createdAt === 'string' ? createdAt : null);
-    if (valid) return valid;
-  } catch {
-    // Missing or malformed manifest.
-  }
-  try {
-    const stat = await fs.stat(changeFolder);
-    const birth = stat.birthtime;
-    if (birth && Number.isFinite(birth.getTime()) && birth.getTime() > 0) {
-      return birth.toISOString();
-    }
-  } catch {
-    // Unreadable folder.
-  }
-  return null;
 }

@@ -5,6 +5,12 @@ import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { type QueueReport, readQueueReport } from '../status/queue-report.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from '../status/state.js';
+import {
+  type PlanningChangeEconomics,
+  type PlanningComparison,
+  buildPlanningComparison,
+  computePlanningByChange,
+} from './planning-economics.js';
 import { readPlanningSessions } from './planning.js';
 import {
   asData,
@@ -230,6 +236,10 @@ export interface PlanningMetrics {
     readonly reportedSessions: number;
     readonly totalSessions: number;
   };
+  /** Per change planning economics for every change with a valid start. */
+  readonly byChange: Record<string, PlanningChangeEconomics>;
+  /** Planning against executor tokens and cost, in totals. */
+  readonly comparison: PlanningComparison;
 }
 
 /** One aggregate over archived changes for a single lifecycle phase. */
@@ -1110,6 +1120,7 @@ export async function getMetricsReport(
   let planningReasoning = 0;
   let planningCost = 0;
   let planningReportedSessions = 0;
+  let planningCostReportedSessions = 0;
 
   for (const folderPath of allSpecFolders) {
     const changeId = path.basename(folderPath);
@@ -1146,6 +1157,7 @@ export async function getMetricsReport(
       if (usage.cost !== null) {
         planningCost += usage.cost;
         reported = true;
+        planningCostReportedSessions++;
       }
       if (reported) planningReportedSessions++;
     }
@@ -1154,6 +1166,24 @@ export async function getMetricsReport(
 
   const planningWallSecondsByChange = Object.fromEntries(
     Object.entries(planningWallByChange).sort(([a], [b]) => a.localeCompare(b)),
+  );
+
+  const planningByChange = await computePlanningByChange(allSpecFolders);
+  const planningComparison = buildPlanningComparison(
+    {
+      input: planningInput,
+      output: planningOutput,
+      cached: planningCached,
+      reasoning: planningReasoning,
+      cost: planningCostReportedSessions > 0 ? planningCost : null,
+    },
+    {
+      input: totalInput,
+      output: totalOutput,
+      cached: totalCachedInput,
+      reasoning: totalReasoning,
+      cost: reportedCostAttempts > 0 || totalCost !== 0 ? totalCost : null,
+    },
   );
 
   // 8. Archived change cycle time. Only archived folders get a row; every phase
@@ -1331,13 +1361,15 @@ export async function getMetricsReport(
       },
       cost: {
         total: planningCost,
-        formattedTotal: formatReportedCost(planningCost, planningReportedSessions),
+        formattedTotal: formatReportedCost(planningCost, planningCostReportedSessions),
         provenance: 'harness-reported',
       },
       coverage: {
         reportedSessions: planningReportedSessions,
         totalSessions: planningSessions,
       },
+      byChange: planningByChange,
+      comparison: planningComparison,
     },
     queue,
   };
@@ -1528,6 +1560,30 @@ export function formatRepositoryRecordBody(record: RepositoryRecord): string {
   return lines.join('\n');
 }
 
+/** A nullable measured value: `unavailable` when nothing reported it. */
+function formatOptionalValue(value: number | null): string {
+  return value === null ? 'unavailable' : String(value);
+}
+
+/** A nullable comparison cost: `not reported` when nothing on its side did. */
+function formatComparisonCost(cost: number | null): string {
+  return formatReportedCost(cost ?? 0, cost === null ? 0 : 1);
+}
+
+/** One `Planning by change:` row for a single change's economics. */
+function formatPlanningChangeLine(entry: PlanningChangeEconomics): string {
+  const tokens = entry.tokens;
+  return [
+    `sessions ${entry.sessions}`,
+    `active ${formatOptionalValue(entry.activeMinutes)} min`,
+    `tokens in ${formatOptionalValue(tokens.input)} out ${formatOptionalValue(tokens.output)} cache-read ${formatOptionalValue(tokens.cacheRead)} cache-write ${formatOptionalValue(tokens.cacheWrite)} reasoning ${formatOptionalValue(tokens.reasoning)}`,
+    `cost ${formatComparisonCost(entry.cost)}`,
+    `spec words ${formatOptionalValue(entry.specWords)}`,
+    `changed lines ${formatOptionalValue(entry.changedLines)} (${formatOptionalValue(entry.specWordsPerChangedLine)} words/line)`,
+    `last edit to approval ${formatOptionalValue(entry.minutesLastEditToApproval)} min`,
+  ].join(', ');
+}
+
 export function formatMetricsReport(
   report: MetricsReport,
   config: OsqConfig = DEFAULT_CONFIG,
@@ -1664,6 +1720,41 @@ export function formatMetricsReport(
     `  ${report.planning.coverage.reportedSessions} of ${report.planning.coverage.totalSessions} sessions reported usage`,
   );
   lines.push(`  ${report.planning.changesWithPlanningRecords} changes have a planning record`);
+
+  const planningChangeEntries = Object.entries(report.planning.byChange).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  // A repository with no planning at all prints only the totals above; the
+  // per-change and comparison sections need at least one planning record.
+  if (report.planning.sessions > 0 || planningChangeEntries.length > 0) {
+    lines.push('');
+    lines.push('Planning by change:');
+    if (planningChangeEntries.length === 0) {
+      lines.push('  (none)');
+    } else {
+      for (const [change, entry] of planningChangeEntries) {
+        lines.push(`  ${change}: ${formatPlanningChangeLine(entry)}`);
+      }
+    }
+    lines.push('Planning vs execution:');
+    const planningSide = report.planning.comparison.planning;
+    const executionSide = report.planning.comparison.execution;
+    lines.push(
+      `  Input tokens: planning ${formatOptionalValue(planningSide.input)}, execution ${formatOptionalValue(executionSide.input)}`,
+    );
+    lines.push(
+      `  Output tokens: planning ${formatOptionalValue(planningSide.output)}, execution ${formatOptionalValue(executionSide.output)}`,
+    );
+    lines.push(
+      `  Cached tokens: planning ${formatOptionalValue(planningSide.cached)}, execution ${formatOptionalValue(executionSide.cached)}`,
+    );
+    lines.push(
+      `  Reasoning tokens: planning ${formatOptionalValue(planningSide.reasoning)}, execution ${formatOptionalValue(executionSide.reasoning)}`,
+    );
+    lines.push(
+      `  Cost: planning ${formatComparisonCost(planningSide.cost)}, execution ${formatComparisonCost(executionSide.cost)}`,
+    );
+  }
 
   lines.push('');
   lines.push('Cycle:');

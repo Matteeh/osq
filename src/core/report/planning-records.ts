@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getChangeRunDir } from '../status/layout.js';
+import { parsePlanningSlice } from './planning-slice-record.js';
+import type { PlanningSlice } from './planning-slice.js';
 
 // Append-only planning telemetry at `<change>/.run/plan.jsonl` (outside the hash).
 const PLAN_LOG_NAME = 'plan.jsonl';
@@ -53,7 +55,13 @@ export interface PlanExitedRecord {
   timestamp: string;
   /** Absent on legacy records; absence reads as owned. */
   source?: PlanningSource;
-  data: { exitCode: number | null; wallSeconds: number; usage: PlanningUsage };
+  data: {
+    exitCode: number | null;
+    wallSeconds: number;
+    usage: PlanningUsage;
+    /** Observed slice measures; absent on legacy or malformed records. */
+    slice?: PlanningSlice;
+  };
 }
 export type PlanRecord = PlanStartedRecord | PlanExitedRecord;
 
@@ -129,6 +137,7 @@ function parsePlanRecord(value: unknown): PlanRecord | null {
     };
   }
   if (record.type === 'plan_exited') {
+    const slice = parsePlanningSlice(data.slice);
     return {
       type: 'plan_exited',
       sessionId,
@@ -139,6 +148,7 @@ function parsePlanRecord(value: unknown): PlanRecord | null {
         exitCode: finiteNumber(data.exitCode),
         wallSeconds: finiteNonNegative(data.wallSeconds) ?? 0,
         usage: parseUsage(data.usage),
+        ...(slice ? { slice } : {}),
       },
     };
   }

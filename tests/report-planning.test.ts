@@ -295,7 +295,9 @@ describe('report planning metrics', () => {
       const parsed = JSON.parse(raw) as MetricsReport;
 
       assert.deepEqual(Object.keys(parsed.planning).sort(), [
+        'byChange',
         'changesWithPlanningRecords',
+        'comparison',
         'cost',
         'coverage',
         'sessions',

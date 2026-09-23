@@ -133,8 +133,9 @@ export async function observeExecution(folderPath: string): Promise<ChangeExecut
 
 /**
  * Aggregates per-change planning evidence from valid `.run/plan.jsonl`
- * lifecycle pairs. No valid start, or no session reporting any usage, yields a
- * null planning cost rather than a summed zero.
+ * lifecycle pairs. Cost coverage counts only sessions whose `usage.cost` was
+ * recorded; tokens alone yield a null cost and `reported: 0` rather than a
+ * summed zero.
  */
 export async function observePlanning(folderPath: string): Promise<WebMetricObservation> {
   const sessions = (await readPlanningSessions(folderPath)).filter((session) => session.started);
@@ -206,7 +207,7 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
       costValues.push(usage.cost);
       sessionReported = true;
     }
-    if (sessionReported) reported++;
+    if (sessionReported && usage.cost !== null) reported++;
     if (Number.isFinite(exited.data.wallSeconds)) durations.push(exited.data.wallSeconds);
   }
 

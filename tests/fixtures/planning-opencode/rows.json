@@ -1,0 +1,36 @@
+{
+  "rows": [
+    {
+      "session_id": "oc-turns",
+      "directory": "__CWD__",
+      "version": "1.18.31",
+      "message_id": "msg-1",
+      "message_time": 1758000000000,
+      "model": "oc-turns-model",
+      "tokens_input": 100,
+      "tokens_output": 20,
+      "tokens_reasoning": 5,
+      "tokens_cache_read": 7,
+      "tokens_cache_write": 3,
+      "cost": 0.25,
+      "edit_path": null,
+      "edit_time": null
+    },
+    {
+      "session_id": "oc-turns",
+      "directory": "__CWD__",
+      "version": "1.18.31",
+      "message_id": "msg-2",
+      "message_time": 1758000060000,
+      "model": "oc-turns-model",
+      "tokens_input": 200,
+      "tokens_output": 40,
+      "tokens_reasoning": 9,
+      "tokens_cache_read": 11,
+      "tokens_cache_write": 13,
+      "cost": 0.5,
+      "edit_path": "__INSIDE_PATH__",
+      "edit_time": 1758000055000
+    }
+  ]
+}

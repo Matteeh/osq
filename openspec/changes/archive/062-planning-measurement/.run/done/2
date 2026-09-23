@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:405bbbbe5d1e300ce4e5b0efc85737221b2a4a8174871d77457d12a527d26f69"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/core/foundation/config-planning.ts":"sha256:dc4e24e6aea9ad2c9b72cfb86ff419f51098222d747003a37523d5606a2c5e63","src/core/foundation/config.ts":"sha256:ee35bde9dbbc01e8cc3e4e6af5b2ed6d7b9e2160dae86f7c31d67d33124f158b","src/index.ts":"sha256:0678aa49916f9a2b745493375deec5f258002a6c63806d2f2995892e57996ef8"}
+---
+2026-09-23T13:08:04.406Z

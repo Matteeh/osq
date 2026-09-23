@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:fc8aa9c642e9c6302d3741b7e6ddad9fced1d26cce2328c606d4cc993e52c477"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/harness/opencode/opencode-observe-usage.ts":"sha256:9b6d02920125c7143162ca8b22bb77aaaa94e8ca1ce3001a585dcfe947f62575","src/harness/opencode/opencode-usage.ts":"sha256:10cc9168f38a14571f308d00a63f5df72cae89401e1bf9cfa52a955fbcd7e220","tests/planning-observed-opencode.test.ts":"sha256:a3f4a0db8da3db1727188aa4b74311b4eddbd3dec7b75592647d91017d670033"}
+---
+2026-09-23T13:33:19.802Z

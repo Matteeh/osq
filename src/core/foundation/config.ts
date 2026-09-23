@@ -5,6 +5,11 @@ import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './
 import { applyHarnessModelEnv } from './config-env.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { type PiConfig, validatePiConfig } from './config-pi.js';
+import {
+  DEFAULT_PLANNING_CONFIG,
+  type PlanningConfig,
+  validatePlanningConfig,
+} from './config-planning.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
 
@@ -71,6 +76,7 @@ export interface OsqConfig {
   readonly pi?: PiConfig;
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
+  readonly planning?: PlanningConfig;
   readonly queue?: QueueConfig;
   readonly serve?: Partial<ServeConfig>;
   readonly gates?: GatesConfig;
@@ -79,7 +85,16 @@ export interface OsqConfig {
 export type OsqUserConfig = Partial<
   Omit<
     OsqConfig,
-    'limits' | 'paths' | 'timeouts' | 'codex' | 'pi' | 'log' | 'planner' | 'queue' | 'gates'
+    | 'limits'
+    | 'paths'
+    | 'timeouts'
+    | 'codex'
+    | 'pi'
+    | 'log'
+    | 'planner'
+    | 'planning'
+    | 'queue'
+    | 'gates'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -91,6 +106,7 @@ export type OsqUserConfig = Partial<
   readonly pi?: Partial<PiConfig>;
   readonly log?: Partial<LogConfig>;
   readonly planner?: Partial<PlannerConfig>;
+  readonly planning?: Partial<PlanningConfig>;
   readonly queue?: Partial<QueueConfig>;
   readonly gates?: Partial<GatesConfig>;
 };
@@ -100,6 +116,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
+  planning: DEFAULT_PLANNING_CONFIG,
   agy: {
     model: 'gemini-3.8-flash-high',
     dangerouslySkipPermissions: true,
@@ -148,6 +165,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     ...DEFAULT_CONFIG,
     ...restConfig,
     serve,
+    planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:08e96d1c6560e3f1a7f8691526fbdac71f8a2405ad9af00e53127ca9d2e80fd6"
+build_stamp: "66bea2e"
+exit_code: 0
+scope_files: {"src/harness/claude/claude-turns.ts":"sha256:6e06905958a657c18b90eea7b6c3cb4c42a56a5fbe2f309e998a6ed7d8696ffc","src/harness/claude/claude-usage.ts":"sha256:1df99cc2da2c9a3c83e19c7941519374fa0bcceb5c72f8a5c49302c251be5d4e","tests/planning-observed-claude.test.ts":"sha256:460384018fd1bedc830bd0e944aa676fffcce57002c5590cc3e280b5cf323426"}
+---
+2026-09-23T13:24:45.055Z
