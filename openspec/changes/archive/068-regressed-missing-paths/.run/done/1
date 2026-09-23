@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:938de3e4f2609b46cbeb6bc42e8d0d7dc335b424bb79ddefbc42ada6b5456a65"
+build_stamp: "5ecd1ec"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:93cad824f71471a0dbabf98d060718c7274b80ea0990500431e836f5e76d1152","src/watcher/archive-verify.ts":"sha256:f3c765cbcd9cf5615e045f461c41a6eaceb9b8e1f8cdfcf37ca58076f4216f78","tests/archive-verify-path-missing.test.ts":"sha256:d575b592d5ba665eb7ad01e2b5ffbc633490749c41c110666065114e961100d0","tests/regressed-missing-paths.test.ts":"sha256:bcc0655e9503541b82e3ddc34431fc7852564f3c096d3c7ffd01432f6b27ab8a"}
+---
+2026-09-23T21:15:23.532Z

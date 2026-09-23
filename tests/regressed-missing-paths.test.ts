@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { approveSpec } from '../src/core/spec/approve.js';
-import { getArchiveDir } from '../src/core/status/layout.js';
 import { AgyAdapter } from '../src/harness/agy/agy.js';
 import { checkAndArchiveSpec } from '../src/watcher/archiver.js';
 import { runTask } from '../src/watcher/runner.js';
@@ -45,14 +44,14 @@ process.exit(0);
 function proposal(changeVerify: string): string {
   return [
     '---',
-    'title: Archive verify path check',
+    'title: Regressed named paths',
     'depends_on: []',
     `verify: ${changeVerify}`,
     'features:',
     '  reads: []',
     '---',
     '## Goal',
-    'Exercise archive-time named-path checking.',
+    'Exercise archive-time named-path regression events.',
     '## Contract',
     '| Input | Expected Output |',
     '|---|---|',
@@ -80,14 +79,13 @@ function taskFile(title: string, verify: string): string {
   ].join('\n')}\n`;
 }
 
-describe('archive-time verify named-path check', () => {
+describe('archive-time verify_path_missing regressed event', () => {
   let tmpDir: string;
   let specFolder: string;
-  let archivedPath: string;
   let originalAgyPath: string | undefined;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-archive-path-'));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-regressed-missing-'));
     await installFakeValidator(tmpDir);
     await scaffoldProject(tmpDir);
     await fs.writeFile(path.join(tmpDir, 'verify-pass.cjs'), 'process.exit(0);\n', 'utf8');
@@ -109,11 +107,7 @@ describe('archive-time verify named-path check', () => {
   });
 
   async function writeDoneChange(): Promise<OsqConfig> {
-    specFolder = path.join(tmpDir, 'openspec', 'changes', '001-archive-path');
-    archivedPath = path.join(
-      getArchiveDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir),
-      path.basename(specFolder),
-    );
+    specFolder = path.join(tmpDir, 'openspec', 'changes', '001-regressed-paths');
     await fs.mkdir(path.join(specFolder, 'tasks'), { recursive: true });
     await fs.writeFile(path.join(specFolder, 'proposal.md'), proposal(CHANGE_VERIFY), 'utf8');
     await fs.writeFile(path.join(specFolder, 'tasks.md'), '# Tasks\n\n- [ ] 1. task 1\n', 'utf8');
@@ -140,63 +134,19 @@ describe('archive-time verify named-path check', () => {
       .map((line) => JSON.parse(line) as ParsedEvent);
   }
 
-  function verifyRanEvents(events: ParsedEvent[]): ParsedEvent[] {
-    return events.filter(
-      (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
-    );
-  }
-
-  async function exists(target: string): Promise<boolean> {
-    return fs
-      .stat(target)
-      .then(() => true)
-      .catch(() => false);
-  }
-
-  it('regresses without running when a named path was deleted', async () => {
+  it('carries missingPaths and no differingPaths on the regressed event', async () => {
     const config = await writeDoneChange();
-    const before = verifyRanEvents(await readEvents(specFolder, '1')).length;
 
     await fs.rm(path.join(tmpDir, NAMED_PATH));
 
     assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, config), false);
 
-    // The change stays active and no archive event is recorded.
-    assert.equal(await exists(specFolder), true);
-    assert.equal(await exists(archivedPath), false);
-    assert.equal(
-      (await readEvents(specFolder, 'change')).some((event) => event.type === 'archived'),
-      false,
-    );
-
-    // The regressed marker carries the reason, the command, and each missing path.
-    const marker = await fs.readFile(path.join(specFolder, '.run', 'regressed', '1.md'), 'utf8');
-    assert.match(marker, /reason: verify_path_missing/);
-    assert.match(marker, /tests\/present\.cjs/);
-    assert.match(marker, /node tests\/present\.cjs/);
-
-    // The regressed event carries the same reason and the path.
     const regressed = (await readEvents(specFolder, '1')).filter(
       (event) => event.type === 'regressed',
     );
     assert.equal(regressed.length, 1);
     assert.equal(regressed[0].data?.reason, 'verify_path_missing');
     assert.deepEqual(regressed[0].data?.missingPaths, [NAMED_PATH]);
-
-    // The archive step never ran the command.
-    assert.equal(verifyRanEvents(await readEvents(specFolder, '1')).length, before);
-  });
-
-  it('archives as before when every named path is present', async () => {
-    const config = await writeDoneChange();
-    const before = verifyRanEvents(await readEvents(specFolder, '1')).length;
-
-    assert.equal(await checkAndArchiveSpec(tmpDir, specFolder, config), true);
-
-    assert.equal(await exists(specFolder), false);
-    assert.equal(await exists(archivedPath), true);
-    assert.equal(await exists(path.join(archivedPath, '.run', 'done', '1')), true);
-    assert.equal(await exists(path.join(archivedPath, '.run', 'regressed')), false);
-    assert.equal(verifyRanEvents(await readEvents(archivedPath, '1')).length, before + 1);
+    assert.equal('differingPaths' in (regressed[0].data ?? {}), false);
   });
 });

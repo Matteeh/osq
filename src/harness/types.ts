@@ -144,6 +144,8 @@ export interface RegressedEventData {
   duration?: number;
   command?: string;
   differingPaths?: string[];
+  /** Paths a verify named that did not exist; set on `verify_path_missing` regressions. */
+  missingPaths?: string[];
   reason?: string;
   /** Structured per-path attribution detected by the scope recertification audit. */
   attribution?: ScopePathAttribution[];

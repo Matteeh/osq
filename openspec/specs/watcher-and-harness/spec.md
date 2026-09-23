@@ -428,14 +428,14 @@ The engine SHALL record regression failures under `.run/regressed/`, emit typed 
 - **THEN** status output displays `[!] <task>. <title> [regressed]` and marks the spec overview as `[regressed]`
 
 ### Requirement: Archive-time verification re-run
-<!-- source: src/watcher/archiver.ts, src/watcher/archive-verify.ts, src/watcher/verify.ts, tests/archive-verification.test.ts, tests/plan-prompt-lifecycle.test.ts, tests/archive-verify-path-missing.test.ts -->
-Before archiving, the watcher SHALL re-run every task verification and the
-change-level verification against the final tree after scope recertification.
-A command naming a missing path SHALL be recorded as a regression with reason
-`verify_path_missing` without running. When all gates pass, it SHALL delete
-root-level `plan-prompt.md`, apply deltas, relocate the folder, project
-completed checkboxes, and record the archive event. The transient prompt SHALL
-not participate in any archive tree hash.
+<!-- source: src/watcher/archiver.ts, src/watcher/archive-verify.ts, src/watcher/verify.ts, src/harness/types.ts, tests/archive-verification.test.ts, tests/plan-prompt-lifecycle.test.ts, tests/archive-verify-path-missing.test.ts, tests/regressed-missing-paths.test.ts -->
+Before archiving, the watcher SHALL re-run every task and change-level
+verification against the final tree after scope recertification. A command
+naming a missing path SHALL NOT run; its regression SHALL carry reason
+`verify_path_missing` and the paths as `missingPaths`. When all gates pass, it
+SHALL delete root-level `plan-prompt.md`, apply deltas, relocate the folder,
+project completed checkboxes, and record the archive event. The transient prompt
+SHALL not affect any archive tree hash.
 
 #### Scenario: Archive verification passes and seals change
 - **WHEN** every task verification and the change-level verify command pass against the final tree
@@ -459,7 +459,7 @@ not participate in any archive tree hash.
 
 #### Scenario: Named path missing at archive
 - **WHEN** a done task's verify names a file that no longer exists
-- **THEN** that task gets a regressed marker with reason `verify_path_missing` listing the path, the command does not run, and the change stays unarchived
+- **THEN** that task gets a regressed marker with reason `verify_path_missing` listing the path, its `regressed` event carries `missingPaths` with the path and no `differingPaths`, the command does not run, and the change stays unarchived
 
 ### Requirement: Deterministic delta spec archival and appender removal
 <!-- source: src/watcher/archiver.ts, tests/archiver.test.ts, tests/living-specs-delta-equivalence.test.ts -->

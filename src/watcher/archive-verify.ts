@@ -55,7 +55,7 @@ export async function verifyArchiveStep(
     await recordRegressedEvent(specFolderPath, target, {
       command,
       reason: 'verify_path_missing',
-      differingPaths: [...missing],
+      missingPaths: [...missing],
     });
     return false;
   }
