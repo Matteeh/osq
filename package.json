@@ -1,6 +1,6 @@
 {
   "name": "@matteeh/osq",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
   "type": "module",
   "sideEffects": false,

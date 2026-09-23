@@ -72,8 +72,11 @@ describe('Build identity resolution', () => {
 
   it('returns the package version and a git commit or dist hash', async () => {
     const info = await resolveBuildInfo();
+    const packageJson = JSON.parse(
+      await fs.readFile(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as { version: string };
 
-    assert.equal(info.version, '0.1.0');
+    assert.equal(info.version, packageJson.version);
     assert.equal(typeof info.commit, 'string');
     assert.match(info.commit, /^[0-9a-f]{7,40}$/);
   });
