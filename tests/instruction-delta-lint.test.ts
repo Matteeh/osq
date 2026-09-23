@@ -39,6 +39,10 @@ Reject instruction-shaped delta requirements.
 
 None.
 
+## Surface
+
+None.
+
 ## Delta
 
 Delta specs live beside the proposal.

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3b10cd054f2de1797a5d8415b5752a8bcb33c4094544f6d34384d054a225b110"
+build_stamp: "2d73185"
+exit_code: 0
+scope_files: {"README.md":"sha256:5bf27cdb194d14619a1e246c9e4d0a165d46b415323bf07d76aa0fe322e5348a","src/core/spec/linter.ts":"sha256:a910eb0bb5a37dc2ba9f7be188f07bfc7cfb6293873740283be39b9b9ec31668","tests/instruction-delta-lint.test.ts":"sha256:0a114b90c81dd9ba54d2da4d39f81dd615c88c96dfe0dd5d0dc61d877c078efd","tests/mangled-lint.test.ts":"sha256:00a5ba92e5b439fb8d8ffd08d5e7bcf4d032e0f230f26bc0b662adb78be90d22","tests/openspec-version.test.ts":"sha256:3d329e6ac2304357f979aa73b95646f27ba22d33b8dac7f12ea55ce542893f7b","tests/plan-prompt-lifecycle.test.ts":"sha256:a8ff9e77a41d2fa7039160e8c9e70845d6092a07e2909c92cdbb376eebf05e0f","tests/proposal-surface-lint.test.ts":"sha256:012a7aeed9558ee778ee3726bcdc63681bddcaa9116cd27ea80e9c5723cdeab5","tests/proposal-writes-schema.test.ts":"sha256:bbbd1c9ee870876887b68a0b14f019d8b0f70c7756227a5abdfc0d7cb7b70031"}
+---
+2026-09-23T08:01:13.981Z

@@ -96,12 +96,15 @@ features:
 ## Goal
 ## Verify
 ## Non-goals
+## Surface
 ## Contract
 ## Human steps
 ## Delta
 ```
 
 The frontmatter `verify` is the change-level command the watcher runs after every task and before archiving. Capability writes are not declared in frontmatter: the set of delta specs under `specs/<capability>/spec.md` is the authoritative declaration of what the change writes.
+
+`## Surface` lists the user-facing names the change adds, changes, or removes — commands, flags, config keys, frontmatter fields, document sections, dead reasons, and event types; a change with none of those writes `None`.
 
 A delta spec holds the exact text the capability spec will contain after the change, grouped under an OpenSpec operation heading:
 

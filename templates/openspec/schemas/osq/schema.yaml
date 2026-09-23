@@ -19,6 +19,9 @@ artifacts:
       - **Goal**: the problem this change solves and why now.
       - **Verify**: the change-level `verify` command again, and what it proves.
       - **Non-goals**: what the change deliberately does not do.
+      - **Surface**: the user-facing names the change adds, changes, or removes:
+        commands, flags, config keys, frontmatter fields, document sections,
+        dead reasons, and event types. Write `None` when there are none.
       - **Contract**: requirements, each with `#### Scenario:` blocks using
         WHEN/THEN bullets.
       - **Human steps**: everything a task must not do itself, including running

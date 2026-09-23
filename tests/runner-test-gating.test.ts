@@ -45,6 +45,10 @@ features:
 ## Goal
 
 Exercise undeclared test change gating.
+
+## Surface
+
+None.
 `;
 }
 

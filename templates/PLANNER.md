@@ -64,6 +64,10 @@ your complete prompt; read it and follow it exactly.
 - `## Goal`, then the change-level `verify` every proposal declares as the first
   thing written after the goal, then `## Non-goals` and the contract as
   requirements with scenarios.
+- `## Surface` follows `## Non-goals` and lists the user-facing names the change
+  adds, changes, or removes: commands, flags, config keys, frontmatter fields,
+  document sections, dead reasons, and event types. Write `None` when there are
+  none; `osq lint` rejects a proposal without the section.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
 - Anything a task must not do itself goes under `## Human steps`.

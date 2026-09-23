@@ -77,6 +77,10 @@ Probe the approval manifest.
 
 None.
 
+## Surface
+
+None.
+
 ## Delta
 
 Adds a manifest requirement to metrics-and-reporting.

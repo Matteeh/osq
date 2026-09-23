@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9ab045c01dab2d46c146d2239831d29b66f06892ad28b1ff371a76d26d0e31d7"
+build_stamp: "2d73185"
+exit_code: 0
+scope_files: {"tests/archive-verification.test.ts":"sha256:0d21078cf35d44d5fb76c1d23b239c5d1533cbb3450c7fb818fbf9a9fd5ff8e1","tests/cut-over.test.ts":"sha256:6bee036cd5b91ca6000503434b79f199199a1c35724715b525e42eea667f4fbe","tests/manifest.test.ts":"sha256:f426962ee25f50057cdb6d4aaa5b715a036e23548fbcc11ab30c1ea59a8ec579","tests/queue-watch.test.ts":"sha256:89b6e0de970b06788fdb73545a632ebbd73b390236b7d68f98dd74324e7a322d","tests/runner-scope-hashes.test.ts":"sha256:ea1e916eb353fe56d5ca29c5601bfa7884a708118cebfd67d849a1efc66caf00","tests/runner-test-gating.test.ts":"sha256:d5fd96963229af64bbac9f49f310c07c6dc8e0891088a609f32301d8a058e67c","tests/scope-recertification.test.ts":"sha256:2cbec59f12dac8afada388f47501194f5c3ed317ad1e6252281939b08257aa77","tests/scope-resolver-upgrade.test.ts":"sha256:ad22e2dc1debee7257dada3118d9d8792a5104c09e645d8e0524d6aa69d58b6d"}
+---
+2026-09-23T07:46:24.910Z

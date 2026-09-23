@@ -20,6 +20,14 @@ that verifies the completed change's final tree, and say what it proves.
 
 - What this change deliberately does not do.
 
+## Surface
+
+<!-- User-facing names this change adds, changes, or removes: commands, flags,
+config keys, frontmatter fields, document sections, dead reasons, and event
+types. Replace None with one line per name, such as
+"- Added: `osq init --refresh-schema` (flag)". -->
+None
+
 ## Contract
 
 ### Requirement: <requirement name>

@@ -13,7 +13,7 @@ context: |
 
 rules:
   proposal:
-    - "Follow the proposal template's sections in order: Goal, Verify, Non-goals, Contract, Human steps, Delta."
+    - "Follow the proposal template's sections in order: Goal, Verify, Non-goals, Surface, Contract, Human steps, Delta."
     - Declare the change-level verify command in frontmatter; the human gate reads the proposal before approving.
   specs:
     - Write one delta spec per capability at specs/<capability>/spec.md.

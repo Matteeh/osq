@@ -72,6 +72,10 @@ Probe the retired features.writes field.
 
 None.
 
+## Surface
+
+None.
+
 ## Delta
 
 Delta specs declare the written capabilities.

@@ -98,6 +98,8 @@ function proposalMd(title: string, humanSteps?: string): string {
     '| cut-over | openspec paths |',
     '## Non-goals',
     'None.',
+    '## Surface',
+    'None.',
   ];
   if (humanSteps) {
     lines.push('## Human steps', '', humanSteps, '');

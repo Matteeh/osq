@@ -18,7 +18,7 @@ const REPO_SCHEMA = path.join(REPO_OPENSPEC, SCHEMA_DIR, 'schema.yaml');
 const REPO_CONFIG = path.join(REPO_OPENSPEC, 'config.yaml');
 
 /** The osq proposal section names, in the order every entry point names them. */
-const SECTIONS = ['Goal', 'Verify', 'Non-goals', 'Contract', 'Human steps', 'Delta'];
+const SECTIONS = ['Goal', 'Verify', 'Non-goals', 'Surface', 'Contract', 'Human steps', 'Delta'];
 
 interface ParsedArtifact {
   id: string;
@@ -112,7 +112,32 @@ describe('One proposal format', () => {
   it('managed planner block names the proposal sections', () => {
     assert.ok(MANAGED_PLANNER_BLOCK.includes('## Goal'));
     assert.ok(MANAGED_PLANNER_BLOCK.includes('## Non-goals'));
+    assert.ok(MANAGED_PLANNER_BLOCK.includes('## Surface'));
     assert.ok(MANAGED_PLANNER_BLOCK.includes('## Human steps'));
+  });
+
+  it('template Surface section names the seven categories and seeds None', async () => {
+    const proposal = await fs.readFile(CANONICAL_PROPOSAL, 'utf8');
+    const start = proposal.indexOf('## Surface');
+    const end = proposal.indexOf('## Contract');
+    assert.ok(start >= 0, 'proposal template must declare ## Surface');
+    assert.ok(end > start, '## Contract must follow ## Surface');
+
+    const surface = proposal.slice(start, end);
+    const normalized = surface.replace(/\s+/g, ' ');
+    const categories = [
+      'commands',
+      'flags',
+      'config keys',
+      'frontmatter fields',
+      'document sections',
+      'dead reasons',
+      'event types',
+    ];
+    for (const category of categories) {
+      assert.ok(normalized.includes(category), `Surface section must name ${category}`);
+    }
+    assert.match(surface, /^None$/m, 'Surface section must seed a None line');
   });
 
   it('repository dogfood schema declares the osq artifacts', async () => {

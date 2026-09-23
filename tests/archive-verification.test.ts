@@ -74,6 +74,8 @@ function proposal(changeVerify: string): string {
     '| a | b |',
     '## Non-goals',
     'None.',
+    '## Surface',
+    'None.',
     '## Delta',
     'None.',
   ].join('\n');

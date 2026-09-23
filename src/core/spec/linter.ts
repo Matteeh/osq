@@ -58,6 +58,40 @@ const INSTRUCTION_SHAPED_REQUIREMENT_REGEX = /^(?:update|document)/i;
 /** The exact template verify sentinel planning must replace before approval. */
 const PLACEHOLDER_VERIFY_COMMAND = 'node -e "process.exit(0)"';
 
+/** The one find-it error for a missing or empty proposal `## Surface` section. */
+const PROPOSAL_SURFACE_ERROR =
+  'proposal.md needs a ## Surface section: list the commands, flags, config keys, frontmatter fields, document sections, dead reasons, and event types this change adds, changes, or removes, or write None';
+
+/** HTML comments are structural scaffolding, not declared surface text. */
+const HTML_COMMENT_REGEX = /<!--[\s\S]*?-->/g;
+
+/**
+ * Reads a proposal body's `## Surface` section content. The heading must occupy
+ * its own line; a mention inside prose does not count. Returns `null` when the
+ * section is absent.
+ */
+function readSurfaceSection(body: string): string | null {
+  const match = /^##\s+Surface\s*$/m.exec(body);
+  if (!match) {
+    return null;
+  }
+  const rest = body.slice(match.index + match[0].length);
+  const boundary = rest.search(/\n##(?!#)\s/);
+  return boundary === -1 ? rest : rest.slice(0, boundary);
+}
+
+/**
+ * True when a proposal has no `## Surface` section, or the section holds only
+ * HTML comments and whitespace. Lint checks presence, never the declared text.
+ */
+function proposalSurfaceIsEmpty(body: string): boolean {
+  const section = readSurfaceSection(body);
+  if (section === null) {
+    return true;
+  }
+  return section.replace(HTML_COMMENT_REGEX, '').trim().length === 0;
+}
+
 /** Package managers whose direct or `run` invocations reference a script. */
 const PACKAGE_MANAGER_BINARIES = new Set(['pnpm', 'npm', 'yarn', 'bun']);
 
@@ -924,6 +958,15 @@ export async function lintChangeFolder(
   // Check: proposals must declare a change-level verify command
   if (resolvedDoc.kind === 'proposal' && !spec.verify) {
     errors.push('proposal.md must declare a verify command in frontmatter');
+  }
+
+  // Check: proposals must declare a non-empty ## Surface section; legacy spec.md
+  // change documents are exempt exactly as they are for the verify check.
+  if (
+    resolvedDoc.kind === 'proposal' &&
+    proposalSurfaceIsEmpty(parseFrontmatter(specContent).body)
+  ) {
+    errors.push(PROPOSAL_SURFACE_ERROR);
   }
 
   // Check: the change-level verify participates in the same trust analysis
