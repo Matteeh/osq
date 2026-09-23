@@ -54,8 +54,12 @@ export function createProgram(version?: string): Command {
   program
     .command('init')
     .description('scaffold osq folders and configuration')
-    .action(async () => {
-      await initCommand();
+    .option(
+      '--refresh-schema',
+      'overwrite scaffolded OpenSpec schema files from installed templates',
+    )
+    .action(async (options: { refreshSchema?: boolean }) => {
+      await initCommand({ refreshSchema: options.refreshSchema });
     });
 
   program

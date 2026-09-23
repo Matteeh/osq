@@ -76,19 +76,27 @@ async function readCapabilityDelta(capability: string): Promise<string> {
   return fs.readFile(path.join(deltaRoot, capability, 'spec.md'), 'utf8');
 }
 
-function stripOwnership(content: string): string {
+function stripOwnership(content: string, exclude: readonly string[] = []): string {
+  const excluded = new Set(['Code ownership', ...exclude]);
   const parsed = parseCapabilitySpec(content);
   return serializeCapabilitySpec({
     ...parsed,
-    requirements: parsed.requirements.filter(
-      (requirement) => requirement.name !== 'Code ownership',
-    ),
+    requirements: parsed.requirements.filter((requirement) => !excluded.has(requirement.name)),
   });
 }
 
-async function readLivingSpec(capability: string): Promise<string> {
+/**
+ * The living spec as it stood before change 017 added its requirements. The
+ * ownership delta is replayed against this base, so removing the names it
+ * introduces keeps the synthetic merge compatible with the parity rules the
+ * delta merge now enforces.
+ */
+async function readLivingSpec(
+  capability: string,
+  exclude: readonly string[] = [],
+): Promise<string> {
   const content = await fs.readFile(path.join(LIVING_SPEC_ROOT, capability, 'spec.md'), 'utf8');
-  return stripOwnership(content);
+  return stripOwnership(content, exclude);
 }
 
 const INITIAL_DELTA = `# Spec Delta: cli-foundation
@@ -129,8 +137,8 @@ Should not replace the existing base purpose.
 
 ## RENAMED Requirements
 
-- FROM: \`Alpha\`
-- TO: \`Alpha Renamed\`
+- FROM: \`### Requirement: Alpha\`
+- TO: \`### Requirement: Alpha Renamed\`
 
 ## REMOVED Requirements
 
@@ -162,7 +170,6 @@ The system SHALL provide delta.
 const GOLDEN_SPEC = `# cli-foundation Specification
 
 ## Purpose
-
 Provides CLI behavior for the golden rebuild test.
 
 ## Requirements
@@ -273,8 +280,8 @@ describe('Delta merge engine', () => {
 
 ## RENAMED Requirements
 
-- FROM: \`Alpha\`
-- TO: \`Alpha Two\`
+- FROM: \`### Requirement: Alpha\`
+- TO: \`### Requirement: Alpha Two\`
 
 ## REMOVED Requirements
 
@@ -291,15 +298,15 @@ describe('Delta merge engine', () => {
 
 ## RENAMED Requirements
 
-- FROM: \`Alpha\`
-- TO: \`Alpha Two\`
+- FROM: \`### Requirement: Alpha\`
+- TO: \`### Requirement: Alpha Two\`
 
 ## MODIFIED Requirements
 
 ### Requirement: Alpha Two
 The system SHALL provide alpha v2.
 
-#### Scenario: Alpha Two runs
+#### Scenario: Alpha runs
 - **WHEN** alpha invoked twice
 - **THEN** alpha responds twice
 `;
@@ -359,6 +366,83 @@ The system SHALL not exist.
           error.message,
           'Cannot apply REMOVED: requirement "Does Not Exist" not found in base spec',
         );
+        return true;
+      },
+    );
+  });
+
+  it('refuses a MODIFIED block that leaves out an existing scenario', () => {
+    const base = mergeDelta(null, 'cap', parseDelta(INITIAL_DELTA));
+    const dropped = `# Spec Delta: cap
+
+## MODIFIED Requirements
+
+### Requirement: Beta
+The system SHALL provide beta v2.
+
+#### Scenario: Renamed scenario
+- **WHEN** beta invoked
+- **THEN** beta responds
+`;
+
+    assert.throws(
+      () => mergeDelta(base, 'cap', parseDelta(dropped)),
+      (error: unknown) => {
+        assert.ok(error instanceof DeltaMergeError);
+        assert.ok(error.message.includes('Beta runs'), error.message);
+        return true;
+      },
+    );
+  });
+
+  it('refuses an ADDED requirement whose name already exists', () => {
+    const base = mergeDelta(null, 'cap', parseDelta(INITIAL_DELTA));
+    const duplicate = `# Spec Delta: cap
+
+## ADDED Requirements
+
+### Requirement: Alpha
+The system SHALL provide a different alpha.
+
+#### Scenario: Alpha runs
+- **WHEN** alpha invoked
+- **THEN** alpha responds
+`;
+
+    assert.throws(
+      () => mergeDelta(base, 'cap', parseDelta(duplicate)),
+      (error: unknown) => {
+        assert.ok(error instanceof DeltaMergeError);
+        assert.ok(error.message.includes('already exists'), error.message);
+        return true;
+      },
+    );
+  });
+
+  it('refuses a RENAMED entry that is not in the ### Requirement: form', () => {
+    const base = mergeDelta(null, 'cap', parseDelta(INITIAL_DELTA));
+    const bareRename = `# Spec Delta: cap
+
+## RENAMED Requirements
+
+- FROM: \`Alpha\`
+- TO: \`Alpha Renamed\`
+
+## ADDED Requirements
+
+### Requirement: Epsilon
+The system SHALL provide epsilon.
+
+#### Scenario: Epsilon runs
+- **WHEN** epsilon invoked
+- **THEN** epsilon responds
+`;
+
+    assert.throws(
+      () => mergeDelta(base, 'cap', parseDelta(bareRename)),
+      (error: unknown) => {
+        assert.ok(error instanceof DeltaMergeError);
+        assert.ok(error.message.includes('### Requirement:'), error.message);
         return true;
       },
     );
@@ -509,8 +593,9 @@ The sample capability SHALL own sample code.
   it('deterministically merges each delta into a valid spec containing the ownership globs', async () => {
     for (const capability of CAPABILITIES) {
       const deltaContent = await readCapabilityDelta(capability);
-      const baseContent = await readLivingSpec(capability);
       const delta = parseDelta(deltaContent);
+      const addedNames = delta.added.map((requirement) => requirement.name);
+      const baseContent = await readLivingSpec(capability, addedNames);
 
       const first = mergeDelta(baseContent, capability, delta);
       const second = mergeDelta(baseContent, capability, parseDelta(deltaContent));
@@ -546,16 +631,17 @@ The sample capability SHALL own sample code.
       for (const capability of CAPABILITIES) {
         const deltaDir = path.join(changeFolder, 'specs', capability);
         await fs.mkdir(deltaDir, { recursive: true });
-        await fs.copyFile(
-          path.join(deltaRoot, capability, 'spec.md'),
-          path.join(deltaDir, 'spec.md'),
-        );
+        const deltaPath = path.join(deltaRoot, capability, 'spec.md');
+        await fs.copyFile(deltaPath, path.join(deltaDir, 'spec.md'));
 
+        const addedNames = parseDelta(await fs.readFile(deltaPath, 'utf8')).added.map(
+          (requirement) => requirement.name,
+        );
         const livingDir = path.join(tmpDir, 'openspec', 'specs', capability);
         await fs.mkdir(livingDir, { recursive: true });
         await fs.writeFile(
           path.join(livingDir, 'spec.md'),
-          await readLivingSpec(capability),
+          await readLivingSpec(capability, addedNames),
           'utf8',
         );
       }

@@ -22,7 +22,8 @@ export async function doctorCommand(options: DoctorCommandOptions = {}): Promise
     });
 
   for (const check of report.checks) {
-    write(`${check.ok ? '[ok]' : '[fail]'} ${check.name}: ${check.message}`);
+    const prefix = check.ok ? (check.warning === true ? '[warn]' : '[ok]') : '[fail]';
+    write(`${prefix} ${check.name}: ${check.message}`);
   }
 
   if (!report.ok) {

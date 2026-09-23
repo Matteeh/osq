@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import {
   CLAUDE_PLAN_COMMAND_PATH,
   MANAGED_AGENTS_MD_BODY,
@@ -36,11 +37,30 @@ const PROBLEM_TEXT: Record<ManagedBlockProblem, string> = {
   stale: 'has a stale managed block',
 };
 
+/** Relative path of the executor agent file `osq setup` writes for opencode. */
+const OPENCODE_AGENT_DIR = path.join('.opencode', 'agent');
+
+/** `osq setup` writes the agent file for either harness selection. */
+function opencodeConfigured(config: OsqConfig): boolean {
+  return config.harness === 'opencode' || config.planner?.harness === 'opencode';
+}
+
+function opencodeAgentRelPath(config: OsqConfig): string {
+  const configured = config.opencode?.agent;
+  const agent = configured ?? DEFAULT_CONFIG.opencode?.agent ?? '';
+  return path.join(OPENCODE_AGENT_DIR, `${agent}.md`);
+}
+
 /**
  * Compare each managed file's osq block bytes with the installed canonical
- * values, so marker presence alone never counts as healthy.
+ * values, so marker presence alone never counts as healthy. When opencode is
+ * the execution or planner harness, the executor agent file `osq setup` writes
+ * is inspected too and repaired by `osq setup`, not `osq init`.
  */
-export async function checkManagedBlocks(projectRoot: string): Promise<ManagedBlocksResult> {
+export async function checkManagedBlocks(
+  projectRoot: string,
+  config: OsqConfig,
+): Promise<ManagedBlocksResult> {
   const failures: string[] = [];
   for (const { relPath, canonical } of MANAGED_FILES) {
     const fullPath = path.join(projectRoot, relPath);
@@ -55,8 +75,25 @@ export async function checkManagedBlocks(projectRoot: string): Promise<ManagedBl
     if (problem) failures.push(`${relPath} ${PROBLEM_TEXT[problem]}`);
   }
 
-  if (failures.length === 0) {
+  const setupFailures: string[] = [];
+  if (opencodeConfigured(config)) {
+    const relPath = opencodeAgentRelPath(config);
+    try {
+      const content = await fs.readFile(path.join(projectRoot, relPath), 'utf8');
+      const problem = inspectManagedBlock(content, MANAGED_AGENTS_MD_BODY);
+      if (problem) setupFailures.push(`${relPath} ${PROBLEM_TEXT[problem]}`);
+    } catch {
+      setupFailures.push(`${relPath} is missing`);
+    }
+  }
+
+  const groups = [
+    failures.length > 0 ? `${failures.join('; ')} (run osq init)` : '',
+    setupFailures.length > 0 ? `${setupFailures.join('; ')} (run osq setup)` : '',
+  ].filter((group) => group !== '');
+
+  if (groups.length === 0) {
     return { ok: true, message: 'managed blocks valid' };
   }
-  return { ok: false, message: `${failures.join('; ')} (run osq init)` };
+  return { ok: false, message: groups.join('; ') };
 }

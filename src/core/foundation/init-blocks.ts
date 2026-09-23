@@ -3,22 +3,59 @@ import path from 'node:path';
 export const OSQ_START_MARKER = '<!-- OSQ:START -->';
 export const OSQ_END_MARKER = '<!-- OSQ:END -->';
 
+/**
+ * The seven step lines of the managed `## Executing a task` section, in order.
+ * Task 2's shared executor prompt interpolates these verbatim.
+ */
+export const EXECUTOR_STEPS: readonly string[] = [
+  '1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.',
+  '2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.',
+  "3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.",
+  '4. Tests for each acceptance line before implementing.',
+  "5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.",
+  '6. New test files are always allowed. Change a preexisting test only when the task sets `tests.modify: true` and the file is inside `scope`; any other test change kills the task.',
+  "7. Run the task's `verify` command before exiting. Then run the proposal's `verify`; the watcher runs both itself and kills the task if either fails.",
+];
+
+/** The result-file headings and their purposes, in the order they must appear. */
+export const RESULT_HEADINGS: ReadonlyArray<{ heading: string; purpose: string }> = [
+  { heading: '## Changed', purpose: 'what you changed.' },
+  { heading: '## Deviated', purpose: 'where you departed from the task, and why.' },
+  {
+    heading: '## Missing context',
+    purpose: 'what you needed that the task files did not give you.',
+  },
+  { heading: '## Next', purpose: 'for unfinished work, the acceptance line to pick up next.' },
+];
+
+/** The label prefix of the final line listing every changed file except the result file. */
+export const RESULT_TOUCHED_PREFIX = 'Touched:';
+
+/**
+ * The body lines of the managed `## Exiting` section, including empty separator
+ * lines. Rendered from {@link RESULT_HEADINGS} and {@link RESULT_TOUCHED_PREFIX}
+ * so the prompt and the managed block name the same headings.
+ */
+export const EXECUTOR_EXIT_LINES: readonly string[] = [
+  'Write `.run/results/<n>.md` first, with these headings in this order. Leave out any that would be empty.',
+  '',
+  ...RESULT_HEADINGS.map(({ heading, purpose }) => `- \`${heading}\`: ${purpose}`),
+  '',
+  `End the file with one line, \`${RESULT_TOUCHED_PREFIX} <path>, <path>\`, listing every file you changed other than the result file, relative to the project root.`,
+  '',
+  'Then exit. One attempt. Do not ask questions.',
+];
+
 export const MANAGED_AGENTS_MD_BODY = `${OSQ_START_MARKER}
 ## Executing a task
 
 You were handed one task, \`tasks/<n>.md\`, from a change under \`openspec/changes/\`.
 
-1. Read your task file, its parent \`proposal.md\`, then only the delta specs and capability specs it names. Nothing else.
-2. Too big for one pass? Write why in \`.run/results/<n>.md\`, exit without code.
-3. Read a previous result file for this task if present. Run the task's \`verify\`. Start from what fails.
-4. Tests for each acceptance line before implementing.
-5. Minimal code to pass. Write only \`.run/results/<n>.md\` and files inside the task's \`scope\`; the task's \`scope\` wins over any other ownership rule you were given.
-6. New test files are always allowed. Change a preexisting test only when the task sets \`tests.modify: true\` and the file is inside \`scope\`; any other test change kills the task.
-7. Run the task's \`verify\` command before exiting. Then run the proposal's \`verify\`; the watcher runs both itself and kills the task if either fails.
+${EXECUTOR_STEPS.join('\n')}
 
 ## Exiting
 
-Write \`.run/results/<n>.md\` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
+${EXECUTOR_EXIT_LINES.join('\n')}
 
 ## Where things live
 

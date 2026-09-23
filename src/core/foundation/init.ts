@@ -46,6 +46,8 @@ export interface InitResult {
   createdDirs: string[];
   createdFiles: string[];
   existingFiles: string[];
+  refreshedFiles: string[];
+  currentFiles: string[];
   updatedAgentsMd: boolean;
   updatedPlannerMd: boolean;
   updatedClaudePlanCommand: boolean;
@@ -58,11 +60,46 @@ async function pathExists(targetPath: string): Promise<boolean> {
     .catch(() => false);
 }
 
-export async function scaffoldProject(targetDir: string): Promise<InitResult> {
+/**
+ * Create a scaffolded file, or, when `refresh` is set, overwrite it from the
+ * template only if its bytes differ. Matching files stay untouched.
+ */
+async function writeOrRefreshFile(
+  targetDir: string,
+  file: { relPath: string; content: string },
+  refresh: boolean,
+  result: InitResult,
+): Promise<void> {
+  const fullPath = path.join(targetDir, file.relPath);
+  if (!(await pathExists(fullPath))) {
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, file.content, 'utf8');
+    result.createdFiles.push(file.relPath);
+    return;
+  }
+  if (!refresh) {
+    result.existingFiles.push(file.relPath);
+    return;
+  }
+  const current = await fs.readFile(fullPath);
+  if (current.equals(Buffer.from(file.content, 'utf8'))) {
+    result.currentFiles.push(file.relPath);
+    return;
+  }
+  await fs.writeFile(fullPath, file.content, 'utf8');
+  result.refreshedFiles.push(file.relPath);
+}
+
+export async function scaffoldProject(
+  targetDir: string,
+  options: { refreshSchema?: boolean } = {},
+): Promise<InitResult> {
   const result: InitResult = {
     createdDirs: [],
     createdFiles: [],
     existingFiles: [],
+    refreshedFiles: [],
+    currentFiles: [],
     updatedAgentsMd: false,
     updatedPlannerMd: false,
     updatedClaudePlanCommand: false,
@@ -86,7 +123,7 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
     }
   }
 
-  const filesToCreate: Array<{ relPath: string; content: string }> = [
+  const baseFiles: Array<{ relPath: string; content: string }> = [
     { relPath: 'osq.config.ts', content: DEFAULT_CONFIG_CONTENT },
     { relPath: '.env.example', content: DEFAULT_ENV_EXAMPLE },
   ];
@@ -100,22 +137,18 @@ export async function scaffoldProject(targetDir: string): Promise<InitResult> {
     path.join('openspec', 'schemas', 'osq', 'templates', 'tasks.md'),
   ];
 
-  for (const relPath of bundledTemplates) {
-    filesToCreate.push({
-      relPath,
-      content: await fs.readFile(path.join(TEMPLATES_ROOT, relPath), 'utf8'),
-    });
+  for (const file of baseFiles) {
+    await writeOrRefreshFile(targetDir, file, false, result);
   }
 
-  for (const file of filesToCreate) {
-    const fullPath = path.join(targetDir, file.relPath);
-    if (await pathExists(fullPath)) {
-      result.existingFiles.push(file.relPath);
-    } else {
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
-      await fs.writeFile(fullPath, file.content, 'utf8');
-      result.createdFiles.push(file.relPath);
-    }
+  for (const relPath of bundledTemplates) {
+    const content = await fs.readFile(path.join(TEMPLATES_ROOT, relPath), 'utf8');
+    await writeOrRefreshFile(
+      targetDir,
+      { relPath, content },
+      options.refreshSchema ?? false,
+      result,
+    );
   }
 
   const claudeCommandExisted = await pathExists(path.join(targetDir, CLAUDE_PLAN_COMMAND_PATH));

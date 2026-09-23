@@ -328,23 +328,10 @@ None
     assert.ok(prompt.includes('Verify Command: pnpm test tests/sample.test.ts'));
     assert.ok(
       prompt.includes(
-        `1. Read ${taskRelPath}, ${specRelPath}, then only the delta specs and capability specs the task names.`,
+        `CRITICAL: Before exiting, you MUST write ${resultRelPath} as the Exiting rules above describe.`,
       ),
     );
-    assert.ok(prompt.includes('2. Write tests for each acceptance line before implementing.'));
-    assert.ok(prompt.includes('3. Keep all edits strictly inside scope.'));
-    assert.ok(prompt.includes('4. Verify your work by running: pnpm test tests/sample.test.ts'));
-    assert.ok(
-      prompt.includes(
-        `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} following the Exiting section of AGENTS.md: changed, deviated, missing context, and for unfinished work which acceptance line is next.`,
-      ),
-    );
-    assert.ok(
-      prompt.includes(
-        `6. Do not modify tasks.md, proposal.md, or any file outside your scope and ${resultRelPath}.`,
-      ),
-    );
-    assert.ok(prompt.includes(`7. When done, write ${resultRelPath} and exit cleanly.`));
+    assert.ok(prompt.includes('One attempt.'));
 
     // Verify prompt is args[1] (immediately after "run") and no --file value equals the prompt
     const args = await buildOpencodeArgs(options);

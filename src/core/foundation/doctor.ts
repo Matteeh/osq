@@ -2,7 +2,11 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { isPidRunning } from '../run/lock.js';
-import { OPENSPEC_EXPECTED_VERSION } from '../spec/linter.js';
+import {
+  OPENSPEC_EXPECTED_VERSION,
+  assessOpenSpecVersion,
+  formatInRangeWarning,
+} from '../spec/openspec-version.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir } from '../status/layout.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
@@ -13,6 +17,8 @@ export interface DoctorCheckResult {
   name: string;
   ok: boolean;
   message: string;
+  /** The check passed but carries a non-failing warning; printed as `[warn]`. */
+  warning?: boolean;
 }
 
 export interface DoctorReport {
@@ -90,14 +96,22 @@ async function checkValidator(
     const raw = deps.probeValidator
       ? await deps.probeValidator(projectRoot)
       : await probeVersion(bin, projectRoot);
-    const version = raw.trim();
-    if (version === OPENSPEC_EXPECTED_VERSION) {
+    const assessment = await assessOpenSpecVersion(raw);
+    if (assessment.status === 'pinned') {
       return make('validator', true, `pinned ${OPENSPEC_EXPECTED_VERSION}`);
+    }
+    if (assessment.status === 'in-range' && assessment.range !== null) {
+      return {
+        name: 'validator',
+        ok: true,
+        warning: true,
+        message: formatInRangeWarning(assessment.version, assessment.range),
+      };
     }
     return make(
       'validator',
       false,
-      `openspec version ${version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}`,
+      `openspec version ${assessment.version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}`,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -106,9 +120,11 @@ async function checkValidator(
 }
 
 // PLANNER.md, AGENTS.md, and the Claude command all carry canonical osq
-// managed blocks; doctor compares bytes, not marker presence.
-async function checkManaged(projectRoot: string): Promise<DoctorCheckResult> {
-  const result = await checkManagedBlocks(projectRoot);
+// managed blocks; doctor compares bytes, not marker presence. The opencode
+// executor agent file is included when either harness selection is opencode and
+// is repaired by `osq setup`, not `osq init`.
+async function checkManaged(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
+  const result = await checkManagedBlocks(projectRoot, config);
   return make('managed-blocks', result.ok, result.message);
 }
 
@@ -198,7 +214,7 @@ export async function runDoctorChecks(
   const checks = [
     configCheck,
     await checkHarness(projectRoot, config),
-    await checkManaged(projectRoot),
+    await checkManaged(projectRoot, config),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),
     await checkDoneMarkers(projectRoot, config),

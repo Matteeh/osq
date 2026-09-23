@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,6 +6,7 @@ import { type OsqConfig, loadConfig } from '../../core/foundation/config.js';
 import type { Logger } from '../../core/foundation/logger.js';
 import { relativizeToolSummary } from '../../core/run/summary.js';
 import { spawnWithTimeout } from '../process.js';
+import { buildExecutorPrompt } from '../prompt.js';
 import {
   EventStreamParser,
   asRecord,
@@ -24,9 +24,6 @@ import {
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
-  capabilityRuleLines,
-  priorContextLines,
-  resolveCapabilityRules,
 } from '../types.js';
 
 export async function resolveAgyBinary(): Promise<string> {
@@ -48,48 +45,7 @@ export async function resolveAgyBinary(): Promise<string> {
 }
 
 export function buildAgyPrompt(options: SpawnTaskOptions): string {
-  const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
-    options;
-
-  const changeDocName = fsSync.existsSync(path.join(specFolderPath, 'proposal.md'))
-    ? 'proposal.md'
-    : 'spec.md';
-  const taskRelPath = path.relative(
-    projectRoot,
-    path.join(specFolderPath, 'tasks', `${taskNumber}.md`),
-  );
-  const specRelPath = path.relative(projectRoot, path.join(specFolderPath, changeDocName));
-  const resultAbsPath = path.join(specFolderPath, '.run', 'results', `${taskNumber}.md`);
-  const resultRelPath = path.relative(projectRoot, resultAbsPath);
-  const priorResult = fsSync.existsSync(resultAbsPath) ? resultRelPath : undefined;
-
-  const capabilityRules = resolveCapabilityRules(options);
-
-  return [
-    'You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.',
-    `Task File: ${taskRelPath}`,
-    `Parent Spec: ${specRelPath}`,
-    `Task Title: ${taskTitle}`,
-    `Scope: ${scope.join(', ')}`,
-    `Entry: ${entry.join(', ')}`,
-    `Verify Command: ${verifyCommand}`,
-    ...priorContextLines({
-      attempt: options.attempt,
-      reason: options.priorFailureReason,
-      output: options.priorFailureOutput,
-      resultPath: priorResult,
-    }),
-    '',
-    'Rules:',
-    `1. Read ${taskRelPath}, ${specRelPath}, then only the delta specs and capability specs the task names.`,
-    '2. Write tests for each acceptance line before implementing.',
-    '3. Keep all edits strictly inside scope.',
-    `4. Verify your work by running: ${verifyCommand}`,
-    `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} following the Exiting section of AGENTS.md: changed, deviated, missing context, and for unfinished work which acceptance line is next.`,
-    `6. Do not modify tasks.md, ${changeDocName}, or any file outside your scope and ${resultRelPath}.`,
-    `7. When done, write ${resultRelPath} and exit cleanly.`,
-    ...capabilityRuleLines(capabilityRules),
-  ].join('\n');
+  return buildExecutorPrompt(options);
 }
 
 export function buildAgyArgs(options: SpawnTaskOptions): string[] {

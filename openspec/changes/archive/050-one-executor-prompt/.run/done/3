@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c1310272856ae306b2579e3fbe6e3acda6c0a56c645819800aa66966b32317ad"
+build_stamp: "520838a"
+exit_code: 0
+scope_files: {"src/core/foundation/doctor-managed.ts":"sha256:77d54c1ebdb1b96ef1cbbc9fdb4c3df9aa4e070345828416285f89030c846966","src/core/foundation/doctor.ts":"sha256:750678a91b8399c42d97cc1e154daa0648dde11676d147e73f8b9adee108b545","tests/doctor-agent-file.test.ts":"sha256:9a707a3db29245e1a44a32ff4f8236a267fa416db2d984e180c5df7a75ee3f72"}
+---
+2026-09-22T23:25:27.238Z

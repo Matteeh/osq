@@ -316,7 +316,8 @@ describe('Codex noninteractive execution', () => {
       assert.ok(prompt.includes('openspec/specs/cli-foundation/spec.md'));
       assert.ok(prompt.includes('Prior Result:'));
       assert.ok(prompt.includes('Result Destination:'));
-      assert.match(prompt, /Execution procedure \(one attempt only\)/);
+      assert.ok(prompt.includes('CRITICAL: Before exiting, you MUST write'));
+      assert.ok(prompt.includes('One attempt.'));
       assert.ok(prompt.includes('watcher-and-harness: Codex task execution'));
     } finally {
       await cleanup(root);

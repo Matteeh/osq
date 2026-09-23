@@ -9,6 +9,12 @@ import { compareNumericPrefix } from '../status/state.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { isExcludedChangePath } from './hasher.js';
 import {
+  OPENSPEC_EXPECTED_VERSION,
+  type OpenSpecVersionAssessment,
+  assessOpenSpecVersion,
+  formatInRangeWarning,
+} from './openspec-version.js';
+import {
   hasDeclaredWrites,
   parseFrontmatter,
   parseSpecMd,
@@ -16,8 +22,7 @@ import {
   resolveChangeDoc,
 } from './parser.js';
 
-/** The exact `@fission-ai/openspec` version this profile is pinned against. */
-export const OPENSPEC_EXPECTED_VERSION = '1.13.1';
+export { OPENSPEC_EXPECTED_VERSION };
 
 /** Remediation guidance citing ADR 004 for any validator pin violation. */
 const OPENSPEC_PIN_REMEDIATION =
@@ -573,11 +578,31 @@ function execFileCapture(
 }
 
 /**
+ * Maps a validator version assessment to the single finding it produces: none
+ * for the pin, one warning inside the declared peer range, and one error citing
+ * ADR 004 and the install command outside it.
+ */
+function versionFinding(assessment: OpenSpecVersionAssessment): {
+  readonly error?: string;
+  readonly warning?: string;
+} {
+  if (assessment.status === 'in-range' && assessment.range !== null) {
+    return { warning: formatInRangeWarning(assessment.version, assessment.range) };
+  }
+  if (assessment.status === 'out-of-range') {
+    return {
+      error: `OpenSpec validator version ${assessment.version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}. ${OPENSPEC_PIN_REMEDIATION}`,
+    };
+  }
+  return {};
+}
+
+/**
  * Runs the local OpenSpec validator for changes and specs. Validation failures
- * are returned prefixed with `openspec:`. The validator is pinned: a missing
- * binary or a version that differs from `OPENSPEC_EXPECTED_VERSION` is an error
- * that cites ADR 004 and the install command, so linting fails closed rather
- * than silently degrading.
+ * are returned prefixed with `openspec:`. A missing binary or a version outside
+ * the declared peer range is an error that cites ADR 004 and the install
+ * command; a version inside the range that differs from the pin warns and cites
+ * ADR 005. Linting fails closed rather than silently degrading.
  */
 export async function validateWithOpenSpec(
   projectRoot: string,
@@ -608,10 +633,12 @@ export async function validateWithOpenSpec(
     );
   } else {
     logger?.info(`openspec version ${version}`);
-    if (version !== OPENSPEC_EXPECTED_VERSION) {
-      errors.push(
-        `OpenSpec validator version ${version} differs from pinned ${OPENSPEC_EXPECTED_VERSION}. ${OPENSPEC_PIN_REMEDIATION}`,
-      );
+    const finding = versionFinding(await assessOpenSpecVersion(version));
+    if (finding.error !== undefined) {
+      errors.push(finding.error);
+    }
+    if (finding.warning !== undefined) {
+      warnings.push(finding.warning);
     }
   }
 

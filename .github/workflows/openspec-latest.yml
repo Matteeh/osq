@@ -1,0 +1,34 @@
+name: OpenSpec latest
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  differential:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install latest OpenSpec outside the lockfile
+        run: npm install --prefix "$RUNNER_TEMP/openspec-latest" @fission-ai/openspec@latest
+
+      - name: Print latest OpenSpec version
+        run: '"$RUNNER_TEMP/openspec-latest/node_modules/.bin/openspec" --version'
+
+      - name: Run differential test against latest OpenSpec
+        env:
+          OSQ_OPENSPEC_BIN: ${{ runner.temp }}/openspec-latest/node_modules/.bin/openspec
+          OPENSPEC_TELEMETRY: '0'
+        run: node --import tsx --test tests/openspec-differential.test.ts

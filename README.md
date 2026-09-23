@@ -18,6 +18,8 @@ pnpm osq watch                 # start the watcher
 
 `init` is idempotent. Run it again after upgrading to refresh the managed blocks in `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md`; it never touches anything else you've edited and preserves foreign managed blocks. Until you do, `osq doctor` reports the drift.
 
+Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites the six scaffolded schema files — `openspec/config.yaml`, `openspec/schemas/osq/schema.yaml`, `openspec/schemas/osq/README.md`, and `openspec/schemas/osq/templates/{proposal,spec,tasks}.md` — from the installed templates, so any local edits to those files are replaced. It leaves files that already match untouched, and it does not touch `osq.config.ts` or `.env.example`. Review or commit your diff first.
+
 ## Upgrading
 
 Resolver 2 changes the automated done-marker hashes for active changes. On the first watcher cycle after upgrading, a completed task in an active change whose `.run/done/<n>` lacks `scope_resolver: 2` is detected even when its recorded aggregate hash still matches. This is a one-time recertification wave: the watcher runs each affected task's `verify` at detection, writes one idempotent `.run/regressed/<n>.md` scope-regression marker carrying the recorded and current resolver versions, and halts the change. Review each marker and run `osq retry <id> <task>` to recertify that task explicitly; a passing verification refreshes the marker with resolver-2 hashes. Markers inside `openspec/changes/archive/` are not rewritten or audited by this migration.
@@ -267,6 +269,7 @@ Offline tests use a deterministic fake Codex executable and require no authentic
 osq                      human attention inbox: needs you, running, landed since last look
 osq --json               print human attention inbox as stable JSON
 osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
+osq init --refresh-schema  overwrite the six scaffolded OpenSpec schema files from the installed templates
 osq setup                write harness config for OSQ_HARNESS
 osq new <name>           new change folder from template in openspec/changes/
 osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool

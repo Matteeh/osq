@@ -1,0 +1,43 @@
+You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.
+Task File: openspec/changes/001-test/tasks/3.md
+Parent Spec: openspec/changes/001-test/proposal.md
+Task Title: When executor prompts are constructed
+Scope: src/harness/agy.ts
+Entry: src/harness/agy.ts
+Verify Command: node -e "process.exit(0)"
+Result Destination: openspec/changes/001-test/.run/results/3.md
+
+Delta Specs:
+- openspec/changes/001-test/specs/alpha/spec.md
+- openspec/changes/001-test/specs/beta/spec.md
+
+Living Capability Specs:
+- openspec/specs/alpha/spec.md
+
+Rules:
+1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.
+2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
+3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.
+4. Tests for each acceptance line before implementing.
+5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.
+6. New test files are always allowed. Change a preexisting test only when the task sets `tests.modify: true` and the file is inside `scope`; any other test change kills the task.
+7. Run the task's `verify` command before exiting. Then run the proposal's `verify`; the watcher runs both itself and kills the task if either fails.
+
+Capability Rules:
+- alpha: Alpha ownership — The Alpha capability SHALL own alpha files.
+- alpha: Alpha gating — The Alpha capability SHALL gate alpha actions.
+- beta: Beta rule — The Beta capability SHALL do beta.
+
+Exiting:
+Write `.run/results/<n>.md` first, with these headings in this order. Leave out any that would be empty.
+
+- `## Changed`: what you changed.
+- `## Deviated`: where you departed from the task, and why.
+- `## Missing context`: what you needed that the task files did not give you.
+- `## Next`: for unfinished work, the acceptance line to pick up next.
+
+End the file with one line, `Touched: <path>, <path>`, listing every file you changed other than the result file, relative to the project root.
+
+Then exit. One attempt. Do not ask questions.
+
+CRITICAL: Before exiting, you MUST write openspec/changes/001-test/.run/results/3.md as the Exiting rules above describe. Change no file outside Scope except that result file.

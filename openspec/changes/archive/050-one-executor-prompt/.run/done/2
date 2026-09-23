@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8f59677f87edac5adafd0104789153f1700e53a011bba3720c10ce56e0d9cc0f"
+build_stamp: "520838a"
+exit_code: 0
+scope_files: {"src/harness/agy/agy.ts":"sha256:3b7a6d445da9403b7d8ad5a9ff31b9b52bf4a3d4f4de57522c292abd70643067","src/harness/codex/codex-prompt.ts":"sha256:b521b7122d389984c601eb8ddbc6b04258987604aa2f2e54f4f484cc35132d88","src/harness/opencode/opencode.ts":"sha256:5e27f0d872947c2bacaa9ec1074ae8e8b7878df878c26f1a611186a693da4173","src/harness/prompt.ts":"sha256:b57409e1d8dfef9edac61b19c834a01c8a013d23e6c0660f5eb0d9d5e5c4d023","tests/codex/adapter.test.ts":"sha256:d0c784db3466683a334433d21d0b7dc16b69aee202acaef02cfd2f40ac7a6b8c","tests/fixtures/prompts/agy.txt":"sha256:b3499358eb293f47fddf7c27a7bcc5c6853c43a8ae8f9403218eca9893063a42","tests/fixtures/prompts/codex.txt":"sha256:b3499358eb293f47fddf7c27a7bcc5c6853c43a8ae8f9403218eca9893063a42","tests/fixtures/prompts/opencode.txt":"sha256:b3499358eb293f47fddf7c27a7bcc5c6853c43a8ae8f9403218eca9893063a42","tests/harness-prompt-injection.test.ts":"sha256:828d324d9bcaf4f88613e0271657b04d23780e89ef52eac3cc70babd635b58b7","tests/opencode-spawn.test.ts":"sha256:e884fade0c4237bf7101e0f66a8d552242ddf659e4caaa10aafc6595b7c4f056"}
+---
+2026-09-22T23:22:48.692Z

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ac010f49b1ca532cf32987a43e7a81cb7a2883e0dbc3077f89860592afdb00d6"
+build_stamp: "520838a"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:43e23e68e2a1495c0c1960d173eb11ea989eb576d2766f5132d298292053b622","AGENTS.md":"sha256:ca9498ab9d32742d0f99fdd61d05b9a79d1b19f80cf0668f3d29adb8402a88c3","src/core/foundation/init-blocks.ts":"sha256:d68bf77565aaf5c914e1ae7fadd184b50ea41811b23033267a93d7a9464274c6","tests/fixtures/events/dead.jsonl":"sha256:27ee005e3be36739ae94b711b338953c13aae7efbeee58e17431626095034961","tests/fixtures/events/verified.jsonl":"sha256:76c2ed533d589522220732f1cba2bbbd8cf923160b8e4229a705fed60df82029","tests/managed-blocks.test.ts":"sha256:e5c9733e798fdecba13c586e600e4c63e4b09ac57b370c4ffc792b1329767a35"}
+---
+2026-09-22T23:19:29.462Z

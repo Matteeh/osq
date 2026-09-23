@@ -3,14 +3,22 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { buildAgyPrompt } from '../src/harness/agy/agy.js';
-import { buildCodexPrompt } from '../src/harness/codex/codex-prompt.js';
-import { buildOpencodePrompt } from '../src/harness/opencode/opencode.js';
+import { fileURLToPath } from 'node:url';
+import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
+import { EXECUTOR_EXIT_LINES, EXECUTOR_STEPS } from '../src/core/foundation/init-blocks.js';
+import { buildAgyArgs, buildAgyPrompt } from '../src/harness/agy/agy.js';
+import { buildCodexArgs, buildCodexPrompt } from '../src/harness/codex/codex-prompt.js';
+import { buildOpencodeArgs, buildOpencodePrompt } from '../src/harness/opencode/opencode.js';
+import { buildExecutorPrompt } from '../src/harness/prompt.js';
 import {
   type SpawnTaskOptions,
   extractCapabilityRules,
   priorContextLines,
 } from '../src/harness/types.js';
+
+const FIXTURES_DIR = fileURLToPath(new URL('./fixtures/prompts/', import.meta.url));
+const GOLDEN_HARNESSES = ['agy', 'opencode', 'codex'] as const;
+const UPDATE_GOLDEN = process.env.UPDATE_GOLDEN === '1';
 
 const ALPHA_DELTA = `# Spec Delta: Alpha
 
@@ -74,6 +82,57 @@ describe('Harness capability rule prompt injection', () => {
     await fs.writeFile(path.join(capabilityDir, 'spec.md'), content, 'utf8');
   }
 
+  /** Write the shared golden fixture change folder used by the assertions below. */
+  async function writeGoldenFixture(): Promise<void> {
+    const proposal = [
+      '---',
+      'title: Test',
+      'depends_on: []',
+      'verify: node -e "process.exit(0)"',
+      'features:',
+      '  reads:',
+      '    - alpha',
+      '---',
+      '## Goal',
+      'Test.',
+      '',
+    ].join('\n');
+    await fs.writeFile(path.join(changeFolder, 'proposal.md'), proposal, 'utf8');
+    await fs.mkdir(path.join(changeFolder, 'tasks'), { recursive: true });
+    const task = [
+      '---',
+      'title: When executor prompts are constructed',
+      'verify: node -e "process.exit(0)"',
+      'scope:',
+      '  - src/harness/agy.ts',
+      'entry:',
+      '  - src/harness/agy.ts',
+      'skills: []',
+      '---',
+      '## Acceptance',
+      '- [ ] criterion',
+      '',
+    ].join('\n');
+    await fs.writeFile(path.join(changeFolder, 'tasks', '3.md'), task, 'utf8');
+    await writeDelta('alpha', ALPHA_DELTA);
+    await writeDelta('beta', BETA_DELTA);
+    const livingDir = path.join(tmpDir, 'openspec', 'specs', 'alpha');
+    await fs.mkdir(livingDir, { recursive: true });
+    await fs.writeFile(path.join(livingDir, 'spec.md'), '# alpha\n', 'utf8');
+  }
+
+  /** The prompt each textual harness actually delivers for `options`. */
+  async function deliveredPrompts(taskOptions: SpawnTaskOptions): Promise<string[]> {
+    const agyArgs = buildAgyArgs(taskOptions);
+    const opencodeArgs = await buildOpencodeArgs(taskOptions);
+    const codexArgs = await buildCodexArgs(taskOptions);
+    return [
+      agyArgs[agyArgs.indexOf('-p') + 1] ?? '',
+      opencodeArgs[opencodeArgs.indexOf('run') + 1] ?? '',
+      codexArgs[codexArgs.length - 1] ?? '',
+    ];
+  }
+
   it('extractCapabilityRules reads delta specs under specs/<capability>/spec.md', async () => {
     await writeDelta('beta', BETA_DELTA);
     await writeDelta('alpha', ALPHA_DELTA);
@@ -91,6 +150,66 @@ describe('Harness capability rule prompt injection', () => {
     assert.deepEqual(extractCapabilityRules(changeFolder), []);
   });
 
+  it('delivers one golden prompt through agy, opencode, and codex argv', async () => {
+    await writeGoldenFixture();
+    const taskOptions = options({ config: DEFAULT_CONFIG });
+    const expected = buildExecutorPrompt(taskOptions);
+    const delivered = await deliveredPrompts(taskOptions);
+
+    assert.deepEqual(delivered, [expected, expected, expected]);
+
+    for (let index = 0; index < GOLDEN_HARNESSES.length; index++) {
+      const fixturePath = path.join(FIXTURES_DIR, `${GOLDEN_HARNESSES[index]}.txt`);
+      if (UPDATE_GOLDEN) {
+        await fs.mkdir(FIXTURES_DIR, { recursive: true });
+        await fs.writeFile(fixturePath, delivered[index] ?? '', 'utf8');
+        continue;
+      }
+      assert.equal(delivered[index], await fs.readFile(fixturePath, 'utf8'));
+    }
+  });
+
+  it('carries every managed step and exit line through every harness', async () => {
+    await writeGoldenFixture();
+    const prompts = await deliveredPrompts(options({ config: DEFAULT_CONFIG }));
+
+    for (const prompt of prompts) {
+      for (const step of EXECUTOR_STEPS) {
+        assert.ok(prompt.includes(step), `missing managed step: ${step}`);
+      }
+      for (const line of EXECUTOR_EXIT_LINES.filter((entry) => entry.length > 0)) {
+        assert.ok(prompt.includes(line), `missing managed exit line: ${line}`);
+      }
+      assert.ok(prompt.includes('Rules:'));
+      assert.ok(prompt.includes('Exiting:'));
+      assert.ok(prompt.includes('CRITICAL:'));
+      assert.ok(prompt.includes('Delta Specs:'));
+      assert.ok(prompt.includes('Living Capability Specs:'));
+      assert.ok(!prompt.includes('features/'));
+    }
+  });
+
+  it('omits delta and living sections when the change has neither', async () => {
+    const prompts = await deliveredPrompts(options({ config: DEFAULT_CONFIG }));
+
+    for (const prompt of prompts) {
+      assert.ok(!prompt.includes('Delta Specs:'));
+      assert.ok(!prompt.includes('Living Capability Specs:'));
+    }
+  });
+
+  it('names proposal.md as Parent Spec even when the change folder has no proposal.md', async () => {
+    const prompts = await deliveredPrompts(options({ config: DEFAULT_CONFIG }));
+
+    for (const prompt of prompts) {
+      assert.ok(
+        prompt.includes(
+          `Parent Spec: ${path.relative(tmpDir, path.join(changeFolder, 'proposal.md'))}`,
+        ),
+      );
+    }
+  });
+
   it('buildAgyPrompt injects capabilityRules under a dedicated section in Rules', () => {
     const rules = ['alpha: The Alpha capability SHALL own alpha files.'];
     const prompt = buildAgyPrompt(options({ capabilityRules: rules }));
@@ -99,7 +218,7 @@ describe('Harness capability rule prompt injection', () => {
     assert.ok(prompt.includes('Capability Rules:'));
     assert.ok(prompt.includes('- alpha: The Alpha capability SHALL own alpha files.'));
     assert.ok(prompt.indexOf('Capability Rules:') > prompt.indexOf('Rules:'));
-    assert.ok(prompt.includes('7. When done, write'));
+    assert.ok(prompt.includes(EXECUTOR_STEPS[0] ?? ''));
   });
 
   it('buildOpencodePrompt injects capabilityRules under the same dedicated section in Rules', () => {
@@ -110,7 +229,7 @@ describe('Harness capability rule prompt injection', () => {
     assert.ok(prompt.includes('Capability Rules:'));
     assert.ok(prompt.includes('- alpha: The Alpha capability SHALL own alpha files.'));
     assert.ok(prompt.indexOf('Capability Rules:') > prompt.indexOf('Rules:'));
-    assert.ok(prompt.includes('7. When done, write'));
+    assert.ok(prompt.includes(EXECUTOR_STEPS[0] ?? ''));
   });
 
   it('builds standard default rules without empty headers when capability rules are absent', () => {
@@ -119,14 +238,14 @@ describe('Harness capability rule prompt injection', () => {
 
     for (const prompt of [agyPrompt, opencodePrompt]) {
       assert.ok(prompt.includes('Rules:'));
-      assert.ok(prompt.includes('1. Read '));
-      assert.ok(prompt.includes('2. Write tests for each acceptance line before implementing.'));
-      assert.ok(prompt.includes('7. When done, write'));
+      for (const step of EXECUTOR_STEPS) {
+        assert.ok(prompt.includes(step));
+      }
       assert.ok(!prompt.includes('Capability Rules:'));
     }
   });
 
-  it('points every adapter at the AGENTS.md Exiting section and no retired features/ docs', async () => {
+  it('points every adapter at the concrete result path and no retired features/ docs', async () => {
     const prompts = [
       buildAgyPrompt(options()),
       buildOpencodePrompt(options()),
@@ -134,7 +253,8 @@ describe('Harness capability rule prompt injection', () => {
     ];
 
     for (const prompt of prompts) {
-      assert.ok(prompt.includes('following the Exiting section of AGENTS.md'));
+      assert.ok(prompt.includes('CRITICAL: Before exiting, you MUST write'));
+      assert.ok(prompt.includes('One attempt.'));
       assert.ok(!prompt.includes('features/'));
       assert.ok(!prompt.includes('features docs'));
     }

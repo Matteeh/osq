@@ -5,6 +5,12 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
+  EXECUTOR_EXIT_LINES,
+  EXECUTOR_STEPS,
+  RESULT_HEADINGS,
+  RESULT_TOUCHED_PREFIX,
+} from '../src/core/foundation/init-blocks.js';
+import {
   MANAGED_AGENTS_MD_BODY,
   MANAGED_CLAUDE_PLAN_COMMAND,
   MANAGED_PLANNER_BLOCK,
@@ -18,6 +24,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const agentsMdPath = path.join(repoRoot, 'AGENTS.md');
 const plannerMdPath = path.join(repoRoot, 'PLANNER.md');
 const claudeCommandPath = path.join(repoRoot, '.claude', 'commands', 'osq-plan.md');
+const opencodeAgentPath = path.join(repoRoot, '.opencode', 'agent', 'osq-coder.md');
 
 /** Slice the single managed block, markers included, out of a document. */
 function extractManagedBlock(content: string): string {
@@ -103,9 +110,66 @@ describe('managed instructions block executor protocol', () => {
   });
 });
 
+describe('managed instructions block executor constants', () => {
+  it('assembles the managed body from the joined step and exit lines', () => {
+    assert.ok(
+      MANAGED_AGENTS_MD_BODY.includes(EXECUTOR_STEPS.join('\n')),
+      'managed body should interpolate the joined executor steps',
+    );
+    assert.ok(
+      MANAGED_AGENTS_MD_BODY.includes(EXECUTOR_EXIT_LINES.join('\n')),
+      'managed body should interpolate the joined exit lines',
+    );
+  });
+
+  it('carries every executor step line and every non-empty exit line', () => {
+    for (const line of EXECUTOR_STEPS) {
+      assert.ok(MANAGED_AGENTS_MD_BODY.includes(line), `body should contain step: ${line}`);
+    }
+    for (const line of EXECUTOR_EXIT_LINES) {
+      if (line.length === 0) continue;
+      assert.ok(MANAGED_AGENTS_MD_BODY.includes(line), `body should contain exit line: ${line}`);
+    }
+  });
+
+  it('numbers seven executor steps 1. through 7.', () => {
+    assert.equal(EXECUTOR_STEPS.length, 7);
+    for (let index = 0; index < EXECUTOR_STEPS.length; index++) {
+      const prefix = `${index + 1}. `;
+      assert.ok(
+        EXECUTOR_STEPS[index].startsWith(prefix),
+        `step ${index + 1} should start with "${prefix}"`,
+      );
+    }
+  });
+
+  it('names the result headings and touched prefix in order', () => {
+    assert.deepEqual(
+      RESULT_HEADINGS.map(({ heading }) => heading),
+      ['## Changed', '## Deviated', '## Missing context', '## Next'],
+    );
+
+    const exitText = EXECUTOR_EXIT_LINES.join('\n');
+    const positions = [
+      ...RESULT_HEADINGS.map(({ heading }) => exitText.indexOf(heading)),
+      exitText.indexOf(RESULT_TOUCHED_PREFIX),
+    ];
+    for (const position of positions)
+      assert.notEqual(position, -1, 'exit text should name every token');
+    for (let index = 1; index < positions.length; index++) {
+      assert.ok(positions[index] > positions[index - 1], 'result headings should appear in order');
+    }
+  });
+});
+
 describe('repository managed instructions', () => {
   it('AGENTS.md managed block matches the installed constant', async () => {
     const content = await fs.readFile(agentsMdPath, 'utf8');
+    assert.equal(extractManagedBlock(content), MANAGED_AGENTS_MD_BODY);
+  });
+
+  it('opencode executor agent managed block matches the installed constant', async () => {
+    const content = await fs.readFile(opencodeAgentPath, 'utf8');
     assert.equal(extractManagedBlock(content), MANAGED_AGENTS_MD_BODY);
   });
 

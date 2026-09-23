@@ -134,20 +134,24 @@ The CLI watch command SHALL support options to bypass stale build detection and 
 - **THEN** CLI passes `dev: true` to the watch loop options
 
 ### Requirement: Repository health diagnostics
-<!-- source: src/cli/doctor.ts, src/core/doctor.ts, src/core/config*.ts, tests/doctor.test.ts -->
-The CLI SHALL provide a doctor command that validates configuration, harness binary availability, managed blocks, lock states, archive integrity, and the pinned OpenSpec validator.
+<!-- source: src/cli/doctor.ts, src/core/foundation/doctor.ts, src/core/foundation/config*.ts, tests/doctor.test.ts, tests/openspec-version.test.ts -->
+The CLI SHALL provide a doctor command that validates configuration, harness binary availability, managed blocks, lock states, archive integrity, and the OpenSpec validator. A check MAY pass with a warning; doctor prints it as `[warn]` and it does not change the exit code.
 
 #### Scenario: Doctor passes on healthy repository
 - **WHEN** user executes `osq doctor` in a properly configured repository with the pinned validator
 - **THEN** command prints one status line per check (`config`, `harness`, `managed-blocks`, `locks`, `archives`, `validator`) and exits with code 0
 
 #### Scenario: Doctor fails on check violation
-- **WHEN** any diagnostic check fails (invalid config, missing harness binary, drift in managed blocks, orphaned locks, invalid archives, or validator drift)
+- **WHEN** any diagnostic check fails (invalid config, missing harness binary, drift in managed blocks, orphaned locks, invalid archives, or a validator outside the peer range)
 - **THEN** command reports the failed check line and exits with code 1
 
 #### Scenario: Doctor fails on validator drift
-- **WHEN** the installed OpenSpec validator version differs from the pinned version
+- **WHEN** the installed OpenSpec validator version lies outside the `peerDependencies` range declared in osq's `package.json`
 - **THEN** command reports a failing `validator` line describing version drift and exits with code 1
+
+#### Scenario: Doctor warns on a compatible validator
+- **WHEN** the installed OpenSpec validator version differs from the pinned version but lies inside the declared peer range
+- **THEN** command prints a `[warn] validator:` line naming the version and the range, and exits with code 0
 
 #### Scenario: Doctor rejects an incomplete gate configuration
 - **WHEN** the resolved configuration lacks a boolean `gates.changeVerifyAfterTask`
@@ -796,3 +800,94 @@ sections.
 #### Scenario: Template unreadable
 - **WHEN** the packaged `templates/proposal.md` cannot be read
 - **THEN** the fallback proposal has the same six sections in the same order
+
+### Requirement: Executor protocol constants and result headings
+<!-- source: src/core/foundation/init-blocks.ts, AGENTS.md, .opencode/agent/osq-coder.md, tests/managed-blocks.test.ts -->
+The step lines of the managed `## Executing a task` section and the body lines
+of `## Exiting` SHALL be exported constants in
+`src/core/foundation/init-blocks.ts`, and `MANAGED_AGENTS_MD_BODY` SHALL be
+assembled from them. `## Exiting` SHALL name the result headings `## Changed`,
+`## Deviated`, `## Missing context`, and `## Next` in that order, tell the
+executor to leave out empty ones, and require a final `Touched:` line listing
+every changed file other than the result file.
+
+#### Scenario: Result headings defined once
+- **WHEN** `MANAGED_AGENTS_MD_BODY` is inspected
+- **THEN** it contains every exported executor step line and every exported exit line verbatim, and the exit lines name `## Changed`, `## Deviated`, `## Missing context`, `## Next`, and `Touched:`
+
+#### Scenario: Repository copies stay current
+- **WHEN** the managed block in the repository's `AGENTS.md` or `.opencode/agent/osq-coder.md` is inspected
+- **THEN** it equals `MANAGED_AGENTS_MD_BODY`
+
+### Requirement: Harness agent file diagnostics
+<!-- source: src/core/foundation/doctor-managed.ts, src/core/foundation/doctor.ts, tests/doctor-agent-file.test.ts -->
+When the configured execution harness or planner harness is `opencode`, the
+doctor `managed-blocks` check SHALL also inspect
+`.opencode/agent/<opencode.agent>.md`, the executor agent file `osq setup`
+writes, against the managed `AGENTS.md` block. A missing file, or a missing,
+partial, reversed, duplicated, or stale block, SHALL fail the check with a
+message that names the file and names `osq setup` as the fix. Other harnesses
+SHALL NOT require the file.
+
+#### Scenario: Stale opencode agent file
+- **WHEN** the harness is `opencode` and the agent file's managed block differs from the managed `AGENTS.md` block
+- **THEN** the `managed-blocks` check fails with a message naming the agent file and `run osq setup`
+
+#### Scenario: Current opencode agent file
+- **WHEN** the harness is `opencode` and the agent file holds the current managed block
+- **THEN** the agent file does not fail the `managed-blocks` check
+
+#### Scenario: Other harness
+- **WHEN** neither the execution harness nor the planner harness is `opencode` and no agent file exists
+- **THEN** the agent file does not affect the `managed-blocks` check
+
+### Requirement: One proposal format
+<!-- source: templates/proposal.md, templates/openspec/schemas/osq/templates/proposal.md, templates/openspec/schemas/osq/schema.yaml, templates/openspec/config.yaml, tests/proposal-format.test.ts -->
+The osq schema's proposal template SHALL be byte-identical to
+`templates/proposal.md`, the template `osq new` writes. The schema's proposal
+instruction and the proposal rules in `templates/openspec/config.yaml` SHALL
+name the sections Goal, Verify, Non-goals, Contract, Human steps, and Delta in
+that order, the frontmatter `verify` command, and `features.reads`, and SHALL
+NOT ask for Why, What Changes, Capabilities, or Impact sections.
+
+#### Scenario: Both proposal entry points agree
+- **WHEN** the schema's proposal template and `templates/proposal.md` are compared
+- **THEN** they are byte-identical
+
+#### Scenario: Instruction matches the planner
+- **WHEN** the schema's proposal instruction and the managed `PLANNER.md` block are inspected
+- **THEN** both name `## Goal`, `## Non-goals`, and `## Human steps`, and the instruction contains no `What Changes` or `Capabilities` section
+
+### Requirement: Repository runs the scaffolded OpenSpec schema
+<!-- source: openspec/config.yaml, openspec/schemas/osq/**, tests/proposal-format.test.ts -->
+The osq repository SHALL carry `openspec/config.yaml` and
+`openspec/schemas/osq/**` byte-identical to the files under
+`templates/openspec/` that `osq init` scaffolds, so the repository's own
+changes and living specs validate under the schema users get.
+
+#### Scenario: Dogfood copy stays current
+- **WHEN** the repository's `openspec/config.yaml` and `openspec/schemas/osq/` files are compared with `templates/openspec/`
+- **THEN** both sides hold the same file set and every file is byte-identical
+
+### Requirement: Scaffolded schema refresh
+<!-- source: src/core/foundation/init.ts, src/cli/init.ts, src/cli/index.ts, README.md, tests/init-refresh-schema.test.ts -->
+`osq init --refresh-schema` SHALL overwrite `openspec/config.yaml`,
+`openspec/schemas/osq/schema.yaml`, `openspec/schemas/osq/README.md`, and
+`openspec/schemas/osq/templates/{proposal,spec,tasks}.md` from the installed
+templates when their bytes differ, and SHALL print each replaced file as
+`refreshed`. Files that already match SHALL stay untouched and print as
+`current`, and missing files SHALL be created as usual. Everything else init
+does SHALL stay the same. Without the flag, `osq init` SHALL behave and print
+exactly as before.
+
+#### Scenario: Stale consumer schema
+- **WHEN** a scaffolded schema file differs from the installed template and the consumer runs `osq init --refresh-schema`
+- **THEN** the file equals the installed template and init prints it as `refreshed`
+
+#### Scenario: Current schema
+- **WHEN** every scaffolded schema file already matches the installed templates
+- **THEN** `osq init --refresh-schema` rewrites none of them and prints each as `current`
+
+#### Scenario: Plain init leaves the schema alone
+- **WHEN** `osq init` runs without the flag on an initialized project
+- **THEN** it reports the schema files as `exists` and leaves them unchanged

@@ -78,7 +78,16 @@ You were handed one task, `tasks/<n>.md`, from a change under `openspec/changes/
 
 ## Exiting
 
-Write `.run/results/<n>.md` first: changed, deviated, missing context, and for unfinished work which acceptance line is next. Omit empty sections. Then exit. One attempt. Do not ask questions.
+Write `.run/results/<n>.md` first, with these headings in this order. Leave out any that would be empty.
+
+- `## Changed`: what you changed.
+- `## Deviated`: where you departed from the task, and why.
+- `## Missing context`: what you needed that the task files did not give you.
+- `## Next`: for unfinished work, the acceptance line to pick up next.
+
+End the file with one line, `Touched: <path>, <path>`, listing every file you changed other than the result file, relative to the project root.
+
+Then exit. One attempt. Do not ask questions.
 
 ## Where things live
 

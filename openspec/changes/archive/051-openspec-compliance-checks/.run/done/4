@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:80b6671c4a90b829ab472bf95f80adbd7bbed53ffc86342b003f101198474bd3"
+build_stamp: "520838a"
+exit_code: 0
+scope_files: {".github/workflows/openspec-latest.yml":"sha256:59290d2c39eec4cf701072c5f3cef39a94fac02b654cd5daefeede92649a5143","tests/openspec-latest-workflow.test.ts":"sha256:aaaa6a0fd7a2d27557d59eb936b6a17cecb5c59066d760576db890747d761ce6"}
+---
+2026-09-22T23:55:23.260Z

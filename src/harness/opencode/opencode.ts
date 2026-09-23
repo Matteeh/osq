@@ -12,6 +12,7 @@ import type { Logger } from '../../core/foundation/logger.js';
 import { relativizeToolSummary } from '../../core/run/summary.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../../core/spec/parser.js';
 import { type SpawnProcessResult, spawnWithTimeout } from '../process.js';
+import { buildExecutorPrompt } from '../prompt.js';
 import {
   EventStreamParser,
   asRecord,
@@ -28,9 +29,6 @@ import {
   type TextEventData,
   type ToolEventData,
   appendHarnessEvent,
-  capabilityRuleLines,
-  priorContextLines,
-  resolveCapabilityRules,
 } from '../types.js';
 import { readOpencodeInteractiveUsage } from './opencode-usage.js';
 
@@ -91,48 +89,7 @@ export async function resolveOpencodeBinary(config?: OsqConfig): Promise<string>
 }
 
 export function buildOpencodePrompt(options: SpawnTaskOptions): string {
-  const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
-    options;
-
-  const changeDocName = fsSync.existsSync(path.resolve(specFolderPath, 'proposal.md'))
-    ? 'proposal.md'
-    : 'spec.md';
-  const taskRelPath = path.relative(
-    projectRoot,
-    path.resolve(specFolderPath, 'tasks', `${taskNumber}.md`),
-  );
-  const specRelPath = path.relative(projectRoot, path.resolve(specFolderPath, changeDocName));
-  const resultAbsPath = path.resolve(specFolderPath, '.run', 'results', `${taskNumber}.md`);
-  const resultRelPath = path.relative(projectRoot, resultAbsPath);
-  const priorResult = fsSync.existsSync(resultAbsPath) ? resultRelPath : undefined;
-
-  const capabilityRules = resolveCapabilityRules(options);
-
-  return [
-    'You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.',
-    `Task File: ${taskRelPath}`,
-    `Parent Spec: ${specRelPath}`,
-    `Task Title: ${taskTitle}`,
-    `Scope: ${scope.join(', ')}`,
-    `Entry: ${entry.join(', ')}`,
-    `Verify Command: ${verifyCommand}`,
-    ...priorContextLines({
-      attempt: options.attempt,
-      reason: options.priorFailureReason,
-      output: options.priorFailureOutput,
-      resultPath: priorResult,
-    }),
-    '',
-    'Rules:',
-    `1. Read ${taskRelPath}, ${specRelPath}, then only the delta specs and capability specs the task names.`,
-    '2. Write tests for each acceptance line before implementing.',
-    '3. Keep all edits strictly inside scope.',
-    `4. Verify your work by running: ${verifyCommand}`,
-    `5. CRITICAL: Before exiting, you MUST write ${resultRelPath} following the Exiting section of AGENTS.md: changed, deviated, missing context, and for unfinished work which acceptance line is next.`,
-    `6. Do not modify tasks.md, ${changeDocName}, or any file outside your scope and ${resultRelPath}.`,
-    `7. When done, write ${resultRelPath} and exit cleanly.`,
-    ...capabilityRuleLines(capabilityRules),
-  ].join('\n');
+  return buildExecutorPrompt(options);
 }
 
 export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<string[]> {

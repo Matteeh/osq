@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:837d41b6097d45fc7f7b424730d60b4b13c64e1ac341cbc9fc8e14cf7316ce09"
+build_stamp: "520838a"
+exit_code: 0
+scope_files: {"decisions/005-openspec-validator-peer-range.md":"sha256:01e32cd604f4ada636947faf927fead96c928290a251c0f0ce0d589e7d5e7930","decisions/README.md":"sha256:8d605e19be61af1a51b1ca9a955d4137d6709800135a8b77fc8917537482ccea","src/cli/doctor.ts":"sha256:f45fd207ed76e77d05f1a6abdf6f4d5505200554c12ba5903ac21b5a5712ccf7","src/core/foundation/doctor.ts":"sha256:75d072b01243dcc6ad911aa4fafb2d4a2472aa034536031fdde8a97700380b1e","src/core/spec/linter.ts":"sha256:561d81036e95bc9f51559e5fc3e64886815a1920b89458301f4aa4b1c880d032","src/core/spec/openspec-version.ts":"sha256:e4222d7b84fbcc40c7fedbc1dcc5f24c38a7b841738ecfde1bc48d21c35bf8ec","tests/openspec-version.test.ts":"sha256:fba60cdf13a078f89e55a74b630b41f2dcf510a89538e50657c230811ce99311"}
+---
+2026-09-22T23:49:23.262Z
