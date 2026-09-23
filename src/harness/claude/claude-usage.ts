@@ -1,12 +1,8 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type {
-  ObservedPlanningSession,
-  PlanningSessionEdit,
-} from '../../core/report/planning-observed.js';
+import type { ObservedPlanningSession } from '../../core/report/planning-observed.js';
 import type { PlanningTurn } from '../../core/report/planning-slice.js';
-import { NULL_INTERACTIVE_USAGE } from '../types.js';
 import { parseClaudeTurns } from './claude-turns.js';
 
 /** Resolve the Claude session store: explicit osq override, config dir, or home. */
@@ -21,14 +17,6 @@ export function resolveClaudeProjectsDir(
   return path.join(homeDir, '.claude', 'projects');
 }
 
-function editsFromTurns(turns: readonly PlanningTurn[]): PlanningSessionEdit[] {
-  const edits: PlanningSessionEdit[] = [];
-  for (const turn of turns) {
-    for (const raw of turn.edits) edits.push({ path: raw, timestamp: turn.timestamp });
-  }
-  return edits;
-}
-
 function lastModel(turns: readonly PlanningTurn[]): string | null {
   let model: string | null = null;
   for (const turn of turns) model = turn.model ?? model;
@@ -37,14 +25,13 @@ function lastModel(turns: readonly PlanningTurn[]): string | null {
 
 /**
  * Parse one Claude session JSONL body. Each assistant message becomes one turn
- * carrying its own usage; `usage`, `startedAt`, and `endedAt` are legacy fields
- * that the observer no longer derives from the transcript.
+ * carrying its own usage. A session without any edited path yields null; the
+ * observer derives no session-level usage, edits, or start and end times.
  */
 export function parseClaudeSession(content: string): ObservedPlanningSession | null {
   const parsed = parseClaudeTurns(content);
   if (!parsed.sessionId) return null;
-  const edits = editsFromTurns(parsed.turns);
-  if (edits.length === 0) return null;
+  if (!parsed.turns.some((turn) => turn.edits.length > 0)) return null;
   return {
     harness: 'claude',
     nativeSessionId: parsed.sessionId,
@@ -52,9 +39,7 @@ export function parseClaudeSession(content: string): ObservedPlanningSession | n
     model: lastModel(parsed.turns),
     harnessVersion: parsed.harnessVersion,
     sessionCost: parsed.sessionCost,
-    usage: NULL_INTERACTIVE_USAGE,
     turns: parsed.turns,
-    edits,
   };
 }
 
@@ -129,7 +114,7 @@ function mergeObservations(
   a: ObservedPlanningSession,
   b: ObservedPlanningSession,
 ): ObservedPlanningSession {
-  const turns = mergeTurns(a.turns ?? [], b.turns ?? []);
+  const turns = mergeTurns(a.turns, b.turns);
   return {
     harness: 'claude',
     nativeSessionId: a.nativeSessionId,
@@ -137,9 +122,7 @@ function mergeObservations(
     model: a.model ?? b.model,
     harnessVersion: a.harnessVersion ?? b.harnessVersion,
     sessionCost: a.sessionCost ?? b.sessionCost,
-    usage: NULL_INTERACTIVE_USAGE,
     turns,
-    edits: editsFromTurns(turns),
   };
 }
 

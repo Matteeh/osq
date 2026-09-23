@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { createNewSpec } from '../src/core/foundation/new.js';
 import type { ObservedPlanningSession } from '../src/core/report/planning-observed.js';
-import { NULL_PLANNING_USAGE } from '../src/core/report/planning.js';
+import type { PlanningTurn } from '../src/core/report/planning-slice.js';
 import { installFakeValidator } from './helpers.js';
 
 export const TESTS_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -115,6 +115,24 @@ export async function renderTree(
   }
 }
 
+/** One turn carrying a single edited path and no recorded usage. */
+export function editTurn(target: string, timestamp: string): PlanningTurn {
+  return {
+    timestamp,
+    model: null,
+    inputTokens: null,
+    outputTokens: null,
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    reasoningTokens: null,
+    cost: null,
+    edits: [target],
+  };
+}
+
+/** The default session turn, one per edit the helper used to list. */
+const DEFAULT_TURNS: readonly PlanningTurn[] = [editTurn('tasks/1.md', '2026-01-01T00:00:30.000Z')];
+
 export function candidate(
   overrides: Partial<ObservedPlanningSession> = {},
 ): ObservedPlanningSession {
@@ -123,10 +141,7 @@ export function candidate(
     nativeSessionId: 'native-1',
     sessionDir: null,
     model: 'm',
-    startedAt: '2026-01-01T00:00:00.000Z',
-    endedAt: '2026-01-01T00:01:00.000Z',
-    usage: NULL_PLANNING_USAGE,
-    edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:30.000Z' }],
+    turns: DEFAULT_TURNS,
     ...overrides,
   };
 }

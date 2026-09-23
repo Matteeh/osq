@@ -62,10 +62,8 @@ describe('OpenCode observation', () => {
       assert.equal(found[0].model, 'oc-model');
       assert.equal(found[0].harnessVersion, '1.18.31');
       assert.equal(found[0].sessionCost, null);
-      assert.equal(found[0].usage.inputTokens, null);
-      assert.equal(found[0].usage.cost, null);
-      assert.equal(found[0].edits.length, 1);
-      assert.equal(found[0].edits[0].path, 'tasks/1.md');
+      assert.equal(found[0].turns.length, 1);
+      assert.deepEqual(found[0].turns[0].edits, ['tasks/1.md']);
 
       assert.deepEqual(await readOpencodePlanningSessions(path.join(root, 'missing-bin')), []);
     } finally {

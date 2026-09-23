@@ -66,7 +66,6 @@ interface SliceOptions {
   readonly approvedAt: string;
   readonly approvals?: ReadonlyMap<string, string>;
   readonly sessionCost?: number | null;
-  readonly sessionUsage?: PlanningUsage | null;
   readonly idleGapMinutes?: number;
   readonly prices?: Record<
     string,
@@ -88,7 +87,6 @@ async function sliceFor(
     approvedAt: options.approvedAt,
     turns,
     sessionCost: options.sessionCost ?? null,
-    sessionUsage: options.sessionUsage ?? null,
     idleGapMinutes: options.idleGapMinutes ?? 10,
     ...(options.prices ? { prices: options.prices } : {}),
     resolveApproval: async (folder) => options.approvals?.get(folder) ?? null,
@@ -333,29 +331,6 @@ describe('planning slice measures', () => {
     );
     assert.equal(unpriced?.usage.cost, null);
     assert.equal(unpriced?.slice.costSource, null);
-  });
-
-  it('keeps a legacy session usage when the slice holds every synthesized turn', async () => {
-    const a = path.join(changesDir, '001-a');
-    const legacyTurns = [turn({ at: 0, edits: [edit(a)] })];
-    const sessionUsage = usage({
-      inputTokens: 100,
-      outputTokens: 50,
-      cachedTokens: 25,
-      cost: 0.42,
-    });
-    const result = await sliceFor(changesDir, a, legacyTurns, {
-      approvedAt: at(2),
-      sessionCost: 0.42,
-      sessionUsage,
-    });
-    assert.deepEqual(result?.usage, {
-      inputTokens: 100,
-      outputTokens: 50,
-      cachedTokens: 25,
-      reasoningTokens: null,
-      cost: 0.42,
-    });
   });
 
   it('reads a valid slice and leaves a malformed one absent', () => {

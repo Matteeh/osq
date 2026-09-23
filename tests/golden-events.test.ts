@@ -19,6 +19,8 @@ const DEAD_FIXTURE = path.join(FIXTURES_DIR, 'dead.jsonl');
 /** `UPDATE_GOLDEN=1` rewrites the checked-in fixtures from the live run. */
 const UPDATE_GOLDEN = process.env.UPDATE_GOLDEN === '1';
 const MASKED_PID = 12345;
+/** Repository size counts depend on the scaffolded project and are pinned to one value. */
+const MASKED_REPO_COUNT = 0;
 
 /** Rewrite any string that embeds the ephemeral project root as a relative path. */
 function relativizePaths(value: string, projectRoot: string): string {
@@ -57,7 +59,10 @@ function maskEvent(event: Record<string, unknown>, projectRoot: string): Record<
     if ('osqVersion' in record) record.osqVersion = '[VERSION]';
     if ('elapsedSeconds' in record) record.elapsedSeconds = 0;
     if ('duration' in record) record.duration = 0;
-    if (masked.type === 'measures') maskScopeHashes(record);
+    if (masked.type === 'measures') {
+      maskScopeHashes(record);
+      maskRepoCounts(record);
+    }
   }
 
   return masked;
@@ -73,6 +78,12 @@ function maskScopeHashes(data: Record<string, unknown>): void {
     if (hashes.before !== null && hashes.before !== undefined) hashes.before = '[HASH]';
     if (hashes.after !== null && hashes.after !== undefined) hashes.after = '[HASH]';
   }
+}
+
+/** Replace the scaffolded project's file and line counts with one stable value. */
+function maskRepoCounts(data: Record<string, unknown>): void {
+  if ('repoFiles' in data) data.repoFiles = MASKED_REPO_COUNT;
+  if ('repoLines' in data) data.repoLines = MASKED_REPO_COUNT;
 }
 
 /**
@@ -234,6 +245,29 @@ describe('Golden event streams', () => {
     );
   });
 
+  it('masks measures repository counts to a stable placeholder', () => {
+    const raw = `${JSON.stringify({
+      type: 'measures',
+      timestamp: '2026-01-01T00:00:00.000Z',
+      data: { phase: 'start', repoFiles: 14, repoLines: 518, scopeFiles: 0, scopeLines: 0 },
+    })}\n`;
+
+    assert.equal(
+      normalizeEvents(raw, tmpDir),
+      `${JSON.stringify({
+        type: 'measures',
+        timestamp: '[TIMESTAMP]',
+        data: {
+          phase: 'start',
+          repoFiles: MASKED_REPO_COUNT,
+          repoLines: MASKED_REPO_COUNT,
+          scopeFiles: 0,
+          scopeLines: 0,
+        },
+      })}\n`,
+    );
+  });
+
   it('matches the checked-in golden events for a verified task', async () => {
     await writeTask(
       specFolder,
@@ -241,6 +275,25 @@ describe('Golden event streams', () => {
       'node -e "process.exit(0)"',
     );
     await sealApproval(specFolder);
+
+    const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, new MockAdapter());
+    assert.equal(result.success, true);
+
+    await assertGolden(await readNormalizedEvents(specFolder, tmpDir), VERIFIED_FIXTURE);
+  });
+
+  it('still matches the verified golden events when the scaffolded project grows', async () => {
+    await writeTask(
+      specFolder,
+      'When the mock task verifies, the emitted events are golden',
+      'node -e "process.exit(0)"',
+    );
+    await sealApproval(specFolder);
+
+    const plannerPath = path.join(tmpDir, 'PLANNER.md');
+    const original = await fs.readFile(plannerPath, 'utf8');
+    const growth = Array.from({ length: 10 }, (_, index) => `added line ${index + 1}`).join('\n');
+    await fs.writeFile(plannerPath, `${original}${growth}\n`, 'utf8');
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, new MockAdapter());
     assert.equal(result.success, true);

@@ -241,7 +241,10 @@ Every new started event SHALL include build identity and execution attempt.
 
 ### Requirement: Golden event stream validation
 <!-- source: tests/golden-events.test.ts, tests/fixtures/events/** -->
-The test suite SHALL validate end-to-end task execution event streams against checked-in golden fixtures for both verified and dead task outcomes.
+The test suite SHALL validate end-to-end task execution event streams against
+checked-in golden fixtures for both verified and dead task outcomes. The
+comparison SHALL mask `measures` repository counts (`repoLines` and
+`repoFiles`), so the fixtures do not depend on the scaffolded project's size.
 
 #### Scenario: Verified task golden events match
 - **WHEN** runner executes a successful mock harness task end-to-end
@@ -250,6 +253,10 @@ The test suite SHALL validate end-to-end task execution event streams against ch
 #### Scenario: Dead task golden events match
 - **WHEN** runner executes a failing mock harness task end-to-end
 - **THEN** the normalized emitted events match `tests/fixtures/events/dead.jsonl`
+
+#### Scenario: Scaffolded project size changes
+- **WHEN** the managed planner block or a template gains or loses lines
+- **THEN** both golden fixtures still match without regeneration
 
 ### Requirement: Consolidated marker writing and pure state derivation
 <!-- source: src/watcher/outcome.ts, src/core/lock.ts, src/core/state.ts, tests/runner-done-dead-events.test.ts -->
@@ -823,19 +830,18 @@ be deterministic for the same declarations and tree.
 - **THEN** aggregate comparison reports each normalized path as added, modified, or deleted
 
 ### Requirement: Approval-time local planning observation
-<!-- source: src/core/report/planning-observed.ts, src/core/report/planning-slice.ts, src/core/spec/approve.ts, src/harness/claude/claude-usage.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, tests/planning-observed-match.test.ts, tests/planning-observed-approve.test.ts -->
+<!-- source: src/core/report/planning-observed.ts, src/core/report/planning-slice.ts, src/core/report/planning-slice-turns.ts, src/core/spec/approve.ts, src/harness/claude/claude-usage.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, tests/planning-observed-match.test.ts, tests/planning-observed-approve.test.ts -->
 `findPlanningSessions` SHALL ask every available Codex, OpenCode, and Claude
-Code local reader for sessions with at least one edit whose normalized target
-is within the selected change folder and whose timestamp is inclusively between
-folder creation and observation time. Path matching SHALL be segment-aware. A
-matched session SHALL be reduced to the turns the change owns under planning
-turn attribution. Readers SHALL degrade missing stores and malformed records to
-no match or null.
+Code local reader for sessions with at least one turn edit whose normalized
+target is within the selected change folder and whose turn timestamp is
+inclusively between folder creation and observation time. Path matching SHALL
+be segment-aware. A matched session SHALL be reduced to the turns the change
+owns under planning turn attribution. Readers SHALL degrade missing stores and
+malformed records to no match or null.
 
 Readers SHALL inspect only metadata, usage, timestamps, tool names, versions,
 and file-path arguments, SHALL never retain transcript content or send data off
-the machine, and SHALL never estimate a missing value. A reader that reports
-edits without turns SHALL be treated as one turn per edit with null usage.
+the machine, and SHALL never estimate a missing value.
 
 #### Scenario: Supported session edits the change
 - **WHEN** one local session has an in-window edit under the change and another does not
@@ -1042,10 +1048,11 @@ under `fail` it SHALL kill the task with `verify_precondition`.
 - **THEN** the pre-spawn event records `mismatch: false`
 
 ### Requirement: Per-turn planning readers
-<!-- source: src/harness/claude/claude-usage.ts, src/harness/claude/claude-turns.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, src/harness/opencode/opencode-usage.ts, tests/planning-observed-claude.test.ts, tests/planning-observed-codex.test.ts, tests/planning-observed-opencode.test.ts -->
+<!-- source: src/harness/claude/claude-usage.ts, src/harness/claude/claude-turns.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, src/harness/opencode/opencode-usage.ts, tests/planning-observed-claude.test.ts, tests/planning-observed-codex.test.ts, tests/planning-observed-opencode.test.ts, tests/planning-reader-shape.test.ts -->
 Each planning reader SHALL return, per native session, the harness version
 when known, a whole-session reported cost when the harness records one, and one
-turn per model response. A turn SHALL carry its timestamp, model, independently
+turn per model response, and SHALL NOT return session-level usage, edits, or
+start and end times. A turn SHALL carry its timestamp, model, independently
 nullable input, output, cache-read, cache-write, and reasoning tokens, a
 nullable reported cost, and its successfully edited paths. Input SHALL exclude
 cached input. A session whose records cannot be parsed SHALL yield null usage.
@@ -1073,3 +1080,7 @@ cached input. A session whose records cannot be parsed SHALL yield null usage.
 #### Scenario: Unparseable session
 - **WHEN** a transcript's records carry malformed usage or no parseable usage at all
 - **THEN** the affected turns carry null usage and approval still succeeds
+
+#### Scenario: Session shape
+- **WHEN** any reader returns a session
+- **THEN** the session has `turns` and no `usage`, `edits`, `startedAt`, or `endedAt` key

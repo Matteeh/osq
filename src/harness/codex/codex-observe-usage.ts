@@ -1,11 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type {
-  ObservedPlanningSession,
-  PlanningSessionEdit,
-} from '../../core/report/planning-observed.js';
+import type { ObservedPlanningSession } from '../../core/report/planning-observed.js';
 import type { PlanningTurn } from '../../core/report/planning-slice.js';
-import { NULL_INTERACTIVE_USAGE } from '../types.js';
 import { listRolloutFiles, resolveCodexDataHome } from './codex-usage.js';
 
 /**
@@ -212,11 +208,6 @@ export function parseCodexObservation(content: string): ObservedPlanningSession 
   }
   flushPendingEdits(state);
 
-  const edits: PlanningSessionEdit[] = [];
-  for (const turn of state.turns) {
-    for (const raw of turn.edits) edits.push({ path: raw, timestamp: turn.timestamp });
-  }
-
   if (!state.sessionId) return null;
   return {
     harness: 'codex',
@@ -225,9 +216,7 @@ export function parseCodexObservation(content: string): ObservedPlanningSession 
     model: state.model,
     harnessVersion: state.harnessVersion,
     sessionCost: null,
-    usage: NULL_INTERACTIVE_USAGE,
     turns: state.turns,
-    edits,
   };
 }
 

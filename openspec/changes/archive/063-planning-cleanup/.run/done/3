@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1ffbc2381310809e326c0f887e3cfc871884a65652f330d13fdec6b7f08c7d52"
+build_stamp: "a6650a7"
+exit_code: 0
+scope_files: {"tests/fixtures/events/dead.jsonl":"sha256:a44bd11dfab0cab024b39a2ff132b1a3d781a8df2441bd1a7ac97c421002cd71","tests/fixtures/events/verified.jsonl":"sha256:f3a76ec0d7d720eec1c8c6cda39a83954fb08a9f1b1fb679c85fad1347bacb44","tests/golden-events.test.ts":"sha256:2a7e9dc63f52831c5803c04f941d3023b35c3fc0d9686010f40e9ea8abde090c"}
+---
+2026-09-23T16:09:44.114Z

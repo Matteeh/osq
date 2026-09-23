@@ -9,7 +9,7 @@ import {
   normalizeObservedTarget,
   observedSessionId,
 } from '../src/core/report/planning-observed.js';
-import { candidate } from './planning-observed-helpers.js';
+import { candidate, editTurn } from './planning-observed-helpers.js';
 
 describe('path containment', () => {
   it('accepts nested targets and rejects sibling prefixes and escapes', () => {
@@ -48,21 +48,21 @@ describe('findPlanningSessions', () => {
 
   it('matches inclusive window boundaries and the segment-contained folder', async () => {
     const readings = [
-      candidate({ sessionDir: changeFolder, edits: [{ path: 'tasks/1.md', timestamp: created }] }),
+      candidate({ sessionDir: changeFolder, turns: [editTurn('tasks/1.md', created)] }),
       candidate({
         sessionDir: changeFolder,
         nativeSessionId: 'native-2',
-        edits: [{ path: 'tasks/2.md', timestamp: observed }],
+        turns: [editTurn('tasks/2.md', observed)],
       }),
       candidate({
         sessionDir: changeFolder,
         nativeSessionId: 'native-3',
-        edits: [{ path: 'tasks/3.md', timestamp: '2025-12-31T23:59:59.000Z' }],
+        turns: [editTurn('tasks/3.md', '2025-12-31T23:59:59.000Z')],
       }),
       candidate({
         sessionDir: changeFolder,
         nativeSessionId: 'native-4',
-        edits: [{ path: 'tasks/4.md', timestamp: '2026-01-01T00:01:00.001Z' }],
+        turns: [editTurn('tasks/4.md', '2026-01-01T00:01:00.001Z')],
       }),
     ];
     const matches = await findPlanningSessions(changeFolder, {
@@ -82,19 +82,17 @@ describe('findPlanningSessions', () => {
       candidate({
         nativeSessionId: 'sib',
         sessionDir: changeFolder,
-        edits: [
-          { path: `../${path.basename(sibling)}/f.md`, timestamp: '2026-01-01T00:00:30.000Z' },
-        ],
+        turns: [editTurn(`../${path.basename(sibling)}/f.md`, '2026-01-01T00:00:30.000Z')],
       }),
       candidate({
         nativeSessionId: 'esc',
         sessionDir: changeFolder,
-        edits: [{ path: '../../outside/f.md', timestamp: '2026-01-01T00:00:30.000Z' }],
+        turns: [editTurn('../../outside/f.md', '2026-01-01T00:00:30.000Z')],
       }),
       candidate({
         nativeSessionId: 'inside',
         sessionDir: changeFolder,
-        edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:30.000Z' }],
+        turns: [editTurn('tasks/1.md', '2026-01-01T00:00:30.000Z')],
       }),
     ];
     const matches = await findPlanningSessions(changeFolder, {
@@ -115,13 +113,13 @@ describe('findPlanningSessions', () => {
           harness: 'opencode',
           sessionDir: changeFolder,
           nativeSessionId: 'z',
-          edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:10.000Z' }],
+          turns: [editTurn('tasks/1.md', '2026-01-01T00:00:10.000Z')],
         }),
         candidate({
           harness: 'codex',
           sessionDir: changeFolder,
           nativeSessionId: 'b',
-          edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:20.000Z' }],
+          turns: [editTurn('tasks/1.md', '2026-01-01T00:00:20.000Z')],
         }),
       ]);
     const readerB = () =>
@@ -130,13 +128,13 @@ describe('findPlanningSessions', () => {
           harness: 'codex',
           sessionDir: changeFolder,
           nativeSessionId: 'b',
-          edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:20.000Z' }],
+          turns: [editTurn('tasks/1.md', '2026-01-01T00:00:20.000Z')],
         }),
         candidate({
           harness: 'claude',
           sessionDir: changeFolder,
           nativeSessionId: 'a',
-          edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:05.000Z' }],
+          turns: [editTurn('tasks/1.md', '2026-01-01T00:00:05.000Z')],
         }),
       ]);
     const matches = await findPlanningSessions(changeFolder, {
@@ -160,7 +158,7 @@ describe('findPlanningSessions', () => {
       Promise.resolve([
         candidate({
           sessionDir: changeFolder,
-          edits: [{ path: 'tasks/1.md', timestamp: '2026-01-01T00:00:30.000Z' }],
+          turns: [editTurn('tasks/1.md', '2026-01-01T00:00:30.000Z')],
         }),
       ]);
     const matches = await findPlanningSessions(changeFolder, {

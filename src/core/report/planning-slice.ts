@@ -55,7 +55,6 @@ export interface SliceRequest {
   readonly approvedAt: string;
   readonly turns: readonly PlanningTurn[];
   readonly sessionCost: number | null;
-  readonly sessionUsage: PlanningUsage | null;
   readonly idleGapMinutes: number;
   readonly prices?: Readonly<Record<string, PlanningPrice>>;
   readonly resolveApproval: (changeFolder: string, sessionId: string) => Promise<string | null>;
@@ -192,19 +191,14 @@ function assignOwnership(
   return assigned;
 }
 
-function buildUsage(
-  tokens: PlanningTokens,
-  cost: number | null,
-  sessionUsage: PlanningUsage | null,
-): PlanningUsage {
-  const base = sessionUsage ?? {
+function buildUsage(tokens: PlanningTokens, cost: number | null): PlanningUsage {
+  return {
     inputTokens: tokens.input,
     outputTokens: tokens.output,
     cachedTokens: combineCache(tokens.cacheRead, tokens.cacheWrite),
     reasoningTokens: tokens.reasoning,
     cost,
   };
-  return { ...base, cost };
 }
 
 /** Cut one session to the turns a change owns and measure that slice. */
@@ -236,7 +230,7 @@ export async function sliceChangeOwnership(request: SliceRequest): Promise<Slice
       tokens,
       costSource,
     },
-    usage: buildUsage(tokens, cost, complete ? request.sessionUsage : null),
+    usage: buildUsage(tokens, cost),
     ownedTurns: owned,
   };
 }

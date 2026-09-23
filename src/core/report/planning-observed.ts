@@ -1,13 +1,7 @@
 import { DEFAULT_PLANNING_CONFIG, type PlanningConfig } from '../foundation/config-planning.js';
 import { type PlanRecord, type PlanningUsage, readPlanRecords } from './planning-records.js';
 import { resolveChangeApprovalTime } from './planning-slice-lookup.js';
-import {
-  firstMatchingEdit,
-  lastTurnModel,
-  parseMs,
-  sessionEdits,
-  sessionTurns,
-} from './planning-slice-turns.js';
+import { firstMatchingEdit, lastTurnModel, parseMs, sessionEdits } from './planning-slice-turns.js';
 import { type PlanningSlice, type PlanningTurn, sliceChangeOwnership } from './planning-slice.js';
 import { appendPlanRecord } from './planning.js';
 
@@ -21,7 +15,7 @@ export interface PlanningSessionEdit {
   readonly timestamp: string;
 }
 
-/** The reader port every harness returns; turn and session fields may be absent. */
+/** The reader port every harness returns; one turn per native model response. */
 export interface ObservedPlanningSession {
   readonly harness: string;
   readonly nativeSessionId: string;
@@ -31,13 +25,7 @@ export interface ObservedPlanningSession {
   readonly harnessVersion?: string | null;
   /** Whole-session reported cost when the harness records one. */
   readonly sessionCost?: number | null;
-  readonly startedAt?: string | null;
-  readonly endedAt?: string | null;
-  readonly usage: PlanningUsage;
-  /** One entry per native model response; absent on legacy readers. */
-  readonly turns?: readonly PlanningTurn[];
-  /** Legacy edit list used only when `turns` is absent. */
-  readonly edits: readonly PlanningSessionEdit[];
+  readonly turns: readonly PlanningTurn[];
 }
 
 /** Independent local reader for one harness. Failure degrades to no matches. */
@@ -137,9 +125,8 @@ export async function findPlanningSessions(
         sessionId,
         sessionDir,
         approvedAt,
-        turns: sessionTurns(candidate),
-        sessionCost: candidate.sessionCost ?? candidate.usage?.cost ?? null,
-        sessionUsage: candidate.turns === undefined ? (candidate.usage ?? null) : null,
+        turns: candidate.turns,
+        sessionCost: candidate.sessionCost ?? null,
         idleGapMinutes: planning.idleGapMinutes,
         ...(planning.prices ? { prices: planning.prices } : {}),
         resolveApproval: (folder, id) => resolveChangeApprovalTime(folder, id, approvalCache),

@@ -25,6 +25,7 @@ import {
   captureLogs,
   createChange,
   createProject,
+  editTurn,
   readManifest,
   renderTree,
   restoreEnv,
@@ -199,7 +200,7 @@ describe('approval-time observation', () => {
           Promise.resolve([
             candidate({
               sessionDir: change.folderPath,
-              edits: [{ path: 'tasks/1.md', timestamp: new Date(now - 1000).toISOString() }],
+              turns: [editTurn('tasks/1.md', new Date(now - 1000).toISOString())],
             }),
           ]),
       ],
@@ -286,7 +287,7 @@ describe('approve command planning notice', () => {
           harness: 'claude',
           sessionDir: change.folderPath,
           nativeSessionId: 'matched',
-          edits: [{ path: 'tasks/1.md', timestamp: new Date(now - 30000).toISOString() }],
+          turns: [editTurn('tasks/1.md', new Date(now - 30000).toISOString())],
         }),
       ]);
     const lines = await captureLogs(() =>

@@ -13,30 +13,13 @@ export function parseMs(value: string | null): number | null {
   return iso === null ? null : Date.parse(iso);
 }
 
-/** Edits of a session: each turn's edits, or the legacy `edits` list. */
+/** Every turn edit of a session, each paired with its turn's timestamp. */
 export function sessionEdits(session: ObservedPlanningSession): readonly PlanningSessionEdit[] {
-  if (session.turns === undefined) return session.edits ?? [];
   const edits: PlanningSessionEdit[] = [];
   for (const turn of session.turns) {
     for (const raw of turn.edits) edits.push({ path: raw, timestamp: turn.timestamp });
   }
   return edits;
-}
-
-/** One turn per edit with null usage when a reader reports no turns. */
-export function sessionTurns(session: ObservedPlanningSession): readonly PlanningTurn[] {
-  if (session.turns !== undefined) return session.turns;
-  return (session.edits ?? []).map((edit) => ({
-    timestamp: edit.timestamp,
-    model: session.model,
-    inputTokens: null,
-    outputTokens: null,
-    cacheReadTokens: null,
-    cacheWriteTokens: null,
-    reasoningTokens: null,
-    cost: null,
-    edits: [edit.path],
-  }));
 }
 
 /** First in-window edit whose normalized target is inside the change folder. */

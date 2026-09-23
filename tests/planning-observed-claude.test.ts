@@ -71,21 +71,12 @@ describe('Claude session observation', () => {
     assert.equal(observation.sessionDir, '/project/001-x');
     assert.equal(observation.model, 'claude-x');
     assert.deepEqual(
-      observation.edits.map((edit) => edit.path),
+      observation.turns.flatMap((turn) => turn.edits),
       ['tasks/1.md', 'tasks/3.ipynb'],
     );
     // Cost-state counters no longer supply token usage; only its cost survives.
-    assert.deepEqual(observation.usage, {
-      inputTokens: null,
-      outputTokens: null,
-      cachedTokens: null,
-      reasoningTokens: null,
-      cost: null,
-    });
     assert.equal(observation.sessionCost, 0.5);
     assert.equal(observation.harnessVersion, null);
-    assert.equal(observation.startedAt, undefined);
-    assert.equal(observation.endedAt, undefined);
     assert.equal(JSON.stringify(observation).includes('tool_result'), false);
   });
 

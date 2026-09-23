@@ -1,10 +1,6 @@
-import type {
-  ObservedPlanningSession,
-  PlanningSessionEdit,
-} from '../../core/report/planning-observed.js';
+import type { ObservedPlanningSession } from '../../core/report/planning-observed.js';
 import type { PlanningTurn } from '../../core/report/planning-slice.js';
 import { spawnWithTimeout } from '../process.js';
-import { NULL_INTERACTIVE_USAGE } from '../types.js';
 import {
   buildOpencodeObservationQuery,
   finiteNonNegative,
@@ -124,10 +120,6 @@ export async function readOpencodePlanningSessions(
   for (const [nativeSessionId, draft] of drafts) {
     const turns = draft.turns.map(toTurn);
     if (turns.length === 0) continue;
-    const edits: PlanningSessionEdit[] = [];
-    for (const turn of turns) {
-      for (const raw of turn.edits) edits.push({ path: raw, timestamp: turn.timestamp });
-    }
     results.push({
       harness: 'opencode',
       nativeSessionId,
@@ -135,9 +127,7 @@ export async function readOpencodePlanningSessions(
       model: draft.model,
       harnessVersion: draft.version,
       sessionCost: null,
-      usage: NULL_INTERACTIVE_USAGE,
       turns,
-      edits,
     });
   }
   return results;

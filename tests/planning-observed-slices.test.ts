@@ -4,11 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { type PlanningTurn, observedSessionId } from '../src/core/report/planning-observed.js';
-import {
-  NULL_PLANNING_USAGE,
-  type PlanRecord,
-  readPlanRecords,
-} from '../src/core/report/planning-records.js';
+import { type PlanRecord, readPlanRecords } from '../src/core/report/planning-records.js';
 import { approveSpec } from '../src/core/spec/approve.js';
 import { createChange, createProject, restoreEnv } from './planning-observed-helpers.js';
 
@@ -39,8 +35,6 @@ function session(turns: readonly PlanningTurn[]) {
     nativeSessionId: 'slices-session',
     sessionDir: null,
     model: 'claude-test',
-    usage: NULL_PLANNING_USAGE,
-    edits: [],
     turns,
   };
 }

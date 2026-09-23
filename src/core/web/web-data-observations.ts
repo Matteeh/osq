@@ -162,7 +162,6 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
     const usage = exited.data.usage;
     const harness = started.data.harness || '';
     const model = started.data.model;
-    let sessionReported = false;
     if (usage.inputTokens !== null) {
       mergeTokenDraft(groups, harness, model, {
         input: usage.inputTokens,
@@ -171,7 +170,6 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
         reasoning: 0,
         total: usage.inputTokens,
       });
-      sessionReported = true;
     }
     if (usage.outputTokens !== null) {
       mergeTokenDraft(groups, harness, model, {
@@ -181,7 +179,6 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
         reasoning: 0,
         total: usage.outputTokens,
       });
-      sessionReported = true;
     }
     if (usage.cachedTokens !== null) {
       mergeTokenDraft(groups, harness, model, {
@@ -191,7 +188,6 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
         reasoning: 0,
         total: 0,
       });
-      sessionReported = true;
     }
     if (usage.reasoningTokens !== null) {
       mergeTokenDraft(groups, harness, model, {
@@ -201,13 +197,11 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
         reasoning: usage.reasoningTokens,
         total: 0,
       });
-      sessionReported = true;
     }
     if (usage.cost !== null) {
       costValues.push(usage.cost);
-      sessionReported = true;
+      reported++;
     }
-    if (sessionReported && usage.cost !== null) reported++;
     if (Number.isFinite(exited.data.wallSeconds)) durations.push(exited.data.wallSeconds);
   }
 

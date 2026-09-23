@@ -71,26 +71,13 @@ describe('Codex rollout observation', () => {
     assert.equal(observation.nativeSessionId, 'codex-1');
     assert.equal(observation.sessionDir, '/project/001-x');
     assert.equal(observation.model, 'gpt-5');
-    assert.deepEqual(
-      observation.edits.map((edit) => edit.path),
-      ['tasks/1.md', 'tasks/2.md', 'tasks/old.md'],
-    );
     // `token_usage_record` adds no turn and no session usage.
-    assert.deepEqual(observation.usage, {
-      inputTokens: null,
-      outputTokens: null,
-      cachedTokens: null,
-      reasoningTokens: null,
-      cost: null,
-    });
     assert.equal(observation.harnessVersion, null);
     assert.equal(observation.sessionCost, null);
-    assert.equal(observation.startedAt, undefined);
-    assert.equal(observation.endedAt, undefined);
     // The edits after the last token_count form one final turn with null usage.
-    assert.equal(observation.turns?.length, 1);
-    assert.equal(observation.turns?.[0].timestamp, '2026-01-01T00:00:05.000Z');
-    assert.deepEqual(observation.turns?.[0].edits, ['tasks/1.md', 'tasks/2.md', 'tasks/old.md']);
+    assert.equal(observation.turns.length, 1);
+    assert.equal(observation.turns[0].timestamp, '2026-01-01T00:00:05.000Z');
+    assert.deepEqual(observation.turns[0].edits, ['tasks/1.md', 'tasks/2.md', 'tasks/old.md']);
   });
 
   it('adds no turn for a token_count without last_token_usage', () => {
@@ -119,15 +106,7 @@ describe('Codex rollout observation', () => {
       ].join('\n'),
     );
     assert.ok(observation);
-    assert.deepEqual(observation.usage, {
-      inputTokens: null,
-      outputTokens: null,
-      cachedTokens: null,
-      reasoningTokens: null,
-      cost: null,
-    });
     assert.deepEqual(observation.turns, []);
-    assert.deepEqual(observation.edits, []);
   });
 
   it('reads every rollout below the Codex data home and degrades a missing store', async () => {

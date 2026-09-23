@@ -40,7 +40,6 @@ const GRANDFATHERED = new Set([
   'core/foundation/new.ts#createNewSpec',
   'core/status/status.ts#getStatusOverview',
   'watcher/dev.ts#runDevSupervisor',
-  'core/web/web-data-observations.ts#observePlanning',
   'harness/agy/agy.ts#processAgyStdoutLine',
 ]);
 

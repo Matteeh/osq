@@ -96,9 +96,9 @@ describe('Claude per-message turns', () => {
       .join('\n');
     const observation = parseClaudeSession(content);
     assert.ok(observation);
-    assert.equal(observation.turns?.length, 2);
+    assert.equal(observation.turns.length, 2);
     assert.deepEqual(
-      observation.edits.map((edit) => edit.path),
+      observation.turns.flatMap((turn) => turn.edits),
       ['a.md'],
     );
   });
