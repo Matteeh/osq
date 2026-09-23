@@ -9,6 +9,7 @@ import {
   type RegressedEventData,
   appendHarnessEvent,
 } from '../harness/types.js';
+import { addFingerprint } from './fingerprint.js';
 export type RunTaskFailureReason =
   | 'spec_conflict'
   | 'already_running'
@@ -145,8 +146,9 @@ export async function writeDeadMarker(
   runDir: string,
   taskNumber: string,
   content: string,
+  projectRoot?: string,
 ): Promise<void> {
-  await writeMarkerFile(runDir, 'dead', `${taskNumber}.md`, content);
+  await writeMarkerFile(runDir, 'dead', `${taskNumber}.md`, addFingerprint(content, projectRoot));
 }
 /** Write the `.run/regressed/<target>.md` marker, creating the directory when needed. */
 export async function writeRegressedMarker(

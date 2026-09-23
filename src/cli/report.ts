@@ -119,6 +119,11 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         provenance: report.history.cost.provenance,
         coverage: { ...report.history.cost.coverage },
       },
+      retries: {
+        automatic: { ...report.history.retries.automatic },
+        manual: { ...report.history.retries.manual },
+        stuck: report.history.retries.stuck,
+      },
       rejections: {
         total: report.history.rejections.total,
         byPlannerModel: { ...report.history.rejections.byPlannerModel },

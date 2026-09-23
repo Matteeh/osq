@@ -25,6 +25,13 @@ import {
   parseEventLines,
   parseTokenEvent,
 } from './report-events.js';
+import {
+  type RetryGroupHistory,
+  type RetryHistory,
+  addRetryHistory,
+  emptyRetryHistory,
+  observeRetries,
+} from './report-retries.js';
 
 export interface SpecMetrics {
   readonly total: number;
@@ -163,6 +170,7 @@ export interface HistoryMetrics {
   readonly verifyRuns: VerifyRunMetrics;
   readonly preSpawnVerify: PreSpawnVerifyHistory;
   readonly cost: CostHistory;
+  readonly retries: RetryHistory;
   readonly rejections: RejectionHistory;
   readonly sizes: SizeMetrics;
   readonly scopeRegressions: ScopeRegressionHistory;
@@ -599,6 +607,21 @@ function selectHintSeries(series: readonly ScopeFileSeries[]): ScopeFileSeries |
   return series.find((entry) => entry.resolver === 'legacy');
 }
 
+/** One retry-group line in the `Automatic retries:` block. */
+function formatRetryGroupLine(name: string, group: RetryGroupHistory): string {
+  return `  ${name}: ${group.count} retries, ${group.reachedDone} reached done, cost ${formatReportedCost(group.cost, group.costReportedAttempts)} (${group.costReportedAttempts} of ${group.count} attempts reported cost)`;
+}
+
+/** The retry block printed after the verification lines. */
+function formatRetryHistoryLines(retries: RetryHistory): string[] {
+  return [
+    '  Automatic retries:',
+    formatRetryGroupLine('automatic', retries.automatic),
+    formatRetryGroupLine('manual', retries.manual),
+    `  Stuck: ${retries.stuck}`,
+  ];
+}
+
 /** Rows printed for one size-against-outcome table. */
 function formatSizeBucketLines(rows: readonly SizeBucketRow[]): string[] {
   const lines = ['    bucket     tasks  first-attempt pass rate  mean attempts  median duration'];
@@ -954,6 +977,7 @@ export async function getMetricsReport(
   let totalCost = 0;
   const perSpecCost: Record<string, number> = {};
   let reportedCostAttempts = 0;
+  let retries = emptyRetryHistory();
   let scopeDetected = 0;
   let scopeVerificationPassed = 0;
   let scopeVerificationFailed = 0;
@@ -983,7 +1007,9 @@ export async function getMetricsReport(
       ? await fs.readFile(task.eventFilePath, 'utf8').catch(() => '')
       : '';
 
-    const observation = observeTaskStream(parseEventLines(content));
+    const events = parseEventLines(content);
+    const observation = observeTaskStream(events);
+    retries = addRetryHistory(retries, observeRetries(events));
     const taskAttempts = observation.attempts;
     attemptsTotal += taskAttempts;
     unexplainedTotal += observation.unexplained;
@@ -1311,6 +1337,7 @@ export async function getMetricsReport(
           totalAttempts: attemptsTotal,
         },
       },
+      retries,
       rejections: {
         total: rejectionTotal,
         byPlannerModel: rejectionsByPlannerModel,
@@ -1629,6 +1656,7 @@ export function formatMetricsReport(
   lines.push(
     `  Pre-spawn verify mismatches: ${report.history.preSpawnVerify.mismatches} of ${report.history.preSpawnVerify.runs} runs`,
   );
+  lines.push(...formatRetryHistoryLines(report.history.retries));
   lines.push(
     `  Harness-reported cost: ${report.history.cost.formattedTotal} (${report.history.cost.coverage.reportedAttempts} of ${report.history.cost.coverage.totalAttempts} attempts reported cost)`,
   );

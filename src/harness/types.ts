@@ -23,6 +23,7 @@ export type HarnessEventType =
   | 'dead'
   | 'regressed'
   | 'retry'
+  | 'stuck'
   | 'harness_retry'
   | 'recertification'
   | 'rejected';
@@ -163,6 +164,17 @@ export interface RetryEventData {
   readonly target: string;
   readonly reason: string;
   readonly attempt: number;
+  /** True only when the watcher, rather than a human, requested the retry. */
+  readonly automatic?: boolean;
+}
+
+/**
+ * Payload of a `stuck` event: the watcher observed the same failure twice and
+ * stopped retrying the task automatically.
+ */
+export interface StuckEventData {
+  readonly task: string;
+  readonly fingerprint: string;
 }
 
 /**
@@ -228,6 +240,7 @@ export interface OsqEventData {
   dead: DeadEventData;
   regressed: RegressedEventData;
   retry: RetryEventData;
+  stuck: StuckEventData;
   harness_retry: HarnessRetryEventData;
   recertification: RecertificationEventData;
   rejected: RejectedEventData;

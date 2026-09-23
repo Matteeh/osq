@@ -1,0 +1,23 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:ca9498ab9d32742d0f99fdd61d05b9a79d1b19f80cf0668f3d29adb8402a88c3",
+    "PLANNER.md": "sha256:d502a59e3934e998dabfb816b91a522bcd34f06928c4732395e2a468cc5e0328",
+    "config": "sha256:e819053c6a36d4d8f7b5a0524d01140dc106f79ac460b69ed30b232cae4847c4",
+    "watcher-and-harness": "sha256:e06cee719c75002f12bdc28d48ea686afd0089ff045ffd1ae6dd0bd76ca9a2e6",
+    "cli-foundation": "sha256:a11b699600532780f9e190c989b118a1c4fafaec086543d94a4d529834186c40",
+    "status-inspection": "sha256:11c3bef59af1a93c969bd8e4a54ba429191155a327d16d4892c9c4ed1e65fb5a",
+    "metrics-and-reporting": "sha256:3c1e7e7a4e89fe873040baae7ea3b1d375b4f0cb899b37e01a3feb4e1f062d85"
+  },
+  "osqVersion": "0.1.0",
+  "harness": "opencode",
+  "model": "deepseek/deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-09-23T16:27:14.556Z",
+  "approvedAt": "2026-09-23T16:37:24.987Z",
+  "planningSessions": 1,
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  }
+}

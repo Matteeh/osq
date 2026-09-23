@@ -1,0 +1,106 @@
+{"type":"verify_ran","timestamp":"2026-09-23T17:00:56.254Z","data":{"command":"node --import tsx --test tests/report-retries.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/report-retries.test.ts'\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-09-23T17:00:56.570Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":3573,"repoFiles":1105,"repoLines":116610,"importFanIn":10,"proposalWords":881,"taskWords":330,"deltaRequirements":10,"deltaScenarios":36}}
+{"type":"started","timestamp":"2026-09-23T17:00:56.574Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.1.0","attempt":1,"pid":990082,"timeoutSeconds":1800,"version":"0.1.0","commit":"a6650a7"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:00.367Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:00.450Z","data":{"tool":"read","summary":"src/core/report/report-events.ts"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:00.548Z","data":{"tool":"read","summary":"src/cli/report.ts"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:00.691Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:00.730Z","data":{"promptTokens":48566,"candidateTokens":182,"totalTokens":58141,"cachedTokens":9344,"reasoningTokens":49,"cost":0.007451532}}
+{"type":"tool","timestamp":"2026-09-23T17:01:02.504Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:02.596Z","data":{"tool":"read","summary":"tests/report-json.test.ts"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:02.691Z","data":{"tool":"read","summary":"tests/report-scope-regressions.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:02.736Z","data":{"promptTokens":26223,"candidateTokens":160,"totalTokens":84514,"cachedTokens":58112,"reasoningTokens":19,"cost":0.004215186}}
+{"type":"tool","timestamp":"2026-09-23T17:01:04.763Z","data":{"tool":"bash","summary":"ls -la openspec/changes/065-automatic-retry/.run/results/ 2>"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:04.768Z","data":{"tool":"bash","summary":"cat fixture/report/expected.json | head -120"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:04.809Z","data":{"promptTokens":15811,"candidateTokens":140,"totalTokens":100536,"cachedTokens":84480,"reasoningTokens":105,"cost":0.00277209}}
+{"type":"tool","timestamp":"2026-09-23T17:01:06.909Z","data":{"tool":"read","summary":"openspec/changes/065-automatic-retry/.run/results/6.md"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:07.395Z","data":{"tool":"bash","summary":"grep -rn '\"retry\"\\|\"stuck\"' fixture/report/ 2>/dev/null; ech"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:07.430Z","data":{"promptTokens":1670,"candidateTokens":187,"totalTokens":102386,"cachedTokens":100480,"reasoningTokens":49,"cost":0.00069354}}
+{"type":"tool","timestamp":"2026-09-23T17:01:14.227Z","data":{"tool":"bash","summary":"grep -rn \"HistoryMetrics\\|history: {\" src/ packages/ui/src 2"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:14.404Z","data":{"tool":"bash","summary":"cat fixture/report/expected.json | python3 -c \"import sys,js"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:14.442Z","data":{"promptTokens":723,"candidateTokens":154,"totalTokens":104475,"cachedTokens":102272,"reasoningTokens":1326,"cost":0.001303266}}
+{"type":"tool","timestamp":"2026-09-23T17:01:16.203Z","data":{"tool":"bash","summary":"grep -n \"history\\|getMetricsReport\\|formatMetricsReport\" src"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:16.369Z","data":{"tool":"bash","summary":"ls src/core/report/; echo \"---line counts---\"; wc -l src/cor"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:16.445Z","data":{"promptTokens":1066,"candidateTokens":119,"totalTokens":105694,"cachedTokens":104448,"reasoningTokens":61,"cost":0.000581244}}
+{"type":"tool","timestamp":"2026-09-23T17:01:27.163Z","data":{"tool":"bash","summary":"sed -n '1,80p' tests/line-budget.test.ts; echo \"=== function"}}
+{"type":"tool","timestamp":"2026-09-23T17:01:27.372Z","data":{"tool":"bash","summary":"cat package.json | python3 -c \"import sys,json; d=json.load("}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:27.418Z","data":{"promptTokens":453,"candidateTokens":156,"totalTokens":108449,"cachedTokens":105600,"reasoningTokens":2240,"cost":0.00182235}}
+{"type":"tool","timestamp":"2026-09-23T17:01:29.070Z","data":{"tool":"bash","summary":"for f in 1 2 3 4 5; do echo \"===== $f =====\"; cat openspec/c"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:29.099Z","data":{"promptTokens":1904,"candidateTokens":80,"totalTokens":110464,"cachedTokens":108416,"reasoningTokens":64,"cost":0.000697248}}
+{"type":"tool","timestamp":"2026-09-23T17:01:48.486Z","data":{"tool":"write","summary":"tests/report-retries.test.ts"}}
+{"type":"text","timestamp":"2026-09-23T17:01:48.492Z","data":{"text":"Now I'll write the test file first, then implement."}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:48.531Z","data":{"promptTokens":2856,"candidateTokens":1742,"totalTokens":118689,"cachedTokens":110464,"reasoningTokens":3627,"cost":0.003981192}}
+{"type":"tool","timestamp":"2026-09-23T17:01:53.133Z","data":{"tool":"write","summary":"src/core/report/report-retries.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:53.158Z","data":{"promptTokens":177,"candidateTokens":1045,"totalTokens":119757,"cachedTokens":118528,"reasoningTokens":7,"cost":0.001013334}}
+{"type":"tool","timestamp":"2026-09-23T17:01:55.249Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:55.294Z","data":{"promptTokens":221,"candidateTokens":196,"totalTokens":120046,"cachedTokens":119552,"reasoningTokens":77,"cost":0.000555606}}
+{"type":"tool","timestamp":"2026-09-23T17:01:57.058Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:57.091Z","data":{"promptTokens":253,"candidateTokens":150,"totalTokens":120211,"cachedTokens":119808,"reasoningTokens":0,"cost":0.000487374}}
+{"type":"tool","timestamp":"2026-09-23T17:01:59.523Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:01:59.843Z","data":{"promptTokens":162,"candidateTokens":131,"totalTokens":120524,"cachedTokens":120064,"reasoningTokens":167,"cost":0.000563292}}
+{"type":"tool","timestamp":"2026-09-23T17:02:02.046Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:02.093Z","data":{"promptTokens":219,"candidateTokens":132,"totalTokens":120671,"cachedTokens":120320,"reasoningTokens":0,"cost":0.00047301}}
+{"type":"tool","timestamp":"2026-09-23T17:02:04.498Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:04.538Z","data":{"promptTokens":238,"candidateTokens":155,"totalTokens":120869,"cachedTokens":120448,"reasoningTokens":28,"cost":0.000506844}}
+{"type":"tool","timestamp":"2026-09-23T17:02:06.476Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:06.516Z","data":{"promptTokens":180,"candidateTokens":151,"totalTokens":121054,"cachedTokens":120704,"reasoningTokens":19,"cost":0.000491112}}
+{"type":"tool","timestamp":"2026-09-23T17:02:09.768Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:09.805Z","data":{"promptTokens":237,"candidateTokens":158,"totalTokens":121583,"cachedTokens":120832,"reasoningTokens":356,"cost":0.000706446}}
+{"type":"tool","timestamp":"2026-09-23T17:02:11.954Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:11.995Z","data":{"promptTokens":254,"candidateTokens":147,"totalTokens":121745,"cachedTokens":121344,"reasoningTokens":0,"cost":0.000490332}}
+{"type":"tool","timestamp":"2026-09-23T17:02:13.983Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:14.008Z","data":{"promptTokens":160,"candidateTokens":85,"totalTokens":121888,"cachedTokens":121600,"reasoningTokens":43,"cost":0.0004656}}
+{"type":"tool","timestamp":"2026-09-23T17:02:16.264Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:16.305Z","data":{"promptTokens":449,"candidateTokens":373,"totalTokens":122694,"cachedTokens":121856,"reasoningTokens":16,"cost":0.000666318}}
+{"type":"tool","timestamp":"2026-09-23T17:02:18.472Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:18.528Z","data":{"promptTokens":213,"candidateTokens":298,"totalTokens":123026,"cachedTokens":122496,"reasoningTokens":19,"cost":0.000589638}}
+{"type":"tool","timestamp":"2026-09-23T17:02:20.955Z","data":{"tool":"edit","summary":"src/cli/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:20.989Z","data":{"promptTokens":161,"candidateTokens":277,"totalTokens":123371,"cachedTokens":122880,"reasoningTokens":53,"cost":0.00059079}}
+{"type":"tool","timestamp":"2026-09-23T17:02:23.281Z","data":{"tool":"bash","summary":"grep -rn \"scopeRegressions:\" tests --include=*.test.ts | hea"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:23.323Z","data":{"promptTokens":250,"candidateTokens":56,"totalTokens":123677,"cachedTokens":123136,"reasoningTokens":235,"cost":0.000581508}}
+{"type":"tool","timestamp":"2026-09-23T17:02:26.634Z","data":{"tool":"edit","summary":"tests/report-json.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:26.675Z","data":{"promptTokens":223,"candidateTokens":231,"totalTokens":123999,"cachedTokens":123520,"reasoningTokens":25,"cost":0.00055761}}
+{"type":"tool","timestamp":"2026-09-23T17:02:31.416Z","data":{"tool":"edit","summary":"tests/report-json.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:31.457Z","data":{"promptTokens":238,"candidateTokens":309,"totalTokens":124896,"cachedTokens":123776,"reasoningTokens":573,"cost":0.000936228}}
+{"type":"tool","timestamp":"2026-09-23T17:02:33.759Z","data":{"tool":"edit","summary":"tests/report-json.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:33.796Z","data":{"promptTokens":239,"candidateTokens":293,"totalTokens":125204,"cachedTokens":124672,"reasoningTokens":0,"cost":0.000585666}}
+{"type":"tool","timestamp":"2026-09-23T17:02:36.443Z","data":{"tool":"edit","summary":"tests/report-scope-regressions.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:36.484Z","data":{"promptTokens":163,"candidateTokens":237,"totalTokens":125575,"cachedTokens":125056,"reasoningTokens":119,"cost":0.000613218}}
+{"type":"text","timestamp":"2026-09-23T17:02:38.098Z","data":{"text":"Now let me run the new test and typecheck."}}
+{"type":"tool","timestamp":"2026-09-23T17:02:38.410Z","data":{"tool":"bash","summary":"node --import tsx --test tests/report-retries.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:38.446Z","data":{"promptTokens":150,"candidateTokens":68,"totalTokens":125658,"cachedTokens":125440,"reasoningTokens":0,"cost":0.00043962}}
+{"type":"tool","timestamp":"2026-09-23T17:02:43.116Z","data":{"tool":"bash","summary":"pnpm typecheck:cli 2>&1 | tail -20"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:43.143Z","data":{"promptTokens":220,"candidateTokens":50,"totalTokens":125861,"cachedTokens":125568,"reasoningTokens":23,"cost":0.000453504}}
+{"type":"tool","timestamp":"2026-09-23T17:02:45.300Z","data":{"tool":"bash","summary":"node --import tsx -e \"\nimport path from 'node:path';\nconst {"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:45.333Z","data":{"promptTokens":222,"candidateTokens":149,"totalTokens":126153,"cachedTokens":125696,"reasoningTokens":86,"cost":0.000551388}}
+{"type":"tool","timestamp":"2026-09-23T17:02:48.229Z","data":{"tool":"bash","summary":"git -C . diff --stat; echo \"=== ret"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:48.252Z","data":{"promptTokens":215,"candidateTokens":103,"totalTokens":126321,"cachedTokens":125952,"reasoningTokens":51,"cost":0.000502506}}
+{"type":"tool","timestamp":"2026-09-23T17:02:51.006Z","data":{"tool":"bash","summary":"node --import tsx --test tests/report-json.test.ts tests/rep"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:51.042Z","data":{"promptTokens":1019,"candidateTokens":67,"totalTokens":127401,"cachedTokens":126208,"reasoningTokens":107,"cost":0.000635874}}
+{"type":"tool","timestamp":"2026-09-23T17:02:53.682Z","data":{"tool":"bash","summary":"grep -rn \"parsed.history\\|history as object\\|sortedKeys(.*hi"}}
+{"type":"tokens","timestamp":"2026-09-23T17:02:53.709Z","data":{"promptTokens":385,"candidateTokens":91,"totalTokens":127973,"cachedTokens":127360,"reasoningTokens":137,"cost":0.00057663}}
+{"type":"tool","timestamp":"2026-09-23T17:03:22.350Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-23T17:03:22.386Z","data":{"promptTokens":446,"candidateTokens":65,"totalTokens":128414,"cachedTokens":127872,"reasoningTokens":31,"cost":0.000508116}}
+{"type":"tool","timestamp":"2026-09-23T17:03:24.736Z","data":{"tool":"bash","summary":"npx biome check --write tests/report-retries.test.ts src/cor"}}
+{"type":"tokens","timestamp":"2026-09-23T17:03:24.765Z","data":{"promptTokens":842,"candidateTokens":95,"totalTokens":129372,"cachedTokens":128384,"reasoningTokens":51,"cost":0.000599052}}
+{"type":"tool","timestamp":"2026-09-23T17:03:27.025Z","data":{"tool":"bash","summary":"npx biome check src tests packages/ui/src 2>&1 | tail -5 && "}}
+{"type":"tokens","timestamp":"2026-09-23T17:03:27.061Z","data":{"promptTokens":246,"candidateTokens":84,"totalTokens":129498,"cachedTokens":129152,"reasoningTokens":16,"cost":0.000484356}}
+{"type":"tool","timestamp":"2026-09-23T17:03:55.331Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -30"}}
+{"type":"tokens","timestamp":"2026-09-23T17:03:55.361Z","data":{"promptTokens":172,"candidateTokens":65,"totalTokens":129676,"cachedTokens":129408,"reasoningTokens":31,"cost":0.000471624}}
+{"type":"tool","timestamp":"2026-09-23T17:03:58.937Z","data":{"tool":"bash","summary":"wc -l src/core/report/report-retries.ts; echo \"=== git diff "}}
+{"type":"tokens","timestamp":"2026-09-23T17:03:58.970Z","data":{"promptTokens":381,"candidateTokens":75,"totalTokens":130473,"cachedTokens":129664,"reasoningTokens":353,"cost":0.000702942}}
+{"type":"tool","timestamp":"2026-09-23T17:04:02.015Z","data":{"tool":"bash","summary":"python3 -c \"\nimport re\ns=open('fixture/report/expected.json'"}}
+{"type":"tokens","timestamp":"2026-09-23T17:04:02.047Z","data":{"promptTokens":1333,"candidateTokens":74,"totalTokens":132028,"cachedTokens":130432,"reasoningTokens":189,"cost":0.000749046}}
+{"type":"tool","timestamp":"2026-09-23T17:04:31.130Z","data":{"tool":"bash","summary":"pnpm verify > /tmp/osq-verify-7.log 2>&1; echo \"EXIT=$?\"; ta"}}
+{"type":"tokens","timestamp":"2026-09-23T17:04:31.164Z","data":{"promptTokens":211,"candidateTokens":91,"totalTokens":132322,"cachedTokens":131968,"reasoningTokens":52,"cost":0.000513354}}
+{"type":"tool","timestamp":"2026-09-23T17:04:37.887Z","data":{"tool":"write","summary":"openspec/changes/065-automatic-retry/.run/results/7.md"}}
+{"type":"tokens","timestamp":"2026-09-23T17:04:37.964Z","data":{"promptTokens":172,"candidateTokens":902,"totalTokens":133706,"cachedTokens":132224,"reasoningTokens":408,"cost":0.001208472}}
+{"type":"tool","timestamp":"2026-09-23T17:04:40.245Z","data":{"tool":"bash","summary":"git -C . status --porcelain | grep "}}
+{"type":"tokens","timestamp":"2026-09-23T17:04:40.286Z","data":{"promptTokens":218,"candidateTokens":97,"totalTokens":133866,"cachedTokens":133504,"reasoningTokens":47,"cost":0.000519612}}
+{"type":"text","timestamp":"2026-09-23T17:04:43.554Z","data":{"text":"Task 7 is complete. Summary:\n\n**Implemented `history.retries` for `osq report`:**\n\n- **New `src/core/report/report-retries.ts`** (141 lines): `observeRetries(events)` splits each task stream's `retry` events into automatic (`data.automatic === true`) and manual. Each retry opens an attempt that runs to the next `retry` or stream end; a `done` inside marks it reached, finite `cost` values inside sum, and `costReportedAttempts` counts attempts with at least one finite cost. `stuck` counts `stuck` events. Pre-retry cost is excluded. Callers aggregate via `addRetryHistory`.\n- **`src/core/report/report.ts`**: `HistoryMetrics` gains `retries`; the task loop parses each stream once and feeds both observers; text renders the `Automatic retries:` block (two group lines + `Stuck:`) right after the pre-spawn verification line, using `formatReportedCost`.\n- **`src/cli/report.ts`**: `toStableMetrics` emits `history.retries`.\n- **Tests**: new `tests/report-retries.test.ts` covers the automatic-at-0.10, manual-dies, stuck, and no-retry cases plus text and JSON output. The two named tests changed only their history key lists and hand-built reports.\n- **`fixture/report/expected.json`** regenerated through the real command; the fixture has no retry events, so all counts are zero.\n\nVerification: task verify (`node --import tsx --test tests/report-retries.test.ts`) passes, and `pnpm verify` exits 0 (typechecks, UI build, full suite, lint)."}}
+{"type":"tokens","timestamp":"2026-09-23T17:04:43.589Z","data":{"promptTokens":183,"candidateTokens":381,"totalTokens":134386,"cachedTokens":133760,"reasoningTokens":62,"cost":0.00069453}}
+{"type":"exited","timestamp":"2026-09-23T17:04:43.671Z","data":{"exitCode":0,"pid":990082,"timedOut":false,"elapsedSeconds":227.1}}
+{"type":"verify_ran","timestamp":"2026-09-23T17:04:43.954Z","data":{"command":"node --import tsx --test tests/report-retries.test.ts","exitCode":0,"duration":0.21,"output":"▶ report retry history\n  ✔ splits automatic and manual retries, tracks done and cost, and counts stuck events (47.556112ms)\n  ✔ reports zero counts and not reported costs when no stream holds a retry (8.801134ms)\n✔ report retry history (57.146046ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 185.270908\n"}}
+{"type":"measures","timestamp":"2026-09-23T17:05:10.396Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":3573,"repoFiles":1105,"repoLines":116610,"importFanIn":10,"proposalWords":881,"taskWords":330,"deltaRequirements":10,"deltaScenarios":36,"changedFiles":6,"changedLines":202,"scopeHashes":{"fixture/report/expected.json":{"before":"sha256:6016ef21232df0098482d5be7aeafd95bc87e5e9347bba65ba0f0b4e9eeb55c5","after":"sha256:502c5d7f3f0cd1aa187888e70295ff6798bb0d2097871aa0e178938039292f36"},"src/cli/report.ts":{"before":"sha256:1d89c11c7c16c6fe4c3c35a8e39a6495e8e54d90b44cd7fecb55a33a48517f00","after":"sha256:7652c32394e7b84bf453af35e4a90d057355b2743b7b9b9c2996c28d747a3a90"},"src/core/report/report-retries.ts":{"before":null,"after":"sha256:74f8c6bae037049ddee97f805e30b69c4b3a7e180317bb6d0945f423ff4c17e3"},"src/core/report/report.ts":{"before":"sha256:c76586c38f25435e66e00d18cd5a1a4228734bbcce7527f8013201d8435d796d","after":"sha256:5bde4d72ec518281aa106f2bd893046d4bd5ee5748b8a12dc38d995ac31274ca"},"tests/report-json.test.ts":{"before":"sha256:c27a6406252e012fd9778d6a9d8ffc231292bb9c2ffcbebf0716a16091209429","after":"sha256:fa9f4dda8211a249ca954d8dfc8e79c7beaedfeaaf2db3b0d2d61a297129d4c5"},"tests/report-scope-regressions.test.ts":{"before":"sha256:516df968194bf18ee994223409bea6e7bacca81f857beee8bfd0bb5c16532165","after":"sha256:16e2ae3a95ac271e100661c8f35b3fa4ae54efdcd9c3384ace1531edab7c7f5f"}}}}
+{"type":"done","timestamp":"2026-09-23T17:05:10.399Z","data":{"task":"7"}}
+{"type":"verify_ran","timestamp":"2026-09-23T17:07:40.099Z","data":{"command":"node --import tsx --test tests/report-retries.test.ts","exitCode":0,"duration":0.2,"output":"▶ report retry history\n  ✔ splits automatic and manual retries, tracks done and cost, and counts stuck events (45.027567ms)\n  ✔ reports zero counts and not reported costs when no stream holds a retry (7.720636ms)\n✔ report retry history (53.518415ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 174.151022\n"}}

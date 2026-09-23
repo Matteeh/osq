@@ -108,7 +108,7 @@ describe('retry attempt numbering', () => {
     // A fresh adapter holds no in-memory retry state: the context is rebuilt
     // purely from the retained markers and the append-only retry event.
     const context = await readRetryContext(specFolder, '1');
-    assert.deepEqual(context, { attempt: 2, reason: 'verify_red' });
+    assert.deepEqual(context, { attempt: 2, reason: 'verify_red', output: 'prior failure\n' });
 
     const adapter = new RecordingAdapter();
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);

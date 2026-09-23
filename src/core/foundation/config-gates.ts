@@ -3,17 +3,21 @@
  * proposal verify after each passing task verify; it defaults on so every
  * completed task leaves the full change verifier green. `preSpawnVerify`
  * controls whether a task's verify runs once before its first attempt.
+ * `autoRetries` bounds how many automatic retries the watcher may spend on a
+ * dead task before a human must intervene; zero disables them.
  */
 export type PreSpawnVerifyMode = 'warn' | 'fail' | 'off';
 
 export interface GatesConfig {
   readonly changeVerifyAfterTask: boolean;
   readonly preSpawnVerify?: PreSpawnVerifyMode;
+  readonly autoRetries?: number;
 }
 
 export const DEFAULT_GATES_CONFIG: GatesConfig = {
   changeVerifyAfterTask: true,
   preSpawnVerify: 'warn',
+  autoRetries: 1,
 };
 
 const PRE_SPAWN_VERIFY_MODES: readonly PreSpawnVerifyMode[] = ['warn', 'fail', 'off'];
@@ -43,8 +47,18 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
   if (!PRE_SPAWN_VERIFY_MODES.includes(preSpawnRaw as PreSpawnVerifyMode)) {
     throw new Error('gates.preSpawnVerify must be one of warn, fail, off');
   }
+  const autoRetriesRaw =
+    record.autoRetries === undefined ? DEFAULT_GATES_CONFIG.autoRetries : record.autoRetries;
+  if (
+    typeof autoRetriesRaw !== 'number' ||
+    !Number.isInteger(autoRetriesRaw) ||
+    autoRetriesRaw < 0
+  ) {
+    throw new Error('gates.autoRetries must be a non-negative integer');
+  }
   return {
     changeVerifyAfterTask: value,
     preSpawnVerify: preSpawnRaw as PreSpawnVerifyMode,
+    autoRetries: autoRetriesRaw,
   };
 }

@@ -12,6 +12,7 @@ import { getArchiveDir, getChangesDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
+import { runAutomaticRetries } from './auto-retry.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
@@ -22,6 +23,8 @@ const EXIT_SIGINT = 130;
 
 export interface WatcherSummary {
   tasksRun: number;
+  /** Automatic retries the watcher made; progress even when no task ran. */
+  retried: number;
   specsArchived: number;
   /** Changes whose pre-dispatch scope audit found newly stale tasks. */
   blockedByRegression: {
@@ -188,7 +191,7 @@ export async function runWatcherCycle(
         buildInfo,
       ),
     );
-    return { tasksRun: 0, specsArchived: 0, blockedByRegression: [] };
+    return { tasksRun: 0, retried: 0, specsArchived: 0, blockedByRegression: [] };
   }
 
   const specFolders = entries
@@ -196,6 +199,7 @@ export async function runWatcherCycle(
     .sort(compareNumericPrefix);
 
   let tasksRun = 0;
+  let retried = 0;
   let specsArchived = 0;
   let approvedWaiting = 0;
   const blockedByRegression: {
@@ -238,11 +242,23 @@ export async function runWatcherCycle(
           runDir,
           reaped.taskNumber,
           formatReapedMarker(reaped.reason, reaped.pid, reaped.startedAt),
+          projectRoot,
         );
         await recordDeadEvent(folderPath, reaped.taskNumber, reaped.reason);
       }
 
-      const specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
+      let specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
+
+      // The automatic-retry decision runs from disk for every approved change
+      // after reaping and before the next task is picked. Renaming the active
+      // dead marker is the commit point, so a restart loses no retry.
+      if (specState.approvedHash) {
+        const count = await runAutomaticRetries(projectRoot, folderPath, config, logger);
+        if (count > 0) {
+          retried += count;
+          specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
+        }
+      }
 
       if (
         specState.approvedHash &&
@@ -325,7 +341,7 @@ export async function runWatcherCycle(
     );
   }
 
-  return { tasksRun, specsArchived, blockedByRegression };
+  return { tasksRun, retried, specsArchived, blockedByRegression };
 }
 
 export async function runWatcherOnce(
@@ -335,6 +351,7 @@ export async function runWatcherOnce(
   logger?: Logger,
 ): Promise<WatcherSummary> {
   let totalTasksRun = 0;
+  let totalRetried = 0;
   let totalSpecsArchived = 0;
   const blockedByRegression: {
     id: string;
@@ -345,15 +362,22 @@ export async function runWatcherOnce(
   while (true) {
     const cycle = await runWatcherCycle(projectRoot, config, adapter, logger);
     totalTasksRun += cycle.tasksRun;
+    totalRetried += cycle.retried;
     totalSpecsArchived += cycle.specsArchived;
     blockedByRegression.push(...cycle.blockedByRegression);
 
-    if (cycle.tasksRun === 0) {
+    // A retry is progress on its own: loop again so the retried task runs.
+    if (cycle.tasksRun === 0 && cycle.retried === 0) {
       break;
     }
   }
 
-  return { tasksRun: totalTasksRun, specsArchived: totalSpecsArchived, blockedByRegression };
+  return {
+    tasksRun: totalTasksRun,
+    retried: totalRetried,
+    specsArchived: totalSpecsArchived,
+    blockedByRegression,
+  };
 }
 
 export async function startWatcher(

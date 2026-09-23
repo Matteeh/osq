@@ -1,0 +1,40 @@
+{"type":"verify_ran","timestamp":"2026-09-23T16:58:47.355Z","data":{"command":"node --import tsx --test tests/show-retries.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/show-retries.test.ts'\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-09-23T16:58:47.685Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":790,"repoFiles":1104,"repoLines":116339,"importFanIn":2,"proposalWords":881,"taskWords":185,"deltaRequirements":10,"deltaScenarios":36}}
+{"type":"started","timestamp":"2026-09-23T16:58:47.688Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.1.0","attempt":1,"pid":941597,"timeoutSeconds":1800,"version":"0.1.0","commit":"a6650a7"}}
+{"type":"tool","timestamp":"2026-09-23T16:58:51.375Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tool","timestamp":"2026-09-23T16:58:51.609Z","data":{"tool":"bash","summary":"ls -la openspec/changes/065-automatic-retry/.run/results/ 2>"}}
+{"type":"tokens","timestamp":"2026-09-23T16:58:51.648Z","data":{"promptTokens":48142,"candidateTokens":116,"totalTokens":57635,"cachedTokens":9344,"reasoningTokens":33,"cost":0.007338732}}
+{"type":"tool","timestamp":"2026-09-23T16:58:53.395Z","data":{"tool":"read","summary":"tests/show-pre-spawn.test.ts"}}
+{"type":"tool","timestamp":"2026-09-23T16:58:53.525Z","data":{"tool":"bash","summary":"head -80 tests/show.test.ts; echo ---; ls tests/ | grep -i s"}}
+{"type":"tokens","timestamp":"2026-09-23T16:58:53.557Z","data":{"promptTokens":8780,"candidateTokens":99,"totalTokens":66613,"cachedTokens":57600,"reasoningTokens":134,"cost":0.0016296}}
+{"type":"tool","timestamp":"2026-09-23T16:59:03.408Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-23T16:59:03.586Z","data":{"tool":"bash","summary":"head -60 tests/helpers.ts 2>/dev/null; echo ===; grep -n \"sh"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:03.621Z","data":{"promptTokens":2973,"candidateTokens":113,"totalTokens":71976,"cachedTokens":66560,"reasoningTokens":2330,"cost":0.00211143}}
+{"type":"tool","timestamp":"2026-09-23T16:59:05.409Z","data":{"tool":"bash","summary":"sed -n 1,60p src/cli/show.ts; echo ===; sed -n 15,40p tests/"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:05.443Z","data":{"promptTokens":2136,"candidateTokens":68,"totalTokens":74223,"cachedTokens":71936,"reasoningTokens":83,"cost":0.000626808}}
+{"type":"tool","timestamp":"2026-09-23T16:59:15.737Z","data":{"tool":"write","summary":"tests/show-retries.test.ts"}}
+{"type":"text","timestamp":"2026-09-23T16:59:15.751Z","data":{"text":"Now I'll write the test file first, per the acceptance lines."}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:15.784Z","data":{"promptTokens":765,"candidateTokens":2010,"totalTokens":78022,"cachedTokens":74112,"reasoningTokens":1135,"cost":0.002224086}}
+{"type":"tool","timestamp":"2026-09-23T16:59:19.215Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"text","timestamp":"2026-09-23T16:59:19.223Z","data":{"text":"Now implement the helpers in `show.ts`."}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:19.254Z","data":{"promptTokens":214,"candidateTokens":678,"totalTokens":78828,"cachedTokens":77824,"reasoningTokens":112,"cost":0.000739572}}
+{"type":"tool","timestamp":"2026-09-23T16:59:20.982Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:21.030Z","data":{"promptTokens":251,"candidateTokens":231,"totalTokens":79074,"cachedTokens":78592,"reasoningTokens":0,"cost":0.000412026}}
+{"type":"tool","timestamp":"2026-09-23T16:59:23.187Z","data":{"tool":"bash","summary":"node --import tsx --test tests/show-retries.test.ts 2>&1 | t"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:23.231Z","data":{"promptTokens":241,"candidateTokens":75,"totalTokens":79217,"cachedTokens":78848,"reasoningTokens":53,"cost":0.000349494}}
+{"type":"tool","timestamp":"2026-09-23T16:59:25.580Z","data":{"tool":"bash","summary":"node --import tsx --test tests/show.test.ts tests/show-pre-s"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:25.618Z","data":{"promptTokens":244,"candidateTokens":86,"totalTokens":79460,"cachedTokens":79104,"reasoningTokens":26,"cost":0.000341112}}
+{"type":"text","timestamp":"2026-09-23T16:59:27.396Z","data":{"text":"Now the proposal verify."}}
+{"type":"tool","timestamp":"2026-09-23T16:59:54.875Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -40"}}
+{"type":"tokens","timestamp":"2026-09-23T16:59:54.911Z","data":{"promptTokens":401,"candidateTokens":70,"totalTokens":79831,"cachedTokens":79360,"reasoningTokens":0,"cost":0.00034023}}
+{"type":"tool","timestamp":"2026-09-23T17:00:24.177Z","data":{"tool":"bash","summary":"pnpm verify > /tmp/osq-verify.log 2>&1; echo \"EXIT:$?\"; grep"}}
+{"type":"tokens","timestamp":"2026-09-23T17:00:24.212Z","data":{"promptTokens":633,"candidateTokens":123,"totalTokens":80770,"cachedTokens":79744,"reasoningTokens":270,"cost":0.000569982}}
+{"type":"tool","timestamp":"2026-09-23T17:00:27.082Z","data":{"tool":"write","summary":"openspec/changes/065-automatic-retry/.run/results/6.md"}}
+{"type":"tokens","timestamp":"2026-09-23T17:00:27.133Z","data":{"promptTokens":470,"candidateTokens":341,"totalTokens":81639,"cachedTokens":80768,"reasoningTokens":60,"cost":0.000553404}}
+{"type":"text","timestamp":"2026-09-23T17:00:29.257Z","data":{"text":"Both the task verify (`node --import tsx --test tests/show-retries.test.ts`) and the proposal verify (`pnpm verify`, exit 0) pass. Result written."}}
+{"type":"tokens","timestamp":"2026-09-23T17:00:29.284Z","data":{"promptTokens":247,"candidateTokens":38,"totalTokens":81757,"cachedTokens":81408,"reasoningTokens":64,"cost":0.000342474}}
+{"type":"exited","timestamp":"2026-09-23T17:00:29.361Z","data":{"exitCode":0,"pid":941597,"timedOut":false,"elapsedSeconds":101.7}}
+{"type":"verify_ran","timestamp":"2026-09-23T17:00:29.642Z","data":{"command":"node --import tsx --test tests/show-retries.test.ts","exitCode":0,"duration":0.2,"output":"▶ osq show retries and stuck tasks\n  ✔ counts automatic retries and marks a task that is still stuck (35.286694ms)\n  ✔ drops the stuck line when a retry came after it (18.793687ms)\n✔ osq show retries and stuck tasks (54.838891ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 179.328624\n"}}
+{"type":"measures","timestamp":"2026-09-23T17:00:56.100Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":790,"repoFiles":1104,"repoLines":116339,"importFanIn":2,"proposalWords":881,"taskWords":185,"deltaRequirements":10,"deltaScenarios":36,"changedFiles":1,"changedLines":59,"scopeHashes":{"src/core/status/show.ts":{"before":"sha256:bcda21ec87357a9e15b104d6ac2935e061a306dd90b530d20a973ebc4f5968b2","after":"sha256:c25ef0ea2c9d2258b22f43b2c4381490ce3e1419f69d03d9305f5eb3d5ed6180"}}}}
+{"type":"done","timestamp":"2026-09-23T17:00:56.101Z","data":{"task":"6"}}
+{"type":"verify_ran","timestamp":"2026-09-23T17:07:39.902Z","data":{"command":"node --import tsx --test tests/show-retries.test.ts","exitCode":0,"duration":0.2,"output":"▶ osq show retries and stuck tasks\n  ✔ counts automatic retries and marks a task that is still stuck (33.814853ms)\n  ✔ drops the stuck line when a retry came after it (18.027393ms)\n✔ osq show retries and stuck tasks (52.596846ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 180.81545\n"}}

@@ -7,17 +7,18 @@ Provides command-line interface entrypoints, configuration loading, leveled logg
 ## Requirements
 
 ### Requirement: Configuration loading and schema validation
-<!-- source: src/core/config.ts, src/core/config-gates.ts, tests/config.test.ts, tests/pre-spawn-config.test.ts -->
+<!-- source: src/core/config.ts, src/core/config-gates.ts, tests/config.test.ts, tests/pre-spawn-config.test.ts, tests/auto-retry-config.test.ts -->
 The system SHALL load operational configuration from `osq.config.ts` merged
 over `DEFAULT_CONFIG` using the `defineConfig` helper. Public configuration
 SHALL contain `gates.changeVerifyAfterTask`, a boolean defaulting to `true`,
-and `gates.preSpawnVerify`, one of `warn`, `fail`, or `off`, defaulting to
-`warn`. Partial gate configuration SHALL merge over those defaults and invalid
-gate values SHALL be rejected.
+`gates.preSpawnVerify`, one of `warn`, `fail`, or `off`, defaulting to `warn`,
+and `gates.autoRetries`, a non-negative integer defaulting to 1. Partial gate
+configuration SHALL merge over those defaults and invalid gate values SHALL be
+rejected.
 
 #### Scenario: Default configuration resolution
 - **WHEN** no `osq.config.ts` exists in the project root
-- **THEN** system defaults harness to `agy`, maxConcurrency to 1, maxScopeFiles to 8, timeouts to standard limits, `gates.changeVerifyAfterTask` to true, and `gates.preSpawnVerify` to `warn`
+- **THEN** system defaults harness to `agy`, maxConcurrency to 1, maxScopeFiles to 8, timeouts to standard limits, `gates.changeVerifyAfterTask` to true, `gates.preSpawnVerify` to `warn`, and `gates.autoRetries` to 1
 
 #### Scenario: Environment variable overrides
 - **WHEN** `OSQ_HARNESS` or `OSQ_MODEL` is set in the process environment or `.env`
@@ -37,6 +38,14 @@ gate values SHALL be rejected.
 
 #### Scenario: Invalid pre-spawn verify mode
 - **WHEN** `gates.preSpawnVerify` is present with a value other than `warn`, `fail`, or `off`
+- **THEN** configuration validation fails with a diagnostic naming the key
+
+#### Scenario: Automatic retry count
+- **WHEN** configuration declares `gates.autoRetries: 0`
+- **THEN** resolved configuration retains 0 while preserving the other gate defaults
+
+#### Scenario: Invalid automatic retry count
+- **WHEN** `gates.autoRetries` is negative, fractional, or not a number
 - **THEN** configuration validation fails with a diagnostic naming the key
 
 ### Requirement: Scaffolding and project initialization

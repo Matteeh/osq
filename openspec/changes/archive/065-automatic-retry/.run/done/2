@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3df1fac7267a6aea22ec3050ee88460acb720325b2f2bf7c95012c1f1282d35a"
+build_stamp: "a6650a7"
+exit_code: 0
+scope_files: {"src/watcher/fingerprint.ts":"sha256:05853828f354847fc1d53ba0ad78611407f019ed5cfbe3ca8e95854ed72306b5","src/watcher/outcome.ts":"sha256:a67863e27753e23130db21cc6f9e6b0f4f25116f082bbdad86d87031f03fd2a5","src/watcher/runner.ts":"sha256:42d68972744f102285debd5869f4a330bceb8ed8ff0d0b2aeb0c396d179db964","src/watcher/spawn.ts":"sha256:475ddb59d73d74683a870cc4b7d5441a60d323c03b9d14014a212af603602810"}
+---
+2026-09-23T16:45:27.727Z

@@ -226,6 +226,21 @@
       },
       "total": 2
     },
+    "retries": {
+      "automatic": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "manual": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "stuck": 0
+    },
     "scopeRegressions": {
       "detected": 0,
       "recertifiedByHuman": 0,

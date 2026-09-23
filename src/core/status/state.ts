@@ -10,6 +10,7 @@ export interface TaskState {
   status: TaskStatus;
   verify: string;
   deadReason?: string;
+  stuck?: string;
   resultFile?: string;
   lock?: { readonly pid: number; readonly startedAt: number };
 }
@@ -76,13 +77,8 @@ function deriveTaskStateFromSnapshot(
   taskFileName: string,
 ): TaskState {
   const taskNumber = taskFileName.replace(/\.md$/, '');
-  const taskData = parseTaskMd(snapshot.taskFiles.get(taskFileName) ?? '');
-  const base = {
-    taskNumber,
-    fileName: taskFileName,
-    title: taskData.title,
-    verify: taskData.verify,
-  };
+  const { title, verify } = parseTaskMd(snapshot.taskFiles.get(taskFileName) ?? '');
+  const base = { taskNumber, fileName: taskFileName, title, verify };
   if (snapshot.regressedMarkers?.has(taskNumber)) {
     return { ...base, status: 'regressed' };
   }
@@ -93,7 +89,9 @@ function deriveTaskStateFromSnapshot(
   if (deadContent !== undefined) {
     const { data } = parseFrontmatter(deadContent);
     const reason = typeof data.reason === 'string' ? data.reason : undefined;
-    return { ...base, status: 'dead', deadReason: reason };
+    const stuck =
+      data.stuck === true && typeof data.fingerprint === 'string' ? data.fingerprint : undefined;
+    return { ...base, status: 'dead', deadReason: reason, ...(stuck ? { stuck } : {}) };
   }
   if (snapshot.runningPids.has(taskNumber)) {
     const lock = parseRunningLock(snapshot.runningPids.get(taskNumber));

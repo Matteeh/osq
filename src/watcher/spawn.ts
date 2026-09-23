@@ -126,7 +126,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     lines.push(
       `Agent ${spawnResult.timedOut ? 'timed out' : 'crashed'} with code ${spawnResult.exitCode}: ${spawnResult.error || ''}\n`,
     );
-    await writeDeadMarker(runDir, taskNumber, lines.join('\n'));
+    await writeDeadMarker(runDir, taskNumber, lines.join('\n'), projectRoot);
     await recordDeadEvent(specFolderPath, taskNumber, failureReason);
     const extra = failureReason === 'crashed' ? `code: ${spawnResult.exitCode}` : undefined;
     logOutcome(false, failureReason, extra);

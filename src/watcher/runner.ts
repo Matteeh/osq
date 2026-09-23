@@ -76,7 +76,7 @@ export async function runTask(
     extra?: string,
   ): Promise<RunTaskResult> => {
     await measures?.emitEnd();
-    await writeDeadMarker(runDir, taskNumber, marker);
+    await writeDeadMarker(runDir, taskNumber, marker, projectRoot);
     await recordDeadEvent(specFolderPath, taskNumber, reason);
     logOutcome(false, reason, extra);
     return { success: false, reason, error };

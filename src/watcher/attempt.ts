@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolveSymbol } from '../core/foundation/logger.js';
+import { parseFrontmatter } from '../core/spec/parser.js';
 import { asRecord } from '../harness/stream.js';
+import { stripAnsi } from './fingerprint.js';
 
 const ELLIPSIS = '…';
 
@@ -29,17 +31,35 @@ export function formatTaskStartedLine(
 export interface RetryContext {
   readonly attempt: number;
   readonly reason?: string;
-  /** Failed verification output retained by the latest requeued recertification. */
+  /** Failure output retained by the latest retry or requeued recertification. */
   readonly output?: string;
 }
 
 /**
+ * Body after the frontmatter of the dead marker a retry retained, with ANSI
+ * codes stripped. The retained attempt ordinal is one less than the following
+ * execution attempt. A missing marker, as after retrying a regression, yields no
+ * output.
+ */
+async function readRetainedMarkerBody(
+  specFolderPath: string,
+  taskNumber: string,
+  attempt: number,
+): Promise<string | undefined> {
+  const markerPath = path.join(specFolderPath, '.run', 'dead', `${taskNumber}.${attempt - 1}.md`);
+  const content = await fs.readFile(markerPath, 'utf8').catch(() => undefined);
+  if (content === undefined) return undefined;
+  return stripAnsi(parseFrontmatter(content).body);
+}
+
+/**
  * Reconstruct the target-wide execution attempt, prior failure reason, and
- * failed verification output from the append-only event stream. The latest
- * `retry` transition or requeued `recertification` wins, so a watcher restart
- * loses neither the attempt nor the failure context. A passed recertification
- * is not a transition and never advances attempts. Without either event the
- * target starts at attempt 1.
+ * failure output from the append-only event stream. The latest `retry`
+ * transition or requeued `recertification` wins, so a watcher restart loses
+ * neither the attempt nor the failure context. A retry's output is the body of
+ * the dead marker it retained; a requeued recertification keeps its captured
+ * verification output. A passed recertification is not a transition and never
+ * advances attempts. Without either event the target starts at attempt 1.
  */
 export async function readRetryContext(
   specFolderPath: string,
@@ -67,7 +87,7 @@ export async function readRetryContext(
       if (typeof data?.reason === 'string' && data.reason) {
         reason = data.reason;
       }
-      output = undefined;
+      output = await readRetainedMarkerBody(specFolderPath, taskNumber, attempt);
       continue;
     }
     if (event?.type !== 'recertification') continue;

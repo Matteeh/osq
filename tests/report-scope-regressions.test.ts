@@ -268,6 +268,7 @@ describe('report scope-regression history', () => {
       'deadByReason',
       'preSpawnVerify',
       'rejections',
+      'retries',
       'scopeRegressions',
       'sizes',
       'unexplainedReruns',

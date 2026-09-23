@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:02c123aaf12b05c65d7801c28d47dd79a1d5d3660dffe68b34f490a838b03acd"
+build_stamp: "a6650a7"
+exit_code: 0
+scope_files: {"src/core/status/inbox-text.ts":"sha256:af5a952a598864703c8cde4a3f2d00632c00ad618ca04e9445b12d92e0648530","src/core/status/inbox.ts":"sha256:6cb69a3f08641452e1f3f626101d470db6558009a28345f3791f4bb4d6e3c185","src/core/status/state.ts":"sha256:4d021a8d062d7e476a6ca4ef4b3a0a246569cc1af19f9c430212373042006e8c"}
+---
+2026-09-23T16:58:47.193Z

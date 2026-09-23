@@ -147,6 +147,7 @@ describe('report --json', () => {
       'deadByReason',
       'preSpawnVerify',
       'rejections',
+      'retries',
       'scopeRegressions',
       'sizes',
       'unexplainedReruns',
@@ -388,6 +389,11 @@ describe('formatMetricsReport', () => {
           provenance: 'harness-reported',
           coverage: { reportedAttempts: 4, totalAttempts: 7 },
         },
+        retries: {
+          automatic: { count: 2, reachedDone: 1, cost: 0.5, costReportedAttempts: 2 },
+          manual: { count: 1, reachedDone: 0, cost: 0, costReportedAttempts: 0 },
+          stuck: 1,
+        },
         rejections: {
           total: 2,
           byPlannerModel: { 'opencode/big-pickle': 1, unknown: 1 },
@@ -585,6 +591,11 @@ describe('formatMetricsReport', () => {
           formattedTotal: 'not reported',
           provenance: 'harness-reported',
           coverage: { reportedAttempts: 0, totalAttempts: 0 },
+        },
+        retries: {
+          automatic: { count: 0, reachedDone: 0, cost: 0, costReportedAttempts: 0 },
+          manual: { count: 0, reachedDone: 0, cost: 0, costReportedAttempts: 0 },
+          stuck: 0,
         },
         rejections: { total: 0, byPlannerModel: {} },
         sizes: {

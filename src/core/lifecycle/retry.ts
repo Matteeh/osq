@@ -2,13 +2,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import type { OsqConfig } from '../foundation/config.js';
-/* biome-ignore format: single line keeps this file inside the 250-line source budget */ import { type ScopePathAttribution, computeTaskScopeHash, readDoneMarker } from '../run/scope-hash.js';
+import {
+  type ScopePathAttribution,
+  computeTaskScopeHash,
+  readDoneMarker,
+} from '../run/scope-hash.js';
 import { SCOPE_RESOLVER_VERSION } from '../run/scope.js';
 import { runVerificationCommand } from '../run/verification.js';
 import { findSpecFolder } from '../spec/approve.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { getChangeRunDir, getChangesDir } from '../status/layout.js';
+import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
 // Retry renames active failure markers into attempt-suffixed history; a numeric
 // scope regression with an automated done marker is recertified by re-running
@@ -28,6 +33,11 @@ export interface RetryResult {
   readonly attempt: number;
   readonly retainedMarkers: string[];
   readonly recertification?: 'passed' | 'requeued';
+}
+
+export interface RetryOptions {
+  /** True when the watcher, rather than a human, requested this retry. */
+  readonly automatic?: boolean;
 }
 
 async function pathExists(target: string): Promise<boolean> {
@@ -60,17 +70,6 @@ function markerReason(content: string, fallback: string): string {
   return reason || fallback;
 }
 
-async function appendTargetEvent(
-  folderPath: string,
-  target: string,
-  event: { type: string; data: unknown },
-): Promise<void> {
-  const eventsDir = path.join(folderPath, '.run', 'events');
-  await fs.mkdir(eventsDir, { recursive: true });
-  const line = JSON.stringify({ ...event, timestamp: new Date().toISOString() });
-  await fs.appendFile(path.join(eventsDir, `${target}.jsonl`), `${line}\n`, 'utf8');
-}
-
 // Validate approval, running state, and active failure before verification or
 // mutation, then either recertify a scope regression or preserve the failure.
 export async function retrySpec(
@@ -78,6 +77,7 @@ export async function retrySpec(
   specIdOrPrefix: string,
   target: string,
   config: OsqConfig,
+  options: RetryOptions = {},
 ): Promise<RetryResult> {
   const rawTarget = target.trim();
   if (rawTarget !== CHANGE_TARGET && !NUMERIC_TARGET.test(rawTarget)) {
@@ -205,32 +205,32 @@ export async function retrySpec(
     }
   }
 
-  const retainedMarkers: string[] = [];
-  const retain = async (from: string, to: string): Promise<void> => {
-    await fs.rename(from, to);
-    retainedMarkers.push(path.relative(folderPath, to));
-  };
-  if (hasRegressed) {
-    await retain(regressedPath, path.join(regressedDir, `${rawTarget}.${ordinal}.md`));
-  }
-  if (hasDead) {
-    await retain(deadPath, path.join(deadDir, `${rawTarget}.${ordinal}.md`));
-  }
-  // A regressed completion is retained unless a pass recertified it in place.
-  if (hasRegressed && rawTarget !== CHANGE_TARGET && recertification !== 'passed') {
-    const donePath = path.join(runDir, 'done', rawTarget);
-    if (await pathExists(donePath)) {
-      await retain(donePath, path.join(runDir, 'done', `${rawTarget}.${ordinal}`));
-    }
-  }
+  const retainedMarkers = await retainFailureMarkers({
+    runDir,
+    folderPath,
+    target: rawTarget,
+    ordinal,
+    hasDead,
+    hasRegressed,
+    // A regressed completion is retained unless a pass recertified it in place.
+    retainDone: hasRegressed && rawTarget !== CHANGE_TARGET && recertification !== 'passed',
+  });
 
   const attempt = recertification === 'passed' ? ordinal : ordinal + 1;
+  const retryData: { target: string; reason: string; attempt: number; automatic?: boolean } = {
+    target: rawTarget,
+    reason,
+    attempt,
+  };
+  // Only the watcher's automatic retry carries the marker; a human retry
+  // leaves the event without the key, and recertification never carries it.
+  if (options.automatic) retryData.automatic = true;
   await appendTargetEvent(
     folderPath,
     rawTarget,
     recertificationEvent
       ? { type: 'recertification', data: recertificationEvent }
-      : { type: 'retry', data: { target: rawTarget, reason, attempt } },
+      : { type: 'retry', data: retryData },
   );
 
   return {

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c6b95b0d8a1df1e1c6fb1d5434a4e687b32c09c43dced469ce6b35b280a50e67"
+build_stamp: "a6650a7"
+exit_code: 0
+scope_files: {"src/watcher/attempt.ts":"sha256:3a4efa3c1725e109f917e6f267c5730ac05e84d7376eccfa7503a21c0d513a09","tests/retry-attempts.test.ts":"sha256:16d0d8460445bd2a939a865e8d3e5eabcf3d69313a9c6eadd7d0b31a3db588a4"}
+---
+2026-09-23T16:48:34.774Z

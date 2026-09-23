@@ -622,6 +622,57 @@ function formatPreSpawnVerify(events: TimelineEvent[]): string | null {
   return `      Pre-spawn verify: exit ${exitCode}, expected ${expected}, ${outcome}`;
 }
 
+/**
+ * Counts a task's `retry` events split into total and automatic. Automatic
+ * retries are exactly those whose event data carries `automatic: true`.
+ * Returns null when the task recorded no retry, so every other task's output
+ * stays unchanged.
+ */
+function retryCounts(events: TimelineEvent[]): { total: number; automatic: number } | null {
+  let total = 0;
+  let automatic = 0;
+  for (const event of events) {
+    if (event.type !== 'retry') continue;
+    total += 1;
+    if (event.data?.automatic === true) automatic += 1;
+  }
+  return total > 0 ? { total, automatic } : null;
+}
+
+/** Projects a task's `retry` events into the `Retries:` line, or null. */
+function formatRetries(events: TimelineEvent[]): string | null {
+  const counts = retryCounts(events);
+  if (!counts) return null;
+  return `      Retries: ${counts.total} (${counts.automatic} automatic)`;
+}
+
+/**
+ * Projects the task's latest `stuck` event into the `Stuck:` line, but only
+ * while it is still the task's current state. A later `retry` event means a
+ * human already retried the task, so the line disappears. Returns null when
+ * the task recorded no stuck event or is no longer stuck.
+ */
+function formatStuck(events: TimelineEvent[]): string | null {
+  let stuck: TimelineEvent | undefined;
+  let stuckIndex = -1;
+  let lastRetry = -1;
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index];
+    if (event.type === 'retry') {
+      lastRetry = index;
+    } else if (event.type === 'stuck') {
+      stuck = event;
+      stuckIndex = index;
+    }
+  }
+  if (!stuck || lastRetry > stuckIndex) return null;
+  const fingerprint =
+    typeof stuck.data?.fingerprint === 'string' && stuck.data.fingerprint.trim() !== ''
+      ? stuck.data.fingerprint.trim()
+      : 'unavailable';
+  return `      Stuck: same failure twice (${fingerprint})`;
+}
+
 function formatEventData(data?: Record<string, unknown>): string {
   if (!data || Object.keys(data).length === 0) return '';
   const entries = Object.entries(data).map(([k, v]) => `${k}: ${v}`);
@@ -691,6 +742,14 @@ export function formatSpecDetails(details: SpecDetails): string {
       const preSpawnVerify = formatPreSpawnVerify(task.events);
       if (preSpawnVerify) {
         lines.push(preSpawnVerify);
+      }
+      const retries = formatRetries(task.events);
+      if (retries) {
+        lines.push(retries);
+      }
+      const stuck = formatStuck(task.events);
+      if (stuck) {
+        lines.push(stuck);
       }
       if (task.scope.length > 0) {
         lines.push(`      Scope: ${task.scope.join(', ')}`);
