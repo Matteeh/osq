@@ -147,14 +147,15 @@ The metrics and reporting subsystem SHALL distinguish manual task completions fr
 - **THEN** text and JSON output present explicit verified and manual counts whose sum equals done completions
 
 ### Requirement: Execution history
-<!-- source: src/core/report.ts, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
+<!-- source: src/core/report.ts, src/core/report/report-pre-spawn.ts, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
 Reporting SHALL derive execution history only from numbered task event files,
 with task references naming change and task. History SHALL contain attempts,
 multi-attempt tasks, unexplained re-runs, verification exit codes and
-missing exit codes, pre-spawn verify runs and mismatches, dead reasons,
-scope-regression and recertification counts, repository size evidence, and
-harness-reported cost with attempt coverage. Change-level streams and markers
-SHALL NOT invent task execution history.
+missing exit codes, pre-spawn verify runs, mismatches, runs with missing paths,
+and runs by declared start, dead reasons, scope-regression and recertification
+counts, repository size evidence, and harness-reported cost with attempt
+coverage. Change-level streams and markers SHALL NOT invent task execution
+history.
 
 #### Scenario: Attempt accounting
 - **WHEN** task event streams contain `started` events
@@ -171,6 +172,10 @@ SHALL NOT invent task execution history.
 #### Scenario: Pre-spawn verify history
 - **WHEN** task event streams contain `verify_ran` events with `phase: "pre_spawn"`
 - **THEN** `history.preSpawnVerify` counts them as `runs`, counts those with `mismatch: true` as `mismatches`, lists the mismatched task references in sorted order as `mismatchedTasks`, the text report prints `Pre-spawn verify mismatches: <mismatches> of <runs> runs`, and none of them enter verification history
+
+#### Scenario: Pre-spawn runs with missing paths and by declared start
+- **WHEN** pre-spawn events carry `expected` values and some carry a non-empty `missingPaths`
+- **THEN** `history.preSpawnVerify.missingPathRuns` counts runs with a non-empty `missingPaths`, `history.preSpawnVerify.byStart` gives `runs` and `passed` (exit code 0) for each of `red`, `green`, and `any`, and the text prints `Pre-spawn verify with missing paths: <n> of <runs> runs` and `Pre-spawn verify by declared start: red <p> of <r> passed, green <p> of <r> passed, any <p> of <r> passed`
 
 #### Scenario: Scope recertification is not execution
 - **WHEN** scope detection verification or human recertification occurs without an agent start

@@ -8,9 +8,8 @@ import { parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
 import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
-import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
+import { verifyArchiveStep } from './archive-verify.js';
 import { auditScopeRegressions } from './regression.js';
-import { runVerificationGate } from './verify.js';
 
 /**
  * Payload of the change-level `archived` event. The event timestamp is the
@@ -139,59 +138,6 @@ export async function archiveSpecFolder(
   } as unknown as HarnessEvent);
 
   return targetPath;
-}
-
-/** Re-run one command through the shared gate; record a regressed marker/event on failure. */
-async function verifyArchiveStep(
-  projectRoot: string,
-  specFolderPath: string,
-  runDir: string,
-  config: OsqConfig,
-  target: string,
-  command: string,
-): Promise<boolean> {
-  const gate = await runVerificationGate(
-    projectRoot,
-    command,
-    config.timeouts.verifyTimeoutSeconds ?? 600,
-    { specFolderPath, taskNumber: target },
-  );
-  if (gate.passed) return true;
-
-  // The shared gate is the sole `verify_ran` writer; recover its payload.
-  const raw = await fs
-    .readFile(path.join(specFolderPath, '.run', 'events', `${target}.jsonl`), 'utf8')
-    .catch(() => '');
-  let exitCode = 1;
-  let duration = 0;
-  let output = '';
-  for (const line of raw.split('\n')) {
-    if (!line.includes('"verify_ran"')) continue;
-    const data = (JSON.parse(line) as { data?: Record<string, unknown> }).data ?? {};
-    exitCode = typeof data.exitCode === 'number' ? data.exitCode : 1;
-    duration = typeof data.duration === 'number' ? data.duration : 0;
-    output = typeof data.output === 'string' ? data.output : '';
-  }
-
-  const label = target === 'change' ? 'change-level' : `task ${target}`;
-  const content = [
-    '---',
-    'reason: verify_red',
-    `command: ${JSON.stringify(command)}`,
-    `exit_code: ${exitCode}`,
-    '---',
-    `Archive-time ${label} verification failed.`,
-    output.trim() || '(no output)',
-    '',
-  ].join('\n');
-  await writeRegressedMarker(runDir, target, content);
-  await recordRegressedEvent(specFolderPath, target, {
-    exitCode,
-    duration,
-    command,
-    reason: 'verify_red',
-  });
-  return false;
 }
 
 /** Re-run every task verify, then the change-level verify, before archiving. */

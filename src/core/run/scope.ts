@@ -81,6 +81,29 @@ function globToRegExp(glob: string): RegExp {
 }
 
 /**
+ * True when a list of declared scope entries covers one project-relative path:
+ * the path equals an exact entry, or a glob or trailing-directory entry matches
+ * it through the same `globToRegExp` translation the resolver uses. This is a
+ * pure predicate; it never touches the filesystem.
+ */
+export function scopeCoversPath(scope: readonly string[], relativePath: string): boolean {
+  const normalizedPath = normalizeScopeEntry(relativePath);
+
+  for (const rawEntry of scope) {
+    if (typeof rawEntry !== 'string') continue;
+    const normalizedEntry = normalizeScopeEntry(rawEntry);
+    if (normalizedEntry === normalizedPath) {
+      return true;
+    }
+    if (isPatternEntry(normalizedEntry) && globToRegExp(normalizedEntry).test(normalizedPath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * The project-relative directory a pattern can possibly match beneath. Walking
  * only this prefix keeps resolution proportional to the declared scope rather
  * than the whole project tree.

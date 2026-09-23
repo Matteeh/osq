@@ -142,6 +142,10 @@ describe('report approval flag outcomes', () => {
         shown: { fired: 0, troubled: 0 },
         confirmed: { fired: 1, troubled: 0 },
       },
+      verify_starts_conflict: {
+        shown: { fired: 0, troubled: 0 },
+        confirmed: { fired: 0, troubled: 0 },
+      },
       none: {
         shown: { fired: 1, troubled: 0 },
         confirmed: { fired: 0, troubled: 0 },
@@ -186,6 +190,7 @@ describe('report approval flag outcomes', () => {
       'verify_without_test',
       'removed_requirement',
       'unknown_capability',
+      'verify_starts_conflict',
     ]) {
       assert.deepEqual(report.approvalFlags.byFlag[key], {
         shown: { fired: 0, troubled: 0 },
@@ -213,6 +218,11 @@ describe('report approval flag outcomes', () => {
     assert.ok(
       text.includes('none: fired 0 (shown 0, confirmed 0), later trouble 0 (shown 0, confirmed 0)'),
     );
+    assert.ok(
+      text.includes(
+        'verify_starts_conflict: fired 0 (shown 0, confirmed 0), later trouble 0 (shown 0, confirmed 0)',
+      ),
+    );
     assert.ok(text.indexOf('Approval flags:') > text.indexOf('Planning:'));
     assert.ok(text.indexOf('Approval flags:') < text.indexOf('Cycle:'));
 
@@ -226,6 +236,10 @@ describe('report approval flag outcomes', () => {
       confirmed: { fired: 1, troubled: 1 },
     });
     assert.deepEqual(parsed.approvalFlags.byFlag.none, {
+      shown: { fired: 0, troubled: 0 },
+      confirmed: { fired: 0, troubled: 0 },
+    });
+    assert.deepEqual(parsed.approvalFlags.byFlag.verify_starts_conflict, {
       shown: { fired: 0, troubled: 0 },
       confirmed: { fired: 0, troubled: 0 },
     });

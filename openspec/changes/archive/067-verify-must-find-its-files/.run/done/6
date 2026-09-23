@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d1f17e997f2bd8b1561e3fe74b7833d63c88c9ed5f2f71c666875f6d974514a7"
+build_stamp: "498a82a"
+exit_code: 0
+scope_files: {"src/core/status/show.ts":"sha256:d21d3ebb072148327e817dee4c22ae3884a5149565f9bc104255a469260aa725","tests/show-pre-spawn-missing.test.ts":"sha256:85048100fe8754508a70f09fee288dd53d3b7318a4a6a151cbee4fc9392571c5"}
+---
+2026-09-23T21:00:20.177Z

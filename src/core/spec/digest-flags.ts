@@ -1,12 +1,16 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { CLAUDE_PLAN_COMMAND_PATH } from '../foundation/init-blocks.js';
+import { verifyStartsConflictFlags } from './digest-verify-starts.js';
 import type { ApprovalDigestCapability, ApprovalFlag } from './digest.js';
+import type { VerifyStarts } from './parser.js';
 
-/** One task projection: identity plus every resolved scope path, existing or declared. */
+/** One task projection: identity, verify, declared scope, and resolved scope paths. */
 export interface ApprovalFlagTask {
   readonly number: string;
   readonly verify: string;
+  readonly verifyStarts: VerifyStarts;
+  readonly scope: readonly string[];
   readonly paths: readonly string[];
 }
 
@@ -227,5 +231,6 @@ export async function buildApprovalFlags(input: ApprovalFlagInput): Promise<Appr
     ...verifyWithoutTestFlags(input.tasks, input.proposalVerify),
     ...removedRequirementFlags(input.capabilities),
     ...(await unknownCapabilityFlags(input)),
+    ...(await verifyStartsConflictFlags(input.projectRoot, input.tasks)),
   ];
 }

@@ -15,12 +15,24 @@ import {
   formatInRangeWarning,
 } from './openspec-version.js';
 import {
+  type TaskData,
   hasDeclaredWrites,
   parseFrontmatter,
   parseSpecMd,
   parseTaskMd,
   resolveChangeDoc,
 } from './parser.js';
+import {
+  listNamedPaths,
+  missingNamedPaths,
+  namesExistingRepositoryPath,
+  tokenizeVerifyCommand,
+} from './verify-paths.js';
+import {
+  type VerifyStartTask,
+  analyzeVerifyStarts,
+  namedPathCoveredByScopes,
+} from './verify-starts.js';
 
 export { OPENSPEC_EXPECTED_VERSION };
 
@@ -145,9 +157,6 @@ const PACKAGE_MANAGER_SUBCOMMANDS = new Set([
   'workspaces',
 ]);
 
-/** A URL scheme prefix; such a token is never a repository-relative path. */
-const URL_SCHEME_REGEX = /^[a-z][a-z0-9+.-]*:\/\//i;
-
 /**
  * The outcome of analyzing one verify command. Every field is derived without
  * executing or shell-expanding the command.
@@ -161,53 +170,6 @@ export interface VerifyCommandAnalysis {
   readonly missingScript: string | null;
   /** No existing repository path and no recognized package script was named. */
   readonly unresolved: boolean;
-}
-
-/**
- * Split a command into conservative tokens, honoring single and double quotes
- * so a quoted operand stays one token. This never expands shell syntax; it only
- * separates whitespace-delimited operands.
- */
-function tokenizeVerifyCommand(command: string): string[] {
-  const tokens: string[] = [];
-  let current = '';
-  let quote: string | null = null;
-  let hasContent = false;
-
-  for (const char of command) {
-    if (quote !== null) {
-      if (char === quote) {
-        quote = null;
-      } else {
-        current += char;
-      }
-      continue;
-    }
-
-    if (char === '"' || char === "'") {
-      quote = char;
-      hasContent = true;
-      continue;
-    }
-
-    if (/\s/.test(char)) {
-      if (hasContent) {
-        tokens.push(current);
-        current = '';
-        hasContent = false;
-      }
-      continue;
-    }
-
-    current += char;
-    hasContent = true;
-  }
-
-  if (hasContent) {
-    tokens.push(current);
-  }
-
-  return tokens;
 }
 
 /**
@@ -250,31 +212,6 @@ function extractPackageScript(tokens: string[]): string | null {
     return null;
   }
   return first;
-}
-
-/** True when any non-option operand resolves beneath `projectRoot`. */
-async function namesExistingRepositoryPath(
-  projectRoot: string,
-  tokens: string[],
-): Promise<boolean> {
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index];
-    if (!token || token.startsWith('-') || token.startsWith('/')) {
-      continue;
-    }
-    if (token.includes('=') || URL_SCHEME_REGEX.test(token)) {
-      continue;
-    }
-    // A bare first token is the command binary, not a behavioral path; a
-    // path-shaped first token is itself the local behavior being invoked.
-    if (index === 0 && !token.includes('/') && !token.includes('\\')) {
-      continue;
-    }
-    if (await pathExists(path.join(projectRoot, token))) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /**
@@ -840,6 +777,8 @@ interface ResolvedTaskScope {
   readonly taskFile: string;
   readonly taskNumber: string;
   readonly existingPaths: readonly string[];
+  readonly task: TaskData;
+  readonly verifyAnalysis: VerifyCommandAnalysis | null;
 }
 
 /**
@@ -1042,7 +981,17 @@ export async function lintChangeFolder(
     const existingPaths = resolved
       .filter((entry) => entry.absolutePath !== null)
       .map((entry) => entry.relativePath);
-    resolvedTaskScopes.push({ taskFile, taskNumber: taskFile.replace(/\.md$/, ''), existingPaths });
+    const taskLabel = `Task in ${taskFile}`;
+    const analysis = task.verify
+      ? await analyzeVerifyCommand(projectRoot, task.verify, packageScripts)
+      : null;
+    resolvedTaskScopes.push({
+      taskFile,
+      taskNumber: taskFile.replace(/\.md$/, ''),
+      existingPaths,
+      task,
+      verifyAnalysis: analysis,
+    });
 
     // Check: touching an existing test file requires tests.modify: true
     if (!task.testsModify && existingPaths.length > 0) {
@@ -1054,21 +1003,15 @@ export async function lintChangeFolder(
       }
     }
 
-    // Check: verify command empty, placeholder, chained, missing script, or unresolved
-    if (!task.verify) {
+    // Check: verify command empty, placeholder, chained, or missing script
+    if (analysis === null) {
       errors.push(`Task in ${taskFile} verify command is empty`);
-    } else {
-      const taskLabel = `Task in ${taskFile}`;
-      const analysis = await analyzeVerifyCommand(projectRoot, task.verify, packageScripts);
-      if (analysis.placeholder) {
-        errors.push(placeholderVerifyError(taskLabel));
-      } else if (chainsVerifyCommand(task.verify)) {
-        errors.push(`Task in ${taskFile} verify chains commands ("${task.verify}")`);
-      } else if (analysis.missingScript !== null) {
-        errors.push(missingPackageScriptError(taskLabel, analysis.missingScript));
-      } else if (analysis.unresolved) {
-        warnings.push(unresolvedVerifyWarning(taskLabel, task.verify));
-      }
+    } else if (analysis.placeholder) {
+      errors.push(placeholderVerifyError(taskLabel));
+    } else if (chainsVerifyCommand(task.verify)) {
+      errors.push(`Task in ${taskFile} verify chains commands ("${task.verify}")`);
+    } else if (analysis.missingScript !== null) {
+      errors.push(missingPackageScriptError(taskLabel, analysis.missingScript));
     }
 
     // Check: acceptance checklist length
@@ -1091,6 +1034,49 @@ export async function lintChangeFolder(
 
   // Check: shared resolved files across tasks are reported as non-failing warnings
   warnings.push(...collectOverlapWarnings(resolvedTaskScopes));
+
+  // Tasks are analyzed in numeric order so earlier scopes can cover a later
+  // task's new paths. The unresolved-target warning is suppressed when every
+  // missing named path is one the task's own or an earlier task's scope covers.
+  const orderedScopes = [...resolvedTaskScopes].sort((a, b) =>
+    compareNumericPrefix(a.taskFile, b.taskFile),
+  );
+  const earlierScopes: string[][] = [];
+  for (const scope of orderedScopes) {
+    if (scope.verifyAnalysis?.unresolved && !chainsVerifyCommand(scope.task.verify)) {
+      const namedPaths = listNamedPaths(scope.task.verify);
+      const missingPaths = await missingNamedPaths(projectRoot, scope.task.verify);
+      const covered =
+        namedPaths.length > 0 &&
+        missingPaths.every((namedPath) =>
+          namedPathCoveredByScopes(namedPath, [scope.task.scope, ...earlierScopes]),
+        );
+      if (!covered) {
+        warnings.push(unresolvedVerifyWarning(`Task in ${scope.taskFile}`, scope.task.verify));
+      }
+    }
+    earlierScopes.push([...scope.task.scope]);
+  }
+
+  // Check: a task whose verify names a test it creates must declare red, and a
+  // named path no task scope up to this task covers cannot be created at all
+  const verifyStartTasks: VerifyStartTask[] = orderedScopes.map((scope) => ({
+    taskNumber: scope.taskNumber,
+    verify: scope.task.verify,
+    verifyStarts: scope.task.verifyStarts,
+    scope: scope.task.scope,
+  }));
+  const verifyStarts = await analyzeVerifyStarts(projectRoot, verifyStartTasks);
+  for (const contradiction of verifyStarts.contradictions) {
+    warnings.push(
+      `Task in ${contradiction.taskNumber}.md declares verify_starts: ${contradiction.start} but its verify names ${contradiction.path}, which the task creates`,
+    );
+  }
+  for (const uncreatable of verifyStarts.uncreatable) {
+    warnings.push(
+      `Task in ${uncreatable.taskNumber}.md verify names ${uncreatable.path}, which no task in the change can create`,
+    );
+  }
 
   // Check: delta targets resolve against living base specs before approval
   errors.push(...(await verifyDeltaTargets(projectRoot, folderPath, config)));

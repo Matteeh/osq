@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:835ffda286dc54e8d1e85f0d55c628447ec6d677c604471c3aa39eef6e2365f8"
+build_stamp: "498a82a"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:c225179fec97c40ed2776566e011ec6d69fca068fff615a0c472d912aa945c1e","src/watcher/auto-retry.ts":"sha256:b2c9cb61cc98bbbccbefc80b14893a486bf04fbd229ca3fb7ea84399de90ed05","src/watcher/failure-reason.ts":"sha256:9a339097ca5dcda016d13ceb608bff9267504056be3ef3b3dbd2f55f5e0a20ac","src/watcher/outcome.ts":"sha256:c1b0e4c3bd8687d4cf016710f69dd2c7fab7b1d1b2b90fc3c45d62684e56a785","src/watcher/runner.ts":"sha256:e835ac182211d9e5657bf06df1c858f7a8ecccfe7d3ccbce5f53f5ac79394629","src/watcher/task-verify.ts":"sha256:c641ca57195ecca31efb7d6f5a92b9ea249f9090be93ac3314fda8384844f483","tests/verify-path-missing.test.ts":"sha256:c9efe09e947a66178837f8635f4e9588b988fa216209a0bf2fb2fea06f06235e"}
+---
+2026-09-23T20:49:08.182Z

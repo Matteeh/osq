@@ -1,0 +1,104 @@
+{"type":"verify_ran","timestamp":"2026-09-23T20:51:24.545Z","data":{"command":"node --import tsx --test tests/approval-digest-verify-starts.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/approval-digest-verify-starts.test.ts'\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-09-23T20:51:24.882Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":464,"repoFiles":1137,"repoLines":119931,"importFanIn":5,"proposalWords":1147,"taskWords":263,"deltaRequirements":10,"deltaScenarios":48}}
+{"type":"started","timestamp":"2026-09-23T20:51:24.885Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.1.0","attempt":1,"pid":1554003,"timeoutSeconds":1800,"version":"0.1.0","commit":"498a82a"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:28.989Z","data":{"tool":"bash","summary":"ls openspec/changes/067-verify-must-find-its-files/ openspec"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:29.090Z","data":{"tool":"bash","summary":"cat openspec/changes/067-verify-must-find-its-files/tasks/3."}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:29.142Z","data":{"promptTokens":60217,"candidateTokens":174,"totalTokens":69785,"cachedTokens":9344,"reasoningTokens":50,"cost":0.009194982}}
+{"type":"tool","timestamp":"2026-09-23T20:51:30.734Z","data":{"tool":"bash","summary":"cat openspec/changes/067-verify-must-find-its-files/.run/res"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:30.768Z","data":{"tool":"bash","summary":"cat src/core/spec/verify-starts.ts; echo =====; cat src/core"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:30.813Z","data":{"promptTokens":1437,"candidateTokens":169,"totalTokens":71399,"cachedTokens":69760,"reasoningTokens":33,"cost":0.00054603}}
+{"type":"tool","timestamp":"2026-09-23T20:51:32.486Z","data":{"tool":"bash","summary":"cat -n src/core/spec/digest.ts; echo =====; wc -l src/core/s"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:32.666Z","data":{"tool":"bash","summary":"cat -n src/core/spec/digest-flags.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:32.718Z","data":{"promptTokens":3436,"candidateTokens":113,"totalTokens":74859,"cachedTokens":71296,"reasoningTokens":14,"cost":0.000805488}}
+{"type":"tool","timestamp":"2026-09-23T20:51:34.615Z","data":{"tool":"bash","summary":"cat -n tests/approval-digest.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:34.647Z","data":{"promptTokens":5548,"candidateTokens":47,"totalTokens":80408,"cachedTokens":74752,"reasoningTokens":61,"cost":0.001121256}}
+{"type":"tool","timestamp":"2026-09-23T20:51:38.609Z","data":{"tool":"bash","summary":"grep -n \"verify_starts\\|contradict\\|uncreatable\\|analyzeVeri"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:38.835Z","data":{"tool":"bash","summary":"grep -n \"VerifyStarts\\|verifyStarts\" src/core/spec/parser.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:38.891Z","data":{"promptTokens":4728,"candidateTokens":161,"totalTokens":86018,"cachedTokens":80384,"reasoningTokens":745,"cost":0.001493952}}
+{"type":"tool","timestamp":"2026-09-23T20:51:40.419Z","data":{"tool":"bash","summary":"cat -n src/core/spec/approve.ts"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:40.515Z","data":{"tool":"bash","summary":"cat -n tests/approve-confirm.test.ts | head -120"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:40.551Z","data":{"promptTokens":409,"candidateTokens":88,"totalTokens":86577,"cachedTokens":86016,"reasoningTokens":64,"cost":0.000410598}}
+{"type":"tool","timestamp":"2026-09-23T20:51:42.413Z","data":{"tool":"bash","summary":"grep -n \"approvalFlags\\|ApprovalFlagId\\|ids\" src/core/run/ma"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:42.610Z","data":{"tool":"bash","summary":"grep -rn \"approvalFlags\" src/core/report/approval-flags.ts |"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:42.657Z","data":{"promptTokens":3265,"candidateTokens":148,"totalTokens":89995,"cachedTokens":86528,"reasoningTokens":54,"cost":0.000870534}}
+{"type":"tool","timestamp":"2026-09-23T20:51:48.810Z","data":{"tool":"bash","summary":"cat -n tests/planning-observed-helpers.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:48.870Z","data":{"promptTokens":1135,"candidateTokens":48,"totalTokens":92361,"cachedTokens":89984,"reasoningTokens":1194,"cost":0.001185402}}
+{"type":"tool","timestamp":"2026-09-23T20:51:51.272Z","data":{"tool":"bash","summary":"find templates -type f | head -50; echo ---; cat templates/c"}}
+{"type":"tool","timestamp":"2026-09-23T20:51:51.418Z","data":{"tool":"bash","summary":"grep -rn \"createNewSpec\" src/core/foundation/new.ts | head; "}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:51.448Z","data":{"promptTokens":1678,"candidateTokens":137,"totalTokens":94184,"cachedTokens":92288,"reasoningTokens":81,"cost":0.000659364}}
+{"type":"tool","timestamp":"2026-09-23T20:51:53.438Z","data":{"tool":"bash","summary":"sed -n '140,230p' src/core/foundation/new.ts; echo ---TASKS_"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:53.495Z","data":{"promptTokens":1150,"candidateTokens":92,"totalTokens":95359,"cachedTokens":94080,"reasoningTokens":37,"cost":0.00053214}}
+{"type":"tool","timestamp":"2026-09-23T20:51:55.234Z","data":{"tool":"bash","summary":"cat templates/openspec/schemas/osq/templates/spec.md"}}
+{"type":"tokens","timestamp":"2026-09-23T20:51:55.261Z","data":{"promptTokens":1259,"candidateTokens":51,"totalTokens":96602,"cachedTokens":95232,"reasoningTokens":60,"cost":0.000541146}}
+{"type":"tool","timestamp":"2026-09-23T20:52:03.651Z","data":{"tool":"bash","summary":"grep -rn \"ApprovalFlagTask\\|buildApprovalFlags\\|ApprovalFlag"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:03.712Z","data":{"promptTokens":179,"candidateTokens":64,"totalTokens":98550,"cachedTokens":96512,"reasoningTokens":1795,"cost":0.001431786}}
+{"type":"tool","timestamp":"2026-09-23T20:52:06.119Z","data":{"tool":"bash","summary":"sed -n '185,270p' src/core/spec/parser.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:06.160Z","data":{"promptTokens":448,"candidateTokens":52,"totalTokens":99088,"cachedTokens":98432,"reasoningTokens":156,"cost":0.000487296}}
+{"type":"tool","timestamp":"2026-09-23T20:52:17.449Z","data":{"tool":"bash","summary":"grep -n \"installFakeValidator\" -A 20 tests/helpers.ts | head"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:17.497Z","data":{"promptTokens":675,"candidateTokens":58,"totalTokens":102023,"cachedTokens":99072,"reasoningTokens":2218,"cost":0.001764066}}
+{"type":"tool","timestamp":"2026-09-23T20:52:24.422Z","data":{"tool":"write","summary":"tests/approval-digest-verify-starts.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:24.464Z","data":{"promptTokens":238,"candidateTokens":2044,"totalTokens":104306,"cachedTokens":102016,"reasoningTokens":8,"cost":0.001572948}}
+{"type":"tool","timestamp":"2026-09-23T20:52:27.632Z","data":{"tool":"write","summary":"src/core/spec/digest-verify-starts.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:28.515Z","data":{"promptTokens":258,"candidateTokens":482,"totalTokens":104926,"cachedTokens":104064,"reasoningTokens":122,"cost":0.000713292}}
+{"type":"tool","timestamp":"2026-09-23T20:52:31.227Z","data":{"tool":"edit","summary":"src/core/spec/digest-flags.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:31.261Z","data":{"promptTokens":238,"candidateTokens":296,"totalTokens":105288,"cachedTokens":104704,"reasoningTokens":50,"cost":0.000557412}}
+{"type":"tool","timestamp":"2026-09-23T20:52:33.565Z","data":{"tool":"edit","summary":"src/core/spec/digest-flags.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:33.607Z","data":{"promptTokens":215,"candidateTokens":153,"totalTokens":105629,"cachedTokens":105088,"reasoningTokens":173,"cost":0.000543114}}
+{"type":"text","timestamp":"2026-09-23T20:52:35.120Z","data":{"text":"Now update `digest.ts`:"}}
+{"type":"tool","timestamp":"2026-09-23T20:52:35.128Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:35.167Z","data":{"promptTokens":172,"candidateTokens":136,"totalTokens":105780,"cachedTokens":105472,"reasoningTokens":0,"cost":0.000423816}}
+{"type":"tool","timestamp":"2026-09-23T20:52:37.103Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:37.145Z","data":{"promptTokens":195,"candidateTokens":158,"totalTokens":105984,"cachedTokens":105600,"reasoningTokens":31,"cost":0.00045945}}
+{"type":"tool","timestamp":"2026-09-23T20:52:38.947Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:38.974Z","data":{"promptTokens":143,"candidateTokens":185,"totalTokens":106184,"cachedTokens":105856,"reasoningTokens":0,"cost":0.000450018}}
+{"type":"tool","timestamp":"2026-09-23T20:52:40.918Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:40.952Z","data":{"promptTokens":215,"candidateTokens":182,"totalTokens":106381,"cachedTokens":105984,"reasoningTokens":0,"cost":0.000459402}}
+{"type":"tool","timestamp":"2026-09-23T20:52:42.669Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:42.710Z","data":{"promptTokens":156,"candidateTokens":202,"totalTokens":106598,"cachedTokens":106240,"reasoningTokens":0,"cost":0.00046332}}
+{"type":"tool","timestamp":"2026-09-23T20:52:44.579Z","data":{"tool":"bash","summary":"node --import tsx --test tests/approval-digest-verify-starts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:44.615Z","data":{"promptTokens":245,"candidateTokens":63,"totalTokens":106684,"cachedTokens":106368,"reasoningTokens":8,"cost":0.000398454}}
+{"type":"tool","timestamp":"2026-09-23T20:52:46.675Z","data":{"tool":"bash","summary":"wc -l src/core/spec/digest.ts src/core/spec/digest-flags.ts "}}
+{"type":"tool","timestamp":"2026-09-23T20:52:47.099Z","data":{"tool":"bash","summary":"node --import tsx --test tests/approval-digest.test.ts tests"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:47.129Z","data":{"promptTokens":249,"candidateTokens":142,"totalTokens":107095,"cachedTokens":106624,"reasoningTokens":80,"cost":0.000490422}}
+{"type":"tool","timestamp":"2026-09-23T20:52:49.001Z","data":{"tool":"bash","summary":"cat package.json | grep -n \"\\\"scripts\\\"\" -A 25"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:49.038Z","data":{"promptTokens":467,"candidateTokens":52,"totalTokens":107573,"cachedTokens":107008,"reasoningTokens":46,"cost":0.000449874}}
+{"type":"tool","timestamp":"2026-09-23T20:52:54.194Z","data":{"tool":"bash","summary":"pnpm typecheck:cli 2>&1 | tail -20"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:54.224Z","data":{"promptTokens":529,"candidateTokens":50,"totalTokens":108099,"cachedTokens":107520,"reasoningTokens":0,"cost":0.00043191}}
+{"type":"tool","timestamp":"2026-09-23T20:52:56.928Z","data":{"tool":"edit","summary":"src/core/spec/digest-verify-starts.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:52:56.976Z","data":{"promptTokens":190,"candidateTokens":173,"totalTokens":108517,"cachedTokens":108032,"reasoningTokens":122,"cost":0.000529596}}
+{"type":"tool","timestamp":"2026-09-23T20:53:01.736Z","data":{"tool":"bash","summary":"pnpm typecheck:cli 2>&1 | tail -20"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:01.770Z","data":{"promptTokens":244,"candidateTokens":50,"totalTokens":108582,"cachedTokens":108288,"reasoningTokens":0,"cost":0.000391464}}
+{"type":"tool","timestamp":"2026-09-23T20:53:04.102Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -20"}}
+{"type":"tool","timestamp":"2026-09-23T20:53:04.720Z","data":{"tool":"bash","summary":"node --import tsx --test tests/line-budget.test.ts tests/imp"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:04.751Z","data":{"promptTokens":223,"candidateTokens":109,"totalTokens":108832,"cachedTokens":108416,"reasoningTokens":84,"cost":0.000474498}}
+{"type":"tool","timestamp":"2026-09-23T20:53:07.689Z","data":{"tool":"bash","summary":"pnpm exec biome check src/core/spec/digest-verify-starts.ts "}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:07.722Z","data":{"promptTokens":652,"candidateTokens":61,"totalTokens":109842,"cachedTokens":108800,"reasoningTokens":329,"cost":0.0006582}}
+{"type":"tool","timestamp":"2026-09-23T20:53:09.714Z","data":{"tool":"edit","summary":"src/core/spec/digest-verify-starts.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:09.759Z","data":{"promptTokens":375,"candidateTokens":182,"totalTokens":110404,"cachedTokens":109824,"reasoningTokens":23,"cost":0.000508722}}
+{"type":"tool","timestamp":"2026-09-23T20:53:11.365Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -15"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:11.402Z","data":{"promptTokens":211,"candidateTokens":47,"totalTokens":110466,"cachedTokens":110208,"reasoningTokens":0,"cost":0.000390474}}
+{"type":"tool","timestamp":"2026-09-23T20:53:12.973Z","data":{"tool":"bash","summary":"pnpm exec biome check src/core/spec/digest.ts 2>&1 | head -4"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:13.010Z","data":{"promptTokens":166,"candidateTokens":57,"totalTokens":110699,"cachedTokens":110464,"reasoningTokens":12,"cost":0.000397692}}
+{"type":"tool","timestamp":"2026-09-23T20:53:15.224Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | head -50"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:15.260Z","data":{"promptTokens":260,"candidateTokens":47,"totalTokens":110790,"cachedTokens":110464,"reasoningTokens":19,"cost":0.000409992}}
+{"type":"tool","timestamp":"2026-09-23T20:53:17.073Z","data":{"tool":"edit","summary":"src/core/spec/digest-flags.ts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:17.102Z","data":{"promptTokens":481,"candidateTokens":224,"totalTokens":111425,"cachedTokens":110720,"reasoningTokens":0,"cost":0.00053871}}
+{"type":"tool","timestamp":"2026-09-23T20:53:18.925Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -8"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:18.955Z","data":{"promptTokens":208,"candidateTokens":47,"totalTokens":111487,"cachedTokens":111232,"reasoningTokens":0,"cost":0.000393096}}
+{"type":"tool","timestamp":"2026-09-23T20:53:21.969Z","data":{"tool":"bash","summary":"node --import tsx --test tests/approval-digest-verify-starts"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:22.014Z","data":{"promptTokens":185,"candidateTokens":63,"totalTokens":111889,"cachedTokens":111360,"reasoningTokens":281,"cost":0.00056823}}
+{"type":"tool","timestamp":"2026-09-23T20:53:52.414Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -40"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:52.451Z","data":{"promptTokens":209,"candidateTokens":65,"totalTokens":112018,"cachedTokens":111744,"reasoningTokens":0,"cost":0.000405582}}
+{"type":"tool","timestamp":"2026-09-23T20:53:55.112Z","data":{"tool":"bash","summary":"git status --short"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:55.157Z","data":{"promptTokens":564,"candidateTokens":40,"totalTokens":112957,"cachedTokens":112000,"reasoningTokens":353,"cost":0.0006564}}
+{"type":"tool","timestamp":"2026-09-23T20:53:57.934Z","data":{"tool":"write","summary":"openspec/changes/067-verify-must-find-its-files/.run/results/4.md"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:57.965Z","data":{"promptTokens":304,"candidateTokens":423,"totalTokens":113673,"cachedTokens":112896,"reasoningTokens":50,"cost":0.000668088}}
+{"type":"tool","timestamp":"2026-09-23T20:53:59.841Z","data":{"tool":"edit","summary":"openspec/changes/067-verify-must-find-its-files/.run/results/4.md"}}
+{"type":"tokens","timestamp":"2026-09-23T20:53:59.905Z","data":{"promptTokens":153,"candidateTokens":120,"totalTokens":113887,"cachedTokens":113536,"reasoningTokens":78,"cost":0.000482358}}
+{"type":"text","timestamp":"2026-09-23T20:54:03.703Z","data":{"text":"Task 4 is complete.\n\n## Summary\n\n**What I did**\n\n1. Added `verify_starts_conflict` to the `ApprovalFlagId` union in `src/core/spec/digest.ts`, emitted after `unknown_capability`.\n2. Extended `ApprovalFlagTask` with the parsed task's declared `verifyStarts` and `scope` entries; `ResolvedTask` and `buildApprovalDigest` now carry and fill them.\n3. Created `src/core/spec/digest-verify-starts.ts`, which delegates to the shared `analyzeVerifyStarts` rule in `verify-starts.ts` and maps each contradiction to one flag labelled `verify starts conflict in task <n>`, with an excerpt naming the path and declared start. `buildApprovalFlags` appends it last. `digest-flags.ts` is 236 lines (under the 250 budget).\n4. Added `tests/approval-digest-verify-starts.test.ts`: `green`/`any` tasks raise one flag, ordering after `unknown_capability`, `red` raises none, earlier-task-scope coverage suppresses the flag, and `approveSpec` records the id in the manifest `approvalFlags`.\n\n**Verification**\n- Task verify (`node --import tsx --test tests/approval-digest-verify-starts.test.ts`): 5/5 pass.\n- Frozen tests (`approval-digest`, `approval-digest-docs`, `show-digest`, `approve-confirm`): all pass.\n- `pnpm verify` (typechecks, build, full suite, lint) passed.\n\nTouched: `src/core/spec/digest.ts`, `src/core/spec/digest-flags.ts`, `src/core/spec/digest-verify-starts.ts`, `tests/approval-digest-verify-starts.test.ts`"}}
+{"type":"tokens","timestamp":"2026-09-23T20:54:03.744Z","data":{"promptTokens":238,"candidateTokens":400,"totalTokens":114470,"cachedTokens":113664,"reasoningTokens":168,"cost":0.000717492}}
+{"type":"exited","timestamp":"2026-09-23T20:54:03.858Z","data":{"exitCode":0,"pid":1554003,"timedOut":false,"elapsedSeconds":159}}
+{"type":"verify_ran","timestamp":"2026-09-23T20:54:04.248Z","data":{"command":"node --import tsx --test tests/approval-digest-verify-starts.test.ts","exitCode":0,"duration":0.3,"output":"▶ approval digest verify start conflict\n  ✔ flags a green or any task whose verify names a test it creates (22.949449ms)\n  ✔ emits the conflict last, after unknown_capability (9.516245ms)\n  ✔ does not flag a red task that creates its own test (5.424669ms)\n  ✔ does not flag a path an earlier task scope covers, whatever it declares (13.876641ms)\n  ✔ records the new id in the manifest approvalFlags through approveSpec (80.728479ms)\n✔ approval digest verify start conflict (133.680448ms)\nℹ tests 5\nℹ suites 1\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 267.625385\n"}}
+{"type":"measures","timestamp":"2026-09-23T20:54:32.123Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":464,"repoFiles":1137,"repoLines":119931,"importFanIn":5,"proposalWords":1147,"taskWords":263,"deltaRequirements":10,"deltaScenarios":48,"changedFiles":4,"changedLines":277,"scopeHashes":{"src/core/spec/digest-flags.ts":{"before":"sha256:daf432866e13ba163e5373b93e225a88905ef78e18b9f05849f3783ae2e32ca4","after":"sha256:f127b1076b07aa5795a30599cbe698ff74cb8fc6c5725b9af2aaae267fcf37ac"},"src/core/spec/digest-verify-starts.ts":{"before":null,"after":"sha256:ffc1b6dd4a94c988f8eedc3a142ae4313c2a1a1bacc5ff7bb48e4047d76de003"},"src/core/spec/digest.ts":{"before":"sha256:cb944d298fe90b2ce1dd010f80c6578dfde3d16865147ab507f5cf83c0740f1c","after":"sha256:56d4b7128b416a7b668426db4b9491ab114e3029dd992a8aa3096c00a55a604f"},"tests/approval-digest-verify-starts.test.ts":{"before":null,"after":"sha256:9c88aade50dc7926001f00f9ce3790143ddd10457b951a4017016fe424031efa"}}}}
+{"type":"done","timestamp":"2026-09-23T20:54:32.125Z","data":{"task":"4"}}
+{"type":"verify_ran","timestamp":"2026-09-23T21:03:18.799Z","data":{"command":"node --import tsx --test tests/approval-digest-verify-starts.test.ts","exitCode":0,"duration":0.27,"output":"▶ approval digest verify start conflict\n  ✔ flags a green or any task whose verify names a test it creates (20.96779ms)\n  ✔ emits the conflict last, after unknown_capability (8.519364ms)\n  ✔ does not flag a red task that creates its own test (5.287058ms)\n  ✔ does not flag a path an earlier task scope covers, whatever it declares (12.749784ms)\n  ✔ records the new id in the manifest approvalFlags through approveSpec (67.904883ms)\n✔ approval digest verify start conflict (116.469328ms)\nℹ tests 5\nℹ suites 1\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 243.82001\n"}}

@@ -25,6 +25,7 @@ import {
   parseEventLines,
   parseTokenEvent,
 } from './report-events.js';
+import { type PreSpawnStartCounts, observePreSpawnEvents } from './report-pre-spawn.js';
 import {
   type RetryGroupHistory,
   type RetryHistory,
@@ -185,6 +186,10 @@ export interface PreSpawnVerifyHistory {
   readonly runs: number;
   readonly mismatches: number;
   readonly mismatchedTasks: readonly string[];
+  /** Runs whose pre-spawn event recorded a non-empty `missingPaths`. */
+  readonly missingPathRuns: number;
+  /** Runs and zero-exit passes for each declared `expected` start state. */
+  readonly byStart: PreSpawnStartCounts;
 }
 
 /**
@@ -974,6 +979,12 @@ export async function getMetricsReport(
   let preSpawnRuns = 0;
   let preSpawnMismatches = 0;
   const preSpawnMismatchedTasks: string[] = [];
+  let preSpawnMissingPathRuns = 0;
+  const preSpawnByStart = {
+    red: { runs: 0, passed: 0 },
+    green: { runs: 0, passed: 0 },
+    any: { runs: 0, passed: 0 },
+  };
   let totalCost = 0;
   const perSpecCost: Record<string, number> = {};
   let reportedCostAttempts = 0;
@@ -1009,6 +1020,12 @@ export async function getMetricsReport(
 
     const events = parseEventLines(content);
     const observation = observeTaskStream(events);
+    const preSpawnEvents = observePreSpawnEvents(events);
+    preSpawnMissingPathRuns += preSpawnEvents.missingPathRuns;
+    for (const start of ['red', 'green', 'any'] as const) {
+      preSpawnByStart[start].runs += preSpawnEvents.byStart[start].runs;
+      preSpawnByStart[start].passed += preSpawnEvents.byStart[start].passed;
+    }
     retries = addRetryHistory(retries, observeRetries(events));
     const taskAttempts = observation.attempts;
     attemptsTotal += taskAttempts;
@@ -1326,6 +1343,8 @@ export async function getMetricsReport(
         runs: preSpawnRuns,
         mismatches: preSpawnMismatches,
         mismatchedTasks: preSpawnMismatchedTasks,
+        missingPathRuns: preSpawnMissingPathRuns,
+        byStart: preSpawnByStart,
       },
       cost: {
         total: totalCost,
@@ -1660,6 +1679,13 @@ export function formatMetricsReport(
   lines.push(`  Verification runs missing exit code: ${report.history.verifyRuns.missingExitCode}`);
   lines.push(
     `  Pre-spawn verify mismatches: ${report.history.preSpawnVerify.mismatches} of ${report.history.preSpawnVerify.runs} runs`,
+  );
+  lines.push(
+    `  Pre-spawn verify with missing paths: ${report.history.preSpawnVerify.missingPathRuns} of ${report.history.preSpawnVerify.runs} runs`,
+  );
+  const preSpawnByStart = report.history.preSpawnVerify.byStart;
+  lines.push(
+    `  Pre-spawn verify by declared start: red ${preSpawnByStart.red.passed} of ${preSpawnByStart.red.runs} passed, green ${preSpawnByStart.green.passed} of ${preSpawnByStart.green.runs} passed, any ${preSpawnByStart.any.passed} of ${preSpawnByStart.any.runs} passed`,
   );
   lines.push(...formatRetryHistoryLines(report.history.retries));
   lines.push(

@@ -49,7 +49,10 @@ your complete prompt; read it and follow it exactly.
   only together are one task.
 - The watcher runs each task's `verify` once before the first attempt and expects
   it to fail. A task whose `verify` should already pass before any change, such as
-  a refactor, declares `verify_starts: green`; use `any` when either start is fine.
+  a refactor, declares `verify_starts: green`. A task whose `verify` names a test
+  the task creates declares `verify_starts: red`; a new test file may share that
+  verify with existing tests. `any` is only for a task that can honestly start
+  either way.
 - A file belongs to one task. Before each later task, the watcher re-hashes the
   resolved `scope` of every done task; any change halts the change until a human
   runs `osq retry`. Globs resolve again at every audit, so a broad glob also

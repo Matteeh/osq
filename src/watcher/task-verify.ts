@@ -2,6 +2,7 @@ import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { VerificationResult } from '../core/run/verification.js';
 import type { TaskData, VerifyStarts } from '../core/spec/parser.js';
+import { missingNamedPaths } from '../core/spec/verify-paths.js';
 import { readRetryContext } from './attempt.js';
 import type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
@@ -14,11 +15,19 @@ export type FailFn = (
   extra?: string,
 ) => Promise<RunTaskResult>;
 
-/** True when a first-attempt declared start state disagrees with the observed result. */
-export function isPreSpawnMismatch(expected: VerifyStarts, result: VerificationResult): boolean {
+/**
+ * True when a first-attempt declared start state disagrees with the observed
+ * result. A `red` verify that passes only because a named path is absent is not
+ * a mismatch: the honest red start has not been observed yet.
+ */
+export function isPreSpawnMismatch(
+  expected: VerifyStarts,
+  result: VerificationResult,
+  missingPaths: readonly string[] = [],
+): boolean {
   if (expected === 'any') return false;
   const passed = result.exitCode === 0 && !result.error && !result.timedOut;
-  return expected === 'red' ? passed : !passed;
+  return expected === 'red' ? passed && missingPaths.length === 0 : !passed;
 }
 
 /** One warning line naming the task, its expected start state, and exit code. */
@@ -76,6 +85,7 @@ export async function runPreSpawnVerify(
   if (attempt !== 1) return { ok: true };
 
   const expected = taskData.verifyStarts;
+  const missingPaths = await missingNamedPaths(projectRoot, taskData.verify);
   const result = await runVerificationGateResult(
     projectRoot,
     taskData.verify,
@@ -86,11 +96,12 @@ export async function runPreSpawnVerify(
       extraData: (value) => ({
         phase: 'pre_spawn',
         expected,
-        mismatch: isPreSpawnMismatch(expected, value),
+        ...(missingPaths.length > 0 ? { missingPaths } : {}),
+        mismatch: isPreSpawnMismatch(expected, value, missingPaths),
       }),
     },
   );
-  if (!isPreSpawnMismatch(expected, result)) return { ok: true };
+  if (!isPreSpawnMismatch(expected, result, missingPaths)) return { ok: true };
   if (mode === 'warn') {
     logger?.warn(formatPreSpawnWarning(taskNumber, expected, result.exitCode));
     return { ok: true };
@@ -100,6 +111,44 @@ export async function runPreSpawnVerify(
     marker: formatPreSpawnDeadMarker(taskData.verify, expected, result),
     error: `Pre-spawn verify precondition not met: expected ${expected}, exit code ${result.exitCode}`,
   };
+}
+
+/**
+ * Dead marker for a verify that names a path the tree does not contain: the
+ * reason and quoted command in frontmatter, then one line per missing path.
+ */
+export function formatMissingPathDeadMarker(
+  verifyCommand: string,
+  missingPaths: readonly string[],
+): string {
+  return [
+    '---',
+    'reason: verify_path_missing',
+    `command: "${verifyCommand}"`,
+    '---',
+    'The task verify names paths that do not exist:',
+    ...missingPaths.map((missing) => `- ${missing}`),
+    '',
+  ].join('\n');
+}
+
+/**
+ * After the agent exits and its result is ensured, refuse to run a verify that
+ * names a missing path. Returns null when every named path exists, so a command
+ * that names none always proceeds.
+ */
+export async function checkMissingVerifyPaths(
+  projectRoot: string,
+  taskData: TaskData,
+  fail: FailFn,
+): Promise<RunTaskResult | null> {
+  const missing = await missingNamedPaths(projectRoot, taskData.verify);
+  if (missing.length === 0) return null;
+  return fail(
+    'verify_path_missing',
+    formatMissingPathDeadMarker(taskData.verify, missing),
+    `Verify names missing paths: ${missing.join(', ')}`,
+  );
 }
 
 /**

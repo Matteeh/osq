@@ -126,6 +126,7 @@ describe('report --json', () => {
       'sensitive_path',
       'shared_file',
       'unknown_capability',
+      'verify_starts_conflict',
       'verify_without_test',
     ]);
     assert.deepEqual((parsed.approvalFlags as Record<string, unknown>).changes, 0);
@@ -181,6 +182,24 @@ describe('report --json', () => {
       'missingExitCode',
       'total',
     ]);
+    assert.deepEqual(sortedKeys(parsed.history.preSpawnVerify as object), [
+      'byStart',
+      'mismatchedTasks',
+      'mismatches',
+      'missingPathRuns',
+      'runs',
+    ]);
+    assert.deepEqual(parsed.history.preSpawnVerify, {
+      runs: 0,
+      mismatches: 0,
+      mismatchedTasks: [],
+      missingPathRuns: 0,
+      byStart: {
+        red: { runs: 0, passed: 0 },
+        green: { runs: 0, passed: 0 },
+        any: { runs: 0, passed: 0 },
+      },
+    });
     assert.deepEqual(sortedKeys(parsed.history.cost as object), [
       'coverage',
       'formattedTotal',
@@ -381,7 +400,17 @@ describe('formatMetricsReport', () => {
         deadByReason: { 'reason-z': 7 },
         unexplainedReruns: { total: 2, byTask: { '001-spec/1': 2 } },
         verifyRuns: { total: 3, missingExitCode: 1, byTask: { '001-spec/1': [0, null, 1] } },
-        preSpawnVerify: { runs: 2, mismatches: 1, mismatchedTasks: ['001-spec/1'] },
+        preSpawnVerify: {
+          runs: 2,
+          mismatches: 1,
+          mismatchedTasks: ['001-spec/1'],
+          missingPathRuns: 1,
+          byStart: {
+            red: { runs: 1, passed: 0 },
+            green: { runs: 1, passed: 1 },
+            any: { runs: 0, passed: 0 },
+          },
+        },
         cost: {
           total: 0.5,
           perSpec: { '001-spec': 0.5 },
@@ -584,7 +613,17 @@ describe('formatMetricsReport', () => {
         deadByReason: {},
         unexplainedReruns: { total: 0, byTask: {} },
         verifyRuns: { total: 0, missingExitCode: 0, byTask: {} },
-        preSpawnVerify: { runs: 0, mismatches: 0, mismatchedTasks: [] },
+        preSpawnVerify: {
+          runs: 0,
+          mismatches: 0,
+          mismatchedTasks: [],
+          missingPathRuns: 0,
+          byStart: {
+            red: { runs: 0, passed: 0 },
+            green: { runs: 0, passed: 0 },
+            any: { runs: 0, passed: 0 },
+          },
+        },
         cost: {
           total: 0,
           perSpec: {},

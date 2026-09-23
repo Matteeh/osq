@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:977183cbc91ed4767e7c0ad8008b271ce3197d826616778943c70c492faf882f"
+build_stamp: "498a82a"
+exit_code: 0
+scope_files: {"src/core/spec/digest-flags.ts":"sha256:f127b1076b07aa5795a30599cbe698ff74cb8fc6c5725b9af2aaae267fcf37ac","src/core/spec/digest-verify-starts.ts":"sha256:ffc1b6dd4a94c988f8eedc3a142ae4313c2a1a1bacc5ff7bb48e4047d76de003","src/core/spec/digest.ts":"sha256:56d4b7128b416a7b668426db4b9491ab114e3029dd992a8aa3096c00a55a604f","tests/approval-digest-verify-starts.test.ts":"sha256:9c88aade50dc7926001f00f9ce3790143ddd10457b951a4017016fe424031efa"}
+---
+2026-09-23T20:54:32.125Z

@@ -428,12 +428,14 @@ The engine SHALL record regression failures under `.run/regressed/`, emit typed 
 - **THEN** status output displays `[!] <task>. <title> [regressed]` and marks the spec overview as `[regressed]`
 
 ### Requirement: Archive-time verification re-run
-<!-- source: src/watcher/archiver.ts, src/watcher/verify.ts, tests/archive-verification.test.ts, tests/plan-prompt-lifecycle.test.ts -->
+<!-- source: src/watcher/archiver.ts, src/watcher/archive-verify.ts, src/watcher/verify.ts, tests/archive-verification.test.ts, tests/plan-prompt-lifecycle.test.ts, tests/archive-verify-path-missing.test.ts -->
 Before archiving, the watcher SHALL re-run every task verification and the
 change-level verification against the final tree after scope recertification.
-When all gates pass, it SHALL delete root-level `plan-prompt.md`, apply deltas,
-relocate the folder, project completed checkboxes, and record the archive event.
-The transient prompt SHALL not participate in any archive tree hash.
+A command naming a missing path SHALL be recorded as a regression with reason
+`verify_path_missing` without running. When all gates pass, it SHALL delete
+root-level `plan-prompt.md`, apply deltas, relocate the folder, project
+completed checkboxes, and record the archive event. The transient prompt SHALL
+not participate in any archive tree hash.
 
 #### Scenario: Archive verification passes and seals change
 - **WHEN** every task verification and the change-level verify command pass against the final tree
@@ -454,6 +456,10 @@ The transient prompt SHALL not participate in any archive tree hash.
 #### Scenario: Archive verification fails
 - **WHEN** a task or change-level final verification fails
 - **THEN** the active change and its prompt remain available for diagnosis and no archive event is written
+
+#### Scenario: Named path missing at archive
+- **WHEN** a done task's verify names a file that no longer exists
+- **THEN** that task gets a regressed marker with reason `verify_path_missing` listing the path, the command does not run, and the change stays unarchived
 
 ### Requirement: Deterministic delta spec archival and appender removal
 <!-- source: src/watcher/archiver.ts, tests/archiver.test.ts, tests/living-specs-delta-equivalence.test.ts -->
@@ -1047,25 +1053,30 @@ and scope-audit verification SHALL NOT emit pre-spawn events.
 - **THEN** no pre-spawn verify runs for that attempt
 
 ### Requirement: Pre-spawn verify event and mismatch handling
-<!-- source: src/watcher/task-verify.ts, src/watcher/verify.ts, src/harness/types.ts, tests/pre-spawn-verify.test.ts -->
+<!-- source: src/watcher/task-verify.ts, src/watcher/verify.ts, src/harness/types.ts, tests/pre-spawn-verify.test.ts, tests/verify-path-missing.test.ts -->
 The pre-spawn run SHALL append one `verify_ran` event through the single
 watcher verification entrypoint, adding `phase: "pre_spawn"`, `expected` (the
-task's `verify_starts`), and a boolean `mismatch`. A mismatch SHALL be a pass
-when `red` is expected or a failure or timeout when `green` is expected; `any`
+task's `verify_starts`), `missingPaths` (the named paths absent before spawn,
+only when any is), and a boolean `mismatch`. A mismatch SHALL be a pass when `red` is expected and
+no named path is missing, or a failure or timeout when `green` is expected; `any`
 never mismatches. Under `warn` a mismatch SHALL log one warning and continue;
 under `fail` it SHALL kill the task with `verify_precondition`.
 
 #### Scenario: Green start under warn
-- **WHEN** a task expecting `red` starts its first attempt, its verify passes, and `gates.preSpawnVerify` is `warn`
+- **WHEN** a task expecting `red` starts its first attempt, its verify passes, no named path is missing, and `gates.preSpawnVerify` is `warn`
 - **THEN** the pre-spawn event records `mismatch: true`, the logger receives one warning naming the task, and the task proceeds through its normal gates
 
 #### Scenario: Green start under fail
-- **WHEN** a task expecting `red` starts its first attempt, its verify passes, and `gates.preSpawnVerify` is `fail`
+- **WHEN** a task expecting `red` starts its first attempt, its verify passes, no named path is missing, and `gates.preSpawnVerify` is `fail`
 - **THEN** the task dies with `verify_precondition`, the agent never spawns, and no `started` event is written
 
 #### Scenario: Declared green start
 - **WHEN** a task declaring `verify_starts: green` starts its first attempt and its verify passes
 - **THEN** the pre-spawn event records `mismatch: false`
+
+#### Scenario: Green only because the new test is missing
+- **WHEN** a task expecting `red` names a missing test file next to an existing one and its verify passes before spawn
+- **THEN** the pre-spawn event records that file in `missingPaths` and `mismatch: false`
 
 ### Requirement: Per-turn planning readers
 <!-- source: src/harness/claude/claude-usage.ts, src/harness/claude/claude-turns.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, src/harness/opencode/opencode-usage.ts, tests/planning-observed-claude.test.ts, tests/planning-observed-codex.test.ts, tests/planning-observed-opencode.test.ts, tests/planning-reader-shape.test.ts -->
@@ -1106,17 +1117,22 @@ cached input. A session whose records cannot be parsed SHALL yield null usage.
 - **THEN** the session has `turns` and no `usage`, `edits`, `startedAt`, or `endedAt` key
 
 ### Requirement: Automatic retry
-<!-- source: src/watcher/auto-retry.ts, src/watcher/loop.ts, src/core/lifecycle/retry.ts, tests/auto-retry.test.ts -->
+<!-- source: src/watcher/auto-retry.ts, src/watcher/loop.ts, src/core/lifecycle/retry.ts, tests/auto-retry.test.ts, tests/verify-path-missing.test.ts -->
 Each cycle, for every dead task in an approved change, the watcher SHALL retry
 the task through `retrySpec` with `automatic: true` when its dead reason is
 eligible, it is not stuck, and it has fewer automatic retries than
 `gates.autoRetries` since the later of the manifest's `approvedAt` and its last
 manual retry. Eligible reasons SHALL be `verify_red`, `change_verify_red`,
-`undeclared_test_change`, `no_result`, `crashed`, and `timeout`.
+`undeclared_test_change`, `verify_path_missing`, `no_result`, `crashed`, and
+`timeout`.
 
 #### Scenario: Retry fixes the task
 - **WHEN** a task dies with `verify_red` and passes on its next attempt
 - **THEN** it reaches done with exactly one `retry` event carrying `automatic: true`, and the watcher printed one automatic-retry line
+
+#### Scenario: Missing verify path is retried
+- **WHEN** a task dies with `verify_path_missing`
+- **THEN** it is retried automatically once and the next attempt's prompt contains the missing path
 
 #### Scenario: Ineligible reason
 - **WHEN** a task dies with `spec_conflict`, `already_running`, or `verify_precondition`
@@ -1164,3 +1180,24 @@ death. `osq retry` SHALL still retry a stuck task.
 #### Scenario: Same failure twice
 - **WHEN** a task dies twice with identical output
 - **THEN** the second marker is stuck, one `stuck` event is appended, and no third attempt starts
+
+### Requirement: Verify path check
+<!-- source: src/watcher/task-verify.ts, src/watcher/runner.ts, src/watcher/failure-reason.ts, src/watcher/outcome.ts, src/core/spec/verify-paths.ts, tests/verify-path-missing.test.ts -->
+After the agent exits and its result file is ensured, and before the task
+verify runs, the runner SHALL resolve every path the task verify names through
+the shared verify-path module. When any is missing, the task SHALL die with
+`verify_path_missing` and the verify command SHALL NOT run. The dead marker SHALL
+record the reason and command in frontmatter and list each missing path on its
+own line in the body.
+
+#### Scenario: New test never written
+- **WHEN** a task verify names an existing and a missing test file and the agent writes only its result file
+- **THEN** the task dies with `verify_path_missing`, the marker lists the missing file, and no post-spawn `verify_ran` event is written
+
+#### Scenario: New test written
+- **WHEN** the same task's agent also writes the missing file
+- **THEN** the verify runs and the task reaches done
+
+#### Scenario: Command names no paths
+- **WHEN** a task verify is `pnpm verify` or names only options and bare words
+- **THEN** no path check fails and the task behaves as before

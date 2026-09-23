@@ -9,18 +9,9 @@ import {
   type RegressedEventData,
   appendHarnessEvent,
 } from '../harness/types.js';
+import type { RunTaskFailureReason } from './failure-reason.js';
 import { addFingerprint } from './fingerprint.js';
-export type RunTaskFailureReason =
-  | 'spec_conflict'
-  | 'already_running'
-  | 'no_result'
-  | 'verify_red'
-  | 'verify_precondition'
-  | 'change_verify_red'
-  | 'crashed'
-  | 'timeout'
-  | 'undeclared_test_change'
-  | 'regressed';
+export type { RunTaskFailureReason } from './failure-reason.js';
 export interface RunTaskResult {
   success: boolean;
   reason?: RunTaskFailureReason;

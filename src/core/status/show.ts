@@ -619,7 +619,22 @@ function formatPreSpawnVerify(events: TimelineEvent[]): string | null {
       ? data.expected.trim()
       : 'unavailable';
   const outcome = data.mismatch === true ? 'mismatch' : 'matched';
-  return `      Pre-spawn verify: exit ${exitCode}, expected ${expected}, ${outcome}`;
+  const missing = formatMissingPaths(data.missingPaths);
+  return `      Pre-spawn verify: exit ${exitCode}, expected ${expected}, ${outcome}${missing ?? ''}`;
+}
+
+/**
+ * Renders the `missing <path>, <path>` suffix for a pre-spawn event's recorded
+ * missing named paths. Only a non-empty array whose every entry is a non-empty
+ * string qualifies, so an empty, absent, or malformed value contributes nothing
+ * and leaves the pre-spawn line exactly as it was.
+ */
+function formatMissingPaths(value: unknown): string | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  if (!value.every((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')) {
+    return null;
+  }
+  return `, missing ${value.map((entry) => entry.trim()).join(', ')}`;
 }
 
 /**

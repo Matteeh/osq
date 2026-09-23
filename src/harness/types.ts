@@ -84,6 +84,8 @@ export interface VerifyRanEventData {
   phase?: 'pre_spawn';
   expected?: 'red' | 'green' | 'any';
   mismatch?: boolean;
+  /** Present only when a named path is absent before spawn, in command order. */
+  missingPaths?: string[];
 }
 
 export interface ResultWrittenEventData {

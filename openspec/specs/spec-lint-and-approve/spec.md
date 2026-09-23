@@ -268,14 +268,14 @@ NOT imply that the dependency landed.
 - **THEN** lint does not report the dependency identifier as missing
 
 ### Requirement: Verify-command trust validation
-<!-- source: src/core/linter.ts, tests/linter.test.ts -->
+<!-- source: src/core/linter.ts, src/core/spec/verify-paths.ts, tests/linter.test.ts, tests/lint-verify-starts.test.ts -->
 The linter SHALL analyze the proposal verify command and every task verify
 command without executing or shell-expanding them. The template sentinel
 `node -e "process.exit(0)"` and normalized equivalents SHALL be errors. A
 recognized package-script invocation naming no script in the project-root
 `package.json` SHALL be an error. Any other command that names neither an
-existing repository-relative path nor a recognized package script SHALL emit a
-warning.
+existing repository-relative path, a recognized package script, nor a missing
+path the scope of its task or an earlier task covers SHALL emit a warning.
 
 Sentinel normalization SHALL cover surrounding and repeated ASCII whitespace,
 single or double quotes around `process.exit(0)`, `-e` and `--eval`, and an
@@ -293,11 +293,15 @@ executing the command.
 - **THEN** lint fails and identifies the missing script and artifact
 
 #### Scenario: Verify target cannot be resolved
-- **WHEN** a non-placeholder verify names no existing path and no recognized package script
+- **WHEN** a non-placeholder verify names no existing path, no recognized package script, and no path a task scope covers
 - **THEN** lint emits an artifact-specific warning while preserving all independent lint errors
 
 #### Scenario: Local verify target exists
 - **WHEN** a verify names an existing repository file or directory or a present package script
+- **THEN** trust validation emits no unresolved-target warning
+
+#### Scenario: Verify names only its new test
+- **WHEN** a task verify names only a test file that does not exist yet and the task's scope covers it
 - **THEN** trust validation emits no unresolved-target warning
 
 ### Requirement: Resolved task scope overlap warning
@@ -469,13 +473,14 @@ SHALL reuse `resolveScope` and `parseDelta` and add no parsing of its own.
 - **THEN** the digest lists that task and test and raises no flag for it
 
 ### Requirement: Approval flags
-<!-- source: src/core/spec/digest-flags.ts, tests/approval-digest.test.ts -->
+<!-- source: src/core/spec/digest-flags.ts, src/core/spec/digest.ts, src/core/spec/verify-starts.ts, tests/approval-digest.test.ts, tests/approval-digest-verify-starts.test.ts -->
 The digest SHALL raise `shared_file` for task pairs whose resolved scopes share
 a path, `sensitive_path` for resolved scope paths that are package manifests,
 lockfiles, CI workflows, `osq.config.*`, OpenSpec config, managed instruction
 files, or env files, `verify_without_test` for a verify naming no test file or
-runner, `removed_requirement` for removing deltas, and `unknown_capability` for
-a delta whose living capability does not exist.
+runner, `removed_requirement` for removing deltas, `unknown_capability` for a
+delta whose living capability does not exist, and `verify_starts_conflict` for
+each verify start contradiction.
 
 #### Scenario: Shared file
 - **WHEN** tasks 1 and 2 both resolve `src/a.ts`
@@ -492,6 +497,10 @@ a delta whose living capability does not exist.
 #### Scenario: Approval line
 - **WHEN** two flags fire and approval proceeds
 - **THEN** each flag prints on its own line after the digest and the approval line reads `Approved <id> (<folder>) with 2 flags: <label>, <label>`
+
+#### Scenario: Verify start conflict
+- **WHEN** a task declares `any` or `green` and its verify names a missing test inside its own scope
+- **THEN** one `verify_starts_conflict` flag labelled `verify starts conflict in task <n>` names the path and the declared start, and the same task declaring `red` raises none
 
 ### Requirement: Approval confirmation
 <!-- source: src/cli/approve.ts, src/cli/confirm.ts, src/core/spec/approve.ts, tests/approve-confirm.test.ts -->
@@ -512,3 +521,32 @@ planning record. Without flags, `--confirm` SHALL approve without asking.
 #### Scenario: No terminal
 - **WHEN** flags fire and no terminal is attached
 - **THEN** the command exits 1 naming the flags without prompting and writes nothing
+
+### Requirement: Verify start contradiction
+<!-- source: src/core/spec/verify-paths.ts, src/core/spec/verify-starts.ts, src/core/spec/linter.ts, src/core/run/scope.ts, tests/verify-paths.test.ts, tests/lint-verify-starts.test.ts -->
+A verify's named paths SHALL be its operands that are not options, absolute,
+assignments, URLs, or a bare first token, and that contain a path separator. A
+glob operand SHALL be present when it matches a file. For each missing named
+path not covered by an earlier task's scope, lint SHALL warn when the task
+declares `green` or `any` and its own scope covers the path, and SHALL warn when
+no scope covers it.
+
+#### Scenario: Task creates its own test but declares any
+- **WHEN** a task declares `verify_starts: any` and its verify names an existing test and a missing test inside its own scope
+- **THEN** lint warns naming the task, the path, and the declared start
+
+#### Scenario: Declared red
+- **WHEN** the same task declares `red`
+- **THEN** lint emits no contradiction warning
+
+#### Scenario: Earlier task creates the path
+- **WHEN** a task's verify names a missing file that an earlier task's scope covers
+- **THEN** lint emits neither warning, whatever the task declares
+
+#### Scenario: No task can create the path
+- **WHEN** a task's verify names a missing file outside every task's scope up to and including its own
+- **THEN** lint warns that no task in the change can create it
+
+#### Scenario: Operands that are not paths
+- **WHEN** a verify has quoted operands, `--import tsx`, `KEY=value`, or a URL
+- **THEN** none of them is a named path, and a glob operand matching no file counts as missing

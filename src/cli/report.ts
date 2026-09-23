@@ -111,6 +111,12 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         runs: report.history.preSpawnVerify.runs,
         mismatches: report.history.preSpawnVerify.mismatches,
         mismatchedTasks: [...report.history.preSpawnVerify.mismatchedTasks],
+        missingPathRuns: report.history.preSpawnVerify.missingPathRuns,
+        byStart: {
+          red: { ...report.history.preSpawnVerify.byStart.red },
+          green: { ...report.history.preSpawnVerify.byStart.green },
+          any: { ...report.history.preSpawnVerify.byStart.any },
+        },
       },
       cost: {
         total: report.history.cost.total,

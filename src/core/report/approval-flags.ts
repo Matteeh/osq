@@ -10,12 +10,13 @@ const FLAG_IDS: readonly ApprovalFlagId[] = [
   'verify_without_test',
   'removed_requirement',
   'unknown_capability',
+  'verify_starts_conflict',
 ];
 
 /** The key used for changes whose recorded flag ids are empty. */
 export const NO_APPROVAL_FLAGS = 'none';
 
-/** Every reported key, never recomputed: the five flag ids then `none`. */
+/** Every reported key, never recomputed: the flag ids then `none`. */
 export const APPROVAL_FLAG_KEYS: readonly string[] = [...FLAG_IDS, NO_APPROVAL_FLAGS];
 
 /** Fired and later-troubled counts for one handling mode. */

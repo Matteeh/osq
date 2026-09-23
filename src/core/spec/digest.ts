@@ -6,6 +6,7 @@ import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
 import { type ApprovalFlagTask, buildApprovalFlags } from './digest-flags.js';
 import {
+  type VerifyStarts,
   extractSection,
   parseFrontmatter,
   parseSpecMd,
@@ -19,7 +20,8 @@ export type ApprovalFlagId =
   | 'sensitive_path'
   | 'verify_without_test'
   | 'removed_requirement'
-  | 'unknown_capability';
+  | 'unknown_capability'
+  | 'verify_starts_conflict';
 
 export interface ApprovalFlag {
   readonly id: ApprovalFlagId;
@@ -55,6 +57,8 @@ interface ResolvedTask {
   readonly number: string;
   readonly title: string;
   readonly verify: string;
+  readonly verifyStarts: VerifyStarts;
+  readonly scope: readonly string[];
   readonly testsModify: boolean;
   readonly entries: readonly ResolvedScopeEntry[];
 }
@@ -108,6 +112,8 @@ async function resolveTasks(projectRoot: string, changeFolder: string): Promise<
       number: file.replace(/\.md$/, ''),
       title: task.title,
       verify: task.verify,
+      verifyStarts: task.verifyStarts,
+      scope: task.scope,
       testsModify: task.testsModify,
       entries,
     });
@@ -158,6 +164,8 @@ export async function buildApprovalDigest(
   const flagTasks: ApprovalFlagTask[] = tasks.map((task) => ({
     number: task.number,
     verify: task.verify,
+    verifyStarts: task.verifyStarts,
+    scope: task.scope,
     paths: task.entries.map((entry) => entry.relativePath),
   }));
   const flags = await buildApprovalFlags({
