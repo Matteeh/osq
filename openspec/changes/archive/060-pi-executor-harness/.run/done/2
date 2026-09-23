@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0c8d78d57484a43c6ac52e8cc31908180871ca73b39d1c76aab2617414b3f519"
+build_stamp: "0b6575c"
+exit_code: 0
+scope_files: {"README.md":"sha256:f5f163a9f00660895c338fa83d814feadeb32b538071250b0132deb2871b55d1","src/core/foundation/doctor.ts":"sha256:e3c11f23ee6b8b766eda7c6895418307e62d75f8eb02ba44293a64bacb3cd2ed"}
+---
+2026-09-23T10:20:36.078Z

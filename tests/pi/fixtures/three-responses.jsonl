@@ -1,0 +1,6 @@
+{"type":"session","version":3,"id":"three","timestamp":"2026-01-01T00:00:00.000Z"}
+{"type":"agent_start"}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"first response"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":10,"output":1,"cacheRead":2,"reasoning":3,"totalTokens":14,"cost":{"total":0.01}}}}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"second response"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":20,"output":2,"cacheRead":4,"reasoning":6,"totalTokens":24,"cost":{"total":0.02}}}}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"third response"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":30,"output":3,"cacheRead":6,"reasoning":9,"totalTokens":34,"cost":{"total":0.03}}}}
+{"type":"agent_settled"}

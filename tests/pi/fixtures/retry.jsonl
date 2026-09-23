@@ -1,0 +1,9 @@
+{"type":"session","version":3,"id":"retry","timestamp":"2026-01-01T00:00:00.000Z"}
+{"type":"agent_start"}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"before retry"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":5,"output":1,"totalTokens":6,"cost":{"total":0.001}}}}
+{"type":"agent_end","messages":[]}
+{"type":"auto_retry_start","attempt":1,"maxAttempts":3,"delayMs":250,"errorMessage":"upstream exploded"}
+{"type":"auto_retry_end","success":true,"attempt":1}
+{"type":"turn_start"}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"after retry"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":7,"output":2,"totalTokens":9,"cost":{"total":0.002}}}}
+{"type":"agent_settled"}

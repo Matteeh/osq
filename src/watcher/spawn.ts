@@ -4,7 +4,7 @@ import type { OsqConfig } from '../core/foundation/config.js';
 import { resolveExecutorIdentity } from '../core/foundation/harness-catalog.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { TaskData } from '../core/spec/parser.js';
-import { type HarnessAdapter, appendHarnessEvent } from '../harness/types.js';
+import { type HarnessAdapter, type SpawnDetails, appendHarnessEvent } from '../harness/types.js';
 import { formatTaskStartedLine, readRetryContext } from './attempt.js';
 import { resolveBuildInfo } from './build.js';
 import {
@@ -49,7 +49,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
 
   let startedRecorded = false;
   let startedPromise: Promise<void> | null = null;
-  const recordStarted = (pid: number | undefined): Promise<void> => {
+  const recordStarted = (pid: number | undefined, details?: SpawnDetails): Promise<void> => {
     if (startedRecorded) return startedPromise ?? Promise.resolve();
     startedRecorded = true;
     startedPromise = (async () => {
@@ -68,6 +68,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
             attempt: retryContext.attempt,
             pid,
             timeoutSeconds,
+            ...(details?.harnessVersion ? { harnessVersion: details.harnessVersion } : {}),
             ...buildInfo,
           },
         },
@@ -93,7 +94,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     attempt: retryContext.attempt,
     priorFailureReason: retryContext.reason,
     ...(retryContext.output ? { priorFailureOutput: retryContext.output } : {}),
-    onSpawn: (pid) => recordStarted(pid),
+    onSpawn: (pid, details) => recordStarted(pid, details),
   });
   await recordStarted(spawnResult.pid);
   const elapsedMs = spawnResult.elapsedMs ?? Date.now() - spawnStartMs;

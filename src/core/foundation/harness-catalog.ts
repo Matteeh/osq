@@ -1,19 +1,18 @@
+import type { HarnessDiagnoseContext, HarnessDiagnosis } from './config-pi.js';
+import { diagnosePi, resolvePiBinary, resolvePiEffort } from './config-pi.js';
 import type { OsqConfig } from './config.js';
 
 /**
  * Canonical, immutable catalog of first-party harness capabilities. Every
- * shared consumer — configuration validation, executable diagnostics, executor
- * identity, and planner selection — derives its harness knowledge from here so
- * adding a harness never means editing a generic workflow branch.
- *
- * This is static application metadata, not runtime plugin discovery.
+ * shared consumer derives its harness knowledge from here, so adding a harness
+ * never means editing a generic workflow branch.
  */
-export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex'] as const;
+export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex', 'pi'] as const;
 
 export type HarnessName = (typeof HARNESS_NAMES)[number];
 
 /** Where in {@link OsqConfig} a harness keeps its harness-specific settings. */
-export type HarnessConfigKey = 'agy' | 'opencode' | 'codex';
+export type HarnessConfigKey = 'agy' | 'opencode' | 'codex' | 'pi';
 
 export interface PlannerCapability {
   /** Whether `planner.agent` is a meaningful setting for this harness. */
@@ -37,6 +36,8 @@ export interface HarnessCatalogEntry {
   /** Applicable reasoning effort, or `null` when the harness has no such knob. */
   readonly effort: (config: OsqConfig) => string | null;
   readonly planner: PlannerCapability;
+  /** Optional extra doctor checks run after a passing `harness` probe. */
+  readonly diagnose?: (context: HarnessDiagnoseContext) => Promise<readonly HarnessDiagnosis[]>;
 }
 
 type HarnessCatalogDefinitions = {
@@ -90,6 +91,15 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
     },
     effort: (config) => config.codex?.effort?.trim() || null,
     planner: { agent: false, briefModelWhenNative: 'default' },
+  },
+  pi: {
+    configKey: 'pi',
+    envModelWhenUnselected: false,
+    executable: resolvePiBinary,
+    model: resolvePiModel,
+    effort: resolvePiEffort,
+    planner: { agent: false, briefModelWhenNative: 'default' },
+    diagnose: diagnosePi,
   },
 };
 
@@ -222,4 +232,18 @@ export function resolveCodexModel(
 /** Resolve the Codex reasoning effort override, or `undefined` for native defaults. */
 export function resolveCodexEffort(config?: Pick<OsqConfig, 'codex'>): string | undefined {
   return lookupHarness('codex').effort((config ?? {}) as OsqConfig) ?? undefined;
+}
+
+/**
+ * Resolve the Pi execution model: explicit `pi.model`, then `OSQ_MODEL` only
+ * when Pi is the executor, otherwise `undefined` (Pi's native default).
+ */
+export function resolvePiModel(config?: Pick<OsqConfig, 'harness' | 'pi'>): string | undefined {
+  const explicit = config?.pi?.model?.trim();
+  if (explicit) return explicit;
+  if (normalizeHarnessName(config?.harness ?? '') === 'pi') {
+    const fromEnv = process.env.OSQ_MODEL?.trim();
+    if (fromEnv) return fromEnv;
+  }
+  return undefined;
 }

@@ -12,6 +12,7 @@ import { getArchiveDir, getChangesDir } from '../status/layout.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { checkManagedBlocks } from './doctor-managed.js';
+import { findHarness } from './harness-catalog.js';
 
 export interface DoctorCheckResult {
   name: string;
@@ -73,16 +74,24 @@ async function checkConfig(
   }
 }
 
-async function checkHarness(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
+async function checkHarness(
+  projectRoot: string,
+  config: OsqConfig,
+): Promise<{ check: DoctorCheckResult; version: string }> {
   const bin = harnessBinary(config);
-  if (bin === null) return make('harness', true, 'no external executable required');
+  if (bin === null) {
+    return { check: make('harness', true, 'no external executable required'), version: '' };
+  }
   try {
     const timeoutSeconds = config.timeouts.harnessPreflightSeconds ?? 10;
     const version = await probeVersion(bin, projectRoot, timeoutSeconds);
-    return make('harness', true, `${bin} ${version}`.trim());
+    return { check: make('harness', true, `${bin} ${version}`.trim()), version };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return make('harness', false, `binary unavailable: ${bin} (${message})`);
+    return {
+      check: make('harness', false, `binary unavailable: ${bin} (${message})`),
+      version: '',
+    };
   }
 }
 
@@ -211,9 +220,17 @@ export async function runDoctorChecks(
   deps: DoctorDependencies = {},
 ): Promise<DoctorReport> {
   const { check: configCheck, config } = await checkConfig(projectRoot, deps);
-  const checks = [
+  const harness = await checkHarness(projectRoot, config);
+  // A catalog entry may add checks for its own executable after a passing probe.
+  const diagnose = harness.check.ok ? findHarness(config.harness)?.diagnose : undefined;
+  const extra = diagnose ? await diagnose({ config, projectRoot, version: harness.version }) : [];
+  const checks: DoctorCheckResult[] = [
     configCheck,
-    await checkHarness(projectRoot, config),
+    harness.check,
+    ...extra.map((diagnosis) => ({
+      ...make(diagnosis.name, diagnosis.ok, diagnosis.message),
+      ...(diagnosis.warning ? { warning: true } : {}),
+    })),
     await checkManaged(projectRoot, config),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),

@@ -7,6 +7,7 @@ import { AgyAdapter } from './agy/agy.js';
 import { CodexAdapter } from './codex/codex.js';
 import { MockAdapter } from './mock.js';
 import { OpencodeAdapter } from './opencode/opencode.js';
+import { PiAdapter } from './pi/pi.js';
 import type { HarnessAdapter } from './types.js';
 
 /**
@@ -19,6 +20,7 @@ export const harnessAdapterFactories: Readonly<Record<HarnessName, () => Harness
   codex: () => new CodexAdapter(),
   mock: () => new MockAdapter(),
   opencode: () => new OpencodeAdapter(),
+  pi: () => new PiAdapter(),
 };
 
 export function getHarnessAdapter(name: string): HarnessAdapter {
@@ -40,3 +42,4 @@ export * from './mock.js';
 export * from './agy/agy.js';
 export * from './opencode/opencode.js';
 export * from './codex/codex.js';
+export * from './pi/pi.js';

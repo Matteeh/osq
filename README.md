@@ -189,6 +189,7 @@ Available adapters:
 - `agy`: Antigravity harness adapter
 - `codex`: Codex CLI harness adapter running tasks via `codex exec` and planning via the Codex TUI
 - `opencode`: OpenCode harness adapter running tasks via `opencode run`
+- `pi`: Pi coding agent harness adapter running fresh one-shot tasks in JSON mode
 - `mock`: In-memory deterministic simulation for tests
 
 Configure `opencode` in `osq.config.ts`:
@@ -265,6 +266,41 @@ Each task is a fresh Codex session; osq never resumes a prior conversation. The 
 #### Live Codex smoke check (optional, human-owned)
 
 Offline tests use a deterministic fake Codex executable and require no authentication, network access, or model. A separate optional live check, after installing and authenticating the real CLI, is to run one harmless approved fixture task and one interactive planning session, then confirm the watcher's verification, the emitted events and result file, harness/model attribution, and clean exits. Record the CLI version you tested; the offline suite does not establish a minimum supported Codex release.
+
+### Pi
+
+Select Pi as the executor in `osq.config.ts`:
+
+```ts
+import { defineConfig } from '@matteeh/osq';
+
+export default defineConfig({
+  harness: 'pi',
+  pi: {
+    // All fields are optional; omit any of them to use Pi's native value.
+    // bin: '/path/to/pi',      // pi.bin -> OSQ_PI_PATH -> `pi`
+    // provider: '<provider>',  // required only to run `pi auth check` before execution
+    // model: '<your-model>',   // pi.model -> OSQ_MODEL (Pi executor only) -> native
+    // thinking: '<effort>',    // pi.thinking -> native default
+  },
+});
+```
+
+Setting `OSQ_HARNESS=pi` in the environment or `.env` also selects Pi, but an explicit `harness` in `osq.config.ts` wins over that fallback. Binary precedence is `pi.bin`, then `OSQ_PI_PATH`, then `pi` on `PATH`. Model precedence is `pi.model`, then `OSQ_MODEL` only when Pi is the executor, then Pi's native default; with no model configured, osq records `default` rather than guessing one. `pi.thinking` is passed as Pi's `--thinking` level and recorded as the execution effort, or null when unset.
+
+Install Pi with `npm install -g @earendil-works/pi-coding-agent`. This release is tested against `>=0.87.0 <0.88.0`; `osq doctor` reports a `harness-version` warning and the watcher warns at preflight when the installed version falls outside that range, but neither fails. When `pi.provider` is set, preflight runs `pi auth check --provider <name> --json` and fails before any task spawns unless the status is `ready`; `osq doctor` reports the same as its `harness-auth` check.
+
+#### Pi setup and prerequisites
+
+`osq setup` writes no Pi files, because Pi reads `AGENTS.md` itself, so the shared managed executor protocol reaches it without a harness-specific config. Pi loads only the first of `AGENTS.override.md`, `AGENTS.md`, and `CLAUDE.md` in each directory, so an `AGENTS.override.md` in your project would shadow the managed `AGENTS.md` and hide the executor protocol; do not add one if you want Pi to follow osq.
+
+#### Pi permissions
+
+Each task is a fresh noninteractive process in the project root with stdin closed. osq passes `--mode json --no-session --no-approve --offline --no-extensions --no-skills --no-prompt-templates`, then `--provider`, `--model`, and `--thinking` for the settings you configured, then `--` and the executor prompt as one literal argument. Extensions, skills, and prompt templates are off, so no consumer-supplied Pi customization runs. Pi applies no filesystem sandbox and asks no permission prompts, and its network access stays open.
+
+As with every harness, scope is a protocol, not confinement: the prompt and the watcher's checks restrict the agent to its declared files, but they do not confine the filesystem or network beyond what Pi itself enforces. osq does not provide OS or container isolation.
+
+Pi cannot plan: the adapter has no interactive session, so `osq plan --session` with Pi selected as the planner stops with the existing "does not support interactive sessions" error, and `planner.agent` is unsupported for Pi and rejected by configuration validation.
 
 ## Commands
 
@@ -421,6 +457,7 @@ Run `osq doctor` to verify repository health:
 
 - `config`: confirms `osq.config.ts` is valid and well-formed
 - `harness`: checks that the configured harness binary (e.g. `opencode`, `agy`) exists and is executable
+- `harness-version`, `harness-auth`: Pi's extra checks (only when Pi is selected) warn on an untested Pi version and, with `pi.provider` set, fail unless `pi auth check` reports `ready`
 - `managed-blocks`: verifies the `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md` managed sections match the installed osq version (run `osq init` to repair drift)
 - `locks`: checks for orphaned `.run/running/*.pid` locks and processes
 - `archives`: validates integrity of archived change folders

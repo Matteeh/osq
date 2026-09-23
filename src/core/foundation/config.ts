@@ -2,12 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
+import { applyHarnessModelEnv } from './config-env.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
+import { type PiConfig, validatePiConfig } from './config-pi.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
-import { HARNESS_CATALOG } from './harness-catalog.js';
 
 export type { CodexConfig } from './config-codex.js';
+export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
 export type { ServeConfig } from './config-serve.js';
 
@@ -66,6 +68,7 @@ export interface OsqConfig {
   readonly agy?: AgyConfig;
   readonly opencode?: OpencodeConfig;
   readonly codex?: CodexConfig;
+  readonly pi?: PiConfig;
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
   readonly queue?: QueueConfig;
@@ -74,7 +77,10 @@ export interface OsqConfig {
 }
 
 export type OsqUserConfig = Partial<
-  Omit<OsqConfig, 'limits' | 'paths' | 'timeouts' | 'codex' | 'log' | 'planner' | 'queue' | 'gates'>
+  Omit<
+    OsqConfig,
+    'limits' | 'paths' | 'timeouts' | 'codex' | 'pi' | 'log' | 'planner' | 'queue' | 'gates'
+  >
 > & {
   readonly limits?: Partial<OsqLimits>;
   readonly paths?: Partial<OsqPaths>;
@@ -82,6 +88,7 @@ export type OsqUserConfig = Partial<
   readonly agy?: Partial<AgyConfig>;
   readonly opencode?: Partial<OpencodeConfig>;
   readonly codex?: Partial<CodexConfig>;
+  readonly pi?: Partial<PiConfig>;
   readonly log?: Partial<LogConfig>;
   readonly planner?: Partial<PlannerConfig>;
   readonly queue?: Partial<QueueConfig>;
@@ -134,6 +141,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   }
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const codex = validateCodexConfig(config.codex);
+  const pi = validatePiConfig(config.pi);
   const serve = validateServeConfig(config.serve);
 
   return {
@@ -152,6 +160,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
       ...(config.opencode || {}),
     },
     codex,
+    pi,
     log: {
       ...DEFAULT_CONFIG.log,
       ...(config.log || {}),
@@ -169,29 +178,6 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
       ...(config.timeouts || {}),
     },
   };
-}
-
-// Apply OSQ_MODEL to catalogued harness sections that accept it; explicit
-// models still win and `defineConfig` owns default merging and validation.
-function applyHarnessModelEnv(
-  userConfig: OsqUserConfig,
-  selectedHarness: string,
-  envModel: string,
-): Partial<OsqConfig> {
-  const selected = selectedHarness.trim().toLowerCase();
-  const overrides: Record<string, unknown> = {};
-  for (const entry of HARNESS_CATALOG) {
-    if (!entry.configKey) continue;
-    if (!entry.envModelWhenUnselected && entry.name !== selected) continue;
-    const sections = userConfig as unknown as Record<string, { model?: string } | undefined>;
-    const section = sections[entry.configKey];
-    if (section?.model) continue;
-    const defaults = (DEFAULT_CONFIG as unknown as Record<string, object | undefined>)[
-      entry.configKey
-    ];
-    overrides[entry.configKey] = { ...(defaults ?? {}), ...(section ?? {}), model: envModel };
-  }
-  return overrides as Partial<OsqConfig>;
 }
 
 export async function loadConfig(projectRoot: string): Promise<OsqConfig> {

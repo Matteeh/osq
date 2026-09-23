@@ -23,6 +23,7 @@ export type HarnessEventType =
   | 'dead'
   | 'regressed'
   | 'retry'
+  | 'harness_retry'
   | 'recertification'
   | 'rejected';
 
@@ -37,6 +38,8 @@ export interface StartedEventData {
   pid?: number;
   timeoutSeconds: number;
   version?: string;
+  /** First line of the harness binary's `--version`, when the adapter supplies it. */
+  harnessVersion?: string;
 }
 
 /** Legacy `started` payloads emitted by adapters before the runner owned it. */
@@ -50,6 +53,10 @@ export interface TokensEventData {
   cachedTokens?: number;
   reasoningTokens?: number;
   cost?: number;
+  /** Provider Pi reported for the response, when it reported one. */
+  provider?: string;
+  /** Model Pi reported for the response, when it reported one. */
+  model?: string;
 }
 
 export interface ToolEventData {
@@ -155,6 +162,19 @@ export interface RetryEventData {
 }
 
 /**
+ * Payload of a `harness_retry` event translated from a harness's own automatic
+ * retry records (Pi's `auto_retry_start` and `auto_retry_end`).
+ */
+export interface HarnessRetryEventData {
+  readonly phase: 'start' | 'end';
+  readonly attempt: number;
+  readonly maxAttempts?: number;
+  readonly delayMs?: number;
+  readonly success?: boolean;
+  readonly error?: string;
+}
+
+/**
  * Payload of a `recertification` event recording a human retry of an active
  * scope regression. `passed` refreshes the trusted done record without an agent
  * or execution attempt; `requeued` retains both markers and carries the next
@@ -204,6 +224,7 @@ export interface OsqEventData {
   dead: DeadEventData;
   regressed: RegressedEventData;
   retry: RetryEventData;
+  harness_retry: HarnessRetryEventData;
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
 }
@@ -223,6 +244,11 @@ export type OsqEvent = {
 /** Backwards-compatible alias for {@link OsqEvent}. */
 export type HarnessEvent = OsqEvent;
 
+/** Optional attribution an adapter can add when the child process exists. */
+export interface SpawnDetails {
+  readonly harnessVersion?: string;
+}
+
 export interface SpawnTaskOptions {
   projectRoot: string;
   specFolderPath: string;
@@ -236,7 +262,7 @@ export interface SpawnTaskOptions {
   timeoutSeconds?: number;
   config?: OsqConfig;
   logger?: Logger;
-  onSpawn?: (pid: number) => Promise<void> | void;
+  onSpawn?: (pid: number, details?: SpawnDetails) => Promise<void> | void;
   capabilityRules?: string[];
   /** Target-wide execution attempt; initial execution is 1, post-retry is 2+. */
   attempt?: number;

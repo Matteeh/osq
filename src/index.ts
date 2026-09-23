@@ -15,6 +15,7 @@ export type {
   OsqPaths,
   OsqTimeouts,
   OsqUserConfig,
+  PiConfig,
   QueueConfig,
 } from './core/foundation/config.js';
 export {
@@ -25,6 +26,13 @@ export {
   resolveHarnessModel,
   validatePlannerConfig,
 } from './core/foundation/config-codex.js';
+export { PI_TESTED_RANGE, validatePiConfig } from './core/foundation/config-pi.js';
+export type {
+  HarnessDiagnoseContext,
+  HarnessDiagnosis,
+} from './core/foundation/config-pi.js';
+export { resolvePiBinary, resolvePiEffort } from './core/foundation/config-pi.js';
+export { resolvePiModel } from './core/foundation/harness-catalog.js';
 export {
   HARNESS_CATALOG,
   HARNESS_NAMES,
