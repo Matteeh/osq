@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d0da33ae0fc0fdd74addbed13631ea05683c7733492eaee291b1abd490fb2ded"
+build_stamp: "4c543c4"
+exit_code: 0
+scope_files: {"src/cli/report.ts":"sha256:7652c32394e7b84bf453af35e4a90d057355b2743b7b9b9c2996c28d747a3a90","src/core/report/planning-economics.ts":"sha256:abdce2e23f08eb39d47791f2ce7aabee52a96001e367a7b9f7c6e3ca5a43b6d7","src/core/report/report.ts":"sha256:c0589ffbac44f06e78dbd04fb0815774606085a212c42df91a0da1eea066e696","tests/report-planning-economics.test.ts":"sha256:f9135872bd2ff5f1c94f78469223aa46681a82a2fc1e375c880e0aec02083eda","tests/report-planning-unreported.test.ts":"sha256:bdc36124304efa71ffe7b0788a08eb00bedb552399171b7bd4e10dd1680d5bdd"}
+---
+2026-09-23T17:43:16.940Z

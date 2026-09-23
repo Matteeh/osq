@@ -393,9 +393,9 @@ describe('report planning economics', () => {
       assert.equal(parsed.planning.byChange['001-json'].cost, 0.2);
       assert.deepEqual(parsed.planning.comparison.planning, {
         input: 7,
-        output: 0,
-        cached: 0,
-        reasoning: 0,
+        output: null,
+        cached: null,
+        reasoning: null,
         cost: 0.2,
       });
       assert.deepEqual(parsed.planning.comparison.execution, {

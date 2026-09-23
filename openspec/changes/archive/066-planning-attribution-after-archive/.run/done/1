@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:eb6110acc229612169d3e7246ebb641c962fcdc91416e661f9b8f3e39a74db20"
+build_stamp: "4c543c4"
+exit_code: 0
+scope_files: {"src/core/report/planning-slice-lookup.ts":"sha256:dae78914b64f51cd3798dfc93a71fa03ba1a8517ca663a7b416207e47f97e425","tests/planning-slice-archive.test.ts":"sha256:08548142c212d05338e46d7cbe9f3ae379a7d8c32f333467d5c073c668f3d0ca"}
+---
+2026-09-23T17:40:56.255Z

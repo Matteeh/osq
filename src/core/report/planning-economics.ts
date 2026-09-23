@@ -27,10 +27,11 @@ export interface PlanningChangeEconomics {
 
 /** One side of the planning-versus-execution comparison. */
 export interface PlanningComparisonSide {
-  readonly input: number;
-  readonly output: number;
-  readonly cached: number;
-  readonly reasoning: number;
+  /** Null when nothing on this side reported that kind of token. */
+  readonly input: number | null;
+  readonly output: number | null;
+  readonly cached: number | null;
+  readonly reasoning: number | null;
   /** Null when nothing on this side reported a cost. */
   readonly cost: number | null;
 }

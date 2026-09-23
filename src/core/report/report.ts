@@ -1146,10 +1146,10 @@ export async function getMetricsReport(
   let changesWithPlanningRecords = 0;
   let planningWallSeconds = 0;
   const planningWallByChange: Record<string, number> = {};
-  let planningInput = 0;
-  let planningOutput = 0;
-  let planningCached = 0;
-  let planningReasoning = 0;
+  let planningInput: number | null = null;
+  let planningOutput: number | null = null;
+  let planningCached: number | null = null;
+  let planningReasoning: number | null = null;
   let planningCost = 0;
   let planningReportedSessions = 0;
   let planningCostReportedSessions = 0;
@@ -1171,19 +1171,19 @@ export async function getMetricsReport(
       const usage = exited.data.usage;
       let reported = false;
       if (usage.inputTokens !== null) {
-        planningInput += usage.inputTokens;
+        planningInput = (planningInput ?? 0) + usage.inputTokens;
         reported = true;
       }
       if (usage.outputTokens !== null) {
-        planningOutput += usage.outputTokens;
+        planningOutput = (planningOutput ?? 0) + usage.outputTokens;
         reported = true;
       }
       if (usage.cachedTokens !== null) {
-        planningCached += usage.cachedTokens;
+        planningCached = (planningCached ?? 0) + usage.cachedTokens;
         reported = true;
       }
       if (usage.reasoningTokens !== null) {
-        planningReasoning += usage.reasoningTokens;
+        planningReasoning = (planningReasoning ?? 0) + usage.reasoningTokens;
         reported = true;
       }
       if (usage.cost !== null) {
@@ -1390,10 +1390,10 @@ export async function getMetricsReport(
       wallSeconds: planningWallSeconds,
       wallSecondsByChange: planningWallSecondsByChange,
       tokens: {
-        input: planningInput,
-        output: planningOutput,
-        cached: planningCached,
-        reasoning: planningReasoning,
+        input: planningInput ?? 0,
+        output: planningOutput ?? 0,
+        cached: planningCached ?? 0,
+        reasoning: planningReasoning ?? 0,
       },
       cost: {
         total: planningCost,
@@ -1606,6 +1606,11 @@ function formatComparisonCost(cost: number | null): string {
   return formatReportedCost(cost ?? 0, cost === null ? 0 : 1);
 }
 
+/** A nullable comparison token total: `not reported` when nothing on its side did. */
+function formatComparisonToken(value: number | null): string {
+  return value === null ? 'not reported' : String(value);
+}
+
 /** One `Planning by change:` row for a single change's economics. */
 function formatPlanningChangeLine(entry: PlanningChangeEconomics): string {
   const tokens = entry.tokens;
@@ -1777,16 +1782,16 @@ export function formatMetricsReport(
     const planningSide = report.planning.comparison.planning;
     const executionSide = report.planning.comparison.execution;
     lines.push(
-      `  Input tokens: planning ${formatOptionalValue(planningSide.input)}, execution ${formatOptionalValue(executionSide.input)}`,
+      `  Input tokens: planning ${formatComparisonToken(planningSide.input)}, execution ${formatComparisonToken(executionSide.input)}`,
     );
     lines.push(
-      `  Output tokens: planning ${formatOptionalValue(planningSide.output)}, execution ${formatOptionalValue(executionSide.output)}`,
+      `  Output tokens: planning ${formatComparisonToken(planningSide.output)}, execution ${formatComparisonToken(executionSide.output)}`,
     );
     lines.push(
-      `  Cached tokens: planning ${formatOptionalValue(planningSide.cached)}, execution ${formatOptionalValue(executionSide.cached)}`,
+      `  Cached tokens: planning ${formatComparisonToken(planningSide.cached)}, execution ${formatComparisonToken(executionSide.cached)}`,
     );
     lines.push(
-      `  Reasoning tokens: planning ${formatOptionalValue(planningSide.reasoning)}, execution ${formatOptionalValue(executionSide.reasoning)}`,
+      `  Reasoning tokens: planning ${formatComparisonToken(planningSide.reasoning)}, execution ${formatComparisonToken(executionSide.reasoning)}`,
     );
     lines.push(
       `  Cost: planning ${formatComparisonCost(planningSide.cost)}, execution ${formatComparisonCost(executionSide.cost)}`,

@@ -185,14 +185,15 @@ The reporting subsystem SHALL derive event-file coverage from the presence of `.
 - **THEN** coverage reports totals and per-change task-number lists for both sets, treating an existing empty file as covered
 
 ### Requirement: Planning metrics report
-<!-- source: src/core/report/planning.ts, src/core/report/planning-economics.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-planning.test.ts, tests/report-planning-economics.test.ts, fixture/report/** -->
+<!-- source: src/core/report/planning.ts, src/core/report/planning-economics.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-planning.test.ts, tests/report-planning-economics.test.ts, tests/report-planning-unreported.test.ts, fixture/report/** -->
 `osq report` SHALL expose a planning block from valid owned and observed
 `.run/plan.jsonl` records across active and archived changes, keeping the
 session count, wall seconds, per-change wall time, token and cost sums, usage
 coverage, and planning-change count. `planning.byChange` SHALL give per change
 sessions, tokens by kind, active minutes, cost, spec words, changed lines, spec
 words per changed line, and minutes from last planning edit to approval.
-`planning.comparison` SHALL compare planning and executor tokens and cost.
+`planning.comparison` SHALL compare planning and executor tokens and cost,
+with a planning total null until a session reports that kind.
 
 #### Scenario: Mixed planning usage coverage
 - **WHEN** owned and observed logs contain sessions with complete, partial, and unavailable usage
@@ -217,6 +218,10 @@ words per changed line, and minutes from last planning edit to approval.
 #### Scenario: Legacy planning record
 - **WHEN** a change's only planning record has no `slice`
 - **THEN** its entry keeps usage totals and reports active minutes, cache split, and minutes to approval as null
+
+#### Scenario: No reported planning tokens
+- **WHEN** planning sessions exist and none reported any token kind
+- **THEN** `planning.comparison.planning` carries null for input, output, cached, and reasoning in `osq report --json`, and each `Planning vs execution` token line prints `planning not reported`
 
 ### Requirement: Archived change cycle metrics
 <!-- source: src/core/report.ts, src/cli/report.ts, tests/report-cycle.test.ts, fixture/report/** -->
@@ -473,3 +478,25 @@ from that retry until the next `retry` or the end of the stream.
 #### Scenario: No retries
 - **WHEN** no stream holds a `retry` event
 - **THEN** both groups report zero counts and cost `not reported` in text
+
+### Requirement: Moved change approval lookup
+<!-- source: src/core/report/planning-slice-lookup.ts, tests/planning-slice-archive.test.ts -->
+When planning turn attribution looks up another change's approval time and that
+change's folder no longer exists under the changes directory, the lookup SHALL
+read the same records by folder name under `archive/`, including `<name>-<n>`
+collision suffixes, preferring a folder with a recorded slice for the session
+and otherwise the highest suffix. Failing that, it SHALL read
+`rejected/<name>/`, where a recorded slice for the session wins and otherwise
+the `timestamp` in `.run/rejected.md` closes the segment.
+
+#### Scenario: Earlier change archived
+- **WHEN** a session edited an earlier change at its active path and that change was archived before a later change's approval
+- **THEN** the later change's slice equals the slice it gets with the earlier change still active, and no turn is in both changes
+
+#### Scenario: Earlier change archived under a collision suffix
+- **WHEN** the earlier change was archived as `archive/<name>-1/` because `archive/<name>/` already existed
+- **THEN** the later change's slice equals the slice it gets with the earlier change still active
+
+#### Scenario: Earlier change rejected
+- **WHEN** the earlier change was rejected instead of approved and has no recorded slice
+- **THEN** its rejection time closes its segment and the later change owns only turns after the rejection
