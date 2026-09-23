@@ -7,6 +7,7 @@ import { RepositoryTotals } from './RepositoryTotals.js';
 import { ScopePanel } from './ScopePanel.js';
 import { TokenChart } from './TokenChart.js';
 import { WritesChart } from './WritesChart.js';
+import { costChanges } from './cost.js';
 import {
   aggregateTokens,
   capabilityWriteSeries,
@@ -28,7 +29,9 @@ export interface ReportViewProps {
  */
 export function ReportView({ report, graph }: ReportViewProps): ReactElement {
   const changes = landedChanges(graph);
-  const boundaryIndex = planningBoundaryIndex(changes);
+  const cost = costChanges(graph);
+  const boundaryIndex = planningBoundaryIndex(cost);
+  const boundaryKey = boundaryIndex >= 0 ? cost[boundaryIndex].folderKey : null;
   const tokens = aggregateTokens(graph);
   const windows = passWindows(changes);
   const bins = durationHistogram(graph);
@@ -39,7 +42,7 @@ export function ReportView({ report, graph }: ReportViewProps): ReactElement {
       <h2 id="report-view-title">Delivery report</h2>
       <RepositoryTotals report={report} />
       <div className="report-figures">
-        <CostChart changes={changes} boundaryIndex={boundaryIndex} />
+        <CostChart changes={cost} boundaryKey={boundaryKey} />
         <TokenChart groups={tokens} />
         <PassChart windows={windows} />
         <DurationChart bins={bins} />

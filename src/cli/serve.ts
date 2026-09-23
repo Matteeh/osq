@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
+import path from 'node:path';
 import { InvalidArgumentError } from 'commander';
 import { DEFAULT_SERVE_CONFIG, isValidPort } from '../core/foundation/config-serve.js';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { exportDashboard } from '../core/web/web-export.js';
 import { startWebServer } from '../core/web/web-server.js';
 
 /** Injectable inputs so tests never bind a fixed port, open a browser, or wait on signals. */
@@ -9,6 +11,7 @@ export interface ServeCommandOptions {
   readonly cwd?: string;
   readonly port?: number;
   readonly open?: boolean;
+  readonly exportDir?: string;
   readonly config?: OsqConfig;
   readonly uiDir?: string;
   readonly home?: string;
@@ -103,11 +106,29 @@ function wireShutdown(signal?: AbortSignal): { done: Promise<void>; dispose: () 
 export async function serveCommand(options: ServeCommandOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
   const config = options.config ?? (await loadConfig(cwd));
+  const write = options.stdout ?? ((line: string) => process.stdout.write(`${line}\n`));
+
+  if (options.exportDir) {
+    const target = path.resolve(cwd, options.exportDir);
+    await exportDashboard({
+      projectRoot: cwd,
+      config,
+      targetDir: target,
+      uiDir: options.uiDir,
+      home: options.home,
+      now: options.now?.(),
+    });
+    write(`exported dashboard to ${target}`);
+    write(
+      'scrubbed: project root and home directory paths only; read the export before publishing',
+    );
+    return;
+  }
+
   const port = options.port ?? config.serve?.port ?? DEFAULT_SERVE_CONFIG.port;
   if (!isValidPort(port)) {
     throw new Error(`invalid serve port ${port}; expected an integer from 0 through 65535`);
   }
-  const write = options.stdout ?? ((line: string) => process.stdout.write(`${line}\n`));
   const launch = options.launchBrowser ?? launchBrowser;
 
   const handle = await startWebServer({

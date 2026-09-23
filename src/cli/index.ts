@@ -210,7 +210,8 @@ export function createProgram(version?: string): Command {
     .description('serve the read-only delivery dashboard on loopback')
     .option('--port <n>', 'loopback port from 0 through 65535', parsePortArgument)
     .option('--open', 'open the dashboard URL in the default browser')
-    .action(async (options: { port?: number; open?: boolean }) => {
+    .option('--export <dir>', 'write a static dashboard snapshot to <dir> and exit')
+    .action(async (options: { port?: number; open?: boolean; exportDir?: string }) => {
       try {
         await serveCommand(options);
       } catch (error) {

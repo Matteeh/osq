@@ -266,11 +266,13 @@ describe('report task states', () => {
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
 
-      // No markers exist, so current state is pending despite terminal events.
+      // No markers exist, and the change is archived, so current state is
+      // unmarked despite terminal events.
       assert.equal(report.now.total, 2);
       assert.equal(report.now.done, 0);
       assert.equal(report.now.dead, 0);
-      assert.equal(report.now.pending, 2);
+      assert.equal(report.now.pending, 0);
+      assert.equal(report.now.unmarked, 2);
 
       // History still records the events.
       assert.equal(report.history.deadByReason.timeout, 1);
@@ -288,11 +290,12 @@ describe('report task states', () => {
       assert.equal(report.now.done, 1);
       assert.equal(report.now.dead, 1);
       assert.equal(report.now.pending, 0);
+      assert.equal(report.now.unmarked, 0);
       assert.equal(report.now.running, 0);
       assert.deepEqual(report.history.deadByReason, {});
     });
 
-    it('reports archived tasks with no markers as pending', async () => {
+    it('reports archived tasks with no markers as unmarked', async () => {
       await createArchivedSpec(tmpDir, '003-legacy-spec', ['1', '2']);
 
       const report = await getMetricsReport(tmpDir, DEFAULT_CONFIG);
@@ -301,7 +304,8 @@ describe('report task states', () => {
       assert.equal(report.now.done, 0);
       assert.equal(report.now.dead, 0);
       assert.equal(report.now.running, 0);
-      assert.equal(report.now.pending, 2);
+      assert.equal(report.now.pending, 0);
+      assert.equal(report.now.unmarked, 2);
       assert.equal(report.completionRate, 0);
     });
 
@@ -323,7 +327,8 @@ describe('report task states', () => {
 
       assert.equal(report.now.done, 0);
       assert.equal(report.now.dead, 0);
-      assert.equal(report.now.pending, 1);
+      assert.equal(report.now.pending, 0);
+      assert.equal(report.now.unmarked, 1);
     });
   });
 });

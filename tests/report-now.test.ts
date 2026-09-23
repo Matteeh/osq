@@ -70,7 +70,7 @@ describe('report current state', () => {
     root = await makeProject();
   });
 
-  it('derives all eight task counts from markers and separates manual from verified', async () => {
+  it('derives all nine task counts from markers and separates manual from verified', async () => {
     const change = await createChange(root, '001-states', ['1', '2', '3', '4', '5', '6']);
     await doneMarker(change, '1', '---\nmanual: true\nreason: nope\n---\n');
     await doneMarker(change, '2');
@@ -89,6 +89,7 @@ describe('report current state', () => {
       regressed: 1,
       running: 1,
       pending: 1,
+      unmarked: 0,
     });
   });
 

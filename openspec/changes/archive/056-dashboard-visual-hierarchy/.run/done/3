@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c56d79d1632b00f0581c5d54e6d392b753510d8793a181a00b56bcf8427b5bf0"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"packages/ui/src/graph/CapabilityPanel.tsx":"sha256:eca623a113af28c901d6c5db0afc9f4f703d39f1296589d2f7dedc5ae7fffebc","packages/ui/src/graph/ChangeMark.tsx":"sha256:56a70e1228d9617d5e6adae5f7c0f7effb3c357d609bc7e922965fdf87cabd75","packages/ui/src/graph/GraphCanvas.tsx":"sha256:38ee36f2b52b530faca3d78389e0e0d737cf8f0bf430d0082f0efd0e3920a203","packages/ui/src/graph/GraphControlsBar.tsx":"sha256:e46e8ee344bf9199860b76a9caa3f00eeed304d1baf64d8add81b4916474d8ee","packages/ui/src/graph/GraphView.tsx":"sha256:0aef5cf45be3cc44f9079f4cc2286f6718ae0208a3c9ef2458b0c409f6dff595","packages/ui/src/graph/controls.ts":"sha256:29be6914fb1fde7311e6a615432fc8bcfe9180e7287d055ea7c3e1ea72271135","packages/ui/src/graph/fill.ts":"sha256:e1f0ace2d0e732010cebdaa64dcafe8ffd97e74d1a3bcc58ea4b577603ccf6d7","packages/ui/src/graph/format.ts":"sha256:517b0f03b5a776e1d7cc751a327de2010c07cec8d42169d4e6f590da2456f739","packages/ui/src/graph/index.ts":"sha256:057ada73b7443503c55aa473239a222515934cb7ac73c529dd2338bbe1884cb5","packages/ui/src/graph/interaction.ts":"sha256:69fe44262ebf741bfc0b8afad7f1d3e72b9d3acc6f40458823281fe74f8a86dc","packages/ui/src/graph/layout.ts":"sha256:3fb217d1b654aabfc59755a88741bc0f5c559f3df884fbc1cf8f157c86b02ea6","packages/ui/src/graph/relationships.ts":"sha256:8c7db060c8357f165b4b05f703392faf73e80f13077829c00063870cc248909e","packages/ui/src/graph/types.ts":"sha256:c7d234e81ee2e6b9e0dc7cf9af6eee965fac879e2e19ce76cac3a932a7a797c0","tests/ui-graph.test.tsx":"sha256:e9b01a1998bb1090cd48cc436567cc0efe0511179c975f6e7fe5991c0ae56765"}
+---
+2026-09-23T09:04:20.874Z

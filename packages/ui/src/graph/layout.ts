@@ -15,19 +15,31 @@ import {
   round,
 } from './types.js';
 
-/** Archived changes with a valid recorded landed time, sorted by time then key. */
-export function orderedArchived(
-  graph: WebGraph,
-): { readonly node: WebChangeNode; readonly landedMs: number }[] {
-  const archived: { node: WebChangeNode; landedMs: number }[] = [];
-  for (const node of graph.changes) {
-    if (node.state !== 'archived' || node.landed === null) continue;
-    const landedMs = Date.parse(node.landed);
-    if (Number.isFinite(landedMs)) archived.push({ node, landedMs });
-  }
-  return archived.sort(
-    (a, b) => a.landedMs - b.landedMs || a.node.folderKey.localeCompare(b.node.folderKey),
-  );
+/** A change's number, from its id when present and its key's numeric prefix otherwise. */
+function changeNumber(node: WebChangeNode): number {
+  if (node.id !== null && Number.isFinite(node.id)) return node.id;
+  const match = node.folderKey.match(/^(\d+)/);
+  return match ? Number.parseInt(match[1], 10) : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Every archived change ordered left to right by change number, including one
+ * with no recorded landed time, tied by folder key.
+ */
+export function orderedArchived(graph: WebGraph): WebChangeNode[] {
+  return graph.changes
+    .filter((node) => node.state === 'archived')
+    .sort((a, b) => changeNumber(a) - changeNumber(b) || a.folderKey.localeCompare(b.folderKey));
+}
+
+/** The average glyph width as a fraction of the label font size in the system stack. */
+const LABEL_CHAR_EM = 0.62;
+
+/** The lane label column: wide enough for the longest capability name, or the minimum. */
+function laneLabelWidth(capabilityIds: readonly string[]): number {
+  const longest = capabilityIds.reduce((max, id) => Math.max(max, id.length), 0);
+  const estimate = Math.ceil(longest * GRAPH_GEOMETRY.laneLabelFontSize * LABEL_CHAR_EM) + 24;
+  return Math.max(GRAPH_GEOMETRY.laneLabelWidth, estimate);
 }
 
 function uniqueWrites(graph: WebGraph): Map<string, string[]> {
@@ -75,7 +87,7 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
   const activeNodes = graph.changes.filter((node) => node.state === 'active').sort(byFolderKey);
   const rejectedNodes = graph.changes.filter((node) => node.state === 'rejected').sort(byFolderKey);
   const placedNodes = [
-    ...archived.map((entry) => entry.node),
+    ...archived,
     ...activeNodes,
     ...(controls.rejectedVisible ? rejectedNodes : []),
   ];
@@ -84,19 +96,16 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
   const hasUnmapped = placedNodes.some((node) => laneTargets(node.folderKey).length === 0);
   const unmappedY = laneBottom + geometry.laneHeight / 2;
 
+  const labelWidth = round(laneLabelWidth(graph.capabilities.map((node) => node.id)));
   const plotInner = Math.max(geometry.minPlotWidth, archived.length * geometry.nodeSpacing);
-  const plotLeft = geometry.laneLabelWidth + geometry.gutterGap;
+  const plotLeft = labelWidth + geometry.gutterGap;
   const plotRight = plotLeft + plotInner;
   const innerLeft = plotLeft + geometry.nodeSpacing / 2;
   const innerRight = plotRight - geometry.nodeSpacing / 2;
-  const first = archived[0];
-  const last = archived[archived.length - 1];
-  const tMin = first?.landedMs ?? 0;
-  const tMax = last?.landedMs ?? 0;
-  const baseX = (ms: number): number =>
-    tMax <= tMin
+  const baseX = (index: number): number =>
+    archived.length <= 1
       ? (innerLeft + innerRight) / 2
-      : innerLeft + ((ms - tMin) / (tMax - tMin)) * (innerRight - innerLeft);
+      : innerLeft + (index / (archived.length - 1)) * (innerRight - innerLeft);
 
   const activeStart = plotRight + geometry.bandGap;
   const activeWidth = Math.max(activeNodes.length * geometry.gutterSpacing, geometry.minBandWidth);
@@ -119,14 +128,9 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
     });
   };
 
-  let previousBase: number | null = null;
-  let ordinal = 0;
-  for (const entry of archived) {
-    const base = baseX(entry.landedMs);
-    ordinal = previousBase !== null && base === previousBase ? ordinal + 1 : 0;
-    previousBase = base;
-    makeMark(entry.node, 'archived', base + ordinal * geometry.overlapOffset);
-  }
+  archived.forEach((node, index) => {
+    makeMark(node, 'archived', baseX(index));
+  });
   activeNodes.forEach((node, index) => {
     makeMark(
       node,
@@ -144,7 +148,7 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
     });
   }
 
-  const { depends, reads } = projectRelationships(graph, controls, marks, lanes);
+  const { depends, reads } = projectRelationships(graph, controls, marks, lanes, labelWidth);
 
   const rejectedVisible = controls.rejectedVisible && rejectedNodes.length > 0;
   const width = rejectedVisible
@@ -160,7 +164,7 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
     reads,
     width: round(width),
     height: round(height),
-    laneLabelWidth: geometry.laneLabelWidth,
+    laneLabelWidth: labelWidth,
     plotRight: round(plotRight),
     activeBand: { start: round(activeStart), width: round(activeWidth), label: 'Active changes' },
     rejectedBand: rejectedVisible

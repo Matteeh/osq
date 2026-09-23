@@ -8,7 +8,10 @@ import type { GraphFill } from './controls.js';
 
 /** Fixed geometry for the archive graph. No number is read from configuration. */
 export const GRAPH_GEOMETRY = {
+  /** Minimum lane-label column; the placed width grows for longer names. */
   laneLabelWidth: 168,
+  /** SVG label font size in px, used to estimate the widest capability name. */
+  laneLabelFontSize: 16,
   laneHeight: 64,
   topMargin: 44,
   bottomMargin: 56,
@@ -18,7 +21,6 @@ export const GRAPH_GEOMETRY = {
   gutterSpacing: 72,
   minPlotWidth: 320,
   minBandWidth: 96,
-  overlapOffset: 16,
   rightPad: 24,
 } as const;
 

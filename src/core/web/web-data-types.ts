@@ -74,6 +74,11 @@ interface WebChangeNodeBase {
   readonly rejection: { readonly reason: string; readonly timestamp: string } | null;
   readonly planner: string | null;
   readonly taskCount: number;
+  /**
+   * Tasks with a done marker, manual done included; same derivation as
+   * `osq status`. Derived graph documents always set it.
+   */
+  readonly doneCount?: number;
   readonly attempts: number;
   readonly execution: WebMetricObservation;
   readonly planning: WebMetricObservation;

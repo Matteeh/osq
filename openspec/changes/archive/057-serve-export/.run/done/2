@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e1bc76e11a2e2ef286c72a4c0311e52f23b285898c61064c87c8d5de965c5e82"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"README.md":"sha256:9b3d6f48b81266c627a1d195c2a2db98ef144ef7c3b7d6a7a421ae99e0a10d73","src/cli/index.ts":"sha256:6c892b8d28126e7ee255b861a9d97ab440d10fd629e74ead0641fc17066310e4","src/cli/serve.ts":"sha256:2c31cbff09d6665bb95fbbf11af543cacdbcae70feb74abca0e8df0754db9cd8","tests/serve-export.test.ts":"sha256:87570d48a53f66c68a389ac32978df14afc97e87bfaabb974ee5a674596c376f"}
+---
+2026-09-23T09:14:24.756Z

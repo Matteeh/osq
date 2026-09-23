@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b63efa8637e6293d001e6b826ea46a38db627d20d11d26a387e107a56cc1b82e"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"packages/ui/src/change/BriefPanel.tsx":"sha256:ddd5455ba364d4fe846dc532139c03a73fbaae76047ee11306325e20051636e9","packages/ui/src/change/format.ts":"sha256:417364a3a08b90790dd81909222c8d0c8a9b219dba63c303432717fe3d54c2a2","packages/ui/src/format.ts":"sha256:a8d111249e06c79b964538a1aa3064dc14f1fc047f3ca1da9c14db6eef1e2855","packages/ui/src/graph/format.ts":"sha256:6b988bbe766d441a8cf5eb6a6c21dd1fa64878e20b733c71832408c420802daf","packages/ui/src/report/RepositoryTotals.tsx":"sha256:a712e67fb256b31943490e68f3dc0dec55836c4195720fea9454b1aac3a8f627","packages/ui/src/report/format.ts":"sha256:e2def3fbf4fdb95308721346fc5b0774f8575b1d6b56a0091b62d46616543013","tests/ui-change.test.tsx":"sha256:ec9559c9cf5a6a77c2b8cda54ff9e1211933a4db08f02c43900a9cc20d16d129","tests/ui-report.test.tsx":"sha256:ae9eacef4e980eb333058426b3d4b47a941791aa2a25cc6dada0c577f9777c97"}
+---
+2026-09-23T08:32:38.061Z

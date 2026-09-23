@@ -1,8 +1,13 @@
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { DataTable, Figure } from './Figure.js';
 import { formatCount, formatRate } from './format.js';
 import type { PassWindow } from './landed.js';
 import { bandScale, linearScale, round } from './scales.js';
+
+const AXIS_STYLE: CSSProperties = { stroke: 'var(--border)' };
+const ACCENT_FILL: CSSProperties = { fill: 'var(--accent)' };
+const MUTED_FILL: CSSProperties = { fill: 'var(--muted)' };
+const TEXT_STYLE: CSSProperties = { fill: 'var(--text)' };
 
 const WIDTH = 720;
 const HEIGHT = 220;
@@ -62,9 +67,9 @@ export function PassChart({ windows }: PassChartProps): ReactElement {
           Bars of first-attempt task pass rate over consecutive landed windows of at most five
           changes. A window with no task attempts is labelled unavailable.
         </desc>
-        <line x1={PLOT_LEFT} y1={PLOT_BOTTOM} x2={PLOT_RIGHT} y2={PLOT_BOTTOM} stroke="#8a8a86" />
+        <line x1={PLOT_LEFT} y1={PLOT_BOTTOM} x2={PLOT_RIGHT} y2={PLOT_BOTTOM} style={AXIS_STYLE} />
         {windows.length === 0 ? (
-          <text x={PLOT_LEFT + 8} y={PLOT_TOP + 16} fontSize={10}>
+          <text x={PLOT_LEFT + 8} y={PLOT_TOP + 16} fontSize={10} style={MUTED_FILL}>
             No landed change carries a first-attempt observation.
           </text>
         ) : null}
@@ -75,9 +80,15 @@ export function PassChart({ windows }: PassChartProps): ReactElement {
               y1={round(y(tick))}
               x2={PLOT_RIGHT}
               y2={round(y(tick))}
-              stroke="#d7d7d2"
+              style={AXIS_STYLE}
             />
-            <text x={PLOT_LEFT - 6} y={round(y(tick) + 3)} textAnchor="end" fontSize={9}>
+            <text
+              x={PLOT_LEFT - 6}
+              y={round(y(tick) + 3)}
+              textAnchor="end"
+              fontSize={9}
+              style={MUTED_FILL}
+            >
               {formatRate(tick, 1)}
             </text>
           </g>
@@ -96,7 +107,7 @@ export function PassChart({ windows }: PassChartProps): ReactElement {
                   y={round(top)}
                   width={round(barWidth)}
                   height={round(barHeight)}
-                  fill="#2f5d8a"
+                  style={ACCENT_FILL}
                 >
                   <title>{`Window ${window.index}: ${formatRate(window.reported, window.total)} (${formatCount(window.reported)} of ${formatCount(window.total)})`}</title>
                 </rect>
@@ -106,15 +117,27 @@ export function PassChart({ windows }: PassChartProps): ReactElement {
                   y={PLOT_BOTTOM - 3}
                   width={round(barWidth)}
                   height={3}
-                  fill="#b9b9b4"
+                  style={MUTED_FILL}
                 >
                   <title>{`Window ${window.index}: unavailable`}</title>
                 </rect>
               )}
-              <text x={round(band.center)} y={round(top - 5)} textAnchor="middle" fontSize={9}>
+              <text
+                x={round(band.center)}
+                y={round(top - 5)}
+                textAnchor="middle"
+                fontSize={9}
+                style={TEXT_STYLE}
+              >
                 {formatRate(window.reported, window.total)}
               </text>
-              <text x={round(band.center)} y={PLOT_BOTTOM + 14} textAnchor="middle" fontSize={8}>
+              <text
+                x={round(band.center)}
+                y={PLOT_BOTTOM + 14}
+                textAnchor="middle"
+                fontSize={8}
+                style={MUTED_FILL}
+              >
                 W{window.index} ({window.changes.length})
               </text>
             </g>

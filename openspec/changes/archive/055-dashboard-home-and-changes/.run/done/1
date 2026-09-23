@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:80247f4e7e0e2732144674848eaebdb67cd2a0ed46e04d9b5e5dde2a1c39c9f9"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"src/core/web/web-data-graph.ts":"sha256:587259d367a9bf134d8f8ce34eccbf9ba76059cd791530630a5d34324596f2ba","src/core/web/web-data-types.ts":"sha256:4b1fb886246ec4de4f68be995ce9b059c66b403a3c77ab2bf6aedc6e03fcad46","tests/web-data-progress.test.ts":"sha256:e640b8feb30bf3315db9f9eed0bfabf484d66c932fd885f164c4b6ed60d4bd72","tests/web-data.test.ts":"sha256:0bb225003c592c4270986bf50e0c785063c1a932d11b23f3653a4b43346a6bab"}
+---
+2026-09-23T08:39:50.582Z

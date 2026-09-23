@@ -126,6 +126,7 @@ describe('report --json', () => {
       'regressed',
       'running',
       'total',
+      'unmarked',
       'verified',
     ]);
     assert.deepEqual(sortedKeys(parsed.coverage), ['byChange', 'withEvents', 'withoutEvents']);
@@ -409,6 +410,7 @@ describe('formatMetricsReport', () => {
         regressed: 1,
         running: 2,
         pending: 1,
+        unmarked: 0,
       },
       planning: {
         sessions: 9,
@@ -526,7 +528,7 @@ describe('formatMetricsReport', () => {
         cost: {
           total: 0,
           perSpec: {},
-          formattedTotal: '$0.0000',
+          formattedTotal: 'not reported',
           provenance: 'harness-reported',
           coverage: { reportedAttempts: 0, totalAttempts: 0 },
         },
@@ -565,6 +567,7 @@ describe('formatMetricsReport', () => {
         regressed: 0,
         running: 0,
         pending: 0,
+        unmarked: 0,
       },
       planning: {
         sessions: 0,
@@ -572,7 +575,7 @@ describe('formatMetricsReport', () => {
         wallSeconds: 0,
         wallSecondsByChange: {},
         tokens: { input: 0, output: 0, cached: 0, reasoning: 0 },
-        cost: { total: 0, formattedTotal: '$0.0000', provenance: 'harness-reported' },
+        cost: { total: 0, formattedTotal: 'not reported', provenance: 'harness-reported' },
         coverage: { reportedSessions: 0, totalSessions: 0 },
       },
       specs: { total: 0, active: 0, archived: 0 },
@@ -588,7 +591,7 @@ describe('formatMetricsReport', () => {
 
     const formatted = formatMetricsReport(report);
     assert.ok(
-      formatted.includes('Harness-reported cost: $0.0000 (0 of 0 attempts reported cost)'),
+      formatted.includes('Harness-reported cost: not reported (0 of 0 attempts reported cost)'),
       formatted,
     );
     assert.ok(formatted.includes('Scope regressions:'), formatted);

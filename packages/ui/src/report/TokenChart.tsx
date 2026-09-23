@@ -1,8 +1,12 @@
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { DataTable, Figure } from './Figure.js';
 import { formatCount, formatPercent, modelLabel } from './format.js';
 import type { TokenTotal } from './landed.js';
 import { linearScale, round } from './scales.js';
+
+const ACCENT_FILL: CSSProperties = { fill: 'var(--accent)' };
+const MUTED_STYLE: CSSProperties = { fill: 'var(--muted)' };
+const TEXT_STYLE: CSSProperties = { fill: 'var(--text)' };
 
 const WIDTH = 720;
 const ROW_HEIGHT = 44;
@@ -67,7 +71,7 @@ export function TokenChart({ groups }: TokenChartProps): ReactElement {
           unavailable provenance is never merged.
         </desc>
         {groups.length === 0 ? (
-          <text x={8} y={TOP + 16} fontSize={10}>
+          <text x={8} y={TOP + 16} fontSize={10} style={MUTED_STYLE}>
             Token provenance is unavailable: no recorded token totals.
           </text>
         ) : null}
@@ -76,13 +80,24 @@ export function TokenChart({ groups }: TokenChartProps): ReactElement {
           const barWidth = Math.max(0, x(group.total) - BAR_LEFT);
           return (
             <g key={`${group.harness}\u0000${group.model ?? ''}`}>
-              <text x={8} y={rowTop + 15} fontSize={10}>
+              <text x={8} y={rowTop + 15} fontSize={10} style={TEXT_STYLE}>
                 {group.harness} / {modelLabel(group.model)}
               </text>
-              <rect x={BAR_LEFT} y={rowTop + 2} width={round(barWidth)} height={20} fill="#2f5d8a">
+              <rect
+                x={BAR_LEFT}
+                y={rowTop + 2}
+                width={round(barWidth)}
+                height={20}
+                style={ACCENT_FILL}
+              >
                 <title>{`${group.harness} ${modelLabel(group.model)} total ${formatCount(group.total)} tokens`}</title>
               </rect>
-              <text x={round(BAR_LEFT + barWidth + 6)} y={rowTop + 16} fontSize={9}>
+              <text
+                x={round(BAR_LEFT + barWidth + 6)}
+                y={rowTop + 16}
+                fontSize={9}
+                style={MUTED_STYLE}
+              >
                 {formatCount(group.total)} total · cache share {formatPercent(group.cacheShare)}
               </text>
             </g>

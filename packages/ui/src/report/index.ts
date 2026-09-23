@@ -1,4 +1,5 @@
 export { ReportView, type ReportViewProps } from './ReportView.js';
+export { costChanges, type CostChange } from './cost.js';
 export {
   PASS_WINDOW_SIZE,
   aggregateTokens,

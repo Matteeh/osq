@@ -171,6 +171,8 @@ export function createDashboardData(options: DashboardDataOptions = {}): Dashboa
   }
 
   function loadRoute(next: Route): Promise<Partial<DashboardSnapshot>> {
+    if (next.name === 'home') return getInbox().then((inbox) => ({ inbox }));
+    if (next.name === 'changes') return getGraph().then((graph) => ({ graph }));
     if (next.name === 'report') return loadReport();
     if (next.name === 'graph') return getGraph().then((graph) => ({ graph }));
     return getChange(next.folderKey).then((change) => ({ change }));

@@ -10,6 +10,15 @@ function percent(value: number): string {
 /** Repository-wide totals and overall coverage derived from `MetricsReport`. */
 export function RepositoryTotals({ report }: { readonly report: MetricsReport }): ReactElement {
   const { now, coverage, durations, history, planning, specs, tokens } = report;
+  const states = [
+    `verified ${formatCount(now.verified)}`,
+    `manual ${formatCount(now.manual)}`,
+    `dead ${formatCount(now.dead)}`,
+    `regressed ${formatCount(now.regressed)}`,
+    `running ${formatCount(now.running)}`,
+    `pending ${formatCount(now.pending)}`,
+  ];
+  if (now.unmarked > 0) states.push(`unmarked ${formatCount(now.unmarked)}`);
   const rows = [
     {
       key: 'specs',
@@ -27,10 +36,7 @@ export function RepositoryTotals({ report }: { readonly report: MetricsReport })
     },
     {
       key: 'states',
-      cells: [
-        'Task states',
-        `verified ${formatCount(now.verified)} · manual ${formatCount(now.manual)} · dead ${formatCount(now.dead)} · regressed ${formatCount(now.regressed)} · running ${formatCount(now.running)} · pending ${formatCount(now.pending)}`,
-      ],
+      cells: ['Task states', states.join(' · ')],
     },
     {
       key: 'event-coverage',

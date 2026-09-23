@@ -9,6 +9,17 @@ export function round(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** A label shortened with a trailing ellipsis once it passes `max` characters. */
+export function shortenLabel(text: string, max = 28): string {
+  return text.length > max ? `${text.slice(0, max - 1)}\u2026` : text;
+}
+
+/** The index step that prints labels at least `minGap` pixels apart. */
+export function labelStep(spacing: number, minGap: number): number {
+  if (!Number.isFinite(spacing) || spacing <= 0) return 1;
+  return Math.max(1, Math.ceil(minGap / spacing));
+}
+
 /**
  * A finite linear mapping from a data domain onto a pixel range. A singleton
  * domain is widened around its value; an all-zero domain maps zero to the

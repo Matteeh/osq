@@ -1,7 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ChangeView } from './change/index.js';
+import { ChangesView } from './changes/index.js';
 import type { DashboardSnapshot } from './data.js';
 import { GraphView } from './graph/index.js';
+import { HomeView } from './home/index.js';
 import { ReportView } from './report/index.js';
 import type { Route } from './router.js';
 import { routeToHash } from './router.js';
@@ -41,6 +43,32 @@ function NavLink({ route, current, onNavigate, children }: NavLinkProps): ReactE
 
 function EmptyState({ children }: { readonly children: ReactNode }): ReactElement {
   return <p className="state state-empty">{children}</p>;
+}
+
+function HomeRoute({
+  documents,
+  onNavigate,
+}: {
+  readonly documents: DashboardSnapshot;
+  readonly onNavigate: (route: Route) => void;
+}): ReactElement {
+  if (documents.inbox === null) {
+    return <EmptyState>No inbox is available yet.</EmptyState>;
+  }
+  return <HomeView inbox={documents.inbox} onNavigate={onNavigate} />;
+}
+
+function ChangesRoute({
+  documents,
+  onNavigate,
+}: {
+  readonly documents: DashboardSnapshot;
+  readonly onNavigate: (route: Route) => void;
+}): ReactElement {
+  if (documents.graph === null) {
+    return <EmptyState>No changes are available yet.</EmptyState>;
+  }
+  return <ChangesView graph={documents.graph} onNavigate={onNavigate} />;
 }
 
 function ReportRoute({
@@ -103,6 +131,12 @@ export function App({
       <header className="app-header">
         <h1>osq dashboard</h1>
         <nav className="app-nav" aria-label="Dashboard sections">
+          <NavLink route={{ name: 'home' }} current={route} onNavigate={onNavigate}>
+            Home
+          </NavLink>
+          <NavLink route={{ name: 'changes' }} current={route} onNavigate={onNavigate}>
+            Changes
+          </NavLink>
           <NavLink route={{ name: 'report' }} current={route} onNavigate={onNavigate}>
             Report
           </NavLink>
@@ -121,6 +155,10 @@ export function App({
           </p>
         ) : null}
         {loading ? <p className="state state-loading">Loading…</p> : null}
+        {route.name === 'home' ? <HomeRoute documents={documents} onNavigate={onNavigate} /> : null}
+        {route.name === 'changes' ? (
+          <ChangesRoute documents={documents} onNavigate={onNavigate} />
+        ) : null}
         {route.name === 'report' ? <ReportRoute documents={documents} /> : null}
         {route.name === 'graph' ? (
           <GraphRoute documents={documents} onNavigate={onNavigate} />

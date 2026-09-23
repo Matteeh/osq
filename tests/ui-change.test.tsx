@@ -139,11 +139,12 @@ function taskOf(change: WebChange, number: string): WebTask | undefined {
 
 describe('change formatting', () => {
   it('labels every unavailable observation instead of inferring a value', () => {
-    assert.equal(formatCost(null), UNAVAILABLE);
-    assert.equal(formatCost(Number.NaN), UNAVAILABLE);
-    assert.equal(formatCost(Number.POSITIVE_INFINITY), UNAVAILABLE);
-    assert.equal(formatCost(-1), UNAVAILABLE);
+    assert.equal(formatCost(null), 'not reported');
+    assert.equal(formatCost(Number.NaN), 'not reported');
+    assert.equal(formatCost(Number.POSITIVE_INFINITY), 'not reported');
+    assert.equal(formatCost(-1), 'not reported');
     assert.equal(formatCost(0), '$0.0000');
+    assert.equal(formatCost(0, { reported: 0, total: 1 }), 'not reported');
     assert.equal(formatCost(1.5), '$1.50');
     assert.equal(formatCount(Number.NaN), UNAVAILABLE);
     assert.equal(formatCount(3), '3');
@@ -170,7 +171,11 @@ describe('change formatting', () => {
     );
     assert.equal(
       costWithCoverage(null, { reported: 0, total: 0 }),
-      'unavailable (0 of 0 attempts reported)',
+      'not reported (0 of 0 attempts reported)',
+    );
+    assert.equal(
+      costWithCoverage(0, { reported: 0, total: 1 }),
+      'not reported (0 of 1 attempts reported)',
     );
   });
 
@@ -205,7 +210,11 @@ describe('change evidence view', () => {
 
   it('labels a missing brief and renders the complete proposal goal', () => {
     const html = renderChange(archived);
-    assert.match(html, /brief absent/);
+    assert.match(html, /<h3 id="change-brief-title">Brief<\/h3>/);
+    assert.match(
+      html,
+      /<p class="brief-absent">No brief was recorded; the proposal goal follows\.<\/p>/,
+    );
     assert.match(html, /Archived Change goal text\./);
     assert.match(html, /<pre class="brief-goal">Archived Change goal text\.<\/pre>/);
   });
@@ -238,12 +247,15 @@ describe('change evidence view', () => {
     const html = renderChange(change);
     assert.match(html, /<table class="task-table">/);
     assert.match(html, /<th scope="col">State<\/th>/);
-    assert.match(html, /<th scope="row">1\. Covered<\/th><td class="task-state">done<\/td>/);
+    assert.match(
+      html,
+      /<th scope="row">1\. Covered<\/th><td class="task-state"><span class="status-badge status-verified">/,
+    );
     assert.match(html, /<td>2<\/td><td>unavailable<\/td><td>12s<\/td>/);
     assert.match(html, /\$0\.50 \(1 of 2 attempts reported\)/);
-    assert.match(html, /<td class="task-state">dead<\/td>/);
+    assert.match(html, /<td class="task-state"><span class="status-badge status-dead">/);
     assert.match(html, /verify_red/);
-    assert.match(html, /\$0\.0000 \(0 of 1 attempts reported\)/);
+    assert.match(html, /not reported \(0 of 1 attempts reported\)/);
   });
 
   it('exposes declared scope, resolved scope, acceptance, and verify without collapsing them', () => {
@@ -344,7 +356,7 @@ describe('change evidence view', () => {
   it('renders running start and elapsed seconds from the server-derived document', () => {
     const html = renderChange(running);
     assert.match(html, /running since 2026-06-01T00:00:00\.000Z, 42s elapsed/);
-    assert.match(html, /<td class="task-state">running<\/td>/);
+    assert.match(html, /<td class="task-state"><span class="status-badge status-running">/);
   });
 
   it('renders rejected rejection evidence without treating it as active or landed', () => {
@@ -380,9 +392,9 @@ describe('change evidence view', () => {
     });
     const html = renderChange(change);
     assert.match(html, /Still visible/);
-    assert.match(html, /brief absent/);
+    assert.match(html, /No brief was recorded; the proposal goal follows\./);
     assert.match(html, /Malformed goal\./);
-    assert.match(html, /unavailable \(0 of 2 attempts reported\)/);
+    assert.match(html, /not reported \(0 of 2 attempts reported\)/);
     assert.match(html, /<td>unavailable<\/td>/);
     assert.match(html, /<td>human<\/td>/);
   });

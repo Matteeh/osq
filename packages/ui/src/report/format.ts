@@ -1,11 +1,8 @@
 import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
+import { formatCost } from '../format.js';
 import { round } from './scales.js';
 
-/** Reported cost, or explicit `unavailable` when there is no finite value. */
-export function formatCost(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return 'unavailable';
-  return value >= 0.01 ? `$${value.toFixed(2)}` : `$${value.toFixed(4)}`;
-}
+export { formatCost };
 
 /** A whole non-negative count, or `unavailable` for a non-finite value. */
 export function formatCount(value: number): string {
@@ -49,12 +46,12 @@ export function costWithCoverage(
   coverage: WebCoverage,
   unit: string,
 ): string {
-  return `${formatCost(value)} (${coverageText(coverage)} ${unit} reported)`;
+  return `${formatCost(value, coverage)} (${coverageText(coverage)} ${unit} reported)`;
 }
 
 /** A compact adjacent cost and coverage label for an SVG mark. */
-export function compactCost(value: number, coverage: WebCoverage): string {
-  return `${formatCost(value)} (${formatCount(coverage.reported)}/${formatCount(coverage.total)})`;
+export function compactCost(value: number | null, coverage: WebCoverage): string {
+  return `${formatCost(value, coverage)} (${formatCount(coverage.reported)}/${formatCount(coverage.total)})`;
 }
 
 /** A nullable model rendered as an explicit unavailable label. */

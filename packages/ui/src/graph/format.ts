@@ -1,11 +1,8 @@
 import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
+import { formatCost } from '../format.js';
 import type { GraphFillValue, GraphMark } from './types.js';
 
-/** A cost value, or explicit `unavailable` when no finite observation exists. */
-export function formatCost(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return 'unavailable';
-  return value >= 0.01 ? `$${value.toFixed(2)}` : `$${value.toFixed(4)}`;
-}
+export { formatCost };
 
 /** A whole count, or `unavailable` for a non-finite value. */
 export function formatCount(value: number): string {
@@ -20,7 +17,7 @@ export function coverageText(coverage: WebCoverage): string {
 /** The exact value and coverage for one mark's current fill mode. */
 export function fillDescription(fill: GraphFillValue): string {
   if (fill.mode === 'attempts') return `${formatCount(fill.value ?? 0)} attempts`;
-  return `cost ${formatCost(fill.value)} (${coverageText(fill.coverage)} attempts and sessions reported)`;
+  return `cost ${formatCost(fill.value, fill.coverage)} (${coverageText(fill.coverage)} attempts and sessions reported)`;
 }
 
 /**
@@ -30,11 +27,11 @@ export function fillDescription(fill: GraphFillValue): string {
  */
 export function markAriaLabel(mark: GraphMark): string {
   const node = mark.node;
-  const date = node.landed ?? node.created ?? 'unavailable';
+  const landed = node.landed === null ? 'landed date not recorded' : `landed date ${node.landed}`;
   const writes = mark.laneIds.length > 0 ? mark.laneIds.join(', ') : 'no current capability';
   return [
     node.title,
-    `date ${date}`,
+    landed,
     `planner ${node.planner ?? 'unavailable'}`,
     `tasks ${formatCount(node.taskCount)}`,
     `attempts ${formatCount(node.attempts)}`,

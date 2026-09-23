@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a0f12c40354fe9bcfe88e304a523ea31fdd4355292775fb87ceea43d2b2af685"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"packages/ui/src/change/TaskTable.tsx":"sha256:b6ccaa780f06a8e9ebc5032d81718dfd27c509d5e462a8c2d65e1cda2ab95a5a","packages/ui/src/home/HomeView.tsx":"sha256:436fcdd1ea49610704da6f0cf20ba6e68af37acc94bdd50583e0c491264b402b","packages/ui/src/home/LandedGroup.tsx":"sha256:4c785c28fce192030b6c386c671bc5d92b3cd44035664874104e5c623694c791","packages/ui/src/home/NeedsYouGroup.tsx":"sha256:c0a3dd6d5772ff5b8549a966b0c86f9d577aca0487b15cec23aee6d60bcf916d","packages/ui/src/home/RunningGroup.tsx":"sha256:3bd6a2bc6bd79d03b24891868ece6a2329b81cae753510cbfa2e472cebf6d67b","packages/ui/src/home/index.ts":"sha256:4e4a4f24665499d9f3f545ba2787c89467353311162d0b59f63d2bf8c99735d4","packages/ui/src/home/labels.ts":"sha256:8185b457318ee7fa718a352948a36ecbd1f1d4873b64b2dd4c2707938f12c2b4","packages/ui/src/status.tsx":"sha256:d34d3bcbd23dc94eab030560eaf3ccf7033f0cc64182174246739b8a56ea2479","packages/ui/src/styles.css":"sha256:129d9836c7469f4b3e3e607b4fe953d10620445ac2c31cb7d4ac86e606595221","tests/ui-change.test.tsx":"sha256:f60a8f185b94ed2fbb74d6ce68afef52b5d40886efdf5628dfd6e018a84c3fa2","tests/ui-home.test.tsx":"sha256:20adf149dcfbf7bed31b108cab7c271f8709f4599fe2046169c3e243f065a0ab","tests/ui-status.test.tsx":"sha256:a1ca53042642c19db0f5d8459249496e9f28a64df11ffc6ed69a44d18b0e2391"}
+---
+2026-09-23T08:52:44.777Z

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import type { WebTask } from '../../../../src/core/web/web-data-types.js';
+import { StatusBadge, statusForTaskState } from '../status.js';
 import { TaskEvidence } from './TaskEvidence.js';
 import {
   UNAVAILABLE,
@@ -20,7 +21,9 @@ function TaskRow({ task }: { readonly task: WebTask }): ReactElement {
       <th scope="row">
         {task.taskNumber}. {task.title}
       </th>
-      <td className="task-state">{task.state}</td>
+      <td className="task-state">
+        <StatusBadge status={statusForTaskState(task.state)} />
+      </td>
       <td>{formatCount(task.attempts)}</td>
       <td>{task.reason ?? UNAVAILABLE}</td>
       <td>{running ?? formatSeconds(task.duration)}</td>

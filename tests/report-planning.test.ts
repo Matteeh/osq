@@ -211,10 +211,11 @@ describe('report planning metrics', () => {
       assert.deepEqual(report.planning.wallSecondsByChange, {});
       assert.deepEqual(report.planning.tokens, { input: 0, output: 0, cached: 0, reasoning: 0 });
       assert.equal(report.planning.cost.total, 0);
-      assert.equal(report.planning.cost.formattedTotal, '$0.0000');
+      assert.equal(report.planning.cost.formattedTotal, 'not reported');
       assert.deepEqual(report.planning.coverage, { reportedSessions: 0, totalSessions: 0 });
 
       const text = formatMetricsReport(report);
+      assert.ok(text.includes('Harness-reported cost: not reported'), text);
       assert.ok(text.includes('0 of 0 sessions reported usage'), text);
     });
   });

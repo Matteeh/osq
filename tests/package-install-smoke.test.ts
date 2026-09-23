@@ -270,7 +270,7 @@ describe('packed tarball consumer smoke test', { skip: skipPackTest }, () => {
         'packaged index must be served as HTML',
       );
       const html = await index.text();
-      const assetPath = html.match(/src="(\/assets\/[^"]+)"/)?.[1];
+      const assetPath = html.match(/src="((?:\.\/|\/)?assets\/[^"]+)"/)?.[1];
       assert.ok(assetPath, 'packaged index must reference a fingerprinted asset');
 
       const asset = await fetch(new URL(assetPath, url));

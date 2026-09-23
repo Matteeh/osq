@@ -16,8 +16,8 @@ export interface GraphViewProps {
 }
 
 /**
- * The graph route: one labelled lane per current capability, a time-ordered
- * mark per change, typed relationship layers, and independent presentation
+ * The graph route: one labelled lane per current capability, a change-number
+ * ordered mark per change, typed relationship layers, and independent presentation
  * controls. The graph document is treated as immutable.
  */
 export function GraphView({ graph, onNavigate, initialControls }: GraphViewProps): ReactElement {

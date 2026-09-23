@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1778f92e2c48bff6caf22fabf96051b81e562a25c506d53751a40340dca97d0b"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"packages/ui/vite.config.ts":"sha256:c1c44c11db2120c6042b67502711b26f6060e19638c589cea8390d4ae48c8045","src/core/web/web-export.ts":"sha256:ec024885c32cded3ba2971930f7a571aca175e2671521f65822c8051c3ca11e5","tests/package-install-smoke.test.ts":"sha256:aba33a2564233b1aea9305b85f8aa4f76dc664e2a5373565c2dd3b0a6b3279b0","tests/web-export.test.ts":"sha256:a58e2cdf81251dad7363a88663b57a0af19bf8514c94c95b0d0e3aa38112f671"}
+---
+2026-09-23T09:11:17.871Z

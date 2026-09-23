@@ -56,6 +56,7 @@ describe('web data graph nodes', () => {
     assert.equal(active.rejection, null);
     assert.equal(active.planner, 'opencode/big-pickle');
     assert.equal(active.taskCount, 3);
+    assert.equal(active.doneCount, 1);
     assert.equal(active.attempts, 3);
 
     assert.equal(active.execution.cost, 0.5);

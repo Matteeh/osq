@@ -1,13 +1,10 @@
 import type { WebCoverage } from '../../../../src/core/web/web-data-types.js';
+import { formatCost } from '../format.js';
+
+export { formatCost };
 
 /** The single explicit label for absent or non-finite evidence. */
 export const UNAVAILABLE = 'unavailable';
-
-/** A non-negative cost, or the explicit unavailable label. */
-export function formatCost(value: number | null): string {
-  if (value === null || !Number.isFinite(value) || value < 0) return UNAVAILABLE;
-  return value >= 0.01 ? `$${value.toFixed(2)}` : `$${value.toFixed(4)}`;
-}
 
 /** A finite non-negative count, or the explicit unavailable label. */
 export function formatCount(value: number | null): string {
@@ -50,7 +47,7 @@ export function coverageText(coverage: WebCoverage): string {
 
 /** A cost value with its exact coverage immediately beside it. */
 export function costWithCoverage(value: number | null, coverage: WebCoverage): string {
-  return `${formatCost(value)} (${coverageText(coverage)} attempts reported)`;
+  return `${formatCost(value, coverage)} (${coverageText(coverage)} attempts reported)`;
 }
 
 /** The server-derived running start and elapsed seconds, never a client timer. */

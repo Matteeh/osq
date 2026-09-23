@@ -202,8 +202,39 @@ describe('report projections', () => {
     const html = render({ report, graph: lateGraph });
     assert.match(html, /Planning records begin at change 004-late/);
     assert.match(html, /\$0\.00/);
-    assert.match(html, /unavailable \(0 of 0 sessions reported\)/);
+    assert.match(html, /not reported \(0 of 0 sessions reported\)/);
     assert.match(html, /1 of 2 attempts reported/);
+  });
+
+  it('labels a zero-coverage cost as not reported rather than a zero dollar amount', () => {
+    const zeroCoverage: WebGraph = {
+      capabilities: [],
+      changes: [
+        changeNode({
+          folderKey: '001-zero',
+          title: 'Zero',
+          landed: LANDED_EARLIER,
+          execution: observation({ cost: 0, costCoverage: { reported: 0, total: 1 } }),
+        }),
+      ],
+      edges: [],
+    };
+    const html = render({ report, graph: zeroCoverage });
+    assert.match(html, /not reported \(0 of 1 attempts reported\)/);
+    assert.equal(html.includes('$0.0000 (0 of 1'), false);
+  });
+
+  it('shows the unmarked task count only while it is above zero', () => {
+    const flagged = render({
+      report: { ...report, now: { ...report.now, unmarked: 3 } },
+      graph,
+    });
+    assert.match(flagged, /· unmarked 3/);
+    const clear = render({
+      report: { ...report, now: { ...report.now, unmarked: 0 } },
+      graph,
+    });
+    assert.equal(clear.includes('unmarked'), false);
   });
 
   it('chunks landed changes into consecutive windows of at most five', () => {
@@ -375,6 +406,76 @@ describe('report projections', () => {
     const html = render({ report, graph: malformedGraph });
     assert.equal(count(html, /<figure/g), 5);
     assert.match(html, /unavailable/);
+  });
+});
+
+describe('many-change report layout', () => {
+  function manyChangeGraph(count: number, undated: number): WebGraph {
+    const changes: WebChangeNode[] = Array.from({ length: count }, (_, index) => {
+      const number = index + 1;
+      return changeNode({
+        folderKey: `${String(number).padStart(3, '0')}-change-with-a-long-descriptive-slug`,
+        title: `Change ${number}`,
+        id: number,
+        landed:
+          index < count - undated
+            ? new Date(Date.parse(LANDED_EARLIER) + index * 86_400_000).toISOString()
+            : null,
+        execution: observation({ cost: 0.5, costCoverage: { reported: 1, total: 1 } }),
+      });
+    });
+    return { capabilities: [], changes, edges: [] };
+  }
+
+  function keyFor(number: number): string {
+    return `${String(number).padStart(3, '0')}-change-with-a-long-descriptive-slug`;
+  }
+
+  function writesTicks(html: string): number[] {
+    return [...html.matchAll(/<text class="report-writes-tick"[^>]*x="([0-9.]+)"/g)].map((match) =>
+      Number(match[1]),
+    );
+  }
+
+  function assertSpaced(ticks: readonly number[]): void {
+    for (let index = 1; index < ticks.length; index += 1) {
+      const gap = ticks[index] - ticks[index - 1];
+      assert.ok(
+        gap >= 24,
+        `writes labels ${ticks[index - 1]} and ${ticks[index]} are ${gap}px apart`,
+      );
+    }
+  }
+
+  it('draws fifty horizontal cost rows newest first, including undated archived changes', () => {
+    const html = render({ report, graph: manyChangeGraph(50, 37) });
+    assert.equal(count(html, /class="report-cost-row"/g), 50);
+    // Thirty-seven rows have no landed time, so the row count proves inclusion.
+    assert.match(html, /landed date not recorded/);
+    const firstTitle = html.match(/class="report-cost-row"><title>([^<]+)<\/title>/);
+    assert.equal(firstTitle?.[1], keyFor(50));
+    for (let number = 1; number <= 50; number += 1) {
+      assert.ok(html.includes(`<title>${keyFor(number)}</title>`), `missing row title ${number}`);
+    }
+    assert.ok(html.includes('\u2026'));
+  });
+
+  it('thins the writes axis to change numbers at least 24px apart', () => {
+    const mixed = writesTicks(render({ report, graph: manyChangeGraph(50, 37) }));
+    assert.ok(mixed.length > 1);
+    assertSpaced(mixed);
+    const dense = writesTicks(render({ report, graph: manyChangeGraph(50, 0) }));
+    assert.ok(dense.length > 1);
+    assert.ok(dense.length < 50);
+    assertSpaced(dense);
+  });
+
+  it('titles every writes band with its full folder key', () => {
+    const html = render({ report, graph: manyChangeGraph(50, 0) });
+    assert.equal(count(html, /class="report-writes-band"/g), 50);
+    for (let number = 1; number <= 50; number += 1) {
+      assert.ok(html.includes(`<title>${keyFor(number)}</title>`), `missing band title ${number}`);
+    }
   });
 });
 

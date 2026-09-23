@@ -115,32 +115,32 @@ function count(html: string, pattern: RegExp): number {
 }
 
 describe('graph layout helpers', () => {
-  it('orders archived changes by landed time then folder key and drops bad dates', () => {
+  it('orders archived changes by change number and keeps one with no landed time', () => {
     const mixed: WebGraph = {
       capabilities: [capability('alpha')],
       changes: [
-        changeNode({ folderKey: '002-b', title: 'B', landed: LATE }),
-        changeNode({ folderKey: '001-a', title: 'A', landed: EARLY }),
-        changeNode({ folderKey: '003-tie', title: 'Tie', landed: LATE }),
-        changeNode({ folderKey: '004-bad', title: 'Bad', landed: 'not-a-date' }),
-        changeNode({ folderKey: '005-active', title: 'Active', state: 'active' }),
+        changeNode({ folderKey: '002-b', title: 'B', id: 2, landed: LATE }),
+        changeNode({ folderKey: '001-a', title: 'A', id: 1, landed: EARLY }),
+        changeNode({ folderKey: '003-tie', title: 'Tie', id: 3, landed: LATE }),
+        changeNode({ folderKey: '004-bad', title: 'Bad', id: 4, landed: 'not-a-date' }),
+        changeNode({ folderKey: '005-active', title: 'Active', id: 5, state: 'active' }),
       ],
       edges: [],
     };
     const ordered = orderedArchived(mixed);
     assert.deepEqual(
-      ordered.map((entry) => entry.node.folderKey),
-      ['001-a', '002-b', '003-tie'],
+      ordered.map((node) => node.folderKey),
+      ['001-a', '002-b', '003-tie', '004-bad'],
     );
     const layout = graphLayout(mixed, DEFAULT_GRAPH_CONTROLS);
     assert.deepEqual(
       layout.marks.map((mark) => mark.folderKey),
-      ['001-a', '002-b', '003-tie', '005-active'],
+      ['001-a', '002-b', '003-tie', '004-bad', '005-active'],
     );
     const archivedMarks = layout.marks.filter((mark) => mark.location === 'archived');
     assert.ok((archivedMarks[0]?.x ?? 0) < (archivedMarks[1]?.x ?? 0));
-    // Equal landed times get stable per-location ordinal offsets, not exact overlap.
     assert.ok((archivedMarks[1]?.x ?? 0) < (archivedMarks[2]?.x ?? 0));
+    assert.ok((archivedMarks[2]?.x ?? 0) < (archivedMarks[3]?.x ?? 0));
   });
 
   it('renders one mark per change and connects every lane named by writes edges', () => {
@@ -311,6 +311,34 @@ describe('graph rendering', () => {
     assert.ok(count(html, /tabindex="0"/) >= 3);
   });
 
+  it('renders undated archived changes in id order with visible typed edges and full lane names', () => {
+    const undated: WebGraph = {
+      capabilities: [capability('alpha'), capability('metrics-and-reporting')],
+      changes: [
+        changeNode({ folderKey: '011-second', title: 'Second', id: 11 }),
+        changeNode({ folderKey: '007-first', title: 'First', id: 7 }),
+      ],
+      edges: [
+        edge('depends_on', '011-second', '007-first'),
+        edge('reads', '011-second', 'metrics-and-reporting'),
+      ],
+    };
+    const layout = graphLayout(undated, DEFAULT_GRAPH_CONTROLS);
+    assert.deepEqual(
+      layout.marks.map((mark) => mark.folderKey),
+      ['007-first', '011-second'],
+    );
+    assert.equal(layout.depends.length, 1);
+    assert.equal(layout.reads.length, 1);
+    assert.ok(layout.laneLabelWidth > GRAPH_GEOMETRY.laneLabelWidth);
+
+    const html = render({ graph: undated });
+    assert.equal(count(html, /class="graph-mark /), 2);
+    assert.equal(count(html, /class="graph-edge graph-edge-depends"/), 1);
+    assert.equal(count(html, /class="graph-edge graph-edge-reads"/), 1);
+    assert.match(html, />metrics-and-reporting<\/text>/);
+  });
+
   it('hides rejected content by default and reveals it through the toggle', () => {
     const hidden = render({ graph });
     assert.equal(hidden.includes('002-rejected-change'), false);
@@ -337,7 +365,7 @@ describe('graph rendering', () => {
     const html = render({ graph });
     const label = html.match(/aria-label="(Active Change;[^"]*)"/)?.[1] ?? '';
     assert.match(label, /Active Change/);
-    assert.match(label, /date /);
+    assert.match(label, /landed date not recorded/);
     assert.match(label, /planner opencode\/big-pickle/);
     assert.match(label, /tasks 3/);
     assert.match(label, /attempts 3/);

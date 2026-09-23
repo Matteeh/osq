@@ -65,8 +65,13 @@ export function landedChanges(graph: WebGraph): LandedChange[] {
   return changes.sort((a, b) => a.landedMs - b.landedMs || a.folderKey.localeCompare(b.folderKey));
 }
 
-/** Index of the first landed change with a valid planning record, or -1. */
-export function planningBoundaryIndex(changes: readonly LandedChange[]): number {
+/** Index of the first change with a valid planning record, or -1. */
+export function planningBoundaryIndex(
+  changes: readonly {
+    readonly planningCost: number | null;
+    readonly planningCoverage: WebCoverage;
+  }[],
+): number {
   return changes.findIndex(
     (change) => change.planningCost !== null || change.planningCoverage.total > 0,
   );

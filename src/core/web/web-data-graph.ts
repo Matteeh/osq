@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
+import { deriveSpecState } from '../status/state.js';
 import {
   listCapabilityFolders,
   listChangeFolders,
@@ -34,6 +35,16 @@ async function readProposalFields(folderPath: string): Promise<ProposalFields | 
 
 function edgeKey(kind: WebGraphEdge['kind'], from: string, to: string): string {
   return `${kind}:${from}->${to}`;
+}
+
+/**
+ * Done tasks for one change folder, using the same marker derivation as
+ * `osq status`. A folder whose state cannot be derived counts zero.
+ */
+async function countDoneTasks(projectRoot: string, folderPath: string): Promise<number> {
+  const derived = await deriveSpecState(projectRoot, folderPath).catch(() => null);
+  if (!derived) return 0;
+  return derived.tasks.filter((task) => task.status === 'done').length;
 }
 
 /** One present change for a numeric or key dependency declaration, if unique. */
@@ -89,6 +100,7 @@ async function changeNodes(projectRoot: string, config: OsqConfig): Promise<WebC
       rejection,
       planner: await readPlannerAttribution(brief, manifest),
       taskCount: await countTasks(folder.folderPath),
+      doneCount: await countDoneTasks(projectRoot, folder.folderPath),
       attempts: execution.attempts,
       execution: execution.observation,
       planning,

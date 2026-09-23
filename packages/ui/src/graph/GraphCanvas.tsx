@@ -42,8 +42,9 @@ export function GraphCanvas({
       >
         <title>Capability archive</title>
         <desc>
-          One horizontal lane per current capability with landed changes increasing left to right,
-          active changes in a right gutter, and optional rejected, reads, and dependency layers.
+          One horizontal lane per current capability with archived changes increasing left to right
+          by change number, active changes in a right gutter, and optional rejected, reads, and
+          dependency layers.
         </desc>
         <defs>
           <marker

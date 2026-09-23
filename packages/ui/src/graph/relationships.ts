@@ -1,12 +1,6 @@
 import type { WebGraph } from '../../../../src/core/web/web-data-types.js';
 import type { GraphControls } from './controls.js';
-import {
-  GRAPH_GEOMETRY,
-  type GraphLane,
-  type GraphMark,
-  type GraphRelationship,
-  round,
-} from './types.js';
+import { type GraphLane, type GraphMark, type GraphRelationship, round } from './types.js';
 
 function linePath(x1: number, y1: number, x2: number, y2: number): string {
   return `M ${round(x1)} ${round(y1)} L ${round(x2)} ${round(y2)}`;
@@ -22,6 +16,7 @@ export function projectRelationships(
   controls: GraphControls,
   marks: readonly GraphMark[],
   lanes: readonly GraphLane[],
+  laneLabelWidth: number,
 ): { depends: GraphRelationship[]; reads: GraphRelationship[] } {
   const markByKey = new Map(marks.map((mark) => [mark.folderKey, mark]));
   const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
@@ -55,7 +50,7 @@ export function projectRelationships(
         kind: 'reads',
         from: from.folderKey,
         to: lane.id,
-        path: linePath(from.x, from.y, GRAPH_GEOMETRY.laneLabelWidth, lane.y),
+        path: linePath(from.x, from.y, laneLabelWidth, lane.y),
       });
     }
     reads.sort((a, b) => a.key.localeCompare(b.key));

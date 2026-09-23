@@ -80,7 +80,7 @@ export async function observeTaskFile(
   const stream = observeTaskStream(events);
   return {
     attempts: stream.attempts,
-    cost: stream.attempts === 0 ? null : sum(stream.costValues),
+    cost: stream.costReportedAttempts === 0 ? null : sum(stream.costValues),
     costCoverage: { reported: stream.costReportedAttempts, total: stream.attempts },
     duration: measureDurationSeconds(events),
   };
@@ -88,7 +88,7 @@ export async function observeTaskFile(
 
 /**
  * Aggregates per-change execution evidence from numbered task streams only.
- * `cost` stays null when no attempt was recorded; no value is estimated.
+ * `cost` stays null when no attempt reported a cost; no value is estimated.
  */
 export async function observeExecution(folderPath: string): Promise<ChangeExecutionObservation> {
   const files = await listTaskEventFiles(folderPath);
@@ -122,7 +122,7 @@ export async function observeExecution(folderPath: string): Promise<ChangeExecut
   return {
     attempts,
     observation: {
-      cost: attempts === 0 ? null : sum(costValues),
+      cost: reported === 0 ? null : sum(costValues),
       costCoverage,
       tokens: sortedTokenGroups(groups),
       durations,
@@ -133,7 +133,8 @@ export async function observeExecution(folderPath: string): Promise<ChangeExecut
 
 /**
  * Aggregates per-change planning evidence from valid `.run/plan.jsonl`
- * lifecycle pairs. No valid start yields a null planning cost, never zero.
+ * lifecycle pairs. No valid start, or no session reporting any usage, yields a
+ * null planning cost rather than a summed zero.
  */
 export async function observePlanning(folderPath: string): Promise<WebMetricObservation> {
   const sessions = (await readPlanningSessions(folderPath)).filter((session) => session.started);
@@ -210,7 +211,7 @@ export async function observePlanning(folderPath: string): Promise<WebMetricObse
   }
 
   return {
-    cost: sum(costValues),
+    cost: reported === 0 ? null : sum(costValues),
     costCoverage: { reported, total: sessions.length },
     tokens: sortedTokenGroups(groups),
     durations,

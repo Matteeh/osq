@@ -35,6 +35,7 @@ export interface NowMetrics {
   readonly regressed: number;
   readonly running: number;
   readonly pending: number;
+  readonly unmarked: number;
 }
 
 export interface DurationMetrics {
@@ -261,6 +262,27 @@ export function formatCost(total: number): string {
   return `$${fixed}`;
 }
 
+/**
+ * Formats a cost only when something was actually reported. A non-zero sum
+ * proves a reported value even when it was not attributed to a counted attempt;
+ * a counted reporter with a zero sum proves a reported zero. Otherwise the
+ * honest label is `not reported` rather than a dollar amount summed from nothing.
+ */
+function formatReportedCost(total: number, reportedCount: number): string {
+  return total !== 0 || reportedCount > 0 ? formatCost(total) : 'not reported';
+}
+
+/**
+ * Whether the queue's planning spend has at least one reported value. Complete
+ * coverage with sessions proves every session reported, including recorded
+ * zeros; a non-zero sum proves one did and is handled by the formatter. An
+ * incomplete zero sum cannot tell an unrecorded cost from a reported zero, so
+ * it is treated as unreported rather than invented.
+ */
+function queuePlanningCostReported(queue: QueueReport): boolean {
+  return queue.planning.sessions > 0 && queue.planning.costCoverageComplete;
+}
+
 const FILE_CHANGE_TOOLS = new Set(['edit', 'write']);
 
 /**
@@ -308,6 +330,8 @@ interface DiscoveredTask {
   readonly id: string;
   readonly folderPath: string;
   readonly eventFilePath: string;
+  /** True when the change sits under the archive root, so nothing can run in it. */
+  readonly archived: boolean;
   readonly status: TaskStatus;
 }
 
@@ -804,6 +828,7 @@ export async function getMetricsReport(
 
   // 3. Shared task discovery. Both the marker and event views iterate this same
   // set, so current state and history can never disagree about which tasks exist.
+  const archivedFolderSet = new Set(archivedFolders);
   const discoveredTasks: DiscoveredTask[] = [];
   for (const folderPath of allSpecFolders) {
     const changeId = path.basename(folderPath);
@@ -834,12 +859,15 @@ export async function getMetricsReport(
         id: `${changeId}/${taskNumber}`,
         folderPath,
         eventFilePath: path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`),
+        archived: archivedFolderSet.has(folderPath),
         status: statusByTask.get(taskNumber) ?? 'pending',
       });
     }
   }
 
-  // 4. Current state: markers only.
+  // 4. Current state: markers only. A task in an archived change that carries no
+  // terminal or running marker can never run again, so it is unmarked rather
+  // than pending.
   let doneTasks = 0;
   let verifiedTasks = 0;
   let manualTasks = 0;
@@ -847,6 +875,7 @@ export async function getMetricsReport(
   let regressedTasks = 0;
   let runningTasks = 0;
   let pendingTasks = 0;
+  let unmarkedTasks = 0;
 
   const manualCache = new Map<string, boolean>();
   for (const task of discoveredTasks) {
@@ -873,7 +902,8 @@ export async function getMetricsReport(
         runningTasks++;
         break;
       case 'pending':
-        pendingTasks++;
+        if (task.archived) unmarkedTasks++;
+        else pendingTasks++;
         break;
     }
   }
@@ -1189,6 +1219,7 @@ export async function getMetricsReport(
       regressed: regressedTasks,
       running: runningTasks,
       pending: pendingTasks,
+      unmarked: unmarkedTasks,
     },
     completionRate,
     history: {
@@ -1210,7 +1241,7 @@ export async function getMetricsReport(
       cost: {
         total: totalCost,
         perSpec: sortedPerSpec,
-        formattedTotal: formatCost(totalCost),
+        formattedTotal: formatReportedCost(totalCost, reportedCostAttempts),
         provenance: 'harness-reported',
         coverage: {
           reportedAttempts: reportedCostAttempts,
@@ -1276,7 +1307,7 @@ export async function getMetricsReport(
       },
       cost: {
         total: planningCost,
-        formattedTotal: formatCost(planningCost),
+        formattedTotal: formatReportedCost(planningCost, planningReportedSessions),
         provenance: 'harness-reported',
       },
       coverage: {
@@ -1496,6 +1527,7 @@ export function formatMetricsReport(
   lines.push(`  Regressed: ${report.now.regressed}`);
   lines.push(`  Running: ${report.now.running}`);
   lines.push(`  Pending: ${report.now.pending}`);
+  lines.push(`  Unmarked: ${report.now.unmarked}`);
   lines.push(`  Completion rate: ${report.completionRate}%`);
 
   lines.push('');
@@ -1627,9 +1659,11 @@ export function formatMetricsReport(
     lines.push('  (not configured)');
   } else {
     lines.push(`  Landed: ${queue.landed} of ${queue.total} items`);
-    lines.push(
-      `  Planning sessions: ${queue.planning.sessions}, recorded cost: ${formatCost(queue.planning.cost)}`,
+    const queueCost = formatReportedCost(
+      queue.planning.cost,
+      queuePlanningCostReported(queue) ? 1 : 0,
     );
+    lines.push(`  Planning sessions: ${queue.planning.sessions}, recorded cost: ${queueCost}`);
     lines.push(
       `  Cost coverage: ${queue.planning.costCoverageComplete ? 'complete' : 'incomplete'}`,
     );

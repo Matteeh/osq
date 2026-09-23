@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9f8f65f2c3c6eef61973d37cdf81f72fddb7e0ddf68c79db49f50be3c81f67ce"
+build_stamp: "38bbc6d"
+exit_code: 0
+scope_files: {"fixture/report/expected.json":"sha256:1d9d9632fac8ed1d767a69aaf4e425154d2ac6939d9695cd22b5181651858ae4","src/core/report/report.ts":"sha256:e5b7f5e72c1493cc299105efac605b0aa107eac3ec591d7436116e33d3becc20","tests/report-cost.test.ts":"sha256:f673a4d263be54868b7954d2108a666d6fcdb3b94a2ceaa64975c8b5b0b7f76b","tests/report-json.test.ts":"sha256:589a5b83ae90f37ae736f24cf76031d87045c14548b655f734d2b86200f15446","tests/report-now.test.ts":"sha256:98ffc468adc779a20c476753e4117e8d6c901d3719c7b4a6c780ade7717895db","tests/report-planning.test.ts":"sha256:bfd05c7f184e8c55d6a14a3c14d581abad70683d8cdd964436cc38f5e2f26eae","tests/report-task-states.test.ts":"sha256:044b580a6612fa3b4d35b8e9a37b64b6f23b64c62fc9783e668a57d53c8ed0a5","tests/report-unreported.test.ts":"sha256:2a2e7c5700c3a6711e5a48bc8ab1cd4fd23d71e4375278fb86ab3a54c720e990"}
+---
+2026-09-23T08:25:20.151Z

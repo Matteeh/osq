@@ -1,17 +1,24 @@
-/** The three views the dashboard can show. */
+/** The five views the dashboard can show. */
 export type Route =
+  | { readonly name: 'home' }
+  | { readonly name: 'changes' }
   | { readonly name: 'report' }
   | { readonly name: 'graph' }
   | { readonly name: 'change'; readonly folderKey: string };
 
+export const HOME_ROUTE: Route = { name: 'home' };
+export const CHANGES_ROUTE: Route = { name: 'changes' };
 export const REPORT_ROUTE: Route = { name: 'report' };
 export const GRAPH_ROUTE: Route = { name: 'graph' };
 
+const CHANGES_PATH = '/changes';
 const CHANGE_PREFIX = '/changes/';
 const HASH_PREFIX = '#';
 
 /** Render a route as its canonical location hash. */
 export function routeToHash(route: Route): string {
+  if (route.name === 'home') return `${HASH_PREFIX}/`;
+  if (route.name === 'changes') return `${HASH_PREFIX}${CHANGES_PATH}`;
   if (route.name === 'report') return `${HASH_PREFIX}/report`;
   if (route.name === 'graph') return `${HASH_PREFIX}/graph`;
   return `${HASH_PREFIX}${CHANGE_PREFIX}${encodeURIComponent(route.folderKey)}`;
@@ -34,8 +41,9 @@ export function decodeFolderKey(encoded: string): string | null {
 /** Parse a location hash into a route, or `null` when it is not usable. */
 export function parseHash(hash: string): Route | null {
   const raw = hash.startsWith(HASH_PREFIX) ? hash.slice(HASH_PREFIX.length) : hash;
-  if (raw === '' || raw === '/') return REPORT_ROUTE;
+  if (raw === '' || raw === '/') return HOME_ROUTE;
   if (!raw.startsWith('/')) return null;
+  if (raw === CHANGES_PATH) return CHANGES_ROUTE;
   if (raw === '/report') return REPORT_ROUTE;
   if (raw === '/graph') return GRAPH_ROUTE;
   if (!raw.startsWith(CHANGE_PREFIX)) return null;
@@ -43,9 +51,9 @@ export function parseHash(hash: string): Route | null {
   return folderKey === null ? null : { name: 'change', folderKey };
 }
 
-/** Resolve a hash to a route, falling back to the report view. */
+/** Resolve a hash to a route, falling back to the home view. */
 export function resolveRoute(hash: string): Route {
-  return parseHash(hash) ?? REPORT_ROUTE;
+  return parseHash(hash) ?? HOME_ROUTE;
 }
 
 /** The browser surface the hash router needs; injectable for focused tests. */

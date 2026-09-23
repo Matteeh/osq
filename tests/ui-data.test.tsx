@@ -106,22 +106,32 @@ function renderApp(overrides: Partial<AppProps> & Pick<AppProps, 'documents'>): 
 const EMPTY: DashboardSnapshot = { report: null, graph: null, inbox: null, change: null };
 
 describe('hash router', () => {
-  it('recognizes the canonical report, graph, and change routes', () => {
+  it('recognizes the canonical home, changes, report, graph, and change routes', () => {
     assert.deepEqual(parseHash('#/report'), { name: 'report' });
     assert.deepEqual(parseHash('#/graph'), { name: 'graph' });
+    assert.deepEqual(parseHash('#/changes'), { name: 'changes' });
     assert.deepEqual(parseHash('#/changes/010-active-change'), {
       name: 'change',
       folderKey: '010-active-change',
     });
-    assert.deepEqual(parseHash('#/'), { name: 'report' });
-    assert.deepEqual(parseHash('#'), { name: 'report' });
+    assert.deepEqual(parseHash('#/'), { name: 'home' });
+    assert.deepEqual(parseHash('#'), { name: 'home' });
   });
 
-  it('round-trips a safely encoded change key and preserves a fallback', () => {
+  it('round-trips every static route, a safely encoded change key, and a fallback', () => {
+    for (const route of [
+      { name: 'home' },
+      { name: 'changes' },
+      { name: 'report' },
+      { name: 'graph' },
+    ] as const) {
+      assert.deepEqual(parseHash(routeToHash(route)), route);
+    }
     const route = { name: 'change', folderKey: '010 spaces & symbols' } as const;
     assert.deepEqual(parseHash(routeToHash(route)), route);
-    assert.equal(resolveRoute('#/nothing-here'), resolveRoute('#/report'));
-    assert.deepEqual(resolveRoute(''), { name: 'report' });
+    assert.equal(resolveRoute('#/nothing-here'), resolveRoute('#/'));
+    assert.deepEqual(resolveRoute('#/nothing-here'), { name: 'home' });
+    assert.deepEqual(resolveRoute(''), { name: 'home' });
   });
 
   it('rejects separators, traversal, and malformed escapes', () => {
@@ -176,7 +186,8 @@ describe('UI workspace dependency boundary', () => {
 
 describe('inlined dashboard data', () => {
   it('server-renders every route without fetch or EventSource', async () => {
-    const inline = { report, graph, changes: { '010-active-change': change } };
+    const inbox = { needsYou: [], running: [], landed: [] };
+    const inline = { report, graph, inbox, changes: { '010-active-change': change } };
     let fetches = 0;
     let sources = 0;
     const data = createDashboardData({
@@ -205,11 +216,17 @@ describe('inlined dashboard data', () => {
     const changeSnapshot = await data.load({ name: 'change', folderKey: '010-active-change' });
     assert.deepEqual(changeSnapshot.change, change);
 
+    const homeSnapshot = await data.load({ name: 'home' });
+    assert.equal(homeSnapshot.inbox, inbox);
+
+    const changesSnapshot = await data.load({ name: 'changes' });
+    assert.equal(changesSnapshot.graph, graph);
+
     assert.equal(fetches, 0);
     assert.equal(sources, 0);
   });
 
-  it('renders navigation, state messaging, and all three placeholders', () => {
+  it('renders the nav order and every route placeholder', () => {
     const inlineDocuments: DashboardSnapshot = {
       report,
       graph,
@@ -217,9 +234,25 @@ describe('inlined dashboard data', () => {
       change,
     };
     const reportHtml = renderApp({ route: { name: 'report' }, documents: inlineDocuments });
+    assert.match(reportHtml, /href="#\/"/);
+    assert.match(reportHtml, /href="#\/changes"/);
     assert.match(reportHtml, /href="#\/report"/);
     assert.match(reportHtml, /href="#\/graph"/);
+    const order = ['Home', 'Changes', 'Report', 'Graph'].map((label) =>
+      reportHtml.indexOf(`>${label}<`),
+    );
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+    );
+    assert.ok(order.every((index) => index >= 0));
     assert.match(reportHtml, /Delivery report/);
+
+    const homeHtml = renderApp({ route: { name: 'home' }, documents: inlineDocuments });
+    assert.match(homeHtml, /No inbox is available/);
+
+    const changesHtml = renderApp({ route: { name: 'changes' }, documents: inlineDocuments });
+    assert.match(changesHtml, /Changes/);
 
     const graphHtml = renderApp({ route: { name: 'graph' }, documents: inlineDocuments });
     assert.match(graphHtml, /Capability archive/);

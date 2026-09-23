@@ -287,6 +287,7 @@ osq status               overview of all changes, tasks, and runtime states
 osq show <id>            change details, tasks, results, dead markers, and event timeline
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
+osq serve --export <dir> write a static dashboard snapshot to <dir> and exit
 osq doctor               validate repository health, harness availability, and pinned validator
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
 ```
@@ -386,6 +387,7 @@ osq report --json        # raw JSON report for scripting and CI pipelines
 osq serve                 # local dashboard at the configured serve.port, default http://127.0.0.1:4173/
 osq serve --port 0        # ask the OS for an ephemeral loopback port
 osq serve --open          # launch the printed URL in the default browser
+osq serve --export ./demo # write a static snapshot to ./demo and exit without serving
 ```
 
 `osq serve` starts a Node HTTP server bound only to `127.0.0.1` and prints its
@@ -393,6 +395,12 @@ exact URL. The CLI `--port` option overrides `serve.port` from `osq.config.ts`;
 `--port 0` requests an operating-system-assigned port, and only integers from 0
 through 65535 are accepted. `--open` launches the printed URL through the
 platform's default browser without adding a runtime dependency.
+
+`osq serve --export <dir>` writes a self-contained snapshot of every dashboard
+view into an empty or missing `<dir>` and exits 0 without binding a port or
+opening a browser. The snapshot needs a static host and cannot be opened
+directly from `file://`, and it scrubs only the project root and home directory
+paths, so read the export before publishing it.
 
 The dashboard is one hash-routed read-only page: `#/report` renders delivery
 charts, `#/graph` renders the capability archive graph, and `#/changes/<key>`

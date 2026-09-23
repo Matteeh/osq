@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
+import { readLandedAt } from '../src/core/web/web-data-lifecycle.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHIVE_DIR = path.join(REPO_ROOT, 'openspec', 'changes', 'archive');
@@ -88,13 +90,54 @@ function stripLegacyDeltaReferences(content: string): string {
   return content.replace(/Delta from /g, '');
 }
 
-/** Archive folders from 016 onward, ascending lexicographic order. */
-async function archivedChangeFolders(): Promise<string[]> {
-  const entries = await fs.readdir(ARCHIVE_DIR, { withFileTypes: true });
-  return entries
+/**
+ * Archive folders from 016 onward in landing order. Archives that never
+ * recorded a change-level `archived` event come first, in folder-name order.
+ * The rest follow by that event's timestamp, with ties broken by folder name.
+ */
+async function archivedChangeFolders(archiveDir: string = ARCHIVE_DIR): Promise<string[]> {
+  const entries = await fs.readdir(archiveDir, { withFileTypes: true });
+  const names = entries
     .filter((entry) => entry.isDirectory() && entry.name >= FIRST_ARCHIVED_DELTA)
-    .map((entry) => entry.name)
-    .sort();
+    .map((entry) => entry.name);
+
+  const landed = await Promise.all(
+    names.map(async (name) => ({
+      name,
+      landedAt: await readLandedAt(path.join(archiveDir, name)),
+    })),
+  );
+
+  return landed
+    .sort((a, b) => {
+      if (a.landedAt === null || b.landedAt === null) {
+        if (a.landedAt === b.landedAt) return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+        return a.landedAt === null ? -1 : 1;
+      }
+      if (a.landedAt !== b.landedAt) return a.landedAt < b.landedAt ? -1 : 1;
+      return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+    })
+    .map((entry) => entry.name);
+}
+
+/** Writes one temporary archived change that carries a single capability delta. */
+async function writeArchivedChange(
+  archiveDir: string,
+  folder: string,
+  capability: string,
+  landedAt: string,
+): Promise<void> {
+  const changeDir = path.join(archiveDir, folder);
+  await fs.mkdir(path.join(changeDir, 'specs', capability), { recursive: true });
+  await fs.writeFile(
+    path.join(changeDir, 'specs', capability, 'spec.md'),
+    `# Delta for ${capability}\n`,
+  );
+  await fs.mkdir(path.join(changeDir, '.run', 'events'), { recursive: true });
+  await fs.writeFile(
+    path.join(changeDir, '.run', 'events', 'change.jsonl'),
+    `${JSON.stringify({ type: 'archived', timestamp: landedAt })}\n`,
+  );
 }
 
 /**
@@ -223,5 +266,39 @@ describe('Living spec delta equivalence', () => {
     const archiver = await import('../src/watcher/archiver.js');
     assert.equal(typeof archiver.applyOpenSpecDeltas, 'function');
     assert.ok(!('applyDelta' in archiver), 'applyDelta must not be exported');
+  });
+
+  it('orders archives by landing time and puts eventless folders first', async () => {
+    const tempArchiveDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-archive-order-'));
+    try {
+      const capability = 'cli-foundation';
+      await writeArchivedChange(
+        tempArchiveDir,
+        '060-later-landed',
+        capability,
+        '2026-09-23T09:00:00.000Z',
+      );
+      await writeArchivedChange(
+        tempArchiveDir,
+        '061-earlier-landed',
+        capability,
+        '2026-09-23T08:00:00.000Z',
+      );
+      await fs.mkdir(path.join(tempArchiveDir, '059-no-event', 'specs', capability), {
+        recursive: true,
+      });
+      await fs.writeFile(
+        path.join(tempArchiveDir, '059-no-event', 'specs', capability, 'spec.md'),
+        `# Delta for ${capability}\n`,
+      );
+
+      assert.deepEqual(await archivedChangeFolders(tempArchiveDir), [
+        '059-no-event',
+        '061-earlier-landed',
+        '060-later-landed',
+      ]);
+    } finally {
+      await fs.rm(tempArchiveDir, { recursive: true, force: true });
+    }
   });
 });

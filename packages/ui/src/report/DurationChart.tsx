@@ -1,8 +1,13 @@
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { DataTable, Figure } from './Figure.js';
 import { formatCount } from './format.js';
 import type { DurationBin } from './landed.js';
 import { bandScale, linearScale, round } from './scales.js';
+
+const AXIS_STYLE: CSSProperties = { stroke: 'var(--border)' };
+const ACCENT_FILL: CSSProperties = { fill: 'var(--accent)' };
+const MUTED_STYLE: CSSProperties = { fill: 'var(--muted)' };
+const TEXT_STYLE: CSSProperties = { fill: 'var(--text)' };
 
 const WIDTH = 720;
 const HEIGHT = 220;
@@ -52,15 +57,27 @@ export function DurationChart({ bins }: DurationChartProps): ReactElement {
           Counts of finite non-negative covered task durations in fixed bins. Uncovered tasks never
           contribute an estimated duration.
         </desc>
-        <line x1={PLOT_LEFT} y1={PLOT_BOTTOM} x2={PLOT_RIGHT} y2={PLOT_BOTTOM} stroke="#8a8a86" />
-        <text x={PLOT_LEFT - 6} y={round(y(max) + 3)} textAnchor="end" fontSize={9}>
+        <line x1={PLOT_LEFT} y1={PLOT_BOTTOM} x2={PLOT_RIGHT} y2={PLOT_BOTTOM} style={AXIS_STYLE} />
+        <text
+          x={PLOT_LEFT - 6}
+          y={round(y(max) + 3)}
+          textAnchor="end"
+          fontSize={9}
+          style={MUTED_STYLE}
+        >
           {formatCount(max)}
         </text>
-        <text x={PLOT_LEFT - 6} y={PLOT_BOTTOM + 3} textAnchor="end" fontSize={9}>
+        <text
+          x={PLOT_LEFT - 6}
+          y={PLOT_BOTTOM + 3}
+          textAnchor="end"
+          fontSize={9}
+          style={MUTED_STYLE}
+        >
           0
         </text>
         {total === 0 ? (
-          <text x={PLOT_LEFT + 8} y={PLOT_TOP + 16} fontSize={10}>
+          <text x={PLOT_LEFT + 8} y={PLOT_TOP + 16} fontSize={10} style={MUTED_STYLE}>
             Covered task durations are unavailable.
           </text>
         ) : null}
@@ -76,14 +93,26 @@ export function DurationChart({ bins }: DurationChartProps): ReactElement {
                 y={round(top)}
                 width={round(barWidth)}
                 height={round(barHeight)}
-                fill="#3f7a5c"
+                style={ACCENT_FILL}
               >
                 <title>{`${bin.label}: ${formatCount(bin.count)} covered tasks`}</title>
               </rect>
-              <text x={round(band.center)} y={round(top - 5)} textAnchor="middle" fontSize={9}>
+              <text
+                x={round(band.center)}
+                y={round(top - 5)}
+                textAnchor="middle"
+                fontSize={9}
+                style={TEXT_STYLE}
+              >
                 {formatCount(bin.count)}
               </text>
-              <text x={round(band.center)} y={PLOT_BOTTOM + 14} textAnchor="middle" fontSize={8}>
+              <text
+                x={round(band.center)}
+                y={PLOT_BOTTOM + 14}
+                textAnchor="middle"
+                fontSize={8}
+                style={MUTED_STYLE}
+              >
                 {bin.label}
               </text>
             </g>

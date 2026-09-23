@@ -172,14 +172,14 @@ describe('report cost metrics', () => {
       ]);
 
       assert.equal(report.history.cost.total, 0);
-      assert.equal(report.history.cost.formattedTotal, '$0.0000');
+      assert.equal(report.history.cost.formattedTotal, 'not reported');
       assert.deepEqual(report.history.cost.perSpec, {});
       assert.equal(report.history.cost.coverage.reportedAttempts, 0);
       assert.equal(report.history.cost.coverage.totalAttempts, 1);
 
       const formatted = formatMetricsReport(report);
       assert.ok(
-        formatted.includes('Harness-reported cost: $0.0000 (0 of 1 attempts reported cost)'),
+        formatted.includes('Harness-reported cost: not reported (0 of 1 attempts reported cost)'),
         formatted,
       );
       assert.ok(!formatted.includes('Cost:'), formatted);

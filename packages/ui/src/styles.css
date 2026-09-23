@@ -1,23 +1,29 @@
 :root {
   color-scheme: light dark;
-  --osq-bg: #f7f7f5;
-  --osq-surface: #ffffff;
-  --osq-fg: #1b1b1b;
-  --osq-muted: #5b5b5b;
-  --osq-border: #d7d7d2;
-  --osq-accent: #2f5d8a;
-  --osq-error: #a32b2b;
+  --bg: #fafaf9;
+  --text: #1c1d1f;
+  --muted: #6b6f76;
+  --border: #e4e4e0;
+  --accent: #2f5d8a;
+  --status-verified: #1f7a4d;
+  --status-dead: #b42318;
+  --status-regressed: #b54708;
+  --status-running: #175cd3;
+  --status-pending: #667085;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --osq-bg: #16181a;
-    --osq-surface: #1f2225;
-    --osq-fg: #ececec;
-    --osq-muted: #a6a6a6;
-    --osq-border: #343a3f;
-    --osq-accent: #8ab4e8;
-    --osq-error: #e88a8a;
+    --bg: #111214;
+    --text: #e6e6e3;
+    --muted: #9a9ea6;
+    --border: #2a2c30;
+    --accent: #7fa7d4;
+    --status-verified: #5cc98f;
+    --status-dead: #f97066;
+    --status-regressed: #fdb022;
+    --status-running: #84adff;
+    --status-pending: #98a2b3;
   }
 }
 
@@ -27,11 +33,28 @@
 
 body {
   margin: 0;
-  background: var(--osq-bg);
-  color: var(--osq-fg);
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 0.9375rem;
+  font-weight: 400;
   line-height: 1.5;
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+}
+
+h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .app {
@@ -45,12 +68,11 @@ body {
   flex-wrap: wrap;
   gap: 0.75rem 1.5rem;
   align-items: center;
-  border-bottom: 1px solid var(--osq-border);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
 .app-header h1 {
-  font-size: 1.25rem;
   margin: 0;
 }
 
@@ -60,39 +82,100 @@ body {
 }
 
 .nav-link {
-  color: var(--osq-accent);
+  color: var(--accent);
   text-decoration: none;
 }
 
 .nav-link-active {
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
 }
 
 .refresh {
   margin-left: auto;
-  background: var(--osq-surface);
-  color: var(--osq-fg);
-  border: 1px solid var(--osq-border);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 0.35rem;
   padding: 0.3rem 0.7rem;
   cursor: pointer;
 }
 
 .state {
-  color: var(--osq-muted);
+  color: var(--muted);
 }
 
 .state-error {
-  color: var(--osq-error);
+  color: var(--status-dead);
 }
 
 .view {
   min-width: 0;
 }
 
-.view h2 {
-  font-size: 1.1rem;
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  color: var(--muted);
+  padding: 0.25rem 0.5rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.num,
+.task-table td:nth-child(3),
+.task-table td:nth-child(5),
+.task-table td:nth-child(6),
+.changes-table td:nth-child(3),
+.changes-table td:nth-child(4),
+.changes-table td:nth-child(5) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.graph-edge-depends,
+.graph-edge-reads {
+  fill: none;
+  stroke-width: 1.25px;
+}
+
+.graph-edge-depends {
+  stroke: var(--accent);
+}
+
+.graph-edge-reads {
+  stroke: var(--muted);
+  stroke-dasharray: 4 3;
 }
 
 @media (max-width: 40rem) {
