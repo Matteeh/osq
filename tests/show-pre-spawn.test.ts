@@ -175,27 +175,24 @@ describe('osq show pre-spawn verify', () => {
 
     const first = taskBlock(text, 'Mismatched Task');
     assert.ok(
-      first.includes('      Pre-spawn verify: exit 1, expected red, mismatch'),
-      `task 1 should read mismatch, got:\n${first}`,
+      first.includes('      Pre-spawn verify: started red: verify fails'),
+      `task 1 should read a red start, got:\n${first}`,
     );
     // Directly after the Verify line.
     const firstLines = first.split('\n');
     const verifyIndex = firstLines.findIndex((line) => line.trim().startsWith('Verify:'));
     assert.ok(verifyIndex >= 0, 'task 1 Verify line should render');
-    assert.equal(
-      firstLines[verifyIndex + 1],
-      '      Pre-spawn verify: exit 1, expected red, mismatch',
-    );
+    assert.equal(firstLines[verifyIndex + 1], '      Pre-spawn verify: started red: verify fails');
 
     const second = taskBlock(text, 'Matched Task');
     assert.ok(
-      second.includes('      Pre-spawn verify: exit 0, expected red, matched'),
-      `task 2 should read matched, got:\n${second}`,
+      second.includes('      Pre-spawn verify: started green, but it declared red'),
+      `task 2 should read a green start declared red, got:\n${second}`,
     );
 
     const third = taskBlock(text, 'Unavailable Task');
     assert.ok(
-      third.includes('      Pre-spawn verify: exit unavailable, expected unavailable, matched'),
+      third.includes('      Pre-spawn verify: unavailable'),
       `task 3 should read unavailable values, got:\n${third}`,
     );
 

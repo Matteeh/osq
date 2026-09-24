@@ -1,0 +1,120 @@
+{"type":"verify_ran","timestamp":"2026-09-24T20:31:53.670Z","data":{"command":"node --import tsx --test tests/pre-spawn-words.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/pre-spawn-words.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/pre-spawn-words.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-24T20:31:54.033Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":1887,"repoFiles":1219,"repoLines":127527,"importFanIn":3,"proposalWords":876,"taskWords":339,"deltaRequirements":7,"deltaScenarios":19}}
+{"type":"started","timestamp":"2026-09-24T20:31:54.038Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"fa03f50","pid":37875,"timeoutSeconds":1800,"version":"0.2.1","commit":"fa03f50"}}
+{"type":"tool","timestamp":"2026-09-24T20:31:57.599Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:31:57.697Z","data":{"tool":"read","summary":"tests/pre-spawn-verify.test.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:31:57.812Z","data":{"tool":"read","summary":"tests/show-pre-spawn.test.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:31:57.910Z","data":{"tool":"read","summary":"tests/show-pre-spawn-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:31:57.978Z","data":{"promptTokens":40561,"candidateTokens":190,"totalTokens":50149,"cachedTokens":9344,"reasoningTokens":54,"cost":0.006258582}}
+{"type":"tool","timestamp":"2026-09-24T20:31:59.677Z","data":{"tool":"grep","summary":"{\"pattern\":\"formatPreSpawnVerify|formatMissingPaths|Pre-spaw"}}
+{"type":"tool","timestamp":"2026-09-24T20:31:59.899Z","data":{"tool":"bash","summary":"ls src/core/status/ && wc -l /hom"}}
+{"type":"tokens","timestamp":"2026-09-24T20:31:59.941Z","data":{"promptTokens":11204,"candidateTokens":167,"totalTokens":61448,"cachedTokens":50048,"reasoningTokens":29,"cost":0.001948344}}
+{"type":"tool","timestamp":"2026-09-24T20:32:01.559Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:01.609Z","data":{"promptTokens":314,"candidateTokens":84,"totalTokens":61838,"cachedTokens":61440,"reasoningTokens":0,"cost":0.00028182}}
+{"type":"tool","timestamp":"2026-09-24T20:32:16.485Z","data":{"tool":"bash","summary":"rg -l \"MockAdapter\" tests | head "}}
+{"type":"tool","timestamp":"2026-09-24T20:32:16.767Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:16.874Z","data":{"promptTokens":888,"candidateTokens":148,"totalTokens":66306,"cachedTokens":61824,"reasoningTokens":3446,"cost":0.002475072}}
+{"type":"tool","timestamp":"2026-09-24T20:32:18.714Z","data":{"tool":"grep","summary":"{\"pattern\":\"MockAdapter\",\"path\":\""}}
+{"type":"tool","timestamp":"2026-09-24T20:32:18.887Z","data":{"tool":"grep","summary":"{\"pattern\":\"from '\\\\.\\\\./src/watcher/loop|runWatchLoop|watch"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:18.963Z","data":{"promptTokens":501,"candidateTokens":136,"totalTokens":66949,"cachedTokens":66304,"reasoningTokens":8,"cost":0.000360462}}
+{"type":"tool","timestamp":"2026-09-24T20:32:20.920Z","data":{"tool":"read","summary":"tests/watcher-loop-logging.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:21.061Z","data":{"promptTokens":2806,"candidateTokens":56,"totalTokens":69865,"cachedTokens":66944,"reasoningTokens":59,"cost":0.000690732}}
+{"type":"tool","timestamp":"2026-09-24T20:32:23.146Z","data":{"tool":"read","summary":"src/harness/mock.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:23.212Z","data":{"promptTokens":4983,"candidateTokens":53,"totalTokens":74857,"cachedTokens":69760,"reasoningTokens":61,"cost":0.00102513}}
+{"type":"tool","timestamp":"2026-09-24T20:32:26.799Z","data":{"tool":"read","summary":"src/core/spec/verify-paths.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:32:26.940Z","data":{"tool":"read","summary":"tests/verify-path-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:26.985Z","data":{"promptTokens":1007,"candidateTokens":116,"totalTokens":76312,"cachedTokens":74752,"reasoningTokens":437,"cost":0.000707106}}
+{"type":"tool","timestamp":"2026-09-24T20:32:29.152Z","data":{"tool":"grep","summary":"{\"pattern\":\"runPreSpawnVerify|preSpawn\",\"path\":\"/home/mathia"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:29.202Z","data":{"promptTokens":2892,"candidateTokens":74,"totalTokens":79363,"cachedTokens":76288,"reasoningTokens":109,"cost":0.000772464}}
+{"type":"tool","timestamp":"2026-09-24T20:32:30.765Z","data":{"tool":"bash","summary":"ls -la openspec/changes/073-ts-pa"}}
+{"type":"tool","timestamp":"2026-09-24T20:32:30.916Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:30.947Z","data":{"promptTokens":172,"candidateTokens":172,"totalTokens":79718,"cachedTokens":79360,"reasoningTokens":14,"cost":0.00037548}}
+{"type":"tool","timestamp":"2026-09-24T20:32:32.797Z","data":{"tool":"grep","summary":"{\"pattern\":\"formatPreSpawnWarning|formatMissingPaths|formatP"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:32.837Z","data":{"promptTokens":238,"candidateTokens":86,"totalTokens":80016,"cachedTokens":79616,"reasoningTokens":76,"cost":0.000371748}}
+{"type":"tool","timestamp":"2026-09-24T20:32:34.868Z","data":{"tool":"bash","summary":"cd . && grep -rn --include=*.ts -l "}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:34.895Z","data":{"promptTokens":167,"candidateTokens":112,"totalTokens":80151,"cachedTokens":79872,"reasoningTokens":0,"cost":0.000331866}}
+{"type":"tool","timestamp":"2026-09-24T20:32:44.109Z","data":{"tool":"read","summary":"tests/verify-path-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:44.151Z","data":{"promptTokens":456,"candidateTokens":87,"totalTokens":82627,"cachedTokens":80128,"reasoningTokens":1956,"cost":0.001534584}}
+{"type":"tool","timestamp":"2026-09-24T20:32:45.987Z","data":{"tool":"grep","summary":"{\"pattern\":\"verifyStarts|verify_starts\",\"path\":\"/home/mathia"}}
+{"type":"tool","timestamp":"2026-09-24T20:32:46.115Z","data":{"tool":"grep","summary":"{\"pattern\":\"verify_starts|VerifyStarts\",\"path\":\"/home/mathia"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:46.176Z","data":{"promptTokens":1629,"candidateTokens":134,"totalTokens":84361,"cachedTokens":82560,"reasoningTokens":38,"cost":0.00059523}}
+{"type":"tool","timestamp":"2026-09-24T20:32:47.661Z","data":{"tool":"read","summary":"src/core/spec/parser.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:32:47.723Z","data":{"promptTokens":1300,"candidateTokens":85,"totalTokens":85746,"cachedTokens":84352,"reasoningTokens":9,"cost":0.000504456}}
+{"type":"tool","timestamp":"2026-09-24T20:33:03.871Z","data":{"tool":"write","summary":"tests/pre-spawn-words.test.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:33:03.897Z","data":{"text":"Now let me write the new test file first (tests before implementation)."}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:03.941Z","data":{"promptTokens":500,"candidateTokens":1786,"totalTokens":90308,"cachedTokens":85632,"reasoningTokens":2390,"cost":0.002837496}}
+{"type":"tool","timestamp":"2026-09-24T20:33:07.511Z","data":{"tool":"edit","summary":"tests/pre-spawn-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:07.542Z","data":{"promptTokens":212,"candidateTokens":199,"totalTokens":90878,"cachedTokens":90112,"reasoningTokens":355,"cost":0.000634536}}
+{"type":"tool","timestamp":"2026-09-24T20:33:09.193Z","data":{"tool":"edit","summary":"tests/pre-spawn-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:09.233Z","data":{"promptTokens":141,"candidateTokens":166,"totalTokens":91059,"cachedTokens":90752,"reasoningTokens":0,"cost":0.000393006}}
+{"type":"tool","timestamp":"2026-09-24T20:33:12.630Z","data":{"tool":"edit","summary":"tests/show-pre-spawn.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:12.670Z","data":{"promptTokens":194,"candidateTokens":591,"totalTokens":91766,"cachedTokens":90880,"reasoningTokens":101,"cost":0.00071694}}
+{"type":"tool","timestamp":"2026-09-24T20:33:16.032Z","data":{"tool":"edit","summary":"tests/show-pre-spawn-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:16.069Z","data":{"promptTokens":261,"candidateTokens":650,"totalTokens":92570,"cachedTokens":91520,"reasoningTokens":139,"cost":0.00078711}}
+{"type":"tool","timestamp":"2026-09-24T20:33:18.536Z","data":{"tool":"edit","summary":"tests/show-pre-spawn-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:18.572Z","data":{"promptTokens":169,"candidateTokens":212,"totalTokens":92797,"cachedTokens":92416,"reasoningTokens":0,"cost":0.000429798}}
+{"type":"tool","timestamp":"2026-09-24T20:33:21.075Z","data":{"tool":"write","summary":"src/core/status/pre-spawn-words.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:33:21.088Z","data":{"text":"Now the new module:"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:21.126Z","data":{"promptTokens":140,"candidateTokens":403,"totalTokens":93232,"cachedTokens":92672,"reasoningTokens":17,"cost":0.000551016}}
+{"type":"tool","timestamp":"2026-09-24T20:33:22.984Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:33:22.994Z","data":{"text":"Now update `task-verify.ts`:"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:23.029Z","data":{"promptTokens":192,"candidateTokens":173,"totalTokens":93421,"cachedTokens":93056,"reasoningTokens":0,"cost":0.000411768}}
+{"type":"tool","timestamp":"2026-09-24T20:33:24.961Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:24.989Z","data":{"promptTokens":252,"candidateTokens":205,"totalTokens":93641,"cachedTokens":93184,"reasoningTokens":0,"cost":0.000440352}}
+{"type":"tool","timestamp":"2026-09-24T20:33:26.947Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:26.990Z","data":{"promptTokens":216,"candidateTokens":71,"totalTokens":93858,"cachedTokens":93440,"reasoningTokens":131,"cost":0.00043392}}
+{"type":"tool","timestamp":"2026-09-24T20:33:29.034Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:29.094Z","data":{"promptTokens":851,"candidateTokens":279,"totalTokens":94984,"cachedTokens":93824,"reasoningTokens":30,"cost":0.000594522}}
+{"type":"tool","timestamp":"2026-09-24T20:33:30.736Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:30.790Z","data":{"promptTokens":151,"candidateTokens":87,"totalTokens":95142,"cachedTokens":94848,"reasoningTokens":56,"cost":0.000392994}}
+{"type":"tool","timestamp":"2026-09-24T20:33:32.747Z","data":{"tool":"bash","summary":"cd . && git checkout -- src/watcher"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:32.810Z","data":{"promptTokens":623,"candidateTokens":73,"totalTokens":95873,"cachedTokens":95104,"reasoningTokens":73,"cost":0.000466362}}
+{"type":"tool","timestamp":"2026-09-24T20:33:35.078Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:35.116Z","data":{"promptTokens":143,"candidateTokens":165,"totalTokens":96186,"cachedTokens":95744,"reasoningTokens":134,"cost":0.000488082}}
+{"type":"tool","timestamp":"2026-09-24T20:33:37.189Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:37.228Z","data":{"promptTokens":201,"candidateTokens":205,"totalTokens":96406,"cachedTokens":96000,"reasoningTokens":0,"cost":0.00044115}}
+{"type":"tool","timestamp":"2026-09-24T20:33:40.074Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:40.113Z","data":{"promptTokens":165,"candidateTokens":87,"totalTokens":96754,"cachedTokens":96256,"reasoningTokens":246,"cost":0.000513318}}
+{"type":"tool","timestamp":"2026-09-24T20:33:42.509Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:42.548Z","data":{"promptTokens":567,"candidateTokens":353,"totalTokens":97598,"cachedTokens":96640,"reasoningTokens":38,"cost":0.00060957}}
+{"type":"tool","timestamp":"2026-09-24T20:33:44.732Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:44.787Z","data":{"promptTokens":205,"candidateTokens":205,"totalTokens":97871,"cachedTokens":97408,"reasoningTokens":53,"cost":0.000477774}}
+{"type":"tool","timestamp":"2026-09-24T20:33:46.417Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:46.460Z","data":{"promptTokens":222,"candidateTokens":87,"totalTokens":98017,"cachedTokens":97664,"reasoningTokens":44,"cost":0.000404892}}
+{"type":"tool","timestamp":"2026-09-24T20:33:49.138Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:49.174Z","data":{"promptTokens":624,"candidateTokens":617,"totalTokens":99161,"cachedTokens":97920,"reasoningTokens":0,"cost":0.00075756}}
+{"type":"tool","timestamp":"2026-09-24T20:33:51.156Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:51.200Z","data":{"promptTokens":232,"candidateTokens":179,"totalTokens":99385,"cachedTokens":98944,"reasoningTokens":30,"cost":0.000457032}}
+{"type":"tool","timestamp":"2026-09-24T20:33:54.716Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:54.772Z","data":{"promptTokens":200,"candidateTokens":944,"totalTokens":100344,"cachedTokens":99200,"reasoningTokens":0,"cost":0.000894}}
+{"type":"tool","timestamp":"2026-09-24T20:33:57.412Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:57.449Z","data":{"promptTokens":135,"candidateTokens":70,"totalTokens":100512,"cachedTokens":100224,"reasoningTokens":83,"cost":0.000412722}}
+{"type":"tool","timestamp":"2026-09-24T20:33:59.891Z","data":{"tool":"edit","summary":"tests/pre-spawn-words.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:33:59.927Z","data":{"promptTokens":477,"candidateTokens":219,"totalTokens":101320,"cachedTokens":100480,"reasoningTokens":144,"cost":0.00059079}}
+{"type":"tool","timestamp":"2026-09-24T20:34:02.233Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:02.269Z","data":{"promptTokens":215,"candidateTokens":70,"totalTokens":101405,"cachedTokens":101120,"reasoningTokens":0,"cost":0.00037761}}
+{"type":"tool","timestamp":"2026-09-24T20:34:05.210Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:05.241Z","data":{"promptTokens":202,"candidateTokens":92,"totalTokens":101681,"cachedTokens":101376,"reasoningTokens":11,"cost":0.000396228}}
+{"type":"tool","timestamp":"2026-09-24T20:34:37.587Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:37.622Z","data":{"promptTokens":485,"candidateTokens":76,"totalTokens":102426,"cachedTokens":101632,"reasoningTokens":233,"cost":0.000563046}}
+{"type":"tool","timestamp":"2026-09-24T20:34:40.057Z","data":{"tool":"edit","summary":"tests/pre-spawn-words.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:40.115Z","data":{"promptTokens":830,"candidateTokens":197,"totalTokens":103567,"cachedTokens":102400,"reasoningTokens":140,"cost":0.0006339}}
+{"type":"tool","timestamp":"2026-09-24T20:34:41.695Z","data":{"tool":"edit","summary":"tests/show-pre-spawn.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:41.732Z","data":{"promptTokens":158,"candidateTokens":141,"totalTokens":103723,"cachedTokens":103424,"reasoningTokens":0,"cost":0.000418572}}
+{"type":"tool","timestamp":"2026-09-24T20:34:43.769Z","data":{"tool":"bash","summary":"cd . && npx biome check src/core/st"}}
+{"type":"tokens","timestamp":"2026-09-24T20:34:43.819Z","data":{"promptTokens":186,"candidateTokens":116,"totalTokens":103876,"cachedTokens":103552,"reasoningTokens":22,"cost":0.000421356}}
+{"type":"tool","timestamp":"2026-09-24T20:35:15.564Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -25"}}
+{"type":"tokens","timestamp":"2026-09-24T20:35:15.604Z","data":{"promptTokens":221,"candidateTokens":76,"totalTokens":103977,"cachedTokens":103680,"reasoningTokens":0,"cost":0.00038979}}
+{"type":"tool","timestamp":"2026-09-24T20:35:47.783Z","data":{"tool":"bash","summary":"cd . && git status --short && echo "}}
+{"type":"tokens","timestamp":"2026-09-24T20:35:47.812Z","data":{"promptTokens":329,"candidateTokens":94,"totalTokens":104461,"cachedTokens":103936,"reasoningTokens":102,"cost":0.000478758}}
+{"type":"tool","timestamp":"2026-09-24T20:35:51.741Z","data":{"tool":"bash","summary":"cd . && grep -rn --include=*.ts \"fo"}}
+{"type":"tokens","timestamp":"2026-09-24T20:35:51.776Z","data":{"promptTokens":361,"candidateTokens":75,"totalTokens":105349,"cachedTokens":104448,"reasoningTokens":465,"cost":0.000691494}}
+{"type":"tool","timestamp":"2026-09-24T20:35:55.028Z","data":{"tool":"write","summary":"openspec/changes/073-ts-paas-wording/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-24T20:35:55.062Z","data":{"promptTokens":150,"candidateTokens":575,"totalTokens":105963,"cachedTokens":105216,"reasoningTokens":22,"cost":0.000696348}}
+{"type":"text","timestamp":"2026-09-24T20:35:57.200Z","data":{"text":"Task complete.\n\n## Summary\n\nImplemented the pre-spawn start wording for both the watch log and `osq show`.\n\n- **New `src/core/status/pre-spawn-words.ts`** — pure `formatPreSpawnStart(expected, exitCode, missingPaths)` producing `started red: <paths> missing`, `started red: verify fails`, or `started green, as declared`, with `, but it declared <state>` appended on a red/green declaration mismatch (`any` never).\n- **`src/watcher/task-verify.ts`** — removed `formatPreSpawnWarning`; `runPreSpawnVerify` logs one `task <n> <start words>` line per pre-spawn run at info (match) or warn (mismatch), leaving event data, dead marker, and outcomes unchanged.\n- **`src/core/status/show.ts`** — `formatPreSpawnVerify` now prints `      Pre-spawn verify: <formatPreSpawnStart(...)>` or `unavailable` for a non-finite exit code/empty state; removed `formatMissingPaths`.\n- **Tests** — new `tests/pre-spawn-words.test.ts` covers all wordings plus four `MockAdapter` watcher-cycle cases; the three existing tests changed only their expected log/show text.\n\nBoth the task `verify` and the proposal `verify` (`pnpm verify`) pass, including lint. Result written to `.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-24T20:35:57.230Z","data":{"promptTokens":251,"candidateTokens":313,"totalTokens":106292,"cachedTokens":105728,"reasoningTokens":0,"cost":0.000542634}}
+{"type":"exited","timestamp":"2026-09-24T20:35:57.327Z","data":{"exitCode":0,"pid":37875,"timedOut":false,"elapsedSeconds":243.3}}
+{"type":"verify_ran","timestamp":"2026-09-24T20:35:58.201Z","data":{"command":"node --import tsx --test tests/pre-spawn-words.test.ts","exitCode":0,"duration":0.78,"output":"▶ formatPreSpawnStart wording\n  ✔ words a failing verify as a red start (0.64814ms)\n  ✔ words missing named paths as a red start naming them in order (0.082379ms)\n  ✔ words a passing verify as a green start (0.06692ms)\n  ✔ appends the declaration on a red start declared green (0.05922ms)\n  ✔ appends the declaration on a green start declared red (0.0986ms)\n  ✔ appends the declaration after a missing-path red start (0.06853ms)\n  ✔ never appends a declaration for an any start (0.09663ms)\n✔ formatPreSpawnStart wording (2.098049ms)\n▶ pre-spawn start log line\n  ✔ logs a named missing test file as a red start (128.900838ms)\n  ✔ logs a failing verify as a red start at info level (124.406359ms)\n  ✔ logs a declared green start that passes as declared (170.455492ms)\n  ✔ warns for a passing verify declared red (166.448797ms)\n✔ pre-spawn start log line (590.751295ms)\nℹ tests 11\nℹ suites 2\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 756.368585\n"}}
+{"type":"measures","timestamp":"2026-09-24T20:36:28.201Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":1887,"repoFiles":1219,"repoLines":127527,"importFanIn":3,"proposalWords":876,"taskWords":339,"deltaRequirements":7,"deltaScenarios":19,"changedFiles":7,"changedLines":221,"scopeHashes":{"src/core/status/pre-spawn-words.ts":{"before":null,"after":"sha256:397b9b76a9756da70d6e98379186baa75730cd08755b2c1c739f3384df3eb893"},"src/core/status/show.ts":{"before":"sha256:d21d3ebb072148327e817dee4c22ae3884a5149565f9bc104255a469260aa725","after":"sha256:791d32f0b4a0e5fde6486268abff3d659fe01355526a98a46eff84c0aa708f03"},"src/watcher/task-verify.ts":{"before":"sha256:c641ca57195ecca31efb7d6f5a92b9ea249f9090be93ac3314fda8384844f483","after":"sha256:8961977505c816d2a1d2f708ba23ec9e74f9a0cecf2c4749462a8a085f8d97bf"},"tests/pre-spawn-verify.test.ts":{"before":"sha256:4357b8f264fbcb96cb3665e162e984746ee609c1b8fe7e1f07432b69069e34f4","after":"sha256:dbb601fc5d9ace26df726b9325f79aff923fc2a46310129c0af2d08919914bfe"},"tests/pre-spawn-words.test.ts":{"before":null,"after":"sha256:f3cb6e1e18776fc28c88638bf4c54fb49307a644bcc7c985900f2780ff98e4c6"},"tests/show-pre-spawn-missing.test.ts":{"before":"sha256:85048100fe8754508a70f09fee288dd53d3b7318a4a6a151cbee4fc9392571c5","after":"sha256:381dc58530fc3bb45420997677667b9fd7e3fe94c2e419bb27aa89a724caa3d7"},"tests/show-pre-spawn.test.ts":{"before":"sha256:cc555a38cfff63bf7dc4370d216cda6e773debf4c021f03f75e2c1e3122f743d","after":"sha256:c073d654fc8b7edb7e24e2f4e8e1cdba8be2c26c4be414854f0c3a8a32e4f39d"}}}}
+{"type":"done","timestamp":"2026-09-24T20:36:28.206Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-24T20:36:29.346Z","data":{"command":"node --import tsx --test tests/pre-spawn-words.test.ts","exitCode":0,"duration":0.77,"output":"▶ formatPreSpawnStart wording\n  ✔ words a failing verify as a red start (0.531235ms)\n  ✔ words missing named paths as a red start naming them in order (0.083509ms)\n  ✔ words a passing verify as a green start (0.067609ms)\n  ✔ appends the declaration on a red start declared green (0.059189ms)\n  ✔ appends the declaration on a green start declared red (0.099539ms)\n  ✔ appends the declaration after a missing-path red start (0.113059ms)\n  ✔ never appends a declaration for an any start (0.110009ms)\n✔ formatPreSpawnStart wording (2.07397ms)\n▶ pre-spawn start log line\n  ✔ logs a named missing test file as a red start (126.787183ms)\n  ✔ logs a failing verify as a red start at info level (127.35074ms)\n  ✔ logs a declared green start that passes as declared (168.955601ms)\n  ✔ warns for a passing verify declared red (170.706595ms)\n✔ pre-spawn start log line (594.358512ms)\nℹ tests 11\nℹ suites 2\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 748.931968\n"}}

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8319de74c7f3770e7f893bb31649d5855eacd180f51f31424b1f94b5eba08357"
+build_stamp: "fa03f50"
+project_commit: "fa03f50"
+exit_code: 0
+scope_files: {"src/core/status/pre-spawn-words.ts":"sha256:397b9b76a9756da70d6e98379186baa75730cd08755b2c1c739f3384df3eb893","src/core/status/show.ts":"sha256:791d32f0b4a0e5fde6486268abff3d659fe01355526a98a46eff84c0aa708f03","src/watcher/task-verify.ts":"sha256:8961977505c816d2a1d2f708ba23ec9e74f9a0cecf2c4749462a8a085f8d97bf","tests/pre-spawn-verify.test.ts":"sha256:dbb601fc5d9ace26df726b9325f79aff923fc2a46310129c0af2d08919914bfe","tests/pre-spawn-words.test.ts":"sha256:f3cb6e1e18776fc28c88638bf4c54fb49307a644bcc7c985900f2780ff98e4c6","tests/show-pre-spawn-missing.test.ts":"sha256:381dc58530fc3bb45420997677667b9fd7e3fe94c2e419bb27aa89a724caa3d7","tests/show-pre-spawn.test.ts":"sha256:c073d654fc8b7edb7e24e2f4e8e1cdba8be2c26c4be414854f0c3a8a32e4f39d"}
+---
+2026-09-24T20:36:28.205Z

@@ -24,8 +24,7 @@ artifacts:
         dead reasons, and event types. Write `None` when there are none.
       - **Contract**: requirements, each with `#### Scenario:` blocks using
         WHEN/THEN bullets.
-      - **Human steps**: everything a task must not do itself, including running
-        `osq approve <id>`.
+      - **Human steps**: everything a task must not do itself, never including `osq approve`; write `None` when there is nothing.
       - **Delta**: one line per delta spec, and any file two tasks share.
 
       Each capability the change adds or modifies needs a delta spec file at

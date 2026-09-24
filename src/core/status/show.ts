@@ -5,6 +5,7 @@ import { readPlanningSessions } from '../report/planning.js';
 import { formatDuration } from '../report/report.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
+import { formatPreSpawnStart } from './pre-spawn-words.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
 
 export interface TimelineEvent {
@@ -596,9 +597,10 @@ async function buildSpecDetails(
 /**
  * Projects the latest pre-spawn `verify_ran` event of one task into the
  * `Pre-spawn verify:` show line. Returns null when the task recorded no
- * pre-spawn result, so output for every other task stays unchanged. Only the
- * already parsed event stream is read; missing or malformed values render as
- * unavailable rather than being guessed.
+ * pre-spawn result, so output for every other task stays unchanged. The start
+ * is worded exactly as the watch log words it. Only the already parsed event
+ * stream is read; a missing exit code or declared state renders as unavailable
+ * rather than being guessed.
  */
 function formatPreSpawnVerify(events: TimelineEvent[]): string | null {
   let latest: TimelineEvent | undefined;
@@ -611,30 +613,26 @@ function formatPreSpawnVerify(events: TimelineEvent[]): string | null {
 
   const data = latest.data ?? {};
   const exitCode =
-    typeof data.exitCode === 'number' && Number.isFinite(data.exitCode)
-      ? String(data.exitCode)
-      : 'unavailable';
-  const expected =
-    typeof data.expected === 'string' && data.expected.trim() !== ''
-      ? data.expected.trim()
-      : 'unavailable';
-  const outcome = data.mismatch === true ? 'mismatch' : 'matched';
-  const missing = formatMissingPaths(data.missingPaths);
-  return `      Pre-spawn verify: exit ${exitCode}, expected ${expected}, ${outcome}${missing ?? ''}`;
+    typeof data.exitCode === 'number' && Number.isFinite(data.exitCode) ? data.exitCode : null;
+  const expected = typeof data.expected === 'string' ? data.expected.trim() : '';
+  if (exitCode === null || expected === '') {
+    return '      Pre-spawn verify: unavailable';
+  }
+  const missing = validMissingPaths(data.missingPaths);
+  return `      Pre-spawn verify: ${formatPreSpawnStart(expected, exitCode, missing)}`;
 }
 
 /**
- * Renders the `missing <path>, <path>` suffix for a pre-spawn event's recorded
- * missing named paths. Only a non-empty array whose every entry is a non-empty
- * string qualifies, so an empty, absent, or malformed value contributes nothing
- * and leaves the pre-spawn line exactly as it was.
+ * The recorded missing named paths of a pre-spawn event. Only a non-empty array
+ * whose every entry is a non-empty string qualifies, so an empty, absent, or
+ * malformed value contributes no path.
  */
-function formatMissingPaths(value: unknown): string | null {
-  if (!Array.isArray(value) || value.length === 0) return null;
+function validMissingPaths(value: unknown): string[] {
+  if (!Array.isArray(value) || value.length === 0) return [];
   if (!value.every((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')) {
-    return null;
+    return [];
   }
-  return `, missing ${value.map((entry) => entry.trim()).join(', ')}`;
+  return value.map((entry) => entry.trim());
 }
 
 /**

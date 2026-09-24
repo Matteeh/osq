@@ -256,9 +256,7 @@ describe('Pre-spawn verify check', () => {
     assert.equal(pre[0].data?.mismatch, true);
     assert.equal(pre[0].data?.exitCode, 0);
     assert.equal(logger.warns.length, 1, 'exactly one warning');
-    assert.match(logger.warns[0] ?? '', /task 1/);
-    assert.match(logger.warns[0] ?? '', /expected red/);
-    assert.match(logger.warns[0] ?? '', /exit code 0/);
+    assert.equal(logger.warns[0], 'task 1 started green, but it declared red');
   });
 
   it('declared green start with a passing verify records mismatch false', async () => {
@@ -303,6 +301,7 @@ describe('Pre-spawn verify check', () => {
     assert.equal(pre[0].data?.expected, 'green');
     assert.equal(pre[0].data?.mismatch, true);
     assert.equal(logger.warns.length, 1);
+    assert.equal(logger.warns[0], 'task 1 started red: verify fails, but it declared green');
   });
 
   it('an any start never mismatches', async () => {

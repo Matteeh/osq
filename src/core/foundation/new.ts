@@ -6,7 +6,7 @@ import { TEMPLATES_ROOT } from './package-root.js';
 
 export { TEMPLATES_ROOT } from './package-root.js';
 
-const FALLBACK_PROPOSAL_MD = `---
+export const FALLBACK_PROPOSAL_MD = `---
 title: Change title
 depends_on: []
 verify: node -e "process.exit(0)"
@@ -48,8 +48,7 @@ The system SHALL <observable behavior>.
 
 ## Human steps
 
-- Review the proposal, delta specs, and task bodies, then run \`osq approve <id>\`
-  yourself.
+None
 
 ## Delta
 

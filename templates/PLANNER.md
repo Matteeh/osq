@@ -10,9 +10,10 @@ When a human is in the session:
 
 1. Read `AGENTS.md`, the capability specs this change touches, and one recent
    archived change end to end.
-2. Reply with the parent spec, the task list (titles only), the capability specs
-   this change will write, and any `## Human steps`. Stop there.
-3. Write the change folder only after the human approves the list.
+2. Write the change folder. Stop after the task list only when the human asks to
+   review it first; then reply with the parent spec, the task list (titles only),
+   the capability specs this change will write, and any `## Human steps`, and say
+   the change folder is not written yet.
 
 ### Working from the handoff
 
@@ -24,6 +25,9 @@ your complete prompt; read it and follow it exactly.
 - Write only inside that change folder.
 - Run `osq lint <slug>` and fix every finding before you finish.
 - Never run `osq approve`; a human owns that gate.
+- Finish by telling the human, in chat, the task titles, that the change folder
+  is written and `osq lint` passes, and the exact `osq approve <id>` to run. The
+  human should not approve before that message.
 - Grep for what already exists; verify every version, flag, or API before use.
 - Write files with the file tool, never through a shell echo.
 
@@ -73,5 +77,12 @@ your complete prompt; read it and follow it exactly.
   none; `osq lint` rejects a proposal without the section.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
-- Anything a task must not do itself goes under `## Human steps`.
+- Anything a task must not do itself goes under `## Human steps`, which never
+  includes `osq approve`.
+- Guidance a task needs about another capability's code, such as how to test
+  against it, goes into that capability's spec through a delta, not only into the
+  task.
+- Replacing a requirement's behavior is a REMOVED requirement plus an ADDED one.
+  A MODIFIED requirement must keep every scenario it already has; `osq lint` and
+  archive refuse one that drops any.
 <!-- OSQ:END -->
