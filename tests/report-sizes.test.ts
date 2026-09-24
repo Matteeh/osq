@@ -442,7 +442,7 @@ describe('repository record derivation', () => {
     const record = await getRepositoryRecord(fixtureRoot, DEFAULT_CONFIG);
 
     assert.equal(record.measuredTasks, 8);
-    assert.equal(record.firstAttemptPassRate, 0.63);
+    assert.equal(record.firstAttemptPasses, 5);
     assert.equal(record.medianDurationSeconds, 35);
     assert.deepEqual(record.largestFirstAttemptPass, {
       change: '102-size-medium',
@@ -478,7 +478,7 @@ describe('repository record derivation', () => {
 
     const record = await getRepositoryRecord(rootPath, DEFAULT_CONFIG);
     assert.equal(record.measuredTasks, 20);
-    assert.equal(record.firstAttemptPassRate, 1);
+    assert.equal(record.firstAttemptPasses, 20);
     assert.deepEqual(record.deadOutcomes, []);
     assert.equal(record.largestFirstAttemptPass?.change, '022-change-21');
     assert.equal(record.largestFirstAttemptPass?.scopeFiles, 9);
@@ -632,7 +632,7 @@ describe('formatRepositoryRecordBody', () => {
   it('prints the four labeled groups for a sufficient record', () => {
     const record: RepositoryRecord = {
       measuredTasks: 6,
-      firstAttemptPassRate: 0.5,
+      firstAttemptPasses: 3,
       medianDurationSeconds: 30,
       largestFirstAttemptPass: {
         change: '102-size-medium',
@@ -649,7 +649,7 @@ describe('formatRepositoryRecordBody', () => {
     };
 
     const body = formatRepositoryRecordBody(record);
-    assert.ok(body.includes('First-attempt pass rate: 0.5'), body);
+    assert.ok(body.includes('First-attempt passes: 3/6'), body);
     assert.ok(body.includes('Largest first-attempt pass:'), body);
     assert.ok(body.includes('[legacy scope]'), body);
     assert.ok(body.includes('Median task duration: 30s'), body);
@@ -661,7 +661,7 @@ describe('formatRepositoryRecordBody', () => {
   it('prints only the too-small sentence below five measured tasks', () => {
     const record: RepositoryRecord = {
       measuredTasks: 4,
-      firstAttemptPassRate: 0,
+      firstAttemptPasses: 0,
       medianDurationSeconds: null,
       largestFirstAttemptPass: null,
       scopeFileResolver: null,

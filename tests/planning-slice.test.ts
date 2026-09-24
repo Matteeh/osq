@@ -222,6 +222,7 @@ describe('planning turn attribution', () => {
       JSON.stringify({ approvedAt: at(9) }),
       'utf8',
     );
+    await fs.writeFile(path.join(a, '.run', 'approved'), 'sha256:sealed\n', 'utf8');
 
     assert.equal(await resolveChangeApprovalTime(a, SESSION), at(3));
     assert.equal(await resolveChangeApprovalTime(a, 'observed:claude:other'), at(9));

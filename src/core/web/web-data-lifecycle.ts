@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readPlanningSessions } from '../report/planning.js';
+import { readManifestApprovedAt } from '../run/manifest-approval.js';
 import { parseFrontmatter, resolveChangeDoc } from '../spec/parser.js';
 
 /** Recorded brief metadata: nullable planner, creation date, and body. */
@@ -66,7 +67,7 @@ export async function readManifestMetadata(folderPath: string): Promise<Manifest
   if (!record) return null;
   return {
     createdAt: validIso(record.createdAt),
-    approvedAt: validIso(record.approvedAt),
+    approvedAt: await readManifestApprovedAt(folderPath),
     planner: trimmedOrNull(record.planner),
   };
 }

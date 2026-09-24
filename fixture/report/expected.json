@@ -125,17 +125,17 @@
       },
       {
         "approvalToFirstTaskSeconds": 5866,
-        "briefToApprovalSeconds": 72000,
+        "briefToApprovalSeconds": null,
         "change": "009-watcher-observability",
         "firstTaskToArchiveSeconds": 8534,
-        "totalSeconds": 86400
+        "totalSeconds": null
       },
       {
         "approvalToFirstTaskSeconds": 3600,
-        "briefToApprovalSeconds": 82800,
+        "briefToApprovalSeconds": null,
         "change": "010-report-history-state",
         "firstTaskToArchiveSeconds": 3600,
-        "totalSeconds": 90000
+        "totalSeconds": null
       }
     ],
     "phases": {
@@ -146,10 +146,10 @@
         "totalSeconds": 9466
       },
       "briefToApproval": {
-        "averageSeconds": 77400,
-        "coveredChanges": 2,
+        "averageSeconds": 0,
+        "coveredChanges": 0,
         "totalChanges": 3,
-        "totalSeconds": 154800
+        "totalSeconds": 0
       },
       "firstTaskToArchive": {
         "averageSeconds": 6067,
@@ -158,10 +158,10 @@
         "totalSeconds": 12134
       },
       "total": {
-        "averageSeconds": 88200,
-        "coveredChanges": 2,
+        "averageSeconds": 0,
+        "coveredChanges": 0,
         "totalChanges": 3,
-        "totalSeconds": 176400
+        "totalSeconds": 0
       }
     }
   },

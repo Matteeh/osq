@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { readManifestApprovedAt } from '../run/manifest-approval.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { type QueueReport, readQueueReport } from '../status/queue-report.js';
@@ -10,6 +11,7 @@ import {
   collectApprovalFlagOutcomes,
   formatApprovalFlagOutcomes,
 } from './approval-flags.js';
+import { readBriefToApprovalSeconds } from './brief-to-approval.js';
 import {
   type PlanningChangeEconomics,
   type PlanningComparison,
@@ -33,6 +35,7 @@ import {
   emptyRetryHistory,
   observeRetries,
 } from './report-retries.js';
+import { taskScopeSize } from './scope-size.js';
 
 export interface SpecMetrics {
   readonly total: number;
@@ -440,7 +443,7 @@ function deriveMeasuredTask(
   task: string,
   events: readonly Record<string, unknown>[],
 ): Omit<MeasuredTask, 'title' | 'acceptanceLines'> | null {
-  let scopeFiles: number | null = null;
+  let startScopeFiles: number | null = null;
   let scopeResolver: unknown;
   let pendingStartMs: number | null = null;
   let coveredMs = 0;
@@ -452,12 +455,12 @@ function deriveMeasuredTask(
     if (data?.phase === 'start') {
       const rawScopeFiles = data.scopeFiles;
       if (
-        scopeFiles === null &&
+        startScopeFiles === null &&
         typeof rawScopeFiles === 'number' &&
         Number.isFinite(rawScopeFiles) &&
         rawScopeFiles >= 0
       ) {
-        scopeFiles = rawScopeFiles;
+        startScopeFiles = rawScopeFiles;
         scopeResolver = data.scopeResolver;
       }
       pendingStartMs = eventTimestampMs(event);
@@ -471,7 +474,7 @@ function deriveMeasuredTask(
     }
   }
 
-  if (scopeFiles === null) return null;
+  if (startScopeFiles === null) return null;
 
   const { attempts, firstAttemptPass } = observeAttempts(events);
 
@@ -479,7 +482,7 @@ function deriveMeasuredTask(
     change,
     task,
     scopeResolver,
-    scopeFiles,
+    scopeFiles: taskScopeSize(events, startScopeFiles),
     attempts,
     firstAttemptPass,
     durationSeconds: hasDuration ? coveredMs / 1000 : null,
@@ -642,41 +645,15 @@ function formatSizeBucketLines(rows: readonly SizeBucketRow[]): string[] {
   return lines;
 }
 
-/** Parses a `brief.md` frontmatter `date` value into epoch milliseconds. */
-function parseBriefDateMs(data: Record<string, unknown>): number | null {
-  const value = data.date;
-  if (value instanceof Date) {
-    const ms = value.getTime();
-    return Number.isFinite(ms) ? ms : null;
-  }
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const ms = Date.parse(trimmed);
-  return Number.isFinite(ms) ? ms : null;
-}
-
-/** Brief frontmatter date in milliseconds, or null when missing or invalid. */
-async function readBriefDateMs(folderPath: string): Promise<number | null> {
-  const content = await fs.readFile(path.join(folderPath, 'brief.md'), 'utf8').catch(() => null);
-  if (content === null) return null;
-  return parseBriefDateMs(parseFrontmatter(content).data);
-}
-
-/** Manifest `approvedAt` in milliseconds, or null when missing or invalid. */
+/**
+ * Trusted manifest `approvedAt` in milliseconds: the value counts only when the
+ * change folder holds `.run/approved`. Null when missing, untrusted, or invalid.
+ */
 async function readApprovedAtMs(folderPath: string): Promise<number | null> {
-  const content = await fs
-    .readFile(path.join(folderPath, '.run', 'manifest.json'), 'utf8')
-    .catch(() => null);
-  if (content === null) return null;
-  try {
-    const parsed = JSON.parse(content) as { approvedAt?: unknown };
-    if (typeof parsed.approvedAt !== 'string') return null;
-    const ms = Date.parse(parsed.approvedAt);
-    return Number.isFinite(ms) ? ms : null;
-  } catch {
-    return null;
-  }
+  const approvedAt = await readManifestApprovedAt(folderPath);
+  if (approvedAt === null) return null;
+  const ms = Date.parse(approvedAt);
+  return Number.isFinite(ms) ? ms : null;
 }
 
 /**
@@ -1240,12 +1217,11 @@ export async function getMetricsReport(
   const cycleRows: CycleChangeMetrics[] = [];
   for (const folderPath of archivedFolders) {
     const change = path.basename(folderPath);
-    const briefMs = await readBriefDateMs(folderPath);
     const approvedMs = await readApprovedAtMs(folderPath);
     const firstStartMs = await readFirstTaskStartMs(folderPath);
     const archivedMs = await readArchivedAtMs(folderPath);
 
-    const briefToApprovalSeconds = phaseSeconds(briefMs, approvedMs);
+    const briefToApprovalSeconds = await readBriefToApprovalSeconds(folderPath);
     const approvalToFirstTaskSeconds = phaseSeconds(approvedMs, firstStartMs);
     const firstTaskToArchiveSeconds = phaseSeconds(firstStartMs, archivedMs);
     const totalSeconds =
@@ -1446,7 +1422,7 @@ export interface RepositoryDeadOutcome {
 /** Bounded repository record derived only from recent archived changes. */
 export interface RepositoryRecord {
   readonly measuredTasks: number;
-  readonly firstAttemptPassRate: number;
+  readonly firstAttemptPasses: number;
   readonly medianDurationSeconds: number | null;
   readonly largestFirstAttemptPass: LargestFirstAttemptPass | null;
   /** Resolver generation behind the largest scope pass, or null when none. */
@@ -1560,7 +1536,7 @@ export async function getRepositoryRecord(
 
   return {
     measuredTasks: measured.length,
-    firstAttemptPassRate: measured.length > 0 ? round2(passed / measured.length) : 0,
+    firstAttemptPasses: passed,
     medianDurationSeconds: medianSeconds(durations),
     largestFirstAttemptPass: selectLargestFirstAttemptPass(scopeTasks),
     scopeFileResolver,
@@ -1578,7 +1554,7 @@ export function formatRepositoryRecordBody(record: RepositoryRecord): string {
   }
 
   const lines: string[] = [];
-  lines.push(`First-attempt pass rate: ${record.firstAttemptPassRate}`);
+  lines.push(`First-attempt passes: ${record.firstAttemptPasses}/${record.measuredTasks}`);
 
   const largest = record.largestFirstAttemptPass;
   if (largest) {
@@ -1837,6 +1813,10 @@ export function formatMetricsReport(
     ['Total', report.cycle.phases.total],
   ];
   for (const [label, phase] of cyclePhaseLines) {
+    if (phase.coveredChanges === 0) {
+      lines.push(`  ${label}: not reported (0 of ${phase.totalChanges} archived changes)`);
+      continue;
+    }
     lines.push(
       `  ${label}: total ${formatDuration(phase.totalSeconds * 1000)}, average ${formatDuration(phase.averageSeconds * 1000)} (${phase.coveredChanges} of ${phase.totalChanges} archived changes)`,
     );

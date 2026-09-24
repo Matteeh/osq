@@ -5,7 +5,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { resolveExecutorIdentity } from '../foundation/harness-catalog.js';
 import { PACKAGE_ROOT } from '../foundation/package-root.js';
 import { type PlanRecord, planningRecordSource, readPlanRecords } from '../report/planning.js';
-import { parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
+import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { getSpecsDir } from '../status/layout.js';
 
 /** Recorded approval flags: the distinct sorted ids and how they were handled. */
@@ -23,7 +23,10 @@ export interface ManifestData {
   planner: string | null;
   effort: string | null;
   createdAt: string;
-  approvedAt: string;
+  /** Set only when `createdAt` is the change folder's creation time. */
+  createdAtSource?: 'created';
+  /** Only the approval path records it; a planning-only manifest omits it. */
+  approvedAt?: string;
   /** Count of valid `plan_started` records present at manifest build time. */
   planningSessions: number;
   /**
@@ -78,14 +81,50 @@ async function resolveOsqVersion(): Promise<string> {
   return version ?? 'unknown';
 }
 
-/** ISO timestamp of the change document's last modification, or now. */
-async function resolveCreatedAt(specFolderPath: string): Promise<string> {
-  const resolved = await resolveChangeDoc(specFolderPath);
-  if (!resolved) {
-    return new Date().toISOString();
+interface ResolvedCreation {
+  createdAt: string;
+  createdAtSource?: 'created';
+}
+
+function validIso(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  return Number.isFinite(Date.parse(value)) ? value : null;
+}
+
+/**
+ * The manifest's creation time, in order: an existing manifest's valid
+ * `createdAt` (kept together with its `createdAtSource` when present), the
+ * change folder's valid birth time, then the current time. The creation marker
+ * is added only for a genuine creation time, and for the current-time fallback
+ * only when `osq plan` (no approval flags) writes the manifest.
+ */
+async function resolveCreation(
+  specFolderPath: string,
+  hasApproval: boolean,
+): Promise<ResolvedCreation> {
+  try {
+    const raw = await fs.readFile(path.join(specFolderPath, '.run', 'manifest.json'), 'utf8');
+    const existing = JSON.parse(raw) as { createdAt?: unknown; createdAtSource?: unknown };
+    const createdAt = validIso(existing.createdAt);
+    if (createdAt !== null) {
+      return existing.createdAtSource === 'created'
+        ? { createdAt, createdAtSource: 'created' }
+        : { createdAt };
+    }
+  } catch {
+    // Missing or malformed manifest.
   }
-  const stat = await fs.stat(resolved.path).catch(() => null);
-  return stat ? stat.mtime.toISOString() : new Date().toISOString();
+  try {
+    const stat = await fs.stat(specFolderPath);
+    const birth = stat.birthtime;
+    if (birth && Number.isFinite(birth.getTime()) && birth.getTime() > 0) {
+      return { createdAt: birth.toISOString(), createdAtSource: 'created' };
+    }
+  } catch {
+    // Unreadable folder.
+  }
+  const now = new Date().toISOString();
+  return hasApproval ? { createdAt: now } : { createdAt: now, createdAtSource: 'created' };
 }
 
 /**
@@ -148,6 +187,7 @@ export async function buildManifest(
   const identity = resolveExecutorIdentity(config);
   const planRecords = await readPlanRecords(specFolderPath);
   const planningSessions = planRecords.filter((record) => record.type === 'plan_started').length;
+  const creation = await resolveCreation(specFolderPath, approvalFlags !== undefined);
 
   const manifest: ManifestData = {
     hashes,
@@ -156,11 +196,14 @@ export async function buildManifest(
     model: identity.model,
     planner: resolvePlanningAttribution(planRecords),
     effort: identity.effort,
-    createdAt: await resolveCreatedAt(specFolderPath),
-    approvedAt: new Date().toISOString(),
+    createdAt: creation.createdAt,
     planningSessions,
   };
+  if (creation.createdAtSource) {
+    manifest.createdAtSource = creation.createdAtSource;
+  }
   if (approvalFlags) {
+    manifest.approvedAt = new Date().toISOString();
     manifest.approvalFlags = {
       ids: [...new Set(approvalFlags.ids)].sort(),
       mode: approvalFlags.mode,

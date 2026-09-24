@@ -4,6 +4,7 @@ import YAML from 'yaml';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { retrySpec } from '../core/lifecycle/retry.js';
+import { readManifestApprovedAt } from '../core/run/manifest-approval.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { appendHarnessEvent } from '../harness/types.js';
 import { markerFingerprint } from './fingerprint.js';
@@ -82,16 +83,6 @@ function automaticRetriesSince(events: readonly StreamEvent[], cutoff?: string):
     count += 1;
   }
   return count;
-}
-
-async function readApprovedAt(runDir: string): Promise<string | undefined> {
-  const raw = await fs.readFile(path.join(runDir, 'manifest.json'), 'utf8').catch(() => '');
-  try {
-    const parsed = JSON.parse(raw) as { approvedAt?: unknown };
-    return typeof parsed.approvedAt === 'string' ? parsed.approvedAt : undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 /** Stored fingerprint, falling back to a content-derived one for legacy markers. */
@@ -181,7 +172,10 @@ async function decideDeadTask(
     await markStuck(folderPath, specId, taskNumber, deadPath, fingerprint, logger);
     return 'stuck';
   }
-  const cutoff = laterOf(await readApprovedAt(runDir), lastManualRetryAt(events));
+  const cutoff = laterOf(
+    (await readManifestApprovedAt(folderPath)) ?? undefined,
+    lastManualRetryAt(events),
+  );
   if (automaticRetriesSince(events, cutoff) >= limit) return 'none';
   try {
     const result = await retrySpec(projectRoot, specId, taskNumber, config, { automatic: true });
