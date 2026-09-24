@@ -15,6 +15,7 @@ import {
 } from '../core/run/scope-hash.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import { compareNumericPrefix } from '../core/status/state.js';
+import { resolveProjectCommit } from './build-project.js';
 import { resolveBuildInfo } from './build.js';
 import {
   type DoneMarkerMetadata,
@@ -199,13 +200,15 @@ export async function buildDoneMetadata(
   projectRoot: string,
   scope: string[],
 ): Promise<DoneMarkerMetadata> {
-  const [scopeHash, buildInfo] = await Promise.all([
+  const [scopeHash, buildInfo, projectCommit] = await Promise.all([
     computeTaskScopeHash(projectRoot, scope),
-    resolveBuildInfo(projectRoot),
+    resolveBuildInfo(),
+    resolveProjectCommit(projectRoot),
   ]);
   return {
     scopeHash: scopeHash.hash,
     buildStamp: buildInfo.commit,
+    projectCommit,
     exitCode: 0,
     fileHashes: scopeHash.fileHashes,
     scopeResolver: SCOPE_RESOLVER_VERSION,

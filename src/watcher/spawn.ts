@@ -6,6 +6,7 @@ import type { Logger } from '../core/foundation/logger.js';
 import type { TaskData } from '../core/spec/parser.js';
 import { type HarnessAdapter, type SpawnDetails, appendHarnessEvent } from '../harness/types.js';
 import { formatTaskStartedLine, readRetryContext } from './attempt.js';
+import { resolveProjectCommit } from './build-project.js';
 import { resolveBuildInfo } from './build.js';
 import {
   type RunTaskFailureReason,
@@ -53,7 +54,10 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     if (startedRecorded) return startedPromise ?? Promise.resolve();
     startedRecorded = true;
     startedPromise = (async () => {
-      const buildInfo = await resolveBuildInfo(projectRoot);
+      const [buildInfo, projectCommit] = await Promise.all([
+        resolveBuildInfo(),
+        resolveProjectCommit(projectRoot),
+      ]);
       const { model } = resolveExecutorIdentity(config);
       await recordLifecycleEvent(
         specFolderPath,
@@ -66,6 +70,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
             model,
             osqVersion: buildInfo.version,
             attempt: retryContext.attempt,
+            projectCommit,
             pid,
             timeoutSeconds,
             ...(details?.harnessVersion ? { harnessVersion: details.harnessVersion } : {}),

@@ -1,6 +1,6 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { CLAUDE_PLAN_COMMAND_PATH } from '../foundation/init-blocks.js';
+import { resemblingCapability } from './digest-capability.js';
 import { verifyStartsConflictFlags } from './digest-verify-starts.js';
 import type { ApprovalDigestCapability, ApprovalFlag } from './digest.js';
 import type { VerifyStarts } from './parser.js';
@@ -21,6 +21,7 @@ export interface ApprovalFlagInput {
   readonly proposalVerify: string;
   readonly tasks: readonly ApprovalFlagTask[];
   readonly capabilities: readonly ApprovalDigestCapability[];
+  readonly livingCapabilities: readonly string[];
 }
 
 const SENSITIVE_KINDS = [
@@ -192,29 +193,23 @@ function removedRequirementFlags(
     }));
 }
 
-/** One flag per delta capability whose living spec file does not exist. */
-async function unknownCapabilityFlags(input: ApprovalFlagInput): Promise<ApprovalFlag[]> {
+/** One flag per delta capability that has no living spec and is not deliberately created. */
+function unknownCapabilityFlags(input: ApprovalFlagInput): ApprovalFlag[] {
   const flags: ApprovalFlag[] = [];
+  const living = input.livingCapabilities;
   const ordered = [...input.capabilities].sort((a, b) => compareText(a.name, b.name));
   for (const capability of ordered) {
-    const specPath = path.join(
-      input.projectRoot,
-      input.openspecRoot,
-      'specs',
-      capability.name,
-      'spec.md',
-    );
-    const exists = await fs
-      .stat(specPath)
-      .then(() => true)
-      .catch(() => false);
-    if (!exists) {
-      flags.push({
-        id: 'unknown_capability',
-        label: `unknown capability ${capability.name}`,
-        excerpt: `no living spec at ${input.openspecRoot}/specs/${capability.name}/spec.md`,
-      });
-    }
+    if (living.includes(capability.name) || capability.creates) continue;
+    const resembles = resemblingCapability(capability.name, living);
+    const label =
+      resembles === null
+        ? `unknown capability ${capability.name} without a Purpose`
+        : `unknown capability ${capability.name} resembles ${resembles}`;
+    flags.push({
+      id: 'unknown_capability',
+      label,
+      excerpt: `no living spec at ${input.openspecRoot}/specs/${capability.name}/spec.md`,
+    });
   }
   return flags;
 }
@@ -230,7 +225,7 @@ export async function buildApprovalFlags(input: ApprovalFlagInput): Promise<Appr
     ...sensitivePathFlags(input.tasks, openspecRoot),
     ...verifyWithoutTestFlags(input.tasks, input.proposalVerify),
     ...removedRequirementFlags(input.capabilities),
-    ...(await unknownCapabilityFlags(input)),
+    ...unknownCapabilityFlags(input),
     ...(await verifyStartsConflictFlags(input.projectRoot, input.tasks)),
   ];
 }

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a9fa207a0c100d7bfd57c10eda4a6d3a95ed4b282012402de3dadceb92753143"
+build_stamp: "619e2f6"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:3543440579f6ca3d4f179787925464e3dd1f20bdff5ab2de98542f4048e862e5","src/watcher/build-project.ts":"sha256:cb9ce5eba9a133163cc99594310ca84dd4ff0a5e7db55905224367a8eaef8a5b","src/watcher/build.ts":"sha256:baf3b7a21a1f0e11652c47f3a0f90b34c58ec45dd70958c81cf458bc4ef6b8b5","src/watcher/loop.ts":"sha256:44f804547904a5c605ade7911aaad57acfc1b61492c10ece29300b756a283a7e","src/watcher/outcome.ts":"sha256:d9d781452f92d1e7dc8da42e9bd282205a55f16aed69ed5e8696d2b22b6d26f1","src/watcher/regression.ts":"sha256:f5b91ebc8e31d1c3b8919d8807e4e1321dfcedd7bc456992a673d94e522cfa43","src/watcher/spawn.ts":"sha256:a0c55d8d44660449b593ec759a17dcd8948c495e71bc0d9a492c8d906ab14327","tests/fixtures/events/dead.jsonl":"sha256:3a2608e5b019d02ab50a4131aff9b957098512c09535e0a173ebfc8ab21d026e","tests/fixtures/events/verified.jsonl":"sha256:6a15642d3c96f64d2d93a6523cd312235eabf931f7551dec3909b1d6c8b38451","tests/watcher-build-identity-project.test.ts":"sha256:b3c4a4b68d7d9442720af415a1ee3815e063e15a26c4980f2ca9acdcae08165f","tests/watcher-build-identity.test.ts":"sha256:c9449d00dfb4b03ec636b4e5428a8a7925aebf3674840d7dde6ce58683289f41"}
+---
+2026-09-23T22:32:18.348Z

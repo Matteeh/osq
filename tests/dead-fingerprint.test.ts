@@ -49,7 +49,22 @@ describe('failure body normalization', () => {
       normalizeFailureBody('/tmp/proj/src/a.ts and /tmp/proj', '/tmp/proj'),
       '<root>/src/a.ts and <root>',
     );
-    assert.equal(normalizeFailureBody('/tmp/proj/src/a.ts'), '/tmp/proj/src/a.ts');
+    assert.equal(normalizeFailureBody('/tmp/proj/src/a.ts'), '<tmp>/src/a.ts');
+  });
+
+  it('replaces numbers after duration keys', () => {
+    assert.equal(
+      normalizeFailureBody('duration_ms: 3.803686\n# duration_ms 92.962079'),
+      'duration_ms: <duration>\n# duration_ms <duration>',
+    );
+  });
+
+  it('replaces paths under the temp directory keeping the rest', () => {
+    assert.equal(normalizeFailureBody('/tmp/paas-Hfp38F/state.db'), '<tmp>/state.db');
+    assert.equal(normalizeFailureBody('/tmp/paas-Hfp38F'), '<tmp>');
+    assert.equal(normalizeFailureBody('file:///tmp/paas-Hfp38F/a.mjs'), 'file://<tmp>/a.mjs');
+    assert.equal(normalizeFailureBody("'/tmp/paas-Hfp38F'"), "'<tmp>'");
+    assert.equal(normalizeFailureBody('at /tmp/paas-Hfp38F done'), 'at <tmp> done');
   });
 });
 

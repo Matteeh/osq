@@ -156,6 +156,12 @@ export interface DoneMarkerMetadata {
   fileHashes?: Record<string, string | null>;
   /** Recorded deterministic resolver version; defaults to the current version. */
   scopeResolver?: number;
+  /** Short HEAD commit of the project being watched, or null outside git. */
+  projectCommit?: string | null;
+}
+/** Frontmatter line for the watched project's commit, null when absent. */
+function formatProjectCommit(projectCommit: string | null | undefined): string {
+  return projectCommit ? `project_commit: "${projectCommit}"\n` : 'project_commit: null\n';
 }
 export async function writeDoneMarker(
   runDir: string,
@@ -166,7 +172,7 @@ export async function writeDoneMarker(
   await fs.mkdir(doneDir, { recursive: true });
   const stamp = `${new Date().toISOString()}\n`;
   const frontmatter = metadata
-    ? `---\nscope_resolver: ${metadata.scopeResolver ?? SCOPE_RESOLVER_VERSION}\nscope_hash: "${metadata.scopeHash}"\nbuild_stamp: "${metadata.buildStamp}"\nexit_code: ${metadata.exitCode}\nscope_files: ${JSON.stringify(metadata.fileHashes ?? {})}\n---\n`
+    ? `---\nscope_resolver: ${metadata.scopeResolver ?? SCOPE_RESOLVER_VERSION}\nscope_hash: "${metadata.scopeHash}"\nbuild_stamp: "${metadata.buildStamp}"\n${formatProjectCommit(metadata.projectCommit)}exit_code: ${metadata.exitCode}\nscope_files: ${JSON.stringify(metadata.fileHashes ?? {})}\n---\n`
     : '';
   await fs.writeFile(path.join(doneDir, taskNumber), `${frontmatter}${stamp}`, 'utf8');
 }

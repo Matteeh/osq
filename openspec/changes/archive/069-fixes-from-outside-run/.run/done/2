@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d84782f4fb91e27cba42fa99ad226c0030499f524e1660b3f169a1d77b024d07"
+build_stamp: "619e2f6"
+exit_code: 0
+scope_files: {"README.md":"sha256:6b3a788fbaeac84c41a3bafe1daabe845b21ed37b0428bf0e8c919365e0c0a8b","src/core/spec/digest-capability.ts":"sha256:c9b56a0b43d7f4fb5084453e24eaaa0d21882f6bbe52b8d4b411f2c1ccaaee81","src/core/spec/digest-flags.ts":"sha256:460a6e5293e28a90522e7927bf41d4d4234fa2488041ed77513e01ab1f3ab84d","src/core/spec/digest.ts":"sha256:5ee775eebc58ab22c8d327bad36453f383427f1f824658d483596d98f52272ce","tests/approval-digest-capability.test.ts":"sha256:6a360c70a82c39899fc4a2a2026efc4ef1df924ad7b63c780799c9ff3e7a30ef","tests/approval-digest.test.ts":"sha256:cab608de4d5af23df6c6a656aaf09776c4146bbb4e793687a44bc00624d3f3d0"}
+---
+2026-09-23T22:37:34.068Z

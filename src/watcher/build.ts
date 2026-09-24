@@ -1,9 +1,9 @@
-import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readGitCommit, readGitTopLevel } from './build-project.js';
 
 /** Identity of the osq build currently executing: package version plus commit. */
 export interface BuildInfo {
@@ -29,26 +29,19 @@ const RUNNING_FROM_SOURCE = fileURLToPath(import.meta.url).endsWith('.ts');
 const buildInfoCache = new Map<string, BuildInfo>();
 
 /**
- * Read the `version` field from `package.json`. Prefers the project root the
- * watcher is running against and falls back to the osq package itself, so an
- * installed consumer that carries no `package.json` still reports a version.
+ * Read the `version` field from the osq package root's own `package.json`.
+ * The project being watched is never consulted: an installed osq must report
+ * its own version, not the consumer's.
  */
-async function readVersion(projectRoot: string): Promise<string> {
-  const candidates = [
-    path.join(projectRoot, 'package.json'),
-    path.join(PACKAGE_ROOT, 'package.json'),
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      const raw = await fs.readFile(candidate, 'utf8');
-      const parsed = JSON.parse(raw) as { version?: unknown };
-      if (typeof parsed.version === 'string' && parsed.version.trim().length > 0) {
-        return parsed.version.trim();
-      }
-    } catch {
-      // Missing or malformed file: try the next candidate.
+async function readVersion(packageRoot: string): Promise<string> {
+  try {
+    const raw = await fs.readFile(path.join(packageRoot, 'package.json'), 'utf8');
+    const parsed = JSON.parse(raw) as { version?: unknown };
+    if (typeof parsed.version === 'string' && parsed.version.trim().length > 0) {
+      return parsed.version.trim();
     }
+  } catch {
+    // Missing or malformed file: report unknown.
   }
 
   return UNKNOWN;
@@ -100,35 +93,37 @@ async function hashDist(projectRoot: string): Promise<string> {
   return hash.digest('hex').slice(0, 8);
 }
 
-/** Short git commit for `cwd`, or `null` when git is missing / not a repo. */
-function readGitCommit(cwd: string): Promise<string | null> {
-  return new Promise((resolve) => {
-    execFile('git', ['rev-parse', '--short', 'HEAD'], { cwd }, (error, stdout) => {
-      if (error) {
-        resolve(null);
-        return;
-      }
-      const commit = String(stdout).trim();
-      resolve(commit.length > 0 ? commit : null);
-    });
-  });
+/** Whether two paths resolve to the same real location on disk. */
+async function sameRealPath(a: string, b: string): Promise<boolean> {
+  try {
+    const [realA, realB] = await Promise.all([fs.realpath(a), fs.realpath(b)]);
+    return realA === realB;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Resolve the active osq build identity. Version comes from `package.json`;
- * the commit is the short git SHA when available, otherwise a hash of `dist/`,
- * otherwise `unknown`. The result is cached per resolved root so the watcher
- * pays the git spawn at most once.
+ * Resolve the active osq build identity from an optional osq package root,
+ * defaulting to the running package. Version comes from that root's
+ * `package.json`; the commit is the short git SHA only when the root is the top
+ * of a git work tree, otherwise a hash of that root's `dist/`, otherwise
+ * `unknown`. The project's `package.json` and HEAD are never consulted here;
+ * an installed osq must not report the consumer's identity. The result is
+ * cached per resolved root so the watcher pays the git spawn at most once.
  */
-export async function resolveBuildInfo(projectRoot?: string): Promise<BuildInfo> {
-  const root = path.resolve(projectRoot ?? PACKAGE_ROOT);
+export async function resolveBuildInfo(packageRoot?: string): Promise<BuildInfo> {
+  const root = path.resolve(packageRoot ?? PACKAGE_ROOT);
   const cached = buildInfoCache.get(root);
   if (cached) {
     return cached;
   }
 
-  const [version, gitCommit] = await Promise.all([readVersion(root), readGitCommit(root)]);
-  const commit = gitCommit ?? (await hashDist(root));
+  const [version, gitTopLevel] = await Promise.all([readVersion(root), readGitTopLevel(root)]);
+  const commit =
+    gitTopLevel && (await sameRealPath(gitTopLevel, root))
+      ? ((await readGitCommit(root)) ?? (await hashDist(root)))
+      : await hashDist(root);
   const info: BuildInfo = { version, commit };
   buildInfoCache.set(root, info);
   return info;

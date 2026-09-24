@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
+import { readLivingCapabilityNames, resemblingCapability } from './digest-capability.js';
 import { type ApprovalFlagTask, buildApprovalFlags } from './digest-flags.js';
 import {
   type VerifyStarts,
@@ -42,6 +43,7 @@ export interface ApprovalDigestCapability {
   readonly added: readonly string[];
   readonly modified: readonly string[];
   readonly removed: readonly string[];
+  readonly creates: boolean;
 }
 
 export interface ApprovalDigest {
@@ -155,11 +157,14 @@ export async function buildApprovalDigest(
   const body = resolvedDoc ? parseFrontmatter(content).body : '';
   const tasks = await resolveTasks(projectRoot, changeFolder);
   const changeCapabilities = await readCapabilities(changeFolder);
+  const living = await readLivingCapabilityNames(projectRoot, config.paths.openspecRoot);
   const capabilities: ApprovalDigestCapability[] = changeCapabilities.map(({ name, delta }) => ({
     name,
     added: delta.added.map((requirement) => requirement.name),
     modified: delta.modified.map((requirement) => requirement.name),
     removed: delta.removed.map((requirement) => requirement.name),
+    creates:
+      !living.includes(name) && delta.purpose !== '' && resemblingCapability(name, living) === null,
   }));
   const flagTasks: ApprovalFlagTask[] = tasks.map((task) => ({
     number: task.number,
@@ -174,6 +179,7 @@ export async function buildApprovalDigest(
     proposalVerify: spec.verify,
     tasks: flagTasks,
     capabilities,
+    livingCapabilities: living,
   });
   return {
     change: path.basename(changeFolder),
@@ -213,7 +219,8 @@ export function formatApprovalDigest(digest: ApprovalDigest): string {
   lines.push('Capabilities:');
   if (digest.capabilities.length === 0) lines.push('  (none)');
   for (const capability of digest.capabilities) {
-    lines.push(`  ${capability.name}:`);
+    const creation = capability.creates ? ' (new capability)' : '';
+    lines.push(`  ${capability.name}${creation}:`);
     for (const kind of ['added', 'modified', 'removed'] as const) {
       const names = capability[kind];
       lines.push(`    ${kind}: ${names.length > 0 ? names.join(', ') : '(none)'}`);

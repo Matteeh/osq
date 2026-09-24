@@ -35,6 +35,8 @@ export interface StartedEventData {
   osqVersion: string;
   /** Target-wide execution attempt; initial execution is 1. */
   attempt: number;
+  /** Short HEAD commit of the project being watched, or null outside git. */
+  projectCommit?: string | null;
   commit?: string;
   pid?: number;
   timeoutSeconds: number;

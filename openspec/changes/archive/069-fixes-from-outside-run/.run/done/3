@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:65622634a7c2b244a51023084cb4b2a9c6fbfe26d8f55f038a5d14e473721b3a"
+build_stamp: "619e2f6"
+exit_code: 0
+scope_files: {"src/watcher/fingerprint.ts":"sha256:9ac228336b2d10633a42b162d70a3a2182e5041d03b3e17169d7d4fdfc64ce2f","tests/dead-fingerprint-node-test.test.ts":"sha256:7a9c22ce7afaa0187777086ba3342e2ef9d6c89b8d94fec766aacdf02cf1b119","tests/dead-fingerprint.test.ts":"sha256:8ca59cd0fc73749ed09b2a531136236977af0f7a2af560e590008d2350255eec"}
+---
+2026-09-23T22:40:50.001Z

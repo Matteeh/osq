@@ -459,10 +459,11 @@ uses.
 `buildApprovalDigest` SHALL summarize a change from its authored files: the
 first two sentences of the proposal's `## Goal`, one entry per task with its
 title and the number of existing files in its resolved scope, and per delta
-capability the requirement names added, modified, and removed. It SHALL list,
-as information and never as flags, each task with `tests.modify: true` and the
-existing test files in its resolved scope, and the `## Human steps` text. It
-SHALL reuse `resolveScope` and `parseDelta` and add no parsing of its own.
+capability the requirement names added, modified, and removed, and whether the
+change deliberately creates it. It SHALL list, as information and never as
+flags, each task with `tests.modify: true` and the existing test files in its
+resolved scope, and the `## Human steps` text. It SHALL reuse `resolveScope` and
+`parseDelta` and add no parsing of its own.
 
 #### Scenario: Digest content
 - **WHEN** a change with two tasks and one delta is digested
@@ -479,8 +480,8 @@ a path, `sensitive_path` for resolved scope paths that are package manifests,
 lockfiles, CI workflows, `osq.config.*`, OpenSpec config, managed instruction
 files, or env files, `verify_without_test` for a verify naming no test file or
 runner, `removed_requirement` for removing deltas, `unknown_capability` for a
-delta whose living capability does not exist, and `verify_starts_conflict` for
-each verify start contradiction.
+delta capability with no living spec that is not deliberately created, and
+`verify_starts_conflict` for each verify start contradiction.
 
 #### Scenario: Shared file
 - **WHEN** tasks 1 and 2 both resolve `src/a.ts`
@@ -550,3 +551,40 @@ no scope covers it.
 #### Scenario: Operands that are not paths
 - **WHEN** a verify has quoted operands, `--import tsx`, `KEY=value`, or a URL
 - **THEN** none of them is a named path, and a glob operand matching no file counts as missing
+
+### Requirement: Capability creation
+<!-- source: src/core/spec/digest-capability.ts, src/core/spec/digest-flags.ts, src/core/spec/digest.ts, tests/approval-digest-capability.test.ts -->
+A delta capability with no living spec SHALL count as deliberately created when
+its delta has a `## Purpose` section and its name resembles no living
+capability. Any other delta capability with no living spec SHALL raise one
+`unknown_capability` flag, labelled `unknown capability <name> resembles
+<living>` when a resemblance exists, naming the first resembling living
+capability in name order, and otherwise `unknown capability <name> without a
+Purpose`.
+
+#### Scenario: Deliberate creation
+- **WHEN** a delta with `## Purpose` targets a new name that resembles no living capability
+- **THEN** no `unknown_capability` flag fires and the formatted digest shows its heading as `<name> (new capability):`
+
+#### Scenario: Missing Purpose
+- **WHEN** a delta without `## Purpose` targets a capability with no living spec and a name resembling none
+- **THEN** one `unknown_capability` flag labelled `unknown capability <name> without a Purpose` fires
+
+#### Scenario: Resembling name
+- **WHEN** a delta with `## Purpose` targets `watcher-harness` and `watcher-and-harness` has a living spec
+- **THEN** one `unknown_capability` flag labelled `unknown capability watcher-harness resembles watcher-and-harness` fires
+
+### Requirement: Capability name resemblance
+<!-- source: src/core/spec/digest-capability.ts, tests/approval-digest-capability.test.ts -->
+A new capability name SHALL resemble a living capability name when the two are
+equal once hyphens and underscores are removed, when the words of one, split on
+hyphens and underscores, all appear among the words of the other, or when both
+are at least five characters long and their edit distance is at most two.
+
+#### Scenario: Word subset
+- **WHEN** `watcher-harness` is compared with `watcher-and-harness`
+- **THEN** they resemble each other
+
+#### Scenario: Short dissimilar names
+- **WHEN** `cli` is compared with `api`
+- **THEN** they do not resemble each other

@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
 import { parseFrontmatter } from '../core/spec/parser.js';
 
 // Built from a char code so the escape byte never appears as a regex control
@@ -10,7 +12,31 @@ const ANSI_PATTERN = new RegExp(
 
 const ISO_TIMESTAMP = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g;
 const DURATION = /\(?\b\d+(?:\.\d+)?(?:ms|s|m|h)\b\)?/g;
+// A number that follows a duration key, as node:test prints `duration_ms: 3.8`
+// and TAP prints `# duration_ms 92.9`, keeping the key and separator.
+const DURATION_KEY = /(\bduration(?:_ms|_s)?\b[ \t]*[:=]?[ \t]*)\d+(?:\.\d+)?/gi;
 const PID = /\bpid\s*[:=]?\s*\d+/gi;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Matches a path below the OS temp directory, both as reported and resolved. */
+function tempPathPattern(): RegExp | null {
+  const roots = new Set<string>();
+  try {
+    roots.add(os.tmpdir());
+    roots.add(fs.realpathSync(os.tmpdir()));
+  } catch {
+    roots.add(os.tmpdir());
+  }
+  const present = [...roots].filter((root) => root.length > 0);
+  if (present.length === 0) return null;
+  const alternation = present.map(escapeRegExp).join('|');
+  return new RegExp(`(?:${alternation})/[^/\\s'"]+`, 'g');
+}
+
+const TEMP_PATH = tempPathPattern();
 
 /** Strip ANSI escape sequences (CSI and OSC) from terminal text. */
 export function stripAnsi(text: string): string {
@@ -19,17 +45,21 @@ export function stripAnsi(text: string): string {
 
 /**
  * Normalize a dead marker body for fingerprinting: drop ANSI codes, replace the
- * project root, timestamps, durations, and PIDs with fixed placeholders, and
- * leave every other byte untouched.
+ * project root, temp-directory paths, timestamps, durations, and PIDs with fixed
+ * placeholders, and leave every other byte untouched.
  */
 export function normalizeFailureBody(body: string, projectRoot?: string): string {
   let normalized = stripAnsi(body);
   if (projectRoot) {
     normalized = normalized.split(projectRoot).join('<root>');
   }
+  if (TEMP_PATH) {
+    normalized = normalized.replace(TEMP_PATH, '<tmp>');
+  }
   return normalized
     .replace(ISO_TIMESTAMP, '<time>')
     .replace(DURATION, '<duration>')
+    .replace(DURATION_KEY, '$1<duration>')
     .replace(PID, 'pid <pid>');
 }
 

@@ -138,6 +138,7 @@ The system SHALL do a thing.
         added: ['Fixture requirement'],
         modified: [],
         removed: [],
+        creates: false,
       },
     ]);
     assert.deepEqual(digest.flags, []);
@@ -341,7 +342,7 @@ The system SHALL do a thing.
         ],
         [
           'unknown_capability',
-          'unknown capability brand-new-capability',
+          'unknown capability brand-new-capability without a Purpose',
           'no living spec at openspec/specs/brand-new-capability/spec.md',
         ],
       ],
@@ -390,7 +391,7 @@ The system SHALL do a thing.
         'package manifest in scope',
         'verify without a test in task 1',
         'removes 1 requirements from spec-lint-and-approve',
-        'unknown capability brand-new-capability',
+        'unknown capability brand-new-capability without a Purpose',
       ],
     );
 
@@ -399,11 +400,11 @@ The system SHALL do a thing.
       'Flag: package manifest in scope \u2014 package.json in task 1',
       'Flag: verify without a test in task 1 \u2014 npx tsc --noEmit',
       'Flag: removes 1 requirements from spec-lint-and-approve \u2014 Legacy requirement',
-      'Flag: unknown capability brand-new-capability \u2014 no living spec at openspec/specs/brand-new-capability/spec.md',
+      'Flag: unknown capability brand-new-capability without a Purpose \u2014 no living spec at openspec/specs/brand-new-capability/spec.md',
     ]);
     assert.equal(
       summarizeApprovalFlags(digest.flags),
-      '5 flags: shared files in tasks 1 and 2, package manifest in scope, verify without a test in task 1, removes 1 requirements from spec-lint-and-approve, unknown capability brand-new-capability',
+      '5 flags: shared files in tasks 1 and 2, package manifest in scope, verify without a test in task 1, removes 1 requirements from spec-lint-and-approve, unknown capability brand-new-capability without a Purpose',
     );
   });
 

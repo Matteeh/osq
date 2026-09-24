@@ -174,8 +174,8 @@ export async function runWatcherCycle(
   const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
 
   // Resolved once per cycle (and cached in `build.ts`) so both the missing-specs
-  // branch and the idle status row carry the same identity.
-  const buildInfo = await resolveBuildInfo(projectRoot);
+  // branch and the idle status row carry osq's own identity.
+  const buildInfo = await resolveBuildInfo();
 
   const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   let entries: string[] = [];
