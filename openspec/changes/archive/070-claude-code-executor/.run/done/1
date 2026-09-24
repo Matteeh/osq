@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9858f453e8317a51ba673b9ad4a4720c5275f3197975344d0f12608339ce151b"
+build_stamp: "e368483"
+project_commit: "e368483"
+exit_code: 0
+scope_files: {"src/harness/claude/claude-stream.ts":"sha256:726ebf56f2d5e502eb8ca6959b51acbd380b02c96d73541f438ca345221ab05a","src/harness/claude/claude-tools.ts":"sha256:77822d204f632be0f42dbbc8fb85fd728f70df7830258b967bc96df43c54c0c7","tests/claude/fixtures/stream-errored-write.jsonl":"sha256:74665f6d8ba396d2a385252cd4cd62b6332852d4e545f423ea086ef8a71826f5","tests/claude/fixtures/stream-multi-usage.jsonl":"sha256:6fc01dbf9e6447e94392e6afc6cb0282b5b456bae05e12d5d47f1b6968a99cc9","tests/claude/fixtures/stream-skipped.jsonl":"sha256:eef15de0cfe044a5664caf7da491e5eafdf0a3cb065950dc8730a6362fc56f77","tests/claude/stream.test.ts":"sha256:2783905a0c23c29ed345ad00cb7c280eda6a0544c8396fec1063062b392c1b69","tests/fixtures/claude/run.jsonl":"sha256:249685ff99682572e0fe8243e29051053e1b1c3e126d462ea9bd80df552bc5a7"}
+---
+2026-09-24T07:28:39.258Z

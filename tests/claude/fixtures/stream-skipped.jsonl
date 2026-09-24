@@ -1,0 +1,5 @@
+this is not json at all
+
+{"type":"future_record","payload":{"anything":true}}
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","content":[{"type":"text","text":"kept"}]},"timestamp":"2026-09-24T05:11:20.238Z"}
+{"type":"system","subtype":"thinking_tokens","estimated_tokens":50}
