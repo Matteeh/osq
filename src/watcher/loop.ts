@@ -8,7 +8,7 @@ import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { reapStaleLocks } from '../core/run/lock.js';
 import type { StaleTaskAudit } from '../core/run/scope-hash.js';
 import { resolveChangeDoc } from '../core/spec/parser.js';
-import { getArchiveDir, getChangesDir } from '../core/status/layout.js';
+import { getArchiveDir, getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
@@ -194,9 +194,7 @@ export async function runWatcherCycle(
     return { tasksRun: 0, retried: 0, specsArchived: 0, blockedByRegression: [] };
   }
 
-  const specFolders = entries
-    .filter((e) => !e.startsWith('_') && e !== 'archive')
-    .sort(compareNumericPrefix);
+  const specFolders = entries.filter((e) => isActiveChangeFolderName(e)).sort(compareNumericPrefix);
 
   let tasksRun = 0;
   let retried = 0;

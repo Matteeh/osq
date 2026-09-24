@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e7074b7bf6c5a63e742620b87623ca76bb854d37059278e3a3f6ed4f074a8800"
+build_stamp: "e04af71"
+project_commit: "e04af71"
+exit_code: 0
+scope_files: {"src/cli/lint.ts":"sha256:9ce532d4198ead9cbbb8c91096421dc927ffa17be7ea9cfbfe9970b7e237b1b6","tests/lint-skip-rejected.test.ts":"sha256:d8dff2dace9ffad2bf36cb57c8826b644363ef35a411f2db8f45dc71d66568a0"}
+---
+2026-09-24T19:57:50.279Z
