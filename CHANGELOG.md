@@ -2,6 +2,13 @@
 
 All notable changes to `osq` are documented in this file.
 
+## [0.2.1] - 2026-09-24
+
+Fixes from the first run on a project other than osq (069):
+- `started` events, the idle status line, and done markers name osq's own version and commit. The project's HEAD is recorded separately as `projectCommit` and `project_commit`.
+- The `unknown_capability` approval flag fires only for a delta without `## Purpose` or with a name resembling a living capability. The digest marks a deliberately created capability as `(new capability)`.
+- Dead marker fingerprints ignore numbers after duration keys such as `duration_ms` and the names of temp directories, so repeated `node:test` failures are detected as stuck.
+
 ## [0.2.0] - 2026-09-24
 
 Planning inside osq, stricter verification gates, and a read-only dashboard:
