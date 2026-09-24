@@ -170,7 +170,7 @@ export async function readQueueState(
       changeId: choice.selected?.id ?? null,
       rejectionCount: groups.get(item.slug)?.rejected.length ?? 0,
       changedSincePlanned: choice.selected ? choice.selected.queueHash !== item.hash : false,
-      unmetDependencies: item.dependsOn.filter((dep) => !landed.has(dep)),
+      unmetDependencies: [...item.dependsOn, ...item.fixes].filter((slug) => !landed.has(slug)),
     };
   });
   return { items, groups, rows, landed };

@@ -20,10 +20,17 @@ export const EXECUTOR_STEPS: readonly string[] = [
 /** The result-file headings and their purposes, in the order they must appear. */
 export const RESULT_HEADINGS: ReadonlyArray<{ heading: string; purpose: string }> = [
   { heading: '## Changed', purpose: 'what you changed.' },
-  { heading: '## Deviated', purpose: 'where you departed from the task, and why.' },
+  {
+    heading: '## Deviated',
+    purpose: 'for the reviewer: what you did differently from the task, and why.',
+  },
   {
     heading: '## Missing context',
-    purpose: 'what you needed that the task files did not give you.',
+    purpose: 'for the planner: what the task lacked that you needed.',
+  },
+  {
+    heading: '## Outside scope',
+    purpose: 'for the human: what you found broken outside your scope and left alone.',
   },
   { heading: '## Next', purpose: 'for unfinished work, the acceptance line to pick up next.' },
 ];

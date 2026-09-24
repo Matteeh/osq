@@ -146,7 +146,7 @@ describe('managed instructions block executor constants', () => {
   it('names the result headings and touched prefix in order', () => {
     assert.deepEqual(
       RESULT_HEADINGS.map(({ heading }) => heading),
-      ['## Changed', '## Deviated', '## Missing context', '## Next'],
+      ['## Changed', '## Deviated', '## Missing context', '## Outside scope', '## Next'],
     );
 
     const exitText = EXECUTOR_EXIT_LINES.join('\n');

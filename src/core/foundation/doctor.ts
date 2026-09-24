@@ -12,6 +12,7 @@ import { getArchiveDir, getChangesDir } from '../status/layout.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { checkManagedBlocks } from './doctor-managed.js';
+import { checkPlanningPrices } from './doctor-prices.js';
 import { findHarness } from './harness-catalog.js';
 
 export interface DoctorCheckResult {
@@ -237,5 +238,7 @@ export async function runDoctorChecks(
     await checkDoneMarkers(projectRoot, config),
     await checkValidator(projectRoot, deps),
   ];
+  const priceCheck = await checkPlanningPrices(projectRoot, config);
+  if (priceCheck) checks.push(priceCheck);
   return { ok: checks.every((check) => check.ok), checks };
 }

@@ -18,8 +18,23 @@ function runningLine(item: RunningItem): string {
   return `  ${item.change.id}: ${item.change.title} — task ${item.task.number}: ${item.task.title} — ${duration} — ${item.command}`;
 }
 
+/**
+ * The `— disclosed: ...` suffix for a landed item whose tasks disclosed a gap.
+ * Counts appear in the order deviated, missing context, outside scope, and an
+ * item without disclosures contributes nothing.
+ */
+function disclosedSuffix(item: LandedItem): string {
+  const disclosures = item.disclosures;
+  if (!disclosures) return '';
+  const parts: string[] = [];
+  if (disclosures.deviated > 0) parts.push(`deviated ${disclosures.deviated}`);
+  if (disclosures.missingContext > 0) parts.push(`missing context ${disclosures.missingContext}`);
+  if (disclosures.outsideScope > 0) parts.push(`outside scope ${disclosures.outsideScope}`);
+  return parts.length > 0 ? ` — disclosed: ${parts.join(', ')}` : '';
+}
+
 function landedLine(item: LandedItem): string {
-  return `  ${item.change.id}: ${item.change.title} — archived ${item.archivedAt} — ${item.command}`;
+  return `  ${item.change.id}: ${item.change.title} — archived ${item.archivedAt}${disclosedSuffix(item)} — ${item.command}`;
 }
 
 /** Concise text rendering of the three inbox groups. */

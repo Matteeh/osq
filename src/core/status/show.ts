@@ -3,6 +3,7 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readPlanningSessions } from '../report/planning.js';
 import { formatDuration } from '../report/report.js';
+import { parseResultSections } from '../report/result-sections.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
@@ -686,6 +687,23 @@ function formatStuck(events: TimelineEvent[]): string | null {
   return `      Stuck: same failure twice (${fingerprint})`;
 }
 
+/**
+ * Projects the real disclosure sections of a task's result file into the
+ * `Disclosures:` show line. Empty or `None`-only sections are absent, and a
+ * task whose result holds no real disclosure prints no line. Returns null so
+ * every other task's output stays unchanged.
+ */
+function formatDisclosures(resultContent: string | undefined): string | null {
+  if (!resultContent) return null;
+  const sections = parseResultSections(resultContent);
+  const names: string[] = [];
+  if (sections.deviated !== null) names.push('deviated');
+  if (sections.missingContext !== null) names.push('missing context');
+  if (sections.outsideScope !== null) names.push('outside scope');
+  if (names.length === 0) return null;
+  return `      Disclosures: ${names.join(', ')}`;
+}
+
 function formatEventData(data?: Record<string, unknown>): string {
   if (!data || Object.keys(data).length === 0) return '';
   const entries = Object.entries(data).map(([k, v]) => `${k}: ${v}`);
@@ -763,6 +781,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       const stuck = formatStuck(task.events);
       if (stuck) {
         lines.push(stuck);
+      }
+      const disclosures = formatDisclosures(task.resultContent);
+      if (disclosures) {
+        lines.push(disclosures);
       }
       if (task.scope.length > 0) {
         lines.push(`      Scope: ${task.scope.join(', ')}`);

@@ -7,6 +7,7 @@ import {
   findPlanningSessions,
   resolveChangeCreationTime,
 } from '../report/planning-observed.js';
+import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { hashBriefBytes, resolveOsqPackageVersion } from '../report/planning.js';
 import { buildManifest, writeManifest } from '../run/manifest.js';
 import { getChangesDir } from '../status/layout.js';
@@ -57,6 +58,8 @@ export interface ApproveResult {
   warnings: string[];
   /** Number of local planning sessions matched at approval time. */
   planningMatches: number;
+  /** Recorded-token planning models the change's folder leaves unpriced. */
+  missingPrices: string[];
   /** The digest built for this approval, flags included. */
   digest: ApprovalDigest;
 }
@@ -140,6 +143,10 @@ export async function approveSpec(
     osqVersion: await resolveOsqPackageVersion(),
   });
 
+  // Price gaps are read after observation so a session found at approval is
+  // named too. Approval itself is unaffected.
+  const missingPrices = await findUnpricedPlanningModels([folderPath], config.planning?.prices);
+
   const hash = await hashChangeFolder(folderPath);
 
   // Approval only refreshes the seal. It never retires failure markers: that is
@@ -163,6 +170,7 @@ export async function approveSpec(
     hash,
     warnings: lintResult.warnings,
     planningMatches: observations.length,
+    missingPrices,
     digest,
   };
 }

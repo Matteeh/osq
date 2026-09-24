@@ -174,7 +174,7 @@ Every inbox item SHALL expose one exact `command`. Approval items SHALL use
 - **THEN** its JSON command and trailing text command are identical and match its item kind
 
 ### Requirement: Stable inbox object
-<!-- source: src/core/status/inbox.ts, src/cli/inbox.ts, tests/inbox.test.ts, tests/inbox-stuck.test.ts -->
+<!-- source: src/core/status/inbox.ts, src/cli/inbox.ts, tests/inbox.test.ts, tests/inbox-stuck.test.ts, tests/disclosures-inbox-show.test.ts -->
 The inbox object SHALL have exactly the top-level array properties `needsYou`,
 `running`, and `landed`.
 
@@ -185,8 +185,11 @@ and `command`. Its kind SHALL be one of `approval`, `task-dead`,
 `stuck: { fingerprint }`; no other item carries `stuck`. A running item SHALL
 contain `change`, `task`, numeric `pid`, ISO `startedAt`, integer non-negative
 `elapsedSeconds`, and `command`. A landed item SHALL contain `change`, ISO
-`archivedAt`, and `command`. Empty groups SHALL be empty arrays and JSON output
-SHALL contain no additional prose or metadata.
+`archivedAt`, and `command`. A landed item whose tasks disclosed anything SHALL
+also carry `disclosures: { deviated, missingContext, outsideScope }`, the
+number of tasks with each real section; no other landed item carries
+`disclosures`. Empty groups SHALL be empty arrays and JSON output SHALL contain
+no additional prose or metadata.
 
 #### Scenario: JSON contract projection
 - **WHEN** the inbox is serialized for `osq --json`
@@ -199,6 +202,10 @@ SHALL contain no additional prose or metadata.
 #### Scenario: Stuck field
 - **WHEN** a dead task is stuck
 - **THEN** its `task-dead` item carries `stuck: { fingerprint }` and every other item's JSON is unchanged
+
+#### Scenario: Landed change with disclosures
+- **WHEN** a landed change has one task with a real `## Outside scope` section
+- **THEN** its landed item carries `disclosures: { deviated: 0, missingContext: 0, outsideScope: 1 }`, its text line ends with `— disclosed: outside scope 1`, and every other landed item is unchanged
 
 ### Requirement: Per-project last-look cursor
 <!-- source: src/core/inbox.ts, src/cli/inbox.ts, tests/inbox.test.ts -->
@@ -260,13 +267,14 @@ queue modules to the source-line allow list.
 - **THEN** the source-line budget and queue regression tests pass through the stable queue entrypoints without a new allow-list entry
 
 ### Requirement: Read-only brief queue parsing
-<!-- source: src/core/queue.ts, tests/queue.test.ts -->
+<!-- source: src/core/status/queue-parser.ts, tests/queue.test.ts, tests/fixes-declaration.test.ts -->
 The system SHALL parse ordered items only from `openspec/queue.md`. Each item
 SHALL consist of a unique `## [slug] Title` heading, one `Depends on:` line
-naming comma-separated earlier slugs or `nothing`, and a non-empty brief body.
-Invalid headings, slugs, titles, bodies, dependency lines, duplicate values,
-and unknown, self, or forward dependencies SHALL be rejected with queue and
-item context before mutation.
+naming comma-separated earlier slugs or `nothing`, an optional `Fixes:` line
+right after it naming comma-separated earlier slugs, and a non-empty brief body.
+Invalid headings, slugs, titles, bodies, dependency or fixes lines, duplicate
+values, and unknown, self, or forward dependencies or fixes SHALL be rejected
+with queue and item context before mutation.
 
 Each item SHALL retain its brief body and a deterministic `sha256:` digest of
 the complete raw section from its heading to the next matching item heading or
@@ -280,6 +288,14 @@ file.
 #### Scenario: Invalid queue sections
 - **WHEN** a queue has malformed or ambiguous item or dependency syntax
 - **THEN** parsing reports the queue path and offending item without changing any file
+
+#### Scenario: Fixes line
+- **WHEN** an item's `Depends on:` line is followed by `Fixes: first-item` and `first-item` is an earlier item
+- **THEN** parsing returns `fixes: ["first-item"]` and a body that does not include the `Fixes:` line
+
+#### Scenario: Invalid fixes line
+- **WHEN** a `Fixes:` line names an unknown, later, repeated, or the item's own slug, or is empty
+- **THEN** parsing fails naming the queue path and the item
 
 ### Requirement: Brief queue state projection
 <!-- source: src/core/queue.ts, src/cli/queue.ts, tests/queue.test.ts -->
@@ -350,3 +366,14 @@ retry events and `Stuck: same failure twice (<fingerprint>)` for a stuck task.
 #### Scenario: Retries in show
 - **WHEN** a task's event stream has one manual and one automatic `retry` event
 - **THEN** its show entry prints `Retries: 2 (1 automatic)`, and a task without retry events prints no such line
+
+### Requirement: Task disclosure inspection
+<!-- source: src/core/status/show.ts, src/core/report/result-sections.ts, tests/disclosures-inbox-show.test.ts -->
+For each task whose result file has a real `## Deviated`, `## Missing context`,
+or `## Outside scope` section, `osq show <id>` SHALL print one
+`Disclosures: <names>` line in the task's entry naming those sections in that
+order. A task without one SHALL print no such line.
+
+#### Scenario: Task with disclosures
+- **WHEN** a task's result file has a real `## Deviated` section and an `## Outside scope` section, and its `## Missing context` says `None`
+- **THEN** its entry prints `Disclosures: deviated, outside scope`

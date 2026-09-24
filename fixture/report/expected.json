@@ -72,7 +72,8 @@
         }
       }
     },
-    "changes": 0
+    "changes": 0,
+    "troubledChanges": []
   },
   "completionRate": 100,
   "coverage": {
@@ -513,6 +514,21 @@
       }
     },
     "cost": {
+      "bySource": {
+        "approvalPrice": {
+          "sessions": 0,
+          "total": 0
+        },
+        "harness": {
+          "sessions": 3,
+          "total": 0.35
+        },
+        "reportEstimate": {
+          "sessions": 0,
+          "total": 0
+        },
+        "totalWithEstimates": 0.35
+      },
       "formattedTotal": "$0.35",
       "provenance": "harness-reported",
       "total": 0.35

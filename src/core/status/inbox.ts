@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { type DisclosureCounts, countChangeDisclosures } from '../report/result-sections.js';
 import { isPidRunning } from '../run/lock.js';
 import { parseSpecMd, resolveChangeDoc } from '../spec/parser.js';
 import { type SpecState, compareNumericPrefix } from './state.js';
@@ -33,6 +34,8 @@ export interface LandedItem {
   readonly change: InboxChangeRef;
   readonly archivedAt: string;
   readonly command: string;
+  /** Present only when at least one task of the landed change disclosed a gap. */
+  readonly disclosures?: DisclosureCounts;
 }
 export interface Inbox {
   readonly needsYou: NeedsYouItem[];
@@ -188,10 +191,14 @@ export async function collectLandedItems(
     if (lastLookMs !== null && Date.parse(archivedAt) <= lastLookMs) continue;
 
     const id = changeId(entry);
+    const disclosures = await countChangeDisclosures(folderPath);
+    const hasDisclosures =
+      disclosures.deviated > 0 || disclosures.missingContext > 0 || disclosures.outsideScope > 0;
     items.push({
       change: { id, title: await readArchivedTitle(folderPath, entry) },
       archivedAt,
       command: showCommand(id),
+      ...(hasDisclosures ? { disclosures } : {}),
     });
   }
 

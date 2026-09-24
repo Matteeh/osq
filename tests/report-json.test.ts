@@ -119,7 +119,11 @@ describe('report --json', () => {
     const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
 
     assert.deepEqual(sortedKeys(parsed.specs), ['active', 'archived', 'total']);
-    assert.deepEqual(sortedKeys(parsed.approvalFlags as object), ['byFlag', 'changes']);
+    assert.deepEqual(sortedKeys(parsed.approvalFlags as object), [
+      'byFlag',
+      'changes',
+      'troubledChanges',
+    ]);
     assert.deepEqual(sortedKeys((parsed.approvalFlags as Record<string, object>).byFlag), [
       'none',
       'removed_requirement',
@@ -246,9 +250,16 @@ describe('report --json', () => {
       'reasoning',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning.cost as object), [
+      'bySource',
       'formattedTotal',
       'provenance',
       'total',
+    ]);
+    assert.deepEqual(sortedKeys((parsed.planning.cost as Record<string, object>).bySource), [
+      'approvalPrice',
+      'harness',
+      'reportEstimate',
+      'totalWithEstimates',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning.coverage as object), [
       'reportedSessions',

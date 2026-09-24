@@ -1,6 +1,7 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
+import { formatPriceKey } from '../core/report/planning-price-gaps.js';
 import { type ApprovalReview, approveSpec } from '../core/spec/approve.js';
 import {
   type ApprovalDigest,
@@ -100,6 +101,9 @@ export async function approveCommand(
       }
       if (result.planningMatches === 0) {
         console.log(`No planning record found for ${result.specId}.`);
+      }
+      for (const model of result.missingPrices) {
+        console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -133,16 +133,21 @@ export interface NewSpecResult {
   folderPath: string;
 }
 
+type IdList = readonly string[];
+
 /**
- * Replace only the proposal title and, when queue dependencies are supplied,
- * the `depends_on` line. The template body and every other frontmatter key
- * stay intact.
+ * Replace only the proposal title and, when supplied, the queue dependency and
+ * fix lines. Every other frontmatter key stays intact.
  */
-function seedProposal(content: string, title: string, dependsOn?: readonly string[]): string {
+function seedProposal(content: string, title: string, dependsOn?: IdList, fixes?: IdList): string {
   let seeded = content.replace(/^title:\s*.*$/m, `title: ${title}`);
   if (dependsOn !== undefined) {
     const value = `[${dependsOn.map((id) => JSON.stringify(id)).join(', ')}]`;
     seeded = seeded.replace(/^depends_on:\s*.*$/m, `depends_on: ${value}`);
+  }
+  if (fixes !== undefined && fixes.length > 0) {
+    const value = `[${fixes.map((id) => JSON.stringify(id)).join(', ')}]`;
+    seeded = seeded.replace(/^(depends_on:.*)$/m, `$1\nfixes: ${value}`);
   }
   return seeded;
 }
@@ -150,7 +155,7 @@ function seedProposal(content: string, title: string, dependsOn?: readonly strin
 export async function createNewSpec(
   projectDir: string,
   title: string,
-  options: { specsDirName?: string; slug?: string; dependsOn?: readonly string[] } = {},
+  options: { specsDirName?: string; slug?: string; dependsOn?: IdList; fixes?: IdList } = {},
 ): Promise<NewSpecResult> {
   const trimmedTitle = title.trim();
   if (!trimmedTitle) {
@@ -203,7 +208,12 @@ export async function createNewSpec(
       proposalContent = await fs.readFile(path.join(TEMPLATES_ROOT, 'proposal.md'), 'utf8');
     } catch {}
 
-    const updatedProposal = seedProposal(proposalContent, trimmedTitle, options.dependsOn);
+    const updatedProposal = seedProposal(
+      proposalContent,
+      trimmedTitle,
+      options.dependsOn,
+      options.fixes,
+    );
     await fs.writeFile(path.join(targetDir, 'proposal.md'), updatedProposal, 'utf8');
 
     let tasksContent = FALLBACK_TASKS_MD;

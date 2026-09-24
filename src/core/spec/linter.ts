@@ -945,6 +945,14 @@ export async function lintChangeFolder(
     }
   }
 
+  // Check: fixes names an existing active, archived, or rejected change
+  for (const fixed of spec.fixes) {
+    const exists = await checkDependencyExists(projectRoot, fixed, config);
+    if (!exists) {
+      errors.push(`fixes names missing change: ${fixed}`);
+    }
+  }
+
   // Tasks checks
   const tasksDir = path.join(folderPath, 'tasks');
   let taskEntries: string[] = [];

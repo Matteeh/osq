@@ -20,6 +20,17 @@ import {
 } from './planning-economics.js';
 import { readPlanningSessions } from './planning.js';
 import {
+  type DisclosureEntry,
+  collectDisclosures,
+  formatDisclosures,
+} from './record-disclosures.js';
+import {
+  type PlanningCostBySource,
+  collectCostBySource,
+  formatPlanningCostBySource,
+} from './record-estimates.js';
+import { type ReworkEntry, collectRework, formatRework } from './record-rework.js';
+import {
   asData,
   eventTimestampMs,
   observeAttempts,
@@ -178,6 +189,10 @@ export interface HistoryMetrics {
   readonly rejections: RejectionHistory;
   readonly sizes: SizeMetrics;
   readonly scopeRegressions: ScopeRegressionHistory;
+  /** Later active/archived changes naming each fixed change, by change id. */
+  readonly rework: readonly ReworkEntry[];
+  /** Changes whose task result files hold a real executor disclosure. */
+  readonly disclosures: readonly DisclosureEntry[];
 }
 
 /**
@@ -253,6 +268,8 @@ export interface PlanningMetrics {
     readonly total: number;
     readonly formattedTotal: string;
     readonly provenance: 'harness-reported';
+    /** Recorded and estimated cost split by provenance. */
+    readonly bySource: PlanningCostBySource;
   };
   readonly coverage: {
     readonly reportedSessions: number;
@@ -1264,7 +1281,10 @@ export async function getMetricsReport(
 
   const queue = await readQueueReport(projectRoot, config);
 
-  const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders);
+  const rework = await collectRework(allSpecFolders);
+  const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders, rework);
+  const disclosures = await collectDisclosures(allSpecFolders);
+  const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
@@ -1345,6 +1365,8 @@ export async function getMetricsReport(
         recertifiedByHuman: scopeRecertifiedByHuman,
         requeuedForAgent: scopeRequeuedForAgent,
       },
+      rework,
+      disclosures,
     },
     coverage: {
       withEvents: withEventsCount,
@@ -1394,6 +1416,7 @@ export async function getMetricsReport(
         total: planningCost,
         formattedTotal: formatReportedCost(planningCost, planningCostReportedSessions),
         provenance: 'harness-reported',
+        bySource: planningCostBySource,
       },
       coverage: {
         reportedSessions: planningReportedSessions,
@@ -1703,6 +1726,9 @@ export function formatMetricsReport(
   lines.push(`    Recertified by human: ${report.history.scopeRegressions.recertifiedByHuman}`);
   lines.push(`    Requeued for agent: ${report.history.scopeRegressions.requeuedForAgent}`);
 
+  lines.push(...formatRework(report.history.rework ?? []));
+  lines.push(...formatDisclosures(report.history.disclosures ?? []));
+
   const scopeSeries = report.history.sizes.scopeFileSeries;
   const legacySeries = scopeSeries.find((entry) => entry.resolver === 'legacy');
   const resolver2Series = scopeSeries.find((entry) => entry.resolver === 'resolver-2');
@@ -1760,6 +1786,7 @@ export function formatMetricsReport(
   lines.push(`  Cached tokens: ${report.planning.tokens.cached}`);
   lines.push(`  Reasoning tokens: ${report.planning.tokens.reasoning}`);
   lines.push(`  Harness-reported cost: ${report.planning.cost.formattedTotal}`);
+  lines.push(...formatPlanningCostBySource(report.planning.cost.bySource));
   lines.push(
     `  ${report.planning.coverage.reportedSessions} of ${report.planning.coverage.totalSessions} sessions reported usage`,
   );
