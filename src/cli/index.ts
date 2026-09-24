@@ -101,8 +101,12 @@ export function createProgram(version?: string): Command {
   program
     .command('lint [ids...]')
     .description('validate change folders and OpenSpec artifacts')
-    .action(async (ids: string[]) => {
-      await lintCommand(ids);
+    .option('--json', 'print findings as JSON')
+    .action(async (ids: string[], options: { json?: boolean }) => {
+      await lintCommand(ids, {
+        json: options.json,
+        stdout: (text) => process.stdout.write(text),
+      });
     });
 
   program
