@@ -57,11 +57,21 @@ async function createArchivedChange(
   }
 
   if (lifecycle.approvedAt !== undefined && lifecycle.approvedAt !== null) {
+    const manifest: Record<string, unknown> = { approvedAt: lifecycle.approvedAt };
+    const createdMs =
+      lifecycle.briefDate !== undefined && lifecycle.briefDate !== null
+        ? Date.parse(lifecycle.briefDate)
+        : Number.NaN;
+    if (Number.isFinite(createdMs)) {
+      manifest.createdAt = new Date(createdMs).toISOString();
+      manifest.createdAtSource = 'created';
+    }
     await fs.writeFile(
       path.join(folder, '.run', 'manifest.json'),
-      `${JSON.stringify({ approvedAt: lifecycle.approvedAt }, null, 2)}\n`,
+      `${JSON.stringify(manifest, null, 2)}\n`,
       'utf8',
     );
+    await fs.writeFile(path.join(folder, '.run', 'approved'), '', 'utf8');
   }
 
   if (lifecycle.firstTaskStart !== undefined && lifecycle.firstTaskStart !== null) {
@@ -117,17 +127,17 @@ describe('report cycle metrics', () => {
         },
         {
           change: '009-watcher-observability',
-          briefToApprovalSeconds: 72000,
+          briefToApprovalSeconds: null,
           approvalToFirstTaskSeconds: 5866,
           firstTaskToArchiveSeconds: 8534,
-          totalSeconds: 86400,
+          totalSeconds: null,
         },
         {
           change: '010-report-history-state',
-          briefToApprovalSeconds: 82800,
+          briefToApprovalSeconds: null,
           approvalToFirstTaskSeconds: 3600,
           firstTaskToArchiveSeconds: 3600,
-          totalSeconds: 90000,
+          totalSeconds: null,
         },
       ]);
     });
@@ -137,9 +147,9 @@ describe('report cycle metrics', () => {
 
       assert.deepEqual(report.cycle.phases, {
         briefToApproval: {
-          totalSeconds: 154800,
-          averageSeconds: 77400,
-          coveredChanges: 2,
+          totalSeconds: 0,
+          averageSeconds: 0,
+          coveredChanges: 0,
           totalChanges: 3,
         },
         approvalToFirstTask: {
@@ -155,9 +165,9 @@ describe('report cycle metrics', () => {
           totalChanges: 3,
         },
         total: {
-          totalSeconds: 176400,
-          averageSeconds: 88200,
-          coveredChanges: 2,
+          totalSeconds: 0,
+          averageSeconds: 0,
+          coveredChanges: 0,
           totalChanges: 3,
         },
       });
@@ -172,6 +182,7 @@ describe('report cycle metrics', () => {
       assert.ok(text.includes('Approval to first task:'), text);
       assert.ok(text.includes('First task to archive:'), text);
       assert.ok(text.includes('2 of 3 archived changes'), text);
+      assert.ok(text.includes('not reported (0 of 3 archived changes)'), text);
       // Aggregate cycle view is text; per-change cycle rows stay JSON-only.
       assert.ok(!text.includes('briefToApprovalSeconds'), text);
       assert.ok(!text.includes('approvalToFirstTaskSeconds'), text);

@@ -5,7 +5,7 @@ import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { type Logger, createLogger } from '../core/foundation/logger.js';
 import { findSpecFolder } from '../core/spec/approve.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
-import { getChangesDir } from '../core/status/layout.js';
+import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 
 export interface LintCommandEntry {
   readonly folder: string;
@@ -35,9 +35,7 @@ async function listChangeFolders(specsDir: string): Promise<string[]> {
   }
 
   return entries
-    .filter(
-      (entry) => entry.isDirectory() && entry.name !== 'archive' && !entry.name.startsWith('_'),
-    )
+    .filter((entry) => entry.isDirectory() && isActiveChangeFolderName(entry.name))
     .map((entry) => path.join(specsDir, entry.name))
     .sort();
 }

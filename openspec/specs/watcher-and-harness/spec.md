@@ -309,13 +309,20 @@ The state derivation subsystem SHALL support overloaded invocation for both in-m
 - **THEN** archive destination path is determined using `getArchiveDir` from `src/core/layout.ts`
 
 ### Requirement: Run manifest at approval
-<!-- source: src/core/spec/approve.ts, src/core/run/manifest.ts, src/core/report/planning.ts, tests/manifest.test.ts, tests/planning-observed-approve.test.ts, tests/approve-confirm.test.ts -->
+<!-- source: src/core/spec/approve.ts, src/core/run/manifest.ts, src/core/report/planning.ts, tests/manifest.test.ts, tests/manifest-creation.test.ts, tests/planning-observed-approve.test.ts, tests/approve-confirm.test.ts -->
 The approve command SHALL write `.run/manifest.json` containing
 content-addressed instruction, config, and capability hashes; execution
-identity and timestamps; `planningSessions`, the number of valid owned and
-observed `plan_started` records; nullable `planner` attribution; and
+identity; `createdAt`; `approvedAt`; `planningSessions`, the number of valid
+owned and observed `plan_started` records; nullable `planner` attribution; and
 `approvalFlags` with the distinct sorted flag `ids` of this approval and a
 `mode` of `confirmed` when they were confirmed at a prompt, else `shown`.
+`osq plan` SHALL write the same manifest without `approvedAt` and
+`approvalFlags`.
+
+`createdAt` SHALL be an existing manifest's `createdAt`, kept together with its
+`createdAtSource` when present. Without one, it SHALL be the change folder's
+birth time, recorded with `createdAtSource: "created"`, and otherwise the
+current time, marked `created` only when `osq plan` writes it.
 
 `planner` SHALL use the model from the most recent observed session that reports
 one, then the most recent owned `--session` record that reports one, else null.
@@ -324,7 +331,19 @@ Configuration alone SHALL never populate it. Planning logs remain below
 
 #### Scenario: Manifest written on approval
 - **WHEN** `osq approve` seals a change
-- **THEN** `.run/manifest.json` contains content hashes, execution identity, timestamps, planning-session count, observed planner attribution, and approval flags
+- **THEN** `.run/manifest.json` contains content hashes, execution identity, `createdAt`, `approvedAt`, planning-session count, observed planner attribution, and approval flags
+
+#### Scenario: Manifest written at plan time
+- **WHEN** `osq plan` creates a change
+- **THEN** its manifest carries `createdAt` with `createdAtSource: "created"` and no `approvedAt`
+
+#### Scenario: Approval keeps the creation time
+- **WHEN** a planned change is approved, amended, and approved again
+- **THEN** each manifest keeps the plan-time `createdAt` and `createdAtSource`, and `approvedAt` is the latest approval
+
+#### Scenario: Approval without a prior manifest
+- **WHEN** a change created by `osq new` without a manifest is approved on a filesystem that reports folder birth time
+- **THEN** `createdAt` is the folder's birth time with `createdAtSource: "created"`
 
 #### Scenario: Approval after multiple planning sessions
 - **WHEN** a change with valid owned and observed starts is approved
@@ -1072,18 +1091,27 @@ and scope-audit verification SHALL NOT emit pre-spawn events.
 - **THEN** no pre-spawn verify runs for that attempt
 
 ### Requirement: Pre-spawn verify event and mismatch handling
-<!-- source: src/watcher/task-verify.ts, src/watcher/verify.ts, src/harness/types.ts, tests/pre-spawn-verify.test.ts, tests/verify-path-missing.test.ts -->
+<!-- source: src/watcher/task-verify.ts, src/core/status/pre-spawn-words.ts, src/watcher/verify.ts, src/harness/types.ts, tests/pre-spawn-verify.test.ts, tests/pre-spawn-words.test.ts, tests/verify-path-missing.test.ts -->
 The pre-spawn run SHALL append one `verify_ran` event through the single
 watcher verification entrypoint, adding `phase: "pre_spawn"`, `expected` (the
 task's `verify_starts`), `missingPaths` (the named paths absent before spawn,
 only when any is), and a boolean `mismatch`. A mismatch SHALL be a pass when `red` is expected and
 no named path is missing, or a failure or timeout when `green` is expected; `any`
-never mismatches. Under `warn` a mismatch SHALL log one warning and continue;
-under `fail` it SHALL kill the task with `verify_precondition`.
+never mismatches. Under `fail` a mismatch SHALL kill the task with
+`verify_precondition`.
+
+Under `warn` and `fail` the watcher SHALL log one line per pre-spawn result,
+`task <n> ` followed by the start words from `formatPreSpawnStart` in
+`src/core/status/pre-spawn-words.ts`: a start is red when verify fails or a
+named path is missing, worded `started red: <path>, <path> missing` when paths
+are missing and `started red: verify fails` otherwise, and green worded
+`started green, as declared`. A mismatch SHALL replace `, as declared` with
+nothing and append `, but it declared <state>`. A matching start SHALL log at
+info level and a mismatch at warn level.
 
 #### Scenario: Green start under warn
 - **WHEN** a task expecting `red` starts its first attempt, its verify passes, no named path is missing, and `gates.preSpawnVerify` is `warn`
-- **THEN** the pre-spawn event records `mismatch: true`, the logger receives one warning naming the task, and the task proceeds through its normal gates
+- **THEN** the pre-spawn event records `mismatch: true`, the logger receives one warning `task <n> started green, but it declared red`, and the task proceeds through its normal gates
 
 #### Scenario: Green start under fail
 - **WHEN** a task expecting `red` starts its first attempt, its verify passes, no named path is missing, and `gates.preSpawnVerify` is `fail`
@@ -1091,11 +1119,19 @@ under `fail` it SHALL kill the task with `verify_precondition`.
 
 #### Scenario: Declared green start
 - **WHEN** a task declaring `verify_starts: green` starts its first attempt and its verify passes
-- **THEN** the pre-spawn event records `mismatch: false`
+- **THEN** the pre-spawn event records `mismatch: false` and the log prints `task <n> started green, as declared`
 
 #### Scenario: Green only because the new test is missing
 - **WHEN** a task expecting `red` names a missing test file next to an existing one and its verify passes before spawn
-- **THEN** the pre-spawn event records that file in `missingPaths` and `mismatch: false`
+- **THEN** the pre-spawn event records that file in `missingPaths` and `mismatch: false`, and the log prints `task <n> started red: <path> missing`
+
+#### Scenario: Red start because verify fails
+- **WHEN** a task expecting `red` names no missing path and its verify fails before spawn
+- **THEN** the log prints `task <n> started red: verify fails`
+
+#### Scenario: Red start against a green declaration
+- **WHEN** a task declaring `verify_starts: green` fails its verify before spawn under `warn`
+- **THEN** the log warns `task <n> started red: verify fails, but it declared green`
 
 ### Requirement: Per-turn planning readers
 <!-- source: src/harness/claude/claude-usage.ts, src/harness/claude/claude-turns.ts, src/harness/codex/codex-observe-usage.ts, src/harness/opencode/opencode-observe-usage.ts, src/harness/opencode/opencode-usage.ts, tests/planning-observed-claude.test.ts, tests/planning-observed-codex.test.ts, tests/planning-observed-opencode.test.ts, tests/planning-reader-shape.test.ts -->
@@ -1227,3 +1263,116 @@ own line in the body.
 #### Scenario: Command names no paths
 - **WHEN** a task verify is `pnpm verify` or names only options and bare words
 - **THEN** no path check fails and the task behaves as before
+
+### Requirement: Claude task execution
+<!-- source: src/harness/claude/claude-exec.ts, src/harness/claude/claude-exec-args.ts, src/harness/index.ts, tests/claude/** -->
+The Claude adapter SHALL implement the existing `HarnessAdapter` port without
+new methods and SHALL run each task as a fresh `claude -p` process in the
+project root with stdin closed, no session resume, and
+`--output-format stream-json --verbose`. The prompt SHALL be the one
+`buildExecutorPrompt` returns, passed as one literal argument after `--`. Setup
+SHALL write no Claude Code files.
+
+#### Scenario: Fresh headless process
+- **WHEN** a task spawns with harness `claude`
+- **THEN** Claude Code runs in the project root with stdin closed, receives `-p --output-format stream-json --verbose` and `--no-session-persistence`, and receives the shared executor prompt byte for byte after `--`
+
+#### Scenario: Configured model
+- **WHEN** `claude.model` is set
+- **THEN** Claude Code receives `--model` with that value, and without it no `--model` flag is passed and execution metadata records `default`
+
+### Requirement: Claude tool surface
+<!-- source: src/harness/claude/claude-exec-args.ts, tests/claude/** -->
+Every Claude task SHALL load only the built-in tools `Bash`, `Read`, `Edit`,
+`Write`, `Glob`, and `Grep` through `--tools`, no MCP servers through
+`--strict-mcp-config` without `--mcp-config`, no skills through
+`--disable-slash-commands`, no user, project, or local settings files through
+`--setting-sources ""`, and no auto-memory through `--settings` carrying
+`"autoMemoryEnabled": false`. A non-empty `ANTHROPIC_API_KEY` SHALL add
+`--bare`. No configuration SHALL re-enable any of them.
+
+#### Scenario: Login run
+- **WHEN** `ANTHROPIC_API_KEY` is unset or empty
+- **THEN** the arguments carry every stripping flag above and no `--bare`
+
+#### Scenario: API key run
+- **WHEN** `ANTHROPIC_API_KEY` is non-empty
+- **THEN** the arguments also carry `--bare`
+
+### Requirement: Claude permissions and containment
+<!-- source: src/harness/claude/claude-exec-args.ts, src/core/foundation/config-claude.ts, tests/claude/** -->
+Every Claude task SHALL run with `--permission-mode dontAsk`, the allow rules
+`Bash`, `Read`, `Edit(./**)`, `Write(./**)`, `Glob`, and `Grep`, and the deny
+rule `Bash(git:*)`. When `claude.sandbox` is true, the `--settings` JSON SHALL
+also carry `sandbox` with `enabled: true`, `failIfUnavailable: true`,
+`autoAllowBashIfSandboxed: true`, `allowUnsandboxedCommands: false`, and
+`network` with an empty `allowedDomains` and `strictAllowlist: true`.
+
+#### Scenario: Default containment
+- **WHEN** `claude.sandbox` is unset or false
+- **THEN** the settings JSON is exactly `{"autoMemoryEnabled":false}` and the `git` deny rule is passed
+
+#### Scenario: Sandboxed containment
+- **WHEN** `claude.sandbox` is true
+- **THEN** the settings JSON carries the sandbox block above, and the `git` deny rule is still passed
+
+### Requirement: Claude stream translation
+<!-- source: src/harness/claude/claude-stream.ts, src/harness/claude/claude-tools.ts, tests/claude/**, tests/fixtures/claude/** -->
+The adapter SHALL read stdout through the shared LF-only `EventStreamParser`
+and skip malformed or unknown records without aborting. Each `tool_use` block
+in an `assistant` record SHALL become a `tool` event with a project-relative
+summary, and each non-empty `text` block a `text` event. Each `tool_result`
+without `is_error: true` for a remembered `Edit` or `Write` SHALL become a
+`file_changed` event with the project-relative path.
+
+#### Scenario: Captured run
+- **WHEN** `tests/fixtures/claude/run.jsonl` is replayed
+- **THEN** it yields one `tool` event per `tool_use` block, one `text` event per non-empty `text` block, and a `file_changed` event for each successful `Write` and `Edit`
+
+#### Scenario: Denied command
+- **WHEN** a `Bash` `tool_use` is followed by a `tool_result` with `is_error: true`
+- **THEN** the `tool` event is still written and no `file_changed` event is written for it
+
+### Requirement: Claude token accounting
+<!-- source: src/harness/claude/claude-stream.ts, tests/claude/**, tests/fixtures/claude/** -->
+The `result` record SHALL become one `tokens` event per `modelUsage` entry,
+with `inputTokens` plus `cacheReadInputTokens` plus `cacheCreationInputTokens`
+as `promptTokens`, `outputTokens` as `candidateTokens`, their sum as
+`totalTokens`, `cacheReadInputTokens` as `cachedTokens`, `thinkingTokens` as
+`reasoningTokens`, `costUSD` as `cost`, and the entry's key as `model`.
+Per-message usage SHALL NOT produce `tokens` events.
+
+#### Scenario: Cost matches the run
+- **WHEN** a `result` record has two `modelUsage` entries
+- **THEN** two `tokens` events are written and their `cost` values sum to the record's `total_cost_usd`
+
+### Requirement: Claude failure and result handling
+<!-- source: src/harness/claude/claude-exec.ts, src/watcher/spawn.ts, src/watcher/verify.ts, tests/claude/** -->
+A non-zero Claude Code exit SHALL become the existing crashed dead letter
+carrying Claude Code's stderr and, when the stream ended with a `result` whose
+`is_error` is true, its `subtype`. A missing result file SHALL follow the
+watcher's existing synthesis from the last `text` event and its `no_result`
+path.
+
+#### Scenario: Sandbox unavailable
+- **WHEN** Claude Code prints `sandbox required but unavailable` to stderr and exits 1
+- **THEN** the task's dead letter records `crashed` with that stderr
+
+#### Scenario: Successful run without a result file
+- **WHEN** the replayed run exits 0 without writing the result file
+- **THEN** the watcher synthesizes it from the last `text` event and marks the task done only after its own verify passes
+
+### Requirement: Claude execution attribution
+<!-- source: src/harness/types.ts, src/harness/claude/claude-exec.ts, src/watcher/spawn.ts, tests/claude/** -->
+`SpawnDetails` SHALL accept an optional `harnessAuth` of `api_key` or `login`,
+and the runner SHALL add a supplied value to the `started` event. The Claude
+adapter SHALL supply `api_key` when it passed `--bare` and `login` otherwise,
+along with `harnessVersion` from the first line of `claude --version`.
+
+#### Scenario: Claude started event
+- **WHEN** a Claude task starts without `ANTHROPIC_API_KEY`
+- **THEN** its `started` event carries `harness: "claude"`, the configured model or `default`, `harnessVersion`, and `harnessAuth: "login"`
+
+#### Scenario: Other harnesses unchanged
+- **WHEN** an adapter supplies no `harnessAuth`
+- **THEN** its `started` event carries no `harnessAuth`

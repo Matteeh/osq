@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3809cbe4296f77b98c3428884ccb4edafe60ec934a3df78a2f2d52cdea163b9a"
+build_stamp: "e368483"
+project_commit: "e368483"
+exit_code: 0
+scope_files: {"README.md":"sha256:72d903e7acc47d81bf1348c32418d06421be72ce5690eddf4d914cdd3d0963b3","tests/claude/readme.test.ts":"sha256:d93006b2de0101a90f18dafce1936ba3031b59879ba90c9a487efd75bdfb02a6"}
+---
+2026-09-24T07:40:01.709Z

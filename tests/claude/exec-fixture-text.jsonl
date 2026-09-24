@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"hello from claude"}]}}
+{"type":"result","subtype":"success","is_error":false,"result":"hello from claude","total_cost_usd":0.002,"usage":{},"modelUsage":{"claude-haiku-4-5-20251001":{"inputTokens":3,"outputTokens":4,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"thinkingTokens":0,"costUSD":0.002}}}

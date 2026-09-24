@@ -43,6 +43,8 @@ export interface StartedEventData {
   version?: string;
   /** First line of the harness binary's `--version`, when the adapter supplies it. */
   harnessVersion?: string;
+  /** How the harness authenticated, when the adapter can tell. */
+  harnessAuth?: 'api_key' | 'login';
 }
 
 /** Legacy `started` payloads emitted by adapters before the runner owned it. */
@@ -270,6 +272,7 @@ export type HarnessEvent = OsqEvent;
 /** Optional attribution an adapter can add when the child process exists. */
 export interface SpawnDetails {
   readonly harnessVersion?: string;
+  readonly harnessAuth?: 'api_key' | 'login';
 }
 
 export interface SpawnTaskOptions {

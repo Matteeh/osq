@@ -3,6 +3,7 @@ import type { Logger } from '../core/foundation/logger.js';
 import type { VerificationResult } from '../core/run/verification.js';
 import type { TaskData, VerifyStarts } from '../core/spec/parser.js';
 import { missingNamedPaths } from '../core/spec/verify-paths.js';
+import { formatPreSpawnStart } from '../core/status/pre-spawn-words.js';
 import { readRetryContext } from './attempt.js';
 import type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
@@ -28,15 +29,6 @@ export function isPreSpawnMismatch(
   if (expected === 'any') return false;
   const passed = result.exitCode === 0 && !result.error && !result.timedOut;
   return expected === 'red' ? passed && missingPaths.length === 0 : !passed;
-}
-
-/** One warning line naming the task, its expected start state, and exit code. */
-export function formatPreSpawnWarning(
-  taskNumber: string,
-  expected: VerifyStarts,
-  exitCode: number,
-): string {
-  return `task ${taskNumber} pre-spawn verify mismatch: expected ${expected}, exit code ${exitCode}`;
 }
 
 /** Dead marker for a pre-spawn mismatch: reason, command, expected state, exit, output. */
@@ -101,11 +93,15 @@ export async function runPreSpawnVerify(
       }),
     },
   );
-  if (!isPreSpawnMismatch(expected, result, missingPaths)) return { ok: true };
-  if (mode === 'warn') {
-    logger?.warn(formatPreSpawnWarning(taskNumber, expected, result.exitCode));
-    return { ok: true };
+  const mismatch = isPreSpawnMismatch(expected, result, missingPaths);
+  const line = `task ${taskNumber} ${formatPreSpawnStart(expected, result.exitCode, missingPaths)}`;
+  if (mismatch) {
+    logger?.warn(line);
+  } else {
+    logger?.info(line);
   }
+  if (!mismatch) return { ok: true };
+  if (mode === 'warn') return { ok: true };
   return {
     ok: false,
     marker: formatPreSpawnDeadMarker(taskData.verify, expected, result),

@@ -191,6 +191,7 @@ Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeou
 Available adapters:
 
 - `agy`: Antigravity harness adapter
+- `claude`: Claude Code harness adapter running fresh headless `claude -p` tasks
 - `codex`: Codex CLI harness adapter running tasks via `codex exec` and planning via the Codex TUI
 - `opencode`: OpenCode harness adapter running tasks via `opencode run`
 - `pi`: Pi coding agent harness adapter running fresh one-shot tasks in JSON mode
@@ -305,6 +306,46 @@ Each task is a fresh noninteractive process in the project root with stdin close
 As with every harness, scope is a protocol, not confinement: the prompt and the watcher's checks restrict the agent to its declared files, but they do not confine the filesystem or network beyond what Pi itself enforces. osq does not provide OS or container isolation.
 
 Pi cannot plan: the adapter has no interactive session, so `osq plan --session` with Pi selected as the planner stops with the existing "does not support interactive sessions" error, and `planner.agent` is unsupported for Pi and rejected by configuration validation.
+
+### Claude Code
+
+Select Claude Code as the executor in `osq.config.ts`:
+
+```ts
+import { defineConfig } from '@matteeh/osq';
+
+export default defineConfig({
+  harness: 'claude',
+  claude: {
+    // All fields are optional; omit any to use Claude Code's native value.
+    // bin: '/path/to/claude',  // claude.bin -> `claude`
+    // model: '<your-model>',   // claude.model -> OSQ_MODEL (Claude executor only) -> native
+    // sandbox: true,           // confine Bash with Claude Code's OS sandbox (needs bubblewrap and socat)
+  },
+});
+```
+
+Setting `OSQ_HARNESS=claude` in the environment or `.env` also selects Claude Code, but an explicit `harness` in `osq.config.ts` wins over that fallback. Binary precedence is `claude.bin`, then `claude` on `PATH`. Model precedence is `claude.model`, then `OSQ_MODEL` only when Claude Code is the executor, then Claude Code's native default; with no model configured, osq records `default` rather than guessing one. This release requires Claude Code `2.1.278` or newer, the version every flag below was verified on; `osq doctor`'s `harness-version` check and the watcher's preflight both fail under it.
+
+Each task is a fresh `claude -p --output-format stream-json --verbose` process in the project root with stdin closed and `--no-session-persistence`, so there is no session to resume.
+
+#### Claude Code setup and prerequisites
+
+Install the Claude Code CLI and log in as usual: by default osq reuses your Claude Code login. When `ANTHROPIC_API_KEY` is set to a non-empty value, osq adds `--bare` and uses the key instead; `--bare` never reads your login, which is why it is tied to the key. The `started` event records which one ran through `harnessAuth`: `api_key` with a key and `login` otherwise.
+
+`osq setup` writes no Claude Code files for execution; it only maintains the shared managed `AGENTS.md` block. Planning with Claude Code uses the tool-native `/osq-plan` command that `osq init` installs, not this adapter.
+
+#### Claude Code stripped tool surface
+
+Each task loads only six built-in tools: `Bash`, `Read`, `Edit`, `Write`, `Glob`, and `Grep`. osq passes `--tools Bash,Read,Edit,Write,Glob,Grep`, `--strict-mcp-config` with no `--mcp-config`, `--disable-slash-commands`, `--setting-sources ""`, `--no-session-persistence`, and `--settings '{"autoMemoryEnabled":false}'`. That strips MCP servers, skills, plugins, hooks, user, project and local settings, saved sessions, and auto-memory so the agent pays no tokens for harness features a coding task never uses: measured on a one-line prompt, input fell from about 29,500 to about 13,300 tokens per request. No configuration key re-enables any of them.
+
+#### Claude Code permissions
+
+Executor tasks run with `--permission-mode dontAsk`, so anything not allowed is denied rather than prompting. `Read`, `Glob`, and `Grep` are allowed; `Edit` and `Write` are confined to the project through `Edit(./**)` and `Write(./**)`; `Bash` is allowed but `git` is denied by `Bash(git:*)`, which still denies `git` inside compound commands such as `echo a && git status`.
+
+Without `claude.sandbox`, Bash is not confined: a shell command can still write outside the project or reach the network. Set `claude.sandbox: true` to add Claude Code's Bash sandbox with no network. It fails at startup if the sandbox is unavailable instead of running unconfined, and on Linux and WSL2 it needs the OS packages `bubblewrap` and `socat` (`apt install bubblewrap socat`).
+
+As with every harness, scope is a protocol, not confinement beyond what the harness itself enforces.
 
 ## Commands
 

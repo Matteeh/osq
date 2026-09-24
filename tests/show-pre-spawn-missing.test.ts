@@ -162,7 +162,7 @@ describe('osq show pre-spawn verify missing paths', () => {
     const first = taskBlock(text, 'Missing Paths Task');
     assert.ok(
       first.includes(
-        '      Pre-spawn verify: exit 0, expected red, matched, missing tests/a.test.ts, tests/b.test.ts',
+        '      Pre-spawn verify: started red: tests/a.test.ts, tests/b.test.ts missing',
       ),
       `task 1 should name its missing paths, got:\n${first}`,
     );
@@ -171,19 +171,19 @@ describe('osq show pre-spawn verify missing paths', () => {
     assert.ok(verifyIndex >= 0, 'task 1 Verify line should render');
     assert.equal(
       firstLines[verifyIndex + 1],
-      '      Pre-spawn verify: exit 0, expected red, matched, missing tests/a.test.ts, tests/b.test.ts',
+      '      Pre-spawn verify: started red: tests/a.test.ts, tests/b.test.ts missing',
     );
 
     const second = taskBlock(text, 'No Missing Paths Task');
     assert.ok(
-      second.includes('      Pre-spawn verify: exit 0, expected red, matched\n'),
-      `task 2 should keep the unchanged line, got:\n${second}`,
+      second.includes('      Pre-spawn verify: started green, but it declared red\n'),
+      `task 2 should word the start from its exit code, got:\n${second}`,
     );
 
     const third = taskBlock(text, 'Malformed Missing Paths Task');
     assert.ok(
-      third.includes('      Pre-spawn verify: exit 0, expected red, matched\n'),
-      `task 3 should keep the unchanged line, got:\n${third}`,
+      third.includes('      Pre-spawn verify: started green, but it declared red\n'),
+      `task 3 should ignore malformed missing paths, got:\n${third}`,
     );
   });
 
@@ -224,8 +224,8 @@ describe('osq show pre-spawn verify missing paths', () => {
 
     const block = taskBlock(captured, 'Empty Missing Paths Task');
     assert.ok(
-      block.includes('      Pre-spawn verify: exit 0, expected red, matched\n'),
-      `empty missing paths should keep the unchanged line, got:\n${block}`,
+      block.includes('      Pre-spawn verify: started green, but it declared red\n'),
+      `empty missing paths should word the start from its exit code, got:\n${block}`,
     );
   });
 });

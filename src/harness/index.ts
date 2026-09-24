@@ -4,6 +4,7 @@ import {
   lookupHarness,
 } from '../core/foundation/harness-catalog.js';
 import { AgyAdapter } from './agy/agy.js';
+import { ClaudeAdapter } from './claude/claude-exec.js';
 import { CodexAdapter } from './codex/codex.js';
 import { MockAdapter } from './mock.js';
 import { OpencodeAdapter } from './opencode/opencode.js';
@@ -17,6 +18,7 @@ import type { HarnessAdapter } from './types.js';
  */
 export const harnessAdapterFactories: Readonly<Record<HarnessName, () => HarnessAdapter>> = {
   agy: () => new AgyAdapter(),
+  claude: () => new ClaudeAdapter(),
   codex: () => new CodexAdapter(),
   mock: () => new MockAdapter(),
   opencode: () => new OpencodeAdapter(),
@@ -43,3 +45,4 @@ export * from './agy/agy.js';
 export * from './opencode/opencode.js';
 export * from './codex/codex.js';
 export * from './pi/pi.js';
+export * from './claude/claude-exec.js';

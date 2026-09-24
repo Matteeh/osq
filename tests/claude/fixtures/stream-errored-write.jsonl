@@ -1,0 +1,4 @@
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","content":[{"type":"tool_use","id":"toolu_write_ok","name":"Write","input":{"file_path":"/project/hello.txt","content":"<content>"}}]},"timestamp":"2026-09-24T05:11:10.701Z"}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_write_ok","content":"<content>"}]},"timestamp":"2026-09-24T05:11:10.714Z"}
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","content":[{"type":"tool_use","id":"toolu_write_bad","name":"Write","input":{"file_path":"/project/denied.txt","content":"<content>"}}]},"timestamp":"2026-09-24T05:11:11.000Z"}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_write_bad","content":"<content>","is_error":true}]},"timestamp":"2026-09-24T05:11:11.014Z"}

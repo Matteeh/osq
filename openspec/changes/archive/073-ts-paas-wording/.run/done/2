@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:955c67fb4596d44759b5c13501981a5bef1f5244d962d7d25d90d93c7eb6889b"
+build_stamp: "fa03f50"
+project_commit: "fa03f50"
+exit_code: 0
+scope_files: {"openspec/schemas/osq/README.md":"sha256:42a6b53983d1b84b2c6979d1a723b9b684ccdf5ecf42d735b4faad6d6a25b3a0","openspec/schemas/osq/schema.yaml":"sha256:4ce70234f8099e08391e56ee37c3add9937357c41923cfa4b44954be5dfaf109","openspec/schemas/osq/templates/proposal.md":"sha256:5bc0abcf3b0e69c23e8e907342679967e920a59faf31dc6456c07b9f2c2f08b4","openspec/schemas/osq/templates/spec.md":"sha256:1cccfb573f031c6352bed2a879b7035ff710bc909112fc23d10bdcfcdd8d4318","openspec/schemas/osq/templates/tasks.md":"sha256:fa67d99fb4a93b12d702f89ea83e1838219d1cad1c90a4192c402278001cd30e","src/core/foundation/new.ts":"sha256:99454b04308ffa3c9f14b230dc1de585f5d4aa63066f8c3f8d6b1c9b3b4db197","templates/openspec/schemas/osq/README.md":"sha256:42a6b53983d1b84b2c6979d1a723b9b684ccdf5ecf42d735b4faad6d6a25b3a0","templates/openspec/schemas/osq/schema.yaml":"sha256:4ce70234f8099e08391e56ee37c3add9937357c41923cfa4b44954be5dfaf109","templates/openspec/schemas/osq/templates/proposal.md":"sha256:5bc0abcf3b0e69c23e8e907342679967e920a59faf31dc6456c07b9f2c2f08b4","templates/openspec/schemas/osq/templates/spec.md":"sha256:1cccfb573f031c6352bed2a879b7035ff710bc909112fc23d10bdcfcdd8d4318","templates/openspec/schemas/osq/templates/tasks.md":"sha256:fa67d99fb4a93b12d702f89ea83e1838219d1cad1c90a4192c402278001cd30e","templates/proposal.md":"sha256:5bc0abcf3b0e69c23e8e907342679967e920a59faf31dc6456c07b9f2c2f08b4","tests/fixtures/events/dead.jsonl":"sha256:d3278688cd2b9320c8d6ec0c5e4051e16f875a1993a7e35398ab0e8df54d32f9","tests/fixtures/events/verified.jsonl":"sha256:becbdbaadc54fa9cd931f7218b61d1641be8b127bb61fa8ad404eb59cf719178","tests/proposal-seed-human-steps.test.ts":"sha256:f26cee1e14008d9a562edcd87008644eb3baec5edf6c2f766dcc9240bf64cd67"}
+---
+2026-09-24T20:31:53.505Z

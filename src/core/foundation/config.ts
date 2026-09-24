@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
+import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { applyHarnessModelEnv } from './config-env.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
@@ -12,11 +13,14 @@ import {
 } from './config-planning.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
+import type { OsqUserConfig } from './config-user.js';
 
+export type { ClaudeConfig } from './config-claude.js';
 export type { CodexConfig } from './config-codex.js';
 export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
 export type { ServeConfig } from './config-serve.js';
+export type { OsqUserConfig } from './config-user.js';
 
 export interface OsqLimits {
   readonly maxScopeFiles: number;
@@ -74,6 +78,7 @@ export interface OsqConfig {
   readonly opencode?: OpencodeConfig;
   readonly codex?: CodexConfig;
   readonly pi?: PiConfig;
+  readonly claude?: ClaudeConfig;
   readonly log?: LogConfig;
   readonly planner?: PlannerConfig;
   readonly planning?: PlanningConfig;
@@ -81,35 +86,6 @@ export interface OsqConfig {
   readonly serve?: Partial<ServeConfig>;
   readonly gates?: GatesConfig;
 }
-
-export type OsqUserConfig = Partial<
-  Omit<
-    OsqConfig,
-    | 'limits'
-    | 'paths'
-    | 'timeouts'
-    | 'codex'
-    | 'pi'
-    | 'log'
-    | 'planner'
-    | 'planning'
-    | 'queue'
-    | 'gates'
-  >
-> & {
-  readonly limits?: Partial<OsqLimits>;
-  readonly paths?: Partial<OsqPaths>;
-  readonly timeouts?: Partial<OsqTimeouts>;
-  readonly agy?: Partial<AgyConfig>;
-  readonly opencode?: Partial<OpencodeConfig>;
-  readonly codex?: Partial<CodexConfig>;
-  readonly pi?: Partial<PiConfig>;
-  readonly log?: Partial<LogConfig>;
-  readonly planner?: Partial<PlannerConfig>;
-  readonly planning?: Partial<PlanningConfig>;
-  readonly queue?: Partial<QueueConfig>;
-  readonly gates?: Partial<GatesConfig>;
-};
 
 export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
@@ -159,6 +135,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const codex = validateCodexConfig(config.codex);
   const pi = validatePiConfig(config.pi);
+  const claude = validateClaudeConfig(config.claude);
   const serve = validateServeConfig(config.serve);
 
   return {
@@ -179,6 +156,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     },
     codex,
     pi,
+    claude,
     log: {
       ...DEFAULT_CONFIG.log,
       ...(config.log || {}),

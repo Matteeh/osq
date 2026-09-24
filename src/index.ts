@@ -12,6 +12,7 @@ export {
 export type { ServeConfig } from './core/foundation/config-serve.js';
 export type {
   AgyConfig,
+  ClaudeConfig,
   CodexConfig,
   LogConfig,
   OpencodeConfig,
@@ -23,6 +24,14 @@ export type {
   PiConfig,
   QueueConfig,
 } from './core/foundation/config.js';
+export {
+  CLAUDE_MINIMUM_VERSION,
+  assessClaudeVersion,
+  claudeContainment,
+  resolveClaudeBinary,
+  resolveClaudeModel,
+  validateClaudeConfig,
+} from './core/foundation/config-claude.js';
 export {
   resolveCodexBinary,
   resolveCodexEffort,

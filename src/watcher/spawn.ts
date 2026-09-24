@@ -74,6 +74,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
             pid,
             timeoutSeconds,
             ...(details?.harnessVersion ? { harnessVersion: details.harnessVersion } : {}),
+            ...(details?.harnessAuth ? { harnessAuth: details.harnessAuth } : {}),
             ...buildInfo,
           },
         },

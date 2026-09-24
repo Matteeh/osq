@@ -1,5 +1,11 @@
-import type { HarnessDiagnoseContext, HarnessDiagnosis } from './config-pi.js';
-import { diagnosePi, resolvePiBinary, resolvePiEffort } from './config-pi.js';
+import {
+  claudeContainment,
+  diagnoseClaude,
+  resolveClaudeBinary,
+  resolveClaudeModel,
+} from './config-claude.js';
+import { codexExecutable, codexModel } from './config-codex-resolve.js';
+import * as piConfig from './config-pi.js';
 import type { OsqConfig } from './config.js';
 
 /**
@@ -7,12 +13,12 @@ import type { OsqConfig } from './config.js';
  * shared consumer derives its harness knowledge from here, so adding a harness
  * never means editing a generic workflow branch.
  */
-export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex', 'pi'] as const;
+export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex', 'pi', 'claude'] as const;
 
 export type HarnessName = (typeof HARNESS_NAMES)[number];
 
 /** Where in {@link OsqConfig} a harness keeps its harness-specific settings. */
-export type HarnessConfigKey = 'agy' | 'opencode' | 'codex' | 'pi';
+export type HarnessConfigKey = 'agy' | 'opencode' | 'codex' | 'pi' | 'claude';
 
 export interface PlannerCapability {
   /** Whether `planner.agent` is a meaningful setting for this harness. */
@@ -36,8 +42,12 @@ export interface HarnessCatalogEntry {
   /** Applicable reasoning effort, or `null` when the harness has no such knob. */
   readonly effort: (config: OsqConfig) => string | null;
   readonly planner: PlannerCapability;
+  /** What the harness confines for this configuration, when the entry declares it. */
+  readonly containment?: (config: OsqConfig) => string;
   /** Optional extra doctor checks run after a passing `harness` probe. */
-  readonly diagnose?: (context: HarnessDiagnoseContext) => Promise<readonly HarnessDiagnosis[]>;
+  readonly diagnose?: (
+    context: piConfig.HarnessDiagnoseContext,
+  ) => Promise<readonly piConfig.HarnessDiagnosis[]>;
 }
 
 type HarnessCatalogDefinitions = {
@@ -73,33 +83,30 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   codex: {
     configKey: 'codex',
     envModelWhenUnselected: false,
-    executable: (config) => {
-      const explicit = config.codex?.bin?.trim();
-      if (explicit) return explicit;
-      const fromEnv = process.env.CODEX_PATH?.trim();
-      if (fromEnv) return fromEnv;
-      return 'codex';
-    },
-    model: (config) => {
-      const explicit = config.codex?.model?.trim();
-      if (explicit) return explicit;
-      if (normalizeHarnessName(config.harness) === 'codex') {
-        const fromEnv = process.env.OSQ_MODEL?.trim();
-        if (fromEnv) return fromEnv;
-      }
-      return undefined;
-    },
+    executable: codexExecutable,
+    model: (config) => codexModel(config, normalizeHarnessName(config.harness) === 'codex'),
     effort: (config) => config.codex?.effort?.trim() || null,
     planner: { agent: false, briefModelWhenNative: 'default' },
   },
   pi: {
     configKey: 'pi',
     envModelWhenUnselected: false,
-    executable: resolvePiBinary,
+    executable: piConfig.resolvePiBinary,
     model: resolvePiModel,
-    effort: resolvePiEffort,
+    effort: piConfig.resolvePiEffort,
     planner: { agent: false, briefModelWhenNative: 'default' },
-    diagnose: diagnosePi,
+    diagnose: piConfig.diagnosePi,
+  },
+  claude: {
+    configKey: 'claude',
+    envModelWhenUnselected: false,
+    executable: resolveClaudeBinary,
+    model: (config) =>
+      resolveClaudeModel(config, normalizeHarnessName(config.harness) === 'claude'),
+    effort: () => null,
+    planner: { agent: false, briefModelWhenNative: 'default' },
+    containment: claudeContainment,
+    diagnose: diagnoseClaude,
   },
 };
 
@@ -216,7 +223,7 @@ export function resolveAdapterModel(_adapterName: string, config: OsqConfig): st
 
 /** Resolve the Codex executable: explicit config, then `CODEX_PATH`, then `codex`. */
 export function resolveCodexBinary(config?: Pick<OsqConfig, 'codex'>): string {
-  return lookupHarness('codex').executable((config ?? {}) as OsqConfig) ?? 'codex';
+  return codexExecutable(config);
 }
 
 /**
@@ -226,24 +233,15 @@ export function resolveCodexBinary(config?: Pick<OsqConfig, 'codex'>): string {
 export function resolveCodexModel(
   config?: Pick<OsqConfig, 'harness' | 'codex'>,
 ): string | undefined {
-  return lookupHarness('codex').model((config ?? {}) as OsqConfig);
+  return codexModel(config, normalizeHarnessName(config?.harness ?? '') === 'codex');
 }
 
 /** Resolve the Codex reasoning effort override, or `undefined` for native defaults. */
 export function resolveCodexEffort(config?: Pick<OsqConfig, 'codex'>): string | undefined {
-  return lookupHarness('codex').effort((config ?? {}) as OsqConfig) ?? undefined;
+  return config?.codex?.effort?.trim() || undefined;
 }
 
-/**
- * Resolve the Pi execution model: explicit `pi.model`, then `OSQ_MODEL` only
- * when Pi is the executor, otherwise `undefined` (Pi's native default).
- */
+/** Resolve the Pi execution model with the selected-executor env fallback. */
 export function resolvePiModel(config?: Pick<OsqConfig, 'harness' | 'pi'>): string | undefined {
-  const explicit = config?.pi?.model?.trim();
-  if (explicit) return explicit;
-  if (normalizeHarnessName(config?.harness ?? '') === 'pi') {
-    const fromEnv = process.env.OSQ_MODEL?.trim();
-    if (fromEnv) return fromEnv;
-  }
-  return undefined;
+  return piConfig.resolvePiModel(config, normalizeHarnessName(config?.harness ?? '') === 'pi');
 }

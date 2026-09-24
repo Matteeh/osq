@@ -17,7 +17,7 @@ Living Capability Specs:
 Rules:
 1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.
 2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
-3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails.
+3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.
 4. Tests for each acceptance line before implementing.
 5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.
 6. New test files are always allowed. Change a preexisting test only when the task sets `tests.modify: true` and the file is inside `scope`; any other test change kills the task.

@@ -802,18 +802,19 @@ without launching a browser or retaining a watcher.
 - **THEN** the command launches the printed loopback URL once through the current platform's default-browser command
 
 ### Requirement: Proposal seed template
-<!-- source: templates/proposal.md, src/core/foundation/new.ts, tests/new.test.ts -->
+<!-- source: templates/proposal.md, templates/openspec/schemas/osq/**, openspec/schemas/osq/**, src/core/foundation/new.ts, tests/new.test.ts, tests/proposal-seed-human-steps.test.ts -->
 `osq new` SHALL seed `proposal.md` with the planning sentinel `verify` in
 frontmatter and the body sections `## Goal`, `## Verify`, `## Non-goals`,
 `## Contract`, `## Human steps`, and `## Delta`, in that order. The contract
 placeholder SHALL be a `### Requirement:` block with a `#### Scenario:`, not a
-table. The seed SHALL NOT mention retired `features.writes`. The built-in
-fallback used when the template file is unreadable SHALL carry the same
-sections.
+table. The seeded `## Human steps` SHALL read `None`, and the osq schema's
+instruction SHALL say the section never includes `osq approve`. The seed SHALL
+NOT mention retired `features.writes`. The built-in fallback used when the
+template file is unreadable SHALL carry the same sections.
 
 #### Scenario: New change proposal
 - **WHEN** `osq new <name>` creates a change
-- **THEN** its `proposal.md` has the six sections in order, a requirement-and-scenario contract placeholder, and `verify: node -e "process.exit(0)"` in frontmatter
+- **THEN** its `proposal.md` has the six sections in order, a requirement-and-scenario contract placeholder, `## Human steps` reading `None`, and `verify: node -e "process.exit(0)"` in frontmatter
 
 #### Scenario: Template unreadable
 - **WHEN** the packaged `templates/proposal.md` cannot be read
@@ -1039,3 +1040,120 @@ approval flag.
 #### Scenario: README names the new reason and flag
 - **WHEN** README is inspected
 - **THEN** `verify_path_missing` appears in the automatic retry bullet and the dead reasons list, and `verify_starts_conflict` appears with the approval flags
+
+### Requirement: Claude configuration and resolution
+<!-- source: src/core/foundation/config-claude.ts, src/core/foundation/config.ts, src/core/foundation/harness-catalog.ts, src/index.ts, tests/claude/** -->
+Configuration SHALL accept harness `claude` and a publicly exported
+`ClaudeConfig` with optional non-empty `bin` and `model` strings and an
+optional boolean `sandbox`, and SHALL reject any other value naming the key.
+The binary SHALL resolve from `claude.bin`, then `claude`. The model SHALL
+resolve from `claude.model`, then `OSQ_MODEL` only when Claude is the executor,
+then Claude Code's native default. Effort SHALL be null. The catalog entry
+SHALL declare `planner.agent` unsupported.
+
+#### Scenario: Explicit settings win
+- **WHEN** `claude.model` is set and `OSQ_MODEL` is also set
+- **THEN** osq uses `claude.model`
+
+#### Scenario: Invalid setting
+- **WHEN** `claude.sandbox` is the string `"yes"` or `claude.bin` is an empty string
+- **THEN** configuration fails with a message naming that key
+
+### Requirement: Claude diagnostics
+<!-- source: src/core/foundation/config-claude.ts, src/core/foundation/harness-catalog.ts, src/harness/claude/claude-exec.ts, tests/claude/** -->
+A harness catalog entry MAY declare an optional `containment` function that
+describes, from configuration, what the harness confines. The `claude` entry
+SHALL declare it and a `diagnose` hook. The hook SHALL add a `harness-version`
+check that fails when `claude --version` is below 2.1.278, naming the version
+and the minimum, and a passing `harness-containment` check whose message is
+the entry's containment. Claude preflight SHALL fail before any task spawns on
+the same version condition.
+
+#### Scenario: Old version
+- **WHEN** `claude --version` prints `2.1.200 (Claude Code)`
+- **THEN** doctor's `harness-version` check fails naming `2.1.200` and `2.1.278`, and preflight fails before any task spawns
+
+#### Scenario: Containment report
+- **WHEN** doctor runs with `claude.sandbox: true`
+- **THEN** the `harness-containment` check says that Bash is sandboxed without network, that file tools are confined to the project, and that `git` is denied
+
+### Requirement: Claude consumer guidance
+<!-- source: README.md, tests/claude/readme.test.ts -->
+The README SHALL describe the Claude Code harness: a config example, its
+settings, the minimum version, login versus `ANTHROPIC_API_KEY` and `--bare`,
+the stripped tool surface and why, the permission baseline and `git` denial,
+`claude.sandbox` with its bubblewrap and socat requirement on Linux, the
+honest limits of containment without the sandbox, and that planning uses the
+tool-native command instead.
+
+#### Scenario: Reading the Claude section
+- **WHEN** a consumer reads the README's Claude Code section
+- **THEN** it finds the flags osq passes and a statement that without `claude.sandbox` Bash is not confined
+
+### Requirement: Active change folder entries
+<!-- source: src/core/status/layout.ts, src/watcher/loop.ts, src/cli/lint.ts -->
+`isActiveChangeFolderName` in `src/core/status/layout.ts` SHALL decide which
+changes directory entries are active change folders: every name except those
+starting with `_` or `.` and the archive and rejected folders. The watcher cycle
+and bare `osq lint` SHALL list change folders through it.
+
+#### Scenario: Watcher skips the rejected folder
+- **WHEN** the watcher runs a cycle and the changes directory holds `archive` and `rejected` beside an approved change
+- **THEN** it logs no watcher error for either folder and runs the approved change's task
+
+#### Scenario: Bare lint skips the rejected folder
+- **WHEN** `osq lint` runs without ids and the changes directory holds `rejected` beside a valid change
+- **THEN** it lints only the valid change, reports no finding that names `rejected`, and exits 0
+
+### Requirement: Planner finish and approval handoff
+<!-- source: src/core/foundation/init-blocks.ts, PLANNER.md, templates/PLANNER.md, tests/managed-wording.test.ts -->
+The managed planner block SHALL tell an interactive planner to read what it
+needs and then write the change folder, stopping after the task list only when
+the human asks to review it first and then saying the folder is not written
+yet. It SHALL tell every planner to finish by telling the human, in chat, the
+task titles, that the change folder is written and `osq lint` passes, and the
+exact `osq approve <id>` to run, and SHALL say the human should not approve
+before that message. It SHALL say `## Human steps` never includes
+`osq approve`.
+
+#### Scenario: Planner block states the handoff
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it contains no instruction to stop after the task list by default, contains the finishing message with the exact `osq approve <id>`, and says `## Human steps` never includes `osq approve`
+
+### Requirement: Planner delta guidance
+<!-- source: src/core/foundation/init-blocks.ts, PLANNER.md, templates/PLANNER.md, tests/managed-wording.test.ts -->
+The managed planner block SHALL say that guidance a task needs about another
+capability's code, such as how to test against it, goes into that capability's
+spec through a delta, not only into the task. It SHALL say that replacing a
+requirement's behavior is a REMOVED requirement plus an ADDED one, because a
+MODIFIED requirement must keep every scenario it already has and `osq lint` and
+archive refuse one that drops any.
+
+#### Scenario: Planner block states delta guidance
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it names the other-capability delta rule and the REMOVED plus ADDED rule with its reason
+
+### Requirement: Executor start and ownership wording
+<!-- source: src/core/foundation/init-blocks.ts, AGENTS.md, .opencode/agent/osq-coder.md, tests/fixtures/prompts/**, tests/managed-wording.test.ts -->
+Executor step 3 SHALL say that a `verify` naming a file the task creates fails
+until that file exists, so starting red is expected. The managed `AGENTS.md`
+line about `tasks.md` and `.run/` SHALL be addressed to executors and SHALL say
+planners write `tasks.md` and the task files.
+
+#### Scenario: Executor block states the start and ownership rules
+- **WHEN** `MANAGED_AGENTS_MD_BODY` or an executor prompt is inspected
+- **THEN** step 3 explains the expected red start and the ownership line names executors as the ones who never edit those files and planners as the writers of the task files
+
+#### Scenario: Old blocks refreshed
+- **WHEN** `osq init` runs on a project whose `AGENTS.md` and `PLANNER.md` hold the previous managed blocks
+- **THEN** both blocks are replaced with the current ones and `osq doctor` reports no managed-block drift
+
+### Requirement: Plan prompt spec list label
+<!-- source: src/cli/plan-queue.ts, tests/managed-wording.test.ts -->
+The plan prompt's `## Capability Specs` section SHALL start with the sentence
+`All living specs. Read the ones this change writes or whose code it uses.` and
+SHALL still list every living spec.
+
+#### Scenario: Labeled spec list
+- **WHEN** a plan prompt is built for a project with living specs
+- **THEN** its `## Capability Specs` section starts with that sentence and lists every `openspec/specs/<capability>/spec.md`

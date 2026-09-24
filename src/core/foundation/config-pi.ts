@@ -120,6 +120,21 @@ export function resolvePiEffort(config?: {
   return config?.pi?.thinking?.trim() || null;
 }
 
+/**
+ * Pi execution model: explicit `pi.model`, then `OSQ_MODEL` only when Pi is the
+ * selected executor. `undefined` defers to Pi's native default. The selected
+ * check is supplied by the caller so the catalog owns harness-name knowledge.
+ */
+export function resolvePiModel(
+  config?: { readonly pi?: { readonly model?: string } },
+  selected = false,
+): string | undefined {
+  const explicit = config?.pi?.model?.trim();
+  if (explicit) return explicit;
+  if (!selected) return undefined;
+  return process.env.OSQ_MODEL?.trim() || undefined;
+}
+
 /** Version warning plus provider credential check for `osq doctor`. */
 export async function diagnosePi(
   context: HarnessDiagnoseContext,

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:fdbbdc11b0f3d9ef2ca9dd878435294c68b9869c9153eb197d8f023510513803"
+build_stamp: "e04af71"
+project_commit: "e04af71"
+exit_code: 0
+scope_files: {"src/core/report/planning-slice-lookup.ts":"sha256:94c839bd8833aa5a80d670f5c9d8a6b3247012ccbd0d1ab1da684053c7c09491","src/core/run/manifest-approval.ts":"sha256:54b0281f46a740a07d670e9e3c65c724582dab4198a6d6f8791d2d06f5c5ffe4","src/core/web/web-data-lifecycle.ts":"sha256:756277215015224dcf1ab0b47afa61f5d5dc750ceca18e7aae83cd5844dfe91b","src/watcher/auto-retry.ts":"sha256:97285017f0f69c48cf3c275f8838b13fe3c8e52701722bf8e3c3dc93ef6ab5b5","tests/manifest-approval-gate.test.ts":"sha256:488a4c31ebacde103d61422dab21a7ca1597d4c04ac2cb49e179b6a7f5033fee","tests/planning-slice-archive.test.ts":"sha256:22d73542371f56f4c84cc6384f5ebbef29361841d735442cebb4248f95d0ca8f","tests/planning-slice.test.ts":"sha256:5d6764d68afb0293e4be6c439f1d1cee79527cf69434f89eecce165f106d9321"}
+---
+2026-09-24T20:11:47.582Z

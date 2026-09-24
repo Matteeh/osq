@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { readManifestApprovedAt } from '../run/manifest-approval.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { getRejectedMarkerPath } from '../status/layout.js';
 import { readPlanRecords } from './planning-records.js';
@@ -46,15 +47,9 @@ async function directApproval(changeFolder: string, sessionId: string): Promise<
   return manifestApproval(changeFolder);
 }
 
-/** `<changeFolder>/.run/manifest.json` `approvedAt`, or null. */
+/** Trusted manifest approval for one folder, or null. */
 async function manifestApproval(changeFolder: string): Promise<string | null> {
-  try {
-    const raw = await fs.readFile(path.join(changeFolder, '.run', 'manifest.json'), 'utf8');
-    const value = (JSON.parse(raw) as { approvedAt?: unknown }).approvedAt;
-    return validIso(typeof value === 'string' ? value : null);
-  } catch {
-    return null;
-  }
+  return readManifestApprovedAt(changeFolder);
 }
 
 async function isDirectory(target: string): Promise<boolean> {

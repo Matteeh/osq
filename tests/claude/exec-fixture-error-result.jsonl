@@ -1,0 +1,2 @@
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"working"}]}}
+{"type":"result","subtype":"error_max_turns","is_error":true,"result":"boom","total_cost_usd":0.01,"usage":{},"modelUsage":{"claude-haiku-4-5-20251001":{"inputTokens":1,"outputTokens":2,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"thinkingTokens":0,"costUSD":0.01}}}

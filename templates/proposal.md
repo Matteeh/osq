@@ -40,8 +40,7 @@ The system SHALL <observable behavior>.
 
 ## Human steps
 
-- Review the proposal, delta specs, and task bodies, then run `osq approve <id>`
-  yourself.
+None
 
 ## Delta
 

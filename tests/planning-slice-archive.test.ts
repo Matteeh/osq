@@ -83,6 +83,7 @@ async function writeManifest(folder: string, approvedAt: string): Promise<void> 
     JSON.stringify({ approvedAt }),
     'utf8',
   );
+  await fs.writeFile(path.join(folder, '.run', 'approved'), 'sha256:sealed\n', 'utf8');
 }
 
 async function writeRejectedMarker(folder: string, timestamp: string): Promise<void> {

@@ -41,6 +41,17 @@ export function getSpecsDir(openspecRoot: string, projectRoot = ''): string {
   return path.join(projectRoot, openspecRoot, SPECS_DIR);
 }
 
+/**
+ * Whether a changes-directory entry name denotes an active change folder.
+ * Scaffolding and tooling entries (leading `_` or `.`) and the archive and
+ * rejected containers are not active changes. Every other name is.
+ */
+export function isActiveChangeFolderName(name: string): boolean {
+  return (
+    !name.startsWith('_') && !name.startsWith('.') && name !== ARCHIVE_DIR && name !== REJECTED_DIR
+  );
+}
+
 /** `<changeFolder>/.run`. */
 export function getChangeRunDir(changeFolder: string): string {
   return path.join(changeFolder, RUN_DIR);

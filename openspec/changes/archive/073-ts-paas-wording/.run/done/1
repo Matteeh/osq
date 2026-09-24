@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6c3779d7dab2552198a2e9d0b02bf1fc4f37bd38242ec4b7a7e110bf351bd096"
+build_stamp: "fa03f50"
+project_commit: "fa03f50"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:4665794fbbb31ac656b32d3bf0120faf6c3192a17fe18ebcb818d33099e4a5f8","AGENTS.md":"sha256:fbfd819da03880f3d05c434c31e6299876f83f49911e79940bd119f42463d2e7","PLANNER.md":"sha256:b046874edd04577cf31993fca840a9035ac0ec6ad910a56a1704c71b43d2df9a","src/cli/plan-queue.ts":"sha256:8046f6e8966d60f8c0981e86cbb529265bf31e15efa2d5d2d4004bf7986ac7a5","src/core/foundation/init-blocks.ts":"sha256:51a8d3b9b4aca2473384d25e0e043e27ea5978260863513e6f71e2ff15a6683a","templates/PLANNER.md":"sha256:ec57c017949bc6ad4dc681d75f452b8d2f05d576c1054b68a80808ec8c01a295","tests/fixtures/prompts/agy.txt":"sha256:fc83b15c0c53d933277c3e0cb2faf6ddc46c86916fcf4f837cf80524ba1dd582","tests/fixtures/prompts/codex.txt":"sha256:fc83b15c0c53d933277c3e0cb2faf6ddc46c86916fcf4f837cf80524ba1dd582","tests/fixtures/prompts/opencode.txt":"sha256:fc83b15c0c53d933277c3e0cb2faf6ddc46c86916fcf4f837cf80524ba1dd582","tests/managed-wording.test.ts":"sha256:d30e779587c1f9afec6a180ac347bb3119063c5a2091e0b48eb90d723c96b4d2"}
+---
+2026-09-24T20:29:10.537Z

@@ -72,7 +72,7 @@ export async function buildBaseOpeningPrompt(options: {
       }
     }
   } catch {}
-  const specsHeader = `## Capability Specs\n\n${specPaths.map((p) => `- ${p}`).join('\n')}`;
+  const specsHeader = `## Capability Specs\n\nAll living specs. Read the ones this change writes or whose code it uses.\n\n${specPaths.map((p) => `- ${p}`).join('\n')}`;
 
   const briefHeader = `## Brief\n\n${briefContent.trim()}`;
 

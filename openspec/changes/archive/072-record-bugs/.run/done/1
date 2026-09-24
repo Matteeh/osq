@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7969cd89c8baa975c7b106e49b690869e670b998590c072a3a835005f06c61d2"
+build_stamp: "e04af71"
+project_commit: "e04af71"
+exit_code: 0
+scope_files: {"src/core/run/manifest.ts":"sha256:5fedf2ddee87f5365b2735e2f7702509199d8bba2cdcadd2602c00b4b1b185c4","tests/manifest-creation.test.ts":"sha256:daddf2244ecfa5be1596ec59aa9458c5593cfa0a67044e5ad8090688261e098e"}
+---
+2026-09-24T20:08:00.325Z

@@ -320,7 +320,7 @@ describe('osq plan command', () => {
     );
 
     const section = recordSection(prompt);
-    assert.ok(section.includes('First-attempt pass rate: 0.63'), section);
+    assert.ok(section.includes('First-attempt passes: 5/8'), section);
     assert.ok(
       section.includes(
         'Largest first-attempt pass: 102-size-medium/2 "Tied largest A" (scope files: 8, acceptance lines: 7)',
@@ -349,7 +349,7 @@ describe('osq plan command', () => {
     const section = recordSection(prompt);
     assert.equal(section, "This repository's measured record is too small (fewer than 5 tasks).");
     for (const forbidden of [
-      'First-attempt pass rate',
+      'First-attempt passes',
       'Dead outcomes',
       'Largest first-attempt pass',
       'Median task duration',
@@ -368,7 +368,7 @@ describe('osq plan command', () => {
     await planCommand('record-probe', { brief: briefFixture, session: true, cwd: tmpDir, adapter });
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     const interactivePrompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
-    assert.ok(recordSection(interactivePrompt).includes('First-attempt pass rate: 0.63'));
+    assert.ok(recordSection(interactivePrompt).includes('First-attempt passes: 5/8'));
 
     const folderName = (await fs.readdir(changesDir)).find((entry) =>
       entry.endsWith('-record-probe'),
@@ -409,7 +409,7 @@ describe('osq plan command', () => {
     });
 
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 0);
-    assert.ok(recordSection(stdout).includes('First-attempt pass rate: 0.63'));
+    assert.ok(recordSection(stdout).includes('First-attempt passes: 5/8'));
   });
 
   it('puts the repository record in a queue-selected planning prompt', async () => {
@@ -439,7 +439,7 @@ describe('osq plan command', () => {
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 1);
     const prompt = MockAdapter.recordedInteractiveSpawns[0].prompt;
     assert.ok(prompt.includes('Queue Alpha'), 'queue item title seeded');
-    assert.ok(recordSection(prompt).includes('First-attempt pass rate: 0.63'));
+    assert.ok(recordSection(prompt).includes('First-attempt passes: 5/8'));
 
     const changesDir = getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, tmpDir);
     const entries = (await fs.readdir(changesDir)).filter(
