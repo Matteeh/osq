@@ -1,3 +1,8 @@
+---
+status: accepted
+applies_to: [cli-foundation]
+rule: Load osq.config.ts, .js and .mjs with jiti; add no other TypeScript loader.
+---
 # 001. Use jiti for Runtime Config Loading
 
 Date: 2026-09-17

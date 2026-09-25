@@ -1,3 +1,8 @@
+---
+status: accepted
+applies_to: [watcher-and-harness]
+rule: Archive merges approved deltas into living specs deterministically, without a model.
+---
 # 002. Feature Doc Delta Application Strategy
 
 Date: 2026-09-17

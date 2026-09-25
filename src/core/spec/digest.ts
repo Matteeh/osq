@@ -5,6 +5,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
 import { readLivingCapabilityNames, resemblingCapability } from './digest-capability.js';
+import { type DigestDecision, collectDigestDecisions } from './digest-decisions.js';
 import { type ApprovalFlagTask, buildApprovalFlags } from './digest-flags.js';
 import { parseHumanSteps } from './human-steps.js';
 import {
@@ -23,7 +24,8 @@ export type ApprovalFlagId =
   | 'verify_without_test'
   | 'removed_requirement'
   | 'unknown_capability'
-  | 'verify_starts_conflict';
+  | 'verify_starts_conflict'
+  | 'adr_departure';
 
 export interface ApprovalFlag {
   readonly id: ApprovalFlagId;
@@ -52,6 +54,7 @@ export interface ApprovalDigest {
   readonly goal: string;
   readonly tasks: readonly ApprovalDigestTask[];
   readonly capabilities: readonly ApprovalDigestCapability[];
+  readonly decisions: readonly DigestDecision[];
   readonly humanSteps: string;
   readonly beforeApproval: string;
   readonly flags: readonly ApprovalFlag[];
@@ -176,7 +179,13 @@ export async function buildApprovalDigest(
     scope: task.scope,
     paths: task.entries.map((entry) => entry.relativePath),
   }));
-  const flags = await buildApprovalFlags({
+  const digestDecisions = await collectDigestDecisions(
+    projectRoot,
+    changeCapabilities.map((capability) => capability.name),
+    extractSection(body, 'Decisions'),
+    config,
+  );
+  const baseFlags = await buildApprovalFlags({
     projectRoot,
     openspecRoot: config.paths.openspecRoot,
     proposalVerify: spec.verify,
@@ -184,6 +193,7 @@ export async function buildApprovalDigest(
     capabilities,
     livingCapabilities: living,
   });
+  const flags = [...baseFlags, ...digestDecisions.flags];
   return {
     change: path.basename(changeFolder),
     goal: firstTwoSentences(spec.goal),
@@ -201,6 +211,7 @@ export async function buildApprovalDigest(
       };
     }),
     capabilities,
+    decisions: digestDecisions.decisions,
     humanSteps: extractSection(body, 'Human steps'),
     beforeApproval: humanSteps.beforeApproval,
     flags,

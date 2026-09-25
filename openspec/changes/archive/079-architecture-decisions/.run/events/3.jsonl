@@ -1,0 +1,82 @@
+{"type":"verify_ran","timestamp":"2026-09-25T07:41:50.550Z","data":{"command":"node --import tsx --test tests/plan-decisions.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/plan-decisions.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/plan-decisions.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-25T07:41:50.968Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":465,"repoFiles":1346,"repoLines":144066,"importFanIn":1,"proposalWords":1155,"taskWords":267,"deltaRequirements":17,"deltaScenarios":31}}
+{"type":"started","timestamp":"2026-09-25T07:41:50.974Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"9cdc92a","pid":50086,"timeoutSeconds":1800,"version":"0.2.1","commit":"9cdc92a"}}
+{"type":"text","timestamp":"2026-09-25T07:41:56.203Z","data":{"text":"I'll start by exploring the relevant files and checking for previous results."}}
+{"type":"tool","timestamp":"2026-09-25T07:41:56.203Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:41:56.206Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:41:56.212Z","data":{"tool":"bash","summary":"ls -la openspec/changes/079-architecture-decisions/.run/resu"}}
+{"type":"tokens","timestamp":"2026-09-25T07:41:56.253Z","data":{"promptTokens":74576,"candidateTokens":235,"totalTokens":84383,"cachedTokens":9472,"reasoningTokens":100,"cost":0.011415816}}
+{"type":"tool","timestamp":"2026-09-25T07:41:57.968Z","data":{"tool":"read","summary":"src/cli/plan.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:41:58.023Z","data":{"tool":"read","summary":"tests/managed-wording.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:41:58.155Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-25T07:41:58.284Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-09-25T07:41:58.317Z","data":{"promptTokens":5722,"candidateTokens":204,"totalTokens":90305,"cachedTokens":84352,"reasoningTokens":27,"cost":0.001249956}}
+{"type":"tool","timestamp":"2026-09-25T07:42:00.878Z","data":{"tool":"bash","summary":"rg -n \"decisions|DEFAULT_CONFIG|interface OsqConfig|OsqPaths"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:01.086Z","data":{"tool":"bash","summary":"rg -n \"readLivingCapabilityNames\" src/core/spec/digest-capab"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:01.122Z","data":{"promptTokens":5909,"candidateTokens":161,"totalTokens":96377,"cachedTokens":90240,"reasoningTokens":67,"cost":0.00129387}}
+{"type":"tool","timestamp":"2026-09-25T07:42:02.663Z","data":{"tool":"grep","summary":"{\"pattern\":\"decisions|DEFAULT_CONFIG|interface OsqConfig|int"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:02.793Z","data":{"tool":"grep","summary":"{\"pattern\":\"buildBaseOpeningPrompt\",\"path\":\"/home/mathias/pr"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:02.900Z","data":{"tool":"grep","summary":"{\"pattern\":\"readLivingCapabilityNames\",\"path\":\"/home/mathias"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:02.932Z","data":{"promptTokens":197,"candidateTokens":201,"totalTokens":96664,"cachedTokens":96256,"reasoningTokens":10,"cost":0.000444918}}
+{"type":"tool","timestamp":"2026-09-25T07:42:04.622Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:04.775Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:04.820Z","data":{"promptTokens":2667,"candidateTokens":146,"totalTokens":99476,"cachedTokens":96640,"reasoningTokens":23,"cost":0.00079137}}
+{"type":"tool","timestamp":"2026-09-25T07:42:13.395Z","data":{"tool":"read","summary":"tests/decisions-read.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:13.486Z","data":{"tool":"read","summary":"src/core/report/recent-disclosures.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:13.532Z","data":{"promptTokens":1867,"candidateTokens":115,"totalTokens":103588,"cachedTokens":99456,"reasoningTokens":2150,"cost":0.001937418}}
+{"type":"tool","timestamp":"2026-09-25T07:42:15.084Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:15.208Z","data":{"tool":"grep","summary":"{\"path\":\"tests\",\"pattern\":\"buildO"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:15.246Z","data":{"promptTokens":3128,"candidateTokens":109,"totalTokens":106817,"cachedTokens":103552,"reasoningTokens":28,"cost":0.000862056}}
+{"type":"tool","timestamp":"2026-09-25T07:42:16.952Z","data":{"tool":"read","summary":"tests/plan.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:17.120Z","data":{"tool":"read","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:17.181Z","data":{"promptTokens":1610,"candidateTokens":160,"totalTokens":108544,"cachedTokens":106752,"reasoningTokens":22,"cost":0.000670956}}
+{"type":"tool","timestamp":"2026-09-25T07:42:20.931Z","data":{"tool":"read","summary":"src/core/foundation/config-user.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:21.061Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:21.118Z","data":{"promptTokens":1819,"candidateTokens":129,"totalTokens":111040,"cachedTokens":108544,"reasoningTokens":548,"cost":0.001004682}}
+{"type":"tool","timestamp":"2026-09-25T07:42:39.295Z","data":{"tool":"write","summary":"tests/plan-decisions.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:42:39.339Z","data":{"text":"Now I have enough context. Let me write the tests first, then implement."}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:39.379Z","data":{"promptTokens":1236,"candidateTokens":1328,"totalTokens":117528,"cachedTokens":110976,"reasoningTokens":3988,"cost":0.003707928}}
+{"type":"tool","timestamp":"2026-09-25T07:42:43.191Z","data":{"tool":"write","summary":"src/cli/plan-sections.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:43.239Z","data":{"promptTokens":168,"candidateTokens":714,"totalTokens":118270,"cachedTokens":117376,"reasoningTokens":12,"cost":0.000812928}}
+{"type":"tool","timestamp":"2026-09-25T07:42:45.338Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:42:45.346Z","data":{"text":"Now update `plan-queue.ts`:"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:45.377Z","data":{"promptTokens":142,"candidateTokens":311,"totalTokens":118597,"cachedTokens":118144,"reasoningTokens":0,"cost":0.000562332}}
+{"type":"tool","timestamp":"2026-09-25T07:42:47.291Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:47.325Z","data":{"promptTokens":212,"candidateTokens":191,"totalTokens":118803,"cachedTokens":118400,"reasoningTokens":0,"cost":0.0005016}}
+{"type":"tool","timestamp":"2026-09-25T07:42:49.839Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:49.882Z","data":{"promptTokens":162,"candidateTokens":411,"totalTokens":119229,"cachedTokens":118656,"reasoningTokens":0,"cost":0.000626868}}
+{"type":"tool","timestamp":"2026-09-25T07:42:52.031Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:54.793Z","data":{"promptTokens":204,"candidateTokens":182,"totalTokens":119442,"cachedTokens":119040,"reasoningTokens":16,"cost":0.00050652}}
+{"type":"tool","timestamp":"2026-09-25T07:42:56.281Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:56.305Z","data":{"promptTokens":161,"candidateTokens":70,"totalTokens":119543,"cachedTokens":119296,"reasoningTokens":16,"cost":0.000433638}}
+{"type":"tool","timestamp":"2026-09-25T07:42:58.722Z","data":{"tool":"bash","summary":"wc -l src/cli/plan-queue.ts src/cli/plan-sections.ts tests/p"}}
+{"type":"tool","timestamp":"2026-09-25T07:42:59.233Z","data":{"tool":"bash","summary":"node --import tsx --test tests/plan-decisions.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T07:42:59.271Z","data":{"promptTokens":1213,"candidateTokens":128,"totalTokens":120903,"cachedTokens":119424,"reasoningTokens":138,"cost":0.000699822}}
+{"type":"tool","timestamp":"2026-09-25T07:43:01.182Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:43:01.238Z","data":{"promptTokens":273,"candidateTokens":156,"totalTokens":121314,"cachedTokens":120832,"reasoningTokens":53,"cost":0.000528846}}
+{"type":"tool","timestamp":"2026-09-25T07:43:04.497Z","data":{"tool":"bash","summary":"node --import tsx --test tests/managed-wording.test.ts tests"}}
+{"type":"tokens","timestamp":"2026-09-25T07:43:04.536Z","data":{"promptTokens":241,"candidateTokens":109,"totalTokens":121539,"cachedTokens":121088,"reasoningTokens":101,"cost":0.000525414}}
+{"type":"text","timestamp":"2026-09-25T07:43:06.424Z","data":{"text":"Targeted tests pass. Now the proposal verify:"}}
+{"type":"tool","timestamp":"2026-09-25T07:43:38.940Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-25T07:43:38.977Z","data":{"promptTokens":525,"candidateTokens":74,"totalTokens":122098,"cachedTokens":121472,"reasoningTokens":27,"cost":0.000503766}}
+{"type":"tool","timestamp":"2026-09-25T07:43:41.353Z","data":{"tool":"bash","summary":"pnpm exec biome check --write tests/plan-decisions.test.ts s"}}
+{"type":"tokens","timestamp":"2026-09-25T07:43:41.393Z","data":{"promptTokens":907,"candidateTokens":98,"totalTokens":123129,"cachedTokens":121984,"reasoningTokens":140,"cost":0.000644802}}
+{"type":"tool","timestamp":"2026-09-25T07:44:15.653Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -25"}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:15.697Z","data":{"promptTokens":147,"candidateTokens":65,"totalTokens":123227,"cachedTokens":123008,"reasoningTokens":7,"cost":0.000434274}}
+{"type":"tool","timestamp":"2026-09-25T07:44:19.515Z","data":{"tool":"bash","summary":"node --import tsx --test tests/plan-decisions.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:19.550Z","data":{"promptTokens":379,"candidateTokens":90,"totalTokens":123990,"cachedTokens":123136,"reasoningTokens":385,"cost":0.000711258}}
+{"type":"tool","timestamp":"2026-09-25T07:44:22.427Z","data":{"tool":"bash","summary":"wc -l src/cli/plan-queue.ts src/cli/plan-sections.ts; echo \""}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:22.454Z","data":{"promptTokens":220,"candidateTokens":64,"totalTokens":124471,"cachedTokens":123904,"reasoningTokens":283,"cost":0.000612912}}
+{"type":"tool","timestamp":"2026-09-25T07:44:25.486Z","data":{"tool":"bash","summary":"git diff src/cli/plan-queue.ts src/cli/plan.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:44:25.661Z","data":{"tool":"read","summary":"tests/plan-decisions.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:25.697Z","data":{"promptTokens":309,"candidateTokens":128,"totalTokens":125139,"cachedTokens":124416,"reasoningTokens":286,"cost":0.000667998}}
+{"type":"tool","timestamp":"2026-09-25T07:44:28.880Z","data":{"tool":"write","summary":"openspec/changes/079-architecture-decisions/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-09-25T07:44:28.907Z","data":{"text":"Both verifies pass. Writing the result file:"}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:28.940Z","data":{"promptTokens":2096,"candidateTokens":536,"totalTokens":127769,"cachedTokens":125056,"reasoningTokens":81,"cost":0.001059768}}
+{"type":"text","timestamp":"2026-09-25T07:44:31.581Z","data":{"text":"Task complete. Summary:\n\n- **`src/cli/plan-sections.ts`** (new): `formatCapabilitySpecsSection` holds the moved `## Capability Specs` code byte-for-byte; `formatArchitectureDecisionsSection` reads via `readDecisions`, keeps accepted ADRs in number order, and emits the required sentence plus `- ADR <n>: <title>. Applies to: <scope>. Rule: <rule> Path: <path>`, or null when none are accepted.\n- **`src/cli/plan-queue.ts`**: `buildBaseOpeningPrompt` takes optional `config` (default `DEFAULT_CONFIG`) and inserts the decisions section between specs and brief only when non-null; no-decisions output is unchanged. 247 lines.\n- **`src/cli/plan.ts`**: `buildOpeningPrompt` resolves config before building the base prompt and passes it in.\n- **`tests/plan-decisions.test.ts`** (new): 4 tests via `buildOpeningPrompt` with a supplied `recordBody` covering the accepted/superseded scenario, proposed-only ADRs, a missing folder, and a configured `paths.decisions`.\n\nBoth the task verify (4/4) and `pnpm verify` pass. Result written to `.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-25T07:44:31.609Z","data":{"promptTokens":169,"candidateTokens":281,"totalTokens":128186,"cachedTokens":127616,"reasoningTokens":120,"cost":0.000648798}}
+{"type":"exited","timestamp":"2026-09-25T07:44:31.689Z","data":{"exitCode":0,"pid":50086,"timedOut":false,"elapsedSeconds":160.7}}
+{"type":"verify_ran","timestamp":"2026-09-25T07:44:32.002Z","data":{"command":"node --import tsx --test tests/plan-decisions.test.ts","exitCode":0,"duration":0.21,"output":"▶ plan prompt architecture decisions\n  ✔ lists accepted ADRs in number order with scope, rule, and path (15.868529ms)\n  ✔ omits the section when every ADR is still proposed (2.855973ms)\n  ✔ omits the section when the decisions folder is missing (1.1909ms)\n  ✔ reads the configured decisions folder (3.46208ms)\n✔ plan prompt architecture decisions (24.213491ms)\nℹ tests 4\nℹ suites 1\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 190.215737\n"}}
+{"type":"measures","timestamp":"2026-09-25T07:45:05.817Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":465,"repoFiles":1346,"repoLines":144066,"importFanIn":1,"proposalWords":1155,"taskWords":267,"deltaRequirements":17,"deltaScenarios":31,"changedFiles":4,"changedLines":196,"scopeHashes":{"src/cli/plan-queue.ts":{"before":"sha256:b5f027a0158edad47f268d36070ceb6da921646ccbcfed0bf0bbaee1638df4a3","after":"sha256:4b69a946717b8e6e44bbac93bdec5edff6a065ca62a03e741fc9fd5cf22380eb"},"src/cli/plan-sections.ts":{"before":null,"after":"sha256:3ab0ebdac21790b566b65cba051043bee7c9fd31347db7dc7270d1603dfa38c6"},"src/cli/plan.ts":{"before":"sha256:d23ab9a3ee93593069e59919c1a0bb69a2f824858a8105d43ed56f751c5a464b","after":"sha256:92e6c6faecd5371cfdfa74da66f082ac2b3b7b849d2c30dd1dc11ae1edb022ea"},"tests/plan-decisions.test.ts":{"before":null,"after":"sha256:678a86995332d243b4d813645903bc4ecbded3799223a4ade8b06accc67ea31c"}}}}
+{"type":"done","timestamp":"2026-09-25T07:45:05.821Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-25T08:07:09.475Z","data":{"command":"node --import tsx --test tests/plan-decisions.test.ts","exitCode":0,"duration":0.22,"output":"▶ plan prompt architecture decisions\n  ✔ lists accepted ADRs in number order with scope, rule, and path (17.830661ms)\n  ✔ omits the section when every ADR is still proposed (3.313584ms)\n  ✔ omits the section when the decisions folder is missing (1.374321ms)\n  ✔ reads the configured decisions folder (3.942547ms)\n✔ plan prompt architecture decisions (27.46573ms)\nℹ tests 4\nℹ suites 1\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 198.180663\n"}}

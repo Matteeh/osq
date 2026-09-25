@@ -26,7 +26,8 @@ export type HarnessEventType =
   | 'stuck'
   | 'harness_retry'
   | 'recertification'
-  | 'rejected';
+  | 'rejected'
+  | 'instructions_changed';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -234,6 +235,15 @@ export interface RejectedEventData {
   readonly reason: string;
 }
 
+/**
+ * Payload of an `instructions_changed` event: the instruction inputs the
+ * approval pinned that differ before a task's first attempt. `changed` holds
+ * `AGENTS.md`, then each differing governing ADR in number order.
+ */
+export interface InstructionsChangedEventData {
+  readonly changed: string[];
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -254,6 +264,7 @@ export interface OsqEventData {
   harness_retry: HarnessRetryEventData;
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
+  instructions_changed: InstructionsChangedEventData;
 }
 
 /**

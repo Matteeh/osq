@@ -162,6 +162,10 @@ Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; def
 | `verify` names an absent package script | reject |
 | `verify` names no existing path or package script | warn |
 | a delta targets a requirement the living spec lacks, or is written as an instruction | reject |
+| a project with ADRs has no usable `## Decisions` section (`None` with no governing ADR passes) | reject |
+| `## Decisions` omits an accepted ADR that governs a capability the change writes | reject |
+| the AGENTS.md project rules block is stale or exceeds `limits.maxProjectRules` | reject |
+| `## Decisions` names an ADR that does not exist or is not accepted | warn |
 | a file contains a prohibited control character | reject |
 | OpenSpec schema or validator drift | reject |
 | two tasks resolve the same scope file | warn |
@@ -173,6 +177,14 @@ Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; def
 `osq init` and `osq new` seed `verify: node -e "process.exit(0)"`. That is a planning sentinel, not trusted coverage: replace it before approval with a command that verifies the completed change's final tree. Checked-in fixtures use a local `node verify.cjs` verifier backed by files in their own execution root, never the sentinel, the network, a TTY, or this repository's full verification suite.
 
 The rules lint can't check live in the managed `PLANNER.md` block: titles read "When X, Y"; every task leaves the change green on its own; a file belongs to one task; approve the task list before writing any task in full.
+
+### Architecture decisions
+
+Architecture decision records live under `paths.decisions` (default `decisions/`). A markdown file there is an ADR when its YAML frontmatter carries `status` (`proposed`, `accepted`, or `superseded`); its number is the leading digits of the file name, its title the first `# ` heading without that number prefix. Only accepted ADRs take effect. An accepted ADR states `applies_to`, either `all` or a list of capability names, and a one-line `rule`; a superseded ADR states `superseded_by`. `limits.maxRuleLength` (default 160) caps a rule's length. A file without frontmatter is ignored and reported.
+
+`osq init` writes the rules block for every accepted system-wide ADR into `AGENTS.md` between `<!-- OSQ:RULES:START -->` and `<!-- OSQ:RULES:END -->`: a `## Project rules` heading and one `- <rule> ADR <number>` line per ADR, in number order. `limits.maxProjectRules` (default 10) caps how many lines the block may hold. The `decisions` check in `osq doctor` validates every ADR, fails on a stale or oversized rules block, and warns about ignored files and capability names with no living spec.
+
+When the project has any ADR with osq frontmatter, every proposal needs a `## Decisions` section after `## Surface`. Name each accepted ADR that governs a capability the change writes, or write `None` when none does. A departure line begins `Departs from ADR <n>:` and gives the reason. `osq lint` and `osq approve` reject a missing or empty section, reject an unnamed governing ADR, and fail while the AGENTS.md rules block is out of date.
 
 ## What the watcher guarantees
 

@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { governingAdrs, readDecisions } from '../foundation/decisions.js';
 import { resolveExecutorIdentity } from '../foundation/harness-catalog.js';
 import { PACKAGE_ROOT } from '../foundation/package-root.js';
 import { type PlanRecord, planningRecordSource, readPlanRecords } from '../report/planning.js';
@@ -35,9 +36,15 @@ export interface ManifestData {
    * report can tell an approval apart from a queued plan.
    */
   approvalFlags?: ApprovalFlagsData;
+  /**
+   * Number of each accepted ADR governing the change to its content hash. Only
+   * the approval path records it; an approval with no governing ADR records an
+   * empty object and a planning-only manifest omits the field.
+   */
+  decisions?: Record<string, string>;
 }
 
-async function hashFileContent(filePath: string): Promise<string | null> {
+export async function hashFileContent(filePath: string): Promise<string | null> {
   try {
     const content = await fs.readFile(filePath, 'utf8');
     const digest = crypto.createHash('sha256').update(content, 'utf8').digest('hex');
@@ -208,6 +215,12 @@ export async function buildManifest(
       ids: [...new Set(approvalFlags.ids)].sort(),
       mode: approvalFlags.mode,
     };
+    const records = await readDecisions(projectRoot, config);
+    const decisions: Record<string, string> = {};
+    for (const adr of governingAdrs(records, writtenCapabilities)) {
+      decisions[adr.number] = adr.hash;
+    }
+    manifest.decisions = decisions;
   }
   return manifest;
 }

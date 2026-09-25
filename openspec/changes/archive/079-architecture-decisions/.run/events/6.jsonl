@@ -1,0 +1,107 @@
+{"type":"verify_ran","timestamp":"2026-09-25T07:55:14.588Z","data":{"command":"node --import tsx --test tests/approval-digest-decisions.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/approval-digest-decisions.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/approval-digest-decisions.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-25T07:55:15.062Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":2069,"repoFiles":1351,"repoLines":145181,"importFanIn":7,"proposalWords":1155,"taskWords":295,"deltaRequirements":17,"deltaScenarios":31}}
+{"type":"started","timestamp":"2026-09-25T07:55:15.068Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"9cdc92a","pid":2787,"timeoutSeconds":1800,"version":"0.2.1","commit":"9cdc92a"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:19.927Z","data":{"tool":"read","summary":"src/core/spec/digest.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:19.974Z","data":{"tool":"read","summary":"src/core/spec/digest-flags.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:20.057Z","data":{"tool":"read","summary":"src/core/spec/digest-format.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:55:20.243Z","data":{"text":"I'll start by reading the entry files and existing tests to understand the current state."}}
+{"type":"tool","timestamp":"2026-09-25T07:55:20.252Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:20.295Z","data":{"promptTokens":74796,"candidateTokens":207,"totalTokens":84518,"cachedTokens":9472,"reasoningTokens":43,"cost":0.011397816}}
+{"type":"tool","timestamp":"2026-09-25T07:55:21.913Z","data":{"tool":"read","summary":"tests/approval-digest.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:22.023Z","data":{"tool":"read","summary":"src/core/report/approval-flags.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:22.121Z","data":{"tool":"read","summary":"tests/report-approval-flags.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:55:22.148Z","data":{"text":"Now let me read the relevant tests and report files."}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:22.198Z","data":{"promptTokens":8717,"candidateTokens":158,"totalTokens":93367,"cachedTokens":84480,"reasoningTokens":12,"cost":0.00166299}}
+{"type":"tool","timestamp":"2026-09-25T07:55:24.198Z","data":{"tool":"bash","summary":"ls -la openspec/changes/079-architecture-decisions/.run/resu"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:24.211Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:55:24.232Z","data":{"text":"Let me check for a prior result, the fixture, report-json test, and approve.ts."}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:24.278Z","data":{"promptTokens":10537,"candidateTokens":173,"totalTokens":104086,"cachedTokens":93312,"reasoningTokens":64,"cost":0.002002686}}
+{"type":"tool","timestamp":"2026-09-25T07:55:29.433Z","data":{"tool":"read","summary":"tests/report-json.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:29.525Z","data":{"tool":"read","summary":"fixture/report/expected.json"}}
+{"type":"text","timestamp":"2026-09-25T07:55:29.546Z","data":{"text":"Let me read the remaining relevant files."}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:29.607Z","data":{"promptTokens":2566,"candidateTokens":105,"totalTokens":107630,"cachedTokens":104064,"reasoningTokens":895,"cost":0.001297092}}
+{"type":"tool","timestamp":"2026-09-25T07:55:32.470Z","data":{"tool":"bash","summary":"grep -n \"extractSection\" src/core"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:32.577Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/tasks.md"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:32.639Z","data":{"promptTokens":13053,"candidateTokens":111,"totalTokens":120854,"cachedTokens":107520,"reasoningTokens":170,"cost":0.00244911}}
+{"type":"tool","timestamp":"2026-09-25T07:55:34.621Z","data":{"tool":"read","summary":"src/core/spec/parser.ts"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:34.729Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:34.844Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/.run/results/5.md"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:34.891Z","data":{"promptTokens":523,"candidateTokens":193,"totalTokens":121573,"cachedTokens":120832,"reasoningTokens":25,"cost":0.000571746}}
+{"type":"tool","timestamp":"2026-09-25T07:55:37.228Z","data":{"tool":"read","summary":"src/core/spec/decisions-lint.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:37.266Z","data":{"promptTokens":2528,"candidateTokens":56,"totalTokens":124153,"cachedTokens":121472,"reasoningTokens":97,"cost":0.000835416}}
+{"type":"tool","timestamp":"2026-09-25T07:55:47.189Z","data":{"tool":"read","summary":"tests/decisions-lint.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:55:47.218Z","data":{"text":"Let me read the decisions-lint test to reuse the temp-project patterns, plus config to confirm paths."}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:47.252Z","data":{"promptTokens":2117,"candidateTokens":75,"totalTokens":128481,"cachedTokens":124032,"reasoningTokens":2257,"cost":0.002088846}}
+{"type":"tool","timestamp":"2026-09-25T07:55:50.030Z","data":{"tool":"bash","summary":"grep -n \"installFakeValidator\" te"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:50.143Z","data":{"tool":"bash","summary":"grep -n \"decisions\" src/core/foun"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:50.207Z","data":{"promptTokens":4984,"candidateTokens":138,"totalTokens":133667,"cachedTokens":128384,"reasoningTokens":161,"cost":0.001312152}}
+{"type":"tool","timestamp":"2026-09-25T07:55:54.229Z","data":{"tool":"bash","summary":"grep -rn \"collectApprovalFlagOutcomes\" /home/mathias/project"}}
+{"type":"tool","timestamp":"2026-09-25T07:55:54.379Z","data":{"tool":"bash","summary":"sed -n '1,60p' src/core/spec/dige"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:54.416Z","data":{"promptTokens":308,"candidateTokens":116,"totalTokens":134543,"cachedTokens":133632,"reasoningTokens":487,"cost":0.000808896}}
+{"type":"tool","timestamp":"2026-09-25T07:55:56.883Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:56.917Z","data":{"promptTokens":730,"candidateTokens":86,"totalTokens":135385,"cachedTokens":134528,"reasoningTokens":41,"cost":0.000589284}}
+{"type":"tool","timestamp":"2026-09-25T07:55:58.867Z","data":{"tool":"bash","summary":"node --import tsx --test tests/approval-digest-decisions.tes"}}
+{"type":"tokens","timestamp":"2026-09-25T07:55:58.917Z","data":{"promptTokens":710,"candidateTokens":86,"totalTokens":136159,"cachedTokens":135296,"reasoningTokens":67,"cost":0.000604188}}
+{"type":"tool","timestamp":"2026-09-25T07:56:06.481Z","data":{"tool":"bash","summary":"grep -rn \"ApprovalDigest\" src /ho"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:06.540Z","data":{"promptTokens":250,"candidateTokens":78,"totalTokens":137710,"cachedTokens":135936,"reasoningTokens":1446,"cost":0.001359708}}
+{"type":"tool","timestamp":"2026-09-25T07:56:11.680Z","data":{"tool":"write","summary":"src/core/spec/digest-decisions.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:56:11.692Z","data":{"text":"Now I'll create the new module."}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:11.727Z","data":{"promptTokens":1142,"candidateTokens":674,"totalTokens":139901,"cachedTokens":137600,"reasoningTokens":485,"cost":0.0012795}}
+{"type":"tool","timestamp":"2026-09-25T07:56:14.069Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:56:14.079Z","data":{"text":"Now update `digest.ts`."}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:14.124Z","data":{"promptTokens":141,"candidateTokens":222,"totalTokens":140208,"cachedTokens":139776,"reasoningTokens":69,"cost":0.000615078}}
+{"type":"tool","timestamp":"2026-09-25T07:56:16.312Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:19.722Z","data":{"promptTokens":191,"candidateTokens":130,"totalTokens":140353,"cachedTokens":140032,"reasoningTokens":0,"cost":0.000526746}}
+{"type":"tool","timestamp":"2026-09-25T07:56:21.894Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:21.940Z","data":{"promptTokens":208,"candidateTokens":162,"totalTokens":140530,"cachedTokens":140160,"reasoningTokens":0,"cost":0.00054888}}
+{"type":"tool","timestamp":"2026-09-25T07:56:25.031Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:25.082Z","data":{"promptTokens":257,"candidateTokens":259,"totalTokens":141043,"cachedTokens":140288,"reasoningTokens":239,"cost":0.000758214}}
+{"type":"tool","timestamp":"2026-09-25T07:56:27.142Z","data":{"tool":"edit","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:27.189Z","data":{"promptTokens":258,"candidateTokens":160,"totalTokens":141218,"cachedTokens":140800,"reasoningTokens":0,"cost":0.0005571}}
+{"type":"tool","timestamp":"2026-09-25T07:56:29.114Z","data":{"tool":"edit","summary":"src/core/spec/digest-format.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:56:29.125Z","data":{"text":"Now `digest-format.ts`."}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:29.172Z","data":{"promptTokens":177,"candidateTokens":185,"totalTokens":141438,"cachedTokens":141056,"reasoningTokens":20,"cost":0.000572718}}
+{"type":"text","timestamp":"2026-09-25T07:56:31.355Z","data":{"text":"Now `approval-flags.ts`."}}
+{"type":"tool","timestamp":"2026-09-25T07:56:31.372Z","data":{"tool":"edit","summary":"src/core/report/approval-flags.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:56:31.415Z","data":{"promptTokens":141,"candidateTokens":136,"totalTokens":141603,"cachedTokens":141312,"reasoningTokens":14,"cost":0.000535086}}
+{"type":"tool","timestamp":"2026-09-25T07:57:10.878Z","data":{"tool":"write","summary":"tests/approval-digest-decisions.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:57:10.994Z","data":{"text":"Now I'll create the test file."}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:11.044Z","data":{"promptTokens":178,"candidateTokens":3003,"totalTokens":152425,"cachedTokens":141440,"reasoningTokens":7804,"cost":0.00693522}}
+{"type":"tool","timestamp":"2026-09-25T07:57:13.850Z","data":{"tool":"edit","summary":"tests/report-approval-flags.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T07:57:13.854Z","data":{"text":"Now update the report tests and fixture."}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:13.886Z","data":{"promptTokens":249,"candidateTokens":289,"totalTokens":152763,"cachedTokens":152192,"reasoningTokens":33,"cost":0.000687126}}
+{"type":"tool","timestamp":"2026-09-25T07:57:16.013Z","data":{"tool":"edit","summary":"tests/report-approval-flags.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:16.059Z","data":{"promptTokens":202,"candidateTokens":136,"totalTokens":152914,"cachedTokens":152576,"reasoningTokens":0,"cost":0.000569628}}
+{"type":"tool","timestamp":"2026-09-25T07:57:18.397Z","data":{"tool":"edit","summary":"tests/report-json.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:18.432Z","data":{"promptTokens":225,"candidateTokens":167,"totalTokens":153119,"cachedTokens":152704,"reasoningTokens":23,"cost":0.000605862}}
+{"type":"tool","timestamp":"2026-09-25T07:57:20.996Z","data":{"tool":"edit","summary":"fixture/report/expected.json"}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:21.060Z","data":{"promptTokens":174,"candidateTokens":182,"totalTokens":153393,"cachedTokens":152960,"reasoningTokens":77,"cost":0.00064038}}
+{"type":"text","timestamp":"2026-09-25T07:57:23.310Z","data":{"text":"Now let's run the new test."}}
+{"type":"tool","timestamp":"2026-09-25T07:57:23.879Z","data":{"tool":"bash","summary":"node --import tsx --test tests/approval-digest-decisions.tes"}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:23.919Z","data":{"promptTokens":192,"candidateTokens":93,"totalTokens":153510,"cachedTokens":153216,"reasoningTokens":9,"cost":0.000549648}}
+{"type":"tool","timestamp":"2026-09-25T07:57:26.806Z","data":{"tool":"bash","summary":"node --import tsx --test tests/report-approval-flags.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T07:57:26.851Z","data":{"promptTokens":248,"candidateTokens":101,"totalTokens":153839,"cachedTokens":153472,"reasoningTokens":18,"cost":0.000569016}}
+{"type":"text","timestamp":"2026-09-25T07:57:30.758Z","data":{"text":"Task verify passes. Now the proposal verify."}}
+{"type":"tool","timestamp":"2026-09-25T07:58:11.010Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-25T07:58:11.051Z","data":{"promptTokens":429,"candidateTokens":98,"totalTokens":154460,"cachedTokens":153728,"reasoningTokens":205,"cost":0.000707334}}
+{"type":"tool","timestamp":"2026-09-25T07:58:53.645Z","data":{"tool":"bash","summary":"pnpm verify > /tmp/opencode/osq-verify.log 2>&1; echo \"EXIT="}}
+{"type":"tokens","timestamp":"2026-09-25T07:58:53.694Z","data":{"promptTokens":970,"candidateTokens":155,"totalTokens":155577,"cachedTokens":154368,"reasoningTokens":84,"cost":0.000752004}}
+{"type":"tool","timestamp":"2026-09-25T07:58:56.199Z","data":{"tool":"bash","summary":"wc -l src/core/spec/digest.ts src/core/spec/digest-decisions"}}
+{"type":"tokens","timestamp":"2026-09-25T07:58:56.229Z","data":{"promptTokens":224,"candidateTokens":121,"totalTokens":155808,"cachedTokens":155392,"reasoningTokens":71,"cost":0.000614976}}
+{"type":"text","timestamp":"2026-09-25T07:59:02.379Z","data":{"text":"Let me review my specific diffs."}}
+{"type":"tool","timestamp":"2026-09-25T07:59:02.394Z","data":{"tool":"bash","summary":"git diff src/core/spec/digest.ts src/core/spec/digest-format"}}
+{"type":"tokens","timestamp":"2026-09-25T07:59:02.425Z","data":{"promptTokens":620,"candidateTokens":121,"totalTokens":157601,"cachedTokens":155776,"reasoningTokens":1084,"cost":0.001283328}}
+{"type":"tool","timestamp":"2026-09-25T07:59:09.162Z","data":{"tool":"write","summary":"openspec/changes/079-architecture-decisions/.run/results/6.md"}}
+{"type":"text","timestamp":"2026-09-25T07:59:09.181Z","data":{"text":"Everything passes. Now let me write the result file."}}
+{"type":"tokens","timestamp":"2026-09-25T07:59:09.229Z","data":{"promptTokens":1644,"candidateTokens":818,"totalTokens":160706,"cachedTokens":157568,"reasoningTokens":676,"cost":0.001615704}}
+{"type":"tool","timestamp":"2026-09-25T07:59:11.467Z","data":{"tool":"edit","summary":"openspec/changes/079-architecture-decisions/.run/results/6.md"}}
+{"type":"tokens","timestamp":"2026-09-25T07:59:11.517Z","data":{"promptTokens":210,"candidateTokens":122,"totalTokens":160917,"cachedTokens":160512,"reasoningTokens":73,"cost":0.000630036}}
+{"type":"tool","timestamp":"2026-09-25T07:59:14.025Z","data":{"tool":"read","summary":"openspec/changes/079-architecture-decisions/.run/results/6.md"}}
+{"type":"tokens","timestamp":"2026-09-25T07:59:14.077Z","data":{"promptTokens":185,"candidateTokens":64,"totalTokens":161172,"cachedTokens":160768,"reasoningTokens":155,"cost":0.000641454}}
+{"type":"text","timestamp":"2026-09-25T07:59:17.397Z","data":{"text":"The task is complete. Summary of what I did:\n\n**Implementation**\n- Added `src/core/spec/digest-decisions.ts` with `collectDigestDecisions`, using `readDecisions` and `governingAdrs` to return the digest's `{ number, rule }` decisions plus one `adr_departure` flag per `Departs from ADR <n>:` line.\n- `src/core/spec/digest.ts`: added `adr_departure` to `ApprovalFlagId`, a `decisions` field to `ApprovalDigest`, and appended departure flags after `buildApprovalFlags` results.\n- `src/core/spec/digest-format.ts`: prints `Decisions:` after capabilities and before human steps only when non-empty.\n- `src/core/report/approval-flags.ts`: added `adr_departure` to `FLAG_IDS` after `verify_starts_conflict`.\n\n**Tests/fixture**\n- New `tests/approval-digest-decisions.test.ts` (6 tests) covering every scenario, including `approveSpec` recording `adr_departure` counted by `osq report` (shown fired 1, troubled 1 after a dead event).\n- Updated `tests/report-approval-flags.test.ts`, `tests/report-json.test.ts`, and `fixture/report/expected.json` for the new zero-count key.\n\nBoth the task verify (6/6) and `pnpm verify` (exit 0) pass. Result written to `openspec/changes/079-architecture-decisions/.run/results/6.md`."}}
+{"type":"tokens","timestamp":"2026-09-25T07:59:17.428Z","data":{"promptTokens":902,"candidateTokens":355,"totalTokens":162599,"cachedTokens":161152,"reasoningTokens":190,"cost":0.000945756}}
+{"type":"exited","timestamp":"2026-09-25T07:59:17.532Z","data":{"exitCode":0,"pid":2787,"timedOut":false,"elapsedSeconds":242.5}}
+{"type":"verify_ran","timestamp":"2026-09-25T07:59:18.129Z","data":{"command":"node --import tsx --test tests/approval-digest-decisions.test.ts","exitCode":0,"duration":0.48,"output":"▶ approval digest decisions\n  ✔ lists each governing ADR in number order and prints them after capabilities (40.876674ms)\n  ✔ lists only accepted ADRs (25.311029ms)\n  ✔ leaves the formatted digest unchanged when no ADR governs the change (21.76108ms)\n  ✔ raises one adr_departure flag per departure line, after every other flag (17.989041ms)\n  ✔ accepts a departure line without a list marker and raises one flag per line (19.278565ms)\n  ✔ records adr_departure through approveSpec and counts it in the report (135.652073ms)\n✔ approval digest decisions (262.301576ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 452.267213\n"}}
+{"type":"measures","timestamp":"2026-09-25T07:59:59.877Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":2069,"repoFiles":1351,"repoLines":145181,"importFanIn":7,"proposalWords":1155,"taskWords":295,"deltaRequirements":17,"deltaScenarios":31,"changedFiles":8,"changedLines":422,"scopeHashes":{"fixture/report/expected.json":{"before":"sha256:6c21f98941836c7b7c156c315277a4d4e0aad31520d616e8dc4198d90116a09e","after":"sha256:dd548618bc0cdde444aed6af3bc25e70b19d8a8f1de2afef741c7dac57537d9b"},"src/core/report/approval-flags.ts":{"before":"sha256:e53ed0474b66de99e1f4f2496179e3a178791fd88fe13e7d9fa3d64981cf72b4","after":"sha256:51280efb040af88eb9a9f4f624b556d21b8a428692c0d27bcd5b50730707711b"},"src/core/spec/digest-decisions.ts":{"before":null,"after":"sha256:7954419e14b19bc4a7c12c4178f03bbfde10c8fff894f42b19e3e1591ae3abf8"},"src/core/spec/digest-format.ts":{"before":"sha256:a9aff4e3c0b5b5f3c5b245bc196aea4db669d24def435be28bf8569ad678d7b9","after":"sha256:69551b725c14e727e4e04ae1d334f747e1acb1c64b671ec122318f210bd5bddf"},"src/core/spec/digest.ts":{"before":"sha256:d6ecc198007ae137a28b3f87557cbbf6c695585c63f96042c9ac452f9f222ab6","after":"sha256:f6c84bae7f28f2a4067b42e8ccf5c51dab711184ed243ab68088fd3707099835"},"tests/approval-digest-decisions.test.ts":{"before":null,"after":"sha256:1b4cff846da4380fca90607cf87861e37e04a165dd53fa5e986eda936913a90a"},"tests/report-approval-flags.test.ts":{"before":"sha256:91878a7ad266fe4983c530b23e16380537f1fb56cf48ca705231df59b4f08dab","after":"sha256:e3ddf7c10e1cda01bfa6870f4ebab870edf1f3d4e9d361efc91c030fe1b7b392"},"tests/report-json.test.ts":{"before":"sha256:6a91c9b41a13486dc1bf7f132b90f77fd94c1e4a7515d04cedc254197435aa18","after":"sha256:2c6223bed21520b501d244dbadfb37d042ddd2c76a866e77c0750ad671c6149f"}}}}
+{"type":"done","timestamp":"2026-09-25T07:59:59.883Z","data":{"task":"6"}}
+{"type":"verify_ran","timestamp":"2026-09-25T08:07:11.469Z","data":{"command":"node --import tsx --test tests/approval-digest-decisions.test.ts","exitCode":0,"duration":0.38,"output":"▶ approval digest decisions\n  ✔ lists each governing ADR in number order and prints them after capabilities (33.551686ms)\n  ✔ lists only accepted ADRs (20.630247ms)\n  ✔ leaves the formatted digest unchanged when no ADR governs the change (18.404977ms)\n  ✔ raises one adr_departure flag per departure line, after every other flag (15.566656ms)\n  ✔ accepts a departure line without a list marker and raises one flag per line (16.731191ms)\n  ✔ records adr_departure through approveSpec and counts it in the report (100.61902ms)\n✔ approval digest decisions (206.484872ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 353.755959\n"}}

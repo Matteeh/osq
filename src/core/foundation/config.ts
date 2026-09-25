@@ -31,6 +31,10 @@ export interface OsqLimits {
   readonly importGraphDepth: number;
   /** The most tests or files one import-graph warning lists. */
   readonly maxListedImporters: number;
+  /** The most characters an accepted ADR's rule may have. */
+  readonly maxRuleLength: number;
+  /** The most system-wide rules the AGENTS.md block may hold. */
+  readonly maxProjectRules: number;
 }
 
 export interface OsqPaths {
@@ -116,6 +120,8 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxAcceptanceLines: 7,
     importGraphDepth: 2,
     maxListedImporters: 8,
+    maxRuleLength: 160,
+    maxProjectRules: 10,
   },
   paths: {
     features: 'openspec/specs',

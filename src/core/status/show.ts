@@ -775,6 +775,20 @@ function formatStuck(events: TimelineEvent[]): string | null {
 }
 
 /**
+ * Projects the task's latest `instructions_changed` event into the
+ * `Instructions changed after approval:` line. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatInstructionsChanged(events: TimelineEvent[]): string | null {
+  let latest: TimelineEvent | undefined;
+  for (const event of events) {
+    if (event.type === 'instructions_changed') latest = event;
+  }
+  if (!latest) return null;
+  return `      Instructions changed after approval: ${stringList(latest.data?.changed).join(', ')}`;
+}
+
+/**
  * Projects the real disclosure sections of a task's result file into the
  * `Disclosures:` show line. Empty or `None`-only sections are absent, and a
  * task whose result holds no real disclosure prints no line. Returns null so
@@ -894,6 +908,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       const stuck = formatStuck(task.events);
       if (stuck) {
         lines.push(stuck);
+      }
+      const instructionsChanged = formatInstructionsChanged(task.events);
+      if (instructionsChanged) {
+        lines.push(instructionsChanged);
       }
       const disclosures = formatDisclosures(task.resultContent);
       if (disclosures) {

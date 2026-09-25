@@ -78,6 +78,14 @@ your complete prompt; read it and follow it exactly.
   adds, changes, or removes: commands, flags, config keys, frontmatter fields,
   document sections, dead reasons, and event types. Write `None` when there are
   none; `osq lint` rejects a proposal without the section.
+- `## Decisions` follows `## Surface`. Give one line per accepted ADR that
+  governs a capability the change writes, saying what it means for this
+  change, such as `ADR 009: the adapter is the only module that imports
+  dockerode.` Name a system-wide ADR only to depart from it; AGENTS.md already
+  carries its rule. A departure line starts `Departs from ADR <n>:` and gives
+  the reason; a needed departure is a reason for a new ADR. Write `None` when
+  no ADR governs the change. Repeat a rule in a task only when that task
+  touches the area.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
 - Anything a task must not do itself goes under `## Human steps`, which never

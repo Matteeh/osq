@@ -12,6 +12,7 @@ const FLAG_IDS: readonly ApprovalFlagId[] = [
   'removed_requirement',
   'unknown_capability',
   'verify_starts_conflict',
+  'adr_departure',
 ];
 
 /** The key used for changes whose recorded flag ids are empty. */

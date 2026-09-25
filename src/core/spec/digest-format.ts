@@ -27,6 +27,12 @@ export function formatApprovalDigest(digest: ApprovalDigest): string {
       lines.push(`    ${kind}: ${names.length > 0 ? names.join(', ') : '(none)'}`);
     }
   }
+  if (digest.decisions.length > 0) {
+    lines.push('Decisions:');
+    for (const decision of digest.decisions) {
+      lines.push(`  ADR ${decision.number}: ${decision.rule}`);
+    }
+  }
   if (digest.humanSteps) {
     lines.push('Human steps:');
     for (const line of digest.humanSteps.split('\n')) lines.push(`  ${line.trim()}`);

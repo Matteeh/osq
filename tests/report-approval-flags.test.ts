@@ -146,6 +146,10 @@ describe('report approval flag outcomes', () => {
         shown: { fired: 0, troubled: 0 },
         confirmed: { fired: 0, troubled: 0 },
       },
+      adr_departure: {
+        shown: { fired: 0, troubled: 0 },
+        confirmed: { fired: 0, troubled: 0 },
+      },
       none: {
         shown: { fired: 1, troubled: 0 },
         confirmed: { fired: 0, troubled: 0 },
@@ -191,6 +195,7 @@ describe('report approval flag outcomes', () => {
       'removed_requirement',
       'unknown_capability',
       'verify_starts_conflict',
+      'adr_departure',
     ]) {
       assert.deepEqual(report.approvalFlags.byFlag[key], {
         shown: { fired: 0, troubled: 0 },

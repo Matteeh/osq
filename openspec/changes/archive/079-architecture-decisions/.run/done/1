@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c3f253cdd80a35541e6ff01c093cc85df247360f49f1424846bea13a6a0cc6fa"
+build_stamp: "9cdc92a"
+project_commit: "9cdc92a"
+exit_code: 0
+scope_files: {"decisions/001-use-jiti-for-runtime-config-loading.md":"sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493","decisions/002-feature-doc-delta-application.md":"sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7","decisions/004-pinned-openspec-validator.md":"sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1","decisions/005-openspec-validator-peer-range.md":"sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2","decisions/README.md":"sha256:de5cc035c17e32d1349ce434c69304743098c6390c6358ad26f48c9e770524fa","src/core/foundation/config.ts":"sha256:1cff0c76d23d10e0a360b7642eab14906a669fa0ed4ca28e44831c56a799ddb7","src/core/foundation/decisions.ts":"sha256:a9b9eb3dc5d4fba978598ea08888f5bc2330ae9fce344f28b67235a71af6b55c","tests/decisions-read.test.ts":"sha256:fbda49fe130a4804908ed85d6bfeb484a92bd8834854c13ffd10455eed97eb15"}
+---
+2026-09-25T07:36:57.090Z

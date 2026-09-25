@@ -2,12 +2,15 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { OsqConfig } from '../core/foundation/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../core/foundation/config.js';
 import { createNewSpec } from '../core/foundation/new.js';
 import { buildManifest, writeManifest } from '../core/run/manifest.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
-import { getSpecsDir } from '../core/status/layout.js';
 import { type QueuePlanSelection, prepareQueuePlan } from '../core/status/queue.js';
+import {
+  formatArchitectureDecisionsSection,
+  formatCapabilitySpecsSection,
+} from './plan-sections.js';
 
 export function formatBriefContent(
   body: string,
@@ -31,7 +34,11 @@ export function formatBriefContent(
   return `${fm}${cleanBody}\n`;
 }
 
-/** The first four ordered prompt sections; the repository record is appended by `plan.ts`. */
+/**
+ * The ordered prompt sections before the repository record: PLANNER.md, the
+ * change identity, the capability specs, an optional `## Architecture Decisions`
+ * section, and the brief. `plan.ts` appends the repository record.
+ */
 export async function buildBaseOpeningPrompt(options: {
   projectRoot: string;
   folderPath: string;
@@ -40,8 +47,10 @@ export async function buildBaseOpeningPrompt(options: {
   briefContent: string;
   openspecRoot: string;
   dependencyPaths?: readonly string[];
+  config?: OsqConfig;
 }): Promise<string> {
   const { projectRoot, folderPath, specId, specTitle, briefContent, openspecRoot } = options;
+  const config = options.config ?? DEFAULT_CONFIG;
 
   let plannerMd = '';
   try {
@@ -61,24 +70,15 @@ export async function buildBaseOpeningPrompt(options: {
   }
   const changeHeader = changeLines.join('\n');
 
-  const specsDir = getSpecsDir(openspecRoot, projectRoot);
-  const specPaths: string[] = [];
-  try {
-    const entries = await fs.readdir(specsDir, { withFileTypes: true });
-    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-      if (entry.isDirectory()) {
-        const rel = path.relative(projectRoot, path.join(specsDir, entry.name, 'spec.md'));
-        specPaths.push(rel);
-      }
-    }
-  } catch {}
-  const specsHeader = `## Capability Specs\n\nAll living specs. Read the ones this change writes or whose code it uses.\n\n${specPaths.map((p) => `- ${p}`).join('\n')}`;
+  const specsHeader = await formatCapabilitySpecsSection(projectRoot, openspecRoot);
+  const decisionsHeader = await formatArchitectureDecisionsSection(projectRoot, config);
 
   const briefHeader = `## Brief\n\n${briefContent.trim()}`;
 
-  return [plannerMd.trim(), changeHeader.trim(), specsHeader.trim(), briefHeader.trim()].join(
-    '\n\n',
-  );
+  const sections = [plannerMd.trim(), changeHeader.trim(), specsHeader.trim()];
+  if (decisionsHeader !== null) sections.push(decisionsHeader.trim());
+  sections.push(briefHeader.trim());
+  return sections.join('\n\n');
 }
 
 export async function readBriefInput(briefOption?: string): Promise<string> {

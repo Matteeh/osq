@@ -5,6 +5,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
+import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { isExcludedChangePath } from './hasher.js';
 import { collectImpactFindings } from './impact-lint.js';
@@ -1064,6 +1065,20 @@ export async function lintChangeFolder(
     proposalSurfaceIsEmpty(parseFrontmatter(specContent).body)
   ) {
     findings.error({ file: docRepoPath, section: 'Surface' }, PROPOSAL_SURFACE_ERROR);
+  }
+
+  // Check: Decisions section and project rules block, when the project has ADRs.
+  // A legacy spec.md change document is exempt exactly as it is for Surface.
+  if (resolvedDoc.kind === 'proposal') {
+    for (const finding of await collectDecisionsFindings({
+      projectRoot,
+      folderPath,
+      proposalPath: docRepoPath,
+      proposalBody: parseFrontmatter(specContent).body,
+      config,
+    })) {
+      findings.addOwn(finding);
+    }
   }
 
   // Check: the change-level verify participates in the same trust analysis

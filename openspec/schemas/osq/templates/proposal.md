@@ -28,6 +28,14 @@ types. Replace None with one line per name, such as
 "- Added: `osq init --refresh-schema` (flag)". -->
 None
 
+## Decisions
+
+<!-- One line per accepted ADR that governs a capability this change writes,
+saying what it means here, such as "ADR 009: the adapter is the only module
+that imports dockerode." Start a line "Departs from ADR <n>:" to record a
+departure and its reason. -->
+None
+
 ## Contract
 
 ### Requirement: <requirement name>

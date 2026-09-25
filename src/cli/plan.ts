@@ -51,8 +51,8 @@ export interface OpeningPromptOptions {
  * A sixth section quotes recent executor disclosures when any exist.
  */
 export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise<string> {
-  const base = await buildBaseOpeningPrompt(options);
   const config = options.config ?? (await loadConfig(options.projectRoot));
+  const base = await buildBaseOpeningPrompt({ ...options, config });
   const recordBody =
     options.recordBody ??
     formatRepositoryRecordBody(await getRepositoryRecord(options.projectRoot, config));
