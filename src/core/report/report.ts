@@ -36,6 +36,11 @@ import {
   formatVerificationCounts,
 } from './record-verification.js';
 import {
+  type DependencyEntry,
+  collectDependencies,
+  formatDependencies,
+} from './report-dependencies.js';
+import {
   asData,
   eventTimestampMs,
   observeAttempts,
@@ -199,6 +204,11 @@ export interface HistoryMetrics {
   readonly rework: readonly ReworkEntry[];
   /** Changes whose task result files hold a real executor disclosure. */
   readonly disclosures: readonly DisclosureEntry[];
+  /**
+   * Distinct packages added per active or archived change, in change order.
+   * Absent when no task stream holds a `dependencies_added` event.
+   */
+  readonly dependencies?: readonly DependencyEntry[];
   /**
    * After-landing verification counts by latest outcome. Absent when no
    * archived change requires verification.
@@ -1297,6 +1307,7 @@ export async function getMetricsReport(
   const rework = await collectRework(allSpecFolders);
   const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders, rework);
   const disclosures = await collectDisclosures(allSpecFolders);
+  const dependencies = await collectDependencies(allSpecFolders);
   const verification = await collectVerificationCounts(archivedFolders);
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
 
@@ -1382,6 +1393,7 @@ export async function getMetricsReport(
       },
       rework,
       disclosures,
+      ...(dependencies.length > 0 ? { dependencies } : {}),
       ...(verification ? { verification } : {}),
     },
     coverage: {
@@ -1747,6 +1759,9 @@ export function formatMetricsReport(
 
   lines.push(...formatRework(report.history.rework ?? []));
   lines.push(...formatDisclosures(report.history.disclosures ?? []));
+  if ((report.history.dependencies ?? []).length > 0) {
+    lines.push(...formatDependencies(report.history.dependencies ?? []));
+  }
   if (report.history.verification) {
     lines.push(formatVerificationCounts(report.history.verification));
   }

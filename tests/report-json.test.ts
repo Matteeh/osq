@@ -125,6 +125,7 @@ describe('report --json', () => {
       'troubledChanges',
     ]);
     assert.deepEqual(sortedKeys((parsed.approvalFlags as Record<string, object>).byFlag), [
+      'adr_check_modified',
       'adr_departure',
       'none',
       'removed_requirement',

@@ -18,6 +18,7 @@ export type HarnessEventType =
   | 'result_written'
   | 'exited'
   | 'measures'
+  | 'dependencies_added'
   | 'done'
   | 'done_manual'
   | 'dead'
@@ -126,6 +127,13 @@ export interface MeasuresEventData {
   changedFiles?: number;
   changedLines?: number;
   scopeHashes?: Record<string, { before: string | null; after: string | null }>;
+  /** Scoped `package.json` path to its sorted package names, when any is scoped. */
+  dependencies?: Record<string, string[]>;
+}
+
+/** Payload of a `dependencies_added` event: the new packages a task introduced. */
+export interface DependenciesAddedEventData {
+  readonly added: readonly { file: string; name: string }[];
 }
 
 export interface DoneEventData {
@@ -255,6 +263,7 @@ export interface OsqEventData {
   result_written: ResultWrittenEventData;
   exited: ExitedEventData;
   measures: MeasuresEventData;
+  dependencies_added: DependenciesAddedEventData;
   done: DoneEventData;
   done_manual: DoneManualEventData;
   dead: DeadEventData;

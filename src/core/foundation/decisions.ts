@@ -15,6 +15,9 @@ export interface Adr {
   readonly appliesTo: 'all' | readonly string[] | null; // null when missing or invalid
   readonly rule: string; // trimmed; '' when missing
   readonly supersededBy: string | null;
+  readonly checks: readonly string[]; // repository-relative paths, forward slashes
+  readonly denies: readonly string[]; // package names the decision forbids
+  readonly malformed: readonly string[]; // 'checks' and 'denies' fields that aren't string lists
 }
 
 /** The parsed decisions folder: ADRs in number order plus ignored files. */
@@ -23,16 +26,41 @@ export interface DecisionRecords {
   readonly ignored: readonly string[]; // repository-relative paths, sorted
 }
 
-/** Validation errors and warnings for a project's ADRs. */
-export interface DecisionProblems {
-  readonly errors: readonly string[];
-  readonly warnings: readonly string[];
-}
-
-const VALID_STATUSES = new Set(['proposed', 'accepted', 'superseded']);
-
 function toPosix(value: string): string {
   return value.split(path.sep).join('/');
+}
+
+/** One frontmatter list field: its values and whether the raw value was malformed. */
+interface ReadList {
+  readonly values: readonly string[];
+  readonly malformed: boolean;
+}
+
+/** Reads an array of non-empty strings; anything else reads as malformed. */
+function readStringList(value: unknown): ReadList {
+  if (!Array.isArray(value)) return { values: [], malformed: true };
+  const values: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string' || entry.trim() === '') return { values: [], malformed: true };
+    values.push(entry.trim());
+  }
+  return { values, malformed: false };
+}
+
+/** Reads a present list field, applying `normalize` to each value. */
+function readListField(
+  data: Record<string, unknown>,
+  key: string,
+  normalize: (value: string) => string,
+): ReadList {
+  if (!Object.prototype.hasOwnProperty.call(data, key)) return { values: [], malformed: false };
+  const read = readStringList(data[key]);
+  return { values: read.values.map(normalize), malformed: read.malformed };
+}
+
+/** A check path is repository-relative with forward slashes and no leading `./`. */
+function normalizeCheckPath(value: string): string {
+  return value.split('\\').join('/').replace(/^\.\//, '');
 }
 
 /** `sha256:<hex>` digest of a UTF-8 string, like the manifest's file hasher. */
@@ -94,6 +122,8 @@ function compareAdr(a: Adr, b: Adr): number {
 function toAdr(content: string, relativePath: string, number: string): Adr | null {
   const { data, body } = parseFrontmatter(content);
   if (!Object.prototype.hasOwnProperty.call(data, 'status')) return null;
+  const checks = readListField(data, 'checks', normalizeCheckPath);
+  const denies = readListField(data, 'denies', (value) => value);
   return {
     number,
     title: readTitle(body),
@@ -103,6 +133,9 @@ function toAdr(content: string, relativePath: string, number: string): Adr | nul
     appliesTo: readAppliesTo(data.applies_to),
     rule: readRule(data.rule),
     supersededBy: readSupersededBy(data.superseded_by),
+    checks: checks.values,
+    denies: denies.values,
+    malformed: [...(checks.malformed ? ['checks'] : []), ...(denies.malformed ? ['denies'] : [])],
   };
 }
 
@@ -142,79 +175,6 @@ export async function readDecisions(
   return { adrs, ignored };
 }
 
-function validateAccepted(adr: Adr, config: OsqConfig, errors: string[]): void {
-  if (adr.appliesTo === null) {
-    errors.push(`${adr.path}: accepted ADR needs applies_to, either "all" or capabilities`);
-  }
-  if (adr.rule === '') {
-    errors.push(`${adr.path}: accepted ADR needs a one-line rule`);
-  } else if (adr.rule.includes('\n')) {
-    errors.push(`${adr.path}: rule must be one line`);
-  } else if (adr.rule.length > config.limits.maxRuleLength) {
-    errors.push(
-      `${adr.path}: rule is longer than limits.maxRuleLength (${config.limits.maxRuleLength})`,
-    );
-  }
-}
-
-function validateSuperseded(adr: Adr, numbers: readonly string[], errors: string[]): void {
-  const replacement = adr.supersededBy;
-  if (replacement === null) {
-    errors.push(`${adr.path}: superseded ADR needs superseded_by naming its replacement`);
-  } else if (!numbers.some((number) => sameAdrNumber(number, replacement))) {
-    errors.push(`${adr.path}: superseded_by ${replacement} names no existing ADR`);
-  }
-}
-
-function warnUnknownCapabilities(adr: Adr, living: ReadonlySet<string>, warnings: string[]): void {
-  if (adr.appliesTo === null || adr.appliesTo === 'all') return;
-  for (const name of adr.appliesTo) {
-    if (!living.has(name)) {
-      warnings.push(`${adr.path}: applies_to capability "${name}" has no living spec`);
-    }
-  }
-}
-
-/**
- * Validates the parsed ADRs: status vocabulary, an accepted ADR's applies_to and
- * rule, a superseded ADR's replacement, plus warnings for ignored files and for
- * capability names without a living spec.
- */
-export function validateDecisions(
-  records: DecisionRecords,
-  livingCapabilities: readonly string[],
-  config: OsqConfig,
-): DecisionProblems {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-  const living = new Set(livingCapabilities);
-  const numbers = records.adrs.map((adr) => adr.number);
-
-  for (const adr of records.adrs) {
-    if (!VALID_STATUSES.has(adr.status)) {
-      errors.push(`${adr.path}: status must be proposed, accepted, or superseded`);
-      continue;
-    }
-    if (adr.status === 'accepted') validateAccepted(adr, config, errors);
-    if (adr.status === 'superseded') validateSuperseded(adr, numbers, errors);
-    warnUnknownCapabilities(adr, living, warnings);
-  }
-
-  for (const ignoredPath of records.ignored) {
-    warnings.push(`${ignoredPath}: no osq frontmatter, ignored`);
-  }
-
-  return { errors, warnings };
-}
-
-/** True when two ADR numbers name the same ADR by numeric value: `7` is `007`. */
-export function sameAdrNumber(a: string, b: string): boolean {
-  const na = Number.parseInt(a, 10);
-  const nb = Number.parseInt(b, 10);
-  if (Number.isNaN(na) || Number.isNaN(nb)) return a === b;
-  return na === nb;
-}
-
 /** Accepted ADRs applying to `all`, in number order. */
 export function systemWideAdrs(records: DecisionRecords): Adr[] {
   return records.adrs.filter((adr) => adr.status === 'accepted' && adr.appliesTo === 'all');
@@ -229,3 +189,6 @@ export function governingAdrs(records: DecisionRecords, capabilities: readonly s
       (adr.appliesTo === 'all' || adr.appliesTo?.some((name) => wanted.has(name))),
   );
 }
+
+export { sameAdrNumber, validateDecisions } from './decisions-validate.js';
+export type { DecisionProblems } from './decisions-validate.js';

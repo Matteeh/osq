@@ -6,6 +6,7 @@ import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/run/scope.js';
 import { IGNORED_DIRS, buildImportGraph } from '../core/spec/import-graph.js';
 import { type TaskData, resolveChangeDoc } from '../core/spec/parser.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
+import { readScopedDependencies } from './dependencies.js';
 
 function countLines(content: string): number {
   return content.split('\n').length;
@@ -154,11 +155,12 @@ export async function gatherStartMeasures(
   const proposalContent = proposalDoc
     ? await fs.readFile(proposalDoc.path, 'utf8').catch(() => '')
     : '';
-  const [scopeCounts, repoCounts, importFanIn, delta] = await Promise.all([
+  const [scopeCounts, repoCounts, importFanIn, delta, dependencies] = await Promise.all([
     gatherScopeCounts(projectRoot, taskData.scope),
     gatherRepoCounts(projectRoot),
     countImportFanIn(projectRoot, taskData.scope),
     countDeltaRequirementsAndScenarios(specFolderPath),
+    readScopedDependencies(projectRoot, taskData.scope),
   ]);
   return {
     phase: 'start',
@@ -172,6 +174,7 @@ export async function gatherStartMeasures(
     taskWords: countWords(taskData.raw),
     deltaRequirements: delta.requirements,
     deltaScenarios: delta.scenarios,
+    ...(Object.keys(dependencies).length > 0 ? { dependencies } : {}),
   };
 }
 

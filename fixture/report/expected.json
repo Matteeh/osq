@@ -1,6 +1,16 @@
 {
   "approvalFlags": {
     "byFlag": {
+      "adr_check_modified": {
+        "confirmed": {
+          "fired": 0,
+          "troubled": 0
+        },
+        "shown": {
+          "fired": 0,
+          "troubled": 0
+        }
+      },
       "adr_departure": {
         "confirmed": {
           "fired": 0,

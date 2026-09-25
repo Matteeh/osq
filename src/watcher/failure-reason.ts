@@ -10,6 +10,7 @@ export type RunTaskFailureReason =
   | 'verify_red'
   | 'verify_precondition'
   | 'verify_path_missing'
+  | 'denied_dependency'
   | 'change_verify_red'
   | 'crashed'
   | 'timeout'

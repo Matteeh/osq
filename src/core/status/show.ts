@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readPlanningSessions } from '../report/planning.js';
+import { type DependencyPair, addedPairs, distinctPairs } from '../report/report-dependencies.js';
 import { formatDuration } from '../report/report.js';
 import { parseResultSections } from '../report/result-sections.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
@@ -775,6 +776,24 @@ function formatStuck(events: TimelineEvent[]): string | null {
 }
 
 /**
+ * Projects every `dependencies_added` event of a task into the
+ * `Dependencies added:` show line, with distinct pairs sorted by file and then
+ * name. Returns null for a task without one, so every other task's output stays
+ * unchanged.
+ */
+function formatDependenciesAdded(events: TimelineEvent[]): string | null {
+  const pairs: DependencyPair[] = [];
+  for (const event of events) {
+    if (event.type !== 'dependencies_added') continue;
+    pairs.push(...addedPairs(event.data?.added));
+  }
+  const distinct = distinctPairs(pairs);
+  if (distinct.length === 0) return null;
+  const rendered = distinct.map((pair) => `${pair.name} (${pair.file})`).join(', ');
+  return `      Dependencies added: ${rendered}`;
+}
+
+/**
  * Projects the task's latest `instructions_changed` event into the
  * `Instructions changed after approval:` line. Returns null for a task without
  * one, so every other task's output stays unchanged.
@@ -912,6 +931,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       const instructionsChanged = formatInstructionsChanged(task.events);
       if (instructionsChanged) {
         lines.push(instructionsChanged);
+      }
+      const dependenciesAdded = formatDependenciesAdded(task.events);
+      if (dependenciesAdded) {
+        lines.push(dependenciesAdded);
       }
       const disclosures = formatDisclosures(task.resultContent);
       if (disclosures) {

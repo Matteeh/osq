@@ -13,6 +13,10 @@ An ADR may begin with YAML frontmatter that osq reads:
 status: accepted
 applies_to: [cli-foundation]
 rule: Load osq.config.ts, .js and .mjs with jiti; add no other TypeScript loader.
+checks:
+  - tests/config.test.ts
+denies:
+  - ts-node
 ---
 ```
 
@@ -20,6 +24,12 @@ rule: Load osq.config.ts, .js and .mjs with jiti; add no other TypeScript loader
 - `applies_to` is `all` or a list of capability names the decision governs.
 - `rule` is one sentence saying what a spec must do.
 - `superseded_by` names the number of the replacement ADR on a superseded ADR.
+- `checks` is a list of repository-relative test files that enforce the decision.
+- `denies` is a list of package names the decision forbids.
+
+`osq doctor` fails when a check file named by an accepted ADR does not exist. Only
+accepted ADRs' `checks` and `denies` take effect; a proposed or superseded ADR's
+checks and denials are read but not enforced.
 
 The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdown file without frontmatter is ignored.
 

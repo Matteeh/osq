@@ -25,7 +25,8 @@ export type ApprovalFlagId =
   | 'removed_requirement'
   | 'unknown_capability'
   | 'verify_starts_conflict'
-  | 'adr_departure';
+  | 'adr_departure'
+  | 'adr_check_modified';
 
 export interface ApprovalFlag {
   readonly id: ApprovalFlagId;
@@ -179,10 +180,16 @@ export async function buildApprovalDigest(
     scope: task.scope,
     paths: task.entries.map((entry) => entry.relativePath),
   }));
+  const decisionTasks = tasks.map((task) => ({
+    number: task.number,
+    testsModify: task.testsModify,
+    paths: task.entries.map((entry) => entry.relativePath),
+  }));
   const digestDecisions = await collectDigestDecisions(
     projectRoot,
     changeCapabilities.map((capability) => capability.name),
     extractSection(body, 'Decisions'),
+    decisionTasks,
     config,
   );
   const baseFlags = await buildApprovalFlags({

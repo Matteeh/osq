@@ -170,6 +170,14 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
             })),
           }
         : {}),
+      ...((report.history.dependencies ?? []).length > 0
+        ? {
+            dependencies: (report.history.dependencies ?? []).map((entry) => ({
+              change: entry.change,
+              added: entry.added.map((pair) => ({ file: pair.file, name: pair.name })),
+            })),
+          }
+        : {}),
     },
     now: { ...report.now },
     planning: {

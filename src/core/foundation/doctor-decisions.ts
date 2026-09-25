@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readLivingCapabilityNames } from '../spec/digest-capability.js';
 import type { OsqConfig } from './config.js';
+import type { DecisionRecords } from './decisions.js';
 import { readDecisions, validateDecisions } from './decisions.js';
 import type { DoctorCheckResult } from './doctor.js';
 import { RULES_START_MARKER, checkProjectRules } from './rules-block.js';
@@ -31,7 +32,11 @@ export async function checkDecisions(
 
   const living = await readLivingCapabilityNames(projectRoot, config.paths.openspecRoot);
   const problems = validateDecisions(records, living, config);
-  const errors = [...problems.errors, ...(await checkProjectRules(projectRoot, config))];
+  const errors = [
+    ...problems.errors,
+    ...(await checkAdrCheckFiles(projectRoot, records)),
+    ...(await checkProjectRules(projectRoot, config)),
+  ];
   if (errors.length > 0) {
     return { name: 'decisions', ok: false, message: errors.join('; ') };
   }
@@ -39,4 +44,23 @@ export async function checkDecisions(
     return { name: 'decisions', ok: true, warning: true, message: problems.warnings.join('; ') };
   }
   return { name: 'decisions', ok: true, message: `${records.adrs.length} ADRs valid` };
+}
+
+/** One error per check file an accepted ADR names that doesn't exist. */
+async function checkAdrCheckFiles(
+  projectRoot: string,
+  records: DecisionRecords,
+): Promise<string[]> {
+  const errors: string[] = [];
+  for (const adr of records.adrs) {
+    if (adr.status !== 'accepted') continue;
+    for (const file of adr.checks) {
+      const exists = await fs.stat(path.join(projectRoot, file)).then(
+        () => true,
+        () => false,
+      );
+      if (!exists) errors.push(`${adr.path}: check file ${file} does not exist`);
+    }
+  }
+  return errors;
 }
