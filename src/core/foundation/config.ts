@@ -13,6 +13,11 @@ import {
 } from './config-planning.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
+import {
+  DEFAULT_TRACEABILITY_CONFIG,
+  type TraceabilityConfig,
+  validateTraceabilityConfig,
+} from './config-traceability.js';
 import type { OsqUserConfig } from './config-user.js';
 
 export type { ClaudeConfig } from './config-claude.js';
@@ -20,6 +25,7 @@ export type { CodexConfig } from './config-codex.js';
 export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
 export type { ServeConfig } from './config-serve.js';
+export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
 
 export interface OsqLimits {
@@ -93,6 +99,7 @@ export interface OsqConfig {
   readonly queue?: QueueConfig;
   readonly serve?: Partial<ServeConfig>;
   readonly gates?: GatesConfig;
+  readonly traceability?: TraceabilityConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -100,6 +107,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
+  traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
   agy: {
     model: 'gemini-3.8-flash-high',
@@ -156,6 +164,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     serve,
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),
+    traceability: validateTraceabilityConfig(config.traceability),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     agy: {

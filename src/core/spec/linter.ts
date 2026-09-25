@@ -38,6 +38,7 @@ import {
   parseTaskMd,
   resolveChangeDoc,
 } from './parser.js';
+import { collectTraceabilityFindings } from './traceability-lint.js';
 import {
   listNamedPaths,
   missingNamedPaths,
@@ -919,6 +920,8 @@ interface ResolvedTaskScope {
   readonly taskNumber: string;
   readonly taskPath: string;
   readonly existingPaths: readonly string[];
+  /** Every resolved scope path, existing or not. */
+  readonly resolvedPaths: readonly string[];
   readonly task: TaskData;
   readonly verifyAnalysis: VerifyCommandAnalysis | null;
 }
@@ -1179,6 +1182,7 @@ export async function lintChangeFolder(
       taskNumber: taskFile.replace(/\.md$/, ''),
       taskPath: taskRepoPath,
       existingPaths,
+      resolvedPaths: resolved.map((entry) => entry.relativePath),
       task,
       verifyAnalysis: analysis,
     });
@@ -1300,6 +1304,25 @@ export async function lintChangeFolder(
       existingPaths: scope.existingPaths,
       testsModify: scope.task.testsModify,
       verify: scope.task.verify,
+    })),
+    importGraph,
+  })) {
+    findings.addOwn(finding);
+  }
+
+  // Check: scenario traceability links and the blast radius of changed
+  // scenarios. Reuses the graph already built for impact lint and builds the
+  // scenario index once.
+  for (const finding of await collectTraceabilityFindings({
+    projectRoot,
+    folderPath,
+    config,
+    proposalPath: docRepoPath,
+    tasks: resolvedTaskScopes.map((scope) => ({
+      taskNumber: scope.taskNumber,
+      taskPath: scope.taskPath,
+      resolvedPaths: scope.resolvedPaths,
+      testsModify: scope.task.testsModify,
     })),
     importGraph,
   })) {

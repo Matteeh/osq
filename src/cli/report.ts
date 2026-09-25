@@ -240,6 +240,18 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       total: report.queue.total,
     },
     specs: { ...report.specs },
+    ...(report.traceability
+      ? {
+          traceability: report.traceability.map((entry) => ({
+            capability: entry.capability,
+            unclaimedFunctions: entry.unclaimedFunctions.map((fn) => ({
+              file: fn.file,
+              name: fn.name,
+            })),
+            untestedScenarios: [...entry.untestedScenarios],
+          })),
+        }
+      : {}),
     tokens: {
       input: report.tokens.input,
       cached_input: report.tokens.cached_input,

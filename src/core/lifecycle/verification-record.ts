@@ -121,10 +121,13 @@ export async function runCheck(
     throw new Error(`Change ${target.folderName} has no recorded check command.`);
   }
 
+  // An archived change's check runs with no OSQ_CHANGE: its deltas are already
+  // in the living spec, so the command should not resolve against the change.
   const result = await runVerificationCommand(
     projectRoot,
     check,
     config.timeouts.verifyTimeoutSeconds,
+    null,
   );
   const data: CheckRanEventData = {
     command: result.command,

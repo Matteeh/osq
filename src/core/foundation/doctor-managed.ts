@@ -8,6 +8,7 @@ import {
   MANAGED_PLANNER_BLOCK,
 } from './init-blocks.js';
 import { type ManagedBlockProblem, inspectManagedBlock } from './init-managed.js';
+import { checkTraceabilityBlocks } from './traceability-block.js';
 
 export interface ManagedBlocksResult {
   ok: boolean;
@@ -87,9 +88,12 @@ export async function checkManagedBlocks(
     }
   }
 
+  const traceabilityFailures = await checkTraceabilityBlocks(projectRoot, config);
+
   const groups = [
     failures.length > 0 ? `${failures.join('; ')} (run osq init)` : '',
     setupFailures.length > 0 ? `${setupFailures.join('; ')} (run osq setup)` : '',
+    traceabilityFailures.length > 0 ? traceabilityFailures.join('; ') : '',
   ].filter((group) => group !== '');
 
   if (groups.length === 0) {

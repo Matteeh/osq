@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:bace2d6b44d6d88c29a8114e011c94b8e331b06c919524b5ab403a7135325a35"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"fixture/trace/pricing/decisions/001-money-in-integer-cents.md":"sha256:409f1a2f7acc03687eb4f4cb847c1f00534692a529297d4d05697b2ddd7cb24d","fixture/trace/pricing/openspec/specs/pricing/spec.md":"sha256:564486ca706c7108c23bccdfa2eea0da49fb999721ef53a4d231375535e1b3e4","fixture/trace/pricing/src/pricing/quote.ts":"sha256:4d2e4741adde2a7b9b5ad0e79dc63883ec40c5f6a5be62a9d4c0ef6c9d550bf9","fixture/trace/pricing/tests/pricing-quote.test.ts":"sha256:dc7b68360f1a14c6453e46cca6d3f90a7efeb7d763c5c2c873cc859a71d08291","package.json":"sha256:75c3794d8bd4664c72b0a9647715e474905b0757d266cb9fac67297c15a3624d","src/testing/index.ts":"sha256:722d8b40efd61047a6d101a3f4ed9e5650b2e8b3fad539240859bc85fa6c6da3","src/testing/scenario.ts":"sha256:d2d574f1f938d0d9bbf024b397064d18dd75ffba3778ab1a5a2992edfb4c0166","tests/trace-helper.test.ts":"sha256:4570cbd8b250afab25c7a3c4309325c848efab4844b33703bba3f69e15441de7","tests/trace-pricing.test.ts":"sha256:365f8f7bbe83b8fffee739f21a66998198cdd92c011bfbe54a55b848cc6c304f"}
+---
+2026-09-25T21:32:05.918Z

@@ -23,11 +23,13 @@ src/core/         code grouped by the capability that owns it:
   report/         metrics-and-reporting
   status/         status-inspection
   web/            web-inspection
+  trace/          traceability
 src/watcher/      event loop. calls core, owns every automatic marker write.
 src/harness/      one adapter per harness. spawn + setup + event translation only.
   agy/ claude/ codex/ opencode/
   index.ts mock.ts process.ts stream.ts types.ts
 src/index.ts      public configuration exports.
+src/testing/      scenario test helper; the `@matteeh/osq/testing` entry point.
 packages/ui/      read-only browser dashboard; `scripts/stage-ui.mjs` copies its build to `ui/dist`.
 templates/        files `init` copies. owned by the consumer after copy.
 openspec/         living capability specs, in-flight changes, and the archive.

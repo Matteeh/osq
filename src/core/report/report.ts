@@ -56,6 +56,11 @@ import {
   emptyRetryHistory,
   observeRetries,
 } from './report-retries.js';
+import {
+  type CapabilityTraceabilityGaps,
+  collectTraceabilityGaps,
+  formatTraceability,
+} from './report-traceability.js';
 import { taskScopeSize } from './scope-size.js';
 
 export interface SpecMetrics {
@@ -266,6 +271,11 @@ export interface MetricsReport {
   readonly queue: QueueReport;
   readonly specs: SpecMetrics;
   readonly tokens: TokenMetrics;
+  /**
+   * Traceability gaps per opted-in capability, in name order. Absent when no
+   * capability is opted in, so the report is unchanged for other projects.
+   */
+  readonly traceability?: readonly CapabilityTraceabilityGaps[];
 }
 
 /** Aggregate planning usage derived only from `.run/plan.jsonl` lifecycle pairs. */
@@ -1310,6 +1320,7 @@ export async function getMetricsReport(
   const dependencies = await collectDependencies(allSpecFolders);
   const verification = await collectVerificationCounts(archivedFolders);
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
+  const traceability = await collectTraceabilityGaps(projectRoot, config);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
@@ -1454,6 +1465,7 @@ export async function getMetricsReport(
       comparison: planningComparison,
     },
     queue,
+    ...(traceability ? { traceability } : {}),
   };
 }
 
@@ -1796,6 +1808,11 @@ export function formatMetricsReport(
         `  Size hint: largest first-attempt pass ${largestPass.change}/${largestPass.task} — ${matching.join('; ')}`,
       );
     }
+  }
+
+  if (report.traceability) {
+    lines.push('');
+    lines.push(...formatTraceability(report.traceability));
   }
 
   lines.push('');

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1917ced233bf3e792c341bcea60ab4d6d1044e54732d5ea4e3e47062d05c10c2"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"src/core/trace/scenario-index.ts":"sha256:5cf5c1f7a25ce852383b0b368fe85f5214fa0b6138623c932f53355d25c80592","src/core/trace/tag-scan.ts":"sha256:35df6fdfe8de496fe0b0bf6561d6fecf165fcc45c1eac3d3767f16cbdeb71187","tests/trace-scan.test.ts":"sha256:ac8daab72affc6801736417d21fbe659a475766b759ca3b1a5cdeb03a0d06161"}
+---
+2026-09-25T21:38:47.763Z

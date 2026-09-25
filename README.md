@@ -190,6 +190,59 @@ An accepted ADR may also name `checks`, the repository-relative test files that 
 
 After an agent exits, the watcher compares each scoped `package.json` against the baseline recorded on the attempt's `measures` start event. A new package appends one `dependencies_added` event; if an accepted ADR denies it, the task dies with `denied_dependency`, eligible for one automatic retry, and the marker names each package, file, ADR, and rule. `osq show` prints a `Dependencies added: <name> (<file>), ...` line under such a task, and `osq report` prints a `Dependencies added:` section with one `<change>: <name> (<file>), ...` line per change that added packages.
 
+### Traceability
+
+Opt a capability in through the `traceability` block in `osq.config.ts`:
+
+```ts
+export default defineConfig({
+  traceability: {
+    capabilities: ['pricing'], // or 'all'
+    mode: 'warn',              // or 'require'
+  },
+});
+```
+
+The resolved config always holds `traceability`, defaulting to `{ capabilities: [], mode: 'warn' }`. With no capability opted in, `osq init`, `osq lint`, `osq report`, and both managed blocks are exactly what they were, and a project that never imports the helper sees no change.
+
+When at least one capability is opted in, `osq init` writes a `<!-- OSQ:TRACEABILITY:START -->` … `<!-- OSQ:TRACEABILITY:END -->` block directly after the managed block in `AGENTS.md` and `PLANNER.md`. Its scope is `every capability` for `'all'`, otherwise the opted-in names joined by `, `. Removing the opt-in removes the block and restores both files.
+
+A test proves a scenario by importing from `@matteeh/osq/testing`:
+
+```ts
+import { scenario } from '@matteeh/osq/testing';
+
+scenario('pricing', 'Volume pricing', { covers: quote }, ({ run, then, each }) => {
+  then('the subtotal is 1800.00', () => assert.equal(run(100).subtotal, 1800));
+  each('the unit price follows this table', (row) => assert.equal(quote(+row.quantity).unit, +row['unit price']));
+});
+```
+
+`scenario(capability, name, { covers }, body)` registers one `node:test` test titled `Scenario: <name>`. It fails unless the covered function ran through `run`, every outcome was asserted by a `then` or `each` that completed, and every table row passed. `run` takes the covered function's parameters and returns its result, `then(outcome, check)` asserts one outcome, and `each(outcome, check)` calls the check once per table row, in order, with the row as an object keyed by the header cells. The helper's failure messages are exact: a missing name is `"<text>" is not a THEN of this scenario`; a `then` on a table is `THEN <text>: has a table, so check it with each`; an `each` on a non-table is `THEN <text>: has no table`; a failed check is `THEN <text>: failed` or `THEN <text>: failed at <column> <value>, ...`; a check before the function ran or settled is `THEN <text>: checked before <fn> ran` or `THEN <text>: checked before <fn> settled`; a body that never called `run` is `<fn> never ran`; and a missing assertion is `No assertion for: <text>; <text>`. A lookup failure is reported unchanged.
+
+A scenario with more than one case puts a Markdown table directly under its THEN or AND line, with only blank lines between:
+
+```
+- **THEN** the unit price follows this table
+
+  | quantity | unit price |
+  | -------- | ---------- |
+  | 100      | 9.00       |
+  | 500      | 8.00       |
+```
+
+The first row names the columns, the dashes row is skipped, and later rows are keyed by the trimmed header cells with trimmed string values. Lint accepts a table under a THEN or AND line in a delta and in a living spec.
+
+Lint reads tags only from a `/** ... */` doc comment directly above `export function`/`export async function`, or `export const <name>` bound to an arrow or function expression. A `@scenario <capability>: <scenario name>` line names a scenario the function serves; `@adr <number>` names a decision it follows. A file is a scenario test file when it imports from `@matteeh/osq/testing`, and its `scenario(` calls are read when capability and name are string literals and the third argument is `{ covers: <identifier> }`; anything else is reported as unreadable as `<file>:<line>: <reason>`.
+
+A task lists the scenarios its tests prove under `## Scenarios`, one `- <capability>: <scenario name>` bullet each. A listed scenario counts as planned while the task's resolved scope holds a test path, so lint passes before the test exists; once a scoped test names it, only real `scenario(...)` calls count.
+
+The watcher sets `OSQ_CHANGE` to the absolute change folder for every verify, so the helper resolves scenarios from the change's delta while it is still active. `osq check` on an archived change runs without it, because its deltas are already in the living spec.
+
+For an opted-in capability, `osq lint` reports each scenario an ADDED or MODIFIED requirement holds that no scoped test names and that is not planned (`<capability>: no test names scenario "<name>"`), a `@scenario` tag naming a missing scenario (`<fn>: names a scenario the <capability> spec doesn't have: "<name>"`) or one no test covers (`<fn>: no test for "<name>" covers it`), a bad `@adr` tag (`<fn>: ADR <n> doesn't exist or isn't accepted`, `<fn>: ADR <n> doesn't apply to any capability it serves`), and a duplicate scenario name (`<capability>: two scenarios named "<name>"`). For every capability it also lists the tests naming a scenario a MODIFIED or REMOVED requirement changes and warns `<file> names changed scenario "<name>" but no task scopes it with tests.modify: true`. Every finding is a warning under `mode: 'warn'` and an error under `mode: 'require'`.
+
+When a capability is opted in, `osq report` prints a `Traceability:` section with `<capability>: <n> untested scenarios, <m> unclaimed functions` and `    untested: <name>` / `    unclaimed: <file>#<name>` lines, also carried in JSON under `traceability`. `osq show` prints `      Scenarios: <capability>: <name>; ...` under a task whose scoped tests name scenarios.
+
 ## What the watcher guarantees
 
 - **Rebuilt from disk**: State is rebuilt from `openspec/` on every change. Kill it and restart it any time.

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3372a1fbc69f8e82b9a07b1b10b076d2434d680b1b9b0128cc60f646f27e0606"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:b406c308756ba6cfc6674592a19e294d74b2d85c3c4ee7deebd0af48d49b2b5c","README.md":"sha256:8aa0264c908cde553b44ef6a5aeabe9e10db4f9da39268b386de3df475ade941","src/core/foundation/doctor-managed.ts":"sha256:ba885ca7ca7c7d51d34980aac4ae960a79350f4ba490227a655648c64e6987c1","src/core/foundation/init.ts":"sha256:8b5933b2c9494d658eb43f827e1219f5b263abe8559f19703b84d86cb31efd43","src/core/foundation/traceability-block.ts":"sha256:a9e7b946bf62ed50f0f285f1161523d231f50b5fcc0badafd74f386e937572ad","tests/trace-blocks.test.ts":"sha256:5efca161455151eb3700affee2fdc15a34e41bdd3de204b9e0a0ae9efd892961"}
+---
+2026-09-25T22:01:29.366Z

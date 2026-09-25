@@ -5,7 +5,11 @@ import { readPlanningSessions } from '../report/planning.js';
 import { type DependencyPair, addedPairs, distinctPairs } from '../report/report-dependencies.js';
 import { formatDuration } from '../report/report.js';
 import { parseResultSections } from '../report/result-sections.js';
+import { resolveScope } from '../run/scope.js';
+import { buildImportGraph } from '../spec/import-graph.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
+import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
+import type { TaggedScenario } from '../trace/tag-scan.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
@@ -51,6 +55,8 @@ export interface TaskDetail {
   entry: string[];
   skills: string[];
   acceptance: string[];
+  /** Distinct scenario pairs named by scenario test files in the resolved scope. */
+  scenarios?: TaggedScenario[];
   deadReason?: string;
   deadDiagnostic?: string;
   regressedReason?: string;
@@ -406,11 +412,67 @@ export async function getSpecDetailsFromFolder(
   return buildSpecDetails(projectRoot, folderPath, location, config);
 }
 
+/** A test path is under `tests/`, or its file name holds `.test.` or `.spec.`. */
+function showIsTestPath(relativePath: string): boolean {
+  if (relativePath === 'tests' || relativePath.startsWith('tests/')) return true;
+  const base = relativePath.slice(relativePath.lastIndexOf('/') + 1);
+  return base.includes('.test.') || base.includes('.spec.');
+}
+
+/** Distinct scenario pairs named by a file list, sorted by capability and name. */
+function distinctScenarioPairs(files: readonly string[], index: ScenarioIndex): TaggedScenario[] {
+  const seen = new Set<string>();
+  const pairs: TaggedScenario[] = [];
+  for (const file of files) {
+    for (const pair of index.scenariosInFile(file)) {
+      const key = `${pair.capability}\u0000${pair.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push(pair);
+    }
+  }
+  return pairs.sort(
+    (a, b) => a.capability.localeCompare(b.capability) || a.name.localeCompare(b.name),
+  );
+}
+
+/**
+ * Attach each task's scenario pairs from scenario test files in its resolved
+ * scope. The import graph is built only when some task's scope holds a test
+ * path, so a change without scenario tests pays nothing extra.
+ */
+async function attachTaskScenarios(
+  projectRoot: string,
+  tasks: readonly TaskDetail[],
+  config: OsqConfig,
+): Promise<TaskDetail[]> {
+  const resolvedByTask = new Map<string, readonly string[]>();
+  let hasTestPath = false;
+  for (const task of tasks) {
+    const resolved = await resolveScope(projectRoot, task.scope);
+    const files = resolved.map((entry) => entry.relativePath);
+    resolvedByTask.set(task.taskNumber, files);
+    if (files.some(showIsTestPath)) hasTestPath = true;
+  }
+  if (!hasTestPath) return [...tasks];
+
+  const graph = await buildImportGraph(projectRoot, { skip: [config.paths.openspecRoot] });
+  const index = buildScenarioIndex(projectRoot, graph);
+  const scenarioFiles = new Set(index.scenarioTestFiles);
+  return tasks.map((task) => {
+    const files = (resolvedByTask.get(task.taskNumber) ?? []).filter((file) =>
+      scenarioFiles.has(file),
+    );
+    const scenarios = distinctScenarioPairs(files, index);
+    return scenarios.length > 0 ? { ...task, scenarios } : task;
+  });
+}
+
 async function buildSpecDetails(
   projectRoot: string,
   folderPath: string,
   location: 'active' | 'archived' | 'rejected',
-  _config: OsqConfig,
+  config: OsqConfig,
 ): Promise<SpecDetails> {
   const isArchived = location === 'archived';
 
@@ -638,6 +700,8 @@ async function buildSpecDetails(
     });
   }
 
+  const taskDetails = await attachTaskScenarios(projectRoot, tasks, config);
+
   // Derive spec status
   let status: SpecStatus = 'pending';
   if (isArchived) {
@@ -676,7 +740,7 @@ async function buildSpecDetails(
     contract: specData.contract,
     nonGoals: specData.nonGoals,
     delta: specData.delta,
-    tasks,
+    tasks: taskDetails,
     planningSessions,
     recertifications,
     timeline,
@@ -791,6 +855,17 @@ function formatDependenciesAdded(events: TimelineEvent[]): string | null {
   if (distinct.length === 0) return null;
   const rendered = distinct.map((pair) => `${pair.name} (${pair.file})`).join(', ');
   return `      Dependencies added: ${rendered}`;
+}
+
+/**
+ * Projects the scenario pairs named by the scenario test files in a task's
+ * resolved scope into the `Scenarios:` line. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatTaskScenarios(scenarios: readonly TaggedScenario[] | undefined): string | null {
+  if (!scenarios || scenarios.length === 0) return null;
+  const rendered = scenarios.map((pair) => `${pair.capability}: ${pair.name}`).join('; ');
+  return `      Scenarios: ${rendered}`;
 }
 
 /**
@@ -935,6 +1010,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       const dependenciesAdded = formatDependenciesAdded(task.events);
       if (dependenciesAdded) {
         lines.push(dependenciesAdded);
+      }
+      const taskScenarios = formatTaskScenarios(task.scenarios);
+      if (taskScenarios) {
+        lines.push(taskScenarios);
       }
       const disclosures = formatDisclosures(task.resultContent);
       if (disclosures) {

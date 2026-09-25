@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:58cfc795fe042dc5a46ce52b12b0def6fb135553da4b81b2c098ba7453f01046"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"src/core/spec/linter.ts":"sha256:503c413cd9fb3c5e7a21da49bcc1bc40407e3e4ab57a5df314ff49446d7e92ac","src/core/spec/scenario-impact.ts":"sha256:205c7900f56c469fe6cfc1e92131bc93d11360634dc5f3240ba6806d946e0b04","src/core/spec/traceability-links.ts":"sha256:dff564b73d723d03cd561c1b2e45726f6d56e47c6a6ebd6fdbf13bd10a1d5aa0","src/core/spec/traceability-lint.ts":"sha256:1f9d023d78eeef6a0f76298680fc04d52b02655005460e21af1a0c600f99a132","tests/trace-impact-lint.test.ts":"sha256:70bb380e965b1bded86bc76f82d5d50639591079cdd04db9ae0caf2191d47b5e","tests/trace-lint.test.ts":"sha256:0f3bacea4d843548b183d9d2da4120c3abf7ac2cdfbdf43d784ee240ba4bd3e4"}
+---
+2026-09-25T21:50:27.785Z

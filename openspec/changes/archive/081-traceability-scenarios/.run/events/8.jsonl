@@ -1,0 +1,135 @@
+{"type":"verify_ran","timestamp":"2026-09-25T21:50:28.007Z","data":{"command":"node --import tsx --test tests/trace-report.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/trace-report.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/trace-report.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-25T21:50:28.493Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":3271,"repoFiles":1421,"repoLines":154774,"importFanIn":8,"proposalWords":1408,"taskWords":309,"deltaRequirements":21,"deltaScenarios":43}}
+{"type":"started","timestamp":"2026-09-25T21:50:28.502Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"6fde142","pid":39431,"timeoutSeconds":1800,"version":"0.2.1","commit":"6fde142"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:33.527Z","data":{"tool":"bash","summary":"ls openspec/changes/081-traceability-scenarios/.run/results/"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:33.533Z","data":{"tool":"read","summary":"src/core/report/report-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:33.614Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:50:33.711Z","data":{"text":"I'll start by reading the entry files and checking for any previous result."}}
+{"type":"tool","timestamp":"2026-09-25T21:50:33.719Z","data":{"tool":"read","summary":"src/cli/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:33.771Z","data":{"promptTokens":80890,"candidateTokens":246,"totalTokens":90639,"cachedTokens":9472,"reasoningTokens":31,"cost":0.012328116}}
+{"type":"tool","timestamp":"2026-09-25T21:50:36.213Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:36.318Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:36.414Z","data":{"tool":"read","summary":"src/core/trace/scenario-index.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:50:36.415Z","data":{"text":"Let me read the rest of report.ts, show.ts, scenario index, and prior results."}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:36.459Z","data":{"promptTokens":20670,"candidateTokens":174,"totalTokens":111527,"cachedTokens":90624,"reasoningTokens":59,"cost":0.003512172}}
+{"type":"tool","timestamp":"2026-09-25T21:50:39.265Z","data":{"tool":"read","summary":"openspec/changes/081-traceability-scenarios/.run/results/6.md"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:39.346Z","data":{"tool":"read","summary":"openspec/changes/081-traceability-scenarios/.run/results/7.md"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:39.447Z","data":{"tool":"read","summary":"src/core/trace/tag-scan.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:39.558Z","data":{"tool":"read","summary":"src/core/spec/traceability-links.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:39.606Z","data":{"promptTokens":19806,"candidateTokens":211,"totalTokens":131675,"cachedTokens":111488,"reasoningTokens":170,"cost":0.003533964}}
+{"type":"tool","timestamp":"2026-09-25T21:50:42.585Z","data":{"tool":"grep","summary":"{\"pattern\":\"readCapabilityOwnership\",\"path\":\"/home/mathias/p"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:42.673Z","data":{"tool":"read","summary":"src/core/spec/capability-impact.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:42.738Z","data":{"tool":"read","summary":"tests/dependencies-report.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:42.788Z","data":{"promptTokens":7990,"candidateTokens":155,"totalTokens":139925,"cachedTokens":131584,"reasoningTokens":196,"cost":0.001803852}}
+{"type":"tool","timestamp":"2026-09-25T21:50:45.725Z","data":{"tool":"read","summary":"src/core/spec/traceability-lint.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:45.825Z","data":{"tool":"read","summary":"src/core/spec/import-graph.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:45.888Z","data":{"promptTokens":4280,"candidateTokens":101,"totalTokens":144341,"cachedTokens":139904,"reasoningTokens":56,"cost":0.001155912}}
+{"type":"tool","timestamp":"2026-09-25T21:50:53.983Z","data":{"tool":"read","summary":"src/core/spec/delta.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:53.983Z","data":{"tool":"read","summary":"src/core/foundation/config-traceability.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:54.046Z","data":{"tool":"read","summary":"src/core/trace/scenario-lookup.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:54.091Z","data":{"promptTokens":4980,"candidateTokens":144,"totalTokens":150770,"cachedTokens":144256,"reasoningTokens":1390,"cost":0.002100168}}
+{"type":"tool","timestamp":"2026-09-25T21:50:57.524Z","data":{"tool":"read","summary":"tests/trace-lint.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:50:57.711Z","data":{"tool":"bash","summary":"find fixture/trace -type f | sort"}}
+{"type":"tokens","timestamp":"2026-09-25T21:50:57.746Z","data":{"promptTokens":12626,"candidateTokens":127,"totalTokens":163708,"cachedTokens":150656,"reasoningTokens":299,"cost":0.002601468}}
+{"type":"tool","timestamp":"2026-09-25T21:51:04.998Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:51:05.117Z","data":{"tool":"read","summary":"fixture/trace/pricing/openspec/specs/pricing/spec.md"}}
+{"type":"tool","timestamp":"2026-09-25T21:51:05.251Z","data":{"tool":"read","summary":"fixture/trace/pricing/tests/pricing-quote.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:05.316Z","data":{"promptTokens":6519,"candidateTokens":159,"totalTokens":171417,"cachedTokens":163584,"reasoningTokens":1155,"cost":0.002257002}}
+{"type":"tool","timestamp":"2026-09-25T21:51:07.825Z","data":{"tool":"bash","summary":"cd . && rg -n \"export function scop"}}
+{"type":"tool","timestamp":"2026-09-25T21:51:07.953Z","data":{"tool":"grep","summary":"{\"pattern\":\"getSpecDetailsFromFolder\",\"path\":\"/home/mathias/"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:07.989Z","data":{"promptTokens":2702,"candidateTokens":180,"totalTokens":174341,"cachedTokens":171392,"reasoningTokens":67,"cost":0.001067676}}
+{"type":"tool","timestamp":"2026-09-25T21:51:09.726Z","data":{"tool":"read","summary":"src/core/run/scope.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:09.767Z","data":{"promptTokens":167,"candidateTokens":53,"totalTokens":174446,"cachedTokens":174208,"reasoningTokens":18,"cost":0.000590274}}
+{"type":"tool","timestamp":"2026-09-25T21:51:21.161Z","data":{"tool":"read","summary":"src/cli/show.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:51:21.321Z","data":{"tool":"bash","summary":"cd . && rg -n \"getSpecDetailsFromFo"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:21.357Z","data":{"promptTokens":2422,"candidateTokens":111,"totalTokens":179340,"cachedTokens":174336,"reasoningTokens":2471,"cost":0.002435508}}
+{"type":"tool","timestamp":"2026-09-25T21:51:34.588Z","data":{"tool":"grep","summary":"{\"pattern\":\"openspecRoot\",\"path\":\"."}}
+{"type":"tool","timestamp":"2026-09-25T21:51:34.816Z","data":{"tool":"bash","summary":"cd . && sed -n '1,80p' src/core/sta"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:34.873Z","data":{"promptTokens":639,"candidateTokens":164,"totalTokens":182683,"cachedTokens":179328,"reasoningTokens":2552,"cost":0.002263434}}
+{"type":"tool","timestamp":"2026-09-25T21:51:38.166Z","data":{"tool":"read","summary":"tests/report-json.test.ts"}}
+{"type":"tool","timestamp":"2026-09-25T21:51:38.298Z","data":{"tool":"bash","summary":"cd . && ls fixture/report && sed -n"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:38.339Z","data":{"promptTokens":456,"candidateTokens":109,"totalTokens":183455,"cachedTokens":182656,"reasoningTokens":234,"cost":0.000822168}}
+{"type":"tool","timestamp":"2026-09-25T21:51:41.862Z","data":{"tool":"bash","summary":"cd . && grep -n \"traceability\" src/"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:41.925Z","data":{"promptTokens":8074,"candidateTokens":86,"totalTokens":191871,"cachedTokens":183424,"reasoningTokens":287,"cost":0.001985172}}
+{"type":"tool","timestamp":"2026-09-25T21:51:46.144Z","data":{"tool":"bash","summary":"cd . && grep -n \"export async funct"}}
+{"type":"tokens","timestamp":"2026-09-25T21:51:46.177Z","data":{"promptTokens":638,"candidateTokens":93,"totalTokens":192850,"cachedTokens":191744,"reasoningTokens":375,"cost":0.000951732}}
+{"type":"tool","timestamp":"2026-09-25T21:52:04.644Z","data":{"tool":"bash","summary":"cd . && grep -n \"parseCodeOwnership"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:04.685Z","data":{"promptTokens":364,"candidateTokens":67,"totalTokens":198063,"cachedTokens":192768,"reasoningTokens":4864,"cost":0.003591504}}
+{"type":"tool","timestamp":"2026-09-25T21:52:15.263Z","data":{"tool":"bash","summary":"cd . && grep -rln \"getSpecDetails\\|"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:15.333Z","data":{"promptTokens":381,"candidateTokens":66,"totalTokens":200606,"cachedTokens":198016,"reasoningTokens":2143,"cost":0.001976598}}
+{"type":"tool","timestamp":"2026-09-25T21:52:19.401Z","data":{"tool":"bash","summary":"cd . && grep -rn \"scope:\" tests/sho"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:19.448Z","data":{"promptTokens":247,"candidateTokens":75,"totalTokens":201049,"cachedTokens":200448,"reasoningTokens":279,"cost":0.000850794}}
+{"type":"tool","timestamp":"2026-09-25T21:52:39.882Z","data":{"tool":"write","summary":"tests/trace-report.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:52:39.911Z","data":{"text":"Now I have enough context. Let me write the test first (expected red)."}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:39.947Z","data":{"promptTokens":269,"candidateTokens":2260,"totalTokens":207336,"cachedTokens":200960,"reasoningTokens":3847,"cost":0.00430743}}
+{"type":"tool","timestamp":"2026-09-25T21:52:42.255Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:42.300Z","data":{"promptTokens":248,"candidateTokens":68,"totalTokens":207428,"cachedTokens":207104,"reasoningTokens":8,"cost":0.000704112}}
+{"type":"tool","timestamp":"2026-09-25T21:52:48.874Z","data":{"tool":"write","summary":"src/core/report/report-traceability.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:52:48.889Z","data":{"text":"Red as expected. Now implement the report module."}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:48.935Z","data":{"promptTokens":621,"candidateTokens":1554,"totalTokens":209602,"cachedTokens":207360,"reasoningTokens":67,"cost":0.00168783}}
+{"type":"tool","timestamp":"2026-09-25T21:52:53.113Z","data":{"tool":"edit","summary":"src/core/report/report-traceability.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:53.165Z","data":{"promptTokens":210,"candidateTokens":504,"totalTokens":210394,"cachedTokens":209408,"reasoningTokens":272,"cost":0.001125324}}
+{"type":"text","timestamp":"2026-09-25T21:52:55.909Z","data":{"text":"Now wire the report core."}}
+{"type":"tool","timestamp":"2026-09-25T21:52:55.920Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:55.961Z","data":{"promptTokens":233,"candidateTokens":172,"totalTokens":210651,"cachedTokens":210176,"reasoningTokens":70,"cost":0.000810678}}
+{"type":"tool","timestamp":"2026-09-25T21:52:59.484Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:52:59.543Z","data":{"promptTokens":234,"candidateTokens":325,"totalTokens":210991,"cachedTokens":210432,"reasoningTokens":0,"cost":0.000861396}}
+{"type":"tool","timestamp":"2026-09-25T21:53:03.096Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:03.136Z","data":{"promptTokens":190,"candidateTokens":210,"totalTokens":211339,"cachedTokens":210816,"reasoningTokens":123,"cost":0.000860748}}
+{"type":"tool","timestamp":"2026-09-25T21:53:05.541Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:05.579Z","data":{"promptTokens":154,"candidateTokens":108,"totalTokens":211462,"cachedTokens":211200,"reasoningTokens":0,"cost":0.0007215}}
+{"type":"tool","timestamp":"2026-09-25T21:53:08.895Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:08.943Z","data":{"promptTokens":149,"candidateTokens":243,"totalTokens":211881,"cachedTokens":211328,"reasoningTokens":161,"cost":0.000898734}}
+{"type":"tool","timestamp":"2026-09-25T21:53:12.544Z","data":{"tool":"edit","summary":"src/cli/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:12.588Z","data":{"promptTokens":184,"candidateTokens":190,"totalTokens":212275,"cachedTokens":211712,"reasoningTokens":189,"cost":0.000890136}}
+{"type":"tool","timestamp":"2026-09-25T21:53:16.868Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:53:16.869Z","data":{"text":"Now update show.ts."}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:16.915Z","data":{"promptTokens":194,"candidateTokens":293,"totalTokens":212940,"cachedTokens":212096,"reasoningTokens":357,"cost":0.001055388}}
+{"type":"tool","timestamp":"2026-09-25T21:53:19.858Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:19.904Z","data":{"promptTokens":219,"candidateTokens":127,"totalTokens":213226,"cachedTokens":212736,"reasoningTokens":144,"cost":0.000833658}}
+{"type":"tool","timestamp":"2026-09-25T21:53:24.080Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:24.129Z","data":{"promptTokens":249,"candidateTokens":279,"totalTokens":213796,"cachedTokens":212992,"reasoningTokens":276,"cost":0.001009326}}
+{"type":"tool","timestamp":"2026-09-25T21:53:30.840Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:30.899Z","data":{"promptTokens":179,"candidateTokens":880,"totalTokens":215479,"cachedTokens":213632,"reasoningTokens":788,"cost":0.001668546}}
+{"type":"tool","timestamp":"2026-09-25T21:53:33.539Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:33.587Z","data":{"promptTokens":198,"candidateTokens":142,"totalTokens":215766,"cachedTokens":215296,"reasoningTokens":130,"cost":0.000838788}}
+{"type":"tool","timestamp":"2026-09-25T21:53:35.533Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:35.583Z","data":{"promptTokens":229,"candidateTokens":119,"totalTokens":215900,"cachedTokens":215552,"reasoningTokens":0,"cost":0.000752406}}
+{"type":"tool","timestamp":"2026-09-25T21:53:37.920Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"text","timestamp":"2026-09-25T21:53:37.932Z","data":{"text":"Now add the formatter call in `formatSpecDetails` after the dependencies line."}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:37.970Z","data":{"promptTokens":235,"candidateTokens":191,"totalTokens":216106,"cachedTokens":215680,"reasoningTokens":0,"cost":0.00079689}}
+{"type":"text","timestamp":"2026-09-25T21:53:40.203Z","data":{"text":"Now run the task verify."}}
+{"type":"tool","timestamp":"2026-09-25T21:53:40.645Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:40.687Z","data":{"promptTokens":185,"candidateTokens":73,"totalTokens":216194,"cachedTokens":215936,"reasoningTokens":0,"cost":0.000719358}}
+{"type":"text","timestamp":"2026-09-25T21:53:43.585Z","data":{"text":"Task verify green. Now run the affected existing tests."}}
+{"type":"tool","timestamp":"2026-09-25T21:53:45.681Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:45.723Z","data":{"promptTokens":184,"candidateTokens":144,"totalTokens":216569,"cachedTokens":216192,"reasoningTokens":49,"cost":0.000791976}}
+{"type":"tool","timestamp":"2026-09-25T21:53:52.403Z","data":{"tool":"bash","summary":"cd . && wc -l src/core/report/repor"}}
+{"type":"tokens","timestamp":"2026-09-25T21:53:52.458Z","data":{"promptTokens":604,"candidateTokens":76,"totalTokens":217189,"cachedTokens":216448,"reasoningTokens":61,"cost":0.000822144}}
+{"type":"tool","timestamp":"2026-09-25T21:54:37.121Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:37.174Z","data":{"promptTokens":170,"candidateTokens":77,"totalTokens":217382,"cachedTokens":217088,"reasoningTokens":47,"cost":0.000751164}}
+{"type":"tool","timestamp":"2026-09-25T21:54:40.806Z","data":{"tool":"edit","summary":"src/core/report/report-traceability.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:40.851Z","data":{"promptTokens":868,"candidateTokens":172,"totalTokens":218688,"cachedTokens":217344,"reasoningTokens":304,"cost":0.001067832}}
+{"type":"tool","timestamp":"2026-09-25T21:54:43.731Z","data":{"tool":"edit","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:43.777Z","data":{"promptTokens":207,"candidateTokens":429,"totalTokens":219132,"cachedTokens":218496,"reasoningTokens":0,"cost":0.000943938}}
+{"type":"tool","timestamp":"2026-09-25T21:54:46.322Z","data":{"tool":"edit","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:46.368Z","data":{"promptTokens":139,"candidateTokens":240,"totalTokens":219387,"cachedTokens":219008,"reasoningTokens":0,"cost":0.000821874}}
+{"type":"tool","timestamp":"2026-09-25T21:54:49.099Z","data":{"tool":"bash","summary":"cd . && grep -n '\"lint\"\\|\"verify\"\\|"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:49.132Z","data":{"promptTokens":138,"candidateTokens":64,"totalTokens":219542,"cachedTokens":219264,"reasoningTokens":76,"cost":0.000762492}}
+{"type":"tool","timestamp":"2026-09-25T21:54:51.531Z","data":{"tool":"bash","summary":"cd . && pnpm lint 2>&1 | tail -30"}}
+{"type":"tokens","timestamp":"2026-09-25T21:54:51.572Z","data":{"promptTokens":259,"candidateTokens":76,"totalTokens":219727,"cachedTokens":219392,"reasoningTokens":0,"cost":0.000742626}}
+{"type":"tool","timestamp":"2026-09-25T21:55:40.370Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -50"}}
+{"type":"tokens","timestamp":"2026-09-25T21:55:40.423Z","data":{"promptTokens":137,"candidateTokens":77,"totalTokens":219919,"cachedTokens":219648,"reasoningTokens":57,"cost":0.000759894}}
+{"type":"tool","timestamp":"2026-09-25T21:55:45.462Z","data":{"tool":"bash","summary":"cd . && git diff --stat src/core/re"}}
+{"type":"text","timestamp":"2026-09-25T21:55:45.481Z","data":{"text":"Full verify passes. Let me review the final diff of my files."}}
+{"type":"tokens","timestamp":"2026-09-25T21:55:45.529Z","data":{"promptTokens":739,"candidateTokens":113,"totalTokens":221379,"cachedTokens":219904,"reasoningTokens":623,"cost":0.001212162}}
+{"type":"tool","timestamp":"2026-09-25T21:55:52.745Z","data":{"tool":"write","summary":"openspec/changes/081-traceability-scenarios/.run/results/8.md"}}
+{"type":"text","timestamp":"2026-09-25T21:55:52.770Z","data":{"text":"Both verifies pass. Writing the result file."}}
+{"type":"tokens","timestamp":"2026-09-25T21:55:52.812Z","data":{"promptTokens":165,"candidateTokens":787,"totalTokens":222903,"cachedTokens":221312,"reasoningTokens":639,"cost":0.001544286}}
+{"type":"text","timestamp":"2026-09-25T21:55:57.080Z","data":{"text":"Done. Summary of the work:\n\n**Implemented** `src/core/report/report-traceability.ts` (new, 147 lines) exposing `collectTraceabilityGaps` and `formatTraceability`, and wired it through:\n\n- `src/core/report/report.ts` — optional `MetricsReport.traceability`, collected when a capability is opted in, printed only when present.\n- `src/cli/report.ts` — `toStableMetrics` copies `traceability` only when present.\n- `src/core/status/show.ts` — optional `TaskDetail.scenarios`, an `attachTaskScenarios` helper that resolves task scope and builds the import graph only when a scope holds a test path, and a `formatTaskScenarios` beside `formatDependenciesAdded` printing the line right after `Dependencies added:`.\n- `tests/trace-report.test.ts` (new, 4 tests) covering both delta scenarios through `getMetricsReport`, the report command's JSON/text output, and `getSpecDetailsFromFolder` + `formatSpecDetails`, plus the nothing-opted-in absence assertions.\n\n**Verified**: `node --import tsx --test tests/trace-report.test.ts` passes (4/4) and the proposal's `pnpm verify` passes in full (typechecks, build, suite, lint). `tests/report-json.test.ts` and `fixture/report/expected.json` are unchanged and pass.\n\nResult written to `openspec/changes/081-traceability-scenarios/.run/results/8.md`.\n\nTouched: src/core/report/report-traceability.ts, src/core/report/report.ts, src/cli/report.ts, src/core/status/show.ts, tests/trace-report.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T21:55:57.123Z","data":{"promptTokens":199,"candidateTokens":367,"totalTokens":223452,"cachedTokens":222720,"reasoningTokens":166,"cost":0.00101781}}
+{"type":"exited","timestamp":"2026-09-25T21:55:57.270Z","data":{"exitCode":0,"pid":39431,"timedOut":false,"elapsedSeconds":328.8}}
+{"type":"verify_ran","timestamp":"2026-09-25T21:55:57.650Z","data":{"command":"node --import tsx --test tests/trace-report.test.ts","exitCode":0,"duration":0.27,"output":"▶ report traceability gaps\n  ✔ lists an untested scenario and an unclaimed function when pricing is opted in (27.487476ms)\n  ✔ leaves the report unchanged when no capability is opted in (6.708977ms)\n✔ report traceability gaps (35.019343ms)\n▶ show scenarios\n  ✔ prints both scenario pairs under a task whose scope holds the test (24.531949ms)\n  ✔ prints no scenario line for a task without a scenario test in scope (8.154523ms)\n✔ show scenarios (33.025178ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 239.458141\n"}}
+{"type":"measures","timestamp":"2026-09-25T21:56:42.836Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":3271,"repoFiles":1421,"repoLines":154774,"importFanIn":8,"proposalWords":1408,"taskWords":309,"deltaRequirements":21,"deltaScenarios":43,"changedFiles":5,"changedLines":478,"scopeHashes":{"src/cli/report.ts":{"before":"sha256:de422b58ee3240b13106c1e0d19df0fa0648971237c3c156d7484ab5273a504c","after":"sha256:f641d73ab199f1583598e61113cc0c623129fc620f518d666147f3de735e9442"},"src/core/report/report-traceability.ts":{"before":null,"after":"sha256:0a72fc2a2d9326b32c7376389c448ae13d79b31223119e7eb71a21b657292ab4"},"src/core/report/report.ts":{"before":"sha256:98f205fea48694468d981f9f8a9a859c85076ef3fbecbd4fa0726cedc173f374","after":"sha256:7eeac4bd7b3f358a892586bdf5c8a775c90af762242221c1f6894f1d2f57cb8f"},"src/core/status/show.ts":{"before":"sha256:8db5ac89e965748ff6a00242f47450c289807dc0b1c793b35fb05ccce811ab2e","after":"sha256:ec903950fb91fa5524a46ec84fdc53a39351da412dd784747ba812ad15dcc650"},"tests/trace-report.test.ts":{"before":null,"after":"sha256:39582b0c989317fb87a652a310066eed803c020f2ef96f63200f0047107f7e43"}}}}
+{"type":"done","timestamp":"2026-09-25T21:56:42.842Z","data":{"task":"8"}}
+{"type":"verify_ran","timestamp":"2026-09-25T22:01:35.220Z","data":{"command":"node --import tsx --test tests/trace-report.test.ts","exitCode":0,"duration":0.23,"output":"▶ report traceability gaps\n  ✔ lists an untested scenario and an unclaimed function when pricing is opted in (21.709076ms)\n  ✔ leaves the report unchanged when no capability is opted in (6.156502ms)\n✔ report traceability gaps (28.595468ms)\n▶ show scenarios\n  ✔ prints both scenario pairs under a task whose scope holds the test (19.483506ms)\n  ✔ prints no scenario line for a task without a scenario test in scope (7.16841ms)\n✔ show scenarios (26.953917ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 205.466896\n"}}
