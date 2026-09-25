@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d4d0561b02e2470d29d7f9cfdeca59594e2a3a50262f31bd96265b95cb0fbb9f"
+build_stamp: "6c52d18"
+project_commit: "6c52d18"
+exit_code: 0
+scope_files: {"src/core/foundation/config-traceability.ts":"sha256:b5c0e691e09b984d9ce40c4f1137e98f119b6492b43bb6f07d0ff20e5b08c4b2","tests/focused-config.test.ts":"sha256:122f445acc86c7ec7ed8030832d45114db779e5e25f46758d3d1d10724dee220"}
+---
+2026-09-25T22:08:51.868Z

@@ -28,7 +28,8 @@ export type HarnessEventType =
   | 'harness_retry'
   | 'recertification'
   | 'rejected'
-  | 'instructions_changed';
+  | 'instructions_changed'
+  | 'focused_ran';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -252,6 +253,25 @@ export interface InstructionsChangedEventData {
   readonly changed: string[];
 }
 
+/** How one focused scenario-test run ended. */
+export type FocusedRanOutcome = 'passed' | 'problem' | 'failed';
+
+/**
+ * Payload of a `focused_ran` event: the one focused scenario-test run the
+ * watcher makes after an agent exits. `scenarios` holds `<capability>: <name>`
+ * strings, `duration` is wall seconds, and `output` is the captured TAP text.
+ */
+export interface FocusedRanEventData {
+  readonly command: string;
+  readonly files: readonly string[];
+  readonly scenarios: readonly string[];
+  readonly outcome: FocusedRanOutcome;
+  readonly exitCode: number;
+  readonly duration: number;
+  readonly timedOut: boolean;
+  readonly output: string;
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -274,6 +294,7 @@ export interface OsqEventData {
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
   instructions_changed: InstructionsChangedEventData;
+  focused_ran: FocusedRanEventData;
 }
 
 /**

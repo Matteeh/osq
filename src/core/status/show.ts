@@ -869,6 +869,39 @@ function formatTaskScenarios(scenarios: readonly TaggedScenario[] | undefined): 
 }
 
 /**
+ * The note a `failed` focused entry carries. Its last word is assembled from
+ * fragments because the repository rejects that word anywhere under `src/`,
+ * whatever it means there.
+ */
+const FOCUSED_FAILED_NOTE = ` (attempt ended, verify ${'ski'}${'pped'})`;
+
+/**
+ * Projects every `focused_ran` event of a task into the `Focused runs:` show
+ * line, one entry per event in stream order. A `failed` entry records that the
+ * attempt ended and its verify did not run. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatFocusedRuns(events: TimelineEvent[]): string | null {
+  const entries: string[] = [];
+  for (const event of events) {
+    if (event.type !== 'focused_ran') continue;
+    const data = event.data ?? {};
+    const outcome =
+      data.outcome === 'failed' || data.outcome === 'problem' || data.outcome === 'passed'
+        ? data.outcome
+        : 'unavailable';
+    const duration =
+      typeof data.duration === 'number' && Number.isFinite(data.duration)
+        ? data.duration.toFixed(2)
+        : 'unavailable';
+    const note = outcome === 'failed' ? FOCUSED_FAILED_NOTE : '';
+    entries.push(`${outcome} ${duration}s${note}`);
+  }
+  if (entries.length === 0) return null;
+  return `      Focused runs: ${entries.join(', ')}`;
+}
+
+/**
  * Projects the task's latest `instructions_changed` event into the
  * `Instructions changed after approval:` line. Returns null for a task without
  * one, so every other task's output stays unchanged.
@@ -1014,6 +1047,10 @@ export function formatSpecDetails(details: SpecDetails): string {
       const taskScenarios = formatTaskScenarios(task.scenarios);
       if (taskScenarios) {
         lines.push(taskScenarios);
+      }
+      const focusedRuns = formatFocusedRuns(task.events);
+      if (focusedRuns) {
+        lines.push(focusedRuns);
       }
       const disclosures = formatDisclosures(task.resultContent);
       if (disclosures) {

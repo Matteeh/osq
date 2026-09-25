@@ -199,6 +199,7 @@ export default defineConfig({
   traceability: {
     capabilities: ['pricing'], // or 'all'
     mode: 'warn',              // or 'require'
+    focusedTests: 'node --test --test-reporter=tap {files}', // optional
   },
 });
 ```
@@ -242,6 +243,8 @@ The watcher sets `OSQ_CHANGE` to the absolute change folder for every verify, so
 For an opted-in capability, `osq lint` reports each scenario an ADDED or MODIFIED requirement holds that no scoped test names and that is not planned (`<capability>: no test names scenario "<name>"`), a `@scenario` tag naming a missing scenario (`<fn>: names a scenario the <capability> spec doesn't have: "<name>"`) or one no test covers (`<fn>: no test for "<name>" covers it`), a bad `@adr` tag (`<fn>: ADR <n> doesn't exist or isn't accepted`, `<fn>: ADR <n> doesn't apply to any capability it serves`), and a duplicate scenario name (`<capability>: two scenarios named "<name>"`). For every capability it also lists the tests naming a scenario a MODIFIED or REMOVED requirement changes and warns `<file> names changed scenario "<name>" but no task scopes it with tests.modify: true`. Every finding is a warning under `mode: 'warn'` and an error under `mode: 'require'`.
 
 When a capability is opted in, `osq report` prints a `Traceability:` section with `<capability>: <n> untested scenarios, <m> unclaimed functions` and `    untested: <name>` / `    unclaimed: <file>#<name>` lines, also carried in JSON under `traceability`. `osq show` prints `      Scenarios: <capability>: <name>; ...` under a task whose scoped tests name scenarios.
+
+Set the optional `traceability.focusedTests` to a command containing `{files}`, such as the reference `node --test --test-reporter=tap {files}`, to run a task's scenario tests before its full verify. When a task's resolved scope holds scenario test files naming opted-in scenarios, the watcher replaces `{files}` with every scenario test file in the repository that names one of those scenarios, each single-quoted and separated by spaces, and runs it through the verify's environment, `OSQ_CHANGE` included. The outcome is `passed` when the command succeeds, `failed` when the TAP output has a `not ok` line for a collected `Scenario: <name>`, and `problem` when it exits nonzero, times out, or cannot start and isn't `failed`. Only a `failed` outcome ends the attempt: the task dies with `verify_red` and its verify is skipped, so the next attempt receives the focused output; a `problem` or `passed` outcome goes on to the full verify, which alone decides the task. Each run appends one `focused_ran` event carrying the command, files, scenarios, outcome, exit code, duration, timeout state, and output. `osq show` prints `      Focused runs: <outcome> <duration>s, ...` under the task after its `Scenarios:` line, adding ` (attempt ended, verify skipped)` to each `failed` entry.
 
 ## What the watcher guarantees
 

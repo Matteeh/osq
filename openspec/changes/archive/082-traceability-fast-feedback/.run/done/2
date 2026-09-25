@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:249eb94e9c1d6f469578b5cb9f57e85cf5f815024de5390cf4ffbb11f879467e"
+build_stamp: "6c52d18"
+project_commit: "6c52d18"
+exit_code: 0
+scope_files: {"src/core/run/focused-tests.ts":"sha256:691ee69e5ef006bd1ac8a70f8c8e0da45a20b85e600b4e31687e997b672e4dd7","tests/focused-tests.test.ts":"sha256:247c8b57560e310f52b5d9f4a5e04fdcdf166d396b11b0e9bb5fb127feeb5c59"}
+---
+2026-09-25T22:12:40.814Z

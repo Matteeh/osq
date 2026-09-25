@@ -7,6 +7,7 @@ import { formatPreSpawnStart } from '../core/status/pre-spawn-words.js';
 import { readRetryContext } from './attempt.js';
 import { checkBlocked } from './blocked.js';
 import { checkDependencies } from './dependencies.js';
+import { checkFocusedTests } from './focused-verify.js';
 import type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
 
@@ -152,8 +153,8 @@ export async function checkMissingVerifyPaths(
 /**
  * The checks that run after the agent exits and its result is ensured, before
  * any verify: a stated `## Blocked` need fails the task first, then an added
- * denied package, then a verify naming a missing path is refused. Each keeps
- * its own dead marker.
+ * denied package, then a verify naming a missing path is refused, and last a
+ * failing focused scenario test ends the attempt. Each keeps its own dead marker.
  */
 export async function checkBlockedFirst(
   options: TaskVerifyOptions,
@@ -164,7 +165,9 @@ export async function checkBlockedFirst(
   if (blocked) return blocked;
   const denied = await checkDependencies(options, fail);
   if (denied) return denied;
-  return checkMissingVerifyPaths(projectRoot, taskData, fail);
+  const missing = await checkMissingVerifyPaths(projectRoot, taskData, fail);
+  if (missing) return missing;
+  return checkFocusedTests(options, fail);
 }
 
 /**

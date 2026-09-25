@@ -1,13 +1,15 @@
 /**
  * Scenario traceability. `capabilities` opts capabilities in, either every
  * capability with `'all'` or a list of names; `mode` turns each finding into a
- * warning or an error.
+ * warning or an error; `focusedTests` is an optional command with a `{files}`
+ * placeholder, left out of the resolved block when unset.
  */
 export type TraceabilityMode = 'warn' | 'require';
 
 export interface TraceabilityConfig {
   readonly capabilities: 'all' | readonly string[];
   readonly mode: TraceabilityMode;
+  readonly focusedTests?: string;
 }
 
 export const DEFAULT_TRACEABILITY_CONFIG: TraceabilityConfig = {
@@ -43,5 +45,15 @@ export function validateTraceabilityConfig(traceability: unknown): TraceabilityC
   if (!TRACEABILITY_MODES.includes(mode as TraceabilityMode)) {
     throw new Error('traceability.mode must be one of warn, require');
   }
-  return { capabilities, mode: mode as TraceabilityMode };
+  const focusedTests = record.focusedTests;
+  if (focusedTests !== undefined) {
+    if (typeof focusedTests !== 'string' || !focusedTests.includes('{files}')) {
+      throw new Error('traceability.focusedTests must be a command containing {files}');
+    }
+  }
+  return {
+    capabilities,
+    mode: mode as TraceabilityMode,
+    ...(focusedTests !== undefined ? { focusedTests } : {}),
+  };
 }
