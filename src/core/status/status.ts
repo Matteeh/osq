@@ -3,7 +3,9 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir, getRejectedMarkerPath } from './layout.js';
+import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { type SpecState, type TaskState, compareNumericPrefix, deriveSpecState } from './state.js';
+import { listPendingVerifications } from './verification.js';
 
 /**
  * A change retained under `rejected/`. Rejection is a terminal location, not a
@@ -22,6 +24,10 @@ export interface StatusOverview {
   rejected: RejectedSpecSummary[];
   archivedCount: number;
   archivedChangeFolders: number;
+  /** Next step for each active change, keyed by folder name. */
+  nextSteps?: Record<string, NextStep>;
+  /** Archived changes still awaiting a verification outcome. */
+  pendingVerifications?: Array<{ folderName: string; title: string; next: NextStep }>;
 }
 
 /** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
@@ -134,6 +140,18 @@ export async function getStatusOverview(
     specs.push(specState);
   }
 
+  const nextSteps: Record<string, NextStep> = {};
+  for (const folder of validFolders) {
+    nextSteps[folder] = await readNextStep(projectRoot, path.join(specsDir, folder), config);
+  }
+  const pendingVerifications = await Promise.all(
+    (await listPendingVerifications(archiveDir)).map(async (pending) => ({
+      folderName: pending.folderName,
+      title: pending.title,
+      next: await readNextStep(projectRoot, pending.folderPath, config),
+    })),
+  );
+
   let archivedCount = 0;
   try {
     const archiveEntries = await fs.readdir(archiveDir);
@@ -156,6 +174,8 @@ export async function getStatusOverview(
     rejected,
     archivedCount,
     archivedChangeFolders: archivedCount,
+    nextSteps,
+    pendingVerifications,
   };
 }
 
@@ -184,6 +204,10 @@ export function formatStatusOverview(overview: StatusOverview): string {
     for (const spec of overview.specs) {
       const approvalStatus = spec.approvedHash ? 'approved' : 'unapproved';
       lines.push(`${spec.folderName}: ${spec.title} [${spec.status}] (${approvalStatus})`);
+      const next = overview.nextSteps?.[spec.folderName];
+      if (next) {
+        lines.push(`  next: ${formatNextStep(next)}`);
+      }
       if (spec.tasks.length === 0) {
         lines.push('  (no tasks)');
       } else {
@@ -195,6 +219,14 @@ export function formatStatusOverview(overview: StatusOverview): string {
   }
 
   lines.push('');
+  const pending = overview.pendingVerifications;
+  if (pending && pending.length > 0) {
+    lines.push('Verification pending:');
+    for (const item of pending) {
+      lines.push(`${item.folderName}: ${item.title} — ${formatNextStep(item.next)}`);
+    }
+    lines.push('');
+  }
   lines.push(`Archived specs: ${overview.archivedCount}`);
 
   lines.push('');

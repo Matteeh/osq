@@ -6,8 +6,10 @@ import { formatDuration } from '../report/report.js';
 import { parseResultSections } from '../report/result-sections.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
+import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
+import { readVerification } from './verification.js';
 
 export interface TimelineEvent {
   taskNumber: string;
@@ -72,6 +74,26 @@ export interface PlanningSessionDetail {
   wallSeconds: number | null;
 }
 
+/** One recorded `check_ran` event of an archived change. */
+export interface VerificationCheckRow {
+  time: string;
+  command: string;
+  exitCode: number | null;
+}
+
+/** One recorded human `verification_recorded` outcome of an archived change. */
+export interface VerificationOutcomeRow {
+  time: string;
+  outcome: 'passed' | 'failed' | null;
+  note: string | null;
+}
+
+/** The change-level verification history of an archived change. */
+export interface VerificationHistory {
+  checks: VerificationCheckRow[];
+  outcomes: VerificationOutcomeRow[];
+}
+
 export interface SpecDetails {
   id: string;
   folderName: string;
@@ -94,6 +116,10 @@ export interface SpecDetails {
   planningSessions: PlanningSessionDetail[];
   recertifications: RecertificationDetail[];
   timeline: TimelineEvent[];
+  /** What the change needs next; absent for rejected changes. */
+  next?: NextStep;
+  /** Present only for an archived change that requires verification. */
+  verification?: VerificationHistory;
 }
 
 function matchesFolder(folderName: string, query: string): boolean {
@@ -302,7 +328,68 @@ export async function getSpecDetails(
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<SpecDetails> {
   const { folderPath, location } = await resolveSpecFolder(projectRoot, specIdOrPrefix, config);
-  return buildSpecDetails(projectRoot, folderPath, location, config);
+  const details = await buildSpecDetails(projectRoot, folderPath, location, config);
+  return withNextStep(projectRoot, folderPath, location, details, config);
+}
+
+/**
+ * Attach the change's next step for active and archived folders, and its
+ * verification history for an archived folder that requires verification. A
+ * rejected folder is returned unchanged, so no next step is invented for it.
+ */
+async function withNextStep(
+  projectRoot: string,
+  folderPath: string,
+  location: 'active' | 'archived' | 'rejected',
+  details: SpecDetails,
+  config: OsqConfig,
+): Promise<SpecDetails> {
+  if (location === 'rejected') return details;
+
+  const next = await readNextStep(projectRoot, folderPath, config);
+  if (location !== 'archived') return { ...details, next };
+
+  const verification = await readVerification(folderPath);
+  if (!verification.required) return { ...details, next };
+  return { ...details, next, verification: buildVerificationHistory(details.timeline) };
+}
+
+/** A recorded timestamp when it parses, else `unavailable`. */
+function showTime(value: string): string {
+  return value && !Number.isNaN(new Date(value).getTime()) ? value : 'unavailable';
+}
+
+/**
+ * Project the change-level `check_ran` and `verification_recorded` events of
+ * an archived change into the `Verification:` section rows. Missing optional
+ * values stay unavailable rather than being guessed.
+ */
+function buildVerificationHistory(timeline: TimelineEvent[]): VerificationHistory {
+  const checks: VerificationCheckRow[] = [];
+  const outcomes: VerificationOutcomeRow[] = [];
+  for (const event of timeline) {
+    const data = event.data ?? {};
+    if (event.type === 'check_ran') {
+      checks.push({
+        time: showTime(event.timestamp),
+        command:
+          typeof data.command === 'string' && data.command.trim() !== ''
+            ? data.command.trim()
+            : 'unavailable',
+        exitCode:
+          typeof data.exitCode === 'number' && Number.isFinite(data.exitCode)
+            ? data.exitCode
+            : null,
+      });
+    } else if (event.type === 'verification_recorded') {
+      outcomes.push({
+        time: showTime(event.timestamp),
+        outcome: data.outcome === 'passed' || data.outcome === 'failed' ? data.outcome : null,
+        note: typeof data.note === 'string' && data.note.trim() !== '' ? data.note.trim() : null,
+      });
+    }
+  }
+  return { checks, outcomes };
 }
 
 /**
@@ -710,6 +797,26 @@ function formatEventData(data?: Record<string, unknown>): string {
   return ` (${entries.join(', ')})`;
 }
 
+/**
+ * Render an archived change's verification history as the `Verification:`
+ * section: one line per `check_ran` with its time, command, and exit code, and
+ * one per `verification_recorded` with its time, outcome, and note.
+ */
+function formatVerificationHistory(history: VerificationHistory): string[] {
+  const lines = ['Verification:'];
+  for (const check of history.checks) {
+    const exit = check.exitCode === null ? 'unavailable' : String(check.exitCode);
+    lines.push(`  check_ran ${check.time}: ${check.command} (exit ${exit})`);
+  }
+  for (const outcome of history.outcomes) {
+    const note = outcome.note ?? 'none';
+    lines.push(
+      `  verification_recorded ${outcome.time}: ${outcome.outcome ?? 'unavailable'} (note: ${note})`,
+    );
+  }
+  return lines;
+}
+
 export function formatSpecDetails(details: SpecDetails): string {
   const lines: string[] = [];
 
@@ -719,6 +826,12 @@ export function formatSpecDetails(details: SpecDetails): string {
   lines.push(`Spec: ${details.folderName} (${details.id})`);
   lines.push(`Title: ${details.title}`);
   lines.push(`Status: [${details.status}]`);
+  if (details.next) {
+    lines.push(`Next: ${formatNextStep(details.next)}`);
+  }
+  if (details.verification) {
+    lines.push(...formatVerificationHistory(details.verification));
+  }
   lines.push(`Location: ${location}`);
   lines.push(`Approval: ${approval}`);
 

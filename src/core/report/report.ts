@@ -31,6 +31,11 @@ import {
 } from './record-estimates.js';
 import { type ReworkEntry, collectRework, formatRework } from './record-rework.js';
 import {
+  type VerificationCounts,
+  collectVerificationCounts,
+  formatVerificationCounts,
+} from './record-verification.js';
+import {
   asData,
   eventTimestampMs,
   observeAttempts,
@@ -193,6 +198,11 @@ export interface HistoryMetrics {
   readonly rework: readonly ReworkEntry[];
   /** Changes whose task result files hold a real executor disclosure. */
   readonly disclosures: readonly DisclosureEntry[];
+  /**
+   * After-landing verification counts by latest outcome. Absent when no
+   * archived change requires verification.
+   */
+  readonly verification?: VerificationCounts;
 }
 
 /**
@@ -1284,6 +1294,7 @@ export async function getMetricsReport(
   const rework = await collectRework(allSpecFolders);
   const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders, rework);
   const disclosures = await collectDisclosures(allSpecFolders);
+  const verification = await collectVerificationCounts(archivedFolders);
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
@@ -1367,6 +1378,7 @@ export async function getMetricsReport(
       },
       rework,
       disclosures,
+      ...(verification ? { verification } : {}),
     },
     coverage: {
       withEvents: withEventsCount,
@@ -1728,6 +1740,9 @@ export function formatMetricsReport(
 
   lines.push(...formatRework(report.history.rework ?? []));
   lines.push(...formatDisclosures(report.history.disclosures ?? []));
+  if (report.history.verification) {
+    lines.push(formatVerificationCounts(report.history.verification));
+  }
 
   const scopeSeries = report.history.sizes.scopeFileSeries;
   const legacySeries = scopeSeries.find((entry) => entry.resolver === 'legacy');

@@ -1376,3 +1376,47 @@ along with `harnessVersion` from the first line of `claude --version`.
 #### Scenario: Other harnesses unchanged
 - **WHEN** an adapter supplies no `harnessAuth`
 - **THEN** its `started` event carries no `harnessAuth`
+
+### Requirement: Archived verification requirement
+<!-- source: src/watcher/archiver.ts, src/core/spec/human-steps.ts, tests/verification-record.test.ts -->
+When an archived change's proposal has after-landing steps or a `check`
+command, its `archived` event SHALL carry `verification: { afterLanding, check
+}`, where `afterLanding` says whether after-landing steps exist and `check` is
+the command or null. Otherwise the event SHALL carry no `verification` key. The
+watcher SHALL archive exactly as before in both cases.
+
+#### Scenario: After-landing steps
+- **WHEN** a change whose `### After landing` lists a step is archived
+- **THEN** its `archived` event carries `verification: { afterLanding: true, check: null }`
+
+#### Scenario: No human steps
+- **WHEN** a change whose `## Human steps` reads `None` and has no `check` is archived
+- **THEN** its `archived` event carries only `archivePath`, as before
+
+### Requirement: Human verification events
+<!-- source: src/core/lifecycle/verification-record.ts, tests/verification-record.test.ts -->
+The CLI SHALL append `check_ran` events, with data `command`, `exitCode`,
+`duration`, `timedOut`, and `output`, and `verification_recorded` events, with
+data `outcome` (`passed` or `failed`) and `note` (text or null), only to an
+archived change's `.run/events/change.jsonl`. Their data types SHALL live in
+`src/core/lifecycle/verification-record.ts`, as the `rejected` event's shape
+lives in core.
+
+#### Scenario: Recorded outcome
+- **WHEN** a human records a failed outcome with a note
+- **THEN** the archived change's stream gains one `verification_recorded` event with `outcome: "failed"` and the note
+
+### Requirement: Import fan-in from the shared graph
+<!-- source: src/watcher/measures.ts, src/core/spec/import-graph.ts, tests/import-graph-build.test.ts, tests/measures.test.ts -->
+`countImportFanIn` SHALL count the `src/**/*.ts` files outside the scope that
+import a scoped file under `src/`, read from `buildImportGraph`. It SHALL match
+whole import specifiers, so an importer of `./codex-prompt.js` does not count
+toward `./codex.ts`.
+
+#### Scenario: Prefix-named sibling
+- **WHEN** `src/x.ts` imports `./codex-prompt.js` and scope is `src/codex.ts`
+- **THEN** `src/x.ts` does not count toward the fan-in
+
+#### Scenario: osq's own repository
+- **WHEN** fan-in is counted on this repository for a sample of `src/` files
+- **THEN** each count equals a search for whole import specifiers

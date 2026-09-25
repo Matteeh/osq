@@ -11,6 +11,7 @@ import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report/
 import { findSpecFolder } from '../core/spec/approve.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { getChangesDir } from '../core/status/layout.js';
+import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import type { QueuePlanSelection } from '../core/status/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
@@ -164,7 +165,8 @@ export async function planCommand(
   }
 
   if (!plannerSelection) {
-    await writePromptHandoff(folderPath, openingPrompt);
+    const nextStep = await readNextStep(cwd, folderPath, config);
+    await writePromptHandoff(folderPath, openingPrompt, formatNextStep(nextStep));
     return;
   }
 

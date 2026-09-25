@@ -125,11 +125,17 @@ export async function readBriefInput(briefOption?: string): Promise<string> {
 
 /**
  * Default handoff: persist the transient prompt beside the change and name the
- * exact change an available planning tool should pick up.
+ * exact change an available planning tool should pick up, with its next step.
  */
-export async function writePromptHandoff(folderPath: string, openingPrompt: string): Promise<void> {
+export async function writePromptHandoff(
+  folderPath: string,
+  openingPrompt: string,
+  nextStep: string,
+): Promise<void> {
   await fs.writeFile(path.join(folderPath, 'plan-prompt.md'), openingPrompt, 'utf8');
-  console.log(`${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)}`);
+  console.log(
+    `${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)} \u2014 next: ${nextStep}`,
+  );
 }
 
 /** Reject ordinary and queue mode combinations before any file is touched. */

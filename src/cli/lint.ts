@@ -4,6 +4,7 @@ import path from 'node:path';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { type Logger, createLogger } from '../core/foundation/logger.js';
 import { findSpecFolder } from '../core/spec/approve.js';
+import { buildImportGraph } from '../core/spec/import-graph.js';
 import {
   type LintJsonEntry,
   buildLintJson,
@@ -84,8 +85,13 @@ export async function lintCommand(
       : await listChangeFolders(specsDir);
 
   const entries: LintCommandEntry[] = [];
+  const importGraph =
+    folders.length > 0 ? await buildImportGraph(cwd, { skip: [config.paths.openspecRoot] }) : null;
   for (const folder of folders) {
-    const result = await lintChangeFolder(cwd, folder, config, logger ? { logger } : {});
+    const result = await lintChangeFolder(cwd, folder, config, {
+      ...(logger ? { logger } : {}),
+      ...(importGraph ? { importGraph } : {}),
+    });
     entries.push({ folder, result });
     if (logger) {
       printChangeFindings(logger, path.basename(folder), result);

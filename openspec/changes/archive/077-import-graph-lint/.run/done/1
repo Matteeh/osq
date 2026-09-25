@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f9d62caa489533ceed5c4ab5b5803ffe033620ff78121da97fea301d2576d3e8"
+build_stamp: "a1402d2"
+project_commit: "a1402d2"
+exit_code: 0
+scope_files: {"src/core/spec/import-graph.ts":"sha256:f1316f6aa81114875c6832864b39c70b9289302c76f5dd8e9893e2e8778186b3","src/watcher/measures.ts":"sha256:0188a70f5a7fd256bddec2df3087927fa66cdbfcf70c8e5bc0200041dadfedbb","tests/import-graph-build.test.ts":"sha256:ac767eff2043bf4ecc29dc1686b94a598fbf8d6111a011389801c1738572451a"}
+---
+2026-09-25T06:18:08.341Z

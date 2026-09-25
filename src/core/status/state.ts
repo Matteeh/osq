@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 /* biome-ignore format: single line keeps this file inside the 250-line source budget */ import { type SpecData, parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
+import { isDependencyDone, listDir } from './dependency-readiness.js';
 import * as layout from './layout.js';
 export type TaskStatus = 'pending' | 'running' | 'done' | 'dead' | 'regressed';
 export interface TaskState {
@@ -148,27 +149,6 @@ export function deriveSpecState(
     nextTask,
     changeRegressed,
   };
-}
-async function listDir(dir: string): Promise<string[]> {
-  return fs.readdir(dir).catch(() => []);
-}
-async function findFolder(parent: string, prefix: string): Promise<string | null> {
-  const entries = await listDir(parent);
-  return entries.find((entry) => entry === prefix || entry.startsWith(`${prefix}-`)) ?? null;
-}
-async function isDependencyDone(changesDir: string, dependency: string): Promise<boolean> {
-  const padded = dependency.padStart(3, '0');
-  if (await findFolder(path.join(changesDir, 'archive'), padded)) return true;
-  if (await findFolder(path.join(changesDir, 'rejected'), padded)) return false;
-  const active = await findFolder(changesDir, padded);
-  if (!active) return false;
-  const dependencyFolder = path.join(changesDir, active);
-  const taskFiles = (await listDir(path.join(dependencyFolder, 'tasks'))).filter((entry) =>
-    entry.endsWith('.md'),
-  );
-  if (taskFiles.length === 0) return false;
-  const done = new Set(await listDir(path.join(dependencyFolder, '.run', 'done')));
-  return taskFiles.every((entry) => done.has(entry.replace(/\.md$/, '')));
 }
 async function resolveUnmetDependencies(
   projectRoot: string,

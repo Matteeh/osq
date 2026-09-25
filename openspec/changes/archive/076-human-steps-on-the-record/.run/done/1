@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0ba2c0e6627d0d7b830697e70ed1fc48c515554c3fb49a3175972add31dfd0e8"
+build_stamp: "ee1b12a"
+project_commit: "a1402d2"
+exit_code: 0
+scope_files: {"src/core/spec/human-steps.ts":"sha256:436a10d6b851a96c196be0789e28c26d760dfc258fcbbd4542b2d09c9ec5faed","src/core/status/next-step.ts":"sha256:63cba48fd6863ede9c4a7972673ea046479688c6cd6b4fef675dff38941b9cae","src/core/status/status.ts":"sha256:954f58e892f9d2f48f73e6fd2010699e0ecddd7caaebd721208d3cd31978c3c4","src/core/status/verification.ts":"sha256:fedf44bbbcf8970e68521c41050a2f3ca2a1e7265b077ff04403e008abffd74e","tests/next-step.test.ts":"sha256:90cdda4097e0f026a35d569958246c21d290cee8cabcd92d1a67f4c0c10a528e"}
+---
+2026-09-24T22:04:10.054Z

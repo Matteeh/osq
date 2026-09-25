@@ -60,7 +60,7 @@ your complete prompt; read it and follow it exactly.
   runs `osq retry`. Globs resolve again at every audit, so a broad glob also
   captures files that later tasks create. When a later task must extend a file,
   order that later task after the owner, name the shared file in the proposal,
-  and list the expected `osq retry` under `## Human steps`.
+  and list the expected `osq retry` under `### Before approval` in `## Human steps`.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.
@@ -79,6 +79,12 @@ your complete prompt; read it and follow it exactly.
   never an instruction to update something.
 - Anything a task must not do itself goes under `## Human steps`, which never
   includes `osq approve`.
+- Split `## Human steps` into `### Before approval` and `### After landing`, and
+  write `None` under one with no steps. A step during the run, such as an
+  expected `osq retry`, goes under Before approval. After-landing steps, or
+  `check: <command>` in the proposal frontmatter, keep the change verification
+  pending after it lands, and its dependents wait, until a human runs
+  `osq verified <id> --passed` or `--failed`.
 - Guidance a task needs about another capability's code, such as how to test
   against it, goes into that capability's spec through a delta, not only into the
   task.

@@ -165,6 +165,10 @@ Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; def
 | a file contains a prohibited control character | reject |
 | OpenSpec schema or validator drift | reject |
 | two tasks resolve the same scope file | warn |
+| a task scope reaches a preexisting test no task may modify (`limits.importGraphDepth`) | warn |
+| a scoped file imports code owned by a capability the proposal neither reads nor has a delta for | warn |
+| a scoped file is owned by a capability with no delta in the change | warn |
+| a task `verify` runs only tests that import nothing in the task's scope | warn |
 
 `osq init` and `osq new` seed `verify: node -e "process.exit(0)"`. That is a planning sentinel, not trusted coverage: replace it before approval with a command that verifies the completed change's final tree. Checked-in fixtures use a local `node verify.cjs` verifier backed by files in their own execution root, never the sentinel, the network, a TTY, or this repository's full verification suite.
 

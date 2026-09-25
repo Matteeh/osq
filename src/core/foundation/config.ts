@@ -27,6 +27,10 @@ export interface OsqLimits {
   readonly maxFeatureWrites: number;
   readonly maxContractTables: number;
   readonly maxAcceptanceLines: number;
+  /** Import levels the frozen-test reach warning follows. */
+  readonly importGraphDepth: number;
+  /** The most tests or files one import-graph warning lists. */
+  readonly maxListedImporters: number;
 }
 
 export interface OsqPaths {
@@ -110,6 +114,8 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxFeatureWrites: 2,
     maxContractTables: 1,
     maxAcceptanceLines: 7,
+    importGraphDepth: 2,
+    maxListedImporters: 8,
   },
   paths: {
     features: 'openspec/specs',

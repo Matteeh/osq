@@ -6,6 +6,7 @@ import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
 import { readLivingCapabilityNames, resemblingCapability } from './digest-capability.js';
 import { type ApprovalFlagTask, buildApprovalFlags } from './digest-flags.js';
+import { parseHumanSteps } from './human-steps.js';
 import {
   type VerifyStarts,
   extractSection,
@@ -52,6 +53,7 @@ export interface ApprovalDigest {
   readonly tasks: readonly ApprovalDigestTask[];
   readonly capabilities: readonly ApprovalDigestCapability[];
   readonly humanSteps: string;
+  readonly beforeApproval: string;
   readonly flags: readonly ApprovalFlag[];
 }
 
@@ -155,6 +157,7 @@ export async function buildApprovalDigest(
   const content = resolvedDoc ? await fs.readFile(resolvedDoc.path, 'utf8') : '';
   const spec = parseSpecMd(content);
   const body = resolvedDoc ? parseFrontmatter(content).body : '';
+  const humanSteps = parseHumanSteps(body);
   const tasks = await resolveTasks(projectRoot, changeFolder);
   const changeCapabilities = await readCapabilities(changeFolder);
   const living = await readLivingCapabilityNames(projectRoot, config.paths.openspecRoot);
@@ -199,39 +202,12 @@ export async function buildApprovalDigest(
     }),
     capabilities,
     humanSteps: extractSection(body, 'Human steps'),
+    beforeApproval: humanSteps.beforeApproval,
     flags,
   };
 }
 
-/** Render the digest body, without flags. */
-export function formatApprovalDigest(digest: ApprovalDigest): string {
-  const lines: string[] = [`Change: ${digest.change}`];
-  if (digest.goal) lines.push(`Goal: ${digest.goal}`);
-  lines.push('Tasks:');
-  for (const task of digest.tasks) {
-    const suffix = task.scopeFiles === 1 ? 'scope file' : 'scope files';
-    lines.push(`  ${task.number}. ${task.title} (${task.scopeFiles} ${suffix})`);
-    if (task.testsModify) {
-      const tests = task.existingTests.length > 0 ? task.existingTests.join(', ') : '(none)';
-      lines.push(`     tests.modify: existing tests in scope: ${tests}`);
-    }
-  }
-  lines.push('Capabilities:');
-  if (digest.capabilities.length === 0) lines.push('  (none)');
-  for (const capability of digest.capabilities) {
-    const creation = capability.creates ? ' (new capability)' : '';
-    lines.push(`  ${capability.name}${creation}:`);
-    for (const kind of ['added', 'modified', 'removed'] as const) {
-      const names = capability[kind];
-      lines.push(`    ${kind}: ${names.length > 0 ? names.join(', ') : '(none)'}`);
-    }
-  }
-  if (digest.humanSteps) {
-    lines.push('Human steps:');
-    for (const line of digest.humanSteps.split('\n')) lines.push(`  ${line.trim()}`);
-  }
-  return lines.join('\n');
-}
+export { formatApprovalDigest } from './digest-format.js';
 
 /** One `Flag: <label> — <excerpt>` line per flag. */
 export function formatApprovalFlags(flags: readonly ApprovalFlag[]): string[] {

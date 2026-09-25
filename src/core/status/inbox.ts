@@ -6,7 +6,14 @@ import { parseSpecMd, resolveChangeDoc } from '../spec/parser.js';
 import { type SpecState, compareNumericPrefix } from './state.js';
 import type { StatusOverview } from './status.js';
 export { formatInboxText } from './inbox-text.js';
-export type NeedsYouKind = 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed';
+export type NeedsYouKind =
+  | 'planning'
+  | 'approval'
+  | 'task-dead'
+  | 'task-regressed'
+  | 'change-regressed'
+  | 'verification-pending'
+  | 'verification-failed';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;
@@ -21,6 +28,8 @@ export interface NeedsYouItem {
   readonly task: InboxTaskRef | null;
   readonly command: string;
   readonly stuck?: { readonly fingerprint: string };
+  /** Present only when an approval item's change has steps before approval. */
+  readonly beforeApproval?: true;
 }
 export interface RunningItem {
   readonly change: InboxChangeRef;
@@ -68,7 +77,21 @@ export function projectNeedsYou(overview: StatusOverview): NeedsYouItem[] {
   for (const spec of overview.specs) {
     const change = changeRef(spec);
     if (spec.approvedHash === null && spec.hasProposal !== false) {
-      items.push({ kind: 'approval', change, task: null, command: `osq approve ${spec.id}` });
+      const next = overview.nextSteps?.[spec.folderName];
+      const command = next?.command ?? `osq approve ${spec.id}`;
+      if (next?.state === 'unplanned') {
+        items.push({ kind: 'planning', change, task: null, command });
+      } else {
+        const beforeApproval =
+          next?.state === 'ready-for-approval' && next.detail !== null ? true : undefined;
+        items.push({
+          kind: 'approval',
+          change,
+          task: null,
+          command,
+          ...(beforeApproval ? { beforeApproval } : {}),
+        });
+      }
     }
     if (spec.changeRegressed) {
       items.push({

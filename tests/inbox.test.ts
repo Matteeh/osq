@@ -139,7 +139,7 @@ describe('inbox needs-you projection', () => {
 
     assert.deepEqual(
       items.map((item) => item.kind),
-      ['approval', 'task-dead', 'task-dead', 'task-regressed', 'change-regressed'],
+      ['planning', 'task-dead', 'task-dead', 'task-regressed', 'change-regressed'],
     );
     assert.deepEqual(
       items.map((item) => item.change.id),
@@ -148,7 +148,7 @@ describe('inbox needs-you projection', () => {
     assert.deepEqual(
       items.map((item) => item.command),
       [
-        'osq approve 001',
+        'osq lint 001',
         'osq retry 002 1',
         'osq retry 002 2',
         'osq retry 003 1',

@@ -5,7 +5,15 @@ const REJECT_HINT = '--reason <text>';
 
 function needsYouLine(item: NeedsYouItem): string {
   const head = `  ${item.change.id}: ${item.change.title}`;
-  if (item.kind === 'approval') return `${head} — ${item.command}`;
+  if (item.kind === 'planning') return `${head} — unplanned — ${item.command}`;
+  if (item.kind === 'verification-pending')
+    return `${head} — verification pending — ${item.command}`;
+  if (item.kind === 'verification-failed') return `${head} — verification failed — ${item.command}`;
+  if (item.kind === 'approval') {
+    return item.beforeApproval
+      ? `${head} — do the steps before approval first — ${item.command}`
+      : `${head} — ${item.command}`;
+  }
   if (item.kind === 'change-regressed') return `${head} — change regressed — ${item.command}`;
   const task = item.task as InboxTaskRef;
   const row = `${head} — task ${task.number}: ${task.title}`;

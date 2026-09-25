@@ -7,6 +7,8 @@ import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.j
 import { compareNumericPrefix } from '../status/state.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { isExcludedChangePath } from './hasher.js';
+import { collectImpactFindings } from './impact-lint.js';
+import { type ImportGraph, buildImportGraph } from './import-graph.js';
 import {
   type LintFinding,
   LintFindingSet,
@@ -374,6 +376,8 @@ export interface LintOptions {
   readonly logger?: LintLogger;
   /** The change folder being linted, used to attribute OpenSpec issues. */
   readonly changeFolder?: string;
+  /** A graph built once per lint run; built here when absent. */
+  readonly importGraph?: ImportGraph;
 }
 
 export interface OpenSpecFindings {
@@ -1262,6 +1266,29 @@ export async function lintChangeFolder(
       { file: taskRepoPathFor(projectRoot, tasksDir, uncreatable.taskNumber) },
       `Task in ${uncreatable.taskNumber}.md verify names ${uncreatable.path}, which no task in the change can create`,
     );
+  }
+
+  // Check: import-graph impact warnings never fail the change. The graph is
+  // built once per lint run by the CLI and passed through `LintOptions`.
+  const importGraph =
+    options.importGraph ??
+    (await buildImportGraph(projectRoot, { skip: [config.paths.openspecRoot] }));
+  for (const finding of await collectImpactFindings({
+    projectRoot,
+    folderPath,
+    config,
+    proposalPath: docRepoPath,
+    reads: spec.features.reads,
+    tasks: resolvedTaskScopes.map((scope) => ({
+      taskNumber: scope.taskNumber,
+      taskPath: scope.taskPath,
+      existingPaths: scope.existingPaths,
+      testsModify: scope.task.testsModify,
+      verify: scope.task.verify,
+    })),
+    importGraph,
+  })) {
+    findings.addOwn(finding);
   }
 
   // Check: pinned OpenSpec validator and strict validation. Runs before the

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { approveCommand } from './approve.js';
+import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
 import { inboxCommand } from './inbox.js';
@@ -33,7 +34,6 @@ function parseRejectReason(value: string): string {
   }
   return value;
 }
-
 export function createProgram(version?: string): Command {
   const program = new Command();
   // Keep root options (notably `--json`) from shadowing the identically named
@@ -227,6 +227,7 @@ export function createProgram(version?: string): Command {
       }
     });
 
+  registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
     const raw = argv || process.argv;

@@ -151,6 +151,7 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         })),
       },
       scopeRegressions: { ...report.history.scopeRegressions },
+      ...(report.history.verification ? { verification: { ...report.history.verification } } : {}),
       ...((report.history.rework ?? []).length > 0
         ? {
             rework: (report.history.rework ?? []).map((entry) => ({
