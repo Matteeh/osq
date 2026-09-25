@@ -96,6 +96,7 @@ describe('report scope-regression history', () => {
       verificationPassedAtDetection: 0,
       verificationFailedAtDetection: 0,
       recertifiedByHuman: 0,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 0,
     });
     for (const value of Object.values(report.history.scopeRegressions)) {
@@ -183,6 +184,7 @@ describe('report scope-regression history', () => {
       verificationPassedAtDetection: 1,
       verificationFailedAtDetection: 1,
       recertifiedByHuman: 1,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 1,
     });
   });
@@ -218,6 +220,7 @@ describe('report scope-regression history', () => {
       verificationPassedAtDetection: 1,
       verificationFailedAtDetection: 1,
       recertifiedByHuman: 1,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 1,
     });
   });
@@ -279,6 +282,7 @@ describe('report scope-regression history', () => {
       verificationPassedAtDetection: 0,
       verificationFailedAtDetection: 1,
       recertifiedByHuman: 1,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 1,
     });
   });

@@ -17,6 +17,10 @@ function needsYouLine(item: NeedsYouItem): string {
   if (item.kind === 'change-regressed') return `${head} — change regressed — ${item.command}`;
   const task = item.task as InboxTaskRef;
   const row = `${head} — task ${task.number}: ${task.title}`;
+  if (item.blocked) {
+    const need = item.blocked.need.replace(/\s+/g, ' ');
+    return `${row} — blocked: ${need} — reject, then osq plan --next --replan — ${item.command}`;
+  }
   if (!item.stuck) return `${row} — ${item.command}`;
   return `${row} — stuck: same failure twice; amend the spec or osq reject ${item.change.id} ${REJECT_HINT} — ${item.command}`;
 }

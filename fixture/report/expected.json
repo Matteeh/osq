@@ -269,6 +269,7 @@
     },
     "scopeRegressions": {
       "detected": 0,
+      "recertifiedAutomatically": 0,
       "recertifiedByHuman": 0,
       "requeuedForAgent": 0,
       "verificationFailedAtDetection": 0,

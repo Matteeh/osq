@@ -179,6 +179,7 @@ export interface ScopeRegressionHistory {
   readonly verificationPassedAtDetection: number;
   readonly verificationFailedAtDetection: number;
   readonly recertifiedByHuman: number;
+  readonly recertifiedAutomatically: number;
   readonly requeuedForAgent: number;
 }
 
@@ -997,6 +998,7 @@ export async function getMetricsReport(
   let scopeVerificationPassed = 0;
   let scopeVerificationFailed = 0;
   let scopeRecertifiedByHuman = 0;
+  let scopeRecertifiedAutomatically = 0;
   let scopeRequeuedForAgent = 0;
 
   let withEventsCount = 0;
@@ -1051,6 +1053,7 @@ export async function getMetricsReport(
     scopeVerificationPassed += observation.scopeVerificationPassed;
     scopeVerificationFailed += observation.scopeVerificationFailed;
     scopeRecertifiedByHuman += observation.scopeRecertifiedByHuman;
+    scopeRecertifiedAutomatically += observation.scopeRecertifiedAutomatically;
     scopeRequeuedForAgent += observation.scopeRequeuedForAgent;
 
     attemptsByTask[task.id] = taskAttempts;
@@ -1374,6 +1377,7 @@ export async function getMetricsReport(
         verificationPassedAtDetection: scopeVerificationPassed,
         verificationFailedAtDetection: scopeVerificationFailed,
         recertifiedByHuman: scopeRecertifiedByHuman,
+        recertifiedAutomatically: scopeRecertifiedAutomatically,
         requeuedForAgent: scopeRequeuedForAgent,
       },
       rework,
@@ -1736,6 +1740,9 @@ export function formatMetricsReport(
     `    Verification failed at detection: ${report.history.scopeRegressions.verificationFailedAtDetection}`,
   );
   lines.push(`    Recertified by human: ${report.history.scopeRegressions.recertifiedByHuman}`);
+  lines.push(
+    `    Recertified automatically: ${report.history.scopeRegressions.recertifiedAutomatically}`,
+  );
   lines.push(`    Requeued for agent: ${report.history.scopeRegressions.requeuedForAgent}`);
 
   lines.push(...formatRework(report.history.rework ?? []));

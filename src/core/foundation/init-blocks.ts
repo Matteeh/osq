@@ -9,7 +9,7 @@ export const OSQ_END_MARKER = '<!-- OSQ:END -->';
  */
 export const EXECUTOR_STEPS: readonly string[] = [
   '1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.',
-  '2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.',
+  "2. Can't finish within your task's `scope`, or too big for one pass? Write what you need under `## Blocked` in `.run/results/<n>.md`, and exit without code.",
   "3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.",
   '4. Tests for each acceptance line before implementing.',
   "5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.",
@@ -31,6 +31,10 @@ export const RESULT_HEADINGS: ReadonlyArray<{ heading: string; purpose: string }
   {
     heading: '## Outside scope',
     purpose: 'for the human: what you found broken outside your scope and left alone.',
+  },
+  {
+    heading: '## Blocked',
+    purpose: 'for the human: what you need before this task can be finished within its scope.',
   },
   { heading: '## Next', purpose: 'for unfinished work, the acceptance line to pick up next.' },
 ];
@@ -141,11 +145,12 @@ your complete prompt; read it and follow it exactly.
   verify with existing tests. \`any\` is only for a task that can honestly start
   either way.
 - A file belongs to one task. Before each later task, the watcher re-hashes the
-  resolved \`scope\` of every done task; any change halts the change until a human
-  runs \`osq retry\`. Globs resolve again at every audit, so a broad glob also
-  captures files that later tasks create. When a later task must extend a file,
-  order that later task after the owner, name the shared file in the proposal,
-  and list the expected \`osq retry\` under \`### Before approval\` in \`## Human steps\`.
+  resolved \`scope\` of every done task. When a later task must extend a file,
+  order that later task after the owner, put the file in its \`scope\` too, and
+  name the shared file in the proposal; the watcher then recertifies the owner
+  by itself when the owner's \`verify\` still passes. Any other change to a done
+  task's files halts the change until a human runs \`osq retry\`. Globs resolve again
+  at every audit, so a broad glob also captures files that later tasks create.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.

@@ -283,6 +283,12 @@ export async function runWatcherCycle(
           eligibleTaskNumbers: earlier,
           verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
         });
+        for (const recertified of audit.recertified) {
+          const paths = audit.recertifiedPaths[recertified] ?? [];
+          logger?.info(
+            `${tag('↻', '[recertified]')} task ${recertified} recertified automatically (${paths.join(', ') || 'no differing paths'})`,
+          );
+        }
         if (audit.stale.length > 0) {
           const staleNumbers = audit.stale
             .map((stale) => stale.taskNumber)

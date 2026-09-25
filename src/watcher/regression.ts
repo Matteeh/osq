@@ -15,16 +15,11 @@ import {
 } from '../core/run/scope-hash.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import { compareNumericPrefix } from '../core/status/state.js';
-import { resolveProjectCommit } from './build-project.js';
-import { resolveBuildInfo } from './build.js';
-import {
-  type DoneMarkerMetadata,
-  type RunTaskResult,
-  recordRegressedEvent,
-  writeRegressedMarker,
-} from './outcome.js';
+import { autoRecertify } from './auto-recertify.js';
+import { type RunTaskResult, recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
 
+export { buildDoneMetadata } from './done-metadata.js';
 export { computeTaskScopeHash } from '../core/run/scope-hash.js';
 export type { ScopeHashResult } from '../core/run/scope-hash.js';
 
@@ -48,14 +43,20 @@ export interface ScopeAuditOptions {
 
 export interface ScopeAuditResult {
   stale: StaleTaskAudit[];
+  /** Task numbers automatically recertified in this audit, numerically ordered. */
+  recertified: string[];
+  /** Differing display paths per recertified task number, for logging. */
+  recertifiedPaths: Record<string, string[]>;
 }
 
 /**
  * Pre-lock scope recertification audit. Compares every eligible automated done
  * marker's recorded resolver-aware scope hash and version against the current
  * tree in one pass, verifies each stale task under the configured timeout, and
- * records one regression marker and typed event per stale task. Already-active
- * regressions are reported without re-verification or duplicate writes.
+ * records one regression marker and typed event per stale task. A stale task a
+ * later in-scope task alone carried is recertified automatically instead.
+ * Already-active regressions are reported without re-verification or duplicate
+ * writes.
  */
 export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
   const { projectRoot, specFolderPath, eligibleTaskNumbers, verifyTimeoutSeconds } = options;
@@ -78,6 +79,8 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
   }
 
   const stale: StaleTaskAudit[] = [];
+  const recertified: string[] = [];
+  const recertifiedPaths: Record<string, string[]> = {};
   for (const taskNumber of [...new Set(eligibleTaskNumbers)].sort(compareNumericPrefix)) {
     const recorded = doneInfo.get(taskNumber);
     if (!recorded) continue;
@@ -134,6 +137,25 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       verificationPassed: gate?.passed ?? false,
       alreadyActive: false,
     };
+    if (gate?.passed === true) {
+      const qualified = await autoRecertify({
+        projectRoot,
+        specFolderPath,
+        runDir,
+        taskNumber,
+        differing,
+        recorded,
+        current,
+        verifyCommand: taskData.verify,
+        verify: gate,
+        attribution: base.attribution,
+      });
+      if (qualified) {
+        recertified.push(taskNumber);
+        recertifiedPaths[taskNumber] = base.differingPaths;
+        continue;
+      }
+    }
     if (gate) {
       const marker = buildScopeRegressionMarker(audit).replace(
         '\n---\n',
@@ -158,7 +180,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
     }
     stale.push(audit);
   }
-  return { stale };
+  return { stale, recertified, recertifiedPaths };
 }
 
 async function eligibleEarlierTasks(runDir: string, currentTask: number): Promise<string[]> {
@@ -193,26 +215,6 @@ export async function checkDoneTasksScopeHashes(
         currentHash: first.currentHash,
       }
     : null;
-}
-
-/** Resolve the metadata written to the done marker after a passing task. */
-export async function buildDoneMetadata(
-  projectRoot: string,
-  scope: string[],
-): Promise<DoneMarkerMetadata> {
-  const [scopeHash, buildInfo, projectCommit] = await Promise.all([
-    computeTaskScopeHash(projectRoot, scope),
-    resolveBuildInfo(),
-    resolveProjectCommit(projectRoot),
-  ]);
-  return {
-    scopeHash: scopeHash.hash,
-    buildStamp: buildInfo.commit,
-    projectCommit,
-    exitCode: 0,
-    fileHashes: scopeHash.fileHashes,
-    scopeResolver: SCOPE_RESOLVER_VERSION,
-  };
 }
 
 /**

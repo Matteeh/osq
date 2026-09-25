@@ -92,6 +92,7 @@ describe('parseResultSections', () => {
       deviated: null,
       missingContext: null,
       outsideScope: null,
+      blocked: null,
       next: null,
       touched: null,
     });

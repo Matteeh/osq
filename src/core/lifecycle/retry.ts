@@ -1,18 +1,17 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import YAML from 'yaml';
 import type { OsqConfig } from '../foundation/config.js';
 import {
   type ScopePathAttribution,
   computeTaskScopeHash,
   readDoneMarker,
 } from '../run/scope-hash.js';
-import { SCOPE_RESOLVER_VERSION } from '../run/scope.js';
 import { runVerificationCommand } from '../run/verification.js';
 import { findSpecFolder } from '../spec/approve.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { getChangeRunDir, getChangesDir } from '../status/layout.js';
+import { refreshRecertifiedDoneMarker } from './recertify.js';
 import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
 // Retry renames active failure markers into attempt-suffixed history; a numeric
@@ -183,25 +182,7 @@ export async function retrySpec(
       ...(recertification === 'passed' ? {} : { attempt: ordinal + 1, reason: SCOPE_REGRESSION }),
     };
     if (recertification === 'passed') {
-      const { data, body } = parseFrontmatter(
-        await fs.readFile(path.join(runDir, 'done', rawTarget), 'utf8'),
-      );
-      const merged: Record<string, unknown> = { ...data };
-      if (typeof merged.original_scope_hash !== 'string' || !merged.original_scope_hash) {
-        merged.original_scope_hash = done.scopeHash;
-      }
-      merged.scope_hash = current.hash;
-      merged.scope_files = current.fileHashes;
-      merged.scope_resolver = SCOPE_RESOLVER_VERSION;
-      merged.recertified_at = new Date().toISOString();
-      const count = data.recertification_count;
-      merged.recertification_count =
-        (typeof count === 'number' && Number.isInteger(count) && count > 0 ? count : 0) + 1;
-      await fs.writeFile(
-        path.join(runDir, 'done', rawTarget),
-        `---\n${YAML.stringify(merged)}---\n${body}`,
-        'utf8',
-      );
+      await refreshRecertifiedDoneMarker(runDir, rawTarget, done.scopeHash, current);
     }
   }
 

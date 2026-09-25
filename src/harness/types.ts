@@ -221,6 +221,8 @@ export interface RecertificationEventData {
   readonly attempt?: number;
   /** Failure reason carried to the next executor; present only for a requeue. */
   readonly reason?: string;
+  /** True only when the watcher recertified automatically; absent for a human. */
+  readonly automatic?: true;
 }
 
 /**

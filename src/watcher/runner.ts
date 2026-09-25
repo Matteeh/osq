@@ -26,7 +26,7 @@ import {
 } from './outcome.js';
 import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
-import { checkMissingVerifyPaths, runPreSpawnVerify, verifyRedFailure } from './task-verify.js';
+import { checkBlockedFirst, runPreSpawnVerify, verifyRedFailure } from './task-verify.js';
 import { captureTestGate, findUndeclaredTestChanges, runVerificationGate } from './verify.js';
 
 export type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
@@ -169,8 +169,8 @@ export async function runTask(
 
     const ensured = await ensureTaskResult({ specFolderPath, taskNumber, logger, logOutcome });
     if (!ensured.ok) return finish(ensured.result);
-    const missingPath = await checkMissingVerifyPaths(projectRoot, taskData, fail);
-    if (missingPath) return missingPath;
+    const stop = await checkBlockedFirst(projectRoot, specFolderPath, taskNumber, taskData, fail);
+    if (stop) return stop;
 
     const verifyResult = await runVerificationGate(
       projectRoot,

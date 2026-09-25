@@ -7,6 +7,7 @@ export interface ResultSections {
   deviated: string | null;
   missingContext: string | null;
   outsideScope: string | null;
+  blocked: string | null;
   next: string | null;
   touched: string | null;
 }
@@ -34,6 +35,7 @@ const HEADING_KEYS: Readonly<Record<string, SectionKey>> = {
   deviated: 'deviated',
   'missing context': 'missingContext',
   'outside scope': 'outsideScope',
+  blocked: 'blocked',
   next: 'next',
   touched: 'touched',
 };
@@ -104,6 +106,7 @@ export function parseResultSections(content: string): ResultSections {
     deviated: section('deviated'),
     missingContext: section('missingContext'),
     outsideScope: section('outsideScope'),
+    blocked: section('blocked'),
     next: section('next'),
     touched: section('touched'),
   };

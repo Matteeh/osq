@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { applyBlockedItems } from './blocked-item.js';
 import { readLastLook } from './inbox-cursor.js';
 import { type Inbox, type NeedsYouItem, collectLandedItems, projectInbox } from './inbox.js';
 import { getArchiveDir } from './layout.js';
@@ -45,5 +46,6 @@ export async function readInbox(
   const landed = await collectLandedItems(archiveDir, lastLookMs);
   const inbox = projectInbox(overview, landed, now.getTime());
   const pending = projectPendingVerifications(overview);
-  return pending.length === 0 ? inbox : { ...inbox, needsYou: [...inbox.needsYou, ...pending] };
+  const needsYou = await applyBlockedItems(overview, [...inbox.needsYou, ...pending]);
+  return { ...inbox, needsYou };
 }

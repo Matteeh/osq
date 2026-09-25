@@ -29,10 +29,7 @@ const HUMAN_STEPS_BULLET =
 const NEW_SUBSECTION_BULLET =
   '- Split `## Human steps` into `### Before approval` and `### After landing`, and write `None` under one with no steps. A step during the run, such as an expected `osq retry`, goes under Before approval. After-landing steps, or `check: <command>` in the proposal frontmatter, keep the change verification pending after it lands, and its dependents wait, until a human runs `osq verified <id> --passed` or `--failed`.';
 
-const CHANGED_RETRY_LINE =
-  'list the expected `osq retry` under `### Before approval` in `## Human steps`';
-
-const OLD_RETRY_LINE = 'list the expected `osq retry` under `## Human steps`';
+const EXPECTED_RETRY_LINE = 'list the expected `osq retry`';
 
 const SCHEMA_LINE =
   '- **Human steps**: everything a task must not do itself, never including `osq approve`, under `### Before approval` and `### After landing`; write `None` when there is nothing. After-landing steps or a `check` command keep the change verification pending until `osq verified`.';
@@ -54,10 +51,9 @@ describe('planner human steps guidance', () => {
     );
   });
 
-  it('moves the expected retry into Before approval', () => {
+  it('does not tell planners to list an expected retry for a shared file', () => {
     const block = flatten(MANAGED_PLANNER_BLOCK);
-    assert.ok(block.includes(CHANGED_RETRY_LINE), 'must name ### Before approval for the retry');
-    assert.equal(block.includes(OLD_RETRY_LINE), false, 'must not keep the old retry line');
+    assert.equal(block.includes(EXPECTED_RETRY_LINE), false, 'must not list an expected retry');
   });
 
   it('repository PLANNER.md and its template carry the new block', async () => {

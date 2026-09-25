@@ -14,4 +14,5 @@ export type RunTaskFailureReason =
   | 'crashed'
   | 'timeout'
   | 'undeclared_test_change'
+  | 'blocked'
   | 'regressed';

@@ -56,11 +56,12 @@ your complete prompt; read it and follow it exactly.
   verify with existing tests. `any` is only for a task that can honestly start
   either way.
 - A file belongs to one task. Before each later task, the watcher re-hashes the
-  resolved `scope` of every done task; any change halts the change until a human
-  runs `osq retry`. Globs resolve again at every audit, so a broad glob also
-  captures files that later tasks create. When a later task must extend a file,
-  order that later task after the owner, name the shared file in the proposal,
-  and list the expected `osq retry` under `### Before approval` in `## Human steps`.
+  resolved `scope` of every done task. When a later task must extend a file,
+  order that later task after the owner, put the file in its `scope` too, and
+  name the shared file in the proposal; the watcher then recertifies the owner
+  by itself when the owner's `verify` still passes. Any other change to a done
+  task's files halts the change until a human runs `osq retry`. Globs resolve again
+  at every audit, so a broad glob also captures files that later tasks create.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.

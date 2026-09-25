@@ -28,6 +28,8 @@ export interface NeedsYouItem {
   readonly task: InboxTaskRef | null;
   readonly command: string;
   readonly stuck?: { readonly fingerprint: string };
+  /** Present only for a task-dead item whose task died with reason `blocked`. */
+  readonly blocked?: { readonly need: string };
   /** Present only when an approval item's change has steps before approval. */
   readonly beforeApproval?: true;
 }

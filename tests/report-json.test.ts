@@ -160,6 +160,7 @@ describe('report --json', () => {
     ]);
     assert.deepEqual(sortedKeys(parsed.history.scopeRegressions as object), [
       'detected',
+      'recertifiedAutomatically',
       'recertifiedByHuman',
       'requeuedForAgent',
       'verificationFailedAtDetection',
@@ -170,6 +171,7 @@ describe('report --json', () => {
       verificationPassedAtDetection: 0,
       verificationFailedAtDetection: 0,
       recertifiedByHuman: 0,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 0,
     });
     assert.deepEqual(sortedKeys(parsed.history.sizes as object), [
@@ -468,6 +470,7 @@ describe('formatMetricsReport', () => {
           verificationPassedAtDetection: 1,
           verificationFailedAtDetection: 2,
           recertifiedByHuman: 1,
+          recertifiedAutomatically: 0,
           requeuedForAgent: 1,
         },
       },
@@ -670,6 +673,7 @@ describe('formatMetricsReport', () => {
           verificationPassedAtDetection: 0,
           verificationFailedAtDetection: 0,
           recertifiedByHuman: 0,
+          recertifiedAutomatically: 0,
           requeuedForAgent: 0,
         },
       },
