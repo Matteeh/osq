@@ -5,6 +5,7 @@ import path from 'node:path';
 import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/run/scope.js';
 import { IGNORED_DIRS, buildImportGraph } from '../core/spec/import-graph.js';
 import { type TaskData, resolveChangeDoc } from '../core/spec/parser.js';
+import { readScopedFunctionHashes } from '../core/trace/function-ranges.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
 import { readScopedDependencies } from './dependencies.js';
 
@@ -155,13 +156,15 @@ export async function gatherStartMeasures(
   const proposalContent = proposalDoc
     ? await fs.readFile(proposalDoc.path, 'utf8').catch(() => '')
     : '';
-  const [scopeCounts, repoCounts, importFanIn, delta, dependencies] = await Promise.all([
-    gatherScopeCounts(projectRoot, taskData.scope),
-    gatherRepoCounts(projectRoot),
-    countImportFanIn(projectRoot, taskData.scope),
-    countDeltaRequirementsAndScenarios(specFolderPath),
-    readScopedDependencies(projectRoot, taskData.scope),
-  ]);
+  const [scopeCounts, repoCounts, importFanIn, delta, dependencies, functionHashes] =
+    await Promise.all([
+      gatherScopeCounts(projectRoot, taskData.scope),
+      gatherRepoCounts(projectRoot),
+      countImportFanIn(projectRoot, taskData.scope),
+      countDeltaRequirementsAndScenarios(specFolderPath),
+      readScopedDependencies(projectRoot, taskData.scope),
+      readScopedFunctionHashes(projectRoot, taskData.scope),
+    ]);
   return {
     phase: 'start',
     scopeResolver: SCOPE_RESOLVER_VERSION,
@@ -175,6 +178,7 @@ export async function gatherStartMeasures(
     deltaRequirements: delta.requirements,
     deltaScenarios: delta.scenarios,
     ...(Object.keys(dependencies).length > 0 ? { dependencies } : {}),
+    ...(Object.keys(functionHashes).length > 0 ? { functionHashes } : {}),
   };
 }
 

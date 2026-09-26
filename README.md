@@ -246,6 +246,56 @@ When a capability is opted in, `osq report` prints a `Traceability:` section wit
 
 Set the optional `traceability.focusedTests` to a command containing `{files}`, such as the reference `node --test --test-reporter=tap {files}`, to run a task's scenario tests before its full verify. When a task's resolved scope holds scenario test files naming opted-in scenarios, the watcher replaces `{files}` with every scenario test file in the repository that names one of those scenarios, each single-quoted and separated by spaces, and runs it through the verify's environment, `OSQ_CHANGE` included. The outcome is `passed` when the command succeeds, `failed` when the TAP output has a `not ok` line for a collected `Scenario: <name>`, and `problem` when it exits nonzero, times out, or cannot start and isn't `failed`. Only a `failed` outcome ends the attempt: the task dies with `verify_red` and its verify is skipped, so the next attempt receives the focused output; a `problem` or `passed` outcome goes on to the full verify, which alone decides the task. Each run appends one `focused_ran` event carrying the command, files, scenarios, outcome, exit code, duration, timeout state, and output. `osq show` prints `      Focused runs: <outcome> <duration>s, ...` under the task after its `Scenarios:` line, adding ` (attempt ended, verify skipped)` to each `failed` entry.
 
+### Mutation checks
+
+Set the optional `traceability.mutation` block to the project's mutation command
+and an optional per-task budget in seconds (default `300`):
+
+```ts
+export default defineConfig({
+  traceability: {
+    capabilities: ['pricing'], // or 'all'
+    mode: 'warn',
+    mutation: {
+      command: 'npx stryker run', // or a command using {mutate}, {tests}, {report}
+      budgetSeconds: 300,         // optional
+    },
+  },
+});
+```
+
+After a task passes, osq picks the covered functions the task changed or newly tested. A covered function is an exported function carrying a `@scenario` tag naming an opted-in capability whose tagged scenario a scenario test file names. A function is picked when its file is in the task's resolved scope and its own range's hash differs from the task's last start `measures` event's `functionHashes` entry (a missing entry counts as different), or when a scenario test file the task changed covers it.
+
+Each run gets that function's own range plus the range of every non-exported top-level function in the same file it calls, sorted by start line as `<file>:<start>-<end>`, and the sorted, distinct scenario test files naming its tagged scenarios. The command is run once per pick through the verify's environment, `OSQ_CHANGE` included, and receives:
+
+- `{mutate}` and `OSQ_MUTATE`: the ranges, comma-joined for the placeholder and a JSON array for the variable
+- `{tests}` and `OSQ_MUTATION_TESTS`: the tests, single-quoted and space-separated for the placeholder and a JSON array for the variable
+- `{report}` and `OSQ_MUTATION_REPORT`: an absolute path in a fresh temporary folder, single-quoted for the placeholder
+
+Each run's timeout is the budget left, and picks left once `budgetSeconds` of total wall time for the task is spent are not run. Each pick appends one `mutation_ran` event to the task's stream with `file`, `function`, `ranges`, `scenarios`, `tests`, `outcome`, `killed`, `survived`, `invalid`, `survivors`, `duration`, and `exitCode`. When a pick can't be measured the event says why: `range_unknown` (unknown ranges), `budget`, `timed_out`, `command_failed`, or `report_invalid`; a failed or timed-out run also carries the command's last 2,000 output characters. The check is observe only: it never fails, retries, or halts a task.
+
+`osq show` prints, under a task whose stream holds `mutation_ran` events after its last `measures` start event, `      Mutation: <entry>; <entry>` with one entry per event in stream order. A measured entry is `<file>#<function> <killed> of <killed + survived> killed`, a not-measured one is `<file>#<function> not measured (<reason>)`, and each survivor adds a `        Survived: <file>:<line>:<column> <mutator> -> <replacement>` line. When a capability is opted in, `osq report` prints a `Mutation:` section with `  <capability>: <killed> of <killed + survived> killed (<percent>%), <n> survivors not yet reviewed`, the percent to one decimal, then a `    survived: ...` line per survivor, also carried under `mutation` in JSON. Every listed survivor counts as not yet reviewed.
+
+The reference setup uses StrykerJS with its command test runner. Add `@stryker-mutator/core` as a dev dependency of the project, set `traceability.mutation.command` to `npx stryker run`, and add this `stryker.config.mjs`:
+
+```js
+const tests = JSON.parse(process.env.OSQ_MUTATION_TESTS ?? '[]')
+  .map((file) => `'build/${file.replace(/\.(m|c)?ts$/, (_, k) => `.${k ?? ''}js`)}'`)
+  .join(' ');
+export default {
+  testRunner: 'command',
+  commandRunner: { command: `node --test ${tests}` },
+  buildCommand: 'npx tsc',
+  mutate: JSON.parse(process.env.OSQ_MUTATE ?? '[]'),
+  coverageAnalysis: 'off',
+  reporters: ['json'],
+  jsonReporter: { fileName: process.env.OSQ_MUTATION_REPORT },
+  tempDirName: '.stryker-tmp',
+};
+```
+
+The config assumes `tsc` compiles `tests/` to `build/tests/`; follow the project's own layout if it differs. Leave `thresholds.break` unset so survivors never change the command's exit code, and add `.stryker-tmp` to `.gitignore`.
+
 ## What the watcher guarantees
 
 - **Rebuilt from disk**: State is rebuilt from `openspec/` on every change. Kill it and restart it any time.

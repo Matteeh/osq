@@ -48,6 +48,11 @@ import {
   parseEventLines,
   parseTokenEvent,
 } from './report-events.js';
+import {
+  type CapabilityMutationScore,
+  collectMutationScores,
+  formatMutation,
+} from './report-mutation.js';
 import { type PreSpawnStartCounts, observePreSpawnEvents } from './report-pre-spawn.js';
 import {
   type RetryGroupHistory,
@@ -276,6 +281,11 @@ export interface MetricsReport {
    * capability is opted in, so the report is unchanged for other projects.
    */
   readonly traceability?: readonly CapabilityTraceabilityGaps[];
+  /**
+   * Mutation scores per opted-in capability, in name order. Absent when no
+   * measured event names an opted-in capability, so the report is unchanged.
+   */
+  readonly mutation?: readonly CapabilityMutationScore[];
 }
 
 /** Aggregate planning usage derived only from `.run/plan.jsonl` lifecycle pairs. */
@@ -1321,6 +1331,7 @@ export async function getMetricsReport(
   const verification = await collectVerificationCounts(archivedFolders);
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
   const traceability = await collectTraceabilityGaps(projectRoot, config);
+  const mutation = await collectMutationScores(allSpecFolders, config);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
@@ -1466,6 +1477,7 @@ export async function getMetricsReport(
     },
     queue,
     ...(traceability ? { traceability } : {}),
+    ...(mutation ? { mutation } : {}),
   };
 }
 
@@ -1813,6 +1825,11 @@ export function formatMetricsReport(
   if (report.traceability) {
     lines.push('');
     lines.push(...formatTraceability(report.traceability));
+  }
+
+  if (report.mutation) {
+    lines.push('');
+    lines.push(...formatMutation(report.mutation));
   }
 
   lines.push('');

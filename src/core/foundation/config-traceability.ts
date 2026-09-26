@@ -2,15 +2,26 @@
  * Scenario traceability. `capabilities` opts capabilities in, either every
  * capability with `'all'` or a list of names; `mode` turns each finding into a
  * warning or an error; `focusedTests` is an optional command with a `{files}`
- * placeholder, left out of the resolved block when unset.
+ * placeholder, left out of the resolved block when unset; `mutation` is an
+ * optional command and budget, also left out when unset.
  */
 export type TraceabilityMode = 'warn' | 'require';
+
+/** The project's mutation command and its per-task wall-time budget. */
+export interface MutationConfig {
+  readonly command: string;
+  readonly budgetSeconds: number;
+}
 
 export interface TraceabilityConfig {
   readonly capabilities: 'all' | readonly string[];
   readonly mode: TraceabilityMode;
   readonly focusedTests?: string;
+  readonly mutation?: MutationConfig;
 }
+
+/** Default wall-time budget for one task's mutation check. */
+export const DEFAULT_MUTATION_BUDGET_SECONDS = 300;
 
 export const DEFAULT_TRACEABILITY_CONFIG: TraceabilityConfig = {
   capabilities: [],
@@ -22,6 +33,24 @@ const TRACEABILITY_MODES: readonly TraceabilityMode[] = ['warn', 'require'];
 function isCapabilities(value: unknown): value is 'all' | readonly string[] {
   if (value === 'all') return true;
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+/** Validate an optional `mutation` block; the budget defaults when omitted. */
+function validateMutationConfig(mutation: unknown): MutationConfig {
+  const record =
+    typeof mutation === 'object' && mutation !== null && !Array.isArray(mutation)
+      ? (mutation as Record<string, unknown>)
+      : {};
+  const command = record.command;
+  if (typeof command !== 'string' || command.trim() === '') {
+    throw new Error('traceability.mutation.command must be a non-empty command');
+  }
+  const budgetSeconds =
+    record.budgetSeconds === undefined ? DEFAULT_MUTATION_BUDGET_SECONDS : record.budgetSeconds;
+  if (typeof budgetSeconds !== 'number' || !Number.isFinite(budgetSeconds) || budgetSeconds <= 0) {
+    throw new Error('traceability.mutation.budgetSeconds must be a positive number');
+  }
+  return { command, budgetSeconds };
 }
 
 /**
@@ -51,9 +80,11 @@ export function validateTraceabilityConfig(traceability: unknown): TraceabilityC
       throw new Error('traceability.focusedTests must be a command containing {files}');
     }
   }
+  const mutation = record.mutation;
   return {
     capabilities,
     mode: mode as TraceabilityMode,
     ...(focusedTests !== undefined ? { focusedTests } : {}),
+    ...(mutation !== undefined ? { mutation: validateMutationConfig(mutation) } : {}),
   };
 }

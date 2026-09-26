@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:bc29444ef725dbf933d46dbb9e8d6156a6af6155690db24f4934850fed68216f"
+build_stamp: "088bcf6"
+project_commit: "088bcf6"
+exit_code: 0
+scope_files: {"src/core/foundation/config-traceability.ts":"sha256:b1258ac144a9c191bf9254c97b5de218a28f8b418608f9b62cf75d5de941aa82","tests/mutation-config.test.ts":"sha256:ce57196225dfff1e1ae4bb32dbfffb462758ad3cff88ca0725588a0c505eae0c"}
+---
+2026-09-25T23:06:43.381Z

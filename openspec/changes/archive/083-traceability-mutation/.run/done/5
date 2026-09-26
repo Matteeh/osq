@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2c5271789af9065d7c5c97861dc39eb212d92cca2a1911af65a92e9f871c21e3"
+build_stamp: "088bcf6"
+project_commit: "088bcf6"
+exit_code: 0
+scope_files: {"README.md":"sha256:30dc2696af9e05ec8c23baf691348261f0033dcd665acd4deec12c1b1bf86f6f","src/cli/report.ts":"sha256:363a15b7e2a4b896a3b1abbc78cab8f6cd02d635a8e291f9c4f94aa6cfac21c0","src/core/report/report-mutation.ts":"sha256:df2a0b325304ab3c70cecc1045c6d074ee2db881b482959f894038678ca5606a","src/core/report/report.ts":"sha256:a6763514da5d81ee63433d09d7a10b5f4ec0b64b9dc4a3102598fc5e34dd0f21","src/core/status/show.ts":"sha256:7f1b76c24618e08b75dc60b89e88897e6eddce364b6d62f2aac6bb284d7b2ae0","tests/mutation-report.test.ts":"sha256:71c70ddda17150fb14522ff9ab3d2dc310d64499934d29d8da2af0467b0f4144"}
+---
+2026-09-25T23:33:59.891Z

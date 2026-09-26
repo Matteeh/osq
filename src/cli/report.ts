@@ -252,6 +252,24 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
           })),
         }
       : {}),
+    ...(report.mutation
+      ? {
+          mutation: report.mutation.map((entry) => ({
+            capability: entry.capability,
+            killed: entry.killed,
+            survived: entry.survived,
+            score: entry.score,
+            survivors: entry.survivors.map((survivor) => ({
+              file: survivor.file,
+              function: survivor.function,
+              line: survivor.line,
+              column: survivor.column,
+              mutator: survivor.mutator,
+              replacement: survivor.replacement,
+            })),
+          })),
+        }
+      : {}),
     tokens: {
       input: report.tokens.input,
       cached_input: report.tokens.cached_input,
