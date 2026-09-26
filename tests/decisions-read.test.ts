@@ -364,14 +364,14 @@ describe('decision limits', () => {
 });
 
 describe("osq's own decision records", () => {
-  it('reads and validates the four accepted ADRs without error or warning', async () => {
+  it('reads and validates the five accepted ADRs without error or warning', async () => {
     const records = await readDecisions(repoRoot, DEFAULT_CONFIG);
     const living = await readLivingCapabilityNames(repoRoot, DEFAULT_CONFIG.paths.openspecRoot);
     const problems = validateDecisions(records, living, DEFAULT_CONFIG);
 
     assert.deepEqual(
       records.adrs.map((adr) => adr.number),
-      ['001', '002', '004', '005'],
+      ['001', '002', '003', '004', '005'],
     );
     assert.equal(
       records.adrs.every((adr) => adr.status === 'accepted'),
@@ -380,6 +380,9 @@ describe("osq's own decision records", () => {
     assert.deepEqual(records.ignored, []);
     assert.deepEqual(problems.errors, []);
     assert.deepEqual(problems.warnings, []);
-    assert.deepEqual(systemWideAdrs(records), []);
+    assert.deepEqual(
+      systemWideAdrs(records).map((adr) => adr.number),
+      ['003'],
+    );
   });
 });
