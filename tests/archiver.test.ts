@@ -283,7 +283,10 @@ describe('Archiver and Delta Application', () => {
     assert.equal(events.length, 1);
     const archivedEvent = events[0];
     assert.equal(archivedEvent.type, 'archived');
-    assert.equal(archivedEvent.data.archivePath, archivedPath);
+    assert.equal(
+      archivedEvent.data.archivePath,
+      path.relative(tmpDir, archivedPath).split(path.sep).join('/'),
+    );
 
     const stamp = Date.parse(archivedEvent.timestamp);
     assert.ok(!Number.isNaN(stamp), `expected ISO archive time, got ${archivedEvent.timestamp}`);
@@ -356,7 +359,10 @@ Blocks archive.
     const [verifyRan, archivedEvent] = events;
     assert.equal(verifyRan.data.exitCode, 0);
     assert.ok(typeof verifyRan.data.command === 'string');
-    assert.equal(archivedEvent.data.archivePath, archivedPath);
+    assert.equal(
+      archivedEvent.data.archivePath,
+      path.relative(tmpDir, archivedPath).split(path.sep).join('/'),
+    );
     assert.ok(
       Date.parse(verifyRan.timestamp) <= Date.parse(archivedEvent.timestamp),
       'archive time is stamped after the change-level verification',

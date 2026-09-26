@@ -956,8 +956,8 @@ byte for byte, and SHALL keep its own delivery, arguments, and attachments. The
 prompt SHALL name the task file, `proposal.md`, title, scope, entry files,
 verification command, result destination, prior context, delta spec paths, and
 living spec paths, then the managed executor steps, capability rules, managed
-exit text, and the concrete result path. It SHALL NOT name `features/` or a
-parent `spec.md`.
+exit text, and the concrete result path. Its closing line SHALL also tell the
+agent never to run git. It SHALL NOT name `features/` or a parent `spec.md`.
 
 #### Scenario: Same task, three harnesses
 - **WHEN** agy, codex, and opencode build argv for the same fixture task
@@ -970,6 +970,10 @@ parent `spec.md`.
 #### Scenario: Managed text reaches the prompt
 - **WHEN** a harness prompt is built
 - **THEN** it contains every managed executor step line and every managed exit line verbatim
+
+#### Scenario: No git
+- **WHEN** a harness prompt is built
+- **THEN** its last line says never to run git
 
 ### Requirement: Pi task execution
 <!-- source: src/harness/pi/**, src/harness/index.ts, tests/pi/** -->
@@ -1753,3 +1757,143 @@ state, markers, or retries.
 #### Scenario: Mutation unset
 - **WHEN** `traceability.mutation` is unset
 - **THEN** no mutation command runs and no `mutation_ran` event is appended
+
+### Requirement: Git state recording
+<!-- source: src/core/vcs/snapshot.ts, src/watcher/git-guard.ts, src/watcher/runner.ts, tests/vcs-guard.test.ts -->
+When `GitVcs` is selected, the runner SHALL record HEAD's commit and branch,
+the index digest, and the stash list before it spawns the agent, and again
+after the agent exits and before verify. When any of them differs, the runner
+SHALL append one `vcs_violation` event with `moved`, the list of what differs
+from `head`, `branch`, `index` and `stash`, and `before` and `after` holding
+all four values. It SHALL log a warning that names what moved, how to put each
+back, and that a human using git in this checkout during the task causes the
+same result. The task's outcome SHALL NOT change. A git read that fails SHALL
+record nothing and log a warning.
+
+#### Scenario: Agent commits
+- **WHEN** the agent commits its edit and the task's verify passes
+- **THEN** a `vcs_violation` event lists `head` in `moved` with both commits, and the task is done
+
+#### Scenario: Agent stashes
+- **WHEN** the agent runs `git stash` on the checked-out branch
+- **THEN** a `vcs_violation` event lists `stash` in `moved`, and HEAD is unchanged in `before` and `after`
+
+#### Scenario: Agent checks out another branch
+- **WHEN** the agent checks out another branch
+- **THEN** a `vcs_violation` event lists `branch` in `moved`
+
+#### Scenario: Agent stages a file
+- **WHEN** the agent runs `git add` on a file in its scope
+- **THEN** a `vcs_violation` event lists `index` in `moved`
+
+#### Scenario: Outside git
+- **WHEN** a task runs under `NoVcs`
+- **THEN** no `vcs_violation` or `scope_violation` event is recorded
+
+### Requirement: Scope violation recording
+<!-- source: src/core/vcs/snapshot.ts, src/watcher/git-guard.ts, tests/vcs-guard.test.ts -->
+When `GitVcs` is selected, the runner SHALL hash every file status lists
+before it spawns the agent, with null for a deleted file. After the agent exits
+and before verify, a file SHALL count as changed during the task when status
+lists it now or before spawn and its status code or hash differs. A changed
+file SHALL be a scope violation when it is outside the task's scope resolved
+after the agent exits, and outside the change folder. The runner SHALL append
+one `scope_violation` event whose `files` lists them sorted, and log a warning.
+The task's outcome SHALL NOT change. Under `NoVcs`, scope checks SHALL stay as
+they are.
+
+#### Scenario: Edit outside scope
+- **WHEN** the agent edits a tracked file outside its scope and the task's verify passes
+- **THEN** a `scope_violation` event names that file, and the task is done
+
+#### Scenario: Human edit before spawn
+- **WHEN** a file outside scope was modified before spawn and the agent leaves it alone
+- **THEN** no `scope_violation` event is recorded
+
+#### Scenario: Agent edits a dirty file
+- **WHEN** a file outside scope was modified before spawn and the agent edits it again
+- **THEN** a `scope_violation` event names that file
+
+### Requirement: Relative verify output and archive path
+<!-- source: src/core/run/verification.ts, src/watcher/archiver.ts, tests/relative-paths.test.ts -->
+The shared verification runner SHALL return output with the project root
+replaced by relative paths, using the same rule as tool summaries, so
+`verify_ran` events, dead and regressed markers, and prior failure context
+never carry the project root. The `archived` event SHALL record `archivePath`
+relative to the project root. Existing events and archives SHALL NOT be
+rewritten.
+
+#### Scenario: Absolute path in verify output
+- **WHEN** a task's verify prints `<projectRoot>/src/a.ts` and fails
+- **THEN** its `verify_ran` event and dead marker carry `src/a.ts` and not the project root
+
+#### Scenario: Archived change
+- **WHEN** a change is archived
+- **THEN** its `archived` event's `archivePath` is `openspec/changes/archive/<folder>`
+
+### Requirement: Baseline key
+<!-- source: src/watcher/baseline-key.ts, tests/baseline-key.test.ts -->
+Under `GitVcs`, a baseline key SHALL hold HEAD's commit and a SHA-256 digest of
+every status entry outside `.run/` folders, each as its path, status code, and
+content hash, with null for a deleted file, in path order. Under `NoVcs`, or
+when HEAD has no commit, there SHALL be no key.
+
+#### Scenario: Same tree
+- **WHEN** the key is read twice with no file changed, and only a `.run/` file written in between
+- **THEN** both keys are equal
+
+#### Scenario: Edited untracked file
+- **WHEN** an untracked file outside `.run/` changes between two reads
+- **THEN** the digests differ and the commits are equal
+
+#### Scenario: Outside git
+- **WHEN** the key is read under `NoVcs`
+- **THEN** there is no key
+
+### Requirement: Baseline verify before a change's first task
+<!-- source: src/watcher/baseline.ts, src/watcher/runner.ts, tests/baseline-verify.test.ts -->
+When `gates.baselineVerify` is set and none of the change's task streams holds
+a `started` event, `runTask` SHALL settle the baseline before its pre-spawn
+verify or agent spawn. It SHALL run the command in the project root
+with `timeouts.verifyTimeoutSeconds` and without `OSQ_CHANGE`, and append one
+`baseline_ran` event to the change stream with `outcome`, `command`, `commit`,
+`treeDigest`, `exitCode`, and `durationSeconds`. When the command fails, the
+task SHALL die with `baseline_red`. Its dead marker SHALL start with "tree was
+red before this change started", then name the command, its exit code, and
+`osq retry <id> <n>`, then carry the output. The outcome line SHALL end with
+"tree was red before this change started". `baseline_red` SHALL NOT be retried
+automatically.
+
+#### Scenario: Green baseline
+- **WHEN** the baseline command exits 0 before task 1 of a change
+- **THEN** a `baseline_ran` event with `outcome: passed` precedes task 1's `started` event
+
+#### Scenario: Retry after a red baseline
+- **WHEN** a human fixes the tree and runs `osq retry <id> 1` after `baseline_red`
+- **THEN** the baseline runs again before task 1 spawns
+
+#### Scenario: Change already started
+- **WHEN** task 2 of a change runs after task 1 started
+- **THEN** no baseline runs and no `baseline_ran` event is appended
+
+#### Scenario: Gate unset
+- **WHEN** `gates.baselineVerify` is unset
+- **THEN** no baseline runs and no `baseline_ran` event is appended
+
+### Requirement: Baseline reuse
+<!-- source: src/watcher/baseline.ts, tests/baseline-verify.test.ts -->
+Before running the command, the watcher SHALL find the latest `baseline_ran`
+event with outcome `passed` or `reused` across the change streams of every
+active and archived change. When that event's command equals the configured
+command, and its commit and digest equal the current baseline key, the watcher
+SHALL NOT run the command. It SHALL append a `baseline_ran` event with
+`outcome: reused` and `reusedFrom`, the folder name of the change that
+recorded it. Without a key, the command SHALL always run.
+
+#### Scenario: Unchanged tree
+- **WHEN** a second change's first task starts in a git repository whose HEAD and dirty files are unchanged since the first change's green baseline
+- **THEN** its `baseline_ran` event has `outcome: reused` and names the first change, and the command did not run
+
+#### Scenario: Changed file
+- **WHEN** a tracked file changed after the first change's green baseline
+- **THEN** the second change's baseline runs the command

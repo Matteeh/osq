@@ -168,7 +168,10 @@ describe('archived verification requirement', () => {
   it('records only archivePath when there are no human steps or check', async () => {
     const archived = await archiveChange(tmpDir, '003-plain', { humanSteps: 'None' });
     const event = await archivedEvent(archived);
-    assert.equal(event.data?.archivePath, archived);
+    assert.equal(
+      event.data?.archivePath,
+      path.relative(tmpDir, archived).split(path.sep).join('/'),
+    );
     assert.equal('verification' in (event.data ?? {}), false);
   });
 

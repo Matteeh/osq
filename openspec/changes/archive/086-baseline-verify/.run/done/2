@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d3deb6877b5fbde4e7f427df8dafa92a772e11305b57c8df8184af3c7c7cf1ec"
+build_stamp: "c8174d5"
+project_commit: "c8174d5"
+exit_code: 0
+scope_files: {"README.md":"sha256:d12a323176ff7ea2f8756367c15df48573387de312e43475a050b549036878f9","osq.config.ts":"sha256:f14a4c4d5d6cff2f9566da47bf4947a26cff1af417a206d989527b205092afca","src/harness/types.ts":"sha256:184e3a2a65d7033d024f4287a360b4ddffae90b76da1ebe4c26db959fc416ae1","src/watcher/baseline.ts":"sha256:9ea91134defc987a76a1bc3dec60dedd83900b18dc8881ded99c60a148e6284d","src/watcher/failure-reason.ts":"sha256:0ab1fd28558a4140287358ff8978b667583dfa4ecf398fdc93c270520d40bcdf","src/watcher/runner.ts":"sha256:06eaa7f12b872a3b65c8557c4cb6a76561a36843ea00d4255ce5d75f891643d0","tests/baseline-verify.test.ts":"sha256:c4957e0376657fe12fafdc991f5910830e2ec42726e4696d78c75f9dc87d88da"}
+---
+2026-09-26T11:43:02.240Z

@@ -65,6 +65,12 @@ Tests run against `fixture/`. A test that needs a real model is an integration t
 
 Tests that submit fixture changes to lint or approval use a local `node verify.cjs` verifier backed by files in their own execution root, never the planning sentinel, the network, a TTY, or this repository's full verification suite.
 
+<!-- OSQ:RULES:START -->
+## Project rules
+
+- Agents never run git. osq alone writes to git, never rewrites history, and never writes the human's checkout or main except through osq land. ADR 003
+<!-- OSQ:RULES:END -->
+
 <!-- OSQ:START -->
 ## Executing a task
 

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c1960693133cddfffb4975d6014da45a94abf0ce6e41c0028f09fbe0165e6be6"
+build_stamp: "fc2b9f0"
+project_commit: "fc2b9f0"
+exit_code: 0
+scope_files: {"src/core/foundation/doctor.ts":"sha256:c2d90a840e76149d239ffaf3fd3fffedb58838cf9f2e14a8c69ce0c9aeaca908","src/core/vcs/doctor-git.ts":"sha256:dc8c5e40a191d5e44daa817462d972a88c74d64b1f5c4f73b1c7392e8c2231f6","tests/codex/adapter.test.ts":"sha256:8c9b0aa6682fa4355d919dd4475cfb4115df8b6d77539043dbbca5ddb8e716a0","tests/doctor.test.ts":"sha256:543c9fcb18bedf5c497827d4a013d3da3f653799c9eb339667c66563a0e39f32","tests/pi/doctor.test.ts":"sha256:89914acc121e5553f648099b4c1e57bedb5c2813dcfd92771209868fbf80c007","tests/vcs-doctor.test.ts":"sha256:72c29f8a0c1e9dfaf262921d3e471286a3ed3499a49e55e8f9f9f5e43a5a4f89"}
+---
+2026-09-26T11:11:13.873Z

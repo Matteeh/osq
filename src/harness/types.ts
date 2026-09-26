@@ -5,6 +5,7 @@ import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { ScopePathAttribution } from '../core/run/scope-hash.js';
 import type { SCOPE_RESOLVER_VERSION } from '../core/run/scope.js';
+import type { VcsMovedField, VcsStateValues } from '../core/vcs/snapshot.js';
 
 export type { ScopePathAttribution } from '../core/run/scope-hash.js';
 
@@ -29,8 +30,11 @@ export type HarnessEventType =
   | 'recertification'
   | 'rejected'
   | 'instructions_changed'
+  | 'baseline_ran'
   | 'focused_ran'
-  | 'mutation_ran';
+  | 'mutation_ran'
+  | 'vcs_violation'
+  | 'scope_violation';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -256,6 +260,23 @@ export interface InstructionsChangedEventData {
   readonly changed: string[];
 }
 
+/**
+ * Payload of a `baseline_ran` event: the baseline command a change settles
+ * before its first task spawns. `outcome: reused` means an equal green baseline
+ * from `reusedFrom` covered the current tree, so the command did not run.
+ * `commit` and `treeDigest` are null outside a reusable key.
+ */
+export interface BaselineRanEventData {
+  readonly outcome: 'passed' | 'failed' | 'reused';
+  readonly command: string;
+  readonly commit: string | null;
+  readonly treeDigest: string | null;
+  readonly exitCode: number;
+  readonly durationSeconds: number;
+  /** Folder name of the change whose green baseline was reused. */
+  readonly reusedFrom?: string;
+}
+
 /** How one focused scenario-test run ended. */
 export type FocusedRanOutcome = 'passed' | 'problem' | 'failed';
 
@@ -306,6 +327,25 @@ export interface MutationRanEventData {
   readonly output?: string;
 }
 
+/**
+ * Payload of a `vcs_violation` event: the git state fields that moved during a
+ * task, with each field's value before the agent spawned and after it exited.
+ * Observe-only in stage 0; it never changes a task's outcome.
+ */
+export interface VcsViolationEventData {
+  readonly moved: readonly VcsMovedField[];
+  readonly before: VcsStateValues;
+  readonly after: VcsStateValues;
+}
+
+/**
+ * Payload of a `scope_violation` event: the sorted project-relative files a
+ * task changed outside its resolved scope and outside the change folder.
+ */
+export interface ScopeViolationEventData {
+  readonly files: readonly string[];
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -328,8 +368,11 @@ export interface OsqEventData {
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
   instructions_changed: InstructionsChangedEventData;
+  baseline_ran: BaselineRanEventData;
   focused_ran: FocusedRanEventData;
   mutation_ran: MutationRanEventData;
+  vcs_violation: VcsViolationEventData;
+  scope_violation: ScopeViolationEventData;
 }
 
 /**

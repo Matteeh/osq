@@ -59,6 +59,7 @@ describe('Pi doctor diagnostics', () => {
         'archives',
         'done-markers',
         'validator',
+        'git',
       ]);
       assert.equal(report.checks[1]?.name, 'harness');
       assert.equal(report.checks[1]?.ok, true);
@@ -76,7 +77,16 @@ describe('Pi doctor diagnostics', () => {
       const report = await runPiDoctor(root, defineConfig({ harness: 'mock' }));
       assert.deepEqual(
         report.checks.map((check) => check.name),
-        ['config', 'harness', 'managed-blocks', 'locks', 'archives', 'done-markers', 'validator'],
+        [
+          'config',
+          'harness',
+          'managed-blocks',
+          'locks',
+          'archives',
+          'done-markers',
+          'validator',
+          'git',
+        ],
       );
     } finally {
       await fs.rm(root, { recursive: true, force: true });

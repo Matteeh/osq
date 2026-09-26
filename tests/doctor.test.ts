@@ -120,7 +120,16 @@ describe('runDoctorChecks', () => {
     assert.equal(report.ok, true);
     assert.deepEqual(
       report.checks.map((check) => check.name),
-      ['config', 'harness', 'managed-blocks', 'locks', 'archives', 'done-markers', 'validator'],
+      [
+        'config',
+        'harness',
+        'managed-blocks',
+        'locks',
+        'archives',
+        'done-markers',
+        'validator',
+        'git',
+      ],
     );
     assert.ok(
       report.checks.every((check) => check.ok),
@@ -505,9 +514,9 @@ describe('doctorCommand', () => {
       exit: (code) => codes.push(code),
     });
 
-    assert.equal(report.checks.length, 7);
-    assert.equal(lines.length, 7);
-    assert.ok(lines.every((line) => line.startsWith('[ok]')));
+    assert.equal(report.checks.length, 8);
+    assert.equal(lines.length, 8);
+    assert.ok(lines.every((line) => line.startsWith('[ok]') || line.startsWith('[warn] git:')));
     assert.equal(codes.length, 0);
 
     await fs.writeFile(path.join(tmpDir, 'PLANNER.md'), '# no markers\n');

@@ -42,4 +42,4 @@ End the file with one line, `Touched: <path>, <path>`, listing every file you ch
 
 Then exit. One attempt. Do not ask questions.
 
-CRITICAL: Before exiting, you MUST write openspec/changes/001-test/.run/results/3.md as the Exiting rules above describe. Change no file outside Scope except that result file.
+CRITICAL: Before exiting, you MUST write openspec/changes/001-test/.run/results/3.md as the Exiting rules above describe. Change no file outside Scope except that result file. Never run git.

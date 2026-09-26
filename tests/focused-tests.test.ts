@@ -212,6 +212,9 @@ describe('focused run classification', () => {
     const result = await collectAndRun(root, allIn(), ['tests/a.test.ts'], changeFolder);
 
     assert.equal(result?.outcome, 'passed');
-    assert.equal(result?.output.trim(), changeFolder);
+    assert.equal(
+      result?.output.trim(),
+      path.relative(root, changeFolder).split(path.sep).join('/'),
+    );
   });
 });

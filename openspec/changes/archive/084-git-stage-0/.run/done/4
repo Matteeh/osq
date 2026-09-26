@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f5a72e5d41800fc6bb2087d59ad9694ff97459eb70c24ab39bae4643bbeca7f2"
+build_stamp: "fc2b9f0"
+project_commit: "fc2b9f0"
+exit_code: 0
+scope_files: {"src/core/run/verification.ts":"sha256:68d80dbac4f0cfd48873dd8fce057b9daced81128981619547b96e4eb1461db6","src/watcher/archiver.ts":"sha256:ba4a29fdfdfb9083c8318e24b85a7bad50858574b70539ec857ef2b6239b2142","tests/archiver.test.ts":"sha256:a049ac64d1d0c7e013895e9f31f225b4f34605cb233e1c7e2c3e7e0d8813a82a","tests/focused-tests.test.ts":"sha256:c7d71e5327bcbe2ef1123f5e20e21b0bb00d39dcef0e73b0677494e809f102d6","tests/osq-change-env.test.ts":"sha256:1be8505311449c0038e2b7eb7d547f89b45aa20ad950c007866fa488044cc8c6","tests/relative-paths.test.ts":"sha256:50d9d3922e4a4d6b3dae5cd04a0e03360bc92e0f1a02a00340d11646ee38515c","tests/verification-record.test.ts":"sha256:7bfd3a8697e97d71509038989f9e314cae908741cdcca28b6251f324777d31ea"}
+---
+2026-09-26T11:22:55.320Z
