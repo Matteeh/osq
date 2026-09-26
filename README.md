@@ -22,6 +22,12 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 
 ## Upgrading
 
+To 0.2.2:
+
+- The opencode adapter needs opencode 2. `osq doctor` and the watcher's preflight refuse opencode 1.
+- A config file that exists but fails to import or validate now stops every command with `Error: Failed to load <path>: <message>` and exit 1. Earlier releases carried on with the defaults.
+- The managed `AGENTS.md` and `PLANNER.md` blocks changed. Run `osq init` to refresh them; until you do, `osq doctor` reports the drift.
+
 Resolver 2 changes the automated done-marker hashes for active changes. On the first watcher cycle after upgrading, a completed task in an active change whose `.run/done/<n>` lacks `scope_resolver: 2` is detected even when its recorded aggregate hash still matches. This is a one-time recertification wave: the watcher runs each affected task's `verify` at detection, writes one idempotent `.run/regressed/<n>.md` scope-regression marker carrying the recorded and current resolver versions, and halts the change. Review each marker and run `osq retry <id> <task>` to recertify that task explicitly; a passing verification refreshes the marker with resolver-2 hashes. Markers inside `openspec/changes/archive/` are not rewritten or audited by this migration.
 
 ## What it puts in your repo
@@ -41,7 +47,7 @@ openspec/
   specs/           living capability specifications (e.g. cli-foundation/spec.md)
   changes/
     042-order-cancellation/
-      proposal.md  parent spec: goal, verify, non-goals, contract, human steps, delta
+      proposal.md  parent spec: goal, verify, non-goals, surface, decisions, contract, human steps, delta
       plan-prompt.md  the planning prompt `osq plan` writes; removed at archive
       tasks.md     task checklist, ticked by the watcher
       tasks/1.md   unit of work: acceptance, verify, scope, entry, tests.modify, verify_starts
@@ -73,12 +79,12 @@ Smart models author specs and never execute them. Cheap models execute specs and
 ## Gates and permissions
 
 - **Approval gate.** Nothing runs until a human runs `osq approve`. It lints the change, hashes the folder, and writes `.run/approved` plus `.run/manifest.json`.
-- **Approval digest.** Before sealing, `osq approve` prints a short digest: the goal, one line per task with its resolved-scope file count, and the requirements each delta adds, modifies, or removes. It then flags six things worth a human look: `shared_file` (a path two tasks share), `sensitive_path` (a package manifest, lockfile, CI workflow, osq or OpenSpec config, managed instruction file, or env file in scope), `verify_without_test` (a verify naming no test file or runner), `removed_requirement` (a delta that removes requirements), `unknown_capability` (a delta for a capability with no living spec that either has no `## Purpose` or has a name resembling a living capability, and the label names which; a deliberate new capability instead prints `(new capability)` on its digest heading), and `verify_starts_conflict` (a task that declares `green` or `any` while its verify names a missing test its own scope creates). Flags never block by default: they print last, as information, and the approval line names them (`Approved <id> with N flags: ...`). Add `--confirm` to stop and ask about them instead.
+- **Approval digest.** Before sealing, `osq approve` prints a short digest: the goal, one line per task with its resolved-scope file count, and the requirements each delta adds, modifies, or removes. It then flags eight things worth a human look: `shared_file` (a path two tasks share), `sensitive_path` (a package manifest, lockfile, CI workflow, osq or OpenSpec config, managed instruction file, or env file in scope), `verify_without_test` (a verify naming no test file or runner), `removed_requirement` (a delta that removes requirements), `unknown_capability` (a delta for a capability with no living spec that either has no `## Purpose` or has a name resembling a living capability, and the label names which; a deliberate new capability instead prints `(new capability)` on its digest heading), `verify_starts_conflict` (a task that declares `green` or `any` while its verify names a missing test its own scope creates), `adr_departure` (a `Departs from ADR <n>:` line in `## Decisions`), and `adr_check_modified` (a task that may change an ADR's check file; see Architecture decisions). Flags never block by default: they print last, as information, and the approval line names them (`Approved <id> with N flags: ...`). Add `--confirm` to stop and ask about them instead.
 - **Verification gate.** The watcher never trusts the agent's claim. It runs each task's `verify` in its own process after the agent exits and writes `.run/done/<n>` only on exit 0; a non-zero exit becomes `.run/dead/<n>.md`.
 - **Change verification after every task.** When the task's `verify` passes, the watcher also runs the proposal's change-level `verify` (`gates.changeVerifyAfterTask`, on by default). A red result kills the task with `change_verify_red`, so every task must leave the whole change green.
 - **Baseline verify.** When `gates.baselineVerify` names a command, the watcher runs it once in the project root before a change's first task spawns, to prove the tree was green before the change started. A non-zero exit kills the first task with `baseline_red` and prints "tree was red before this change started"; no agent spawns and the reason waits for `osq retry`. Under git, when HEAD and every dirty file outside a `.run/` folder are unchanged since the latest green baseline in any active or archived change, the watcher reuses it and records `baseline_ran` with `outcome: reused` instead of running the command; outside git, or with no commit, the command always runs.
 - **Pre-spawn verify check.** Before a task's first attempt, the watcher runs that task's `verify` once and expects it to fail: a verify already green before any agent work means the work is done or the verify does not exercise the task. A task declares its expected start with `verify_starts` — `red` by default, `green` for work like a refactor that should already pass, or `any` when either is fine. A mismatch warns by default and the task continues; `gates.preSpawnVerify: fail` kills the task with `verify_precondition` before the agent spawns, and `off` disables the check. A mismatch shows in the task's `verify_ran` event, `osq show`, and `osq report`. A named path the verify refers to that does not exist yet is recorded as `missingPaths` on that event and does not count as a mismatch for a `red` task. The check adds one extra verify per task, on its first attempt only.
-- **Automatic retry.** When a task dies for a reason a fresh attempt could fix — `verify_red`, `change_verify_red`, `undeclared_test_change`, `verify_path_missing`, `no_result`, `crashed`, or `timeout` — the watcher retries it without asking. Every other reason (`spec_conflict`, `verify_precondition`, `already_running`, `blocked`, `baseline_red`) waits for you. `gates.autoRetries` caps how many automatic retries a task gets since its approval or its last manual retry; it defaults to 1, `0` turns automatic retries off entirely, and a manual `osq retry` grants one more. Each retry's prompt carries the previous dead marker's body, so the fresh agent sees exactly what failed.
+- **Automatic retry.** When a task dies for a reason a fresh attempt could fix — `verify_red`, `change_verify_red`, `undeclared_test_change`, `verify_path_missing`, `denied_dependency`, `no_result`, `crashed`, or `timeout` — the watcher retries it without asking. Every other reason (`spec_conflict`, `verify_precondition`, `already_running`, `blocked`, `baseline_red`) waits for you. `gates.autoRetries` caps how many automatic retries a task gets since its approval or its last manual retry; it defaults to 1, `0` turns automatic retries off entirely, and a manual `osq retry` grants one more. Each retry's prompt carries the previous dead marker's body, so the fresh agent sees exactly what failed.
 - **Stuck tasks.** Every dead marker records a `fingerprint` over its reason and body, ignoring details a rerun changes: ISO timestamps, durations, PIDs, ANSI codes, and absolute paths under the project root. When a task dies again with the same fingerprint as its most recent retained death, the watcher stops retrying and marks it stuck — `stuck: true` on the active marker, one `stuck` event, one line. The inbox shows the task as stuck and `osq --json` gives its `task-dead` item a `stuck` field carrying the fingerprint; `osq retry <id> <n>` still retries it after you fix the cause.
 - **Scope recertification.** Before each task and again before archiving, the watcher re-hashes the resolved `scope` of every done task. When a later task whose `scope` covers a changed file changed it, the recorded hashes show nothing else did, and the task's `verify` still passes, the watcher recertifies that task by itself. Every other change halts the change until you run `osq retry <id> <n>`.
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
@@ -102,12 +108,17 @@ features:
 ## Verify
 ## Non-goals
 ## Surface
+## Decisions
 ## Contract
 ## Human steps
+### Before approval
+### After landing
 ## Delta
 ```
 
-The frontmatter `verify` is the change-level command the watcher runs after every task and before archiving. Capability writes are not declared in frontmatter: the set of delta specs under `specs/<capability>/spec.md` is the authoritative declaration of what the change writes.
+The frontmatter `verify` is the change-level command the watcher runs after every task and before archiving. An optional `fixes` list names the changes this one reworks; lint fails on an id that names no active, archived, or rejected change, and `fixes` never affects execution order. Capability writes are not declared in frontmatter: the set of delta specs under `specs/<capability>/spec.md` is the authoritative declaration of what the change writes.
+
+`## Human steps` holds what osq cannot do. Steps under `### Before approval` show in the approval digest and on the inbox's approval item. Steps under `### After landing`, or a `check: <command>` in the frontmatter, leave the change **verification pending** once it archives: changes that depend on it wait until you run `osq check <id>` (for a `check` command) and record the outcome with `osq verified <id> --passed` or `--failed`. `osq status`, `osq show`, and the inbox list pending changes with their next command. Write `None` under a heading with no steps.
 
 `## Surface` lists the user-facing names the change adds, changes, or removes — commands, flags, config keys, frontmatter fields, document sections, dead reasons, and event types; a change with none of those writes `None`.
 
@@ -147,7 +158,9 @@ skills: []
 
 Tasks run in order. The agent reads its task, the parent `proposal.md`, the delta specs and capability docs it names, `AGENTS.md`, and a previous result file for that task if there is one. The runner also injects capability-specific constraints and code ownership rules extracted from living capability specs. The delta is applied by the watcher, so the agent never edits living specs under `openspec/specs/`.
 
-Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; defaults are shown.
+Before exiting, the agent writes `.run/results/<n>.md` with these headings, leaving out any that would be empty: `## Changed`, `## Deviated` (for the reviewer), `## Missing context` (for the planner), `## Outside scope` (for the human), `## Blocked`, and `## Next`, ending with a `Touched: <paths>` line. A task that cannot finish within its scope writes what it needs under `## Blocked` and no code; the watcher records it dead with reason `blocked`, never retries it automatically, and the inbox shows the stated need. `osq show` prints each task's disclosures, and the plan prompt quotes those from recent archived changes, bounded by `planning.disclosures.recentChanges` (default 3) and `planning.disclosures.maxCharacters` (default 4000).
+
+Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; defaults are shown. `osq lint` prints each finding as `<change>: <severity> <file> (<requirement or section>): <message>`, with repository-wide findings in their own group at the end, and `osq lint --json` prints them as JSON.
 
 | Check | Result |
 | --- | --- |
@@ -155,6 +168,7 @@ Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; def
 | proposal declares `features.writes` | reject |
 | more than one table under `## Contract` | reject |
 | `depends_on` names a missing change | reject |
+| `fixes` names a missing change | reject |
 | task `scope` has more than 8 patterns (`limits.maxScopeFiles`) | reject |
 | task acceptance longer than 7 lines (`limits.maxAcceptanceLines`), or two lines fused into one | reject |
 | task scope names a preexisting test without `tests.modify: true` | reject |
@@ -309,18 +323,40 @@ The config assumes `tsc` compiles `tests/` to `build/tests/`; follow the project
 - **Deterministic spec merges**: Capability specs are only ever changed by the watcher applying an approved delta merge (ADR 002). Agents never touch `openspec/specs/`.
 - **Synthesized results**: An agent that exits without writing `.run/results/<n>.md` is not lost: if the adapter captured a final text message, the watcher synthesizes a result file (`synthesized: true`) from it and proceeds to verify. Only an exit with neither a result file nor final text is `dead` with `reason: no_result`. Nothing disappears silently.
 
-Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `verify_precondition`, `baseline_red` (the configured baseline verify failed before the change's first task), `undeclared_test_change`, `verify_path_missing` (a path the task's `verify` names did not exist after the agent exited), `denied_dependency` (a scoped `package.json` gained a package an accepted ADR denies; retried automatically once), `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns. Every dead marker also carries a `fingerprint` of its reason and body, and a marker the watcher stopped retrying carries `stuck: true`.
+Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `verify_precondition`, `baseline_red` (the configured baseline verify failed before the change's first task), `undeclared_test_change`, `verify_path_missing` (a path the task's `verify` names did not exist after the agent exited), `denied_dependency` (a scoped `package.json` gained a package an accepted ADR denies; retried automatically once), `blocked` (the agent wrote `## Blocked` in its result; never retried automatically), `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns. Every dead marker also carries a `fingerprint` of its reason and body, and a marker the watcher stopped retrying carries `stuck: true`.
+
+## Version control
+
+osq reads git when it is available: `osq doctor` reports it, baseline reuse compares HEAD, and the watcher records `scope_violation` and `vcs_violation` events. Agents never run git. osq makes no git writes unless `vcs.enabled` is true, and in this release that support is **unfinished**. Leave it off.
+
+```ts
+export default defineConfig({
+  vcs: {
+    enabled: false,                  // default; no git writes
+    author: 'osq <osq@example.com>', // required when enabled
+    // defaultBranch: 'main',        // approval's base branch when origin has no HEAD; default main
+    // worktreeRoot: '~/.osq/worktrees',
+    // prepare: 'pnpm install',      // run once in each new worktree
+  },
+  timeouts: {
+    gitSeconds: 10,        // each git read
+    gitCommitSeconds: 120, // each commit
+  },
+});
+```
+
+With `vcs.enabled`, `osq approve` creates branch `osq/<folder>` and a linked worktree under `vcs.worktreeRoot`, runs `vcs.prepare` there, writes the seal plus `.run/base` and `.run/approver` into the worktree's copy, commits `osq: <id> approved`, and prints `Worktree:` and `Branch:` lines. Your checkout is left untouched, and `osq status` warns when the checkout's copy of the change is edited afterwards. The watcher does not yet run changes in their worktrees, so a change approved this way does not run.
 
 ## Harnesses
 
-`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own (`measures`, `verify_ran`, `done`, `done_manual`, `dead`, `regressed`, `retry`, `recertification`, `rejected`), all to the task's `.run/events/<n>.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
+`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `done_manual`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
 
 Available adapters:
 
 - `agy`: Antigravity harness adapter
 - `claude`: Claude Code harness adapter running fresh headless `claude -p` tasks
 - `codex`: Codex CLI harness adapter running tasks via `codex exec` and planning via the Codex TUI
-- `opencode`: OpenCode harness adapter running tasks via `opencode run`
+- `opencode`: OpenCode harness adapter running tasks via `opencode run` (requires opencode 2)
 - `pi`: Pi coding agent harness adapter running fresh one-shot tasks in JSON mode
 - `mock`: In-memory deterministic simulation for tests
 
@@ -335,10 +371,12 @@ export default defineConfig({
     bin: 'opencode',
     model: 'deepseek/deepseek-flash',
     agent: 'osq-coder',
-    variant: 'thinking', // optional
+    variant: 'thinking', // optional; passed as <model>#<variant>
   },
 });
 ```
+
+The adapter needs opencode 2; `osq doctor` reports a failing `harness-version` check for opencode 1 and a warning above the tested range. Tasks run with `opencode run --standalone` from the project root, and a configured `variant` is appended to the model as `<model>#<variant>`.
 
 Running `osq setup` with the `opencode` harness scaffolds `.opencode/agent/osq-coder.md` with restricted permissions (denying `webfetch` and `websearch`) and the managed `AGENTS.md` execution procedure. Note that the `--auto` flag approves any action the agent file does not deny. The agent file must have mode `all` or `primary`; a subagent cannot be selected with --agent and OpenCode silently falls back to an unrestricted default. `webfetch` and `websearch` are denied at the tool level, but `bash` is allowed and unrestricted, so the agent can reach the network through the shell. Network isolation requires a sandbox, which osq does not provide.
 
@@ -485,11 +523,13 @@ osq setup                write harness config for OSQ_HARNESS
 osq new <name>           new change folder from template in openspec/changes/
 osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool
 osq queue                print the read-only brief queue from openspec/queue.md
-osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints
+osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints (--json for JSON)
 osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
 osq reject <id>          move an unapproved or failed change intact into rejected history
 osq done <id> <task>     mark a task done manually with required justification (--manual)
+osq check <id>           run an archived change's recorded check command
+osq verified <id>        record an after-landing outcome (--passed or --failed, optional --note <text>)
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
@@ -503,14 +543,19 @@ osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ 
 ### Approval
 
 ```sh
-osq approve <id> --confirm   # show the digest, then ask about any flags before sealing
-osq show <id> --json         # details, tasks, events, and the digest as JSON
+osq approve <id> --confirm      # show the digest, then ask about any flags before sealing
+osq approve <id> --base-ok      # approve even when HEAD is not the default branch
+osq approve <id> --ignore-dirty # approve despite uncommitted changes in task scope
+osq show <id> --json            # details, tasks, events, and the digest as JSON
 ```
 
 By default `osq approve` prints the digest and its flags, then approves without
 asking; flags never block. `--confirm` asks only when flags fire, defaults to no,
 and refuses without a terminal rather than waiting. A declined or refused approval
 writes nothing, and `--confirm` on a flag-free change approves without a prompt.
+With `vcs.enabled`, approve normally requires HEAD on the default branch and a
+clean checkout in task scope; `--base-ok` and `--ignore-dirty` override those
+two refusals.
 `osq show <id> --json` prints the same details as JSON, with the digest and flags
 for an unapproved change and a null digest once it is approved.
 
@@ -670,7 +715,13 @@ Run `osq doctor` to verify repository health:
 
 - `config`: confirms `osq.config.ts` is valid and well-formed
 - `harness`: checks that the configured harness binary (e.g. `opencode`, `agy`) exists and is executable
-- `harness-version`, `harness-auth`: Pi's extra checks (only when Pi is selected) warn on an untested Pi version and, with `pi.provider` set, fail unless `pi auth check` reports `ready`
+- `harness-version`: the installed harness's version. Pi warns outside its tested range; Claude Code fails under `2.1.278`; opencode fails under 2 and warns from 3
+- `harness-auth`: with Pi and `pi.provider` set, fails unless `pi auth check` reports `ready`
+- `harness-containment`: with Claude Code, states what confines the agent's Bash
+- `decisions`: validates every ADR, the AGENTS.md rules block, and each accepted ADR's check files
+- `planning-prices`: warns, only when it applies, that a model with recorded planning tokens has no price in `planning.prices`
+- `git`: git's version, or a warning saying why git is off. `git-env` warns when a variable such as `GIT_DIR` is set
+- `vcs-prepare`, `git-hooks`, `git-signing`: with `vcs.enabled` only, warn about a lockfile without `vcs.prepare`, active commit hooks, and commit signing
 - `managed-blocks`: verifies the `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md` managed sections match the installed osq version (run `osq init` to repair drift)
 - `locks`: checks for orphaned `.run/running/*.pid` locks and processes
 - `archives`: validates integrity of archived change folders
@@ -683,7 +734,7 @@ To release a new version of `osq`:
 
 1. Bump `"version"` in `package.json`.
 2. Add a corresponding release section in `CHANGELOG.md`.
-3. Commit the changes: `git commit -am "release: v<x.y.z>"`.
+3. Commit the changes: `git commit -am "chore: release <x.y.z>"`.
 4. Create and push the release tag: `git tag v<x.y.z> && git push --tags`.
 5. GitHub Actions (`release.yml`) verifies the build and publishes to npm with provenance via trusted publishing.
 
