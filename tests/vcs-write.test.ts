@@ -41,6 +41,7 @@ const PORT_MEMBERS = [
   'status',
   'configValue',
   'hookNames',
+  'defaultBranch',
   'listBranches',
   'createBranch',
   'worktreeAdd',

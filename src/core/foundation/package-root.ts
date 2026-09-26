@@ -10,3 +10,10 @@ export const PACKAGE_ROOT = path.resolve(fileURLToPath(new URL('../../../', impo
 
 /** Path to the package's bundled `templates/` directory. */
 export const TEMPLATES_ROOT = path.join(PACKAGE_ROOT, 'templates');
+
+/**
+ * The running osq's own `index` entry, without an extension: `src/index` under
+ * `tsx` and `dist/index` once compiled. Config files import `@matteeh/osq`,
+ * which jiti aliases here so they resolve to the running osq.
+ */
+export const PACKAGE_ENTRY = path.resolve(fileURLToPath(new URL('../../index', import.meta.url)));

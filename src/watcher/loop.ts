@@ -202,6 +202,9 @@ export async function runWatcherCycle(
   };
 
   for (const change of activeChanges) {
+    // Worktree changes wait: their branch's own run owns them. The watcher
+    // must not reap, retry, spawn, verify, or archive them.
+    if (change.tree.worktreeFolder !== undefined) continue;
     const folder = change.folderName;
     const folderPath = change.folderPath;
     const treeRoot = change.tree.root;

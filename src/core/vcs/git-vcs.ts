@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
-import { DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
+import { DEFAULT_BRANCH, DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
@@ -165,6 +165,10 @@ export class GitVcs implements Vcs {
 
   hookNames(): Promise<string[]> {
     return writes.hookNames(this.context);
+  }
+
+  defaultBranch(): Promise<string> {
+    return writes.defaultBranch(this.context, this.config.vcs?.defaultBranch ?? DEFAULT_BRANCH);
   }
 
   listBranches(prefix: string): Promise<string[]> {

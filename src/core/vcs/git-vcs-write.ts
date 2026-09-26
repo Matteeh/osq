@@ -66,6 +66,19 @@ export async function listBranches(ctx: GitWriteContext, prefix: string): Promis
   return lines(result.stdout);
 }
 
+/**
+ * The default branch: the branch `refs/remotes/origin/HEAD` names without its
+ * `origin/` prefix, read locally, else `fallback`. Never contacts the remote.
+ */
+export async function defaultBranch(ctx: GitWriteContext, fallback: string): Promise<string> {
+  const result = await ctx.run(['symbolic-ref', '--quiet', '--short', 'refs/remotes/origin/HEAD']);
+  const value = result.code === 0 ? result.stdout.trim() : '';
+  if (value.startsWith('origin/') && value.length > 'origin/'.length) {
+    return value.slice('origin/'.length);
+  }
+  return fallback;
+}
+
 function parseWorktrees(output: string): VcsWorktree[] {
   const trees: VcsWorktree[] = [];
   let current: { path?: string; branch: string | null; head: string | null } | null = null;
@@ -123,18 +136,28 @@ export async function worktreeRemove(ctx: GitWriteContext, worktreePath: string)
 }
 
 /** Write the commit message to a temporary file git reads, never an argument. */
-async function commitMessage(ctx: GitWriteContext, author: string, message: string): Promise<void> {
+async function commitMessage(
+  ctx: GitWriteContext,
+  author: string,
+  message: string,
+  paths: readonly string[],
+): Promise<void> {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-commit-'));
   const file = path.join(dir, 'message.txt');
   try {
     await fs.writeFile(file, message, 'utf8');
-    ok(await ctx.runCommit(['commit', `--author=${author}`, '-F', file]));
+    const args = ['commit', `--author=${author}`, '-F', file];
+    if (paths.length > 0) args.push('--only', '--', ...paths);
+    ok(await ctx.runCommit(args));
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }
 }
 
-/** Stage exactly `paths`, commit them, and return the new commit. */
+/**
+ * Stage exactly `paths` and commit only them, leaving anything else staged as
+ * it was; with no paths commit the index as it stands.
+ */
 export async function commit(
   ctx: GitWriteContext,
   paths: readonly string[],
@@ -142,7 +165,7 @@ export async function commit(
   author: string,
 ): Promise<string> {
   if (paths.length > 0) ok(await ctx.run(['add', '--', ...paths]));
-  await commitMessage(ctx, author, message);
+  await commitMessage(ctx, author, message, paths);
   return ok(await ctx.run(['rev-parse', '--verify', 'HEAD'])).trim();
 }
 
@@ -185,17 +208,34 @@ async function assertDiscardable(ctx: GitWriteContext): Promise<void> {
   assertOsqBranch(branch.stdout, branch.code);
 }
 
-/** Tracked files under `paths`, as named in the index. */
-async function trackedPaths(ctx: GitWriteContext, paths: readonly string[]): Promise<string[]> {
+/** Files HEAD tracks under `paths`. */
+async function headPaths(ctx: GitWriteContext, paths: readonly string[]): Promise<string[]> {
+  const result = await ctx.run(['ls-tree', '-r', '--name-only', 'HEAD', '--', ...paths]);
+  if (result.code !== 0) return [];
+  return lines(result.stdout);
+}
+
+/** Files in the index under `paths`. */
+async function indexPaths(ctx: GitWriteContext, paths: readonly string[]): Promise<string[]> {
   const result = await ctx.run(['ls-files', '-z', '--', ...paths]);
   if (result.code !== 0) return [];
   return result.stdout.split('\0').filter((entry) => entry.length > 0);
 }
 
-/** Restore tracked paths to HEAD and remove untracked files under them. */
+/**
+ * Restore `paths` to HEAD in the index and the tree, remove files under them
+ * HEAD lacks, staged or untracked, and never remove ignored ones. With no
+ * paths it returns before running git.
+ */
 export async function discard(ctx: GitWriteContext, paths: readonly string[]): Promise<void> {
+  if (paths.length === 0) return;
   await assertDiscardable(ctx);
-  const tracked = await trackedPaths(ctx, paths);
-  if (tracked.length > 0) ok(await ctx.run(['checkout', 'HEAD', '--', ...tracked]));
+  const head = await headPaths(ctx, paths);
+  const inHead = new Set(head);
+  const absent = (await indexPaths(ctx, paths)).filter((entry) => !inHead.has(entry));
+  if (absent.length > 0) ok(await ctx.run(['rm', '--cached', '-q', '--', ...absent]));
+  if (head.length > 0) {
+    ok(await ctx.run(['restore', '--source=HEAD', '--staged', '--worktree', '--', ...head]));
+  }
   ok(await ctx.run(['clean', '-fd', '--', ...paths]));
 }

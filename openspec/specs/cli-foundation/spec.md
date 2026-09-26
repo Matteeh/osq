@@ -1654,13 +1654,13 @@ SHALL run.
 - **THEN** loading fails with `gates.baselineVerify must be a non-empty command`
 
 ### Requirement: Version control configuration
-<!-- source: src/core/foundation/config-vcs.ts, src/core/foundation/config.ts, tests/vcs-config.test.ts -->
+<!-- source: src/core/foundation/config-vcs.ts, src/core/foundation/config.ts, tests/vcs-config.test.ts, tests/vcs-worktree-setup.test.ts -->
 `osq.config.ts` MAY carry a `vcs` block. `enabled` SHALL be a boolean and
 default to false. `author`, when set, SHALL have the form `Name <email>`, and
-SHALL be required when `enabled` is true. `worktreeRoot` and `prepare`, when
-set, SHALL be non-empty strings after trimming, kept trimmed. A loaded config
-SHALL always carry `vcs`. `timeouts.gitCommitSeconds` MAY bound each commit
-osq makes, and SHALL default to 120 when unset.
+SHALL be required when `enabled` is true. `worktreeRoot`, `prepare`, and
+`defaultBranch`, when set, SHALL be non-empty strings after trimming, kept
+trimmed. A loaded config SHALL always carry `vcs`. `timeouts.gitCommitSeconds`
+MAY bound each commit osq makes, and SHALL default to 120 when unset.
 
 #### Scenario: Block unset
 - **WHEN** `osq.config.ts` has no `vcs` block
@@ -1673,6 +1673,10 @@ osq makes, and SHALL default to 120 when unset.
 #### Scenario: Malformed author
 - **WHEN** `osq.config.ts` sets `vcs: { author: 'osq' }`
 - **THEN** loading fails with `vcs.author must look like "Name <email>"`
+
+#### Scenario: Default branch trimmed
+- **WHEN** `osq.config.ts` sets `vcs: { defaultBranch: ' trunk ' }`
+- **THEN** the loaded config carries `defaultBranch: 'trunk'`, and a blank `defaultBranch` fails with `vcs.defaultBranch must be a non-empty string if provided`
 
 ### Requirement: Doctor version control warnings
 <!-- source: src/core/vcs/doctor-git.ts, tests/vcs-doctor-warnings.test.ts -->
@@ -1695,3 +1699,66 @@ exit code.
 #### Scenario: Flag off
 - **WHEN** doctor runs with `vcs.enabled` off in that same repository
 - **THEN** it prints no `vcs-prepare`, `git-hooks`, or `git-signing` line
+
+### Requirement: Config file errors
+<!-- source: src/core/foundation/config.ts, src/core/foundation/package-root.ts, tests/config-load-errors.test.ts -->
+When `osq.config.ts`, `osq.config.js`, or `osq.config.mjs` exists and fails to
+import or validate, `loadConfig` SHALL reject with a `ConfigLoadError` whose
+message is `Failed to load <absolute path>: <original message>`. It SHALL
+import the file with jiti aliasing `@matteeh/osq` to the running osq's own
+entry, `src/index` under `tsx` and `dist/index` once built. A project with no
+config file SHALL load the defaults as before.
+
+#### Scenario: Validation error
+- **WHEN** `osq.config.ts` calls `defineConfig({ vcs: { author: 'osq' } })`
+- **THEN** `loadConfig` rejects with a `ConfigLoadError` naming the file and `vcs.author must look like "Name <email>"`
+
+#### Scenario: Import error
+- **WHEN** `osq.config.ts` has a syntax error
+- **THEN** `loadConfig` rejects with a `ConfigLoadError` naming the file
+
+#### Scenario: Scaffolded config without node_modules
+- **WHEN** a temporary project has only the `osq.config.ts` that `osq init` writes, with its `'agy'` replaced by `'codex'`, `OSQ_HARNESS` unset, and no `node_modules`
+- **THEN** `loadConfig` resolves with harness `codex` from that file
+
+#### Scenario: Doctor
+- **WHEN** `osq doctor` runs with a config file that fails to validate
+- **THEN** its `config` check fails with `failed to load: ` followed by the `ConfigLoadError` message
+
+### Requirement: Config error exit
+<!-- source: src/cli/bin.ts, src/cli/run.ts, src/cli/init.ts, tests/cli-config-errors.test.ts -->
+When any command rejects with a `ConfigLoadError`, the command line SHALL print
+`Error: <message>` to stderr, without a stack trace, and exit 1. `osq init`
+SHALL load config like every other command and SHALL NOT fall back to the
+defaults. Any other error SHALL propagate as before.
+
+#### Scenario: Status with a broken config
+- **WHEN** `osq status` runs in a project whose config fails to validate
+- **THEN** stderr holds `Error: Failed to load ` and the file, and the exit code is 1
+
+#### Scenario: Init with a broken config
+- **WHEN** `osq init` runs in that project
+- **THEN** it prints the same error, exits 1, and scaffolds nothing
+
+### Requirement: OpenCode diagnostics
+<!-- source: src/core/foundation/config-opencode.ts, src/core/foundation/harness-catalog.ts, tests/opencode-doctor.test.ts -->
+The opencode catalog entry SHALL declare a `diagnose` hook adding a
+`harness-version` check. It SHALL read the first `major.minor.patch` in the
+`--version` output, so `opencode v2.0.18` reads as `2.0.18`. Inside
+`>=2.0.0 <3.0.0` the check SHALL pass with `opencode <version> (tested >=2.0.0 <3.0.0)`.
+Below 2.0.0 it SHALL fail with
+`opencode <version> is not supported; the opencode adapter needs opencode 2 (tested >=2.0.0 <3.0.0)`.
+At 3.0.0 or above, or when no version can be read, it SHALL pass with a
+warning, `opencode <version> is outside the tested range >=2.0.0 <3.0.0`.
+
+#### Scenario: Version 2
+- **WHEN** `opencode --version` prints `opencode v2.0.18`
+- **THEN** the `harness-version` check passes naming `2.0.18` and the tested range
+
+#### Scenario: Version 1
+- **WHEN** `opencode --version` prints `1.14.3`
+- **THEN** the `harness-version` check fails naming `1.14.3`, and doctor exits 1
+
+#### Scenario: Version 3
+- **WHEN** `opencode --version` prints `opencode v3.0.0`
+- **THEN** the `harness-version` check passes with a warning naming `3.0.0`

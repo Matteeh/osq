@@ -2,6 +2,18 @@
 
 All notable changes to `osq` are documented in this file.
 
+## [0.2.2] - 2026-09-26
+
+- Claude Code executor harness (070).
+- OpenCode 2: tasks and planning sessions use v2's flags, run usage includes the final step, and doctor and the watcher's preflight refuse opencode 1 (092).
+- Architecture decisions reach every spec, with ADR checks judged by validity (079, 080, 085).
+- Opt-in scenario traceability: scenario tests run before the full verify, and mutation checks are observe only (081–083).
+- Baseline verify before a change's first task (086); a blocked exit and automatic recertification (078).
+- Planning and lint: rework declarations, executor disclosures, planning price estimates, lint findings you can act on, import-graph lint, and human steps on the record (074–077).
+- Config errors fail loudly (090).
+- Fixes from the ts-paas run: skip the rejected folder, recorded bugs, plainer wording (071–073).
+- Groundwork for git (ADR 003), off by default and not yet complete: read-only git, one resolver for where changes live, `vcs` config and git writes, approve into a worktree, and dead-path building blocks (084, 087–089, 091). The watcher does not run changes in worktrees yet, so leave `vcs.enabled` off.
+
 ## [0.2.1] - 2026-09-24
 
 Fixes from the first run on a project other than osq (069):

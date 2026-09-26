@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:148476e18b8b7399371869f7b0635f75f3554b45859f7807c489664802a79218"
+build_stamp: "5a2bee7"
+project_commit: "5a2bee7"
+exit_code: 0
+scope_files: {"src/core/run/dead-commit.ts":"sha256:a999a3eaa2caf4055891a1f4fa1df930bfa32d703a6282bf6044b93eb95439a1","tests/dead-commit.test.ts":"sha256:bbcce69d9254b5b638227ea0fe0e7fb2e5a15650249cdee257cee34ebbc4cef9"}
+---
+2026-09-26T14:56:28.552Z

@@ -1,11 +1,11 @@
-import { DEFAULT_CONFIG, loadConfig } from '../core/foundation/config.js';
+import { loadConfig } from '../core/foundation/config.js';
 import { scaffoldProject } from '../core/foundation/init.js';
 
 export async function initCommand(
   options: { cwd?: string; refreshSchema?: boolean } = {},
 ): Promise<void> {
   const cwd = options.cwd || process.cwd();
-  const config = await loadConfig(cwd).catch(() => DEFAULT_CONFIG);
+  const config = await loadConfig(cwd);
   const result = await scaffoldProject(cwd, { refreshSchema: options.refreshSchema, config });
 
   for (const dir of result.createdDirs) {

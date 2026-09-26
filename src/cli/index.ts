@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
-import { approveCommand } from './approve.js';
+import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
@@ -117,14 +117,6 @@ export function createProgram(version?: string): Command {
     });
 
   program
-    .command('approve <ids...>')
-    .description('lint, hash, and approve change folders')
-    .option('--confirm', 'ask about approval flags before sealing')
-    .action(async (ids: string[], options: { confirm?: boolean }) => {
-      await approveCommand(ids, { confirm: options.confirm });
-    });
-
-  program
     .command('retry <id> <target>')
     .description('retry a dead or regressed task or change without deleting diagnostics')
     .action(async (id: string, target: string) => {
@@ -227,6 +219,7 @@ export function createProgram(version?: string): Command {
       }
     });
 
+  registerApproveCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {

@@ -45,6 +45,8 @@ export interface Vcs {
   status(): Promise<VcsStatusEntry[]>;
   configValue(key: string): Promise<string | null>;
   hookNames(): Promise<string[]>;
+  /** Origin's default branch, then `vcs.defaultBranch`, then `main`. */
+  defaultBranch(): Promise<string>;
   listBranches(prefix: string): Promise<string[]>;
   createBranch(name: string, base: string): Promise<void>;
   worktreeAdd(path: string, branch: string): Promise<void>;

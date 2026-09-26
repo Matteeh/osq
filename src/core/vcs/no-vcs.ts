@@ -1,3 +1,4 @@
+import { DEFAULT_BRANCH } from '../foundation/config-vcs.js';
 import type { Vcs, VcsHead, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
 
 /** The port used when git is unavailable or the project root is not the repo top. */
@@ -40,6 +41,10 @@ export class NoVcs implements Vcs {
 
   async hookNames(): Promise<string[]> {
     return [];
+  }
+
+  async defaultBranch(): Promise<string> {
+    return DEFAULT_BRANCH;
   }
 
   async listBranches(_prefix: string): Promise<string[]> {

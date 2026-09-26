@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createProgram, resolvePackageVersion } from './index.js';
+import { runCli } from './run.js';
 
-const program = createProgram(resolvePackageVersion());
-await program.parseAsync(process.argv);
+await runCli(process.argv);

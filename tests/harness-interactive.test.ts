@@ -103,9 +103,10 @@ process.exit(42);
       assert.equal(exitCode, 42);
 
       const recorded = JSON.parse(await fs.readFile(recordedFile, 'utf8'));
-      assert.equal(recorded.argv[0], prompt);
-      assert.equal(recorded.argv[1], '--dir');
-      assert.equal(recorded.argv[2], tmpDir);
+      assert.equal(recorded.argv[0], 'mini');
+      assert.equal(recorded.argv[1], '--prompt');
+      assert.equal(recorded.argv[2], prompt);
+      assert.equal(recorded.argv.includes('--dir'), false);
 
       const modelIdx = recorded.argv.indexOf('--model');
       assert.notEqual(modelIdx, -1);

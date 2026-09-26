@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { DEFAULT_SERVE_CONFIG } from '../foundation/config-serve.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { type MetricsReport, getMetricsReport } from '../report/report.js';
+import { changeTrees } from '../status/change-locations.js';
 import { type ReadInboxOptions, readInbox } from '../status/inbox-projection.js';
 import type { Inbox } from '../status/inbox.js';
 import { getWebChange } from './web-data-change.js';
@@ -130,10 +131,12 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   const getInbox =
     options.getInbox ?? ((root: string, inbox: ReadInboxOptions) => readInbox(root, inbox));
 
+  const trees = await changeTrees(projectRoot, config);
   const hub = createInvalidationHub({
     projectRoot,
     openspecRoot: config.paths.openspecRoot,
     debounceMs: config.serve?.eventDebounceMs ?? DEFAULT_SERVE_CONFIG.eventDebounceMs,
+    trees,
     watch: options.watch,
     schedule: options.schedule,
   });

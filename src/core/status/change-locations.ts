@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { selectVcs } from '../vcs/select.js';
 import {
   getArchiveDir,
   getChangesDir,
@@ -16,6 +17,8 @@ export type ChangeLocation = 'active' | 'archived' | 'rejected';
 export interface ChangeTree {
   /** Absolute project root of the tree. */
   readonly root: string;
+  /** For an osq worktree tree, the change folder it checks out. */
+  readonly worktreeFolder?: string;
   readonly changesDir: string;
   readonly archiveDir: string;
   readonly rejectedDir: string;
@@ -63,21 +66,44 @@ async function listLocation(
   return changes;
 }
 
+/** One tree rooted at `root`, its canonical directories from the config. */
+function treeAt(root: string, config: OsqConfig, worktreeFolder?: string): ChangeTree {
+  return {
+    root,
+    ...(worktreeFolder !== undefined ? { worktreeFolder } : {}),
+    changesDir: getChangesDir(config.paths.openspecRoot, root),
+    archiveDir: getArchiveDir(config.paths.openspecRoot, root),
+    rejectedDir: getRejectedDir(config.paths.openspecRoot, root),
+  };
+}
+
+/** Resolve a path with symlinks, falling back to the raw path when absent. */
+async function realpath(target: string): Promise<string> {
+  return fs.realpath(target).catch(() => target);
+}
+
 /**
- * The trees changes live in. Today there is exactly one, the project root; a
- * relative project root resolves against the current directory. The function is
- * async because the next stage adds `git worktree list` behind it.
+ * The trees changes live in. The first is always the project root; with
+ * `vcs.enabled` and git selected, one tree follows per osq worktree, carrying
+ * the change folder its branch names. A relative project root resolves against
+ * the current directory.
  */
 export async function changeTrees(projectRoot: string, config: OsqConfig): Promise<ChangeTree[]> {
   const root = path.resolve(projectRoot);
-  return [
-    {
-      root,
-      changesDir: getChangesDir(config.paths.openspecRoot, root),
-      archiveDir: getArchiveDir(config.paths.openspecRoot, root),
-      rejectedDir: getRejectedDir(config.paths.openspecRoot, root),
-    },
-  ];
+  const trees: ChangeTree[] = [treeAt(root, config)];
+  if (config.vcs?.enabled !== true) return trees;
+
+  const vcs = await selectVcs(root, config);
+  if (vcs.kind !== 'git') return trees;
+
+  const rootReal = await realpath(root);
+  for (const worktree of await vcs.worktreeList()) {
+    const branch = worktree.branch;
+    if (!branch?.startsWith('osq/')) continue;
+    if ((await realpath(worktree.path)) === rootReal) continue;
+    trees.push(treeAt(worktree.path, config, branch.slice('osq/'.length)));
+  }
+  return trees;
 }
 
 /**
@@ -91,16 +117,31 @@ export async function listChanges(
 ): Promise<LocatedChange[]> {
   const wanted = new Set(locations);
   const trees = await changeTrees(projectRoot, config);
+  const worktreeFolders = new Set(
+    trees.flatMap((tree) => (tree.worktreeFolder === undefined ? [] : [tree.worktreeFolder])),
+  );
   const changes: LocatedChange[] = [];
   for (const tree of trees) {
+    const entries: LocatedChange[] = [];
     if (wanted.has('active')) {
-      changes.push(...(await listLocation(tree, tree.changesDir, 'active')));
+      entries.push(...(await listLocation(tree, tree.changesDir, 'active')));
     }
     if (wanted.has('archived')) {
-      changes.push(...(await listLocation(tree, tree.archiveDir, 'archived')));
+      entries.push(...(await listLocation(tree, tree.archiveDir, 'archived')));
     }
     if (wanted.has('rejected')) {
-      changes.push(...(await listLocation(tree, tree.rejectedDir, 'rejected')));
+      entries.push(...(await listLocation(tree, tree.rejectedDir, 'rejected')));
+    }
+    // A worktree tree contributes only the folder its branch names; the
+    // project root drops an active folder any worktree tree names.
+    if (tree.worktreeFolder !== undefined) {
+      changes.push(...entries.filter((entry) => entry.folderName === tree.worktreeFolder));
+    } else {
+      changes.push(
+        ...entries.filter(
+          (entry) => entry.location !== 'active' || !worktreeFolders.has(entry.folderName),
+        ),
+      );
     }
   }
   return changes.sort(compareLocated);
