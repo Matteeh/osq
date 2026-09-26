@@ -164,6 +164,11 @@ export function formatStatusOverview(overview: StatusOverview): string {
       const worktree = overview.worktrees?.[spec.folderName];
       if (worktree) {
         lines.push(`  worktree: ${worktree.path}`);
+        if (spec.tasks.some((task) => task.status === 'running')) {
+          lines.push(
+            '  warning: a task is running in this worktree; do not edit it until the task ends',
+          );
+        }
         if (worktree.checkoutChanged) {
           lines.push(
             `  warning: the checkout's copy of ${spec.folderName} changed since approval; edits there never reach the run`,

@@ -6,8 +6,13 @@ import { findHarness } from '../core/foundation/harness-catalog.js';
 import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { reapStaleLocks } from '../core/run/lock.js';
 import type { StaleTaskAudit } from '../core/run/scope-hash.js';
-import { resolveChangeDoc } from '../core/spec/parser.js';
-import { changeTrees, changesDirLabel, listChanges } from '../core/status/change-locations.js';
+import { parseSpecMdFromFolder, resolveChangeDoc } from '../core/spec/parser.js';
+import {
+  type LocatedChange,
+  changeTrees,
+  changesDirLabel,
+  listChanges,
+} from '../core/status/change-locations.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
@@ -17,6 +22,15 @@ import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
+import {
+  commitPendingVerifiedTasks,
+  commitWorktreeArchive,
+  commitWorktreeDeadTask,
+  commitWorktreeVerifiedTask,
+  newArchiveName,
+  readArchiveNames,
+} from './worktree-commit.js';
+import { checkWorktree, haltWorktreeChange } from './worktree-run.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
 const EXIT_SIGINT = 130;
@@ -181,38 +195,54 @@ export async function runWatcherCycle(
     tasks: readonly string[];
   }[] = [];
 
-  const archiveCompletedSpec = async (
-    root: string,
-    folder: string,
-    folderPath: string,
-    specId: string,
-  ): Promise<void> => {
+  const archiveCompletedSpec = async (change: LocatedChange, specId: string): Promise<void> => {
+    const folder = change.folderName;
+    const folderPath = change.folderPath;
+    const root = change.tree.root;
+    const worktree = change.tree.worktreeFolder !== undefined;
     // Read the manual steps while the folder still exists: the archive move
     // relocates it, and this task never performs those steps itself.
     const humanSteps = await readHumanSteps(folderPath);
+    if (worktree) {
+      const halt = await checkWorktree(change, config);
+      if (halt) {
+        await haltWorktreeChange(change, specId, halt, logger);
+        return;
+      }
+    }
+    const proposalTitle = worktree
+      ? ((await parseSpecMdFromFolder(folderPath).catch(() => null))?.title ?? '')
+      : '';
+    const before = worktree ? await readArchiveNames(change.tree.archiveDir) : null;
     const archived = await checkAndArchiveSpec(root, folderPath, config);
     if (!archived) {
       return;
     }
     specsArchived++;
     logger?.info(`${tag('✓ spec', '[archived]')} ${specId} archived (${folder})`);
+    if (worktree && before !== null) {
+      const archiveName = await newArchiveName(change.tree.archiveDir, before);
+      if (archiveName !== null) {
+        await commitWorktreeArchive(change, config, archiveName, proposalTitle, logger);
+      }
+    }
     if (humanSteps) {
       logger?.info(`Human steps after completion:\n${humanSteps}`);
     }
   };
 
   for (const change of activeChanges) {
-    // Worktree changes wait: their branch's own run owns them. The watcher
-    // must not reap, retry, spawn, verify, or archive them.
-    if (change.tree.worktreeFolder !== undefined) continue;
     const folder = change.folderName;
     const folderPath = change.folderPath;
     const treeRoot = change.tree.root;
+    const worktree = change.tree.worktreeFolder !== undefined;
+    const specId = folder.match(/^(\d+)/)?.[1] ?? folder;
     try {
       // The reaper only detects and unlinks expired locks; the watcher owns the
       // dead marker and event so every artifact is written through outcome.ts.
       const runDir = path.join(folderPath, '.run');
       const reapedLocks = await reapStaleLocks(folderPath, config.timeouts.staleLockSeconds);
+      let reaperHalted = false;
       for (const reaped of reapedLocks) {
         await writeDeadMarker(
           runDir,
@@ -221,7 +251,21 @@ export async function runWatcherCycle(
           treeRoot,
         );
         await recordDeadEvent(folderPath, reaped.taskNumber, reaped.reason);
+        if (worktree) {
+          const halt = await commitWorktreeDeadTask(
+            change,
+            config,
+            reaped.taskNumber,
+            reaped.reason,
+          );
+          if (halt) {
+            await haltWorktreeChange(change, specId, halt, logger);
+            reaperHalted = true;
+            break;
+          }
+        }
       }
+      if (reaperHalted) continue;
 
       let specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
 
@@ -234,6 +278,23 @@ export async function runWatcherCycle(
           retried += count;
           specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
         }
+      }
+
+      // A worktree change commits its pending done tasks before any check, so a
+      // commit a hook rejected is retried by `osq retry <id> change`, then the
+      // clean check runs against the resulting tree.
+      if (worktree && specState.status !== 'regressed') {
+        const pendingHalt = await commitPendingVerifiedTasks(change, config);
+        if (pendingHalt) {
+          await haltWorktreeChange(change, specId, pendingHalt, logger);
+          continue;
+        }
+        const worktreeHalt = await checkWorktree(change, config);
+        if (worktreeHalt) {
+          await haltWorktreeChange(change, specId, worktreeHalt, logger);
+          continue;
+        }
+        specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
       }
 
       if (
@@ -290,14 +351,38 @@ export async function runWatcherCycle(
 
         if (taskResult.success) {
           await runMutationCheck(treeRoot, folderPath, taskNumber, config, logger);
-          await archiveCompletedSpec(treeRoot, folder, folderPath, specState.id);
+          if (worktree) {
+            const halt = await commitWorktreeVerifiedTask(change, config, taskNumber);
+            if (halt) {
+              await haltWorktreeChange(change, specId, halt, logger);
+              continue;
+            }
+          }
+          await archiveCompletedSpec(change, specState.id);
         } else {
+          if (
+            worktree &&
+            taskResult.reason !== undefined &&
+            taskResult.reason !== 'regressed' &&
+            taskResult.reason !== 'already_running'
+          ) {
+            const halt = await commitWorktreeDeadTask(
+              change,
+              config,
+              taskNumber,
+              taskResult.reason,
+            );
+            if (halt) {
+              await haltWorktreeChange(change, specId, halt, logger);
+              continue;
+            }
+          }
           logger?.info(
             `${tag('■ spec', '[halted]')} ${specState.id} halted (task ${taskNumber} dead)`,
           );
         }
       } else if (specState.status === 'done') {
-        await archiveCompletedSpec(treeRoot, folder, folderPath, specState.id);
+        await archiveCompletedSpec(change, specState.id);
       }
     } catch (err) {
       logWatcherError(logger, useSymbols, err);

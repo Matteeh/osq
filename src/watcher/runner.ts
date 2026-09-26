@@ -154,8 +154,9 @@ export async function runTask(
     await measures.emitStart();
     const gitGuard = await beginGitGuard({ ...verifyCtx, scope: taskData.scope });
     const spawnOutcome = await spawnTaskAgent({ ...verifyCtx, adapter, logOutcome });
-    await gitGuard?.check();
+    const violation = await gitGuard?.check();
     if (!spawnOutcome.ok) return finish(spawnOutcome.result);
+    if (violation) return fail(violation.reason, violation.marker, violation.error);
 
     const undeclared = await findUndeclaredTestChanges(projectRoot, testGate.snapshot, testGate);
     if (undeclared.length > 0) {

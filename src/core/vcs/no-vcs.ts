@@ -47,12 +47,20 @@ export class NoVcs implements Vcs {
     return DEFAULT_BRANCH;
   }
 
+  async show(_ref: string, _path: string): Promise<string | null> {
+    return null;
+  }
+
   async listBranches(_prefix: string): Promise<string[]> {
     return [];
   }
 
   async worktreeList(): Promise<VcsWorktree[]> {
     return [];
+  }
+
+  async worktreePrune(): Promise<void> {
+    this.reject();
   }
 
   async createBranch(_name: string, _base: string): Promise<void> {

@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { findChange } from '../status/change-locations.js';
-import { getChangeRunDir, getRejectedDir } from '../status/layout.js';
+import { getChangeRunDir } from '../status/layout.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
 
 /**
@@ -81,23 +81,24 @@ export async function rejectSpec(
   }
 
   // Resolve only beneath the active changes directory. Archived and rejected
-  // folders live elsewhere and therefore never match.
-  const { folderPath: sourcePath } = await findChange(projectRoot, config, specIdOrPrefix);
+  // folders live elsewhere and therefore never match. A change that runs in a
+  // worktree is rejected inside that tree, never in the checkout.
+  const { folderPath: sourcePath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(sourcePath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
 
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
+  const rejectedDir = tree.rejectedDir;
   const destinationPath = path.join(rejectedDir, folderName);
   if (await pathExists(destinationPath)) {
     throw new Error(
-      `Cannot reject ${folderName}: destination "${path.relative(projectRoot, destinationPath) || destinationPath}" already exists.`,
+      `Cannot reject ${folderName}: destination "${path.relative(tree.root, destinationPath) || destinationPath}" already exists.`,
     );
   }
 
   // Read running markers and approval directly so no state-precedence result
   // can hide a live lock, and so a historical suffixed marker never reads as an
   // active failure.
-  const snapshot = await readChangeFolder(projectRoot, sourcePath);
+  const snapshot = await readChangeFolder(tree.root, sourcePath);
   if (snapshot.runningPids.size > 0) {
     throw new Error(`Change ${folderName} has a running task; rejection is refused.`);
   }

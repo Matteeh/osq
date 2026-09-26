@@ -83,7 +83,7 @@ export async function retrySpec(
     throw new Error(`Invalid retry target "${target}": expected a numeric task or "change".`);
   }
 
-  const { folderPath } = await findChange(projectRoot, config, specIdOrPrefix);
+  const { folderPath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
   const runDir = getChangeRunDir(folderPath);
@@ -161,12 +161,12 @@ export async function retrySpec(
       .filter((line) => line.startsWith('- '))
       .map((line) => line.slice(2).trim());
     const gate = await runVerificationCommand(
-      projectRoot,
+      tree.root,
       taskData.verify,
       config.timeouts.verifyTimeoutSeconds,
       folderPath,
     );
-    const current = await computeTaskScopeHash(projectRoot, taskData.scope);
+    const current = await computeTaskScopeHash(tree.root, taskData.scope);
     recertification = gate.exitCode === 0 && !gate.error ? 'passed' : 'requeued';
     recertificationEvent = {
       task: rawTarget,

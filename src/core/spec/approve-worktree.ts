@@ -109,7 +109,11 @@ async function refuseUnlandedDependencies(
 }
 
 /** Run `vcs.prepare` once in the worktree, stopping on a non-zero exit. */
-async function runPrepare(worktreeRoot: string, config: OsqConfig, branch: string): Promise<void> {
+export async function runPrepare(
+  worktreeRoot: string,
+  config: OsqConfig,
+  branch: string,
+): Promise<void> {
   const prepare = config.vcs?.prepare;
   if (prepare === undefined) return;
   const result = await runVerificationCommand(
