@@ -1,4 +1,3 @@
-import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { isPidRunning } from '../run/lock.js';
@@ -8,7 +7,7 @@ import {
   formatInRangeWarning,
 } from '../spec/openspec-version.js';
 import { parseFrontmatter } from '../spec/parser.js';
-import { getArchiveDir, getChangesDir } from '../status/layout.js';
+import { listChanges } from '../status/change-locations.js';
 import { checkGit } from '../vcs/doctor-git.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
@@ -140,24 +139,11 @@ async function checkManaged(projectRoot: string, config: OsqConfig): Promise<Doc
   return make('managed-blocks', result.ok, result.message);
 }
 
-async function listDirs(root: string): Promise<string[]> {
-  let entries: Dirent[] = [];
-  try {
-    entries = await fs.readdir(root, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  return entries.filter((entry) => entry.isDirectory()).map((entry) => path.join(root, entry.name));
-}
-
 async function checkLocks(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
-  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   const orphaned: string[] = [];
-  for (const changeDir of await listDirs(changesDir)) {
-    const name = path.basename(changeDir);
-    if (name === 'archive' || name.startsWith('_') || name.startsWith('.')) continue;
+  for (const change of await listChanges(projectRoot, config, ['active'])) {
     for (const lockDirName of ['running', 'locks']) {
-      const lockDir = path.join(changeDir, '.run', lockDirName);
+      const lockDir = path.join(change.folderPath, '.run', lockDirName);
       for (const file of await fs.readdir(lockDir).catch(() => [])) {
         if (!file.endsWith('.pid')) continue;
         const lockPath = path.join(lockDir, file);
@@ -175,16 +161,15 @@ async function checkLocks(projectRoot: string, config: OsqConfig): Promise<Docto
 }
 
 async function checkArchives(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
-  const root = getArchiveDir(config.paths.openspecRoot, projectRoot);
   const corrupt: string[] = [];
-  for (const archiveDir of await listDirs(root)) {
+  for (const change of await listChanges(projectRoot, config, ['archived'])) {
     const hasProposal =
-      (await exists(path.join(archiveDir, 'proposal.md'))) ||
-      (await exists(path.join(archiveDir, 'spec.md')));
+      (await exists(path.join(change.folderPath, 'proposal.md'))) ||
+      (await exists(path.join(change.folderPath, 'spec.md')));
     const hasTasks =
-      (await exists(path.join(archiveDir, 'tasks'))) ||
-      (await exists(path.join(archiveDir, 'tasks.md')));
-    if (!hasProposal || !hasTasks) corrupt.push(path.relative(projectRoot, archiveDir));
+      (await exists(path.join(change.folderPath, 'tasks'))) ||
+      (await exists(path.join(change.folderPath, 'tasks.md')));
+    if (!hasProposal || !hasTasks) corrupt.push(path.relative(projectRoot, change.folderPath));
   }
   return corrupt.length > 0
     ? make('archives', false, `invalid archive(s): ${corrupt.join(', ')}`)
@@ -196,12 +181,9 @@ async function checkDoneMarkers(
   projectRoot: string,
   config: OsqConfig,
 ): Promise<DoctorCheckResult> {
-  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
   const invalid: string[] = [];
-  for (const changeDir of await listDirs(changesDir)) {
-    const name = path.basename(changeDir);
-    if (name === 'archive' || name.startsWith('_') || name.startsWith('.')) continue;
-    const doneDir = path.join(changeDir, '.run', 'done');
+  for (const change of await listChanges(projectRoot, config, ['active'])) {
+    const doneDir = path.join(change.folderPath, '.run', 'done');
     for (const marker of await fs.readdir(doneDir).catch(() => [])) {
       const markerPath = path.join(doneDir, marker);
       const { data } = parseFrontmatter(await fs.readFile(markerPath, 'utf8').catch(() => ''));

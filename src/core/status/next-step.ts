@@ -4,7 +4,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { analyzeVerifyCommand } from '../spec/linter.js';
 import { parseFrontmatter } from '../spec/parser.js';
-import { getArchiveDir } from './layout.js';
+import { locateFolder } from './change-locations.js';
 import { deriveSpecState, readChangeFolder } from './state.js';
 import { readVerification } from './verification.js';
 
@@ -100,8 +100,8 @@ export async function readNextStep(
   folderPath: string,
   config: OsqConfig,
 ): Promise<NextStep> {
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  if (path.resolve(path.dirname(folderPath)) === path.resolve(archiveDir)) {
+  const located = await locateFolder(projectRoot, config, folderPath);
+  if (located?.location === 'archived') {
     return readArchivedNextStep(folderPath);
   }
   return readActiveNextStep(projectRoot, folderPath);

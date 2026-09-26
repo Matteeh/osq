@@ -10,7 +10,7 @@ import { buildImportGraph } from '../spec/import-graph.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
 import type { TaggedScenario } from '../trace/tag-scan.js';
-import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
+import { type ChangeLocation, listChanges, locateFolder } from './change-locations.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
@@ -234,99 +234,30 @@ export async function resolveSpecFolder(
     throw new Error('Spec ID or prefix cannot be empty');
   }
 
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
-
   // If directly pointing to an existing folder
   if (path.isAbsolute(trimmed) || trimmed.includes(path.sep)) {
     const candidatePath = path.isAbsolute(trimmed) ? trimmed : path.resolve(projectRoot, trimmed);
     const stat = await fs.stat(candidatePath).catch(() => null);
     if (stat?.isDirectory()) {
-      const location =
-        candidatePath === archiveDir || candidatePath.startsWith(`${archiveDir}${path.sep}`)
-          ? 'archived'
-          : candidatePath === rejectedDir || candidatePath.startsWith(`${rejectedDir}${path.sep}`)
-            ? 'rejected'
-            : 'active';
+      const located = await locateFolder(projectRoot, config, candidatePath);
+      const location: ChangeLocation = located?.location ?? 'active';
       return { folderPath: candidatePath, isArchived: location === 'archived', location };
     }
   }
 
-  // 1. Search active specs
-  let activeEntries: string[] = [];
-  try {
-    activeEntries = await fs.readdir(specsDir);
-  } catch {
-    activeEntries = [];
-  }
-
-  const archiveRel = path.relative(specsDir, archiveDir);
-  const archiveFolder =
-    !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
-      ? archiveRel.split(path.sep)[0]
-      : 'archive';
-  const rejectedRel = path.relative(specsDir, rejectedDir);
-  const rejectedFolder =
-    !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
-      ? rejectedRel.split(path.sep)[0]
-      : 'rejected';
-
-  for (const entry of activeEntries) {
-    if (
-      entry.startsWith('.') ||
-      entry.startsWith('_') ||
-      entry === archiveFolder ||
-      entry === rejectedFolder
-    ) {
-      continue;
-    }
-    if (matchesFolder(entry, trimmed)) {
-      const fullPath = path.join(specsDir, entry);
-      const stat = await fs.stat(fullPath).catch(() => null);
-      if (stat?.isDirectory()) {
-        return { folderPath: fullPath, isArchived: false, location: 'active' };
-      }
+  // Search active, then archived, then rejected. The search order and every
+  // message stay as before this module took over folder discovery.
+  for (const change of await listChanges(projectRoot, config)) {
+    if (matchesFolder(change.folderName, trimmed)) {
+      return {
+        folderPath: change.folderPath,
+        isArchived: change.location === 'archived',
+        location: change.location,
+      };
     }
   }
-
-  // 2. Search archive directory
-  const archived = await searchFolder(archiveDir, trimmed, 'archived');
-  if (archived) return archived;
-
-  // 3. Search rejected directory
-  const rejected = await searchFolder(rejectedDir, trimmed, 'rejected');
-  if (rejected) return rejected;
 
   throw new Error(`Spec "${idOrPrefix}" not found in specs or archive`);
-}
-
-/** Search one canonical location directory for a folder matching the query. */
-async function searchFolder(
-  dir: string,
-  query: string,
-  location: 'archived' | 'rejected',
-): Promise<{ folderPath: string; isArchived: boolean; location: 'archived' | 'rejected' } | null> {
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(dir);
-  } catch {
-    return null;
-  }
-
-  for (const entry of entries) {
-    if (entry.startsWith('.') || entry.startsWith('_')) {
-      continue;
-    }
-    if (matchesFolder(entry, query)) {
-      const fullPath = path.join(dir, entry);
-      const stat = await fs.stat(fullPath).catch(() => null);
-      if (stat?.isDirectory()) {
-        return { folderPath: fullPath, isArchived: location === 'archived', location };
-      }
-    }
-  }
-  return null;
 }
 
 export async function getSpecDetails(

@@ -3,12 +3,8 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { readPlanRecords } from '../report/planning.js';
 import { parseFrontmatter } from '../spec/parser.js';
-import {
-  getChangesDir,
-  getDeadMarkerPath,
-  getRegressedMarkerPath,
-  getRejectedMarkerPath,
-} from './layout.js';
+import { findChange } from './change-locations.js';
+import { getDeadMarkerPath, getRegressedMarkerPath, getRejectedMarkerPath } from './layout.js';
 import type {
   QueueActiveFailure,
   QueueAssociationGroups,
@@ -166,10 +162,7 @@ export async function readQueueReportFailure(
   config: OsqConfig,
   failure: QueueActiveFailure,
 ): Promise<QueueReportFailure> {
-  const folderPath = path.join(
-    getChangesDir(config.paths.openspecRoot, projectRoot),
-    failure.folderName,
-  );
+  const { folderPath } = await findChange(projectRoot, config, failure.folderName);
   const candidates =
     failure.target === 'change'
       ? [getRegressedMarkerPath(folderPath, 'change')]

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f8c3d4bae142175c0519626bc0309d90f5d7288420954ae561a80cb8be16cc59"
+build_stamp: "2d8bc7c"
+project_commit: "2d8bc7c"
+exit_code: 0
+scope_files: {"src/core/foundation/doctor-prices.ts":"sha256:01d6395f2d768ae801d0b032d0fbd91ac86c97c228c2a2d4b5e12837128008cc","src/core/foundation/doctor.ts":"sha256:5c684abc663408fa11700df4169aa4f9c20183f1590439dabf8abfb2b27b3a3a","src/core/report/recent-disclosures.ts":"sha256:e721681e876cc7881c69ed4054078f41b322a90c84d71b29baa7e3a971b6a410","src/core/report/report.ts":"sha256:7fde8ac8927aea8a67e8def0cc39f8725704fe1c12347370c2eb20750a92a427","src/core/web/web-events.ts":"sha256:d98ab0959e69352e7e241a2cb95396c97b4883a2b1e215a15e533bd8f1383429"}
+---
+2026-09-26T12:54:33.214Z

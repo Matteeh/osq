@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { resolveChangeDoc } from '../spec/parser.js';
-import { getArchiveDir, getChangesDir, getRejectedDir, getSpecsDir } from '../status/layout.js';
+import { listChanges } from '../status/change-locations.js';
+import { getSpecsDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { WebDataError, type WebLocation } from './web-data-types.js';
 
@@ -34,36 +35,13 @@ export function slugOf(folderKey: string): string {
   return folderKey.replace(/^\d+-?/, '');
 }
 
-async function isDirectory(target: string): Promise<boolean> {
-  const stat = await fs.stat(target).catch(() => null);
-  return stat?.isDirectory() ?? false;
-}
-
 async function listDirectory(dir: string): Promise<string[]> {
   return fs.readdir(dir).catch(() => []);
 }
 
-/** Discover change folders under one canonical location directory. */
-async function discoverLocation(
-  dir: string,
-  location: WebLocation,
-  skip: ReadonlySet<string>,
-): Promise<DiscoveredChangeFolder[]> {
-  const folders: DiscoveredChangeFolder[] = [];
-  for (const entry of await listDirectory(dir)) {
-    if (entry.startsWith('_') || entry.startsWith('.') || skip.has(entry)) continue;
-    const folderPath = path.join(dir, entry);
-    if (!(await isDirectory(folderPath))) continue;
-    if (!(await resolveChangeDoc(folderPath))) continue;
-    folders.push({
-      folderKey: entry,
-      folderPath,
-      location,
-      numericId: numericIdOf(entry),
-      slug: slugOf(entry),
-    });
-  }
-  return folders;
+async function isDirectory(target: string): Promise<boolean> {
+  const stat = await fs.stat(target).catch(() => null);
+  return stat?.isDirectory() ?? false;
 }
 
 function compareFolders(a: DiscoveredChangeFolder, b: DiscoveredChangeFolder): number {
@@ -83,15 +61,18 @@ export async function listChangeFolders(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<DiscoveredChangeFolder[]> {
-  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
-  const skip = new Set([path.basename(archiveDir), path.basename(rejectedDir)]);
-
-  const active = await discoverLocation(changesDir, 'active', skip);
-  const archived = await discoverLocation(archiveDir, 'archived', new Set());
-  const rejected = await discoverLocation(rejectedDir, 'rejected', new Set());
-  return [...active, ...archived, ...rejected].sort(compareFolders);
+  const folders: DiscoveredChangeFolder[] = [];
+  for (const change of await listChanges(projectRoot, config)) {
+    if (!(await resolveChangeDoc(change.folderPath))) continue;
+    folders.push({
+      folderKey: change.folderName,
+      folderPath: change.folderPath,
+      location: change.location,
+      numericId: numericIdOf(change.folderName),
+      slug: slugOf(change.folderName),
+    });
+  }
+  return folders.sort(compareFolders);
 }
 
 /**
