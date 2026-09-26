@@ -184,11 +184,15 @@ describe('lifecycle commands in a worktree', () => {
 
     const result = await rejectSpec(p.repo, '001', 'stop', p.config);
 
-    const worktreeRejected = path.join(p.worktree, 'openspec', 'changes', 'rejected', p.folderName);
-    assert.equal(result.destinationPath, worktreeRejected);
+    const branch = `osq/${p.folderName}`;
+    const rejectedRel = path.posix.join('openspec', 'changes', 'rejected', p.folderName);
+    assert.equal(result.branch, branch);
+    assert.equal(result.worktree?.removed, true);
+    assert.equal(await exists(p.worktree), false);
     assert.equal(await exists(path.join(p.worktreeFolder, 'proposal.md')), false);
-    assert.equal(await exists(path.join(worktreeRejected, 'proposal.md')), true);
-    assert.equal(await exists(path.join(worktreeRejected, '.run', 'rejected.md')), true);
+    assert.match(await git(['show', `${branch}:${rejectedRel}/proposal.md`], p.repo), /Order Flow/);
+    assert.notEqual(await git(['show', `${branch}:${rejectedRel}/.run/rejected.md`], p.repo), '');
+    assert.ok(!(await git(['worktree', 'list', '--porcelain'], p.repo)).includes(p.worktree));
     assert.equal(await exists(checkoutRejected), checkoutRejectedBefore);
     assertSameTree(before, await snapshotTree(p.checkoutFolder), "checkout's copy");
   });

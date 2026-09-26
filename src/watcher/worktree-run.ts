@@ -7,7 +7,13 @@ import type { VcsStatusEntry } from '../core/vcs/vcs.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 
 /** Why a worktree change halts before it spawns or archives. */
-export type WorktreeHaltReason = 'worktree_off_branch' | 'worktree_dirty' | 'commit_failed';
+export type WorktreeHaltReason =
+  | 'worktree_off_branch'
+  | 'worktree_dirty'
+  | 'commit_failed'
+  | 'dependency_changed'
+  | 'dependency_diverged'
+  | 'stack_cut_failed';
 
 /** A halt: the regression reason and the detail its marker body carries. */
 export interface WorktreeHalt {

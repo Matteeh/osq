@@ -177,6 +177,11 @@ export class GitVcs implements Vcs {
     return result.stdout;
   }
 
+  async pathExists(ref: string, filePath: string): Promise<boolean> {
+    const result = await this.run(['cat-file', '-e', `${ref}:${filePath}`]);
+    return result.code === 0;
+  }
+
   listBranches(prefix: string): Promise<string[]> {
     return writes.listBranches(this.context, prefix);
   }

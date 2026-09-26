@@ -28,3 +28,17 @@ export function worktreePath(
   const root = expandHome(config.worktreeRoot ?? DEFAULT_WORKTREE_ROOT, home);
   return path.join(root, path.basename(repoRoot), folderName);
 }
+
+/**
+ * Where the stacked approval of `folderName` lives:
+ * `<vcs.worktreeRoot>/<repo>/.stacked/<folder>`, resolved like `worktreePath`.
+ */
+export function stackedPath(
+  config: VcsConfig,
+  repoRoot: string,
+  folderName: string,
+  home: string = os.homedir(),
+): string {
+  const root = expandHome(config.worktreeRoot ?? DEFAULT_WORKTREE_ROOT, home);
+  return path.join(root, path.basename(repoRoot), '.stacked', folderName);
+}

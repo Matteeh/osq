@@ -266,7 +266,7 @@ describe('osq approve into a worktree', () => {
     assert.equal(await exists(worktreePath(p.vcs, p.repo, p.folder001)), false);
   });
 
-  it('refuses an approved dependency that has not landed', async () => {
+  it('stacks on an approved dependency that has not landed', async () => {
     const p = await makeProject();
     const proposalPath = path.join(p.spec002, 'proposal.md');
     const content = await fs.readFile(proposalPath, 'utf8');
@@ -278,10 +278,13 @@ describe('osq approve into a worktree', () => {
 
     await approveSpec(p.repo, '001', p.config);
 
-    await assert.rejects(
-      approveSpec(p.repo, '002', p.config),
-      /depends on 001-order-flow, which is approved and has not landed; approve this change after it lands/,
-    );
+    const result = await approveSpec(p.repo, '002', p.config);
+
+    assert.equal(result.branch, undefined);
+    assert.equal(result.worktreePath, undefined);
+    assert.deepEqual(result.waitingFor, [p.folder001]);
+    assert.ok(result.stackedPath);
+    assert.equal(await exists(worktreePath(p.vcs, p.repo, p.folder002)), false);
   });
 
   it('approves in the checkout when vcs is off', async () => {

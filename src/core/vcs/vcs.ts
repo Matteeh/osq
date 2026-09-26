@@ -49,6 +49,8 @@ export interface Vcs {
   defaultBranch(): Promise<string>;
   /** One file's contents at a ref, or null when that ref has no such file. */
   show(ref: string, path: string): Promise<string | null>;
+  /** Whether a file or directory exists at a ref; false when the ref is unknown. */
+  pathExists(ref: string, path: string): Promise<boolean>;
   listBranches(prefix: string): Promise<string[]>;
   createBranch(name: string, base: string): Promise<void>;
   worktreeAdd(path: string, branch: string): Promise<void>;

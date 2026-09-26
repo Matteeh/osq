@@ -581,17 +581,21 @@ unchanged.
 - **THEN** `osq show` prints `      Mutation: src/pricing/quote.ts#quote 18 of 19 killed` and `        Survived: src/pricing/quote.ts:36:19 ConditionalExpression -> false` under task 1
 
 ### Requirement: Change locations
-<!-- source: src/core/status/change-locations.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts -->
+<!-- source: src/core/status/change-locations.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts, tests/change-locations-stacked.test.ts -->
 `src/core/status/change-locations.ts` SHALL be the one place that lists the
 trees changes live in and the change folders in them. `changeTrees` SHALL
 return each tree with its root and its changes, archive, and rejected
 directories. The first tree SHALL be the project root. With `vcs.enabled` and
 `GitVcs` selected, one tree SHALL follow for each worktree from `worktreeList`
 whose branch starts with `osq/` and whose path is not the project root, and
-that tree SHALL carry `worktreeFolder`, the branch name without `osq/`.
-Otherwise the project root SHALL be the only tree. A worktree tree SHALL
-contribute only the change folder its `worktreeFolder` names, and the project
-root SHALL NOT report an active folder that a worktree tree names.
+that tree SHALL carry `worktreeFolder`, the branch name without `osq/`. After
+them, one tree SHALL follow for each directory directly under the stacked
+approval directory `<vcs.worktreeRoot>/<repo>/.stacked/`, rooted at that
+directory and carrying `stackedFolder`, the directory's name, unless a
+worktree tree already names that folder. Otherwise the project root SHALL be
+the only tree. A worktree or stacked tree SHALL contribute only the change
+folder its `worktreeFolder` or `stackedFolder` names, and the project root
+SHALL NOT report an active folder that a worktree or stacked tree names.
 `listChanges` SHALL return directories only, active first, then archived, then
 rejected, each in numeric prefix order. An active folder SHALL pass
 `isActiveChangeFolderName`, and an archived or rejected one SHALL NOT start
@@ -630,6 +634,18 @@ root, for display.
 #### Scenario: Worktree of another branch
 - **WHEN** `vcs.enabled` is on and a worktree is on a branch not starting with `osq/`
 - **THEN** `changeTrees` returns no tree for it
+
+#### Scenario: Stacked change
+- **WHEN** `vcs.enabled` is on, the checkout has active `002-b`, and `<vcs.worktreeRoot>/<repo>/.stacked/002-b` holds active `002-b` with `.run/approved`
+- **THEN** `changeTrees` ends with a tree rooted at that directory whose `stackedFolder` is `002-b` and which has no `worktreeFolder`, and `listChanges` and `findChange` for `2` return `002-b` from that tree only
+
+#### Scenario: Stacked folder with a worktree
+- **WHEN** a stacked directory `002-b` exists and a worktree on `osq/002-b` exists too
+- **THEN** `changeTrees` returns no stacked tree for `002-b`, and `listChanges` returns `002-b` from the worktree only
+
+#### Scenario: Stacked directory with the flag off
+- **WHEN** `vcs.enabled` is off and a stacked directory exists
+- **THEN** `changeTrees` returns exactly one tree
 
 ### Requirement: Change location readers
 <!-- source: tests/change-locations-readers.test.ts -->

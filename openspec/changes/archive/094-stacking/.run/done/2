@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4f1b634d60e199dc6f31bb5d215ee8f4e9223403a4c1d61ed47185697aed8e8d"
+build_stamp: "5a2bee7"
+project_commit: "a86a45f"
+exit_code: 0
+scope_files: {"src/core/status/change-locations.ts":"sha256:2092a412f8e3432efa1ce7c4cdd8dc1b10a37c87e9c4c3bac36e739374ea3ebd","tests/change-locations-stacked.test.ts":"sha256:42755a514cdaed5a776903a40b4c4aad1439fe0ff532856d2bed60d9baca03a3"}
+---
+2026-09-26T20:37:19.816Z

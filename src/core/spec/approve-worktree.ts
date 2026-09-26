@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import {
+  type PlanningObservation,
   appendObservedSessions,
   findPlanningSessions,
   resolveChangeCreationTime,
@@ -10,10 +11,9 @@ import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import { scopeCoversPath } from '../run/scope.js';
 import { runVerificationCommand } from '../run/verification.js';
-import { findChange } from '../status/change-locations.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs, VcsHead } from '../vcs/vcs.js';
-import { worktreeBranch, worktreePath } from '../vcs/worktree.js';
+import { stackedPath, worktreeBranch, worktreePath } from '../vcs/worktree.js';
 import {
   confirmApproval,
   readBriefHash,
@@ -21,8 +21,14 @@ import {
   writeApprovalSeal,
 } from './approve-worktree-shared.js';
 import type { ApproveOptions, ApproveResult } from './approve.js';
+import type { ApprovalDigest } from './digest.js';
 import { hashChangeFolder } from './hasher.js';
-import { parseSpecMdFromFolder, parseTaskMd } from './parser.js';
+import { parseTaskMd } from './parser.js';
+import {
+  awaitedDependencies,
+  recordStackedApproval,
+  writeProvenance,
+} from './stack-dependencies.js';
 
 /** Everything the worktree path needs from the checkout's change folder. */
 export interface WorktreeApprovalInput {
@@ -86,28 +92,6 @@ async function refuseExistingBranch(vcs: Vcs, branch: string): Promise<void> {
   if (branches.includes(branch)) throw new Error(`branch ${branch} already exists`);
 }
 
-/** Refuse when a `depends_on` change is approved but has not landed. */
-async function refuseUnlandedDependencies(
-  projectRoot: string,
-  config: OsqConfig,
-  folderPath: string,
-): Promise<void> {
-  const proposal = await parseSpecMdFromFolder(folderPath);
-  for (const id of proposal?.dependsOn ?? []) {
-    const dependency = await findChange(projectRoot, config, id).catch(() => null);
-    if (dependency === null) continue;
-    const approved = await fs
-      .stat(path.join(dependency.folderPath, '.run', 'approved'))
-      .then(() => true)
-      .catch(() => false);
-    if (approved) {
-      throw new Error(
-        `depends on ${dependency.folderName}, which is approved and has not landed; approve this change after it lands`,
-      );
-    }
-  }
-}
-
 /** Run `vcs.prepare` once in the worktree, stopping on a non-zero exit. */
 export async function runPrepare(
   worktreeRoot: string,
@@ -129,29 +113,67 @@ export async function runPrepare(
   }
 }
 
-/** Write `.run/base` and `.run/approver` into the worktree's folder copy. */
-async function writeProvenance(
-  vcs: Vcs,
-  worktreeFolder: string,
-  base: string | null,
-): Promise<void> {
-  const runDir = path.join(worktreeFolder, '.run');
-  await fs.writeFile(path.join(runDir, 'base'), `${base ?? ''}\n`, 'utf8');
-  const [userName, userEmail] = await Promise.all([
-    vcs.configValue('user.name'),
-    vcs.configValue('user.email'),
-  ]);
-  await fs.writeFile(
-    path.join(runDir, 'approver'),
-    `${userName ?? ''} <${userEmail ?? ''}>\n`,
-    'utf8',
-  );
+/** The approval prelude's results that the worktree write needs. */
+interface WorktreeApprovalResolved extends WorktreeApprovalInput {
+  readonly branch: string;
+  readonly head: VcsHead;
+  readonly hash: string;
+  readonly digest: ApprovalDigest;
+  readonly mode: 'shown' | 'confirmed';
+  readonly observations: readonly PlanningObservation[];
+  readonly author: string;
+}
+
+/** Create the branch and worktree, seal the checkout's copy, and commit it. */
+async function approveIntoNewWorktree(
+  projectRoot: string,
+  input: WorktreeApprovalResolved,
+): Promise<ApproveResult> {
+  const { specId, folderName, folderPath, config, vcs, warnings, branch, head, author } = input;
+  const vcsConfig = config.vcs;
+  if (vcsConfig === undefined) throw new Error('vcs.enabled is required');
+
+  const repoRoot = (await vcs.root()) ?? projectRoot;
+  const wtPath = worktreePath(vcsConfig, repoRoot, folderName);
+  await fs.mkdir(path.dirname(wtPath), { recursive: true });
+  await vcs.createBranch(branch, head.sha ?? 'HEAD');
+  await vcs.worktreeAdd(wtPath, branch);
+  await runPrepare(wtPath, config, branch);
+
+  const relativeFolder = path.relative(projectRoot, folderPath).split(path.sep).join('/');
+  const worktreeFolder = path.join(wtPath, relativeFolder);
+  await fs.rm(worktreeFolder, { recursive: true, force: true });
+  await fs.cp(folderPath, worktreeFolder, { recursive: true });
+  await appendObservedSessions(worktreeFolder, input.observations, {
+    briefHash: await readBriefHash(folderPath),
+    osqVersion: await resolveOsqPackageVersion(),
+  });
+  await writeApprovalSeal(wtPath, worktreeFolder, config, input.digest, input.mode, input.hash);
+  await writeProvenance(vcs, worktreeFolder, head.sha);
+
+  const worktreeVcs = await selectVcs(wtPath, config);
+  await worktreeVcs.commit([relativeFolder], `osq: ${specId} approved`, author);
+  await fs.rm(stackedPath(vcsConfig, repoRoot, folderName), { recursive: true, force: true });
+
+  return {
+    specId,
+    folderName,
+    folderPath,
+    hash: input.hash,
+    warnings: [...warnings],
+    planningMatches: input.observations.length,
+    missingPrices: await findUnpricedPlanningModels([worktreeFolder], config.planning?.prices),
+    digest: input.digest,
+    worktreePath: wtPath,
+    branch,
+  };
 }
 
 /**
  * Approve a change onto its own branch and linked worktree, writing nothing to
  * the checkout: lint and digest read it, the branch and worktree receive the
- * sealed copy, and the worktree's first commit holds it.
+ * sealed copy, and the worktree's first commit holds it. When any `depends_on`
+ * entry is approved or archived, record a stacked approval instead.
  */
 export async function approveIntoWorktree(
   projectRoot: string,
@@ -167,11 +189,9 @@ export async function approveIntoWorktree(
   const head = await resolveBase(vcs, options.baseOk);
   await refuseDirtyScope(folderPath, vcs, options.ignoreDirty);
   await refuseExistingBranch(vcs, branch);
-  await refuseUnlandedDependencies(projectRoot, config, folderPath);
 
   const hash = await hashChangeFolder(folderPath);
   const { digest, mode } = await confirmApproval(projectRoot, folderPath, config, options);
-
   const observations = await findPlanningSessions(folderPath, {
     createdAt: await resolveChangeCreationTime(folderPath),
     observedAt: toIso(options.now) ?? new Date().toISOString(),
@@ -180,39 +200,45 @@ export async function approveIntoWorktree(
     readers: options.planningReaders ?? [],
   });
 
-  const repoRoot = (await vcs.root()) ?? projectRoot;
-  const wtPath = worktreePath(vcsConfig, repoRoot, folderName);
-  await fs.mkdir(path.dirname(wtPath), { recursive: true });
-  await vcs.createBranch(branch, head.sha ?? 'HEAD');
-  await vcs.worktreeAdd(wtPath, branch);
+  const awaited = await awaitedDependencies(projectRoot, config, vcs, folderPath);
+  if (awaited.length > 0) {
+    const stacked = await recordStackedApproval({
+      projectRoot,
+      config,
+      vcs,
+      folderName,
+      folderPath,
+      hash,
+      digest,
+      mode,
+      observations,
+      awaited,
+    });
+    return {
+      specId,
+      folderName,
+      folderPath,
+      hash,
+      warnings: [...warnings],
+      planningMatches: observations.length,
+      missingPrices: await findUnpricedPlanningModels(
+        [stacked.copyFolder],
+        config.planning?.prices,
+      ),
+      digest,
+      stackedPath: stacked.path,
+      waitingFor: awaited.map((entry) => entry.folder),
+    };
+  }
 
-  await runPrepare(wtPath, config, branch);
-
-  const relativeFolder = path.relative(projectRoot, folderPath).split(path.sep).join('/');
-  const worktreeFolder = path.join(wtPath, relativeFolder);
-  await fs.rm(worktreeFolder, { recursive: true, force: true });
-  await fs.cp(folderPath, worktreeFolder, { recursive: true });
-
-  await appendObservedSessions(worktreeFolder, observations, {
-    briefHash: await readBriefHash(folderPath),
-    osqVersion: await resolveOsqPackageVersion(),
-  });
-  await writeApprovalSeal(wtPath, worktreeFolder, config, digest, mode, hash);
-  await writeProvenance(vcs, worktreeFolder, head.sha);
-
-  const worktreeVcs = await selectVcs(wtPath, config);
-  await worktreeVcs.commit([relativeFolder], `osq: ${specId} approved`, vcsConfig.author);
-
-  return {
-    specId,
-    folderName,
-    folderPath,
-    hash,
-    warnings: [...warnings],
-    planningMatches: observations.length,
-    missingPrices: await findUnpricedPlanningModels([worktreeFolder], config.planning?.prices),
-    digest,
-    worktreePath: wtPath,
+  return approveIntoNewWorktree(projectRoot, {
+    ...input,
     branch,
-  };
+    head,
+    hash,
+    digest,
+    mode,
+    observations,
+    author: vcsConfig.author,
+  });
 }

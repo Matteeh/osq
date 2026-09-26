@@ -15,7 +15,18 @@ export async function rejectCommand(specId: string, options: RejectCommandOption
     const result = await rejectSpec(cwd, specId, options.reason, config);
     console.log(`Rejected ${result.specId} (${result.folderName})`);
     console.log(`  Reason: ${result.reason}`);
-    console.log(`  Destination: ${result.destinationPath}`);
+    if (result.stackedPath !== undefined) {
+      console.log(`  Withdrew stacked approval: ${result.stackedPath}`);
+    } else if (result.worktree !== undefined) {
+      if (result.worktree.removed) {
+        console.log(`  Worktree removed: ${result.worktree.path}`);
+      } else {
+        console.log(`  Worktree kept: ${result.worktree.path} (${result.worktree.why ?? ''})`);
+      }
+      console.log(`  Branch kept: ${result.branch}`);
+    } else {
+      console.log(`  Destination: ${result.destinationPath}`);
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`Error rejecting ${specId}:\n  ${message}`);

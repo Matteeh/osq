@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { VcsConfig } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { selectVcs } from '../vcs/select.js';
+import { stackedPath } from '../vcs/worktree.js';
 import {
   getArchiveDir,
   getChangesDir,
@@ -19,6 +21,8 @@ export interface ChangeTree {
   readonly root: string;
   /** For an osq worktree tree, the change folder it checks out. */
   readonly worktreeFolder?: string;
+  /** For a stacked approval tree, the change folder it holds. */
+  readonly stackedFolder?: string;
   readonly changesDir: string;
   readonly archiveDir: string;
   readonly rejectedDir: string;
@@ -67,14 +71,24 @@ async function listLocation(
 }
 
 /** One tree rooted at `root`, its canonical directories from the config. */
-function treeAt(root: string, config: OsqConfig, worktreeFolder?: string): ChangeTree {
+function treeAt(
+  root: string,
+  config: OsqConfig,
+  refs: { worktreeFolder?: string; stackedFolder?: string } = {},
+): ChangeTree {
   return {
     root,
-    ...(worktreeFolder !== undefined ? { worktreeFolder } : {}),
+    ...(refs.worktreeFolder !== undefined ? { worktreeFolder: refs.worktreeFolder } : {}),
+    ...(refs.stackedFolder !== undefined ? { stackedFolder: refs.stackedFolder } : {}),
     changesDir: getChangesDir(config.paths.openspecRoot, root),
     archiveDir: getArchiveDir(config.paths.openspecRoot, root),
     rejectedDir: getRejectedDir(config.paths.openspecRoot, root),
   };
+}
+
+/** The `.stacked` directory holding one stacked approval per change folder. */
+function stackedRoot(vcs: VcsConfig, repoRoot: string): string {
+  return path.dirname(stackedPath(vcs, repoRoot, 'folder'));
 }
 
 /** Resolve a path with symlinks, falling back to the raw path when absent. */
@@ -97,11 +111,23 @@ export async function changeTrees(projectRoot: string, config: OsqConfig): Promi
   if (vcs.kind !== 'git') return trees;
 
   const rootReal = await realpath(root);
+  const namedByWorktree = new Set<string>();
   for (const worktree of await vcs.worktreeList()) {
     const branch = worktree.branch;
     if (!branch?.startsWith('osq/')) continue;
     if ((await realpath(worktree.path)) === rootReal) continue;
-    trees.push(treeAt(worktree.path, config, branch.slice('osq/'.length)));
+    const folder = branch.slice('osq/'.length);
+    namedByWorktree.add(folder);
+    trees.push(treeAt(worktree.path, config, { worktreeFolder: folder }));
+  }
+
+  const repoRoot = (await vcs.root()) ?? root;
+  const rootDir = stackedRoot(config.vcs, repoRoot);
+  const entries = await fs.readdir(rootDir, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (namedByWorktree.has(entry.name)) continue;
+    trees.push(treeAt(path.join(rootDir, entry.name), config, { stackedFolder: entry.name }));
   }
   return trees;
 }
@@ -117,8 +143,11 @@ export async function listChanges(
 ): Promise<LocatedChange[]> {
   const wanted = new Set(locations);
   const trees = await changeTrees(projectRoot, config);
-  const worktreeFolders = new Set(
-    trees.flatMap((tree) => (tree.worktreeFolder === undefined ? [] : [tree.worktreeFolder])),
+  const namedFolders = new Set(
+    trees.flatMap((tree) => {
+      const folder = tree.worktreeFolder ?? tree.stackedFolder;
+      return folder === undefined ? [] : [folder];
+    }),
   );
   const changes: LocatedChange[] = [];
   for (const tree of trees) {
@@ -132,14 +161,15 @@ export async function listChanges(
     if (wanted.has('rejected')) {
       entries.push(...(await listLocation(tree, tree.rejectedDir, 'rejected')));
     }
-    // A worktree tree contributes only the folder its branch names; the
-    // project root drops an active folder any worktree tree names.
-    if (tree.worktreeFolder !== undefined) {
-      changes.push(...entries.filter((entry) => entry.folderName === tree.worktreeFolder));
+    // A worktree or stacked tree contributes only the folder it names; the
+    // project root drops an active folder any such tree names.
+    const namedFolder = tree.worktreeFolder ?? tree.stackedFolder;
+    if (namedFolder !== undefined) {
+      changes.push(...entries.filter((entry) => entry.folderName === namedFolder));
     } else {
       changes.push(
         ...entries.filter(
-          (entry) => entry.location !== 'active' || !worktreeFolders.has(entry.folderName),
+          (entry) => entry.location !== 'active' || !namedFolders.has(entry.folderName),
         ),
       );
     }

@@ -105,7 +105,10 @@ export async function approveCommand(
         `Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}`,
       );
       console.log(`  Hash: ${result.hash}`);
-      if (result.worktreePath !== undefined && result.branch !== undefined) {
+      if (result.stackedPath !== undefined) {
+        console.log(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}`);
+        console.log(`  Stacked: ${result.stackedPath}`);
+      } else if (result.worktreePath !== undefined && result.branch !== undefined) {
         console.log(`  Worktree: ${result.worktreePath}`);
         console.log(`  Branch: ${result.branch}`);
       }
