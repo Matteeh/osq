@@ -16,4 +16,5 @@ export type RunTaskFailureReason =
   | 'timeout'
   | 'undeclared_test_change'
   | 'blocked'
+  | 'baseline_red'
   | 'regressed';

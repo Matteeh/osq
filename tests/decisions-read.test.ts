@@ -4,7 +4,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import {
   type DecisionRecords,
@@ -14,9 +13,6 @@ import {
   systemWideAdrs,
   validateDecisions,
 } from '../src/core/foundation/decisions.js';
-import { readLivingCapabilityNames } from '../src/core/spec/digest-capability.js';
-
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 let tmpDir: string;
 
@@ -360,29 +356,5 @@ describe('decision limits', () => {
     const records = await read(config);
     const problems = validateDecisions(records, [], config);
     assert.deepEqual(problems.errors, []);
-  });
-});
-
-describe("osq's own decision records", () => {
-  it('reads and validates the five accepted ADRs without error or warning', async () => {
-    const records = await readDecisions(repoRoot, DEFAULT_CONFIG);
-    const living = await readLivingCapabilityNames(repoRoot, DEFAULT_CONFIG.paths.openspecRoot);
-    const problems = validateDecisions(records, living, DEFAULT_CONFIG);
-
-    assert.deepEqual(
-      records.adrs.map((adr) => adr.number),
-      ['001', '002', '003', '004', '005'],
-    );
-    assert.equal(
-      records.adrs.every((adr) => adr.status === 'accepted'),
-      true,
-    );
-    assert.deepEqual(records.ignored, []);
-    assert.deepEqual(problems.errors, []);
-    assert.deepEqual(problems.warnings, []);
-    assert.deepEqual(
-      systemWideAdrs(records).map((adr) => adr.number),
-      ['003'],
-    );
   });
 });

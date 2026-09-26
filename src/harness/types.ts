@@ -30,6 +30,7 @@ export type HarnessEventType =
   | 'recertification'
   | 'rejected'
   | 'instructions_changed'
+  | 'baseline_ran'
   | 'focused_ran'
   | 'mutation_ran'
   | 'vcs_violation'
@@ -259,6 +260,23 @@ export interface InstructionsChangedEventData {
   readonly changed: string[];
 }
 
+/**
+ * Payload of a `baseline_ran` event: the baseline command a change settles
+ * before its first task spawns. `outcome: reused` means an equal green baseline
+ * from `reusedFrom` covered the current tree, so the command did not run.
+ * `commit` and `treeDigest` are null outside a reusable key.
+ */
+export interface BaselineRanEventData {
+  readonly outcome: 'passed' | 'failed' | 'reused';
+  readonly command: string;
+  readonly commit: string | null;
+  readonly treeDigest: string | null;
+  readonly exitCode: number;
+  readonly durationSeconds: number;
+  /** Folder name of the change whose green baseline was reused. */
+  readonly reusedFrom?: string;
+}
+
 /** How one focused scenario-test run ended. */
 export type FocusedRanOutcome = 'passed' | 'problem' | 'failed';
 
@@ -350,6 +368,7 @@ export interface OsqEventData {
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
   instructions_changed: InstructionsChangedEventData;
+  baseline_ran: BaselineRanEventData;
   focused_ran: FocusedRanEventData;
   mutation_ran: MutationRanEventData;
   vcs_violation: VcsViolationEventData;

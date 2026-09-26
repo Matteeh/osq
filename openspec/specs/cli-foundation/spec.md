@@ -1419,18 +1419,6 @@ system-wide rules the AGENTS.md block may hold. Both SHALL merge from
 - **WHEN** `osq.config.ts` sets `limits.maxRuleLength` to 40
 - **THEN** an accepted ADR with a 41-character rule fails validation naming 40
 
-### Requirement: osq's own decision records
-<!-- source: decisions/**, tests/decisions-read.test.ts -->
-ADRs 001, 002, 004, and 005 in osq's `decisions/` SHALL carry osq frontmatter
-with status `accepted`, a capability-scoped `applies_to`, and a one-line rule,
-and SHALL keep their bodies unchanged. `decisions/README.md` SHALL describe the
-frontmatter format. None of them SHALL apply to all, so osq's AGENTS.md has no
-rules block.
-
-#### Scenario: Own ADRs validate
-- **WHEN** osq's own decisions folder is read and validated against its living specs
-- **THEN** it yields four accepted ADRs, no ignored file, no error, and no warning
-
 ### Requirement: Decision checks and denied packages
 <!-- source: src/core/foundation/decisions.ts, src/core/foundation/decisions-validate.ts, tests/adr-checks-denies.test.ts -->
 ADR frontmatter MAY carry `checks`, a list of repository-relative test files
@@ -1631,3 +1619,36 @@ do not. Neither line SHALL change doctor's exit code.
 #### Scenario: GIT_DIR set
 - **WHEN** doctor runs with `GIT_DIR` set
 - **THEN** it prints a `[warn] git-env:` line naming `GIT_DIR`
+
+### Requirement: osq's own decision records validate
+<!-- source: decisions/**, tests/decisions-own.test.ts -->
+Every ADR in osq's `decisions/` SHALL carry osq frontmatter. Reading the folder
+and validating it against osq's living specs SHALL yield no ignored file, no
+error, and no warning, and `checkProjectRules` SHALL report no error for osq's
+AGENTS.md. `decisions/README.md` SHALL describe the frontmatter format. The
+test of these records SHALL NOT pin ADR numbers, statuses, or which ADRs apply
+to all.
+
+#### Scenario: Own ADRs validate
+- **WHEN** osq's own decisions folder is read and validated against its living specs
+- **THEN** it yields at least one ADR, no ignored file, no error, and no warning, and the rules block check reports no error
+
+#### Scenario: One more ADR
+- **WHEN** a copy of osq's decisions folder and AGENTS.md gains a valid accepted ADR that applies to all, and `writeRulesBlock` refreshes the copy's rules block
+- **THEN** the same checks report no error and no warning
+
+### Requirement: Baseline verify configuration
+<!-- source: src/core/foundation/config-gates.ts, tests/baseline-key.test.ts -->
+`gates.baselineVerify` in `osq.config.ts` MAY name the command the watcher
+runs as a change's baseline. When set, it SHALL be a non-empty string after
+trimming, and validation SHALL keep it trimmed. When it is unset,
+`validateGatesConfig` SHALL leave the key out of its result, and no baseline
+SHALL run.
+
+#### Scenario: Command set
+- **WHEN** `osq.config.ts` sets `gates: { baselineVerify: ' pnpm verify ' }`
+- **THEN** the loaded gates carry `baselineVerify: 'pnpm verify'`
+
+#### Scenario: Empty command
+- **WHEN** `osq.config.ts` sets `gates: { baselineVerify: '  ' }`
+- **THEN** loading fails with `gates.baselineVerify must be a non-empty command`

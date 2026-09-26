@@ -5,6 +5,7 @@ import type { Logger } from '../core/foundation/logger.js';
 import { hashChangeFolder } from '../core/spec/hasher.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { settleBaseline } from './baseline.js';
 import { runChangeVerifyGate } from './change-verify.js';
 import { beginGitGuard } from './git-guard.js';
 import {
@@ -145,6 +146,8 @@ export async function runTask(
   try {
     const testGate = await captureTestGate(projectRoot, taskData.scope, taskData.testsModify);
     const verifyCtx = { projectRoot, specFolderPath, taskNumber, taskData, config, logger };
+    const baseline = await settleBaseline(verifyCtx);
+    if (!baseline.ok) return fail('baseline_red', baseline.marker, baseline.error, baseline.extra);
     const preSpawn = await runPreSpawnVerify(verifyCtx);
     if (!preSpawn.ok) return fail('verify_precondition', preSpawn.marker, preSpawn.error);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);

@@ -12,6 +12,8 @@ export interface GatesConfig {
   readonly changeVerifyAfterTask: boolean;
   readonly preSpawnVerify?: PreSpawnVerifyMode;
   readonly autoRetries?: number;
+  /** The command the watcher runs as a change's baseline, when configured. */
+  readonly baselineVerify?: string;
 }
 
 export const DEFAULT_GATES_CONFIG: GatesConfig = {
@@ -56,9 +58,17 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
   ) {
     throw new Error('gates.autoRetries must be a non-negative integer');
   }
+  let baselineVerify: string | undefined;
+  if (record.baselineVerify !== undefined) {
+    if (typeof record.baselineVerify !== 'string' || record.baselineVerify.trim().length === 0) {
+      throw new Error('gates.baselineVerify must be a non-empty command');
+    }
+    baselineVerify = record.baselineVerify.trim();
+  }
   return {
     changeVerifyAfterTask: value,
     preSpawnVerify: preSpawnRaw as PreSpawnVerifyMode,
     autoRetries: autoRetriesRaw,
+    ...(baselineVerify !== undefined ? { baselineVerify } : {}),
   };
 }
