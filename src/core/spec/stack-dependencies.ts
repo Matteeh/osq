@@ -4,7 +4,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import type { PlanningObservation } from '../report/planning-observed.js';
 import { appendObservedSessions } from '../report/planning-observed.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
-import { changeTrees, listChanges } from '../status/change-locations.js';
+import { changeTrees, listChanges, matchesFolder } from '../status/change-locations.js';
 import type { Vcs } from '../vcs/vcs.js';
 import { stackedPath, worktreeBranch } from '../vcs/worktree.js';
 import { readBriefHash, writeApprovalSeal } from './approve-worktree-shared.js';
@@ -101,19 +101,6 @@ export async function readDependencyState(
     (await readTrimmed(path.join(root, archive, folder, '.run', 'approved')));
   if (checkout !== null) return status(folder, 'approved', checkout);
   return status(folder, 'unapproved', null);
-}
-
-/** Whether a folder name matches a query as `findChange` matches an active one. */
-function matchesFolder(folderName: string, query: string): boolean {
-  const trimmed = query.trim();
-  const num = Number.parseInt(trimmed, 10);
-  const padded = !Number.isNaN(num) ? String(num).padStart(3, '0') : trimmed;
-  return (
-    folderName === trimmed ||
-    folderName === padded ||
-    folderName.startsWith(`${trimmed}-`) ||
-    folderName.startsWith(`${padded}-`)
-  );
 }
 
 /** Resolve one `depends_on` entry to a folder name, or null when none matches. */

@@ -2151,7 +2151,7 @@ run the task's verify and hash its scope in the change's own tree.
 - **THEN** `.run/done/<n>` is written in the worktree's change folder and not in the checkout's copy
 
 ### Requirement: Stacked cut
-<!-- source: src/watcher/loop.ts, src/watcher/stack-run.ts, src/core/spec/stack-cut.ts, tests/stack-run.test.ts -->
+<!-- source: src/watcher/loop.ts, src/watcher/stack-run.ts, src/core/spec/stack-cut.ts, tests/stack-run.test.ts, tests/stack-cut-kept.test.ts -->
 With `vcs.enabled` and `GitVcs` selected, each watcher cycle SHALL, before it
 lists changes, visit every active change in a stacked tree in numeric order,
 skipping one that has `.run/regressed/change.md`. For each, it SHALL read
@@ -2178,9 +2178,9 @@ folder with subject `osq: <id> approved` and author `vcs.author`. Last, it
 SHALL delete the stacked approval directory and log
 `stacked <folder> on <base>: worktree <path>`. The same cycle SHALL then run
 the change from its worktree. A cut that fails SHALL halt the change with
-`stack_cut_failed` and the error's message and keep the stacked approval.
-After `osq retry <id> change`, the next cycle cuts again and reuses the
-branch and worktree that exist. With `vcs.enabled` off, or under `NoVcs`,
+`stack_cut_failed` and the error's message, and SHALL keep the branch, any
+worktree it added, and the stacked approval. After `osq retry <id> change`,
+the next cycle cuts again and reuses the branch and worktree that exist. With `vcs.enabled` off, or under `NoVcs`,
 the step SHALL do nothing.
 
 #### Scenario: Chain approved at once
@@ -2201,7 +2201,7 @@ the step SHALL do nothing.
 
 #### Scenario: Cut fails and resumes
 - **WHEN** `vcs.prepare` exits 1 during the cut, then is fixed, and a human runs `osq retry <id> change`
-- **THEN** the first cycle halts with `stack_cut_failed` and keeps the stacked approval, and the next cycle ends with exactly one `osq: <id> approved` commit on the branch and no stacked approval
+- **THEN** the first cycle halts with `stack_cut_failed` and keeps the branch, the worktree at the path "Worktree location" gives, and the stacked approval, and the next cycle reuses that worktree and ends with exactly one `osq: <id> approved` commit on the branch and no stacked approval
 
 #### Scenario: Flag off
 - **WHEN** `vcs.enabled` is off and a stacked approval directory exists

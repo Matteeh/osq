@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6e6033c7eca08b1d0fbd0d73fb78666faadf82f78946a2f20d5eb9de1a99105d"
+build_stamp: "5a2bee7"
+project_commit: "acca1fa"
+exit_code: 0
+scope_files: {"src/core/spec/stack-dependencies.ts":"sha256:f92f281253f3be49fd08aa27ead3d2156fd4d6c04053488643c34e9847867ae4","src/core/status/change-locations.ts":"sha256:bc08d932b1784e701d73688b25c04a166e5e6ccead0a4600b78e9aaaa2eca628","tests/change-locations-holds.test.ts":"sha256:bf278d57ed6e93183feee476f548ea60cd6e5452de017082c52bbfcf211675ae","tests/change-locations-stacked.test.ts":"sha256:e8f95c13497009dab827dcbd9a0decc1e855a46e4fe4b2512d8fe8aa47c505c1","tests/serve-sse-worktrees.test.ts":"sha256:10834b83edc467dc767bfe3708e7a7bdaf293c06a3828a6770c78a146d606c32"}
+---
+2026-09-26T22:25:40.566Z

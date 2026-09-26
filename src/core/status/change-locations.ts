@@ -91,6 +91,23 @@ function stackedRoot(vcs: VcsConfig, repoRoot: string): string {
   return path.dirname(stackedPath(vcs, repoRoot, 'folder'));
 }
 
+/**
+ * Whether a worktree holds `folder`: an approved copy in its changes
+ * directory, or the folder in its archive or rejected directory. Checks the
+ * three paths in that order and stops at the first that exists.
+ */
+async function holdsChange(tree: ChangeTree, folder: string): Promise<boolean> {
+  const candidates = [
+    path.join(tree.changesDir, folder, '.run', 'approved'),
+    path.join(tree.archiveDir, folder),
+    path.join(tree.rejectedDir, folder),
+  ];
+  for (const candidate of candidates) {
+    if (await fs.stat(candidate).catch(() => null)) return true;
+  }
+  return false;
+}
+
 /** Resolve a path with symlinks, falling back to the raw path when absent. */
 async function realpath(target: string): Promise<string> {
   return fs.realpath(target).catch(() => target);
@@ -117,8 +134,10 @@ export async function changeTrees(projectRoot: string, config: OsqConfig): Promi
     if (!branch?.startsWith('osq/')) continue;
     if ((await realpath(worktree.path)) === rootReal) continue;
     const folder = branch.slice('osq/'.length);
+    const tree = treeAt(worktree.path, config, { worktreeFolder: folder });
+    if (!(await holdsChange(tree, folder))) continue;
     namedByWorktree.add(folder);
-    trees.push(treeAt(worktree.path, config, { worktreeFolder: folder }));
+    trees.push(tree);
   }
 
   const repoRoot = (await vcs.root()) ?? root;
@@ -178,7 +197,7 @@ export async function listChanges(
 }
 
 /** Whether a folder name matches a query as `findSpecFolder` matches it. */
-function matchesFolder(folderName: string, query: string): boolean {
+export function matchesFolder(folderName: string, query: string): boolean {
   const trimmed = query.trim();
   const num = Number.parseInt(trimmed, 10);
   const padded = !Number.isNaN(num) ? String(num).padStart(3, '0') : trimmed;

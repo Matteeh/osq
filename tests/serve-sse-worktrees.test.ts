@@ -208,6 +208,9 @@ describe('serve server wiring', () => {
     await git(['branch', 'osq/001-a'], repo);
     const wt = path.join(wtRoot, '001-a');
     await git(['worktree', 'add', wt, 'osq/001-a'], repo);
+    const wtRunDir = path.join(wt, 'openspec', 'changes', '001-a', '.run');
+    await fs.mkdir(wtRunDir, { recursive: true });
+    await fs.writeFile(path.join(wtRunDir, 'approved'), 'hash\n', 'utf8');
 
     const config = defineConfig({
       vcs: { enabled: true, author: 'osq <osq@example.invalid>', worktreeRoot: wtRoot },

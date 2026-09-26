@@ -144,20 +144,12 @@ async function writeApprovedCopy(
   await worktreeVcs.commit([relative], `osq: ${id} approved`, author);
 }
 
-/** Drop a worktree this cut could not finish, so the stacked tree stays listed. */
-async function removeFailedWorktree(vcs: Vcs, wtPath: string): Promise<void> {
-  try {
-    await vcs.worktreeRemove(wtPath);
-  } catch {
-    await fs.rm(wtPath, { recursive: true, force: true });
-    await vcs.worktreePrune().catch(() => undefined);
-  }
-}
-
 /**
  * Cut `osq/<folder>` at `base`: create the branch and worktree unless they
  * exist, run prepare, seal the stacked copy as the approved commit unless the
  * branch tip already holds it, then delete the stacked approval directory.
+ * A failure rethrows and keeps the branch, the worktree it added, and the
+ * stacked approval, so a later cut reuses them.
  */
 export async function cutStackedChange(input: CutStackedChangeInput): Promise<string> {
   const { projectRoot, config, change, vcs, base } = input;
@@ -170,22 +162,17 @@ export async function cutStackedChange(input: CutStackedChangeInput): Promise<st
   const branch = worktreeBranch(change.folderName);
   const repoRoot = (await vcs.root()) ?? projectRoot;
   const wtPath = worktreePath(vcsConfig, repoRoot, change.folderName);
-  try {
-    if (!(await vcs.listBranches(branch)).includes(branch)) {
-      await vcs.createBranch(branch, base);
-    }
-    if (!(await vcs.worktreeList()).some((entry) => entry.branch === branch)) {
-      await fs.mkdir(path.dirname(wtPath), { recursive: true });
-      await vcs.worktreeAdd(wtPath, branch);
-    }
-    await runPrepare(wtPath, config, branch);
-    if (!(await vcs.pathExists(branch, `${changes}/${change.folderName}/.run/approved`))) {
-      await writeApprovedCopy(config, change, wtPath, changes, id, vcsConfig.author);
-    }
-    await fs.rm(change.tree.root, { recursive: true, force: true });
-    return wtPath;
-  } catch (err) {
-    await removeFailedWorktree(vcs, wtPath);
-    throw err;
+  if (!(await vcs.listBranches(branch)).includes(branch)) {
+    await vcs.createBranch(branch, base);
   }
+  if (!(await vcs.worktreeList()).some((entry) => entry.branch === branch)) {
+    await fs.mkdir(path.dirname(wtPath), { recursive: true });
+    await vcs.worktreeAdd(wtPath, branch);
+  }
+  await runPrepare(wtPath, config, branch);
+  if (!(await vcs.pathExists(branch, `${changes}/${change.folderName}/.run/approved`))) {
+    await writeApprovedCopy(config, change, wtPath, changes, id, vcsConfig.author);
+  }
+  await fs.rm(change.tree.root, { recursive: true, force: true });
+  return wtPath;
 }
