@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4e13085e81561f4dad8972ad6d5da4234159b8d8416823a660bbb11d612d5107"
+build_stamp: "5a2bee7"
+project_commit: "26ece81"
+exit_code: 0
+scope_files: {"README.md":"sha256:cdfcf3b71d2311a9d74ced67fcd0c457000c4480f81e491821b29b9fc1e8496c","src/core/run/task-commit.ts":"sha256:bd555fe528ea578c7d791906ec0d99cdcfbd8c3617ac442deece8f6c6406cfbe","src/watcher/auto-retry.ts":"sha256:24f31a2d1b2aeb81c5d2a300353962b53b4792f3de8fae70ab7dd9d20b313d09","src/watcher/loop.ts":"sha256:db99f4f038f49a5d0493957908ec7c4cb3095434d26b0f0d34eee52dd002486a","src/watcher/worktree-commit.ts":"sha256:6a6f85a72f89b7988798a96293b23947c412ce79e486b404f1005bdaf0e62d25","src/watcher/worktree-run.ts":"sha256:83434d59372b241a13709b87dfaa1e059650c86fd60b317f49508c617a3c11ec","tests/change-locations-worktrees.test.ts":"sha256:e68e957c953bdea95e403f21eebb5896ae342c0c4a2f6d4802c45492bbc09785","tests/worktree-run.test.ts":"sha256:dac2b46e17fd066096b01068fdc6a106b9562796ecb2fb711dbc43b349e5bc93"}
+---
+2026-09-26T19:26:07.629Z

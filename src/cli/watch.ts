@@ -1,5 +1,6 @@
 import { loadConfig } from '../core/foundation/config.js';
 import { type LogLevel, createLogger } from '../core/foundation/logger.js';
+import { recreateWorktrees } from '../core/vcs/worktree-recreate.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { WatchCommandOptions } from '../watcher/dev.js';
 import { startWatcher } from '../watcher/loop.js';
@@ -35,6 +36,9 @@ export async function watchCommand(options: WatchCommandOptions): Promise<void> 
   const config = await loadConfig(cwd);
   const adapter = getHarnessAdapter(config.harness);
   const logger = createLogger(resolveLogLevel(options), 'osq');
+  for (const line of await recreateWorktrees(cwd, config)) {
+    logger.info(line);
+  }
   const watcherOptions = { ...options, logger };
   await startWatcher(cwd, config, adapter, watcherOptions);
 }

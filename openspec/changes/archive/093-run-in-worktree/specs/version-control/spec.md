@@ -1,20 +1,4 @@
-# version-control Specification
-
-## Purpose
-Reads the project's git state through one port, so the watcher and doctor can
-see what moved during a task without ever writing to git.
-
-## Requirements
-
-### Requirement: Code ownership
-<!-- source: src/core/vcs/**, tests/vcs*.test.ts -->
-The Version Control capability SHALL own the `Vcs` port, its git and no-git
-implementations, their selection, the git state snapshot and its comparison,
-the doctor git check's code, and their tests.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for the Vcs port, selection, snapshot, or doctor git check code
-- **THEN** system maps `src/core/vcs/**` and `tests/vcs*.test.ts` to version-control
+## MODIFIED Requirements
 
 ### Requirement: Vcs port
 <!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/no-vcs.ts, tests/vcs.test.ts, tests/vcs-worktree-setup.test.ts, tests/vcs-worktree-recreate.test.ts -->
@@ -65,22 +49,6 @@ empty digest, null config values, a null file from `show`, empty lists, and
 #### Scenario: File at a branch
 - **WHEN** branch `osq/001-a` holds `notes.txt` with `hello` and the checkout does not
 - **THEN** `show('osq/001-a', 'notes.txt')` returns `hello`, and `show('osq/001-a', 'missing.txt')` returns null
-
-### Requirement: Vcs selection
-<!-- source: src/core/vcs/select.ts, tests/vcs.test.ts -->
-The system SHALL select `GitVcs` only when the git binary runs and the project
-root, with symbolic links resolved, is the top level of a git repository.
-Otherwise it SHALL select `NoVcs` with one of the reasons `git not found`,
-`not a git repository`, or `not the repository root`. The watcher and doctor
-SHALL select through this one function.
-
-#### Scenario: Folder below the root
-- **WHEN** the project root is a folder inside a repository but not its top level
-- **THEN** selection returns `NoVcs` with reason `not the repository root`
-
-#### Scenario: Plain folder
-- **WHEN** the project root is a temporary folder outside any repository
-- **THEN** selection returns `NoVcs` with reason `not a git repository`
 
 ### Requirement: Vcs write operations
 <!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/git-vcs-write.ts, src/core/vcs/no-vcs.ts, tests/vcs-write.test.ts, tests/vcs-discard-commit.test.ts, tests/vcs-worktree-recreate.test.ts -->
@@ -146,32 +114,7 @@ not hold. Under `NoVcs`, every write SHALL fail naming the reason git is off.
 - **WHEN** a linked worktree's directory is deleted by hand and `worktreePrune` runs
 - **THEN** `worktreeList` no longer lists it, and every other worktree remains
 
-### Requirement: Operations osq never runs
-<!-- source: src/core/vcs/git-vcs.ts, src/core/vcs/git-vcs-write.ts, tests/vcs-write.test.ts -->
-The `Vcs` port SHALL have no operation that force-pushes, pushes, rebases,
-amends, resets, rewrites history, deletes a branch or tag, stashes, cleans
-ignored files, or removes a worktree by force. No git argument list in
-`src/core/vcs/` SHALL contain `--force`, `--amend`, `--hard`, `-D`, `-x`,
-`rebase`, `reset`, `filter-branch`, `push`, or `--no-verify`.
-
-#### Scenario: Forbidden argument
-- **WHEN** a git argument list in `src/core/vcs/` contains `--force`
-- **THEN** the structural test fails and names the file
-
-### Requirement: Worktree location
-<!-- source: src/core/vcs/worktree.ts, tests/vcs-worktree-setup.test.ts -->
-A change's worktree SHALL live at `<vcs.worktreeRoot>/<repo>/<folder>`, where
-`vcs.worktreeRoot` defaults to `~/.osq/worktrees`, a leading `~` expands to
-the home directory, `<repo>` is the folder name of the repository root, and
-`<folder>` is the change folder's name. Its branch SHALL be `osq/<folder>`.
-
-#### Scenario: Default root
-- **WHEN** the repository root is `/src/osq`, the home directory is `/home/u`, and `vcs.worktreeRoot` is unset
-- **THEN** the worktree of `089-approve-into-worktree` is `/home/u/.osq/worktrees/osq/089-approve-into-worktree`
-
-#### Scenario: Configured root
-- **WHEN** `vcs.worktreeRoot` is `/tmp/wt` and the repository root is `/src/osq`
-- **THEN** the worktree of `089-approve-into-worktree` is `/tmp/wt/osq/089-approve-into-worktree`
+## ADDED Requirements
 
 ### Requirement: Worktree recreation
 <!-- source: src/core/vcs/worktree-recreate.ts, src/cli/watch.ts, tests/vcs-worktree-recreate.test.ts -->

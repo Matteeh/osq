@@ -7,8 +7,6 @@ import { afterEach, describe, it } from 'node:test';
 import { promisify } from 'node:util';
 import { DEFAULT_CONFIG, defineConfig } from '../src/core/foundation/config.js';
 import { changeTrees, findChange, listChanges } from '../src/core/status/change-locations.js';
-import { MockAdapter } from '../src/harness/mock.js';
-import { runWatcherCycle } from '../src/watcher/loop.js';
 
 const execFileAsync = promisify(execFile);
 const CHANGES = path.join('openspec', 'changes');
@@ -170,24 +168,5 @@ describe('Change locations across osq worktrees', () => {
     assert.equal(trees.length, 1);
     assert.equal(trees[0].root, path.resolve(root));
     assert.equal(trees[0].worktreeFolder, undefined);
-  });
-});
-
-describe('Watcher worktree wait', () => {
-  it('leaves an approved change in a worktree untouched during a cycle', async () => {
-    const { repo, wtRoot, config } = await setupRepo();
-    await writeChange(repo, '001-a');
-    await commitChanges(repo);
-    await git(['branch', 'osq/001-a'], repo);
-    const wt = path.join(wtRoot, '001-a');
-    await git(['worktree', 'add', wt, 'osq/001-a'], repo);
-    const wtChange = path.join(wt, CHANGES, '001-a');
-    await fs.mkdir(path.join(wtChange, '.run'), { recursive: true });
-    await fs.writeFile(path.join(wtChange, '.run', 'approved'), 'hash\n', 'utf8');
-
-    const summary = await runWatcherCycle(repo, config, new MockAdapter());
-
-    assert.equal(summary.tasksRun, 0);
-    assert.deepEqual(await fs.readdir(path.join(wtChange, '.run')), ['approved']);
   });
 });

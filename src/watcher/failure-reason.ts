@@ -17,4 +17,6 @@ export type RunTaskFailureReason =
   | 'undeclared_test_change'
   | 'blocked'
   | 'baseline_red'
-  | 'regressed';
+  | 'regressed'
+  | 'vcs_violation'
+  | 'scope_violation';

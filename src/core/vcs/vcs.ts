@@ -47,11 +47,15 @@ export interface Vcs {
   hookNames(): Promise<string[]>;
   /** Origin's default branch, then `vcs.defaultBranch`, then `main`. */
   defaultBranch(): Promise<string>;
+  /** One file's contents at a ref, or null when that ref has no such file. */
+  show(ref: string, path: string): Promise<string | null>;
   listBranches(prefix: string): Promise<string[]>;
   createBranch(name: string, base: string): Promise<void>;
   worktreeAdd(path: string, branch: string): Promise<void>;
   worktreeRemove(path: string): Promise<void>;
   worktreeList(): Promise<VcsWorktree[]>;
+  /** Drop git's records of worktrees whose directory no longer exists. */
+  worktreePrune(): Promise<void>;
   commit(paths: readonly string[], message: string, author: string): Promise<string>;
   patch(): Promise<string>;
   discard(paths: readonly string[]): Promise<void>;

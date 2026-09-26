@@ -171,6 +171,12 @@ export class GitVcs implements Vcs {
     return writes.defaultBranch(this.context, this.config.vcs?.defaultBranch ?? DEFAULT_BRANCH);
   }
 
+  async show(ref: string, filePath: string): Promise<string | null> {
+    const result = await this.run(['show', `${ref}:${filePath}`]);
+    if (result.code !== 0) return null;
+    return result.stdout;
+  }
+
   listBranches(prefix: string): Promise<string[]> {
     return writes.listBranches(this.context, prefix);
   }
@@ -189,6 +195,13 @@ export class GitVcs implements Vcs {
 
   worktreeList(): Promise<VcsWorktree[]> {
     return writes.worktreeList(this.context);
+  }
+
+  async worktreePrune(): Promise<void> {
+    const result = await this.run(['worktree', 'prune']);
+    if (result.code !== 0) {
+      throw new Error([result.stdout, result.stderr].filter((part) => part.length > 0).join(''));
+    }
   }
 
   commit(paths: readonly string[], message: string, author: string): Promise<string> {

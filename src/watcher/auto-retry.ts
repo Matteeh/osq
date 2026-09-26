@@ -19,6 +19,8 @@ export const ELIGIBLE_AUTO_RETRY_REASONS = [
   'undeclared_test_change',
   'verify_path_missing',
   'denied_dependency',
+  'vcs_violation',
+  'scope_violation',
   'no_result',
   'crashed',
   'timeout',
