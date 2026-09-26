@@ -536,12 +536,12 @@ The harness event stream SHALL support a typed `done_manual` event recording hum
 - **THEN** system appends an event to `.run/events/<n>.jsonl` with `type: "done_manual"` and payload containing `task` and `reason`
 
 ### Requirement: Interactive harness adapter spawning
-<!-- source: src/harness/types.ts, src/harness/opencode.ts, src/harness/agy.ts, src/harness/mock.ts, tests/harness-interactive.test.ts -->
+<!-- source: src/harness/types.ts, src/harness/opencode/opencode.ts, src/harness/agy/agy.ts, src/harness/mock.ts, tests/harness-interactive.test.ts -->
 Harness adapters SHALL implement `spawnInteractive` inheriting terminal stdio and returning the process exit code.
 
 #### Scenario: Opencode interactive session spawning
 - **WHEN** `OpencodeAdapter.spawnInteractive` executes
-- **THEN** adapter executes binary with inherited stdio, passing prompt, working directory, and optional model and agent flags
+- **THEN** adapter executes `opencode mini --prompt <prompt>` in the working directory with inherited stdio, adding `--model` and `--agent` when given, and no variant, which `mini` does not accept
 
 #### Scenario: Agy interactive session spawning
 - **WHEN** `AgyAdapter.spawnInteractive` executes
@@ -1897,3 +1897,89 @@ recorded it. Without a key, the command SHALL always run.
 #### Scenario: Changed file
 - **WHEN** a tracked file changed after the first change's green baseline
 - **THEN** the second change's baseline runs the command
+
+### Requirement: Worktree changes wait
+<!-- source: src/watcher/loop.ts, tests/change-locations-worktrees.test.ts -->
+The watcher cycle SHALL skip every change the resolver reports from a worktree
+tree: it SHALL NOT reap, retry, spawn, verify, or archive it. Changes in the
+project root SHALL run as before.
+
+#### Scenario: Approved change in a worktree
+- **WHEN** a watcher cycle runs with `vcs.enabled` and an approved change whose worktree holds an unstarted task
+- **THEN** the cycle runs no task, and the worktree's `.run/` gains no file
+
+### Requirement: Osq commit message
+<!-- source: src/core/run/commit-message.ts, tests/commit-message.test.ts -->
+One function SHALL build every commit message osq makes for a task: the
+subject, a blank line, the task title and the outcome line on their own lines,
+a blank line, and trailers `Osq-Change: <folder>`, `Osq-Task: <n>`,
+`Osq-Model: <harness> <model>`, and `Osq-Version: <osqVersion>`. The model
+and version SHALL come from the last `started` event in
+`.run/events/<n>.jsonl`; without one, those two trailers SHALL be left out.
+The caller SHALL supply the outcome line, as `formatTaskOutcomeLine` writes it
+with symbols off.
+
+#### Scenario: Trailers parse
+- **WHEN** a task's events hold a `started` event with harness `pi`, model `deepseek-flash`, and osqVersion `0.2.1`, then a second one with model `deepseek-pro`
+- **THEN** `git interpret-trailers --parse` over the message prints `Osq-Change`, `Osq-Task`, `Osq-Model: pi deepseek-pro`, and `Osq-Version: 0.2.1`
+
+#### Scenario: No started event
+- **WHEN** the task's events file is missing
+- **THEN** the message carries only the `Osq-Change` and `Osq-Task` trailers
+
+### Requirement: Dead task record
+<!-- source: src/core/run/dead-commit.ts, tests/dead-commit.test.ts -->
+Given a `Vcs` for an osq worktree, a change folder inside it, a task number, a
+reason, the task title, and the outcome line, the dead record SHALL, in this
+order: write `patch()` to `.run/dead/<n>.patch`; discard every path `status`
+reports outside the change folder, a rename's source included; then commit
+whichever of `.run/dead/<n>.md`, `.run/dead/<n>.patch`, and
+`.run/events/<n>.jsonl` exist, with subject
+`osq: <id> task <n> dead, reason <reason>`, the message from "Osq commit
+message", and author `vcs.author`. It SHALL return the new commit. It SHALL
+never discard or commit anything else inside the change folder, so for
+`spec_conflict` the human's edits to the folder stay uncommitted. When
+`vcs.author` is unset it SHALL fail before writing anything.
+
+#### Scenario: Agent edits put back
+- **WHEN** a task dies with reason `verify_red` after the agent modified a tracked file and created `src/new.ts` in the worktree
+- **THEN** the branch gains one commit holding only the three `.run/` files, the worktree status is empty outside `.run/`, and `git apply` of the committed patch on the worktree restores both edits
+
+#### Scenario: Patch before discard
+- **WHEN** discarding fails
+- **THEN** `.run/dead/<n>.patch` already holds the agent's edits
+
+#### Scenario: Spec conflict
+- **WHEN** a task dies with reason `spec_conflict` after `tasks/1.md` in the worktree's change folder was edited
+- **THEN** the dead commit holds only `.run/` files, and the edit to `tasks/1.md` remains, uncommitted
+
+### Requirement: OpenCode v2 task execution
+<!-- source: src/harness/opencode/opencode.ts, src/harness/opencode/opencode-session.ts, tests/opencode-spawn.test.ts, tests/opencode-v2.test.ts, tests/fixtures/events/opencode-v2/** -->
+The opencode adapter SHALL run a task as `opencode run <prompt> --standalone
+--agent <agent> --auto --format json --model <model>` with the project root as
+the working directory, then one `--file` per attached file as before. It SHALL
+pass no `--dir` and no `--variant`; a configured `opencode.variant` SHALL be
+appended to the model as `<model>#<variant>`. After the process exits, when
+the stream carried a `sessionID`, the adapter SHALL run `opencode session
+export --standalone <sessionID>` and, when `info.tokens` and `info.cost`
+exceed what the run's `tokens` events recorded, append one `tokens` event with
+the difference, so a task's tokens and cost equal the session's totals. A
+failed or unparseable export SHALL append nothing. Preflight SHALL exit 1 with
+the "OpenCode diagnostics" failure message when the installed opencode is
+below 2.0.0.
+
+#### Scenario: Task argv
+- **WHEN** `buildOpencodeArgs` runs with `opencode: { model: 'deepseek/deepseek-flash', variant: 'thinking' }`
+- **THEN** the argv holds `--standalone`, `--model deepseek/deepseek-flash#thinking`, and neither `--dir` nor `--variant`
+
+#### Scenario: Final step usage
+- **WHEN** a fake opencode replays `observed/run-stream.jsonl` and exports `observed/session-export.json`
+- **THEN** the task's events hold one `tool` event with tool `read` and summary `hello.txt`, one `text` event `banana`, and two `tokens` events whose prompt tokens sum to 9463 and whose cost sums to the export's `info.cost` within 1e-12
+
+#### Scenario: Export fails
+- **WHEN** the fake opencode's `session export` exits 1
+- **THEN** the task's events hold only the streamed `tokens` event
+
+#### Scenario: Opencode 1 preflight
+- **WHEN** the watcher's preflight runs with an opencode that prints `1.14.3`
+- **THEN** it prints the unsupported-version message and exits 1

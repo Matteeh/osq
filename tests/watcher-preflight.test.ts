@@ -87,7 +87,7 @@ describe('Watcher Preflight Verification', () => {
       fakeBin,
       `#!${process.execPath}
 if (process.argv.includes('--version')) {
-  console.log('opencode 1.0.0');
+  console.log('opencode 2.0.0');
   process.exit(0);
 }
 process.exit(0);
@@ -110,7 +110,7 @@ process.exit(0);
 
     await startWatcher(tmpDir, config, opencodeAdapter, { once: true });
     assert.equal(preflightCalled, true, 'Preflight check must run when harness is opencode');
-    assert.ok(logLines.includes('opencode 1.0.0'));
+    assert.ok(logLines.includes('opencode 2.0.0'));
 
     // When harness is mock, preflight must NOT run
     let mockPreflightCalled = false;

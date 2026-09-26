@@ -2,7 +2,10 @@ import type http from 'node:http';
 import path from 'node:path';
 import { watch } from 'chokidar';
 import type { ChangeTree } from '../status/change-locations.js';
-import { numericIdOf } from './web-data-folders.js';
+import { classifyTreePath, singleChangeTree, treeWatchPaths } from './web-trees.js';
+
+/** Re-exported for focused callers that classify a single tree's paths. */
+export { classifyChangePath } from './web-trees.js';
 
 /** Framed invalidation payload: affected numeric ids, empty for shared documents. */
 export interface InvalidationBatch {
@@ -77,56 +80,10 @@ function defaultSchedule(callback: () => void, delayMs: number): TimerHandle {
   return { cancel: () => clearTimeout(timer) };
 }
 
-function folderKeyWithin(base: string, target: string): string | null {
-  const relative = path.relative(base, target);
-  if (relative === '' || relative.startsWith('..') || path.isAbsolute(relative)) return null;
-  const key = relative.split(path.sep)[0];
-  return key === undefined || key === '' || key === '.' ? null : key;
-}
-
-/**
- * Leading numeric id for a path inside exactly one change folder, or `null`
- * when the path belongs to shared state: capability specs, root layout, or an
- * unrecognized folder.
- */
-export function classifyChangePath(
-  target: string,
-  changesDir: string,
-  archiveDir: string,
-  rejectedDir: string,
-): number | null {
-  for (const base of [archiveDir, rejectedDir]) {
-    const key = folderKeyWithin(base, target);
-    if (key !== null) return numericIdOf(key);
-  }
-  const key = folderKeyWithin(changesDir, target);
-  if (key === null || key === 'archive' || key === 'rejected') return null;
-  return numericIdOf(key);
-}
-
-/**
- * The one tree changes live in, built synchronously for direct callers such as
- * focused tests. `changeTrees` is async only because a later stage adds
- * worktree discovery, so this mirrors the single tree it returns today.
- */
-function singleChangeTree(projectRoot: string, openspecRoot: string): ChangeTree {
-  const root = path.resolve(projectRoot);
-  const changesDir = path.join(root, openspecRoot, 'changes');
-  return {
-    root,
-    changesDir,
-    archiveDir: path.join(changesDir, 'archive'),
-    rejectedDir: path.join(changesDir, 'rejected'),
-  };
-}
-
 /** Create the one watcher and debounce accumulator owned by a server. */
 export function createInvalidationHub(options: InvalidationHubOptions): InvalidationHub {
-  const tree = options.trees?.[0] ?? singleChangeTree(options.projectRoot, options.openspecRoot);
-  const changesDir = path.resolve(tree.changesDir);
-  const archiveDir = path.resolve(tree.archiveDir);
-  const rejectedDir = path.resolve(tree.rejectedDir);
-  const root = path.resolve(options.projectRoot, options.openspecRoot);
+  const trees = options.trees ?? [singleChangeTree(options.projectRoot, options.openspecRoot)];
+  const watched = treeWatchPaths(options.projectRoot, options.openspecRoot, trees);
   const factory = options.watch ?? defaultWatch;
   const schedule = options.schedule ?? defaultSchedule;
 
@@ -155,11 +112,11 @@ export function createInvalidationHub(options: InvalidationHubOptions): Invalida
     global = false;
   }
 
-  const watcher = factory([root], { ignoreInitial: true });
+  const watcher = factory(watched, { ignoreInitial: true });
   for (const event of WATCHED_EVENTS) {
     watcher.on(event, (target) => {
       if (closed || typeof target !== 'string') return;
-      const id = classifyChangePath(path.resolve(target), changesDir, archiveDir, rejectedDir);
+      const id = classifyTreePath(path.resolve(target), trees);
       if (id === null) global = true;
       else ids.add(id);
       if (pending === null) {

@@ -1,10 +1,9 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createJiti } from 'jiti';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { applyHarnessModelEnv } from './config-env.js';
+import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { type PiConfig, validatePiConfig } from './config-pi.js';
 import {
@@ -22,6 +21,7 @@ import {
 import type { OsqUserConfig } from './config-user.js';
 import { DEFAULT_VCS_CONFIG, type VcsConfig, validateVcsConfig } from './config-vcs.js';
 
+export { ConfigLoadError } from './config-file.js';
 export type { AgyConfig, OpencodeConfig } from './config-agents.js';
 export type { ClaudeConfig } from './config-claude.js';
 export type { CodexConfig } from './config-codex.js';
@@ -201,44 +201,21 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
     }
   } catch {}
 
-  const configFiles = ['osq.config.ts', 'osq.config.js', 'osq.config.mjs'];
-  let userConfig: OsqUserConfig = {};
-
-  for (const file of configFiles) {
-    const fullPath = path.join(projectRoot, file);
-    const exists = await fs
-      .stat(fullPath)
-      .then(() => true)
-      .catch(() => false);
-
-    if (exists) {
-      try {
-        const jiti = createJiti(import.meta.url, {
-          moduleCache: false,
-          interopDefault: true,
-        });
-        const loaded = await jiti.import(fullPath);
-        const resolved = (loaded as { default?: OsqUserConfig })?.default || loaded;
-        if (typeof resolved === 'object' && resolved !== null) {
-          userConfig = resolved as OsqUserConfig;
-        }
-      } catch (err) {
-        if (process.env.DEBUG_OSQ) {
-          console.error(`Warning: Failed to load config from ${file}:`, err);
-        }
-      }
-      break;
-    }
-  }
+  const { userConfig, path: configPath } = await loadConfigFile(projectRoot);
 
   const harness = userConfig.harness || process.env.OSQ_HARNESS || DEFAULT_CONFIG.harness;
   const envModel = process.env.OSQ_MODEL?.trim();
   const envOverrides = envModel ? applyHarnessModelEnv(userConfig, harness, envModel) : {};
 
-  return defineConfig({
-    ...userConfig,
-    harness,
-    ...envOverrides,
-    ...(userConfig.planner ? { planner: userConfig.planner } : {}),
-  });
+  try {
+    return defineConfig({
+      ...userConfig,
+      harness,
+      ...envOverrides,
+      ...(userConfig.planner ? { planner: userConfig.planner } : {}),
+    });
+  } catch (err) {
+    if (configPath !== undefined) throw new ConfigLoadError(configPath, err);
+    throw err;
+  }
 }

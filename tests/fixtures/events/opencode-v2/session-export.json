@@ -1,0 +1,15 @@
+{
+  "info": {
+    "id": "ses_f21d26208ffevST4hkAF8l3NgB",
+    "tokens": {
+      "input": 9463,
+      "output": 49,
+      "reasoning": 308,
+      "cache": {
+        "read": 8832,
+        "write": 0
+      }
+    },
+    "cost": 0.0016601459999999997
+  }
+}

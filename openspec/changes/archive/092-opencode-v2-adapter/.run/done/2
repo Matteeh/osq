@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:43825e8f7d2ebd305823750d2659e48c3f433347f5d18ab8496ee81569a8c9c6"
+build_stamp: "5a2bee7"
+project_commit: "5a2bee7"
+exit_code: 0
+scope_files: {"README.md":"sha256:cf9128a686fd0fdab568ae0728936af5f4c95b0dcc0225a35f38aa3975336929","src/harness/opencode/opencode-session.ts":"sha256:df07dcae86ddb2e825ca582b2e737e3c6456a2b483931bf8c1092bade2577255","src/harness/opencode/opencode.ts":"sha256:c9b106e4a7e3bb13f865d764ae4e8bbc48c838714268e1e8789fa1356b08036f","tests/fixtures/events/opencode-v2/run-stream.jsonl":"sha256:0cc5ecd5d950c0b7ad32df8d57b42d02ca39de09e8172fa031449702cc27bb11","tests/fixtures/events/opencode-v2/session-export.json":"sha256:f023b59d27971a20fb9c5a579e7f7d12a1779534a6613fce7a26935bdcf310fc","tests/harness-interactive.test.ts":"sha256:52e8d38958cb67dc1b2f7e1b6dd9b9a24213a542baa22bca02036bcc56889728","tests/opencode-spawn.test.ts":"sha256:037d375220153f291a1611f59f4d4031079adee358689707b4c65535d5de1a92","tests/opencode-v2.test.ts":"sha256:e11dc51169ccfb60cf415189aa87c52960aff46737efd0310a50c1dc75ef9a75","tests/watcher-preflight.test.ts":"sha256:c93a7bb0263f35b51bd99ce419aad1ee9468e9f435671eabfcb2f1d6d71bb36a"}
+---
+2026-09-26T18:00:11.618Z

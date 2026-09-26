@@ -5,6 +5,7 @@ import {
   resolveClaudeModel,
 } from './config-claude.js';
 import { codexExecutable, codexModel } from './config-codex-resolve.js';
+import { diagnoseOpencode } from './config-opencode.js';
 import * as piConfig from './config-pi.js';
 import type { OsqConfig } from './config.js';
 
@@ -72,6 +73,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
     model: (config) => config.opencode?.model?.trim() || undefined,
     effort: () => null,
     planner: { agent: true, defaultAgent: 'osq-planner', briefModelWhenNative: '' },
+    diagnose: diagnoseOpencode,
   },
   mock: {
     envModelWhenUnselected: false,

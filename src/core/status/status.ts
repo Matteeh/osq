@@ -1,11 +1,21 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { changeTrees, listChanges } from './change-locations.js';
 import { getRejectedMarkerPath } from './layout.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 import { listPendingVerifications } from './verification.js';
+
+/** Where a change runs when it has its own worktree. */
+export interface ChangeWorktree {
+  /** Absolute path of the linked worktree the change runs in. */
+  readonly path: string;
+  /** Whether the checkout's copy differs from the worktree's `.run/approved`. */
+  readonly checkoutChanged: boolean;
+}
 
 /**
  * A change retained under `rejected/`. Rejection is a terminal location, not a
@@ -26,8 +36,20 @@ export interface StatusOverview {
   archivedChangeFolders: number;
   /** Next step for each active change, keyed by folder name. */
   nextSteps?: Record<string, NextStep>;
+  /** Worktree path and checkout drift for each change running in a worktree. */
+  worktrees?: Record<string, ChangeWorktree>;
   /** Archived changes still awaiting a verification outcome. */
   pendingVerifications?: Array<{ folderName: string; title: string; next: NextStep }>;
+}
+
+/** Whether the checkout's copy changed since approval; a missing copy does not. */
+async function checkoutCopyChanged(
+  checkoutFolder: string,
+  approvedHash: string | null,
+): Promise<boolean> {
+  if (!approvedHash) return false;
+  const current = await hashChangeFolder(checkoutFolder).catch(() => null);
+  return current !== null && current !== approvedHash.trim();
 }
 
 /** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
@@ -73,6 +95,7 @@ export async function getStatusOverview(
 
   const specs: SpecState[] = [];
   const nextSteps: Record<string, NextStep> = {};
+  const worktrees: Record<string, ChangeWorktree> = {};
   for (const change of active) {
     const changeDoc = await resolveChangeDoc(change.folderPath);
     if (!changeDoc) continue;
@@ -80,6 +103,15 @@ export async function getStatusOverview(
     specState.hasProposal = changeDoc.kind === 'proposal';
     specs.push(specState);
     nextSteps[change.folderName] = await readNextStep(projectRoot, change.folderPath, config);
+    if (change.tree.worktreeFolder !== undefined) {
+      worktrees[change.folderName] = {
+        path: change.tree.root,
+        checkoutChanged: await checkoutCopyChanged(
+          path.join(tree.changesDir, change.folderName),
+          specState.approvedHash,
+        ),
+      };
+    }
   }
 
   const pendingVerifications = await Promise.all(
@@ -99,6 +131,7 @@ export async function getStatusOverview(
     archivedCount,
     archivedChangeFolders: archivedCount,
     nextSteps,
+    ...(Object.keys(worktrees).length > 0 ? { worktrees } : {}),
     pendingVerifications,
   };
 }
@@ -128,6 +161,15 @@ export function formatStatusOverview(overview: StatusOverview): string {
     for (const spec of overview.specs) {
       const approvalStatus = spec.approvedHash ? 'approved' : 'unapproved';
       lines.push(`${spec.folderName}: ${spec.title} [${spec.status}] (${approvalStatus})`);
+      const worktree = overview.worktrees?.[spec.folderName];
+      if (worktree) {
+        lines.push(`  worktree: ${worktree.path}`);
+        if (worktree.checkoutChanged) {
+          lines.push(
+            `  warning: the checkout's copy of ${spec.folderName} changed since approval; edits there never reach the run`,
+          );
+        }
+      }
       const next = overview.nextSteps?.[spec.folderName];
       if (next) {
         lines.push(`  next: ${formatNextStep(next)}`);

@@ -17,18 +17,21 @@ the doctor git check's code, and their tests.
 - **THEN** system maps `src/core/vcs/**` and `tests/vcs*.test.ts` to version-control
 
 ### Requirement: Vcs port
-<!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/no-vcs.ts, tests/vcs.test.ts -->
+<!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/no-vcs.ts, tests/vcs.test.ts, tests/vcs-worktree-setup.test.ts -->
 The `Vcs` port SHALL offer these reads: the repository root, HEAD's commit and
 the branch it points to, a digest of the index, the stash list with the branch
-each entry was made on, status, a git config value, and the names of the
-active commit hooks. Its writes are those of "Vcs write operations". Status
-SHALL list untracked files one by one and leave ignored files out, with paths
-relative to the project root. `GitVcs` SHALL run the git binary with the
-project root as its working directory, SHALL remove `GIT_DIR`,
-`GIT_INDEX_FILE` and `GIT_WORK_TREE` from the child environment, and SHALL
-bound every read by `timeouts.gitSeconds`, 10 when unset. `NoVcs` SHALL return
-a null root, a null commit and branch, an empty digest, null config values,
-and empty lists, and SHALL carry the reason git is off.
+each entry was made on, status, a git config value, the names of the active
+commit hooks, and the default branch. Its writes are those of "Vcs write
+operations". Status SHALL list untracked files one by one and leave ignored
+files out, with paths relative to the project root. The default branch SHALL
+be the branch `refs/remotes/origin/HEAD` names without its `origin/` prefix,
+read locally without contacting the remote, else `vcs.defaultBranch`, else
+`main`. `GitVcs` SHALL run the git binary with the project root as its working
+directory, SHALL remove `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` from
+the child environment, and SHALL bound every read by `timeouts.gitSeconds`, 10
+when unset. `NoVcs` SHALL return a null root, a null commit and branch, an
+empty digest, null config values, empty lists, and `main` as the default
+branch, and SHALL carry the reason git is off.
 
 #### Scenario: Stash on a branch
 - **WHEN** a file is stashed on branch `main` of a temporary repository
@@ -50,6 +53,14 @@ and empty lists, and SHALL carry the reason git is off.
 - **WHEN** a repository has an executable `pre-commit` hook and a `commit-msg.sample`
 - **THEN** the hook names are `pre-commit` only
 
+#### Scenario: Default branch from origin
+- **WHEN** a temporary repository's `refs/remotes/origin/HEAD` points to `refs/remotes/origin/trunk` and `vcs.defaultBranch` is `develop`
+- **THEN** the default branch is `trunk`
+
+#### Scenario: Default branch without a remote
+- **WHEN** a temporary repository has no remote
+- **THEN** the default branch is `vcs.defaultBranch` when set, and `main` otherwise
+
 ### Requirement: Vcs selection
 <!-- source: src/core/vcs/select.ts, tests/vcs.test.ts -->
 The system SHALL select `GitVcs` only when the git binary runs and the project
@@ -67,22 +78,26 @@ SHALL select through this one function.
 - **THEN** selection returns `NoVcs` with reason `not a git repository`
 
 ### Requirement: Vcs write operations
-<!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/git-vcs-write.ts, src/core/vcs/no-vcs.ts, tests/vcs-write.test.ts -->
+<!-- source: src/core/vcs/vcs.ts, src/core/vcs/git-vcs.ts, src/core/vcs/git-vcs-write.ts, src/core/vcs/no-vcs.ts, tests/vcs-write.test.ts, tests/vcs-discard-commit.test.ts -->
 The `Vcs` port SHALL offer these writes. `createBranch` SHALL create a branch
 at a base commit and fail when the branch exists. `worktreeAdd` SHALL add a
 worktree for an existing branch. `worktreeRemove` SHALL remove a worktree and
 fail, removing nothing, when it has changes outside ignored files.
 `worktreeList` SHALL list every worktree with its path, branch, and HEAD.
-`commit` SHALL stage exactly the given paths, commit them with the given
-message and author, run the repository's hooks, and return the new commit. A
-commit that fails or exceeds `timeouts.gitCommitSeconds` SHALL fail with git's
-combined output. `patch` SHALL return a binary diff against HEAD of every
-change, untracked files included, built through a temporary index so the real
-index is unchanged. `discard` SHALL restore the given paths to HEAD and remove
-untracked files under them, never ignored ones. It SHALL first assert that the
-tree is a linked worktree and that HEAD is on a branch starting `osq/`, and
-fail without touching anything when either does not hold. Under `NoVcs`,
-every write SHALL fail naming the reason git is off.
+`commit` SHALL stage exactly the given paths, commit only those paths with the
+given message and author, leaving anything else staged as it was, or commit
+the index as it stands when given no paths, run the
+repository's hooks, and return the new commit. A commit that fails or exceeds
+`timeouts.gitCommitSeconds` SHALL fail with git's combined output. `patch`
+SHALL return a binary diff against HEAD of every change, untracked files
+included, built through a temporary index so the real index is unchanged.
+`discard` SHALL restore the given paths to HEAD in the index and the working
+tree, remove files under them that HEAD lacks, staged or untracked, and never
+remove ignored ones. Under `GitVcs`, given no paths, it SHALL return without
+running git. It
+SHALL first assert that the tree is a linked worktree and that HEAD is on a
+branch starting `osq/`, and fail without touching anything when either does
+not hold. Under `NoVcs`, every write SHALL fail naming the reason git is off.
 
 #### Scenario: Branch exists
 - **WHEN** `createBranch` names a branch that already exists
@@ -108,6 +123,18 @@ every write SHALL fail naming the reason git is off.
 - **WHEN** `discard` runs in an osq worktree over a folder holding a modified file, an untracked file, and an ignored file
 - **THEN** the modified file is restored, the untracked file is gone, and the ignored file remains
 
+#### Scenario: Discard with no paths
+- **WHEN** `discard` is given an empty list in an osq worktree holding an untracked file
+- **THEN** it runs no git command and the untracked file remains
+
+#### Scenario: Discard a staged new file
+- **WHEN** `discard` runs over a new file that was staged with `git add` and a tracked file modified and staged
+- **THEN** the new file is gone from the index and the tree, the tracked file matches HEAD in both, and `status` is empty
+
+#### Scenario: Commit leaves other staged paths
+- **WHEN** `a.txt` is staged and `commit` is given only `b.txt`
+- **THEN** the new commit changes only `b.txt`, and `a.txt` is still staged
+
 ### Requirement: Operations osq never runs
 <!-- source: src/core/vcs/git-vcs.ts, src/core/vcs/git-vcs-write.ts, tests/vcs-write.test.ts -->
 The `Vcs` port SHALL have no operation that force-pushes, pushes, rebases,
@@ -119,3 +146,18 @@ ignored files, or removes a worktree by force. No git argument list in
 #### Scenario: Forbidden argument
 - **WHEN** a git argument list in `src/core/vcs/` contains `--force`
 - **THEN** the structural test fails and names the file
+
+### Requirement: Worktree location
+<!-- source: src/core/vcs/worktree.ts, tests/vcs-worktree-setup.test.ts -->
+A change's worktree SHALL live at `<vcs.worktreeRoot>/<repo>/<folder>`, where
+`vcs.worktreeRoot` defaults to `~/.osq/worktrees`, a leading `~` expands to
+the home directory, `<repo>` is the folder name of the repository root, and
+`<folder>` is the change folder's name. Its branch SHALL be `osq/<folder>`.
+
+#### Scenario: Default root
+- **WHEN** the repository root is `/src/osq`, the home directory is `/home/u`, and `vcs.worktreeRoot` is unset
+- **THEN** the worktree of `089-approve-into-worktree` is `/home/u/.osq/worktrees/osq/089-approve-into-worktree`
+
+#### Scenario: Configured root
+- **WHEN** `vcs.worktreeRoot` is `/tmp/wt` and the repository root is `/src/osq`
+- **THEN** the worktree of `089-approve-into-worktree` is `/tmp/wt/osq/089-approve-into-worktree`

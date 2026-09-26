@@ -1,3 +1,4 @@
+import type { Command } from 'commander';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
@@ -23,6 +24,10 @@ export interface ApproveCommandOptions {
   now?: Date | string;
   /** Block on flagged approvals by asking before the seal is written. */
   confirm?: boolean;
+  /** Approve from a branch other than the default branch. */
+  baseOk?: boolean;
+  /** Approve despite uncommitted changes covered by a task's scope. */
+  ignoreDirty?: boolean;
   /** Injectable terminal check; defaults to both stdio streams being TTYs. */
   isTerminal?: () => boolean;
   /** Injectable prompt; defaults to a `node:readline/promises` question. */
@@ -92,12 +97,18 @@ export async function approveCommand(
         planningReaders,
         now: options.now,
         review,
+        baseOk: options.baseOk,
+        ignoreDirty: options.ignoreDirty,
       });
       const summary = summarizeApprovalFlags(result.digest.flags);
       console.log(
         `Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}`,
       );
       console.log(`  Hash: ${result.hash}`);
+      if (result.worktreePath !== undefined && result.branch !== undefined) {
+        console.log(`  Worktree: ${result.worktreePath}`);
+        console.log(`  Branch: ${result.branch}`);
+      }
       for (const warning of result.warnings) {
         console.warn(`  Warning: ${warning}`);
       }
@@ -118,4 +129,26 @@ export async function approveCommand(
       process.exit(1);
     }
   }
+}
+
+/** Register `osq approve` and its approval-only flags. */
+export function registerApproveCommand(program: Command): void {
+  program
+    .command('approve <ids...>')
+    .description('lint, hash, and approve change folders')
+    .option('--confirm', 'ask about approval flags before sealing')
+    .option('--base-ok', 'approve even when HEAD is not the default branch')
+    .option('--ignore-dirty', 'approve despite uncommitted changes in task scope')
+    .action(
+      async (
+        ids: string[],
+        options: { confirm?: boolean; baseOk?: boolean; ignoreDirty?: boolean },
+      ) => {
+        await approveCommand(ids, {
+          confirm: options.confirm,
+          baseOk: options.baseOk,
+          ignoreDirty: options.ignoreDirty,
+        });
+      },
+    );
 }

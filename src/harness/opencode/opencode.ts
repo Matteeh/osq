@@ -2,6 +2,10 @@ import { spawn } from 'node:child_process';
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  OPENCODE_TESTED_RANGE,
+  assessOpencodeVersion,
+} from '../../core/foundation/config-opencode.js';
 import { type OsqConfig, loadConfig } from '../../core/foundation/config.js';
 import {
   MANAGED_AGENTS_BLOCK,
@@ -30,6 +34,14 @@ import {
   type ToolEventData,
   appendHarnessEvent,
 } from '../types.js';
+import {
+  type OpencodeRunTracker,
+  addOpencodeUsage,
+  appendOpencodeSessionRemainder,
+  createOpencodeRunTracker,
+  readOpencodeSessionUsage,
+  trackOpencodeSessionID,
+} from './opencode-session.js';
 import { readOpencodeInteractiveUsage } from './opencode-usage.js';
 
 export const OPENCODE_PLANNER_AGENT_TEMPLATE = `---
@@ -97,25 +109,22 @@ export async function buildOpencodeArgs(options: SpawnTaskOptions): Promise<stri
 
   const agent = config?.opencode?.agent || 'osq-coder';
   const model = config?.opencode?.model || process.env.OSQ_MODEL || 'deepseek/deepseek-flash';
+  const variant = config?.opencode?.variant;
+  const modelArg = variant ? `${model}#${variant}` : model;
   const prompt = buildOpencodePrompt(options);
 
   const args: string[] = [
     'run',
     prompt,
+    '--standalone',
     '--agent',
     agent,
     '--auto',
     '--format',
     'json',
-    '--dir',
-    projectRoot,
     '--model',
-    model,
+    modelArg,
   ];
-
-  if (config?.opencode?.variant) {
-    args.push('--variant', config.opencode.variant);
-  }
 
   const changeDocName = fsSync.existsSync(path.resolve(specFolderPath, 'proposal.md'))
     ? 'proposal.md'
@@ -369,6 +378,7 @@ export async function processOpencodeStdoutLine(
   taskNumber: string,
   logger?: Logger,
   projectRoot?: string,
+  tracker?: OpencodeRunTracker,
 ): Promise<void> {
   const trimmed = line.trim();
   if (!trimmed) {
@@ -389,6 +399,10 @@ export async function processOpencodeStdoutLine(
 
   const eventObj = event as Record<string, unknown>;
 
+  if (tracker) {
+    trackOpencodeSessionID(tracker, eventObj);
+  }
+
   const toolEvent = extractOpencodeToolEvent(eventObj);
   if (toolEvent) {
     await emitObservedToolEvent(
@@ -403,21 +417,7 @@ export async function processOpencodeStdoutLine(
   }
 
   if (eventObj.type === 'step_finish') {
-    const tokensData = extractOpencodeTokens(eventObj);
-    if (tokensData) {
-      await appendHarnessEvent(specFolderPath, taskNumber, {
-        type: 'tokens',
-        timestamp: resolveEventTimestamp(eventObj),
-        data: {
-          promptTokens: tokensData.promptTokens,
-          candidateTokens: tokensData.candidateTokens,
-          totalTokens: tokensData.totalTokens,
-          cachedTokens: tokensData.cachedTokens,
-          reasoningTokens: tokensData.reasoningTokens,
-          cost: tokensData.cost,
-        },
-      });
-    }
+    await emitOpencodeTokensEvent(specFolderPath, taskNumber, eventObj, tracker);
     return;
   }
 
@@ -439,6 +439,34 @@ export async function processOpencodeStdoutLine(
   // Unrecognised event types route exclusively to verbose logging so harness
   // stdout can never leak onto the terminal.
   logger?.verbose(`[opencode] Unknown event type: ${eventObj.type}`);
+}
+
+/** Append one `tokens` event for a streamed `step_finish`, tracking the run sum. */
+async function emitOpencodeTokensEvent(
+  specFolderPath: string,
+  taskNumber: string,
+  eventObj: Record<string, unknown>,
+  tracker?: OpencodeRunTracker,
+): Promise<void> {
+  const tokensData = extractOpencodeTokens(eventObj);
+  if (!tokensData) {
+    return;
+  }
+  if (tracker) {
+    addOpencodeUsage(tracker, tokensData);
+  }
+  await appendHarnessEvent(specFolderPath, taskNumber, {
+    type: 'tokens',
+    timestamp: resolveEventTimestamp(eventObj),
+    data: {
+      promptTokens: tokensData.promptTokens,
+      candidateTokens: tokensData.candidateTokens,
+      totalTokens: tokensData.totalTokens,
+      cachedTokens: tokensData.cachedTokens,
+      reasoningTokens: tokensData.reasoningTokens,
+      cost: tokensData.cost,
+    },
+  });
 }
 
 /**
@@ -480,7 +508,17 @@ export async function preflightOpencode(
     return { version: '', bin };
   }
 
-  const version = (result.stdout || result.stderr).trim().split('\n')[0].trim();
+  const raw = (result.stdout || result.stderr).trim();
+  const version = raw.split('\n')[0]?.trim() ?? '';
+  const assessment = assessOpencodeVersion(raw);
+  if (!assessment.ok) {
+    console.error(
+      `opencode ${assessment.version} is not supported; the opencode adapter needs opencode 2 (tested ${OPENCODE_TESTED_RANGE})`,
+    );
+    process.exitCode = 1;
+    process.exit(1);
+    return { version, bin };
+  }
   console.log(version);
   return { version, bin };
 }
@@ -544,8 +582,16 @@ export class OpencodeAdapter implements HarnessAdapter {
 
     const args = await buildOpencodeArgs(options);
     const bin = await resolveOpencodeBinary(config);
+    const tracker = createOpencodeRunTracker();
     const streamParser = new EventStreamParser((line) =>
-      processOpencodeStdoutLine(line, specFolderPath, taskNumber, options.logger, projectRoot),
+      processOpencodeStdoutLine(
+        line,
+        specFolderPath,
+        taskNumber,
+        options.logger,
+        projectRoot,
+        tracker,
+      ),
     );
 
     const result = await spawnWithTimeout({
@@ -566,6 +612,24 @@ export class OpencodeAdapter implements HarnessAdapter {
 
     await streamParser.flush();
 
+    if (tracker.sessionID) {
+      const timeoutSeconds = config?.timeouts?.harnessPreflightSeconds ?? 10;
+      const sessionTotals = await readOpencodeSessionUsage(
+        bin,
+        projectRoot,
+        tracker.sessionID,
+        timeoutSeconds,
+      );
+      if (sessionTotals) {
+        await appendOpencodeSessionRemainder(
+          specFolderPath,
+          taskNumber,
+          tracker.totals,
+          sessionTotals,
+        );
+      }
+    }
+
     return {
       exitCode: result.exitCode,
       timedOut: result.timedOut,
@@ -581,15 +645,12 @@ export class OpencodeAdapter implements HarnessAdapter {
     const config = await loadConfig(cwd).catch(() => undefined);
     const bin = await resolveOpencodeBinary(config);
 
-    const args: string[] = [prompt, '--dir', cwd];
+    const args: string[] = ['mini', '--prompt', prompt];
     if (model) {
       args.push('--model', model);
     }
     if (agent) {
       args.push('--agent', agent);
-    }
-    if (config?.opencode?.variant) {
-      args.push('--variant', config.opencode.variant);
     }
 
     const child = spawn(bin, args, {

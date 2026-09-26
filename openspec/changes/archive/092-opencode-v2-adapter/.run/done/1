@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5e2c21573c1d29ffdb1bff143ff780be3b6748fc5df37af110354d8da78d9aab"
+build_stamp: "5a2bee7"
+project_commit: "5a2bee7"
+exit_code: 0
+scope_files: {"src/core/foundation/config-opencode.ts":"sha256:5095ecb485f608c41f4f86d2280194f7151a076ed708fa22726acf23c7084fb7","src/core/foundation/harness-catalog.ts":"sha256:35cc16ce9598680e0f424e7e7a926da2eea1649c117ed58a2f77cc0a7b74fc43","tests/opencode-doctor.test.ts":"sha256:d8d9a1bd570bd57ee1fef263c88356dcbaea6dbfbf50e46e5bfd75e18af19b26"}
+---
+2026-09-26T15:01:15.758Z

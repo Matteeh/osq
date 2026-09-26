@@ -33,7 +33,7 @@ describe('OpenCode Adapter Task Spawning', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('spawnTask constructs arguments: run --agent <agent> --auto --format json --dir <projectRoot> --model <model>', async () => {
+  it('spawnTask constructs arguments: run --standalone --agent <agent> --auto --format json --model <model>', async () => {
     const defaultOptions: SpawnTaskOptions = {
       projectRoot: tmpDir,
       specFolderPath: specFolder,
@@ -59,11 +59,11 @@ describe('OpenCode Adapter Task Spawning', () => {
     }
     assert.ok(defaultArgs.includes('--agent'));
     assert.equal(defaultArgs[defaultArgs.indexOf('--agent') + 1], 'osq-coder');
+    assert.ok(defaultArgs.includes('--standalone'));
     assert.ok(defaultArgs.includes('--auto'));
     assert.ok(defaultArgs.includes('--format'));
     assert.equal(defaultArgs[defaultArgs.indexOf('--format') + 1], 'json');
-    assert.ok(defaultArgs.includes('--dir'));
-    assert.equal(defaultArgs[defaultArgs.indexOf('--dir') + 1], tmpDir);
+    assert.equal(defaultArgs.includes('--dir'), false);
     assert.ok(defaultArgs.includes('--model'));
     assert.equal(defaultArgs[defaultArgs.indexOf('--model') + 1], 'deepseek/deepseek-flash');
 
@@ -90,7 +90,7 @@ describe('OpenCode Adapter Task Spawning', () => {
     assert.equal(customArgs[customArgs.indexOf('--model') + 1], 'anthropic/claude-3-5-sonnet');
   });
 
-  it('Optional variant flag --variant <variant> is included when configured', async () => {
+  it('Variant is folded into the model as <model>#<variant> when configured', async () => {
     const baseOptions: SpawnTaskOptions = {
       projectRoot: tmpDir,
       specFolderPath: specFolder,
@@ -104,11 +104,15 @@ describe('OpenCode Adapter Task Spawning', () => {
       config: DEFAULT_CONFIG,
     };
 
-    // Variant not configured -> --variant is not present
+    // Variant not configured -> bare model, no --variant
     const argsWithoutVariant = await buildOpencodeArgs(baseOptions);
     assert.equal(argsWithoutVariant.includes('--variant'), false);
+    assert.equal(
+      argsWithoutVariant[argsWithoutVariant.indexOf('--model') + 1],
+      'deepseek/deepseek-flash',
+    );
 
-    // Variant configured -> --variant <variant> included
+    // Variant configured -> appended to the model, never a separate flag
     const configWithVariant: OsqConfig = {
       ...DEFAULT_CONFIG,
       opencode: {
@@ -122,9 +126,10 @@ describe('OpenCode Adapter Task Spawning', () => {
       config: configWithVariant,
     });
 
-    assert.ok(argsWithVariant.includes('--variant'));
-    const variantIndex = argsWithVariant.indexOf('--variant');
-    assert.equal(argsWithVariant[variantIndex + 1], 'high');
+    assert.equal(argsWithVariant.includes('--variant'), false);
+    const modelIndex = argsWithVariant.indexOf('--model');
+    assert.notEqual(modelIndex, -1);
+    assert.equal(argsWithVariant[modelIndex + 1], 'deepseek/deepseek-flash#high');
   });
 
   it('attaches task, proposal, and existing living specs named by the task', async () => {
@@ -368,6 +373,7 @@ const recorded = {
   subcommand: argv[0],
   agent: null,
   auto: false,
+  standalone: false,
   format: null,
   dir: null,
   model: null,
@@ -379,6 +385,7 @@ const recorded = {
 for (let i = 0; i < argv.length; i++) {
   if (argv[i] === '--agent') recorded.agent = argv[++i];
   else if (argv[i] === '--auto') recorded.auto = true;
+  else if (argv[i] === '--standalone') recorded.standalone = true;
   else if (argv[i] === '--format') recorded.format = argv[++i];
   else if (argv[i] === '--dir') recorded.dir = argv[++i];
   else if (argv[i] === '--model') recorded.model = argv[++i];
@@ -446,9 +453,10 @@ process.exit(0);
     assert.equal(recorded.agent, 'custom-agent-val');
     assert.equal(recorded.auto, true);
     assert.equal(recorded.format, 'json');
-    assert.equal(recorded.dir, tmpDir);
-    assert.equal(recorded.model, 'custom/model-val');
-    assert.equal(recorded.variant, 'thinking');
+    assert.equal(recorded.standalone, true);
+    assert.equal(recorded.dir, null);
+    assert.equal(recorded.model, 'custom/model-val#thinking');
+    assert.equal(recorded.variant, null);
     assert.ok(recorded.files.length >= 2);
     assert.ok(recorded.prompt.includes('Follow AGENTS.md strictly.'));
 

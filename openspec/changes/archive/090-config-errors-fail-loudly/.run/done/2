@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a6b5afdcd99debea834228dfbc967e4254cb0a875d9bafd8dcfd0487f9c1d386"
+build_stamp: "5a2bee7"
+project_commit: "5a2bee7"
+exit_code: 0
+scope_files: {"src/cli/bin.ts":"sha256:e6135bac2df5a5890d9464cd4eff47637a3565d10f509310b6a5e14245fe561b","src/cli/init.ts":"sha256:dccfeb071e4c23e49dfab5c1c43606ca264aea46c3456e72c6ec39df2ffa83af","src/cli/run.ts":"sha256:60a4ac1105488752e40952acebf7bfffe7a84fc84386dfa6a7989376ae6b8be9","tests/cli-config-errors.test.ts":"sha256:79025aa4651353fc7856b3f2f972e646343e60ec7e8ce9493e8cc554b14e718e"}
+---
+2026-09-26T14:40:40.015Z
