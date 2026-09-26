@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { relativizeToolSummary } from './summary.js';
 
 /** Raw outcome of one timeout-bounded verification command. */
 export interface VerificationResult {
@@ -38,6 +39,9 @@ function killTree(child: ReturnType<typeof spawn>, signal: NodeJS.Signals): void
  * `extraEnv` holds additional variables for the command, set after the
  * `OSQ_CHANGE` handling so a caller can pass mutation inputs without touching
  * the base environment.
+ *
+ * The captured output is passed through `relativizeToolSummary`, so every gate,
+ * event, and marker that reads it carries project-relative paths.
  */
 export async function runVerificationCommand(
   projectRoot: string,
@@ -107,7 +111,7 @@ export async function runVerificationCommand(
     command,
     exitCode,
     duration: Number(((Date.now() - startMs) / 1000).toFixed(2)),
-    output,
+    output: relativizeToolSummary(output, projectRoot),
     timedOut,
     ...(spawnError ? { error: spawnError } : {}),
   };

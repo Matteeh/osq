@@ -1,0 +1,36 @@
+/**
+ * The read-only version-control port. Nothing here runs git; the git and
+ * no-git implementations live beside it and are chosen by `selectVcs`.
+ */
+export interface VcsHead {
+  /** HEAD's commit; null in a repository with no commit. */
+  readonly sha: string | null;
+  /** The branch HEAD points to; null when HEAD is detached. */
+  readonly branch: string | null;
+}
+
+export interface VcsStash {
+  readonly sha: string;
+  /** The branch the stash was made on; null when HEAD was detached. */
+  readonly branch: string | null;
+}
+
+export interface VcsStatusEntry {
+  /** Path relative to the project root. */
+  readonly path: string;
+  /** The two-letter porcelain v1 code, such as ` M`, `A ` or `??`. */
+  readonly code: string;
+  /** The old path of a rename or copy. */
+  readonly from?: string;
+}
+
+export interface Vcs {
+  readonly kind: 'git' | 'none';
+  /** The reason git is off; null for `GitVcs`. */
+  readonly unavailableReason: string | null;
+  root(): Promise<string | null>;
+  head(): Promise<VcsHead>;
+  indexDigest(): Promise<string>;
+  stashList(): Promise<VcsStash[]>;
+  status(): Promise<VcsStatusEntry[]>;
+}

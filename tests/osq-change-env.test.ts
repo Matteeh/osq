@@ -125,7 +125,10 @@ describe('OSQ_CHANGE in a task verify through runTask', () => {
       (event) => event.type === 'verify_ran' && event.data?.phase !== 'pre_spawn',
     );
     assert.equal(postSpawn.length, 1);
-    assert.equal(String(postSpawn[0]?.data?.output).trim(), specFolder);
+    assert.equal(
+      String(postSpawn[0]?.data?.output).trim(),
+      path.relative(tmpDir, specFolder).split(path.sep).join('/'),
+    );
   });
 });
 
@@ -168,7 +171,10 @@ describe('OSQ_CHANGE in the change-level verify through the watcher cycle', () =
     );
     assert.ok(changeVerifies.length > 0, 'the change-level verify should run');
     for (const event of changeVerifies) {
-      assert.equal(String(event.data?.output).trim(), folder);
+      assert.equal(
+        String(event.data?.output).trim(),
+        path.relative(root, folder).split(path.sep).join('/'),
+      );
     }
   });
 });

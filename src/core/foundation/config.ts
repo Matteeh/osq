@@ -58,6 +58,7 @@ export interface OsqTimeouts {
   readonly harnessPreflightSeconds?: number;
   /** Kill grace after SIGTERM before SIGKILL; defaults to 5000 milliseconds. */
   readonly harnessKillGracePeriodMs?: number;
+  readonly gitSeconds?: number;
 }
 
 export interface AgyConfig {

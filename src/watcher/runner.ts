@@ -6,6 +6,7 @@ import { hashChangeFolder } from '../core/spec/hasher.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { runChangeVerifyGate } from './change-verify.js';
+import { beginGitGuard } from './git-guard.js';
 import {
   clearTaskHeartbeatStats,
   computeTaskHeartbeatStats,
@@ -148,16 +149,9 @@ export async function runTask(
     if (!preSpawn.ok) return fail('verify_precondition', preSpawn.marker, preSpawn.error);
     measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
     await measures.emitStart();
-    const spawnOutcome = await spawnTaskAgent({
-      projectRoot,
-      specFolderPath,
-      taskNumber,
-      taskData,
-      config,
-      adapter,
-      logger,
-      logOutcome,
-    });
+    const gitGuard = await beginGitGuard({ ...verifyCtx, scope: taskData.scope });
+    const spawnOutcome = await spawnTaskAgent({ ...verifyCtx, adapter, logOutcome });
+    await gitGuard?.check();
     if (!spawnOutcome.ok) return finish(spawnOutcome.result);
 
     const undeclared = await findUndeclaredTestChanges(projectRoot, testGate.snapshot, testGate);

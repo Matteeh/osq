@@ -108,6 +108,6 @@ export function buildExecutorPrompt(options: SpawnTaskOptions): string {
     'Exiting:',
     ...EXECUTOR_EXIT_LINES,
     '',
-    `CRITICAL: Before exiting, you MUST write ${resultRel} as the Exiting rules above describe. Change no file outside Scope except that result file.`,
+    `CRITICAL: Before exiting, you MUST write ${resultRel} as the Exiting rules above describe. Change no file outside Scope except that result file. Never run git.`,
   ].join('\n');
 }

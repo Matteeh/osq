@@ -1,0 +1,107 @@
+{"type":"verify_ran","timestamp":"2026-09-26T11:11:14.083Z","data":{"command":"node --import tsx --test tests/vcs-guard.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/vcs-guard.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/vcs-guard.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-26T11:11:14.636Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":793,"repoFiles":1475,"repoLines":163259,"importFanIn":29,"proposalWords":799,"taskWords":364,"deltaRequirements":9,"deltaScenarios":25}}
+{"type":"instructions_changed","timestamp":"2026-09-26T11:11:14.641Z","data":{"changed":["AGENTS.md","ADR 003 added"]}}
+{"type":"started","timestamp":"2026-09-26T11:11:14.648Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"fc2b9f0","pid":7285,"timeoutSeconds":1800,"version":"0.2.1","commit":"fc2b9f0"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:20.455Z","data":{"tool":"bash","summary":"ls openspec/changes/084-git-stage-0/ && echo \"---RUN---\" && "}}
+{"type":"tool","timestamp":"2026-09-26T11:11:20.483Z","data":{"tool":"bash","summary":"ls src/core/vcs/ 2>/dev/null; echo \"---\"; ls src/watcher/; e"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:20.536Z","data":{"promptTokens":59494,"candidateTokens":204,"totalTokens":70412,"cachedTokens":10624,"reasoningTokens":90,"cost":0.009132372}}
+{"type":"tool","timestamp":"2026-09-26T11:11:22.472Z","data":{"tool":"read","summary":"openspec/changes/084-git-stage-0/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:22.684Z","data":{"tool":"read","summary":"openspec/changes/084-git-stage-0/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:22.900Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:22.916Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:22.968Z","data":{"promptTokens":554,"candidateTokens":206,"totalTokens":71192,"cachedTokens":70400,"reasoningTokens":32,"cost":0.0004371}}
+{"type":"tool","timestamp":"2026-09-26T11:11:24.741Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:24.741Z","data":{"tool":"read","summary":"src/watcher/verify.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:24.749Z","data":{"tool":"read","summary":"src/core/run/scope.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:24.810Z","data":{"promptTokens":2641,"candidateTokens":139,"totalTokens":73996,"cachedTokens":71168,"reasoningTokens":48,"cost":0.000721854}}
+{"type":"tool","timestamp":"2026-09-26T11:11:26.801Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:26.859Z","data":{"tool":"read","summary":"tests/focused-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:26.909Z","data":{"promptTokens":6909,"candidateTokens":96,"totalTokens":81012,"cachedTokens":73984,"reasoningTokens":23,"cost":0.001329702}}
+{"type":"tool","timestamp":"2026-09-26T11:11:29.120Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:29.209Z","data":{"tool":"read","summary":"src/core/vcs/no-vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:29.292Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:29.375Z","data":{"promptTokens":11291,"candidateTokens":142,"totalTokens":92414,"cachedTokens":80896,"reasoningTokens":85,"cost":0.002072538}}
+{"type":"tool","timestamp":"2026-09-26T11:11:31.435Z","data":{"tool":"read","summary":"tests/vcs.test.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:31.525Z","data":{"tool":"read","summary":"src/watcher/spawn.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:31.574Z","data":{"promptTokens":7303,"candidateTokens":95,"totalTokens":99747,"cachedTokens":92288,"reasoningTokens":61,"cost":0.001465914}}
+{"type":"tool","timestamp":"2026-09-26T11:11:55.246Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:11:55.315Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:11:55.399Z","data":{"promptTokens":5790,"candidateTokens":95,"totalTokens":110915,"cachedTokens":99712,"reasoningTokens":5318,"cost":0.004415436}}
+{"type":"tool","timestamp":"2026-09-26T11:12:01.914Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:12:02.009Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:02.076Z","data":{"promptTokens":2940,"candidateTokens":97,"totalTokens":114994,"cachedTokens":110848,"reasoningTokens":1109,"cost":0.001497144}}
+{"type":"tool","timestamp":"2026-09-26T11:12:08.611Z","data":{"tool":"read","summary":"src/core/foundation/logger.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:12:08.698Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:08.748Z","data":{"promptTokens":3258,"candidateTokens":97,"totalTokens":119345,"cachedTokens":114944,"reasoningTokens":1046,"cost":0.001519332}}
+{"type":"tool","timestamp":"2026-09-26T11:12:11.223Z","data":{"tool":"bash","summary":"sed -n '1,80p' tests/function-budget.test.ts; echo \"=== LINE"}}
+{"type":"tool","timestamp":"2026-09-26T11:12:11.442Z","data":{"tool":"bash","summary":"grep -n \"runTask\" tests/function-budget.test.ts; echo \"---\";"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:11.492Z","data":{"promptTokens":4170,"candidateTokens":152,"totalTokens":123704,"cachedTokens":119296,"reasoningTokens":86,"cost":0.001126188}}
+{"type":"tool","timestamp":"2026-09-26T11:12:14.422Z","data":{"tool":"bash","summary":"grep -rn \"HarnessEventType\\|OsqEventData\" tests/ src/ | grep"}}
+{"type":"tool","timestamp":"2026-09-26T11:12:14.665Z","data":{"tool":"bash","summary":"sed -n '1,120p' src/core/foundation/init.ts | grep -n \"scaff"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:14.731Z","data":{"promptTokens":2746,"candidateTokens":188,"totalTokens":126859,"cachedTokens":123648,"reasoningTokens":277,"cost":0.001061844}}
+{"type":"tool","timestamp":"2026-09-26T11:12:17.606Z","data":{"tool":"bash","summary":"ls -la openspec/changes/084-git-stage-0/.run/dead/ openspec/"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:20.109Z","data":{"promptTokens":951,"candidateTokens":125,"totalTokens":128149,"cachedTokens":126848,"reasoningTokens":225,"cost":0.000733194}}
+{"type":"tool","timestamp":"2026-09-26T11:12:56.902Z","data":{"tool":"read","summary":"src/watcher/archive-verify.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:12:56.995Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:12:57.087Z","data":{"promptTokens":1544,"candidateTokens":100,"totalTokens":138319,"cachedTokens":128128,"reasoningTokens":8547,"cost":0.005804184}}
+{"type":"tool","timestamp":"2026-09-26T11:13:05.891Z","data":{"tool":"write","summary":"src/core/vcs/snapshot.ts"}}
+{"type":"text","timestamp":"2026-09-26T11:13:05.902Z","data":{"text":"Now I understand the codebase. Let me write the tests first, then the implementation."}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:05.951Z","data":{"promptTokens":3408,"candidateTokens":1038,"totalTokens":143615,"cachedTokens":138240,"reasoningTokens":929,"cost":0.00210612}}
+{"type":"tool","timestamp":"2026-09-26T11:13:07.872Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:07.914Z","data":{"promptTokens":143,"candidateTokens":184,"totalTokens":143830,"cachedTokens":143488,"reasoningTokens":15,"cost":0.000571314}}
+{"type":"tool","timestamp":"2026-09-26T11:13:10.198Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:10.257Z","data":{"promptTokens":229,"candidateTokens":133,"totalTokens":143978,"cachedTokens":143616,"reasoningTokens":0,"cost":0.000544998}}
+{"type":"tool","timestamp":"2026-09-26T11:13:12.578Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:12.643Z","data":{"promptTokens":249,"candidateTokens":261,"totalTokens":144282,"cachedTokens":143744,"reasoningTokens":28,"cost":0.000641982}}
+{"type":"tool","timestamp":"2026-09-26T11:13:14.969Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:15.031Z","data":{"promptTokens":169,"candidateTokens":152,"totalTokens":144449,"cachedTokens":144128,"reasoningTokens":0,"cost":0.000548934}}
+{"type":"tool","timestamp":"2026-09-26T11:13:20.100Z","data":{"tool":"write","summary":"src/watcher/git-guard.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:20.150Z","data":{"promptTokens":208,"candidateTokens":1241,"totalTokens":145748,"cachedTokens":144256,"reasoningTokens":43,"cost":0.001234368}}
+{"type":"tool","timestamp":"2026-09-26T11:13:25.427Z","data":{"tool":"edit","summary":"src/watcher/git-guard.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:25.487Z","data":{"promptTokens":228,"candidateTokens":465,"totalTokens":146713,"cachedTokens":145536,"reasoningTokens":484,"cost":0.001040208}}
+{"type":"tool","timestamp":"2026-09-26T11:13:28.597Z","data":{"tool":"edit","summary":"src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:28.639Z","data":{"promptTokens":168,"candidateTokens":130,"totalTokens":146951,"cachedTokens":146560,"reasoningTokens":93,"cost":0.00059868}}
+{"type":"tool","timestamp":"2026-09-26T11:13:30.958Z","data":{"tool":"edit","summary":"src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:31.195Z","data":{"promptTokens":150,"candidateTokens":309,"totalTokens":147275,"cachedTokens":146816,"reasoningTokens":0,"cost":0.000648348}}
+{"type":"tool","timestamp":"2026-09-26T11:13:54.616Z","data":{"tool":"write","summary":"tests/vcs-guard.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:13:54.938Z","data":{"promptTokens":218,"candidateTokens":3197,"totalTokens":154053,"cachedTokens":147072,"reasoningTokens":3566,"cost":0.004531716}}
+{"type":"tool","timestamp":"2026-09-26T11:14:03.893Z","data":{"tool":"bash","summary":"node --import tsx --test tests/vcs-guard.test.ts 2>&1 | tail"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:04.057Z","data":{"promptTokens":213,"candidateTokens":76,"totalTokens":154171,"cachedTokens":153856,"reasoningTokens":26,"cost":0.000554718}}
+{"type":"tool","timestamp":"2026-09-26T11:14:11.925Z","data":{"tool":"bash","summary":"cat > /tmp/opencode/dbg.mjs <<'EOF'\nimport fs from 'node:fs/"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:12.105Z","data":{"promptTokens":485,"candidateTokens":978,"totalTokens":155984,"cachedTokens":154112,"reasoningTokens":409,"cost":0.001367286}}
+{"type":"tool","timestamp":"2026-09-26T11:14:18.171Z","data":{"tool":"edit","summary":"tests/vcs-guard.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:18.394Z","data":{"promptTokens":197,"candidateTokens":613,"totalTokens":157235,"cachedTokens":155904,"reasoningTokens":521,"cost":0.001177662}}
+{"type":"tool","timestamp":"2026-09-26T11:14:21.586Z","data":{"tool":"edit","summary":"tests/vcs-guard.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:21.798Z","data":{"promptTokens":194,"candidateTokens":175,"totalTokens":157425,"cachedTokens":157056,"reasoningTokens":0,"cost":0.000605268}}
+{"type":"tool","timestamp":"2026-09-26T11:14:29.018Z","data":{"tool":"bash","summary":"node --import tsx --test tests/vcs-guard.test.ts 2>&1 | tail"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:29.098Z","data":{"promptTokens":256,"candidateTokens":76,"totalTokens":157516,"cachedTokens":157184,"reasoningTokens":0,"cost":0.000555552}}
+{"type":"tool","timestamp":"2026-09-26T11:14:31.089Z","data":{"tool":"bash","summary":"cat package.json | grep -A 20 '\"scripts\"'"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:31.131Z","data":{"promptTokens":445,"candidateTokens":48,"totalTokens":157868,"cachedTokens":157312,"reasoningTokens":63,"cost":0.000605286}}
+{"type":"tool","timestamp":"2026-09-26T11:14:34.056Z","data":{"tool":"bash","summary":"npx biome check src/core/vcs/snapshot.ts src/watcher/git-gua"}}
+{"type":"tool","timestamp":"2026-09-26T11:14:38.579Z","data":{"tool":"bash","summary":"pnpm typecheck:cli 2>&1 | tail -20"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:38.627Z","data":{"promptTokens":405,"candidateTokens":161,"totalTokens":158406,"cachedTokens":157824,"reasoningTokens":16,"cost":0.000640422}}
+{"type":"tool","timestamp":"2026-09-26T11:14:42.500Z","data":{"tool":"bash","summary":"node --import tsx --test tests/line-budget.test.ts tests/fun"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:42.572Z","data":{"promptTokens":148,"candidateTokens":106,"totalTokens":158612,"cachedTokens":158336,"reasoningTokens":22,"cost":0.000574008}}
+{"type":"tool","timestamp":"2026-09-26T11:14:48.433Z","data":{"tool":"bash","summary":"sed -n '240,300p' tests/import-graph.test.ts"}}
+{"type":"tool","timestamp":"2026-09-26T11:14:48.568Z","data":{"tool":"bash","summary":"wc -l src/watcher/runner.ts; sed -n '140,175p' src/watcher/r"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:48.630Z","data":{"promptTokens":340,"candidateTokens":105,"totalTokens":159856,"cachedTokens":158592,"reasoningTokens":819,"cost":0.001081176}}
+{"type":"text","timestamp":"2026-09-26T11:14:57.777Z","data":{"text":"The stricter lifecycle budget requires `runner.ts` under 200 lines. I'll compress the adjacent spawn call via the existing `verifyCtx` object."}}
+{"type":"tool","timestamp":"2026-09-26T11:14:57.792Z","data":{"tool":"edit","summary":"src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T11:14:57.855Z","data":{"promptTokens":887,"candidateTokens":346,"totalTokens":162612,"cachedTokens":159744,"reasoningTokens":1635,"cost":0.001800882}}
+{"type":"tool","timestamp":"2026-09-26T11:15:04.672Z","data":{"tool":"bash","summary":"wc -l src/watcher/runner.ts && pnpm typecheck:cli 2>&1 | tai"}}
+{"type":"tokens","timestamp":"2026-09-26T11:15:04.735Z","data":{"promptTokens":195,"candidateTokens":79,"totalTokens":162706,"cachedTokens":162432,"reasoningTokens":0,"cost":0.000563946}}
+{"type":"tool","timestamp":"2026-09-26T11:15:09.009Z","data":{"tool":"bash","summary":"node --import tsx --test tests/import-graph.test.ts tests/fu"}}
+{"type":"tokens","timestamp":"2026-09-26T11:15:09.052Z","data":{"promptTokens":212,"candidateTokens":97,"totalTokens":162892,"cachedTokens":162560,"reasoningTokens":23,"cost":0.00059148}}
+{"type":"tool","timestamp":"2026-09-26T11:16:03.713Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-26T11:16:03.765Z","data":{"promptTokens":391,"candidateTokens":66,"totalTokens":163499,"cachedTokens":162816,"reasoningTokens":226,"cost":0.000722298}}
+{"type":"tool","timestamp":"2026-09-26T11:16:15.798Z","data":{"tool":"bash","summary":"node --import tsx --test tests/vcs-guard.test.ts 2>&1 | tail"}}
+{"type":"tokens","timestamp":"2026-09-26T11:16:15.852Z","data":{"promptTokens":921,"candidateTokens":76,"totalTokens":166289,"cachedTokens":163456,"reasoningTokens":1836,"cost":0.001775718}}
+{"type":"tool","timestamp":"2026-09-26T11:16:21.601Z","data":{"tool":"write","summary":"openspec/changes/084-git-stage-0/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-26T11:16:21.661Z","data":{"promptTokens":151,"candidateTokens":874,"totalTokens":167592,"cachedTokens":166272,"reasoningTokens":295,"cost":0.001222866}}
+{"type":"text","timestamp":"2026-09-26T11:16:26.633Z","data":{"text":"Task complete. Both verifies pass.\n\n**Summary of what I did:**\n\n- **`src/core/vcs/snapshot.ts`** (new): `captureSnapshot` reads HEAD commit/branch, index digest, stash list, and status through the `Vcs` port, hashing every status-listed file (null for deletions). `compareSnapshots` yields `moved` (`head`/`branch`/`index`/`stash`) and the sorted changed files. It never runs git.\n- **`src/watcher/git-guard.ts`** (new): `beginGitGuard` selects via `selectVcs`, returns null under `NoVcs`, and captures before spawn; `check` captures after exit and appends one `vcs_violation` and, when warranted, one `scope_violation` (changed files outside the post-exit resolved scope and the change folder), logging a warning for each. Failed reads log and record nothing.\n- **`src/watcher/runner.ts`**: one import, `const gitGuard = await beginGitGuard(...)` right before `spawnTaskAgent`, and `await gitGuard?.check()` right after, before the `ok` test.\n- **`src/harness/types.ts`**: added `vcs_violation`/`scope_violation` event types and their payload interfaces in `OsqEventData`.\n- **`tests/vcs-guard.test.ts`** (new): 8 tests through `runWatcherOnce` in temp git repos with an acting fake adapter, covering all five git-state scenarios, all three scope scenarios, and the proposal's commit-and-land scenario.\n\n**Notable deviation:** `tests/import-graph.test.ts` caps `runner.ts` at strictly under 200 lines (baseline 199), so I compressed the adjacent `spawnTaskAgent` call to spread the existing `verifyCtx` object (behavior-preserving); `runner.ts` is now 193 lines.\n\n- `node --import tsx --test tests/vcs-guard.test.ts` → 8/8 pass\n- `pnpm verify` → exit 0 (typechecks, UI build, full suite, lint)"}}
+{"type":"tokens","timestamp":"2026-09-26T11:16:26.679Z","data":{"promptTokens":184,"candidateTokens":469,"totalTokens":168228,"cachedTokens":167424,"reasoningTokens":151,"cost":0.000901872}}
+{"type":"exited","timestamp":"2026-09-26T11:16:26.863Z","data":{"exitCode":0,"pid":7285,"timedOut":false,"elapsedSeconds":312.2}}
+{"type":"verify_ran","timestamp":"2026-09-26T11:16:29.170Z","data":{"command":"node --import tsx --test tests/vcs-guard.test.ts","exitCode":0,"duration":2.19,"output":"▶ Git state recording\n  ✔ records a head move for a commit and still lands the task (291.166774ms)\n  ✔ records a stash move and leaves HEAD unchanged (239.239405ms)\n  ✔ records a branch move for a checkout (236.022412ms)\n  ✔ records an index move for a staged file (241.796174ms)\n  ✔ records neither violation outside git (204.631204ms)\n✔ Git state recording (1214.348279ms)\n▶ Scope violation recording\n  ✔ records an edit outside scope and still lands the task (242.459114ms)\n  ✔ leaves a file dirty before spawn alone and records nothing (230.542299ms)\n  ✔ records a file that was dirty before spawn and edited again (223.297273ms)\n✔ Scope violation recording (696.872577ms)\nℹ tests 8\nℹ suites 2\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2154.056378\n"}}
+{"type":"measures","timestamp":"2026-09-26T11:17:18.211Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":793,"repoFiles":1475,"repoLines":163259,"importFanIn":29,"proposalWords":799,"taskWords":364,"deltaRequirements":9,"deltaScenarios":25,"changedFiles":5,"changedLines":624,"scopeHashes":{"src/core/vcs/snapshot.ts":{"before":null,"after":"sha256:793f5d66b8afd4a7374dc27a6caa45d2c9b00d978262828f0a4073724f07f485"},"src/harness/types.ts":{"before":"sha256:078d7b562856918d129ef8174a1832c29413cbd515084de4bf26aeab9466c561","after":"sha256:b310e3075c21ddec0532753d9ead9a6737bddb2eba4002b2087d02094101cfe4"},"src/watcher/git-guard.ts":{"before":null,"after":"sha256:264d5c2fbafa8717154b78c24889e4d1f7198042ee395059322d04dea05be4a1"},"src/watcher/runner.ts":{"before":"sha256:1d490c5c6b73d1aab24aea0085e47cec02118a3601b55d678cfcb6355f750947","after":"sha256:25653644fb691f2662ac36a262da9d9da215260f177adafcb46444df7d7fadcb"},"tests/vcs-guard.test.ts":{"before":null,"after":"sha256:47d1c48b41eff0036a3880cd1f9f4dd70337da6bcd2a64e2609509f262429e77"}}}}
+{"type":"done","timestamp":"2026-09-26T11:17:18.216Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-26T11:24:55.693Z","data":{"command":"node --import tsx --test tests/vcs-guard.test.ts","exitCode":0,"duration":1.7,"output":"▶ Git state recording\n  ✔ records a head move for a commit and still lands the task (234.219469ms)\n  ✔ records a stash move and leaves HEAD unchanged (186.237885ms)\n  ✔ records a branch move for a checkout (179.763806ms)\n  ✔ records an index move for a staged file (191.526537ms)\n  ✔ records neither violation outside git (153.547441ms)\n✔ Git state recording (946.383648ms)\n▶ Scope violation recording\n  ✔ records an edit outside scope and still lands the task (180.561213ms)\n  ✔ leaves a file dirty before spawn alone and records nothing (184.646153ms)\n  ✔ records a file that was dirty before spawn and edited again (179.93ms)\n✔ Scope violation recording (545.552888ms)\nℹ tests 8\nℹ suites 2\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1672.595586\n"}}

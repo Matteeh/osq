@@ -18,7 +18,8 @@ import { auditScopeRegressions } from './regression.js';
 
 /**
  * Payload of the change-level `archived` event. The event timestamp is the
- * authoritative archive time for cycle metrics.
+ * authoritative archive time for cycle metrics. `archivePath` is relative to
+ * the project root.
  */
 export interface ArchivedEventData {
   readonly archivePath: string;
@@ -154,12 +155,16 @@ export async function archiveSpecFolder(
   await fs.rename(specFolderPath, targetPath);
   await ensureArchivedTasksTicked(targetPath);
 
+  // The event carries the archive location relative to the project root so it
+  // never records an absolute path.
+  const archivePath = path.relative(projectRoot, targetPath).split(path.sep).join('/');
+
   // Only after the folder is relocated and its tasks are projected do we stamp
   // the authoritative archive time. The event is always change-level; it never
   // lands in a numbered task event file.
   const data: ArchivedEventData & { verification?: VerificationRequirement } = verification
-    ? { archivePath: targetPath, verification }
-    : { archivePath: targetPath };
+    ? { archivePath, verification }
+    : { archivePath };
   await appendHarnessEvent(targetPath, 'change', {
     type: 'archived',
     timestamp: new Date().toISOString(),

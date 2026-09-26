@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4bc8ffd9f29c6058d0aaebbc8586bf4844c18817cc82140d6781f1c3ebbd6038"
+build_stamp: "fc2b9f0"
+project_commit: "fc2b9f0"
+exit_code: 0
+scope_files: {"src/harness/prompt.ts":"sha256:cebb9d896598e5a912ee9b24051bc2c3561347a4c747bf26be0aa30c62bf38bc","tests/executor-no-git.test.ts":"sha256:648895e76aa1e07534ca137bf685f20f9162acbd02abc2cb45d9a9c0deb013a9","tests/fixtures/prompts/agy.txt":"sha256:9834a3f55308a50367f5223e76d7f41164cf25599dc9f1aab664379d032f2b70","tests/fixtures/prompts/codex.txt":"sha256:9834a3f55308a50367f5223e76d7f41164cf25599dc9f1aab664379d032f2b70","tests/fixtures/prompts/opencode.txt":"sha256:9834a3f55308a50367f5223e76d7f41164cf25599dc9f1aab664379d032f2b70"}
+---
+2026-09-26T11:24:53.030Z

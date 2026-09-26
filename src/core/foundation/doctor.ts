@@ -9,6 +9,7 @@ import {
 } from '../spec/openspec-version.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir } from '../status/layout.js';
+import { checkGit } from '../vcs/doctor-git.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { checkDecisions } from './doctor-decisions.js';
@@ -240,6 +241,7 @@ export async function runDoctorChecks(
     await checkArchives(projectRoot, config),
     await checkDoneMarkers(projectRoot, config),
     await checkValidator(projectRoot, deps),
+    ...(await checkGit(projectRoot, config)),
   ];
   const priceCheck = await checkPlanningPrices(projectRoot, config);
   if (priceCheck) checks.push(priceCheck);

@@ -5,6 +5,7 @@ import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { ScopePathAttribution } from '../core/run/scope-hash.js';
 import type { SCOPE_RESOLVER_VERSION } from '../core/run/scope.js';
+import type { VcsMovedField, VcsStateValues } from '../core/vcs/snapshot.js';
 
 export type { ScopePathAttribution } from '../core/run/scope-hash.js';
 
@@ -30,7 +31,9 @@ export type HarnessEventType =
   | 'rejected'
   | 'instructions_changed'
   | 'focused_ran'
-  | 'mutation_ran';
+  | 'mutation_ran'
+  | 'vcs_violation'
+  | 'scope_violation';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -306,6 +309,25 @@ export interface MutationRanEventData {
   readonly output?: string;
 }
 
+/**
+ * Payload of a `vcs_violation` event: the git state fields that moved during a
+ * task, with each field's value before the agent spawned and after it exited.
+ * Observe-only in stage 0; it never changes a task's outcome.
+ */
+export interface VcsViolationEventData {
+  readonly moved: readonly VcsMovedField[];
+  readonly before: VcsStateValues;
+  readonly after: VcsStateValues;
+}
+
+/**
+ * Payload of a `scope_violation` event: the sorted project-relative files a
+ * task changed outside its resolved scope and outside the change folder.
+ */
+export interface ScopeViolationEventData {
+  readonly files: readonly string[];
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -330,6 +352,8 @@ export interface OsqEventData {
   instructions_changed: InstructionsChangedEventData;
   focused_ran: FocusedRanEventData;
   mutation_ran: MutationRanEventData;
+  vcs_violation: VcsViolationEventData;
+  scope_violation: ScopeViolationEventData;
 }
 
 /**
