@@ -11,7 +11,9 @@ import { parseFrontmatter } from '../spec/parser.js';
 import { getArchiveDir, getChangesDir } from '../status/layout.js';
 import { harnessBinary, probeVersion } from './config-doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
+import { checkDecisions } from './doctor-decisions.js';
 import { checkManagedBlocks } from './doctor-managed.js';
+import { checkPlanningPrices } from './doctor-prices.js';
 import { findHarness } from './harness-catalog.js';
 
 export interface DoctorCheckResult {
@@ -224,6 +226,7 @@ export async function runDoctorChecks(
   // A catalog entry may add checks for its own executable after a passing probe.
   const diagnose = harness.check.ok ? findHarness(config.harness)?.diagnose : undefined;
   const extra = diagnose ? await diagnose({ config, projectRoot, version: harness.version }) : [];
+  const decisionsCheck = await checkDecisions(projectRoot, config);
   const checks: DoctorCheckResult[] = [
     configCheck,
     harness.check,
@@ -232,10 +235,13 @@ export async function runDoctorChecks(
       ...(diagnosis.warning ? { warning: true } : {}),
     })),
     await checkManaged(projectRoot, config),
+    ...(decisionsCheck ? [decisionsCheck] : []),
     await checkLocks(projectRoot, config),
     await checkArchives(projectRoot, config),
     await checkDoneMarkers(projectRoot, config),
     await checkValidator(projectRoot, deps),
   ];
+  const priceCheck = await checkPlanningPrices(projectRoot, config);
+  if (priceCheck) checks.push(priceCheck);
   return { ok: checks.every((check) => check.ok), checks };
 }

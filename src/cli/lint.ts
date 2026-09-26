@@ -4,6 +4,14 @@ import path from 'node:path';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { type Logger, createLogger } from '../core/foundation/logger.js';
 import { findSpecFolder } from '../core/spec/approve.js';
+import { buildImportGraph } from '../core/spec/import-graph.js';
+import {
+  type LintJsonEntry,
+  buildLintJson,
+  dedupeFindings,
+  printChangeFindings,
+  printRepositoryFindings,
+} from '../core/spec/lint-output.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 
@@ -24,6 +32,19 @@ export interface LintCommandOptions {
   readonly config?: OsqConfig;
   readonly logger?: LintCommandLogger;
   readonly exit?: (code: number) => void;
+  /** Write the JSON document to the stdout sink instead of logger lines. */
+  readonly json?: boolean;
+  readonly stdout?: (text: string) => void;
+}
+
+/** Project the linted entries onto the JSON builder's view. */
+function lintEntriesToJson(entries: readonly LintCommandEntry[]): LintJsonEntry[] {
+  return entries.map((entry) => ({
+    change: path.basename(entry.folder),
+    valid: entry.result.valid,
+    findings: entry.result.findings,
+    repository: entry.result.repository,
+  }));
 }
 
 async function listChangeFolders(specsDir: string): Promise<string[]> {
@@ -52,8 +73,11 @@ export async function lintCommand(
 ): Promise<LintCommandResult> {
   const cwd = options.cwd ?? process.cwd();
   const config = options.config ?? (await loadConfig(cwd));
-  const logger = options.logger ?? createLogger('normal', 'osq');
   const specsDir = getChangesDir(config.paths.openspecRoot, cwd);
+  const json = options.json === true;
+  // JSON mode prints no logger lines and passes no logger into the lint pass,
+  // so even the OpenSpec version info line stays out of the document.
+  const logger = json ? null : (options.logger ?? createLogger('normal', 'osq'));
 
   const folders =
     specIds.length > 0
@@ -61,24 +85,29 @@ export async function lintCommand(
       : await listChangeFolders(specsDir);
 
   const entries: LintCommandEntry[] = [];
+  const importGraph =
+    folders.length > 0 ? await buildImportGraph(cwd, { skip: [config.paths.openspecRoot] }) : null;
   for (const folder of folders) {
-    const name = path.basename(folder);
-    const result = await lintChangeFolder(cwd, folder, config, { logger });
-
-    for (const error of result.errors) {
-      logger.error(`${name}: ${error}`);
-    }
-    for (const warning of result.warnings) {
-      logger.warn(`${name}: ${warning}`);
-    }
-    if (result.valid) {
-      logger.info(`${name}: valid`);
-    }
-
+    const result = await lintChangeFolder(cwd, folder, config, {
+      ...(logger ? { logger } : {}),
+      ...(importGraph ? { importGraph } : {}),
+    });
     entries.push({ folder, result });
+    if (logger) {
+      printChangeFindings(logger, path.basename(folder), result);
+    }
   }
 
   const valid = entries.every((entry) => entry.result.valid);
+  const repository = dedupeFindings(entries.flatMap((entry) => [...entry.result.repository]));
+
+  if (json) {
+    const stdout = options.stdout ?? ((text: string) => process.stdout.write(text));
+    stdout(`${JSON.stringify(buildLintJson(valid, lintEntriesToJson(entries)))}\n`);
+  } else if (logger) {
+    printRepositoryFindings(logger, repository);
+  }
+
   if (!valid) {
     const exit =
       options.exit ??

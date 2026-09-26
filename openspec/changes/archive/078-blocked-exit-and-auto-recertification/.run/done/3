@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c249898347787848eae67bd0d4454b563209dd490a43366fa58d934aecc94d7e"
+build_stamp: "8def602"
+project_commit: "8def602"
+exit_code: 0
+scope_files: {"src/core/status/blocked-item.ts":"sha256:364042a191d191a9119b8ab336cc965fada9d2f2d4dd64ed39fdb9c469663cdd","src/core/status/inbox-projection.ts":"sha256:35914105800155a0b009a553d1e543dad0c40799cb29e768033d512152e515cd","src/core/status/inbox-text.ts":"sha256:10cfa0fa7ba252c1462d082f06cd62ac0e4be160d2dd7c3c6e02414b8bcdf3a2","src/core/status/inbox.ts":"sha256:7bf9362a2b91c6ea4b143c1845ea33410220bf9b4bace99c245a62c9d68046c1","tests/inbox-blocked.test.ts":"sha256:4cdc81f605141e8408f3385afdaa9f0bd0f7803c5ca56b82c0e23e66463a9fae"}
+---
+2026-09-25T07:07:30.681Z

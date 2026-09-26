@@ -8,6 +8,7 @@ import { type HarnessAdapter, type SpawnDetails, appendHarnessEvent } from '../h
 import { formatTaskStartedLine, readRetryContext } from './attempt.js';
 import { resolveProjectCommit } from './build-project.js';
 import { resolveBuildInfo } from './build.js';
+import { checkInstructionsDrift } from './instructions-drift.js';
 import {
   type RunTaskFailureReason,
   type RunTaskResult,
@@ -47,6 +48,9 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
   // Reconstruct retry context from append-only state before any spawn so a
   // watcher restart still carries the attempt and prior failure reason.
   const retryContext = await readRetryContext(specFolderPath, taskNumber);
+  if (retryContext.attempt === 1) {
+    await checkInstructionsDrift({ ...opts, attempt: 1 });
+  }
 
   let startedRecorded = false;
   let startedPromise: Promise<void> | null = null;

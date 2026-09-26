@@ -1117,7 +1117,7 @@ The system SHALL load configuration.
     assert.equal(result.valid, false);
     assert.ok(result.errors.some((e) => e.includes('chains commands')));
     assert.equal(
-      result.errors.some((e) => e.includes('package script')),
+      result.errors.some((e) => e.includes('that is not defined in the root package.json')),
       false,
       result.errors.join('\n'),
     );

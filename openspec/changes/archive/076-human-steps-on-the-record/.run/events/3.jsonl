@@ -1,0 +1,110 @@
+{"type":"verify_ran","timestamp":"2026-09-24T22:08:35.419Z","data":{"command":"node --import tsx --test tests/verification-dependents.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/verification-dependents.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/verification-dependents.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-24T22:08:35.787Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":705,"repoFiles":1289,"repoLines":136167,"importFanIn":20,"proposalWords":997,"taskWords":274,"deltaRequirements":23,"deltaScenarios":34}}
+{"type":"started","timestamp":"2026-09-24T22:08:35.792Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"a1402d2","pid":74437,"timeoutSeconds":1800,"version":"0.2.1","commit":"ee1b12a"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:40.375Z","data":{"tool":"bash","summary":"ls -la openspec/changes/076-human-steps-on-the-record/.run/r"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:40.404Z","data":{"tool":"read","summary":"src/core/status/state.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:40.501Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:08:40.547Z","data":{"promptTokens":76472,"candidateTokens":180,"totalTokens":86296,"cachedTokens":9472,"reasoningTokens":172,"cost":0.011710416}}
+{"type":"tool","timestamp":"2026-09-24T22:08:42.217Z","data":{"tool":"read","summary":"openspec/changes/076-human-steps-on-the-record/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:42.318Z","data":{"tool":"read","summary":"openspec/changes/076-human-steps-on-the-record/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:42.415Z","data":{"tool":"read","summary":"src/core/status/verification.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:42.530Z","data":{"tool":"read","summary":"src/core/status/queue-report-detail.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:08:42.573Z","data":{"promptTokens":6178,"candidateTokens":212,"totalTokens":92683,"cachedTokens":86272,"reasoningTokens":21,"cost":0.001325316}}
+{"type":"tool","timestamp":"2026-09-24T22:08:45.225Z","data":{"tool":"read","summary":"src/core/status/queue-planning.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:45.278Z","data":{"tool":"read","summary":"src/core/status/next-step.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:45.372Z","data":{"tool":"read","summary":"tests/queue-plan.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:08:45.422Z","data":{"promptTokens":5763,"candidateTokens":142,"totalTokens":98862,"cachedTokens":92672,"reasoningTokens":285,"cost":0.001398666}}
+{"type":"tool","timestamp":"2026-09-24T22:08:48.124Z","data":{"tool":"read","summary":"src/core/status/queue.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:48.217Z","data":{"tool":"read","summary":"tests/line-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:48.325Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:08:48.489Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T22:08:48.555Z","data":{"promptTokens":10975,"candidateTokens":202,"totalTokens":110042,"cachedTokens":98816,"reasoningTokens":49,"cost":0.002093298}}
+{"type":"tool","timestamp":"2026-09-24T22:09:00.031Z","data":{"tool":"bash","summary":"cd . && grep -rn \"isDependencyDone\\"}}
+{"type":"tool","timestamp":"2026-09-24T22:09:00.250Z","data":{"tool":"read","summary":"tests/import-graph.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:00.299Z","data":{"promptTokens":3574,"candidateTokens":132,"totalTokens":116265,"cachedTokens":109952,"reasoningTokens":2607,"cost":0.002509356}}
+{"type":"tool","timestamp":"2026-09-24T22:09:02.855Z","data":{"tool":"read","summary":"tests/next-step.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:02.888Z","data":{"promptTokens":3772,"candidateTokens":53,"totalTokens":120178,"cachedTokens":116224,"reasoningTokens":129,"cost":0.001023672}}
+{"type":"tool","timestamp":"2026-09-24T22:09:23.791Z","data":{"tool":"bash","summary":"cd . && grep -rn \"landed\\|verificat"}}
+{"type":"tool","timestamp":"2026-09-24T22:09:24.158Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:24.195Z","data":{"promptTokens":6355,"candidateTokens":187,"totalTokens":131463,"cachedTokens":120064,"reasoningTokens":4857,"cost":0.004339842}}
+{"type":"tool","timestamp":"2026-09-24T22:09:36.134Z","data":{"tool":"write","summary":"src/core/status/dependency-readiness.ts"}}
+{"type":"text","timestamp":"2026-09-24T22:09:36.168Z","data":{"text":"Now I have enough context. Let me make the source changes."}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:36.209Z","data":{"promptTokens":1552,"candidateTokens":489,"totalTokens":136081,"cachedTokens":131456,"reasoningTokens":2584,"cost":0.002470968}}
+{"type":"tool","timestamp":"2026-09-24T22:09:38.280Z","data":{"tool":"edit","summary":"src/core/status/state.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:09:39.142Z","data":{"tool":"edit","summary":"src/core/status/state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:39.670Z","data":{"promptTokens":161,"candidateTokens":584,"totalTokens":136704,"cachedTokens":135936,"reasoningTokens":23,"cost":0.000796158}}
+{"type":"tool","timestamp":"2026-09-24T22:09:41.932Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:09:42.342Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:42.383Z","data":{"promptTokens":154,"candidateTokens":379,"totalTokens":137138,"cachedTokens":136576,"reasoningTokens":29,"cost":0.000677628}}
+{"type":"tool","timestamp":"2026-09-24T22:09:44.233Z","data":{"tool":"edit","summary":"src/core/status/queue-report-detail.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:44.262Z","data":{"promptTokens":204,"candidateTokens":168,"totalTokens":137332,"cachedTokens":136960,"reasoningTokens":0,"cost":0.00054228}}
+{"type":"tool","timestamp":"2026-09-24T22:09:47.026Z","data":{"tool":"edit","summary":"src/core/status/queue-report-detail.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:47.081Z","data":{"promptTokens":259,"candidateTokens":186,"totalTokens":137666,"cachedTokens":137088,"reasoningTokens":133,"cost":0.000641514}}
+{"type":"tool","timestamp":"2026-09-24T22:09:55.679Z","data":{"tool":"write","summary":"tests/verification-dependents.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:55.736Z","data":{"promptTokens":209,"candidateTokens":2322,"totalTokens":140206,"cachedTokens":137472,"reasoningTokens":203,"cost":0.001958766}}
+{"type":"tool","timestamp":"2026-09-24T22:09:58.976Z","data":{"tool":"edit","summary":"tests/verification-dependents.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:09:59.015Z","data":{"promptTokens":190,"candidateTokens":475,"totalTokens":140883,"cachedTokens":140032,"reasoningTokens":186,"cost":0.000845196}}
+{"type":"tool","timestamp":"2026-09-24T22:10:00.971Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:01.007Z","data":{"promptTokens":226,"candidateTokens":71,"totalTokens":141010,"cachedTokens":140672,"reasoningTokens":41,"cost":0.000523116}}
+{"type":"tool","timestamp":"2026-09-24T22:10:02.895Z","data":{"tool":"bash","summary":"cd . && sed -n '1,40p' package.json"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:02.949Z","data":{"promptTokens":263,"candidateTokens":58,"totalTokens":141309,"cachedTokens":140928,"reasoningTokens":60,"cost":0.000533034}}
+{"type":"tool","timestamp":"2026-09-24T22:10:05.537Z","data":{"tool":"bash","summary":"cd . && npx biome check src/core/st"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:05.573Z","data":{"promptTokens":639,"candidateTokens":102,"totalTokens":141990,"cachedTokens":141184,"reasoningTokens":65,"cost":0.000619602}}
+{"type":"tool","timestamp":"2026-09-24T22:10:08.064Z","data":{"tool":"bash","summary":"cd . && npx biome check --write src"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:08.094Z","data":{"promptTokens":568,"candidateTokens":104,"totalTokens":142643,"cachedTokens":141952,"reasoningTokens":19,"cost":0.000584856}}
+{"type":"tool","timestamp":"2026-09-24T22:10:10.392Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:10.428Z","data":{"promptTokens":205,"candidateTokens":117,"totalTokens":142804,"cachedTokens":142464,"reasoningTokens":18,"cost":0.000539142}}
+{"type":"tool","timestamp":"2026-09-24T22:10:15.644Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:15.691Z","data":{"promptTokens":203,"candidateTokens":86,"totalTokens":143917,"cachedTokens":142720,"reasoningTokens":908,"cost":0.00105501}}
+{"type":"tool","timestamp":"2026-09-24T22:10:18.696Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:18.727Z","data":{"promptTokens":637,"candidateTokens":86,"totalTokens":144901,"cachedTokens":143872,"reasoningTokens":306,"cost":0.000762366}}
+{"type":"tool","timestamp":"2026-09-24T22:10:22.047Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:22.090Z","data":{"promptTokens":625,"candidateTokens":86,"totalTokens":146123,"cachedTokens":144896,"reasoningTokens":516,"cost":0.000889638}}
+{"type":"tool","timestamp":"2026-09-24T22:10:31.083Z","data":{"tool":"read","summary":"src/core/status/dependency-readiness.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:31.292Z","data":{"promptTokens":1398,"candidateTokens":55,"totalTokens":149310,"cachedTokens":146048,"reasoningTokens":1809,"cost":0.001766244}}
+{"type":"tool","timestamp":"2026-09-24T22:10:34.136Z","data":{"tool":"edit","summary":"src/core/status/dependency-readiness.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:34.180Z","data":{"promptTokens":606,"candidateTokens":400,"totalTokens":150254,"cachedTokens":149248,"reasoningTokens":0,"cost":0.000778644}}
+{"type":"tool","timestamp":"2026-09-24T22:10:37.143Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tool","timestamp":"2026-09-24T22:10:37.613Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:37.658Z","data":{"promptTokens":253,"candidateTokens":454,"totalTokens":150734,"cachedTokens":150016,"reasoningTokens":11,"cost":0.000766998}}
+{"type":"tool","timestamp":"2026-09-24T22:10:39.849Z","data":{"tool":"bash","summary":"cd . && npx biome check --write src"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:39.884Z","data":{"promptTokens":232,"candidateTokens":100,"totalTokens":150883,"cachedTokens":150528,"reasoningTokens":23,"cost":0.000560184}}
+{"type":"tool","timestamp":"2026-09-24T22:10:41.697Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:41.739Z","data":{"promptTokens":151,"candidateTokens":70,"totalTokens":151037,"cachedTokens":150784,"reasoningTokens":32,"cost":0.000536202}}
+{"type":"tool","timestamp":"2026-09-24T22:10:44.394Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:44.439Z","data":{"promptTokens":1317,"candidateTokens":148,"totalTokens":152604,"cachedTokens":150912,"reasoningTokens":227,"cost":0.000875286}}
+{"type":"tool","timestamp":"2026-09-24T22:10:46.849Z","data":{"tool":"bash","summary":"cd . && npx biome check --write src"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:46.890Z","data":{"promptTokens":171,"candidateTokens":107,"totalTokens":152726,"cachedTokens":152448,"reasoningTokens":0,"cost":0.000547194}}
+{"type":"tool","timestamp":"2026-09-24T22:10:56.856Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T22:10:56.896Z","data":{"promptTokens":237,"candidateTokens":109,"totalTokens":153211,"cachedTokens":152576,"reasoningTokens":289,"cost":0.000732078}}
+{"type":"tool","timestamp":"2026-09-24T22:11:01.890Z","data":{"tool":"bash","summary":"cd . && pnpm typecheck:cli 2>&1 | t"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:01.928Z","data":{"promptTokens":493,"candidateTokens":79,"totalTokens":153736,"cachedTokens":153088,"reasoningTokens":76,"cost":0.000626214}}
+{"type":"tool","timestamp":"2026-09-24T22:11:31.717Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:31.751Z","data":{"promptTokens":193,"candidateTokens":76,"totalTokens":153925,"cachedTokens":153600,"reasoningTokens":56,"cost":0.00056895}}
+{"type":"tool","timestamp":"2026-09-24T22:11:36.778Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:36.825Z","data":{"promptTokens":807,"candidateTokens":86,"totalTokens":155378,"cachedTokens":153856,"reasoningTokens":629,"cost":0.001011618}}
+{"type":"tool","timestamp":"2026-09-24T22:11:39.503Z","data":{"tool":"bash","summary":"cd . && cat biome.json 2>/dev/null "}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:39.537Z","data":{"promptTokens":661,"candidateTokens":61,"totalTokens":156196,"cachedTokens":155264,"reasoningTokens":210,"cost":0.000727542}}
+{"type":"tool","timestamp":"2026-09-24T22:11:41.262Z","data":{"tool":"bash","summary":"cd . && node -e \"const s='  const g"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:41.304Z","data":{"promptTokens":246,"candidateTokens":89,"totalTokens":156509,"cachedTokens":156160,"reasoningTokens":14,"cost":0.00056718}}
+{"type":"tool","timestamp":"2026-09-24T22:11:48.527Z","data":{"tool":"edit","summary":"src/core/status/queue-state.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:48.590Z","data":{"promptTokens":235,"candidateTokens":208,"totalTokens":158117,"cachedTokens":156288,"reasoningTokens":1386,"cost":0.001460514}}
+{"type":"tool","timestamp":"2026-09-24T22:11:51.452Z","data":{"tool":"bash","summary":"cd . && npx biome check --write src"}}
+{"type":"tokens","timestamp":"2026-09-24T22:11:51.484Z","data":{"promptTokens":180,"candidateTokens":159,"totalTokens":158374,"cachedTokens":157952,"reasoningTokens":83,"cost":0.000646056}}
+{"type":"tool","timestamp":"2026-09-24T22:12:24.491Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -25"}}
+{"type":"tokens","timestamp":"2026-09-24T22:12:24.530Z","data":{"promptTokens":148,"candidateTokens":76,"totalTokens":158664,"cachedTokens":158336,"reasoningTokens":104,"cost":0.000605208}}
+{"type":"tool","timestamp":"2026-09-24T22:13:00.743Z","data":{"tool":"bash","summary":"cd . && pnpm verify > /tmp/opencode"}}
+{"type":"tokens","timestamp":"2026-09-24T22:13:00.781Z","data":{"promptTokens":360,"candidateTokens":102,"totalTokens":159924,"cachedTokens":158592,"reasoningTokens":870,"cost":0.001112976}}
+{"type":"tool","timestamp":"2026-09-24T22:13:02.983Z","data":{"tool":"bash","summary":"cd . && git status --porcelain && e"}}
+{"type":"tokens","timestamp":"2026-09-24T22:13:03.014Z","data":{"promptTokens":254,"candidateTokens":62,"totalTokens":160081,"cachedTokens":159744,"reasoningTokens":21,"cost":0.000567132}}
+{"type":"tool","timestamp":"2026-09-24T22:13:08.906Z","data":{"tool":"write","summary":"openspec/changes/076-human-steps-on-the-record/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-24T22:13:08.948Z","data":{"promptTokens":387,"candidateTokens":819,"totalTokens":161536,"cachedTokens":160000,"reasoningTokens":330,"cost":0.00122745}}
+{"type":"tool","timestamp":"2026-09-24T22:13:12.498Z","data":{"tool":"read","summary":"openspec/changes/076-human-steps-on-the-record/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-24T22:13:12.541Z","data":{"promptTokens":144,"candidateTokens":66,"totalTokens":162053,"cachedTokens":161408,"reasoningTokens":435,"cost":0.000806424}}
+{"type":"text","timestamp":"2026-09-24T22:13:15.614Z","data":{"text":"Task 3 complete.\n\n## What changed\n\n- **New `src/core/status/dependency-readiness.ts`**: moved `isDependencyDone`, its `findFolder` helper, and the shared `listDir` out of `state.ts`. An archived dependency now counts as met only when `readVerification` reports no requirement or a `passed` outcome; rejected/unfinished active ones stay unmet. Also exports `isVerificationPending`.\n- **`src/core/status/state.ts`**: imports those helpers back; `resolveUnmetDependencies` and all exports unchanged.\n- **`src/core/status/queue-state.ts`**: `QueueItemState` gains `verification-pending`; `selectAssociation` derives a single archived association as pending while verification has not passed, keeping it out of `readQueueState`'s landed set.\n- **`src/core/status/queue-report-detail.ts`**: a `verification-pending` row is treated like `landed` when reading the archived association.\n- **New `tests/verification-dependents.test.ts`**: 4 tests covering blocked derivation, `readNextStep` blocked, freeing on `passed`, `failed` staying blocked, no-`verification` staying met, and the queue scenario (`projectQueue`, `prepareQueuePlan`, `formatQueue` `[verification-pending]`).\n\n## Verification\n\n- `node --import tsx --test tests/verification-dependents.test.ts` — 4/4 pass.\n- `pnpm verify` — exit 0 (typechecks, build, 1760 tests, lint).\n\nBoth `state.ts` (227) and `queue-state.ts` (249 real lines) stay within the source line budget. Result written to `.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-24T22:13:15.655Z","data":{"promptTokens":928,"candidateTokens":378,"totalTokens":163417,"cachedTokens":162048,"reasoningTokens":63,"cost":0.000889944}}
+{"type":"exited","timestamp":"2026-09-24T22:13:15.772Z","data":{"exitCode":0,"pid":74437,"timedOut":false,"elapsedSeconds":280}}
+{"type":"verify_ran","timestamp":"2026-09-24T22:13:16.066Z","data":{"command":"node --import tsx --test tests/verification-dependents.test.ts","exitCode":0,"duration":0.21,"output":"▶ verification pending dependency\n  ✔ blocks a dependent of a pending archived change, then frees it on passed (26.073296ms)\n  ✔ keeps the dependent blocked while the archived outcome is failed (9.609199ms)\n  ✔ treats an archived dependency without a verification requirement as met (7.290296ms)\n✔ verification pending dependency (43.79275ms)\n▶ verification pending queue dependency\n  ✔ derives the archived association as verification-pending and holds its dependent (11.803125ms)\n✔ verification pending queue dependency (11.990341ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 183.726376\n"}}
+{"type":"measures","timestamp":"2026-09-24T22:13:46.523Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":705,"repoFiles":1289,"repoLines":136167,"importFanIn":20,"proposalWords":997,"taskWords":274,"deltaRequirements":23,"deltaScenarios":34,"changedFiles":5,"changedLines":321,"scopeHashes":{"src/core/status/dependency-readiness.ts":{"before":null,"after":"sha256:c2a4098227bea272a09e2ea21d7b72cb7f14ba8fe6c61d1a03057abadacfc366"},"src/core/status/queue-report-detail.ts":{"before":"sha256:40c589ccb99f5c98c4b08edf688f3f1a650536afa4d308f437ef0ba6325c592a","after":"sha256:58253f6ca81fe7426e8345e3dc0d9061d8f9fd5ab4103f7c2a033fa013074a20"},"src/core/status/queue-state.ts":{"before":"sha256:ca6db7d9163c578a916d0798760985899168a9a65f2e6ea35dd076216a45345b","after":"sha256:6bc09544188183cb549bfcd790e0ac5216e345e7f2c69541c82f44e82bc69f78"},"src/core/status/state.ts":{"before":"sha256:4d021a8d062d7e476a6ca4ef4b3a0a246569cc1af19f9c430212373042006e8c","after":"sha256:5b0061d06fc6a70bf684da144e437a024cd37c03577a667774b572a8fc26a868"},"tests/verification-dependents.test.ts":{"before":null,"after":"sha256:2f419442652086f5d217f491f44d3473117c8776cc75c20843759cc1882faf1d"}}}}
+{"type":"done","timestamp":"2026-09-24T22:13:46.527Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-24T22:32:27.118Z","data":{"command":"node --import tsx --test tests/verification-dependents.test.ts","exitCode":0,"duration":0.2,"output":"▶ verification pending dependency\n  ✔ blocks a dependent of a pending archived change, then frees it on passed (25.629538ms)\n  ✔ keeps the dependent blocked while the archived outcome is failed (9.978319ms)\n  ✔ treats an archived dependency without a verification requirement as met (7.421107ms)\n✔ verification pending dependency (43.842689ms)\n▶ verification pending queue dependency\n  ✔ derives the archived association as verification-pending and holds its dependent (11.920703ms)\n✔ verification pending queue dependency (12.142924ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 179.514472\n"}}

@@ -14,6 +14,7 @@ import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
+import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
@@ -283,6 +284,12 @@ export async function runWatcherCycle(
           eligibleTaskNumbers: earlier,
           verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
         });
+        for (const recertified of audit.recertified) {
+          const paths = audit.recertifiedPaths[recertified] ?? [];
+          logger?.info(
+            `${tag('↻', '[recertified]')} task ${recertified} recertified automatically (${paths.join(', ') || 'no differing paths'})`,
+          );
+        }
         if (audit.stale.length > 0) {
           const staleNumbers = audit.stale
             .map((stale) => stale.taskNumber)
@@ -312,6 +319,7 @@ export async function runWatcherCycle(
         tasksRun++;
 
         if (taskResult.success) {
+          await runMutationCheck(projectRoot, folderPath, taskNumber, config, logger);
           await archiveCompletedSpec(folder, folderPath, specState.id);
         } else {
           logger?.info(

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5bbf9ffd06afc022d40e588dc35fc2d6016cd1fdf936b6a3ba6b8a47969d58ca"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"src/core/spec/delta.ts":"sha256:a9148c2974945a58e199034ec7e20949fea02a29d13954855de1206b6a43637e","tests/scenario-outcomes.test.ts":"sha256:4a1140f25f1f1fdc23fe41b2c4b1d6232d89d959dc7343dc944e4aa93ea527b4"}
+---
+2026-09-25T21:08:30.295Z

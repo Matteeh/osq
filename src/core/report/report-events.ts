@@ -1,5 +1,7 @@
 /** Pure event-stream observation helpers shared by the terminal report and web documents. */
 
+import { observeScopeRegression } from './report-scope.js';
+
 /** Parse one append-only jsonl stream, skipping blank and malformed lines. */
 export function parseEventLines(content: string): Record<string, unknown>[] {
   const events: Record<string, unknown>[] = [];
@@ -159,6 +161,7 @@ export interface TaskStreamObservation {
   readonly scopeVerificationPassed: number;
   readonly scopeVerificationFailed: number;
   readonly scopeRecertifiedByHuman: number;
+  readonly scopeRecertifiedAutomatically: number;
   readonly scopeRequeuedForAgent: number;
 }
 
@@ -177,11 +180,6 @@ export function observeTaskStream(
   const preSpawn = { runs: 0, mismatches: 0 };
   const costValues: number[] = [];
   let costReportedAttempts = 0;
-  let scopeDetected = 0;
-  let scopeVerificationPassed = 0;
-  let scopeVerificationFailed = 0;
-  let scopeRecertifiedByHuman = 0;
-  let scopeRequeuedForAgent = 0;
 
   let hasPriorStarted = false;
   let gapExplained = true;
@@ -205,17 +203,6 @@ export function observeTaskStream(
       deadByReason[reason] = (deadByReason[reason] ?? 0) + 1;
     } else if (type === 'regressed') {
       gapExplained = true;
-      if (data?.reason === 'scope_regression') {
-        scopeDetected++;
-        const rawExit = data.exitCode;
-        if (typeof rawExit === 'number' && Number.isFinite(rawExit)) {
-          if (rawExit === 0) scopeVerificationPassed++;
-          else scopeVerificationFailed++;
-        }
-      }
-    } else if (type === 'recertification') {
-      if (data?.outcome === 'passed') scopeRecertifiedByHuman++;
-      else if (data?.outcome === 'requeued') scopeRequeuedForAgent++;
     } else if (type === 'verify_ran') {
       recordVerifyRun(data, verifyCodes, preSpawn);
     }
@@ -230,6 +217,8 @@ export function observeTaskStream(
     }
   }
 
+  const scope = observeScopeRegression(events);
+
   return {
     attempts,
     unexplained,
@@ -239,10 +228,11 @@ export function observeTaskStream(
     preSpawnMismatches: preSpawn.mismatches,
     costValues,
     costReportedAttempts,
-    scopeDetected,
-    scopeVerificationPassed,
-    scopeVerificationFailed,
-    scopeRecertifiedByHuman,
-    scopeRequeuedForAgent,
+    scopeDetected: scope.detected,
+    scopeVerificationPassed: scope.verificationPassedAtDetection,
+    scopeVerificationFailed: scope.verificationFailedAtDetection,
+    scopeRecertifiedByHuman: scope.recertifiedByHuman,
+    scopeRecertifiedAutomatically: scope.recertifiedAutomatically,
+    scopeRequeuedForAgent: scope.requeuedForAgent,
   };
 }

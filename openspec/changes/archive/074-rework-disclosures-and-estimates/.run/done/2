@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:400cee3d6d1bde23723accc1e1111ba748f50657c16a815e594231fc6a04adfe"
+build_stamp: "9231e23"
+project_commit: "9231e23"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:45d72860d4f5d22df8bf7facfa1493e0cbd6cbceb531b75e1d158733a5648550","AGENTS.md":"sha256:9981278278beb773052d24688cd9ec40450049e28f2ae58e66adbf284fe049bc","src/core/foundation/init-blocks.ts":"sha256:352107482b58eb3900facf5f0975bf5ebc5100d69f7d9863d40fe1c631b2a49c","src/core/report/result-sections.ts":"sha256:e3ac625d8b00a8875c4463be56628ccbeec655e773516b463af595f85bd43022","tests/fixtures/prompts/agy.txt":"sha256:ffad4681e43899ca295d21a83b19645bdc789b0bba5810a7080f9cd456f179ce","tests/fixtures/prompts/codex.txt":"sha256:ffad4681e43899ca295d21a83b19645bdc789b0bba5810a7080f9cd456f179ce","tests/fixtures/prompts/opencode.txt":"sha256:ffad4681e43899ca295d21a83b19645bdc789b0bba5810a7080f9cd456f179ce","tests/managed-blocks.test.ts":"sha256:8e10d877404814d494fc05b317e41a561baac3b3ef2e41049994ed5226865b8e","tests/result-sections.test.ts":"sha256:7b087f4d05af1b70f0cacaeca82fede5e863610ccec0b062cc09b52a28c96e0d"}
+---
+2026-09-24T20:50:40.715Z

@@ -4,7 +4,12 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { listCanonicalDoneNumbers } from '../core/run/scope-hash.js';
 import { mergeDelta, parseDelta } from '../core/spec/delta.js';
-import { parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
+import {
+  type VerificationRequirement,
+  parseHumanSteps,
+  readCheckCommand,
+} from '../core/spec/human-steps.js';
+import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
 import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
@@ -95,12 +100,33 @@ async function ensureArchivedTasksTicked(folderPath: string): Promise<void> {
   }
 }
 
+/**
+ * The archived verification requirement a proposal declares, or undefined when
+ * it has neither after-landing steps nor a `check` command.
+ */
+async function readArchivedVerification(
+  folderPath: string,
+): Promise<VerificationRequirement | undefined> {
+  const proposal = await parseSpecMdFromFolder(folderPath).catch(() => null);
+  if (!proposal) return undefined;
+
+  const { data, body } = parseFrontmatter(proposal.raw);
+  const steps = parseHumanSteps(body);
+  const check = readCheckCommand(data);
+  if (steps.afterLanding === '' && check === null) return undefined;
+  return { afterLanding: steps.afterLanding !== '', check };
+}
+
 /** Apply deltas, move the folder to the canonical archive, and tick every `tasks.md`. */
 export async function archiveSpecFolder(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
 ): Promise<string> {
+  // The proposal's after-landing steps and `check` command must be read before
+  // the folder moves, because the event is stamped after relocation.
+  const verification = await readArchivedVerification(specFolderPath);
+
   await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
 
   // The planning prompt is transient local context, not authored content. Remove
@@ -131,10 +157,13 @@ export async function archiveSpecFolder(
   // Only after the folder is relocated and its tasks are projected do we stamp
   // the authoritative archive time. The event is always change-level; it never
   // lands in a numbered task event file.
+  const data: ArchivedEventData & { verification?: VerificationRequirement } = verification
+    ? { archivePath: targetPath, verification }
+    : { archivePath: targetPath };
   await appendHarnessEvent(targetPath, 'change', {
     type: 'archived',
     timestamp: new Date().toISOString(),
-    data: { archivePath: targetPath } satisfies ArchivedEventData,
+    data,
   } as unknown as HarnessEvent);
 
   return targetPath;

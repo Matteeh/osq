@@ -23,14 +23,26 @@ const RENAME_FROM_REGEX = /^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s
 const RENAME_TO_REGEX = /^\s*[-*+]?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
 const ANY_RENAME_REGEX = /^\s*[-*+]?\s*(FROM|TO):\s*(.*)$/i;
 const REMOVED_BULLET_REGEX = /^\s*[-*+]\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
+const WHEN_BULLET_REGEX = /^-[ \t]+\*\*WHEN\*\*[ \t]*(.*)$/;
+const THEN_BULLET_REGEX = /^-[ \t]+\*\*THEN\*\*[ \t]*(.*)$/;
+const AND_BULLET_REGEX = /^-[ \t]+\*\*AND\*\*[ \t]*(.*)$/;
+const TABLE_ROW_REGEX = /^\s*\|.*\|\s*$/;
+const TABLE_SEPARATOR_CELL_REGEX = /^:?-+:?$/;
 
 const PURPOSE_PLACEHOLDER_PREFIX = 'TBD - created by archiving change ';
 const PURPOSE_PLACEHOLDER_SUFFIX = '. Update Purpose after archive.';
+
+/** One THEN or AND assertion, with the table directly under it when present. */
+export interface ScenarioOutcome {
+  readonly text: string;
+  readonly rows?: readonly Record<string, string>[];
+}
 
 export interface DeltaScenario {
   readonly name: string;
   readonly when: string[];
   readonly then: string[];
+  readonly outcomes: readonly ScenarioOutcome[];
   readonly raw: string;
 }
 
@@ -189,19 +201,92 @@ export function parseScenario(raw: string): DeltaScenario {
   const name = scenarioNameAt(lines[0]);
   const when: string[] = [];
   const then: string[] = [];
-  for (const line of lines.slice(1)) {
-    const whenMatch = line.match(/^-[ \t]+\*\*WHEN\*\*[ \t]*(.*)$/);
+  const outcomes: ScenarioOutcome[] = [];
+  let thenSeen = false;
+
+  for (let index = 1; index < lines.length; index++) {
+    const line = lines[index];
+    const whenMatch = line.match(WHEN_BULLET_REGEX);
     if (whenMatch) {
       when.push(whenMatch[1].trim());
+      thenSeen = false;
       continue;
     }
-    const thenMatch = line.match(/^-[ \t]+\*\*THEN\*\*[ \t]*(.*)$/);
+    const thenMatch = line.match(THEN_BULLET_REGEX);
     if (thenMatch) {
-      then.push(thenMatch[1].trim());
+      const text = thenMatch[1].trim();
+      then.push(text);
+      outcomes.push(outcomeWithTable(text, lines, index + 1));
+      thenSeen = true;
+      continue;
+    }
+    const andMatch = line.match(AND_BULLET_REGEX);
+    if (andMatch && thenSeen) {
+      outcomes.push(outcomeWithTable(andMatch[1].trim(), lines, index + 1));
     }
   }
 
-  return { name, when, then, raw: normalizeLineEndings(raw).trimEnd() };
+  return { name, when, then, outcomes, raw: normalizeLineEndings(raw).trimEnd() };
+}
+
+/** An outcome line paired with the table directly below it, if any. */
+function outcomeWithTable(text: string, lines: readonly string[], start: number): ScenarioOutcome {
+  const rows = readTableRows(lines, start);
+  return rows === undefined ? { text } : { text, rows };
+}
+
+/** Split one Markdown table row into its trimmed cells. */
+function splitTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map((cell) => cell.trim());
+}
+
+/** True when a table row is the dashes-and-colons alignment row. */
+function isTableSeparator(line: string): boolean {
+  const cells = splitTableRow(line);
+  return cells.length > 0 && cells.every((cell) => TABLE_SEPARATOR_CELL_REGEX.test(cell));
+}
+
+/**
+ * Read the Markdown table directly under an outcome line. Blank lines may sit
+ * between the outcome and the table, and the table may be indented. The first
+ * row names the columns, the alignment row is left out, and each later row is
+ * keyed by the header cells, a missing cell reading as the empty string.
+ * Returns undefined when no table follows the outcome.
+ */
+function readTableRows(
+  lines: readonly string[],
+  start: number,
+): Record<string, string>[] | undefined {
+  let index = start;
+  while (index < lines.length && lines[index].trim() === '') {
+    index++;
+  }
+  if (index >= lines.length || !TABLE_ROW_REGEX.test(lines[index])) {
+    return undefined;
+  }
+
+  const header = splitTableRow(lines[index]);
+  index++;
+  if (index < lines.length && isTableSeparator(lines[index])) {
+    index++;
+  }
+
+  const rows: Record<string, string>[] = [];
+  while (index < lines.length && TABLE_ROW_REGEX.test(lines[index])) {
+    const cells = splitTableRow(lines[index]);
+    const row: Record<string, string> = {};
+    for (let column = 0; column < header.length; column++) {
+      row[header[column]] = cells[column] ?? '';
+    }
+    rows.push(row);
+    index++;
+  }
+  return rows;
 }
 
 /** The body of a `## Purpose` section, or undefined when it is absent or empty. */

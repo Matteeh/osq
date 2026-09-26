@@ -77,9 +77,9 @@ Smart models author specs and never execute them. Cheap models execute specs and
 - **Verification gate.** The watcher never trusts the agent's claim. It runs each task's `verify` in its own process after the agent exits and writes `.run/done/<n>` only on exit 0; a non-zero exit becomes `.run/dead/<n>.md`.
 - **Change verification after every task.** When the task's `verify` passes, the watcher also runs the proposal's change-level `verify` (`gates.changeVerifyAfterTask`, on by default). A red result kills the task with `change_verify_red`, so every task must leave the whole change green.
 - **Pre-spawn verify check.** Before a task's first attempt, the watcher runs that task's `verify` once and expects it to fail: a verify already green before any agent work means the work is done or the verify does not exercise the task. A task declares its expected start with `verify_starts` — `red` by default, `green` for work like a refactor that should already pass, or `any` when either is fine. A mismatch warns by default and the task continues; `gates.preSpawnVerify: fail` kills the task with `verify_precondition` before the agent spawns, and `off` disables the check. A mismatch shows in the task's `verify_ran` event, `osq show`, and `osq report`. A named path the verify refers to that does not exist yet is recorded as `missingPaths` on that event and does not count as a mismatch for a `red` task. The check adds one extra verify per task, on its first attempt only.
-- **Automatic retry.** When a task dies for a reason a fresh attempt could fix — `verify_red`, `change_verify_red`, `undeclared_test_change`, `verify_path_missing`, `no_result`, `crashed`, or `timeout` — the watcher retries it without asking. Every other reason (`spec_conflict`, `verify_precondition`, `already_running`) waits for you. `gates.autoRetries` caps how many automatic retries a task gets since its approval or its last manual retry; it defaults to 1, `0` turns automatic retries off entirely, and a manual `osq retry` grants one more. Each retry's prompt carries the previous dead marker's body, so the fresh agent sees exactly what failed.
+- **Automatic retry.** When a task dies for a reason a fresh attempt could fix — `verify_red`, `change_verify_red`, `undeclared_test_change`, `verify_path_missing`, `no_result`, `crashed`, or `timeout` — the watcher retries it without asking. Every other reason (`spec_conflict`, `verify_precondition`, `already_running`, `blocked`) waits for you. `gates.autoRetries` caps how many automatic retries a task gets since its approval or its last manual retry; it defaults to 1, `0` turns automatic retries off entirely, and a manual `osq retry` grants one more. Each retry's prompt carries the previous dead marker's body, so the fresh agent sees exactly what failed.
 - **Stuck tasks.** Every dead marker records a `fingerprint` over its reason and body, ignoring details a rerun changes: ISO timestamps, durations, PIDs, ANSI codes, and absolute paths under the project root. When a task dies again with the same fingerprint as its most recent retained death, the watcher stops retrying and marks it stuck — `stuck: true` on the active marker, one `stuck` event, one line. The inbox shows the task as stuck and `osq --json` gives its `task-dead` item a `stuck` field carrying the fingerprint; `osq retry <id> <n>` still retries it after you fix the cause.
-- **Scope recertification.** Before each task and again before archiving, the watcher re-hashes the resolved `scope` of every done task. If a later task changed any of those files, it re-runs that task's `verify`, writes `.run/regressed/<n>.md`, and halts the change until you run `osq retry <id> <n>`.
+- **Scope recertification.** Before each task and again before archiving, the watcher re-hashes the resolved `scope` of every done task. When a later task whose `scope` covers a changed file changed it, the recorded hashes show nothing else did, and the task's `verify` still passes, the watcher recertifies that task by itself. Every other change halts the change until you run `osq retry <id> <n>`.
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
 - **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
 - **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files. The watcher writes markers and checkboxes automatically; a human writes the rest through `osq approve`, `osq retry`, `osq reject`, and `osq done`.
@@ -162,13 +162,139 @@ Lint, run by `osq approve` and `osq lint`. Limits come from `osq.config.ts`; def
 | `verify` names an absent package script | reject |
 | `verify` names no existing path or package script | warn |
 | a delta targets a requirement the living spec lacks, or is written as an instruction | reject |
+| a project with ADRs has no usable `## Decisions` section (`None` with no governing ADR passes) | reject |
+| `## Decisions` omits an accepted ADR that governs a capability the change writes | reject |
+| the AGENTS.md project rules block is stale or exceeds `limits.maxProjectRules` | reject |
+| `## Decisions` names an ADR that does not exist or is not accepted | warn |
 | a file contains a prohibited control character | reject |
 | OpenSpec schema or validator drift | reject |
 | two tasks resolve the same scope file | warn |
+| a task scope reaches a preexisting test no task may modify (`limits.importGraphDepth`) | warn |
+| a scoped file imports code owned by a capability the proposal neither reads nor has a delta for | warn |
+| a scoped file is owned by a capability with no delta in the change | warn |
+| a task `verify` runs only tests that import nothing in the task's scope | warn |
 
 `osq init` and `osq new` seed `verify: node -e "process.exit(0)"`. That is a planning sentinel, not trusted coverage: replace it before approval with a command that verifies the completed change's final tree. Checked-in fixtures use a local `node verify.cjs` verifier backed by files in their own execution root, never the sentinel, the network, a TTY, or this repository's full verification suite.
 
 The rules lint can't check live in the managed `PLANNER.md` block: titles read "When X, Y"; every task leaves the change green on its own; a file belongs to one task; approve the task list before writing any task in full.
+
+### Architecture decisions
+
+Architecture decision records live under `paths.decisions` (default `decisions/`). A markdown file there is an ADR when its YAML frontmatter carries `status` (`proposed`, `accepted`, or `superseded`); its number is the leading digits of the file name, its title the first `# ` heading without that number prefix. Only accepted ADRs take effect. An accepted ADR states `applies_to`, either `all` or a list of capability names, and a one-line `rule`; a superseded ADR states `superseded_by`. `limits.maxRuleLength` (default 160) caps a rule's length. A file without frontmatter is ignored and reported.
+
+`osq init` writes the rules block for every accepted system-wide ADR into `AGENTS.md` between `<!-- OSQ:RULES:START -->` and `<!-- OSQ:RULES:END -->`: a `## Project rules` heading and one `- <rule> ADR <number>` line per ADR, in number order. `limits.maxProjectRules` (default 10) caps how many lines the block may hold. The `decisions` check in `osq doctor` validates every ADR, fails on a stale or oversized rules block, and warns about ignored files and capability names with no living spec.
+
+When the project has any ADR with osq frontmatter, every proposal needs a `## Decisions` section after `## Surface`. Name each accepted ADR that governs a capability the change writes, or write `None` when none does. A departure line begins `Departs from ADR <n>:` and gives the reason. `osq lint` and `osq approve` reject a missing or empty section, reject an unnamed governing ADR, and fail while the AGENTS.md rules block is out of date.
+
+An accepted ADR may also name `checks`, the repository-relative test files that enforce it, and `denies`, the package names it forbids. A check path is trimmed, uses forward slashes, and drops a leading `./`; only accepted ADRs' checks and denials take effect. The `decisions` doctor check fails when an accepted ADR names a check file that does not exist. When a task declares `tests.modify: true` and its resolved scope covers an accepted ADR's check file, approval raises one `adr_check_modified` flag labelled `task <n> may modify a check of ADR <number>`, and `osq report` counts it in `approvalFlags.byFlag`.
+
+After an agent exits, the watcher compares each scoped `package.json` against the baseline recorded on the attempt's `measures` start event. A new package appends one `dependencies_added` event; if an accepted ADR denies it, the task dies with `denied_dependency`, eligible for one automatic retry, and the marker names each package, file, ADR, and rule. `osq show` prints a `Dependencies added: <name> (<file>), ...` line under such a task, and `osq report` prints a `Dependencies added:` section with one `<change>: <name> (<file>), ...` line per change that added packages.
+
+### Traceability
+
+Opt a capability in through the `traceability` block in `osq.config.ts`:
+
+```ts
+export default defineConfig({
+  traceability: {
+    capabilities: ['pricing'], // or 'all'
+    mode: 'warn',              // or 'require'
+    focusedTests: 'node --test --test-reporter=tap {files}', // optional
+  },
+});
+```
+
+The resolved config always holds `traceability`, defaulting to `{ capabilities: [], mode: 'warn' }`. With no capability opted in, `osq init`, `osq lint`, `osq report`, and both managed blocks are exactly what they were, and a project that never imports the helper sees no change.
+
+When at least one capability is opted in, `osq init` writes a `<!-- OSQ:TRACEABILITY:START -->` … `<!-- OSQ:TRACEABILITY:END -->` block directly after the managed block in `AGENTS.md` and `PLANNER.md`. Its scope is `every capability` for `'all'`, otherwise the opted-in names joined by `, `. Removing the opt-in removes the block and restores both files.
+
+A test proves a scenario by importing from `@matteeh/osq/testing`:
+
+```ts
+import { scenario } from '@matteeh/osq/testing';
+
+scenario('pricing', 'Volume pricing', { covers: quote }, ({ run, then, each }) => {
+  then('the subtotal is 1800.00', () => assert.equal(run(100).subtotal, 1800));
+  each('the unit price follows this table', (row) => assert.equal(quote(+row.quantity).unit, +row['unit price']));
+});
+```
+
+`scenario(capability, name, { covers }, body)` registers one `node:test` test titled `Scenario: <name>`. It fails unless the covered function ran through `run`, every outcome was asserted by a `then` or `each` that completed, and every table row passed. `run` takes the covered function's parameters and returns its result, `then(outcome, check)` asserts one outcome, and `each(outcome, check)` calls the check once per table row, in order, with the row as an object keyed by the header cells. The helper's failure messages are exact: a missing name is `"<text>" is not a THEN of this scenario`; a `then` on a table is `THEN <text>: has a table, so check it with each`; an `each` on a non-table is `THEN <text>: has no table`; a failed check is `THEN <text>: failed` or `THEN <text>: failed at <column> <value>, ...`; a check before the function ran or settled is `THEN <text>: checked before <fn> ran` or `THEN <text>: checked before <fn> settled`; a body that never called `run` is `<fn> never ran`; and a missing assertion is `No assertion for: <text>; <text>`. A lookup failure is reported unchanged.
+
+A scenario with more than one case puts a Markdown table directly under its THEN or AND line, with only blank lines between:
+
+```
+- **THEN** the unit price follows this table
+
+  | quantity | unit price |
+  | -------- | ---------- |
+  | 100      | 9.00       |
+  | 500      | 8.00       |
+```
+
+The first row names the columns, the dashes row is skipped, and later rows are keyed by the trimmed header cells with trimmed string values. Lint accepts a table under a THEN or AND line in a delta and in a living spec.
+
+Lint reads tags only from a `/** ... */` doc comment directly above `export function`/`export async function`, or `export const <name>` bound to an arrow or function expression. A `@scenario <capability>: <scenario name>` line names a scenario the function serves; `@adr <number>` names a decision it follows. A file is a scenario test file when it imports from `@matteeh/osq/testing`, and its `scenario(` calls are read when capability and name are string literals and the third argument is `{ covers: <identifier> }`; anything else is reported as unreadable as `<file>:<line>: <reason>`.
+
+A task lists the scenarios its tests prove under `## Scenarios`, one `- <capability>: <scenario name>` bullet each. A listed scenario counts as planned while the task's resolved scope holds a test path, so lint passes before the test exists; once a scoped test names it, only real `scenario(...)` calls count.
+
+The watcher sets `OSQ_CHANGE` to the absolute change folder for every verify, so the helper resolves scenarios from the change's delta while it is still active. `osq check` on an archived change runs without it, because its deltas are already in the living spec.
+
+For an opted-in capability, `osq lint` reports each scenario an ADDED or MODIFIED requirement holds that no scoped test names and that is not planned (`<capability>: no test names scenario "<name>"`), a `@scenario` tag naming a missing scenario (`<fn>: names a scenario the <capability> spec doesn't have: "<name>"`) or one no test covers (`<fn>: no test for "<name>" covers it`), a bad `@adr` tag (`<fn>: ADR <n> doesn't exist or isn't accepted`, `<fn>: ADR <n> doesn't apply to any capability it serves`), and a duplicate scenario name (`<capability>: two scenarios named "<name>"`). For every capability it also lists the tests naming a scenario a MODIFIED or REMOVED requirement changes and warns `<file> names changed scenario "<name>" but no task scopes it with tests.modify: true`. Every finding is a warning under `mode: 'warn'` and an error under `mode: 'require'`.
+
+When a capability is opted in, `osq report` prints a `Traceability:` section with `<capability>: <n> untested scenarios, <m> unclaimed functions` and `    untested: <name>` / `    unclaimed: <file>#<name>` lines, also carried in JSON under `traceability`. `osq show` prints `      Scenarios: <capability>: <name>; ...` under a task whose scoped tests name scenarios.
+
+Set the optional `traceability.focusedTests` to a command containing `{files}`, such as the reference `node --test --test-reporter=tap {files}`, to run a task's scenario tests before its full verify. When a task's resolved scope holds scenario test files naming opted-in scenarios, the watcher replaces `{files}` with every scenario test file in the repository that names one of those scenarios, each single-quoted and separated by spaces, and runs it through the verify's environment, `OSQ_CHANGE` included. The outcome is `passed` when the command succeeds, `failed` when the TAP output has a `not ok` line for a collected `Scenario: <name>`, and `problem` when it exits nonzero, times out, or cannot start and isn't `failed`. Only a `failed` outcome ends the attempt: the task dies with `verify_red` and its verify is skipped, so the next attempt receives the focused output; a `problem` or `passed` outcome goes on to the full verify, which alone decides the task. Each run appends one `focused_ran` event carrying the command, files, scenarios, outcome, exit code, duration, timeout state, and output. `osq show` prints `      Focused runs: <outcome> <duration>s, ...` under the task after its `Scenarios:` line, adding ` (attempt ended, verify skipped)` to each `failed` entry.
+
+### Mutation checks
+
+Set the optional `traceability.mutation` block to the project's mutation command
+and an optional per-task budget in seconds (default `300`):
+
+```ts
+export default defineConfig({
+  traceability: {
+    capabilities: ['pricing'], // or 'all'
+    mode: 'warn',
+    mutation: {
+      command: 'npx stryker run', // or a command using {mutate}, {tests}, {report}
+      budgetSeconds: 300,         // optional
+    },
+  },
+});
+```
+
+After a task passes, osq picks the covered functions the task changed or newly tested. A covered function is an exported function carrying a `@scenario` tag naming an opted-in capability whose tagged scenario a scenario test file names. A function is picked when its file is in the task's resolved scope and its own range's hash differs from the task's last start `measures` event's `functionHashes` entry (a missing entry counts as different), or when a scenario test file the task changed covers it.
+
+Each run gets that function's own range plus the range of every non-exported top-level function in the same file it calls, sorted by start line as `<file>:<start>-<end>`, and the sorted, distinct scenario test files naming its tagged scenarios. The command is run once per pick through the verify's environment, `OSQ_CHANGE` included, and receives:
+
+- `{mutate}` and `OSQ_MUTATE`: the ranges, comma-joined for the placeholder and a JSON array for the variable
+- `{tests}` and `OSQ_MUTATION_TESTS`: the tests, single-quoted and space-separated for the placeholder and a JSON array for the variable
+- `{report}` and `OSQ_MUTATION_REPORT`: an absolute path in a fresh temporary folder, single-quoted for the placeholder
+
+Each run's timeout is the budget left, and picks left once `budgetSeconds` of total wall time for the task is spent are not run. Each pick appends one `mutation_ran` event to the task's stream with `file`, `function`, `ranges`, `scenarios`, `tests`, `outcome`, `killed`, `survived`, `invalid`, `survivors`, `duration`, and `exitCode`. When a pick can't be measured the event says why: `range_unknown` (unknown ranges), `budget`, `timed_out`, `command_failed`, or `report_invalid`; a failed or timed-out run also carries the command's last 2,000 output characters. The check is observe only: it never fails, retries, or halts a task.
+
+`osq show` prints, under a task whose stream holds `mutation_ran` events after its last `measures` start event, `      Mutation: <entry>; <entry>` with one entry per event in stream order. A measured entry is `<file>#<function> <killed> of <killed + survived> killed`, a not-measured one is `<file>#<function> not measured (<reason>)`, and each survivor adds a `        Survived: <file>:<line>:<column> <mutator> -> <replacement>` line. When a capability is opted in, `osq report` prints a `Mutation:` section with `  <capability>: <killed> of <killed + survived> killed (<percent>%), <n> survivors not yet reviewed`, the percent to one decimal, then a `    survived: ...` line per survivor, also carried under `mutation` in JSON. Every listed survivor counts as not yet reviewed.
+
+The reference setup uses StrykerJS with its command test runner. Add `@stryker-mutator/core` as a dev dependency of the project, set `traceability.mutation.command` to `npx stryker run`, and add this `stryker.config.mjs`:
+
+```js
+const tests = JSON.parse(process.env.OSQ_MUTATION_TESTS ?? '[]')
+  .map((file) => `'build/${file.replace(/\.(m|c)?ts$/, (_, k) => `.${k ?? ''}js`)}'`)
+  .join(' ');
+export default {
+  testRunner: 'command',
+  commandRunner: { command: `node --test ${tests}` },
+  buildCommand: 'npx tsc',
+  mutate: JSON.parse(process.env.OSQ_MUTATE ?? '[]'),
+  coverageAnalysis: 'off',
+  reporters: ['json'],
+  jsonReporter: { fileName: process.env.OSQ_MUTATION_REPORT },
+  tempDirName: '.stryker-tmp',
+};
+```
+
+The config assumes `tsc` compiles `tests/` to `build/tests/`; follow the project's own layout if it differs. Leave `thresholds.break` unset so survivors never change the command's exit code, and add `.stryker-tmp` to `.gitignore`.
 
 ## What the watcher guarantees
 
@@ -182,7 +308,7 @@ The rules lint can't check live in the managed `PLANNER.md` block: titles read "
 - **Deterministic spec merges**: Capability specs are only ever changed by the watcher applying an approved delta merge (ADR 002). Agents never touch `openspec/specs/`.
 - **Synthesized results**: An agent that exits without writing `.run/results/<n>.md` is not lost: if the adapter captured a final text message, the watcher synthesizes a result file (`synthesized: true`) from it and proceeds to verify. Only an exit with neither a result file nor final text is `dead` with `reason: no_result`. Nothing disappears silently.
 
-Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `verify_precondition`, `undeclared_test_change`, `verify_path_missing` (a path the task's `verify` names did not exist after the agent exited), `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns. Every dead marker also carries a `fingerprint` of its reason and body, and a marker the watcher stopped retrying carries `stuck: true`.
+Dead reasons: `verify_red` (with `timed_out: true` if verify exceeded its timeout), `change_verify_red`, `verify_precondition`, `undeclared_test_change`, `verify_path_missing` (a path the task's `verify` names did not exist after the agent exited), `denied_dependency` (a scoped `package.json` gained a package an accepted ADR denies; retried automatically once), `no_result`, `crashed`, `timeout`, `spec_conflict`, and `already_running`. A done task whose scoped files changed afterwards is recorded under `.run/regressed/<n>.md` with `reason: scope_regression`, and a failed archive-time change verify under `.run/regressed/change.md`; either stops the run before the next task spawns. Every dead marker also carries a `fingerprint` of its reason and body, and a marker the watcher stopped retrying carries `stuck: true`.
 
 ## Harnesses
 

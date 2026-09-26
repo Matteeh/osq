@@ -134,7 +134,8 @@ export async function readQueueReportItem(
   groups: QueueAssociationGroups | undefined,
 ): Promise<QueueReportItem> {
   let plannedToLandedSeconds: number | null = null;
-  if (row.state === 'landed' && groups?.archived.length === 1) {
+  const archivedRow = row.state === 'landed' || row.state === 'verification-pending';
+  if (archivedRow && groups?.archived.length === 1) {
     plannedToLandedSeconds = elapsedSeconds(
       await earliestPlanStartMs(groups),
       await archivedEventMs(groups.archived[0].folderPath),

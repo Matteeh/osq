@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9925ced7603c57a43d4f8ae14830d76a03563460dee89dd3b2b27e290305ebdd"
+build_stamp: "9cdc92a"
+project_commit: "9cdc92a"
+exit_code: 0
+scope_files: {"fixture/report/expected.json":"sha256:dd548618bc0cdde444aed6af3bc25e70b19d8a8f1de2afef741c7dac57537d9b","src/core/report/approval-flags.ts":"sha256:51280efb040af88eb9a9f4f624b556d21b8a428692c0d27bcd5b50730707711b","src/core/spec/digest-decisions.ts":"sha256:7954419e14b19bc4a7c12c4178f03bbfde10c8fff894f42b19e3e1591ae3abf8","src/core/spec/digest-format.ts":"sha256:69551b725c14e727e4e04ae1d334f747e1acb1c64b671ec122318f210bd5bddf","src/core/spec/digest.ts":"sha256:f6c84bae7f28f2a4067b42e8ccf5c51dab711184ed243ab68088fd3707099835","tests/approval-digest-decisions.test.ts":"sha256:1b4cff846da4380fca90607cf87861e37e04a165dd53fa5e986eda936913a90a","tests/report-approval-flags.test.ts":"sha256:e3ddf7c10e1cda01bfa6870f4ebab870edf1f3d4e9d361efc91c030fe1b7b392","tests/report-json.test.ts":"sha256:2c6223bed21520b501d244dbadfb37d042ddd2c76a866e77c0750ad671c6149f"}
+---
+2026-09-25T07:59:59.883Z

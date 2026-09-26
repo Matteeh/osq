@@ -794,11 +794,12 @@ events and run artifacts remain intact.
 Before locking an upcoming task, the watcher SHALL compare every earlier
 automated done task's recorded resolver-aware scope hash and resolver version
 with the current tree in one audit. Every stale task SHALL run its own verify
-command under the configured verify timeout, then receive an active regression
-marker and typed regression event containing sorted differing paths,
-verification command and result, recorded and current scope hashes, resolver
-upgrade context, and per-path attribution whether verification passed or
-failed.
+command under the configured verify timeout. A stale task that automatic scope
+recertification recertifies SHALL be done again. Every other stale task SHALL
+receive an active regression marker and typed regression event containing
+sorted differing paths, verification command and result, recorded and current
+scope hashes, resolver upgrade context, and per-path attribution whether
+verification passed or failed.
 
 A differing path SHALL be attributed to a later done task only when exactly one
 later task's normalized file-change events name a resolver-produced path and
@@ -806,10 +807,10 @@ the current file hash agrees with that task's resolver-produced completion hash
 when available. Multiple qualifying tasks SHALL be `ambiguous`; absence of a
 trustworthy candidate SHALL be `unknown`.
 
-An active regression marker SHALL make later audits idempotent. Any newly stale
-task SHALL return `blocked_by_regression` without locking, running, counting, or
-writing failure state for the upcoming task. Logging SHALL contain one
-stale-task line followed by one numerically ordered change summary.
+An active regression marker SHALL make later audits idempotent. Any newly
+regressed task SHALL return `blocked_by_regression` without locking, running,
+counting, or writing failure state for the upcoming task. Logging SHALL contain
+one stale-task line followed by one numerically ordered change summary.
 
 #### Scenario: More than one completed task is stale
 - **WHEN** multiple earlier done tasks differ from their recorded resolved scopes before another task is due
@@ -831,6 +832,10 @@ stale-task line followed by one numerically ordered change summary.
 - **WHEN** normalized file-change and resolver-produced completion evidence identifies one later done task for a differing path
 - **THEN** the marker and event name that task, otherwise recording `ambiguous` or `unknown` according to the evidence
 
+#### Scenario: Automatically recertified task
+- **WHEN** the only stale task qualifies for automatic scope recertification
+- **THEN** the audit reports no regressed task and the upcoming task runs
+
 ### Requirement: Archive scope recertification audit
 <!-- source: src/watcher/archiver.ts, src/watcher/regression.ts, tests/archive-verification.test.ts -->
 Before the existing archive-time task and change verification sequence, the
@@ -848,12 +853,14 @@ the existing archive verification semantics unchanged.
 - **THEN** ordered task verification, change verification, delta application, and archival proceed unchanged
 
 ### Requirement: Scope recertification lifecycle event
-<!-- source: src/harness/types.ts, src/core/retry.ts, src/watcher/attempt.ts, src/watcher/spawn.ts, tests/retry-recertification.test.ts -->
+<!-- source: src/harness/types.ts, src/core/retry.ts, src/core/lifecycle/recertify.ts, src/watcher/auto-recertify.ts, src/watcher/attempt.ts, src/watcher/spawn.ts, tests/retry-recertification.test.ts, tests/auto-recertify.test.ts -->
 The lifecycle event union SHALL include a typed `recertification` event carrying
 task, outcome, differing paths and attribution, verify command, exit code,
 output and timeout state, recorded or original scope hash, and current scope
-hash. Outcome SHALL be `passed` when human retry refreshes the trusted done
-record and `requeued` when failed verification returns the task to agent work.
+hash. Outcome SHALL be `passed` when human retry or automatic scope
+recertification refreshes the trusted done record and `requeued` when failed
+verification returns the task to agent work. An automatic recertification's
+event SHALL carry `automatic: true`; a human one SHALL carry no `automatic` key.
 
 A passed recertification SHALL not advance execution attempts. A requeued
 recertification SHALL retain the next execution attempt and failed verification
@@ -867,6 +874,10 @@ executor.
 #### Scenario: Human recertification requeues
 - **WHEN** explicit retry verification exits non-zero or times out
 - **THEN** one `recertification` event records `outcome: requeued` and preserves the next attempt and failing output for a later agent spawn
+
+#### Scenario: Automatic recertification event
+- **WHEN** the watcher recertifies a task automatically
+- **THEN** one `recertification` event records `outcome: passed` and `automatic: true` without a retry, started event, or execution-attempt increment
 
 ### Requirement: Deterministic task scope resolution
 <!-- source: src/core/scope.ts, src/core/scope-hash.ts, tests/scope-resolver.test.ts, tests/runner-scope-hashes.test.ts -->
@@ -1178,8 +1189,8 @@ the task through `retrySpec` with `automatic: true` when its dead reason is
 eligible, it is not stuck, and it has fewer automatic retries than
 `gates.autoRetries` since the later of the manifest's `approvedAt` and its last
 manual retry. Eligible reasons SHALL be `verify_red`, `change_verify_red`,
-`undeclared_test_change`, `verify_path_missing`, `no_result`, `crashed`, and
-`timeout`.
+`undeclared_test_change`, `verify_path_missing`, `denied_dependency`,
+`no_result`, `crashed`, and `timeout`.
 
 #### Scenario: Retry fixes the task
 - **WHEN** a task dies with `verify_red` and passes on its next attempt
@@ -1188,6 +1199,10 @@ manual retry. Eligible reasons SHALL be `verify_red`, `change_verify_red`,
 #### Scenario: Missing verify path is retried
 - **WHEN** a task dies with `verify_path_missing`
 - **THEN** it is retried automatically once and the next attempt's prompt contains the missing path
+
+#### Scenario: Denied dependency is retried
+- **WHEN** a task dies with `denied_dependency` for `vue`
+- **THEN** it is retried automatically once and the next attempt's prompt contains `vue`
 
 #### Scenario: Ineligible reason
 - **WHEN** a task dies with `spec_conflict`, `already_running`, or `verify_precondition`
@@ -1376,3 +1391,365 @@ along with `harnessVersion` from the first line of `claude --version`.
 #### Scenario: Other harnesses unchanged
 - **WHEN** an adapter supplies no `harnessAuth`
 - **THEN** its `started` event carries no `harnessAuth`
+
+### Requirement: Archived verification requirement
+<!-- source: src/watcher/archiver.ts, src/core/spec/human-steps.ts, tests/verification-record.test.ts -->
+When an archived change's proposal has after-landing steps or a `check`
+command, its `archived` event SHALL carry `verification: { afterLanding, check
+}`, where `afterLanding` says whether after-landing steps exist and `check` is
+the command or null. Otherwise the event SHALL carry no `verification` key. The
+watcher SHALL archive exactly as before in both cases.
+
+#### Scenario: After-landing steps
+- **WHEN** a change whose `### After landing` lists a step is archived
+- **THEN** its `archived` event carries `verification: { afterLanding: true, check: null }`
+
+#### Scenario: No human steps
+- **WHEN** a change whose `## Human steps` reads `None` and has no `check` is archived
+- **THEN** its `archived` event carries only `archivePath`, as before
+
+### Requirement: Human verification events
+<!-- source: src/core/lifecycle/verification-record.ts, tests/verification-record.test.ts -->
+The CLI SHALL append `check_ran` events, with data `command`, `exitCode`,
+`duration`, `timedOut`, and `output`, and `verification_recorded` events, with
+data `outcome` (`passed` or `failed`) and `note` (text or null), only to an
+archived change's `.run/events/change.jsonl`. Their data types SHALL live in
+`src/core/lifecycle/verification-record.ts`, as the `rejected` event's shape
+lives in core.
+
+#### Scenario: Recorded outcome
+- **WHEN** a human records a failed outcome with a note
+- **THEN** the archived change's stream gains one `verification_recorded` event with `outcome: "failed"` and the note
+
+### Requirement: Import fan-in from the shared graph
+<!-- source: src/watcher/measures.ts, src/core/spec/import-graph.ts, tests/import-graph-build.test.ts, tests/measures.test.ts -->
+`countImportFanIn` SHALL count the `src/**/*.ts` files outside the scope that
+import a scoped file under `src/`, read from `buildImportGraph`. It SHALL match
+whole import specifiers, so an importer of `./codex-prompt.js` does not count
+toward `./codex.ts`.
+
+#### Scenario: Prefix-named sibling
+- **WHEN** `src/x.ts` imports `./codex-prompt.js` and scope is `src/codex.ts`
+- **THEN** `src/x.ts` does not count toward the fan-in
+
+#### Scenario: osq's own repository
+- **WHEN** fan-in is counted on this repository for a sample of `src/` files
+- **THEN** each count equals a search for whole import specifiers
+
+### Requirement: Blocked exit
+<!-- source: src/watcher/blocked.ts, src/watcher/task-verify.ts, src/watcher/runner.ts, src/watcher/failure-reason.ts, tests/blocked-exit.test.ts -->
+After the agent exits and the runner has made sure a result file exists, a
+result file whose `## Blocked` section `parseResultSections` reads as present
+SHALL make the task die with reason `blocked`. The runner SHALL check this
+before the missing verify path check, the task verify, and the change verify,
+and SHALL run none of them for a blocked task. The dead marker SHALL carry
+`reason: blocked` in its frontmatter and the stated need in its body, and one
+`dead` event SHALL record reason `blocked`. A `## Blocked` section that is empty
+or says only `None` SHALL leave the task to the checks that follow, as before.
+`blocked` SHALL NOT be one of the reasons eligible for an automatic retry.
+
+#### Scenario: Executor stops blocked
+- **WHEN** a fake agent writes a result file whose `## Blocked` says `Needs src/b.ts in scope` and writes no code
+- **THEN** the task dies with `blocked`, the dead marker body holds `Needs src/b.ts in scope`, and no `verify_ran` event follows the agent's exit
+
+#### Scenario: Blocked task is not retried
+- **WHEN** a watcher cycle with `gates.autoRetries` of 1 sees a task that died with `blocked`
+- **THEN** the task stays dead and no `retry` event is appended
+
+#### Scenario: Blocked says None
+- **WHEN** the result file's `## Blocked` says only `None`
+- **THEN** the task goes through the missing-path check and verify as before
+
+### Requirement: Automatic scope recertification
+<!-- source: src/watcher/auto-recertify.ts, src/watcher/regression.ts, src/watcher/loop.ts, src/core/lifecycle/recertify.ts, src/core/lifecycle/retry.ts, src/harness/types.ts, tests/auto-recertify.test.ts -->
+When the scope recertification audit finds a stale done task that has no
+active regression marker, the watcher SHALL recertify that task without a human
+only when it has at least one differing path and, for every differing path, all
+of these hold:
+
+1. A later-numbered task in the same change has a resolved approved `scope`
+   that covers the path, as `scopeCoversPath` decides.
+2. That later task's `measures` end events carry the path from the done task's
+   recorded hash to the current hash without a gap: one end event's `before`
+   equals the done marker's recorded `scope_files` hash, each later end event's
+   `before` equals the previous one's `after`, and the last end event's `after`
+   equals the current hash. A missing hash counts as `null`, which means the
+   file was absent.
+3. The done task's verify passes at detection.
+
+An automatic recertification SHALL refresh the done marker through the same
+function `osq retry` uses for a passing recertification. It SHALL append one
+`recertification` event with `outcome: passed` and `automatic: true`, carrying
+the same differing paths, attribution, verify result, and hashes as a human
+recertification. It SHALL write no regression marker and no `regressed` event,
+and it SHALL not halt the change. The watcher SHALL log one line per
+automatically recertified task. Any other stale task SHALL be recorded and
+halt the change exactly as before.
+
+#### Scenario: A later task extends the file
+- **WHEN** task 1 finished with `src/a.ts`, task 2's scope covers it, task 2 is the only thing that changed it, and task 1's verify passes
+- **THEN** task 1's done marker holds the current hashes with `recertification_count: 1`, one `recertification` event carries `outcome: passed` and `automatic: true`, no `.run/regressed/1.md` exists, and task 3 runs
+
+#### Scenario: Verify fails at detection
+- **WHEN** the chain is intact but task 1's verify fails
+- **THEN** task 1 gets a regression marker and a `regressed` event, and the change halts
+
+#### Scenario: Human edit breaks the chain
+- **WHEN** `src/a.ts` was edited by hand between task 1's done marker and task 2's start
+- **THEN** task 2's first `before` doesn't match task 1's recorded hash, so task 1 gets a regression marker and the change halts
+
+#### Scenario: File outside every later scope
+- **WHEN** a changed file of task 1 is covered by no later task's scope
+- **THEN** task 1 gets a regression marker and the change halts
+
+#### Scenario: Resolver upgrade only
+- **WHEN** a done marker lacks the current resolver version but no file differs
+- **THEN** it is recorded as a scope regression exactly as before
+
+### Requirement: Governing decisions in the manifest
+<!-- source: src/core/run/manifest.ts, tests/instructions-drift.test.ts -->
+The approval manifest SHALL carry `decisions`, an object from the number of
+each accepted ADR that governs the change to the `sha256:<hex>` hash of its
+file content. An approval with no governing ADR SHALL record an empty object.
+A planning-only manifest SHALL omit the field.
+
+#### Scenario: Governing ADR recorded
+- **WHEN** accepted ADR 009 applies to a capability the change writes and the change is approved
+- **THEN** the manifest's `decisions` maps `009` to the hash of ADR 009's file
+
+### Requirement: Instructions changed after approval
+<!-- source: src/watcher/instructions-drift.ts, src/watcher/spawn.ts, src/harness/types.ts, tests/instructions-drift.test.ts -->
+Before a task's first attempt spawns, the watcher SHALL compare the current
+AGENTS.md hash with the manifest's `hashes["AGENTS.md"]` and, when the manifest
+has `decisions`, the current governing ADR set and hashes with it. When either
+differs, it SHALL append one `instructions_changed` event to the task stream
+with `data.changed`, a list holding `AGENTS.md` when that file changed and
+`ADR <number> added`, `ADR <number> changed`, or `ADR <number> removed` for
+each ADR difference in number order, and print one warning line
+`task <n>: instructions changed after approval: <changed joined by ", ">`. The
+task SHALL still run. The check SHALL do nothing for a later attempt, for a
+manifest without `approvedAt`, or when the task stream already holds an
+`instructions_changed` event.
+
+#### Scenario: AGENTS.md edited after approval
+- **WHEN** AGENTS.md changes between approval and task 1's first attempt
+- **THEN** task 1's stream gains one `instructions_changed` event with `changed: ["AGENTS.md"]`, one warning line prints, and the agent still spawns
+
+#### Scenario: New ADR accepted after approval
+- **WHEN** an accepted ADR for a capability the change writes is added after approval
+- **THEN** the event's `changed` holds `ADR <number> added` and the task still runs
+
+#### Scenario: Nothing changed
+- **WHEN** AGENTS.md and the governing ADRs match the approval
+- **THEN** no `instructions_changed` event is appended and no warning prints
+
+### Requirement: Dependency baseline
+<!-- source: src/watcher/dependencies.ts, src/watcher/measures.ts, src/harness/types.ts, tests/denied-dependency.test.ts -->
+When a task's resolved scope includes a path whose file name is
+`package.json`, the `measures` start event of every attempt SHALL carry
+`dependencies`, an object from each such repository-relative path to the
+sorted distinct package names in its `dependencies`, `devDependencies`,
+`peerDependencies`, and `optionalDependencies`, empty for a missing or
+unreadable file. Without such a path the field SHALL be absent. The watcher
+SHALL never read a `package.json` outside the task's resolved scope for this.
+
+#### Scenario: Scoped manifest
+- **WHEN** a task's scope includes `package.json`, which depends on `chokidar` and dev-depends on `tsx`
+- **THEN** its `measures` start event carries `dependencies: { "package.json": ["chokidar", "tsx"] }`
+
+#### Scenario: Manifest outside scope
+- **WHEN** a task's scope doesn't include `package.json`
+- **THEN** its `measures` start event has no `dependencies` field and the file is not read
+
+### Requirement: Dependencies added
+<!-- source: src/watcher/dependencies.ts, src/watcher/task-verify.ts, src/harness/types.ts, tests/denied-dependency.test.ts -->
+After the agent exits, after the blocked check and before the missing verify
+path check, the watcher SHALL compare each path in the latest `measures` start
+event's `dependencies` with the same file's current package names across the
+four sections. When any name is new, it SHALL append one `dependencies_added`
+event with `data.added`, the `{ file, name }` pairs sorted by file and then
+name. A name moved between sections SHALL NOT count, and without a baseline
+the comparison SHALL be skipped.
+
+#### Scenario: Allowed addition
+- **WHEN** the agent adds `zod` to a scoped `package.json` and no accepted ADR denies it
+- **THEN** one `dependencies_added` event names `zod` and the file, and the task goes on to its verify
+
+### Requirement: Denied dependency
+<!-- source: src/watcher/dependencies.ts, src/watcher/task-verify.ts, src/watcher/failure-reason.ts, tests/denied-dependency.test.ts -->
+When an added name is listed in `denies` of an accepted ADR, the task SHALL
+die with reason `denied_dependency` after the `dependencies_added` event is
+appended, and SHALL run neither verify. The dead marker body SHALL start
+`The task added packages an accepted ADR denies:` and hold one line per denied
+pair and ADR, `- <name> in <file>: ADR <number>: <rule>`. Packages denied only
+by proposed or superseded ADRs SHALL NOT be enforced.
+
+#### Scenario: Vue denied
+- **WHEN** accepted ADR 007 denies `vue` and the agent adds `vue` to a scoped `package.json`
+- **THEN** the task dies with `denied_dependency`, and the marker names `vue`, the file, ADR 007, and its rule
+
+#### Scenario: Superseded denial
+- **WHEN** only a superseded ADR denies `vue` and the agent adds it
+- **THEN** the task doesn't die for it
+
+### Requirement: Change folder in verify environment
+<!-- source: src/core/run/verification.ts, src/watcher/verify.ts, src/core/lifecycle/verification-record.ts, src/core/lifecycle/retry.ts, tests/osq-change-env.test.ts -->
+`runVerificationCommand` SHALL take the change folder as a required argument,
+either an absolute path or null. It SHALL run the command with the process
+environment plus `OSQ_CHANGE` set to that path. With null, it SHALL run with
+`OSQ_CHANGE` removed. Every watcher verify SHALL pass the change folder it runs
+for: a task's pre-spawn and post-exit verify, the change-level verify, the
+archive-time verifies, and the scope-regression audit. So SHALL the
+recertification verify of `osq retry`. The `check` command of an archived
+change SHALL run with null, because its deltas are already in the living spec.
+
+#### Scenario: Task verify sees its change
+- **WHEN** the watcher runs a task whose verify prints `OSQ_CHANGE`
+- **THEN** the recorded `verify_ran` output is the absolute path of the change folder
+
+#### Scenario: Archived check runs without it
+- **WHEN** `osq check` runs an archived change's check command while the shell has `OSQ_CHANGE` set
+- **THEN** the command sees no `OSQ_CHANGE`
+
+### Requirement: Focused file collection
+<!-- source: src/core/run/focused-tests.ts, tests/focused-tests.test.ts -->
+When `traceability.focusedTests` is set, osq SHALL collect a task's focused
+scenarios and files from the scenario index, built once for the collection.
+The collected scenarios are the capability and name pairs named by `scenario(...)`
+calls for an opted-in capability, in scenario test files in the task's resolved
+scope. The focused files are every scenario test file in the repository that
+names a collected scenario, as sorted, distinct, project-relative paths. With
+the command unset, no capability opted in, or no collected scenario, there is
+nothing to run.
+
+#### Scenario: Two scenarios, one outside file
+- **WHEN** the task's scoped `tests/pricing-quote.test.ts` names two pricing scenarios and the unscoped `tests/pricing-bulk.test.ts` names one of them
+- **THEN** the focused files are `tests/pricing-bulk.test.ts` and `tests/pricing-quote.test.ts`
+
+#### Scenario: Capability not opted in
+- **WHEN** the task's scoped test names only scenarios of a capability that isn't opted in
+- **THEN** there is nothing to run
+
+### Requirement: Focused run
+<!-- source: src/core/run/focused-tests.ts, tests/focused-tests.test.ts -->
+osq SHALL run the focused command with `{files}` replaced by the focused files,
+each single-quoted for the shell and separated by spaces. It SHALL run through
+`runVerificationCommand` with the task's change folder and the verify timeout,
+so it gets the verify's environment, `OSQ_CHANGE` included. The outcome SHALL be:
+
+- `failed` when the output has a line matching `not ok <n> - <title>`, at any
+  indentation, whose title, with a trailing ` # <directive>` removed and `\#`
+  and `\\` unescaped, is `Scenario: <name>` for a collected scenario's name
+- `problem` when the exit code isn't 0, or the run timed out or couldn't start,
+  and it isn't `failed`
+- `passed` otherwise
+
+#### Scenario: Failing scenario test
+- **WHEN** the output holds `not ok 3 - Scenario: Volume discount tiers` and that scenario was collected
+- **THEN** the outcome is `failed`
+
+#### Scenario: Failure outside the scenarios
+- **WHEN** the command exits 1 and its only `not ok` line names a file that failed to load
+- **THEN** the outcome is `problem`
+
+### Requirement: Focused failure ends the attempt
+<!-- source: src/watcher/focused-verify.ts, src/watcher/task-verify.ts, src/harness/types.ts, tests/focused-verify.test.ts -->
+After the agent exits, the watcher SHALL run the focused run as the last check
+of `checkBlockedFirst`, after the missing verify path check, and only when there
+is something to run. It SHALL append one `focused_ran` event with `command`,
+`files`, `scenarios` as `<capability>: <name>` strings, `outcome`, `exitCode`,
+`duration`, `timedOut`, and `output`.
+
+On `failed`, the watcher SHALL kill the task with `verify_red` and not run its
+verify. The dead marker's frontmatter holds `reason: verify_red`, `focused: true`,
+and the quoted focused command. Its body is
+`Watcher focused scenario tests failed:` followed by the output, so the next
+attempt receives it as it receives verify output. On `problem` or `passed`, the
+watcher SHALL run the verify as before, which alone decides the outcome.
+
+#### Scenario: Focused pass goes on to verify
+- **WHEN** the focused run passes
+- **THEN** a `focused_ran` event with outcome `passed` is followed by the task's `verify_ran` event
+
+#### Scenario: Broken focused command
+- **WHEN** the focused command is `node missing-runner.js {files}`
+- **THEN** a `focused_ran` event with outcome `problem` is recorded and the verify still decides the task
+
+#### Scenario: Unset command
+- **WHEN** `traceability.focusedTests` is unset
+- **THEN** no `focused_ran` event is appended and the task runs exactly as before
+
+### Requirement: Mutation command
+<!-- source: src/core/run/mutation-run.ts, src/core/run/verification.ts, tests/mutation-run.test.ts -->
+osq SHALL run the mutation command once per pick, through
+`runVerificationCommand` with the change folder, so the command also gets
+`OSQ_CHANGE`. It SHALL set:
+
+- `{mutate}` and `OSQ_MUTATE`: the pick's ranges, comma-joined for the
+  placeholder and as a JSON array for the variable
+- `{tests}` and `OSQ_MUTATION_TESTS`: the pick's tests, single-quoted for the
+  shell and space-separated for the placeholder, and as a JSON array for the
+  variable
+- `{report}` and `OSQ_MUTATION_REPORT`: an absolute path in a fresh temporary
+  folder, single-quoted for the placeholder
+
+`runVerificationCommand` SHALL take an optional record of extra environment
+variables for this. The temporary folder SHALL be removed after the report is
+read.
+
+#### Scenario: Placeholders and environment
+- **WHEN** the command is `node fake-mutate.cjs {mutate} {tests} {report}` for a pick of `quote`
+- **THEN** the command receives `src/pricing/quote.ts:20-24,src/pricing/quote.ts:33-39`, `'tests/pricing-quote.test.ts'`, and the report path, and the same values in the three environment variables
+
+### Requirement: Mutation report reading
+<!-- source: src/core/run/mutation-report.ts, tests/mutation-run.test.ts -->
+osq SHALL treat the report as untrusted JSON and read only
+`files[<file>].mutants[]`, and from each mutant `status`, `mutatorName`,
+`replacement`, and `location.start.line` and `column`. It SHALL count only
+mutants of the pick's file whose start line falls in one of its ranges:
+
+- `Killed` and `Timeout` count as killed.
+- `Survived` and `NoCoverage` count as survived.
+- Any other status, or a mutant with a missing or mistyped field, counts as
+  invalid.
+
+Each survivor SHALL keep its file, line, column, mutator, and replacement, the
+replacement cut to 200 characters. A report that is missing, isn't JSON, or
+has no `files` object SHALL make the pick not measured with reason
+`report_invalid`.
+
+#### Scenario: Survivor recorded
+- **WHEN** the report holds 18 killed mutants and one `Survived` `ConditionalExpression` at line 36, column 19, replaced with `false`
+- **THEN** the pick records 18 killed, 1 survived, and that survivor
+
+#### Scenario: Mutant outside the ranges
+- **WHEN** the report holds a surviving mutant at line 5 of the same file
+- **THEN** it isn't counted
+
+### Requirement: Mutation check after a pass
+<!-- source: src/watcher/mutation-check.ts, src/watcher/loop.ts, src/harness/types.ts, tests/mutation-check.test.ts -->
+When `traceability.mutation` is set and at least one capability is opted in,
+`runWatcherCycle` SHALL run the mutation check right after `runTask` returns
+success, before the change can archive. The check SHALL run the picks in
+order, under `budgetSeconds` of total wall time for the task. Each run's
+timeout is the budget left. The check SHALL append one `mutation_ran` event per
+pick to the task's stream, with `file`, `function`, `ranges`, `scenarios`,
+`tests`, `outcome`, `killed`, `survived`, `invalid`, `survivors`, `duration`,
+and `exitCode`. The outcome is `measured` or `not_measured`, and a not-measured
+event also has `reason`: `range_unknown`, `budget`, `timed_out`,
+`command_failed`, or `report_invalid`. A `command_failed` or `timed_out` event
+also has the command's output cut to its last 2,000 characters.
+
+A pick whose ranges are unknown SHALL be recorded as `range_unknown` without
+running. Picks left once the budget is spent SHALL be recorded as `budget`
+without running. A nonzero exit is `command_failed`. The check SHALL catch
+every error it meets, log it, and return. It never changes the task's done
+state, markers, or retries.
+
+#### Scenario: Budget runs out
+- **WHEN** `budgetSeconds` is 1 and the first of two picks takes longer
+- **THEN** the first is recorded as `timed_out`, the second as `budget`, and the task stays done
+
+#### Scenario: Mutation unset
+- **WHEN** `traceability.mutation` is unset
+- **THEN** no mutation command runs and no `mutation_ran` event is appended

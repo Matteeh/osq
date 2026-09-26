@@ -3,10 +3,15 @@ import path from 'node:path';
 import { resolvePlannerSelection } from '../core/foundation/config-codex.js';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/report/planning.js';
+import {
+  RECENT_DISCLOSURES_HEADING,
+  formatRecentDisclosures,
+} from '../core/report/recent-disclosures.js';
 import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report/report.js';
 import { findSpecFolder } from '../core/spec/approve.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { getChangesDir } from '../core/status/layout.js';
+import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import type { QueuePlanSelection } from '../core/status/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
@@ -43,18 +48,21 @@ export interface OpeningPromptOptions {
  * Compose the opening prompt with the repository record as the fifth ordered
  * section. The record body comes from the shared report derivation over the 20
  * most recent canonical archives, or from a caller-supplied preformatted body.
+ * A sixth section quotes recent executor disclosures when any exist.
  */
 export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise<string> {
-  const base = await buildBaseOpeningPrompt(options);
+  const config = options.config ?? (await loadConfig(options.projectRoot));
+  const base = await buildBaseOpeningPrompt({ ...options, config });
   const recordBody =
     options.recordBody ??
-    formatRepositoryRecordBody(
-      await getRepositoryRecord(
-        options.projectRoot,
-        options.config ?? (await loadConfig(options.projectRoot)),
-      ),
-    );
-  return `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
+    formatRepositoryRecordBody(await getRepositoryRecord(options.projectRoot, config));
+  let prompt = `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
+
+  const disclosures = await formatRecentDisclosures(options.projectRoot, config);
+  if (disclosures !== null) {
+    prompt += `\n\n${RECENT_DISCLOSURES_HEADING}\n\n${disclosures}`;
+  }
+  return prompt;
 }
 
 export interface PlanCommandOptions {
@@ -157,7 +165,8 @@ export async function planCommand(
   }
 
   if (!plannerSelection) {
-    await writePromptHandoff(folderPath, openingPrompt);
+    const nextStep = await readNextStep(cwd, folderPath, config);
+    await writePromptHandoff(folderPath, openingPrompt, formatNextStep(nextStep));
     return;
   }
 

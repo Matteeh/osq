@@ -1,14 +1,32 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { applyBlockedItems } from './blocked-item.js';
 import { readLastLook } from './inbox-cursor.js';
-import { type Inbox, collectLandedItems, projectInbox } from './inbox.js';
+import { type Inbox, type NeedsYouItem, collectLandedItems, projectInbox } from './inbox.js';
 import { getArchiveDir } from './layout.js';
-import { getStatusOverview } from './status.js';
+import { type StatusOverview, getStatusOverview } from './status.js';
 
 /** Injectable clock, config, and home root for the read-only projection. */
 export interface ReadInboxOptions {
   readonly config?: OsqConfig;
   readonly now?: Date;
   readonly home?: string;
+}
+
+function changeId(folderName: string): string {
+  return folderName.match(/^(\d+)/)?.[1] ?? folderName;
+}
+
+/** One needs-you item per archived change still awaiting a verification outcome. */
+function projectPendingVerifications(overview: StatusOverview): NeedsYouItem[] {
+  return (overview.pendingVerifications ?? []).map((pending) => {
+    const id = changeId(pending.folderName);
+    return {
+      kind: pending.next.detail === 'failed' ? 'verification-failed' : 'verification-pending',
+      change: { id, title: pending.title },
+      task: null,
+      command: pending.next.command ?? `osq verified ${id} --passed|--failed`,
+    } satisfies NeedsYouItem;
+  });
 }
 
 /**
@@ -26,5 +44,8 @@ export async function readInbox(
   const lastLookMs = await readLastLook(projectRoot, options.home);
   const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
   const landed = await collectLandedItems(archiveDir, lastLookMs);
-  return projectInbox(overview, landed, now.getTime());
+  const inbox = projectInbox(overview, landed, now.getTime());
+  const pending = projectPendingVerifications(overview);
+  const needsYou = await applyBlockedItems(overview, [...inbox.needsYou, ...pending]);
+  return { ...inbox, needsYou };
 }

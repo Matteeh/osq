@@ -1,0 +1,29 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:9981278278beb773052d24688cd9ec40450049e28f2ae58e66adbf284fe049bc",
+    "PLANNER.md": "sha256:b046874edd04577cf31993fca840a9035ac0ec6ad910a56a1704c71b43d2df9a",
+    "config": "sha256:e819053c6a36d4d8f7b5a0524d01140dc106f79ac460b69ed30b232cae4847c4",
+    "status-inspection": "sha256:b061c62366aec1f145ddf97c5a489213152910dd1d377a6d5769363992e5a819",
+    "watcher-and-harness": "sha256:d125d71f6c1a754214aeaa2e08446157631992e69ed33c810dad29bb4aa12b50",
+    "cli-foundation": "sha256:aa995406fcbbdeb482e039ad6eba75ede26929c4badd1113216f923376ab3a67",
+    "spec-lint-and-approve": "sha256:191126877423955746bacfafd4d82a37dfe1f0771b4a4e789217ae6f159b3f5e",
+    "metrics-and-reporting": "sha256:1146fbb3e093932a8fc74437e0840aaece319a51ea2dc69d39d64bdd42f183e4",
+    "web-inspection": "sha256:7017c707a0a209a852a78e4af9af44845059e714c54910c527d365ad9621a2ba"
+  },
+  "osqVersion": "0.2.1",
+  "harness": "opencode",
+  "model": "deepseek/deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-09-24T21:38:04.035Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-09-24T21:59:06.570Z",
+  "approvalFlags": {
+    "ids": [
+      "removed_requirement",
+      "sensitive_path"
+    ],
+    "mode": "shown"
+  }
+}

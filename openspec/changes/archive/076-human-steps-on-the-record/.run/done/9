@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:81144c197ea76dc9e29145aa4a87fc278dacc3cc1422f0f5670f2dc979bde317"
+build_stamp: "ee1b12a"
+project_commit: "a1402d2"
+exit_code: 0
+scope_files: {"PLANNER.md":"sha256:ba1784c70ab9d05a0510fb2ece5e9ee26681d2af4c85d2074f80e8b86b62d8cb","openspec/schemas/osq/schema.yaml":"sha256:0fb6471353b66eba1f443652474713311b77385f09d7f7482e6ce5775f9dbad6","src/core/foundation/init-blocks.ts":"sha256:95e8463945e88ad67b11c16b1fc1d495e38e1cae4000793055679c321fb7d4d7","templates/PLANNER.md":"sha256:861ea615777d5f0f534c37a991132d26049e8854e62f0cddbc04b4709bfcd745","templates/openspec/schemas/osq/schema.yaml":"sha256:0fb6471353b66eba1f443652474713311b77385f09d7f7482e6ce5775f9dbad6","tests/human-steps-guidance.test.ts":"sha256:b6419773e596d20fa5890f3e0abc61afa7f204eb433ff981a4410b8e180c41f0"}
+---
+2026-09-24T22:32:26.153Z

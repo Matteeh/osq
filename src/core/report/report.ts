@@ -20,6 +20,27 @@ import {
 } from './planning-economics.js';
 import { readPlanningSessions } from './planning.js';
 import {
+  type DisclosureEntry,
+  collectDisclosures,
+  formatDisclosures,
+} from './record-disclosures.js';
+import {
+  type PlanningCostBySource,
+  collectCostBySource,
+  formatPlanningCostBySource,
+} from './record-estimates.js';
+import { type ReworkEntry, collectRework, formatRework } from './record-rework.js';
+import {
+  type VerificationCounts,
+  collectVerificationCounts,
+  formatVerificationCounts,
+} from './record-verification.js';
+import {
+  type DependencyEntry,
+  collectDependencies,
+  formatDependencies,
+} from './report-dependencies.js';
+import {
   asData,
   eventTimestampMs,
   observeAttempts,
@@ -27,6 +48,11 @@ import {
   parseEventLines,
   parseTokenEvent,
 } from './report-events.js';
+import {
+  type CapabilityMutationScore,
+  collectMutationScores,
+  formatMutation,
+} from './report-mutation.js';
 import { type PreSpawnStartCounts, observePreSpawnEvents } from './report-pre-spawn.js';
 import {
   type RetryGroupHistory,
@@ -35,6 +61,11 @@ import {
   emptyRetryHistory,
   observeRetries,
 } from './report-retries.js';
+import {
+  type CapabilityTraceabilityGaps,
+  collectTraceabilityGaps,
+  formatTraceability,
+} from './report-traceability.js';
 import { taskScopeSize } from './scope-size.js';
 
 export interface SpecMetrics {
@@ -163,6 +194,7 @@ export interface ScopeRegressionHistory {
   readonly verificationPassedAtDetection: number;
   readonly verificationFailedAtDetection: number;
   readonly recertifiedByHuman: number;
+  readonly recertifiedAutomatically: number;
   readonly requeuedForAgent: number;
 }
 
@@ -178,6 +210,20 @@ export interface HistoryMetrics {
   readonly rejections: RejectionHistory;
   readonly sizes: SizeMetrics;
   readonly scopeRegressions: ScopeRegressionHistory;
+  /** Later active/archived changes naming each fixed change, by change id. */
+  readonly rework: readonly ReworkEntry[];
+  /** Changes whose task result files hold a real executor disclosure. */
+  readonly disclosures: readonly DisclosureEntry[];
+  /**
+   * Distinct packages added per active or archived change, in change order.
+   * Absent when no task stream holds a `dependencies_added` event.
+   */
+  readonly dependencies?: readonly DependencyEntry[];
+  /**
+   * After-landing verification counts by latest outcome. Absent when no
+   * archived change requires verification.
+   */
+  readonly verification?: VerificationCounts;
 }
 
 /**
@@ -230,6 +276,16 @@ export interface MetricsReport {
   readonly queue: QueueReport;
   readonly specs: SpecMetrics;
   readonly tokens: TokenMetrics;
+  /**
+   * Traceability gaps per opted-in capability, in name order. Absent when no
+   * capability is opted in, so the report is unchanged for other projects.
+   */
+  readonly traceability?: readonly CapabilityTraceabilityGaps[];
+  /**
+   * Mutation scores per opted-in capability, in name order. Absent when no
+   * measured event names an opted-in capability, so the report is unchanged.
+   */
+  readonly mutation?: readonly CapabilityMutationScore[];
 }
 
 /** Aggregate planning usage derived only from `.run/plan.jsonl` lifecycle pairs. */
@@ -253,6 +309,8 @@ export interface PlanningMetrics {
     readonly total: number;
     readonly formattedTotal: string;
     readonly provenance: 'harness-reported';
+    /** Recorded and estimated cost split by provenance. */
+    readonly bySource: PlanningCostBySource;
   };
   readonly coverage: {
     readonly reportedSessions: number;
@@ -970,6 +1028,7 @@ export async function getMetricsReport(
   let scopeVerificationPassed = 0;
   let scopeVerificationFailed = 0;
   let scopeRecertifiedByHuman = 0;
+  let scopeRecertifiedAutomatically = 0;
   let scopeRequeuedForAgent = 0;
 
   let withEventsCount = 0;
@@ -1024,6 +1083,7 @@ export async function getMetricsReport(
     scopeVerificationPassed += observation.scopeVerificationPassed;
     scopeVerificationFailed += observation.scopeVerificationFailed;
     scopeRecertifiedByHuman += observation.scopeRecertifiedByHuman;
+    scopeRecertifiedAutomatically += observation.scopeRecertifiedAutomatically;
     scopeRequeuedForAgent += observation.scopeRequeuedForAgent;
 
     attemptsByTask[task.id] = taskAttempts;
@@ -1264,7 +1324,14 @@ export async function getMetricsReport(
 
   const queue = await readQueueReport(projectRoot, config);
 
-  const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders);
+  const rework = await collectRework(allSpecFolders);
+  const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders, rework);
+  const disclosures = await collectDisclosures(allSpecFolders);
+  const dependencies = await collectDependencies(allSpecFolders);
+  const verification = await collectVerificationCounts(archivedFolders);
+  const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
+  const traceability = await collectTraceabilityGaps(projectRoot, config);
+  const mutation = await collectMutationScores(allSpecFolders, config);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
@@ -1343,8 +1410,13 @@ export async function getMetricsReport(
         verificationPassedAtDetection: scopeVerificationPassed,
         verificationFailedAtDetection: scopeVerificationFailed,
         recertifiedByHuman: scopeRecertifiedByHuman,
+        recertifiedAutomatically: scopeRecertifiedAutomatically,
         requeuedForAgent: scopeRequeuedForAgent,
       },
+      rework,
+      disclosures,
+      ...(dependencies.length > 0 ? { dependencies } : {}),
+      ...(verification ? { verification } : {}),
     },
     coverage: {
       withEvents: withEventsCount,
@@ -1394,6 +1466,7 @@ export async function getMetricsReport(
         total: planningCost,
         formattedTotal: formatReportedCost(planningCost, planningCostReportedSessions),
         provenance: 'harness-reported',
+        bySource: planningCostBySource,
       },
       coverage: {
         reportedSessions: planningReportedSessions,
@@ -1403,6 +1476,8 @@ export async function getMetricsReport(
       comparison: planningComparison,
     },
     queue,
+    ...(traceability ? { traceability } : {}),
+    ...(mutation ? { mutation } : {}),
   };
 }
 
@@ -1701,7 +1776,19 @@ export function formatMetricsReport(
     `    Verification failed at detection: ${report.history.scopeRegressions.verificationFailedAtDetection}`,
   );
   lines.push(`    Recertified by human: ${report.history.scopeRegressions.recertifiedByHuman}`);
+  lines.push(
+    `    Recertified automatically: ${report.history.scopeRegressions.recertifiedAutomatically}`,
+  );
   lines.push(`    Requeued for agent: ${report.history.scopeRegressions.requeuedForAgent}`);
+
+  lines.push(...formatRework(report.history.rework ?? []));
+  lines.push(...formatDisclosures(report.history.disclosures ?? []));
+  if ((report.history.dependencies ?? []).length > 0) {
+    lines.push(...formatDependencies(report.history.dependencies ?? []));
+  }
+  if (report.history.verification) {
+    lines.push(formatVerificationCounts(report.history.verification));
+  }
 
   const scopeSeries = report.history.sizes.scopeFileSeries;
   const legacySeries = scopeSeries.find((entry) => entry.resolver === 'legacy');
@@ -1735,6 +1822,16 @@ export function formatMetricsReport(
     }
   }
 
+  if (report.traceability) {
+    lines.push('');
+    lines.push(...formatTraceability(report.traceability));
+  }
+
+  if (report.mutation) {
+    lines.push('');
+    lines.push(...formatMutation(report.mutation));
+  }
+
   lines.push('');
   lines.push('Coverage:');
   lines.push(`  Tasks with event files: ${report.coverage.withEvents}`);
@@ -1760,6 +1857,7 @@ export function formatMetricsReport(
   lines.push(`  Cached tokens: ${report.planning.tokens.cached}`);
   lines.push(`  Reasoning tokens: ${report.planning.tokens.reasoning}`);
   lines.push(`  Harness-reported cost: ${report.planning.cost.formattedTotal}`);
+  lines.push(...formatPlanningCostBySource(report.planning.cost.bySource));
   lines.push(
     `  ${report.planning.coverage.reportedSessions} of ${report.planning.coverage.totalSessions} sessions reported usage`,
   );

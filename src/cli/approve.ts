@@ -1,13 +1,16 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
-import { type ApprovalReview, approveSpec } from '../core/spec/approve.js';
+import { formatPriceKey } from '../core/report/planning-price-gaps.js';
+import { type ApprovalReview, approveSpec, findSpecFolder } from '../core/spec/approve.js';
 import {
   type ApprovalDigest,
   formatApprovalDigest,
   formatApprovalFlags,
   summarizeApprovalFlags,
 } from '../core/spec/digest.js';
+import { getChangesDir } from '../core/status/layout.js';
+import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import { readClaudePlanningSessions } from '../harness/claude/claude-usage.js';
 import { readCodexPlanningSessions } from '../harness/codex/codex-observe-usage.js';
 import { readOpencodePlanningSessions } from '../harness/opencode/opencode-observe-usage.js';
@@ -101,9 +104,20 @@ export async function approveCommand(
       if (result.planningMatches === 0) {
         console.log(`No planning record found for ${result.specId}.`);
       }
+      for (const model of result.missingPrices) {
+        console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`Error approving ${specId}:\n  ${message}`);
+      try {
+        const folderPath = await findSpecFolder(
+          getChangesDir(config.paths.openspecRoot, cwd),
+          specId,
+        );
+        const nextStep = await readNextStep(cwd, folderPath, config);
+        console.log(`Next: ${formatNextStep(nextStep)}`);
+      } catch {}
       process.exit(1);
     }
   }

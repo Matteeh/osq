@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e91e3e0d96a4d80165916674edfcb6405e5dc2ad8fe891a2b0c2ea68cc0d2cef"
+build_stamp: "8def602"
+project_commit: "8def602"
+exit_code: 0
+scope_files: {"src/core/lifecycle/recertify.ts":"sha256:fd3a6074557bc38c830c174d9ce2481dbc640c9a9263a3dc6c8af0c4ba08904a","src/core/lifecycle/retry.ts":"sha256:257ed238286f1578e07a16468d6bdc111d51727dfe0e92046c757691c1508539","src/harness/types.ts":"sha256:2308999399777f526fe9df99f49f9847feceba801600384e9cc993f26302b31e","src/watcher/auto-recertify.ts":"sha256:00b73a4433a8be4c2855693ef8cd013ff8f46710e621378644ca0dca712e4e66","src/watcher/done-metadata.ts":"sha256:9ced1af2f6f176434bb3e4b0dd8336291c5fab59da9c4dc7852b87b4c9e65f4b","src/watcher/loop.ts":"sha256:8808ca8102e02626da9639c529bfe5b07e4ae3019b4801404e10e3f239366962","src/watcher/regression.ts":"sha256:b27abe87a2b1645a3b98e9a6fae508be097610a3591d152c31b8d3004e92612c","tests/auto-recertify.test.ts":"sha256:2a1d32470f0af2429958bbf813552c28c7c9b2dd5ff20a222e5fedd54cfe4304"}
+---
+2026-09-25T07:14:38.798Z

@@ -1,3 +1,8 @@
+---
+status: accepted
+applies_to: [spec-lint-and-approve, cli-foundation]
+rule: Run the local OpenSpec validator with OPENSPEC_TELEMETRY=0, --strict, --json and --no-interactive.
+---
 # 004. Pinned OpenSpec Validator
 
 Date: 2026-09-19

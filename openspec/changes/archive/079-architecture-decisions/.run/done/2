@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7c77325f69a0323641b590fab474e29cf02cd43dd6baf398836eed1e655e8992"
+build_stamp: "9cdc92a"
+project_commit: "9cdc92a"
+exit_code: 0
+scope_files: {"src/cli/init.ts":"sha256:a993eaf3b440fce6856e74b072e8f016d68cfbb1aecbd9505b44eecaedbcd4db","src/core/foundation/doctor-decisions.ts":"sha256:21dc8062c7eeeb9a7c6965ae5b2bbec26ad7e121d2cb5fe73980b24e1ef15388","src/core/foundation/doctor.ts":"sha256:4e4c0e752840c35c7b0db46dcefb47c07e15caa09e4fc182ac06bf903971f7e4","src/core/foundation/init.ts":"sha256:96096bd56537bde758fa41871d9e859520dac58383579b264ca1a9d787dffd93","src/core/foundation/rules-block.ts":"sha256:3576423a0e576bede2c36ec290a94112bf308b382bf91448d5df3ce536d46150","tests/rules-block.test.ts":"sha256:b42cd497432d883fae660d8066464fea95bb2885c502f1a014cb6d84b784fb00"}
+---
+2026-09-25T07:41:50.335Z

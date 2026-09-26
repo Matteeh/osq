@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter } from '../spec/parser.js';
+import { isVerificationPending } from './dependency-readiness.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { type QueueItem, readQueue } from './queue-parser.js';
 import {
@@ -14,6 +15,7 @@ import {
 
 export type QueueItemState =
   | 'landed'
+  | 'verification-pending'
   | 'dead'
   | 'running'
   | 'approved'
@@ -107,8 +109,7 @@ export async function scanQueueAssociations(
 function mapActiveState(status: SpecStatus): QueueItemState {
   if (status === 'dead' || status === 'regressed') return 'dead';
   if (status === 'running') return 'running';
-  if (status === 'unapproved') return 'planned';
-  return 'approved';
+  return status === 'unapproved' ? 'planned' : 'approved';
 }
 
 function ambiguous(item: QueueItem, matches: readonly QueueAssociation[], location: string): Error {
@@ -130,7 +131,10 @@ async function selectAssociation(
   const { active, archived, rejected } = groups;
   if (archived.length > 1) throw ambiguous(item, archived, 'archived');
   if (active.length > 1) throw ambiguous(item, active, 'active');
-  if (archived.length === 1) return { state: 'landed', selected: archived[0] };
+  if (archived.length === 1) {
+    const pending = await isVerificationPending(archived[0].folderPath);
+    return { state: pending ? 'verification-pending' : 'landed', selected: archived[0] };
+  }
   if (active.length === 1) {
     try {
       const spec = await deriveSpecState(projectRoot, active[0].folderPath);
@@ -145,7 +149,6 @@ async function selectAssociation(
   }
   return { state: 'unplanned', selected: null };
 }
-
 /** Project the current queue's filesystem-derived state for planning and report views. */
 export async function readQueueState(
   projectRoot: string,
@@ -170,7 +173,7 @@ export async function readQueueState(
       changeId: choice.selected?.id ?? null,
       rejectionCount: groups.get(item.slug)?.rejected.length ?? 0,
       changedSincePlanned: choice.selected ? choice.selected.queueHash !== item.hash : false,
-      unmetDependencies: item.dependsOn.filter((dep) => !landed.has(dep)),
+      unmetDependencies: [...item.dependsOn, ...item.fixes].filter((slug) => !landed.has(slug)),
     };
   });
   return { items, groups, rows, landed };

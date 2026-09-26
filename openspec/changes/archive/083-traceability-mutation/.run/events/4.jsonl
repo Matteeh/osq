@@ -1,0 +1,128 @@
+{"type":"verify_ran","timestamp":"2026-09-25T23:22:00.621Z","data":{"command":"node --import tsx --test tests/mutation-check.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/mutation-check.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/mutation-check.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-25T23:22:01.120Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":488,"repoFiles":1452,"repoLines":159851,"importFanIn":1,"proposalWords":1113,"taskWords":325,"deltaRequirements":10,"deltaScenarios":17}}
+{"type":"started","timestamp":"2026-09-25T23:22:01.130Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"088bcf6","pid":52296,"timeoutSeconds":1800,"version":"0.2.1","commit":"088bcf6"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:05.823Z","data":{"tool":"bash","summary":"ls openspec/changes/083-traceability-mutation/.run/results/ "}}
+{"type":"tool","timestamp":"2026-09-25T23:22:05.831Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:05.884Z","data":{"promptTokens":78788,"candidateTokens":122,"totalTokens":88498,"cachedTokens":9472,"reasoningTokens":116,"cost":0.011989416}}
+{"type":"tool","timestamp":"2026-09-25T23:22:07.439Z","data":{"tool":"read","summary":"src/core/trace/mutation-pick.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:07.535Z","data":{"tool":"read","summary":"src/core/run/mutation-run.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:07.648Z","data":{"tool":"read","summary":"src/core/run/mutation-report.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:07.749Z","data":{"tool":"read","summary":"src/watcher/focused-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:07.814Z","data":{"promptTokens":5537,"candidateTokens":188,"totalTokens":94223,"cachedTokens":88448,"reasoningTokens":50,"cost":0.001238694}}
+{"type":"tool","timestamp":"2026-09-25T23:22:10.015Z","data":{"tool":"bash","summary":"grep -n \"mutation_ran\\|MutationRan\\|appendHarnessEvent\" -r s"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:10.115Z","data":{"tool":"read","summary":"tests/focused-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:10.188Z","data":{"promptTokens":5555,"candidateTokens":178,"totalTokens":100076,"cachedTokens":94208,"reasoningTokens":135,"cost":0.001303674}}
+{"type":"tool","timestamp":"2026-09-25T23:22:12.331Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:12.430Z","data":{"tool":"bash","summary":"sed -n '560,640p' src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:12.501Z","data":{"promptTokens":8196,"candidateTokens":125,"totalTokens":108334,"cachedTokens":99968,"reasoningTokens":45,"cost":0.001631304}}
+{"type":"tool","timestamp":"2026-09-25T23:22:14.381Z","data":{"tool":"read","summary":"src/core/trace/scenario-index.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:14.681Z","data":{"tool":"bash","summary":"grep -rn \"phase === 'start'\\|phase === \\\"start\\\"\\|MeasuresEv"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:14.738Z","data":{"promptTokens":1526,"candidateTokens":143,"totalTokens":110053,"cachedTokens":108288,"reasoningTokens":96,"cost":0.000697164}}
+{"type":"tool","timestamp":"2026-09-25T23:22:16.193Z","data":{"tool":"read","summary":"src/watcher/dependencies.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:16.292Z","data":{"tool":"read","summary":"src/core/foundation/config-traceability.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:16.338Z","data":{"promptTokens":2240,"candidateTokens":99,"totalTokens":112358,"cachedTokens":109952,"reasoningTokens":67,"cost":0.000765456}}
+{"type":"tool","timestamp":"2026-09-25T23:22:18.273Z","data":{"tool":"bash","summary":"grep -rn \"buildScenarioIndex\\|buildImportGraph\" src/ | grep "}}
+{"type":"tool","timestamp":"2026-09-25T23:22:18.346Z","data":{"tool":"read","summary":"src/core/report/report-traceability.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:18.394Z","data":{"promptTokens":3172,"candidateTokens":112,"totalTokens":115595,"cachedTokens":112256,"reasoningTokens":55,"cost":0.000912768}}
+{"type":"tool","timestamp":"2026-09-25T23:22:20.253Z","data":{"tool":"read","summary":"src/core/run/focused-tests.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:20.340Z","data":{"tool":"read","summary":"src/core/run/verification.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:20.386Z","data":{"promptTokens":2368,"candidateTokens":99,"totalTokens":118117,"cachedTokens":115584,"reasoningTokens":66,"cost":0.000800952}}
+{"type":"tool","timestamp":"2026-09-25T23:22:22.361Z","data":{"tool":"bash","summary":"sed -n '1,120p' src/watcher/task-verify.ts; echo \"=== outcom"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:22.470Z","data":{"tool":"read","summary":"tests/verify-path-missing.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:22.499Z","data":{"promptTokens":3263,"candidateTokens":133,"totalTokens":121477,"cachedTokens":118016,"reasoningTokens":65,"cost":0.000962298}}
+{"type":"tool","timestamp":"2026-09-25T23:22:25.353Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:25.492Z","data":{"tool":"read","summary":"src/watcher/outcome.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:25.586Z","data":{"promptTokens":5079,"candidateTokens":113,"totalTokens":126829,"cachedTokens":121472,"reasoningTokens":165,"cost":0.001293066}}
+{"type":"tool","timestamp":"2026-09-25T23:22:32.593Z","data":{"tool":"bash","summary":"sed -n '180,270p' src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:22:32.677Z","data":{"tool":"bash","summary":"sed -n '1,120p' src/watcher/measures.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:32.724Z","data":{"promptTokens":3376,"candidateTokens":93,"totalTokens":131306,"cachedTokens":126720,"reasoningTokens":1117,"cost":0.00161256}}
+{"type":"tool","timestamp":"2026-09-25T23:22:34.943Z","data":{"tool":"bash","summary":"grep -n \"MeasuresEventData\" -A 40 src/harness/types.ts | hea"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:34.986Z","data":{"promptTokens":2234,"candidateTokens":60,"totalTokens":133503,"cachedTokens":131200,"reasoningTokens":9,"cost":0.0007701}}
+{"type":"tool","timestamp":"2026-09-25T23:22:36.992Z","data":{"tool":"read","summary":"tests/mutation-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:37.020Z","data":{"promptTokens":705,"candidateTokens":53,"totalTokens":134252,"cachedTokens":133376,"reasoningTokens":118,"cost":0.000608478}}
+{"type":"tool","timestamp":"2026-09-25T23:22:39.258Z","data":{"tool":"read","summary":"tests/mutation-pick.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:39.293Z","data":{"promptTokens":3400,"candidateTokens":54,"totalTokens":137665,"cachedTokens":134144,"reasoningTokens":67,"cost":0.000985032}}
+{"type":"tool","timestamp":"2026-09-25T23:22:41.197Z","data":{"tool":"bash","summary":"find fixture/trace -type f | head -40; echo \"==== quote.ts ="}}
+{"type":"tool","timestamp":"2026-09-25T23:22:41.342Z","data":{"tool":"bash","summary":"sed -n '1,80p' tests/line-budget.test.ts; echo \"=== function"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:41.382Z","data":{"promptTokens":2549,"candidateTokens":167,"totalTokens":140354,"cachedTokens":137600,"reasoningTokens":38,"cost":0.00091815}}
+{"type":"tool","timestamp":"2026-09-25T23:22:44.332Z","data":{"tool":"bash","summary":"grep -n \"traceability\" src/core/foundation/config.ts src/cor"}}
+{"type":"tokens","timestamp":"2026-09-25T23:22:44.395Z","data":{"promptTokens":2109,"candidateTokens":83,"totalTokens":142782,"cachedTokens":140288,"reasoningTokens":302,"cost":0.000968214}}
+{"type":"tool","timestamp":"2026-09-25T23:23:02.091Z","data":{"tool":"read","summary":"src/core/trace/function-ranges.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:23:06.188Z","data":{"promptTokens":837,"candidateTokens":55,"totalTokens":147926,"cachedTokens":142720,"reasoningTokens":4314,"cost":0.00317511}}
+{"type":"tool","timestamp":"2026-09-25T23:23:08.172Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-09-25T23:23:08.341Z","data":{"tool":"bash","summary":"grep -n \"export async function createNewSpec\\|export functio"}}
+{"type":"tokens","timestamp":"2026-09-25T23:23:08.390Z","data":{"promptTokens":3360,"candidateTokens":123,"totalTokens":151365,"cachedTokens":147840,"reasoningTokens":42,"cost":0.00104652}}
+{"type":"tool","timestamp":"2026-09-25T23:23:18.253Z","data":{"tool":"bash","summary":"sed -n '120,240p' src/watcher/measures.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:23:18.289Z","data":{"promptTokens":774,"candidateTokens":52,"totalTokens":153887,"cachedTokens":151296,"reasoningTokens":1765,"cost":0.001660188}}
+{"type":"tool","timestamp":"2026-09-25T23:23:27.818Z","data":{"tool":"bash","summary":"grep -n \"interface Logger\\|warn(\\|info(\\|error(\\|verbose(\" s"}}
+{"type":"tool","timestamp":"2026-09-25T23:23:28.017Z","data":{"tool":"bash","summary":"grep -rn \"import-graph\" tests/import-graph.test.ts | head; s"}}
+{"type":"tokens","timestamp":"2026-09-25T23:23:28.089Z","data":{"promptTokens":1082,"candidateTokens":131,"totalTokens":156793,"cachedTokens":153856,"reasoningTokens":1724,"cost":0.001736868}}
+{"type":"tool","timestamp":"2026-09-25T23:23:33.197Z","data":{"tool":"bash","summary":"sed -n '150,230p' src/core/foundation/new.ts; echo \"=== appr"}}
+{"type":"tokens","timestamp":"2026-09-25T23:23:33.243Z","data":{"promptTokens":741,"candidateTokens":103,"totalTokens":158292,"cachedTokens":156672,"reasoningTokens":776,"cost":0.001108566}}
+{"type":"tool","timestamp":"2026-09-25T23:24:05.760Z","data":{"tool":"write","summary":"src/watcher/mutation-check.ts"}}
+{"type":"text","timestamp":"2026-09-25T23:24:05.791Z","data":{"text":"Now I have a clear picture. Let me write the implementation."}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:05.829Z","data":{"promptTokens":1285,"candidateTokens":1797,"totalTokens":168354,"cachedTokens":158208,"reasoningTokens":7064,"cost":0.005983974}}
+{"type":"tool","timestamp":"2026-09-25T23:24:07.545Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:07.587Z","data":{"promptTokens":178,"candidateTokens":166,"totalTokens":168547,"cachedTokens":168192,"reasoningTokens":11,"cost":0.000637476}}
+{"type":"tool","timestamp":"2026-09-25T23:24:09.467Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:09.514Z","data":{"promptTokens":242,"candidateTokens":150,"totalTokens":168712,"cachedTokens":168320,"reasoningTokens":0,"cost":0.00063126}}
+{"type":"tool","timestamp":"2026-09-25T23:24:16.341Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:16.405Z","data":{"promptTokens":151,"candidateTokens":54,"totalTokens":169971,"cachedTokens":168576,"reasoningTokens":1190,"cost":0.001274778}}
+{"type":"tool","timestamp":"2026-09-25T23:24:26.016Z","data":{"tool":"bash","summary":"grep -n \"export async function scaffoldProject\\|export funct"}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:26.062Z","data":{"promptTokens":2695,"candidateTokens":106,"totalTokens":174391,"cachedTokens":169856,"reasoningTokens":1734,"cost":0.002017818}}
+{"type":"tool","timestamp":"2026-09-25T23:24:57.430Z","data":{"tool":"write","summary":"tests/mutation-check.test.ts"}}
+{"type":"text","timestamp":"2026-09-25T23:24:57.466Z","data":{"text":"Now the test file:"}}
+{"type":"tokens","timestamp":"2026-09-25T23:24:57.511Z","data":{"promptTokens":333,"candidateTokens":4002,"totalTokens":184112,"cachedTokens":174336,"reasoningTokens":5441,"cost":0.006238758}}
+{"type":"tool","timestamp":"2026-09-25T23:25:00.543Z","data":{"tool":"bash","summary":"node --import tsx --test tests/mutation-check.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:00.598Z","data":{"promptTokens":192,"candidateTokens":75,"totalTokens":184222,"cachedTokens":183936,"reasoningTokens":19,"cost":0.000637008}}
+{"type":"tool","timestamp":"2026-09-25T23:25:04.716Z","data":{"tool":"edit","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:04.773Z","data":{"promptTokens":1459,"candidateTokens":151,"totalTokens":186226,"cachedTokens":184192,"reasoningTokens":424,"cost":0.001116426}}
+{"type":"tool","timestamp":"2026-09-25T23:25:09.244Z","data":{"tool":"bash","summary":"node --import tsx --test tests/mutation-check.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:09.286Z","data":{"promptTokens":257,"candidateTokens":75,"totalTokens":186316,"cachedTokens":185984,"reasoningTokens":0,"cost":0.000641502}}
+{"type":"tool","timestamp":"2026-09-25T23:25:21.621Z","data":{"tool":"edit","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:21.680Z","data":{"promptTokens":843,"candidateTokens":97,"totalTokens":189476,"cachedTokens":186240,"reasoningTokens":2296,"cost":0.00212097}}
+{"type":"tool","timestamp":"2026-09-25T23:25:24.170Z","data":{"tool":"read","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:24.219Z","data":{"promptTokens":179,"candidateTokens":85,"totalTokens":189614,"cachedTokens":189312,"reasoningTokens":38,"cost":0.000668586}}
+{"type":"tool","timestamp":"2026-09-25T23:25:26.341Z","data":{"tool":"edit","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:26.377Z","data":{"promptTokens":510,"candidateTokens":169,"totalTokens":190268,"cachedTokens":189568,"reasoningTokens":21,"cost":0.000759204}}
+{"type":"tool","timestamp":"2026-09-25T23:25:28.401Z","data":{"tool":"bash","summary":"grep -n \"quantity > 100\" tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:28.465Z","data":{"promptTokens":203,"candidateTokens":52,"totalTokens":190418,"cachedTokens":190080,"reasoningTokens":83,"cost":0.00068169}}
+{"type":"tool","timestamp":"2026-09-25T23:25:30.863Z","data":{"tool":"bash","summary":"cd . && sed -i \"s|edits: { \\[QUOTE_"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:30.918Z","data":{"promptTokens":210,"candidateTokens":123,"totalTokens":190669,"cachedTokens":190336,"reasoningTokens":0,"cost":0.000676308}}
+{"type":"tool","timestamp":"2026-09-25T23:25:35.560Z","data":{"tool":"bash","summary":"node --import tsx --test tests/mutation-check.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:35.601Z","data":{"promptTokens":172,"candidateTokens":75,"totalTokens":190839,"cachedTokens":190592,"reasoningTokens":0,"cost":0.000642576}}
+{"type":"tool","timestamp":"2026-09-25T23:25:39.589Z","data":{"tool":"edit","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:39.654Z","data":{"promptTokens":339,"candidateTokens":155,"totalTokens":191574,"cachedTokens":190720,"reasoningTokens":360,"cost":0.00093201}}
+{"type":"tool","timestamp":"2026-09-25T23:25:46.244Z","data":{"tool":"bash","summary":"pnpm typecheck:cli 2>&1 | tail -30"}}
+{"type":"tokens","timestamp":"2026-09-25T23:25:46.301Z","data":{"promptTokens":229,"candidateTokens":68,"totalTokens":191672,"cachedTokens":191360,"reasoningTokens":15,"cost":0.00065823}}
+{"type":"tool","timestamp":"2026-09-25T23:26:28.617Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:28.661Z","data":{"promptTokens":241,"candidateTokens":65,"totalTokens":192078,"cachedTokens":191488,"reasoningTokens":284,"cost":0.000820014}}
+{"type":"tool","timestamp":"2026-09-25T23:26:31.030Z","data":{"tool":"bash","summary":"grep -n \"\\\"lint\\\"\\|biome\" package.json"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:31.064Z","data":{"promptTokens":1017,"candidateTokens":50,"totalTokens":193183,"cachedTokens":192000,"reasoningTokens":116,"cost":0.00082815}}
+{"type":"tool","timestamp":"2026-09-25T23:26:33.270Z","data":{"tool":"bash","summary":"pnpm exec biome check --write src/watcher/mutation-check.ts "}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:33.298Z","data":{"promptTokens":222,"candidateTokens":65,"totalTokens":193429,"cachedTokens":193024,"reasoningTokens":118,"cost":0.000722172}}
+{"type":"tool","timestamp":"2026-09-25T23:26:35.744Z","data":{"tool":"bash","summary":"pnpm exec biome check src/watcher/mutation-check.ts tests/mu"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:35.773Z","data":{"promptTokens":175,"candidateTokens":63,"totalTokens":193547,"cachedTokens":193280,"reasoningTokens":29,"cost":0.00066129}}
+{"type":"tool","timestamp":"2026-09-25T23:26:38.218Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -30"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:38.254Z","data":{"promptTokens":164,"candidateTokens":65,"totalTokens":193692,"cachedTokens":193408,"reasoningTokens":55,"cost":0.000676824}}
+{"type":"tool","timestamp":"2026-09-25T23:26:40.279Z","data":{"tool":"bash","summary":"sed -n '1,30p' src/watcher/mutation-check.ts; echo \"=== test"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:40.306Z","data":{"promptTokens":214,"candidateTokens":77,"totalTokens":193862,"cachedTokens":193536,"reasoningTokens":35,"cost":0.000679908}}
+{"type":"tool","timestamp":"2026-09-25T23:26:44.869Z","data":{"tool":"bash","summary":"node --import tsx --test tests/mutation-check.test.ts 2>&1 |"}}
+{"type":"tokens","timestamp":"2026-09-25T23:26:44.909Z","data":{"promptTokens":653,"candidateTokens":75,"totalTokens":194542,"cachedTokens":193792,"reasoningTokens":22,"cost":0.000737526}}
+{"type":"tool","timestamp":"2026-09-25T23:27:27.446Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -40"}}
+{"type":"tokens","timestamp":"2026-09-25T23:27:27.482Z","data":{"promptTokens":331,"candidateTokens":65,"totalTokens":194852,"cachedTokens":194432,"reasoningTokens":24,"cost":0.000686346}}
+{"type":"tool","timestamp":"2026-09-25T23:28:06.265Z","data":{"tool":"bash","summary":"pnpm verify > /tmp/opencode/verify.log 2>&1; echo \"EXIT=$?\";"}}
+{"type":"tokens","timestamp":"2026-09-25T23:28:06.305Z","data":{"promptTokens":582,"candidateTokens":118,"totalTokens":195562,"cachedTokens":194816,"reasoningTokens":46,"cost":0.000770148}}
+{"type":"tool","timestamp":"2026-09-25T23:28:11.006Z","data":{"tool":"read","summary":"tests/mutation-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-25T23:28:11.036Z","data":{"promptTokens":169,"candidateTokens":69,"totalTokens":196474,"cachedTokens":195456,"reasoningTokens":780,"cost":0.001121118}}
+{"type":"tool","timestamp":"2026-09-25T23:28:14.462Z","data":{"tool":"bash","summary":"git status --short"}}
+{"type":"tokens","timestamp":"2026-09-25T23:28:14.503Z","data":{"promptTokens":2156,"candidateTokens":40,"totalTokens":198844,"cachedTokens":196352,"reasoningTokens":296,"cost":0.001114056}}
+{"type":"tool","timestamp":"2026-09-25T23:28:21.792Z","data":{"tool":"write","summary":"openspec/changes/083-traceability-mutation/.run/results/4.md"}}
+{"type":"tokens","timestamp":"2026-09-25T23:28:21.841Z","data":{"promptTokens":270,"candidateTokens":885,"totalTokens":200433,"cachedTokens":198784,"reasoningTokens":494,"cost":0.001464252}}
+{"type":"text","timestamp":"2026-09-25T23:28:25.276Z","data":{"text":"Both gates are green. Summary:\n\n**Task 4 — Mutation check after a pass**\n\n- **`src/watcher/mutation-check.ts`** (new): `runMutationCheck` reads the task's latest start/end `measures` views, builds the scenario index once, picks via `pickMutations`, and runs picks in order through `runMutationPick` under one `budgetSeconds` wall-clock budget (each run's timeout = budget left). It appends one `mutation_ran` event per pick with all required fields; unknown ranges are `range_unknown`, picks left after the budget are `budget`, and `command_failed`/`timed_out` carry bounded output. All errors are caught and logged, never touching the task state.\n- **`src/watcher/loop.ts`**: one `runMutationCheck(...)` call in the `taskResult.success` branch, before `archiveCompletedSpec`.\n- **`tests/mutation-check.test.ts`** (new): 7 tests driving real watcher cycles with a mutating fake adapter and a fake `node` mutation command, covering the two required scenarios plus the broken-command case, helper ranges, test-only picks, `range_unknown`, `report_invalid`, budget exhaustion (`timed_out` then `budget`), and mutation unset.\n\nVerification:\n- `node --import tsx --test tests/mutation-check.test.ts` → 7/7 pass\n- `pnpm verify` → exit 0\n\nResult written to `openspec/changes/083-traceability-mutation/.run/results/4.md`."}}
+{"type":"tokens","timestamp":"2026-09-25T23:28:25.308Z","data":{"promptTokens":257,"candidateTokens":340,"totalTokens":200912,"cachedTokens":200192,"reasoningTokens":123,"cost":0.000916926}}
+{"type":"exited","timestamp":"2026-09-25T23:28:25.393Z","data":{"exitCode":0,"pid":52296,"timedOut":false,"elapsedSeconds":384.3}}
+{"type":"verify_ran","timestamp":"2026-09-25T23:28:27.948Z","data":{"command":"node --import tsx --test tests/mutation-check.test.ts","exitCode":0,"duration":2.45,"output":"▶ mutation check after a passing task\n  ✔ runs once for a changed covered function with its ranges and tests (219.993304ms)\n  ✔ mutates the unchanged function a newly added scenario test covers (177.664226ms)\n  ✔ records a pick whose ranges are unknown without running the command (162.044056ms)\n  ✔ records an unreadable report as report_invalid (175.696429ms)\n  ✔ records a broken command and still archives the change (176.450083ms)\n  ✔ records the picks left once the budget runs out (1171.930883ms)\n  ✔ does nothing when mutation is unset (161.027339ms)\n✔ mutation check after a passing task (2246.097736ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2426.743366\n"}}
+{"type":"measures","timestamp":"2026-09-25T23:29:04.112Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":488,"repoFiles":1452,"repoLines":159851,"importFanIn":1,"proposalWords":1113,"taskWords":325,"deltaRequirements":10,"deltaScenarios":17,"changedFiles":3,"changedLines":609,"scopeHashes":{"src/watcher/loop.ts":{"before":"sha256:8808ca8102e02626da9639c529bfe5b07e4ae3019b4801404e10e3f239366962","after":"sha256:9d19d31609390b4c3b54feeb30c2b47bbcfb2958247b117a8f90b850e51b3080"},"src/watcher/mutation-check.ts":{"before":null,"after":"sha256:b0ee1a5fc61ca3bcb9675bb8fa3b61f08c685a8315a1d40c1a0f57c719c0368d"},"tests/mutation-check.test.ts":{"before":null,"after":"sha256:cf50e90d3bf0b128426e645f592ac2379fa5edeec2c0b8a5f566a791af87c9bc"}}}}
+{"type":"done","timestamp":"2026-09-25T23:29:04.115Z","data":{"task":"4"}}
+{"type":"verify_ran","timestamp":"2026-09-25T23:34:03.653Z","data":{"command":"node --import tsx --test tests/mutation-check.test.ts","exitCode":0,"duration":2.5,"output":"▶ mutation check after a passing task\n  ✔ runs once for a changed covered function with its ranges and tests (242.099089ms)\n  ✔ mutates the unchanged function a newly added scenario test covers (182.090708ms)\n  ✔ records a pick whose ranges are unknown without running the command (163.664546ms)\n  ✔ records an unreadable report as report_invalid (176.753169ms)\n  ✔ records a broken command and still archives the change (185.213082ms)\n  ✔ records the picks left once the budget runs out (1184.112294ms)\n  ✔ does nothing when mutation is unset (155.279654ms)\n✔ mutation check after a passing task (2290.418536ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2471.600318\n"}}

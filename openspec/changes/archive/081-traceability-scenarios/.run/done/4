@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e7e468eed9252aab7cc60fad9f6bb3bbf9cb0d16de28ee27558f31e014e5ebbf"
+build_stamp: "6fde142"
+project_commit: "6fde142"
+exit_code: 0
+scope_files: {"src/core/trace/scenario-lookup.ts":"sha256:9d0f63122739ffbc7482b1a89d5720e0e69b9e5054373285116419ce57c51947","tests/trace-scenario-lookup.test.ts":"sha256:a62d62c9125b66d53e7998fcc92133ba0733adf70a6cb43971558c3b2e62ef67"}
+---
+2026-09-25T21:22:43.159Z

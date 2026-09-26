@@ -292,23 +292,27 @@ The managed planner instructions block in `PLANNER.md` and `src/core/init.ts` SH
 - **THEN** the text contains `Write files with the file tool, never through a shell echo.`
 
 ### Requirement: Planner protocol rules in documentation and templates
-<!-- source: PLANNER.md, templates/PLANNER.md, src/core/foundation/init-blocks.ts, tests/init-planner.test.ts -->
+<!-- source: PLANNER.md, templates/PLANNER.md, src/core/foundation/init-blocks.ts, tests/init-planner.test.ts, tests/human-steps-guidance.test.ts, tests/executor-planner-wording.test.ts -->
 The managed planner block in `PLANNER.md`, `templates/PLANNER.md`, and
 `src/core/foundation/init-blocks.ts` SHALL encode slicing, detail, file tool,
 change-level verify, final-tree verification, and task file-ownership rules.
 Every task verify SHALL exercise its complete slice through a real entrypoint
 and remain safely re-runnable against the final tree of the completed change.
 A file SHALL belong to one task unless a later task must extend it; that later
-task SHALL be ordered after the first owner and the proposal SHALL identify the
-shared file.
+task SHALL be ordered after the first owner, SHALL have the file in its own
+`scope`, and the proposal SHALL identify the shared file.
 The block SHALL state interactive planning and the `osq plan` handoff as
 separate modes sharing the write-boundary, lint, and no-approval rules. It SHALL
 state that the watcher runs the change-level `verify` after every task, so tasks
-that pass only together are one task; that a later task changing an earlier done
-task's resolved `scope` halts the change until a human runs `osq retry`, and
-globs resolve again at every audit; that a preexisting test changes only with
-`tests.modify: true` and the file in `scope`; and that `osq lint` enforces the
-configured limits on scope patterns and acceptance lines.
+that pass only together are one task; that when a later task whose `scope`
+covers an earlier done task's file changed it, and nothing else touched the
+file, the watcher recertifies the earlier task itself if its `verify` still
+passes, while any other change to an earlier done task's resolved `scope`
+halts the change until a human runs `osq retry`; that globs resolve again at
+every audit; that a preexisting test changes only with `tests.modify: true` and
+the file in `scope`; and that `osq lint` enforces the configured limits on
+scope patterns and acceptance lines. The block SHALL NOT tell planners to list
+an expected `osq retry` for a shared file.
 
 #### Scenario: Managed block encodes planner discipline
 - **WHEN** `PLANNER.md` or `MANAGED_PLANNER_BLOCK` is inspected
@@ -316,11 +320,15 @@ configured limits on scope patterns and acceptance lines.
 
 #### Scenario: Managed block encodes between-task watcher rules
 - **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
-- **THEN** its task rules state the change-level verify after every task, the scope-overlap halt resolved by `osq retry`, glob re-resolution, and the `tests.modify` rule
+- **THEN** its task rules state the change-level verify after every task, automatic recertification of a file extended by a later task that has it in scope, the scope-overlap halt resolved by `osq retry` for any other change, glob re-resolution, and the `tests.modify` rule
 
 #### Scenario: Byte-equality test for planner templates
 - **WHEN** `tests/init-planner.test.ts` executes
 - **THEN** it asserts byte-for-byte equality between the `PLANNER.md` managed block, `templates/PLANNER.md`, and `MANAGED_PLANNER_BLOCK` in `src/core/foundation/init-blocks.ts`
+
+#### Scenario: No expected retry for a shared file
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it doesn't contain `list the expected \`osq retry\``
 
 ### Requirement: Planner configuration validation
 <!-- source: src/core/config.ts, tests/config-planner.test.ts -->
@@ -349,13 +357,15 @@ planner agent file.
 - **THEN** the last matching rule denies it
 
 ### Requirement: Interactive planning command
-<!-- source: src/cli/plan.ts, src/cli/plan-queue.ts, src/cli/index.ts, src/core/report.ts, tests/plan-handoff.test.ts -->
+<!-- source: src/cli/plan.ts, src/cli/plan-queue.ts, src/cli/index.ts, src/core/report.ts, src/core/report/recent-disclosures.ts, tests/plan-handoff.test.ts, tests/plan-disclosures.test.ts -->
 The CLI SHALL provide `osq plan <name> [--brief <file> | -] [--session | --print]`
 and `osq plan --next [--session | --print]` to prepare an ordinary or
 queue-selected change. Every mode SHALL build the same five ordered prompt
 sections: complete `PLANNER.md`, change identity, capability spec paths,
 complete brief, and `This repository's record` derived from the 20 most recent
-archived changes under the established bounded rules.
+archived changes under the established bounded rules. When the recent archived
+changes hold any executor disclosure, every mode SHALL add a sixth section,
+`## Recent executor disclosures`, after the record.
 
 Without `--session` or `--print`, planning SHALL create `plan-prompt.md` from
 those exact prompt bytes, record `planner: null` in brief frontmatter, avoid
@@ -396,6 +406,10 @@ process, or recording telemetry.
 #### Scenario: Print mode outputs prompt to stdout
 - **WHEN** either planning form includes `--print`
 - **THEN** the complete five-section prompt is written exclusively to stdout without a prompt file, interactive process, or telemetry
+
+#### Scenario: Disclosures section
+- **WHEN** a recent archived change's result file holds a real disclosure section
+- **THEN** every planning mode's prompt ends with `## Recent executor disclosures` after the repository record, and a prompt without disclosures is unchanged
 
 ### Requirement: Codex configuration and resolution
 <!-- source: src/core/config*.ts, src/index.ts, tests/codex/** -->
@@ -645,14 +659,15 @@ queue path override.
 - **THEN** both finite non-negative ceilings are available to planning through the public typed configuration
 
 ### Requirement: Next queue item planning
-<!-- source: src/cli/plan.ts, src/cli/index.ts, src/core/new.ts, src/core/queue.ts, tests/queue-plan.test.ts, tests/queue-watch.test.ts -->
+<!-- source: src/cli/plan.ts, src/cli/plan-queue.ts, src/cli/index.ts, src/core/foundation/new.ts, src/core/status/queue-planning.ts, src/core/status/queue-state.ts, tests/queue-plan.test.ts, tests/queue-watch.test.ts, tests/fixes-declaration.test.ts -->
 The planning command SHALL accept either ordinary `osq plan <name>` behavior or
 `osq plan --next [--replan] [--print]`. Next mode SHALL select exactly the first
-unplanned queue item in file order whose queue dependencies are landed, create
-one numerically identified folder using the queue slug, seed its proposal title
-and numeric archived dependency ids, and write the item body to `brief.md` with
+unplanned queue item in file order whose queue dependencies and fixed items are
+landed, create one numerically identified folder using the queue slug, seed its
+proposal title, numeric archived dependency ids, and the numeric archived ids of
+the items it fixes as `fixes`, and write the item body to `brief.md` with
 `queue_item` and `queue_hash` metadata before entering the existing planning
-flow.
+flow. A proposal seeded without fixes SHALL carry no `fixes` key.
 
 Numeric allocation SHALL consider active, archived, and rejected folders.
 Print mode SHALL create the change and emit the prompt without launching a
@@ -667,6 +682,14 @@ queue items or the complete queue file.
 #### Scenario: No eligible item
 - **WHEN** every queue item is active, landed, rejected without replan permission, or waiting on an unlanded dependency
 - **THEN** planning explains why nothing is eligible and creates no change
+
+#### Scenario: Item that fixes a landed item
+- **WHEN** the selected item carries `Fixes: first-item` and `first-item` landed as change 007
+- **THEN** the new proposal's frontmatter carries `fixes: ["007"]`
+
+#### Scenario: Fixed item not landed
+- **WHEN** an item's `Fixes:` names an item that has not landed
+- **THEN** the item waits as it would on an unlanded dependency and the queue lists the fixed slug among its unmet dependencies
 
 ### Requirement: Queue planning safety and spend gates
 <!-- source: src/cli/plan.ts, src/core/queue.ts, src/core/config.ts, tests/queue-plan.test.ts, tests/queue-budget.test.ts, tests/queue-watch.test.ts -->
@@ -821,22 +844,41 @@ template file is unreadable SHALL carry the same sections.
 - **THEN** the fallback proposal has the same six sections in the same order
 
 ### Requirement: Executor protocol constants and result headings
-<!-- source: src/core/foundation/init-blocks.ts, AGENTS.md, .opencode/agent/osq-coder.md, tests/managed-blocks.test.ts -->
+<!-- source: src/core/foundation/init-blocks.ts, AGENTS.md, .opencode/agent/osq-coder.md, tests/managed-blocks.test.ts, tests/executor-planner-wording.test.ts -->
 The step lines of the managed `## Executing a task` section and the body lines
 of `## Exiting` SHALL be exported constants in
 `src/core/foundation/init-blocks.ts`, and `MANAGED_AGENTS_MD_BODY` SHALL be
 assembled from them. `## Exiting` SHALL name the result headings `## Changed`,
-`## Deviated`, `## Missing context`, and `## Next` in that order, tell the
-executor to leave out empty ones, and require a final `Touched:` line listing
-every changed file other than the result file.
+`## Deviated`, `## Missing context`, `## Outside scope`, `## Blocked`, and
+`## Next` in that order, tell the executor to leave out empty ones, and require
+a final `Touched:` line listing every changed file other than the result file.
+Each disclosure heading's purpose SHALL name who reads it: `## Deviated` is what
+the executor did differently from the task, for the reviewer; `## Missing
+context` is what the task lacked, for the planner; `## Outside scope` is what
+the executor found broken outside its scope and left alone, for the human.
+`## Blocked` is what the executor needs before the task can be finished within
+its scope, for the human.
+
+Step 2 SHALL read exactly: `2. Can't finish within your task's scope, or too big
+for one pass? Write what you need under ## Blocked in .run/results/<n>.md, and
+exit without code.`, with `scope`, `## Blocked`, and `.run/results/<n>.md` in
+backticks.
 
 #### Scenario: Result headings defined once
 - **WHEN** `MANAGED_AGENTS_MD_BODY` is inspected
-- **THEN** it contains every exported executor step line and every exported exit line verbatim, and the exit lines name `## Changed`, `## Deviated`, `## Missing context`, `## Next`, and `Touched:`
+- **THEN** it contains every exported executor step line and every exported exit line verbatim, and the exit lines name `## Changed`, `## Deviated`, `## Missing context`, `## Outside scope`, `## Blocked`, `## Next`, and `Touched:`
 
 #### Scenario: Repository copies stay current
 - **WHEN** the managed block in the repository's `AGENTS.md` or `.opencode/agent/osq-coder.md` is inspected
 - **THEN** it equals `MANAGED_AGENTS_MD_BODY`
+
+#### Scenario: Disclosure headings name their reader
+- **WHEN** the exit lines are inspected
+- **THEN** `## Deviated` names the reviewer, `## Missing context` names the planner, and `## Outside scope` names the human
+
+#### Scenario: Blocked stop
+- **WHEN** step 2 and the exit lines are inspected
+- **THEN** step 2 tells an executor that can't finish within its scope to write `## Blocked` and exit without code, and `## Blocked` names the human
 
 ### Requirement: Harness agent file diagnostics
 <!-- source: src/core/foundation/doctor-managed.ts, src/core/foundation/doctor.ts, tests/doctor-agent-file.test.ts -->
@@ -865,12 +907,14 @@ SHALL NOT require the file.
 The osq schema's proposal template SHALL be byte-identical to
 `templates/proposal.md`, the template `osq new` writes. The schema's proposal
 instruction and the proposal rules in `templates/openspec/config.yaml` SHALL
-name the sections Goal, Verify, Non-goals, Surface, Contract, Human steps, and
-Delta in that order, the frontmatter `verify` command, and `features.reads`,
-and SHALL NOT ask for Why, What Changes, Capabilities, or Impact sections.
-The template's `## Surface` section SHALL hold an HTML comment naming the
-categories commands, flags, config keys, frontmatter fields, document sections,
-dead reasons, and event types, followed by the line `None`. The managed
+name the sections Goal, Verify, Non-goals, Surface, Decisions, Contract, Human
+steps, and Delta in that order, the frontmatter `verify` command, and
+`features.reads`, and SHALL NOT ask for Why, What Changes, Capabilities, or
+Impact sections. The template's `## Surface` section SHALL hold an HTML comment
+naming the categories commands, flags, config keys, frontmatter fields,
+document sections, dead reasons, and event types, followed by the line `None`.
+The template's `## Decisions` section SHALL hold an HTML comment describing
+decision lines and departure lines, followed by the line `None`. The managed
 `PLANNER.md` block SHALL tell the planner to fill `## Surface` after
 `## Non-goals`, list the same categories, and allow a single `None`.
 
@@ -885,6 +929,10 @@ dead reasons, and event types, followed by the line `None`. The managed
 #### Scenario: Seeded surface section
 - **WHEN** `osq new` seeds a proposal
 - **THEN** its `## Surface` section follows `## Non-goals`, precedes `## Contract`, and holds the categories comment followed by `None`
+
+#### Scenario: Seeded decisions section
+- **WHEN** `osq new` seeds a proposal
+- **THEN** its `## Decisions` section follows `## Surface`, precedes `## Contract`, and holds a comment followed by `None`
 
 ### Requirement: Repository runs the scaffolded OpenSpec schema
 <!-- source: openspec/config.yaml, openspec/schemas/osq/**, tests/proposal-format.test.ts -->
@@ -1157,3 +1205,398 @@ SHALL still list every living spec.
 #### Scenario: Labeled spec list
 - **WHEN** a plan prompt is built for a project with living specs
 - **THEN** its `## Capability Specs` section starts with that sentence and lists every `openspec/specs/<capability>/spec.md`
+
+### Requirement: Planning price diagnostics
+<!-- source: src/core/foundation/doctor-prices.ts, src/core/foundation/doctor.ts, src/core/report/planning-price-gaps.ts, tests/planning-price-gaps.test.ts -->
+`osq doctor` SHALL add a `planning-prices` check only when a model named by the
+`plan_started` record of a planning session with recorded tokens, in any active
+or archived change, has no `planning.prices` entry. The check SHALL pass with a
+warning and name each missing key exactly, such as
+`planning.prices["claude-opus-5-5"]`, in sorted model order. With no such model
+the check list SHALL be unchanged.
+
+#### Scenario: Missing price entry
+- **WHEN** an archived change recorded planning tokens from `claude-opus-5-5` and `planning.prices` has no entry for it
+- **THEN** doctor prints a `[warn]` `planning-prices` line naming `planning.prices["claude-opus-5-5"]` and still exits zero
+
+#### Scenario: Every model priced
+- **WHEN** every model with recorded planning tokens has a price entry, or none recorded tokens
+- **THEN** doctor prints no `planning-prices` line
+
+### Requirement: Check command
+<!-- source: src/cli/check.ts, src/core/lifecycle/verification-record.ts, src/cli/index.ts, tests/verification-record.test.ts -->
+`osq check <id>` SHALL run an archived change's recorded `check` command from
+the project root with `runVerificationCommand` and the verify timeout, append
+one `check_ran` event, print the exit code, output, and next step, and exit 0
+only when the check passed. It SHALL refuse, writing nothing, a change that is
+not archived or has no check command.
+
+#### Scenario: Check runs on request
+- **WHEN** `osq check 012` runs on an archived change with `check: node check.cjs`
+- **THEN** `node check.cjs` runs once and one `check_ran` event records its exit code and output
+
+#### Scenario: No check command
+- **WHEN** `osq check 012` runs on an archived change without a check command
+- **THEN** it exits 1 with an error and appends nothing
+
+### Requirement: Verified command
+<!-- source: src/cli/verified.ts, src/core/lifecycle/verification-record.ts, src/cli/index.ts, tests/verification-record.test.ts -->
+`osq verified <id> --passed|--failed [--note <text>]` SHALL require exactly one
+of `--passed` and `--failed`, find an archived change that requires
+verification, append one `verification_recorded` event with its `outcome` and
+`note`, and print the change's next step. It SHALL refuse, writing nothing, any
+other change, and SHALL change nothing else in the archive.
+
+#### Scenario: Passed outcome
+- **WHEN** a human runs `osq verified 012 --passed` on a pending change
+- **THEN** one `verification_recorded` event is appended and it prints `Next: landed`
+
+#### Scenario: Both flags
+- **WHEN** a human runs `osq verified 012 --passed --failed`
+- **THEN** it exits 1 with an error and appends nothing
+
+### Requirement: Plan handoff next step
+<!-- source: src/cli/plan-queue.ts, tests/plan-approve-next-step.test.ts -->
+The one line the `osq plan` prompt handoff prints SHALL end with
+` — next: <next step>` for the change it hands off.
+
+#### Scenario: Fresh handoff
+- **WHEN** `osq plan <name>` hands off a new change 021
+- **THEN** its one line ends with ` — next: unplanned — osq plan 021`
+
+### Requirement: Approve refusal next step
+<!-- source: src/cli/approve.ts, tests/plan-approve-next-step.test.ts -->
+When `osq approve <id>` fails for a change whose folder exists, it SHALL print
+`Next: <next step>` for that change after the error.
+
+#### Scenario: Approving a template
+- **WHEN** `osq approve 021` runs on a change that still has the placeholder verify
+- **THEN** it fails and prints `Next: unplanned — osq plan 021`
+
+### Requirement: Planner human steps guidance
+<!-- source: src/core/foundation/init-blocks.ts, templates/openspec/schemas/osq/schema.yaml, tests/human-steps-guidance.test.ts -->
+The planner block and osq schema SHALL tell planners to split `## Human steps`
+into `### Before approval` and `### After landing`, with steps during the run
+under Before approval, and that after-landing steps or a `check` command keep
+the change pending, and dependents waiting, until `osq verified`.
+
+#### Scenario: Planner block names the subsections
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it names `### Before approval`, `### After landing`, `check: <command>`, and `osq verified`
+
+### Requirement: Import graph lint limits
+<!-- source: src/core/foundation/config.ts, README.md, tests/impact-lint.test.ts -->
+`limits` SHALL carry `importGraphDepth`, default 2, the import levels the
+frozen-test warning follows, and `maxListedImporters`, default 8, the most tests
+or files one import-graph warning lists. Both SHALL merge from `osq.config.ts`
+like the other limits, and the README's lint table SHALL list the four
+import-graph warnings.
+
+#### Scenario: Deeper reach
+- **WHEN** `limits.importGraphDepth` is 3 and a test imports a scoped file three levels away
+- **THEN** the frozen-test warning names that test
+
+### Requirement: Architecture decision records
+<!-- source: src/core/foundation/decisions.ts, tests/decisions-read.test.ts -->
+osq SHALL read ADRs from the markdown files directly under `paths.decisions`,
+leaving out `README.md`, through one module, `src/core/foundation/decisions.ts`,
+that every other part of osq uses. A file whose YAML frontmatter has a `status`
+key SHALL be an ADR. Any other markdown file SHALL be ignored and listed as
+ignored. An ADR's number SHALL be the leading digits of its file name, as
+written, such as `007`, and ADR numbers SHALL compare by numeric value, so
+`ADR 7` names `007`. Its title SHALL be its first `# ` heading without a
+leading `<number>.`. Frontmatter SHALL carry `status`, one of `proposed`,
+`accepted`, or `superseded`; `applies_to`, either `all` or a list of
+capability names; `rule`, one sentence saying what a spec must do; and, on a
+superseded ADR, `superseded_by`, the number of its replacement. Only accepted
+ADRs SHALL take effect. An accepted ADR SHALL govern a change when it applies
+to `all` or names a capability the change writes. A missing decisions folder
+SHALL read as no ADRs.
+
+#### Scenario: Frontmatter ADR
+- **WHEN** `decisions/007-ui-framework.md` has frontmatter `status: accepted`, `applies_to: all`, `rule: UI components use React.` and the heading `# 007. UI framework`
+- **THEN** osq reads ADR `007` titled `UI framework`, applying to all, with that rule
+
+#### Scenario: Plain markdown ADR
+- **WHEN** a file under the decisions folder has no frontmatter
+- **THEN** it is listed as ignored and takes no effect
+
+### Requirement: Architecture decision validation
+<!-- source: src/core/foundation/decisions.ts, tests/decisions-read.test.ts -->
+Validation SHALL report an error for an ADR whose `status` is not one of the
+three values, an accepted ADR without a valid `applies_to`, an accepted ADR
+whose `rule` is missing, spans more than one line, or is longer than
+`limits.maxRuleLength` characters, and a superseded ADR whose `superseded_by`
+is missing or names no existing ADR. It SHALL report a warning for each
+ignored file and for each capability name in `applies_to` that has no living
+spec, since the capability may not exist yet.
+
+#### Scenario: Rule too long
+- **WHEN** an accepted ADR's rule is one character longer than `limits.maxRuleLength`
+- **THEN** validation reports an error naming the ADR and the limit
+
+#### Scenario: Future capability
+- **WHEN** an accepted ADR applies to `ingress` and no living spec named `ingress` exists
+- **THEN** validation reports a warning, not an error
+
+### Requirement: Project rules block
+<!-- source: src/core/foundation/rules-block.ts, src/core/foundation/init.ts, src/cli/init.ts, tests/rules-block.test.ts -->
+`osq init` SHALL write a project rules block into AGENTS.md between
+`<!-- OSQ:RULES:START -->` and `<!-- OSQ:RULES:END -->`, directly before the
+`<!-- OSQ:START -->` managed block and separated from it by one blank line.
+The block SHALL hold the heading `## Project rules`, a blank line, and one line
+per accepted ADR that applies to all, in number order, each reading
+`- <rule> ADR <number>`, such as `- UI components use React. ADR 007`. With no
+such ADR the block SHALL be absent, and `osq init` SHALL remove one that
+exists. Writing the block SHALL never change AGENTS.md content outside its
+markers, including the osq managed block, and a second run SHALL change
+nothing.
+
+#### Scenario: Two system-wide rules
+- **WHEN** ADRs 003 and 007 are accepted and apply to all, and `osq init` runs twice
+- **THEN** AGENTS.md holds one rules block with the 003 line before the 007 line, directly before the managed block, and the second run leaves the file byte-identical
+
+#### Scenario: Superseded rule
+- **WHEN** ADR 003 becomes superseded by accepted system-wide ADR 008 and `osq init` runs
+- **THEN** the 003 line is gone and the 008 line is present
+
+### Requirement: Decisions doctor check
+<!-- source: src/core/foundation/doctor-decisions.ts, src/core/foundation/doctor.ts, tests/rules-block.test.ts -->
+`osq doctor` SHALL add a `decisions` check, after `managed-blocks`, when the
+decisions folder holds a markdown file other than `README.md` or AGENTS.md
+holds a rules marker. The check SHALL fail on any validation error, on a rules
+block that doesn't match the accepted ADRs, saying to run `osq init`, and on
+more system-wide rules than `limits.maxProjectRules`, naming the limit. With no
+failure and at least one validation warning it SHALL pass with a warning that
+lists each ignored file and unknown capability. Without ADR files or a rules
+marker, the check list SHALL be unchanged.
+
+#### Scenario: Stale block
+- **WHEN** a new accepted system-wide ADR is added and `osq init` has not run
+- **THEN** doctor prints `[fail] decisions:` with a message naming `osq init`, and passes after `osq init`
+
+#### Scenario: Ignored file
+- **WHEN** the decisions folder holds one ADR with frontmatter and one without
+- **THEN** doctor prints a `[warn] decisions:` line naming the file without frontmatter and exits zero
+
+### Requirement: Plan prompt architecture decisions
+<!-- source: src/cli/plan-sections.ts, src/cli/plan-queue.ts, src/cli/plan.ts, tests/plan-decisions.test.ts -->
+When the project has at least one accepted ADR, the plan prompt SHALL carry an
+`## Architecture Decisions` section after `## Capability Specs` and before
+`## Brief`. It SHALL start with the sentence
+`Read in full every ADR that applies to all, and every ADR that applies to a capability this change writes. Name each governing capability ADR in the proposal's ## Decisions section.`
+and list each accepted ADR in number order as
+`- ADR <number>: <title>. Applies to: <all, or capability names joined by ", ">. Rule: <rule> Path: <repository-relative path>`.
+Proposed and superseded ADRs SHALL NOT appear. Without an accepted ADR the
+section SHALL be absent.
+
+#### Scenario: Accepted and superseded ADRs
+- **WHEN** ADR 003 is superseded and ADRs 007 and 009 are accepted
+- **THEN** the section lists 007 and 009 with their scopes, rules, and paths, and does not mention 003
+
+### Requirement: Planner decisions guidance
+<!-- source: src/core/foundation/init-blocks.ts, PLANNER.md, templates/PLANNER.md, tests/proposal-format.test.ts -->
+The managed `PLANNER.md` block SHALL tell the planner to write `## Decisions`
+after `## Surface`, with one line per accepted ADR that governs a capability
+the change writes saying what the decision means for this change, to name a
+system-wide ADR only to depart from it, to start a departure line with
+`Departs from ADR <n>:` and give the reason, to treat a needed departure as a
+reason for a new ADR, to write `None` when no ADR governs the change, and to
+repeat a rule in a task only when that task touches the area.
+
+#### Scenario: Planner block names the section
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it names `## Decisions`, `Departs from ADR <n>:`, and `None`
+
+### Requirement: Decision limits
+<!-- source: src/core/foundation/config.ts, tests/decisions-read.test.ts -->
+`limits` SHALL carry `maxRuleLength`, default 160, the most characters an
+accepted ADR's rule may have, and `maxProjectRules`, default 10, the most
+system-wide rules the AGENTS.md block may hold. Both SHALL merge from
+`osq.config.ts` like the other limits.
+
+#### Scenario: Configured rule length
+- **WHEN** `osq.config.ts` sets `limits.maxRuleLength` to 40
+- **THEN** an accepted ADR with a 41-character rule fails validation naming 40
+
+### Requirement: osq's own decision records
+<!-- source: decisions/**, tests/decisions-read.test.ts -->
+ADRs 001, 002, 004, and 005 in osq's `decisions/` SHALL carry osq frontmatter
+with status `accepted`, a capability-scoped `applies_to`, and a one-line rule,
+and SHALL keep their bodies unchanged. `decisions/README.md` SHALL describe the
+frontmatter format. None of them SHALL apply to all, so osq's AGENTS.md has no
+rules block.
+
+#### Scenario: Own ADRs validate
+- **WHEN** osq's own decisions folder is read and validated against its living specs
+- **THEN** it yields four accepted ADRs, no ignored file, no error, and no warning
+
+### Requirement: Decision checks and denied packages
+<!-- source: src/core/foundation/decisions.ts, src/core/foundation/decisions-validate.ts, tests/adr-checks-denies.test.ts -->
+ADR frontmatter MAY carry `checks`, a list of repository-relative test files
+that enforce the decision, and `denies`, a list of package names the decision
+forbids. Each ADR SHALL read both as lists, empty when the field is missing,
+with each check path trimmed, using forward slashes, and without a leading
+`./`. Validation SHALL report an error for a field that is not a list of
+non-empty strings. Only accepted ADRs' checks and denied packages SHALL take
+effect.
+
+#### Scenario: Checks and denies read
+- **WHEN** an accepted ADR has `checks: [./tests/adapter-imports.test.ts]` and `denies: [vue, "@vue/runtime-core"]`
+- **THEN** it reads checks `tests/adapter-imports.test.ts` and denies `vue` and `@vue/runtime-core`
+
+#### Scenario: Malformed denies
+- **WHEN** an ADR has `denies: vue`
+- **THEN** validation reports an error naming the ADR and `denies`
+
+### Requirement: Decision check files in doctor
+<!-- source: src/core/foundation/doctor-decisions.ts, tests/adr-checks-denies.test.ts -->
+The `decisions` doctor check SHALL fail when a check file named by an accepted
+ADR doesn't exist, naming the ADR and the file. A missing check file on a
+proposed or superseded ADR SHALL NOT fail it.
+
+#### Scenario: Missing check file
+- **WHEN** accepted ADR 009 names `tests/adapter-imports.test.ts` and the file doesn't exist
+- **THEN** doctor prints `[fail] decisions:` naming ADR 009's path and `tests/adapter-imports.test.ts`
+
+### Requirement: Traceability configuration
+<!-- source: src/core/foundation/config.ts, src/core/foundation/config-traceability.ts, src/core/foundation/config-user.ts, tests/traceability-config.test.ts -->
+`osq.config.ts` MAY set `traceability.capabilities` to `'all'` or a list of
+capability names, and `traceability.mode` to `warn` or `require`. The resolved
+config SHALL always hold `traceability`, defaulting to
+`{ capabilities: [], mode: 'warn' }`, with a partial block keeping each
+missing default. `defineConfig` SHALL throw
+`traceability.capabilities must be 'all' or a list of capability names` or
+`traceability.mode must be one of warn, require` for any other value.
+
+#### Scenario: Default opts nothing in
+- **WHEN** `osq.config.ts` has no `traceability` block
+- **THEN** the resolved config holds `{ capabilities: [], mode: 'warn' }`
+
+#### Scenario: Invalid mode
+- **WHEN** `traceability.mode` is `strict`
+- **THEN** `defineConfig` throws `traceability.mode must be one of warn, require`
+
+### Requirement: Testing package subpath
+<!-- source: package.json, tests/trace-helper.test.ts -->
+`package.json` SHALL export `./testing`, with `types` at
+`./dist/testing/index.d.ts` and `import` at `./dist/testing/index.js`, beside
+the existing `.` export. It SHALL add no runtime dependency.
+
+#### Scenario: Subpath resolves after build
+- **WHEN** `pnpm build` has run
+- **THEN** both files the `./testing` export names exist
+
+### Requirement: Traceability instruction blocks
+<!-- source: src/core/foundation/traceability-block.ts, src/core/foundation/init.ts, src/core/foundation/doctor-managed.ts, tests/trace-blocks.test.ts -->
+When at least one capability is opted in, `osq init` SHALL write a block
+between `<!-- OSQ:TRACEABILITY:START -->` and `<!-- OSQ:TRACEABILITY:END -->`
+directly after the managed block's `<!-- OSQ:END -->` line. It goes in
+PLANNER.md and in AGENTS.md, or at the end of a file without a managed block.
+With none opted in, `osq init` SHALL remove any such block and leave both files
+otherwise unchanged. `<scope>` below is `every capability` for `'all'` and
+otherwise the opted-in names joined by `, `.
+
+The PLANNER.md block SHALL read:
+
+```
+## Traceability
+
+Traceability covers <scope>.
+
+- Under `## Scenarios` in each task, list the scenarios its tests prove as `- <capability>: <scenario name>`, and scope their test files.
+- Give a scenario with more than one case a table of exact inputs and outputs directly under its THEN.
+- Put every test that names a modified scenario in its task's scope with `tests.modify: true`; `osq lint` lists them.
+- Have exported functions tagged with `@scenario` and `@adr`.
+```
+
+The AGENTS.md block SHALL read:
+
+```
+## Traceability
+
+For <scope>:
+
+- Prove each scenario with `import { scenario } from '@matteeh/osq/testing'` and `scenario('<capability>', '<scenario name>', { covers: fn }, ({ run, then, each }) => ...)`, with literal names. Call `fn` only through `run`.
+- Take expected values from the scenario's THEN lines and tables, never from running the code.
+- Check a table with `each`. Check a rule that holds for every input with a property test inside `then`.
+- Tag each exported function you add or change in a doc comment directly above `export function` or `export const <name> = (...) =>`: one `@scenario <capability>: <scenario name>` line per scenario it serves and one `@adr <number>` line per decision it follows.
+```
+
+`osq doctor` SHALL fail with
+`` <file> traceability block is missing; run `osq init` ``,
+`` <file> traceability block is out of date; run `osq init` ``, or
+`` <file> has an unexpected traceability block; run `osq init` ``
+when either file's block differs from the canonical one.
+
+#### Scenario: Opted in
+- **WHEN** `traceability.capabilities` is `['pricing']` and `osq init` runs
+- **THEN** AGENTS.md and PLANNER.md each hold their block naming `pricing`, directly after `<!-- OSQ:END -->`
+
+#### Scenario: Not opted in
+- **WHEN** no capability is opted in and `osq init` runs
+- **THEN** AGENTS.md and PLANNER.md are byte for byte what they were before this change, and `osq doctor` reports no traceability problem
+
+### Requirement: Focused test command
+<!-- source: src/core/foundation/config-traceability.ts, tests/focused-config.test.ts -->
+`traceability.focusedTests` in `osq.config.ts` MAY hold a command containing
+`{files}`. It is unset by default, and the resolved `traceability` block SHALL
+leave it out when unset. Any other value SHALL make `defineConfig` throw
+`traceability.focusedTests must be a command containing {files}`. osq documents
+`node --test --test-reporter=tap {files}` as the reference command.
+
+#### Scenario: Unset by default
+- **WHEN** `osq.config.ts` sets `traceability.capabilities` but not `focusedTests`
+- **THEN** the resolved `traceability` block has no `focusedTests`
+
+#### Scenario: Missing placeholder
+- **WHEN** `traceability.focusedTests` is `node --test`
+- **THEN** `defineConfig` throws `traceability.focusedTests must be a command containing {files}`
+
+### Requirement: Mutation configuration
+<!-- source: src/core/foundation/config-traceability.ts, tests/mutation-config.test.ts -->
+`traceability.mutation` in `osq.config.ts` MAY hold `command`, a non-empty
+string, and `budgetSeconds`, a positive number that defaults to 300. Setting
+the block turns the mutation check on for opted-in capabilities. The resolved
+`traceability` block SHALL leave `mutation` out when it is unset. `defineConfig`
+SHALL throw `traceability.mutation.command must be a non-empty command` or
+`traceability.mutation.budgetSeconds must be a positive number` for any other
+value.
+
+#### Scenario: Off by default
+- **WHEN** `osq.config.ts` sets `traceability.capabilities` but no `mutation`
+- **THEN** the resolved `traceability` block has no `mutation`
+
+#### Scenario: Budget defaults
+- **WHEN** `traceability.mutation` is `{ command: 'npx stryker run' }`
+- **THEN** the resolved block holds that command and `budgetSeconds: 300`
+
+### Requirement: Reference mutation setup
+<!-- source: README.md -->
+README.md SHALL document the reference StrykerJS setup: `@stryker-mutator/core`
+as a dev dependency of the project, `traceability.mutation.command` set to
+`npx stryker run`, and this `stryker.config.mjs`:
+
+```
+const tests = JSON.parse(process.env.OSQ_MUTATION_TESTS ?? '[]')
+  .map((file) => `'build/${file.replace(/\.(m|c)?ts$/, (_, k) => `.${k ?? ''}js`)}'`)
+  .join(' ');
+export default {
+  testRunner: 'command',
+  commandRunner: { command: `node --test ${tests}` },
+  buildCommand: 'npx tsc',
+  mutate: JSON.parse(process.env.OSQ_MUTATE ?? '[]'),
+  coverageAnalysis: 'off',
+  reporters: ['json'],
+  jsonReporter: { fileName: process.env.OSQ_MUTATION_REPORT },
+  tempDirName: '.stryker-tmp',
+};
+```
+
+It SHALL say that the config assumes `tsc` compiles `tests/` to `build/tests/`
+and must follow the project's own layout. It SHALL say to leave
+`thresholds.break` unset, and to add `.stryker-tmp` to `.gitignore`.
+
+#### Scenario: Setup documented
+- **WHEN** a reader looks up mutation checks in README.md
+- **THEN** it shows the command, the config above, and the placeholders and environment variables osq provides

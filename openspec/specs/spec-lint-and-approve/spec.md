@@ -39,12 +39,18 @@ other authored file.
 - **THEN** lint returns the same findings as it would if that transient file were absent
 
 ### Requirement: OpenSpec strict validation integration
-<!-- source: tests/linter.test.ts -->
-The system SHALL execute OpenSpec CLI validation under strict mode during change linting.
+<!-- source: tests/linter.test.ts, src/core/spec/openspec-issues.ts -->
+The system SHALL execute OpenSpec CLI validation under strict mode during change
+linting and SHALL attribute each issue to the item OpenSpec names, keeping its
+`path`.
 
 #### Scenario: Pinned validator execution
 - **WHEN** `osq lint` or `osq approve` executes
 - **THEN** system executes `openspec validate --changes --strict --json --no-interactive` and `openspec validate --specs --strict --json --no-interactive` with `OPENSPEC_TELEMETRY=0` and surfaces findings prefixed with `openspec:`
+
+#### Scenario: Issue attribution
+- **WHEN** OpenSpec reports an issue under an item with `id` and `type`
+- **THEN** lint sets the finding's file, requirement, section, and severity from that item, the issue's `path`, and its `level`
 
 ### Requirement: Deterministic change folder hashing
 <!-- source: src/core/hasher.ts, tests/hasher.test.ts, tests/plan-prompt-lifecycle.test.ts -->
@@ -588,3 +594,522 @@ are at least five characters long and their edit distance is at most two.
 #### Scenario: Short dissimilar names
 - **WHEN** `cli` is compared with `api`
 - **THEN** they do not resemble each other
+
+### Requirement: Rework declaration
+<!-- source: src/core/spec/parser.ts, src/core/spec/linter.ts, tests/fixes-declaration.test.ts -->
+A proposal MAY declare `fixes` in its frontmatter as a list of the change ids it
+fixes. `parseSpecMd` SHALL expose them as `fixes`, normalized like
+`depends_on`, and an absent or malformed value SHALL read as an empty list.
+`osq lint` SHALL fail with `fixes names missing change: <id>` for each id that
+names no active, archived, or rejected change. `fixes` SHALL NOT affect
+dependency completion or execution order.
+
+#### Scenario: Declared fix
+- **WHEN** a proposal declares `fixes: ["1"]` and change 001 exists
+- **THEN** `parseSpecMd` returns `fixes: ["001"]` and lint reports no `fixes` finding
+
+#### Scenario: Missing fixed change
+- **WHEN** a proposal declares `fixes: ["099"]` and no change 099 exists
+- **THEN** lint fails with `fixes names missing change: 099`
+
+### Requirement: Approval price gap notice
+<!-- source: src/core/spec/approve.ts, src/cli/approve.ts, src/core/report/planning-price-gaps.ts, tests/planning-price-gaps.test.ts -->
+When the change being approved has planning sessions with recorded tokens whose
+`plan_started` model has no `planning.prices` entry, `osq approve` SHALL print
+one line per such model naming the exact key, such as
+`planning.prices["claude-opus-5-5"]`, and saying its planning cost stays
+unreported. The approval SHALL proceed unchanged.
+
+#### Scenario: Unpriced planning model at approval
+- **WHEN** a change with recorded planning tokens from `claude-opus-5-5` is approved and `planning.prices` has no entry for that model
+- **THEN** approval succeeds and prints a line naming `planning.prices["claude-opus-5-5"]`
+
+#### Scenario: Priced or unrecorded
+- **WHEN** every model with recorded planning tokens has a price entry, or no session recorded tokens
+- **THEN** approval prints no price line
+
+### Requirement: Lint finding fields
+<!-- source: src/core/spec/lint-findings.ts, src/core/spec/linter.ts, tests/lint-findings.test.ts -->
+Every lint finding SHALL carry `severity` (`error` or `warning`; OpenSpec
+`WARNING` and `INFO` are warnings), `file`, `requirement`, `section`, and
+`message`, which keeps today's text. `LintResult` SHALL add `findings`, the
+change's own, and `repository`; `errors` and `warnings` SHALL hold the messages
+of the change's own findings.
+
+#### Scenario: Task finding
+- **WHEN** task 1's verify chains commands
+- **THEN** the finding has severity `error`, file `openspec/changes/<id>/tasks/1.md`, and null requirement and section
+
+### Requirement: Lint finding file
+<!-- source: src/core/spec/linter.ts, src/core/spec/openspec-issues.ts, tests/lint-findings.test.ts -->
+A finding's `file` SHALL be the repository-relative path it concerns: the task
+file, `proposal.md`, or delta file; the missing `tasks` directory; or
+`package.json` for validator findings. An OpenSpec change issue SHALL name the
+delta file its `path` names, else that change's `proposal.md`; a living spec
+issue its `spec.md`; output without items the linted `proposal.md`.
+
+#### Scenario: Delta issue
+- **WHEN** OpenSpec reports an issue at path `cap/spec.md` of the linted change
+- **THEN** the finding's file is `openspec/changes/<id>/specs/cap/spec.md`
+
+### Requirement: Lint finding requirement and section
+<!-- source: src/core/spec/openspec-issues.ts, src/core/spec/linter.ts, tests/lint-findings.test.ts -->
+A finding's `requirement` SHALL name the requirement it concerns: for an
+OpenSpec `requirements[<index>]` path, the one at that zero-based position; for
+a change issue starting `ADDED "<name>"` or the same with `MODIFIED`,
+`REMOVED`, or `RENAMED`, that name. `section` SHALL be `Purpose` for an
+`overview` path and `Surface` for the missing surface section. Both SHALL be
+null otherwise.
+
+#### Scenario: Living spec requirement
+- **WHEN** OpenSpec reports a long-requirement issue at `requirements[1]` of living spec `cap`
+- **THEN** the finding has severity `warning`, file `openspec/specs/cap/spec.md`, and the name of `cap`'s second requirement
+
+### Requirement: Repository lint findings
+<!-- source: src/core/spec/openspec-issues.ts, src/core/spec/linter.ts, src/cli/lint.ts, tests/lint-findings.test.ts, tests/lint-output.test.ts -->
+An OpenSpec issue about a living spec or another change SHALL be a repository
+finding, which SHALL NOT affect `valid`, `osq lint`'s exit code, or `osq
+approve`. Issues about the linted change, OpenSpec output naming no item, and
+every osq and validator check SHALL be the change's own.
+
+#### Scenario: Long living requirement
+- **WHEN** a living spec has a requirement longer than 500 characters and a clean change is linted
+- **THEN** the warning is a repository finding, the change is valid, and `osq lint` exits 0
+
+#### Scenario: Another change's error
+- **WHEN** OpenSpec reports an error about another active change
+- **THEN** it is a repository finding and the linted change stays valid
+
+### Requirement: Chained verify refusal
+<!-- source: src/core/spec/linter.ts, tests/lint-findings.test.ts -->
+Lint SHALL refuse a task verify that chains commands with `&&`, `;`, or `|` with
+the error `Task in <n>.md verify chains commands ("<verify>"); move the chain
+into a package script and name that script, for example pnpm run <script>`.
+
+#### Scenario: Chained verify
+- **WHEN** task 1's verify is `pnpm a && pnpm b`
+- **THEN** lint fails with the chained verify error and its package-script advice
+
+### Requirement: Unsupported OpenSpec advice
+<!-- source: src/core/spec/openspec-issues.ts, tests/lint-findings.test.ts -->
+An OpenSpec finding whose message suggests `skip_specs: true` SHALL end with
+` [unsupported by osq: osq does not honor skip_specs; add a delta spec under
+specs/<capability>/spec.md]`.
+
+#### Scenario: Change without deltas
+- **WHEN** a change without a delta spec is linted
+- **THEN** OpenSpec's no-deltas error ends with the unsupported-by-osq note
+
+### Requirement: Merged living spec validation
+<!-- source: src/core/spec/merged-spec-check.ts, src/core/spec/linter.ts, tests/lint-findings.test.ts -->
+Lint SHALL write the text `mergeDelta` returns for every delta that merges to
+`openspec/specs/<capability>/spec.md` in a temporary folder, run `openspec
+validate --specs --strict --json --no-interactive` there once with
+`OPENSPEC_TELEMETRY=0` and the configured verify timeout, and remove the
+folder. It SHALL skip this when no delta merges or the validator binary is
+unavailable.
+
+#### Scenario: No delta merges
+- **WHEN** every delta of a change fails to merge
+- **THEN** lint reports the merge errors and runs no merged spec validation
+
+### Requirement: Merged living spec findings
+<!-- source: src/core/spec/merged-spec-check.ts, tests/lint-findings.test.ts -->
+Each merged spec issue SHALL be a finding of the change with file the delta
+file, the requirement resolved against the merged text, and message `openspec:
+<capability> after archive: <message>`. An issue the living spec already has,
+with the same message on the same requirement name or section, SHALL be left
+out.
+
+#### Scenario: Brief Purpose
+- **WHEN** a delta creates capability `newcap` with `## Purpose` shorter than 50 characters
+- **THEN** lint warns `openspec: newcap after archive: Purpose section is too brief (less than 50 characters)` with file `openspec/changes/<id>/specs/newcap/spec.md`
+
+#### Scenario: Inherited warning
+- **WHEN** a delta adds a requirement to a living spec that already has a long requirement
+- **THEN** lint reports no after-archive finding for the long requirement
+
+### Requirement: Lint output
+<!-- source: src/cli/lint.ts, src/core/spec/lint-output.ts, tests/lint-output.test.ts -->
+`osq lint` SHALL print each finding of a change as `<change>: <severity> <file>
+(<requirement or section>): <message>`, leaving out the parenthesis when both
+are null and preferring the requirement, at the logger's `error` level for
+errors and `warn` level for warnings, and `<change>: valid` when the change is
+valid.
+
+#### Scenario: Error and warning
+- **WHEN** a change has one error and one warning
+- **THEN** the lines start `<change>: error ` and `<change>: warning ` and name the file
+
+### Requirement: Repository lint output
+<!-- source: src/cli/lint.ts, src/core/spec/lint-output.ts, tests/lint-output.test.ts -->
+After every change, `osq lint` SHALL print the repository findings of all
+linted changes once, without duplicates, under the line `repository: findings
+about other changes and living specs; they do not affect the exit code`, each
+as `repository: <severity> <file> (<requirement or section>): <message>`.
+
+#### Scenario: Two changes share a repository finding
+- **WHEN** `osq lint` lints two changes and OpenSpec reports one living spec warning
+- **THEN** the warning prints once, under the repository group, after both changes
+
+### Requirement: Lint JSON output
+<!-- source: src/cli/lint.ts, src/cli/index.ts, src/core/spec/lint-output.ts, tests/lint-output.test.ts -->
+`osq lint --json` SHALL write one JSON document to stdout, `{ "valid",
+"changes": [{ "change", "valid", "findings" }], "repository" }`, where each
+finding has `severity`, `file`, `requirement`, `section`, and `message`, and
+SHALL print no text lines. The exit code SHALL match the text mode.
+
+#### Scenario: JSON findings
+- **WHEN** `osq lint --json` lints a change with one error and one warning
+- **THEN** stdout parses as JSON whose change carries both findings with their fields
+
+### Requirement: Human steps sections
+<!-- source: src/core/spec/human-steps.ts, tests/next-step.test.ts -->
+`parseHumanSteps(body)` SHALL split `## Human steps` into `beforeApproval` and
+`afterLanding` by its `### Before approval` and `### After landing`
+subsections, in any case. Text before the first subsection, or a section with
+neither, SHALL be after landing. A part that is empty or `None` SHALL be empty.
+`readCheckCommand` SHALL return the trimmed frontmatter `check`, else null.
+
+#### Scenario: Section without subsections
+- **WHEN** `## Human steps` holds one line and no subsection
+- **THEN** that line is the after-landing text and before approval is empty
+
+#### Scenario: None
+- **WHEN** `## Human steps` reads `None`
+- **THEN** both parts are empty
+
+### Requirement: Digest steps before approval
+<!-- source: src/core/spec/digest.ts, tests/digest-before-approval.test.ts -->
+`buildApprovalDigest` SHALL carry `beforeApproval`, the change's steps before
+approval. When they are not empty, `formatApprovalDigest` SHALL print `Before
+approval, do these first:` and each step line indented by two spaces, right
+after the goal. The `Human steps:` block SHALL stay as it is.
+
+#### Scenario: Steps before approval in the digest
+- **WHEN** a change's `### Before approval` lists `Create the test database`
+- **THEN** the digest prints `Before approval, do these first:` followed by `  Create the test database` before `Tasks:`
+
+### Requirement: Import graph
+<!-- source: src/core/spec/import-graph.ts, tests/import-graph-build.test.ts -->
+`buildImportGraph(projectRoot, options)` SHALL read every JavaScript and
+TypeScript file outside ignored folders and `options.skip`, follow relative
+`import`, `export from`, dynamic `import()`, and `require()` specifiers, resolve
+them as TypeScript does, and record each file's imports and importers. A
+repository without such files SHALL give an empty graph.
+
+#### Scenario: .js specifier for a .ts file
+- **WHEN** `src/a.ts` imports `./b.js` and only `src/b.ts` exists
+- **THEN** the graph records that `src/a.ts` imports `src/b.ts`
+
+#### Scenario: Python-only repository
+- **WHEN** a repository holds only `.py` files
+- **THEN** the graph is empty and building it raises nothing
+
+### Requirement: Import specifier resolution
+<!-- source: src/core/spec/import-graph.ts, tests/import-graph-build.test.ts -->
+A relative specifier SHALL resolve to the first existing file among the exact
+path; for `.js`, `.jsx`, `.mjs`, or `.cjs`, the same stem with `.ts` or `.tsx`,
+`.tsx`, `.mts`, or `.cts`; the path plus each script extension; and the path's
+`index` file with each extension. Bare and aliased specifiers SHALL not
+resolve.
+
+#### Scenario: Directory import
+- **WHEN** `src/a.ts` imports `./lib` and `src/lib/index.ts` exists
+- **THEN** the graph records that `src/a.ts` imports `src/lib/index.ts`
+
+### Requirement: Frozen test reach warning
+<!-- source: src/core/spec/test-impact.ts, tests/impact-lint.test.ts -->
+Lint SHALL warn once per task whose existing scoped files are imported, within
+`limits.importGraphDepth` levels, by preexisting files under `tests/` that no
+task in the change may modify. The warning SHALL give their count and list up
+to `limits.maxListedImporters` of them, nearest first, each with the scoped file
+it reaches.
+
+#### Scenario: Test two levels away
+- **WHEN** `tests/a.test.ts` imports `src/b.ts`, which imports scoped `src/c.ts`
+- **THEN** lint warns on that task's file naming `tests/a.test.ts (src/c.ts)`
+
+#### Scenario: Test declared for modification
+- **WHEN** a task declares `tests.modify: true` with `tests/a.test.ts` in scope
+- **THEN** that test is left out and, with no other test, the warning goes away
+
+### Requirement: Frozen test warning text
+<!-- source: src/core/spec/test-impact.ts, tests/impact-lint.test.ts -->
+The warning SHALL read `Task <n> scope is imported by <count> preexisting tests
+that no task may modify, <direct> directly: <test> (<file>), ... and <rest>
+more. Add each test the task will change to its scope with tests.modify:
+true`, leaving out `and <rest> more` when nothing is left.
+
+#### Scenario: Short list
+- **WHEN** one test imports a scoped file directly
+- **THEN** the warning says `1 preexisting tests` and `1 directly` and has no `more`
+
+### Requirement: Undeclared capability read warning
+<!-- source: src/core/spec/capability-impact.ts, tests/impact-lint.test.ts -->
+Lint SHALL warn once per capability whose Code ownership globs cover a file a
+scoped file imports directly, when no owner of that file is in
+`features.reads` or has a delta, and the file is in no task's scope. The
+warning SHALL be on `proposal.md`, name the capability and the importing files,
+and say to add it to `features.reads`.
+
+#### Scenario: Undeclared read
+- **WHEN** scoped `src/a.ts` imports `src/other/x.ts`, owned by `other`, which the proposal neither reads nor writes
+- **THEN** lint warns naming `other` and `src/a.ts`, and listing `other` in `features.reads` clears it
+
+### Requirement: Capability write without delta warning
+<!-- source: src/core/spec/capability-impact.ts, tests/impact-lint.test.ts -->
+Lint SHALL warn once per resolved scope path whose owning capabilities, by Code
+ownership globs, include none with a delta in the change. The warning SHALL be
+on the task file and read `<path> is owned by <capabilities>, which has no
+delta in this change. Add a delta or move the file out of scope`. It SHALL need
+no import graph.
+
+#### Scenario: Write without delta
+- **WHEN** a task scopes `src/other/x.ts`, owned only by `other`, and the change has no `specs/other/spec.md`
+- **THEN** lint warns on that task's file naming `src/other/x.ts` and `other`
+
+### Requirement: Verify without scope test warning
+<!-- source: src/core/spec/test-impact.ts, tests/impact-lint.test.ts -->
+When every path a task's verify names under `tests/` exists and none imports,
+at any depth, an existing JavaScript or TypeScript file in the task's scope,
+lint SHALL warn on the task file: `Task <n> verify runs <tests> but none of
+them imports a file in the task's scope`. A verify naming no such test SHALL not
+warn.
+
+#### Scenario: Verify tests something else
+- **WHEN** task 1 scopes `src/a.ts` and its verify names only `tests/b.test.ts`, which imports nothing that reaches `src/a.ts`
+- **THEN** lint warns naming `tests/b.test.ts`
+
+### Requirement: Import graph built once per lint run
+<!-- source: src/core/spec/impact-lint.ts, src/core/spec/linter.ts, src/cli/lint.ts, tests/impact-lint.test.ts -->
+`lintCommand` SHALL build the import graph once and pass it to every
+`lintChangeFolder` call through `LintOptions`; `lintChangeFolder` SHALL build
+its own when none is passed. Every import-graph finding SHALL be a warning that
+never affects validity. In a repository without JavaScript or TypeScript, only
+the write warning can appear.
+
+#### Scenario: Python-only repository
+- **WHEN** a change in a Python-only repository is linted
+- **THEN** it gets no frozen-test, read, or verify warning and no error
+
+### Requirement: Decisions section lint
+<!-- source: src/core/spec/decisions-lint.ts, src/core/spec/linter.ts, tests/decisions-lint.test.ts -->
+In a project whose decisions folder holds at least one ADR with osq
+frontmatter, `osq lint` and `osq approve` SHALL reject a `proposal.md` whose
+`## Decisions` section is missing or holds nothing but HTML comments and
+whitespace, and SHALL reject one whose section doesn't name, as `ADR <n>`,
+each accepted ADR whose `applies_to` lists a capability the change writes
+through a delta. The error SHALL name the ADR and the capability. A line
+beginning `Departs from ADR <n>:` names that ADR. Lint SHALL warn when the
+section names an ADR number that doesn't exist or isn't accepted. A system-wide
+ADR need not be named, and `None` SHALL pass when no capability-scoped ADR
+governs the change. A legacy `spec.md` change document and a project without
+an ADR carrying osq frontmatter SHALL be exempt.
+
+#### Scenario: Governing ADR not named
+- **WHEN** accepted ADR 009 applies to `ingress`, a change has a delta for `ingress`, and its Decisions section says `None`
+- **THEN** lint fails naming ADR 009 and `ingress`
+
+#### Scenario: Governing ADR named
+- **WHEN** the same section says `ADR 009: the adapter is the only module that imports dockerode.`
+- **THEN** lint reports no decisions error
+
+#### Scenario: Missing section
+- **WHEN** a project has an ADR with osq frontmatter and a proposal has no `## Decisions` section
+- **THEN** lint fails with an error saying to add the section or write `None`
+
+#### Scenario: Project without ADRs
+- **WHEN** a project's decisions folder is missing or holds no ADR with osq frontmatter
+- **THEN** a proposal without `## Decisions` gets no decisions finding
+
+#### Scenario: Unknown ADR named
+- **WHEN** the section names `ADR 042` and no ADR 042 exists
+- **THEN** lint warns and the change stays valid
+
+### Requirement: Project rules lint
+<!-- source: src/core/spec/decisions-lint.ts, tests/decisions-lint.test.ts -->
+In a project with an ADR carrying osq frontmatter, lint SHALL fail every
+linted proposal while the AGENTS.md rules block doesn't match the accepted
+system-wide ADRs, with an error saying to run `osq init`, and while there are
+more accepted system-wide ADRs than `limits.maxProjectRules`, with an error
+naming the limit.
+
+#### Scenario: Stale block
+- **WHEN** an accepted system-wide ADR is added and `osq init` has not run
+- **THEN** `osq lint` fails the change with an error naming `osq init`, and passes after `osq init`
+
+#### Scenario: Too many rules
+- **WHEN** `limits.maxProjectRules` is 2 and three accepted ADRs apply to all
+- **THEN** lint fails with an error naming the limit 2
+
+### Requirement: Approval digest decisions
+<!-- source: src/core/spec/digest-decisions.ts, src/core/spec/digest.ts, src/core/spec/digest-format.ts, tests/approval-digest-decisions.test.ts -->
+The approval digest SHALL carry `decisions`, each accepted ADR that governs the
+change, in number order, with its number and rule. When the list isn't empty,
+the formatted digest SHALL print `Decisions:` after the capabilities and one
+line per ADR as `  ADR <number>: <rule>`. With no governing ADR the formatted
+digest SHALL be unchanged.
+
+#### Scenario: Governing decisions listed
+- **WHEN** accepted ADR 007 applies to all and accepted ADR 009 applies to a capability the change writes
+- **THEN** the digest prints `Decisions:`, then `  ADR 007: <rule>` and `  ADR 009: <rule>`
+
+### Requirement: ADR departure flag
+<!-- source: src/core/spec/digest-decisions.ts, src/core/spec/digest.ts, tests/approval-digest-decisions.test.ts -->
+The digest SHALL raise one `adr_departure` flag for each line of the proposal's
+`## Decisions` section that begins, after an optional `- ` list marker,
+`Departs from ADR <n>:`. The flag's label SHALL be `departs from ADR <n>` and
+its excerpt the line without the list marker. `adr_departure` flags SHALL come
+after every other flag and be recorded in the manifest's `approvalFlags` like
+the other flags.
+
+#### Scenario: One departure
+- **WHEN** the Decisions section holds `- Departs from ADR 007: the importer needs Vue for the legacy widget.`
+- **THEN** exactly one `adr_departure` flag fires, labelled `departs from ADR 007`
+
+### Requirement: ADR check modification flag
+<!-- source: src/core/spec/digest-decisions.ts, src/core/spec/digest.ts, tests/adr-check-flag.test.ts -->
+The digest SHALL raise one `adr_check_modified` flag for each task with
+`tests.modify: true`, each accepted ADR, and each of that ADR's check files
+that the task's resolved scope paths include. The label SHALL be
+`task <n> may modify a check of ADR <number>` and the excerpt
+`<file> enforces ADR <number>: <rule> Record it as Departs from ADR <number>: in ## Decisions.`
+These flags SHALL come after the `adr_departure` flags, in task-number, ADR
+number, and file order, and SHALL be recorded in the manifest's
+`approvalFlags` like the other flags. A task without `tests.modify: true`
+SHALL raise none.
+
+#### Scenario: Authorized check edit
+- **WHEN** accepted ADR 009 checks `tests/adapter-imports.test.ts` and task 2 declares `tests.modify: true` with that file in scope
+- **THEN** one `adr_check_modified` flag labelled `task 2 may modify a check of ADR 009` names the file
+
+#### Scenario: Frozen check stays frozen
+- **WHEN** the same task lacks `tests.modify: true`
+- **THEN** no `adr_check_modified` flag fires, and an edit to the file kills the task with `undeclared_test_change`
+
+### Requirement: Scenario outcomes
+<!-- source: src/core/spec/delta.ts, tests/scenario-outcomes.test.ts -->
+`parseScenario` SHALL give every scenario `outcomes`, in order. Each outcome is
+the text after a `- **THEN**` line, or after a `- **AND**` line that follows a
+THEN with no WHEN between them. An AND line before any THEN belongs to the WHEN
+and is not an outcome. A Markdown table directly under an outcome line, with
+only blank lines between, SHALL become that outcome's `rows`. The table may be
+indented. Its first row names the columns, and a row of dashes and colons is
+skipped. Each later row becomes one object keyed by the trimmed header cells,
+with trimmed string values, and a missing cell reads as the empty string. An
+outcome without a table has no `rows`. `then` keeps only the THEN lines, as
+before.
+
+#### Scenario: AND lines and a table
+- **WHEN** a scenario has `- **THEN** the unit price follows this table`, a table with columns quantity and unit price and two rows, then `- **AND** the total is not negative`
+- **THEN** `outcomes` holds the THEN text with two rows keyed `quantity` and `unit price`, then the AND text without rows
+
+#### Scenario: AND under WHEN
+- **WHEN** a scenario has a WHEN, an AND, then a THEN
+- **THEN** `outcomes` holds only the THEN text
+
+### Requirement: Scenario tables accepted
+<!-- source: src/core/spec/linter.ts, tests/scenario-outcomes.test.ts -->
+`osq lint` SHALL accept a change whose delta puts a table directly under a THEN
+or AND line, with no finding about the table. It SHALL also accept one whose
+living spec does.
+
+#### Scenario: Sample spec with its table
+- **WHEN** a change's delta adds the pricing sample's "Volume pricing" requirement with its table
+- **THEN** `osq lint` reports the change valid, and `openspec validate --strict` accepts the merged spec
+
+### Requirement: Planned scenarios
+<!-- source: src/core/spec/traceability-lint.ts, tests/trace-lint.test.ts -->
+A task file MAY hold a `## Scenarios` section with one bullet per scenario its
+tests prove, written `- <capability>: <scenario name>`. Lint SHALL treat a
+listed scenario as planned when the task's resolved scope holds at least one
+test path, existing or not. A test path is under `tests/`, or has `.test.` or
+`.spec.` in its file name. A planned scenario that no scenario test file in any
+task's resolved scope names yet SHALL count as tested. It SHALL also count as
+covering every function tagged with it in that task's resolved scope. Once a
+scoped test names the scenario, only real `scenario(...)` calls count.
+
+#### Scenario: Planned before the test exists
+- **WHEN** an opted-in change adds a scenario, and task 2 lists it under `## Scenarios` and scopes the not-yet-written `tests/pricing-bulk.test.ts`
+- **THEN** lint reports no untested-scenario finding for it
+
+### Requirement: Traceability links
+<!-- source: src/core/spec/traceability-lint.ts, src/core/spec/traceability-links.ts, src/core/spec/linter.ts, tests/trace-lint.test.ts -->
+For every capability `traceability.capabilities` opts in, lint SHALL read
+scenarios from the effective spec: the living spec with this change's delta
+applied through "Effective scenario lookup". It SHALL read tags and scenario
+calls from the scenario index. `'all'` opts in every capability with a living
+spec or a delta in the change. Each finding SHALL be a warning under
+`mode: 'warn'` and an error under `mode: 'require'`, with these messages:
+
+- `<capability>: no test names scenario "<name>"`, on the delta, for each
+  scenario an ADDED requirement holds, or a MODIFIED requirement holds with a
+  block that differs from the living spec's. It is raised unless a scenario
+  test file in some task's resolved scope names the scenario, or the scenario
+  is planned.
+- `<fn>: names a scenario the <capability> spec doesn't have: "<name>"`, on the
+  source file, for a `@scenario` tag in a resolved scope file.
+- `<fn>: no test for "<name>" covers it`, on the source file, for a
+  `@scenario` tag in a resolved scope file naming an existing scenario that no
+  scenario test covering the function names, unless the scenario is planned.
+- `<fn>: ADR <n> doesn't exist or isn't accepted` and
+  `<fn>: ADR <n> doesn't apply to any capability it serves`, on the source
+  file, for an `@adr` tag in a resolved scope file. The capabilities a function
+  serves are those of its `@scenario` tags. Without any, they are the
+  capabilities whose Code ownership covers its file. An ADR applies when it is
+  accepted and its `applies_to` is `all` or names one of them. ADR numbers
+  match as `sameAdrNumber` matches them.
+- `<capability>: two scenarios named "<name>"`, on the delta, for an opted-in
+  capability the change has a delta for.
+
+A tag counts when it names an opted-in capability. An `@adr` tag counts when a
+capability the function serves is opted in. Lint SHALL compute all of these in
+one module call from `lintChangeFolder`, with the import graph it already has.
+With no capability opted in, lint SHALL produce none of them.
+
+#### Scenario: Tag covered by a helper test
+- **WHEN** pricing is opted in and the sample's table test covers a new `tierPrice` helper instead of `quote`
+- **THEN** lint reports `quote: no test for "Volume discount tiers" covers it` on `src/pricing/quote.ts`
+
+#### Scenario: Not opted in
+- **WHEN** the same project leaves pricing out of `traceability.capabilities`
+- **THEN** lint reports none of these findings
+
+#### Scenario: Require mode
+- **WHEN** `traceability.mode` is `require` and an added pricing scenario is neither named by a scoped test nor planned
+- **THEN** lint reports `pricing: no test names scenario "<name>"` as an error and the change is invalid
+
+### Requirement: Unreadable traceability forms
+<!-- source: src/core/spec/traceability-lint.ts, tests/trace-lint.test.ts -->
+When at least one capability is opted in, lint SHALL report every unreadable
+tag and scenario call the index holds in a resolved scope file, as
+`<file>:<line>: <reason>`, with the same severity as "Traceability links". An
+unreadable call whose capability is a literal that isn't opted in SHALL be
+skipped. Nothing tag-like in a scoped file is skipped silently.
+
+#### Scenario: Non-literal scenario name
+- **WHEN** pricing is opted in and a scoped test calls `scenario('pricing', NAME, { covers: quote }, ...)`
+- **THEN** lint reports a finding naming the file, the line, and that the name isn't a literal
+
+### Requirement: Scenario blast radius
+<!-- source: src/core/spec/scenario-impact.ts, tests/trace-impact-lint.test.ts -->
+For every capability, opted in or not, lint SHALL find each scenario the change
+alters: one in a MODIFIED requirement whose block differs from the living
+spec's, or one in a REMOVED requirement. For each such scenario that a scenario
+test file anywhere in the repository names, lint SHALL warn
+`Scenario "<name>" in <capability> changes; tests naming it: <file>, <file>`.
+For each of those tests that no task holds in its resolved scope with
+`tests.modify: true`, it SHALL report
+`<file> names changed scenario "<name>" but no task scopes it with tests.modify: true`.
+That is a warning, except an error under `mode: 'require'` for an opted-in
+capability. With no scenario test file in the repository, lint SHALL produce
+neither.
+
+#### Scenario: Modified scenario with a frozen test
+- **WHEN** a delta changes a THEN of "A percentage code comes off the tiered subtotal" and `tests/pricing-quote.test.ts` names it, but no task scopes that test
+- **THEN** lint lists `tests/pricing-quote.test.ts` for the scenario and warns that no task scopes it with `tests.modify: true`
+
+#### Scenario: Test scoped for modification
+- **WHEN** task 1 scopes `tests/pricing-quote.test.ts` with `tests.modify: true`
+- **THEN** lint lists the test and raises no `tests.modify` finding for it

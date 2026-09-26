@@ -138,19 +138,19 @@ export interface VerificationGateResult extends VerificationResult {
 }
 /** Extra `verify_ran` data derived from the completed result (e.g. pre-spawn fields). */
 export type VerifyEventDataFn = (result: VerificationResult) => Record<string, unknown>;
-
-/**
- * Run the verify command through the shared core executor, then append exactly
- * one `verify_ran` event. This is the single watcher verification entrypoint;
- * every watcher gate delegates here so event emission stays on one path.
- */
+/** Run the verify command, then append one `verify_ran` event from that one path. */
 export async function runVerificationGateResult(
   projectRoot: string,
   verifyCommand: string,
   verifyTimeoutSeconds: number,
   context?: { specFolderPath: string; taskNumber: string; extraData?: VerifyEventDataFn },
 ): Promise<VerificationGateResult> {
-  const result = await runVerificationCommand(projectRoot, verifyCommand, verifyTimeoutSeconds);
+  const result = await runVerificationCommand(
+    projectRoot,
+    verifyCommand,
+    verifyTimeoutSeconds,
+    context?.specFolderPath ?? null,
+  );
   const error = result.timedOut
     ? `Verify command timed out after ${verifyTimeoutSeconds}s`
     : (result.error ??

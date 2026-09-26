@@ -18,6 +18,7 @@ export type HarnessEventType =
   | 'result_written'
   | 'exited'
   | 'measures'
+  | 'dependencies_added'
   | 'done'
   | 'done_manual'
   | 'dead'
@@ -26,7 +27,10 @@ export type HarnessEventType =
   | 'stuck'
   | 'harness_retry'
   | 'recertification'
-  | 'rejected';
+  | 'rejected'
+  | 'instructions_changed'
+  | 'focused_ran'
+  | 'mutation_ran';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -125,6 +129,15 @@ export interface MeasuresEventData {
   changedFiles?: number;
   changedLines?: number;
   scopeHashes?: Record<string, { before: string | null; after: string | null }>;
+  /** Scoped `package.json` path to its sorted package names, when any is scoped. */
+  dependencies?: Record<string, string[]>;
+  /** `<file>#<name>` to the hash of a tagged exported function's own range. */
+  functionHashes?: Record<string, string | null>;
+}
+
+/** Payload of a `dependencies_added` event: the new packages a task introduced. */
+export interface DependenciesAddedEventData {
+  readonly added: readonly { file: string; name: string }[];
 }
 
 export interface DoneEventData {
@@ -221,6 +234,8 @@ export interface RecertificationEventData {
   readonly attempt?: number;
   /** Failure reason carried to the next executor; present only for a requeue. */
   readonly reason?: string;
+  /** True only when the watcher recertified automatically; absent for a human. */
+  readonly automatic?: true;
 }
 
 /**
@@ -230,6 +245,65 @@ export interface RecertificationEventData {
  */
 export interface RejectedEventData {
   readonly reason: string;
+}
+
+/**
+ * Payload of an `instructions_changed` event: the instruction inputs the
+ * approval pinned that differ before a task's first attempt. `changed` holds
+ * `AGENTS.md`, then each differing governing ADR in number order.
+ */
+export interface InstructionsChangedEventData {
+  readonly changed: string[];
+}
+
+/** How one focused scenario-test run ended. */
+export type FocusedRanOutcome = 'passed' | 'problem' | 'failed';
+
+/**
+ * Payload of a `focused_ran` event: the one focused scenario-test run the
+ * watcher makes after an agent exits. `scenarios` holds `<capability>: <name>`
+ * strings, `duration` is wall seconds, and `output` is the captured TAP text.
+ */
+export interface FocusedRanEventData {
+  readonly command: string;
+  readonly files: readonly string[];
+  readonly scenarios: readonly string[];
+  readonly outcome: FocusedRanOutcome;
+  readonly exitCode: number;
+  readonly duration: number;
+  readonly timedOut: boolean;
+  readonly output: string;
+}
+
+/** One mutant that survived a pick's mutation run. */
+export interface MutationSurvivor {
+  readonly file: string;
+  readonly line: number;
+  readonly column: number;
+  readonly mutator: string;
+  readonly replacement: string;
+}
+
+/**
+ * Payload of a `mutation_ran` event: the outcome of one pick's mutation run.
+ * A not-measured pick carries `reason`; a failed or timed-out one also carries
+ * the command's bounded `output`.
+ */
+export interface MutationRanEventData {
+  readonly file: string;
+  readonly function: string;
+  readonly ranges: readonly string[];
+  readonly scenarios: readonly string[];
+  readonly tests: readonly string[];
+  readonly outcome: 'measured' | 'not_measured';
+  readonly killed: number;
+  readonly survived: number;
+  readonly invalid: number;
+  readonly survivors: readonly MutationSurvivor[];
+  readonly duration: number;
+  readonly exitCode: number | null;
+  readonly reason?: string;
+  readonly output?: string;
 }
 
 /** Event type to payload mapping for every lifecycle and observed event. */
@@ -243,6 +317,7 @@ export interface OsqEventData {
   result_written: ResultWrittenEventData;
   exited: ExitedEventData;
   measures: MeasuresEventData;
+  dependencies_added: DependenciesAddedEventData;
   done: DoneEventData;
   done_manual: DoneManualEventData;
   dead: DeadEventData;
@@ -252,6 +327,9 @@ export interface OsqEventData {
   harness_retry: HarnessRetryEventData;
   recertification: RecertificationEventData;
   rejected: RejectedEventData;
+  instructions_changed: InstructionsChangedEventData;
+  focused_ran: FocusedRanEventData;
+  mutation_ran: MutationRanEventData;
 }
 
 /**

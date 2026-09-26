@@ -3,22 +3,14 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/run/scope.js';
+import { IGNORED_DIRS, buildImportGraph } from '../core/spec/import-graph.js';
 import { type TaskData, resolveChangeDoc } from '../core/spec/parser.js';
+import { readScopedFunctionHashes } from '../core/trace/function-ranges.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
-
-const IGNORED_DIRS = new Set(
-  'node_modules dist .git .run coverage .nyc_output .vscode .idea'.split(' '),
-);
-const SCRIPT_EXTENSION_REGEX = /\.(?:ts|tsx|js|mjs|cjs)$/;
+import { readScopedDependencies } from './dependencies.js';
 
 function countLines(content: string): number {
   return content.split('\n').length;
-}
-function toPosix(value: string): string {
-  return value.split(path.sep).join('/');
-}
-function relativePosix(projectRoot: string, filePath: string): string {
-  return toPosix(path.relative(projectRoot, filePath));
 }
 function hashContent(content: string): string {
   return `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
@@ -78,38 +70,21 @@ export async function gatherRepoCounts(
   return { files, lines };
 }
 
-async function listTsFiles(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => [] as Dirent[]);
-  const files: string[] = [];
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...(await listTsFiles(fullPath)));
-    else if (entry.isFile() && entry.name.endsWith('.ts')) files.push(fullPath);
-  }
-  return files;
-}
-
-function importSpecifier(fromDir: string, targetPath: string): string {
-  const relative = toPosix(path.relative(fromDir, targetPath)).replace(SCRIPT_EXTENSION_REGEX, '');
-  return relative.startsWith('.') ? relative : `./${relative}`;
-}
-
 /** Count of non-scoped `src/**` TypeScript files that import at least one resolved scoped file. */
 export async function countImportFanIn(projectRoot: string, scope: string[]): Promise<number> {
   const srcDir = path.join(projectRoot, 'src');
-  const scopePaths = (await resolveScope(projectRoot, scope))
-    .map((entry) => entry.absolutePath)
-    .filter((resolved): resolved is string => resolved?.startsWith(srcDir + path.sep) === true);
-  const scoped = new Set(scopePaths.map((resolved) => relativePosix(projectRoot, resolved)));
-  let importers = 0;
-  for (const file of await listTsFiles(srcDir)) {
-    if (scoped.has(relativePosix(projectRoot, file))) continue;
-    const content = await fs.readFile(file, 'utf8').catch(() => '');
-    if (!content) continue;
-    const dir = path.dirname(file);
-    if (scopePaths.some((target) => content.includes(importSpecifier(dir, target)))) importers += 1;
+  const scoped = new Set<string>();
+  for (const entry of await resolveScope(projectRoot, scope)) {
+    if (entry.absolutePath?.startsWith(srcDir + path.sep) === true) scoped.add(entry.relativePath);
   }
-  return importers;
+  if (scoped.size === 0) return 0;
+  const graph = await buildImportGraph(projectRoot);
+  const importers = new Set<string>();
+  for (const file of graph.files) {
+    if (!file.startsWith('src/') || !file.endsWith('.ts') || scoped.has(file)) continue;
+    if (graph.importsOf(file).some((target) => scoped.has(target))) importers.add(file);
+  }
+  return importers.size;
 }
 
 /** Whitespace-delimited word count; empty and whitespace-only input yield 0. */
@@ -181,12 +156,15 @@ export async function gatherStartMeasures(
   const proposalContent = proposalDoc
     ? await fs.readFile(proposalDoc.path, 'utf8').catch(() => '')
     : '';
-  const [scopeCounts, repoCounts, importFanIn, delta] = await Promise.all([
-    gatherScopeCounts(projectRoot, taskData.scope),
-    gatherRepoCounts(projectRoot),
-    countImportFanIn(projectRoot, taskData.scope),
-    countDeltaRequirementsAndScenarios(specFolderPath),
-  ]);
+  const [scopeCounts, repoCounts, importFanIn, delta, dependencies, functionHashes] =
+    await Promise.all([
+      gatherScopeCounts(projectRoot, taskData.scope),
+      gatherRepoCounts(projectRoot),
+      countImportFanIn(projectRoot, taskData.scope),
+      countDeltaRequirementsAndScenarios(specFolderPath),
+      readScopedDependencies(projectRoot, taskData.scope),
+      readScopedFunctionHashes(projectRoot, taskData.scope),
+    ]);
   return {
     phase: 'start',
     scopeResolver: SCOPE_RESOLVER_VERSION,
@@ -199,6 +177,8 @@ export async function gatherStartMeasures(
     taskWords: countWords(taskData.raw),
     deltaRequirements: delta.requirements,
     deltaScenarios: delta.scenarios,
+    ...(Object.keys(dependencies).length > 0 ? { dependencies } : {}),
+    ...(Object.keys(functionHashes).length > 0 ? { functionHashes } : {}),
   };
 }
 

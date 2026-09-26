@@ -36,6 +36,14 @@ types. Replace None with one line per name, such as
 "- Added: \`osq init --refresh-schema\` (flag)". -->
 None
 
+## Decisions
+
+<!-- One line per accepted ADR that governs a capability this change writes,
+saying what it means here, such as "ADR 009: the adapter is the only module
+that imports dockerode." Start a line "Departs from ADR <n>:" to record a
+departure and its reason. -->
+None
+
 ## Contract
 
 ### Requirement: <requirement name>
@@ -133,16 +141,21 @@ export interface NewSpecResult {
   folderPath: string;
 }
 
+type IdList = readonly string[];
+
 /**
- * Replace only the proposal title and, when queue dependencies are supplied,
- * the `depends_on` line. The template body and every other frontmatter key
- * stay intact.
+ * Replace only the proposal title and, when supplied, the queue dependency and
+ * fix lines. Every other frontmatter key stays intact.
  */
-function seedProposal(content: string, title: string, dependsOn?: readonly string[]): string {
+function seedProposal(content: string, title: string, dependsOn?: IdList, fixes?: IdList): string {
   let seeded = content.replace(/^title:\s*.*$/m, `title: ${title}`);
   if (dependsOn !== undefined) {
     const value = `[${dependsOn.map((id) => JSON.stringify(id)).join(', ')}]`;
     seeded = seeded.replace(/^depends_on:\s*.*$/m, `depends_on: ${value}`);
+  }
+  if (fixes !== undefined && fixes.length > 0) {
+    const value = `[${fixes.map((id) => JSON.stringify(id)).join(', ')}]`;
+    seeded = seeded.replace(/^(depends_on:.*)$/m, `$1\nfixes: ${value}`);
   }
   return seeded;
 }
@@ -150,7 +163,7 @@ function seedProposal(content: string, title: string, dependsOn?: readonly strin
 export async function createNewSpec(
   projectDir: string,
   title: string,
-  options: { specsDirName?: string; slug?: string; dependsOn?: readonly string[] } = {},
+  options: { specsDirName?: string; slug?: string; dependsOn?: IdList; fixes?: IdList } = {},
 ): Promise<NewSpecResult> {
   const trimmedTitle = title.trim();
   if (!trimmedTitle) {
@@ -166,16 +179,13 @@ export async function createNewSpec(
     ? path.join(projectDir, options.specsDirName)
     : getChangesDir(DEFAULT_CONFIG.paths.openspecRoot, projectDir);
   const legacyTemplateDir = path.join(specsDir, '_template');
-
   const legacyTemplateExists = await fs
     .stat(legacyTemplateDir)
     .then(() => true)
     .catch(() => false);
-
   const specId = await getNextSpecNumber(specsDir);
   const folderName = `${specId}-${slug}`;
   const targetDir = path.join(specsDir, folderName);
-
   const targetExists = await fs
     .stat(targetDir)
     .then(() => true)
@@ -203,7 +213,12 @@ export async function createNewSpec(
       proposalContent = await fs.readFile(path.join(TEMPLATES_ROOT, 'proposal.md'), 'utf8');
     } catch {}
 
-    const updatedProposal = seedProposal(proposalContent, trimmedTitle, options.dependsOn);
+    const updatedProposal = seedProposal(
+      proposalContent,
+      trimmedTitle,
+      options.dependsOn,
+      options.fixes,
+    );
     await fs.writeFile(path.join(targetDir, 'proposal.md'), updatedProposal, 'utf8');
 
     let tasksContent = FALLBACK_TASKS_MD;

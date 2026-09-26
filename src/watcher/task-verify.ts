@@ -5,6 +5,9 @@ import type { TaskData, VerifyStarts } from '../core/spec/parser.js';
 import { missingNamedPaths } from '../core/spec/verify-paths.js';
 import { formatPreSpawnStart } from '../core/status/pre-spawn-words.js';
 import { readRetryContext } from './attempt.js';
+import { checkBlocked } from './blocked.js';
+import { checkDependencies } from './dependencies.js';
+import { checkFocusedTests } from './focused-verify.js';
 import type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
 
@@ -145,6 +148,26 @@ export async function checkMissingVerifyPaths(
     formatMissingPathDeadMarker(taskData.verify, missing),
     `Verify names missing paths: ${missing.join(', ')}`,
   );
+}
+
+/**
+ * The checks that run after the agent exits and its result is ensured, before
+ * any verify: a stated `## Blocked` need fails the task first, then an added
+ * denied package, then a verify naming a missing path is refused, and last a
+ * failing focused scenario test ends the attempt. Each keeps its own dead marker.
+ */
+export async function checkBlockedFirst(
+  options: TaskVerifyOptions,
+  fail: FailFn,
+): Promise<RunTaskResult | null> {
+  const { projectRoot, specFolderPath, taskNumber, taskData } = options;
+  const blocked = await checkBlocked(specFolderPath, taskNumber, fail);
+  if (blocked) return blocked;
+  const denied = await checkDependencies(options, fail);
+  if (denied) return denied;
+  const missing = await checkMissingVerifyPaths(projectRoot, taskData, fail);
+  if (missing) return missing;
+  return checkFocusedTests(options, fail);
 }
 
 /**

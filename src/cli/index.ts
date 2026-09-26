@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { approveCommand } from './approve.js';
+import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
 import { inboxCommand } from './inbox.js';
@@ -33,7 +34,6 @@ function parseRejectReason(value: string): string {
   }
   return value;
 }
-
 export function createProgram(version?: string): Command {
   const program = new Command();
   // Keep root options (notably `--json`) from shadowing the identically named
@@ -101,8 +101,12 @@ export function createProgram(version?: string): Command {
   program
     .command('lint [ids...]')
     .description('validate change folders and OpenSpec artifacts')
-    .action(async (ids: string[]) => {
-      await lintCommand(ids);
+    .option('--json', 'print findings as JSON')
+    .action(async (ids: string[], options: { json?: boolean }) => {
+      await lintCommand(ids, {
+        json: options.json,
+        stdout: (text) => process.stdout.write(text),
+      });
     });
 
   program
@@ -223,6 +227,7 @@ export function createProgram(version?: string): Command {
       }
     });
 
+  registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
     const raw = argv || process.argv;

@@ -1,4 +1,3 @@
-import { execFile } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -6,8 +5,25 @@ import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
+import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { isExcludedChangePath } from './hasher.js';
+import { collectImpactFindings } from './impact-lint.js';
+import { type ImportGraph, buildImportGraph } from './import-graph.js';
+import {
+  type LintFinding,
+  LintFindingSet,
+  type LintSeverity,
+  makeFinding,
+} from './lint-findings.js';
+import { type MergedSpecInput, validateMergedSpecs } from './merged-spec-check.js';
+import {
+  OPENSPEC_ERROR_PREFIX,
+  type OpenSpecIssueContext,
+  appendUnsupportedNote,
+  execFileCapture,
+  scanOpenSpecIssues,
+} from './openspec-issues.js';
 import {
   OPENSPEC_EXPECTED_VERSION,
   type OpenSpecVersionAssessment,
@@ -22,6 +38,7 @@ import {
   parseTaskMd,
   resolveChangeDoc,
 } from './parser.js';
+import { collectTraceabilityFindings } from './traceability-lint.js';
 import {
   listNamedPaths,
   missingNamedPaths,
@@ -34,14 +51,11 @@ import {
   namedPathCoveredByScopes,
 } from './verify-starts.js';
 
-export { OPENSPEC_EXPECTED_VERSION };
+export { OPENSPEC_EXPECTED_VERSION, OPENSPEC_ERROR_PREFIX };
 
 /** Remediation guidance citing ADR 004 for any validator pin violation. */
 const OPENSPEC_PIN_REMEDIATION =
   'Refer to ADR 004 (decisions/004-pinned-openspec-validator.md) and run: pnpm add -D @fission-ai/openspec@1.13.1';
-
-/** Prefix applied to every finding surfaced by the OpenSpec validator. */
-export const OPENSPEC_ERROR_PREFIX = 'openspec:';
 
 export interface LintLogger {
   info(msg: string): void;
@@ -279,6 +293,15 @@ function unresolvedVerifyWarning(label: string, command: string): string {
   return `${label} verify names neither an existing repository path nor a package script: "${command}"`;
 }
 
+function chainedVerifyError(label: string, command: string): string {
+  return `Task in ${label} verify chains commands ("${command}"); move the chain into a package script and name that script, for example pnpm run <script>`;
+}
+
+/** Resolve an absolute path to its repository-relative POSIX form. */
+function repositoryPath(projectRoot: string, absolutePath: string): string {
+  return path.relative(projectRoot, absolutePath).split(path.sep).join('/');
+}
+
 /**
  * Recursively list a change folder's authored files relative to `baseDir`,
  * applying the shared root-relative exclusion predicate. `.run`, `.git`, and
@@ -310,22 +333,35 @@ async function collectArtifactFiles(dir: string, baseDir: string): Promise<strin
 }
 
 /** Report the first prohibited control character found in `content`. */
-function scanControlCharacters(relPath: string, content: string, errors: string[]): void {
+function scanControlCharacters(
+  relPath: string,
+  file: string,
+  content: string,
+  findings: LintFindingSet,
+): void {
   const match = PROHIBITED_CONTROL_REGEX.exec(content);
   if (!match) {
     return;
   }
   const code = match[0].charCodeAt(0).toString(16).toUpperCase().padStart(2, '0');
-  errors.push(`File ${relPath} contains prohibited control character (0x${code})`);
+  findings.error({ file }, `File ${relPath} contains prohibited control character (0x${code})`);
 }
 
 /** Report any task line carrying two or more acceptance checkbox items. */
-function scanFusedAcceptance(taskFile: string, content: string, errors: string[]): void {
+function scanFusedAcceptance(
+  taskFile: string,
+  file: string,
+  content: string,
+  findings: LintFindingSet,
+): void {
   const lines = content.split('\n');
   lines.forEach((line, index) => {
     const count = line.match(ACCEPTANCE_CHECKBOX_REGEX)?.length ?? 0;
     if (count > 1) {
-      errors.push(`Task in ${taskFile} contains fused acceptance lines on line ${index + 1}`);
+      findings.error(
+        { file },
+        `Task in ${taskFile} contains fused acceptance lines on line ${index + 1}`,
+      );
     }
   });
 }
@@ -334,10 +370,16 @@ export interface LintResult {
   readonly valid: boolean;
   readonly errors: string[];
   readonly warnings: string[];
+  readonly findings: LintFinding[];
+  readonly repository: LintFinding[];
 }
 
 export interface LintOptions {
   readonly logger?: LintLogger;
+  /** The change folder being linted, used to attribute OpenSpec issues. */
+  readonly changeFolder?: string;
+  /** A graph built once per lint run; built here when absent. */
+  readonly importGraph?: ImportGraph;
 }
 
 export interface OpenSpecFindings {
@@ -349,17 +391,13 @@ export interface OpenSpecValidationOutcome extends OpenSpecFindings {
   readonly ran: boolean;
   readonly bin: string | null;
   readonly version: string | null;
+  readonly findings: LintFinding[];
+  readonly repository: LintFinding[];
 }
 
 interface OpenSpecSettings {
   readonly bin?: string;
   readonly schema?: string;
-}
-
-interface OpenSpecCommandOutcome {
-  readonly stdout: string;
-  readonly stderr: string;
-  readonly code: number;
 }
 
 async function pathExists(target: string): Promise<boolean> {
@@ -435,7 +473,7 @@ function messageOf(value: unknown): string | null {
   return null;
 }
 
-function levelOf(value: unknown): 'error' | 'warning' {
+function levelOf(value: unknown): LintSeverity {
   if (value && typeof value === 'object') {
     const record = value as Record<string, unknown>;
     for (const key of ['severity', 'level', 'type', 'kind']) {
@@ -454,7 +492,7 @@ function levelOf(value: unknown): 'error' | 'warning' {
   return 'error';
 }
 
-const FINDING_CONTAINERS: ReadonlyArray<readonly [string, 'error' | 'warning' | undefined]> = [
+const FINDING_CONTAINERS: ReadonlyArray<readonly [string, LintSeverity | undefined]> = [
   ['errors', 'error'],
   ['warnings', 'warning'],
   ['issues', undefined],
@@ -486,7 +524,7 @@ export function parseOpenSpecFindings(output: string): OpenSpecFindings {
   }
 
   const seen = new Set<string>();
-  const push = (level: 'error' | 'warning', message: string): void => {
+  const push = (level: LintSeverity, message: string): void => {
     const normalized = message.trim();
     if (!normalized) {
       return;
@@ -499,7 +537,7 @@ export function parseOpenSpecFindings(output: string): OpenSpecFindings {
     (level === 'warning' ? warnings : errors).push(normalized);
   };
 
-  const visit = (value: unknown, hint?: 'error' | 'warning'): void => {
+  const visit = (value: unknown, hint?: LintSeverity): void => {
     if (typeof value === 'string') {
       push(hint ?? 'error', value);
       return;
@@ -531,23 +569,6 @@ export function parseOpenSpecFindings(output: string): OpenSpecFindings {
   return { errors, warnings };
 }
 
-function execFileCapture(
-  bin: string,
-  args: string[],
-  options: { cwd: string; env: NodeJS.ProcessEnv; timeout: number },
-): Promise<OpenSpecCommandOutcome> {
-  return new Promise((resolve) => {
-    execFile(bin, args, options, (error, stdout, stderr) => {
-      const code = error
-        ? typeof (error as { code?: unknown }).code === 'number'
-          ? ((error as { code: number }).code as number)
-          : 1
-        : 0;
-      resolve({ stdout: stdout ?? '', stderr: stderr ?? '', code });
-    });
-  });
-}
-
 /**
  * Maps a validator version assessment to the single finding it produces: none
  * for the pin, one warning inside the declared peer range, and one error citing
@@ -568,6 +589,91 @@ function versionFinding(assessment: OpenSpecVersionAssessment): {
   return {};
 }
 
+/** The proposal file an items-less OpenSpec finding is charged to. */
+function legacyProposalFile(context: OpenSpecIssueContext): string {
+  return context.changeFolder
+    ? `${context.openspecRoot}/changes/${context.changeFolder}/proposal.md`
+    : 'proposal.md';
+}
+
+/** Charge an items-less OpenSpec output to the linted change. */
+function addLegacyFindings(
+  output: string,
+  context: OpenSpecIssueContext,
+  findings: LintFindingSet,
+): number {
+  const file = legacyProposalFile(context);
+  const legacy = parseOpenSpecFindings(output);
+  for (const message of legacy.errors) {
+    findings.error({ file }, `${OPENSPEC_ERROR_PREFIX} ${appendUnsupportedNote(message)}`);
+  }
+  for (const message of legacy.warnings) {
+    findings.warning({ file }, `${OPENSPEC_ERROR_PREFIX} ${appendUnsupportedNote(message)}`);
+  }
+  return legacy.errors.length + legacy.warnings.length;
+}
+
+/** Run one validator command and fold its issues into the finding collector. */
+async function collectCommandFindings(
+  bin: string,
+  args: string[],
+  projectRoot: string,
+  timeout: number,
+  context: OpenSpecIssueContext,
+  findings: LintFindingSet,
+  repository: LintFinding[],
+): Promise<{ code: number; count: number; detail: string }> {
+  const outcome = await execFileCapture(bin, args, {
+    cwd: projectRoot,
+    env: { ...process.env, OPENSPEC_TELEMETRY: '0' },
+    timeout,
+  });
+  const scan = await scanOpenSpecIssues(outcome.stdout, context);
+  let count: number;
+  if (scan === null) {
+    count = addLegacyFindings(outcome.stdout, context, findings);
+  } else {
+    for (const finding of scan.findings) {
+      findings.addOwn(finding);
+    }
+    for (const finding of scan.repository) {
+      repository.push(finding);
+    }
+    count = scan.findings.length + scan.repository.length;
+  }
+  return {
+    code: outcome.code,
+    count,
+    detail: (outcome.stderr || outcome.stdout).trim().split('\n')[0],
+  };
+}
+
+/** Assess the installed validator and record the one version finding it yields. */
+async function collectVersionFindings(
+  projectRoot: string,
+  logger: LintLogger | undefined,
+  file: string,
+  findings: LintFindingSet,
+): Promise<string | null> {
+  const version = await resolveOpenSpecVersion(projectRoot);
+  if (!version) {
+    findings.error(
+      { file },
+      `OpenSpec validator version could not be resolved from node_modules/@fission-ai/openspec/package.json. ${OPENSPEC_PIN_REMEDIATION}`,
+    );
+    return null;
+  }
+  logger?.info(`openspec version ${version}`);
+  const finding = versionFinding(await assessOpenSpecVersion(version));
+  if (finding.error !== undefined) {
+    findings.error({ file }, finding.error);
+  }
+  if (finding.warning !== undefined) {
+    findings.warning({ file }, finding.warning);
+  }
+  return version;
+}
+
 /**
  * Runs the local OpenSpec validator for changes and specs. Validation failures
  * are returned prefixed with `openspec:`. A missing binary or a version outside
@@ -580,71 +686,65 @@ export async function validateWithOpenSpec(
   config: OsqConfig,
   options: LintOptions = {},
 ): Promise<OpenSpecValidationOutcome> {
-  const logger = options.logger;
+  const file = 'package.json';
+  const findings = new LintFindingSet();
+  const repository: LintFinding[] = [];
   const bin = await resolveOpenSpecBin(projectRoot, config);
   if (!bin) {
+    findings.error(
+      { file },
+      `OpenSpec validator binary is unavailable at node_modules/.bin/openspec. ${OPENSPEC_PIN_REMEDIATION}`,
+    );
     return {
-      errors: [
-        `OpenSpec validator binary is unavailable at node_modules/.bin/openspec. ${OPENSPEC_PIN_REMEDIATION}`,
-      ],
-      warnings: [],
+      errors: findings.errors(),
+      warnings: findings.warnings(),
+      findings: [...findings.findings],
+      repository,
       ran: false,
       bin: null,
       version: null,
     };
   }
 
-  const version = await resolveOpenSpecVersion(projectRoot);
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  if (!version) {
-    errors.push(
-      `OpenSpec validator version could not be resolved from node_modules/@fission-ai/openspec/package.json. ${OPENSPEC_PIN_REMEDIATION}`,
-    );
-  } else {
-    logger?.info(`openspec version ${version}`);
-    const finding = versionFinding(await assessOpenSpecVersion(version));
-    if (finding.error !== undefined) {
-      errors.push(finding.error);
-    }
-    if (finding.warning !== undefined) {
-      warnings.push(finding.warning);
-    }
-  }
-
+  const version = await collectVersionFindings(projectRoot, options.logger, file, findings);
   const timeout = config.timeouts.verifyTimeoutSeconds * 1000;
+  const context: OpenSpecIssueContext = {
+    projectRoot,
+    openspecRoot: resolveOpenSpecRoot(config),
+    changeFolder: options.changeFolder ?? null,
+  };
   const commands: string[][] = [
     ['validate', '--changes', '--strict', '--json', '--no-interactive'],
     ['validate', '--specs', '--strict', '--json', '--no-interactive'],
   ];
 
   for (const args of commands) {
-    const outcome = await execFileCapture(bin, args, {
-      cwd: projectRoot,
-      env: { ...process.env, OPENSPEC_TELEMETRY: '0' },
+    const { code, count, detail } = await collectCommandFindings(
+      bin,
+      args,
+      projectRoot,
       timeout,
-    });
-
-    const findings = parseOpenSpecFindings(outcome.stdout);
-    for (const error of findings.errors) {
-      errors.push(`${OPENSPEC_ERROR_PREFIX} ${error}`);
-    }
-    for (const warning of findings.warnings) {
-      warnings.push(`${OPENSPEC_ERROR_PREFIX} ${warning}`);
-    }
-
-    if (outcome.code !== 0 && findings.errors.length === 0 && findings.warnings.length === 0) {
-      const detail = (outcome.stderr || outcome.stdout).trim().split('\n')[0];
-      errors.push(
-        `${OPENSPEC_ERROR_PREFIX} ${args.join(' ')} exited with code ${outcome.code}${
-          detail ? `: ${detail}` : ''
-        }`,
+      context,
+      findings,
+      repository,
+    );
+    if (code !== 0 && count === 0) {
+      findings.error(
+        { file },
+        `${OPENSPEC_ERROR_PREFIX} ${args.join(' ')} exited with code ${code}${detail ? `: ${detail}` : ''}`,
       );
     }
   }
 
-  return { errors, warnings, ran: true, bin, version };
+  return {
+    errors: findings.errors(),
+    warnings: findings.warnings(),
+    findings: [...findings.findings],
+    repository,
+    ran: true,
+    bin,
+    version,
+  };
 }
 
 async function checkDependencyExists(
@@ -691,16 +791,21 @@ function instructionVerbOf(name: string): string | null {
  */
 function scanInstructionShapedRequirements(
   capability: string,
+  deltaFile: string,
   requirements: DeltaRequirement[],
-  errors: string[],
+  findings: LintFinding[],
 ): void {
   for (const requirement of requirements) {
     const verb = instructionVerbOf(requirement.name);
     if (!verb) {
       continue;
     }
-    errors.push(
-      `${OPENSPEC_ERROR_PREFIX} ${capability}: requirement "${requirement.name}" is instruction-shaped ("${verb}"); delta specs must define living capability requirements, not instructions`,
+    findings.push(
+      makeFinding(
+        'error',
+        { file: deltaFile, requirement: requirement.name },
+        `${OPENSPEC_ERROR_PREFIX} ${capability}: requirement "${requirement.name}" is instruction-shaped ("${verb}"); delta specs must define living capability requirements, not instructions`,
+      ),
     );
   }
 }
@@ -710,20 +815,23 @@ function scanInstructionShapedRequirements(
  * the living base spec at `openspec/specs/<capability>/spec.md`. Applying the
  * delta through the deterministic merge engine reports unmatched MODIFIED,
  * REMOVED, or RENAMED targets; ADDED-only deltas may create a new capability.
+ * Merged results are validated against their living spec's repository findings.
  */
 export async function verifyDeltaTargets(
   projectRoot: string,
   folderPath: string,
   config: OsqConfig,
-): Promise<string[]> {
-  const errors: string[] = [];
+  repositoryFindings: readonly LintFinding[] = [],
+): Promise<LintFinding[]> {
+  const findings: LintFinding[] = [];
+  const mergedSpecs: MergedSpecInput[] = [];
   const deltasDir = path.join(folderPath, 'specs');
 
   let entries: Dirent[] = [];
   try {
     entries = await fs.readdir(deltasDir, { withFileTypes: true });
   } catch {
-    return errors;
+    return findings;
   }
 
   const capabilities = entries
@@ -731,15 +839,15 @@ export async function verifyDeltaTargets(
     .map((entry) => entry.name)
     .sort();
   if (capabilities.length === 0) {
-    return errors;
+    return findings;
   }
 
   const specsRoot = path.join(projectRoot, resolveOpenSpecRoot(config), 'specs');
 
   for (const capability of capabilities) {
-    const deltaContent = await fs
-      .readFile(path.join(deltasDir, capability, 'spec.md'), 'utf8')
-      .catch(() => null);
+    const deltaPath = path.join(deltasDir, capability, 'spec.md');
+    const deltaFile = repositoryPath(projectRoot, deltaPath);
+    const deltaContent = await fs.readFile(deltaPath, 'utf8').catch(() => null);
     if (deltaContent === null) {
       continue;
     }
@@ -751,22 +859,56 @@ export async function verifyDeltaTargets(
     const delta = parseDelta(deltaContent);
     scanInstructionShapedRequirements(
       capability,
+      deltaFile,
       [...delta.added, ...delta.modified, ...delta.removed],
-      errors,
+      findings,
     );
 
     try {
-      mergeDelta(baseContent, capability, delta);
+      const merged = mergeDelta(baseContent, capability, delta);
+      mergedSpecs.push({ capability, mergedContent: merged, deltaFile });
     } catch (error) {
       if (error instanceof DeltaMergeError) {
-        errors.push(`${OPENSPEC_ERROR_PREFIX} ${capability}: ${error.message}`);
+        findings.push(
+          makeFinding(
+            'error',
+            { file: deltaFile },
+            `${OPENSPEC_ERROR_PREFIX} ${capability}: ${error.message}`,
+          ),
+        );
       } else {
         throw error;
       }
     }
   }
 
-  return errors;
+  if (mergedSpecs.length > 0) {
+    findings.push(
+      ...(await collectMergedSpecFindings(projectRoot, config, mergedSpecs, repositoryFindings)),
+    );
+  }
+
+  return findings;
+}
+
+/** Validate every merged spec when the validator binary is available. */
+async function collectMergedSpecFindings(
+  projectRoot: string,
+  config: OsqConfig,
+  mergedSpecs: readonly MergedSpecInput[],
+  repositoryFindings: readonly LintFinding[],
+): Promise<LintFinding[]> {
+  const bin = await resolveOpenSpecBin(projectRoot, config);
+  if (!bin) {
+    return [];
+  }
+  return validateMergedSpecs(
+    config,
+    bin,
+    resolveOpenSpecRoot(config),
+    mergedSpecs,
+    repositoryFindings,
+  );
 }
 
 /**
@@ -776,7 +918,10 @@ export async function verifyDeltaTargets(
 interface ResolvedTaskScope {
   readonly taskFile: string;
   readonly taskNumber: string;
+  readonly taskPath: string;
   readonly existingPaths: readonly string[];
+  /** Every resolved scope path, existing or not. */
+  readonly resolvedPaths: readonly string[];
   readonly task: TaskData;
   readonly verifyAnalysis: VerifyCommandAnalysis | null;
 }
@@ -790,9 +935,11 @@ interface ResolvedTaskScope {
  * `existingPaths`; the shared resolver deduplicated them per task, so a task
  * never warns against itself.
  */
-function collectOverlapWarnings(scopes: readonly ResolvedTaskScope[]): string[] {
+function collectOverlapWarnings(
+  scopes: readonly ResolvedTaskScope[],
+): Array<{ file: string; message: string }> {
   const ordered = [...scopes].sort((a, b) => compareNumericPrefix(a.taskFile, b.taskFile));
-  const warnings: string[] = [];
+  const warnings: Array<{ file: string; message: string }> = [];
 
   for (let left = 0; left < ordered.length; left += 1) {
     for (let right = left + 1; right < ordered.length; right += 1) {
@@ -801,9 +948,10 @@ function collectOverlapWarnings(scopes: readonly ResolvedTaskScope[]): string[] 
         .filter((relativePath) => other.has(relativePath))
         .sort();
       for (const relativePath of shared) {
-        warnings.push(
-          `Tasks ${ordered[left].taskNumber} and ${ordered[right].taskNumber} share resolved scope file ${relativePath}`,
-        );
+        warnings.push({
+          file: relativePath,
+          message: `Tasks ${ordered[left].taskNumber} and ${ordered[right].taskNumber} share resolved scope file ${relativePath}`,
+        });
       }
     }
   }
@@ -816,18 +964,21 @@ function collectOverlapWarnings(scopes: readonly ResolvedTaskScope[]): string[] 
  * no resolved file under `tests/fixtures/events/`. Reuses the resolver
  * projection already collected for overlap analysis instead of re-walking.
  */
-function collectHarnessFixtureWarnings(scopes: readonly ResolvedTaskScope[]): string[] {
+function collectHarnessFixtureWarnings(
+  scopes: readonly ResolvedTaskScope[],
+): Array<{ file: string; message: string }> {
   const ordered = [...scopes].sort((a, b) => compareNumericPrefix(a.taskFile, b.taskFile));
-  const warnings: string[] = [];
+  const warnings: Array<{ file: string; message: string }> = [];
   for (const scope of ordered) {
     const hasHarness = scope.existingPaths.some((entry) => entry.startsWith('src/harness/'));
     const hasFixtures = scope.existingPaths.some(
       (entry) => entry === 'tests/fixtures/events' || entry.startsWith('tests/fixtures/events/'),
     );
     if (hasHarness && !hasFixtures) {
-      warnings.push(
-        `Task in ${scope.taskFile} resolves src/harness/ scope but no file under tests/fixtures/events/`,
-      );
+      warnings.push({
+        file: scope.taskPath,
+        message: `Task in ${scope.taskFile} resolves src/harness/ scope but no file under tests/fixtures/events/`,
+      });
     }
   }
   return warnings;
@@ -875,28 +1026,39 @@ export async function lintChangeFolder(
   config: OsqConfig,
   options: LintOptions = {},
 ): Promise<LintResult> {
-  const errors: string[] = [];
-  const warnings: string[] = [];
+  const findings = new LintFindingSet();
   const packageScripts = await readRootPackageScripts(projectRoot);
 
   // Check: no authored change-folder file contains prohibited control characters
   for (const relPath of await collectArtifactFiles(folderPath, folderPath)) {
     const content = await fs.readFile(path.join(folderPath, relPath), 'utf8');
-    scanControlCharacters(relPath, content, errors);
+    scanControlCharacters(
+      relPath,
+      repositoryPath(projectRoot, path.join(folderPath, relPath)),
+      content,
+      findings,
+    );
   }
 
   const resolvedDoc = await resolveChangeDoc(folderPath);
   if (!resolvedDoc) {
-    errors.push('proposal.md (or legacy spec.md) not found in change folder');
-    return { valid: false, errors, warnings };
+    findings.error(
+      { file: repositoryPath(projectRoot, path.join(folderPath, 'proposal.md')) },
+      'proposal.md (or legacy spec.md) not found in change folder',
+    );
+    return lintResult(findings);
   }
 
+  const docRepoPath = repositoryPath(projectRoot, resolvedDoc.path);
   const specContent = await fs.readFile(resolvedDoc.path, 'utf8');
   const spec = parseSpecMd(specContent);
 
   // Check: proposals must declare a change-level verify command
   if (resolvedDoc.kind === 'proposal' && !spec.verify) {
-    errors.push('proposal.md must declare a verify command in frontmatter');
+    findings.error(
+      { file: docRepoPath },
+      'proposal.md must declare a verify command in frontmatter',
+    );
   }
 
   // Check: proposals must declare a non-empty ## Surface section; legacy spec.md
@@ -905,7 +1067,21 @@ export async function lintChangeFolder(
     resolvedDoc.kind === 'proposal' &&
     proposalSurfaceIsEmpty(parseFrontmatter(specContent).body)
   ) {
-    errors.push(PROPOSAL_SURFACE_ERROR);
+    findings.error({ file: docRepoPath, section: 'Surface' }, PROPOSAL_SURFACE_ERROR);
+  }
+
+  // Check: Decisions section and project rules block, when the project has ADRs.
+  // A legacy spec.md change document is exempt exactly as it is for Surface.
+  if (resolvedDoc.kind === 'proposal') {
+    for (const finding of await collectDecisionsFindings({
+      projectRoot,
+      folderPath,
+      proposalPath: docRepoPath,
+      proposalBody: parseFrontmatter(specContent).body,
+      config,
+    })) {
+      findings.addOwn(finding);
+    }
   }
 
   // Check: the change-level verify participates in the same trust analysis
@@ -913,26 +1089,31 @@ export async function lintChangeFolder(
     const docLabel = path.basename(resolvedDoc.path);
     const analysis = await analyzeVerifyCommand(projectRoot, spec.verify, packageScripts);
     if (analysis.placeholder) {
-      errors.push(placeholderVerifyError(docLabel));
+      findings.error({ file: docRepoPath }, placeholderVerifyError(docLabel));
     } else if (!chainsVerifyCommand(spec.verify)) {
       if (analysis.missingScript !== null) {
-        errors.push(missingPackageScriptError(docLabel, analysis.missingScript));
+        findings.error(
+          { file: docRepoPath },
+          missingPackageScriptError(docLabel, analysis.missingScript),
+        );
       } else if (analysis.unresolved) {
-        warnings.push(unresolvedVerifyWarning(docLabel, spec.verify));
+        findings.warning({ file: docRepoPath }, unresolvedVerifyWarning(docLabel, spec.verify));
       }
     }
   }
 
   // Check: features.writes is retired; delta specs are the sole writes declaration
   if (hasDeclaredWrites(parseFrontmatter(specContent).data)) {
-    errors.push(
+    findings.error(
+      { file: docRepoPath },
       'features.writes is no longer supported in proposal frontmatter; write declarations are derived strictly from delta specs under specs/<capability>/spec.md',
     );
   }
 
   // Check: contract tables count
   if (spec.contractTablesCount > config.limits.maxContractTables) {
-    errors.push(
+    findings.error(
+      { file: docRepoPath },
       `Contract has ${spec.contractTablesCount} tables (max allowed is ${config.limits.maxContractTables})`,
     );
   }
@@ -941,37 +1122,48 @@ export async function lintChangeFolder(
   for (const dep of spec.dependsOn) {
     const exists = await checkDependencyExists(projectRoot, dep, config);
     if (!exists) {
-      errors.push(`depends_on names missing change: ${dep}`);
+      findings.error({ file: docRepoPath }, `depends_on names missing change: ${dep}`);
+    }
+  }
+
+  // Check: fixes names an existing active, archived, or rejected change
+  for (const fixed of spec.fixes) {
+    const exists = await checkDependencyExists(projectRoot, fixed, config);
+    if (!exists) {
+      findings.error({ file: docRepoPath }, `fixes names missing change: ${fixed}`);
     }
   }
 
   // Tasks checks
   const tasksDir = path.join(folderPath, 'tasks');
+  const tasksRepoPath = repositoryPath(projectRoot, tasksDir);
   let taskEntries: string[] = [];
   try {
     taskEntries = (await fs.readdir(tasksDir)).filter((e) => e.endsWith('.md'));
   } catch {
-    errors.push('tasks directory not found in change folder');
+    findings.error({ file: tasksRepoPath }, 'tasks directory not found in change folder');
   }
 
   if (taskEntries.length === 0) {
-    errors.push('No task files found under tasks/');
+    findings.error({ file: tasksRepoPath }, 'No task files found under tasks/');
   }
 
   const resolvedTaskScopes: ResolvedTaskScope[] = [];
 
   for (const taskFile of taskEntries) {
     const taskPath = path.join(tasksDir, taskFile);
+    const taskRepoPath = repositoryPath(projectRoot, taskPath);
     const taskContent = await fs.readFile(taskPath, 'utf8');
     const task = parseTaskMd(taskContent);
 
     // Check: acceptance items must each occupy their own line
-    scanFusedAcceptance(taskFile, taskContent, errors);
+    scanFusedAcceptance(taskFile, taskRepoPath, taskContent, findings);
 
     // Check: tests.modify, when declared, must be a boolean
     const testsModify = readTestsModifyDeclaration(taskContent);
     if (testsModify.present && !testsModify.valid) {
-      errors.push(
+      findings.error(
+        { file: taskRepoPath },
         `Task in ${taskFile} tests.modify must be a boolean (got ${JSON.stringify(testsModify.value)})`,
       );
     }
@@ -988,7 +1180,9 @@ export async function lintChangeFolder(
     resolvedTaskScopes.push({
       taskFile,
       taskNumber: taskFile.replace(/\.md$/, ''),
+      taskPath: taskRepoPath,
       existingPaths,
+      resolvedPaths: resolved.map((entry) => entry.relativePath),
       task,
       verifyAnalysis: analysis,
     });
@@ -997,7 +1191,8 @@ export async function lintChangeFolder(
     if (!task.testsModify && existingPaths.length > 0) {
       const touched = existingPaths.filter(isTestFilePath).sort();
       if (touched.length > 0) {
-        errors.push(
+        findings.error(
+          { file: taskRepoPath },
           `Task in ${taskFile} scope touches existing test files (${touched.join(', ')}) without tests.modify: true`,
         );
       }
@@ -1005,35 +1200,44 @@ export async function lintChangeFolder(
 
     // Check: verify command empty, placeholder, chained, or missing script
     if (analysis === null) {
-      errors.push(`Task in ${taskFile} verify command is empty`);
+      findings.error({ file: taskRepoPath }, `Task in ${taskFile} verify command is empty`);
     } else if (analysis.placeholder) {
-      errors.push(placeholderVerifyError(taskLabel));
+      findings.error({ file: taskRepoPath }, placeholderVerifyError(taskLabel));
     } else if (chainsVerifyCommand(task.verify)) {
-      errors.push(`Task in ${taskFile} verify chains commands ("${task.verify}")`);
+      findings.error({ file: taskRepoPath }, chainedVerifyError(taskFile, task.verify));
     } else if (analysis.missingScript !== null) {
-      errors.push(missingPackageScriptError(taskLabel, analysis.missingScript));
+      findings.error(
+        { file: taskRepoPath },
+        missingPackageScriptError(taskLabel, analysis.missingScript),
+      );
     }
 
     // Check: acceptance checklist length
     if (task.acceptance.length > config.limits.maxAcceptanceLines) {
-      errors.push(
+      findings.error(
+        { file: taskRepoPath },
         `Task in ${taskFile} acceptance lines (${task.acceptance.length}) exceeds limit ${config.limits.maxAcceptanceLines}`,
       );
     }
 
     // Check: scope expands to more than maxScopeFiles
     if (task.scope.length > config.limits.maxScopeFiles) {
-      errors.push(
+      findings.error(
+        { file: taskRepoPath },
         `Task in ${taskFile} scope specifies ${task.scope.length} patterns, exceeding limit ${config.limits.maxScopeFiles}`,
       );
     }
   }
 
   // Check: harness scope should cover the event fixtures without failing lint
-  warnings.push(...collectHarnessFixtureWarnings(resolvedTaskScopes));
+  for (const entry of collectHarnessFixtureWarnings(resolvedTaskScopes)) {
+    findings.warning({ file: entry.file }, entry.message);
+  }
 
   // Check: shared resolved files across tasks are reported as non-failing warnings
-  warnings.push(...collectOverlapWarnings(resolvedTaskScopes));
+  for (const entry of collectOverlapWarnings(resolvedTaskScopes)) {
+    findings.warning({ file: entry.file }, entry.message);
+  }
 
   // Tasks are analyzed in numeric order so earlier scopes can cover a later
   // task's new paths. The unresolved-target warning is suppressed when every
@@ -1052,7 +1256,10 @@ export async function lintChangeFolder(
           namedPathCoveredByScopes(namedPath, [scope.task.scope, ...earlierScopes]),
         );
       if (!covered) {
-        warnings.push(unresolvedVerifyWarning(`Task in ${scope.taskFile}`, scope.task.verify));
+        findings.warning(
+          { file: scope.taskPath },
+          unresolvedVerifyWarning(`Task in ${scope.taskFile}`, scope.task.verify),
+        );
       }
     }
     earlierScopes.push([...scope.task.scope]);
@@ -1068,27 +1275,101 @@ export async function lintChangeFolder(
   }));
   const verifyStarts = await analyzeVerifyStarts(projectRoot, verifyStartTasks);
   for (const contradiction of verifyStarts.contradictions) {
-    warnings.push(
+    findings.warning(
+      { file: taskRepoPathFor(projectRoot, tasksDir, contradiction.taskNumber) },
       `Task in ${contradiction.taskNumber}.md declares verify_starts: ${contradiction.start} but its verify names ${contradiction.path}, which the task creates`,
     );
   }
   for (const uncreatable of verifyStarts.uncreatable) {
-    warnings.push(
+    findings.warning(
+      { file: taskRepoPathFor(projectRoot, tasksDir, uncreatable.taskNumber) },
       `Task in ${uncreatable.taskNumber}.md verify names ${uncreatable.path}, which no task in the change can create`,
     );
   }
 
-  // Check: delta targets resolve against living base specs before approval
-  errors.push(...(await verifyDeltaTargets(projectRoot, folderPath, config)));
+  // Check: import-graph impact warnings never fail the change. The graph is
+  // built once per lint run by the CLI and passed through `LintOptions`.
+  const importGraph =
+    options.importGraph ??
+    (await buildImportGraph(projectRoot, { skip: [config.paths.openspecRoot] }));
+  for (const finding of await collectImpactFindings({
+    projectRoot,
+    folderPath,
+    config,
+    proposalPath: docRepoPath,
+    reads: spec.features.reads,
+    tasks: resolvedTaskScopes.map((scope) => ({
+      taskNumber: scope.taskNumber,
+      taskPath: scope.taskPath,
+      existingPaths: scope.existingPaths,
+      testsModify: scope.task.testsModify,
+      verify: scope.task.verify,
+    })),
+    importGraph,
+  })) {
+    findings.addOwn(finding);
+  }
 
-  // Check: pinned OpenSpec validator
-  const openSpec = await validateWithOpenSpec(projectRoot, config, options);
-  errors.push(...openSpec.errors);
-  warnings.push(...openSpec.warnings);
+  // Check: scenario traceability links and the blast radius of changed
+  // scenarios. Reuses the graph already built for impact lint and builds the
+  // scenario index once.
+  for (const finding of await collectTraceabilityFindings({
+    projectRoot,
+    folderPath,
+    config,
+    proposalPath: docRepoPath,
+    tasks: resolvedTaskScopes.map((scope) => ({
+      taskNumber: scope.taskNumber,
+      taskPath: scope.taskPath,
+      resolvedPaths: scope.resolvedPaths,
+      testsModify: scope.task.testsModify,
+    })),
+    importGraph,
+  })) {
+    findings.addOwn(finding);
+  }
 
+  // Check: pinned OpenSpec validator and strict validation. Runs before the
+  // delta check so living-spec repository findings can suppress inherited
+  // warnings in the merged specs.
+  const changeFolder = path.basename(folderPath);
+  const openSpec = await validateWithOpenSpec(projectRoot, config, {
+    ...options,
+    changeFolder,
+  });
+  for (const finding of openSpec.findings) {
+    findings.addOwn(finding);
+  }
+  for (const finding of openSpec.repository) {
+    findings.addRepository(finding);
+  }
+
+  // Check: delta targets resolve against living base specs before approval and
+  // the living spec each delta will produce validates after archive.
+  for (const finding of await verifyDeltaTargets(
+    projectRoot,
+    folderPath,
+    config,
+    openSpec.repository,
+  )) {
+    findings.addOwn(finding);
+  }
+
+  return lintResult(findings);
+}
+
+/** Repository path of a task file named by its numeric task number. */
+function taskRepoPathFor(projectRoot: string, tasksDir: string, taskNumber: string): string {
+  return repositoryPath(projectRoot, path.join(tasksDir, `${taskNumber}.md`));
+}
+
+/** Assemble the public lint result from the accumulated findings. */
+function lintResult(findings: LintFindingSet): LintResult {
   return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
+    valid: findings.errors().length === 0,
+    errors: findings.errors(),
+    warnings: findings.warnings(),
+    findings: [...findings.findings],
+    repository: [...findings.repository],
   };
 }

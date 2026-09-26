@@ -45,6 +45,7 @@ export function hasDeclaredWrites(data: Record<string, unknown>): boolean {
 export interface SpecData {
   readonly title: string;
   readonly dependsOn: string[];
+  readonly fixes: string[];
   readonly features: SpecFeatures;
   readonly goal: string;
   readonly contract: string;
@@ -67,17 +68,27 @@ function countMarkdownTables(text: string): number {
   return matches ? matches.length : 0;
 }
 
-export function parseSpecMd(content: string): SpecData {
-  const { data, body } = parseFrontmatter(content);
-
-  const title = typeof data.title === 'string' ? data.title.trim() : '';
-  const dependsOn = Array.isArray(data.depends_on)
-    ? data.depends_on.map((d: unknown) => {
-        const str = String(d).trim();
+/**
+ * Normalizes a frontmatter change-id list like `depends_on` or `fixes`:
+ * numeric ids pad to three digits while non-numeric entries stay trimmed.
+ * A non-array value reads as an empty list.
+ */
+function normalizeChangeIds(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map((entry: unknown) => {
+        const str = String(entry).trim();
         const num = Number.parseInt(str, 10);
         return !Number.isNaN(num) ? String(num).padStart(3, '0') : str;
       })
     : [];
+}
+
+export function parseSpecMd(content: string): SpecData {
+  const { data, body } = parseFrontmatter(content);
+
+  const title = typeof data.title === 'string' ? data.title.trim() : '';
+  const dependsOn = normalizeChangeIds(data.depends_on);
+  const fixes = normalizeChangeIds(data.fixes);
 
   const rawFeatures = (data.features as Record<string, unknown>) || {};
   const reads = Array.isArray(rawFeatures.reads)
@@ -93,6 +104,7 @@ export function parseSpecMd(content: string): SpecData {
   return {
     title,
     dependsOn,
+    fixes,
     features: { reads },
     goal,
     contract,

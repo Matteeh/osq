@@ -384,20 +384,23 @@ legacy and resolver-2 scope counts.
 - **THEN** the repository record prints `First-attempt passes: 8/8`, and a record with fewer than five measured tasks prints the unchanged too-small sentence
 
 ### Requirement: Scope regression history
-<!-- source: src/core/report.ts, src/cli/report.ts, tests/report-scope-regressions.test.ts, tests/report-json.test.ts, fixture/report/expected.json -->
+<!-- source: src/core/report.ts, src/core/report/report-scope.ts, src/cli/report.ts, tests/report-scope-regressions.test.ts, tests/report-json.test.ts, tests/report-auto-recertification.test.ts, fixture/report/expected.json -->
 The report `history` block SHALL expose
 `scopeRegressions: { detected, verificationPassedAtDetection,
-verificationFailedAtDetection, recertifiedByHuman, requeuedForAgent }` in text
-and stable JSON, with every counter present as a non-negative integer including
-zero.
+verificationFailedAtDetection, recertifiedByHuman, recertifiedAutomatically,
+requeuedForAgent }` in text and stable JSON, with every counter present as a
+non-negative integer including zero. Text SHALL print
+`Recertified automatically: <n>` right after `Recertified by human: <n>`.
 
 Counts SHALL derive only from valid typed events in numbered task streams
 across active and archived changes. A `regressed` event with
 `reason: scope_regression` SHALL increment detected; finite exit code zero SHALL
 also increment passed at detection and a finite non-zero exit SHALL increment
-failed at detection. A `recertification` event with `outcome: passed` SHALL
-increment recertified by human, while `outcome: requeued` SHALL increment
-requeued for agent. Missing or malformed outcome fields SHALL not be guessed.
+failed at detection. A `recertification` event with `outcome: passed` and
+`automatic: true` SHALL increment recertified automatically; one with
+`outcome: passed` and no `automatic: true` SHALL increment recertified by human,
+while `outcome: requeued` SHALL increment requeued for agent. Missing or
+malformed outcome fields SHALL not be guessed.
 
 Detection and recertification events SHALL NOT count as execution attempts,
 multiple-attempt tasks, unexplained reruns, dead reasons, or cost coverage. A
@@ -410,11 +413,19 @@ attempt accounting.
 
 #### Scenario: No scope regression history
 - **WHEN** no numbered task stream contains scope-regression or recertification events
-- **THEN** text and JSON expose all five scope regression counters as zero
+- **THEN** text and JSON expose all six scope regression counters as zero
 
 #### Scenario: Requeue later executes
 - **WHEN** failed human recertification is followed by an agent started event
 - **THEN** history counts one requeue decision and counts only the started event as the new execution attempt
+
+#### Scenario: Automatic and human recertifications
+- **WHEN** one task stream holds a passed recertification with `automatic: true` and another holds a passed recertification without it
+- **THEN** `recertifiedAutomatically` is 1 and `recertifiedByHuman` is 1, in text and JSON
+
+#### Scenario: Blocked deaths
+- **WHEN** a task stream holds a `dead` event with reason `blocked`
+- **THEN** `deadByReason` counts it under `blocked`
 
 ### Requirement: Unreported cost labelling
 <!-- source: src/core/report/report.ts, tests/report-unreported.test.ts, tests/report-planning.test.ts, tests/report-json.test.ts, tests/report-planning-economics.test.ts -->
@@ -485,13 +496,18 @@ and output tokens; otherwise null. `costSource` SHALL be `harness`,
 - **THEN** cost is the sum of each kind's tokens times its price per million, and `costSource` is `price_table`
 
 ### Requirement: Approval flag outcomes
-<!-- source: src/core/report/approval-flags.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-approval-flags.test.ts, fixture/report/** -->
+<!-- source: src/core/report/approval-flags.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-approval-flags.test.ts, tests/report-record-extras.test.ts, fixture/report/** -->
 `osq report` SHALL read `approvalFlags` from each active and archived change's
 manifest and report, per flag id and for changes with no flag, how many changes
 recorded it and how many of those later had trouble, split by `shown` and
-`confirmed`. Trouble SHALL mean a `dead` event in a task stream or a `regressed`
-event in a task or change stream. Changes without a recorded `approvalFlags`
-SHALL NOT be counted, and flags SHALL NOT be recomputed.
+`confirmed`. Trouble SHALL mean a `dead` event in a task stream, a `regressed`
+event in a task or change stream, or a later non-rejected change naming the
+change in `fixes`. `approvalFlags.troubledChanges` SHALL list each troubled
+change that recorded at least one flag, with its id, its flag ids, and its
+trouble kinds in the order `dead`, `regressed`, `rework`, and text output SHALL
+print one line per such change after the per-flag lines. Changes without a
+recorded `approvalFlags` SHALL NOT be counted, and flags SHALL NOT be
+recomputed.
 
 #### Scenario: Flag outcomes
 - **WHEN** three changes recorded `shared_file`, two shown and one confirmed, and one shown change later has a `dead` event
@@ -500,6 +516,10 @@ SHALL NOT be counted, and flags SHALL NOT be recomputed.
 #### Scenario: Older changes
 - **WHEN** a change's manifest has no `approvalFlags`
 - **THEN** it contributes nothing to the section and `approvalFlags.changes` does not count it
+
+#### Scenario: Rework as trouble
+- **WHEN** 007 recorded `removed_requirement` and `sensitive_path`, had no dead or regressed event, and 008 declares `fixes: ["007"]`
+- **THEN** both flags count 007 as troubled and `troubledChanges` lists 007 with kinds `["rework"]`
 
 ### Requirement: Automatic retry history
 <!-- source: src/core/report/report-retries.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-retries.test.ts, fixture/report/** -->
@@ -554,3 +574,208 @@ null otherwise. Records are not rewritten.
 #### Scenario: Approved change
 - **WHEN** a change's manifest has `approvedAt` and the folder holds `.run/approved`
 - **THEN** every reader uses that `approvedAt` as before
+
+### Requirement: Result file sections
+<!-- source: src/core/report/result-sections.ts, tests/result-sections.test.ts -->
+One parser in `src/core/report/result-sections.ts` SHALL read a result file's
+sections. A heading SHALL match regardless of case, `#` count, surrounding
+spaces, and a trailing colon, so `## deviated:` is `## Deviated` and
+`## Touched:` is the `Touched:` line. A section that is empty or says only
+`None`, in any case and with an optional trailing period, SHALL be absent. The
+real disclosure sections of a task SHALL be `## Deviated`, `## Missing context`,
+and `## Outside scope`; the parser SHALL also read every task result file of a
+change into per-task disclosures. The parser SHALL also read `## Blocked` as
+`blocked`, under the same matching and absence rules. `## Blocked` SHALL NOT
+count as a disclosure.
+
+#### Scenario: Heading drift
+- **WHEN** a result file holds `## deviated:` with text, `## Missing context` saying `None`, and `##  Outside Scope` with text
+- **THEN** the task has a deviated and an outside-scope disclosure and no missing-context disclosure
+
+#### Scenario: Blocked section
+- **WHEN** a result file holds `## blocked:` with text, and another holds `## Blocked` saying `none.`
+- **THEN** the first parses with that text as `blocked`, the second with `blocked` null, and neither counts as a disclosure
+
+### Requirement: Rework history
+<!-- source: src/core/report/record-rework.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-record-extras.test.ts -->
+`osq report` SHALL derive rework from the `fixes` of every active and archived
+change, never rejected ones. `history.rework` SHALL list, for each change named
+in some `fixes`, the change id and the sorted ids of the changes that fix it,
+ordered by change id. Text output SHALL print a `Rework:` section with one
+`<id>: fixed by <id>, <id>` line per entry, or `(none)`.
+
+#### Scenario: One fix
+- **WHEN** active change 002 declares `fixes: ["001"]`
+- **THEN** `history.rework` holds `{ change: "001", fixedBy: ["002"] }` and the text prints `001: fixed by 002`
+
+#### Scenario: Rejected fix
+- **WHEN** the only change naming 001 in `fixes` was rejected
+- **THEN** 001 has no rework entry
+
+### Requirement: Executor disclosure counts
+<!-- source: src/core/report/record-disclosures.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-record-extras.test.ts -->
+`osq report` SHALL count, per active and archived change, the tasks whose result
+files hold a real `## Deviated`, `## Missing context`, or `## Outside scope`
+section. `history.disclosures` SHALL list only changes with at least one, as
+`{ change, deviated, missingContext, outsideScope }` ordered by change id, and
+text output SHALL print an `Executor disclosures:` section with one line per
+listed change, or `(none)`.
+
+#### Scenario: Counted disclosures
+- **WHEN** one task of 003 has a real `## Deviated` and another has a real `## Outside scope`
+- **THEN** `history.disclosures` holds `{ change: "003", deviated: 1, missingContext: 0, outsideScope: 1 }`
+
+### Requirement: Recent executor disclosures in the plan prompt
+<!-- source: src/core/report/recent-disclosures.ts, src/cli/plan.ts, src/core/foundation/config-planning.ts, tests/plan-disclosures.test.ts, tests/config-planning.test.ts -->
+The plan prompt's `## Recent executor disclosures` section SHALL quote the real
+disclosure sections of the `planning.disclosures.recentChanges` most recent
+archived changes by numeric id, newest first and in task order, each as a
+`<change> task <n>, <section>:` line followed by its text with every line
+prefixed `> `. The section SHALL open with the sentence `Executor claims from
+result files, not verified facts. Check them against the code before relying on
+them.` Its quoted entries SHALL total at most
+`planning.disclosures.maxCharacters` characters; the first entry that does not
+fit SHALL be cut to fit and end with `[truncated]`, and no later entry SHALL be
+included. It SHALL never include `## Changed`, `## Next`, `Touched:`, or diffs.
+`recentChanges` and `maxCharacters` SHALL default to 3 and 4000 and be positive
+integers.
+
+#### Scenario: Budgeted disclosures
+- **WHEN** the configured recent changes hold more disclosure text than `maxCharacters`
+- **THEN** the quoted entries fit the budget, the last one ends with `[truncated]`, and no quoted line starts without `> `
+
+#### Scenario: Invalid configuration
+- **WHEN** `planning.disclosures.recentChanges` or `maxCharacters` is zero, negative, or not an integer
+- **THEN** configuration loading fails naming the key
+
+### Requirement: Planning cost estimates at report time
+<!-- source: src/core/report/record-estimates.ts, src/core/report/report.ts, src/cli/report.ts, tests/report-record-extras.test.ts -->
+For each planning session whose recorded slice has non-null input and output
+tokens and whose exit reports no cost, `osq report` SHALL estimate a cost when
+`planning.prices` has an entry for the model named by the session's
+`plan_started` record, by calling `resolveSliceCost` with one turn carrying the
+slice's summed tokens and that model, so a single-model session gets the number
+approval would have recorded. `planning.cost.bySource` SHALL report
+`harness`, `approvalPrice`, and `reportEstimate`, each with `total` and
+`sessions`, where `approvalPrice` holds recorded costs whose slice says
+`costSource: "price_table"`, plus `totalWithEstimates`. Text output SHALL print
+each source on its own labelled line and state how much of the total is
+estimated. No record SHALL be written.
+
+#### Scenario: Estimated slice
+- **WHEN** a session recorded slice tokens from `claude-opus-5-5`, no cost, and `planning.prices` prices that model
+- **THEN** `bySource.reportEstimate` counts that session with the same cost `resolveSliceCost` returns for those tokens, and the text labels it as estimated from `planning.prices`
+
+#### Scenario: No price entry
+- **WHEN** such a session's model has no price entry
+- **THEN** it is not estimated and its cost stays unreported
+
+### Requirement: After-landing verification counts
+<!-- source: src/core/report/record-verification.ts, src/core/report/report.ts, tests/report-verification.test.ts -->
+`osq report` SHALL count archived changes that require verification by their
+latest outcome as `passed`, `failed`, and `pending`, print `After-landing
+checks: <passed> passed, <failed> failed, <pending> pending` in text, and carry
+`history.verification: { passed, failed, pending }` in JSON. When no archived
+change requires verification, it SHALL print neither.
+
+#### Scenario: Mixed outcomes
+- **WHEN** three archived changes require verification, one passed, one failed, and one without an outcome
+- **THEN** the report prints `After-landing checks: 1 passed, 1 failed, 1 pending` and JSON carries the same counts
+
+#### Scenario: No verification required
+- **WHEN** no archived `archived` event carries `verification`
+- **THEN** the text has no `After-landing checks` line and JSON `history` has no `verification` key
+
+### Requirement: ADR departure flag outcomes
+<!-- source: src/core/report/approval-flags.ts, tests/report-approval-flags.test.ts, fixture/report/** -->
+`osq report` SHALL report `adr_departure` in `approvalFlags.byFlag` after
+`verify_starts_conflict` and before `none`, counting fired and troubled
+changes by handling mode exactly as it does the other flag ids.
+
+#### Scenario: Departure counted
+- **WHEN** one change recorded `adr_departure` shown and later has a `dead` event
+- **THEN** `approvalFlags.byFlag.adr_departure` reports shown fired 1 and troubled 1
+
+### Requirement: ADR check flag outcomes
+<!-- source: src/core/report/approval-flags.ts, tests/report-approval-flags.test.ts, fixture/report/** -->
+`osq report` SHALL report `adr_check_modified` in `approvalFlags.byFlag` after
+`adr_departure` and before `none`, counting fired and troubled changes by
+handling mode exactly as it does the other flag ids.
+
+#### Scenario: Check flag counted
+- **WHEN** one change recorded `adr_check_modified` shown and never had trouble
+- **THEN** `approvalFlags.byFlag.adr_check_modified` reports shown fired 1 and troubled 0
+
+### Requirement: Dependencies added per change
+<!-- source: src/core/report/report-dependencies.ts, src/core/report/report.ts, src/cli/report.ts, tests/dependencies-report.test.ts -->
+`osq report` SHALL list, under `history.dependencies`, each active or archived
+change whose task streams hold a `dependencies_added` event, in change order,
+with the distinct `{ file, name }` pairs from every such event of every
+attempt, sorted by file and then name. Stable JSON SHALL omit the field when
+the list is empty. Text output SHALL print a `Dependencies added:` section with
+one line per change, `  <change>: <name> (<file>), ...`, only when the list
+isn't empty.
+
+#### Scenario: Two changes add packages
+- **WHEN** change 012 added `zod` to `package.json` and change 013 added nothing
+- **THEN** `history.dependencies` lists only 012 with `zod` in `package.json`, and text prints `  012-<slug>: zod (package.json)`
+
+#### Scenario: No additions
+- **WHEN** no stream holds a `dependencies_added` event
+- **THEN** stable JSON has no `dependencies` field and text prints no `Dependencies added:` section
+
+### Requirement: Traceability gaps in report
+<!-- source: src/core/report/report-traceability.ts, src/core/report/report.ts, src/cli/report.ts, tests/trace-report.test.ts -->
+When at least one capability is opted in, `osq report` SHALL list, for each
+opted-in capability with a living spec, in name order:
+
+- the untested scenarios: the living spec's scenarios that no scenario test
+  file in the repository names, in spec order
+- the unclaimed functions: exported functions the scanner reads, in files
+  outside scenario test files and test paths that the capability's Code
+  ownership covers, that no `@scenario` tag claims for any capability. They
+  are sorted by file, then line.
+
+The stable JSON SHALL hold them under `traceability` as
+`[{ capability, untestedScenarios: [<name>], unclaimedFunctions: [{ file, name }] }]`.
+The text output SHALL print a `Traceability:` section with one line per
+capability, `  <capability>: <n> untested scenarios, <m> unclaimed functions`,
+followed by `    untested: <name>` and `    unclaimed: <file>#<name>` lines.
+With none opted in, the JSON SHALL have no `traceability` key and the text no
+section, so the report is unchanged.
+
+#### Scenario: Gaps listed
+- **WHEN** pricing is opted in, its living spec has "Volume discount tiers" that no test names, and `src/pricing/quote.ts` exports an untagged `tierPrice`
+- **THEN** the report lists "Volume discount tiers" as untested and `src/pricing/quote.ts#tierPrice` as unclaimed
+
+#### Scenario: Nothing opted in
+- **WHEN** no capability is opted in
+- **THEN** the report's text and JSON are unchanged
+
+### Requirement: Mutation in report
+<!-- source: src/core/report/report-mutation.ts, src/core/report/report.ts, src/cli/report.ts, tests/mutation-report.test.ts -->
+`osq report` SHALL take, across every active and archived change, the latest
+measured `mutation_ran` event per `<file>#<function>`, by timestamp. It SHALL
+group these by each capability named in the event's `scenarios`, for
+opted-in capabilities, in name order. Per capability it SHALL show the killed
+and survived sums, the score `killed / (killed + survived)`, and every survivor
+of those events. osq records no review of a survivor, so every one listed
+counts as not yet reviewed.
+
+The stable JSON SHALL hold
+`mutation: [{ capability, killed, survived, score, survivors: [{ file, function, line, column, mutator, replacement }] }]`.
+The score is rounded to three decimals, or null when nothing was killed or
+survived. The text SHALL print a `Mutation:` section with
+`  <capability>: <killed> of <killed + survived> killed (<percent>%), <n> survivors not yet reviewed`,
+the percent to one decimal, then
+`    survived: <file>:<line>:<column> <mutator> -> <replacement>` lines. With no
+measured `mutation_ran` event, the JSON SHALL have no `mutation` key and the
+text no section.
+
+#### Scenario: Latest measurement wins
+- **WHEN** `quote` was measured with two survivors in change 083 and later with one survivor in change 084
+- **THEN** the report's pricing entry counts only the change 084 measurement and lists one survivor
+
+#### Scenario: No mutation events
+- **WHEN** no stream holds a measured `mutation_ran` event
+- **THEN** the report's text and JSON are unchanged

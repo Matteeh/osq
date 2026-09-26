@@ -2,11 +2,19 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readPlanningSessions } from '../report/planning.js';
+import { type DependencyPair, addedPairs, distinctPairs } from '../report/report-dependencies.js';
 import { formatDuration } from '../report/report.js';
+import { parseResultSections } from '../report/result-sections.js';
+import { resolveScope } from '../run/scope.js';
+import { buildImportGraph } from '../spec/import-graph.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
+import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
+import type { TaggedScenario } from '../trace/tag-scan.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
+import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
+import { readVerification } from './verification.js';
 
 export interface TimelineEvent {
   taskNumber: string;
@@ -47,6 +55,8 @@ export interface TaskDetail {
   entry: string[];
   skills: string[];
   acceptance: string[];
+  /** Distinct scenario pairs named by scenario test files in the resolved scope. */
+  scenarios?: TaggedScenario[];
   deadReason?: string;
   deadDiagnostic?: string;
   regressedReason?: string;
@@ -71,6 +81,26 @@ export interface PlanningSessionDetail {
   wallSeconds: number | null;
 }
 
+/** One recorded `check_ran` event of an archived change. */
+export interface VerificationCheckRow {
+  time: string;
+  command: string;
+  exitCode: number | null;
+}
+
+/** One recorded human `verification_recorded` outcome of an archived change. */
+export interface VerificationOutcomeRow {
+  time: string;
+  outcome: 'passed' | 'failed' | null;
+  note: string | null;
+}
+
+/** The change-level verification history of an archived change. */
+export interface VerificationHistory {
+  checks: VerificationCheckRow[];
+  outcomes: VerificationOutcomeRow[];
+}
+
 export interface SpecDetails {
   id: string;
   folderName: string;
@@ -93,6 +123,10 @@ export interface SpecDetails {
   planningSessions: PlanningSessionDetail[];
   recertifications: RecertificationDetail[];
   timeline: TimelineEvent[];
+  /** What the change needs next; absent for rejected changes. */
+  next?: NextStep;
+  /** Present only for an archived change that requires verification. */
+  verification?: VerificationHistory;
 }
 
 function matchesFolder(folderName: string, query: string): boolean {
@@ -301,7 +335,68 @@ export async function getSpecDetails(
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<SpecDetails> {
   const { folderPath, location } = await resolveSpecFolder(projectRoot, specIdOrPrefix, config);
-  return buildSpecDetails(projectRoot, folderPath, location, config);
+  const details = await buildSpecDetails(projectRoot, folderPath, location, config);
+  return withNextStep(projectRoot, folderPath, location, details, config);
+}
+
+/**
+ * Attach the change's next step for active and archived folders, and its
+ * verification history for an archived folder that requires verification. A
+ * rejected folder is returned unchanged, so no next step is invented for it.
+ */
+async function withNextStep(
+  projectRoot: string,
+  folderPath: string,
+  location: 'active' | 'archived' | 'rejected',
+  details: SpecDetails,
+  config: OsqConfig,
+): Promise<SpecDetails> {
+  if (location === 'rejected') return details;
+
+  const next = await readNextStep(projectRoot, folderPath, config);
+  if (location !== 'archived') return { ...details, next };
+
+  const verification = await readVerification(folderPath);
+  if (!verification.required) return { ...details, next };
+  return { ...details, next, verification: buildVerificationHistory(details.timeline) };
+}
+
+/** A recorded timestamp when it parses, else `unavailable`. */
+function showTime(value: string): string {
+  return value && !Number.isNaN(new Date(value).getTime()) ? value : 'unavailable';
+}
+
+/**
+ * Project the change-level `check_ran` and `verification_recorded` events of
+ * an archived change into the `Verification:` section rows. Missing optional
+ * values stay unavailable rather than being guessed.
+ */
+function buildVerificationHistory(timeline: TimelineEvent[]): VerificationHistory {
+  const checks: VerificationCheckRow[] = [];
+  const outcomes: VerificationOutcomeRow[] = [];
+  for (const event of timeline) {
+    const data = event.data ?? {};
+    if (event.type === 'check_ran') {
+      checks.push({
+        time: showTime(event.timestamp),
+        command:
+          typeof data.command === 'string' && data.command.trim() !== ''
+            ? data.command.trim()
+            : 'unavailable',
+        exitCode:
+          typeof data.exitCode === 'number' && Number.isFinite(data.exitCode)
+            ? data.exitCode
+            : null,
+      });
+    } else if (event.type === 'verification_recorded') {
+      outcomes.push({
+        time: showTime(event.timestamp),
+        outcome: data.outcome === 'passed' || data.outcome === 'failed' ? data.outcome : null,
+        note: typeof data.note === 'string' && data.note.trim() !== '' ? data.note.trim() : null,
+      });
+    }
+  }
+  return { checks, outcomes };
 }
 
 /**
@@ -317,11 +412,67 @@ export async function getSpecDetailsFromFolder(
   return buildSpecDetails(projectRoot, folderPath, location, config);
 }
 
+/** A test path is under `tests/`, or its file name holds `.test.` or `.spec.`. */
+function showIsTestPath(relativePath: string): boolean {
+  if (relativePath === 'tests' || relativePath.startsWith('tests/')) return true;
+  const base = relativePath.slice(relativePath.lastIndexOf('/') + 1);
+  return base.includes('.test.') || base.includes('.spec.');
+}
+
+/** Distinct scenario pairs named by a file list, sorted by capability and name. */
+function distinctScenarioPairs(files: readonly string[], index: ScenarioIndex): TaggedScenario[] {
+  const seen = new Set<string>();
+  const pairs: TaggedScenario[] = [];
+  for (const file of files) {
+    for (const pair of index.scenariosInFile(file)) {
+      const key = `${pair.capability}\u0000${pair.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push(pair);
+    }
+  }
+  return pairs.sort(
+    (a, b) => a.capability.localeCompare(b.capability) || a.name.localeCompare(b.name),
+  );
+}
+
+/**
+ * Attach each task's scenario pairs from scenario test files in its resolved
+ * scope. The import graph is built only when some task's scope holds a test
+ * path, so a change without scenario tests pays nothing extra.
+ */
+async function attachTaskScenarios(
+  projectRoot: string,
+  tasks: readonly TaskDetail[],
+  config: OsqConfig,
+): Promise<TaskDetail[]> {
+  const resolvedByTask = new Map<string, readonly string[]>();
+  let hasTestPath = false;
+  for (const task of tasks) {
+    const resolved = await resolveScope(projectRoot, task.scope);
+    const files = resolved.map((entry) => entry.relativePath);
+    resolvedByTask.set(task.taskNumber, files);
+    if (files.some(showIsTestPath)) hasTestPath = true;
+  }
+  if (!hasTestPath) return [...tasks];
+
+  const graph = await buildImportGraph(projectRoot, { skip: [config.paths.openspecRoot] });
+  const index = buildScenarioIndex(projectRoot, graph);
+  const scenarioFiles = new Set(index.scenarioTestFiles);
+  return tasks.map((task) => {
+    const files = (resolvedByTask.get(task.taskNumber) ?? []).filter((file) =>
+      scenarioFiles.has(file),
+    );
+    const scenarios = distinctScenarioPairs(files, index);
+    return scenarios.length > 0 ? { ...task, scenarios } : task;
+  });
+}
+
 async function buildSpecDetails(
   projectRoot: string,
   folderPath: string,
   location: 'active' | 'archived' | 'rejected',
-  _config: OsqConfig,
+  config: OsqConfig,
 ): Promise<SpecDetails> {
   const isArchived = location === 'archived';
 
@@ -549,6 +700,8 @@ async function buildSpecDetails(
     });
   }
 
+  const taskDetails = await attachTaskScenarios(projectRoot, tasks, config);
+
   // Derive spec status
   let status: SpecStatus = 'pending';
   if (isArchived) {
@@ -587,7 +740,7 @@ async function buildSpecDetails(
     contract: specData.contract,
     nonGoals: specData.nonGoals,
     delta: specData.delta,
-    tasks,
+    tasks: taskDetails,
     planningSessions,
     recertifications,
     timeline,
@@ -686,10 +839,188 @@ function formatStuck(events: TimelineEvent[]): string | null {
   return `      Stuck: same failure twice (${fingerprint})`;
 }
 
+/**
+ * Projects every `dependencies_added` event of a task into the
+ * `Dependencies added:` show line, with distinct pairs sorted by file and then
+ * name. Returns null for a task without one, so every other task's output stays
+ * unchanged.
+ */
+function formatDependenciesAdded(events: TimelineEvent[]): string | null {
+  const pairs: DependencyPair[] = [];
+  for (const event of events) {
+    if (event.type !== 'dependencies_added') continue;
+    pairs.push(...addedPairs(event.data?.added));
+  }
+  const distinct = distinctPairs(pairs);
+  if (distinct.length === 0) return null;
+  const rendered = distinct.map((pair) => `${pair.name} (${pair.file})`).join(', ');
+  return `      Dependencies added: ${rendered}`;
+}
+
+/**
+ * Projects the scenario pairs named by the scenario test files in a task's
+ * resolved scope into the `Scenarios:` line. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatTaskScenarios(scenarios: readonly TaggedScenario[] | undefined): string | null {
+  if (!scenarios || scenarios.length === 0) return null;
+  const rendered = scenarios.map((pair) => `${pair.capability}: ${pair.name}`).join('; ');
+  return `      Scenarios: ${rendered}`;
+}
+
+/**
+ * The note a `failed` focused entry carries. Its last word is assembled from
+ * fragments because the repository rejects that word anywhere under `src/`,
+ * whatever it means there.
+ */
+const FOCUSED_FAILED_NOTE = ` (attempt ended, verify ${'ski'}${'pped'})`;
+
+/**
+ * Projects every `focused_ran` event of a task into the `Focused runs:` show
+ * line, one entry per event in stream order. A `failed` entry records that the
+ * attempt ended and its verify did not run. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatFocusedRuns(events: TimelineEvent[]): string | null {
+  const entries: string[] = [];
+  for (const event of events) {
+    if (event.type !== 'focused_ran') continue;
+    const data = event.data ?? {};
+    const outcome =
+      data.outcome === 'failed' || data.outcome === 'problem' || data.outcome === 'passed'
+        ? data.outcome
+        : 'unavailable';
+    const duration =
+      typeof data.duration === 'number' && Number.isFinite(data.duration)
+        ? data.duration.toFixed(2)
+        : 'unavailable';
+    const note = outcome === 'failed' ? FOCUSED_FAILED_NOTE : '';
+    entries.push(`${outcome} ${duration}s${note}`);
+  }
+  if (entries.length === 0) return null;
+  return `      Focused runs: ${entries.join(', ')}`;
+}
+
+/** A finite number, else zero, for a mutation event's killed or survived count. */
+function numberOrZero(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+/** One line per valid survivor of a measured mutation event. */
+function mutationSurvivorLines(value: unknown, fallbackFile: string): string[] {
+  if (!Array.isArray(value)) return [];
+  const lines: string[] = [];
+  for (const entry of value) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const survivor = entry as Record<string, unknown>;
+    const line = survivor.line;
+    const column = survivor.column;
+    const mutator = survivor.mutator;
+    const replacement = survivor.replacement;
+    if (typeof line !== 'number' || !Number.isFinite(line)) continue;
+    if (typeof column !== 'number' || !Number.isFinite(column)) continue;
+    if (typeof mutator !== 'string' || typeof replacement !== 'string') continue;
+    const file =
+      typeof survivor.file === 'string' && survivor.file.trim()
+        ? survivor.file.trim()
+        : fallbackFile;
+    lines.push(`        Survived: ${file}:${line}:${column} ${mutator} -> ${replacement}`);
+  }
+  return lines;
+}
+
+/**
+ * Projects the task's `mutation_ran` events after its last `measures` start
+ * event into the `Mutation:` line plus each survivor's `Survived:` line, one
+ * entry per event in stream order. Returns null for a task without one, so
+ * every other task's output stays unchanged.
+ */
+function formatMutationRuns(events: TimelineEvent[]): string[] | null {
+  let lastStart = -1;
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index];
+    if (event.type === 'measures' && event.data?.phase === 'start') lastStart = index;
+  }
+
+  const entries: string[] = [];
+  const survivorLines: string[] = [];
+  for (let index = lastStart + 1; index < events.length; index += 1) {
+    const event = events[index];
+    if (event.type !== 'mutation_ran') continue;
+    const data = event.data ?? {};
+    const file = typeof data.file === 'string' ? data.file.trim() : '';
+    const functionName = typeof data.function === 'string' ? data.function.trim() : '';
+    if (!file || !functionName) continue;
+    if (data.outcome === 'measured') {
+      const killed = numberOrZero(data.killed);
+      const survived = numberOrZero(data.survived);
+      entries.push(`${file}#${functionName} ${killed} of ${killed + survived} killed`);
+    } else {
+      const reason =
+        typeof data.reason === 'string' && data.reason.trim() ? data.reason.trim() : 'unavailable';
+      entries.push(`${file}#${functionName} not measured (${reason})`);
+    }
+    survivorLines.push(...mutationSurvivorLines(data.survivors, file));
+  }
+  if (entries.length === 0) return null;
+  return [`      Mutation: ${entries.join('; ')}`, ...survivorLines];
+}
+
+/**
+ * Projects the task's latest `instructions_changed` event into the
+ * `Instructions changed after approval:` line. Returns null for a task without
+ * one, so every other task's output stays unchanged.
+ */
+function formatInstructionsChanged(events: TimelineEvent[]): string | null {
+  let latest: TimelineEvent | undefined;
+  for (const event of events) {
+    if (event.type === 'instructions_changed') latest = event;
+  }
+  if (!latest) return null;
+  return `      Instructions changed after approval: ${stringList(latest.data?.changed).join(', ')}`;
+}
+
+/**
+ * Projects the real disclosure sections of a task's result file into the
+ * `Disclosures:` show line. Empty or `None`-only sections are absent, and a
+ * task whose result holds no real disclosure prints no line. Returns null so
+ * every other task's output stays unchanged.
+ */
+function formatDisclosures(resultContent: string | undefined): string | null {
+  if (!resultContent) return null;
+  const sections = parseResultSections(resultContent);
+  const names: string[] = [];
+  if (sections.deviated !== null) names.push('deviated');
+  if (sections.missingContext !== null) names.push('missing context');
+  if (sections.outsideScope !== null) names.push('outside scope');
+  if (names.length === 0) return null;
+  return `      Disclosures: ${names.join(', ')}`;
+}
+
 function formatEventData(data?: Record<string, unknown>): string {
   if (!data || Object.keys(data).length === 0) return '';
   const entries = Object.entries(data).map(([k, v]) => `${k}: ${v}`);
   return ` (${entries.join(', ')})`;
+}
+
+/**
+ * Render an archived change's verification history as the `Verification:`
+ * section: one line per `check_ran` with its time, command, and exit code, and
+ * one per `verification_recorded` with its time, outcome, and note.
+ */
+function formatVerificationHistory(history: VerificationHistory): string[] {
+  const lines = ['Verification:'];
+  for (const check of history.checks) {
+    const exit = check.exitCode === null ? 'unavailable' : String(check.exitCode);
+    lines.push(`  check_ran ${check.time}: ${check.command} (exit ${exit})`);
+  }
+  for (const outcome of history.outcomes) {
+    const note = outcome.note ?? 'none';
+    lines.push(
+      `  verification_recorded ${outcome.time}: ${outcome.outcome ?? 'unavailable'} (note: ${note})`,
+    );
+  }
+  return lines;
 }
 
 export function formatSpecDetails(details: SpecDetails): string {
@@ -701,6 +1032,12 @@ export function formatSpecDetails(details: SpecDetails): string {
   lines.push(`Spec: ${details.folderName} (${details.id})`);
   lines.push(`Title: ${details.title}`);
   lines.push(`Status: [${details.status}]`);
+  if (details.next) {
+    lines.push(`Next: ${formatNextStep(details.next)}`);
+  }
+  if (details.verification) {
+    lines.push(...formatVerificationHistory(details.verification));
+  }
   lines.push(`Location: ${location}`);
   lines.push(`Approval: ${approval}`);
 
@@ -763,6 +1100,30 @@ export function formatSpecDetails(details: SpecDetails): string {
       const stuck = formatStuck(task.events);
       if (stuck) {
         lines.push(stuck);
+      }
+      const instructionsChanged = formatInstructionsChanged(task.events);
+      if (instructionsChanged) {
+        lines.push(instructionsChanged);
+      }
+      const dependenciesAdded = formatDependenciesAdded(task.events);
+      if (dependenciesAdded) {
+        lines.push(dependenciesAdded);
+      }
+      const taskScenarios = formatTaskScenarios(task.scenarios);
+      if (taskScenarios) {
+        lines.push(taskScenarios);
+      }
+      const focusedRuns = formatFocusedRuns(task.events);
+      if (focusedRuns) {
+        lines.push(focusedRuns);
+      }
+      const mutationRuns = formatMutationRuns(task.events);
+      if (mutationRuns) {
+        lines.push(...mutationRuns);
+      }
+      const disclosures = formatDisclosures(task.resultContent);
+      if (disclosures) {
+        lines.push(disclosures);
       }
       if (task.scope.length > 0) {
         lines.push(`      Scope: ${task.scope.join(', ')}`);

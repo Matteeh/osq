@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b79bbafd77d78fd8765769bcb67ea628a091c36e3586b822af837e8db217416b"
+build_stamp: "d191d4e"
+project_commit: "d191d4e"
+exit_code: 0
+scope_files: {"fixture/report/expected.json":"sha256:c4b2596f7fb77393990db1d131596a29b28c31f5bafda7fee16ee7aafb9c35b0","src/core/report/approval-flags.ts":"sha256:47d08776c7b9cd0334e87e4b9582910eb860aa0bb5e75614673f201f74077dc4","src/core/spec/digest-decisions.ts":"sha256:a7a54e2cedfe5c182abc74103548b203f196832e478be55e95e6d2d6abfef178","src/core/spec/digest.ts":"sha256:bd5411125a83c601a523f5a10bfbfccd7b8abb6c0c4689d07cd92a2deaec9b61","tests/adr-check-flag.test.ts":"sha256:7b15a52e8c37959b04b3c578b008a0352fcc1303ee4fc95841aa68a1601a383c","tests/report-approval-flags.test.ts":"sha256:8d0a1b0386eac46c8b57dc2f89f1dc5f54331d2dbfc6830a4f5109fcec215b36","tests/report-json.test.ts":"sha256:a5a5dd1f57dfd1ed5e8444183b6056d98a46b449dad92c3c34343417738fa218"}
+---
+2026-09-25T08:53:59.298Z

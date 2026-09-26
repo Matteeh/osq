@@ -49,6 +49,11 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
           },
         ]),
       ),
+      troubledChanges: (report.approvalFlags.troubledChanges ?? []).map((entry) => ({
+        change: entry.change,
+        flags: [...entry.flags],
+        kinds: [...entry.kinds],
+      })),
     },
     completionRate: report.completionRate,
     coverage: {
@@ -146,6 +151,33 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
         })),
       },
       scopeRegressions: { ...report.history.scopeRegressions },
+      ...(report.history.verification ? { verification: { ...report.history.verification } } : {}),
+      ...((report.history.rework ?? []).length > 0
+        ? {
+            rework: (report.history.rework ?? []).map((entry) => ({
+              change: entry.change,
+              fixedBy: [...entry.fixedBy],
+            })),
+          }
+        : {}),
+      ...((report.history.disclosures ?? []).length > 0
+        ? {
+            disclosures: (report.history.disclosures ?? []).map((entry) => ({
+              change: entry.change,
+              deviated: entry.deviated,
+              missingContext: entry.missingContext,
+              outsideScope: entry.outsideScope,
+            })),
+          }
+        : {}),
+      ...((report.history.dependencies ?? []).length > 0
+        ? {
+            dependencies: (report.history.dependencies ?? []).map((entry) => ({
+              change: entry.change,
+              added: entry.added.map((pair) => ({ file: pair.file, name: pair.name })),
+            })),
+          }
+        : {}),
     },
     now: { ...report.now },
     planning: {
@@ -154,7 +186,17 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       wallSeconds: report.planning.wallSeconds,
       wallSecondsByChange: { ...report.planning.wallSecondsByChange },
       tokens: { ...report.planning.tokens },
-      cost: { ...report.planning.cost },
+      cost: {
+        bySource: {
+          approvalPrice: { ...report.planning.cost.bySource.approvalPrice },
+          harness: { ...report.planning.cost.bySource.harness },
+          reportEstimate: { ...report.planning.cost.bySource.reportEstimate },
+          totalWithEstimates: report.planning.cost.bySource.totalWithEstimates,
+        },
+        formattedTotal: report.planning.cost.formattedTotal,
+        provenance: report.planning.cost.provenance,
+        total: report.planning.cost.total,
+      },
       coverage: { ...report.planning.coverage },
       byChange: Object.fromEntries(
         Object.entries(report.planning.byChange).map(([change, entry]) => [
@@ -198,6 +240,36 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
       total: report.queue.total,
     },
     specs: { ...report.specs },
+    ...(report.traceability
+      ? {
+          traceability: report.traceability.map((entry) => ({
+            capability: entry.capability,
+            unclaimedFunctions: entry.unclaimedFunctions.map((fn) => ({
+              file: fn.file,
+              name: fn.name,
+            })),
+            untestedScenarios: [...entry.untestedScenarios],
+          })),
+        }
+      : {}),
+    ...(report.mutation
+      ? {
+          mutation: report.mutation.map((entry) => ({
+            capability: entry.capability,
+            killed: entry.killed,
+            survived: entry.survived,
+            score: entry.score,
+            survivors: entry.survivors.map((survivor) => ({
+              file: survivor.file,
+              function: survivor.function,
+              line: survivor.line,
+              column: survivor.column,
+              mutator: survivor.mutator,
+              replacement: survivor.replacement,
+            })),
+          })),
+        }
+      : {}),
     tokens: {
       input: report.tokens.input,
       cached_input: report.tokens.cached_input,

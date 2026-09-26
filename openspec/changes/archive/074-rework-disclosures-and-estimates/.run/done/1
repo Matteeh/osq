@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b0612d734eeae993e05d2422f94710aeeabaa7ac82ae2c2f501907cdbabe152d"
+build_stamp: "9231e23"
+project_commit: "9231e23"
+exit_code: 0
+scope_files: {"src/cli/plan-queue.ts":"sha256:8922bf6f1e058b5282ab93f727e8bb77e682666c63beb20691bdf1238df76a8b","src/core/foundation/new.ts":"sha256:bdf9f24ddd1a14a81053516b7b4e8ed6f08268fa6a3c760c3394c51edb9c6171","src/core/spec/linter.ts":"sha256:51ca9c77c7c691c1c8fa2b9dcb9230e4a9382308fbd680ef25905d070686ee92","src/core/spec/parser.ts":"sha256:e699e2f401b5a6eea2d81d45f6a69b2e34e3b1a9d9baca3283ffbf184809bbfb","src/core/status/queue-parser.ts":"sha256:a608669d18398256f187ae5a6ebeed06cd82dc04490fc1844047bb8f2a7ea949","src/core/status/queue-planning.ts":"sha256:17d2653e2f7bd6332a80f6317fd6d00ca1591cc4f3a30105fb9e9b68ac3ccaeb","src/core/status/queue-state.ts":"sha256:ca6db7d9163c578a916d0798760985899168a9a65f2e6ea35dd076216a45345b","tests/fixes-declaration.test.ts":"sha256:863f01ed6c41a566ba4416d0f00a808358827c0a3980620c8715fcc611c0caf7"}
+---
+2026-09-24T20:46:33.377Z

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:982fa5e050862b907541213508bd80df3ce42850807d210910c4ceffaabc1391"
+build_stamp: "a1402d2"
+project_commit: "a1402d2"
+exit_code: 0
+scope_files: {"README.md":"sha256:3ebd5bd15960c54c7254ba189d5949115626b5f57997ddb4f2c924c9d6037578","src/cli/lint.ts":"sha256:5b30aafd2df612a87b56735107e8abc9ccdb750255c1bcfab8bff793eade9781","src/core/foundation/config.ts":"sha256:7206d9ae2c3fd50b29b77fff81758afdb6459650aa86cda6a68e4d1dc3288e21","src/core/spec/capability-impact.ts":"sha256:5c21306e1a79702245cc0c01ef4d213cd7806f6fe148dbf0b78186ec4ad0dbf9","src/core/spec/impact-lint.ts":"sha256:a0f682ade7843f7adddfa905cff125c25cc8037c456817d2005fe463e8c42334","src/core/spec/linter.ts":"sha256:e88b649c3579fa7801754a62f9b2e9ae2c0389d55295b52d0395c3100f6d86a2","src/core/spec/test-impact.ts":"sha256:6a1fb0b1467de9fdc9eee6c37e542ffaec7b96c8364be78d3ce4bc6b40090155","tests/impact-lint.test.ts":"sha256:4b31b50f0aa2446db9628cc1fe941208e9913a3ca815056aed2178409a18f509"}
+---
+2026-09-25T06:24:34.580Z

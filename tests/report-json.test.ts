@@ -119,8 +119,14 @@ describe('report --json', () => {
     const parsed = JSON.parse(raw) as Record<string, Record<string, unknown>>;
 
     assert.deepEqual(sortedKeys(parsed.specs), ['active', 'archived', 'total']);
-    assert.deepEqual(sortedKeys(parsed.approvalFlags as object), ['byFlag', 'changes']);
+    assert.deepEqual(sortedKeys(parsed.approvalFlags as object), [
+      'byFlag',
+      'changes',
+      'troubledChanges',
+    ]);
     assert.deepEqual(sortedKeys((parsed.approvalFlags as Record<string, object>).byFlag), [
+      'adr_check_modified',
+      'adr_departure',
       'none',
       'removed_requirement',
       'sensitive_path',
@@ -156,6 +162,7 @@ describe('report --json', () => {
     ]);
     assert.deepEqual(sortedKeys(parsed.history.scopeRegressions as object), [
       'detected',
+      'recertifiedAutomatically',
       'recertifiedByHuman',
       'requeuedForAgent',
       'verificationFailedAtDetection',
@@ -166,6 +173,7 @@ describe('report --json', () => {
       verificationPassedAtDetection: 0,
       verificationFailedAtDetection: 0,
       recertifiedByHuman: 0,
+      recertifiedAutomatically: 0,
       requeuedForAgent: 0,
     });
     assert.deepEqual(sortedKeys(parsed.history.sizes as object), [
@@ -246,9 +254,16 @@ describe('report --json', () => {
       'reasoning',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning.cost as object), [
+      'bySource',
       'formattedTotal',
       'provenance',
       'total',
+    ]);
+    assert.deepEqual(sortedKeys((parsed.planning.cost as Record<string, object>).bySource), [
+      'approvalPrice',
+      'harness',
+      'reportEstimate',
+      'totalWithEstimates',
     ]);
     assert.deepEqual(sortedKeys(parsed.planning.coverage as object), [
       'reportedSessions',
@@ -457,6 +472,7 @@ describe('formatMetricsReport', () => {
           verificationPassedAtDetection: 1,
           verificationFailedAtDetection: 2,
           recertifiedByHuman: 1,
+          recertifiedAutomatically: 0,
           requeuedForAgent: 1,
         },
       },
@@ -659,6 +675,7 @@ describe('formatMetricsReport', () => {
           verificationPassedAtDetection: 0,
           verificationFailedAtDetection: 0,
           recertifiedByHuman: 0,
+          recertifiedAutomatically: 0,
           requeuedForAgent: 0,
         },
       },

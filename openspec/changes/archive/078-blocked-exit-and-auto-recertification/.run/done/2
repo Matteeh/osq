@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b9d0818a7d8265fcab2f29f9958793d6381906c0265dbbc56a4386875b4ea1f4"
+build_stamp: "8def602"
+project_commit: "8def602"
+exit_code: 0
+scope_files: {"src/core/report/result-sections.ts":"sha256:c63dc799831121c0ed1e32bdb346dd35328475dbef51859e9d48f7f9f1e42012","src/watcher/blocked.ts":"sha256:142cc6467eb74d9fcc05ff75ce14321585fe10ace75441c000b6d8d2d4a8d9e7","src/watcher/failure-reason.ts":"sha256:bd3524b30ed2e46829121acff2c3cb5614499cf70aeca95f575a795ed3c16e43","src/watcher/runner.ts":"sha256:5013d3ab40ea811168e5803e91c659daf5caa142d5047e2c3149c423ff4ac3cc","src/watcher/task-verify.ts":"sha256:7f59f258f37f55f777cee79c64bbcdf3b484c260df466d18b5bb95ec01cc7f31","tests/blocked-exit.test.ts":"sha256:b39352524910ac78dc4bbf95392d770ce5ab806db378d542cd04dc5c41135560","tests/result-sections.test.ts":"sha256:c68cdfb8de540b4b77e77a27b0b543f3822a310e5e8e97ac512a64915e0c5714"}
+---
+2026-09-25T07:04:41.067Z

@@ -1,8 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { CLAUDE_PLAN_COMMAND_PATH } from './init-blocks.js';
 import { updateAgentsMd, updateClaudePlanCommand, updatePlannerMd } from './init-managed.js';
 import { TEMPLATES_ROOT } from './package-root.js';
+import { writeRulesBlock } from './rules-block.js';
+import { writeTraceabilityBlocks } from './traceability-block.js';
 
 export { TEMPLATES_ROOT } from './package-root.js';
 export {
@@ -49,8 +52,10 @@ export interface InitResult {
   refreshedFiles: string[];
   currentFiles: string[];
   updatedAgentsMd: boolean;
+  updatedProjectRules: boolean;
   updatedPlannerMd: boolean;
   updatedClaudePlanCommand: boolean;
+  updatedTraceability: boolean;
 }
 
 async function pathExists(targetPath: string): Promise<boolean> {
@@ -92,7 +97,7 @@ async function writeOrRefreshFile(
 
 export async function scaffoldProject(
   targetDir: string,
-  options: { refreshSchema?: boolean } = {},
+  options: { refreshSchema?: boolean; config?: OsqConfig } = {},
 ): Promise<InitResult> {
   const result: InitResult = {
     createdDirs: [],
@@ -101,8 +106,10 @@ export async function scaffoldProject(
     refreshedFiles: [],
     currentFiles: [],
     updatedAgentsMd: false,
+    updatedProjectRules: false,
     updatedPlannerMd: false,
     updatedClaudePlanCommand: false,
+    updatedTraceability: false,
   };
 
   const dirsToCreate = [
@@ -153,8 +160,13 @@ export async function scaffoldProject(
 
   const claudeCommandExisted = await pathExists(path.join(targetDir, CLAUDE_PLAN_COMMAND_PATH));
   result.updatedAgentsMd = await updateAgentsMd(targetDir);
+  result.updatedProjectRules = await writeRulesBlock(targetDir, options.config ?? DEFAULT_CONFIG);
   result.updatedPlannerMd = await updatePlannerMd(targetDir);
   result.updatedClaudePlanCommand = await updateClaudePlanCommand(targetDir);
+  result.updatedTraceability = await writeTraceabilityBlocks(
+    targetDir,
+    options.config ?? DEFAULT_CONFIG,
+  );
 
   if (claudeCommandExisted) result.existingFiles.push(CLAUDE_PLAN_COMMAND_PATH);
   else result.createdFiles.push(CLAUDE_PLAN_COMMAND_PATH);

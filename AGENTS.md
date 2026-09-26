@@ -23,11 +23,13 @@ src/core/         code grouped by the capability that owns it:
   report/         metrics-and-reporting
   status/         status-inspection
   web/            web-inspection
+  trace/          traceability
 src/watcher/      event loop. calls core, owns every automatic marker write.
 src/harness/      one adapter per harness. spawn + setup + event translation only.
   agy/ claude/ codex/ opencode/
   index.ts mock.ts process.ts stream.ts types.ts
 src/index.ts      public configuration exports.
+src/testing/      scenario test helper; the `@matteeh/osq/testing` entry point.
 packages/ui/      read-only browser dashboard; `scripts/stage-ui.mjs` copies its build to `ui/dist`.
 templates/        files `init` copies. owned by the consumer after copy.
 openspec/         living capability specs, in-flight changes, and the archive.
@@ -69,7 +71,7 @@ Tests that submit fixture changes to lint or approval use a local `node verify.c
 You were handed one task, `tasks/<n>.md`, from a change under `openspec/changes/`.
 
 1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.
-2. Too big for one pass? Write why in `.run/results/<n>.md`, exit without code.
+2. Can't finish within your task's `scope`, or too big for one pass? Write what you need under `## Blocked` in `.run/results/<n>.md`, and exit without code.
 3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.
 4. Tests for each acceptance line before implementing.
 5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.
@@ -81,8 +83,10 @@ You were handed one task, `tasks/<n>.md`, from a change under `openspec/changes/
 Write `.run/results/<n>.md` first, with these headings in this order. Leave out any that would be empty.
 
 - `## Changed`: what you changed.
-- `## Deviated`: where you departed from the task, and why.
-- `## Missing context`: what you needed that the task files did not give you.
+- `## Deviated`: for the reviewer: what you did differently from the task, and why.
+- `## Missing context`: for the planner: what the task lacked that you needed.
+- `## Outside scope`: for the human: what you found broken outside your scope and left alone.
+- `## Blocked`: for the human: what you need before this task can be finished within its scope.
 - `## Next`: for unfinished work, the acceptance line to pick up next.
 
 End the file with one line, `Touched: <path>, <path>`, listing every file you changed other than the result file, relative to the project root.

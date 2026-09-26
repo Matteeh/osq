@@ -4,6 +4,7 @@ import type { GatesConfig } from './config-gates.js';
 import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
+import type { TraceabilityConfig } from './config-traceability.js';
 import type {
   AgyConfig,
   LogConfig,
@@ -34,6 +35,7 @@ export type OsqUserConfig = Partial<
     | 'planning'
     | 'queue'
     | 'gates'
+    | 'traceability'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -49,4 +51,5 @@ export type OsqUserConfig = Partial<
   readonly planning?: Partial<PlanningConfig>;
   readonly queue?: Partial<QueueConfig>;
   readonly gates?: Partial<GatesConfig>;
+  readonly traceability?: Partial<TraceabilityConfig>;
 };

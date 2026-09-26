@@ -56,11 +56,12 @@ your complete prompt; read it and follow it exactly.
   verify with existing tests. `any` is only for a task that can honestly start
   either way.
 - A file belongs to one task. Before each later task, the watcher re-hashes the
-  resolved `scope` of every done task; any change halts the change until a human
-  runs `osq retry`. Globs resolve again at every audit, so a broad glob also
-  captures files that later tasks create. When a later task must extend a file,
-  order that later task after the owner, name the shared file in the proposal,
-  and list the expected `osq retry` under `## Human steps`.
+  resolved `scope` of every done task. When a later task must extend a file,
+  order that later task after the owner, put the file in its `scope` too, and
+  name the shared file in the proposal; the watcher then recertifies the owner
+  by itself when the owner's `verify` still passes. Any other change to a done
+  task's files halts the change until a human runs `osq retry`. Globs resolve again
+  at every audit, so a broad glob also captures files that later tasks create.
 - Task bodies carry acceptance lines and the names of existing code to reuse,
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.
@@ -75,10 +76,24 @@ your complete prompt; read it and follow it exactly.
   adds, changes, or removes: commands, flags, config keys, frontmatter fields,
   document sections, dead reasons, and event types. Write `None` when there are
   none; `osq lint` rejects a proposal without the section.
+- `## Decisions` follows `## Surface`. Give one line per accepted ADR that
+  governs a capability the change writes, saying what it means for this
+  change, such as `ADR 009: the adapter is the only module that imports
+  dockerode.` Name a system-wide ADR only to depart from it; AGENTS.md already
+  carries its rule. A departure line starts `Departs from ADR <n>:` and gives
+  the reason; a needed departure is a reason for a new ADR. Write `None` when
+  no ADR governs the change. Repeat a rule in a task only when that task
+  touches the area.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
 - Anything a task must not do itself goes under `## Human steps`, which never
   includes `osq approve`.
+- Split `## Human steps` into `### Before approval` and `### After landing`, and
+  write `None` under one with no steps. A step during the run, such as an
+  expected `osq retry`, goes under Before approval. After-landing steps, or
+  `check: <command>` in the proposal frontmatter, keep the change verification
+  pending after it lands, and its dependents wait, until a human runs
+  `osq verified <id> --passed` or `--failed`.
 - Guidance a task needs about another capability's code, such as how to test
   against it, goes into that capability's spec through a delta, not only into the
   task.

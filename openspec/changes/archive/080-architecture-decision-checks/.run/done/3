@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6748729210d030b52ae5b9317c2bca9bc52aaa4b3953fbc67e1c1c7e122cad51"
+build_stamp: "d191d4e"
+project_commit: "d191d4e"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:c03cbb5babea6bd6b0fb14a428e3767c2ed4064b5cb13807ec268d97efc73489","src/watcher/auto-retry.ts":"sha256:0ca26f552129a93c4c09ac14107dac2e93a0c97aa98936075b50d1cab025271c","src/watcher/dependencies.ts":"sha256:6d97f60f3ff01642438dbe2e586060fed707f1fdbaa77b7a781838600f02aad3","src/watcher/failure-reason.ts":"sha256:2cffd4a08260504fcf94a2ade5ce6419d7822af62fb31361159aea5444163167","src/watcher/measures.ts":"sha256:e6206c5b5c6fe0ab35fb2b4ef8790c16d3ec14a9e9147d1a6f8f279a4668ca3a","src/watcher/runner.ts":"sha256:1d490c5c6b73d1aab24aea0085e47cec02118a3601b55d678cfcb6355f750947","src/watcher/task-verify.ts":"sha256:d30f5cf2a5a2bba2295e38ac286968a8d34447083e0c6f7ab2ecfe700c2cbede","tests/denied-dependency.test.ts":"sha256:451fb79263423071307185a0ea8c0295b99d937943c87ce52db6eea002816fcd"}
+---
+2026-09-25T08:58:56.448Z

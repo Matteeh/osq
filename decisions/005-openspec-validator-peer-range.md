@@ -1,3 +1,8 @@
+---
+status: accepted
+applies_to: [spec-lint-and-approve, cli-foundation]
+rule: An OpenSpec version inside the peer range passes with a warning; one outside it fails.
+---
 # 005. OpenSpec Validator Peer Range
 
 Date: 2026-09-23

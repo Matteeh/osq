@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7d46f023ed24a54b5e786a93c1bb520c627a5a3aa7e57845b972645fd67c8caa"
+build_stamp: "9231e23"
+project_commit: "9231e23"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:2ad001a37bfe2d7479e4167aaff8e27cf2da61f3c49614326b2a3e2a19dc2745","src/core/foundation/doctor-prices.ts":"sha256:112f38332de4c13d9e979824fb81aadaf16235a1a40ff348e1dea3c5504a1c18","src/core/foundation/doctor.ts":"sha256:acea90b98ca3d8f06aa0af77c34faf602a88be7e8daf08101019cdd615a83a10","src/core/report/planning-price-gaps.ts":"sha256:7a8e04663541678e0f58c332ace4a82cb0384f162ca42284eeca889cce3e3347","src/core/spec/approve.ts":"sha256:c90f852f0347adfec02f1359f5129278c1ad36d7bf2a1d30d697ed8ec7206fe3","tests/planning-price-gaps.test.ts":"sha256:bd5aa4212705221e6c5702a30b4f444be7100d4c23350cd81446c7ba893f617c"}
+---
+2026-09-24T21:04:43.369Z

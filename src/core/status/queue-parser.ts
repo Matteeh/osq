@@ -7,6 +7,7 @@ export interface QueueItem {
   readonly slug: string;
   readonly title: string;
   readonly dependsOn: readonly string[];
+  readonly fixes: readonly string[];
   readonly body: string;
   readonly hash: string;
 }
@@ -15,9 +16,48 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HEADING_RE = /^##[ \t]+\[([^\]\r\n]+)\][ \t]+(\S.*?)[ \t\r]*$/;
 const ITEM_LIKE_RE = /^##[ \t]*\[.*$/gm;
 const DEP_LINE_RE = /^Depends on:[ \t]*(.*?)[ \t\r]*$/;
+const FIXES_LINE_RE = /^Fixes:[ \t]*(.*?)[ \t\r]*$/;
 
 export function getQueuePath(projectRoot: string, config: OsqConfig = DEFAULT_CONFIG): string {
   return path.join(projectRoot, config.paths.openspecRoot, 'queue.md');
+}
+
+/**
+ * Parse the optional `Fixes:` line right after `Depends on:`. Returns the fix
+ * slugs and the first body line index. Each fix must be a valid, unrepeated,
+ * earlier item slug and never the item's own slug.
+ */
+function parseFixesLine(
+  lines: readonly string[],
+  afterIndex: number,
+  slug: string,
+  seen: ReadonlySet<string>,
+  fail: (detail: string) => Error,
+): { fixes: string[]; bodyStart: number } {
+  const index = lines.findIndex((line, position) => position > afterIndex && line.trim() !== '');
+  if (index === -1) return { fixes: [], bodyStart: afterIndex + 1 };
+  const match = FIXES_LINE_RE.exec(lines[index].replace(/\r$/, ''));
+  if (!match) return { fixes: [], bodyStart: afterIndex + 1 };
+  const value = match[1].trim();
+  if (!value) throw fail(`queue item "${slug}" has an empty fixes line`);
+  const fixes: string[] = [];
+  const seenFixes = new Set<string>();
+  for (const token of value.split(',').map((entry) => entry.trim())) {
+    if (!SLUG_RE.test(token)) {
+      throw fail(`queue item "${slug}" has an invalid fix ${JSON.stringify(token)}`);
+    }
+    if (seenFixes.has(token)) throw fail(`queue item "${slug}" repeats fix "${token}"`);
+    seenFixes.add(token);
+    if (token === slug || !seen.has(token)) {
+      throw fail(`queue item "${slug}" fix "${token}" must reference an earlier item`);
+    }
+    fixes.push(token);
+  }
+  return { fixes, bodyStart: index + 1 };
+}
+
+function paragraphEnd(lines: readonly string[], start: number, end: number): number {
+  return lines.slice(start, end).reduce((sum, line) => sum + line.length + 1, 0);
 }
 
 function parseSection(raw: string, queuePath: string, seen: ReadonlySet<string>): QueueItem {
@@ -52,16 +92,20 @@ function parseSection(raw: string, queuePath: string, seen: ReadonlySet<string>)
       dependsOn.push(token);
     }
   }
-  const depLineEnd = lines.slice(0, depIndex + 1).reduce((sum, line) => sum + line.length + 1, 0);
-  const body = raw.slice(depLineEnd).trim();
+  const { fixes, bodyStart } = parseFixesLine(lines, depIndex, slug, seen, fail);
+  const body = raw.slice(paragraphEnd(lines, 0, bodyStart)).trim();
   if (!body) throw fail(`queue item "${slug}" has an empty brief body`);
   if (/^\s*Depends on:/m.test(body)) {
     throw fail(`queue item "${slug}" has more than one Depends on: line`);
+  }
+  if (/^\s*Fixes:/m.test(body)) {
+    throw fail(`queue item "${slug}" has more than one Fixes: line`);
   }
   return {
     slug,
     title,
     dependsOn,
+    fixes,
     body,
     hash: `sha256:${createHash('sha256').update(raw, 'utf8').digest('hex')}`,
   };

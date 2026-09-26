@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f2d18eb003988bb803cfa3742204a0084001fee110f74976da60ab5d4c5ee756"
+build_stamp: "d191d4e"
+project_commit: "d191d4e"
+exit_code: 0
+scope_files: {"decisions/README.md":"sha256:f2178c33139915dec745502b86bf66bb19db1c55b825098340b139cff5080dae","src/core/foundation/decisions-validate.ts":"sha256:1de185ffc7fc7d966bf52c2167fb973b0d12ab0f013001ed9c674883c5411b9d","src/core/foundation/decisions.ts":"sha256:c1159b12881870bcf03d0956c47b3213db21a0177eadb8ae7771630942739627","src/core/foundation/doctor-decisions.ts":"sha256:e349ecd0a847c9a3fe7c7bba5643008148ca9a7a14dad125f78782b0823f77f2","tests/adr-checks-denies.test.ts":"sha256:7f3b90b8094abe65fd9196d242ef0b8030b3e4c29498e9fe2b4aee88cd6014fd"}
+---
+2026-09-25T08:49:52.748Z

@@ -5,10 +5,22 @@ const REJECT_HINT = '--reason <text>';
 
 function needsYouLine(item: NeedsYouItem): string {
   const head = `  ${item.change.id}: ${item.change.title}`;
-  if (item.kind === 'approval') return `${head} — ${item.command}`;
+  if (item.kind === 'planning') return `${head} — unplanned — ${item.command}`;
+  if (item.kind === 'verification-pending')
+    return `${head} — verification pending — ${item.command}`;
+  if (item.kind === 'verification-failed') return `${head} — verification failed — ${item.command}`;
+  if (item.kind === 'approval') {
+    return item.beforeApproval
+      ? `${head} — do the steps before approval first — ${item.command}`
+      : `${head} — ${item.command}`;
+  }
   if (item.kind === 'change-regressed') return `${head} — change regressed — ${item.command}`;
   const task = item.task as InboxTaskRef;
   const row = `${head} — task ${task.number}: ${task.title}`;
+  if (item.blocked) {
+    const need = item.blocked.need.replace(/\s+/g, ' ');
+    return `${row} — blocked: ${need} — reject, then osq plan --next --replan — ${item.command}`;
+  }
   if (!item.stuck) return `${row} — ${item.command}`;
   return `${row} — stuck: same failure twice; amend the spec or osq reject ${item.change.id} ${REJECT_HINT} — ${item.command}`;
 }
@@ -18,8 +30,23 @@ function runningLine(item: RunningItem): string {
   return `  ${item.change.id}: ${item.change.title} — task ${item.task.number}: ${item.task.title} — ${duration} — ${item.command}`;
 }
 
+/**
+ * The `— disclosed: ...` suffix for a landed item whose tasks disclosed a gap.
+ * Counts appear in the order deviated, missing context, outside scope, and an
+ * item without disclosures contributes nothing.
+ */
+function disclosedSuffix(item: LandedItem): string {
+  const disclosures = item.disclosures;
+  if (!disclosures) return '';
+  const parts: string[] = [];
+  if (disclosures.deviated > 0) parts.push(`deviated ${disclosures.deviated}`);
+  if (disclosures.missingContext > 0) parts.push(`missing context ${disclosures.missingContext}`);
+  if (disclosures.outsideScope > 0) parts.push(`outside scope ${disclosures.outsideScope}`);
+  return parts.length > 0 ? ` — disclosed: ${parts.join(', ')}` : '';
+}
+
 function landedLine(item: LandedItem): string {
-  return `  ${item.change.id}: ${item.change.title} — archived ${item.archivedAt} — ${item.command}`;
+  return `  ${item.change.id}: ${item.change.title} — archived ${item.archivedAt}${disclosedSuffix(item)} — ${item.command}`;
 }
 
 /** Concise text rendering of the three inbox groups. */

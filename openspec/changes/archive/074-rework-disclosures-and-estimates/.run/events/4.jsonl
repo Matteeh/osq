@@ -1,0 +1,119 @@
+{"type":"verify_ran","timestamp":"2026-09-24T20:54:25.216Z","data":{"command":"node --import tsx --test tests/plan-disclosures.test.ts","exitCode":1,"duration":0.02,"output":"Could not find 'tests/plan-disclosures.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/plan-disclosures.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-24T20:54:25.572Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":417,"repoFiles":1242,"repoLines":129965,"importFanIn":7,"proposalWords":1183,"taskWords":339,"deltaRequirements":15,"deltaScenarios":41}}
+{"type":"started","timestamp":"2026-09-24T20:54:25.577Z","data":{"harness":"opencode","model":"deepseek/deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"9231e23","pid":98781,"timeoutSeconds":1800,"version":"0.2.1","commit":"9231e23"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:29.894Z","data":{"tool":"bash","summary":"ls openspec/changes/074-rework-disclosures-and-estimates/.ru"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:29.907Z","data":{"tool":"read","summary":"src/core/foundation/config-planning.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:29.994Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:30.043Z","data":{"promptTokens":51792,"candidateTokens":181,"totalTokens":61559,"cachedTokens":9472,"reasoningTokens":114,"cost":0.007974216}}
+{"type":"tool","timestamp":"2026-09-24T20:54:31.660Z","data":{"tool":"read","summary":"src/cli/plan.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:31.714Z","data":{"tool":"read","summary":"tests/config-planning.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:31.775Z","data":{"promptTokens":3307,"candidateTokens":95,"totalTokens":64920,"cachedTokens":61440,"reasoningTokens":78,"cost":0.00078417}}
+{"type":"tool","timestamp":"2026-09-24T20:54:33.427Z","data":{"tool":"bash","summary":"grep -n \"listRecentArchiveFolders\\|getRepositoryRecord\\|form"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:33.578Z","data":{"tool":"read","summary":"openspec/changes/074-rework-disclosures-and-estimates/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:33.646Z","data":{"tool":"read","summary":"tests/plan.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:33.692Z","data":{"promptTokens":3684,"candidateTokens":178,"totalTokens":68786,"cachedTokens":64896,"reasoningTokens":28,"cost":0.000870888}}
+{"type":"tool","timestamp":"2026-09-24T20:54:35.149Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:35.205Z","data":{"promptTokens":6546,"candidateTokens":86,"totalTokens":75386,"cachedTokens":68736,"reasoningTokens":18,"cost":0.001250508}}
+{"type":"tool","timestamp":"2026-09-24T20:54:37.013Z","data":{"tool":"bash","summary":"grep -n \"buildBaseOpeningPrompt\\|writePromptHandoff\\|recordB"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:37.124Z","data":{"tool":"bash","summary":"grep -rn \"getArchiveDir\" src/core"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:37.171Z","data":{"promptTokens":2492,"candidateTokens":130,"totalTokens":77936,"cachedTokens":75264,"reasoningTokens":50,"cost":0.000707592}}
+{"type":"tool","timestamp":"2026-09-24T20:54:38.595Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:38.637Z","data":{"promptTokens":189,"candidateTokens":70,"totalTokens":78083,"cachedTokens":77824,"reasoningTokens":0,"cost":0.000303822}}
+{"type":"tool","timestamp":"2026-09-24T20:54:52.656Z","data":{"tool":"bash","summary":"grep -rn \"idleGapMinutes\\|planning:\" /home/mathias/projects/"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:52.717Z","data":{"promptTokens":1636,"candidateTokens":109,"totalTokens":82883,"cachedTokens":78080,"reasoningTokens":3058,"cost":0.00237984}}
+{"type":"tool","timestamp":"2026-09-24T20:54:54.530Z","data":{"tool":"bash","summary":"grep -rn \"idleGapMinutes\\|planning\" /home/mathias/projects/o"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:54.656Z","data":{"tool":"bash","summary":"grep -rn \"PlanningConfig\\|DEFAULT_PLANNING_CONFIG\" /home/mat"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:54.687Z","data":{"promptTokens":253,"candidateTokens":163,"totalTokens":83262,"cachedTokens":82816,"reasoningTokens":30,"cost":0.000402198}}
+{"type":"tool","timestamp":"2026-09-24T20:54:56.763Z","data":{"tool":"read","summary":"tests/planning-slice.test.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:54:56.968Z","data":{"tool":"read","summary":"tests/planning-slice-archive.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:57.037Z","data":{"promptTokens":1085,"candidateTokens":166,"totalTokens":84514,"cachedTokens":83200,"reasoningTokens":63,"cost":0.00054975}}
+{"type":"tool","timestamp":"2026-09-24T20:54:59.078Z","data":{"tool":"bash","summary":"grep -rn \"PlanningConfig\\|config.planning\" /home/mathias/pro"}}
+{"type":"tokens","timestamp":"2026-09-24T20:54:59.112Z","data":{"promptTokens":843,"candidateTokens":80,"totalTokens":85481,"cachedTokens":84480,"reasoningTokens":78,"cost":0.00047469}}
+{"type":"tool","timestamp":"2026-09-24T20:55:01.146Z","data":{"tool":"read","summary":"src/core/foundation/config-user.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:55:01.192Z","data":{"promptTokens":650,"candidateTokens":54,"totalTokens":86244,"cachedTokens":85376,"reasoningTokens":164,"cost":0.000484428}}
+{"type":"tool","timestamp":"2026-09-24T20:55:13.199Z","data":{"tool":"read","summary":"tests/result-sections.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:55:13.243Z","data":{"promptTokens":660,"candidateTokens":54,"totalTokens":89146,"cachedTokens":86144,"reasoningTokens":2288,"cost":0.001762632}}
+{"type":"tool","timestamp":"2026-09-24T20:55:22.692Z","data":{"tool":"bash","summary":"cd . && node --import tsx -e \"impor"}}
+{"type":"tokens","timestamp":"2026-09-24T20:55:22.726Z","data":{"promptTokens":1562,"candidateTokens":100,"totalTokens":92542,"cachedTokens":89088,"reasoningTokens":1792,"cost":0.001636764}}
+{"type":"tool","timestamp":"2026-09-24T20:55:30.252Z","data":{"tool":"read","summary":"openspec/changes/074-rework-disclosures-and-estimates/tasks/5.md"}}
+{"type":"tool","timestamp":"2026-09-24T20:55:30.416Z","data":{"tool":"read","summary":"openspec/changes/074-rework-disclosures-and-estimates/tasks/3.md"}}
+{"type":"tokens","timestamp":"2026-09-24T20:55:30.460Z","data":{"promptTokens":168,"candidateTokens":122,"totalTokens":94082,"cachedTokens":92416,"reasoningTokens":1376,"cost":0.001201248}}
+{"type":"tool","timestamp":"2026-09-24T20:56:09.807Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-09-24T20:56:09.955Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:10.051Z","data":{"promptTokens":1359,"candidateTokens":110,"totalTokens":104974,"cachedTokens":94080,"reasoningTokens":9425,"cost":0.00620709}}
+{"type":"tool","timestamp":"2026-09-24T20:56:12.777Z","data":{"tool":"edit","summary":"src/core/foundation/config-planning.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:56:12.786Z","data":{"text":"Now let me implement. Starting with the config changes."}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:12.816Z","data":{"promptTokens":1900,"candidateTokens":547,"totalTokens":107425,"cachedTokens":104960,"reasoningTokens":18,"cost":0.00093888}}
+{"type":"tool","timestamp":"2026-09-24T20:56:15.131Z","data":{"tool":"edit","summary":"src/core/foundation/config-planning.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:15.169Z","data":{"promptTokens":176,"candidateTokens":442,"totalTokens":107882,"cachedTokens":107264,"reasoningTokens":0,"cost":0.000613392}}
+{"type":"tool","timestamp":"2026-09-24T20:56:20.375Z","data":{"tool":"write","summary":"src/core/report/recent-disclosures.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:20.423Z","data":{"promptTokens":249,"candidateTokens":1367,"totalTokens":109364,"cachedTokens":107648,"reasoningTokens":100,"cost":0.001240494}}
+{"type":"tool","timestamp":"2026-09-24T20:56:22.189Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:22.228Z","data":{"promptTokens":196,"candidateTokens":153,"totalTokens":109541,"cachedTokens":109184,"reasoningTokens":8,"cost":0.000453552}}
+{"type":"tool","timestamp":"2026-09-24T20:56:25.094Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:25.149Z","data":{"promptTokens":244,"candidateTokens":450,"totalTokens":110006,"cachedTokens":109312,"reasoningTokens":0,"cost":0.000634536}}
+{"type":"tool","timestamp":"2026-09-24T20:56:27.192Z","data":{"tool":"edit","summary":"tests/config-planning.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:27.237Z","data":{"promptTokens":197,"candidateTokens":173,"totalTokens":110286,"cachedTokens":109824,"reasoningTokens":92,"cost":0.000518022}}
+{"type":"tool","timestamp":"2026-09-24T20:56:30.266Z","data":{"tool":"edit","summary":"tests/config-planning.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:30.300Z","data":{"promptTokens":221,"candidateTokens":612,"totalTokens":110913,"cachedTokens":110080,"reasoningTokens":0,"cost":0.00073059}}
+{"type":"tool","timestamp":"2026-09-24T20:56:32.507Z","data":{"tool":"edit","summary":"tests/config-planning.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:32.549Z","data":{"promptTokens":208,"candidateTokens":364,"totalTokens":111292,"cachedTokens":110720,"reasoningTokens":0,"cost":0.00058176}}
+{"type":"tool","timestamp":"2026-09-24T20:56:53.772Z","data":{"tool":"write","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:56:53.818Z","data":{"text":"Now the test file:"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:53.851Z","data":{"promptTokens":203,"candidateTokens":2571,"totalTokens":116959,"cachedTokens":111104,"reasoningTokens":3081,"cost":0.003754962}}
+{"type":"tool","timestamp":"2026-09-24T20:56:56.680Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:56:56.718Z","data":{"promptTokens":239,"candidateTokens":69,"totalTokens":117157,"cachedTokens":116736,"reasoningTokens":113,"cost":0.000495258}}
+{"type":"tool","timestamp":"2026-09-24T20:57:01.523Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:01.561Z","data":{"promptTokens":546,"candidateTokens":243,"totalTokens":118636,"cachedTokens":117120,"reasoningTokens":727,"cost":0.00101526}}
+{"type":"tool","timestamp":"2026-09-24T20:57:03.592Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:03.623Z","data":{"promptTokens":251,"candidateTokens":69,"totalTokens":118720,"cachedTokens":118400,"reasoningTokens":0,"cost":0.00043425}}
+{"type":"tool","timestamp":"2026-09-24T20:57:05.945Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:05.981Z","data":{"promptTokens":403,"candidateTokens":68,"totalTokens":119141,"cachedTokens":118656,"reasoningTokens":14,"cost":0.000465618}}
+{"type":"tool","timestamp":"2026-09-24T20:57:07.777Z","data":{"tool":"bash","summary":"cd . && grep -n '\"typecheck\"\\|\"veri"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:07.811Z","data":{"promptTokens":373,"candidateTokens":68,"totalTokens":119515,"cachedTokens":119040,"reasoningTokens":34,"cost":0.00047427}}
+{"type":"tool","timestamp":"2026-09-24T20:57:12.698Z","data":{"tool":"bash","summary":"cd . && grep -n '\"typecheck:cli\"' p"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:12.741Z","data":{"promptTokens":209,"candidateTokens":73,"totalTokens":119706,"cachedTokens":119424,"reasoningTokens":0,"cost":0.000433422}}
+{"type":"tool","timestamp":"2026-09-24T20:57:14.897Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:14.940Z","data":{"promptTokens":160,"candidateTokens":144,"totalTokens":120004,"cachedTokens":119680,"reasoningTokens":20,"cost":0.00048144}}
+{"type":"tool","timestamp":"2026-09-24T20:57:16.973Z","data":{"tool":"read","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:17.017Z","data":{"promptTokens":211,"candidateTokens":70,"totalTokens":120134,"cachedTokens":119808,"reasoningTokens":45,"cost":0.000460074}}
+{"type":"tool","timestamp":"2026-09-24T20:57:19.030Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:19.064Z","data":{"promptTokens":524,"candidateTokens":195,"totalTokens":120792,"cachedTokens":120064,"reasoningTokens":9,"cost":0.000561192}}
+{"type":"tool","timestamp":"2026-09-24T20:57:20.949Z","data":{"tool":"read","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:20.990Z","data":{"promptTokens":231,"candidateTokens":70,"totalTokens":120925,"cachedTokens":120576,"reasoningTokens":48,"cost":0.000467178}}
+{"type":"tool","timestamp":"2026-09-24T20:57:23.244Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:23.280Z","data":{"promptTokens":533,"candidateTokens":158,"totalTokens":121523,"cachedTokens":120832,"reasoningTokens":0,"cost":0.000537246}}
+{"type":"tool","timestamp":"2026-09-24T20:57:25.505Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:25.567Z","data":{"promptTokens":215,"candidateTokens":248,"totalTokens":121823,"cachedTokens":121344,"reasoningTokens":16,"cost":0.000554682}}
+{"type":"tool","timestamp":"2026-09-24T20:57:27.478Z","data":{"tool":"read","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:27.518Z","data":{"promptTokens":238,"candidateTokens":70,"totalTokens":121908,"cachedTokens":121600,"reasoningTokens":0,"cost":0.0004425}}
+{"type":"tool","timestamp":"2026-09-24T20:57:32.439Z","data":{"tool":"bash","summary":"cd . && pnpm typecheck:cli 2>&1 | t"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:32.491Z","data":{"promptTokens":441,"candidateTokens":61,"totalTokens":122358,"cachedTokens":121856,"reasoningTokens":0,"cost":0.000468318}}
+{"type":"tool","timestamp":"2026-09-24T20:57:35.007Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:57:35.045Z","data":{"promptTokens":175,"candidateTokens":69,"totalTokens":122588,"cachedTokens":122240,"reasoningTokens":104,"cost":0.00049677}}
+{"type":"tool","timestamp":"2026-09-24T20:58:09.271Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:09.310Z","data":{"promptTokens":156,"candidateTokens":76,"totalTokens":122728,"cachedTokens":122496,"reasoningTokens":0,"cost":0.000436488}}
+{"type":"tool","timestamp":"2026-09-24T20:58:11.800Z","data":{"tool":"bash","summary":"cd . && pnpm exec biome check --wri"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:11.845Z","data":{"promptTokens":976,"candidateTokens":99,"totalTokens":123819,"cachedTokens":122624,"reasoningTokens":120,"cost":0.000645672}}
+{"type":"tool","timestamp":"2026-09-24T20:58:13.429Z","data":{"tool":"bash","summary":"cd . && git status --short"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:13.462Z","data":{"promptTokens":197,"candidateTokens":51,"totalTokens":123896,"cachedTokens":123648,"reasoningTokens":0,"cost":0.000431094}}
+{"type":"tool","timestamp":"2026-09-24T20:58:46.242Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -50"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:46.283Z","data":{"promptTokens":445,"candidateTokens":76,"totalTokens":124409,"cachedTokens":123776,"reasoningTokens":112,"cost":0.000550878}}
+{"type":"tool","timestamp":"2026-09-24T20:58:51.064Z","data":{"tool":"edit","summary":"tests/plan-disclosures.test.ts"}}
+{"type":"text","timestamp":"2026-09-24T20:58:51.064Z","data":{"text":"Let me clean up an awkward test block:"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:51.104Z","data":{"promptTokens":845,"candidateTokens":347,"totalTokens":126015,"cachedTokens":124288,"reasoningTokens":535,"cost":0.001028814}}
+{"type":"tool","timestamp":"2026-09-24T20:58:53.946Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:53.981Z","data":{"promptTokens":206,"candidateTokens":120,"totalTokens":126181,"cachedTokens":125824,"reasoningTokens":31,"cost":0.000498972}}
+{"type":"tool","timestamp":"2026-09-24T20:58:55.840Z","data":{"tool":"read","summary":"src/core/report/recent-disclosures.ts"}}
+{"type":"tokens","timestamp":"2026-09-24T20:58:55.876Z","data":{"promptTokens":178,"candidateTokens":55,"totalTokens":126358,"cachedTokens":126080,"reasoningTokens":45,"cost":0.00046494}}
+{"type":"tool","timestamp":"2026-09-24T20:59:28.835Z","data":{"tool":"bash","summary":"cd . && pnpm verify > /tmp/opencode"}}
+{"type":"tokens","timestamp":"2026-09-24T20:59:28.869Z","data":{"promptTokens":1679,"candidateTokens":100,"totalTokens":128417,"cachedTokens":126336,"reasoningTokens":302,"cost":0.000872058}}
+{"type":"tool","timestamp":"2026-09-24T20:59:34.311Z","data":{"tool":"write","summary":"openspec/changes/074-rework-disclosures-and-estimates/.run/results/4.md"}}
+{"type":"tokens","timestamp":"2026-09-24T20:59:34.344Z","data":{"promptTokens":172,"candidateTokens":789,"totalTokens":129621,"cachedTokens":128384,"reasoningTokens":276,"cost":0.001049952}}
+{"type":"text","timestamp":"2026-09-24T20:59:37.310Z","data":{"text":"Task complete. Summary:\n\n**Changes**\n- `src/core/foundation/config-planning.ts`: added required `disclosures: { recentChanges, maxCharacters }` to `PlanningConfig`, defaulting to 3/4000, with partial-block merge and positive-integer rejection naming `planning.disclosures.<key>`.\n- `src/core/report/recent-disclosures.ts` (new): `formatRecentDisclosures(projectRoot, config)` lists the newest archived folders, quotes each real disclosure newest-first/task-order as `<folder> task <n>, <section>:` with every line prefixed `> `, opens with the executor-claims sentence, returns null with no disclosures, and truncates the first over-budget entry with `[truncated]`.\n- `src/cli/plan.ts`: `buildOpeningPrompt` appends the `## Recent executor disclosures` section after the repository record only when the body is non-null.\n- `tests/plan-disclosures.test.ts` (new) and minimal expected-object updates to `tests/config-planning.test.ts`.\n\n**Verification**: task verify (`node --import tsx --test tests/plan-disclosures.test.ts`) passes 11/11, and the proposal verify (`pnpm verify`) exits 0.\n\nResult written to `openspec/changes/074-rework-disclosures-and-estimates/.run/results/4.md`."}}
+{"type":"tokens","timestamp":"2026-09-24T20:59:37.340Z","data":{"promptTokens":229,"candidateTokens":292,"totalTokens":129981,"cachedTokens":129408,"reasoningTokens":52,"cost":0.000628974}}
+{"type":"exited","timestamp":"2026-09-24T20:59:37.476Z","data":{"exitCode":0,"pid":98781,"timedOut":false,"elapsedSeconds":311.9}}
+{"type":"verify_ran","timestamp":"2026-09-24T20:59:37.925Z","data":{"command":"node --import tsx --test tests/plan-disclosures.test.ts","exitCode":0,"duration":0.36,"output":"▶ formatRecentDisclosures\n  ✔ returns null when no archived change holds a disclosure (12.228785ms)\n  ✔ quotes only the configured number of newest archived changes, newest first (8.677368ms)\n  ✔ orders tasks numerically and sections as deviated, missing context, outside scope (5.842278ms)\n  ✔ cuts the first entry that does not fit and includes nothing after it (8.605437ms)\n  ✔ never quotes Changed, Next, Touched, or result headings (4.550568ms)\n  ✔ prefixes every quoted disclosure line, including one starting with # (0.547709ms)\n✔ formatRecentDisclosures (41.356895ms)\n▶ planning disclosure configuration\n  ✔ accepts a partial disclosures block over the defaults (0.20945ms)\n  ✔ rejects a value that is not a positive integer naming the key (0.359639ms)\n✔ planning disclosure configuration (0.790309ms)\n▶ plan prompt disclosure section\n  ✔ omits the section when no archived change discloses (5.911698ms)\n  ✔ appends the claim-labelled section after the repository record (4.937389ms)\n  ✔ ends osq plan <name> --print output with the section (119.679628ms)\n✔ plan prompt disclosure section (130.818965ms)\nℹ tests 11\nℹ suites 3\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 332.289898\n"}}
+{"type":"measures","timestamp":"2026-09-24T21:00:09.062Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":417,"repoFiles":1242,"repoLines":129965,"importFanIn":7,"proposalWords":1183,"taskWords":339,"deltaRequirements":15,"deltaScenarios":41,"changedFiles":5,"changedLines":470,"scopeHashes":{"src/cli/plan.ts":{"before":"sha256:3e2490ff95dd901bb235bc0c5c3a604e17152b650fce0bfb2bd6c99954a3ea72","after":"sha256:598664c4ed8d7e4221b7c2ac946bf82fb564e48639bec18565de51597ecee114"},"src/core/foundation/config-planning.ts":{"before":"sha256:dc4e24e6aea9ad2c9b72cfb86ff419f51098222d747003a37523d5606a2c5e63","after":"sha256:c8c78f99c9140295c54148ebbe9e264b817cc3009586867db2120a47eee4f9da"},"src/core/report/recent-disclosures.ts":{"before":null,"after":"sha256:152403588be6e1bd1d21fd003d9048c51331b9fc5850995fbf5ffe77fe7b5945"},"tests/config-planning.test.ts":{"before":"sha256:2ec10e7d3ff3ac01907507142f7ef73bbf488f320804df08b70d70989a7a9383","after":"sha256:56ffb74efff478a5de30a78fd3369ea6dbfb2929547a0ecd173dff0b9d66fea4"},"tests/plan-disclosures.test.ts":{"before":null,"after":"sha256:76fd306854d799a59b0b0423fae0b67aaf13c72ec26baf1137e8098dc0e31a71"}}}}
+{"type":"done","timestamp":"2026-09-24T21:00:09.067Z","data":{"task":"4"}}
+{"type":"verify_ran","timestamp":"2026-09-24T21:13:39.258Z","data":{"command":"node --import tsx --test tests/plan-disclosures.test.ts","exitCode":0,"duration":0.35,"output":"▶ formatRecentDisclosures\n  ✔ returns null when no archived change holds a disclosure (11.904607ms)\n  ✔ quotes only the configured number of newest archived changes, newest first (8.723549ms)\n  ✔ orders tasks numerically and sections as deviated, missing context, outside scope (5.401701ms)\n  ✔ cuts the first entry that does not fit and includes nothing after it (10.03987ms)\n  ✔ never quotes Changed, Next, Touched, or result headings (4.387745ms)\n  ✔ prefixes every quoted disclosure line, including one starting with # (0.69434ms)\n✔ formatRecentDisclosures (42.090226ms)\n▶ planning disclosure configuration\n  ✔ accepts a partial disclosures block over the defaults (0.198033ms)\n  ✔ rejects a value that is not a positive integer naming the key (0.401296ms)\n✔ planning disclosure configuration (0.831832ms)\n▶ plan prompt disclosure section\n  ✔ omits the section when no archived change discloses (5.818067ms)\n  ✔ appends the claim-labelled section after the repository record (5.403404ms)\n  ✔ ends osq plan <name> --print output with the section (119.108424ms)\n✔ plan prompt disclosure section (130.63858ms)\nℹ tests 11\nℹ suites 3\nℹ pass 11\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 327.634253\n"}}

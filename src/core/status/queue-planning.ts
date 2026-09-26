@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { type PlanRecord, readPlanRecords } from '../report/planning.js';
 import type { QueueItem } from './queue-parser.js';
 import {
+  type QueueAssociationGroups,
   type QueueRow,
   type QueueStateSnapshot,
   findActiveQueueFailures,
@@ -21,6 +22,7 @@ export interface QueuePlanSelection {
   readonly row: QueueRow;
   readonly replan: boolean;
   readonly landedDependencies: readonly LandedDependency[];
+  readonly landedFixes: readonly LandedDependency[];
 }
 
 export type QueuePlanPreparation =
@@ -152,6 +154,26 @@ function summarizeRows(rows: readonly QueueRow[]): string {
     .join('\n');
 }
 
+/** Resolve the landed archived associations of queue slugs, in the given order. */
+function resolveLanded(
+  slugs: readonly string[],
+  groups: ReadonlyMap<string, QueueAssociationGroups>,
+  projectRoot: string,
+): LandedDependency[] {
+  const landed: LandedDependency[] = [];
+  for (const slug of slugs) {
+    const archived = groups.get(slug)?.archived ?? [];
+    if (archived.length === 1) {
+      landed.push({
+        slug,
+        changeId: archived[0].id,
+        archivePath: path.relative(projectRoot, archived[0].folderPath),
+      });
+    }
+  }
+  return landed;
+}
+
 /**
  * Read-only next-item preparation: halt on any active failure, then select the
  * first unplanned or rejected item whose queue dependencies are landed. A
@@ -202,20 +224,17 @@ export async function prepareQueuePlan(
     notice = evaluation.notice;
   }
   const item = items[index];
-  const landedDependencies: LandedDependency[] = [];
-  for (const dep of item.dependsOn) {
-    const archived = groups.get(dep)?.archived ?? [];
-    if (archived.length === 1) {
-      landedDependencies.push({
-        slug: dep,
-        changeId: archived[0].id,
-        archivePath: path.relative(projectRoot, archived[0].folderPath),
-      });
-    }
-  }
+  const landedDependencies = resolveLanded(item.dependsOn, groups, projectRoot);
+  const landedFixes = resolveLanded(item.fixes, groups, projectRoot);
   return {
     kind: 'ready',
-    selection: { item, row, replan: row.state === 'rejected', landedDependencies },
+    selection: {
+      item,
+      row,
+      replan: row.state === 'rejected',
+      landedDependencies,
+      landedFixes,
+    },
     ...(notice ? { notice } : {}),
   };
 }

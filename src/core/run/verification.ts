@@ -30,11 +30,21 @@ function killTree(child: ReturnType<typeof spawn>, signal: NodeJS.Signals): void
  * scope-audit, archive, and recertification gates. It never imports from the
  * watcher or harness layers, so core retains its import boundary; callers own
  * event emission.
+ *
+ * `changeFolder` is the absolute change folder the command runs for, or null
+ * for a command whose deltas are already in the living spec. It becomes
+ * `OSQ_CHANGE`, or is removed from the child environment when null.
+ *
+ * `extraEnv` holds additional variables for the command, set after the
+ * `OSQ_CHANGE` handling so a caller can pass mutation inputs without touching
+ * the base environment.
  */
 export async function runVerificationCommand(
   projectRoot: string,
   command: string,
   timeoutSeconds: number,
+  changeFolder: string | null,
+  extraEnv?: Readonly<Record<string, string>>,
 ): Promise<VerificationResult> {
   const startMs = Date.now();
   const timeoutMs = timeoutSeconds * 1000;
@@ -42,6 +52,13 @@ export async function runVerificationCommand(
   let exitCode = 1;
   let output = '';
   let spawnError: string | undefined;
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  if (changeFolder === null) {
+    Reflect.deleteProperty(env, 'OSQ_CHANGE');
+  } else {
+    env.OSQ_CHANGE = changeFolder;
+  }
+  for (const [name, value] of Object.entries(extraEnv ?? {})) env[name] = value;
 
   await new Promise<void>((resolve) => {
     const child = spawn(command, {
@@ -49,6 +66,7 @@ export async function runVerificationCommand(
       shell: true,
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
+      env,
     });
     let timer: NodeJS.Timeout | null = null;
     let killTimer: NodeJS.Timeout | null = null;
