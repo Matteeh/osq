@@ -1,4 +1,3 @@
-import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { watch } from 'chokidar';
@@ -8,7 +7,7 @@ import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { reapStaleLocks } from '../core/run/lock.js';
 import type { StaleTaskAudit } from '../core/run/scope-hash.js';
 import { resolveChangeDoc } from '../core/spec/parser.js';
-import { getArchiveDir, getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
+import { changeTrees, changesDirLabel, listChanges } from '../core/status/change-locations.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { checkAndArchiveSpec } from './archiver.js';
@@ -123,23 +122,15 @@ export async function findLatestArchivedSpec(
   projectRoot: string,
   config: OsqConfig,
 ): Promise<ArchivedSpecSummary | undefined> {
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-
-  let entries: Dirent[] = [];
-  try {
-    entries = await fs.readdir(archiveDir, { withFileTypes: true });
-  } catch {
-    return undefined;
-  }
+  const archived = await listChanges(projectRoot, config, ['archived']);
 
   let latest: ArchivedSpecSummary | undefined;
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const stat = await fs.stat(path.join(archiveDir, entry.name)).catch(() => null);
+  for (const change of archived) {
+    const stat = await fs.stat(change.folderPath).catch(() => null);
     if (!stat) continue;
     const summary: ArchivedSpecSummary = {
-      id: entry.name.match(/^(\d+)/)?.[1] ?? entry.name,
-      folder: entry.name,
+      id: change.folderName.match(/^(\d+)/)?.[1] ?? change.folderName,
+      folder: change.folderName,
       archivedAt: stat.mtimeMs,
     };
     if (!latest || summary.archivedAt > latest.archivedAt) {
@@ -174,28 +165,11 @@ export async function runWatcherCycle(
   const useSymbols = logger?.symbols === true;
   const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
 
-  // Resolved once per cycle (and cached in `build.ts`) so both the missing-specs
-  // branch and the idle status row carry osq's own identity.
+  // Resolved once per cycle (and cached in `build.ts`) so both the idle status
+  // row and every change carry osq's own identity.
   const buildInfo = await resolveBuildInfo();
 
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(specsDir);
-  } catch {
-    logger?.status(
-      formatIdleStatus(
-        getChangesDir(config.paths.openspecRoot),
-        0,
-        undefined,
-        undefined,
-        buildInfo,
-      ),
-    );
-    return { tasksRun: 0, retried: 0, specsArchived: 0, blockedByRegression: [] };
-  }
-
-  const specFolders = entries.filter((e) => isActiveChangeFolderName(e)).sort(compareNumericPrefix);
+  const activeChanges = await listChanges(projectRoot, config, ['active']);
 
   let tasksRun = 0;
   let retried = 0;
@@ -208,6 +182,7 @@ export async function runWatcherCycle(
   }[] = [];
 
   const archiveCompletedSpec = async (
+    root: string,
     folder: string,
     folderPath: string,
     specId: string,
@@ -215,7 +190,7 @@ export async function runWatcherCycle(
     // Read the manual steps while the folder still exists: the archive move
     // relocates it, and this task never performs those steps itself.
     const humanSteps = await readHumanSteps(folderPath);
-    const archived = await checkAndArchiveSpec(projectRoot, folderPath, config);
+    const archived = await checkAndArchiveSpec(root, folderPath, config);
     if (!archived) {
       return;
     }
@@ -226,12 +201,11 @@ export async function runWatcherCycle(
     }
   };
 
-  for (const folder of specFolders) {
-    const folderPath = path.join(specsDir, folder);
+  for (const change of activeChanges) {
+    const folder = change.folderName;
+    const folderPath = change.folderPath;
+    const treeRoot = change.tree.root;
     try {
-      const stat = await fs.stat(folderPath).catch(() => null);
-      if (!stat || !stat.isDirectory()) continue;
-
       // The reaper only detects and unlinks expired locks; the watcher owns the
       // dead marker and event so every artifact is written through outcome.ts.
       const runDir = path.join(folderPath, '.run');
@@ -241,21 +215,21 @@ export async function runWatcherCycle(
           runDir,
           reaped.taskNumber,
           formatReapedMarker(reaped.reason, reaped.pid, reaped.startedAt),
-          projectRoot,
+          treeRoot,
         );
         await recordDeadEvent(folderPath, reaped.taskNumber, reaped.reason);
       }
 
-      let specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
+      let specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
 
       // The automatic-retry decision runs from disk for every approved change
       // after reaping and before the next task is picked. Renaming the active
       // dead marker is the commit point, so a restart loses no retry.
       if (specState.approvedHash) {
-        const count = await runAutomaticRetries(projectRoot, folderPath, config, logger);
+        const count = await runAutomaticRetries(treeRoot, folderPath, config, logger);
         if (count > 0) {
           retried += count;
-          specState = deriveSpecState(await readChangeFolder(projectRoot, folderPath));
+          specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
         }
       }
 
@@ -279,7 +253,7 @@ export async function runWatcherCycle(
           .map((task) => task.taskNumber)
           .filter((number) => Number.parseInt(number, 10) < Number.parseInt(taskNumber, 10));
         const audit = await auditScopeRegressions({
-          projectRoot,
+          projectRoot: treeRoot,
           specFolderPath: folderPath,
           eligibleTaskNumbers: earlier,
           verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
@@ -308,26 +282,19 @@ export async function runWatcherCycle(
           continue;
         }
 
-        const taskResult = await runTask(
-          projectRoot,
-          folderPath,
-          taskNumber,
-          config,
-          adapter,
-          logger,
-        );
+        const taskResult = await runTask(treeRoot, folderPath, taskNumber, config, adapter, logger);
         tasksRun++;
 
         if (taskResult.success) {
-          await runMutationCheck(projectRoot, folderPath, taskNumber, config, logger);
-          await archiveCompletedSpec(folder, folderPath, specState.id);
+          await runMutationCheck(treeRoot, folderPath, taskNumber, config, logger);
+          await archiveCompletedSpec(treeRoot, folder, folderPath, specState.id);
         } else {
           logger?.info(
             `${tag('■ spec', '[halted]')} ${specState.id} halted (task ${taskNumber} dead)`,
           );
         }
       } else if (specState.status === 'done') {
-        await archiveCompletedSpec(folder, folderPath, specState.id);
+        await archiveCompletedSpec(treeRoot, folder, folderPath, specState.id);
       }
     } catch (err) {
       logWatcherError(logger, useSymbols, err);
@@ -338,7 +305,7 @@ export async function runWatcherCycle(
     const lastArchived = await findLatestArchivedSpec(projectRoot, config).catch(() => undefined);
     logger?.status(
       formatIdleStatus(
-        getChangesDir(config.paths.openspecRoot),
+        changesDirLabel(config),
         approvedWaiting,
         lastArchived,
         undefined,
@@ -473,11 +440,11 @@ export async function startWatcher(
   await cycleHandler();
   if (interrupted || stopped) return;
 
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  watcher = watch(specsDir, {
-    ignoreInitial: true,
-    depth: 3,
-  });
+  const trees = await changeTrees(projectRoot, config);
+  watcher = watch(
+    trees.map((tree) => tree.changesDir),
+    { ignoreInitial: true, depth: 3 },
+  );
 
   watcher.on('all', () => {
     cycleHandler().catch(() => {});

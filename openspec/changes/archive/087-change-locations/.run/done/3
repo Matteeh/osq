@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:26eacd8c859450891bf93f3111f3dc42ff4744868075e5170076e0c20414ff66"
+build_stamp: "2d8bc7c"
+project_commit: "2d8bc7c"
+exit_code: 0
+scope_files: {"src/core/status/inbox-projection.ts":"sha256:015be30082c77564e70ef8fb22af4e983a8ecdcb5919096a11668f3afc96aaa0","src/core/status/next-step.ts":"sha256:e255613a11a8529c36175b86351c619688dda2dc6aa9f5431593a381068d68db","src/core/status/queue-report-detail.ts":"sha256:f29bb8d2fb08971ba3d546e6e3583cef205e5933bb84280401cbadb5860d936b","src/core/status/queue-state.ts":"sha256:5275e6b75a99a511cd20c87fc1e6c8d72a7a81dfac7e995a26eda42ee24bc73a","src/core/status/status.ts":"sha256:a0855f813315741207ae5bd5a80e66c7e55973295d13b01ba42cb1861b553aff","tests/function-budget.test.ts":"sha256:7025518f0e438252ee7650ff22ee5f9ac74c5289098cfc0d7acd2d03ea393c23"}
+---
+2026-09-26T12:47:07.865Z

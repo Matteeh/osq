@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
-import { getArchiveDir, getChangesDir, getRejectedDir, getRejectedMarkerPath } from './layout.js';
+import { changeTrees, listChanges } from './change-locations.js';
+import { getRejectedMarkerPath } from './layout.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
-import { type SpecState, type TaskState, compareNumericPrefix, deriveSpecState } from './state.js';
+import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 import { listPendingVerifications } from './verification.js';
 
 /**
@@ -56,26 +56,10 @@ async function readRejectedSummaries(
   projectRoot: string,
   config: OsqConfig,
 ): Promise<RejectedSpecSummary[]> {
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(rejectedDir);
-  } catch {
-    return [];
-  }
-
-  const folders: string[] = [];
-  for (const entry of entries) {
-    if (entry.startsWith('.') || entry.startsWith('_')) continue;
-    const fullPath = path.join(rejectedDir, entry);
-    const stat = await fs.stat(fullPath).catch(() => null);
-    if (stat?.isDirectory()) folders.push(entry);
-  }
-  folders.sort(compareNumericPrefix);
-
+  const rejected = await listChanges(projectRoot, config, ['rejected']);
   const summaries: RejectedSpecSummary[] = [];
-  for (const folder of folders) {
-    summaries.push(await readRejectedSummary(path.join(rejectedDir, folder), folder));
+  for (const change of rejected) {
+    summaries.push(await readRejectedSummary(change.folderPath, change.folderName));
   }
   return summaries;
 }
@@ -84,89 +68,29 @@ export async function getStatusOverview(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<StatusOverview> {
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(specsDir);
-  } catch {
-    entries = [];
-  }
-
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const archiveRel = path.relative(specsDir, archiveDir);
-  const archiveFolder =
-    !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
-      ? archiveRel.split(path.sep)[0]
-      : 'archive';
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
-  const rejectedRel = path.relative(specsDir, rejectedDir);
-  const rejectedFolder =
-    !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
-      ? rejectedRel.split(path.sep)[0]
-      : 'rejected';
-
-  const candidateFolders = entries.filter(
-    (e) => !e.startsWith('_') && !e.startsWith('.') && e !== archiveFolder && e !== rejectedFolder,
-  );
-
-  const validFolders: string[] = [];
-  const proposals = new Map<string, boolean>();
-  for (const folder of candidateFolders) {
-    const folderPath = path.join(specsDir, folder);
-    const stat = await fs.stat(folderPath).catch(() => null);
-    if (!stat || !stat.isDirectory()) continue;
-
-    const changeDoc = await resolveChangeDoc(folderPath);
-    if (!changeDoc) continue;
-
-    validFolders.push(folder);
-    proposals.set(folder, changeDoc.kind === 'proposal');
-  }
-
-  validFolders.sort((a, b) => {
-    const numA = Number.parseInt(a, 10);
-    const numB = Number.parseInt(b, 10);
-    if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
-      return numA - numB;
-    }
-    return a.localeCompare(b);
-  });
+  const [tree] = await changeTrees(projectRoot, config);
+  const active = await listChanges(projectRoot, config, ['active']);
 
   const specs: SpecState[] = [];
-  for (const folder of validFolders) {
-    const folderPath = path.join(specsDir, folder);
-    const specState = await deriveSpecState(projectRoot, folderPath);
-    specState.hasProposal = proposals.get(folder) ?? false;
+  const nextSteps: Record<string, NextStep> = {};
+  for (const change of active) {
+    const changeDoc = await resolveChangeDoc(change.folderPath);
+    if (!changeDoc) continue;
+    const specState = await deriveSpecState(projectRoot, change.folderPath);
+    specState.hasProposal = changeDoc.kind === 'proposal';
     specs.push(specState);
+    nextSteps[change.folderName] = await readNextStep(projectRoot, change.folderPath, config);
   }
 
-  const nextSteps: Record<string, NextStep> = {};
-  for (const folder of validFolders) {
-    nextSteps[folder] = await readNextStep(projectRoot, path.join(specsDir, folder), config);
-  }
   const pendingVerifications = await Promise.all(
-    (await listPendingVerifications(archiveDir)).map(async (pending) => ({
+    (await listPendingVerifications(tree.archiveDir)).map(async (pending) => ({
       folderName: pending.folderName,
       title: pending.title,
       next: await readNextStep(projectRoot, pending.folderPath, config),
     })),
   );
 
-  let archivedCount = 0;
-  try {
-    const archiveEntries = await fs.readdir(archiveDir);
-    for (const entry of archiveEntries) {
-      if (entry.startsWith('.')) continue;
-      const fullPath = path.join(archiveDir, entry);
-      const stat = await fs.stat(fullPath).catch(() => null);
-      if (stat?.isDirectory()) {
-        archivedCount++;
-      }
-    }
-  } catch {
-    archivedCount = 0;
-  }
-
+  const archivedCount = (await listChanges(projectRoot, config, ['archived'])).length;
   const rejected = await readRejectedSummaries(projectRoot, config);
 
   return {

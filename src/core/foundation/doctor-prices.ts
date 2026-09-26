@@ -1,29 +1,12 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { findUnpricedPlanningModels, formatPriceKey } from '../report/planning-price-gaps.js';
-import { getArchiveDir, getChangesDir, isActiveChangeFolderName } from '../status/layout.js';
+import { listChanges } from '../status/change-locations.js';
 import type { OsqConfig } from './config.js';
 import type { DoctorCheckResult } from './doctor.js';
 
-/** Direct child directories of `root` whose name passes `keep`. */
-async function subdirectories(root: string, keep: (name: string) => boolean): Promise<string[]> {
-  const entries = await fs.readdir(root, { withFileTypes: true }).catch(() => []);
-  return entries
-    .filter((entry) => entry.isDirectory() && keep(entry.name))
-    .map((entry) => path.join(root, entry.name));
-}
-
 /** Every active and archived change folder under the canonical layout. */
 async function changeFolders(projectRoot: string, config: OsqConfig): Promise<string[]> {
-  const active = await subdirectories(
-    getChangesDir(config.paths.openspecRoot, projectRoot),
-    isActiveChangeFolderName,
-  );
-  const archived = await subdirectories(
-    getArchiveDir(config.paths.openspecRoot, projectRoot),
-    (name) => !name.startsWith('_') && !name.startsWith('.'),
-  );
-  return [...active, ...archived];
+  const changes = await listChanges(projectRoot, config, ['active', 'archived']);
+  return changes.map((change) => change.folderPath);
 }
 
 /**

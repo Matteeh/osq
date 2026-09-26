@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
-import { findSpecFolder } from '../spec/approve.js';
 import { parseTaskList } from '../spec/parser.js';
-import { getChangesDir } from '../status/layout.js';
+import { findChange } from '../status/change-locations.js';
 
 export interface DoneManualResult {
   readonly specId: string;
@@ -100,8 +99,7 @@ export async function markTaskDoneManual(
     throw new Error('a manual completion reason is required');
   }
 
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const folderPath = await findSpecFolder(specsDir, specIdOrPrefix);
+  const { folderPath } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
 

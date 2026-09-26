@@ -38,7 +38,6 @@ const GRANDFATHERED = new Set([
   'watcher/spawn.ts#spawnTaskAgent',
   'core/foundation/logger.ts#createLogger',
   'core/foundation/new.ts#createNewSpec',
-  'core/status/status.ts#getStatusOverview',
   'watcher/dev.ts#runDevSupervisor',
   'harness/agy/agy.ts#processAgyStdoutLine',
 ]);

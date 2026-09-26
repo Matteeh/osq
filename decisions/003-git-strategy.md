@@ -14,7 +14,7 @@ Supersedes nothing. Retires the worktree and `scope_violation` entries under "No
 The first version was written against `e389210`, before osq moved to OpenSpec's layout and before the traceability design. The revision keeps the shape of every decision and changes these things:
 
 - Paths follow OpenSpec. Change folders are `openspec/changes/<id>/`, living specs are `openspec/specs/<capability>/spec.md`, and the archive is wherever osq archives changes today. Living specs take the place of feature docs in decisions 5, 6 and 9.
-- Approval requires the draft to be committed and clean, and it no longer deletes the draft from the checkout. Decision 2.
+- Approval no longer deletes the draft from the checkout, and it commits the draft on the change's branch, so the checkout needs no spec commit. Decision 2.
 - A sync stops instead of re-applying a delta over a requirement main has changed since the branch was cut. Decision 5.
 - The git violation check compares HEAD, its branch, the index and stash entries, scoped to the task's own tree. Decision 4.
 - `vcs_violation` and `scope_violation` are recorded in stage 0 and kill the task from stage 1, once the tree is osq's alone. Decision 4.
@@ -24,6 +24,14 @@ The first version was written against `e389210`, before osq moved to OpenSpec's 
 - The ADR has frontmatter, so its rule reaches every agent through the generated block in AGENTS.md.
 - The `Vcs` port lives in `src/core/vcs/`, owned by a `version-control` capability, following the capability-folder rule in AGENTS.md. Decision 10.
 - Stages 2 to 4 are provisional until their briefs are written. Stages.
+
+A second pass the same day, after stage 0 had landed, settled stage 1's design:
+
+- A worktree per change stays, over one shared osq workspace. A dependent approved before its dependency lands is stacked on the dependency's archive commit. Decisions 2, 3 and 5.
+- Clean means clean outside the active change's `.run/`, and `status` warns not to edit a worktree while a task runs. Decision 3.
+- Commit hooks run, and a failed commit halts the change. Decision 8.
+- The resolver answers only which changes are running or archived but not landed. Readers of drafts keep reading the checkout. Decision 11.
+- The worktree location is settled as `~/.osq/worktrees/<repo>/<folder>`, and `brief.md` already lives in the change folder. Open questions 1 and 2.
 
 The revision was written against those briefs and the traceability design, not a fresh read of the code. Recheck paths and function names against main before planning.
 
@@ -77,7 +85,7 @@ Every commit osq makes on a change branch records either a state the watcher its
 
 | Event | Subject | Contents |
 |---|---|---|
-| approval | `osq: 012 approved` | `.run/approved`, `.run/base`, `.run/approver`. The folder is already on the branch |
+| approval | `osq: 012 approved` | the draft folder, `.run/approved`, `.run/base`, `.run/approver` |
 | task verified | `osq: 012 task 3 verified` | scope edits, `.run/done/3`, `results/3.md`, `events/3.jsonl`, the tick in `tasks.md` |
 | task dead | `osq: 012 task 3 dead, reason verify_red` | `.run/dead/3.md`, `.run/dead/3.patch`, `events/3.jsonl`. No code. |
 | sync | `osq: 012 sync main` | a merge commit from `main`, living specs re-derived |
@@ -112,35 +120,41 @@ Rejected. One commit per change only, made at archive. It throws away the one th
 
 Rejected. Merge commits or rebase-merge onto `main` so task commits survive there. It changes the shape of `main` from one commit per change to six, `git bisect` lands on trees where out-of-scope suites are red, and task-level diffs on `main` are worth little because regeneration needs specs and the final tree, not the original patches. Task commits stay reachable on the branch for as long as the branch or the PR exists, and osq never deletes either.
 
-Mode A. `git log` on the branch is the task-by-task record while the change runs. `main` gains the spec commit decision 2 requires before each change, and otherwise looks exactly as it does today. The human never types a commit message for osq's work again.
+Mode A. `git log` on the branch is the task-by-task record while the change runs. `main` looks exactly as it does today. The human never types a commit message for osq's work again.
 
 Mode B. Every push is a verified checkpoint, so the PR can be read mid-run, and a crash never loses more than the task in flight.
 
-### 2. One branch per change, cut from a commit that already holds the draft
+### 2. One branch per change, cut from a commit, holding the draft from its first commit
 
-The branch is `osq/<folder name>`, so `osq/012-observability-fixes`. The prefix lets branch protection and cleanup rules target every osq branch at once, and the rest is derivable from the folder name, so nothing needs remembering. The branch is cut from a commit, never from a working tree. In mode A that is `HEAD` of the checkout where `osq approve` runs. In mode B it is `origin/main` after a fetch.
+The branch is `osq/<folder name>`, so `osq/012-observability-fixes`. The prefix lets branch protection and cleanup rules target every osq branch at once, and the rest is derivable from the folder name, so nothing needs remembering. The branch is cut from a commit, never from a working tree. In mode A that is `HEAD` of the checkout where `osq approve` runs, or a dependency's archive commit, as stacking below says. In mode B it is `origin/main` after a fetch.
 
-`osq approve 012` is the moment the folder changes owner. The draft must be committed in the checkout and clean. If it is untracked or modified, approve refuses and says to commit it. Approve lints and hashes the committed draft as today, cuts the branch from `HEAD`, creates the worktree, writes `.run/approved`, `.run/base` and `.run/approver` in the worktree, and commits them on the branch. It writes nothing to the checkout and deletes nothing.
+`osq approve 012` is the moment the folder changes owner. Approve lints and hashes the draft in the checkout as today, whether it is committed or not. It cuts the branch, creates the worktree, and copies the folder into it. It then writes `.run/approved`, `.run/base` and `.run/approver` in the worktree, and commits the folder and those files as the branch's first commit. It writes nothing to the checkout and deletes nothing.
 
-The checkout keeps its copy of the folder. From approval on, that copy is a record of what was approved, not the live spec. The resolver in decision 11 reports the change as running and prints its worktree path, so `osq status` never calls a running change a draft. When the checkout's copy stops matching the approved hash, status warns that edits there never reach the run and will conflict when the change lands. Spec edits during a run happen in the worktree, under decision 4's `spec_conflict` path.
+The checkout keeps its copy of the folder. From approval on, that copy is a record of what was approved, not the live spec. The resolver in decision 11 reports the change as running and prints its worktree path, so `osq status` never calls a running change a draft. When the checkout's copy stops matching the approved hash, status warns that edits there never reach the run. Spec edits during a run happen in the worktree, under decision 4's `spec_conflict` path.
 
-Cutting from `HEAD` means cutting from whatever branch the checkout is on. When that is not `main`, the squash in decision 7 later carries that branch's commits too. `osq status` names the base branch, so this is visible before it matters.
+A hand landing leaves that copy behind. `git merge --squash` does not refuse over it, because the branch adds the folder and later moves it into the archive, so the squash touches only the archive path. After the change lands, `osq status` flags a leftover copy whose hash matches the approved one and prints the command that removes it. `osq land` removes it itself.
+
+Approve refuses when the checkout's `HEAD` is not on the default branch, because the squash in decision 7 would carry that branch's own commits into `main`. `--base-ok` overrides it for the times that is meant.
 
 If uncommitted changes in the checkout intersect any task's `scope`, approve refuses and names the files, because the spec was written against a tree the agent will not see. `--ignore-dirty` overrides that. Whether the WIP matters is judgement, and judgement belongs to the human.
+
+Stacking. A change whose `depends_on` names a change that is approved but has not landed waits until that dependency's archive commit exists, and its branch is then cut from that commit. Its worktree holds the dependency's archive, so `deriveSpecState` sees the dependency done without any change. A chain approved at once runs without a human, as it does today. A stacked dependent lands after its dependency; decision 7's landing refuses it before. Its squash repeats changes `main` already has from the dependency's squash, and git merges identical changes without conflict. When the dependency changes or is rejected before it lands, the dependent halts, and the human approves it again on the new base.
 
 `.run/approver` is one line: the committer identity from `git config` in mode A, the tracker actor such as `github:matteeh` in mode B.
 
 In mode B the branch is cut at intake instead, because osq creates the folder in the first place and no other tree exists. Approval by label then commits `.run/approved` onto the existing branch. Same branch, same first-commit contents, different clock.
 
-The first version rejected requiring the draft to be committed before approval, because every change leaves a spec commit next to its squash. The revision accepts that cost. The spec commit also records that the plan existed, in the form it was approved, before any code did.
+Rejected. Requiring the draft to be committed in the checkout before approval, the first revision of this decision. It gave `main` a spec commit per change as a record that the plan came first, at the price of one more step in every approval. The branch's first commit is the same record, and the squash carries the spec.
 
 Rejected. Deleting the draft from the checkout at approval, the first version of this decision. It avoided two copies of the folder, but it was the one write to the human's checkout outside `osq land`, and "osq never writes the checkout" is easier to trust without an exception. The resolver handles the second copy instead.
+
+Rejected. Approval refusing a dependent until its dependency lands. It is the simplest rule, but it turns every chain into approve, run, land, approve, where today a chain runs unattended.
 
 Rejected. Branching at draft time, with `osq new` creating the branch. Drafts are cheap and often abandoned, and mode A drafting happens in the editor next to the checkout, where the smart-model conversation is. Approval is the point of commitment, so it is the point of branching.
 
 Rejected. Naming branches by issue number, date or model. None of those are derivable from the folder, and the folder name is already unique.
 
-Mode A. The developer's dirty checkout is irrelevant to what the agent sees, which is the point. The price is one spec commit per change and a copy of the folder that no longer drives anything.
+Mode A. The developer's dirty checkout is irrelevant to what the agent sees, which is the point. The price is a copy of the folder that no longer drives anything, and a leftover to remove after a hand landing.
 
 Mode B. There is no developer checkout, so the "dirty checkout" question has no subject. The clone osq runs in is osq's alone.
 
@@ -148,15 +162,19 @@ Mode B. There is no developer checkout, so the "dirty checkout" question has no 
 
 Even at concurrency one. A design that touches the live tree at one and a worktree at two is two designs, and the three hazards at the top of the brief all live in the live tree. Each active change has one worktree at `~/.osq/worktrees/<repo>/<folder>`, configurable as `vcs.worktreeRoot`. It sits outside the repository so nothing that walks the tree sees it, whether `tsc`, `biome`, the test runner or `rg`, and outside the parent directory so it does not litter. `~/.osq/` is already the location README.md reserves for derived osq data. `osq status` prints the path so the human can open it in an editor.
 
-`git worktree add` does not bring `node_modules`, so a task's verify would fail in a fresh worktree. `vcs.prepare` is a command osq runs once after creating a worktree, `pnpm install --frozen-lockfile` here. It is optional. `doctor` warns when the repository has a lockfile and no prepare command. Ignored files such as `node_modules/` and `dist/` persist in the worktree across tasks because osq never runs `git clean -x`.
+`git worktree add` does not bring `node_modules`, so a task's verify would fail in a fresh worktree. `vcs.prepare` is a command osq runs once after creating a worktree, `pnpm install --frozen-lockfile` here. Measured in this repository, it takes about a second, because pnpm links files from its store. It is optional. `doctor` warns when the repository has a lockfile and no prepare command. Ignored files such as `node_modules/` and `dist/` persist in the worktree across tasks because osq never runs `git clean -x`.
 
-Before every spawn the worktree must be clean, meaning `git status --porcelain` shows nothing that is not ignored, and it must be on its branch. Anything else stops the change with a message naming the files. There is one exception, the crash case in decision 4.
+Before every spawn the worktree must be clean outside the active change's `.run/`, meaning `git status --porcelain` shows nothing else that is not ignored, and it must be on its branch. The watcher appends events under `.run/` throughout a task, and those files are committed with the task, so they cannot count as dirt. Anything else stops the change with a message naming the files. There is one exception, the crash case in decision 4.
+
+The worktree is osq's while a task runs. `osq status` prints its path with a warning not to edit it until the task ends, because an edit there during a task is a `scope_violation` and dies with it. Nothing is lost when that happens: every dead path writes the patch before it discards anything, so the edit comes back with `git apply`.
 
 The clean-tree rule binds osq as well as the agent. Anything osq runs in the worktree after the agent exits, whether verify, a focused test run or a mutation check, writes only under `.run/` or to ignored paths. A step that leaves other files behind is a configuration bug, and the next spawn stops on it by name. `OSQ_CHANGE` in every verify environment points at the change folder inside the worktree.
 
-What mode A loses. The agent's edits do not appear in the checkout the editor has open; the developer opens the worktree instead, or reads the branch. Uncommitted human work is never the agent's starting point, which is a loss only if you wanted it to be. A worktree costs a dependency install and disk per change. Landing is a merge instead of a commit in place. I think all four are acceptable, and the first two are the reason to do this at all. Verify also gets stricter for free, because it can no longer pass thanks to a file the human happened to have uncommitted.
+What mode A loses. The agent's edits do not appear in the checkout the editor has open; the developer opens the worktree instead, or reads the branch. Uncommitted human work is never the agent's starting point, which is a loss only if you wanted it to be. A worktree costs a dependency install, about a second here, and disk per change. Landing is a merge instead of a commit in place. I think all four are acceptable, and the first two are the reason to do this at all. Verify also gets stricter for free, because it can no longer pass thanks to a file the human happened to have uncommitted.
 
 Rejected. Live tree at concurrency one, worktrees later. See above.
+
+Rejected. One osq workspace, a single worktree on one branch that runs every change in approval order. It needs one install and a simpler resolver, but a single branch cannot give each change a contiguous range of commits unless it runs strictly one after another. A dead change would then stall every independent change behind it, where today they keep running. Every later change would also depend on every earlier one: landing out of order silently squashes the earlier changes in too, and rejecting a change affects everything after it. The workspace would go stale against `main` until a sync exists. Its path to a PR per change needs stacked PRs, which need rebasing after each squash merge, and decision 8 forbids that. Stacking in decision 2 gives the same lanes with a branch per change.
 
 Rejected. Stashing the human's changes around each task. It writes to the human's state, it races with the editor, and `git stash` can fail half way.
 
@@ -168,7 +186,7 @@ Mode B. There is no other tree, so the worktree is where the change lives. Concu
 
 ### 4. A dead task leaves the branch at the last verified state
 
-When a task dies for any reason, osq captures the working tree's diff against `HEAD` into `.run/dead/<n>.patch`, discards every change outside the change folder, and commits the dead record. The branch tip is again a state the watcher verified, or the approval state. The patch is the inspection copy; `git apply` restores it in seconds. `dead/<n>.md` keeps its reason and diagnostics as today.
+When a task dies for any reason, osq first captures the working tree's diff against `HEAD`, untracked files included, into `.run/dead/<n>.patch`. It builds the patch through a temporary index, so the real index is never touched. Only then does it discard every change outside the change folder and commit the dead record. The branch tip is again a state the watcher verified, or the approval state. The patch is the inspection copy; `git apply` restores it in seconds. `dead/<n>.md` keeps its reason and diagnostics as today.
 
 `spec_conflict` follows the same path with one difference. The edits to the change folder that caused it are the human's, not the agent's, so osq does not discard them. It records the dead task, commits `.run/` only, and leaves the folder edits uncommitted. The next cycle finds a dirty worktree not explained by a running task and stops with "spec edited after approval, re-approve or discard". Re-approval is `osq approve 012` run against the worktree, and it commits the edits with the new hash exactly as the first approval did. In mode B the folder can only change through someone pushing to the branch, and the remote check in decision 8 stops the change before any task runs.
 
@@ -182,7 +200,7 @@ Both are dead tasks, both get the patch, and neither passes even if verify would
 
 Stage 0 runs these checks in the live tree the human is editing, so they behave differently there. Both are recorded as events with a warning and neither kills the task. The `vcs_violation` warning says what moved and how to put it back, because the human committing, staging or stashing in that checkout during a task trips it as surely as the agent does. `scope_violation` would trip whenever a human saves a file in the editor. Both kill from stage 1, when the tree is osq's alone.
 
-A crash mid-task is already a dead task today. `reapStaleLocks` writes `dead/<n>.md` with `crashed` or `timeout`, and the git dead path runs from that call site as well as from the runner. A watcher restart therefore finds a dirty worktree, sees a dead marker with no commit for it, records the patch, discards, commits, and proceeds. That is the one case where dirt is discarded without a human.
+A crash mid-task is already a dead task today. `reapStaleLocks` writes `dead/<n>.md` with `crashed` or `timeout`, and the git dead path runs from that call site as well as from the runner. A watcher restart therefore finds a dirty worktree, sees a dead marker with no commit for it, records the patch, discards, commits, and proceeds. That is the one case where dirt is discarded without a human, and the patch still holds all of it.
 
 Rejected. Leaving the edits in the worktree for inspection. Mode B has nobody to inspect, the next task cannot start on a dirty tree, and the state is not derivable from files.
 
@@ -198,7 +216,7 @@ Mode B. The PR shows the dead record and the change halts. Nothing is lost, and 
 
 ### 5. Integrating main is a merge into the branch, and living specs are re-derived rather than merged
 
-osq never rebases and never rewrites a commit it has made. When a branch has to take in `main`, osq merges `main` into the branch as a new commit, `osq: 012 sync main`. It does this at three points: before the first task, so the agent starts from current code; before archive, so the archive's living specs are computed against current `main`; and on request, which is `osq sync 012` in mode A and a PR reported as not mergeable in mode B. A sync is a no-op when `main` is already an ancestor of the branch tip. A blocked change is re-derived after a sync, which is how a dependency that landed on `main` unblocks it.
+osq never rebases and never rewrites a commit it has made. When a branch has to take in `main`, osq merges `main` into the branch as a new commit, `osq: 012 sync main`. It does this at three points: before the first task, so the agent starts from current code, except for a stacked dependent whose dependency has not landed, which starts from its dependency's archive commit; before archive, so the archive's living specs are computed against current `main`; and on request, which is `osq sync 012` in mode A and a PR reported as not mergeable in mode B. A sync is a no-op when `main` is already an ancestor of the branch tip. A blocked change is re-derived after a sync, which is how a dependency that landed on `main` unblocks it.
 
 Living specs are outputs, not sources. During a sync, osq never keeps git's merge of a file under `openspec/specs/`, conflicted or not. It takes `main`'s version and re-applies this change's own deltas with the same merge archive uses, so the result is what archive would have produced against current `main`. Before re-applying, osq compares every requirement the deltas modify, remove or rename between `Osq-Base` and `main`. If `main` changed any of them, the sync stops and names them. Re-applying there would replace `main`'s version of a requirement with one written against the old version, which is a lost update, not a merge. Added requirements need no check. A conflict in any file outside `openspec/specs/` stops the sync too. osq aborts the merge, leaves the branch exactly as it was, and reports the conflicting paths. Code conflicts need judgement.
 
@@ -212,7 +230,7 @@ Rejected. Rebasing the branch onto `main`. It rewrites pushed commits, invalidat
 
 Rejected. Letting git merge living specs and fixing the result in the archive commit. The intermediate conflict still needs a human, and a spec merged by hand is a spec no delta specified.
 
-Rejected. Stacking a dependent change on its dependency's branch. `deriveSpecState` reads `depends_on` against the folders in the tree it runs in. In a worktree cut from `main`, a dependency's folder is either its committed draft, which has no done markers there, or its archive once it has landed. A dependent waits for its dependency to land. Slower, and correct.
+Stacking is decision 2's. A stacked dependent needs no sync of its own while its dependency is unlanded. Once the dependency lands, the dependent's next sync takes a `main` that holds the dependency's squash, and git merges the identical changes cleanly. The first revision rejected stacking because a worktree cut from `main` never sees an unlanded dependency done. Cutting from the dependency's archive commit removes that objection.
 
 Mode A. `main` is the developer's local `main`; the watcher does not fetch. A conflict or a changed requirement is a message and a stopped change.
 
@@ -238,9 +256,9 @@ Mode B. The PR is where a human meets the change, three times at most: plan appr
 
 ### 7. Landing in mode A is a human command
 
-`osq land 012` runs `git merge --squash osq/012-observability-fixes` in the checkout, commits with the generated message, and removes the worktree. It refuses if the checkout has uncommitted changes, if the branch has not archived, or if the squash conflicts, in which case it says to run `osq sync 012` first. It does not push. It exists so that the trailers land in the trailer block of the surviving commit. A hand-run squash puts them into a "Squashed commit of the following" body where `git interpret-trailers` cannot see them.
+`osq land 012` runs `git merge --squash osq/012-observability-fixes` in the checkout, commits with the generated message, and removes the worktree. It refuses if the checkout has uncommitted changes, if the branch has not archived, if the change is stacked on a dependency that has not landed, or if the squash conflicts, in which case it says to run `osq sync 012` first. It removes the checkout's leftover copy of the draft when its hash matches the approved one. It does not push. It exists so that the trailers land in the trailer block of the surviving commit. A hand-run squash puts them into a "Squashed commit of the following" body where `git interpret-trailers` cannot see them.
 
-`osq message 012` ships first, in stage 1. It prints the squash message with its trailer block and writes nothing. Until `osq land` exists, a change lands by hand with `git merge --squash osq/012-observability-fixes` followed by `git commit` using that message, and keeps its trailers.
+`osq message 012` ships first, in stage 1. It prints the squash message with its trailer block and the branch to squash, and writes nothing. For a stacked change whose dependency has not landed, it names the dependency to land first. Until `osq land` exists, a change lands by hand with `git merge --squash osq/012-observability-fixes` followed by `git commit` using that message, and keeps its trailers.
 
 Rejected. Landing automatically when the branch archives. The constraint forbids it, and the human wants to read the diff.
 
@@ -249,6 +267,8 @@ Rejected. Landing automatically when the branch archives. The constraint forbids
 Commits osq makes are authored by a configured bot identity, `vcs.author`, and committed by whoever runs osq: the developer's git identity in mode A, the service account's in mode B. That is what author and committer mean in git, who wrote it and who applied it. The approver is recorded as `Osq-Approved-By`, a trailer with exact semantics, rather than as author or `Co-authored-by`, both of which claim authorship of code the approver did not write. `git blame` therefore says osq, and the trailers on that line's commit lead to the change id, the archive folder, the brief and the issue, which is a better answer to "who do I ask" than a name.
 
 osq never signs and never disables signing. If the environment has `commit.gpgsign` set, the committer's key signs osq's commits. In mode B a signing setup that cannot run unattended is a `doctor` failure. Squash commits made through GitHub's merge button are signed by GitHub.
+
+The same goes for hooks. osq runs the repository's commit hooks and never passes `--no-verify`, because skipping them bypasses the repository's own policy the way disabling signing would. A commit that fails, whether from a hook, signing, or anything else, halts the change with git's output and is not retried. Commits have their own timeout, `timeouts.gitCommitSeconds`, longer than the one for reads, because hooks and signing are slow. With `vcs.enabled`, `doctor` warns when the repository has commit hooks or sets `commit.gpgsign`. A hook that reformats files could make the committed tree differ from the verified one. Comparing the two waits until a repository with such a hook needs it.
 
 Things osq never does, in any mode, and the `Vcs` interface cannot express:
 
@@ -326,15 +346,15 @@ Rejected. A top-level `src/vcs/` beside `src/harness/`, the first version of thi
 
 ### 11. State derivation across worktrees
 
-One resolver answers which changes are active, and every reader asks it: the watcher loop, status, inbox, show, report, serve, queue and doctor, and the traceability helper and lint. Under `GitVcs` with `vcs.enabled`, the active changes are the osq worktrees from `git worktree list`. Under `NoVcs` they are what they are today. The resolver lands first, with today's behaviour, so switching to worktrees later changes one module instead of eight readers.
+One resolver answers which changes are running, or archived but not landed, and where each one's folder is. The readers of that state ask it: the watcher loop, status and its next step, inbox, show, report and recent disclosures, the queue, serve, doctor, the baseline search, and the lifecycle commands `approve`, `retry`, `reject`, `done` and `verified`, which write their markers where the change runs. Readers of drafts keep reading the checkout on purpose, because drafts live there: `new`, `lint`, `plan` and `migrate`. Under `GitVcs` with `vcs.enabled`, the running changes are the osq worktrees from `git worktree list`. Under `NoVcs` they are what they are today. The resolver lands first, with today's behaviour, so switching to worktrees later changes one module instead of every reader.
 
-A branch without a worktree is dormant; `osq watch` recreates the worktree when it finds an `osq/*` branch whose folder has `.run/approved` and lacks a `done` marker for some task. The watcher cycle iterates worktrees instead of change folders and passes the worktree path as `projectRoot`, which `runTask` and the adapters already take as a parameter. `deriveSpecState` itself does not change.
+A missing worktree is recreated: `osq watch` recreates the worktree when it finds an `osq/*` branch whose folder has `.run/approved` and lacks a `done` marker for some task. The watcher cycle iterates worktrees instead of change folders and passes the worktree path as `projectRoot`, which `runTask`, the archiver and the adapters already take as a parameter. `deriveSpecState` itself does not change.
 
-Committed drafts make folder scans misleading. The checkout keeps a copy of every running change, and every branch cut after a draft was committed carries that draft too. A folder is a draft only when the resolver has no worktree or branch for it. Inside an osq worktree, the active change is the one its branch names, `osq/<folder>`. That is also how the traceability helper finds its change when `OSQ_CHANGE` is unset, as when a developer runs tests by hand in a worktree.
+The checkout keeps a copy of every running change, so a folder is a draft only when the resolver has no worktree or branch for it. Inside an osq worktree, the active change is the one its branch names, `osq/<folder>`. The traceability helper finds it that way when `OSQ_CHANGE` is unset, as when a developer runs tests by hand in a worktree. It reads the worktree's `.git` file and the `HEAD` file it points to, and never spawns git, because the helper runs inside every test process.
 
-`osq status` in a checkout lists drafts, then running changes with their worktree paths and a warning for any checkout copy edited since approval, then dormant branches by name.
+`osq status` in a checkout lists drafts, then running changes with their worktree paths, the don't-edit warning while a task runs, and a warning for any checkout copy edited since approval, then leftover copies of landed changes with the command that removes them.
 
-`osq new` allocates the next number from the change folders, the archive and every `osq/*` branch, local and remote where a remote exists. If two intakes race to the same number, the second `createBranch` fails and the intake retries with the next.
+In mode A, `osq new` allocates the next number from the change folders and the archive, as today. The checkout keeps a copy of every approved change until it lands, so no number an osq branch holds is free there. Mode B has no checkout copies, so its intake also scans every `osq/*` branch, local and remote. If two intakes race to the same number, the second `createBranch` fails and the intake retries with the next.
 
 ### 12. Migration
 
@@ -347,7 +367,7 @@ Repository changes. A `vcs` block in `osq.config.ts` with `enabled`, `author`, `
 The decisions land in stages, and each stage runs on real changes before the next brief is written. Stages 2 to 4 are provisional: what they say here is the current intent, and each is settled only when its brief is written against the code the earlier stages left behind.
 
 - **Stage 0, read-only.** Brief `4.1-git-stage-0.md`. The read operations of `Vcs`, `GitVcs` and `NoVcs`, git in `doctor`, this ADR's rule reaching agents, `vcs_violation` and `scope_violation` recorded without killing, verify output and the `archived` event's path relativized at write time. Pushback items 2 and 4, and the detection half of decision 4. Tool summaries and the `started` event's `harness`, `model` and `osqVersion` had already landed before stage 0, which closes pushback item 3.
-- **Stage 1, a worktree per change.** Brief `4.2-git-stage-1-parent.md`, behind `vcs.enabled`. The resolver first, then decisions 1 on the branch side, 2, 3, 4 and 11, the write operations of decision 10, `vcs_violation` and `scope_violation` killing the task, and `osq message` from decision 7.
+- **Stage 1, a worktree per change.** Brief `4.2-git-stage-1-parent.md`, behind `vcs.enabled`. The resolver first, then decisions 1 on the branch side, 2 with stacking, 3, 4 and 11, the write operations of decision 10, the hook rule of decision 8, `vcs_violation` and `scope_violation` killing the task, and `osq message` from decision 7.
 - **Stage 2, integration. Provisional.** Decision 5's sync with its requirement check, and `osq land`.
 - **Stage 3, concurrency above one. Provisional.** Decision 5's scope prevention and per-worktree resources, scheduled by the watcher.
 - **Stage 4, mode B. Provisional.** Decisions 6 and 9, `Remote`, and the tracker adapter.
@@ -359,15 +379,15 @@ The decisions land in stages, and each stage runs on real changes before the nex
 | where the agent works | a worktree under `~/.osq/`, never the checkout | a worktree in osq's own clone |
 | who commits on the branch | osq, author `vcs.author`, committer the developer | osq, committer the service account |
 | who touches `main` | the human, via `osq land` or their own merge | the platform's merge, human or policy |
-| the draft in the checkout | stays as a record; status shows the change running and warns if the copy is edited | not applicable |
+| the draft in the checkout | stays as a record; status shows the change running, warns if the copy is edited, and flags a leftover copy after a hand landing | not applicable |
 | what a dead task leaves | a clean branch tip and `.run/dead/<n>.patch` | the same, plus a PR comment |
 | conflicts with `main` | `osq sync` re-derives living specs, stops on code or on a requirement `main` changed | automatic sync on "not mergeable", with the same stops |
 | what the human loses | live edits in the editor's checkout, dirty-tree starts | not applicable |
 | what the human gains | no hand commits, dead tasks put back, a verify that cannot be fooled by uncommitted files | a change goes from label to PR with nobody present |
 | network | none; the watcher uses local `main` | fetch, push and the tracker API, all outside core |
 
-## Open before stage 1
+## Open questions
 
-1. The worktree location. `~/.osq/worktrees/` versus a sibling directory of the repository. I chose `~/.osq/` for the reasons in decision 3, but if you open worktrees in an editor daily a sibling directory is friendlier. Stage 1 cannot be planned until this is settled.
-2. `brief.md`. `osq plan` takes `--brief <file>`. Whether it keeps the brief in the change folder as `brief.md` decides whether decision 6's PR body has one, or falls back to `## Goal` alone.
+1. Settled: the worktree location is `~/.osq/worktrees/<repo>/<folder>`, configurable as `vcs.worktreeRoot`.
+2. Settled: `osq plan --brief` keeps the brief in the change folder as `brief.md`, and approve hashes it, so decision 6's PR body has one.
 3. Whether re-approval after a dead task should clear the dead marker. Today the runner unlinks it on the next success and nothing else does, so decision 4 describes re-approval as "commit whatever `.run/` files changed" without settling that.

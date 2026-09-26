@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
-import { findSpecFolder } from '../spec/approve.js';
-import { getChangeRunDir, getChangesDir, getRejectedDir } from '../status/layout.js';
+import { findChange } from '../status/change-locations.js';
+import { getChangeRunDir, getRejectedDir } from '../status/layout.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
 
 /**
@@ -82,8 +82,7 @@ export async function rejectSpec(
 
   // Resolve only beneath the active changes directory. Archived and rejected
   // folders live elsewhere and therefore never match.
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const sourcePath = await findSpecFolder(specsDir, specIdOrPrefix);
+  const { folderPath: sourcePath } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(sourcePath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
 

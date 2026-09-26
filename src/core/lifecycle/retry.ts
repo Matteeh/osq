@@ -7,10 +7,10 @@ import {
   readDoneMarker,
 } from '../run/scope-hash.js';
 import { runVerificationCommand } from '../run/verification.js';
-import { findSpecFolder } from '../spec/approve.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
-import { getChangeRunDir, getChangesDir } from '../status/layout.js';
+import { findChange } from '../status/change-locations.js';
+import { getChangeRunDir } from '../status/layout.js';
 import { refreshRecertifiedDoneMarker } from './recertify.js';
 import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
@@ -83,8 +83,7 @@ export async function retrySpec(
     throw new Error(`Invalid retry target "${target}": expected a numeric task or "change".`);
   }
 
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const folderPath = await findSpecFolder(specsDir, specIdOrPrefix);
+  const { folderPath } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
   const runDir = getChangeRunDir(folderPath);

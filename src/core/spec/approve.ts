@@ -10,7 +10,7 @@ import {
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { hashBriefBytes, resolveOsqPackageVersion } from '../report/planning.js';
 import { buildManifest, writeManifest } from '../run/manifest.js';
-import { getChangesDir } from '../status/layout.js';
+import { findChange } from '../status/change-locations.js';
 import {
   type ApprovalDigest,
   type ApprovalFlag,
@@ -105,8 +105,9 @@ export async function approveSpec(
   config: OsqConfig,
   options: ApproveOptions = {},
 ): Promise<ApproveResult> {
-  const specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const folderPath = await findSpecFolder(specsDir, specIdOrPrefix);
+  const change = await findChange(projectRoot, config, specIdOrPrefix);
+  const folderPath = change.folderPath;
+  const specsDir = change.tree.changesDir;
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] || folderName;
 

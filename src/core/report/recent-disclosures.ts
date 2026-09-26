@@ -1,11 +1,10 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
   DEFAULT_PLANNING_CONFIG,
   type PlanningDisclosuresConfig,
 } from '../foundation/config-planning.js';
 import type { OsqConfig } from '../foundation/config.js';
-import { getArchiveDir } from '../status/layout.js';
+import { listChanges } from '../status/change-locations.js';
 import { type TaskDisclosures, readChangeDisclosures } from './result-sections.js';
 
 /** Exact heading of the plan prompt's optional disclosure section. */
@@ -34,24 +33,11 @@ function numericPrefix(name: string): number | null {
 }
 
 /**
- * Canonical archive folders, newest numeric first, hidden entries excluded.
- * Mirrors the bounded listing in `report.ts` without importing it.
+ * Newest archived folders first by numeric prefix, capped at `limit`. Mirrors
+ * the bounded listing in `report.ts` without importing it.
  */
-async function listRecentArchiveFolders(archiveDir: string, limit: number): Promise<string[]> {
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(archiveDir);
-  } catch {
-    return [];
-  }
-  const folders: string[] = [];
-  for (const entry of entries) {
-    if (entry.startsWith('.') || entry.startsWith('_')) continue;
-    const fullPath = path.join(archiveDir, entry);
-    const stat = await fs.stat(fullPath).catch(() => null);
-    if (stat?.isDirectory()) folders.push(fullPath);
-  }
-  folders.sort((a, b) => {
+function listRecentArchiveFolders(folders: readonly string[], limit: number): string[] {
+  const sorted = [...folders].sort((a, b) => {
     const nameA = path.basename(a);
     const nameB = path.basename(b);
     const numA = numericPrefix(nameA);
@@ -64,7 +50,7 @@ async function listRecentArchiveFolders(archiveDir: string, limit: number): Prom
     if (numB !== null) return 1;
     return nameA.localeCompare(nameB);
   });
-  return folders.slice(0, limit);
+  return sorted.slice(0, limit);
 }
 
 /** Prefix every line of a disclosure's text with `> ` so none reads as a heading. */
@@ -107,8 +93,11 @@ export async function formatRecentDisclosures(
 ): Promise<string | null> {
   const limits: PlanningDisclosuresConfig = (config.planning ?? DEFAULT_PLANNING_CONFIG)
     .disclosures;
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const folders = await listRecentArchiveFolders(archiveDir, limits.recentChanges);
+  const archived = await listChanges(projectRoot, config, ['archived']);
+  const folders = listRecentArchiveFolders(
+    archived.map((change) => change.folderPath),
+    limits.recentChanges,
+  );
 
   const entries: string[] = [];
   for (const folder of folders) {

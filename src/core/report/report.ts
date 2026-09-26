@@ -3,7 +3,7 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readManifestApprovedAt } from '../run/manifest-approval.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
-import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
+import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type QueueReport, readQueueReport } from '../status/queue-report.js';
 import { type TaskStatus, compareNumericPrefix, deriveSpecState } from '../status/state.js';
 import {
@@ -830,12 +830,14 @@ export async function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<MetricsReport> {
-  let specsDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  let archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  let rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
+  const [tree] = await changeTrees(projectRoot, config);
+  let specsDir = tree.changesDir;
+  let archiveDir = tree.archiveDir;
+  let rejectedDir = tree.rejectedDir;
 
   const specsDirStat = await fs.stat(specsDir).catch(() => null);
   const archiveDirStat = await fs.stat(archiveDir).catch(() => null);
+  let legacy = false;
 
   if (!specsDirStat && !archiveDirStat) {
     const legacySpecs = path.join(projectRoot, 'specs');
@@ -843,60 +845,66 @@ export async function getMetricsReport(
     const legacySpecsStat = await fs.stat(legacySpecs).catch(() => null);
     const legacyArchiveStat = await fs.stat(legacyArchive).catch(() => null);
     if (legacySpecsStat || legacyArchiveStat) {
+      legacy = true;
       specsDir = legacySpecs;
       archiveDir = legacyArchive;
       rejectedDir = path.join(legacySpecs, 'rejected');
     }
   }
 
-  // 1. Identify active specs
-  let activeEntries: string[] = [];
-  try {
-    activeEntries = await fs.readdir(specsDir);
-  } catch {
-    activeEntries = [];
-  }
-
-  const archiveRel = path.relative(specsDir, archiveDir);
-  const archiveFolder =
-    !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
-      ? archiveRel.split(path.sep)[0]
-      : 'archive';
-  const rejectedRel = path.relative(specsDir, rejectedDir);
-  const rejectedFolder =
-    !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
-      ? rejectedRel.split(path.sep)[0]
-      : 'rejected';
-
-  const candidateActive = activeEntries.filter(
-    (e) => !e.startsWith('_') && !e.startsWith('.') && e !== archiveFolder && e !== rejectedFolder,
-  );
-
   const activeFolders: string[] = [];
-  for (const folder of candidateActive) {
-    const fullPath = path.join(specsDir, folder);
-    const stat = await fs.stat(fullPath).catch(() => null);
-    if (stat?.isDirectory()) {
-      activeFolders.push(fullPath);
-    }
-  }
-
-  // 2. Identify archived specs
-  let archiveEntries: string[] = [];
-  try {
-    archiveEntries = await fs.readdir(archiveDir);
-  } catch {
-    archiveEntries = [];
-  }
-
-  const candidateArchived = archiveEntries.filter((e) => !e.startsWith('_') && !e.startsWith('.'));
-
   const archivedFolders: string[] = [];
-  for (const folder of candidateArchived) {
-    const fullPath = path.join(archiveDir, folder);
-    const stat = await fs.stat(fullPath).catch(() => null);
-    if (stat?.isDirectory()) {
-      archivedFolders.push(fullPath);
+  let rejectedFolders: string[] = [];
+
+  if (legacy) {
+    // 1. Identify active specs
+    let activeEntries: string[] = [];
+    try {
+      activeEntries = await fs.readdir(specsDir);
+    } catch {
+      activeEntries = [];
+    }
+
+    const archiveRel = path.relative(specsDir, archiveDir);
+    const archiveFolder =
+      !archiveRel.startsWith('..') && !path.isAbsolute(archiveRel)
+        ? archiveRel.split(path.sep)[0]
+        : 'archive';
+    const rejectedRel = path.relative(specsDir, rejectedDir);
+    const rejectedFolder =
+      !rejectedRel.startsWith('..') && !path.isAbsolute(rejectedRel)
+        ? rejectedRel.split(path.sep)[0]
+        : 'rejected';
+
+    const candidateActive = activeEntries.filter(
+      (e) =>
+        !e.startsWith('_') && !e.startsWith('.') && e !== archiveFolder && e !== rejectedFolder,
+    );
+    for (const folder of candidateActive) {
+      const fullPath = path.join(specsDir, folder);
+      const stat = await fs.stat(fullPath).catch(() => null);
+      if (stat?.isDirectory()) activeFolders.push(fullPath);
+    }
+
+    // 2. Identify archived specs
+    let archiveEntries: string[] = [];
+    try {
+      archiveEntries = await fs.readdir(archiveDir);
+    } catch {
+      archiveEntries = [];
+    }
+    for (const folder of archiveEntries) {
+      if (folder.startsWith('_') || folder.startsWith('.')) continue;
+      const fullPath = path.join(archiveDir, folder);
+      const stat = await fs.stat(fullPath).catch(() => null);
+      if (stat?.isDirectory()) archivedFolders.push(fullPath);
+    }
+    rejectedFolders = await listRejectedFolders(rejectedDir);
+  } else {
+    for (const change of await listChanges(projectRoot, config)) {
+      if (change.location === 'active') activeFolders.push(change.folderPath);
+      else if (change.location === 'archived') archivedFolders.push(change.folderPath);
+      else rejectedFolders.push(change.folderPath);
     }
   }
 
@@ -907,7 +915,7 @@ export async function getMetricsReport(
   // other aggregate. A folder counts once, only with a valid `rejected` event.
   let rejectionTotal = 0;
   const rejectionsByPlanner: Record<string, number> = {};
-  for (const folderPath of await listRejectedFolders(rejectedDir)) {
+  for (const folderPath of rejectedFolders) {
     if (!(await hasRejectedEvent(folderPath))) continue;
     rejectionTotal++;
     const model = await readPlannerModel(folderPath);
@@ -1514,22 +1522,9 @@ function numericPrefix(name: string): number | null {
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
-/** Canonical archive folders, newest numeric first, hidden entries excluded. */
-async function listRecentArchiveFolders(archiveDir: string, limit: number): Promise<string[]> {
-  let entries: string[] = [];
-  try {
-    entries = await fs.readdir(archiveDir);
-  } catch {
-    return [];
-  }
-  const folders: string[] = [];
-  for (const entry of entries) {
-    if (entry.startsWith('.') || entry.startsWith('_')) continue;
-    const fullPath = path.join(archiveDir, entry);
-    const stat = await fs.stat(fullPath).catch(() => null);
-    if (stat?.isDirectory()) folders.push(fullPath);
-  }
-  folders.sort((a, b) => {
+/** Newest archived folders first by numeric prefix, capped at `limit`. */
+function listRecentArchiveFolders(folders: readonly string[], limit: number): string[] {
+  const sorted = [...folders].sort((a, b) => {
     const nameA = path.basename(a);
     const nameB = path.basename(b);
     const numA = numericPrefix(nameA);
@@ -1542,7 +1537,7 @@ async function listRecentArchiveFolders(archiveDir: string, limit: number): Prom
     if (numB !== null) return 1;
     return nameA.localeCompare(nameB);
   });
-  return folders.slice(0, limit);
+  return sorted.slice(0, limit);
 }
 
 /** Every typed `dead` event in the window, in change/task/event order. */
@@ -1587,9 +1582,9 @@ export async function getRepositoryRecord(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<RepositoryRecord> {
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const folders = await listRecentArchiveFolders(
-    archiveDir,
+  const archived = await listChanges(projectRoot, config, ['archived']);
+  const folders = listRecentArchiveFolders(
+    archived.map((change) => change.folderPath),
     REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES,
   );
   const measured = await projectMeasuredTasks(folders);

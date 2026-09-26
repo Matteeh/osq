@@ -1,7 +1,7 @@
 import type http from 'node:http';
 import path from 'node:path';
 import { watch } from 'chokidar';
-import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
+import type { ChangeTree } from '../status/change-locations.js';
 import { numericIdOf } from './web-data-folders.js';
 
 /** Framed invalidation payload: affected numeric ids, empty for shared documents. */
@@ -35,6 +35,11 @@ export interface InvalidationHubOptions {
   readonly projectRoot: string;
   readonly openspecRoot: string;
   readonly debounceMs: number;
+  /**
+   * Resolved change trees for callers that can await `changeTrees`. When
+   * absent, the single tree of today's canonical layout is used.
+   */
+  readonly trees?: readonly ChangeTree[];
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
 }
@@ -99,11 +104,28 @@ export function classifyChangePath(
   return numericIdOf(key);
 }
 
+/**
+ * The one tree changes live in, built synchronously for direct callers such as
+ * focused tests. `changeTrees` is async only because a later stage adds
+ * worktree discovery, so this mirrors the single tree it returns today.
+ */
+function singleChangeTree(projectRoot: string, openspecRoot: string): ChangeTree {
+  const root = path.resolve(projectRoot);
+  const changesDir = path.join(root, openspecRoot, 'changes');
+  return {
+    root,
+    changesDir,
+    archiveDir: path.join(changesDir, 'archive'),
+    rejectedDir: path.join(changesDir, 'rejected'),
+  };
+}
+
 /** Create the one watcher and debounce accumulator owned by a server. */
 export function createInvalidationHub(options: InvalidationHubOptions): InvalidationHub {
-  const changesDir = path.resolve(getChangesDir(options.openspecRoot, options.projectRoot));
-  const archiveDir = path.resolve(getArchiveDir(options.openspecRoot, options.projectRoot));
-  const rejectedDir = path.resolve(getRejectedDir(options.openspecRoot, options.projectRoot));
+  const tree = options.trees?.[0] ?? singleChangeTree(options.projectRoot, options.openspecRoot);
+  const changesDir = path.resolve(tree.changesDir);
+  const archiveDir = path.resolve(tree.archiveDir);
+  const rejectedDir = path.resolve(tree.rejectedDir);
   const root = path.resolve(options.projectRoot, options.openspecRoot);
   const factory = options.watch ?? defaultWatch;
   const schedule = options.schedule ?? defaultSchedule;

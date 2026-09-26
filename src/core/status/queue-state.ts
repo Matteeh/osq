@@ -2,8 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter } from '../spec/parser.js';
+import { listChanges } from './change-locations.js';
 import { isVerificationPending } from './dependency-readiness.js';
-import { getArchiveDir, getChangesDir, getRejectedDir } from './layout.js';
 import { type QueueItem, readQueue } from './queue-parser.js';
 import {
   type SpecState,
@@ -65,8 +65,6 @@ export interface QueueStateSnapshot {
   readonly landed: Set<string>;
 }
 
-const RESERVED_DIRS = new Set(['archive', 'rejected']);
-
 /** Scan active, archived, and rejected folders for queue metadata; null keeps retired slugs. */
 export async function scanQueueAssociations(
   projectRoot: string,
@@ -74,35 +72,23 @@ export async function scanQueueAssociations(
   slugs: ReadonlySet<string> | null,
 ): Promise<Map<string, QueueAssociationGroups>> {
   const result = new Map<string, QueueAssociationGroups>();
-  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const rejectedDir = getRejectedDir(config.paths.openspecRoot, projectRoot);
-  const scan = async (dir: string, location: 'active' | 'archived' | 'rejected'): Promise<void> => {
-    for (const entry of await fs.readdir(dir, { withFileTypes: true }).catch(() => [])) {
-      const { name } = entry;
-      if (!entry.isDirectory() || name.startsWith('.') || name.startsWith('_')) continue;
-      if (location === 'active' && RESERVED_DIRS.has(name)) continue;
-      const folderPath = path.join(dir, name);
-      const content = await fs
-        .readFile(path.join(folderPath, 'brief.md'), 'utf8')
-        .catch(() => null);
-      if (content === null) continue;
-      const { data } = parseFrontmatter(content);
-      const item = typeof data.queue_item === 'string' ? data.queue_item.trim() : '';
-      if (!item || (slugs && !slugs.has(item))) continue;
-      const groups = result.get(item) ?? { active: [], archived: [], rejected: [] };
-      groups[location].push({
-        folderName: name,
-        folderPath,
-        id: name.match(/^(\d+)/)?.[1] ?? name,
-        queueHash: typeof data.queue_hash === 'string' ? data.queue_hash : null,
-      });
-      result.set(item, groups);
-    }
-  };
-  await scan(changesDir, 'active');
-  await scan(archiveDir, 'archived');
-  await scan(rejectedDir, 'rejected');
+  for (const change of await listChanges(projectRoot, config)) {
+    const content = await fs
+      .readFile(path.join(change.folderPath, 'brief.md'), 'utf8')
+      .catch(() => null);
+    if (content === null) continue;
+    const { data } = parseFrontmatter(content);
+    const item = typeof data.queue_item === 'string' ? data.queue_item.trim() : '';
+    if (!item || (slugs && !slugs.has(item))) continue;
+    const groups = result.get(item) ?? { active: [], archived: [], rejected: [] };
+    groups[change.location].push({
+      folderName: change.folderName,
+      folderPath: change.folderPath,
+      id: change.folderName.match(/^(\d+)/)?.[1] ?? change.folderName,
+      queueHash: typeof data.queue_hash === 'string' ? data.queue_hash : null,
+    });
+    result.set(item, groups);
+  }
   return result;
 }
 

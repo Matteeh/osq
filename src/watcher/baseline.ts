@@ -1,10 +1,9 @@
-import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import { runVerificationCommand } from '../core/run/verification.js';
-import { getArchiveDir, getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
+import { listChanges } from '../core/status/change-locations.js';
 import { selectVcs } from '../core/vcs/select.js';
 import { type BaselineRanEventData, appendHarnessEvent } from '../harness/types.js';
 import { type BaselineKey, readBaselineKey } from './baseline-key.js';
@@ -78,22 +77,8 @@ function greenEvent(value: unknown): BaselineRanEventData | null {
 
 /** Every active and archived change folder, active first. */
 async function changeFolders(projectRoot: string, config: OsqConfig): Promise<string[]> {
-  const folders: string[] = [];
-  const changesDir = getChangesDir(config.paths.openspecRoot, projectRoot);
-  const active = await fs.readdir(changesDir, { withFileTypes: true }).catch(() => [] as Dirent[]);
-  for (const entry of active) {
-    if (entry.isDirectory() && isActiveChangeFolderName(entry.name)) {
-      folders.push(path.join(changesDir, entry.name));
-    }
-  }
-  const archiveDir = getArchiveDir(config.paths.openspecRoot, projectRoot);
-  const archived = await fs
-    .readdir(archiveDir, { withFileTypes: true })
-    .catch(() => [] as Dirent[]);
-  for (const entry of archived) {
-    if (entry.isDirectory()) folders.push(path.join(archiveDir, entry.name));
-  }
-  return folders;
+  const changes = await listChanges(projectRoot, config, ['active', 'archived']);
+  return changes.map((change) => change.folderPath);
 }
 
 /** The latest passed or reused baseline across every active and archived change. */
