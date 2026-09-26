@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createJiti } from 'jiti';
+import type { AgyConfig, OpencodeConfig } from './config-agents.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { applyHarnessModelEnv } from './config-env.js';
@@ -19,7 +20,9 @@ import {
   validateTraceabilityConfig,
 } from './config-traceability.js';
 import type { OsqUserConfig } from './config-user.js';
+import { DEFAULT_VCS_CONFIG, type VcsConfig, validateVcsConfig } from './config-vcs.js';
 
+export type { AgyConfig, OpencodeConfig } from './config-agents.js';
 export type { ClaudeConfig } from './config-claude.js';
 export type { CodexConfig } from './config-codex.js';
 export type { PiConfig } from './config-pi.js';
@@ -59,18 +62,7 @@ export interface OsqTimeouts {
   /** Kill grace after SIGTERM before SIGKILL; defaults to 5000 milliseconds. */
   readonly harnessKillGracePeriodMs?: number;
   readonly gitSeconds?: number;
-}
-
-export interface AgyConfig {
-  readonly model?: string;
-  readonly dangerouslySkipPermissions?: boolean;
-}
-
-export interface OpencodeConfig {
-  readonly bin?: string;
-  readonly model?: string;
-  readonly agent?: string;
-  readonly variant?: string;
+  readonly gitCommitSeconds?: number;
 }
 
 export interface LogConfig {
@@ -89,6 +81,7 @@ export interface OsqConfig {
   readonly limits: OsqLimits;
   readonly paths: OsqPaths;
   readonly timeouts: OsqTimeouts;
+  readonly vcs?: VcsConfig;
   readonly agy?: AgyConfig;
   readonly opencode?: OpencodeConfig;
   readonly codex?: CodexConfig;
@@ -107,6 +100,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
+  vcs: DEFAULT_VCS_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
   traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
@@ -163,6 +157,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     ...DEFAULT_CONFIG,
     ...restConfig,
     serve,
+    vcs: validateVcsConfig(config.vcs),
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),
     traceability: validateTraceabilityConfig(config.traceability),

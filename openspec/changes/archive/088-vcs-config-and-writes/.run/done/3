@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:76f1c80d922e65c3cd265cd24c17b89d11a916b53f7f754fddc409b94910b938"
+build_stamp: "55ef69c"
+project_commit: "55ef69c"
+exit_code: 0
+scope_files: {"src/core/vcs/doctor-git.ts":"sha256:ed3fb574193d16bbcaeb54552898a14b4cc701b984f33800f87e6e3f368d8950","tests/vcs-doctor-warnings.test.ts":"sha256:d27e41b61de93bebd4c0626c5dda21621bef2515ca3b3c43e7b533afc18c698b"}
+---
+2026-09-26T13:39:09.916Z

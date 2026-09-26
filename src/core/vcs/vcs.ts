@@ -24,6 +24,16 @@ export interface VcsStatusEntry {
   readonly from?: string;
 }
 
+/** One entry of `git worktree list`, with its branch and HEAD. */
+export interface VcsWorktree {
+  /** Absolute path of the worktree. */
+  readonly path: string;
+  /** The branch the worktree has checked out; null when detached. */
+  readonly branch: string | null;
+  /** The worktree's HEAD commit; null in an unborn worktree. */
+  readonly head: string | null;
+}
+
 export interface Vcs {
   readonly kind: 'git' | 'none';
   /** The reason git is off; null for `GitVcs`. */
@@ -33,4 +43,14 @@ export interface Vcs {
   indexDigest(): Promise<string>;
   stashList(): Promise<VcsStash[]>;
   status(): Promise<VcsStatusEntry[]>;
+  configValue(key: string): Promise<string | null>;
+  hookNames(): Promise<string[]>;
+  listBranches(prefix: string): Promise<string[]>;
+  createBranch(name: string, base: string): Promise<void>;
+  worktreeAdd(path: string, branch: string): Promise<void>;
+  worktreeRemove(path: string): Promise<void>;
+  worktreeList(): Promise<VcsWorktree[]>;
+  commit(paths: readonly string[], message: string, author: string): Promise<string>;
+  patch(): Promise<string>;
+  discard(paths: readonly string[]): Promise<void>;
 }

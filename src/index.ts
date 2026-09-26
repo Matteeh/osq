@@ -1,4 +1,5 @@
 export { DEFAULT_CONFIG, defineConfig, loadConfig } from './core/foundation/config.js';
+export type { VcsConfig } from './core/foundation/config-vcs.js';
 export {
   DEFAULT_PLANNING_CONFIG,
   validatePlanningConfig,

@@ -1,8 +1,11 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
+import { DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
-import type { Vcs, VcsHead, VcsStash, VcsStatusEntry } from './vcs.js';
+import * as writes from './git-vcs-write.js';
+import type { GitWriteContext } from './git-vcs-write.js';
+import type { Vcs, VcsHead, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
 
 /** Default bound in seconds for each git read when `timeouts.gitSeconds` is unset. */
 export const DEFAULT_GIT_SECONDS = 10;
@@ -13,12 +16,14 @@ const GIT_ENV_VARS = ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'] as const;
 export interface GitResult {
   readonly code: number;
   readonly stdout: string;
+  readonly stderr: string;
 }
 
-/** The child environment with the variables that redirect git removed. */
-function childGitEnv(): NodeJS.ProcessEnv {
+/** The child environment with redirecting variables removed, then `extra` applied. */
+function childGitEnv(extra?: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env = { ...process.env };
   for (const key of GIT_ENV_VARS) delete env[key];
+  if (extra !== undefined) Object.assign(env, extra);
   return env;
 }
 
@@ -28,16 +33,17 @@ export function runGit(
   args: string[],
   cwd: string,
   timeoutSeconds: number,
+  extraEnv?: NodeJS.ProcessEnv,
 ): Promise<GitResult> {
   return new Promise((resolve) => {
     execFile(
       binary,
       args,
-      { cwd, timeout: timeoutSeconds * 1000, env: childGitEnv() },
-      (error, stdout) => {
+      { cwd, timeout: timeoutSeconds * 1000, env: childGitEnv(extraEnv) },
+      (error, stdout, stderr) => {
         let code = 0;
         if (error) code = typeof error.code === 'number' ? error.code : 1;
-        resolve({ code, stdout: String(stdout) });
+        resolve({ code, stdout: String(stdout), stderr: String(stderr) });
       },
     );
   });
@@ -97,11 +103,24 @@ export class GitVcs implements Vcs {
     private readonly projectRoot: string,
     private readonly config: OsqConfig,
     private readonly binary = 'git',
-  ) {}
+  ) {
+    this.context = {
+      projectRoot: this.projectRoot,
+      run: (args, env) => this.run(args, env),
+      runCommit: (args, env) => this.runCommit(args, env),
+    };
+  }
 
-  private run(args: string[]): Promise<GitResult> {
+  private readonly context: GitWriteContext;
+
+  private run(args: string[], env?: NodeJS.ProcessEnv): Promise<GitResult> {
     const seconds = this.config.timeouts.gitSeconds ?? DEFAULT_GIT_SECONDS;
-    return runGit(this.binary, args, this.projectRoot, seconds);
+    return runGit(this.binary, args, this.projectRoot, seconds, env);
+  }
+
+  private runCommit(args: string[], env?: NodeJS.ProcessEnv): Promise<GitResult> {
+    const seconds = this.config.timeouts.gitCommitSeconds ?? DEFAULT_GIT_COMMIT_SECONDS;
+    return runGit(this.binary, args, this.projectRoot, seconds, env);
   }
 
   async root(): Promise<string | null> {
@@ -138,5 +157,45 @@ export class GitVcs implements Vcs {
     const result = await this.run(['status', '--porcelain=v1', '-z', '--untracked-files=all']);
     if (result.code !== 0) return [];
     return parseStatus(result.stdout);
+  }
+
+  configValue(key: string): Promise<string | null> {
+    return writes.configValue(this.context, key);
+  }
+
+  hookNames(): Promise<string[]> {
+    return writes.hookNames(this.context);
+  }
+
+  listBranches(prefix: string): Promise<string[]> {
+    return writes.listBranches(this.context, prefix);
+  }
+
+  createBranch(name: string, base: string): Promise<void> {
+    return writes.createBranch(this.context, name, base);
+  }
+
+  worktreeAdd(worktreePath: string, branch: string): Promise<void> {
+    return writes.worktreeAdd(this.context, worktreePath, branch);
+  }
+
+  worktreeRemove(worktreePath: string): Promise<void> {
+    return writes.worktreeRemove(this.context, worktreePath);
+  }
+
+  worktreeList(): Promise<VcsWorktree[]> {
+    return writes.worktreeList(this.context);
+  }
+
+  commit(paths: readonly string[], message: string, author: string): Promise<string> {
+    return writes.commit(this.context, paths, message, author);
+  }
+
+  patch(): Promise<string> {
+    return writes.patch(this.context);
+  }
+
+  discard(paths: readonly string[]): Promise<void> {
+    return writes.discard(this.context, paths);
   }
 }

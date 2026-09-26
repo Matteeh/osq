@@ -5,6 +5,7 @@ import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
 import type { TraceabilityConfig } from './config-traceability.js';
+import type { VcsConfig } from './config-vcs.js';
 import type {
   AgyConfig,
   LogConfig,
@@ -36,6 +37,7 @@ export type OsqUserConfig = Partial<
     | 'queue'
     | 'gates'
     | 'traceability'
+    | 'vcs'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -52,4 +54,5 @@ export type OsqUserConfig = Partial<
   readonly queue?: Partial<QueueConfig>;
   readonly gates?: Partial<GatesConfig>;
   readonly traceability?: Partial<TraceabilityConfig>;
+  readonly vcs?: Partial<VcsConfig>;
 };
