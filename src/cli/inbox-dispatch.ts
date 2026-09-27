@@ -6,10 +6,17 @@ import {
   type FollowDispatchOptions,
   followDispatch,
 } from '../core/status/dispatch-follow.js';
+import {
+  type CardInput,
+  type CardSessionOptions,
+  type Launcher,
+  runCardSession,
+} from '../core/status/dispatch-session.js';
 import { formatDispatchText } from '../core/status/dispatch-text.js';
 import { readDispatch, readDispatchQueue } from '../core/status/dispatch.js';
 import { type InboxSound, createInboxSound } from '../core/status/inbox-sound.js';
 import type { ScheduleFn, WatcherFactory } from '../core/web/web-events.js';
+import { createChildLauncher, createTerminalInput } from './inbox-terminal.js';
 
 export interface InboxDispatchOptions {
   cwd?: string;
@@ -18,6 +25,12 @@ export interface InboxDispatchOptions {
   stderr?: (msg: string) => void;
   json?: boolean;
   follow?: boolean;
+  /** Injectable terminal check; defaults to both stdio streams being TTYs. */
+  isTerminal?: () => boolean;
+  /** Injectable card input; defaults to the terminal input. */
+  input?: CardInput;
+  /** Injectable child launcher; defaults to the osq bin child launcher. */
+  launch?: Launcher;
   signal?: AbortSignal;
   sound?: InboxSound;
   watch?: WatcherFactory;
@@ -25,6 +38,30 @@ export interface InboxDispatchOptions {
   every?: EveryFn;
   now?: () => Date;
   trees?: (projectRoot: string, config: OsqConfig) => Promise<readonly ChangeTree[]>;
+}
+
+function defaultIsTerminal(): boolean {
+  return process.stdin.isTTY === true && process.stdout.isTTY === true;
+}
+
+/** The seams the card session consumes, filling the terminal defaults. */
+function sessionOptions(
+  options: InboxDispatchOptions,
+  cwd: string,
+  config: OsqConfig,
+): CardSessionOptions {
+  return {
+    input: options.input ?? createTerminalInput(process.stdin),
+    launch: options.launch ?? createChildLauncher(cwd),
+    sound: options.sound ?? createInboxSound(cwd, config),
+    ...(options.stdout ? { stdout: options.stdout } : {}),
+    ...(options.stderr ? { stderr: options.stderr } : {}),
+    ...(options.now ? { now: options.now } : {}),
+    ...(options.watch ? { watch: options.watch } : {}),
+    ...(options.schedule ? { schedule: options.schedule } : {}),
+    ...(options.every ? { every: options.every } : {}),
+    ...(options.trees ? { trees: options.trees } : {}),
+  };
 }
 
 /** The seams the follow loop consumes, forwarding only the ones provided. */
@@ -65,9 +102,20 @@ export async function inboxDispatchCommand(options: InboxDispatchOptions = {}): 
     await followDispatch(cwd, config, followOptions(options, cwd, config));
     return;
   }
-  const output = options.json
-    ? JSON.stringify(await readDispatchQueue(cwd, config), null, 2)
-    : formatDispatchText(await readDispatch(cwd, config));
+  if (options.json) {
+    print(options, JSON.stringify(await readDispatchQueue(cwd, config), null, 2));
+    return;
+  }
+  const isTerminal = options.isTerminal ?? defaultIsTerminal;
+  if (isTerminal()) {
+    await runCardSession(cwd, config, sessionOptions(options, cwd, config));
+    return;
+  }
+  print(options, formatDispatchText(await readDispatch(cwd, config)));
+}
+
+/** Write `output` through the injected writer, or stdout. */
+function print(options: InboxDispatchOptions, output: string): void {
   if (options.stdout) {
     options.stdout(output);
   } else {

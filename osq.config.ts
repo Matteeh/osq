@@ -6,6 +6,11 @@ export default defineConfig({
   gates: {
     baselineVerify: "pnpm verify",
   },
+  vcs: {
+    enabled: true,
+    author: "osq <osq@noreply.invalid>",
+    prepare: "pnpm install --frozen-lockfile",
+  },
   pi: { provider: "deepseek", model: "deepseek-flash", thinking: "high" },
   opencode: {
     bin: "opencode",
@@ -14,7 +19,7 @@ export default defineConfig({
     variant: "thinking",
   },
   queue: {
-    maxPlanningSessions: 10,
+    maxPlanningSessions: 100,
     maxPlanningCost: 20,
   },
 });

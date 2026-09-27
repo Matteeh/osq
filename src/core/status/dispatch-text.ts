@@ -63,8 +63,8 @@ function verifyLines(card: VerifyCard): string[] {
   ];
 }
 
-/** The card header, its reason, the body for its kind, and its actions. */
-function cardLines(item: OrderedDispatchItem, card: DispatchCard): string[] {
+/** The card header, its reason, and the body for its kind, before `Actions:`. */
+export function formatDispatchCardBody(item: OrderedDispatchItem, card: DispatchCard): string[] {
   const lines: string[] = [`${item.kind}: ${item.change.folder}`, `  why: ${item.reason}`];
   switch (card.kind) {
     case 'approval':
@@ -80,6 +80,12 @@ function cardLines(item: OrderedDispatchItem, card: DispatchCard): string[] {
       lines.push(...verifyLines(card));
       break;
   }
+  return lines;
+}
+
+/** The card body followed by its `Actions:` block. */
+function cardLines(item: OrderedDispatchItem, card: DispatchCard): string[] {
+  const lines = formatDispatchCardBody(item, card);
   lines.push('Actions:');
   for (const command of item.commands) lines.push(`  ${command}`);
   return lines;

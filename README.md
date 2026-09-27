@@ -356,6 +356,14 @@ osq message <id> | git commit -F -
 
 `osq message <id>` prints the squash commit message to stdout and the branch and land command to stderr, and writes nothing. After a hand landing, `osq status` flags the checkout's leftover copy of the draft under `Leftover drafts:` while its contents still match the approved hash, and prints the command that removes it. A test that runs inside an `osq/<folder>` worktree finds its change from the worktree's branch when `OSQ_CHANGE` is unset.
 
+### Working with version control on
+
+1. Approve the change from the default branch, so osq cuts the `osq/<folder>` branch and its worktree there.
+2. Find the worktree at the `Worktree:` line `osq approve` prints, or under `vcs.worktreeRoot`.
+3. Leave the worktree alone while a task runs, and edit the change only from the default branch or another checkout.
+4. Land the archived change with `git merge --squash osq/<folder>` and `osq message <id> | git commit -F -`.
+5. Remove the leftover draft that `osq status` names under `Leftover drafts:`.
+
 ## Harnesses
 
 `OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `done_manual`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
@@ -526,7 +534,7 @@ As with every harness, scope is a protocol, not confinement beyond what the harn
 ```
 osq                      human attention inbox: needs you, running, landed since last look
 osq --json               print human attention inbox as stable JSON
-osq inbox                what needs a human, in dispatch order, with the first item's card
+osq inbox                what needs a human; opens as cards on a terminal, prints otherwise
 osq inbox --follow       print new and departed items as they change, and sound when new work appears
 osq inbox --json         the dispatch queue and every item's card data as JSON
 osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
@@ -589,6 +597,17 @@ then prints the first item's card with its reason, evidence, and exact commands.
 It orders the queue by taking approval and halt items first while the watcher is
 idle, then the item that holds up the most changes, then the lower change id and
 task number. `osq inbox --json` carries every item's card data.
+
+On a terminal, `osq inbox` opens the first item as a card instead of printing:
+the same header and card, then a `Keys:` block with `a` approve, `r` retry,
+`x` reject (it asks for a reason), `c` check, `p` verified passed, `f` verified
+failed, `s` show, `n` skip, and `q` quit. Pressing a key runs that osq command
+as a child process on the same terminal, so its output and prompts are exactly
+what you would see typing it, and its exit code prints before the queue is
+re-read. A key only runs a command the card already lists; the land command is
+a shell pipeline, so it appears under `Run yourself:` to copy rather than run.
+When stdout is not a terminal, or with `--json` or `--follow`, `osq inbox`
+prints as before, so piping and scripts are unaffected.
 
 `osq inbox --follow` prints the same text, then
 `Waiting for new items (Ctrl-C to stop).`, and keeps running until you press

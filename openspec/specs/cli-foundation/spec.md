@@ -1799,7 +1799,9 @@ print `Nothing needs you.` With `--json`, it SHALL print
 `{ "watcherIdle": <bool>, "items": [...] }`, where each item holds its
 kind, change, task, weight, reason, commands, and card. It SHALL exit zero.
 Bare `osq` and `osq --json` SHALL be unchanged. `limits.cardOutputLines`
-SHALL default to 20.
+SHALL default to 20. When stdin and stdout are both terminals and neither
+`--json` nor `--follow` is given, `osq inbox` SHALL run the card session
+instead of printing, as "Inbox cards on a terminal" says.
 
 #### Scenario: Ordered list and first card
 - **WHEN** a project has a halt item and an approval item whose change two others depend on, and the watcher has no runnable change
@@ -1885,3 +1887,66 @@ SHALL include `osq inbox --follow`.
 #### Scenario: JSON refused
 - **WHEN** `osq inbox --follow --json` runs
 - **THEN** stderr holds `osq inbox: --follow prints text; drop --json` and the exit code is 1
+
+### Requirement: Inbox cards on a terminal
+<!-- source: src/cli/inbox-terminal.ts, src/cli/inbox-dispatch.ts, README.md, tests/inbox-cards.test.ts -->
+`inboxDispatchCommand` SHALL take `isTerminal`, `input`, and `launch`
+options, defaulting to both stdio streams being TTYs, the terminal input,
+and the child launcher from `src/cli/inbox-terminal.ts`. When `isTerminal()`
+is true and neither `json` nor `follow` is set, it SHALL run
+`runCardSession` with the inbox sound built by `createInboxSound`.
+
+`createTerminalInput(stream)` SHALL read one key at a time with raw mode on
+while a key is awaited and off otherwise, and `line(question)` SHALL write
+the question and read one line with raw mode off. A stream without
+`setRawMode` SHALL still work.
+
+`createChildLauncher(projectRoot)` SHALL spawn `process.execPath` with osq's
+own `bin` entry beside `inbox-terminal`'s module (`bin.ts` with
+`--import` and the absolute URL `import.meta.resolve('tsx')` gives, when
+that module is `.ts`; `bin.js` otherwise) and the
+key's arguments, with `cwd` the project root and stdio inherited, never
+through a shell. It SHALL resolve with the exit code, 1 when the child
+ends by a signal or fails to start. While the child runs, SIGINT SHALL not
+end osq.
+
+README.md SHALL say, in the Human Attention Inbox section, that
+`osq inbox` on a terminal opens cards, list the keys, say that a key runs
+the osq command as a child process on the same terminal, that the land
+command is shown to copy, and that piping or `--json` prints as before.
+
+#### Scenario: Terminal runs the session
+- **WHEN** `inboxDispatchCommand` runs with `isTerminal` true, scripted keys `q`, and a project with one approval item
+- **THEN** the approval card with its `Keys:` block prints and the command resolves without launching
+
+#### Scenario: No terminal prints
+- **WHEN** `inboxDispatchCommand` runs with `isTerminal` false
+- **THEN** it prints what `osq inbox` printed before
+
+#### Scenario: Raw mode around a key
+- **WHEN** `createTerminalInput` reads a key from a fake stream with `setRawMode`
+- **THEN** raw mode is turned on before the read and off after it
+
+#### Scenario: Real child
+- **WHEN** `createChildLauncher` launches `--version`
+- **THEN** it resolves with 0
+
+### Requirement: osq runs its own changes under version control
+<!-- source: osq.config.ts, README.md, tests/own-vcs-config.test.ts -->
+osq's own `osq.config.ts` SHALL set `vcs.enabled` to true, `vcs.author` to
+`osq <osq@noreply.invalid>`, and `vcs.prepare` to
+`pnpm install --frozen-lockfile`. README.md SHALL end its
+`## Version control` section with `### Working with version control on`, a
+numbered list that says, in order, to approve from the default branch, to
+find the worktree from the `Worktree:` line or under `vcs.worktreeRoot`, not
+to edit the worktree while a task runs, to land with
+`git merge --squash osq/<folder>` and `osq message <id> | git commit -F -`,
+and to remove the leftover draft `osq status` names.
+
+#### Scenario: Own config
+- **WHEN** `loadConfig` reads the repository root
+- **THEN** `vcs.enabled` is true, `vcs.author` is `osq <osq@noreply.invalid>`, and `vcs.prepare` is `pnpm install --frozen-lockfile`
+
+#### Scenario: Walkthrough
+- **WHEN** README.md is read
+- **THEN** `### Working with version control on` follows the other `## Version control` text and holds `osq message <id> | git commit -F -`

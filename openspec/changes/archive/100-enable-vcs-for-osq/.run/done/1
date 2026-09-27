@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e14f91215489b53892275b6fbf793c97666f0d9fe37decff6da20035e9d1c225"
+build_stamp: "d2b1ae0"
+project_commit: "d2b1ae0"
+exit_code: 0
+scope_files: {"README.md":"sha256:20c53c04798370711f49f29454577748bd21f4b15b1a34944905dc161827da12","osq.config.ts":"sha256:92b2c8a3ac50732d8cf5aa84991c3dc4a8d8ae80af65c43389f0a3e71338020a","tests/own-vcs-config.test.ts":"sha256:2bfc6292bd693e024d61563af6fc46bfe7a7276767930e734eaee3957e6f9b4d"}
+---
+2026-09-27T10:30:36.013Z
