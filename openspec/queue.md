@@ -4,121 +4,17 @@ The remaining work on osq itself, as an osq brief queue.
 
 Each item's body becomes that change's `brief.md` word for word. Drive the run with `osq plan --next`, then plan the change in a Claude Code session, review it, and `osq approve`.
 
-Stage 1 of `decisions/003-git-strategy.md` is complete: changes 087 to 096 landed with `vcs.enabled` off. `enable-vcs-for-osq` turns it on for this repository once the human decides to approve and land on `main`.
+Stage 1 of `decisions/003-git-strategy.md` is complete, and change 100 turned `vcs.enabled` on for this repository. From change 101, osq's changes run in worktrees, are approved on `main`, and land by hand.
 
-The inbox dispatcher is four items, in order: `inbox-dispatch-order`, `inbox-follow-sound`, `inbox-cards`, and `inbox-wait-log`. Together they grow `osq inbox` into a dispatcher that brings the work to the reviewer. The original single brief was split on 2026-09-27 because it would have been the largest change osq has run.
+The inbox dispatcher was four items. `inbox-dispatch-order`, `inbox-follow-sound`, and `inbox-cards` landed as changes 097 to 099; `inbox-wait-log` remains.
+
+Capabilities are three items, in order: `capability-relations`, `capability-sidecar`, and `capability-graph`, queued on 2026-09-27.
 
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
-## [inbox-dispatch-order] osq inbox orders what needs a human and shows the evidence
-
-Depends on: nothing
-
-### Goal
-
-A new `osq inbox` command lists the items that need a human, in the order a reviewer should take them, and prints the first one as a card with its question and evidence. `osq inbox --json` carries every item's card data. Bare `osq` stays the overview it is today.
-
-### Context
-
-- Bare `osq` and `osq --json` print the human attention inbox from change 037 (`src/core/status/inbox*.ts`). Its `needsYou` kinds are `planning`, `approval`, `task-dead`, `task-regressed`, `change-regressed`, `verification-pending`, and `verification-failed`, in numeric order. There is no `osq inbox` subcommand.
-- `readNextStep` in `src/core/status/next-step.ts` already tells whether an unapproved change is ready for approval or still unplanned, and whether an approved change is dead, blocked, or running.
-- `osq approve` and `osq show` print the approval digest: the goal, delta changes per capability, governing decisions, tasks with scope counts, and flags (`src/core/spec/digest*.ts`).
-- Stage 1 of ADR 003 has landed. With `vcs.enabled`, a change archives on `osq/<folder>` and lands by hand. `readDependencyState` in `src/core/spec/stack-dependencies.ts` reads such a change as `archived` until the default branch holds its archive. `buildSquashMessage` and `osq message` (change 095) produce its squash message, and a dead task in a worktree leaves `.run/dead/<n>.patch`.
-- With `vcs.enabled` off, archive moves the folder in the checkout, and whether it is committed can be read from the `Vcs` port's `status`.
-- `src/cli/index.ts` is close to the 250-line budget, so new commands register from their own file.
-
-### Requirements
-
-- `osq inbox` derives its items from state every time, through the change locations module, and stores nothing. The kinds are:
-  - **approval**: an unapproved change whose next step is `ready-for-approval`.
-  - **halt**: a dead or regressed task, or a change-level regression, including worktree halts.
-  - **land**: with `vcs.enabled`, a change archived on its `osq/` branch that the default branch does not hold. With the flag off, an archive folder that `Vcs` status reports as untracked or modified. Under `NoVcs`, there are no land items.
-  - **verify**: an archived change whose next step is `verification-pending`.
-- An item's weight is the number of changes that wait on it through `depends_on`, transitively, itself included.
-- Order: when the watcher has nothing runnable (no active change's next step is `running`), items whose action would give it work come first (approval and halt). Then heavier items, then lower change id, then lower task number. The same state always gives the same order.
-- Each item carries its kind, change, task when there is one, weight, a one-line reason for its place in the order, the commands osq already has for it, and its card data:
-  - approval: the approval digest, as `osq show` builds it.
-  - halt: the task, the dead reason, the attempt count, the end of the last verify output with paths relative to the project root, and the patch path when a worktree dead path left one.
-  - land: the goal, each task's outcome, and, with `vcs.enabled`, the squash message `osq message` prints.
-  - verify: the check command or the `osq verified` command, and the after-landing steps.
-- `osq inbox` prints the ordered list, one line per item, then the first item's card. `osq inbox --json` prints every item with its card data. An empty inbox says so.
-- Bare `osq` and `osq --json` are unchanged.
-
-### Non-goals
-
-- Keys, running actions from the card, `--follow`, sound, and the wait log. Those are the next three items.
-- New actions.
-
-### Notes for planning
-
-- Put derivation, ordering, and each card kind in their own modules under `src/core/status/`.
-- Reuse the digest builder, `readNextStep`, `readDependencyState`, and the squash message builder rather than re-deriving.
-
-## [inbox-follow-sound] osq inbox --follow plays a sound when new work appears
-
-Depends on: inbox-dispatch-order
-
-### Goal
-
-A reviewer leaves `osq inbox --follow` running on their own machine. When an item appears that was not there before, a short sound plays. The watcher never makes a sound.
-
-### Context
-
-- `inbox-dispatch-order` added `osq inbox` and its items.
-- `src/core/web/web-events.ts` already watches every change tree, worktrees included, for `osq serve`'s invalidation. chokidar is a runtime dependency.
-- The watcher may run somewhere with no audio device. `osq inbox` runs on the host and only reads files.
-- osq keeps its runtime dependencies to chokidar, yaml, commander, and jiti.
-
-### Requirements
-
-- `osq inbox --follow` re-derives the items whenever a change tree changes, prints each item that appears, and keeps running until interrupted. An empty inbox waits.
-- A sound plays when an item appears that was not there before. Items that appear within a few seconds of each other (a config value) make one sound. Items present at start make no sound.
-- `inbox.sound` in `osq.config.ts` is `default`, `bell`, `off`, or a path to a sound file. `default` plays a short sound file osq ships, through the first player found: `afplay` on macOS, then `pw-play`, `paplay`, or `aplay` on Linux. With no player, it rings the terminal bell.
-- `inbox.quietHours`, such as `22:00-07:00` in local time, silences the sound. Items still appear.
-- The watcher never plays a sound.
-
-### Non-goals
-
-- Cards and keys. Those come with `inbox-cards`.
-
-### Notes for planning
-
-- Test the sound through an injectable player, so no test makes noise.
-- Generate the sound file with a script in the repository, so it is original, and keep it under a few kilobytes. Ship it in the package.
-
-## [inbox-cards] osq inbox opens cards and the next item when one is done
-
-Depends on: inbox-follow-sound
-
-### Goal
-
-On a terminal, `osq inbox` opens the first item as a card with a key for each action. When the action finishes and the item is gone, the next card opens at once. A reviewer does nothing but review.
-
-### Context
-
-- `inbox-dispatch-order` built each item's card data and commands. `inbox-follow-sound` added `--follow`, re-derivation on change, and the sound.
-- `osq approve --confirm` already prompts through `node:readline/promises` and refuses without a terminal.
-
-### Requirements
-
-- With a TTY, `osq inbox` shows the first item's card and lists its actions, each with the key that runs it, plus one key that opens the full detail (`osq show`) and one that quits. Without a TTY, it prints as `inbox-dispatch-order` does.
-- A key runs the existing command in-process, with its own output shown.
-- When the item is gone after its action, the next item's card opens. When it is still there, the same card shows again.
-- An empty inbox waits and opens the first item that arrives, with the sound.
-- No sound plays while a card is open. A new item waits its turn.
-
-### Non-goals
-
-- New actions.
-- Cards in the browser.
-
-### Notes for planning
-
-- Read keys through an injectable input stream, so tests drive the loop without a terminal.
-
 ## [inbox-wait-log] osq inbox records how long items waited and osq report shows it
 
-Depends on: inbox-cards
+Depends on: nothing
 
 ### Goal
 
@@ -144,29 +40,200 @@ osq records how long each item waited for a human, so it shows whether reviews h
 
 - Test the report from a fixture log.
 
-## [enable-vcs-for-osq] Turn on version control for osq itself
+## [capability-relations] Every change relates to a capability, and creating one is declared
 
 Depends on: nothing
 
 ### Goal
 
-osq's own changes run in worktrees on `osq/` branches from here on. This is the first change after stage 1, and the first real test of it.
+Every change relates to at least one capability, creating a capability is an explicit declaration, every capability name osq reads names a real capability, and every caller reads code ownership through one function.
 
 ### Context
 
-- ADR 003 migration: every stage-1 change ran with the flag off; the flag turns on for the change after the stage.
-- Approve refuses off the default branch without `--base-ok`, so approvals from here on happen on `main`.
+- Lint derives a change's writes from its delta folders at `openspec/changes/<id>/specs/<capability>/`. An ADDED-only delta for a capability that doesn't exist creates a new capability at archive, so a misspelled folder silently creates one.
+- The proposal's reads are parsed as `features.reads` in `src/core/spec/parser.ts` and never checked against the living specs.
+- `parseCodeOwnership` in `src/core/spec/parser.ts` extracts the globs of a living spec's `### Requirement: Code ownership` block, and `readCapabilityOwnership` in `src/core/spec/capability-impact.ts` reads every capability's globs. As of 2026-09-27 they are called from `impact-lint.ts`, `traceability-lint.ts`, and `src/core/report/report-traceability.ts`. Recheck for other readers.
+- `traceability.capabilities` in `osq.config.ts` names capabilities. `validateTraceabilityConfig` in `src/core/foundation/config-traceability.ts` checks only that it is `'all'` or a list of strings, so a misspelled name opts nothing in and nothing reports it.
+- There are eight capabilities: cli-foundation, metrics-and-reporting, spec-lint-and-approve, status-inspection, traceability, version-control, watcher-and-harness, and web-inspection. Recount before stating numbers.
+- In git stage 0, a test that pinned osq's ADR list by number broke as soon as an ADR was added.
 
 ### Requirements
 
-- `osq.config.ts` sets `vcs.enabled: true`, `vcs.author`, and `vcs.prepare: 'pnpm install --frozen-lockfile'`.
-- README.md documents the stage-1 flow: approve on the default branch, where the worktree is, not editing it while a task runs, and landing by hand with `osq message`.
+- Lint rejects an active change that writes no delta and declares no read, naming both ways to fix it.
+- Every entry in the proposal's reads names an existing capability or one the same change creates. Otherwise lint rejects it and suggests the nearest existing name.
+- Proposal frontmatter accepts `creates: [<capability>]`.
+  - An ADDED-only delta for a missing capability that isn't listed in `creates` is rejected, with the nearest existing name.
+  - A `creates` entry that already exists is rejected.
+  - A `creates` entry with no delta that adds it is rejected.
+- Every name in `traceability.capabilities`, unless it is `'all'`, names an existing capability or one an active change creates. Otherwise osq reports a config error with the nearest existing name.
+- `osq approve` prints one line per capability the change creates.
+- One function answers code ownership, exposed as `getCapabilityOwnership()` or by keeping `readCapabilityOwnership` as that function. Every reader uses it instead of calling `parseCodeOwnership` itself.
+- README and the managed `PLANNER.md` block state the relation rule, that creation is declared in `creates`, and that a planner never invents a capability to avoid touching an existing one.
+- A lint test runs the pinned OpenSpec validator over a fixture change carrying `creates:`, so compatibility stays checked across upgrades.
+
+### Surface
+
+- Frontmatter: `creates`.
+- Lint errors: missing relation, unknown read, undeclared creation, duplicate creation, creation without a delta.
+- Config error: unknown capability in `traceability.capabilities`.
 
 ### Non-goals
 
-- Any code change.
+- Groups and other capability metadata. That's `capability-sidecar`.
+- Statuses, overrides or project rule settings.
+- Changing the spec or delta format, or how deltas merge.
+- Adding relations to archived changes.
 
 ### Notes for planning
 
-- Ask the human which identity `vcs.author` should use.
-- `osq doctor` should show no `vcs-prepare` warning afterwards.
+- Recount the capabilities and the archive through the latest change before stating numbers in the proposal.
+- Tests check behaviour on fixtures. None of them pins this repository's list of capabilities, so adding a capability can't break a test.
+- The README and `PLANNER.md` edits are tasks in the change, gated by verify, not human steps.
+
+## [capability-sidecar] Each capability carries a small osq.yml with its group
+
+Depends on: capability-relations
+
+### Goal
+
+Each capability can carry a small osq-owned sidecar with metadata the OpenSpec spec format has no place for, starting with `group`. Groups are the outermost level of the graph view, and they group capabilities in `osq report`.
+
+### Context
+
+- Capabilities are folders under `openspec/specs/` with no metadata, and the graph view in `packages/ui` has no grouping.
+- At change 049, OpenSpec 1.13.1 validated specs cleanly with an extra YAML file beside `spec.md`, and `openspec list --specs` was unaffected. osq still pins 1.13.1 as of 2026-09-27; recheck.
+- `AGENTS.md` states that living capability specs change only when the watcher applies an approved delta.
+- `capability-relations` adds `creates` to proposal frontmatter.
+- In the inventory ERP, a group maps onto a module, such as an inventory group holding costing, reservations and stock movements.
+
+### Requirements
+
+- `openspec/specs/<capability>/osq.yml` holds `group`, a required string, and `tags`, an optional list. Unknown keys fail lint. A missing sidecar is a lint warning, and so is `group: ungrouped`.
+- A capability's description is read from its spec's `## Purpose` and never stored in the sidecar.
+- `creates` from `capability-relations` takes a group for each new capability, as `creates: [{ name: <capability>, group: <group> }]`. A bare name is rejected with a message showing the new form. At archive, the archiver writes the new capability's sidecar from that entry, so the sidecar is part of the approved change.
+- A change may carry a replacement sidecar at `openspec/changes/<id>/specs/<capability>/osq.yml`, validated at lint and applied at archive.
+- `osq migrate` scaffolds a sidecar with `group: ungrouped` for any capability without one, for projects adopting sidecars.
+- Only those three paths write sidecars: the archiver for `creates`, the archiver for a replacement in a change, and `osq migrate`.
+- The approval manifest records sidecar hashes for touched capabilities.
+- `getMetricsReport` reports, under `coverage`, capabilities with and without a sidecar.
+- The graph view groups capability lanes by `group`.
+- A task in the change writes this repository's sidecars, with the groups below.
+
+### Groups for this repository
+
+| Capability | Group |
+|---|---|
+| cli-foundation | platform |
+| spec-lint-and-approve | planning |
+| traceability | planning |
+| watcher-and-harness | execution |
+| version-control | execution |
+| status-inspection | inspection |
+| web-inspection | inspection |
+| metrics-and-reporting | inspection |
+
+### Surface
+
+- File: `openspec/specs/<capability>/osq.yml`, keys `group` and `tags`.
+- Frontmatter: `creates` entries with a group.
+
+### Non-goals
+
+- Statuses, overrides, ownership in the sidecar, or project rule settings.
+- Changing the spec or delta format.
+- Zoom levels and other graph views. That's `capability-graph`.
+
+### Notes for planning
+
+- Add a test that runs the pinned validator over a fixture with sidecars, so compatibility stays checked across upgrades.
+- Tests check behaviour on fixtures and never pin this repository's list of capabilities or groups.
+
+## [capability-graph] The graph view zooms from groups down to functions
+
+Depends on: capability-sidecar
+
+### Goal
+
+The graph view in `packages/ui` shows the whole system as one map you zoom into, and each level shows a different kind of detail: groups and capabilities, then requirements and scenarios, then tests and functions. Every node and edge comes from a link osq already checks, so the map is true. It answers the questions an architect or a new developer asks, such as what an ADR governs or what changing a scenario touches.
+
+### Context
+
+- `packages/ui` has a graph view with capability lanes, grouped by `group` after `capability-sidecar`. `osq serve` serves it. Recheck how the UI receives its data.
+- `capability-relations` relates every change to a capability through its deltas and reads, makes creation explicit, and gives one ownership reader.
+- `capability-sidecar` gives every capability a `group`.
+- `traceability-scenarios` (change 081) gives the scenario index, `buildScenarioIndex` in `src/core/trace/scenario-index.ts`, which maps each scenario to the tests that name it and the functions they cover, and the `@scenario` and `@adr` tags on functions.
+- `traceability-mutation` (change 083) records surviving mutants per function when it's turned on.
+- The ADR reader gives each ADR's status and scope.
+- `buildImportGraph` in `src/core/spec/import-graph.ts` knows which files import which.
+- `docs-digest` has not landed as of 2026-09-27. If it has by planning time, its archive reader lists the changes that touched each capability.
+
+### Requirements
+
+#### Graph data
+
+- `osq graph --json` prints the graph as nodes and edges with kinds and stable ids. The UI gets the same data from `osq serve`. The format carries a version.
+- Node kinds: group, capability, requirement, scenario, test file, function, ADR and change.
+- Edges and where they come from:
+  - a group contains a capability, from the sidecar
+  - a capability contains a requirement, and a requirement contains a scenario, from the living spec
+  - an ADR applies to a capability, from the ADR's scope
+  - a test proves a scenario and covers a function, from the scenario index
+  - a function follows an ADR, from its `@adr` tag
+  - a change writes or reads a capability, from its deltas and reads
+  - a capability depends on another when a file one owns imports a file the other owns, from the import graph and Code ownership
+- Each node carries what its detail panel needs: a capability its Purpose and gap counts, a scenario its THEN lines and tables, a function its file, tags and surviving mutants.
+- Gaps are marked: scenarios no test proves, exported functions in a capability's ownership that no scenario claims, and files no capability owns.
+- The graph data is built from the existing readers and indexes, and cached by file hash like the scenario index. The same inputs give identical data.
+
+#### Semantic zoom
+
+- **Level 1, the system.** Groups and their capabilities, the dependency edges between capabilities, the ADRs that apply to `all` around them, and gap counts per capability.
+- **Level 2, a capability.** Its requirements and scenarios, the ADRs that apply to it, and its gaps in red.
+- **Level 3, a scenario.** Its THEN lines and tables, the tests that prove it, and the functions they cover.
+- **Level 4, the code.** A function with its tags, its file, its surviving mutants and the last change that touched it.
+- Zooming into a node opens its next level, and zooming out returns. The view draws only the current level and its neighbours, so a project with thousands of scenarios stays fast.
+- Every node opens a detail panel. From level 4, the panel links to the file.
+- For a capability not opted into traceability, levels 3 and 4 aren't available, and the view says traceability isn't on for it.
+
+#### Views that answer questions
+
+- From an ADR: what it governs, meaning the capabilities it applies to and the functions that follow it.
+- From a scenario: its blast radius, meaning the tests that name it and the functions they cover.
+- A gaps view: every gap across the system.
+- From a capability: the changes that touched it, newest first.
+- The URL names the current node and level, so any view can be shared.
+
+### Surface
+
+- CLI: `osq graph --json`.
+- The versioned graph data format.
+- The graph view's levels, question views and URLs.
+
+### Non-goals
+
+- A time slider that replays the graph through the archives. A later change can add it on `docs-digest`'s reader.
+- Editing anything from the graph. It only reads.
+- Modules' published and consumed events from the ERP. That comes once modules declare contracts.
+
+### Verify
+
+`pnpm verify`, plus tests:
+
+- `osq graph --json` on a fixture has every node and edge kind, each from the right source, with ids stable across runs
+- a function carries its tags and surviving mutants, and a scenario carries its THEN lines and table
+- an untested scenario, an unclaimed function and an unowned file are each marked as gaps
+- a dependency edge appears when a file owned by one capability imports a file owned by another, and not otherwise
+- each level shows only its own node kinds and their neighbours, and zooming in and out moves between them
+- the ADR, blast radius, gaps and history views return the right nodes on the fixture
+- a URL with a node and a level reopens that view
+- a capability not opted into traceability shows levels 1 and 2 only, with the message
+- on a synthetic project with 2,000 scenarios, each level opens without drawing nodes outside it
+- building the graph data twice gives identical output
+
+### Notes for planning
+
+- Build the graph data in core, in its own module fed by the existing readers. The UI only draws.
+- The pricing sample from the traceability vision is a fixture for levels 3 and 4. `osq-traceability-vision.md` is not in this repository; ask the human for it or write an equivalent fixture.
+- Pick a graph library that handles large graphs in the browser, such as one that draws with WebGL. It belongs to `packages/ui`, not to the CLI's runtime dependencies.
+- If `docs-digest` has landed, reuse its archive reader for change edges and the history view.
+- This is likely too large for one change. Consider splitting graph data and `osq graph --json` from the zoomable view.
