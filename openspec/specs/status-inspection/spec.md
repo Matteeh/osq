@@ -880,3 +880,293 @@ to the project root, and the card SHALL NOT add an absolute path.
 #### Scenario: Verify card
 - **WHEN** an archived change has a `check` command and after-landing steps
 - **THEN** the card holds the check command and the steps
+
+### Requirement: Inbox sound
+<!-- source: src/core/status/inbox-sound.ts, tests/inbox-sound.test.ts -->
+`createInboxSound(projectRoot, config, deps)` SHALL return an object with
+`notify(now: Date): void`, which plays one sound for a batch of new inbox
+items. `deps` SHALL hold `platform`, `path` (the `PATH` value), `spawn`,
+`bell`, `warn`, and `exists`, each defaulting to the real one, so tests make no
+sound. It SHALL resolve the sound from `config.inbox.sound`:
+
+- `off`: `notify` does nothing.
+- `bell`: `notify` calls `bell`, which writes `\u0007` to stdout by default.
+- `default`: the file `sounds/inbox.wav` under the package root.
+- any other value: that path resolved against the project root.
+
+For a file that does not exist, it SHALL print
+`osq inbox: inbox.sound: <path> does not exist; using the bell` to stderr
+once, through `deps.warn`, and `notify` SHALL call `bell`. It SHALL pick the player once: on
+`darwin`, `afplay`; on `linux`, the first of `pw-play`, `paplay`, and
+`aplay`; each only when an executable file of that name is in a `PATH`
+directory. With no player, `notify` SHALL call `bell`. With a player,
+`notify` SHALL spawn it with the file as its one argument, ignore its
+output, not wait for it, and call `bell` when the spawn emits an error.
+
+`notify` SHALL do nothing when `now`, in local time, falls in
+`inbox.quietHours`: from the start time, inclusive, to the end time,
+exclusive, across midnight when the start is later than the end. It SHALL
+do nothing when it played less than `inbox.soundWindowSeconds` before
+`now`. Nothing under `src/watcher/` or `src/harness/` SHALL import this
+module.
+
+#### Scenario: Linux player order
+- **WHEN** the platform is `linux` and `PATH` holds executable `paplay` and `aplay` but no `pw-play`
+- **THEN** `notify` spawns `paplay` with the package's `sounds/inbox.wav`
+
+#### Scenario: macOS player
+- **WHEN** the platform is `darwin` and `PATH` holds executable `afplay`
+- **THEN** `notify` spawns `afplay` with the sound file
+
+#### Scenario: No player
+- **WHEN** no player is in `PATH`
+- **THEN** `notify` calls `bell` and spawns nothing
+
+#### Scenario: Spawn error
+- **WHEN** the spawned player emits an error
+- **THEN** `bell` is called
+
+#### Scenario: Bell and off
+- **WHEN** `inbox.sound` is `bell`, and then `off`
+- **THEN** `notify` calls `bell` without spawning, and then does nothing
+
+#### Scenario: Own sound file
+- **WHEN** `inbox.sound` is `sounds/ping.wav` and that file exists under the project root
+- **THEN** `notify` spawns the player with that file's absolute path
+
+#### Scenario: Missing sound file
+- **WHEN** `inbox.sound` names a file that does not exist
+- **THEN** `createInboxSound` warns `osq inbox: inbox.sound: <path> does not exist; using the bell` once, and `notify` calls `bell` without spawning
+
+#### Scenario: Quiet hours across midnight
+- **WHEN** `inbox.quietHours` is `22:00-07:00` and `notify` runs at 23:30, 06:59, and 07:00 local time
+- **THEN** only the 07:00 call plays
+
+#### Scenario: One sound per window
+- **WHEN** `inbox.soundWindowSeconds` is 5 and `notify` runs at 0, 3, and 6 seconds
+- **THEN** it plays at 0 and 6 seconds only
+
+#### Scenario: Watcher stays silent
+- **WHEN** every source file under `src/watcher/` and `src/harness/` is read
+- **THEN** none imports `inbox-sound` or `dispatch-follow`
+
+### Requirement: Inbox sound file
+<!-- source: sounds/inbox.wav, scripts/make-inbox-sound.mjs, tests/inbox-sound-file.test.ts -->
+`scripts/make-inbox-sound.mjs [out]` SHALL write a short two-tone chime as a
+mono 16-bit PCM WAV file, to `out` when given and to `sounds/inbox.wav`
+otherwise, computing every sample itself so the sound is original. The same
+script SHALL write the same bytes every time. `sounds/inbox.wav` SHALL be
+that output, at most 4096 bytes. `package.json`'s `files` SHALL include
+`sounds`, so the published package holds `sounds/inbox.wav`.
+
+#### Scenario: Regenerated file matches
+- **WHEN** the script writes to a temporary path
+- **THEN** the bytes equal `sounds/inbox.wav`
+
+#### Scenario: Small WAV
+- **WHEN** `sounds/inbox.wav` is read
+- **THEN** it starts with `RIFF` and `WAVE`, declares one channel and 16 bits per sample, and is at most 4096 bytes
+
+#### Scenario: Shipped
+- **WHEN** `package.json` is read
+- **THEN** its `files` include `sounds`
+
+### Requirement: Dispatch follow
+<!-- source: src/core/status/dispatch-follow.ts, tests/inbox-follow.test.ts -->
+`followDispatch(projectRoot, config, options)` SHALL print what
+`formatDispatchText` prints for the current items, then
+`Waiting for new items (Ctrl-C to stop).`, and then watch the change trees
+through `createInvalidationHub`, with `inbox.eventDebounceMs` as its
+debounce and the injectable `watch` and `schedule` from `options`. After
+each batch, it SHALL derive the items again with `readDispatchItems` and
+`orderDispatchItems` and print, in order, one line per item whose kind,
+change folder, and task number were not among the previous derivation's
+items: `<HH:MM> + ` in local time from `options.now`, then
+`formatDispatchItemSummary`'s text. It SHALL then print one line per
+previous item that is no longer there, `<HH:MM> - ` and the same text as
+it was last derived. When at least one `+` line printed, it SHALL call
+`options.sound.notify(now)` once; a `-` line alone SHALL make no sound. Items present at start SHALL
+make no sound, and an item that went away and came back SHALL count as new.
+
+It SHALL also derive every `inbox.pollSeconds`, through `options.every`,
+a repeating timer seam that defaults to `setInterval` and returns a handle
+with `cancel()`. Derivations SHALL run one at a time; a batch or poll that
+arrives during one SHALL cause one more derivation after it. After each derivation, it SHALL read the
+trees again through `options.trees`, which defaults to `changeTrees`, and
+when their `treeWatchPaths` differ from the watched paths, it SHALL close the
+hub, open a new one over the new trees, and derive once more. A derivation
+that throws SHALL print `osq inbox: <message>` to stderr and keep
+following. When `options.signal` aborts, it SHALL close the hub, cancel
+the poll timer, and resolve. It SHALL write nothing to the project.
+
+#### Scenario: New halt
+- **WHEN** following starts with one approval item, then a task dies and the watcher fires
+- **THEN** one `<HH:MM> + halt ...` line prints and `notify` is called once
+
+#### Scenario: Start makes no sound
+- **WHEN** following starts with two items and the watcher fires with no state change
+- **THEN** no `+` line prints and `notify` is never called
+
+#### Scenario: Item goes away
+- **WHEN** following starts with a halt item, then its dead marker is removed and the watcher fires
+- **THEN** one `<HH:MM> - halt ...` line prints and `notify` is never called
+
+#### Scenario: Poll finds an item
+- **WHEN** a task dies with no watcher event and the poll timer fires
+- **THEN** its `+` line prints and `notify` is called once
+
+#### Scenario: Two items in one batch
+- **WHEN** two new items appear before one batch
+- **THEN** two `+` lines print in dispatch order and `notify` is called once
+
+#### Scenario: Item comes back
+- **WHEN** a dead task's marker is removed, the watcher fires, then the marker returns and the watcher fires
+- **THEN** the second derivation prints the halt item again and calls `notify`
+
+#### Scenario: Empty inbox waits
+- **WHEN** following starts on a project with no items
+- **THEN** it prints `Nothing needs you.` and the waiting line, and keeps running until the signal aborts
+
+#### Scenario: New tree
+- **WHEN** `options.trees` returns a second tree after the first derivation
+- **THEN** the loop opens a new watcher over the new paths, closes the old one, and derives once more
+
+### Requirement: Dispatch watch
+<!-- source: src/core/status/dispatch-watch.ts, src/core/status/dispatch-follow.ts, tests/dispatch-watch.test.ts -->
+`watchDispatch(projectRoot, config, options, onItems)` SHALL derive the
+ordered dispatch items with `readDispatchItems` and `orderDispatchItems`
+after each `createInvalidationHub` batch and every `inbox.pollSeconds`
+through `options.every`, one derivation at a time, with a batch or poll
+during one causing one more after it. After each derivation it SHALL call
+`onItems(items, at)` with the items and the clock time the derivation
+started, then read the trees again through `options.trees`, and when their
+`treeWatchPaths` differ from the watched paths, close the hub, open a new
+one, and derive once more. A derivation that throws SHALL call
+`options.stderr` with `osq inbox: <message>` and keep watching. It SHALL
+take the same `watch`, `schedule`, `every`, `trees`, `now`, and `stderr`
+seams as `followDispatch`, and return `{ close(): Promise<void> }`, which
+closes the hub and cancels the poll. It SHALL derive once as soon as it
+starts. `followDispatch` SHALL be built on it and print what it printed
+before.
+
+#### Scenario: Batch derives
+- **WHEN** the fake watcher fires after a task dies
+- **THEN** `onItems` receives items that include the new halt item
+
+#### Scenario: Poll derives
+- **WHEN** the manual poll timer fires with no watcher event
+- **THEN** `onItems` is called again
+
+#### Scenario: Close
+- **WHEN** `close()` resolves
+- **THEN** the fake watcher is closed, the poll is cancelled, and `onItems` is not called again
+
+#### Scenario: Follow unchanged
+- **WHEN** `tests/inbox-follow.test.ts` runs
+- **THEN** every test passes unchanged
+
+### Requirement: Card keys
+<!-- source: src/core/status/dispatch-keys.ts, src/core/status/dispatch-text.ts, tests/dispatch-keys.test.ts -->
+`cardKeys(item)` SHALL map each of the item's commands to keys, in the
+item's command order:
+
+- `osq approve <id>`: `a`.
+- `osq retry <id> <target>`: `r`.
+- `osq reject <id> --reason <text>`: `x`, which asks `Reason: `; its
+  arguments are `reject <id> --reason` and the answer.
+- `osq check <id>`: `c`.
+- `osq verified <id> --passed|--failed`: `p` with `verified <id> --passed`
+  and `f` with `verified <id> --failed`.
+- `osq show <id>`: `s`.
+
+Each key SHALL carry its label (the command with the chosen flag, or with
+`--reason <text>` for reject) and its argument list without the leading
+`osq`. A command that does not start with `osq `, or whose verb is not in
+this list, SHALL be returned among `manual` commands, unchanged.
+
+`formatCardScreen(total, item, card, keys)` SHALL return `Needs you (<total>):`,
+then the card as `osq inbox` prints it up to but not including `Actions:`,
+then `Keys:` with one `  <key>  <label>` line per key followed by
+`  n  skip` and `  q  quit`, then, when there are manual commands,
+`Run yourself:` with one `  <command>` line each. `dispatch-text.ts` SHALL
+export `formatDispatchCardBody(item, card)`, the card lines before
+`Actions:`, and `osq inbox` SHALL print what it printed before.
+
+#### Scenario: Approval keys
+- **WHEN** `cardKeys` runs on an approval item
+- **THEN** it returns `a` with arguments `approve <id>` and `s` with `show <id>`, and no manual commands
+
+#### Scenario: Change halt keys
+- **WHEN** `cardKeys` runs on a change-level halt item
+- **THEN** it returns `r`, `x` asking `Reason: `, and `s`
+
+#### Scenario: Verify keys
+- **WHEN** `cardKeys` runs on a verify item without a check command
+- **THEN** it returns `p` with `verified <id> --passed`, `f` with `verified <id> --failed`, and `s`
+
+#### Scenario: Land in a worktree
+- **WHEN** `cardKeys` runs on a land item archived in a worktree
+- **THEN** the `git merge --squash ...` command is a manual command and `s` is the only key
+
+#### Scenario: Screen
+- **WHEN** `formatCardScreen` formats an approval item's card
+- **THEN** it holds `Needs you (<n>):`, the card body without `Actions:`, and `Keys:` with `a`, `s`, `n`, and `q` lines
+
+### Requirement: Card session
+<!-- source: src/core/status/dispatch-session.ts, tests/dispatch-session.test.ts -->
+`runCardSession(projectRoot, config, options)` SHALL run until the reviewer
+quits. `options` SHALL hold `input` (`key(): Promise<string | null>` and
+`line(question): Promise<string | null>`), `launch(args): Promise<number>`,
+`sound`, `stdout`, `stderr`, `now`, `signal`, and the watch seams of
+`watchDispatch`. The session SHALL keep at most one pending `key()` read.
+
+- It SHALL derive the ordered items, put the items skipped in this session
+  after the rest in the order they were skipped, and print
+  `formatCardScreen` for the first item with its card from
+  `readDispatchCard`.
+- A key from `cardKeys` SHALL print `── <label> ──`, await `launch` with its
+  arguments, print `── exit <code> ──`, and derive again. The reject key
+  SHALL first ask `Reason: ` through `input.line`; an empty or null answer
+  SHALL show the same card without launching.
+- After a launch, when the item's kind, change folder, and task number are
+  gone, the next first item's card SHALL show; when it is still there, its
+  card SHALL show again, read afresh.
+- `n` SHALL move the item behind the others for the rest of the session and
+  show the next card. A skipped item that goes away SHALL leave the list.
+- `q`, `\u0003`, a null key, or `signal` aborting SHALL end the session.
+  Any other key SHALL be ignored.
+- With no items, it SHALL print
+  `Nothing needs you. Waiting for new items (q to quit).`, watch with
+  `watchDispatch`, and on the first derivation with items close the watch,
+  call `sound.notify(at)` once, and show the first card. `q` while waiting
+  SHALL end the session.
+- It SHALL never call `sound.notify` while a card is shown. It SHALL write
+  nothing itself; only launched commands write.
+
+#### Scenario: Approve and move on
+- **WHEN** the inbox holds an approval item and a halt item, the key `a` is pressed, and the recording launcher approves the change
+- **THEN** the launcher got `approve <id>`, the separators print around it, and the halt item's card shows next
+
+#### Scenario: Item still there
+- **WHEN** the launcher returns 1 and changes nothing
+- **THEN** `── exit 1 ──` prints and the same card shows again
+
+#### Scenario: Reject asks for a reason
+- **WHEN** `x` is pressed on a change-level halt and the reason is `wrong approach`
+- **THEN** the launcher got `reject <id> --reason` and `wrong approach` as separate arguments
+
+#### Scenario: Skip
+- **WHEN** `n` is pressed on the first of two items
+- **THEN** the second item's card shows, and after `n` again the first shows
+
+#### Scenario: Empty then an item arrives
+- **WHEN** the session starts with no items, then a task dies and the fake watcher fires
+- **THEN** the waiting line prints, `notify` is called once, and the halt card shows
+
+#### Scenario: No sound on an open card
+- **WHEN** a card is shown and a new item appears before the next key
+- **THEN** `notify` is never called and the new item takes its place in the order after the key
+
+#### Scenario: Quit
+- **WHEN** `q` is pressed on a card, or while waiting
+- **THEN** the session resolves without launching anything

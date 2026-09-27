@@ -1,6 +1,7 @@
 import type { ClaudeConfig } from './config-claude.js';
 import type { CodexConfig } from './config-codex.js';
 import type { GatesConfig } from './config-gates.js';
+import type { InboxConfig } from './config-inbox.js';
 import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
@@ -38,6 +39,7 @@ export type OsqUserConfig = Partial<
     | 'gates'
     | 'traceability'
     | 'vcs'
+    | 'inbox'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -55,4 +57,5 @@ export type OsqUserConfig = Partial<
   readonly gates?: Partial<GatesConfig>;
   readonly traceability?: Partial<TraceabilityConfig>;
   readonly vcs?: Partial<VcsConfig>;
+  readonly inbox?: Partial<InboxConfig>;
 };

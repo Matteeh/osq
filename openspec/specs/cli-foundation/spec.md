@@ -1799,7 +1799,9 @@ print `Nothing needs you.` With `--json`, it SHALL print
 `{ "watcherIdle": <bool>, "items": [...] }`, where each item holds its
 kind, change, task, weight, reason, commands, and card. It SHALL exit zero.
 Bare `osq` and `osq --json` SHALL be unchanged. `limits.cardOutputLines`
-SHALL default to 20.
+SHALL default to 20. When stdin and stdout are both terminals and neither
+`--json` nor `--follow` is given, `osq inbox` SHALL run the card session
+instead of printing, as "Inbox cards on a terminal" says.
 
 #### Scenario: Ordered list and first card
 - **WHEN** a project has a halt item and an approval item whose change two others depend on, and the watcher has no runnable change
@@ -1816,3 +1818,135 @@ SHALL default to 20.
 #### Scenario: Registered
 - **WHEN** `createProgram` builds the CLI
 - **THEN** it has an `inbox` command with a `--json` option, and bare `osq` still runs the attention inbox
+
+### Requirement: Inbox configuration
+<!-- source: src/core/foundation/config-inbox.ts, src/core/foundation/config.ts, src/core/foundation/config-user.ts, src/index.ts, tests/config-inbox.test.ts -->
+`defineConfig` SHALL validate an optional `inbox` block over these defaults
+and put the result on `OsqConfig.inbox`:
+
+- `sound`: `default`. One of `default`, `bell`, `off`, or any other
+  non-empty string, which is a sound file path relative to the project root.
+- `quietHours`: `null`, or a string `HH:MM-HH:MM` in local time, where each
+  hour is `00` to `23`, each minute `00` to `59`, and the two times differ.
+- `soundWindowSeconds`: 5. A finite number zero or greater.
+- `eventDebounceMs`: 200. A finite number zero or greater.
+- `pollSeconds`: 30. A finite number greater than zero.
+
+A partial block SHALL keep each missing value's default. Any other value
+SHALL throw an error that names the key, such as `inbox.quietHours must be
+HH:MM-HH:MM with two different times`. `parseQuietHours` SHALL return the
+start and end as minutes after midnight. `src/index.ts` SHALL export the
+`InboxConfig` type.
+
+#### Scenario: Defaults
+- **WHEN** `defineConfig({})` runs
+- **THEN** `inbox` is `{ sound: 'default', quietHours: null, soundWindowSeconds: 5, eventDebounceMs: 200, pollSeconds: 30 }`
+
+#### Scenario: Partial block
+- **WHEN** `defineConfig({ inbox: { quietHours: '22:00-07:00' } })` runs
+- **THEN** `inbox.quietHours` is `22:00-07:00` and the other four values are the defaults
+
+#### Scenario: Invalid quiet hours
+- **WHEN** `inbox.quietHours` is `25:00-07:00`, `22:00-22:00`, or `10pm-7am`
+- **THEN** `defineConfig` throws an error naming `inbox.quietHours`
+
+#### Scenario: Invalid poll interval
+- **WHEN** `inbox.pollSeconds` is 0
+- **THEN** `defineConfig` throws an error naming `inbox.pollSeconds`
+
+#### Scenario: Invalid sound
+- **WHEN** `inbox.sound` is an empty string or a number
+- **THEN** `defineConfig` throws an error naming `inbox.sound`
+
+#### Scenario: Loaded from the config file
+- **WHEN** `osq.config.ts` sets `inbox: { sound: 'bell' }`
+- **THEN** `loadConfig` returns `inbox.sound` as `bell`
+
+### Requirement: Inbox follow flag
+<!-- source: src/cli/inbox-dispatch.ts, src/core/status/dispatch-text.ts, README.md, tests/inbox-follow.test.ts -->
+`osq inbox --follow` SHALL run the dispatch follow loop until interrupted,
+with the inbox sound built from the config, and SHALL stop cleanly on
+SIGINT. `inboxDispatchCommand` SHALL take `follow`, `signal`, `sound`,
+`watch`, `schedule`, `every`, and `now` options so tests drive the loop
+without a terminal, a real watcher, a real timer, or a real sound. With `--json`, `--follow` SHALL print
+`osq inbox: --follow prints text; drop --json` to stderr and exit with
+code 1. Without `--follow`, `osq inbox` and `osq inbox --json` SHALL print
+what they printed before. `formatDispatchItemSummary` SHALL return
+`<kind> <id> <title>[ task <n>: <task title>] (<reason>)`, the text that
+follows the position on each line of `osq inbox`'s list.
+
+README.md SHALL say, in the Human Attention Inbox section, what
+`osq inbox --follow` prints, when it plays a sound, which players it tries,
+and the five `inbox` config keys with their defaults. Its Commands list
+SHALL include `osq inbox --follow`.
+
+#### Scenario: Follow through the command
+- **WHEN** `inboxDispatchCommand({ follow: true })` runs with a fake watcher, a recording sound, and a signal that aborts after one event
+- **THEN** it prints `osq inbox`'s text, the waiting line, one line per new item, and resolves after the abort
+
+#### Scenario: JSON refused
+- **WHEN** `osq inbox --follow --json` runs
+- **THEN** stderr holds `osq inbox: --follow prints text; drop --json` and the exit code is 1
+
+### Requirement: Inbox cards on a terminal
+<!-- source: src/cli/inbox-terminal.ts, src/cli/inbox-dispatch.ts, README.md, tests/inbox-cards.test.ts -->
+`inboxDispatchCommand` SHALL take `isTerminal`, `input`, and `launch`
+options, defaulting to both stdio streams being TTYs, the terminal input,
+and the child launcher from `src/cli/inbox-terminal.ts`. When `isTerminal()`
+is true and neither `json` nor `follow` is set, it SHALL run
+`runCardSession` with the inbox sound built by `createInboxSound`.
+
+`createTerminalInput(stream)` SHALL read one key at a time with raw mode on
+while a key is awaited and off otherwise, and `line(question)` SHALL write
+the question and read one line with raw mode off. A stream without
+`setRawMode` SHALL still work.
+
+`createChildLauncher(projectRoot)` SHALL spawn `process.execPath` with osq's
+own `bin` entry beside `inbox-terminal`'s module (`bin.ts` with
+`--import` and the absolute URL `import.meta.resolve('tsx')` gives, when
+that module is `.ts`; `bin.js` otherwise) and the
+key's arguments, with `cwd` the project root and stdio inherited, never
+through a shell. It SHALL resolve with the exit code, 1 when the child
+ends by a signal or fails to start. While the child runs, SIGINT SHALL not
+end osq.
+
+README.md SHALL say, in the Human Attention Inbox section, that
+`osq inbox` on a terminal opens cards, list the keys, say that a key runs
+the osq command as a child process on the same terminal, that the land
+command is shown to copy, and that piping or `--json` prints as before.
+
+#### Scenario: Terminal runs the session
+- **WHEN** `inboxDispatchCommand` runs with `isTerminal` true, scripted keys `q`, and a project with one approval item
+- **THEN** the approval card with its `Keys:` block prints and the command resolves without launching
+
+#### Scenario: No terminal prints
+- **WHEN** `inboxDispatchCommand` runs with `isTerminal` false
+- **THEN** it prints what `osq inbox` printed before
+
+#### Scenario: Raw mode around a key
+- **WHEN** `createTerminalInput` reads a key from a fake stream with `setRawMode`
+- **THEN** raw mode is turned on before the read and off after it
+
+#### Scenario: Real child
+- **WHEN** `createChildLauncher` launches `--version`
+- **THEN** it resolves with 0
+
+### Requirement: osq runs its own changes under version control
+<!-- source: osq.config.ts, README.md, tests/own-vcs-config.test.ts -->
+osq's own `osq.config.ts` SHALL set `vcs.enabled` to true, `vcs.author` to
+`osq <osq@noreply.invalid>`, and `vcs.prepare` to
+`pnpm install --frozen-lockfile`. README.md SHALL end its
+`## Version control` section with `### Working with version control on`, a
+numbered list that says, in order, to approve from the default branch, to
+find the worktree from the `Worktree:` line or under `vcs.worktreeRoot`, not
+to edit the worktree while a task runs, to land with
+`git merge --squash osq/<folder>` and `osq message <id> | git commit -F -`,
+and to remove the leftover draft `osq status` names.
+
+#### Scenario: Own config
+- **WHEN** `loadConfig` reads the repository root
+- **THEN** `vcs.enabled` is true, `vcs.author` is `osq <osq@noreply.invalid>`, and `vcs.prepare` is `pnpm install --frozen-lockfile`
+
+#### Scenario: Walkthrough
+- **WHEN** README.md is read
+- **THEN** `### Working with version control on` follows the other `## Version control` text and holds `osq message <id> | git commit -F -`

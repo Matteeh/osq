@@ -5,6 +5,7 @@ import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './
 import { applyHarnessModelEnv } from './config-env.js';
 import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
+import { DEFAULT_INBOX_CONFIG, type InboxConfig, validateInboxConfig } from './config-inbox.js';
 import { type PiConfig, validatePiConfig } from './config-pi.js';
 import {
   DEFAULT_PLANNING_CONFIG,
@@ -96,12 +97,14 @@ export interface OsqConfig {
   readonly serve?: Partial<ServeConfig>;
   readonly gates?: GatesConfig;
   readonly traceability?: TraceabilityConfig;
+  readonly inbox?: InboxConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
+  inbox: DEFAULT_INBOX_CONFIG,
   vcs: DEFAULT_VCS_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
   traceability: DEFAULT_TRACEABILITY_CONFIG,
@@ -155,11 +158,13 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   const pi = validatePiConfig(config.pi);
   const claude = validateClaudeConfig(config.claude);
   const serve = validateServeConfig(config.serve);
+  const inbox = validateInboxConfig(config.inbox);
 
   return {
     ...DEFAULT_CONFIG,
     ...restConfig,
     serve,
+    inbox,
     vcs: validateVcsConfig(config.vcs),
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),

@@ -11,6 +11,12 @@ export {
   validateServeConfig,
 } from './core/foundation/config-serve.js';
 export type { ServeConfig } from './core/foundation/config-serve.js';
+export {
+  DEFAULT_INBOX_CONFIG,
+  parseQuietHours,
+  validateInboxConfig,
+} from './core/foundation/config-inbox.js';
+export type { InboxConfig, QuietHours } from './core/foundation/config-inbox.js';
 export type {
   AgyConfig,
   ClaudeConfig,
