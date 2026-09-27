@@ -1,4 +1,5 @@
 import type {
+  WebCapabilityNode,
   WebChangeNode,
   WebGraph,
   WebLocation,
@@ -8,12 +9,47 @@ import { fillValue } from './fill.js';
 import { projectRelationships } from './relationships.js';
 import {
   GRAPH_GEOMETRY,
+  type GraphGroupHeader,
   type GraphLane,
   type GraphLaneTarget,
   type GraphLayout,
   type GraphMark,
   round,
 } from './types.js';
+
+/** The header label for capabilities without a group when any group exists. */
+const UNGROUPED = 'ungrouped';
+
+interface CapabilityGroup {
+  readonly group: string;
+  readonly capabilities: readonly WebCapabilityNode[];
+}
+
+/**
+ * Group capabilities when at least one carries a group, ordered by group name
+ * with ungrouped capabilities last and the original order kept within a group.
+ * Returns null when no capability has a group so the layout stays unchanged.
+ */
+function groupCapabilities(capabilities: readonly WebCapabilityNode[]): CapabilityGroup[] | null {
+  if (!capabilities.some((capability) => (capability.group ?? null) !== null)) return null;
+  const grouped = new Map<string, WebCapabilityNode[]>();
+  const ungrouped: WebCapabilityNode[] = [];
+  for (const capability of capabilities) {
+    const group = capability.group ?? null;
+    if (group === null) {
+      ungrouped.push(capability);
+      continue;
+    }
+    const list = grouped.get(group) ?? [];
+    list.push(capability);
+    grouped.set(group, list);
+  }
+  const groups: CapabilityGroup[] = [...grouped.keys()]
+    .sort((a, b) => a.localeCompare(b))
+    .map((group) => ({ group, capabilities: grouped.get(group) ?? [] }));
+  if (ungrouped.length > 0) groups.push({ group: UNGROUPED, capabilities: ungrouped });
+  return groups;
+}
 
 /** A change's number, from its id when present and its key's numeric prefix otherwise. */
 function changeNumber(node: WebChangeNode): number {
@@ -65,12 +101,41 @@ function byFolderKey(a: WebChangeNode, b: WebChangeNode): number {
  */
 export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayout {
   const geometry = GRAPH_GEOMETRY;
-  const lanes: GraphLane[] = graph.capabilities.map((capability, index) => ({
-    id: capability.id,
-    capability,
-    index,
-    y: geometry.topMargin + index * geometry.laneHeight + geometry.laneHeight / 2,
-  }));
+  const lanes: GraphLane[] = [];
+  const groups: GraphGroupHeader[] = [];
+  const capabilityGroups = groupCapabilities(graph.capabilities);
+  if (capabilityGroups === null) {
+    for (let index = 0; index < graph.capabilities.length; index += 1) {
+      const capability = graph.capabilities[index];
+      if (capability === undefined) continue;
+      lanes.push({
+        id: capability.id,
+        capability,
+        index,
+        y: geometry.topMargin + index * geometry.laneHeight + geometry.laneHeight / 2,
+      });
+    }
+  } else {
+    let cursor = geometry.topMargin;
+    let laneIndex = 0;
+    for (const capabilityGroup of capabilityGroups) {
+      const headerY = cursor + geometry.groupHeaderHeight / 2;
+      cursor += geometry.groupHeaderHeight;
+      const laneIds: string[] = [];
+      for (const capability of capabilityGroup.capabilities) {
+        lanes.push({
+          id: capability.id,
+          capability,
+          index: laneIndex,
+          y: cursor + geometry.laneHeight / 2,
+        });
+        laneIds.push(capability.id);
+        laneIndex += 1;
+        cursor += geometry.laneHeight;
+      }
+      groups.push({ group: capabilityGroup.group, y: round(headerY), laneIds });
+    }
+  }
   const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
 
   const writes = uniqueWrites(graph);
@@ -159,6 +224,7 @@ export function graphLayout(graph: WebGraph, controls: GraphControls): GraphLayo
 
   return {
     lanes,
+    groups,
     marks,
     depends,
     reads,

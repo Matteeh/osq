@@ -28,6 +28,11 @@ export interface WebCapabilityNode {
   readonly folderKey: string;
   /** Complete UTF-8 contents of the living capability spec. */
   readonly spec: string;
+  /**
+   * The living sidecar's group, or null when the capability has no sidecar or
+   * its sidecar has a problem. Derived graph documents always set it.
+   */
+  readonly group?: string | null;
 }
 
 /** Token totals grouped by recorded harness and nullable model. */

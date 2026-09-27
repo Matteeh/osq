@@ -13,6 +13,8 @@ export const GRAPH_GEOMETRY = {
   /** SVG label font size in px, used to estimate the widest capability name. */
   laneLabelFontSize: 16,
   laneHeight: 64,
+  /** Vertical room for one group header row above that group's first lane. */
+  groupHeaderHeight: 32,
   topMargin: 44,
   bottomMargin: 56,
   gutterGap: 16,
@@ -35,6 +37,13 @@ export interface GraphLane {
   readonly capability: WebCapabilityNode;
   readonly index: number;
   readonly y: number;
+}
+
+/** One group header row drawn above the lanes of one capability group. */
+export interface GraphGroupHeader {
+  readonly group: string;
+  readonly y: number;
+  readonly laneIds: readonly string[];
 }
 
 /** One lane named by a change's unique writes edges. */
@@ -82,6 +91,8 @@ export interface GraphBand {
 /** The complete deterministic geometry for one graph and control state. */
 export interface GraphLayout {
   readonly lanes: readonly GraphLane[];
+  /** One header per group, in lane order; empty when no capability has a group. */
+  readonly groups: readonly GraphGroupHeader[];
   readonly marks: readonly GraphMark[];
   readonly depends: readonly GraphRelationship[];
   readonly reads: readonly GraphRelationship[];

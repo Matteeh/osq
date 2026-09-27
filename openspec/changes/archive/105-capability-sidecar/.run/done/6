@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e71357e6566647f62993ad617ed93a7c305dfe097dc841cd9c3045f0bd63700b"
+build_stamp: "d026fc5"
+project_commit: "357273b"
+exit_code: 0
+scope_files: {"packages/ui/src/graph/GraphCanvas.tsx":"sha256:f4a1c1de85535c0614db2fb57c05be49801b2bffa7f4f060f06530b084b836d9","packages/ui/src/graph/layout.ts":"sha256:90ae52004ecb852902adadc41a05b9064262c9295863833a5ad4c4b0966ae49b","packages/ui/src/graph/types.ts":"sha256:38e5af83ae9610915371c3e05b83b0aa048bb01f1d5902a6ceb48c40ce1bbdae","src/core/web/web-data-graph.ts":"sha256:b9c491e553f2218c8af2bf95a355f107bb91348df60127d0b3a6dffeef814c51","src/core/web/web-data-types.ts":"sha256:a76a60d55f791d9ac1da5e8b18ce6045a5639709194ab0640bd8a7e6aaa80fb5","tests/ui-graph-groups.test.tsx":"sha256:18f4dfe9c3abee1aa49a58523065fc9b984728b1d64f40bcd6b7110db3c9ab9a"}
+---
+2026-09-27T20:38:33.254Z

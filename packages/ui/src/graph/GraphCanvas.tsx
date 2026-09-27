@@ -104,6 +104,25 @@ export function GraphCanvas({
           </g>
         ) : null}
 
+        {layout.groups.length > 0 ? (
+          <g className="graph-groups">
+            {layout.groups.map((group) => (
+              <g key={group.group} className="graph-group-header" data-group={group.group}>
+                <line
+                  className="graph-group-divider"
+                  x1={0}
+                  y1={round(group.y)}
+                  x2={layout.plotRight}
+                  y2={round(group.y)}
+                />
+                <text className="graph-group-label" x={4} y={round(group.y + 5)}>
+                  {group.group}
+                </text>
+              </g>
+            ))}
+          </g>
+        ) : null}
+
         <g className="graph-lanes">
           {layout.lanes.map((lane) => (
             <g key={lane.id} className="graph-lane" data-capability={lane.id}>

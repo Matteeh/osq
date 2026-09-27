@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2ff66f020547f8a1b92a65e99eee18d2e06066114095ce5b080de253b80d558f"
+build_stamp: "d026fc5"
+project_commit: "e23c8b5"
+exit_code: 0
+scope_files: {"src/cli/migrate.ts":"sha256:35cc3149d07b18b0c4b7ec62be6ce0361b25aa539486471936fd9ea710517dd8","src/core/spec/migrate-sidecars.ts":"sha256:aadf8cdb9d87ce538dccf7ae4875551d5cce8b4febafaf8bef72786096869e31","tests/migrate-sidecars.test.ts":"sha256:d98b09ea8f4e4bc09d14c29ffb58aaf2633781adf19f84cd9fceb16394e49a0f"}
+---
+2026-09-27T20:27:58.107Z

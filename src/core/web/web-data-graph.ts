@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { readLivingSidecar } from '../spec/capability-sidecar.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { deriveSpecState } from '../status/state.js';
 import {
@@ -69,7 +70,14 @@ async function capabilityNodes(
   for (const folder of folders) {
     const spec = await readCapabilitySpec(folder.folderPath);
     if (spec === null) continue;
-    nodes.push({ kind: 'capability', id: folder.id, folderKey: folder.id, spec });
+    const sidecar = await readLivingSidecar(projectRoot, config.paths.openspecRoot, folder.id);
+    nodes.push({
+      kind: 'capability',
+      id: folder.id,
+      folderKey: folder.id,
+      spec,
+      group: sidecar?.group ?? null,
+    });
   }
   return nodes;
 }

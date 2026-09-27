@@ -13,6 +13,7 @@ import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../core/sp
 import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
+import { applyArchiveSidecars } from './archive-sidecars.js';
 import { verifyArchiveStep } from './archive-verify.js';
 import { auditScopeRegressions } from './regression.js';
 
@@ -129,6 +130,7 @@ export async function archiveSpecFolder(
   const verification = await readArchivedVerification(specFolderPath);
 
   await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
+  await applyArchiveSidecars(projectRoot, specFolderPath, config);
 
   // The planning prompt is transient local context, not authored content. Remove
   // it once deltas are applied and only after every verification gate has

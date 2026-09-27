@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3efbe86eda98002dbb764fa01b6c88d8a2d6501089bab465b0acba65e0ee63cc"
+build_stamp: "d026fc5"
+project_commit: "7e300ad"
+exit_code: 0
+scope_files: {"src/core/foundation/config-capability-groups.ts":"sha256:9e34b63882e818a192c08fbf8f714f448d32d63e17c9a0ea5db3bd23101d1a89","src/core/foundation/config-user.ts":"sha256:dd802962551edffd0178cc4659bd8a18c3b9008fae448b004389c6a3883fef27","src/core/foundation/config.ts":"sha256:e2de734e57c022116087655a2c8c69caf63c34d69fc3c800ff736ddb46e5a002","tests/config-capability-groups.test.ts":"sha256:f9aa74d74a85946b049b0cf568f8ceae46c2bf17e04d6b571681469005de38ce"}
+---
+2026-09-27T20:14:19.781Z

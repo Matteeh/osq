@@ -13,25 +13,72 @@ import { parseDelta } from './delta.js';
 import { nearestCapability, readLivingCapabilityNames } from './digest-capability.js';
 import { type LintFinding, makeFinding } from './lint-findings.js';
 
+/** One `creates` entry: the trimmed name and its trimmed group, or null. */
+export interface CreatesEntry {
+  readonly name: string;
+  readonly group: string | null;
+}
+
 /** The `creates` frontmatter declaration: its trimmed names and malformedness. */
 export interface CreatesDeclaration {
   readonly names: readonly string[];
   readonly malformed: boolean;
+  /** Per-name groups; non-enumerable so the legacy `{ names, malformed }` shape is intact. */
+  readonly entries: readonly CreatesEntry[];
+}
+
+/** One raw `creates` entry as a name, a `{ name, group }` mapping, or null. */
+function readCreatesEntry(entry: unknown): CreatesEntry | null {
+  if (typeof entry === 'string') {
+    return { name: entry.trim(), group: null };
+  }
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+    return null;
+  }
+  const record = entry as Record<string, unknown>;
+  if (typeof record.name !== 'string' || typeof record.group !== 'string') {
+    return null;
+  }
+  return { name: record.name.trim(), group: record.group.trim() };
+}
+
+/** The declaration object, with `entries` hidden from the legacy shape. */
+function makeCreatesDeclaration(
+  names: readonly string[],
+  malformed: boolean,
+  entries: readonly CreatesEntry[],
+): CreatesDeclaration {
+  const declaration = { names, malformed, entries };
+  Object.defineProperty(declaration, 'entries', { enumerable: false });
+  return declaration;
 }
 
 /**
- * Reads `creates` from proposal frontmatter: the trimmed names, an empty list
- * when absent, and `malformed` when present but not a list of strings.
+ * Reads `creates` from proposal frontmatter: the trimmed names, each with its
+ * trimmed group or null for a bare name, an empty list when absent, and
+ * `malformed` when present but not a list of names or `{ name, group }` entries.
  */
 export function readCreates(data: Record<string, unknown>): CreatesDeclaration {
   const value = data.creates;
   if (value === undefined) {
-    return { names: [], malformed: false };
+    return makeCreatesDeclaration([], false, []);
   }
-  if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string')) {
-    return { names: [], malformed: true };
+  if (!Array.isArray(value)) {
+    return makeCreatesDeclaration([], true, []);
   }
-  return { names: value.map((entry) => entry.trim()), malformed: false };
+  const entries: CreatesEntry[] = [];
+  for (const raw of value) {
+    const entry = readCreatesEntry(raw);
+    if (entry === null) {
+      return makeCreatesDeclaration([], true, []);
+    }
+    entries.push(entry);
+  }
+  return makeCreatesDeclaration(
+    entries.map((entry) => entry.name),
+    false,
+    entries,
+  );
 }
 
 export interface CapabilityRelationsInput {

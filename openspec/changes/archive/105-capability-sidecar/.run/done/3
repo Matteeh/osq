@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:650f5d153b20717da7b9df26c8e21d6795b4ead8f5549ce03eeffe45d190d8ab"
+build_stamp: "d026fc5"
+project_commit: "764a86b"
+exit_code: 0
+scope_files: {"src/core/run/manifest.ts":"sha256:55dac16b0aabccbad039edd1ed08a9e7dece92efda7cbed6b2a63cb5c2dd9b84","src/watcher/archive-sidecars.ts":"sha256:260f684cc294f5023b4f395552609ede0d994b5f1c6f7718677bf47a8fb9e394","src/watcher/archiver.ts":"sha256:bde5e4af11dd5808d638d97e4604af497f13fe984ac2f94b3a2974a56c5d0690","tests/archive-sidecars.test.ts":"sha256:21bdd0028f39949da093d42f715de038d64ab7acaea8ecc226c1806596d5b1e3"}
+---
+2026-09-27T20:23:48.295Z

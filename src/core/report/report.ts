@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readManifestApprovedAt } from '../run/manifest-approval.js';
+import { livingSidecarPath } from '../spec/capability-sidecar.js';
+import { readLivingCapabilityNames } from '../spec/digest-capability.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type QueueReport, readQueueReport } from '../status/queue-report.js';
@@ -262,11 +264,22 @@ export interface CoverageByChange {
   readonly withoutEvents: readonly string[];
 }
 
+/** Living capability names split by whether a sidecar exists, in name order. */
+export interface CapabilityCoverage {
+  readonly withSidecar: readonly string[];
+  readonly withoutSidecar: readonly string[];
+}
+
 /** Event-file coverage for every discovered task. */
 export interface CoverageMetrics {
   readonly withEvents: number;
   readonly withoutEvents: number;
   readonly byChange: Record<string, CoverageByChange>;
+  /**
+   * Sidecar coverage per living capability. Absent when the project has no
+   * living capability spec, so the report is unchanged for other projects.
+   */
+  readonly capabilities?: CapabilityCoverage;
 }
 
 export interface MetricsReport {
@@ -434,6 +447,26 @@ async function fileExists(filePath: string): Promise<boolean> {
     .stat(filePath)
     .then(() => true)
     .catch(() => false);
+}
+
+/**
+ * Living capability names split by whether `<openspecRoot>/specs/<capability>/osq.yml`
+ * exists, each in name order. Returns undefined when there is no living spec, so
+ * `coverage` keeps its established shape and other projects see no change.
+ */
+async function collectCapabilityCoverage(
+  projectRoot: string,
+  openspecRoot: string,
+): Promise<CapabilityCoverage | undefined> {
+  const living = await readLivingCapabilityNames(projectRoot, openspecRoot);
+  if (living.length === 0) return undefined;
+  const withSidecar: string[] = [];
+  const withoutSidecar: string[] = [];
+  for (const capability of living) {
+    const hasSidecar = await fileExists(livingSidecarPath(projectRoot, openspecRoot, capability));
+    (hasSidecar ? withSidecar : withoutSidecar).push(capability);
+  }
+  return { withSidecar, withoutSidecar };
 }
 
 /** Every task discovered across active and archived changes, with a stable identity. */
@@ -1119,6 +1152,11 @@ export async function getMetricsReport(
   multipleAttempts.sort();
   preSpawnMismatchedTasks.sort();
 
+  const capabilityCoverage = await collectCapabilityCoverage(
+    projectRoot,
+    config.paths.openspecRoot,
+  );
+
   // 6. Unrelated aggregate metrics still read every event stream, including
   // legacy `change.jsonl`, exactly as before. The change-level stream is
   // excluded from execution durations: since 035 it can carry archive events
@@ -1443,6 +1481,7 @@ export async function getMetricsReport(
       withEvents: withEventsCount,
       withoutEvents: withoutEventsCount,
       byChange: coverageByChange,
+      ...(capabilityCoverage ? { capabilities: capabilityCoverage } : {}),
     },
     cycle: {
       phases: cyclePhases,

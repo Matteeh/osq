@@ -11,6 +11,7 @@ export default defineConfig({
     author: "osq <osq@noreply.invalid>",
     prepare: "pnpm install --frozen-lockfile",
   },
+  capabilities: { requireGroups: true },
   pi: { provider: "deepseek", model: "deepseek-flash", thinking: "high" },
   opencode: {
     bin: "opencode",

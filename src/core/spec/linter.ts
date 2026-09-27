@@ -39,6 +39,7 @@ import {
   parseTaskMd,
   resolveChangeDoc,
 } from './parser.js';
+import { collectSidecarFindings } from './sidecar-lint.js';
 import { collectTraceabilityFindings } from './traceability-lint.js';
 import {
   listNamedPaths,
@@ -1123,6 +1124,26 @@ export async function lintChangeFolder(
       reads: spec.features.reads,
     })) {
       findings.addOwn(finding);
+    }
+  }
+
+  // Check: capability sidecars a change carries, broken living sidecars, and,
+  // with requireGroups, a created or written capability without a real group.
+  // A legacy spec.md change document is exempt, as for the relation checks.
+  if (resolvedDoc.kind === 'proposal') {
+    const sidecar = await collectSidecarFindings({
+      projectRoot,
+      openspecRoot: resolveOpenSpecRoot(config),
+      folderPath,
+      proposalPath: docRepoPath,
+      data: parseFrontmatter(specContent).data,
+      requireGroups: config.capabilities?.requireGroups ?? false,
+    });
+    for (const finding of sidecar.own) {
+      findings.addOwn(finding);
+    }
+    for (const finding of sidecar.repository) {
+      findings.addRepository(finding);
     }
   }
 

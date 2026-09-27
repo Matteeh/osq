@@ -1,3 +1,4 @@
+import type { CapabilitiesConfig } from './config-capability-groups.js';
 import type { ClaudeConfig } from './config-claude.js';
 import type { CodexConfig } from './config-codex.js';
 import type { GatesConfig } from './config-gates.js';
@@ -40,6 +41,7 @@ export type OsqUserConfig = Partial<
     | 'traceability'
     | 'vcs'
     | 'inbox'
+    | 'capabilities'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -58,4 +60,5 @@ export type OsqUserConfig = Partial<
   readonly traceability?: Partial<TraceabilityConfig>;
   readonly vcs?: Partial<VcsConfig>;
   readonly inbox?: Partial<InboxConfig>;
+  readonly capabilities?: Partial<CapabilitiesConfig>;
 };

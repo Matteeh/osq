@@ -189,6 +189,7 @@ export async function buildManifest(
   const features = new Set<string>([...(spec?.features.reads ?? []), ...writtenCapabilities]);
   for (const name of features) {
     hashes[name] = await hashFileContent(path.join(specsDir, name, 'spec.md'));
+    hashes[`${name}/osq.yml`] = await hashFileContent(path.join(specsDir, name, 'osq.yml'));
   }
 
   const identity = resolveExecutorIdentity(config);

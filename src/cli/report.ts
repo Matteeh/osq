@@ -101,6 +101,14 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
           },
         ]),
       ),
+      ...(report.coverage.capabilities
+        ? {
+            capabilities: {
+              withSidecar: [...report.coverage.capabilities.withSidecar],
+              withoutSidecar: [...report.coverage.capabilities.withoutSidecar],
+            },
+          }
+        : {}),
     },
     cycle: {
       phases: {

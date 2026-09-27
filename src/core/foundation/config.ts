@@ -1,6 +1,11 @@
 import path from 'node:path';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
 import { checkTraceabilityCapabilities } from './config-capabilities.js';
+import {
+  type CapabilitiesConfig,
+  DEFAULT_CAPABILITIES_CONFIG,
+  validateCapabilitiesConfig,
+} from './config-capability-groups.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { applyHarnessModelEnv } from './config-env.js';
@@ -27,6 +32,7 @@ export { ConfigLoadError } from './config-file.js';
 export type { AgyConfig, OpencodeConfig } from './config-agents.js';
 export type { ClaudeConfig } from './config-claude.js';
 export type { CodexConfig } from './config-codex.js';
+export type { CapabilitiesConfig } from './config-capability-groups.js';
 export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
 export type { ServeConfig } from './config-serve.js';
@@ -99,6 +105,7 @@ export interface OsqConfig {
   readonly gates?: GatesConfig;
   readonly traceability?: TraceabilityConfig;
   readonly inbox?: InboxConfig;
+  readonly capabilities?: CapabilitiesConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -107,6 +114,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   serve: DEFAULT_SERVE_CONFIG,
   inbox: DEFAULT_INBOX_CONFIG,
   vcs: DEFAULT_VCS_CONFIG,
+  capabilities: DEFAULT_CAPABILITIES_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
   traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
@@ -170,6 +178,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),
     traceability: validateTraceabilityConfig(config.traceability),
+    capabilities: validateCapabilitiesConfig(config.capabilities),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     agy: {

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:57558ede69826927206660e459fec1972a983484e997720f70342edc81a9b348"
+build_stamp: "d026fc5"
+project_commit: "468cb84"
+exit_code: 0
+scope_files: {"README.md":"sha256:8057c06cdc2beb1bc1e80405ff8ca98080e4eefcd2daae26d5bd2d72a9e9db0a","openspec/specs/cli-foundation/osq.yml":"sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b","openspec/specs/metrics-and-reporting/osq.yml":"sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef","openspec/specs/spec-lint-and-approve/osq.yml":"sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab","openspec/specs/status-inspection/osq.yml":"sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef","openspec/specs/traceability/osq.yml":"sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab","openspec/specs/version-control/osq.yml":"sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d","openspec/specs/watcher-and-harness/osq.yml":"sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d","openspec/specs/web-inspection/osq.yml":"sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef","osq.config.ts":"sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39","tests/own-sidecars.test.ts":"sha256:82d31f378dbefb9441b6fba05a57f05ebc60cfa1b4d438506447067049314ccd"}
+---
+2026-09-27T20:42:26.059Z
