@@ -101,6 +101,7 @@ const isAllowedPath = (filePath: string): boolean =>
   filePath === 'LICENSE' ||
   filePath === 'package.json' ||
   filePath.startsWith('dist/') ||
+  filePath.startsWith('sounds/') ||
   filePath.startsWith('templates/') ||
   filePath.startsWith('ui/dist/');
 
@@ -138,6 +139,7 @@ describe('package hygiene', () => {
       'tarball is missing templates/',
     );
 
+    assert.ok(paths.has('sounds/inbox.wav'), 'tarball is missing sounds/inbox.wav');
     assert.ok(paths.has('ui/dist/index.html'), 'tarball is missing ui/dist/index.html');
     const uiAssets = [...paths].filter((filePath) => filePath.startsWith('ui/dist/assets/'));
     assert.ok(

@@ -85,10 +85,18 @@ function cardLines(item: OrderedDispatchItem, card: DispatchCard): string[] {
   return lines;
 }
 
+/**
+ * `<kind> <id> <title>[ task <n>: <title>] (<reason>)`, the text after the
+ * position on each list line and the text the follow loop prints after `+`.
+ */
+export function formatDispatchItemSummary(item: OrderedDispatchItem): string {
+  const task = item.task ? ` task ${item.task.number}: ${item.task.title}` : '';
+  return `${item.kind} ${item.change.id} ${item.change.title}${task} (${item.reason})`;
+}
+
 /** One `  <n>. <kind> <id> <title>[ task <n>: <title>] (<reason>)` line. */
 function itemLine(item: OrderedDispatchItem, position: number): string {
-  const task = item.task ? ` task ${item.task.number}: ${item.task.title}` : '';
-  return `  ${position}. ${item.kind} ${item.change.id} ${item.change.title}${task} (${item.reason})`;
+  return `  ${position}. ${formatDispatchItemSummary(item)}`;
 }
 
 /** The ordered list and, when one exists, the first item's card. */

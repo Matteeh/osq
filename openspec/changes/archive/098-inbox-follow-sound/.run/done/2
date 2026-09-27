@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e9de6df7cfbfb61b14af86ef3064b0b29b46379195e9714d50334c10b0830bf1"
+build_stamp: "8907336"
+project_commit: "8655e97"
+exit_code: 0
+scope_files: {"package.json":"sha256:c8c6c4fba5ccbf2346be6c3306c522ab49da0540c9ec8ff6bb29602eb6974710","scripts/make-inbox-sound.mjs":"sha256:5b4f3777ef9143c9926c97585b482c74b712693f44905c3b499e5ab917244b11","sounds/inbox.wav":"sha256:fb086f2afe5f3138288aab0e2aebc86b84408cd2f2da1b0a1720b3bc323c7065","tests/inbox-sound-file.test.ts":"sha256:3c0ac94b3cb3adf2123c1a8417551f2e0f804b0db4f016c137e3d35224edd477","tests/package-hygiene.test.ts":"sha256:107e9d4bac3e0c1f95105d3c390aaf302d4bb14cf9c2279195cdce11051109f5"}
+---
+2026-09-27T08:21:10.526Z

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3ba55afd6b6013e52130cfd6818fdd7d630ba9feacbcc7c96df562643ddc6b1e"
+build_stamp: "8907336"
+project_commit: "8655e97"
+exit_code: 0
+scope_files: {"src/core/status/inbox-sound.ts":"sha256:e01c83d4bd3610dd8d8197e756bc5489207178494f3d9d6823a0978dee13ace9","tests/inbox-sound.test.ts":"sha256:57a1a35d7a4e4b448b5deb82d4e6a507d3d13f3cdd34b725bc153be3e6a362e9"}
+---
+2026-09-27T08:26:46.298Z

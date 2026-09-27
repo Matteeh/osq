@@ -527,6 +527,7 @@ As with every harness, scope is a protocol, not confinement beyond what the harn
 osq                      human attention inbox: needs you, running, landed since last look
 osq --json               print human attention inbox as stable JSON
 osq inbox                what needs a human, in dispatch order, with the first item's card
+osq inbox --follow       print new and departed items as they change, and sound when new work appears
 osq inbox --json         the dispatch queue and every item's card data as JSON
 osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
 osq init --refresh-schema  overwrite the six scaffolded OpenSpec schema files from the installed templates
@@ -588,6 +589,29 @@ then prints the first item's card with its reason, evidence, and exact commands.
 It orders the queue by taking approval and halt items first while the watcher is
 idle, then the item that holds up the most changes, then the lower change id and
 task number. `osq inbox --json` carries every item's card data.
+
+`osq inbox --follow` prints the same text, then
+`Waiting for new items (Ctrl-C to stop).`, and keeps running until you press
+Ctrl-C. It watches the change trees and re-derives the queue every
+`inbox.pollSeconds` as a safety net, printing one `<HH:MM> + <item>` line per
+item that appears and one `<HH:MM> - <item>` line per item that goes away. It
+plays one sound when a batch adds at least one item, never for a departure and
+never for the items already present at start. The sound is `sounds/inbox.wav`
+from the package by default, played through `afplay` on macOS and the first of
+`pw-play`, `paplay`, and `aplay` on Linux; when no player is found, or the
+configured file is missing, it falls back to the terminal bell. Nothing the
+watcher does makes a sound. The optional `inbox` block tunes it:
+
+- `inbox.sound`: `default`, meaning the packaged WAV, or `bell`, `off`, or a
+  sound file path relative to the project root.
+- `inbox.quietHours`: `null` to always play, or `HH:MM-HH:MM` local time to stay
+  silent in that window, start inclusive and end exclusive, wrapping midnight.
+- `inbox.soundWindowSeconds`: `5`, the least seconds between two sounds.
+- `inbox.eventDebounceMs`: `200`, how long change events batch before one
+  re-derivation.
+- `inbox.pollSeconds`: `30`, how often the safety-net poll re-derives the queue.
+
+`--follow` refuses `--json`; it is a text view.
 
 ### Planning
 
