@@ -14,13 +14,16 @@ import { readDispatch } from '../src/core/status/dispatch.js';
 const CHANGES = path.join('openspec', 'changes');
 
 let tmpDir: string;
+let home: string;
 
 beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-inbox-cards-'));
+  home = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-inbox-cards-home-'));
 });
 
 afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true });
 });
 
 function proposalMd(title: string, goal: string): string {
@@ -122,6 +125,7 @@ describe('osq inbox on a terminal', () => {
     await inboxDispatchCommand({
       cwd: tmpDir,
       config,
+      home,
       isTerminal: () => true,
       input: scriptedInput(['q']),
       launch,

@@ -1,10 +1,18 @@
+import os from 'node:os';
 import type { OsqConfig } from '../foundation/config.js';
 import { readDispatchCard } from './dispatch-cards.js';
 import { readDispatchItems } from './dispatch-items.js';
 import { type CardKey, type CardKeys, cardKeys, formatCardScreen } from './dispatch-keys.js';
-import { type OrderedDispatchItem, orderDispatchItems } from './dispatch-order.js';
+import {
+  type FirstSeenTimes,
+  type OrderedDispatchItem,
+  orderDispatchItems,
+} from './dispatch-order.js';
+import { applySetAsides } from './dispatch-set-aside.js';
 import { type DispatchWatch, type WatchDispatchOptions, watchDispatch } from './dispatch-watch.js';
 import type { InboxSound } from './inbox-sound.js';
+import { dispatchIdentity, firstSeenTimes, readWaitLog } from './wait-log.js';
+import type { WaitRecorder } from './wait-recorder.js';
 
 /** One key read and one line read from the terminal. */
 export interface CardInput {
@@ -24,29 +32,10 @@ export interface CardSessionOptions extends WatchDispatchOptions {
   readonly sound?: InboxSound;
   readonly stdout?: (message: string) => void;
   readonly signal?: AbortSignal;
+  readonly recorder?: WaitRecorder;
 }
 
 const WAITING = 'Nothing needs you. Waiting for new items (q to quit).\n';
-
-/** Kind, change folder, and task number as one identity. */
-function identityOf(item: OrderedDispatchItem): string {
-  return `${item.kind}\u0000${item.change.folder}\u0000${item.task?.number ?? ''}`;
-}
-
-/** The ordered items, each set-aside one moved behind the rest, in set-aside order. */
-function applySetAsides(
-  items: readonly OrderedDispatchItem[],
-  setAside: readonly string[],
-): OrderedDispatchItem[] {
-  const setAsideIds = new Set(setAside);
-  const rest = items.filter((item) => !setAsideIds.has(identityOf(item)));
-  const behind: OrderedDispatchItem[] = [];
-  for (const id of setAside) {
-    const found = items.find((item) => identityOf(item) === id);
-    if (found !== undefined) behind.push(found);
-  }
-  return [...rest, ...behind];
-}
 
 /** True when the key ends the session. */
 function endsSession(key: string | null): boolean {
@@ -60,7 +49,11 @@ class CardSession {
   private readonly launch: Launcher;
   private readonly sound: InboxSound;
   private readonly signal: AbortSignal | undefined;
+  private readonly recorder: WaitRecorder | undefined;
+  private readonly home: string;
+  private readonly clock: () => Date;
   private readonly setAside: string[] = [];
+  private lastIdle = false;
   private readonly abort: Promise<void>;
   private onAbort: (() => void) | null = null;
   private pending: Promise<string | null> | null = null;
@@ -80,6 +73,9 @@ class CardSession {
     this.launch = options.launch;
     this.sound = options.sound ?? { notify: () => undefined };
     this.signal = options.signal;
+    this.recorder = options.recorder;
+    this.home = options.home ?? os.homedir();
+    this.clock = options.now ?? (() => new Date());
     this.abort = new Promise<void>((resolve) => {
       if (this.signal === undefined) return;
       if (this.signal.aborted) {
@@ -113,13 +109,22 @@ class CardSession {
 
   /** The ordered items, set-aside ones moved behind the rest. */
   private async derive(): Promise<OrderedDispatchItem[]> {
+    const at = this.clock();
     const dispatch = await readDispatchItems(this.projectRoot, this.config);
-    const ordered = await orderDispatchItems(this.projectRoot, this.config, dispatch);
-    return applySetAsides(ordered, this.setAside);
+    const records = await readWaitLog(this.projectRoot, this.home);
+    const firstSeen: FirstSeenTimes =
+      records === null ? new Map<string, Date>() : firstSeenTimes(records);
+    const ordered = await orderDispatchItems(this.projectRoot, this.config, dispatch, firstSeen);
+    const items = applySetAsides(ordered, this.setAside);
+    this.lastIdle = dispatch.watcherIdle;
+    void this.recorder?.observe(items, dispatch.watcherIdle, at);
+    return items;
   }
 
   /** Close the watch and ring once when the first item arrives. */
-  private onItems = (items: readonly OrderedDispatchItem[], at: Date): void => {
+  private onItems = (items: readonly OrderedDispatchItem[], at: Date, idle: boolean): void => {
+    this.lastIdle = idle;
+    void this.recorder?.observe(applySetAsides(items, this.setAside), idle, at);
     if (this.arrive === null || items.length === 0) return;
     const resolve = this.arrive;
     this.arrive = null;
@@ -176,7 +181,7 @@ class CardSession {
 
   /** Move one item behind the others for the rest of the session. */
   private skip(item: OrderedDispatchItem): void {
-    const id = identityOf(item);
+    const id = dispatchIdentity(item);
     const at = this.setAside.indexOf(id);
     if (at !== -1) this.setAside.splice(at, 1);
     this.setAside.push(id);
@@ -189,6 +194,7 @@ class CardSession {
     const keys: CardKeys = cardKeys(first);
     const card = await readDispatchCard(this.projectRoot, this.config, first);
     this.out(`${formatCardScreen(items.length, first, card, keys)}\n`);
+    void this.recorder?.opened(first, this.lastIdle, this.clock());
     const value = await this.nextKey();
     if (this.quit) return;
     if (endsSession(value)) {
@@ -221,6 +227,7 @@ class CardSession {
       const closing = this.watch;
       this.watch = null;
       await closing?.close();
+      await this.recorder?.stop(this.clock());
     }
   }
 }

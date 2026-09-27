@@ -4,6 +4,8 @@ import { formatDispatchItemSummary, formatDispatchText } from './dispatch-text.j
 import { type DispatchWatch, type WatchDispatchOptions, watchDispatch } from './dispatch-watch.js';
 import { readDispatch } from './dispatch.js';
 import type { InboxSound } from './inbox-sound.js';
+import { dispatchIdentity } from './wait-log.js';
+import type { WaitRecorder } from './wait-recorder.js';
 
 export type { EveryFn } from './dispatch-watch.js';
 
@@ -12,11 +14,7 @@ export interface FollowDispatchOptions extends WatchDispatchOptions {
   readonly stdout?: (message: string) => void;
   readonly sound?: InboxSound;
   readonly signal?: AbortSignal;
-}
-
-/** Kind, change folder, and task number as one identity. */
-function identityOf(item: OrderedDispatchItem): string {
-  return `${item.kind}\u0000${item.change.folder}\u0000${item.task?.number ?? ''}`;
+  readonly recorder?: WaitRecorder;
 }
 
 /** Print `+` lines for new items and `-` lines for departed ones, in order. */
@@ -27,16 +25,16 @@ function followDelta(
   out: (message: string) => void,
 ): boolean {
   const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
-  const before = new Set(previous.map(identityOf));
-  const after = new Set(items.map(identityOf));
+  const before = new Set(previous.map(dispatchIdentity));
+  const after = new Set(items.map(dispatchIdentity));
   let appeared = 0;
   for (const item of items) {
-    if (before.has(identityOf(item))) continue;
+    if (before.has(dispatchIdentity(item))) continue;
     out(`${time} + ${formatDispatchItemSummary(item)}\n`);
     appeared += 1;
   }
   for (const item of previous) {
-    if (after.has(identityOf(item))) continue;
+    if (after.has(dispatchIdentity(item))) continue;
     out(`${time} - ${formatDispatchItemSummary(item)}\n`);
   }
   return appeared > 0;
@@ -68,14 +66,19 @@ export async function followDispatch(
 ): Promise<void> {
   const out = options.stdout ?? ((message: string) => process.stdout.write(message));
   const sound = options.sound ?? { notify: () => undefined };
-  const preview = await readDispatch(projectRoot, config);
+  const recorder = options.recorder;
+  const clock = options.now ?? (() => new Date());
+  const preview = await readDispatch(projectRoot, config, options.home);
   out(`${formatDispatchText(preview)}\n`);
   out('Waiting for new items (Ctrl-C to stop).\n');
+  await recorder?.observe(preview.items, preview.watcherIdle, clock());
   let previous: readonly OrderedDispatchItem[] = preview.items;
-  const watch = watchDispatch(projectRoot, config, options, (items, at) => {
+  const watch = watchDispatch(projectRoot, config, options, (items, at, idle) => {
+    void recorder?.observe(items, idle, at);
     const appeared = followDelta(previous, items, at, out);
     previous = items;
     if (appeared) sound.notify(at);
   });
   await closeOnAbort(watch, options.signal);
+  await recorder?.stop(clock());
 }

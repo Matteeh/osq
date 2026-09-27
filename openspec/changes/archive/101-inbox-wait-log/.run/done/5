@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3b30937584c9209cb69cf7d1047193cf3977b849d191168ef1e3cd300e8531a5"
+build_stamp: "d026fc5"
+project_commit: "50d6a33"
+exit_code: 0
+scope_files: {"fixture/report/inbox-wait.jsonl":"sha256:f8e1900d8bf5289b62104d2b8a7ab8c127571cf9ec72a615f616bbd61781aa19","src/core/report/report-inbox-wait.ts":"sha256:b9c942f48095828c484eae4a37486d78557826f680c437d8df12840ec7012169","tests/report-inbox-wait.test.ts":"sha256:5e34966f65a8aa3423d058ba12b7467be6ffa295fadb02c66551d29e5948305b"}
+---
+2026-09-27T12:00:19.772Z

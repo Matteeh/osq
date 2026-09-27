@@ -1,0 +1,100 @@
+{"type":"verify_ran","timestamp":"2026-09-27T11:50:31.850Z","data":{"command":"node --import tsx --test tests/inbox-wait-log.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/inbox-wait-log.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/inbox-wait-log.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-27T11:50:32.397Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":928,"repoFiles":1726,"repoLines":193532,"importFanIn":1,"proposalWords":1001,"taskWords":170,"deltaRequirements":9,"deltaScenarios":45}}
+{"type":"started","timestamp":"2026-09-27T11:50:32.586Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"9e287ca","pid":98051,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"d026fc5"}}
+{"type":"text","timestamp":"2026-09-27T11:50:33.996Z","data":{"text":"I'll start by reading the task file, proposal, and relevant specs."}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:33.996Z","data":{"promptTokens":4605,"candidateTokens":186,"totalTokens":7991,"cachedTokens":3200,"reasoningTokens":16,"cost":0.0016239,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:33.998Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/tasks/4.md"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:33.998Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/proposal.md"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:35.473Z","data":{"promptTokens":2107,"candidateTokens":199,"totalTokens":10242,"cachedTokens":7936,"reasoningTokens":27,"cost":0.000918516,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:35.474Z","data":{"tool":"bash","summary":"ls -la openspec/changes/101-inbox-wait-log/.run/results/ 2>/"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:35.474Z","data":{"tool":"read","summary":"src/cli/inbox-dispatch.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:37.177Z","data":{"promptTokens":1719,"candidateTokens":250,"totalTokens":12209,"cachedTokens":10240,"reasoningTokens":29,"cost":0.0008771399999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:37.178Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/specs/cli-foundation/spe"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:37.179Z","data":{"tool":"read","summary":"src/core/status/wait-recorder.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:37.179Z","data":{"tool":"read","summary":"src/core/status/dispatch.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:39.203Z","data":{"promptTokens":2704,"candidateTokens":335,"totalTokens":15199,"cachedTokens":12160,"reasoningTokens":97,"cost":0.00128616,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:39.204Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:39.204Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:39.205Z","data":{"tool":"read","summary":"openspec/changes/101-inbox-wait-log/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:40.952Z","data":{"promptTokens":1992,"candidateTokens":205,"totalTokens":17301,"cachedTokens":15104,"reasoningTokens":42,"cost":0.0009342239999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:40.953Z","data":{"tool":"bash","summary":"ls tests/ | grep -i inbox; echo \"---\"; ls tests/ | grep -i w"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:40.954Z","data":{"tool":"read","summary":"tests/inbox-cards.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:42.481Z","data":{"promptTokens":1870,"candidateTokens":151,"totalTokens":19301,"cachedTokens":17280,"reasoningTokens":10,"cost":0.0008458799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:42.482Z","data":{"tool":"read","summary":"tests/inbox-follow.test.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:42.482Z","data":{"tool":"read","summary":"src/core/status/wait-log.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:44.513Z","data":{"promptTokens":6049,"candidateTokens":261,"totalTokens":25510,"cachedTokens":19200,"reasoningTokens":117,"cost":0.0022431,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:44.514Z","data":{"tool":"read","summary":"src/core/status/dispatch-session.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:44.514Z","data":{"tool":"read","summary":"src/core/status/dispatch-follow.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:49.000Z","data":{"promptTokens":3130,"candidateTokens":898,"totalTokens":29500,"cachedTokens":25472,"reasoningTokens":758,"cost":0.002169432,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:49.000Z","data":{"tool":"read","summary":"tests/wait-recording.test.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:49.001Z","data":{"tool":"read","summary":"tests/inbox-dispatch.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:55.477Z","data":{"promptTokens":5854,"candidateTokens":1334,"totalTokens":36628,"cachedTokens":29440,"reasoningTokens":1191,"cost":0.00353364,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:55.478Z","data":{"tool":"read","summary":"src/core/status/dispatch-watch.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:55.479Z","data":{"tool":"read","summary":"src/core/status/dispatch-items.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:50:57.198Z","data":{"promptTokens":3601,"candidateTokens":195,"totalTokens":40404,"cachedTokens":36608,"reasoningTokens":55,"cost":0.001533948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:57.199Z","data":{"tool":"read","summary":"src/core/status/dispatch-order.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:50:57.200Z","data":{"tool":"read","summary":"tests/dispatch-age.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:12.697Z","data":{"promptTokens":3910,"candidateTokens":3759,"totalTokens":47989,"cachedTokens":40320,"reasoningTokens":3684,"cost":0.005925719999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:12.698Z","data":{"tool":"read","summary":"tests/line-budget.test.ts"}}
+{"type":"text","timestamp":"2026-09-27T11:51:17.627Z","data":{"text":"Now I'll implement the command wiring."}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:17.627Z","data":{"promptTokens":1101,"candidateTokens":1409,"totalTokens":50382,"cachedTokens":47872,"reasoningTokens":52,"cost":0.002308332,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:17.629Z","data":{"tool":"edit","summary":"src/cli/inbox-dispatch.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:51:17.632Z","data":{"path":"src/cli/inbox-dispatch.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:18.992Z","data":{"promptTokens":235,"candidateTokens":85,"totalTokens":50496,"cachedTokens":50176,"reasoningTokens":9,"cost":0.000473556,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:18.993Z","data":{"tool":"read","summary":"src/cli/inbox-dispatch.ts"}}
+{"type":"text","timestamp":"2026-09-27T11:51:33.626Z","data":{"text":"Now creating the new test file:"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:33.626Z","data":{"promptTokens":1615,"candidateTokens":4443,"totalTokens":56490,"cachedTokens":50432,"reasoningTokens":1966,"cost":0.006118691999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:33.627Z","data":{"tool":"write","summary":"tests/inbox-wait-log.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:51:33.628Z","data":{"path":"tests/inbox-wait-log.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:36.863Z","data":{"promptTokens":194,"candidateTokens":504,"totalTokens":57018,"cachedTokens":56320,"reasoningTokens":269,"cost":0.00100092,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:36.864Z","data":{"tool":"edit","summary":"tests/inbox-wait-log.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:51:36.865Z","data":{"path":"tests/inbox-wait-log.test.ts"}}
+{"type":"text","timestamp":"2026-09-27T11:51:40.769Z","data":{"text":"Now updating the two existing test files to use a temporary home:"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:40.769Z","data":{"promptTokens":215,"candidateTokens":888,"totalTokens":57935,"cachedTokens":56832,"reasoningTokens":36,"cost":0.0014710919999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:40.770Z","data":{"tool":"edit","summary":"tests/inbox-cards.test.ts"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:40.771Z","data":{"tool":"edit","summary":"tests/inbox-follow.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:51:40.772Z","data":{"path":"tests/inbox-cards.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:51:40.772Z","data":{"path":"tests/inbox-follow.test.ts"}}
+{"type":"text","timestamp":"2026-09-27T11:51:42.397Z","data":{"text":"Now let's run the task verify:"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:42.397Z","data":{"promptTokens":259,"candidateTokens":133,"totalTokens":58120,"cachedTokens":57728,"reasoningTokens":50,"cost":0.000583668,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:42.399Z","data":{"tool":"bash","summary":"node --import tsx --test tests/inbox-wait-log.test.ts 2>&1 |"}}
+{"type":"text","timestamp":"2026-09-27T11:51:44.606Z","data":{"text":"All four scenarios pass. Now let me verify the modified existing test files:"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:44.606Z","data":{"promptTokens":146,"candidateTokens":114,"totalTokens":58372,"cachedTokens":58112,"reasoningTokens":18,"cost":0.000529272,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:44.608Z","data":{"tool":"bash","summary":"node --import tsx --test tests/inbox-cards.test.ts tests/inb"}}
+{"type":"tokens","timestamp":"2026-09-27T11:51:59.278Z","data":{"promptTokens":572,"candidateTokens":2638,"totalTokens":61578,"cachedTokens":58368,"reasoningTokens":2522,"cost":0.0036874079999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:51:59.279Z","data":{"tool":"bash","summary":"for i in 1 2 3; do echo \"=== run $i ===\"; node --import tsx "}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:07.579Z","data":{"promptTokens":181,"candidateTokens":1200,"totalTokens":62949,"cachedTokens":61568,"reasoningTokens":1125,"cost":0.001863708,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:07.580Z","data":{"tool":"read","summary":"tests/inbox-follow.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:17.130Z","data":{"promptTokens":459,"candidateTokens":1784,"totalTokens":65091,"cachedTokens":62848,"reasoningTokens":1704,"cost":0.002655588,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:17.131Z","data":{"tool":"bash","summary":"grep -n \"export function createInvalidationHub\" -A 60 src/co"}}
+{"type":"text","timestamp":"2026-09-27T11:52:25.051Z","data":{"text":"The recorder's start `observe` delays watch creation, exposing a latent race in that test. I'll add a synchronization wait for the watcher (no assertion change):"}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:25.051Z","data":{"promptTokens":657,"candidateTokens":1451,"totalTokens":67132,"cachedTokens":65024,"reasoningTokens":1205,"cost":0.002328444,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:25.052Z","data":{"tool":"edit","summary":"tests/inbox-follow.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:52:25.054Z","data":{"path":"tests/inbox-follow.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:26.916Z","data":{"promptTokens":216,"candidateTokens":116,"totalTokens":67276,"cachedTokens":66944,"reasoningTokens":0,"cost":0.000605664,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:26.916Z","data":{"tool":"bash","summary":"for i in 1 2 3; do echo \"=== run $i ===\"; node --import tsx "}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:30.210Z","data":{"promptTokens":193,"candidateTokens":110,"totalTokens":67503,"cachedTokens":67200,"reasoningTokens":20,"cost":0.0005930999999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:30.211Z","data":{"tool":"bash","summary":"node --import tsx --test tests/inbox-cards.test.ts tests/inb"}}
+{"type":"text","timestamp":"2026-09-27T11:52:32.567Z","data":{"text":"All pass. Now running the proposal's full verify (`pnpm verify`):"}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:32.567Z","data":{"promptTokens":197,"candidateTokens":106,"totalTokens":67759,"cachedTokens":67456,"reasoningTokens":26,"cost":0.000591036,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:32.569Z","data":{"tool":"bash","summary":"cat package.json | grep -A 20 '\"scripts\"'"}}
+{"type":"tokens","timestamp":"2026-09-27T11:52:33.974Z","data":{"promptTokens":408,"candidateTokens":105,"totalTokens":68225,"cachedTokens":67712,"reasoningTokens":40,"cost":0.000654672,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:52:33.975Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-27T11:53:24.787Z","data":{"promptTokens":825,"candidateTokens":194,"totalTokens":69243,"cachedTokens":68224,"reasoningTokens":68,"cost":0.000889644,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:53:24.788Z","data":{"tool":"edit","summary":"tests/inbox-wait-log.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:53:24.789Z","data":{"path":"tests/inbox-wait-log.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T11:53:26.152Z","data":{"promptTokens":152,"candidateTokens":98,"totalTokens":69370,"cachedTokens":69120,"reasoningTokens":34,"cost":0.00057792,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:53:26.152Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -20"}}
+{"type":"tokens","timestamp":"2026-09-27T11:53:28.234Z","data":{"promptTokens":191,"candidateTokens":107,"totalTokens":69546,"cachedTokens":69248,"reasoningTokens":42,"cost":0.000601188,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:53:28.235Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -25"}}
+{"type":"text","timestamp":"2026-09-27T11:54:24.374Z","data":{"text":"All checks pass. Let me write the result file."}}
+{"type":"tokens","timestamp":"2026-09-27T11:54:24.374Z","data":{"promptTokens":341,"candidateTokens":2015,"totalTokens":71860,"cachedTokens":69504,"reasoningTokens":1262,"cost":0.002937324,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T11:54:24.376Z","data":{"tool":"write","summary":"openspec/changes/101-inbox-wait-log/.run/results/4.md"}}
+{"type":"file_changed","timestamp":"2026-09-27T11:54:24.377Z","data":{"path":"openspec/changes/101-inbox-wait-log/.run/results/4.md"}}
+{"type":"text","timestamp":"2026-09-27T11:54:26.978Z","data":{"text":"Task complete.\n\n## Summary\n\n**`src/cli/inbox-dispatch.ts`**\n- Added `home?: string` to `InboxDispatchOptions`.\n- `inboxDispatchCommand` now resolves `home` (default `os.homedir()`) and a single `stderr`.\n- Card session gets `createWaitRecorder(cwd, 'cards', { home, stderr })` + `home`; `--follow` gets `createWaitRecorder(cwd, 'follow', { home, stderr })` + `home`.\n- Printed output reads via `readDispatch(cwd, config, home)`, `--json` via `readDispatchQueue(cwd, config, home)` — both write nothing.\n\n**`tests/inbox-wait-log.test.ts`** (new) — covers all four scenarios: session log shape, follow log shape, printing writes nothing, and first-seen order.\n\n**`tests/inbox-cards.test.ts` / `tests/inbox-follow.test.ts`** — added a per-test temporary home passed to the session/`--follow` command calls.\n\n**Deviation documented in the result file:** one synchronization line (`settle(() => calls.length >= 1)`) in `tests/inbox-follow.test.ts`. The new recorder wiring awaits a filesystem write before `watchDispatch`, exposing a latent race where the fake watcher wasn't created yet when the test fired the debounce timer.\n\n**Verification**\n- `node --import tsx --test tests/inbox-wait-log.test.ts` — 4/4 pass\n- `pnpm verify` — typechecks, build, full test suite, and lint all pass"}}
+{"type":"tokens","timestamp":"2026-09-27T11:54:26.978Z","data":{"promptTokens":214,"candidateTokens":413,"totalTokens":72307,"cachedTokens":71680,"reasoningTokens":63,"cost":0.00098988,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-27T11:54:26.996Z","data":{"exitCode":0,"pid":98051,"timedOut":false,"elapsedSeconds":234.4}}
+{"type":"verify_ran","timestamp":"2026-09-27T11:54:27.480Z","data":{"command":"node --import tsx --test tests/inbox-wait-log.test.ts","exitCode":0,"duration":0.34,"output":"▶ inboxDispatchCommand wait log wiring\n  ✔ Session writes the log (88.796455ms)\n  ✔ Follow writes the log (24.594847ms)\n  ✔ Printing writes nothing (23.383065ms)\n  ✔ Printed order uses first seen (20.005811ms)\n✔ inboxDispatchCommand wait log wiring (157.702749ms)\nℹ tests 4\nℹ suites 1\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 320.985106\n"}}
+{"type":"measures","timestamp":"2026-09-27T11:55:14.202Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":928,"repoFiles":1726,"repoLines":193532,"importFanIn":1,"proposalWords":1001,"taskWords":170,"deltaRequirements":9,"deltaScenarios":45,"changedFiles":4,"changedLines":328,"scopeHashes":{"src/cli/inbox-dispatch.ts":{"before":"sha256:841abc044e32f4fd5055584d695fde5b20a6a26b5e7ef0186f2623653eb5f834","after":"sha256:91f2ec1f3e89851dec0aa02ce3b94c753600e736b616c7239e3c8a713f827070"},"tests/inbox-cards.test.ts":{"before":"sha256:14e3d8ad54b56c34dcab6afadc664850026eb086c34dd03bb029bd49c5dd687b","after":"sha256:34ab21d5fd49265cb33cddaca439217eee374ef005593aeac9372518c4216e1d"},"tests/inbox-follow.test.ts":{"before":"sha256:da964b42abe44967811d426582c2971db6584b1301199a319a0654bb3b7491ae","after":"sha256:1128d5d1bccb4291dbce21273066b329ffa6e0f809d4e9f40564c3e5ae61362f"},"tests/inbox-wait-log.test.ts":{"before":null,"after":"sha256:eb327332ba6f86642d7350ba45a2659f0028bc58d4dcbe00df8a27379ceff8dd"}}}}
+{"type":"done","timestamp":"2026-09-27T11:55:14.206Z","data":{"task":"4"}}
+{"type":"verify_ran","timestamp":"2026-09-27T12:04:00.389Z","data":{"command":"node --import tsx --test tests/inbox-wait-log.test.ts","exitCode":0,"duration":0.37,"output":"▶ inboxDispatchCommand wait log wiring\n  ✔ Session writes the log (91.918171ms)\n  ✔ Follow writes the log (26.475984ms)\n  ✔ Printing writes nothing (22.867239ms)\n  ✔ Printed order uses first seen (19.421748ms)\n✔ inboxDispatchCommand wait log wiring (161.610591ms)\nℹ tests 4\nℹ suites 1\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 339.663126\n"}}

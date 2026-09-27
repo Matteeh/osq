@@ -630,6 +630,14 @@ watcher does makes a sound. The optional `inbox` block tunes it:
   re-derivation.
 - `inbox.pollSeconds`: `30`, how often the safety-net poll re-derives the queue.
 
+The card session and `osq inbox --follow` append to a per-project wait log
+under `~/.osq/inbox/`, keyed by the project's real path: when each item was
+first seen, when its card opened, when it went away, and whether the watcher
+had runnable work at each of those moments. An item already waiting when an
+inbox starts, or gone while none ran, is marked as unobserved. The one-shot
+`osq inbox` and `osq inbox --json` write nothing; they only read the log. The
+dispatch order breaks ties by first-seen time before change id.
+
 `--follow` refuses `--json`; it is a text view.
 
 ### Planning
@@ -734,7 +742,13 @@ osq watch -q, --quiet    # suppress info and verbose output
 ```sh
 osq report               # formatted terminal report
 osq report --json        # raw JSON report for scripting and CI pipelines
+osq report --since <date> --until <date>  # limit the Inbox waiting section's period
 ```
+
+`osq report`'s `Inbox waiting` section shows, for its period, how long each
+approval, halt, land, and verify item waited, the time the watcher sat idle on
+a human's item, and how many items each card session handled; `--since` and
+`--until` choose that period.
 
 `osq report` renders completion rate, failures by reason, execution durations, token usage, and file changes. The `Planning by change` section shows each change's sessions, tokens by kind, cost, active minutes, spec words, changed lines, and spec words per changed line, plus the minutes from its last planning edit to approval; active minutes sum the gaps between a slice's turns and leave out any gap longer than `planning.idleGapMinutes`. The `Planning vs execution` section compares planning and executor tokens and cost. Reported cost sums the `cost` values carried by harness events, and any cost that no attempt or session reported reads `not reported` instead of a dollar amount. Reported cost reflects the harness's internal price table rather than the invoice. The `Approval flags` section counts, per flag and for changes that recorded none, how many changes fired it and how many later had trouble (a dead task or a regression), split by whether the flags were only shown or confirmed with `--confirm`; it counts only changes approved after this release, because older manifests carry no recorded flags and are skipped. The `Automatic retries` section counts automatic and manual retries, how many of the attempts they opened reached done, the `stuck` events, and the harness-reported cost of those attempts.
 

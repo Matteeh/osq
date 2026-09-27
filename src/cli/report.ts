@@ -10,6 +10,12 @@ export interface ReportCommandOptions {
   stdout?: (msg: string) => void;
   config?: OsqConfig;
   json?: boolean;
+  /** Home holding the per-project wait log; defaults to the real home. */
+  home?: string;
+  /** Raw `--since` value for the `Inbox waiting` section. */
+  since?: string;
+  /** Raw `--until` value for the `Inbox waiting` section. */
+  until?: string;
 }
 
 /** Recursively sorts object keys so serialized output is deterministic on every platform. */
@@ -30,6 +36,33 @@ function sortKeysDeep(value: unknown): unknown {
 
 export function serializeSortedJson(data: unknown): string {
   return JSON.stringify(sortKeysDeep(data), null, 2);
+}
+
+/** One `--since`/`--until` bound, or null when the flag was not given. */
+function parseReportBound(
+  value: string | null | undefined,
+  flag: '--since' | '--until',
+): Date | null {
+  if (value === null || value === undefined) return null;
+  const ms = Date.parse(value);
+  if (Number.isNaN(ms)) throw new Error(`${flag} is not a date: ${value}`);
+  return new Date(ms);
+}
+
+/**
+ * Parses the `Inbox waiting` period. Each given value is read with
+ * `Date.parse`; two bounds must be ordered. Both null means unbounded.
+ */
+export function parseReportPeriod(
+  since?: string | null,
+  until?: string | null,
+): { since: Date | null; until: Date | null } {
+  const sinceDate = parseReportBound(since, '--since');
+  const untilDate = parseReportBound(until, '--until');
+  if (sinceDate !== null && untilDate !== null && sinceDate.getTime() >= untilDate.getTime()) {
+    throw new Error('--since must be before --until');
+  }
+  return { since: sinceDate, until: untilDate };
 }
 
 /**
@@ -270,6 +303,7 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
           })),
         }
       : {}),
+    ...(report.inboxWait ? { inboxWait: report.inboxWait } : {}),
     tokens: {
       input: report.tokens.input,
       cached_input: report.tokens.cached_input,
@@ -286,7 +320,12 @@ export async function reportCommand(options: ReportCommandOptions = {}): Promise
   const config = options.config || (await loadConfig(cwd));
 
   try {
-    const report = await getMetricsReport(cwd, config);
+    const period = parseReportPeriod(options.since, options.until);
+    const report = await getMetricsReport(cwd, config, {
+      home: options.home,
+      since: period.since,
+      until: period.until,
+    });
     const output = options.json
       ? serializeSortedJson(toStableMetrics(report))
       : formatMetricsReport(report, config);

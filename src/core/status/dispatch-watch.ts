@@ -1,3 +1,4 @@
+import os from 'node:os';
 import { DEFAULT_INBOX_CONFIG, type InboxConfig } from '../foundation/config-inbox.js';
 import type { OsqConfig } from '../foundation/config.js';
 import {
@@ -11,6 +12,7 @@ import { treeWatchPaths } from '../web/web-trees.js';
 import { type ChangeTree, changeTrees } from './change-locations.js';
 import { readDispatchItems } from './dispatch-items.js';
 import { type OrderedDispatchItem, orderDispatchItems } from './dispatch-order.js';
+import { firstSeenTimes, readWaitLog } from './wait-log.js';
 
 /** Creates a repeating timer and returns a handle that cancels it. */
 export type EveryFn = (callback: () => void, delayMs: number) => { cancel(): void };
@@ -26,10 +28,11 @@ export interface WatchDispatchOptions {
   readonly schedule?: ScheduleFn;
   readonly every?: EveryFn;
   readonly trees?: TreesFn;
+  readonly home?: string;
 }
 
-/** Called with each derivation's ordered items and the time it started. */
-export type OnItems = (items: readonly OrderedDispatchItem[], at: Date) => void;
+/** Called with each derivation's ordered items, the time it started, and idleness. */
+export type OnItems = (items: readonly OrderedDispatchItem[], at: Date, idle: boolean) => void;
 
 /** A running dispatch watch; `close` stops it and releases its resources. */
 export interface DispatchWatch {
@@ -45,6 +48,7 @@ interface WatchContext {
   readonly clock: () => Date;
   readonly every: EveryFn;
   readonly trees: TreesFn;
+  readonly home: string;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
 }
@@ -87,6 +91,7 @@ function watchContext(
     clock: options.now ?? (() => new Date()),
     every: options.every ?? defaultEvery,
     trees: options.trees ?? changeTrees,
+    home: options.home ?? os.homedir(),
     ...(options.watch ? { watch: options.watch } : {}),
     ...(options.schedule ? { schedule: options.schedule } : {}),
   };
@@ -96,9 +101,11 @@ function watchContext(
 async function deriveOnce(state: WatchState, ctx: WatchContext, onItems: OnItems): Promise<void> {
   const at = ctx.clock();
   const dispatch = await readDispatchItems(ctx.projectRoot, ctx.config);
-  const items = await orderDispatchItems(ctx.projectRoot, ctx.config, dispatch);
+  const records = await readWaitLog(ctx.projectRoot, ctx.home);
+  const firstSeen = records === null ? new Map<string, Date>() : firstSeenTimes(records);
+  const items = await orderDispatchItems(ctx.projectRoot, ctx.config, dispatch, firstSeen);
   if (state.closed) return;
-  onItems(items, at);
+  onItems(items, at, dispatch.watcherIdle);
 }
 
 /** Watch `trees` with a fresh hub, replacing the current subscription. */

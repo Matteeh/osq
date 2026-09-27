@@ -49,6 +49,12 @@ import {
   parseTokenEvent,
 } from './report-events.js';
 import {
+  type InboxWaitOptions,
+  type InboxWaitReport,
+  collectInboxWait,
+  formatInboxWait,
+} from './report-inbox-wait.js';
+import {
   type CapabilityMutationScore,
   collectMutationScores,
   formatMutation,
@@ -286,6 +292,11 @@ export interface MetricsReport {
    * measured event names an opted-in capability, so the report is unchanged.
    */
   readonly mutation?: readonly CapabilityMutationScore[];
+  /**
+   * Inbox waiting summary from the per-project wait log. Absent when no log
+   * exists, so the report is unchanged for a project that never ran an inbox.
+   */
+  readonly inboxWait?: InboxWaitReport;
 }
 
 /** Aggregate planning usage derived only from `.run/plan.jsonl` lifecycle pairs. */
@@ -829,6 +840,7 @@ function aggregatePhase(
 export async function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
+  options: InboxWaitOptions = {},
 ): Promise<MetricsReport> {
   const [tree] = await changeTrees(projectRoot, config);
   let specsDir = tree.changesDir;
@@ -1340,6 +1352,7 @@ export async function getMetricsReport(
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
   const traceability = await collectTraceabilityGaps(projectRoot, config);
   const mutation = await collectMutationScores(allSpecFolders, config);
+  const inboxWait = await collectInboxWait(projectRoot, options);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
   const sizes: SizeMetrics = {
@@ -1486,6 +1499,7 @@ export async function getMetricsReport(
     queue,
     ...(traceability ? { traceability } : {}),
     ...(mutation ? { mutation } : {}),
+    ...(inboxWait ? { inboxWait } : {}),
   };
 }
 
@@ -1825,6 +1839,11 @@ export function formatMetricsReport(
   if (report.mutation) {
     lines.push('');
     lines.push(...formatMutation(report.mutation));
+  }
+
+  if (report.inboxWait) {
+    lines.push('');
+    lines.push(...formatInboxWait(report.inboxWait));
   }
 
   lines.push('');

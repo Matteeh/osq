@@ -23,13 +23,16 @@ const CHANGES = path.join('openspec', 'changes');
 const AT = new Date(2026, 0, 1, 9, 30);
 
 let tmpDir: string;
+let home: string;
 
 beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-inbox-follow-'));
+  home = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-inbox-follow-home-'));
 });
 
 afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true });
 });
 
 function proposalMd(title: string, goal: string, dependsOn: readonly string[] = []): string {
@@ -502,6 +505,7 @@ describe('inboxDispatchCommand follow', () => {
       cwd: tmpDir,
       config,
       follow: true,
+      home,
       stdout: out.write,
       now: () => AT,
       sound,
@@ -511,6 +515,7 @@ describe('inboxDispatchCommand follow', () => {
       every: every.every,
     });
     await settle(() => out.text().includes('Waiting for new items (Ctrl-C to stop).'));
+    await settle(() => calls.length >= 1);
 
     await writeDead(work);
     calls[calls.length - 1]?.watcher.emit('add', deadMarkerPath(work));

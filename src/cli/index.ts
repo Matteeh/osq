@@ -194,7 +194,9 @@ export function createProgram(version?: string): Command {
     .command('report')
     .description('display delivery metrics and task completion report')
     .option('--json', 'output report as raw JSON')
-    .action(async (options: { json?: boolean }) => {
+    .option('--since <date>', 'start of the Inbox waiting period')
+    .option('--until <date>', 'end of the Inbox waiting period')
+    .action(async (options: { json?: boolean; since?: string; until?: string }) => {
       await reportCommand(options);
     });
 
