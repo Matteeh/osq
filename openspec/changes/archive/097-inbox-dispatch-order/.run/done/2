@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b4d026f97143373c900666006c2736943142b71ff9aee3aafcc5f0d371fcb9a9"
+build_stamp: "8907336"
+project_commit: "8907336"
+exit_code: 0
+scope_files: {"src/core/status/dispatch-order.ts":"sha256:6456bbae75f343020b43725e5e2721c9d03523470d2a5355b1f6aa9eea3b09f4","tests/dispatch-order.test.ts":"sha256:8ebbc19c7c46edb89180bcce77746046624bd161c6e038d5fe2e95c1c924d601"}
+---
+2026-09-27T07:34:03.632Z

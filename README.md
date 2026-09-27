@@ -526,6 +526,8 @@ As with every harness, scope is a protocol, not confinement beyond what the harn
 ```
 osq                      human attention inbox: needs you, running, landed since last look
 osq --json               print human attention inbox as stable JSON
+osq inbox                what needs a human, in dispatch order, with the first item's card
+osq inbox --json         the dispatch queue and every item's card data as JSON
 osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
 osq init --refresh-schema  overwrite the six scaffolded OpenSpec schema files from the installed templates
 osq setup                write harness config for OSQ_HARNESS
@@ -578,6 +580,14 @@ Running bare `osq` serves as the entrypoint for human attention:
 - **Landed since last look**: changes archived strictly after your project's previous look (tracked per project in `~/.osq/last-look/`), or the newest 10 on first look.
 
 Use `osq --json` to consume this contract programmatically without extra terminal formatting.
+
+`osq inbox` is the dispatcher view: it lists the items that need a human — an
+unapproved change ready for approval, a dead or regressed task, a change-level
+regression, an archived change waiting to land, and a pending verification —
+then prints the first item's card with its reason, evidence, and exact commands.
+It orders the queue by taking approval and halt items first while the watcher is
+idle, then the item that holds up the most changes, then the lower change id and
+task number. `osq inbox --json` carries every item's card data.
 
 ### Planning
 

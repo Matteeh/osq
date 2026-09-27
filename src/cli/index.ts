@@ -4,6 +4,7 @@ import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
+import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
@@ -221,6 +222,7 @@ export function createProgram(version?: string): Command {
     });
 
   registerApproveCommand(program);
+  registerInboxDispatchCommand(program);
   registerMessageCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);

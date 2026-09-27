@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskList } from '../spec/parser.js';
 import { awaitedDependencies } from '../spec/stack-dependencies.js';
-import { type LocatedChange, listChanges } from '../status/change-locations.js';
+import { type LocatedChange, listChanges, matchesFolder } from '../status/change-locations.js';
 import { getChangeRunDir, getDoneMarkerPath } from '../status/layout.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs } from '../vcs/vcs.js';
@@ -26,19 +26,6 @@ function subjectParts(folder: string): { id: string; words: string } {
   return { id, words: rest.replace(/-/g, ' ') };
 }
 
-/** Whether a folder name matches a query as `findChange` matches ids. */
-function matchesFolder(folderName: string, query: string): boolean {
-  const trimmed = query.trim();
-  const num = Number.parseInt(trimmed, 10);
-  const padded = !Number.isNaN(num) ? String(num).padStart(3, '0') : trimmed;
-  return (
-    folderName === trimmed ||
-    folderName === padded ||
-    folderName.startsWith(`${trimmed}-`) ||
-    folderName.startsWith(`${padded}-`)
-  );
-}
-
 /** A file's trimmed contents, or null when absent or blank. */
 async function readTrimmed(target: string): Promise<string | null> {
   const content = await fs.readFile(target, 'utf8').catch(() => null);
@@ -48,7 +35,11 @@ async function readTrimmed(target: string): Promise<string | null> {
 }
 
 /** One `[verified]`/`[manual] task <n>: <title>` line for a tasks.md entry. */
-async function outcomeLine(folderPath: string, taskNumber: number, title: string): Promise<string> {
+export async function outcomeLine(
+  folderPath: string,
+  taskNumber: number,
+  title: string,
+): Promise<string> {
   const marker = await fs
     .readFile(getDoneMarkerPath(folderPath, String(taskNumber)), 'utf8')
     .catch(() => '');

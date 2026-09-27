@@ -44,6 +44,8 @@ export interface OsqLimits {
   readonly maxRuleLength: number;
   /** The most system-wide rules the AGENTS.md block may hold. */
   readonly maxProjectRules: number;
+  /** The most marker lines a dispatch halt card shows. */
+  readonly cardOutputLines: number;
 }
 
 export interface OsqPaths {
@@ -125,6 +127,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxListedImporters: 8,
     maxRuleLength: 160,
     maxProjectRules: 10,
+    cardOutputLines: 20,
   },
   paths: {
     features: 'openspec/specs',
