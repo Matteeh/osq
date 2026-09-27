@@ -70,10 +70,24 @@ function readHeading(raw: string): HeadingMatch | null {
   return { key, inline: '' };
 }
 
-/** Section text that is empty or only `None`, any case and optional period, is absent. */
+/** A leading list marker: `-`, `*`, `+`, or a number and `.`, with trailing spaces. */
+const LIST_MARKER = /^\s*(?:[-*+]|\d+\.)\s*/;
+/** `None`, alone or followed straight away by `.`, `;`, `,`, or `:` and any text. */
+const ONLY_NONE = /^none(?:[.;,:].*)?$/i;
+
+/**
+ * Section text that is empty, or whose only non-blank line reduces to `None`
+ * once a leading list marker and every `*` and `_` are set aside, is absent.
+ * Any other text is returned trimmed and unchanged.
+ */
 function cleanSection(text: string): string | null {
   const trimmed = text.trim();
-  if (trimmed.length === 0 || /^none\.?$/i.test(trimmed)) return null;
+  if (trimmed.length === 0) return null;
+  const lines = trimmed.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  if (lines.length === 1) {
+    const line = (lines[0] ?? '').replace(LIST_MARKER, '').replace(/[*_]/g, '').trim();
+    if (ONLY_NONE.test(line)) return null;
+  }
   return trimmed;
 }
 
