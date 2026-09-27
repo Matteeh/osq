@@ -9,7 +9,7 @@ import {
 } from '../report/planning-observed.js';
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
-import { findChange } from '../status/change-locations.js';
+import { changeTrees, findChange } from '../status/change-locations.js';
 import { selectVcs } from '../vcs/select.js';
 import {
   type ApprovalReviewOptions,
@@ -75,6 +75,10 @@ export interface ApproveResult {
   worktreePath?: string;
   /** For a worktree approval, the branch the commit landed on. */
   branch?: string;
+  /** For a stacked approval, the directory that holds it. */
+  stackedPath?: string;
+  /** For a stacked approval, the awaited dependency folder names, in order. */
+  waitingFor?: string[];
 }
 
 export interface ApproveOptions extends ApprovalReviewOptions {
@@ -150,9 +154,19 @@ export async function approveSpec(
   options: ApproveOptions = {},
 ): Promise<ApproveResult> {
   const change = await findChange(projectRoot, config, specIdOrPrefix);
-  const folderPath = change.folderPath;
-  const specsDir = change.tree.changesDir;
-  const folderName = path.basename(folderPath);
+  let folderPath = change.folderPath;
+  let specsDir = change.tree.changesDir;
+  if (change.tree.stackedFolder !== undefined) {
+    // The stacked copy holds the approved seal; approve the checkout's draft.
+    const [checkout] = await changeTrees(projectRoot, config);
+    folderPath = path.join(checkout.changesDir, change.folderName);
+    specsDir = checkout.changesDir;
+    const stat = await fs.stat(folderPath).catch(() => null);
+    if (!stat?.isDirectory()) {
+      throw new Error(`Spec "${specIdOrPrefix}" not found in ${checkout.changesDir}`);
+    }
+  }
+  const folderName = change.folderName;
   const specId = folderName.match(/^(\d+)/)?.[1] || folderName;
 
   const lintResult = await lintChangeFolder(projectRoot, folderPath, config);

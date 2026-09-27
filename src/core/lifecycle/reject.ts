@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
-import { findChange } from '../status/change-locations.js';
+import { type ChangeTree, findChange } from '../status/change-locations.js';
 import { getChangeRunDir } from '../status/layout.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
+import { worktreeBranch } from '../vcs/worktree.js';
+import { type WorktreeRejection, commitRejectedWorktree } from './reject-vcs.js';
 
 /**
  * Explicit rejection transition. An eligible active change is moved intact into
@@ -19,6 +21,12 @@ export interface RejectResult {
   readonly destinationPath: string;
   readonly reason: string;
   readonly timestamp: string;
+  /** The worktree outcome when a worktree change was rejected. */
+  readonly worktree?: WorktreeRejection;
+  /** The branch a rejected worktree change keeps. */
+  readonly branch?: string;
+  /** The stacked approval directory a stacked change withdrew. */
+  readonly stackedPath?: string;
 }
 
 async function pathExists(target: string): Promise<boolean> {
@@ -61,6 +69,52 @@ async function writeRejectedMarker(
 }
 
 /**
+ * Refuse a running task, and an approved change that is not dead or regressed,
+ * before the first mutation. Reads markers directly so state precedence cannot
+ * hide a live lock or read a historical suffixed marker as active.
+ */
+async function assertRejectable(
+  tree: ChangeTree,
+  sourcePath: string,
+  folderName: string,
+): Promise<void> {
+  const snapshot = await readChangeFolder(tree.root, sourcePath);
+  if (snapshot.runningPids.size > 0) {
+    throw new Error(`Change ${folderName} has a running task; rejection is refused.`);
+  }
+  if (snapshot.approvedHash) {
+    const state = deriveSpecState(snapshot);
+    if (state.status !== 'dead' && state.status !== 'regressed') {
+      throw new Error(
+        `Change ${folderName} is approved and healthy; only a failed change may be rejected.`,
+      );
+    }
+  }
+}
+
+/** Commit a rejected worktree's move and remove the clean worktree, keeping its branch. */
+async function finalizeRejectedWorktree(
+  tree: ChangeTree,
+  config: OsqConfig,
+  specId: string,
+  folderName: string,
+  sourcePath: string,
+  destinationPath: string,
+  reason: string,
+): Promise<Pick<RejectResult, 'worktree' | 'branch'>> {
+  if (config.vcs?.enabled !== true) return {};
+  const outcome = await commitRejectedWorktree(
+    tree,
+    config,
+    specId,
+    sourcePath,
+    destinationPath,
+    reason,
+  );
+  return outcome === null ? {} : { worktree: outcome, branch: worktreeBranch(folderName) };
+}
+
+/**
  * Move an eligible active change into rejected history.
  *
  * An unapproved active change is eligible. An approved change is eligible only
@@ -86,40 +140,22 @@ export async function rejectSpec(
   const { folderPath: sourcePath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
   const folderName = path.basename(sourcePath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
+  const stacked = tree.stackedFolder !== undefined;
+  const worktree = tree.worktreeFolder !== undefined;
 
   const rejectedDir = tree.rejectedDir;
   const destinationPath = path.join(rejectedDir, folderName);
-  if (await pathExists(destinationPath)) {
+  if (!stacked && (await pathExists(destinationPath))) {
     throw new Error(
       `Cannot reject ${folderName}: destination "${path.relative(tree.root, destinationPath) || destinationPath}" already exists.`,
     );
   }
 
-  // Read running markers and approval directly so no state-precedence result
-  // can hide a live lock, and so a historical suffixed marker never reads as an
-  // active failure.
-  const snapshot = await readChangeFolder(tree.root, sourcePath);
-  if (snapshot.runningPids.size > 0) {
-    throw new Error(`Change ${folderName} has a running task; rejection is refused.`);
-  }
-  if (snapshot.approvedHash) {
-    const state = deriveSpecState(snapshot);
-    if (state.status !== 'dead' && state.status !== 'regressed') {
-      throw new Error(
-        `Change ${folderName} is approved and healthy; only a failed change may be rejected.`,
-      );
-    }
-  }
+  await assertRejectable(tree, sourcePath, folderName);
 
   // One ISO timestamp is shared by the marker and the event.
   const timestamp = new Date().toISOString();
-  await fs.mkdir(rejectedDir, { recursive: true });
-  await fs.rename(sourcePath, destinationPath);
-
-  await writeRejectedMarker(destinationPath, trimmedReason, timestamp);
-  await appendRejectedEvent(destinationPath, trimmedReason, timestamp);
-
-  return {
+  const base = {
     specId,
     folderName,
     sourcePath,
@@ -127,4 +163,31 @@ export async function rejectSpec(
     reason: trimmedReason,
     timestamp,
   };
+
+  // A stacked change has no branch and no worktree: withdraw the stacked
+  // approval, move nothing, and write no rejection record.
+  if (stacked) {
+    await fs.rm(tree.root, { recursive: true, force: true });
+    return { ...base, stackedPath: tree.root };
+  }
+
+  await fs.mkdir(rejectedDir, { recursive: true });
+  await fs.rename(sourcePath, destinationPath);
+
+  await writeRejectedMarker(destinationPath, trimmedReason, timestamp);
+  await appendRejectedEvent(destinationPath, trimmedReason, timestamp);
+
+  const outcome = worktree
+    ? await finalizeRejectedWorktree(
+        tree,
+        config,
+        specId,
+        folderName,
+        sourcePath,
+        destinationPath,
+        trimmedReason,
+      )
+    : {};
+
+  return { ...base, ...outcome };
 }

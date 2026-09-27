@@ -581,17 +581,26 @@ unchanged.
 - **THEN** `osq show` prints `      Mutation: src/pricing/quote.ts#quote 18 of 19 killed` and `        Survived: src/pricing/quote.ts:36:19 ConditionalExpression -> false` under task 1
 
 ### Requirement: Change locations
-<!-- source: src/core/status/change-locations.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts -->
+<!-- source: src/core/status/change-locations.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts, tests/change-locations-stacked.test.ts, tests/change-locations-holds.test.ts -->
 `src/core/status/change-locations.ts` SHALL be the one place that lists the
 trees changes live in and the change folders in them. `changeTrees` SHALL
 return each tree with its root and its changes, archive, and rejected
 directories. The first tree SHALL be the project root. With `vcs.enabled` and
 `GitVcs` selected, one tree SHALL follow for each worktree from `worktreeList`
-whose branch starts with `osq/` and whose path is not the project root, and
-that tree SHALL carry `worktreeFolder`, the branch name without `osq/`.
-Otherwise the project root SHALL be the only tree. A worktree tree SHALL
-contribute only the change folder its `worktreeFolder` names, and the project
-root SHALL NOT report an active folder that a worktree tree names.
+whose branch starts with `osq/`, whose path is not the project root, and
+which holds its change, and that tree SHALL carry `worktreeFolder`, the
+branch name without `osq/`. A worktree holds its change `<folder>` when its
+changes directory holds `<folder>/.run/approved`, or its archive or rejected
+directory holds `<folder>`. A worktree that does not hold its change SHALL
+get no tree, and SHALL hide neither the checkout's copy of the folder nor a
+stacked tree of it. After
+them, one tree SHALL follow for each directory directly under the stacked
+approval directory `<vcs.worktreeRoot>/<repo>/.stacked/`, rooted at that
+directory and carrying `stackedFolder`, the directory's name, unless a
+worktree tree already names that folder. Otherwise the project root SHALL be
+the only tree. A worktree or stacked tree SHALL contribute only the change
+folder its `worktreeFolder` or `stackedFolder` names, and the project root
+SHALL NOT report an active folder that a worktree or stacked tree names.
 `listChanges` SHALL return directories only, active first, then archived, then
 rejected, each in numeric prefix order. An active folder SHALL pass
 `isActiveChangeFolderName`, and an archived or rejected one SHALL NOT start
@@ -630,6 +639,30 @@ root, for display.
 #### Scenario: Worktree of another branch
 - **WHEN** `vcs.enabled` is on and a worktree is on a branch not starting with `osq/`
 - **THEN** `changeTrees` returns no tree for it
+
+#### Scenario: Stacked change
+- **WHEN** `vcs.enabled` is on, the checkout has active `002-b`, and `<vcs.worktreeRoot>/<repo>/.stacked/002-b` holds active `002-b` with `.run/approved`
+- **THEN** `changeTrees` ends with a tree rooted at that directory whose `stackedFolder` is `002-b` and which has no `worktreeFolder`, and `listChanges` and `findChange` for `2` return `002-b` from that tree only
+
+#### Scenario: Stacked folder with a worktree
+- **WHEN** a stacked directory `002-b` exists and a worktree on `osq/002-b` holds `002-b` with `.run/approved`
+- **THEN** `changeTrees` returns no stacked tree for `002-b`, and `listChanges` returns `002-b` from the worktree only
+
+#### Scenario: Worktree without its change
+- **WHEN** a stacked directory `002-b` exists and a worktree on `osq/002-b` holds no `002-b` in its changes, archive, or rejected directory
+- **THEN** `changeTrees` returns no tree for that worktree and ends with the stacked tree for `002-b`, and `findChange` for `2` returns `002-b` from the stacked tree
+
+#### Scenario: Worktree with an unapproved copy
+- **WHEN** a worktree on `osq/002-b` holds `002-b` in its changes directory without `.run/approved`, and the checkout has active `002-b`
+- **THEN** `changeTrees` returns no tree for that worktree, and `listChanges` returns `002-b` from the checkout
+
+#### Scenario: Archived or rejected in its worktree
+- **WHEN** a worktree on `osq/001-a` holds `001-a` only in its archive directory, and another on `osq/003-c` holds `003-c` only in its rejected directory
+- **THEN** `changeTrees` returns a tree for each, and `listChanges` returns `001-a` as archived and `003-c` as rejected from those trees
+
+#### Scenario: Stacked directory with the flag off
+- **WHEN** `vcs.enabled` is off and a stacked directory exists
+- **THEN** `changeTrees` returns exactly one tree
 
 ### Requirement: Change location readers
 <!-- source: tests/change-locations-readers.test.ts -->
@@ -672,3 +705,178 @@ A checkout copy that matches, or is missing, SHALL print no warning.
 #### Scenario: Task running in the worktree
 - **WHEN** a task of a change in a worktree holds a live lock in `.run/running/`
 - **THEN** status prints the running-task warning directly below the worktree line, and prints no such warning once the lock is gone
+
+### Requirement: Leftover draft in status
+<!-- source: src/core/status/leftover-drafts.ts, src/core/status/status.ts, tests/status-leftover.test.ts -->
+With `vcs.enabled` and `GitVcs` selected, a folder directly in the project
+root's changes directory, from the first `changeTrees` tree, that passes
+`isActiveChangeFolderName` SHALL be a leftover draft when the default branch
+holds `<archive>/<folder>/.run/approved` and the folder's `hashChangeFolder`
+hash equals that file's trimmed contents. `<archive>` is the first tree's
+archive directory relative to its root. `getStatusOverview` SHALL leave a
+leftover draft out of `specs` and SHALL list it in `leftovers`, with its
+folder name and its path relative to the project root. When `leftovers` is
+not empty, `osq status` SHALL print, after the pending verifications and
+before `Archived specs:`, the line `Leftover drafts:`, then one line
+`  <folder>: landed; remove the checkout copy with rm -r <path>` per
+leftover in folder order, then a blank line. A copy whose hash differs from
+the landed approved hash SHALL NOT be a leftover. With `vcs.enabled` off or
+under `NoVcs`, there SHALL be no leftovers and no git read.
+
+#### Scenario: Leftover after a hand landing
+- **WHEN** a change approved into a worktree has archived, the checkout ran `git merge --squash osq/<folder>` and `git commit`, and the checkout's copy of the folder is untouched
+- **THEN** `osq status` prints `Leftover drafts:` and `  <folder>: landed; remove the checkout copy with rm -r openspec/changes/<folder>`, and does not list the folder under `Active specs:`
+
+#### Scenario: Leftover after the worktree is removed
+- **WHEN** the same landing is followed by `git worktree remove` of the change's worktree
+- **THEN** status still prints the leftover line and still leaves the folder out of `Active specs:`
+
+#### Scenario: Edited copy is not a leftover
+- **WHEN** the checkout's copy was edited after approval and the change landed
+- **THEN** status prints no `Leftover drafts:` section
+
+#### Scenario: Not landed yet
+- **WHEN** the change has archived on its branch and the default branch does not hold its archive
+- **THEN** status prints no `Leftover drafts:` section
+
+#### Scenario: Removing it clears the flag
+- **WHEN** the printed `rm -r` command has run
+- **THEN** status prints no `Leftover drafts:` section
+
+### Requirement: Dispatch items
+<!-- source: src/core/status/dispatch-items.ts, src/core/status/dispatch-land.ts, tests/dispatch-items.test.ts -->
+`readDispatchItems(projectRoot, config)` SHALL derive, on every call and
+without writing anything, the items that need a human, and a
+`watcherIdle` flag. It SHALL read active changes, their next steps, and
+pending verifications from `getStatusOverview`. Each item SHALL carry its
+kind, the change's id, folder name, title, and folder path, the task number
+and title when there is one, and the commands osq already has for it. The
+items SHALL be in numeric change order, then task order. The kinds are:
+
+- `approval`: an active change whose next step is `ready-for-approval`,
+  with commands `osq approve <id>` and `osq show <id>`.
+- `halt`: one per dead or regressed task, with commands
+  `osq retry <id> <n>` and `osq show <id>`; and one per change-level
+  regression, with commands `osq retry <id> change`,
+  `osq reject <id> --reason <text>`, and `osq show <id>`.
+- `land`: with `vcs.enabled` and `GitVcs`, one per change archived in an
+  osq worktree whose `readDependencyState` is `archived`, with commands
+  `git merge --squash osq/<folder> && osq message <id> | git commit -F -`
+  and `osq show <id>`. With `vcs.enabled` off and `GitVcs`, one per folder
+  in the project root's archive directory that `Vcs` status lists as
+  untracked or modified, itself or any path under it, with command
+  `osq show <id>`. Under `NoVcs` there SHALL be no land items.
+- `verify`: one per pending verification, with its next step's command and
+  `osq show <id>`.
+
+`watcherIdle` SHALL be true when no active change's next step is `running`.
+
+#### Scenario: Each kind
+- **WHEN** a project has an unapproved change ready for approval, an approved change with a dead task, and an archived change whose verification is pending
+- **THEN** the items are an `approval`, a `halt` for that task, and a `verify`, each with its commands
+
+#### Scenario: Unplanned draft
+- **WHEN** an unapproved change still has the planning sentinel verify
+- **THEN** it yields no item
+
+#### Scenario: Items follow state
+- **WHEN** the dead task's marker is removed and the approval is written
+- **THEN** the next call has neither the halt nor the approval item
+
+#### Scenario: Change regression
+- **WHEN** an approved change has `.run/regressed/change.md`
+- **THEN** there is one `halt` item with no task and the `osq retry <id> change` command
+
+#### Scenario: Uncommitted archive with the flag off
+- **WHEN** `vcs.enabled` is off, the project is a git repository, and an archived folder is untracked
+- **THEN** there is one `land` item for it, and none once the folder is committed
+
+#### Scenario: Archived on its branch
+- **WHEN** `vcs.enabled` is on and a change has archived in its worktree and not landed
+- **THEN** there is one `land` item for it, and none after `git merge --squash` and a commit put its archive on the default branch
+
+#### Scenario: No git
+- **WHEN** the project is not a git repository
+- **THEN** there are no `land` items
+
+#### Scenario: Watcher idle
+- **WHEN** no approved change has work left, and then an approved change has a pending task
+- **THEN** `watcherIdle` is true first and false second
+
+### Requirement: Dispatch order
+<!-- source: src/core/status/dispatch-order.ts, tests/dispatch-order.test.ts -->
+`orderDispatchItems(projectRoot, config, dispatch)` SHALL return the items
+with a `weight` and a `reason` each, in dispatch order. An item's weight
+SHALL be one plus the number of active changes, in any tree, whose
+`depends_on` reaches the item's change directly or through other active
+changes. Ids SHALL match folders as `matchesFolder` does, and a cycle
+SHALL count each change once. The order SHALL be:
+
+1. When `watcherIdle` is true, `approval` and `halt` items first.
+2. Then higher weight first.
+3. Then lower change id, then lower task number, with a change-level item
+   before its task items.
+
+The reason SHALL join, with `; `, `watcher idle; this gives it work` when
+rule 1 applies to the item and
+`holds up <weight - 1> change` or `holds up <weight - 1> changes` when the
+weight is above one. When neither applies, it SHALL be `in change order`.
+The same files SHALL always give the same order.
+
+#### Scenario: Weight orders
+- **WHEN** an approval item's change has three active changes depending on it, one of them through another, and another approval item's change has none
+- **THEN** the first item has weight 4 and reason `holds up 3 changes` and comes first
+
+#### Scenario: Idle watcher
+- **WHEN** `watcherIdle` is true and there is a heavy `verify` item and a light `halt` item
+- **THEN** the `halt` item comes first with reason `watcher idle; this gives it work`
+
+#### Scenario: Equal items
+- **WHEN** two items have the same kind group and weight
+- **THEN** the lower change id comes first with reason `in change order`
+
+#### Scenario: Dependency cycle
+- **WHEN** two active changes depend on each other
+- **THEN** each has weight 2
+
+### Requirement: Dispatch cards
+<!-- source: src/core/status/dispatch-cards.ts, src/core/run/squash-message.ts, src/core/foundation/config.ts, tests/dispatch-cards.test.ts -->
+`readDispatchCard(projectRoot, config, item)` SHALL return the card data
+for one item:
+
+- `approval`: the approval digest from `buildApprovalDigest`.
+- `halt`: for a task, the task number and title, the dead or regressed
+  reason, the number of `started` events in `.run/events/<n>.jsonl` as the
+  attempt count, the last `limits.cardOutputLines` lines of the marker body,
+  and the path of `.run/dead/<n>.patch` relative to the project root
+  when that file exists. For a change-level regression, the reason and
+  the last `limits.cardOutputLines` lines of `.run/regressed/change.md`'s
+  body.
+- `land`: the proposal's goal, one outcome line per task as
+  `osq message` writes it, and, with `vcs.enabled`, the message
+  `buildSquashMessage` builds, or its refusal message when it refuses.
+- `verify`: the check command when the change has one, the after-landing
+  steps from the proposal, and the verification outcome so far.
+
+The marker lines come from files osq already writes with paths relative
+to the project root, and the card SHALL NOT add an absolute path.
+
+#### Scenario: Approval card
+- **WHEN** the card is read for an approval item
+- **THEN** it holds the digest's goal, capabilities, decisions, and tasks with their scopes
+
+#### Scenario: Halt card
+- **WHEN** a task died with `verify_red` after two attempts and its marker body holds verify output
+- **THEN** the card has attempt count 2, reason `verify_red`, the last lines of that output, and no string that contains the project root
+
+#### Scenario: Halt card with a patch
+- **WHEN** the dead task's change left `.run/dead/<n>.patch`
+- **THEN** the card names that patch by its relative path
+
+#### Scenario: Land card
+- **WHEN** a change archived in its worktree with `vcs.enabled`
+- **THEN** the card holds the goal, one outcome line per task, and the squash message with `Osq-Change` among its trailers
+
+#### Scenario: Verify card
+- **WHEN** an archived change has a `check` command and after-landing steps
+- **THEN** the card holds the check command and the steps

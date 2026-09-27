@@ -51,6 +51,10 @@ export class NoVcs implements Vcs {
     return null;
   }
 
+  async pathExists(_ref: string, _path: string): Promise<boolean> {
+    return false;
+  }
+
   async listBranches(_prefix: string): Promise<string[]> {
     return [];
   }

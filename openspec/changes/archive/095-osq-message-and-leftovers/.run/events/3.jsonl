@@ -1,0 +1,107 @@
+{"type":"verify_ran","timestamp":"2026-09-26T22:14:14.187Z","data":{"command":"node --import tsx --test tests/status-leftover.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/status-leftover.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/status-leftover.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-26T22:14:14.716Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":965,"repoFiles":1646,"repoLines":182259,"importFanIn":4,"proposalWords":997,"taskWords":302,"deltaRequirements":4,"deltaScenarios":23}}
+{"type":"started","timestamp":"2026-09-26T22:14:14.904Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.1","attempt":1,"projectCommit":"901d9e4","pid":21971,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.1","commit":"5a2bee7"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:16.407Z","data":{"promptTokens":2622,"candidateTokens":254,"totalTokens":6076,"cachedTokens":3200,"reasoningTokens":16,"cost":0.0011106,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:16.408Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:16.409Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/proposal.md"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:16.409Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/.run/results/"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:17.883Z","data":{"promptTokens":2483,"candidateTokens":308,"totalTokens":8807,"cachedTokens":6016,"reasoningTokens":15,"cost":0.001150596,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:17.883Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/specs/status-"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:17.884Z","data":{"tool":"read","summary":"openspec/specs/status-inspection/spec.md"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:17.884Z","data":{"tool":"read","summary":"src/core/status/status.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:17.885Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:19.376Z","data":{"promptTokens":14933,"candidateTokens":289,"totalTokens":23926,"cachedTokens":8704,"reasoningTokens":19,"cost":0.004878924,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:19.377Z","data":{"tool":"read","summary":"src/core/spec/hasher.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:19.378Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:19.378Z","data":{"tool":"read","summary":"tests/status-worktree.test.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:19.379Z","data":{"tool":"read","summary":"tests/worktree-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:22.166Z","data":{"promptTokens":9033,"candidateTokens":540,"totalTokens":33381,"cachedTokens":23808,"reasoningTokens":241,"cost":0.0035007479999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:22.167Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/specs/cli-fou"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:22.167Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/specs/watcher"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:22.168Z","data":{"tool":"read","summary":"README.md"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:22.169Z","data":{"tool":"read","summary":"src/cli/status.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:23.962Z","data":{"promptTokens":14564,"candidateTokens":339,"totalTokens":48183,"cachedTokens":33280,"reasoningTokens":65,"cost":0.00497568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:23.963Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:23.963Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:23.964Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:23.965Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:33.005Z","data":{"promptTokens":5447,"candidateTokens":1983,"totalTokens":55558,"cachedTokens":48128,"reasoningTokens":1787,"cost":0.004302468,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:33.005Z","data":{"tool":"bash","summary":"ls -la openspec/changes/095-osq-message-and-leftovers/ opens"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:33.006Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:35.276Z","data":{"promptTokens":841,"candidateTokens":338,"totalTokens":56731,"cachedTokens":55552,"reasoningTokens":104,"cost":0.000991212,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:35.277Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/.run/results/"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:35.278Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/.run/results/"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:35.278Z","data":{"tool":"read","summary":"src/core/run/squash-message.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:36.728Z","data":{"promptTokens":3011,"candidateTokens":192,"totalTokens":59907,"cachedTokens":56704,"reasoningTokens":42,"cost":0.0014739240000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:36.729Z","data":{"tool":"read","summary":"README.md"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:36.729Z","data":{"tool":"read","summary":"openspec/changes/095-osq-message-and-leftovers/specs/traceab"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:50.399Z","data":{"promptTokens":4750,"candidateTokens":3328,"totalTokens":67982,"cachedTokens":59904,"reasoningTokens":3154,"cost":0.005778024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:50.400Z","data":{"tool":"bash","summary":"cd . && sed -n '1,80p' src/watcher/"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:50.400Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:14:59.333Z","data":{"promptTokens":1964,"candidateTokens":1846,"totalTokens":71778,"cachedTokens":67968,"reasoningTokens":1696,"cost":0.0032122080000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:14:59.334Z","data":{"tool":"bash","summary":"cd . && grep -n \"export function co"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:03.787Z","data":{"promptTokens":836,"candidateTokens":1081,"totalTokens":73597,"cachedTokens":71680,"reasoningTokens":409,"cost":0.00197808,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:03.788Z","data":{"tool":"write","summary":"src/core/status/leftover-drafts.ts"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:15:03.789Z","data":{"path":"src/core/status/leftover-drafts.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:07.828Z","data":{"promptTokens":151,"candidateTokens":1126,"totalTokens":74749,"cachedTokens":73472,"reasoningTokens":276,"cost":0.001837332,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:07.829Z","data":{"tool":"edit","summary":"src/core/status/status.ts"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:15:07.834Z","data":{"path":"src/core/status/status.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:27.064Z","data":{"promptTokens":153,"candidateTokens":5470,"totalTokens":80247,"cachedTokens":74624,"reasoningTokens":3101,"cost":0.007057643999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:27.065Z","data":{"tool":"write","summary":"tests/status-leftover.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:15:27.065Z","data":{"path":"tests/status-leftover.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:28.672Z","data":{"promptTokens":142,"candidateTokens":105,"totalTokens":80375,"cachedTokens":80128,"reasoningTokens":19,"cost":0.000649368,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:28.672Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:34.829Z","data":{"promptTokens":1072,"candidateTokens":868,"totalTokens":82196,"cachedTokens":80256,"reasoningTokens":787,"cost":0.001844736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:34.830Z","data":{"tool":"bash","summary":"cd . && sed -n '1,200p' src/watcher"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:45.169Z","data":{"promptTokens":1881,"candidateTokens":2546,"totalTokens":86603,"cachedTokens":82176,"reasoningTokens":1353,"cost":0.004112556,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:45.170Z","data":{"tool":"bash","summary":"cat > /tmp/repro-leftover.mts <<'EOF'\nimport fs from 'node:f"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:50.282Z","data":{"promptTokens":447,"candidateTokens":784,"totalTokens":87759,"cachedTokens":86528,"reasoningTokens":704,"cost":0.001594068,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:50.283Z","data":{"tool":"bash","summary":"cd . && sed -n '174,330p' src/watch"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:53.273Z","data":{"promptTokens":1592,"candidateTokens":390,"totalTokens":89662,"cachedTokens":87680,"reasoningTokens":310,"cost":0.00147168,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:53.274Z","data":{"tool":"bash","summary":"cd . && sed -n '330,470p' src/watch"}}
+{"type":"tokens","timestamp":"2026-09-26T22:15:59.774Z","data":{"promptTokens":1174,"candidateTokens":1561,"totalTokens":92335,"cachedTokens":89600,"reasoningTokens":316,"cost":0.002763,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:15:59.775Z","data":{"tool":"bash","summary":"cd . && cat >> /tmp/repro2.mts <<'E"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:05.363Z","data":{"promptTokens":310,"candidateTokens":648,"totalTokens":93246,"cachedTokens":92288,"reasoningTokens":564,"cost":0.0014243279999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:05.364Z","data":{"tool":"bash","summary":"cd . && grep -n \"export interface L"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:07.314Z","data":{"promptTokens":394,"candidateTokens":310,"totalTokens":93888,"cachedTokens":93184,"reasoningTokens":42,"cost":0.001049304,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:07.315Z","data":{"tool":"bash","summary":"cd . && sed -i 's/console.log(.SUMM"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:12.358Z","data":{"promptTokens":403,"candidateTokens":770,"totalTokens":94997,"cachedTokens":93824,"reasoningTokens":604,"cost":0.0016078439999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:12.359Z","data":{"tool":"bash","summary":"cd . && python3 - <<'PY'\np='/tmp/re"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:14.698Z","data":{"promptTokens":374,"candidateTokens":181,"totalTokens":95531,"cachedTokens":94976,"reasoningTokens":65,"cost":0.000899256,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:14.699Z","data":{"tool":"bash","summary":"cd . && grep -n \"SUMMARY\\|runWatche"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:19.220Z","data":{"promptTokens":134,"candidateTokens":694,"totalTokens":96316,"cachedTokens":95488,"reasoningTokens":435,"cost":0.001445928,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:19.221Z","data":{"tool":"bash","summary":"cd . && python3 - <<'PY'\np='/tmp/re"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:22.621Z","data":{"promptTokens":155,"candidateTokens":530,"totalTokens":96941,"cachedTokens":96256,"reasoningTokens":313,"cost":0.001260036,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:22.622Z","data":{"tool":"edit","summary":"tests/status-leftover.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:16:22.624Z","data":{"path":"tests/status-leftover.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:24.900Z","data":{"promptTokens":201,"candidateTokens":103,"totalTokens":97072,"cachedTokens":96768,"reasoningTokens":17,"cost":0.000764508,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:24.901Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:32.202Z","data":{"promptTokens":258,"candidateTokens":1030,"totalTokens":98312,"cachedTokens":97024,"reasoningTokens":535,"cost":0.0018955439999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:32.203Z","data":{"tool":"edit","summary":"README.md"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:16:32.207Z","data":{"path":"README.md"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:33.833Z","data":{"promptTokens":416,"candidateTokens":138,"totalTokens":98474,"cachedTokens":97920,"reasoningTokens":61,"cost":0.00087792,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:33.834Z","data":{"tool":"bash","summary":"cd . && cat package.json | sed -n '"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:36.101Z","data":{"promptTokens":742,"candidateTokens":222,"totalTokens":99396,"cachedTokens":98432,"reasoningTokens":54,"cost":0.0010795919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:36.102Z","data":{"tool":"bash","summary":"cd . && pnpm typecheck:cli 2>&1 | t"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:36.103Z","data":{"tool":"bash","summary":"cd . && npx biome check src/core/st"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:42.710Z","data":{"promptTokens":576,"candidateTokens":279,"totalTokens":100183,"cachedTokens":99328,"reasoningTokens":133,"cost":0.001103568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:42.710Z","data":{"tool":"bash","summary":"cd . && npx biome check --write src"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:45.160Z","data":{"promptTokens":258,"candidateTokens":200,"totalTokens":100426,"cachedTokens":99968,"reasoningTokens":19,"cost":0.0009172079999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:45.161Z","data":{"tool":"read","summary":"src/core/status/leftover-drafts.ts"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:45.162Z","data":{"tool":"bash","summary":"cd . && sed -n '1,12p' src/core/sta"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:47.082Z","data":{"promptTokens":923,"candidateTokens":212,"totalTokens":101487,"cachedTokens":100352,"reasoningTokens":132,"cost":0.0011334119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:47.082Z","data":{"tool":"bash","summary":"cd . && sed -n '60,140p' tests/line"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:50.487Z","data":{"promptTokens":536,"candidateTokens":518,"totalTokens":102430,"cachedTokens":101376,"reasoningTokens":432,"cost":0.0013906559999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:50.488Z","data":{"tool":"bash","summary":"cd . && node --import tsx --test te"}}
+{"type":"tokens","timestamp":"2026-09-26T22:16:54.895Z","data":{"promptTokens":215,"candidateTokens":101,"totalTokens":102716,"cachedTokens":102400,"reasoningTokens":25,"cost":0.0008001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:16:54.896Z","data":{"tool":"bash","summary":"cd . && pnpm verify 2>&1 | tail -60"}}
+{"type":"tokens","timestamp":"2026-09-26T22:17:52.368Z","data":{"promptTokens":938,"candidateTokens":1970,"totalTokens":105564,"cachedTokens":102656,"reasoningTokens":1464,"cost":0.003261336,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-26T22:17:52.369Z","data":{"tool":"write","summary":"openspec/changes/095-osq-message-and-leftovers/.run/results/"}}
+{"type":"file_changed","timestamp":"2026-09-26T22:17:52.370Z","data":{"path":"openspec/changes/095-osq-message-and-leftovers/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-09-26T22:17:55.978Z","data":{"text":"Done. Summary of the work:\n\n**Added `src/core/status/leftover-drafts.ts`** — `findLeftoverDrafts` finds active checkout folders whose `hashChangeFolder` still matches the `.run/approved` the default branch holds under `<archive>/<folder>`, using the first `changeTrees` tree, `vcs.show`, and `changesDirLabel`. It returns `[]` when `vcs.enabled` is off or git is unavailable.\n\n**Changed `src/core/status/status.ts`** — added optional `leftovers` to `StatusOverview`, filtered leftover folder names out of `specs`, and printed the `Leftover drafts:` section between pending verifications and `Archived specs:`.\n\n**Added `tests/status-leftover.test.ts`** — 7 tests through `statusCommand` on temporary git repos covering every scenario of the delta (hand landing, worktree removed, edited copy, unlanded, removal clears flag, flag off, no git).\n\n**Changed `README.md`** — listed `osq message <id>` under Commands and documented the hand-landing flow, the leftover flag, and worktree-based scenario lookup in the Version control section.\n\nBoth the task verify (`node --import tsx --test tests/status-leftover.test.ts`) and the proposal verify (`pnpm verify`) pass. Result written to `openspec/changes/095-osq-message-and-leftovers/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-26T22:17:55.978Z","data":{"promptTokens":256,"candidateTokens":525,"totalTokens":106125,"cachedTokens":105344,"reasoningTokens":216,"cost":0.001338864,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-26T22:17:56.019Z","data":{"exitCode":0,"pid":21971,"timedOut":false,"elapsedSeconds":221.1}}
+{"type":"verify_ran","timestamp":"2026-09-26T22:17:58.574Z","data":{"command":"node --import tsx --test tests/status-leftover.test.ts","exitCode":0,"duration":2.4,"output":"▶ osq status leftover drafts\n  ✔ flags an untouched checkout copy after a hand landing (408.523978ms)\n  ✔ keeps flagging after the worktree is removed (358.569913ms)\n  ✔ does not flag an edited checkout copy (359.045381ms)\n  ✔ does not flag a change that has not landed (336.09633ms)\n  ✔ clears the flag once the copy is removed (337.283246ms)\n  ✔ prints no leftovers and no section with vcs.enabled off (322.946446ms)\n  ✔ prints no leftovers when git is unavailable (50.911068ms)\n✔ osq status leftover drafts (2174.644957ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2379.000403\n"}}
+{"type":"measures","timestamp":"2026-09-26T22:18:45.458Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":965,"repoFiles":1646,"repoLines":182259,"importFanIn":4,"proposalWords":997,"taskWords":302,"deltaRequirements":4,"deltaScenarios":23,"changedFiles":4,"changedLines":351,"scopeHashes":{"README.md":{"before":"sha256:7952ffce6bb97460a1241b3da570dcd59d1ffc725e805deae2f0576ea84c6b9e","after":"sha256:64ea7f4072b56d84c6a48a67b098ca7d4aedd7c7f3bd51b3844c2f9f7b5e016d"},"src/core/status/leftover-drafts.ts":{"before":null,"after":"sha256:fbd0bd7a8f6592e2cf09cf3d47f6c271f83658222a03ad3ef0f936e9902fa696"},"src/core/status/status.ts":{"before":"sha256:3932b087a14b04fac449eeab95b1e4a867a844a5d30fe1b49b8f4beae3688acb","after":"sha256:d4313f63fb8029050945b3147c32cd4042f7e214bb18c5b8d48fd77e2438cc9c"},"tests/status-leftover.test.ts":{"before":null,"after":"sha256:ecf14816d5a8351fa807c27d795f8093fc564318b7042e8c73753362c4196445"}}}}
+{"type":"done","timestamp":"2026-09-26T22:18:45.463Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-26T22:18:50.913Z","data":{"command":"node --import tsx --test tests/status-leftover.test.ts","exitCode":0,"duration":2.36,"output":"▶ osq status leftover drafts\n  ✔ flags an untouched checkout copy after a hand landing (387.904249ms)\n  ✔ keeps flagging after the worktree is removed (340.918157ms)\n  ✔ does not flag an edited checkout copy (346.541916ms)\n  ✔ does not flag a change that has not landed (337.619263ms)\n  ✔ clears the flag once the copy is removed (341.515254ms)\n  ✔ prints no leftovers and no section with vcs.enabled off (316.182801ms)\n  ✔ prints no leftovers when git is unavailable (58.326194ms)\n✔ osq status leftover drafts (2130.686588ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2337.297311\n"}}

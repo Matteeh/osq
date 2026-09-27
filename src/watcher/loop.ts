@@ -22,6 +22,7 @@ import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
+import { runStackedChanges } from './stack-run.js';
 import {
   commitPendingVerifiedTasks,
   commitWorktreeArchive,
@@ -182,6 +183,8 @@ export async function runWatcherCycle(
   // Resolved once per cycle (and cached in `build.ts`) so both the idle status
   // row and every change carry osq's own identity.
   const buildInfo = await resolveBuildInfo();
+
+  await runStackedChanges(projectRoot, config, logger);
 
   const activeChanges = await listChanges(projectRoot, config, ['active']);
 

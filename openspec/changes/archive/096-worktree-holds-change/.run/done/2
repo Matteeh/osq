@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:faca8cacc842509d7fce3bb56db5ba886a3fee4e1252574312b20649175854c3"
+build_stamp: "5a2bee7"
+project_commit: "acca1fa"
+exit_code: 0
+scope_files: {"src/core/spec/stack-cut.ts":"sha256:4822ad48643cdf4b44f9d20e4aedd15b4692f2b1d9803acbd4dc553c26291378","tests/stack-cut-kept.test.ts":"sha256:a3d3a228e9b96a76557f9bba6eb054232c301a0d2889762698e9b2162c83085d"}
+---
+2026-09-26T22:28:58.712Z

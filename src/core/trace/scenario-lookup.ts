@@ -9,6 +9,12 @@ import {
   parseDelta,
 } from '../spec/delta.js';
 import { isActiveChangeFolderName } from '../status/layout.js';
+import {
+  type SpecLocation,
+  clearLookupRootCache,
+  findOpenspecRoot,
+  worktreeChangeFolder,
+} from './lookup-root.js';
 
 /**
  * Effective scenario lookup: with `OSQ_CHANGE` set the effective spec is the
@@ -23,10 +29,6 @@ interface ScenarioPlace {
   readonly scenarios: readonly DeltaScenario[];
 }
 
-interface SpecLocation {
-  readonly openspecRoot: string;
-  readonly changeFolder: string | null;
-}
 /** A scenario found in one place. */
 interface ScenarioDefinition {
   readonly place: ScenarioPlace;
@@ -39,6 +41,7 @@ let specReads = 0;
 /** Drop every cached spec and reset the read counter. */
 export function clearScenarioLookupCache(): void {
   placesCache.clear();
+  clearLookupRootCache();
   specReads = 0;
 }
 
@@ -197,25 +200,14 @@ function resolveDefinitions(
   );
 }
 
-/** The nearest ancestor of `cwd`, included, that holds `openspec/specs`. */
-function findOpenspecRoot(cwd: string): string {
-  const start = path.resolve(cwd);
-  let dir = start;
-  for (;;) {
-    if (existsSync(path.join(dir, 'openspec', 'specs'))) return path.join(dir, 'openspec');
-    const parent = path.dirname(dir);
-    if (parent === dir) return path.join(start, 'openspec');
-    dir = parent;
-  }
-}
-
 function resolveLocation(cwd: string, env: Record<string, string | undefined>): SpecLocation {
   const raw = env.OSQ_CHANGE?.trim();
   if (raw) {
     const changeFolder = path.resolve(cwd, raw);
     return { openspecRoot: path.dirname(path.dirname(changeFolder)), changeFolder };
   }
-  return { openspecRoot: findOpenspecRoot(cwd), changeFolder: null };
+  const openspecRoot = findOpenspecRoot(cwd);
+  return { openspecRoot, changeFolder: worktreeChangeFolder(openspecRoot) };
 }
 
 /**

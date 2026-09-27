@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:424a13a31c9bbd27c232c444cbe05273f3b8b2855535cda5dfda7e49609e5965"
+build_stamp: "8907336"
+project_commit: "8907336"
+exit_code: 0
+scope_files: {"src/core/foundation/config.ts":"sha256:d0557798200d90c2a470ff8d2d6e04e7f747e1ed4ccd9ee3e77e642f36c2879e","src/core/run/squash-message.ts":"sha256:f4843c62fce0994611c3c61cdab69f084957ab1ed130a920f0d4fe86e218ecd3","src/core/status/dispatch-cards.ts":"sha256:10499430893578da6e17bf49ee5681a037a6fe58207b917a5b344a5f2ed91761","tests/dispatch-cards.test.ts":"sha256:59873a62295845aa9ab2d130abb2d229d78a4d7745b87207f9d1395c87e6b949"}
+---
+2026-09-27T07:38:22.064Z

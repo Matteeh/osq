@@ -1762,3 +1762,57 @@ warning, `opencode <version> is outside the tested range >=2.0.0 <3.0.0`.
 #### Scenario: Version 3
 - **WHEN** `opencode --version` prints `opencode v3.0.0`
 - **THEN** the `harness-version` check passes with a warning naming `3.0.0`
+
+### Requirement: Message command
+<!-- source: src/cli/message.ts, src/cli/index.ts, tests/squash-message.test.ts -->
+`osq message <id>` SHALL print the squash commit message that "Squash
+commit message" builds to stdout, exactly and with nothing else, so that
+`osq message <id> | git commit -F -` commits it. It SHALL then print
+`Branch: osq/<folder>` and
+`Land: git merge --squash osq/<folder> && osq message <id> | git commit -F -`
+to stderr, and exit zero. On a refusal it SHALL print only the refusal to
+stderr and exit one. It SHALL write no file and run no git command that
+writes.
+
+#### Scenario: Landing by hand keeps the trailers
+- **WHEN** a change has archived in its worktree and the checkout runs `git merge --squash osq/<folder>` and then commits with `osq message <id>`'s stdout through `git commit -F -`
+- **THEN** `git interpret-trailers --parse` over the checkout's HEAD message prints every trailer of "Squash commit message", and `git status` in the worktree is unchanged
+
+#### Scenario: Branch on stderr
+- **WHEN** `osq message <id>` succeeds
+- **THEN** stderr holds `Branch: osq/<folder>` and the `Land:` line, and stdout holds only the message
+
+#### Scenario: Refusal
+- **WHEN** `osq message <id>` refuses
+- **THEN** stdout is empty, stderr holds the refusal, and the exit code is one
+
+### Requirement: Inbox dispatch command
+<!-- source: src/cli/inbox-dispatch.ts, src/cli/index.ts, src/core/status/dispatch.ts, src/core/status/dispatch-text.ts, tests/inbox-dispatch.test.ts -->
+`osq inbox` SHALL read the dispatch items, order them, and read the first
+item's card, writing nothing. It SHALL print `Needs you (<n>):`, then one line
+per item in order,
+`  <position>. <kind> <id> <title>[ task <n>: <task title>] (<reason>)`,
+then a blank line and the first item's card. The card SHALL start with
+`<kind>: <folder>`, then `  why: <reason>`, then the card data for its kind,
+then `Actions:` with one `  <command>` line per command. An empty inbox SHALL
+print `Nothing needs you.` With `--json`, it SHALL print
+`{ "watcherIdle": <bool>, "items": [...] }`, where each item holds its
+kind, change, task, weight, reason, commands, and card. It SHALL exit zero.
+Bare `osq` and `osq --json` SHALL be unchanged. `limits.cardOutputLines`
+SHALL default to 20.
+
+#### Scenario: Ordered list and first card
+- **WHEN** a project has a halt item and an approval item whose change two others depend on, and the watcher has no runnable change
+- **THEN** `osq inbox` lists the approval first, then the halt, and prints the approval's card with its goal and `osq approve <id>` under `Actions:`
+
+#### Scenario: JSON
+- **WHEN** `osq inbox --json` runs on the same project
+- **THEN** the output parses as JSON with `watcherIdle` true and two items that each carry a card
+
+#### Scenario: Empty
+- **WHEN** nothing needs a human
+- **THEN** `osq inbox` prints `Nothing needs you.`
+
+#### Scenario: Registered
+- **WHEN** `createProgram` builds the CLI
+- **THEN** it has an `inbox` command with a `--json` option, and bare `osq` still runs the attention inbox

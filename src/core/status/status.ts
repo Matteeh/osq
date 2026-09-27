@@ -5,6 +5,7 @@ import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { changeTrees, listChanges } from './change-locations.js';
 import { getRejectedMarkerPath } from './layout.js';
+import { type LeftoverDraft, findLeftoverDrafts } from './leftover-drafts.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 import { listPendingVerifications } from './verification.js';
@@ -40,6 +41,8 @@ export interface StatusOverview {
   worktrees?: Record<string, ChangeWorktree>;
   /** Archived changes still awaiting a verification outcome. */
   pendingVerifications?: Array<{ folderName: string; title: string; next: NextStep }>;
+  /** Checkout copies of changes already landed on the default branch. */
+  leftovers?: LeftoverDraft[];
 }
 
 /** Whether the checkout's copy changed since approval; a missing copy does not. */
@@ -92,11 +95,14 @@ export async function getStatusOverview(
 ): Promise<StatusOverview> {
   const [tree] = await changeTrees(projectRoot, config);
   const active = await listChanges(projectRoot, config, ['active']);
+  const leftovers = await findLeftoverDrafts(projectRoot, config);
+  const leftoverNames = new Set(leftovers.map((leftover) => leftover.folderName));
 
   const specs: SpecState[] = [];
   const nextSteps: Record<string, NextStep> = {};
   const worktrees: Record<string, ChangeWorktree> = {};
   for (const change of active) {
+    if (leftoverNames.has(change.folderName)) continue;
     const changeDoc = await resolveChangeDoc(change.folderPath);
     if (!changeDoc) continue;
     const specState = await deriveSpecState(projectRoot, change.folderPath);
@@ -133,6 +139,7 @@ export async function getStatusOverview(
     nextSteps,
     ...(Object.keys(worktrees).length > 0 ? { worktrees } : {}),
     pendingVerifications,
+    ...(leftovers.length > 0 ? { leftovers } : {}),
   };
 }
 
@@ -195,6 +202,16 @@ export function formatStatusOverview(overview: StatusOverview): string {
     lines.push('Verification pending:');
     for (const item of pending) {
       lines.push(`${item.folderName}: ${item.title} — ${formatNextStep(item.next)}`);
+    }
+    lines.push('');
+  }
+  const leftovers = overview.leftovers;
+  if (leftovers && leftovers.length > 0) {
+    lines.push('Leftover drafts:');
+    for (const leftover of leftovers) {
+      lines.push(
+        `  ${leftover.folderName}: landed; remove the checkout copy with rm -r ${leftover.path}`,
+      );
     }
     lines.push('');
   }

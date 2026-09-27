@@ -2,6 +2,13 @@
 
 All notable changes to `osq` are documented in this file.
 
+## [0.2.3] - 2026-09-27
+
+- Stage 1 of git (ADR 003) is complete. With `vcs.enabled`, the watcher runs a change in its worktree on `osq/<folder>`, commits each verified task and the archive, and keeps a dead task's edits in `.run/dead/<n>.patch` (093). `vcs.enabled` still defaults to off.
+- Stacking: dependent changes approved together run without a human, with a stacked approval cut from the dependency's archive commit (094, 096).
+- `osq message <id>` prints the squash commit message with `Osq-*` trailers for a hand landing, and `osq status` flags leftover drafts after one (095).
+- `osq inbox` lists what needs a human in dispatch order and prints the first item's card; `osq inbox --json` carries every card. New config key `limits.cardOutputLines`, default 20 (097).
+
 ## [0.2.2] - 2026-09-26
 
 - Claude Code executor harness (070).

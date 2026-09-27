@@ -4,9 +4,11 @@ import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
+import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
 import { lintCommand } from './lint.js';
+import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { planCommand } from './plan.js';
@@ -220,6 +222,8 @@ export function createProgram(version?: string): Command {
     });
 
   registerApproveCommand(program);
+  registerInboxDispatchCommand(program);
+  registerMessageCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
