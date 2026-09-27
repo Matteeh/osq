@@ -4,6 +4,7 @@ import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
 import { doctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
+import { registerGraphCommand } from './graph.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
@@ -222,8 +223,8 @@ export function createProgram(version?: string): Command {
         process.exitCode = 1;
       }
     });
-
   registerApproveCommand(program);
+  registerGraphCommand(program);
   registerInboxDispatchCommand(program);
   registerMessageCommand(program);
   registerVerificationCommands(program);

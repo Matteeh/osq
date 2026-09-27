@@ -6,6 +6,8 @@ import { type MetricsReport, getMetricsReport } from '../report/report.js';
 import { changeTrees } from '../status/change-locations.js';
 import { type ReadInboxOptions, readInbox } from '../status/inbox-projection.js';
 import type { Inbox } from '../status/inbox.js';
+import type { SystemGraph } from './system-graph-types.js';
+import { getSystemGraph } from './system-graph.js';
 import { getWebChange } from './web-data-change.js';
 import { getWebGraph } from './web-data-graph.js';
 import type { WebChange, WebGraph } from './web-data-types.js';
@@ -39,6 +41,7 @@ export interface WebServerOptions {
   readonly home?: string;
   readonly getReport?: (projectRoot: string, config: OsqConfig) => Promise<MetricsReport>;
   readonly getGraph?: (projectRoot: string, config: OsqConfig) => Promise<WebGraph>;
+  readonly getSystem?: (projectRoot: string, config: OsqConfig) => Promise<SystemGraph>;
   readonly getChange?: ChangeDocumentFn;
   readonly getInbox?: (projectRoot: string, options: ReadInboxOptions) => Promise<Inbox>;
   readonly watch?: WatcherFactory;
@@ -127,6 +130,7 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   const clock = options.now ?? (() => new Date());
   const getReport = options.getReport ?? getMetricsReport;
   const getGraph = options.getGraph ?? getWebGraph;
+  const getSystem = options.getSystem ?? getSystemGraph;
   const getChange = options.getChange ?? getWebChange;
   const getInbox =
     options.getInbox ?? ((root: string, inbox: ReadInboxOptions) => readInbox(root, inbox));
@@ -168,6 +172,7 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
       const documents: Record<string, () => Promise<unknown>> = {
         '/api/report': () => getReport(projectRoot, config),
         '/api/graph': () => getGraph(projectRoot, config),
+        '/api/system': () => getSystem(projectRoot, config),
         '/api/inbox': () => getInbox(projectRoot, { config, now: clock(), home }),
       };
       const document = documents[pathname];

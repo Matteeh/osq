@@ -755,6 +755,12 @@ opted-in capability with a living spec, in name order:
   ownership covers, that no `@scenario` tag claims for any capability. They
   are sorted by file, then line.
 
+A test path is one that `isTestPath` accepts, as the traceability
+capability's "Test paths" says. `report-traceability.ts` SHALL export these
+rules as `optedInCapabilities`, `ownedFunctions`, the functions above before
+the tag check, and `unclaimedFunctionsFor`, so the system graph counts the
+same gaps.
+
 The stable JSON SHALL hold them under `traceability` as
 `[{ capability, untestedScenarios: [<name>], unclaimedFunctions: [{ file, name }] }]`.
 The text output SHALL print a `Traceability:` section with one line per

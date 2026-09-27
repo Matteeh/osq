@@ -19,6 +19,8 @@ import { buildImportGraph } from '../spec/import-graph.js';
 import { specDirectories } from '../spec/scenario-impact.js';
 import { getSpecsDir } from '../status/layout.js';
 import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
+import type { ScannedFunction } from '../trace/tag-scan.js';
+import { isTestPath } from '../trace/test-path.js';
 
 /** One exported function no `@scenario` tag claims. */
 export interface UnclaimedFunction {
@@ -35,15 +37,8 @@ export interface CapabilityTraceabilityGaps {
   readonly unclaimedFunctions: readonly UnclaimedFunction[];
 }
 
-/** A test path is under `tests/`, or its file name holds `.test.` or `.spec.`. */
-function isTestPath(relativePath: string): boolean {
-  if (relativePath === 'tests' || relativePath.startsWith('tests/')) return true;
-  const base = relativePath.slice(relativePath.lastIndexOf('/') + 1);
-  return base.includes('.test.') || base.includes('.spec.');
-}
-
 /** The opted-in capability names: the configured list, or every living spec. */
-async function optedInCapabilities(
+export async function optedInCapabilities(
   projectRoot: string,
   openspecRoot: string,
   traceability: TraceabilityConfig,
@@ -76,22 +71,35 @@ function ownedBy(
   );
 }
 
-/** Exported functions in owned, non-test files that no `@scenario` tag claims. */
-function unclaimedFunctionsFor(
+/**
+ * Exported functions in files the capability owns that are neither test paths
+ * nor scenario test files, sorted by file and then line. This is the rule
+ * before the `@scenario` tag check, shared so the graph counts the same gaps.
+ */
+export function ownedFunctions(
   capability: string,
   index: ScenarioIndex,
   ownerships: readonly CapabilityOwnership[],
-): UnclaimedFunction[] {
+): ScannedFunction[] {
   const scenarioFiles = new Set(index.scenarioTestFiles);
   return [...index.functions]
     .filter(
       (fn) =>
-        fn.scenarios.length === 0 &&
         !scenarioFiles.has(fn.file) &&
         !isTestPath(fn.file) &&
         ownedBy(ownerships, capability, fn.file),
     )
-    .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
+    .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+}
+
+/** Exported functions in owned, non-test files that no `@scenario` tag claims. */
+export function unclaimedFunctionsFor(
+  capability: string,
+  index: ScenarioIndex,
+  ownerships: readonly CapabilityOwnership[],
+): UnclaimedFunction[] {
+  return ownedFunctions(capability, index, ownerships)
+    .filter((fn) => fn.scenarios.length === 0)
     .map((fn) => ({ file: fn.file, name: fn.name }));
 }
 

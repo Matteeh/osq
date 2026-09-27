@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0cda2b896cc7d52cb5bd800e7a9b645a80fe1db8abdc74504492b36d78ef0f11"
+build_stamp: "d026fc5"
+project_commit: "6628c84"
+exit_code: 0
+scope_files: {"src/core/report/report-traceability.ts":"sha256:e7237fb1a840b8512a23132322ac2ebbccfdd32ff58f0a973260123c81bff1f0","src/core/spec/traceability-lint.ts":"sha256:10a320a38a01740537763d64679b3b3a5d6c4a820570978e2ff8b9038f6c4d12","src/core/trace/test-path.ts":"sha256:19be54e99fad0a5ba06442e189f643b6d62067167f14e98dead7ec0a310295fc","tests/trace-test-path.test.ts":"sha256:693b562dd924f7824b1e9055687ec1785aeab0dae4caee79188cd11e99f1e5b0"}
+---
+2026-09-27T22:14:49.495Z

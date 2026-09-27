@@ -561,6 +561,8 @@ osq status               overview of all changes, tasks, and runtime states
 osq message <id>         print an archived change's squash commit message for a hand landing
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
+osq graph                print the system graph summary (node, edge, and gap counts)
+osq graph --json         print the system graph as JSON
 osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
 osq serve --export <dir> write a static dashboard snapshot to <dir> and exit
 osq doctor               validate repository health, harness availability, and pinned validator

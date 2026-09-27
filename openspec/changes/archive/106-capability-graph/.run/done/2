@@ -1,0 +1,17 @@
+---
+scope_resolver: 2
+scope_hash: sha256:ff7a4685edd17c7056ac2a835f6f5affb947a748c79509ea85bc62dca1cb9280
+build_stamp: d026fc5
+project_commit: 125360b
+exit_code: 0
+scope_files:
+  src/core/web/system-graph-code.ts: sha256:b3f2337f5029f2875e3d4f84a24787a57adc30fe001b25079d1eb285ac954b60
+  src/core/web/system-graph-specs.ts: sha256:a81b5b3e8e542fc3b2574dd838b3bff1463c010a6d9032674676677db3eca8d2
+  src/core/web/system-graph-types.ts: sha256:2f79ec5a64563256d3854dfa5c9bf3d1a5164bc194bbcedd95f07ac9200161cf
+  src/core/web/system-graph.ts: sha256:e3ff95bc44bc4463524214b2e7f80370bd7b3be531e7f4f8b6995b43f5d3c4ea
+  tests/web-system-graph.test.ts: sha256:2855841226e2ef117595106a688d6ea6074b8168a544c189e6081d6d6a200fc1
+original_scope_hash: sha256:802bb7b18a2dc46603708cb68b904a009a883f640c90969e0e713c169945d246
+recertified_at: 2026-09-27T22:33:09.360Z
+recertification_count: 1
+---
+2026-09-27T22:20:35.397Z

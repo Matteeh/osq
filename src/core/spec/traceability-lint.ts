@@ -9,6 +9,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { readDecisions } from '../foundation/decisions.js';
 import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
 import { effectiveScenarios } from '../trace/scenario-lookup.js';
+import { isTestPath } from '../trace/test-path.js';
 import { readCapabilityOwnership } from './capability-impact.js';
 import { parseCapabilitySpec } from './delta.js';
 import type { ImportGraph } from './import-graph.js';
@@ -112,13 +113,6 @@ async function readLinkCapabilities(
     });
   }
   return capabilities;
-}
-
-/** A test path is under `tests/`, or its file name holds `.test.` or `.spec.`. */
-function isTestPath(relativePath: string): boolean {
-  if (relativePath === 'tests' || relativePath.startsWith('tests/')) return true;
-  const base = relativePath.slice(relativePath.lastIndexOf('/') + 1);
-  return base.includes('.test.') || base.includes('.spec.');
 }
 
 /** The `## Scenarios` keys each task with a test path lists, by task number. */

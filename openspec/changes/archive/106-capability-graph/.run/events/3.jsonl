@@ -1,0 +1,222 @@
+{"type":"verify_ran","timestamp":"2026-09-27T22:20:36.036Z","data":{"command":"node --import tsx --test tests/web-system-graph-trace.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/web-system-graph-trace.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/web-system-graph-trace.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-27T22:20:36.652Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":256,"repoFiles":1808,"repoLines":201798,"importFanIn":2,"proposalWords":975,"taskWords":326,"deltaRequirements":9,"deltaScenarios":26}}
+{"type":"started","timestamp":"2026-09-27T22:20:36.848Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"e49ef16","pid":95846,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"d026fc5"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:38.545Z","data":{"promptTokens":3625,"candidateTokens":169,"totalTokens":6994,"cachedTokens":3200,"reasoningTokens":15,"cost":0.0013095,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:38.546Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:38.546Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/proposal.md"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:40.001Z","data":{"promptTokens":2521,"candidateTokens":232,"totalTokens":9665,"cachedTokens":6912,"reasoningTokens":35,"cost":0.001076172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:40.001Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tool","timestamp":"2026-09-27T22:20:40.001Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/specs/web-inspection/s"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:41.448Z","data":{"promptTokens":3411,"candidateTokens":235,"totalTokens":13246,"cachedTokens":9600,"reasoningTokens":75,"cost":0.0013629,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:41.448Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:41.449Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:42.763Z","data":{"promptTokens":1018,"candidateTokens":141,"totalTokens":14343,"cachedTokens":13184,"reasoningTokens":0,"cost":0.000553704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:42.764Z","data":{"tool":"read","summary":"src/core/web/system-graph-types.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:42.764Z","data":{"tool":"read","summary":"src/core/web/system-graph.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:43.978Z","data":{"promptTokens":2079,"candidateTokens":197,"totalTokens":16612,"cachedTokens":14336,"reasoningTokens":53,"cost":0.0009461159999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:43.978Z","data":{"tool":"read","summary":"src/core/web/system-graph-code.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:43.979Z","data":{"tool":"read","summary":"src/core/web/system-graph-specs.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:20:45.315Z","data":{"promptTokens":2401,"candidateTokens":174,"totalTokens":19087,"cachedTokens":16512,"reasoningTokens":30,"cost":0.001028172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:45.316Z","data":{"tool":"read","summary":"src/core/report/report-traceability.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:20:45.316Z","data":{"tool":"read","summary":"src/core/trace/scenario-index.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:01.532Z","data":{"promptTokens":2525,"candidateTokens":3630,"totalTokens":25227,"cachedTokens":19072,"reasoningTokens":3486,"cost":0.005227932,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:01.532Z","data":{"tool":"read","summary":"src/core/report/report-mutation.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:01.533Z","data":{"tool":"read","summary":"src/core/trace/tag-scan.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:02.880Z","data":{"promptTokens":5066,"candidateTokens":174,"totalTokens":30456,"cachedTokens":25216,"reasoningTokens":35,"cost":0.0018798959999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:02.880Z","data":{"tool":"read","summary":"tests/web-system-graph.test.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:02.880Z","data":{"tool":"read","summary":"tests/trace-report.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:05.110Z","data":{"promptTokens":5258,"candidateTokens":235,"totalTokens":35829,"cachedTokens":30336,"reasoningTokens":62,"cost":0.002041416,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:05.111Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:07.001Z","data":{"promptTokens":471,"candidateTokens":244,"totalTokens":36427,"cachedTokens":35712,"reasoningTokens":34,"cost":0.0006483719999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:07.001Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tool","timestamp":"2026-09-27T22:21:07.002Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:08.822Z","data":{"promptTokens":2750,"candidateTokens":264,"totalTokens":39366,"cachedTokens":36352,"reasoningTokens":70,"cost":0.001359912,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:08.822Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:08.823Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:10.368Z","data":{"promptTokens":2353,"candidateTokens":197,"totalTokens":41846,"cachedTokens":39296,"reasoningTokens":23,"cost":0.001178076,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:10.369Z","data":{"tool":"read","summary":"src/core/foundation/decisions-validate.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:10.369Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:11.961Z","data":{"promptTokens":1235,"candidateTokens":110,"totalTokens":43073,"cachedTokens":41728,"reasoningTokens":0,"cost":0.0007528680000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:11.961Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:14.434Z","data":{"promptTokens":337,"candidateTokens":376,"totalTokens":43721,"cachedTokens":43008,"reasoningTokens":233,"cost":0.0008103479999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:14.434Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:14.435Z","data":{"tool":"read","summary":"src/core/web/web-data-folders.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:20.524Z","data":{"promptTokens":3638,"candidateTokens":1254,"totalTokens":48540,"cachedTokens":43648,"reasoningTokens":1098,"cost":0.002858088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:20.525Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/tasks/2.md"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:20.525Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/tasks/4.md"}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:29.417Z","data":{"promptTokens":1215,"candidateTokens":1839,"totalTokens":51566,"cachedTokens":48512,"reasoningTokens":1738,"cost":0.0028623719999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:29.417Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:21:44.614Z","data":{"promptTokens":172,"candidateTokens":3357,"totalTokens":54985,"cachedTokens":51456,"reasoningTokens":3280,"cost":0.004388735999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:21:44.614Z","data":{"tool":"read","summary":"src/core/spec/import-graph.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:04.113Z","data":{"promptTokens":1883,"candidateTokens":4320,"totalTokens":61115,"cachedTokens":54912,"reasoningTokens":4108,"cost":0.006078371999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:04.114Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tool","timestamp":"2026-09-27T22:22:04.114Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:05.595Z","data":{"promptTokens":1142,"candidateTokens":92,"totalTokens":62290,"cachedTokens":61056,"reasoningTokens":18,"cost":0.0008193359999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:05.596Z","data":{"tool":"read","summary":"tests/mutation-report.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:21.469Z","data":{"promptTokens":1683,"candidateTokens":3686,"totalTokens":67577,"cachedTokens":62208,"reasoningTokens":3575,"cost":0.005301347999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:21.469Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:31.059Z","data":{"promptTokens":1606,"candidateTokens":2109,"totalTokens":71171,"cachedTokens":67456,"reasoningTokens":1928,"cost":0.003417336,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:31.060Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:31.060Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:53.224Z","data":{"promptTokens":1279,"candidateTokens":5127,"totalTokens":77574,"cachedTokens":71168,"reasoningTokens":4893,"cost":0.006963107999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:53.224Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tool","timestamp":"2026-09-27T22:22:53.225Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:54.581Z","data":{"promptTokens":505,"candidateTokens":129,"totalTokens":78202,"cachedTokens":77568,"reasoningTokens":10,"cost":0.0007717080000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:54.582Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:22:56.489Z","data":{"promptTokens":824,"candidateTokens":76,"totalTokens":78980,"cachedTokens":78080,"reasoningTokens":0,"cost":0.00080688,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:22:56.490Z","data":{"tool":"read","summary":"src/core/spec/scenario-impact.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:23:21.642Z","data":{"promptTokens":355,"candidateTokens":6506,"totalTokens":85837,"cachedTokens":78976,"reasoningTokens":6376,"cost":0.008387556,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:23:21.642Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:23:47.952Z","data":{"text":"Now let me look at the existing test helpers and check `parseCodeOwnership`:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:23:47.952Z","data":{"promptTokens":217,"candidateTokens":7952,"totalTokens":93929,"cachedTokens":85760,"reasoningTokens":7724,"cost":0.01012206,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:23:47.953Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tool","timestamp":"2026-09-27T22:23:47.953Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:23:49.675Z","data":{"promptTokens":1142,"candidateTokens":107,"totalTokens":95073,"cachedTokens":93824,"reasoningTokens":32,"cost":0.001033944,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:23:49.676Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:23:51.573Z","data":{"promptTokens":954,"candidateTokens":163,"totalTokens":96093,"cachedTokens":94976,"reasoningTokens":73,"cost":0.001051656,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:23:51.573Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:23:53.782Z","data":{"text":"Now I have enough understanding. Let me add the trace part type:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:23:53.782Z","data":{"promptTokens":669,"candidateTokens":327,"totalTokens":96996,"cachedTokens":96000,"reasoningTokens":46,"cost":0.0011691000000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:23:53.782Z","data":{"tool":"edit","summary":"src/core/web/system-graph-types.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:23:53.786Z","data":{"path":"src/core/web/system-graph-types.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:02.375Z","data":{"promptTokens":257,"candidateTokens":2971,"totalTokens":99996,"cachedTokens":96768,"reasoningTokens":9,"cost":0.004222908,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:02.376Z","data":{"tool":"write","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:24:02.377Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:06.285Z","data":{"promptTokens":181,"candidateTokens":1107,"totalTokens":101128,"cachedTokens":99840,"reasoningTokens":7,"cost":0.00198174,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:06.286Z","data":{"tool":"edit","summary":"src/core/web/system-graph.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:24:06.288Z","data":{"path":"src/core/web/system-graph.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:08.201Z","data":{"promptTokens":164,"candidateTokens":169,"totalTokens":101325,"cachedTokens":100992,"reasoningTokens":70,"cost":0.0008579519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:08.201Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:09.713Z","data":{"promptTokens":362,"candidateTokens":88,"totalTokens":101698,"cachedTokens":101248,"reasoningTokens":0,"cost":0.000821688,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:09.714Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:24:39.694Z","data":{"text":"Now the test file:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:39.694Z","data":{"promptTokens":261,"candidateTokens":7990,"totalTokens":109755,"cachedTokens":101504,"reasoningTokens":5223,"cost":0.010275323999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:39.694Z","data":{"tool":"write","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:24:39.695Z","data":{"path":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:41.204Z","data":{"promptTokens":212,"candidateTokens":98,"totalTokens":109878,"cachedTokens":109568,"reasoningTokens":0,"cost":0.000838608,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:41.204Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:24:49.299Z","data":{"text":"The ownership block I append adds its own \"Ownership boundaries\" scenario, making two untested. Let me drop that scenario:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:49.299Z","data":{"promptTokens":578,"candidateTokens":1235,"totalTokens":111637,"cachedTokens":109824,"reasoningTokens":1043,"cost":0.002314344,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:49.300Z","data":{"tool":"edit","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:24:49.301Z","data":{"path":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:50.785Z","data":{"promptTokens":179,"candidateTokens":98,"totalTokens":111765,"cachedTokens":111488,"reasoningTokens":0,"cost":0.0008402279999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:50.785Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:24:54.522Z","data":{"text":"All pass. Now let me run the existing graph test and lint:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:54.522Z","data":{"promptTokens":274,"candidateTokens":152,"totalTokens":112170,"cachedTokens":111744,"reasoningTokens":30,"cost":0.000935064,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:54.524Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:56.682Z","data":{"promptTokens":336,"candidateTokens":85,"totalTokens":112549,"cachedTokens":112128,"reasoningTokens":0,"cost":0.000875568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:56.682Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:24:59.950Z","data":{"promptTokens":547,"candidateTokens":296,"totalTokens":113355,"cachedTokens":112512,"reasoningTokens":174,"cost":0.001194372,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:24:59.950Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:25:02.329Z","data":{"promptTokens":229,"candidateTokens":85,"totalTokens":113466,"cachedTokens":113152,"reasoningTokens":0,"cost":0.000849612,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:25:02.329Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:25:04.617Z","data":{"promptTokens":254,"candidateTokens":204,"totalTokens":113738,"cachedTokens":113280,"reasoningTokens":106,"cost":0.0010006799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:25:04.617Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:25:15.036Z","data":{"text":"Now let me run the proposal's full verify:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:25:15.036Z","data":{"promptTokens":195,"candidateTokens":1837,"totalTokens":115696,"cachedTokens":113664,"reasoningTokens":1742,"cost":0.002944884,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:25:15.036Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:26:09.825Z","data":{"promptTokens":849,"candidateTokens":311,"totalTokens":116744,"cachedTokens":115584,"reasoningTokens":234,"cost":0.001321404,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:26:09.825Z","data":{"tool":"read","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"text","timestamp":"2026-09-27T22:26:25.202Z","data":{"text":"The file is over the 250-line budget. Let me rewrite it more compactly:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:26:25.202Z","data":{"promptTokens":2933,"candidateTokens":4525,"totalTokens":124194,"cachedTokens":116736,"reasoningTokens":1847,"cost":0.007010316,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:26:25.203Z","data":{"tool":"write","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:26:25.203Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:26:28.033Z","data":{"promptTokens":187,"candidateTokens":451,"totalTokens":124670,"cachedTokens":124032,"reasoningTokens":349,"cost":0.001341492,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:26:28.034Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:26:41.886Z","data":{"promptTokens":338,"candidateTokens":1862,"totalTokens":126744,"cachedTokens":124544,"reasoningTokens":1718,"cost":0.0030830640000000004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:26:41.886Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:26:45.823Z","data":{"promptTokens":177,"candidateTokens":673,"totalTokens":127442,"cachedTokens":126592,"reasoningTokens":576,"cost":0.001620252,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:26:45.824Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:27:00.449Z","data":{"text":"Let me move the input/node-set types into the types file and compress the trace file. First the types:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:00.449Z","data":{"promptTokens":1351,"candidateTokens":3402,"totalTokens":132113,"cachedTokens":127360,"reasoningTokens":3305,"cost":0.00525186,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:00.450Z","data":{"tool":"read","summary":"src/core/web/system-graph-types.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:03.015Z","data":{"promptTokens":241,"candidateTokens":491,"totalTokens":132828,"cachedTokens":132096,"reasoningTokens":0,"cost":0.001454076,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:03.016Z","data":{"tool":"edit","summary":"src/core/web/system-graph-types.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:27:03.017Z","data":{"path":"src/core/web/system-graph-types.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:10.491Z","data":{"promptTokens":249,"candidateTokens":2378,"totalTokens":135235,"cachedTokens":132608,"reasoningTokens":42,"cost":0.003723948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:10.491Z","data":{"tool":"write","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:27:10.492Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:12.894Z","data":{"promptTokens":220,"candidateTokens":208,"totalTokens":135468,"cachedTokens":135040,"reasoningTokens":113,"cost":0.00112584,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:12.894Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:18.987Z","data":{"promptTokens":211,"candidateTokens":1133,"totalTokens":136640,"cachedTokens":135296,"reasoningTokens":1044,"cost":0.0022346759999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:18.988Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:20.805Z","data":{"promptTokens":234,"candidateTokens":136,"totalTokens":136818,"cachedTokens":136448,"reasoningTokens":59,"cost":0.001052088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:20.806Z","data":{"tool":"read","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:22.890Z","data":{"promptTokens":411,"candidateTokens":155,"totalTokens":137270,"cachedTokens":136704,"reasoningTokens":78,"cost":0.001129524,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:22.891Z","data":{"tool":"read","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:33.060Z","data":{"promptTokens":337,"candidateTokens":3181,"totalTokens":140734,"cachedTokens":137216,"reasoningTokens":852,"cost":0.004741596,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:33.061Z","data":{"tool":"write","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:27:33.061Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:35.166Z","data":{"promptTokens":215,"candidateTokens":110,"totalTokens":140869,"cachedTokens":140544,"reasoningTokens":0,"cost":0.001039764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:35.166Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:42.121Z","data":{"promptTokens":163,"candidateTokens":191,"totalTokens":141154,"cachedTokens":140800,"reasoningTokens":80,"cost":0.0011229,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:42.122Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:47.052Z","data":{"promptTokens":175,"candidateTokens":993,"totalTokens":142224,"cachedTokens":141056,"reasoningTokens":786,"cost":0.0020904359999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:47.053Z","data":{"tool":"edit","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:27:47.055Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:49.264Z","data":{"promptTokens":174,"candidateTokens":134,"totalTokens":142388,"cachedTokens":142080,"reasoningTokens":0,"cost":0.00106548,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:49.264Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:53.110Z","data":{"promptTokens":319,"candidateTokens":731,"totalTokens":143386,"cachedTokens":142336,"reasoningTokens":487,"cost":0.001826916,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:53.110Z","data":{"tool":"edit","summary":"src/core/web/system-graph-trace.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:27:53.111Z","data":{"path":"src/core/web/system-graph-trace.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:55.291Z","data":{"promptTokens":184,"candidateTokens":134,"totalTokens":143550,"cachedTokens":143232,"reasoningTokens":0,"cost":0.0010753919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:55.292Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:27:57.174Z","data":{"promptTokens":226,"candidateTokens":152,"totalTokens":143738,"cachedTokens":143360,"reasoningTokens":40,"cost":0.00111036,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:27:57.174Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:28:00.997Z","data":{"promptTokens":449,"candidateTokens":119,"totalTokens":144184,"cachedTokens":143616,"reasoningTokens":33,"cost":0.0011391959999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:28:00.998Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:28:59.833Z","data":{"text":"Full `pnpm verify` passes. Let me review the final system-graph.ts:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:28:59.833Z","data":{"promptTokens":435,"candidateTokens":399,"totalTokens":144962,"cachedTokens":144128,"reasoningTokens":307,"cost":0.001474068,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:28:59.833Z","data":{"tool":"read","summary":"src/core/web/system-graph.ts"}}
+{"type":"text","timestamp":"2026-09-27T22:29:09.027Z","data":{"text":"Let me strengthen the survivor test to exercise dedup across capabilities:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:29:09.027Z","data":{"promptTokens":1243,"candidateTokens":1952,"totalTokens":148091,"cachedTokens":144896,"reasoningTokens":1685,"cost":0.0035846759999999993,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:29:09.028Z","data":{"tool":"edit","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:29:09.028Z","data":{"path":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:29:10.633Z","data":{"promptTokens":153,"candidateTokens":98,"totalTokens":148219,"cachedTokens":147968,"reasoningTokens":0,"cost":0.001051308,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:29:10.633Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:29:14.926Z","data":{"promptTokens":244,"candidateTokens":182,"totalTokens":148522,"cachedTokens":148096,"reasoningTokens":74,"cost":0.001180176,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:29:14.927Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:30:15.378Z","data":{"text":"Both verifies pass. Now let me write the result file:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:15.378Z","data":{"promptTokens":138,"candidateTokens":1320,"totalTokens":149938,"cachedTokens":148480,"reasoningTokens":565,"cost":0.00251628,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:15.379Z","data":{"tool":"write","summary":"openspec/changes/106-capability-graph/.run/results/3.md"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:30:15.380Z","data":{"path":"openspec/changes/106-capability-graph/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:18.225Z","data":{"promptTokens":211,"candidateTokens":391,"totalTokens":150362,"cachedTokens":149760,"reasoningTokens":259,"cost":0.00143106,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:18.226Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"text","timestamp":"2026-09-27T22:30:21.279Z","data":{"text":"The task says every file within 250 lines; the test is 270. Let me trim it:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:21.279Z","data":{"promptTokens":208,"candidateTokens":312,"totalTokens":150792,"cachedTokens":150272,"reasoningTokens":174,"cost":0.001338432,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:21.280Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:25.447Z","data":{"promptTokens":1015,"candidateTokens":472,"totalTokens":152271,"cachedTokens":150784,"reasoningTokens":395,"cost":0.001775604,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:25.448Z","data":{"tool":"read","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:41.037Z","data":{"promptTokens":1967,"candidateTokens":4760,"totalTokens":158919,"cachedTokens":152192,"reasoningTokens":2023,"cost":0.007215252,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:41.038Z","data":{"tool":"write","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:30:41.038Z","data":{"path":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:43.276Z","data":{"promptTokens":224,"candidateTokens":110,"totalTokens":159054,"cachedTokens":158720,"reasoningTokens":0,"cost":0.00115152,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:43.276Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:48.096Z","data":{"promptTokens":371,"candidateTokens":661,"totalTokens":160008,"cachedTokens":158976,"reasoningTokens":572,"cost":0.0018583559999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:48.097Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:30:52.645Z","data":{"promptTokens":150,"candidateTokens":678,"totalTokens":160700,"cachedTokens":159872,"reasoningTokens":550,"cost":0.001817832,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:30:52.646Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:02.317Z","data":{"promptTokens":243,"candidateTokens":3163,"totalTokens":163918,"cachedTokens":160512,"reasoningTokens":446,"cost":0.004831571999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:02.317Z","data":{"tool":"write","summary":"tests/web-system-graph-trace.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:31:02.318Z","data":{"path":"tests/web-system-graph-trace.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:04.812Z","data":{"promptTokens":231,"candidateTokens":135,"totalTokens":164078,"cachedTokens":163712,"reasoningTokens":0,"cost":0.001213572,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:04.812Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:07.375Z","data":{"promptTokens":146,"candidateTokens":192,"totalTokens":164306,"cachedTokens":163968,"reasoningTokens":103,"cost":0.0012580080000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:07.376Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:09.361Z","data":{"promptTokens":224,"candidateTokens":139,"totalTokens":164459,"cachedTokens":164096,"reasoningTokens":50,"cost":0.001218576,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:09.362Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:13.177Z","data":{"promptTokens":149,"candidateTokens":622,"totalTokens":165123,"cachedTokens":164352,"reasoningTokens":462,"cost":0.0017772119999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:13.178Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:15.150Z","data":{"promptTokens":167,"candidateTokens":130,"totalTokens":165289,"cachedTokens":164992,"reasoningTokens":32,"cost":0.001196052,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:15.151Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:31:19.004Z","data":{"promptTokens":162,"candidateTokens":169,"totalTokens":165579,"cachedTokens":165248,"reasoningTokens":28,"cost":0.001242888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:31:19.004Z","data":{"tool":"bash","summary":"cd . && "}}
+{"type":"tokens","timestamp":"2026-09-27T22:32:11.044Z","data":{"promptTokens":184,"candidateTokens":305,"totalTokens":165993,"cachedTokens":165504,"reasoningTokens":220,"cost":0.001414224,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:32:11.044Z","data":{"tool":"read","summary":"openspec/changes/106-capability-graph/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-09-27T22:32:16.571Z","data":{"text":"Task complete. Summary:\n\n## What I did\n\n**Added `src/core/web/system-graph-trace.ts`** (`buildSystemGraphTrace`, 248 lines): builds the traceability half of the system graph for opted-in capabilities — `test`/`function` nodes; `owns`, `proves`, `covers`, `serves`, `follows` edges; function `survivors` (from `collectMutationScores`, deduped per `<file>#<function>`); and the `untested`/`unclaimed` gaps, with `sameAdrNumber` matching ADR tags.\n\n**Extended `src/core/web/system-graph-types.ts`** with `SystemGraphTracePart`, `SystemGraphTraceInput`, and `SystemGraphNodeSet<T>`.\n\n**Wired `getSystemGraph`** to build the import graph and scenario index per call, read active/archived changes, collect mutation scores, run the trace builder, and apply its `traceability`/`gaps`/scenario gaps.\n\n**Added `tests/web-system-graph-trace.test.ts`** (250 lines) covering all five \"System graph traceability\" scenarios plus the two \"System graph gaps\" scenarios.\n\n## Verification\n- Task verify: `node --import tsx --test tests/web-system-graph-trace.test.ts` → 7/7 pass.\n- Proposal verify: `pnpm verify` → exit 0 (2606 + 94 tests pass, lint clean).\n\n## Documented deviation\nThe acceptance line asking `getSystemGraph` to share **one** import graph with the code part is only partially met: the traceability side shares the graph built in `getSystemGraph`, but `buildSystemGraphCode` builds its own because `system-graph-code.ts` was not in this task's `scope`. This is recorded under `## Deviated` / `## Missing context` in the result file.\n\nResult written to `openspec/changes/106-capability-graph/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-27T22:32:16.571Z","data":{"promptTokens":792,"candidateTokens":784,"totalTokens":167464,"cachedTokens":165888,"reasoningTokens":358,"cost":0.0021737279999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-27T22:32:16.632Z","data":{"exitCode":0,"pid":95846,"timedOut":false,"elapsedSeconds":699.8}}
+{"type":"verify_ran","timestamp":"2026-09-27T22:32:18.294Z","data":{"command":"node --import tsx --test tests/web-system-graph-trace.test.ts","exitCode":0,"duration":1.45,"output":"▶ system graph traceability\n  ✔ holds the pricing sample test, function, and links (38.902309ms)\n  ✔ holds a surviving mutant from an archived change on its function (24.672596ms)\n  ✔ lists an unknown @adr tag without a follows edge (17.305629ms)\n  ✔ adds no test or function nodes when pricing is not opted in (14.794492ms)\n  ✔ builds two thousand scenarios and proves edges (935.655052ms)\n  ℹ built the 2000-scenario graph in 466ms\n✔ system graph traceability (1032.423097ms)\n▶ system graph traceability gaps\n  ✔ marks an untested scenario and an unclaimed function (17.178166ms)\n  ✔ gives the same gap counts as the report (20.456711ms)\n✔ system graph traceability gaps (37.932775ms)\nℹ tests 7\nℹ suites 2\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1402.844308\n"}}
+{"type":"measures","timestamp":"2026-09-27T22:33:07.795Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":256,"repoFiles":1808,"repoLines":201798,"importFanIn":2,"proposalWords":975,"taskWords":326,"deltaRequirements":9,"deltaScenarios":26,"changedFiles":4,"changedLines":567,"scopeHashes":{"src/core/web/system-graph-trace.ts":{"before":null,"after":"sha256:97cd6bc561917365169ad9ce15638ef5300764d439b4228269f2d854ad7db404"},"src/core/web/system-graph-types.ts":{"before":"sha256:88dd5eada6b77eba74ef1eed3a357de342eb9ea280dfa7670ccf735e8a50e914","after":"sha256:2f79ec5a64563256d3854dfa5c9bf3d1a5164bc194bbcedd95f07ac9200161cf"},"src/core/web/system-graph.ts":{"before":"sha256:d265ee409cac52bf79901e650fcd7a9766c9634f108e2cd33abc89c937f2eaab","after":"sha256:e3ff95bc44bc4463524214b2e7f80370bd7b3be531e7f4f8b6995b43f5d3c4ea"},"tests/web-system-graph-trace.test.ts":{"before":null,"after":"sha256:09f71b71ca794adbdb4780560ed5c5e7ca6d3c80e2f5a6caca9dbf99f8f5dc6f"}}}}
+{"type":"done","timestamp":"2026-09-27T22:33:07.800Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-27T22:38:41.720Z","data":{"command":"node --import tsx --test tests/web-system-graph-trace.test.ts","exitCode":0,"duration":1.25,"output":"▶ system graph traceability\n  ✔ holds the pricing sample test, function, and links (31.869817ms)\n  ✔ holds a surviving mutant from an archived change on its function (26.525081ms)\n  ✔ lists an unknown @adr tag without a follows edge (16.361246ms)\n  ✔ adds no test or function nodes when pricing is not opted in (14.931934ms)\n  ✔ builds two thousand scenarios and proves edges (900.697847ms)\n  ℹ built the 2000-scenario graph in 440ms\n✔ system graph traceability (991.577981ms)\n▶ system graph traceability gaps\n  ✔ marks an untested scenario and an unclaimed function (17.759677ms)\n  ✔ gives the same gap counts as the report (21.514845ms)\n✔ system graph traceability gaps (39.577272ms)\nℹ tests 7\nℹ suites 2\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1222.529292\n"}}
