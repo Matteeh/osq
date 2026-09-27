@@ -5,6 +5,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
+import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
 import { isExcludedChangePath } from './hasher.js';
@@ -1108,6 +1109,21 @@ export async function lintChangeFolder(
       { file: docRepoPath },
       'features.writes is no longer supported in proposal frontmatter; write declarations are derived strictly from delta specs under specs/<capability>/spec.md',
     );
+  }
+
+  // Check: every proposal relates to a capability and declares any capability
+  // it creates. A legacy spec.md change document is exempt, as for Surface.
+  if (resolvedDoc.kind === 'proposal') {
+    for (const finding of await collectCapabilityRelationFindings({
+      projectRoot,
+      folderPath,
+      openspecRoot: resolveOpenSpecRoot(config),
+      proposalPath: docRepoPath,
+      data: parseFrontmatter(specContent).data,
+      reads: spec.features.reads,
+    })) {
+      findings.addOwn(finding);
+    }
   }
 
   // Check: contract tables count

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f6d75f624df6de8dc036b02b483b2461ca127a6c566ded7412b5b9804ba21b7e"
+build_stamp: "d026fc5"
+project_commit: "b06a8d3"
+exit_code: 0
+scope_files: {"src/core/spec/digest.ts":"sha256:48869da44da185b1d4670f922030ae1c8da4c4821d3e4bebc71745640bda28a3","tests/approval-digest-creates.test.ts":"sha256:e573e83506d20df9b7ef981686fd66b30b1957473081977c1f36ade88663b9c2","tests/ownership-reader.test.ts":"sha256:ce957252de4d78822c3789cfc3011680781a7f736ca9545339a2a681c249caa3"}
+---
+2026-09-27T18:51:02.386Z

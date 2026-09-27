@@ -86,6 +86,24 @@ None.
 Adds a manifest requirement to metrics-and-reporting.
 `;
 
+const GHOST_PROPOSAL = PROPOSAL.replace('features:', 'creates:\n  - ghost-capability\nfeatures:');
+
+const GHOST_DELTA = `# Spec Delta: ghost-capability
+
+## Purpose
+
+A placeholder capability whose living spec does not exist yet.
+
+## ADDED Requirements
+
+### Requirement: Ghost behavior
+The system SHALL behave like a ghost.
+
+#### Scenario: Works
+- **WHEN** invoked
+- **THEN** it works
+`;
+
 describe('run manifest', () => {
   let tmpDir: string;
   let specFolder: string;
@@ -169,7 +187,8 @@ describe('run manifest', () => {
   it('records null for a hashed file that does not exist', async () => {
     const ghostDeltaDir = path.join(specFolder, 'specs', 'ghost-capability');
     await fs.mkdir(ghostDeltaDir, { recursive: true });
-    await fs.writeFile(path.join(ghostDeltaDir, 'spec.md'), '# ghost\n', 'utf8');
+    await fs.writeFile(path.join(ghostDeltaDir, 'spec.md'), GHOST_DELTA, 'utf8');
+    await fs.writeFile(path.join(specFolder, 'proposal.md'), GHOST_PROPOSAL, 'utf8');
 
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
 

@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
+import { checkTraceabilityCapabilities } from './config-capabilities.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
 import { applyHarnessModelEnv } from './config-env.js';
@@ -216,12 +217,18 @@ export async function loadConfig(projectRoot: string): Promise<OsqConfig> {
   const envOverrides = envModel ? applyHarnessModelEnv(userConfig, harness, envModel) : {};
 
   try {
-    return defineConfig({
+    const config = defineConfig({
       ...userConfig,
       harness,
       ...envOverrides,
       ...(userConfig.planner ? { planner: userConfig.planner } : {}),
     });
+    await checkTraceabilityCapabilities(
+      projectRoot,
+      config.paths.openspecRoot,
+      config.traceability?.capabilities ?? [],
+    );
+    return config;
   } catch (err) {
     if (configPath !== undefined) throw new ConfigLoadError(configPath, err);
     throw err;

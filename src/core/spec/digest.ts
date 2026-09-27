@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
+import { readCreates } from './capability-relations.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
 import { readLivingCapabilityNames, resemblingCapability } from './digest-capability.js';
 import { type DigestDecision, collectDigestDecisions } from './digest-decisions.js';
@@ -160,18 +161,23 @@ export async function buildApprovalDigest(
   const resolvedDoc = await resolveChangeDoc(changeFolder);
   const content = resolvedDoc ? await fs.readFile(resolvedDoc.path, 'utf8') : '';
   const spec = parseSpecMd(content);
-  const body = resolvedDoc ? parseFrontmatter(content).body : '';
+  const frontmatter = parseFrontmatter(content);
+  const body = resolvedDoc ? frontmatter.body : '';
+  const creates = readCreates(frontmatter.data);
   const humanSteps = parseHumanSteps(body);
   const tasks = await resolveTasks(projectRoot, changeFolder);
   const changeCapabilities = await readCapabilities(changeFolder);
   const living = await readLivingCapabilityNames(projectRoot, config.paths.openspecRoot);
+  const declaredCreates = new Set(creates.names);
   const capabilities: ApprovalDigestCapability[] = changeCapabilities.map(({ name, delta }) => ({
     name,
     added: delta.added.map((requirement) => requirement.name),
     modified: delta.modified.map((requirement) => requirement.name),
     removed: delta.removed.map((requirement) => requirement.name),
     creates:
-      !living.includes(name) && delta.purpose !== '' && resemblingCapability(name, living) === null,
+      !living.includes(name) &&
+      (declaredCreates.has(name) ||
+        (delta.purpose !== '' && resemblingCapability(name, living) === null)),
   }));
   const flagTasks: ApprovalFlagTask[] = tasks.map((task) => ({
     number: task.number,

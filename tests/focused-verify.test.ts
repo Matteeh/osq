@@ -69,7 +69,8 @@ title: Focused verify
 depends_on: []
 verify: node pass.cjs
 features:
-  reads: []
+  reads:
+    - pricing
 ---
 ## Goal
 

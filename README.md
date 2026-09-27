@@ -103,6 +103,8 @@ verify: pnpm test
 features:
   reads:
     - inventory-reservation
+creates:
+    - order-cancellation
 ---
 ## Goal
 ## Verify
@@ -116,7 +118,7 @@ features:
 ## Delta
 ```
 
-The frontmatter `verify` is the change-level command the watcher runs after every task and before archiving. An optional `fixes` list names the changes this one reworks; lint fails on an id that names no active, archived, or rejected change, and `fixes` never affects execution order. Capability writes are not declared in frontmatter: the set of delta specs under `specs/<capability>/spec.md` is the authoritative declaration of what the change writes.
+The frontmatter `verify` is the change-level command the watcher runs after every task and before archiving. An optional `fixes` list names the changes this one reworks; lint fails on an id that names no active, archived, or rejected change, and `fixes` never affects execution order. Every change relates to a capability: it writes a delta under `specs/<capability>/spec.md` or names a capability in `features.reads`, and every read names a real capability. A new capability is declared in `creates` in the frontmatter. `osq lint` enforces this once the project has a living capability spec, and `traceability.capabilities` must name real capabilities.
 
 `## Human steps` holds what osq cannot do. Steps under `### Before approval` show in the approval digest and on the inbox's approval item. Steps under `### After landing`, or a `check: <command>` in the frontmatter, leave the change **verification pending** once it archives: changes that depend on it wait until you run `osq check <id>` (for a `check` command) and record the outcome with `osq verified <id> --passed` or `--failed`. `osq status`, `osq show`, and the inbox list pending changes with their next command. Write `None` under a heading with no steps.
 

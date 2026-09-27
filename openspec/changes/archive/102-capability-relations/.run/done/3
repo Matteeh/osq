@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b5b85d664a8fbd87300d17735afaa24cb763fe4c6b964544d3400f5a6392ea69"
+build_stamp: "d026fc5"
+project_commit: "60cdbfe"
+exit_code: 0
+scope_files: {"src/core/foundation/config-capabilities.ts":"sha256:c1c8f712dafe1b05b4d4b48e9d9df63139944f8ba2dd202a1e83535bdcfabb09","src/core/foundation/config.ts":"sha256:c4a4cc11e95c05f3e267bbd492a1f841e9de6bfc5ac13e60301fd43b5a9a9b2f","tests/traceability-capability-names.test.ts":"sha256:4b43385014d320e2456469bf933b064ca842e0c9bcb020bc4e41b8110282c5d8"}
+---
+2026-09-27T18:54:48.750Z

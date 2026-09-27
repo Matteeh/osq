@@ -186,6 +186,10 @@ your complete prompt; read it and follow it exactly.
 - Guidance a task needs about another capability's code, such as how to test
   against it, goes into that capability's spec through a delta, not only into the
   task.
+- Every change relates to a capability: it writes a delta or names one in
+  \`features.reads\`, and every read names a living capability or one the
+  change creates. List each new capability in \`creates\` in the proposal
+  frontmatter. Never invent a capability to avoid touching an existing one.
 - Replacing a requirement's behavior is a REMOVED requirement plus an ADDED one.
   A MODIFIED requirement must keep every scenario it already has; \`osq lint\` and
   archive refuse one that drops any.

@@ -106,12 +106,20 @@ interface ChangeHandle {
 async function createChange(
   root: string,
   title: string,
-  options: { capability?: string; delta?: string } = {},
+  options: { capability?: string; delta?: string; creates?: readonly string[] } = {},
 ): Promise<ChangeHandle> {
   const spec = await createNewSpec(root, title);
   const proposalPath = path.join(spec.folderPath, 'proposal.md');
   const proposal = await fs.readFile(proposalPath, 'utf8');
-  await fs.writeFile(proposalPath, proposal.replace(/^verify:.*$/m, `verify: ${VERIFY}`), 'utf8');
+  const withVerify = proposal.replace(/^verify:.*$/m, `verify: ${VERIFY}`);
+  const withCreates =
+    options.creates === undefined
+      ? withVerify
+      : withVerify.replace(
+          `verify: ${VERIFY}`,
+          `verify: ${VERIFY}\ncreates:\n${options.creates.map((name) => `  - ${name}`).join('\n')}`,
+        );
+  await fs.writeFile(proposalPath, withCreates, 'utf8');
 
   const taskPath = path.join(spec.folderPath, 'tasks', '1.md');
   const task = await fs.readFile(taskPath, 'utf8');
@@ -249,10 +257,12 @@ describe('lint output', () => {
     await writeLivingSpec(root, 'cap', LIVING_ONE_LONG);
     await createChange(root, 'First Clean', {
       capability: 'other',
+      creates: ['other'],
       delta: delta('other', CLEAN_ADDED, PURPOSE),
     });
     await createChange(root, 'Second Clean', {
       capability: 'another',
+      creates: ['another'],
       delta: delta('another', CLEAN_ADDED, PURPOSE),
     });
 

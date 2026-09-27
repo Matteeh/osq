@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5013dcc87fc4dd9b71bb215ab93e649246b4db1d071dd52f06bd42bc635bc35e"
+build_stamp: "d026fc5"
+project_commit: "9d74bc4"
+exit_code: 0
+scope_files: {"PLANNER.md":"sha256:387790b16f4ca3ea62adb95a7888daac30640e058119f2b23e08d6b397776df7","README.md":"sha256:9d0f6b5fbb817d249c5ac186a3285351cda2943abd763564de44bab67c71051e","src/core/foundation/init-blocks.ts":"sha256:dda2ada388c551cff41fc83bc806c934b5a2fed73083489eeddd7c70478170a6","templates/PLANNER.md":"sha256:f69dfde996931ce2552b6d953692ee42040baa109f32d470c79133871ab5104b","tests/capability-relations-docs.test.ts":"sha256:9d6ffa15c69499a670cd819c6dde3c70e26c1ddf95e5aa96ab457df9725d140d"}
+---
+2026-09-27T18:59:12.615Z

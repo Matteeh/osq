@@ -69,6 +69,23 @@ export function resemblingCapability(name: string, living: readonly string[]): s
 }
 
 /**
+ * The living name with the smallest edit distance to `name`, the first in name
+ * order on a tie, or null when there is no living name at all.
+ */
+export function nearestCapability(name: string, living: readonly string[]): string | null {
+  let nearest: string | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const candidate of [...living].sort(compareText)) {
+    const distance = editDistance(name, candidate);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = candidate;
+    }
+  }
+  return nearest;
+}
+
+/**
  * Living capability names: the directories under `<openspecRoot>/specs` that
  * hold a `spec.md`, in name order.
  */
