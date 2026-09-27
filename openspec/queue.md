@@ -6,93 +6,150 @@ Each item's body becomes that change's `brief.md` word for word. Drive the run w
 
 Stage 1 of `decisions/003-git-strategy.md` is complete, and change 100 turned `vcs.enabled` on for this repository. From change 101, osq's changes run in worktrees, are approved on `main`, and land by hand.
 
-The inbox dispatcher was four items. `inbox-dispatch-order`, `inbox-follow-sound`, and `inbox-cards` landed as changes 097 to 099; `inbox-wait-log` remains.
+Stage 2 is three items, queued on 2026-09-27 after landing 101 and 102 by hand needed a hand-resolved conflict in a living spec: `archived-once`, `osq-land`, and `osq-sync`. Until `osq land` exists, land each change before approving the next.
 
-Capabilities are three items, in order: `capability-relations`, `capability-sidecar`, and `capability-graph`, queued on 2026-09-27.
+The inbox dispatcher landed as changes 097 to 101. Capabilities are three items: `capability-relations` landed as 102; `capability-sidecar` and `capability-graph` remain.
 
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
-## [inbox-wait-log] osq inbox records how long items waited and osq report shows it
+## [result-none-sections] A result section that says only None counts as empty, however it is written
 
 Depends on: nothing
 
 ### Goal
 
-osq records how long each item waited for a human, so it shows whether reviews happen sooner without getting worse.
+A result section whose content is "None", written as a bullet, in bold, or followed by a short explanation, counts as empty. A task is never killed as `blocked` by `- None.` under `## Blocked`, and `- None.` under `## Deviated`, `## Missing context`, or `## Outside scope` is never counted as a disclosure.
 
 ### Context
 
-- `inbox-cards` opens cards. `osq inbox` runs on the reviewer's machine, and `~/.osq/` already holds derived per-user data such as `~/.osq/last-look/`.
-- `src/core/report/report.ts` is allow-listed in the line budget, so new report sections go in their own module.
+- `cleanSection` in `src/core/report/result-sections.ts` treats a section as empty only when its trimmed text is exactly `None`, any case, with an optional period.
+- `checkBlocked` in `src/watcher/blocked.ts` fails the task with reason `blocked` when `parseResultSections` returns a non-null `blocked`, and `checkBlockedFirst` runs it before any `verify` (change 078). In a consumer project an executor wrote `- None.` under `## Blocked`, and a task whose tests had all passed died as blocked.
+- The same parser feeds `readChangeDisclosures` and `countChangeDisclosures`, so `osq report` and the plan prompt's "Recent executor disclosures" count `- None.` as a real disclosure.
+- As of 2026-09-27, osq's own archive holds about 170 one-line result sections: 102 are `None.`, 40 are `- None.`, about 12 are `None` followed by `;` or `.` and an explanation (`None; the task is complete.`), and a few start with `Nothing`. No section is `N/A`.
+- The executor protocol already says to leave out empty headings. Executors still write them about a quarter of the time.
 
 ### Requirements
 
-- While it runs, `osq inbox` appends to a log under `~/.osq/inbox/`, per project. For each item it records when the item appeared, when its card opened, and when it disappeared, and whether the watcher had anything runnable at each of those moments.
-- An item that appeared while no inbox was running starts its waiting time when the inbox first sees it, and the log marks it that way.
-- The order's age tiebreak uses the log's first-seen time when there is one.
-- `osq report` shows, per kind and for a chosen period, the median and longest waiting time from appearing to disappearing, how long the watcher sat idle while the top item was a human's, and how many items were handled back to back in one session. For a period with no log, those numbers say not measured.
+- A section counts as empty when, after removing a leading list marker (`-`, `*`, `+`, or `1.`) and surrounding emphasis (`*`, `**`, `_`), its text is the word `None`, any case, alone or followed by `.`, `;`, `,`, or `:` and anything after it.
+- `None of the fixtures exist; I need a seed script` stays content: `None` followed by a space and more words is a sentence, not an empty marker.
+- This applies to every section `parseResultSections` returns, `Touched` included.
+- A task whose `## Blocked` holds `- None.` reaches its `verify` as if the heading were absent.
 
 ### Non-goals
 
-- Streaks, and routing items to one reviewer in a team.
+- Running `verify` when `## Blocked` holds real content, or finishing a blocked task whose verify passes. `## Blocked` stays the executor's explicit request for a human, checked before verify.
+- Other words for nothing (`N/A`, `Nothing`, `Not blocked`). None occurs in the archive's empty sections, and guessing at meaning under `## Blocked` risks swallowing a real need.
+- Changing the executor protocol text or the dead marker.
 
 ### Notes for planning
 
-- Test the report from a fixture log.
+- One task: `cleanSection` and its tests in `tests/result-sections.test.ts` or a new test file, plus a `checkBlocked` case through the watcher path that `tests/blocked-exit.test.ts` uses.
+- Include the archive's shapes as test cases: `None.`, `- None.`, `* **None**`, `None; the task is complete.`, `None. All acceptance lines are satisfied.`, and the counter-case `None of the fixtures exist; I need a seed script`.
+- `osq report`'s disclosure counts for archived changes drop once this lands. Check that no report fixture pins a count that includes a bulleted `None`.
 
-## [capability-relations] Every change relates to a capability, and creating one is declared
+## [archived-once] A landed change counts once, even while its worktree is kept
 
 Depends on: nothing
 
 ### Goal
 
-Every change relates to at least one capability, creating a capability is an explicit declaration, every capability name osq reads names a real capability, and every caller reads code ownership through one function.
+After a change lands by hand, osq counts its archive once. Today the kept worktree still holds the archive, so osq sees two archived changes with the same folder, and `osq queue` fails.
 
 ### Context
 
-- Lint derives a change's writes from its delta folders at `openspec/changes/<id>/specs/<capability>/`. An ADDED-only delta for a capability that doesn't exist creates a new capability at archive, so a misspelled folder silently creates one.
-- The proposal's reads are parsed as `features.reads` in `src/core/spec/parser.ts` and never checked against the living specs.
-- `parseCodeOwnership` in `src/core/spec/parser.ts` extracts the globs of a living spec's `### Requirement: Code ownership` block, and `readCapabilityOwnership` in `src/core/spec/capability-impact.ts` reads every capability's globs. As of 2026-09-27 they are called from `impact-lint.ts`, `traceability-lint.ts`, and `src/core/report/report-traceability.ts`. Recheck for other readers.
-- `traceability.capabilities` in `osq.config.ts` names capabilities. `validateTraceabilityConfig` in `src/core/foundation/config-traceability.ts` checks only that it is `'all'` or a list of strings, so a misspelled name opts nothing in and nothing reports it.
-- There are eight capabilities: cli-foundation, metrics-and-reporting, spec-lint-and-approve, status-inspection, traceability, version-control, watcher-and-harness, and web-inspection. Recount before stating numbers.
-- In git stage 0, a test that pinned osq's ADR list by number broke as soon as an ADR was added.
+- On 2026-09-27, after changes 101 and 102 landed by hand on `main` with their worktrees kept under `~/.osq/worktrees/osq/`, `osq queue` failed with `Ambiguous queue association for "inbox-wait-log": multiple archived changes (101-inbox-wait-log, 101-inbox-wait-log)`, from `src/core/status/queue-state.ts`.
+- `listChanges` in `src/core/status/change-locations.ts` lists changes from every tree the resolver returns: the checkout and each worktree. A landed change's archive is in both.
+- `osq message` reads the archive from the kept worktree (change 095), so the worktree cannot simply be dropped from the resolver.
 
 ### Requirements
 
-- Lint rejects an active change that writes no delta and declares no read, naming both ways to fix it.
-- Every entry in the proposal's reads names an existing capability or one the same change creates. Otherwise lint rejects it and suggests the nearest existing name.
-- Proposal frontmatter accepts `creates: [<capability>]`.
-  - An ADDED-only delta for a missing capability that isn't listed in `creates` is rejected, with the nearest existing name.
-  - A `creates` entry that already exists is rejected.
-  - A `creates` entry with no delta that adds it is rejected.
-- Every name in `traceability.capabilities`, unless it is `'all'`, names an existing capability or one an active change creates. Otherwise osq reports a config error with the nearest existing name.
-- `osq approve` prints one line per capability the change creates.
-- One function answers code ownership, exposed as `getCapabilityOwnership()` or by keeping `readCapabilityOwnership` as that function. Every reader uses it instead of calling `parseCodeOwnership` itself.
-- README and the managed `PLANNER.md` block state the relation rule, that creation is declared in `creates`, and that a planner never invents a capability to avoid touching an existing one.
-- A lint test runs the pinned OpenSpec validator over a fixture change carrying `creates:`, so compatibility stays checked across upgrades.
-
-### Surface
-
-- Frontmatter: `creates`.
-- Lint errors: missing relation, unknown read, undeclared creation, duplicate creation, creation without a delta.
-- Config error: unknown capability in `traceability.capabilities`.
+- When the same archived folder is in the checkout and in a worktree, the resolver lists it once, from the checkout, since the checkout's copy is the landed one.
+- `osq queue`, `osq status`, bare `osq`, `osq inbox`, and `osq report` each count such a change once.
+- `osq message <id>` still works for a change that has not landed.
 
 ### Non-goals
 
-- Groups and other capability metadata. That's `capability-sidecar`.
-- Statuses, overrides or project rule settings.
-- Changing the spec or delta format, or how deltas merge.
-- Adding relations to archived changes.
+- Removing worktrees. That's `osq-land`.
 
 ### Notes for planning
 
-- Recount the capabilities and the archive through the latest change before stating numbers in the proposal.
-- Tests check behaviour on fixtures. None of them pins this repository's list of capabilities, so adding a capability can't break a test.
-- The README and `PLANNER.md` edits are tasks in the change, gated by verify, not human steps.
+- Reproduce with a real temporary git repo: approve and archive a change in a worktree, squash it onto the default branch by hand, keep the worktree, then read the queue and status.
+- Check every caller of `listChanges` and `changeTrees` for its own de-duplication before adding one in the resolver.
+
+## [osq-land] osq land lands an archived change in one command, and living specs never conflict
+
+Depends on: archived-once
+
+### Goal
+
+`osq land <id>` lands a change archived on its `osq/` branch onto the default branch in one command: squash, commit with osq's message, clean up. Two changes that both write the same capability spec land one after the other without a hand-resolved conflict, because osq rebuilds living specs from deltas instead of merging them as text.
+
+### Context
+
+- Today a change lands by hand: `git merge --squash osq/<folder>`, then `osq message <id> | git commit -F -`, then removing the leftover draft `osq status` names. README's "Working with version control on" lists these steps.
+- On 2026-09-27, changes 101 and 102 were approved while neither had landed, so both branches were cut from the same `main`. Both appended requirements to `openspec/specs/cli-foundation/spec.md`, and the second squash conflicted. The hand resolution also needed one exact blank line between the two blocks, or `tests/living-specs-delta-equivalence.test.ts` failed.
+- Living specs are derived. Archive applies approved deltas deterministically without a model (ADR 002), and a textual merge of a derived file is the wrong tool.
+- ADR 003 decision 7 already specifies `osq land`: it squashes, commits with the generated message so the trailers stay in the surviving commit's trailer block, removes the leftover draft when its hash matches the approved one, removes the worktree, never pushes, and refuses when the checkout has uncommitted changes, when the branch has not archived, when the change is stacked on an unlanded dependency, or when the squash conflicts. ADR 003's rule names `osq land` as the only way osq writes `main`.
+- `buildSquashMessage` and `osq message` (change 095) build the message.
+
+### Requirements
+
+- `osq land <id>` refuses as ADR 003 decision 7 says, each with a message naming the fix.
+- For every living spec the change's archived deltas write, the landed file is the result of applying those deltas, in the change's delta order, to the default branch's current living spec, as archive does. A conflict in such a spec never reaches the human.
+- Any other conflict leaves the checkout exactly as it was before `osq land`, never through a history rewrite, and says to run `osq sync <id>`, or to resolve by hand until `osq-sync` lands.
+- Before committing, `osq land` runs the change's `verify` on the squashed tree. A red verify leaves the checkout as it was and prints the end of the output.
+- The commit's message is what `osq message <id>` prints, trailers intact.
+- It removes the leftover draft when its hash matches the approved one, then the worktree. It keeps the branch and does not push.
+- README's "Working with version control on" uses `osq land` in place of the hand steps, and keeps the hand steps as the fallback.
+
+### Decide before planning
+
+- Automatic stacking on any unlanded archived change, not only on a `depends_on` change, would also prevent conflicts in code files such as README. ADR 003 rejected one shared workspace because every later change would then depend on every earlier one, and implicit stacking brings that back. Proposed default: no implicit stacking; rebuild specs at land, and let `osq-sync` handle code conflicts.
+
+### Non-goals
+
+- Mode B, pull requests, and pushing.
+- Rebasing or rewriting any commit.
+- Syncing a branch with `main`. That's `osq-sync`.
+
+### Notes for planning
+
+- Test with real temporary git repos, as `tests/worktree-run.test.ts` does.
+- Include the 101 and 102 case as a scenario: two changes cut from the same default branch both add requirements to one capability, and landing both in order gives each living spec what applying both changes' deltas in order gives, with no conflict.
+- The command writes the human's checkout, so every refusal is checked before the first write.
+
+## [osq-sync] osq sync and the watcher keep a change's branch current with main
+
+Depends on: osq-land
+
+### Goal
+
+A change's branch takes in the default branch before its first task and before archive, and on request with `osq sync <id>`, so its archive is computed against current `main` and its land rarely conflicts.
+
+### Context
+
+- ADR 003 decision 5: osq never rebases; to take in `main`, it merges `main` into the branch as a new commit, `osq: <id> sync main`. It does so before the first task (except a stacked dependent whose dependency has not landed), before archive, and on request. A sync is a no-op when `main` is already an ancestor of the branch tip. A blocked change is re-derived after a sync.
+- `osq-land` rebuilds living specs from deltas at land and tells the human to run `osq sync <id>` on any other conflict.
+
+### Requirements
+
+- `osq sync <id>` merges the default branch into the change's branch in its worktree as `osq: <id> sync main`, refusing while a task of the change runs.
+- A conflict only in living specs is resolved by rebuilding them from the default branch's specs and the change's deltas, as `osq land` does. Any other conflict aborts the merge, leaves the worktree as it was, and halts the change with a reason that names the conflicting files for a human.
+- The watcher syncs before a change's first task and before archive, as ADR 003 decision 5 says.
+- `osq status` shows the last sync per change.
+
+### Non-goals
+
+- Mode B.
+- Resolving code conflicts automatically.
+
+### Notes for planning
+
+- Test with real temporary git repos, including a stacked dependent whose dependency lands during its run.
 
 ## [capability-sidecar] Each capability carries a small osq.yml with its group
 
-Depends on: capability-relations
+Depends on: nothing
 
 ### Goal
 
