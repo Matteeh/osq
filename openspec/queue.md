@@ -10,6 +10,8 @@ Stage 2 is three items, queued on 2026-09-27 after landing 101 and 102 by hand n
 
 The inbox dispatcher landed as changes 097 to 101. Capabilities are three items: `capability-relations` landed as 102; `capability-sidecar` and `capability-graph` remain.
 
+Debt cleanup is three items, queued on 2026-09-28: `test-path-meanings`, `traceability-opt-in-once`, and `retire-source-comments`. None depends on stage 2, and none changes what a user sees except `retire-source-comments`, which removes comments from living specs.
+
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
 ## [result-none-sections] A result section that says only None counts as empty, however it is written
@@ -294,3 +296,126 @@ The graph view in `packages/ui` shows the whole system as one map you zoom into,
 - Pick a graph library that handles large graphs in the browser, such as one that draws with WebGL. It belongs to `packages/ui`, not to the CLI's runtime dependencies.
 - If `docs-digest` has landed, reuse its archive reader for change edges and the history view.
 - This is likely too large for one change. Consider splitting graph data and `osq graph --json` from the zoomable view.
+
+## [test-path-meanings] Each meaning of "test path" has one function, and the spec says which consumer uses which
+
+Depends on: nothing
+
+### Goal
+
+osq has two meanings of "test path", and the split is deliberate, but nothing says so and each meaning is copied by hand. Each meaning gets one named function, every consumer calls it, and the living spec says which meaning each consumer uses.
+
+### Context
+
+As of 2026-09-28:
+
+- **The frozen-test gate's meaning** is `tests` or any path under `tests/`. The watcher's gate snapshots only that folder: `snapshotTestFiles` in `src/watcher/verify.ts` walks the private constant `TEST_DIR_NAME`. Three private copies of the same check follow it: `isTestFilePath` in `src/core/spec/linter.ts` (the `tests.modify` lint), `isTestPath` in `src/core/spec/test-impact.ts` (the frozen-test impact warning), and `isTestPath` in `src/core/spec/digest.ts` (the approval digest's `existingTests`). The comments on the first two say they mirror the `tests/**` default. The copy in `digest.ts` has no comment.
+- **The traceability meaning** also counts any file whose name holds `.test.` or `.spec.`. `isTestPath` in `src/core/trace/test-path.ts` is the shared definition, used by traceability lint, the report's traceability gaps, and the system graph. `showIsTestPath` in `src/core/status/show.ts` is a private copy of it.
+- The cli-foundation requirement "Test gating configuration" says the configuration loader defines test file patterns, defaulting to `tests/**`. No such configuration key exists. The gate is hardcoded.
+- `src/core/spec/test-impact.ts` already imports from `src/core/run/`, so core code under `run/` can serve both spec lint and the watcher.
+
+### Requirements
+
+- One exported function and one exported folder constant define the frozen-test gate's meaning. The watcher's snapshot, the `tests.modify` lint, the impact lint's frozen-test warning, and the approval digest all use them. No private copy remains.
+- `show.ts` uses `isTestPath` from `src/core/trace/test-path.ts`. No private copy remains.
+- Output doesn't change: the digest, lint findings, `osq show`, the report and the graph print exactly what they print today.
+- The living specs state both meanings, and which consumers use each one. The "Test gating configuration" requirement stops describing a configuration key that doesn't exist.
+
+### Non-goals
+
+- Changing either meaning, for example counting `.test.` files outside `tests/` as frozen.
+- Making the gate's folder configurable.
+
+### Notes for planning
+
+- One refactor task with `verify_starts: green` should be enough. The delta carries the spec text.
+- The delta will probably replace "Test gating configuration" with a REMOVED requirement and an ADDED one, because its scenario names `osq.config.ts` patterns that don't exist, and a MODIFIED requirement has to keep that scenario.
+- `src/core/spec/linter.ts` is on the line-budget allow list and holds grandfathered functions. Check both budget tests if the edit shrinks one.
+
+## [traceability-opt-in-once] "Is this capability opted into traceability" is answered in one place
+
+Depends on: nothing
+
+### Goal
+
+The check for whether a capability is opted into traceability is written once and shared, not copied into each file that needs it.
+
+### Context
+
+As of 2026-09-28:
+
+- `isOptedIn` is copied word for word in `src/core/trace/mutation-pick.ts` and `src/core/run/focused-tests.ts`. `src/core/report/report-mutation.ts` has a third copy that takes the bare `capabilities` value.
+- The related question "is anything opted in" is answered twice: by `hasOptedInCapability` in `src/watcher/mutation-check.ts`, and inline in `getMutationScores` in `report-mutation.ts`.
+- `TraceabilityConfig` and its validator live in `src/core/foundation/config-traceability.ts`, owned by cli-foundation.
+- Two readers expand `'all'` into a set of names, and they differ. `readOptedIn` in `src/core/spec/traceability-lint.ts` adds the change's delta capabilities, but `optedInCapabilities` in `src/core/report/report-traceability.ts` doesn't, because the report has no change.
+
+### Requirements
+
+- `config-traceability.ts` exports one function that answers "is this capability opted in", and one that answers "is anything opted in". The five places above use them, and no private copy remains.
+- Behaviour doesn't change for `'all'`, for a list, or for the empty default.
+
+### Non-goals
+
+- Merging the two `'all'` expanders, which differ on purpose.
+- Changing the traceability config's shape or its validation.
+
+### Notes for planning
+
+- The change writes no delta. It names `traceability` and `cli-foundation` in `features.reads`.
+- One refactor task with `verify_starts: green`, plus a small test of the two exported functions over `'all'`, a list, and `[]`.
+
+## [retire-source-comments] Only Code ownership carries a source comment
+
+Depends on: nothing
+
+### Goal
+
+The `<!-- source: ... -->` comment is removed from every requirement in the living specs except `Code ownership`, and planners stop writing new ones. Nothing reads these comments and nothing checks them, so a planner or an agent that trusts one can be sent to a file that has moved.
+
+### Context
+
+As of 2026-09-28:
+
+- All 428 requirements across the 8 living specs carry a source comment. Only the 8 on `Code ownership` requirements are read: `parseCodeOwnership` in `src/core/spec/parser.ts` reads their globs as the capability's owned files.
+- 106 of the other comments name at least one path that matches no file, 159 of 1,534 entries in all. For example, web-inspection's comments still name `src/core/web-data*.ts` and `src/core/report.ts`.
+- Planners still add them to new deltas: every archived change from 100 to 106 does. No template asks for them. `templates/proposal.md` shows one only on `Code ownership`. Planners copy the habit from the living specs.
+- Living specs change only when the watcher archives a change and applies its deltas. `tests/living-specs-delta-equivalence.test.ts` checks that each living spec equals the deterministic merge of every archived delta, replayed with `mergeDelta` from `src/core/spec/delta.ts`. The test already normalizes one past merge change, with `stripLegacyDeltaReferences`.
+- The scenario index gives checked links from scenarios to tests and functions (change 081), so a loose "source" hint per requirement adds nothing for traceability.
+
+### Requirements
+
+- The change's own deltas remove the comments. For every living capability, the delta holds a MODIFIED requirement for each requirement except `Code ownership`, with exactly the living text minus its source comment line.
+- After this change archives, no living spec in this repository has a source comment outside `Code ownership`, and every other byte is unchanged.
+- `osq lint` warns, and never fails, when a delta requirement other than `Code ownership` carries a source comment. The warning says only `Code ownership` keeps one.
+- Archive and `mergeDelta` don't change. They keep applying approved text exactly (ADR 002).
+- `parseCodeOwnership` and its fallback to backtick paths don't change.
+- The delta-equivalence test passes unchanged, because replaying every archived delta ends at the swept living specs.
+
+### Decision
+
+Decided on 2026-09-28: the change's own MODIFIED deltas do the sweep, and a lint warning stops new comments.
+
+- The watcher that archives a change runs the osq build from the main checkout, not the change's branch. So stripping comments in archive code could not take effect at this change's own archive. MODIFIED deltas work on today's merge, because a MODIFIED requirement replaces its whole block. On 2026-09-28, generated MODIFIED deltas for all 8 capabilities merged with today's `mergeDelta` into exactly each living spec minus its comment lines, leaving the 8 `Code ownership` comments.
+- Costs accepted: the deltas are large (about 8,900 generated lines), and a MODIFIED requirement puts back its whole block as it was at plan time. If another change edits one of those requirements between planning and archive, this change reverts that edit.
+
+Alternatives considered:
+
+- Archive strips comments, and a second change sweeps after the first lands and the watcher restarts. Rejected: two changes, the equivalence test has to ignore comments in between, and archive would alter approved text.
+- Archive strips comments from each capability it rewrites, with no sweep. Rejected: specs no change touches keep stale comments indefinitely, the equivalence test has to ignore them permanently, and archive would alter approved text.
+- Keep the comments and check them. Rejected: the repair costs the same big deltas, and every later file move then needs a spec edit.
+- Lint warning only. Rejected: the 106 stale comments stay.
+- Edit living specs by hand. Rejected: living specs change only at archive, and replaying the archive brings the comments back.
+
+### Non-goals
+
+- Checking that `Code ownership` globs match files.
+- Changing archive, the merge, or the delta or spec format.
+- Editing archived deltas. Archives are history.
+
+### Notes for planning
+
+- Generate the deltas with a script, from `parseCapabilitySpec` in `src/core/spec/delta.ts`: each requirement's `raw` without its source comment line. Before finishing, merge them into the living specs with `mergeDelta`, and check the result equals each living spec minus the non-ownership comment lines.
+- The new lint requirement goes in the spec-lint-and-approve delta beside that capability's sweep, with no source comment of its own.
+- Plan this change right before approving it, with no other approved change that writes specs waiting, and land it before approving the next. Re-generate the deltas if any living spec changed since planning.
+- One task: the lint warning and its tests. Measure in a scratch worktree for tests that pin lint warning counts.
+- The warning is lint's only new rule. Keep it a warning so that an old habit never costs a retry.
