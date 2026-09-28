@@ -4,11 +4,13 @@ The remaining work on osq itself, as an osq brief queue.
 
 Each item's body becomes that change's `brief.md` word for word. Drive the run with `osq plan --next`, then plan the change in a Claude Code session, review it, and `osq approve`.
 
-Stage 1 of `decisions/003-git-strategy.md` is complete, and change 100 turned `vcs.enabled` on for this repository. From change 101, osq's changes run in worktrees, are approved on `main`, and land by hand.
+Stage 1 of `decisions/003-git-strategy.md` is complete, and change 100 turned `vcs.enabled` on for this repository. From change 101, osq's changes run in worktrees and are approved on `main`. From change 107, they land with `osq land <id>`.
 
-Stage 2 is three items, queued on 2026-09-27 after landing 101 and 102 by hand needed a hand-resolved conflict in a living spec: `archived-once`, `osq-land`, and `osq-sync`. Until `osq land` exists, land each change before approving the next.
+Stage 2 was three items, queued on 2026-09-27 after landing 101 and 102 by hand needed a hand-resolved conflict in a living spec. `archived-once` landed as 104 and `osq-land` as 107; `osq-sync` remains.
 
-The inbox dispatcher landed as changes 097 to 101. Capabilities are three items: `capability-relations` landed as 102; `capability-sidecar` and `capability-graph` remain.
+The inbox dispatcher landed as changes 097 to 101. Capabilities were three items: `capability-relations`, `capability-sidecar` and `capability-graph` landed as 102, 105 and 106. The graph view that draws 106's data is not queued yet.
+
+On 2026-09-28 the Notion roadmap page "osq opus planner roadmap based on current state" set the direction that ADR 006 records: osq is the deterministic core, AI does the judgement inside osq's gates, and a human only steers a planning session or taps a decision. Its first milestone, nothing needs a shell after approval, is queued as `adr-006-deterministic-core`, `deterministic-land`, `osq-sync`, `commands-throw`, `confinement-env`, `approve-owns-draft`, `checks-osq-runs` and `steering-triggers`, plus `docs-digest`, which the second milestone starts from. The later milestones stay in Notion until the first is nearly done, so their briefs are written against the code it leaves behind.
 
 Debt cleanup is three items, queued on 2026-09-28: `test-path-meanings`, `traceability-opt-in-once`, and `retire-source-comments`. None depends on stage 2, and none changes what a user sees except `retire-source-comments`, which removes comments from living specs.
 
@@ -120,9 +122,196 @@ Depends on: archived-once
 - Include the 101 and 102 case as a scenario: two changes cut from the same default branch both add requirements to one capability, and landing both in order gives each living spec what applying both changes' deltas in order gives, with no conflict.
 - The command writes the human's checkout, so every refusal is checked before the first write.
 
+## [adr-006-deterministic-core] ADR 006 records that osq is the deterministic core, and its rule reaches every agent
+
+Depends on: nothing
+
+### Goal
+
+`decisions/006-deterministic-core.md` is accepted with the text below. Its rule reaches every planner and executor through the generated rules block in AGENTS.md, and every later brief in this queue can be checked against it.
+
+### Context
+
+As of 2026-09-28:
+
+- The ADR text below was drafted and agreed in a planning session on 2026-09-28. A copy is in Notion, as a child page of "osq opus planner roadmap based on current state".
+- `decisions/` holds ADRs 001 to 005. The index in `decisions/README.md` lists 001, 002, 004 and 005, and leaves out 003.
+- An accepted ADR whose `applies_to` is `all` reaches agents through the rules block that `writeRulesBlock` in `src/core/foundation/rules-block.ts` writes into AGENTS.md. `osq init` calls it. `checkProjectRules` reports a stale block, and both `osq lint` (through `src/core/spec/decisions-lint.ts`) and `osq doctor` run that check, so adding the ADR without refreshing AGENTS.md fails lint.
+- Change 084 added ADR 003 as a human step, and it broke `tests/decisions-read.test.ts`. Adding an ADR belongs in a task, with the tests that pin decisions and the rules block in its scope.
+
+### Requirements
+
+- `decisions/006-deterministic-core.md` holds the text below, with `status: accepted` in place of `proposed` and `Accepted` under `## Status`. Nothing else in it changes.
+- AGENTS.md's generated rules block carries ADR 006's rule exactly as `writeRulesBlock` renders it, and `osq lint` and `osq doctor` report no stale block.
+- The index in `decisions/README.md` lists 003 and 006.
+
+### Non-goals
+
+- Changing ADR 003. Each later change revises the part of ADR 003 it implements, as ADR 006's "Consequences for ADR 003" says.
+- Any code change.
+
+### Notes for planning
+
+- One task. Measure in a scratch worktree which tests pin the decisions folder, its index and the rules block before writing the task's scope. `tests/rules-block.test.ts`, `tests/decisions-lint.test.ts`, `tests/decisions-own.test.ts`, `tests/decisions-read.test.ts` and `tests/init.test.ts` are the first candidates.
+- The change probably writes no delta. It names `cli-foundation` in `features.reads`.
+
+### ADR text
+
+```markdown
+---
+status: proposed
+applies_to: all
+rule: osq does every deterministic step, AI does judgement inside osq's gates, and a human only steers a planning session or taps a decision; a gate either blocks or is removed.
+---
+# 006. osq is the deterministic core
+
+Date: 2026-09-28
+
+## Status
+
+Proposed
+
+## Context
+
+osq exists so that AI can build most of an application, and eventually all of a simple one. AI does the large share of the work. osq is the deterministic part of the flow: it holds state, sequences work, runs the gates, and keeps the record. Its strictness is what makes AI's output trustworthy enough to ship.
+
+Today that split leaks in two directions.
+
+- Deterministic work falls on the human. Landing meant typing `git merge --squash osq/<folder> && osq message <id> | git commit -F -`, then removing a leftover draft by hand. Finished worktrees are removed by hand. osq's own `dist` is rebuilt by hand after it lands.
+- Judgement work falls on the human at a shell. A stuck task, a blocked task, a code conflict, or a regression each ends in a different set of commands: read a marker, edit the plan in a worktree, approve again, `osq retry`, or merge by hand.
+
+Some human steps also add confidence that is not there. `osq verified --passed` records a human's claim that osq cannot check, and it unblocks dependents. `osq done` marks a task done without the verify gate. Approval flags print and then approve regardless. A warning nobody has to act on is not a gate.
+
+The target is osq on a server, driven from a phone. A step that needs a shell, git, or a build cannot be done from a phone, so every such step is a gap.
+
+## Decision
+
+### 1. Every step has one owner
+
+- **osq** owns every step with one correct result given the files and git: state, sequencing, git, landing, deriving specs, running gates, cleanup, and the record. A human never does these, and neither does a model.
+- **AI** owns every step that needs judgement: planning, executing, and later any fixing role. Each AI role has a contract osq checks: what osq gives it, what it may write, and which gates judge its output.
+- **The human** owns intent and risk: what to build, and whether it runs, ships, or stops.
+
+When a brief adds a step, it names the step's owner. A deterministic step given to a human is a bug in osq.
+
+### 2. The human steers or taps
+
+The human has two kinds of step, and no others.
+
+- **Steering** is a planning session with the AI planner. Direction, taste, and the hard calls go in here. Simple software needs little of it, and harder software needs more.
+- **Tapping** is a single decision: approve, land, reject, or retry. A tap never needs a shell. Before each tap, osq shows the evidence it has: the plan's digest and flags for approve, the gates that ran and what they found for land.
+
+Every human step passes the phone test: it can be done from a phone with what osq shows. The CLI stays, and developers may work in it, but it offers the same decisions and nothing only a shell can do.
+
+### 3. osq records no claim it cannot check
+
+A human's word is never recorded as verification. A check that needs doing after landing is a command osq runs. A check osq cannot run is a note for the human, and nothing waits on it. No command marks a task done without its `verify`.
+
+### 4. A gate blocks, or it goes
+
+A gate either stops the flow when it fails or is removed. A warning is allowed only while its signal is being measured. It becomes blocking once its false positives are known and rare, or it is dropped. Gates are how strictness turns into quality: once AI writes both the code and the tests, osq must tell a real test from one that checks nothing, through the pre-spawn red check, traceability, and mutation checks.
+
+### 5. osq decides when the human steers again
+
+Whether a change needs the human does not depend on someone watching. osq halts a change and asks for steering on a fixed list of triggers:
+
+- a task is stuck, dying twice with the same fingerprint
+- an executor reports `blocked`
+- a sync finds that a requirement the change rewrites changed on the default branch
+- a sync or land hits a code conflict
+- archive finds a regression
+
+Every trigger ends the same way. osq records the reason and its evidence, and offers one action: plan it. That opens a planning session with the change, the reason, and the evidence already loaded. The revised plan is linted and comes back as one tap. After approval, the run continues from the last verified state.
+
+A new trigger is added to this list through a spec change. When no trigger fires, the change runs from the approve tap to the land tap with no human in between.
+
+### 6. osq measures how often steering is needed
+
+For simple software most plans should be approved as the planner first proposed them. osq records the change folder's hash when the planner first reports the plan ready and compares it with the approved hash, so the share of plans approved unrevised can be measured.
+
+### 7. The target is a server driven by an app
+
+osq runs on a server that holds its own clone, and the human decides from an app. There is no human checkout there, landing happens on a tap, and GitHub is optional. Server mode gets its own ADR when its brief is written. Local use with a checkout stays supported.
+
+## Consequences for ADR 003
+
+ADR 003 still governs git. These parts of it change, each in the change that implements it:
+
+- Decision 7. Hand landing was a stopgap until `osq land` existed, and it is retired. `osq land` is the only way a change lands, and landing ends complete or leaves nothing changed. The landing change revises decision 7, and decision 8 if the land commit no longer runs commit hooks.
+- Decision 2. Keeping the draft in the checkout after approval traded a leftover copy for a simpler trust rule. The copy costs more than expected, so approval may remove it. The rule then reads that osq writes the checkout only through commands the human runs, meaning approve and land.
+- Mode B. ADR 003's headless mode assumes GitHub labels and merges. It is one possible server mode, not the only one.
+
+Everything else in ADR 003 stands: agents never run git, osq never rewrites history, living specs are re-derived rather than merged, each change gets its own worktree, and nothing reaches the default branch without a human decision.
+
+## Order of work
+
+1. Deterministic landing: `osq land` builds the land commit from the verified tree and cannot end half-done. The hand path goes.
+2. `osq-sync`: branches stay current with the default branch.
+3. Remove the unchecked human steps: `osq verified`, `osq done`, and flags that never block.
+4. Steering triggers: every trigger in decision 5 ends at "plan it".
+5. Stronger gates: reliable signals block.
+6. Server mode and the app.
+
+## Rejected
+
+- **Humans confirming what osq cannot check.** It records confidence without evidence, and in this repository it was used twice in 107 changes.
+- **Warnings as permanent gates.** A warning needs a human to read it, which defeats the point of a gate.
+- **The human noticing when to step in.** It depends on attention, and it does not survive a phone and a server.
+- **Headless AI planning now.** Planning is where the human steers. It may come back later, through the app, a tracker, or both, and is not designed here.
+- **An AI resolver for every trigger.** A resolver for code conflicts waits until sync data shows conflicts are common and mechanical. Until then, a conflict is a trigger like the others.
+```
+
+## [deterministic-land] osq land builds the land commit from the verified tree and cannot end half-done
+
+Depends on: adr-006-deterministic-core
+
+### Goal
+
+`osq land <id>` either lands the change completely or changes nothing. osq builds the land commit from the tree the watcher verified and fast-forwards the default branch to it, so the squash can't conflict in the checkout, a failed commit can't leave a squash staged, and unrelated uncommitted work in the checkout doesn't block a land. The hand-landing path goes, as ADR 006 retires it.
+
+### Context
+
+As of 2026-09-28:
+
+- `landChange` in `src/core/vcs/land.ts` (227 lines, cap 250) runs `git merge --squash` in the checkout through `Vcs.merge(ref, true)`, then `Vcs.commit`. It refuses any modified tracked file (`assertCheckoutClean` in `src/core/vcs/land-checks.ts`), checks again that the default branch hasn't moved (`assertStillLandable`), aborts a squash that conflicts, and when the commit fails it leaves the squash staged and prints `osq message <id> | git commit -F -` or `git reset --merge`.
+- When the default branch has moved, `syncWithDefaultBranch` in `src/core/vcs/sync-main.ts` first merges it into the branch in the change's worktree, rebuilds the living specs, and runs verify there. After that the branch contains the default branch, so its tip's tree is exactly the tree to land.
+- When the default branch hasn't moved, `landChange` runs the proposal's `verify` again through `runLandVerify`. The archive verification in `src/watcher/archiver.ts` runs every task verify and the change verify before `archiveSpecFolder` applies the deltas, so the spec-merged tree is never verified. That is all the land verify adds today. On 107 it would have been the sixth `pnpm verify`.
+- A prototype on 2026-09-28, in a scratch repository: `git commit-tree <branch tip>^{tree} -p <default branch>`, then `git merge --ff-only` in the checkout. It landed with an unrelated modified file and an untracked draft left in place. With a modified file the change also touches, git refused and the default branch didn't move.
+- ADR 003 decision 7 describes the squash in the checkout, and decision 8 says osq runs commit hooks. `git commit-tree` runs no hooks.
+- README's "Working with version control on" step 5 and the code block above it, the `Land:` line `osq message` prints on stderr, and the staged-squash message all describe landing by hand.
+
+### Requirements
+
+- osq builds the land commit from the branch tip's tree, with the default branch as its only parent, `vcs.author` as its author, and the message `osq message <id>` prints. Building it touches no working tree and no index.
+- The checkout moves to the new commit only by a fast-forward. When git refuses because an uncommitted file in the checkout is one the change touches, the default branch stays where it was and osq names the files.
+- `osq land` no longer refuses unrelated uncommitted changes in the checkout. It still refuses a checkout that isn't on the default branch.
+- If the default branch moves between the sync and the fast-forward, the land stops with the default branch unchanged and says to run `osq land <id>` again.
+- The archive runs the change-level `verify` after applying the deltas instead of before, so the archived tree is a verified tree. Task verifies still run before. `osq land` then runs `verify` only when the sync merged new commits.
+- The hand-landing path goes: README's step 5 and its code block, the `Land:` line on `osq message`'s stderr, and the staged-squash message. `osq message <id>` still prints the message on stdout.
+- ADR 003 decisions 7 and 8 describe the new land: built from the verified tree, fast-forwarded, and the land commit runs no commit hooks.
+
+### Decide before planning
+
+- Whether `git commit-tree` honours `commit.gpgSign` in the git versions osq supports. If it doesn't, osq passes `-S` when the setting is on, because ADR 003 decision 8 says osq never disables signing.
+- Whether a red change verify after the delta merge reuses `.run/regressed/change.md` or needs its own reason.
+
+### Non-goals
+
+- Landing without an id, or several changes at once.
+- Landing automatically after archive.
+- Pushing.
+- Removing the leftover-draft handling. `approve-owns-draft` stops creating leftovers.
+
+### Notes for planning
+
+- The squash path, the staged-squash branch and `assertStillLandable` go, so `land.ts` should shrink.
+- `tests/vcs-land.test.ts` and `tests/vcs-land-refusals.test.ts` pin the dirty-checkout refusal and the hook message. Measure the fallout in a scratch worktree before writing scope.
+- The `Vcs` port gains an operation that builds the commit and one that fast-forwards. Write their signatures in the task, as for any port.
+- Change 107 left two duplicates in the code this change rewrites: `outputTail` is defined in both `land-checks.ts` and `sync-main.ts`, and `runLandVerify` in `land-checks.ts` and `runSyncVerify` in `sync-main.ts` are nearly identical. Keep one of each.
+
 ## [osq-sync] osq sync and the watcher keep a change's branch current with main
 
-Depends on: osq-land
+Depends on: deterministic-land
 
 ### Goal
 
@@ -132,6 +321,8 @@ A change's branch takes in the default branch before its first task and before a
 
 - ADR 003 decision 5: osq never rebases; to take in `main`, it merges `main` into the branch as a new commit, `osq: <id> sync main`. It does so before the first task (except a stacked dependent whose dependency has not landed), before archive, and on request. A sync is a no-op when `main` is already an ancestor of the branch tip. A blocked change is re-derived after a sync.
 - `osq-land` rebuilds living specs from deltas at land and tells the human to run `osq sync <id>` on any other conflict.
+- Change 107 built `syncWithDefaultBranch` in `src/core/vcs/sync-main.ts`, with its requirement check and spec rebuild in `src/core/vcs/sync-specs.ts`. It merges the default branch into the branch in the worktree, stops before re-applying a delta over a requirement the default branch changed, rebuilds living specs with `applyOpenSpecDeltas`, runs `vcs.prepare` and the proposal's `verify`, and commits `osq: <id> sync <default branch>`. Only `osq land` calls it, on an archived change. The watcher's syncs run on active changes.
+- `deterministic-land` changes when land and archive verify. Read its archive before planning.
 
 ### Requirements
 
@@ -148,6 +339,44 @@ A change's branch takes in the default branch before its first task and before a
 ### Notes for planning
 
 - Test with real temporary git repos, including a stacked dependent whose dependency lands during its run.
+
+## [commands-throw] osq's commands throw a CommandError instead of ending the process
+
+Depends on: nothing
+
+### Goal
+
+Every CLI command reports failure by throwing `CommandError`, with a message and an exit code, and `runCli` prints it and sets the exit code in one place. Any caller can then run a command and carry on: the inbox now, and web actions later. Nothing changes for a person at a terminal.
+
+### Context
+
+As of 2026-09-28:
+
+- 18 `process.exit(` calls sit in 13 files under `src/cli/`: `approve.ts`, `check.ts`, `done.ts`, `inbox.ts`, `new.ts`, `queue.ts`, `reject.ts`, `report.ts`, `retry.ts`, `run.ts`, `show.ts`, `status.ts` and `verified.ts`.
+- `approveCommand` relies on exiting for its control flow: with several ids, it moves on to the next only because an error ended the process.
+- `runCli` in `src/cli/run.ts` already catches `ConfigLoadError` once, prints it and sets the exit code. `CommandError` follows that pattern.
+- Seven tests stub `process.exit`: `approve-confirm`, `plan-approve-next-step`, `verification-record`, `cli-config-errors`, `opencode-v2`, `watcher-preflight` and `watcher-loop-logging`. Not all of them stub it for a command.
+- The inbox's card session runs each action as a child process because of these exits (change 099). Each action pays a Node start and a config load, and a card can show only the exit code, not why.
+- `landCommand` and `messageCommand` already take injectable `stdout`, `stderr` and `exit`.
+- Source: the Notion page "Technical debt 27.09 MUST FIX".
+
+### Requirements
+
+- `src/cli/` exports `CommandError`, which carries a message and an exit code.
+- No command under `src/cli/` calls `process.exit`. Each throws `CommandError` where it used to exit, so it stops at the same point.
+- `runCli` catches `CommandError`, prints its message to stderr, and sets `process.exitCode`, as it does for `ConfigLoadError`.
+- Every command prints the same output and exits with the same code as before.
+- Tests that stub `process.exit` for a command expect the thrown error instead.
+
+### Non-goals
+
+- Running inbox actions in the same process. That can follow once each command takes its config and working directory as arguments.
+- Changing any command's output or exit codes.
+
+### Notes for planning
+
+- Check which exits in `run.ts` belong to the entry point and stay.
+- A refactor: `verify_starts: green` for the command files, and `tests.modify: true` for the tests that stub `process.exit` for a command. Measure the fallout in a scratch worktree first, since other tests may assert on exit behaviour.
 
 ## [capability-sidecar] Each capability carries a small osq.yml with its group
 
@@ -419,3 +648,255 @@ Alternatives considered:
 - Plan this change right before approving it, with no other approved change that writes specs waiting, and land it before approving the next. Re-generate the deltas if any living spec changed since planning.
 - One task: the lint warning and its tests. Measure in a scratch worktree for tests that pin lint warning counts.
 - The warning is lint's only new rule. Keep it a warning so that an old habit never costs a retry.
+
+## [confinement-env] Agents and verify get only the environment they need, and osq init scaffolds a contained harness
+
+Depends on: adr-006-deterministic-core
+
+### Goal
+
+Agent-written code never sees a secret it doesn't need. osq builds each spawned process's environment from an allowlist instead of passing on its own, writes each harness's permission settings as a guardrail, and `osq init` stops scaffolding a harness with its permission checks switched off. This is stage 1 of the confinement ADR, with no containers yet.
+
+### Context
+
+As of 2026-09-28:
+
+- `runVerificationCommand` in `src/core/run/verification.ts` starts from `{ ...process.env }`. The harness adapters pass `process.env`, or spread it and add `OSQ_TASK_NUMBER` and `OSQ_SPEC_FOLDER`: `claude-exec.ts`, `pi.ts`, `codex.ts`, `agy.ts`, `opencode.ts`, and the default in `src/harness/process.ts`. Every variable in the shell that starts osq reaches the agent and every test it writes.
+- `osq init` scaffolds `harness: process.env.OSQ_HARNESS || 'agy'` (`src/core/foundation/init.ts`), its `.env.example` sets `OSQ_HARNESS=agy`, and the agy adapter defaults `dangerouslySkipPermissions` to true.
+- `vcs.prepare` runs `pnpm install` through `runPrepare` in `src/core/spec/approve-worktree.ts`, which runs every dependency's install scripts.
+- The confinement ADR is drafted in Notion under Security, "Confinement ADR". It's numbered 004, which the pinned OpenSpec validator already has, so it becomes 007. This item is its stage 1. Its roles are prepare, agent, verify and planner, and its decision 1 says verify never gets the model API key.
+- The old roadmap's "safer defaults" item is folded in here.
+
+### Requirements
+
+- Each role osq spawns (prepare, the agent, and verify with its focused runs and mutation checks) gets an environment built from an allowlist: the variables every process needs, the ones osq sets, and the names the project lists for that role in config. Nothing else is inherited.
+- The agent role gets the model API key its harness needs. Verify never does.
+- A variable the project's tests need is declared by name in config and passed only to verify.
+- Each harness adapter writes that harness's own permission settings for the agent where it has them: deny git, deny network tools, and deny or ask for destructive commands. For a harness without them, `osq doctor` says so.
+- `osq init` no longer scaffolds a harness with its permission checks disabled.
+- `osq doctor` reports how contained each role is.
+
+### Decide before planning
+
+- Whether this change accepts the confinement ADR as 007, with stages 2 to 4 marked provisional, or leaves it proposed. Either way its "mode B" rules become server-mode rules, and it says how it relates to ADR 006.
+- The base allowlist, for example `PATH`, `HOME`, `LANG`, `TERM` and `TMPDIR`, and the config shape for per-role names.
+- Which harness `osq init` picks. The old roadmap suggested the most contained harness installed, printing what it chose and why.
+- Whether agy runs headless without the bypass flag or stalls waiting for approvals.
+
+### Non-goals
+
+- Containers, the network allowlist, and resource limits. Those are the confinement ADR's stages 2 and 3.
+- Confining a planner osq runs. That's stage 4.
+
+### Notes for planning
+
+- Research each harness's permission settings before writing tasks: Claude Code's settings, Codex's sandbox modes, opencode's agent permissions, pi, and agy.
+- Check that this repository's `pnpm verify` still passes with only the allowlist.
+- Probably two changes: the environment and permission settings first, then the init default and the doctor report.
+
+## [approve-owns-draft] Approval moves the draft out of the checkout, and osq done goes
+
+Depends on: deterministic-land, commands-throw
+
+### Goal
+
+After `osq approve`, a change lives in one place: its branch and worktree. The checkout's copy, which looks like the plan but no longer drives anything, is removed at approval. `osq done`, which marks a task done without its verify, is removed, as ADR 006 decision 3 says.
+
+### Context
+
+As of 2026-09-28:
+
+- With `vcs.enabled`, `approveSpec` copies the draft into the new worktree (the `fs.cp` in `src/core/spec/approve-worktree.ts`), commits it there, and leaves the checkout's copy in place. ADR 003 decision 2 chose that so `osq land` would be the only command that writes the checkout.
+- The copy has a cost: `findLeftoverDrafts` in `src/core/status/leftover-drafts.ts`, the `Leftover drafts:` section of `osq status`, the "copy edited since approval" warning, the hash matching, and the cleanup in `osq land`. On 2026-09-28 a planning session opened on 107's leftover copy as "uncommitted work".
+- A stacked approval copies the folder to `<vcs.worktreeRoot>/<repo>/.stacked/<folder>` instead of a branch. Without `vcs.enabled`, the checkout's folder is the change itself.
+- `osq done <id> <task>` writes a done marker with a justification and no verify (`src/core/lifecycle/done.ts`, `src/cli/done.ts`). No archived change used it. AGENTS.md's Principles say a human writes manual `done` through the CLI, and squash outcome lines print `[manual]` for such a task.
+
+### Requirements
+
+- With `vcs.enabled`, `osq approve` removes the checkout's copy of the folder once the approval commit exists on the branch, or once the stacked approval is written. A failed approval leaves the copy.
+- Without `vcs.enabled`, approval moves and removes nothing.
+- ADR 003 decision 2 and its rule say osq writes the checkout only through commands the human runs: approve and land.
+- `osq done` is removed: the command, its core module, and every mention in README, AGENTS.md and the templates. Archives holding a manual done marker still read as they do today.
+
+### Decide before planning
+
+- Whether leftover-draft detection stays as a safety net for drafts left by older approvals and hand landings, or goes.
+- Where a human edits a running change's plan once the checkout has no copy. ADR 003 decision 4 says re-approval runs against the worktree. `steering-triggers` builds on the answer.
+
+### Non-goals
+
+- Changing what a stacked approval stores.
+- `osq verified`. That's `checks-osq-runs`.
+
+### Notes for planning
+
+- Removing a command removes surface from a published package. Say so in CHANGELOG.
+- Tests pin `osq done` and the leftover-draft section. Measure the fallout in a scratch worktree first.
+
+## [checks-osq-runs] Checks after landing are commands osq runs, and nothing waits on a human's word
+
+Depends on: deterministic-land, commands-throw
+
+### Goal
+
+osq never records a human's claim as verification (ADR 006 decision 3). A proposal's `check:` command runs as part of landing, and its result is what's recorded. "After landing" steps become notes that nothing waits on. `osq verified` goes, and so does the verification-pending state that holds dependents back.
+
+### Context
+
+As of 2026-09-28:
+
+- A proposal with `### After landing` steps or a `check: <command>` in its frontmatter archives as verification pending (`readArchivedVerification` in `src/watcher/archiver.ts`). Its dependents wait, and the queue shows it as `verification-pending`, until a human runs `osq verified <id> --passed` or `--failed`. `osq check <id>` runs the recorded command.
+- The state runs through `src/core/status/`: `state.ts`, `dependency-readiness.ts`, `queue-state.ts`, `next-step.ts`, `inbox.ts`, `inbox-projection.ts`, `inbox-text.ts` and `queue-report-detail.ts`. The inbox has a verification item with `p` and `f` keys.
+- PLANNER.md and `templates/PLANNER.md` tell planners that after-landing steps keep verification pending until `osq verified`.
+- Across 107 archived changes, a verification was recorded twice.
+- Approval flags print and then approve anyway, unless `--confirm` is passed (README, "Gates and permissions"). ADR 006 decision 4 says a gate blocks or goes.
+
+### Requirements
+
+- osq runs the proposal's `check:` command as part of `osq land` and records its result in the change's events.
+- `### After landing` steps are shown at land and in `osq show` as notes. Nothing waits on them.
+- `osq verified`, the verification-pending state, the inbox's verification items and their keys, and the queue's `verification-pending` state are removed. Archives holding a recorded verification still read.
+- PLANNER.md and its template describe the new rule.
+
+### Decide before planning
+
+- Where the check runs: in the worktree before the fast-forward, like verify, or in the checkout after it. A server has no checkout.
+- Whether a failed check stops the land or blocks dependents, as a failed gate should, and how a human clears it.
+- Approval flags: count how often each flag fired across the archive by recomputing each archived change's digest. Then make the ones that caught something real lint errors and drop the rest. That may be a change of its own.
+
+### Non-goals
+
+- Human steps before approval. They stay.
+
+### Notes for planning
+
+- Expect REMOVED requirements in status-inspection and cli-foundation. Measure the fallout first.
+- Removing a command needs a CHANGELOG note.
+
+## [steering-triggers] Every way a change gets stuck ends at one action: plan it
+
+Depends on: osq-sync, approve-owns-draft
+
+### Goal
+
+When a change needs a human's judgement, osq decides that, not whoever happens to be watching (ADR 006 decision 5). Each trigger halts the change, records the reason and its evidence, and offers one action: plan it. That opens a planning session with the change, the reason and the evidence loaded. The revised plan comes back for approval, and the run continues from the last verified task. Nothing on this path needs a shell.
+
+### Context
+
+As of 2026-09-28, each trigger ends somewhere different:
+
+- A stuck task, one that died twice with the same fingerprint, waits for `osq retry <id> <n>` after the human finds and fixes the cause.
+- A `blocked` task, where the executor says the plan lacks something, waits for the human to edit the plan, approve again and retry.
+- A regression at archive writes `.run/regressed/<n>.md` or `change.md` and waits for `osq retry`.
+- A code conflict at land stops with the conflicting paths, and the human merges by hand in the worktree.
+- After `osq-sync`, a sync that finds a requirement changed on the default branch, or a code conflict, halts the change with a reason.
+- `osq plan <id> --session` reopens a planning session on an existing change that has a `brief.md`, and `osq plan` writes `plan-prompt.md` into the change folder.
+- ADR 003 decision 4: re-approval runs `osq approve` against the worktree and commits the edits with the new hash.
+- Transient deaths such as `verify_red`, `timeout` and `crashed` already retry automatically.
+
+### Requirements
+
+- A fixed list of triggers halts a change for steering: a stuck task, a blocked task, a requirement the change rewrites that changed on the default branch, a code conflict at sync or land, and a regression at archive. The list lives in a spec, and adding a trigger is a spec change.
+- A halted change has one inbox item, "needs steering", naming the trigger, its reason and its evidence: the dead marker, the conflicting paths, or the changed requirement.
+- The item's one action plans the change: a planning session on the change's own folder, with the trigger, the reason and the evidence in its prompt.
+- After the revised plan is approved, tasks already verified stay done, and the run continues from the first task that isn't.
+- Transient deaths keep retrying automatically and raise no item until they are stuck.
+
+### Decide before planning
+
+- The command for the action at the CLI before the UI exists. Probably `osq plan <id>`, reading the halt from the change's `.run/`.
+- Which done markers a revised plan keeps when it changes a done task's scope or verify.
+- Whether `osq retry` stays for a human who fixed the cause outside osq.
+
+### Non-goals
+
+- The UI action and notifications. Those are later milestones on the roadmap.
+- An AI resolver for code conflicts. It waits until sync data shows conflicts are common and mechanical.
+
+### Notes for planning
+
+- Read ADR 006 decision 5 first.
+- Research the plan-prompt builder, the dead and regressed markers, and the re-approval path in the worktree before writing tasks.
+
+## [docs-digest] A digest of archived changes, by date or by selection
+
+Depends on: nothing
+
+### Goal
+
+A human can ask osq what happened since a date, or what a handful of changes did, and get an answer in a minute of reading instead of an hour in git history. Every line in the digest comes from a file in an archive, so the digest can't say anything the record doesn't. No model is involved.
+
+### Context
+
+As of 2026-09-28:
+
+- Each archive holds the change folder: the proposal with its `## Goal` section, `tasks.md`, the deltas per capability, and `.run/` with the approval hash, done and dead markers, `results/` and `events/`.
+- `src/core/spec/delta.ts` parses deltas into requirements and their scenarios, under ADDED, MODIFIED, REMOVED and RENAMED.
+- `src/core/foundation/decisions.ts` reads ADR frontmatter: status, scope and the one-line rule.
+- osq records every attempt, failure and cost in the events. Recheck which events carry cost and elapsed time.
+- `readLandedAt` in `src/core/web/web-data-lifecycle.ts` reads when a change archived, and change 104 made a landed change count once. On `main`, each land commit carries an `Osq-Change` trailer and the landing date.
+- The `started` event has carried `harness`, `model` and `osqVersion` since change 084. Older archives lack them.
+- `osq report` and `src/core/report/` exist.
+- The dashboard's land view and its "landed since last look" list are meant to read this digest's JSON later, in the roadmap's second milestone.
+- Source: the Notion page "Docs Digest" under DOCS FEAT. Its companions, docs-onboarding and docs-narration, aren't queued yet.
+
+### Requirements
+
+#### Selection
+
+- `osq digest --since <date>`, optionally with `--until <date>`, selects the changes archived in that range, inclusive.
+- `osq digest <id>...` selects changes by id. The two forms can't be combined.
+- An id with no archive is an error that names it. A range with no changes produces an empty digest that says so, and exits zero.
+
+#### What each change contributes
+
+- its id, title and archive date
+- its `## Goal` section, verbatim
+- per capability, the requirements it added, modified, removed or renamed, by name
+- the ADRs its proposal names, with their one-line rules
+- its tasks: how many, how many attempts in total, dead attempts with their reasons, and halts that needed a human
+- its elapsed time, its cost, and the models it used
+
+#### The period
+
+- A digest for a date range starts with totals: changes, requirements added, modified and removed, the capabilities touched most, ADRs dated inside the range, halts, time and cost.
+
+#### Output
+
+- Markdown by default, JSON with `--json`. The JSON gives every change, requirement and ADR a stable id, and its schema carries a version.
+- `--out <file>` writes to a file. Otherwise the digest goes to stdout.
+- `--no-cost` leaves out cost and models, for readers outside the team.
+- The digest never includes tool summaries, verify output, the bodies of `results/`, event contents beyond the fields above, or file paths. A digest gets forwarded, and those belong in the repository.
+- The same archives and arguments produce byte-identical output. Changes are ordered by archive date, then by id.
+
+### Surface
+
+- CLI: `osq digest`.
+- The versioned JSON schema of a digest.
+
+### Non-goals
+
+- Prose written by a model. That's docs-narration.
+- Present-state docs for onboarding. That's docs-onboarding.
+- Changes that haven't archived.
+- Reading git history.
+
+### Verify
+
+`pnpm verify`, plus tests:
+
+- a date range selects exactly the archives dated inside it, including both ends
+- selection by id returns those changes in date order, and an unknown id fails naming it
+- every field above appears for a fixture archive, and a change with a dead task shows its reason
+- a delta with ADDED, MODIFIED, REMOVED and RENAMED requirements lists each under the right heading
+- `--no-cost` output contains no cost and no model
+- no output contains an absolute path, a tool summary or verify output
+- two runs give byte-identical Markdown and JSON
+- an empty range says so and exits zero
+
+### Notes for planning
+
+- Put the archive reader in its own module. docs-onboarding reuses it for a capability's recent changes.
+- Reuse `delta.ts` and the ADR reader rather than parsing again.
+- Older archives may lack fields. Show what exists and mark the rest as not recorded, rather than failing.
+- osq's own archive is the first real input.
