@@ -232,10 +232,7 @@ describe('dispatch land items from an osq worktree', () => {
     assert.equal(lands.length, 1);
     assert.equal(lands[0].change.id, '001');
     assert.equal(lands[0].change.folder, '001-a');
-    assert.deepEqual(lands[0].commands, [
-      'git merge --squash osq/001-a && osq message 001 | git commit -F -',
-      'osq show 001',
-    ]);
+    assert.deepEqual(lands[0].commands, ['osq land 001', 'osq show 001']);
 
     await git(['merge', '--squash', 'osq/001-a'], project.repo);
     await git(['commit', '-qm', 'land 001'], project.repo);

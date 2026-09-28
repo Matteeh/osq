@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ad45e66f9e534f592af09999bef8b4177d4be8dc7da6d87983c77c7833be0a16"
+build_stamp: "d026fc5"
+project_commit: "adf8fad"
+exit_code: 0
+scope_files: {"src/core/spec/apply-deltas.ts":"sha256:6a7b6d57a864a0df0a466113a2e853c8839c5478776539bc34e852e2a18d8d07","src/core/vcs/sync-main.ts":"sha256:a3c1c0e298433f475e44f2196589103121bbee9491f2c86c33841cfeb1974f6c","src/core/vcs/sync-specs.ts":"sha256:3d2677d1704496d77de171f86ce457e07573d6fbc136960da7750549822d9523","src/watcher/archiver.ts":"sha256:5a59d74efd69964371edffc6c0793dc16a1af6001406826d2c9a0a02863b5ba0","tests/vcs-sync.test.ts":"sha256:d0b31251781aaabc001f4b3ae2acaebaed7c45afd9e1b977400143f5567473ba"}
+---
+2026-09-28T13:03:00.830Z

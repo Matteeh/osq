@@ -1,5 +1,5 @@
 import { DEFAULT_BRANCH } from '../foundation/config-vcs.js';
-import type { Vcs, VcsHead, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
+import type { Vcs, VcsHead, VcsMergeResult, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
 
 /** The port used when git is unavailable or the project root is not the repo top. */
 export class NoVcs implements Vcs {
@@ -81,6 +81,22 @@ export class NoVcs implements Vcs {
 
   async commit(_paths: readonly string[], _message: string, _author: string): Promise<string> {
     this.reject();
+  }
+
+  async merge(_ref: string, _squash: boolean): Promise<VcsMergeResult> {
+    this.reject();
+  }
+
+  async mergeAbort(): Promise<void> {
+    this.reject();
+  }
+
+  async stage(_paths: readonly string[]): Promise<void> {
+    this.reject();
+  }
+
+  async isAncestor(_ancestor: string, _descendant: string): Promise<boolean> {
+    return false;
   }
 
   async patch(): Promise<string> {

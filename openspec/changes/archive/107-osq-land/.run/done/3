@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:47f0874f28b14fc7262d31b05b1bff62ad5dfd206dd621e90678529dc2992335"
+build_stamp: "d026fc5"
+project_commit: "76cd895"
+exit_code: 0
+scope_files: {"src/cli/doctor.ts":"sha256:86efc11a080a60ba9c3a5b0bc1082778f490878ec8520dae78318b276c40533b","src/cli/index.ts":"sha256:9db9fb5c6fd47f357955e4c20bcf34804b783af86cf5ec6a0211fbe3a6b2cd3a","src/cli/land.ts":"sha256:345db675efcb5e8dac965261a35857ed92c61cf60a7b1262d981e5d9928e217a","src/core/vcs/land-checks.ts":"sha256:60391e736183e4c7ff3f85eea2aa4add083809bbb3e73d9d95ff50447cb50769","src/core/vcs/land.ts":"sha256:30bd65e1fe3846318d483126a75f2bf6f9c09c335f73c2cae0fd353e4b750773","tests/vcs-land-refusals.test.ts":"sha256:23c466e76055c10f76b8015ebcb34ab486ee50ff324e15af4a862434d89fbfba","tests/vcs-land.test.ts":"sha256:c5ae4f1f698929003f5ddfb4351ad49ddf421d3301d9be4c932f7170e8ead322"}
+---
+2026-09-28T13:15:02.735Z

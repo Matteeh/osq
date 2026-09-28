@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1b00b5da6efeab1d22ad4fbb17b8f1804e43e98b70ff3a3a89cb79aa7c6e8305"
+build_stamp: "d026fc5"
+project_commit: "c36abde"
+exit_code: 0
+scope_files: {"README.md":"sha256:4609d81de06d97102bf6621b151f7629fcce1be1fbf82a44f709dd6f07f0867b","decisions/003-git-strategy.md":"sha256:da351679a884928ef577d836473d351b0a78af3d90861914c9b0e0189d337e62","src/cli/message.ts":"sha256:dc5b57082e22f7ff5778571a1ffeae18eb71f480d3d3708d205cd81ff2a7566a","src/core/status/dispatch-items.ts":"sha256:e89950033001eb0b3b6cf7e2a608312b77a26cd6b1ce8e2db221370591655399","tests/dispatch-items.test.ts":"sha256:15bbde0f3059d8f593809bf023b19ec54cee5b7e550af3599b3dea302d3a15ed","tests/dispatch-keys.test.ts":"sha256:22a27368af012483132f328ca44c969185a5e2788a27af096d131fe6ac70c911","tests/readme-land.test.ts":"sha256:132c70ddf709ae23673ed87be28d237354a44185d8000907527b4c59d3735ead","tests/squash-message.test.ts":"sha256:fb189b7c2267207fc1065734bf215a8e27856ba585e455ecef82cd13695c23e9"}
+---
+2026-09-28T13:19:53.329Z

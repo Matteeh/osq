@@ -36,7 +36,7 @@ export async function messageCommand(
     stdout(message);
     const branch = worktreeBranch(folder);
     stderr(`Branch: ${branch}\n`);
-    stderr(`Land: git merge --squash ${branch} && osq message ${id} | git commit -F -\n`);
+    stderr(`Land: osq land ${id}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     stderr(`${message}\n`);

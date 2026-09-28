@@ -760,7 +760,6 @@ under `NoVcs`, there SHALL be no leftovers and no git read.
 - **THEN** status prints no `Leftover drafts:` section
 
 ### Requirement: Dispatch items
-<!-- source: src/core/status/dispatch-items.ts, src/core/status/dispatch-land.ts, tests/dispatch-items.test.ts -->
 `readDispatchItems(projectRoot, config)` SHALL derive, on every call and
 without writing anything, the items that need a human, and a
 `watcherIdle` flag. It SHALL read active changes, their next steps, and
@@ -777,10 +776,9 @@ items SHALL be in numeric change order, then task order. The kinds are:
   `osq reject <id> --reason <text>`, and `osq show <id>`.
 - `land`: with `vcs.enabled` and `GitVcs`, one per change archived in an
   osq worktree whose `readDependencyState` is `archived`, with commands
-  `git merge --squash osq/<folder> && osq message <id> | git commit -F -`
-  and `osq show <id>`. With `vcs.enabled` off and `GitVcs`, one per folder
-  in the project root's archive directory that `Vcs` status lists as
-  untracked or modified, itself or any path under it, with command
+  `osq land <id>` and `osq show <id>`. With `vcs.enabled` off and `GitVcs`,
+  one per folder in the project root's archive directory that `Vcs` status
+  lists as untracked or modified, itself or any path under it, with command
   `osq show <id>`. Under `NoVcs` there SHALL be no land items.
 - `verify`: one per pending verification, with its next step's command and
   `osq show <id>`.
@@ -809,7 +807,7 @@ items SHALL be in numeric change order, then task order. The kinds are:
 
 #### Scenario: Archived on its branch
 - **WHEN** `vcs.enabled` is on and a change has archived in its worktree and not landed
-- **THEN** there is one `land` item for it, and none after `git merge --squash` and a commit put its archive on the default branch
+- **THEN** there is one `land` item for it with the command `osq land <id>`, and none after `git merge --squash` and a commit put its archive on the default branch
 
 #### Scenario: No git
 - **WHEN** the project is not a git repository
@@ -1105,7 +1103,6 @@ hub and cancels the poll. It SHALL derive once as soon as it starts.
 - **THEN** `onItems` gets `idle` true and the higher change id first
 
 ### Requirement: Card keys
-<!-- source: src/core/status/dispatch-keys.ts, src/core/status/dispatch-text.ts, tests/dispatch-keys.test.ts -->
 `cardKeys(item)` SHALL map each of the item's commands to keys, in the
 item's command order:
 
@@ -1145,7 +1142,7 @@ export `formatDispatchCardBody(item, card)`, the card lines before
 
 #### Scenario: Land in a worktree
 - **WHEN** `cardKeys` runs on a land item archived in a worktree
-- **THEN** the `git merge --squash ...` command is a manual command and `s` is the only key
+- **THEN** `osq land <id>` is a manual command and `s` is the only key
 
 #### Scenario: Screen
 - **WHEN** `formatCardScreen` formats an approval item's card

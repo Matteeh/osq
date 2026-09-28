@@ -51,6 +51,10 @@ const PORT_MEMBERS = [
   'worktreeList',
   'worktreePrune',
   'commit',
+  'merge',
+  'mergeAbort',
+  'stage',
+  'isAncestor',
   'patch',
   'discard',
 ];

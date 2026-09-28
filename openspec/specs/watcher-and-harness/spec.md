@@ -500,8 +500,7 @@ SHALL not affect any archive tree hash.
 - **THEN** that task gets a regressed marker with reason `verify_path_missing` listing the path, its `regressed` event carries `missingPaths` with the path and no `differingPaths`, the command does not run, and the change stays unarchived
 
 ### Requirement: Deterministic delta spec archival and appender removal
-<!-- source: src/watcher/archiver.ts, tests/archiver.test.ts, tests/living-specs-delta-equivalence.test.ts -->
-The archiver SHALL apply delta specifications into `openspec/specs/<capability>/spec.md` exclusively through deterministic delta merges using `applyOpenSpecDeltas`, SHALL NOT append legacy prose sections to feature documents, and the legacy prose appender function `applyDelta` SHALL NOT exist in the codebase.
+The archiver SHALL apply delta specifications into `openspec/specs/<capability>/spec.md` exclusively through deterministic delta merges using `applyOpenSpecDeltas`, SHALL NOT append legacy prose sections to feature documents, and the legacy prose appender function `applyDelta` SHALL NOT exist in the codebase. `applyOpenSpecDeltas` SHALL be defined in `src/core/spec/apply-deltas.ts`, which the default branch sync also uses, and `src/watcher/archiver.ts` SHALL import and re-export it.
 
 #### Scenario: Archiving applies deltas via deterministic merge
 - **WHEN** an approved change with delta specs completes all tasks
@@ -510,6 +509,10 @@ The archiver SHALL apply delta specifications into `openspec/specs/<capability>/
 #### Scenario: Prose appender identifier is deleted
 - **WHEN** the engine source code is inspected
 - **THEN** the identifier `applyDelta` is completely absent from `src/`
+
+#### Scenario: One merge for archive and sync
+- **WHEN** `src/watcher/archiver.ts` and `src/core/vcs/sync-specs.ts` are inspected
+- **THEN** both use the `applyOpenSpecDeltas` that `src/core/spec/apply-deltas.ts` defines, and neither defines its own
 
 ### Requirement: Marker retention under run directory
 <!-- source: src/watcher/runner.ts, src/core/retry.ts, tests/dead-marker-retention.test.ts, tests/retry*.test.ts -->

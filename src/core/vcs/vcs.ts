@@ -24,6 +24,13 @@ export interface VcsStatusEntry {
   readonly from?: string;
 }
 
+/** The result of a merge, clean or holding the unmerged paths. */
+export interface VcsMergeResult {
+  readonly status: 'clean' | 'conflict';
+  /** Unmerged paths relative to the project root, sorted; empty when clean. */
+  readonly conflicts: readonly string[];
+}
+
 /** One entry of `git worktree list`, with its branch and HEAD. */
 export interface VcsWorktree {
   /** Absolute path of the worktree. */
@@ -59,6 +66,13 @@ export interface Vcs {
   /** Drop git's records of worktrees whose directory no longer exists. */
   worktreePrune(): Promise<void>;
   commit(paths: readonly string[], message: string, author: string): Promise<string>;
+  /** Merge `ref` without committing, or squash it, reporting unmerged paths. */
+  merge(ref: string, squash: boolean): Promise<VcsMergeResult>;
+  mergeAbort(): Promise<void>;
+  /** Stage exactly `paths`, including deletions. */
+  stage(paths: readonly string[]): Promise<void>;
+  /** Whether `ancestor` is `descendant` or one of its ancestors. */
+  isAncestor(ancestor: string, descendant: string): Promise<boolean>;
   patch(): Promise<string>;
   discard(paths: readonly string[]): Promise<void>;
 }

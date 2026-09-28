@@ -402,11 +402,7 @@ describe('Message command', () => {
     assert.equal(capture.exitCode, null);
     assert.equal(
       capture.stderr,
-      [
-        `Branch: ${worktreeBranch(ONE)}`,
-        `Land: git merge --squash ${worktreeBranch(ONE)} && osq message 001 | git commit -F -`,
-        '',
-      ].join('\n'),
+      [`Branch: ${worktreeBranch(ONE)}`, 'Land: osq land 001', ''].join('\n'),
     );
     assert.ok(capture.stdout.startsWith('osq: 001 order flow\n'));
     assert.ok(!capture.stdout.includes('Branch:'));

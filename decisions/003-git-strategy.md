@@ -105,14 +105,14 @@ Landing on `main` is one squash commit with today's subject, `osq: 012 observabi
 ```
 Osq-Change: 012-observability-fixes
 Osq-Base: 8463d9c...        the commit the branch was cut from
-Osq-Head: 3fa1b2c...        the archive commit on the branch
+Osq-Head: 3fa1b2c...        the branch tip that landed: the archive commit, or the sync commit after it
 Osq-Approved: sha256:2606...
 Osq-Approved-By: Mathias <mathias@example.org>
 Osq-Model: opencode deepseek/deepseek-flash
 Osq-Version: 0.1.0
 ```
 
-`Osq-Base` and `Osq-Head` are the two hashes a squash would otherwise lose. `Osq-Base` is also written to `.run/base` at approval, because regeneration by a different model needs the starting tree and must not depend on a ref surviving. When tasks used different models, `Osq-Model` repeats once per model; the per-task mapping is in `events/`. In mode B the body also carries `Closes #123` as a plain line, the form GitHub's keyword matching recognises.
+`Osq-Base` and `Osq-Head` are the two hashes a squash would otherwise lose. `Osq-Head` is the branch tip that landed: the archive commit, or the sync commit `osq land` made after it. `Osq-Base` is also written to `.run/base` at approval, because regeneration by a different model needs the starting tree and must not depend on a ref surviving. When tasks used different models, `Osq-Model` repeats once per model; the per-task mapping is in `events/`. In mode B the body also carries `Closes #123` as a plain line, the form GitHub's keyword matching recognises.
 
 Commits a human makes on the branch are allowed in mode A. The squash body lists their subjects under `Manual commits`, and `osq check` reports them, so the record says what happened.
 
@@ -256,7 +256,7 @@ Mode B. The PR is where a human meets the change, three times at most: plan appr
 
 ### 7. Landing in mode A is a human command
 
-`osq land 012` runs `git merge --squash osq/012-observability-fixes` in the checkout, commits with the generated message, and removes the worktree. It refuses if the checkout has uncommitted changes, if the branch has not archived, if the change is stacked on a dependency that has not landed, or if the squash conflicts, in which case it says to run `osq sync 012` first. It removes the checkout's leftover copy of the draft when its hash matches the approved one. It does not push. It exists so that the trailers land in the trailer block of the surviving commit. A hand-run squash puts them into a "Squashed commit of the following" body where `git interpret-trailers` cannot see them.
+`osq land 012` first merges the default branch into `osq/012-observability-fixes` in the change's worktree, as decision 5 describes, when the default branch has moved; a conflict outside the living specs stops it with the paths named. It then runs `git merge --squash osq/012-observability-fixes` in the checkout, commits with the generated message, and removes the worktree. It refuses if the checkout has uncommitted changes, if the branch has not archived, or if the change is stacked on a dependency that has not landed. It removes the checkout's leftover copy of the draft when its hash matches the approved one. It does not push. It exists so that the trailers land in the trailer block of the surviving commit. A hand-run squash puts them into a "Squashed commit of the following" body where `git interpret-trailers` cannot see them.
 
 `osq message 012` ships first, in stage 1. It prints the squash message with its trailer block and the branch to squash, and writes nothing. For a stacked change whose dependency has not landed, it names the dependency to land first. Until `osq land` exists, a change lands by hand with `git merge --squash osq/012-observability-fixes` followed by `git commit` using that message, and keeps its trailers.
 

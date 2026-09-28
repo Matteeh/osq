@@ -116,12 +116,7 @@ async function landItems(projectRoot: string, config: OsqConfig): Promise<Dispat
         folderPath: candidate.folderPath,
       },
       task: null,
-      commands: candidate.worktree
-        ? [
-            `git merge --squash osq/${candidate.folder} && osq message ${id} | git commit -F -`,
-            `osq show ${id}`,
-          ]
-        : [`osq show ${id}`],
+      commands: candidate.worktree ? [`osq land ${id}`, `osq show ${id}`] : [`osq show ${id}`],
     });
   }
   return items;

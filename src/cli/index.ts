@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
-import { doctorCommand } from './doctor.js';
+import { registerDoctorCommand } from './doctor.js';
 import { doneCommand } from './done.js';
 import { registerGraphCommand } from './graph.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
+import { registerLandCommand } from './land.js';
 import { lintCommand } from './lint.js';
 import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
@@ -201,12 +202,7 @@ export function createProgram(version?: string): Command {
       await reportCommand(options);
     });
 
-  program
-    .command('doctor')
-    .description('validate repository health, configuration, and archives')
-    .action(async () => {
-      await doctorCommand();
-    });
+  registerDoctorCommand(program);
 
   program
     .command('serve')
@@ -226,6 +222,7 @@ export function createProgram(version?: string): Command {
   registerApproveCommand(program);
   registerGraphCommand(program);
   registerInboxDispatchCommand(program);
+  registerLandCommand(program);
   registerMessageCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);

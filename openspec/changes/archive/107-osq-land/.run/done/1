@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4d952ff0a4196dccf337ffdc406afcc02a74128a8dda31fe721389a0eab84c4d"
+build_stamp: "d026fc5"
+project_commit: "4df7210"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs-merge.ts":"sha256:c12281ba43b0b9e5d03f3098203df43852d112613346ca700f4a72d15821e382","src/core/vcs/git-vcs.ts":"sha256:448e7985657dc986a1e5f931c01046fad3350827c1f970f18ff06dc142d130a6","src/core/vcs/no-vcs.ts":"sha256:6858262a5c14fa691eca66b256e6eb80518820389e5556548828416bb9411bdf","src/core/vcs/vcs.ts":"sha256:50240a337d77faf3bb3a622505d9e7f0874c9e64d9354ad16992ff83250db6cb","tests/vcs-merge.test.ts":"sha256:f24750e4189d429be1ee86d1979b9f1d74ebe9cd5b841248b0603a4e6eb9aef9","tests/vcs-write.test.ts":"sha256:6b64e4d5a3eeca59f336fcd8a78b1382ebf8f63e609cb5c0d2ce8b209ddb581a"}
+---
+2026-09-28T12:56:39.381Z

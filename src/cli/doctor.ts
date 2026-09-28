@@ -1,3 +1,4 @@
+import type { Command } from 'commander';
 import { type DoctorReport, runDoctorChecks } from '../core/foundation/doctor.js';
 
 export interface DoctorCommandOptions {
@@ -31,4 +32,14 @@ export async function doctorCommand(options: DoctorCommandOptions = {}): Promise
   }
 
   return report;
+}
+
+/** Register `osq doctor` on the root program. */
+export function registerDoctorCommand(program: Command): void {
+  program
+    .command('doctor')
+    .description('validate repository health, configuration, and archives')
+    .action(async () => {
+      await doctorCommand();
+    });
 }

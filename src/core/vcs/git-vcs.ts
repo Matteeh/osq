@@ -3,9 +3,10 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { DEFAULT_BRANCH, DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
+import * as merges from './git-vcs-merge.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
-import type { Vcs, VcsHead, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
+import type { Vcs, VcsHead, VcsMergeResult, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
 
 /** Default bound in seconds for each git read when `timeouts.gitSeconds` is unset. */
 export const DEFAULT_GIT_SECONDS = 10;
@@ -211,6 +212,22 @@ export class GitVcs implements Vcs {
 
   commit(paths: readonly string[], message: string, author: string): Promise<string> {
     return writes.commit(this.context, paths, message, author);
+  }
+
+  merge(ref: string, squash: boolean): Promise<VcsMergeResult> {
+    return merges.merge(this.context, ref, squash);
+  }
+
+  mergeAbort(): Promise<void> {
+    return merges.mergeAbort(this.context);
+  }
+
+  stage(paths: readonly string[]): Promise<void> {
+    return merges.stage(this.context, paths);
+  }
+
+  isAncestor(ancestor: string, descendant: string): Promise<boolean> {
+    return merges.isAncestor(this.context, ancestor, descendant);
   }
 
   patch(): Promise<string> {

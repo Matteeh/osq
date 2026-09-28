@@ -181,9 +181,7 @@ describe('card keys', () => {
       ['s'],
     );
     assert.deepEqual(mapped.keys[0]?.args, ['show', '001']);
-    assert.deepEqual(mapped.manual, [
-      'git merge --squash osq/001-a && osq message 001 | git commit -F -',
-    ]);
+    assert.deepEqual(mapped.manual, ['osq land 001']);
   });
 });
 
