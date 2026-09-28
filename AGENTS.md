@@ -69,6 +69,7 @@ Tests that submit fixture changes to lint or approval use a local `node verify.c
 ## Project rules
 
 - Agents never run git. osq alone writes to git, never rewrites history, and never writes the human's checkout or main except through osq land. ADR 003
+- osq does every deterministic step, AI does judgement inside osq's gates, and a human only steers plans or taps decisions; a gate blocks or is removed. ADR 006
 <!-- OSQ:RULES:END -->
 
 <!-- OSQ:START -->

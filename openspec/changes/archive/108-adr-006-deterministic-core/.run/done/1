@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8a5550bebd4f60fd17aba5385c5c75e0d5b219d7a6d5f17357aaeb81fe019cb1"
+build_stamp: "eca179c"
+project_commit: "313f4be"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:efc560289c9913ad8b6ab7b06133a24c5536cf62e50f16dceceb72a942b2c543","decisions/006-deterministic-core.md":"sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f","decisions/README.md":"sha256:37a223d36cdbcc321edadd8a639ba105704314561c8d49f55f5bb9b52093d4b3","tests/adr-006.test.ts":"sha256:741470ea615c26505f3bf9851ecfebf3219fc20b3eb271cc691a8fb1c0da577c"}
+---
+2026-09-28T18:45:32.804Z

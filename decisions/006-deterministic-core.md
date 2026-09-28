@@ -1,0 +1,101 @@
+---
+status: accepted
+applies_to: all
+rule: osq does every deterministic step, AI does judgement inside osq's gates, and a human only steers plans or taps decisions; a gate blocks or is removed.
+---
+# 006. osq is the deterministic core
+
+Date: 2026-09-28
+
+## Status
+
+Accepted
+
+## Context
+
+osq exists so that AI can build most of an application, and eventually all of a simple one. AI does the large share of the work. osq is the deterministic part of the flow: it holds state, sequences work, runs the gates, and keeps the record. Its strictness is what makes AI's output trustworthy enough to ship.
+
+Today that split leaks in two directions.
+
+- Deterministic work falls on the human. Landing meant typing `git merge --squash osq/<folder> && osq message <id> | git commit -F -`, then removing a leftover draft by hand. Finished worktrees are removed by hand. osq's own `dist` is rebuilt by hand after it lands.
+- Judgement work falls on the human at a shell. A stuck task, a blocked task, a code conflict, or a regression each ends in a different set of commands: read a marker, edit the plan in a worktree, approve again, `osq retry`, or merge by hand.
+
+Some human steps also add confidence that is not there. `osq verified --passed` records a human's claim that osq cannot check, and it unblocks dependents. `osq done` marks a task done without the verify gate. Approval flags print and then approve regardless. A warning nobody has to act on is not a gate.
+
+The target is osq on a server, driven from a phone. A step that needs a shell, git, or a build cannot be done from a phone, so every such step is a gap.
+
+## Decision
+
+### 1. Every step has one owner
+
+- **osq** owns every step with one correct result given the files and git: state, sequencing, git, landing, deriving specs, running gates, cleanup, and the record. A human never does these, and neither does a model.
+- **AI** owns every step that needs judgement: planning, executing, and later any fixing role. Each AI role has a contract osq checks: what osq gives it, what it may write, and which gates judge its output.
+- **The human** owns intent and risk: what to build, and whether it runs, ships, or stops.
+
+When a brief adds a step, it names the step's owner. A deterministic step given to a human is a bug in osq.
+
+### 2. The human steers or taps
+
+The human has two kinds of step, and no others.
+
+- **Steering** is a planning session with the AI planner. Direction, taste, and the hard calls go in here. Simple software needs little of it, and harder software needs more.
+- **Tapping** is a single decision: approve, land, reject, or retry. A tap never needs a shell. Before each tap, osq shows the evidence it has: the plan's digest and flags for approve, the gates that ran and what they found for land.
+
+Every human step passes the phone test: it can be done from a phone with what osq shows. The CLI stays, and developers may work in it, but it offers the same decisions and nothing only a shell can do.
+
+### 3. osq records no claim it cannot check
+
+A human's word is never recorded as verification. A check that needs doing after landing is a command osq runs. A check osq cannot run is a note for the human, and nothing waits on it. No command marks a task done without its `verify`.
+
+### 4. A gate blocks, or it goes
+
+A gate either stops the flow when it fails or is removed. A warning is allowed only while its signal is being measured. It becomes blocking once its false positives are known and rare, or it is dropped. Gates are how strictness turns into quality: once AI writes both the code and the tests, osq must tell a real test from one that checks nothing, through the pre-spawn red check, traceability, and mutation checks.
+
+### 5. osq decides when the human steers again
+
+Whether a change needs the human does not depend on someone watching. osq halts a change and asks for steering on a fixed list of triggers:
+
+- a task is stuck, dying twice with the same fingerprint
+- an executor reports `blocked`
+- a sync finds that a requirement the change rewrites changed on the default branch
+- a sync or land hits a code conflict
+- archive finds a regression
+
+Every trigger ends the same way. osq records the reason and its evidence, and offers one action: plan it. That opens a planning session with the change, the reason, and the evidence already loaded. The revised plan is linted and comes back as one tap. After approval, the run continues from the last verified state.
+
+A new trigger is added to this list through a spec change. When no trigger fires, the change runs from the approve tap to the land tap with no human in between.
+
+### 6. osq measures how often steering is needed
+
+For simple software most plans should be approved as the planner first proposed them. osq records the change folder's hash when the planner first reports the plan ready and compares it with the approved hash, so the share of plans approved unrevised can be measured.
+
+### 7. The target is a server driven by an app
+
+osq runs on a server that holds its own clone, and the human decides from an app. There is no human checkout there, landing happens on a tap, and GitHub is optional. Server mode gets its own ADR when its brief is written. Local use with a checkout stays supported.
+
+## Consequences for ADR 003
+
+ADR 003 still governs git. These parts of it change, each in the change that implements it:
+
+- Decision 7. Hand landing was a stopgap until `osq land` existed, and it is retired. `osq land` is the only way a change lands, and landing ends complete or leaves nothing changed. The landing change revises decision 7, and decision 8 if the land commit no longer runs commit hooks.
+- Decision 2. Keeping the draft in the checkout after approval traded a leftover copy for a simpler trust rule. The copy costs more than expected, so approval may remove it. The rule then reads that osq writes the checkout only through commands the human runs, meaning approve and land.
+- Mode B. ADR 003's headless mode assumes GitHub labels and merges. It is one possible server mode, not the only one.
+
+Everything else in ADR 003 stands: agents never run git, osq never rewrites history, living specs are re-derived rather than merged, each change gets its own worktree, and nothing reaches the default branch without a human decision.
+
+## Order of work
+
+1. Deterministic landing: `osq land` builds the land commit from the verified tree and cannot end half-done. The hand path goes.
+2. `osq-sync`: branches stay current with the default branch.
+3. Remove the unchecked human steps: `osq verified`, `osq done`, and flags that never block.
+4. Steering triggers: every trigger in decision 5 ends at "plan it".
+5. Stronger gates: reliable signals block.
+6. Server mode and the app.
+
+## Rejected
+
+- **Humans confirming what osq cannot check.** It records confidence without evidence, and in this repository it was used twice in 107 changes.
+- **Warnings as permanent gates.** A warning needs a human to read it, which defeats the point of a gate.
+- **The human noticing when to step in.** It depends on attention, and it does not survive a phone and a server.
+- **Headless AI planning now.** Planning is where the human steers. It may come back later, through the app, a tracker, or both, and is not designed here.
+- **An AI resolver for every trigger.** A resolver for code conflicts waits until sync data shows conflicts are common and mechanical. Until then, a conflict is a trigger like the others.
