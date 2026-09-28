@@ -289,6 +289,12 @@ As of 2026-09-28:
 - The archive runs the change-level `verify` after applying the deltas instead of before, so the archived tree is a verified tree. Task verifies still run before. `osq land` then runs `verify` only when the sync merged new commits.
 - The hand-landing path goes: README's step 5 and its code block, the `Land:` line on `osq message`'s stderr, and the staged-squash message. `osq message <id>` still prints the message on stdout.
 - ADR 003 decisions 7 and 8 describe the new land: built from the verified tree, fast-forwarded, and the land commit runs no commit hooks.
+- While it works, `osq land` says what it is doing. When the default branch has moved, it prints one line before the sync, naming how many commits it is taking in and that it will run the change's `verify`, before it goes quiet.
+- The sync and its `verify` leave a record: `osq land` appends events for the sync and for the `verify` it ran, with the command, exit code and duration, to the change's `.run/events/`, as the watcher does for its own verify runs.
+
+### Why the two lines above
+
+Landing 108 on 2026-09-28 took close to a minute and printed nothing. `main` had moved by two commits, so `osq land` merged it into the branch and ran the whole `pnpm verify` on the merged tree before committing, which is right, but it looked stuck. The run left no event either: the timing had to be reconstructed from temporary folders the test suite left in `/tmp`. Once `osq-sync` merges the default branch before archive, and this change skips `verify` when nothing was merged, most lands should be near-instant, and the wait only happens when the default branch moved after archive. When it does happen, it should be visible and recorded.
 
 ### Decide before planning
 
