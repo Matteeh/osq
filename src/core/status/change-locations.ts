@@ -4,6 +4,7 @@ import type { VcsConfig } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { selectVcs } from '../vcs/select.js';
 import { stackedPath } from '../vcs/worktree.js';
+import { filterLandedCopies } from './landed-copies.js';
 import {
   getArchiveDir,
   getChangesDir,
@@ -184,7 +185,8 @@ export async function listChanges(
     // project root drops an active folder any such tree names.
     const namedFolder = tree.worktreeFolder ?? tree.stackedFolder;
     if (namedFolder !== undefined) {
-      changes.push(...entries.filter((entry) => entry.folderName === namedFolder));
+      const own = entries.filter((entry) => entry.folderName === namedFolder);
+      changes.push(...(await filterLandedCopies(trees[0] as ChangeTree, own)));
     } else {
       changes.push(
         ...entries.filter(

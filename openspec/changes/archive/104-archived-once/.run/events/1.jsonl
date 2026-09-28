@@ -1,0 +1,105 @@
+{"type":"verify_ran","timestamp":"2026-09-27T22:52:06.508Z","data":{"command":"node --import tsx --test tests/change-locations-landed.test.ts","exitCode":1,"duration":0.05,"output":"Could not find 'tests/change-locations-landed.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/change-locations-landed.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-27T22:52:07.344Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":412,"repoFiles":1819,"repoLines":203259,"importFanIn":37,"proposalWords":594,"taskWords":250,"deltaRequirements":3,"deltaScenarios":24}}
+{"type":"started","timestamp":"2026-09-27T22:52:07.646Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"1c9e09e","pid":43640,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"d026fc5"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:09.382Z","data":{"promptTokens":4975,"candidateTokens":213,"totalTokens":5700,"cachedTokens":512,"reasoningTokens":15,"cost":0.0017511719999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:09.383Z","data":{"tool":"read","summary":"openspec/"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:09.384Z","data":{"tool":"read","summary":"openspec/"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:10.793Z","data":{"promptTokens":1622,"candidateTokens":232,"totalTokens":7486,"cachedTokens":5632,"reasoningTokens":19,"cost":0.000798792,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:10.795Z","data":{"tool":"read","summary":"openspec/"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:10.796Z","data":{"tool":"read","summary":"openspec/"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:12.062Z","data":{"promptTokens":3358,"candidateTokens":194,"totalTokens":10976,"cachedTokens":7424,"reasoningTokens":9,"cost":0.001284744,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:12.062Z","data":{"tool":"read","summary":"src/core/"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:12.063Z","data":{"tool":"read","summary":"src/core/"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:13.982Z","data":{"promptTokens":4138,"candidateTokens":257,"totalTokens":15275,"cachedTokens":10880,"reasoningTokens":39,"cost":0.0016150799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:13.982Z","data":{"tool":"bash","summary":"cd . && ls "}}
+{"type":"tool","timestamp":"2026-09-27T22:52:13.983Z","data":{"tool":"read","summary":"tests/squ"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:15.185Z","data":{"promptTokens":6103,"candidateTokens":222,"totalTokens":21557,"cachedTokens":15232,"reasoningTokens":36,"cost":0.002188692,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:15.186Z","data":{"tool":"read","summary":"tests/squ"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:15.186Z","data":{"tool":"read","summary":"tests/cha"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:17.217Z","data":{"promptTokens":2620,"candidateTokens":328,"totalTokens":24452,"cachedTokens":21504,"reasoningTokens":97,"cost":0.0013086239999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:17.218Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:17.218Z","data":{"tool":"bash","summary":"cd . && for"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:20.112Z","data":{"promptTokens":4632,"candidateTokens":554,"totalTokens":29634,"cachedTokens":24448,"reasoningTokens":331,"cost":0.002201088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:20.113Z","data":{"tool":"bash","summary":"cd . && ls "}}
+{"type":"tool","timestamp":"2026-09-27T22:52:20.113Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:33.654Z","data":{"promptTokens":979,"candidateTokens":3232,"totalTokens":33779,"cachedTokens":29568,"reasoningTokens":2990,"cost":0.004349508,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:33.654Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:33.654Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:36.267Z","data":{"promptTokens":3210,"candidateTokens":431,"totalTokens":37305,"cachedTokens":33664,"reasoningTokens":229,"cost":0.0016821840000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:36.268Z","data":{"tool":"read","summary":"src/cli/i"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:36.268Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:40.365Z","data":{"promptTokens":3994,"candidateTokens":863,"totalTokens":42105,"cachedTokens":37248,"reasoningTokens":656,"cost":0.002457288,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:40.366Z","data":{"tool":"read","summary":"tests/cha"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:40.366Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:42.362Z","data":{"promptTokens":4527,"candidateTokens":344,"totalTokens":46855,"cachedTokens":41984,"reasoningTokens":98,"cost":0.002022804,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:42.363Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:42.363Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:44.141Z","data":{"promptTokens":1798,"candidateTokens":258,"totalTokens":48904,"cachedTokens":46848,"reasoningTokens":52,"cost":0.001130088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:44.141Z","data":{"tool":"read","summary":"src/core/"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:44.141Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:46.873Z","data":{"promptTokens":2001,"candidateTokens":459,"totalTokens":51356,"cachedTokens":48896,"reasoningTokens":365,"cost":0.0014444759999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:46.873Z","data":{"tool":"read","summary":"tests/que"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:54.301Z","data":{"promptTokens":2276,"candidateTokens":1663,"totalTokens":55267,"cachedTokens":51328,"reasoningTokens":1550,"cost":0.0029863679999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:54.302Z","data":{"tool":"bash","summary":"cd . && cat"}}
+{"type":"text","timestamp":"2026-09-27T22:52:58.175Z","data":{"text":"Now I'll implement. First, create `landed-copies.ts`:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:58.175Z","data":{"promptTokens":587,"candidateTokens":831,"totalTokens":56586,"cachedTokens":55168,"reasoningTokens":434,"cost":0.001504308,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:58.176Z","data":{"tool":"write","summary":"src/core/"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:52:58.176Z","data":{"path":"src/core/status/landed-copies.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:52:59.985Z","data":{"promptTokens":184,"candidateTokens":335,"totalTokens":56967,"cachedTokens":56448,"reasoningTokens":18,"cost":0.000795888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:52:59.986Z","data":{"tool":"edit","summary":"src/core/"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:52:59.989Z","data":{"path":"src/core/status/change-locations.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:02.908Z","data":{"promptTokens":185,"candidateTokens":791,"totalTokens":57808,"cachedTokens":56832,"reasoningTokens":14,"cost":0.0013456920000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:02.908Z","data":{"tool":"edit","summary":"src/core/"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:53:02.911Z","data":{"path":"src/core/run/squash-message.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:04.918Z","data":{"promptTokens":259,"candidateTokens":249,"totalTokens":58108,"cachedTokens":57600,"reasoningTokens":89,"cost":0.0007221,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:04.918Z","data":{"tool":"bash","summary":"cd . && wc "}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:16.234Z","data":{"promptTokens":572,"candidateTokens":1681,"totalTokens":60237,"cachedTokens":57984,"reasoningTokens":1500,"cost":0.002536704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:16.235Z","data":{"tool":"bash","summary":"cd . && sed"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:16.236Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:19.538Z","data":{"promptTokens":1272,"candidateTokens":557,"totalTokens":61989,"cachedTokens":60160,"reasoningTokens":431,"cost":0.00141096,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:19.539Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:24.113Z","data":{"promptTokens":1140,"candidateTokens":848,"totalTokens":63940,"cachedTokens":61952,"reasoningTokens":715,"cost":0.0017313119999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:24.113Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:26.740Z","data":{"promptTokens":611,"candidateTokens":299,"totalTokens":64782,"cachedTokens":63872,"reasoningTokens":62,"cost":0.0009253320000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:26.741Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:26.741Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:32.986Z","data":{"promptTokens":722,"candidateTokens":1142,"totalTokens":66632,"cachedTokens":64768,"reasoningTokens":1013,"cost":0.001975608,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:32.986Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"text","timestamp":"2026-09-27T22:53:49.179Z","data":{"text":"Now let me write the test file:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:49.179Z","data":{"promptTokens":1370,"candidateTokens":5121,"totalTokens":73051,"cachedTokens":66560,"reasoningTokens":1157,"cost":0.0069555599999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:49.180Z","data":{"tool":"write","summary":"tests/cha"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:53:49.180Z","data":{"path":"tests/change-locations-landed.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:52.764Z","data":{"promptTokens":137,"candidateTokens":755,"totalTokens":73852,"cachedTokens":72960,"reasoningTokens":498,"cost":0.00138486,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:52.765Z","data":{"tool":"edit","summary":"tests/cha"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:53:52.766Z","data":{"path":"tests/change-locations-landed.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:54.573Z","data":{"promptTokens":175,"candidateTokens":129,"totalTokens":74032,"cachedTokens":73728,"reasoningTokens":30,"cost":0.000649668,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:54.573Z","data":{"tool":"bash","summary":"cd . && nod"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:57.451Z","data":{"promptTokens":798,"candidateTokens":332,"totalTokens":75114,"cachedTokens":73984,"reasoningTokens":149,"cost":0.001081704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:57.451Z","data":{"tool":"edit","summary":"tests/cha"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:53:57.452Z","data":{"path":"tests/change-locations-landed.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-27T22:53:58.627Z","data":{"promptTokens":157,"candidateTokens":99,"totalTokens":75264,"cachedTokens":75008,"reasoningTokens":0,"cost":0.000615948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:53:58.627Z","data":{"tool":"bash","summary":"cd . && nod"}}
+{"type":"text","timestamp":"2026-09-27T22:54:02.443Z","data":{"text":"Let me verify the tests catch the bug by temporarily neutering the fix:"}}
+{"type":"tokens","timestamp":"2026-09-27T22:54:02.443Z","data":{"promptTokens":198,"candidateTokens":436,"totalTokens":75898,"cachedTokens":75264,"reasoningTokens":186,"cost":0.001034184,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:54:02.444Z","data":{"tool":"bash","summary":"cd . && cp "}}
+{"type":"tokens","timestamp":"2026-09-27T22:54:06.048Z","data":{"promptTokens":373,"candidateTokens":277,"totalTokens":76426,"cachedTokens":75776,"reasoningTokens":190,"cost":0.000898956,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:54:06.049Z","data":{"tool":"bash","summary":"cd . && pnp"}}
+{"type":"tokens","timestamp":"2026-09-27T22:54:56.352Z","data":{"promptTokens":1150,"candidateTokens":155,"totalTokens":77721,"cachedTokens":76416,"reasoningTokens":52,"cost":0.000989496,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:54:56.353Z","data":{"tool":"bash","summary":"cd . && pnp"}}
+{"type":"tokens","timestamp":"2026-09-27T22:54:58.714Z","data":{"promptTokens":237,"candidateTokens":212,"totalTokens":78017,"cachedTokens":77568,"reasoningTokens":107,"cost":0.000790908,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:54:58.714Z","data":{"tool":"bash","summary":"cd . && pnp"}}
+{"type":"tokens","timestamp":"2026-09-27T22:55:48.387Z","data":{"promptTokens":450,"candidateTokens":302,"totalTokens":78704,"cachedTokens":77952,"reasoningTokens":116,"cost":0.000965112,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:55:48.387Z","data":{"tool":"read","summary":"src/core/"}}
+{"type":"tool","timestamp":"2026-09-27T22:55:48.387Z","data":{"tool":"read","summary":"src/core/"}}
+{"type":"tokens","timestamp":"2026-09-27T22:55:51.095Z","data":{"promptTokens":1231,"candidateTokens":394,"totalTokens":80217,"cachedTokens":78592,"reasoningTokens":263,"cost":0.0013136519999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:55:51.096Z","data":{"tool":"bash","summary":"cd . && gre"}}
+{"type":"tokens","timestamp":"2026-09-27T22:55:55.859Z","data":{"promptTokens":224,"candidateTokens":995,"totalTokens":81347,"cachedTokens":80128,"reasoningTokens":447,"cost":0.001741968,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-27T22:55:55.860Z","data":{"tool":"write","summary":"openspec/"}}
+{"type":"file_changed","timestamp":"2026-09-27T22:55:55.860Z","data":{"path":"openspec/changes/104-archived-once/.run/results/1.md"}}
+{"type":"text","timestamp":"2026-09-27T22:55:59.519Z","data":{"text":"Done. Both the task verify and the proposal verify pass.\n\n## Summary\n\nImplemented the \"landed copy counted once\" fix within scope:\n\n**`src/core/status/landed-copies.ts`** (new) — `filterLandedCopies(root, changes)` drops a worktree/stacked tree's archived or rejected folder when the project-root tree holds the same folder in the same location. Active folders are never dropped.\n\n**`src/core/status/change-locations.ts`** — `listChanges` now runs each named tree's entries through `filterLandedCopies(trees[0], own)`. `changeTrees` is untouched. File is 247 lines (under the 250 cap).\n\n**`src/core/run/squash-message.ts`** — `buildSquashMessage` no longer goes through `listChanges`; it resolves matching worktree trees via `changeTrees` and checks their active/archive directories directly, so a checkout that already holds the archive after `git merge --squash` still messages the branch's copy. All refusal messages are unchanged.\n\n**`tests/change-locations-landed.test.ts`** (new) — covers both new \"Change locations\" scenarios through `listChanges`/`changeTrees`, \"Landed change counted once\" through `queueCommand`, `statusCommand`, `inboxCommand --json`, `inboxDispatchCommand --json`, and `reportCommand --json`, and \"Checkout already holds the archive\" through `messageCommand`. I confirmed the tests fail without the resolver fix.\n\nResult written to `openspec/changes/104-archived-once/.run/results/1.md`.\n\n`pnpm verify` exits 0 (typechecks, build, full suite, lint)."}}
+{"type":"tokens","timestamp":"2026-09-27T22:55:59.519Z","data":{"promptTokens":250,"candidateTokens":559,"totalTokens":81961,"cachedTokens":81152,"reasoningTokens":190,"cost":0.001232712,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-27T22:55:59.568Z","data":{"exitCode":0,"pid":43640,"timedOut":false,"elapsedSeconds":231.9}}
+{"type":"verify_ran","timestamp":"2026-09-27T22:56:01.156Z","data":{"command":"node --import tsx --test tests/change-locations-landed.test.ts","exitCode":0,"duration":1.41,"output":"▶ Change locations with a landed copy\n  ✔ lists an archive once, from the checkout, while keeping the worktree tree (47.846223ms)\n  ✔ lists a rejected folder once, from the checkout, when it is rejected in both (36.004806ms)\n✔ Change locations with a landed copy (84.610071ms)\n▶ A landed change counts once\n  ✔ lists the archive once and reads the same from every command (608.189024ms)\n  ✔ messages the worktree copy after the checkout already holds the archive (361.178552ms)\n✔ A landed change counts once (969.748037ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1365.078313\n"}}
+{"type":"measures","timestamp":"2026-09-27T22:56:48.461Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":412,"repoFiles":1819,"repoLines":203259,"importFanIn":37,"proposalWords":594,"taskWords":250,"deltaRequirements":3,"deltaScenarios":24,"changedFiles":4,"changedLines":489,"scopeHashes":{"src/core/run/squash-message.ts":{"before":"sha256:f4843c62fce0994611c3c61cdab69f084957ab1ed130a920f0d4fe86e218ecd3","after":"sha256:b0ee44e2712d0806d482054335f596871500960b15054bd77cbc7bf3a93dc8d2"},"src/core/status/change-locations.ts":{"before":"sha256:bc08d932b1784e701d73688b25c04a166e5e6ccead0a4600b78e9aaaa2eca628","after":"sha256:3806a93916075961910a4c04e00a61ba4451991bbece5906ff9c0274243bbc43"},"src/core/status/landed-copies.ts":{"before":null,"after":"sha256:23ba729ccee88e916c3b3cea7dab14d408187248713c87f1be016596aae0cf15"},"tests/change-locations-landed.test.ts":{"before":null,"after":"sha256:50c84700f014d9e8601757a73efc6300e323cadbca59000244374a98b55dc28d"}}}}
+{"type":"done","timestamp":"2026-09-27T22:56:48.467Z","data":{"task":"1"}}
+{"type":"verify_ran","timestamp":"2026-09-27T22:56:49.895Z","data":{"command":"node --import tsx --test tests/change-locations-landed.test.ts","exitCode":0,"duration":1.27,"output":"▶ Change locations with a landed copy\n  ✔ lists an archive once, from the checkout, while keeping the worktree tree (45.196018ms)\n  ✔ lists a rejected folder once, from the checkout, when it is rejected in both (38.413815ms)\n✔ Change locations with a landed copy (84.316529ms)\n▶ A landed change counts once\n  ✔ lists the archive once and reads the same from every command (583.73195ms)\n  ✔ messages the worktree copy after the checkout already holds the archive (351.717688ms)\n✔ A landed change counts once (935.791321ms)\nℹ tests 4\nℹ suites 2\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1246.218282\n"}}

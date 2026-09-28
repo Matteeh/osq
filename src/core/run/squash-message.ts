@@ -3,7 +3,12 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskList } from '../spec/parser.js';
 import { awaitedDependencies } from '../spec/stack-dependencies.js';
-import { type LocatedChange, listChanges, matchesFolder } from '../status/change-locations.js';
+import {
+  type ChangeTree,
+  type LocatedChange,
+  changeTrees,
+  matchesFolder,
+} from '../status/change-locations.js';
 import { getChangeRunDir, getDoneMarkerPath } from '../status/layout.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs } from '../vcs/vcs.js';
@@ -67,6 +72,24 @@ async function modelVersionTrailers(
     ...models.map((value) => ({ key: 'Osq-Model', value })),
     ...versions.map((value) => ({ key: 'Osq-Version', value })),
   ];
+}
+
+/** Whether `target` is an existing directory. */
+async function isDirectory(target: string): Promise<boolean> {
+  const stat = await fs.stat(target).catch(() => null);
+  return stat?.isDirectory() === true;
+}
+
+/** The worktree trees whose folder matches `idOrPrefix`, in `changeTrees` order. */
+async function matchingWorktreeTrees(
+  projectRoot: string,
+  config: OsqConfig,
+  idOrPrefix: string,
+): Promise<ChangeTree[]> {
+  const trees = await changeTrees(projectRoot, config);
+  return trees.filter(
+    (tree) => tree.worktreeFolder !== undefined && matchesFolder(tree.worktreeFolder, idOrPrefix),
+  );
 }
 
 /** The head `worktreeList` reports for the worktree holding `archived`. */
@@ -138,17 +161,22 @@ export async function buildSquashMessage(
   const vcs = await selectVcs(projectRoot, config);
   if (vcs.kind !== 'git') throw new Error(NO_VCS);
 
-  const matches = (await listChanges(projectRoot, config)).filter(
-    (change) =>
-      change.tree.worktreeFolder !== undefined && matchesFolder(change.folderName, idOrPrefix),
-  );
-  const active = matches.find((change) => change.location === 'active');
-  if (active !== undefined) {
-    throw new Error(
-      `${active.folderName} has not archived on ${worktreeBranch(active.folderName)}`,
-    );
+  const trees = await matchingWorktreeTrees(projectRoot, config, idOrPrefix);
+  for (const tree of trees) {
+    const folder = tree.worktreeFolder as string;
+    if (await isDirectory(path.join(tree.changesDir, folder))) {
+      throw new Error(`${folder} has not archived on ${worktreeBranch(folder)}`);
+    }
   }
-  const archived = matches.find((change) => change.location === 'archived');
+  let archived: LocatedChange | undefined;
+  for (const tree of trees) {
+    const folder = tree.worktreeFolder as string;
+    const folderPath = path.join(tree.archiveDir, folder);
+    if (await isDirectory(folderPath)) {
+      archived = { folderName: folder, folderPath, location: 'archived', tree };
+      break;
+    }
+  }
   if (archived === undefined) {
     throw new Error(`No archived change "${idOrPrefix}" in an osq worktree`);
   }

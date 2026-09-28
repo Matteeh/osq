@@ -2276,6 +2276,10 @@ SHALL print `  Withdrew stacked approval: <path>` in place of its
 <!-- source: src/core/run/squash-message.ts, tests/squash-message.test.ts -->
 osq SHALL build the squash commit message for a change from the archived
 change folder in its osq worktree, and SHALL write nothing while doing so.
+It SHALL find that folder through the worktree trees `changeTrees` returns,
+not through `listChanges`, so a checkout that already holds an archived
+folder of the same name, as it does after `git merge --squash`, changes
+nothing.
 The message SHALL be, in order:
 
 - The subject `osq: <id> <folder words>`, where `<id>` is the folder's
@@ -2334,6 +2338,10 @@ osq SHALL refuse, writing nothing, in these cases:
 #### Scenario: Flag off
 - **WHEN** `vcs.enabled` is off
 - **THEN** it fails with `osq message needs vcs.enabled and git`
+
+#### Scenario: Checkout already holds the archive
+- **WHEN** the checkout has run `git merge --squash osq/<folder>`, so its archive holds `<folder>` too, and the worktree is kept
+- **THEN** `osq message <id>` prints the same message as before the merge, with `Osq-Head` equal to the tip of `osq/<folder>`
 
 ### Requirement: Sidecars at archive
 <!-- source: src/watcher/archive-sidecars.ts, src/watcher/archiver.ts, src/core/run/manifest.ts, tests/archive-sidecars.test.ts -->

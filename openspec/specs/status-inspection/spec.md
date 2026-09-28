@@ -581,7 +581,7 @@ unchanged.
 - **THEN** `osq show` prints `      Mutation: src/pricing/quote.ts#quote 18 of 19 killed` and `        Survived: src/pricing/quote.ts:36:19 ConditionalExpression -> false` under task 1
 
 ### Requirement: Change locations
-<!-- source: src/core/status/change-locations.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts, tests/change-locations-stacked.test.ts, tests/change-locations-holds.test.ts -->
+<!-- source: src/core/status/change-locations.ts, src/core/status/landed-copies.ts, tests/change-locations.test.ts, tests/change-locations-worktrees.test.ts, tests/change-locations-stacked.test.ts, tests/change-locations-holds.test.ts, tests/change-locations-landed.test.ts -->
 `src/core/status/change-locations.ts` SHALL be the one place that lists the
 trees changes live in and the change folders in them. `changeTrees` SHALL
 return each tree with its root and its changes, archive, and rejected
@@ -601,6 +601,10 @@ worktree tree already names that folder. Otherwise the project root SHALL be
 the only tree. A worktree or stacked tree SHALL contribute only the change
 folder its `worktreeFolder` or `stackedFolder` names, and the project root
 SHALL NOT report an active folder that a worktree or stacked tree names.
+When the project root holds an archived or rejected folder, a worktree or
+stacked tree SHALL NOT report the folder of the same name in the same
+location, because the checkout's copy is the landed one. An active folder
+still comes from the worktree or stacked tree that names it.
 `listChanges` SHALL return directories only, active first, then archived, then
 rejected, each in numeric prefix order. An active folder SHALL pass
 `isActiveChangeFolderName`, and an archived or rejected one SHALL NOT start
@@ -664,8 +668,16 @@ root, for display.
 - **WHEN** `vcs.enabled` is off and a stacked directory exists
 - **THEN** `changeTrees` returns exactly one tree
 
+#### Scenario: Landed with its worktree kept
+- **WHEN** `vcs.enabled` is on, the checkout's archive holds `001-a` after a hand landing, and the kept worktree on `osq/001-a` also holds `001-a` in its archive
+- **THEN** `changeTrees` still returns the worktree's tree, and `listChanges` returns `001-a` once, as archived, from the checkout
+
+#### Scenario: Rejected in both
+- **WHEN** the checkout's rejected directory and a kept worktree on `osq/003-c` both hold `003-c`
+- **THEN** `listChanges` returns `003-c` once, as rejected, from the checkout
+
 ### Requirement: Change location readers
-<!-- source: tests/change-locations-readers.test.ts -->
+<!-- source: tests/change-locations-readers.test.ts, tests/change-locations-landed.test.ts -->
 The watcher loop, the baseline search, status and its next step, inbox, show,
 the queue and its report detail, report and recent disclosures, the web data
 and events, doctor and its price check, and the lifecycle commands `approve`,
@@ -677,6 +689,10 @@ the change locations module. Outside it, only `layout.ts`, `foundation/new.ts`,
 #### Scenario: A reader lists changes on its own
 - **WHEN** any other file under `src/` calls `getChangesDir` or `getArchiveDir`
 - **THEN** the structural test fails and names the file
+
+#### Scenario: Landed change counted once
+- **WHEN** a change archived in its worktree has been squashed onto the default branch by hand and committed, and the worktree is kept
+- **THEN** `osq queue` shows its item as landed without an ambiguity error, and `osq status`, bare `osq --json`, `osq inbox --json`, and `osq report --json` each count the change once
 
 ### Requirement: Running change in status
 <!-- source: src/core/status/status.ts, tests/status-worktree.test.ts, tests/worktree-lifecycle.test.ts -->
