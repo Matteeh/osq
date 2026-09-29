@@ -1,5 +1,6 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { rejectSpec } from '../core/lifecycle/reject.js';
+import { CommandError } from './command-error.js';
 
 export interface RejectCommandOptions {
   cwd?: string;
@@ -29,7 +30,6 @@ export async function rejectCommand(specId: string, options: RejectCommandOption
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Error rejecting ${specId}:\n  ${message}`);
-    process.exit(1);
+    throw new CommandError(`Error rejecting ${specId}:\n  ${message}`);
   }
 }

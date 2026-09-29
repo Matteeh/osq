@@ -1,5 +1,6 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { retrySpec } from '../core/lifecycle/retry.js';
+import { CommandError } from './command-error.js';
 
 export interface RetryCommandOptions {
   cwd?: string;
@@ -32,7 +33,6 @@ export async function retryCommand(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Error retrying ${specId} ${target}:\n  ${message}`);
-    process.exit(1);
+    throw new CommandError(`Error retrying ${specId} ${target}:\n  ${message}`);
   }
 }

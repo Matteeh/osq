@@ -4,6 +4,7 @@ import {
   recordVerification,
 } from '../core/lifecycle/verification-record.js';
 import { formatNextStep, readNextStep } from '../core/status/next-step.js';
+import { CommandError } from './command-error.js';
 
 export interface VerifiedCommandOptions {
   cwd?: string;
@@ -11,12 +12,6 @@ export interface VerifiedCommandOptions {
   passed?: boolean;
   failed?: boolean;
   note?: string;
-}
-
-/** Print the error and exit non-zero; typed `never` so callers can return. */
-function exitOne(message: string): never {
-  console.error(message);
-  process.exit(1);
 }
 
 /**
@@ -34,7 +29,7 @@ export async function verifiedCommand(
   const passed = options.passed === true;
   const failed = options.failed === true;
   if (passed === failed) {
-    return exitOne('Error: specify exactly one of --passed or --failed.');
+    throw new CommandError('Error: specify exactly one of --passed or --failed.');
   }
 
   let target: VerificationTarget;
@@ -48,7 +43,7 @@ export async function verifiedCommand(
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return exitOne(`Error recording verification for ${specId}:\n  ${message}`);
+    throw new CommandError(`Error recording verification for ${specId}:\n  ${message}`);
   }
 
   console.log(`Verified ${target.id} (${target.folderName})`);

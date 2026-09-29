@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { checkCommand } from '../src/cli/check.js';
+import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { verifiedCommand } from '../src/cli/verified.js';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
@@ -100,7 +101,7 @@ async function exists(target: string): Promise<boolean> {
     .catch(() => false);
 }
 
-/** Captures logs and stubs `process.exit` so refusals and outcomes stay testable. */
+/** Captures logs and reads a `CommandError`'s exit code and message. */
 async function captureExitAndLogs(
   run: () => Promise<void>,
 ): Promise<{ lines: string[]; exitCode: number | undefined }> {
@@ -108,7 +109,6 @@ async function captureExitAndLogs(
   const originalLog = console.log;
   const originalWarn = console.warn;
   const originalError = console.error;
-  const originalExit = process.exit;
   let exitCode: number | undefined;
 
   const push = (...args: unknown[]): void => {
@@ -117,21 +117,17 @@ async function captureExitAndLogs(
   console.log = push;
   console.warn = push;
   console.error = push;
-  process.exit = ((code?: number) => {
-    exitCode = code ?? 0;
-    throw new Error(`PROCESS_EXIT_${exitCode}`);
-  }) as unknown as typeof process.exit;
 
   try {
     await run();
   } catch (error) {
-    const message = error instanceof Error ? error.message : '';
-    if (!message.startsWith('PROCESS_EXIT_')) throw error;
+    if (!(error instanceof CommandError)) throw error;
+    exitCode = error.exitCode;
+    if (error.message) lines.push(error.message);
   } finally {
     console.log = originalLog;
     console.warn = originalWarn;
     console.error = originalError;
-    process.exit = originalExit;
   }
 
   return { lines, exitCode };

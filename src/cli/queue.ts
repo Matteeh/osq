@@ -1,5 +1,6 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { formatQueue, projectQueue } from '../core/status/queue.js';
+import { CommandError } from './command-error.js';
 
 export interface QueueCommandOptions {
   cwd?: string;
@@ -23,7 +24,6 @@ export async function queueCommand(options: QueueCommandOptions = {}): Promise<s
     return formatted;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`Queue error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Queue error: ${message}`);
   }
 }

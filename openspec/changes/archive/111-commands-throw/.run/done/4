@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6b89f76d2924cd03850d0285510837423206ed801604d4c9c3ee09a2de22f014"
+build_stamp: "eca179c"
+project_commit: "adefebb"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:ed21596d4fb3f4d9cf65ceaf9748ce3342c027aa016465be4b02cc02c8e747d7","tests/approve-confirm.test.ts":"sha256:c02923f9e570b429f6453ea570bc9eeb80cd93094c5a8c4008f9e4fb4fe09001","tests/cli-no-process-exit.test.ts":"sha256:1a4324cba97af10c284feba5a97a1c6a9432391ec21981382051b1a41d1f3cfd","tests/command-error-approve.test.ts":"sha256:5947ac878b610bca1397763e2e8118e5ea2207b82718a988ebbe613e60a55dc8","tests/plan-approve-next-step.test.ts":"sha256:def0a38cbd021f3aa9478ab62ca68b263f060ddb5dca71292801566430f13101"}
+---
+2026-09-29T14:09:59.425Z

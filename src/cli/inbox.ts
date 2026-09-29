@@ -5,6 +5,7 @@ import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { readLastLook, resolveLastLookPath } from '../core/status/inbox-cursor.js';
 import { readInbox } from '../core/status/inbox-projection.js';
 import { type Inbox, formatInboxText } from '../core/status/inbox.js';
+import { CommandError } from './command-error.js';
 
 export { readLastLook, resolveLastLookPath };
 
@@ -52,7 +53,6 @@ export async function inboxCommand(options: InboxCommandOptions = {}): Promise<I
     return inbox;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`Inbox error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Inbox error: ${message}`);
   }
 }

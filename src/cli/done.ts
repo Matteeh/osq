@@ -1,5 +1,6 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { markTaskDoneManual } from '../core/lifecycle/done.js';
+import { CommandError } from './command-error.js';
 
 export interface DoneCommandOptions {
   readonly manual?: string;
@@ -18,8 +19,7 @@ export async function doneCommand(
 ): Promise<void> {
   const reason = options.manual?.trim();
   if (!reason) {
-    console.error('Error: --manual <reason> is required to mark a task done');
-    process.exit(1);
+    throw new CommandError('Error: --manual <reason> is required to mark a task done');
   }
 
   const cwd = options.cwd ?? process.cwd();
@@ -31,7 +31,6 @@ export async function doneCommand(
     console.log(`  Reason: ${reason}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Error marking task done:\n  ${message}`);
-    process.exit(1);
+    throw new CommandError(`Error marking task done:\n  ${message}`);
   }
 }

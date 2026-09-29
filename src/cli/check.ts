@@ -2,17 +2,12 @@ import type { Command } from 'commander';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { type CheckRunResult, runCheck } from '../core/lifecycle/verification-record.js';
 import { formatNextStep, readNextStep } from '../core/status/next-step.js';
+import { CommandError } from './command-error.js';
 import { verifiedCommand } from './verified.js';
 
 export interface CheckCommandOptions {
   cwd?: string;
   config?: OsqConfig;
-}
-
-/** Print the error and exit non-zero; typed `never` so callers can return. */
-function exitOne(message: string): never {
-  console.error(message);
-  process.exit(1);
 }
 
 /** Print one check run's command, exit code, output, and the change's next step. */
@@ -52,11 +47,11 @@ export async function checkCommand(
     result = await runCheck(cwd, specId, config);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return exitOne(`Error running check for ${specId}:\n  ${message}`);
+    throw new CommandError(`Error running check for ${specId}:\n  ${message}`);
   }
 
   await printCheckResult(cwd, config, result);
-  if (result.check.exitCode !== 0 || result.check.timedOut) process.exit(1);
+  if (result.check.exitCode !== 0 || result.check.timedOut) throw new CommandError('');
 }
 
 /** Register `osq check` and `osq verified` on the root program. */

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9ce8943895c0526040d7139b94484c169573b0526ae201ed8b23169cf6537b90"
+build_stamp: "eca179c"
+project_commit: "3cdd637"
+exit_code: 0
+scope_files: {"src/cli/command-error.ts":"sha256:216361265b79cdffeeadfe4d3d4f02f773eb4aea0a9d5510990285cab1a10f1e","src/cli/report.ts":"sha256:f7c64d3324d884026bf7149840204dc1b5f70a0be926e8d695cbe9b3869fa99d","src/cli/run.ts":"sha256:686fd918739c4ffa5721d45fbed69995d57e82994a79fc8cf51d812602118bc2","src/cli/show.ts":"sha256:d653af1713dbeb90e917b9d0f7e03c17f12d824f5e5a710e8c24b85f22522219","src/cli/status.ts":"sha256:848d813b281e374f895f92c41205fec55875914d2707261fd94388714c7bf3ee","tests/cli-capture.ts":"sha256:bd02fa290a64a945b929d70633049f6483f341d2b4f67f1c9c7f754a33b14512","tests/cli-config-errors.test.ts":"sha256:4cee2b05e6360574bf834fab0161ed1b464c0021b9bc44064eff121289b4b79e","tests/command-error.test.ts":"sha256:05851f6ba130f04423be7305169a878502c1e2813968b378769791442b6beea7"}
+---
+2026-09-29T13:52:49.975Z

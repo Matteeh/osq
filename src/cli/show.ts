@@ -5,6 +5,7 @@ import {
   formatApprovalFlags,
 } from '../core/spec/digest.js';
 import { formatSpecDetails, getSpecDetails } from '../core/status/show.js';
+import { CommandError } from './command-error.js';
 
 export async function showCommand(
   specId: string,
@@ -19,8 +20,7 @@ export async function showCommand(
   const config = options.config || (await loadConfig(cwd));
 
   if (!specId || !specId.trim()) {
-    console.error('Error: specify a spec ID to show (e.g. osq show 001)');
-    process.exit(1);
+    throw new CommandError('Error: specify a spec ID to show (e.g. osq show 001)');
   }
 
   try {
@@ -52,7 +52,6 @@ export async function showCommand(
     return formatted;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`Show error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Show error: ${message}`);
   }
 }

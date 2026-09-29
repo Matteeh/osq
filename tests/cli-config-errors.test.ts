@@ -32,11 +32,12 @@ async function exists(target: string): Promise<boolean> {
 
 /**
  * Run `runCli` with `cwd` as the process directory, capturing stderr and the
- * code handed to `process.exit`. All three globals are restored afterwards.
+ * exit code it leaves on `process.exitCode`. The directory, the exit code, and
+ * `console.error` are restored afterwards.
  */
 async function runInProject(cwd: string, argv: readonly string[]): Promise<CliRun> {
   const originalCwd = process.cwd();
-  const originalExit = process.exit;
+  const originalExitCode = process.exitCode;
   const originalError = console.error;
   const errors: string[] = [];
   let exitCode: number | undefined;
@@ -44,16 +45,15 @@ async function runInProject(cwd: string, argv: readonly string[]): Promise<CliRu
   console.error = ((...args: unknown[]) => {
     errors.push(args.map(String).join(' '));
   }) as typeof console.error;
-  process.exit = ((code?: number) => {
-    exitCode = code ?? 0;
-  }) as unknown as typeof process.exit;
 
   try {
     process.chdir(cwd);
+    process.exitCode = undefined;
     await runCli(['node', 'osq', ...argv]);
+    exitCode = process.exitCode;
   } finally {
     process.chdir(originalCwd);
-    process.exit = originalExit;
+    process.exitCode = originalExitCode;
     console.error = originalError;
   }
 

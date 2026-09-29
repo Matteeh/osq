@@ -4,6 +4,7 @@ import {
   formatMetricsReport,
   getMetricsReport,
 } from '../core/report/report.js';
+import { CommandError } from './command-error.js';
 
 export interface ReportCommandOptions {
   cwd?: string;
@@ -346,7 +347,6 @@ export async function reportCommand(options: ReportCommandOptions = {}): Promise
     return output;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`Report error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Report error: ${message}`);
   }
 }

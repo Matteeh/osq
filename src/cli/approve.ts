@@ -15,6 +15,7 @@ import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import { readClaudePlanningSessions } from '../harness/claude/claude-usage.js';
 import { readCodexPlanningSessions } from '../harness/codex/codex-observe-usage.js';
 import { readOpencodePlanningSessions } from '../harness/opencode/opencode-observe-usage.js';
+import { CommandError } from './command-error.js';
 import { refusalMessage, requestApproval } from './confirm.js';
 
 export interface ApproveCommandOptions {
@@ -66,8 +67,7 @@ export async function approveCommand(
   const config = options.config || (await loadConfig(cwd));
 
   if (!specIds || specIds.length === 0) {
-    console.error('Error: specify at least one spec ID to approve (e.g. osq approve 001)');
-    process.exit(1);
+    throw new CommandError('Error: specify at least one spec ID to approve (e.g. osq approve 001)');
   }
 
   const planningReaders = options.planningReaders ?? defaultPlanningReaders(config);
@@ -86,8 +86,7 @@ export async function approveCommand(
         return 'proceed';
       }
       if (!isTerminal()) {
-        console.error(refusalMessage(specId, digest));
-        process.exit(1);
+        throw new CommandError(refusalMessage(specId, digest));
       }
       return requestApproval(specId, digest, { ask });
     };
@@ -122,14 +121,15 @@ export async function approveCommand(
         console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
       }
     } catch (error) {
+      if (error instanceof CommandError) throw error;
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`Error approving ${specId}:\n  ${message}`);
+      let next: string | undefined;
       try {
         const { folderPath } = await findChange(cwd, config, specId);
         const nextStep = await readNextStep(cwd, folderPath, config);
-        console.log(`Next: ${formatNextStep(nextStep)}`);
+        next = formatNextStep(nextStep);
       } catch {}
-      process.exit(1);
+      throw new CommandError(`Error approving ${specId}:\n  ${message}`, { next });
     }
   }
 }

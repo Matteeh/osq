@@ -1,4 +1,5 @@
 import { createNewSpec } from '../core/foundation/new.js';
+import { CommandError } from './command-error.js';
 
 export async function newCommand(name: string, options: { cwd?: string } = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();
@@ -8,7 +9,6 @@ export async function newCommand(name: string, options: { cwd?: string } = {}): 
     console.log(`  Path: ${result.folderPath}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Error: ${message}`);
   }
 }

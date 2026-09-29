@@ -1,5 +1,6 @@
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { formatStatusOverview, getStatusOverview } from '../core/status/status.js';
+import { CommandError } from './command-error.js';
 
 export async function statusCommand(
   options: { cwd?: string; stdout?: (msg: string) => void; config?: OsqConfig } = {},
@@ -18,7 +19,6 @@ export async function statusCommand(
     return formatted;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`Status error: ${message}`);
-    process.exit(1);
+    throw new CommandError(`Status error: ${message}`);
   }
 }

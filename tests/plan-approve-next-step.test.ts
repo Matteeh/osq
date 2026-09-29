@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { approveCommand } from '../src/cli/approve.js';
+import { CommandError } from '../src/cli/command-error.js';
 import { planCommand } from '../src/cli/plan.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
@@ -25,7 +26,7 @@ async function captureStdout(run: () => Promise<void>): Promise<string> {
   return output;
 }
 
-/** Captures logs and stubs `process.exit` so the refusal stays testable. */
+/** Captures logs and reads a `CommandError` so the refusal stays testable. */
 async function captureExitAndLogs(
   run: () => Promise<void>,
 ): Promise<{ lines: string[]; exitCode: number | undefined }> {
@@ -33,7 +34,6 @@ async function captureExitAndLogs(
   const originalLog = console.log;
   const originalWarn = console.warn;
   const originalError = console.error;
-  const originalExit = process.exit;
   let exitCode: number | undefined;
 
   const push = (...args: unknown[]): void => {
@@ -42,21 +42,18 @@ async function captureExitAndLogs(
   console.log = push;
   console.warn = push;
   console.error = push;
-  process.exit = ((code?: number) => {
-    exitCode = code ?? 0;
-    throw new Error(`PROCESS_EXIT_${exitCode}`);
-  }) as unknown as typeof process.exit;
 
   try {
     await run();
   } catch (error) {
-    const message = error instanceof Error ? error.message : '';
-    if (!message.startsWith('PROCESS_EXIT_')) throw error;
+    if (!(error instanceof CommandError)) throw error;
+    exitCode = error.exitCode;
+    if (error.message) lines.push(error.message);
+    if (error.next) lines.push(`Next: ${error.next}`);
   } finally {
     console.log = originalLog;
     console.warn = originalWarn;
     console.error = originalError;
-    process.exit = originalExit;
   }
 
   return { lines, exitCode };
