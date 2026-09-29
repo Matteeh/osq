@@ -19,10 +19,11 @@ import { syncWithDefaultBranch } from './sync-main.js';
 import type { Vcs, VcsFastForwardResult } from './vcs.js';
 import { worktreeBranch, worktreePath } from './worktree.js';
 
-/** The lines a land prints and the code it exits with. */
+/** The lines a land prints, the code it exits with, and the absolute paths it changed. */
 export interface LandResult {
   readonly lines: string[];
   readonly code: number;
+  readonly changed: readonly string[];
 }
 
 /** The numeric id of a change folder, for the messages a land repeats. */
@@ -118,9 +119,9 @@ async function cleanupLanded(
 ): Promise<LandResult> {
   const cleanup = await cleanupChange(projectRoot, config, vcs, folder);
   if (!cleanup.removed) {
-    return { lines: [`${folder} has already landed; nothing to clean up`], code: 0 };
+    return { lines: [`${folder} has already landed; nothing to clean up`], code: 0, changed: [] };
   }
-  return { lines: [`${folder} has already landed`, ...cleanup.lines], code: 0 };
+  return { lines: [`${folder} has already landed`, ...cleanup.lines], code: 0, changed: [] };
 }
 
 /**
@@ -137,7 +138,7 @@ async function landCommit(
   base: string,
   tip: string,
   idOrPrefix: string,
-): Promise<string> {
+): Promise<{ commit: string; changed: readonly string[] }> {
   const author = config.vcs?.author;
   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
   const { message } = await buildSquashMessage(projectRoot, config, idOrPrefix);
@@ -157,7 +158,7 @@ async function landCommit(
       `The checkout has uncommitted changes in files this land writes: ${pushed.blocked.join(', ')}; commit or stash them, then run osq land ${landId(change)} again`,
     );
   }
-  return commit;
+  return { commit, changed: pushed.changed ?? [] };
 }
 
 /**
@@ -211,7 +212,7 @@ export async function landChange(
     throw new Error(`${defaultBranch} moved while landing; run osq land ${landId(change)} again`);
   }
 
-  const commit = await landCommit(
+  const { commit, changed } = await landCommit(
     projectRoot,
     config,
     vcs,
@@ -221,6 +222,7 @@ export async function landChange(
     tip,
     idOrPrefix,
   );
+  const repoRoot = (await vcs.root()) ?? projectRoot;
   const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);
   return {
     lines: [
@@ -229,5 +231,6 @@ export async function landChange(
       `Kept branch ${worktreeBranch(change.folderName)}`,
     ],
     code: 0,
+    changed: changed.map((entry) => path.join(repoRoot, entry)),
   };
 }

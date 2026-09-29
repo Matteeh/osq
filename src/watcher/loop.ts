@@ -18,12 +18,18 @@ import type { HarnessAdapter } from '../harness/types.js';
 import { restoreArchiveSpecs } from './archive-specs.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
-import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
+import { type BuildInfo, StaleBuildError, resolveBuildInfo } from './build.js';
 import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
 import { runStackedChanges } from './stack-run.js';
+import {
+  type StaleCheck,
+  assertNotStale,
+  handleStaleBuild,
+  startStaleCheck,
+} from './stale-pass.js';
 import { checkSync } from './sync-run.js';
 import {
   commitPendingVerifiedTasks,
@@ -58,6 +64,8 @@ export interface StartWatcherOptions {
   logger?: Logger;
   allowStale?: boolean;
   dev?: boolean;
+  packageRoot?: string;
+  exit?: (code: number) => void;
 }
 
 export interface ArchivedSpecSummary {
@@ -178,6 +186,7 @@ export async function runWatcherCycle(
   config: OsqConfig,
   adapter: HarnessAdapter,
   logger?: Logger,
+  staleCheck?: StaleCheck,
 ): Promise<WatcherSummary> {
   const useSymbols = logger?.symbols === true;
   const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
@@ -201,6 +210,7 @@ export async function runWatcherCycle(
   }[] = [];
 
   const archiveCompletedSpec = async (change: LocatedChange, specId: string): Promise<void> => {
+    await assertNotStale(staleCheck);
     const folder = change.folderName;
     const folderPath = change.folderPath;
     const root = change.tree.root;
@@ -328,6 +338,7 @@ export async function runWatcherCycle(
       }
 
       if (specState.status === 'pending' && specState.nextTask) {
+        await assertNotStale(staleCheck);
         if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
           const syncHalt = await checkSync(projectRoot, change, config, logger);
           if (syncHalt) {
@@ -417,6 +428,9 @@ export async function runWatcherCycle(
         await archiveCompletedSpec(change, specState.id);
       }
     } catch (err) {
+      if (err instanceof StaleBuildError) {
+        throw err;
+      }
       logWatcherError(logger, useSymbols, err);
     }
   }
@@ -442,6 +456,7 @@ export async function runWatcherOnce(
   config: OsqConfig,
   adapter: HarnessAdapter,
   logger?: Logger,
+  staleCheck?: StaleCheck,
 ): Promise<WatcherSummary> {
   let totalTasksRun = 0;
   let totalRetried = 0;
@@ -453,7 +468,7 @@ export async function runWatcherOnce(
   }[] = [];
 
   while (true) {
-    const cycle = await runWatcherCycle(projectRoot, config, adapter, logger);
+    const cycle = await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck);
     totalTasksRun += cycle.tasksRun;
     totalRetried += cycle.retried;
     totalSpecsArchived += cycle.specsArchived;
@@ -480,11 +495,20 @@ export async function startWatcher(
   options: StartWatcherOptions = {},
 ): Promise<void> {
   const logger = options.logger;
+  const exit = options.exit ?? process.exit;
+  const staleDeps = { clearStatus: () => logger?.clearStatus(), exit };
 
   // A checkout running a stale compiled build is a footgun: refuse before the
-  // first cycle unless the caller opted out or is executing from source.
-  if (!options.allowStale && !options.dev) {
-    await checkStaleBuild({ allowStale: options.allowStale });
+  // first cycle unless the caller opted out or is executing from source. The
+  // start check also captures the current `dist/` mtime for every later pass.
+  let staleCheck: StaleCheck | undefined;
+  try {
+    staleCheck = await startStaleCheck(options);
+  } catch (err) {
+    if (handleStaleBuild(err, staleDeps)) {
+      return;
+    }
+    throw err;
   }
 
   // Invoke the selected adapter's optional preflight port directly. There is no
@@ -498,7 +522,14 @@ export async function startWatcher(
   }
 
   if (options.once) {
-    await runWatcherOnce(projectRoot, config, adapter, logger);
+    try {
+      await runWatcherOnce(projectRoot, config, adapter, logger, staleCheck);
+    } catch (err) {
+      if (handleStaleBuild(err, staleDeps)) {
+        return;
+      }
+      throw err;
+    }
     return;
   }
 
@@ -540,8 +571,14 @@ export async function startWatcher(
     if (interrupted || stopped || isRunningCycle) return;
     isRunningCycle = true;
     try {
-      await runWatcherCycle(projectRoot, config, adapter, logger);
+      await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck);
     } catch (err) {
+      if (err instanceof StaleBuildError) {
+        stop();
+      }
+      if (handleStaleBuild(err, staleDeps)) {
+        return;
+      }
       logWatcherError(logger, useSymbols, err);
     } finally {
       isRunningCycle = false;

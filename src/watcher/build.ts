@@ -153,9 +153,65 @@ async function newestMtimeMs(dir: string): Promise<number> {
   return newest;
 }
 
-export interface CheckStaleBuildOptions {
+/** The one line every stale-build refusal prints, byte for byte. */
+export const STALE_BUILD_MESSAGE =
+  "osq build is stale: src/ is newer than dist/. Run 'npm run build' or pass --allow-stale.";
+
+/** Thrown by the in-run stale check so the watcher stops without an error line. */
+export class StaleBuildError extends Error {
+  constructor() {
+    super(STALE_BUILD_MESSAGE);
+    this.name = 'StaleBuildError';
+  }
+}
+
+export interface FindStaleBuildOptions {
   allowStale?: boolean;
   packageRoot?: string;
+  /** Newest `dist/` mtime read at watcher start; walks `dist/` when omitted. */
+  distMtimeMs?: number;
+}
+
+/** Package root of the running osq build, for callers outside this module. */
+export function osqPackageRoot(): string {
+  return PACKAGE_ROOT;
+}
+
+/** Newest `mtimeMs` under a package root's `dist/`, or 0 when it has none. */
+export async function newestDistMtimeMs(packageRoot?: string): Promise<number> {
+  const root = packageRoot ? path.resolve(packageRoot) : PACKAGE_ROOT;
+  return newestMtimeMs(path.join(root, 'dist'));
+}
+
+/**
+ * The stale line when the package root's `src/` is newer than its `dist/`,
+ * otherwise null. Skips an installed package with no `src/`, a run from
+ * TypeScript source, and any call with `allowStale`. Compares against
+ * `distMtimeMs` when supplied so an in-run pass keeps using the build the
+ * watcher loaded at start. Prints nothing and exits nothing.
+ */
+export async function findStaleBuild(options: FindStaleBuildOptions = {}): Promise<string | null> {
+  if (options.allowStale === true) {
+    return null;
+  }
+
+  // Executing from TypeScript source means the running code *is* the latest
+  // source, so there is no compiled output that can be stale. An explicit
+  // `packageRoot` (tests, diagnostics) always performs the comparison.
+  if (options.packageRoot === undefined && RUNNING_FROM_SOURCE) {
+    return null;
+  }
+
+  const packageRoot = options.packageRoot ? path.resolve(options.packageRoot) : PACKAGE_ROOT;
+  const srcDir = path.join(packageRoot, 'src');
+  const srcStat = await fs.stat(srcDir).catch(() => null);
+  if (!srcStat?.isDirectory()) {
+    return null;
+  }
+
+  const srcNewest = await newestMtimeMs(srcDir);
+  const distNewest = options.distMtimeMs ?? (await newestDistMtimeMs(packageRoot));
+  return srcNewest > distNewest ? STALE_BUILD_MESSAGE : null;
 }
 
 /**
@@ -164,31 +220,10 @@ export interface CheckStaleBuildOptions {
  * and is never considered stale. Prints exactly one error line and exits with
  * code 1 when stale, so a developer rebuilds instead of debugging a phantom.
  */
-export async function checkStaleBuild(options: CheckStaleBuildOptions = {}): Promise<void> {
-  if (options.allowStale === true) {
-    return;
-  }
-
-  // Executing from TypeScript source means the running code *is* the latest
-  // source, so there is no compiled output that can be stale. An explicit
-  // `packageRoot` (tests, diagnostics) always performs the comparison.
-  if (options.packageRoot === undefined && RUNNING_FROM_SOURCE) {
-    return;
-  }
-
-  const packageRoot = options.packageRoot ? path.resolve(options.packageRoot) : PACKAGE_ROOT;
-  const srcDir = path.join(packageRoot, 'src');
-  const srcStat = await fs.stat(srcDir).catch(() => null);
-  if (!srcStat?.isDirectory()) {
-    return;
-  }
-
-  const srcNewest = await newestMtimeMs(srcDir);
-  const distNewest = await newestMtimeMs(path.join(packageRoot, 'dist'));
-  if (srcNewest > distNewest) {
-    console.error(
-      "osq build is stale: src/ is newer than dist/. Run 'npm run build' or pass --allow-stale.",
-    );
+export async function checkStaleBuild(options: FindStaleBuildOptions = {}): Promise<void> {
+  const stale = await findStaleBuild(options);
+  if (stale !== null) {
+    console.error(stale);
     process.exit(1);
   }
 }

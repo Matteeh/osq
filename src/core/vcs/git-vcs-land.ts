@@ -83,10 +83,11 @@ export async function fastForward(
   commit: string,
   status: readonly VcsStatusEntry[],
 ): Promise<VcsFastForwardResult> {
-  const blocked = blockedPaths(status, await changedPaths(ctx, commit));
+  const changed = await changedPaths(ctx, commit);
+  const blocked = blockedPaths(status, changed);
   if (blocked.length > 0) return { status: 'blocked', blocked };
   ok(await ctx.runCommit(['merge', '--ff-only', commit]));
-  return { status: 'done', blocked: [] };
+  return { status: 'done', blocked: [], changed: [...changed].sort() };
 }
 
 /** How many commits `to` has that `from` lacks, and 0 when either is unknown. */

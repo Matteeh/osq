@@ -174,7 +174,7 @@ describe('Vcs fastForward', () => {
     await fs.writeFile(path.join(root, 'drafts', 'x'), 'draft\n', 'utf8');
 
     const result = await vcs.fastForward(side);
-    assert.deepEqual(result, { status: 'done', blocked: [] });
+    assert.deepEqual(result, { status: 'done', blocked: [], changed: ['b.txt'] });
     assert.equal(await git(['rev-parse', 'HEAD'], root), side);
     assert.equal(await git(['rev-parse', 'main'], root), side);
     assert.equal(await fs.readFile(path.join(root, 'b.txt'), 'utf8'), 'from side\n');

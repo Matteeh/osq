@@ -36,6 +36,8 @@ export interface VcsFastForwardResult {
   readonly status: 'done' | 'blocked';
   /** Uncommitted paths the commit changes, relative to the project root, sorted; empty when done. */
   readonly blocked: readonly string[];
+  /** Paths the commit changes, relative to the project root, sorted; present only when done. */
+  readonly changed?: readonly string[];
 }
 
 /** One entry of `git worktree list`, with its branch and HEAD. */

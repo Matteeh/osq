@@ -1,6 +1,12 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { Command } from 'commander';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { landChange } from '../core/vcs/land.js';
+import { findStaleBuild, osqPackageRoot } from '../watcher/build.js';
+
+/** The line a land prints when it changed osq's own source. */
+export const REBUILD_MESSAGE = "osq's own source changed; run the build and restart the watcher";
 
 export interface LandCommandOptions {
   cwd?: string;
@@ -9,12 +15,49 @@ export interface LandCommandOptions {
   stderr?: (msg: string) => void;
   /** Injectable process exit; defaults to setting `process.exitCode`. */
   exit?: (code: number) => void;
+  /** Skip the stale-build refusal. */
+  allowStale?: boolean;
+  /** osq's own package root; defaults to the running package. */
+  packageRoot?: string;
+}
+
+/** The real path of the nearest directory at or above `target` that exists. */
+async function nearestRealDir(target: string): Promise<string | null> {
+  let dir = path.dirname(target);
+  for (;;) {
+    try {
+      return await fs.realpath(dir);
+    } catch {
+      const parent = path.dirname(dir);
+      if (parent === dir) return null;
+      dir = parent;
+    }
+  }
+}
+
+/** Whether any changed file lies under `<packageRoot>/src`, through real paths. */
+async function changedOwnSource(changed: readonly string[], packageRoot: string): Promise<boolean> {
+  let realRoot: string;
+  try {
+    realRoot = await fs.realpath(packageRoot);
+  } catch {
+    return false;
+  }
+  const srcRoot = path.join(realRoot, 'src');
+  for (const file of changed) {
+    const dir = await nearestRealDir(file);
+    if (dir !== null && (dir === srcRoot || dir.startsWith(`${srcRoot}${path.sep}`))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
- * Land an archived change onto the default branch. Prints each line `landChange`
- * returns to stdout and exits with its code. A refusal or a stop prints only
- * its message to stderr and exits one.
+ * Land an archived change onto the default branch, after refusing a stale build.
+ * Prints each line `landChange` returns to stdout and exits with its code, then
+ * says to rebuild when the land changed osq's own source. A refusal or a stop
+ * prints only its message to stderr and exits one.
  */
 export async function landCommand(id: string, options: LandCommandOptions = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();
@@ -27,9 +70,23 @@ export async function landCommand(id: string, options: LandCommandOptions = {}):
     });
 
   try {
+    const stale = await findStaleBuild({
+      allowStale: options.allowStale,
+      packageRoot: options.packageRoot,
+    });
+    if (stale !== null) {
+      stderr(`${stale}\n`);
+      exit(1);
+      return;
+    }
     const config = options.config || (await loadConfig(cwd));
-    const { lines, code } = await landChange(cwd, config, id, (line) => stderr(`${line}\n`));
+    const { lines, code, changed } = await landChange(cwd, config, id, (line) =>
+      stderr(`${line}\n`),
+    );
     for (const line of lines) stdout(`${line}\n`);
+    if (code === 0 && (await changedOwnSource(changed, options.packageRoot ?? osqPackageRoot()))) {
+      stdout(`${REBUILD_MESSAGE}\n`);
+    }
     exit(code);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -43,7 +100,8 @@ export function registerLandCommand(program: Command): void {
   program
     .command('land <id>')
     .description('land an archived change onto the default branch')
-    .action(async (id: string) => {
-      await landCommand(id);
+    .option('--allow-stale', 'allow landing when dist/ is older than src/')
+    .action(async (id: string, options: { allowStale?: boolean }) => {
+      await landCommand(id, { allowStale: options.allowStale });
     });
 }
