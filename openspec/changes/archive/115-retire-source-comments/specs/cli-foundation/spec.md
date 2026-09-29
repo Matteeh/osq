@@ -1,10 +1,4 @@
-# cli-foundation Specification
-
-## Purpose
-
-Provides command-line interface entrypoints, configuration loading, leveled logging with an interactive status sink, project scaffolding, and npm package distribution.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Configuration loading and schema validation
 The system SHALL load operational configuration from `osq.config.ts` merged
@@ -114,17 +108,6 @@ LTS patch is 24.21.0.
 #### Scenario: Node toolchain alignment
 - **WHEN** package metadata, CI, documentation, and workspace manifests are inspected
 - **THEN** each names the Node 24 LTS baseline without retaining a Node 22-only setup
-
-### Requirement: Code ownership
-<!-- source: src/core/foundation/**, src/cli/**, src/index.ts, osq.config.ts, templates/**, AGENTS.md, PLANNER.md, README.md, .env.example -->
-The CLI Foundation capability SHALL own CLI entrypoints, retry and rejection
-commands, configuration and shared harness capability resolution, doctor
-diagnostics, logger, initialization, public configuration exports, managed
-agent and planner instructions, templates, and consumer guidance.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for CLI, configuration, retry, scaffolding, or managed guidance files
-- **THEN** system maps `src/core/foundation/**`, `src/cli/**`, `src/index.ts`, `osq.config.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
 
 ### Requirement: Watch stale build and dev mode CLI options
 The CLI watch command SHALL support options to bypass stale build detection and enable reactive dev execution.
@@ -1191,20 +1174,6 @@ The one line the `osq plan` prompt handoff prints SHALL end with
 - **WHEN** `osq plan <name>` hands off a new change 021
 - **THEN** its one line ends with ` — next: unplanned — osq plan 021`
 
-### Requirement: Approve refusal next step
-When `osq approve <id>` fails for a change whose folder exists, the
-`CommandError` it throws SHALL carry that change's next step as `next`, so
-`runCli` prints `Next: <next step>` to stdout after the error. When the folder
-does not exist, `next` SHALL be unset and no `Next:` line SHALL print.
-
-#### Scenario: Approving a template
-- **WHEN** `osq approve 021` runs on a change that still has the placeholder verify
-- **THEN** it fails and prints `Next: unplanned — osq plan 021`
-
-#### Scenario: Error before the next step
-- **WHEN** `osq approve 021` fails that way
-- **THEN** its `Error approving 021:` line on stderr is printed before its `Next:` line on stdout
-
 ### Requirement: Planner human steps guidance
 The planner block and osq schema SHALL tell planners to split `## Human steps`
 into `### Before approval` and `### After landing`, with steps during the run
@@ -1633,21 +1602,6 @@ config file SHALL load the defaults as before.
 - **WHEN** `osq doctor` runs with a config file that fails to validate
 - **THEN** its `config` check fails with `failed to load: ` followed by the `ConfigLoadError` message
 
-### Requirement: Config error exit
-When any command rejects with a `ConfigLoadError`, the command line SHALL print
-`Error: <message>` to stderr, without a stack trace, and set the exit code to
-1 without ending the process. `osq init` SHALL load config like every other
-command and SHALL NOT fall back to the defaults. Any other error that is not a
-`CommandError` SHALL propagate as before.
-
-#### Scenario: Status with a broken config
-- **WHEN** `osq status` runs in a project whose config fails to validate
-- **THEN** stderr holds `Error: Failed to load ` and the file, and the exit code is 1
-
-#### Scenario: Init with a broken config
-- **WHEN** `osq init` runs in that project
-- **THEN** it prints the same error, exits 1, and scaffolds nothing
-
 ### Requirement: OpenCode diagnostics
 The opencode catalog entry SHALL declare a `diagnose` hook adding a
 `harness-version` check. It SHALL read the first `major.minor.patch` in the
@@ -1811,25 +1765,6 @@ command is shown to copy, and that piping or `--json` prints as before.
 - **WHEN** `createChildLauncher` launches `--version`
 - **THEN** it resolves with 0
 
-### Requirement: osq runs its own changes under version control
-osq's own `osq.config.ts` SHALL set `vcs.enabled` to true, `vcs.author` to
-`osq <osq@noreply.invalid>`, and `vcs.prepare` to
-`pnpm install --frozen-lockfile`. README.md SHALL end its
-`## Version control` section with `### Working with version control on`, a
-numbered list that says, in order, to approve from the default branch, to
-find the worktree from the `Worktree:` line or under `vcs.worktreeRoot`, not
-to edit the worktree while a task runs, and to land with `osq land <id>`,
-which lands the change completely or changes nothing. The `## Version control`
-section SHALL describe no way to land by hand.
-
-#### Scenario: Own config
-- **WHEN** `loadConfig` reads the repository root
-- **THEN** `vcs.enabled` is true, `vcs.author` is `osq <osq@noreply.invalid>`, and `vcs.prepare` is `pnpm install --frozen-lockfile`
-
-#### Scenario: Walkthrough
-- **WHEN** README.md is read
-- **THEN** `### Working with version control on` follows the other `## Version control` text and holds `osq land <id>`, and the `## Version control` section holds neither `git merge --squash` nor `| git commit -F -`
-
 ### Requirement: Inbox wait log wiring
 `inboxDispatchCommand` SHALL take `home`, defaulting to `os.homedir()`.
 The card session SHALL run with a recorder from
@@ -1973,64 +1908,6 @@ name `osq graph`.
 - **WHEN** `osq graph` runs in a project with two capabilities without sidecars, three requirements, and one unowned file
 - **THEN** stdout starts with `Nodes: capability 2, requirement 3,` and its last line is `Gaps: untested 0, unclaimed 0, unowned 1`
 
-### Requirement: Land command
-`osq land <id>` SHALL run `landChange` for the id in the current directory,
-print each of its lines to stdout, and exit with its code. It SHALL pass
-`landChange` a progress callback that prints each progress line to stderr, so
-stdout holds only the land's result. On a refusal or a stop it SHALL print
-only the message to stderr and exit one. `landCommand` SHALL take injectable
-`cwd`, `config`, `stdout`, `stderr`, and `exit`, as `messageCommand` does, and
-SHALL load `osq.config.ts` inside its error handling, so a configuration error
-prints its message and exits one. `createProgram` SHALL register it through
-`registerLandCommand`, and the `doctor` command through
-`registerDoctorCommand` in `src/cli/doctor.ts`, with its description and
-behaviour unchanged.
-
-#### Scenario: Land prints its lines
-- **WHEN** `osq land <id>` lands an archived change
-- **THEN** stdout holds `Landed <folder> as <commit>`, `Removed leftover draft <path>`, `Removed worktree <path>`, and `Kept branch osq/<folder>`, and the exit code is zero
-
-#### Scenario: Refusal on stderr
-- **WHEN** `osq land <id>` refuses
-- **THEN** stdout is empty, stderr holds the refusal, and the exit code is one
-
-#### Scenario: Registered commands
-- **WHEN** `osq --help` runs
-- **THEN** it lists `land <id>` and `doctor`
-
-#### Scenario: Progress on stderr
-- **WHEN** `osq land <id>` syncs because the default branch moved
-- **THEN** the sync's progress line is on stderr, and stdout holds only the land's result lines
-
-### Requirement: osq's decisions index is complete
-The index in osq's `decisions/README.md` SHALL link every ADR file in
-`decisions/` exactly once, and no index link SHALL name a file that doesn't
-exist. The test of the index SHALL NOT name an ADR number.
-
-#### Scenario: Index lists every ADR
-- **WHEN** the index in osq's `decisions/README.md` is read next to the ADR files in `decisions/`
-- **THEN** every ADR file is linked exactly once, and every link names an ADR file that exists
-
-### Requirement: Land message command
-`osq message <id>` SHALL print the commit message that "Squash commit
-message" builds to stdout, exactly and with nothing else. It is the message
-`osq land <id>` commits. It SHALL then print `Branch: osq/<folder>` to stderr,
-and nothing else there, and exit zero. On a refusal it SHALL print only the
-refusal to stderr and exit one. It SHALL write no file and run no git command
-that writes.
-
-#### Scenario: Message is the land commit's message
-- **WHEN** a change has archived in its worktree, `osq message <id>` prints its message, and `osq land <id>` then lands the change
-- **THEN** the land commit's message equals that stdout, and `git interpret-trailers --parse` over it prints every trailer of "Squash commit message"
-
-#### Scenario: Branch on stderr
-- **WHEN** `osq message <id>` succeeds
-- **THEN** stderr is exactly `Branch: osq/<folder>` and a newline, and stdout holds only the message
-
-#### Scenario: Refusal
-- **WHEN** `osq message <id>` refuses
-- **THEN** stdout is empty, stderr holds the refusal, and the exit code is one
-
 ### Requirement: Sync command
 `osq sync <id>` SHALL run `syncChange` for the id in the current directory,
 print its line to stdout, and exit zero. It SHALL pass `syncChange` a progress
@@ -2054,63 +1931,3 @@ change's branch`.
 #### Scenario: Sync is registered
 - **WHEN** `osq --help` runs
 - **THEN** it lists `sync <id>`
-
-### Requirement: Command errors
-`src/cli/command-error.ts` SHALL export `CommandError`, an `Error` named
-`CommandError` with a readonly `exitCode`, default 1, and a readonly `next`
-step or `undefined`. No file under `src/cli/` SHALL call `process.exit`.
-Where a command printed an error and ended the process, it SHALL throw a
-`CommandError` there instead, whose message is exactly the text it printed to
-stderr, or empty when it printed none. The command SHALL NOT print the message
-or the next step itself.
-
-#### Scenario: Caller carries on
-- **WHEN** a caller awaits `showCommand('999')` in a project without change 999
-- **THEN** it rejects with a `CommandError` whose message is `Show error: Spec "999" not found in specs or archive` and whose exit code is 1, nothing is printed, and the caller keeps running
-
-#### Scenario: Several ids stop at the first failure
-- **WHEN** `osq approve A B` runs and approving A fails
-- **THEN** the command fails with A's error and B is not approved
-
-#### Scenario: No command ends the process
-- **WHEN** every file under `src/cli/` is read
-- **THEN** none contains `process.exit(`
-
-### Requirement: Command error output
-`runCli` SHALL catch a `CommandError`, print a non-empty message to stderr,
-then print `Next: <next>` to stdout when `next` is set, and set
-`process.exitCode` to its `exitCode` without ending the process. Any error
-that is neither a `CommandError` nor a `ConfigLoadError` SHALL propagate from
-`runCli` as before. Every command SHALL print the same text on the same
-streams, in the same order, and exit with the same code as before.
-
-#### Scenario: Refusal on the command line
-- **WHEN** `osq show 999` runs in a project without change 999
-- **THEN** stderr holds exactly `Show error: Spec "999" not found in specs or archive`, stdout is empty, the exit code is 1, and `process.exit` is never called
-
-#### Scenario: Failed check
-- **WHEN** `osq check 012` runs a recorded check that exits 3
-- **THEN** stdout holds `Exit code: 3` and the next step, stderr is empty, and the exit code is 1
-
-### Requirement: Traceability opt-in check
-`src/core/foundation/config-traceability.ts` SHALL export
-`isCapabilityOptedIn(capabilities, capability)`, true when `capabilities` is
-`'all'` or lists `capability`, and `hasOptedInCapability(capabilities)`, true
-when `capabilities` is `'all'` or a non-empty list. The mutation pick, the
-focused test collection, the watcher's mutation check, and the report's
-mutation scores SHALL use them and define none of their own.
-
-#### Scenario: Opt-in answers
-- **WHEN** `isCapabilityOptedIn` is asked about `pricing`, and `hasOptedInCapability` is called, for each `capabilities` value
-- **THEN** they return:
-
-| capabilities | isCapabilityOptedIn pricing | hasOptedInCapability |
-| --- | --- | --- |
-| `'all'` | true | true |
-| `['pricing', 'billing']` | true | true |
-| `['billing']` | false | true |
-| `[]` | false | false |
-
-#### Scenario: One opt-in definition
-- **WHEN** the sources of `src/core/trace/mutation-pick.ts`, `src/core/run/focused-tests.ts`, `src/watcher/mutation-check.ts`, and `src/core/report/report-mutation.ts` are read
-- **THEN** none compares `capabilities` with `'all'` itself or defines `isOptedIn` or `hasOptedInCapability`, and each imports from `src/core/foundation/config-traceability.ts`

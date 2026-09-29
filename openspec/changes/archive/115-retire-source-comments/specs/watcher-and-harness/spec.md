@@ -1,10 +1,4 @@
-# watcher-and-harness Specification
-
-## Purpose
-
-Drives reactive execution of approved tasks: manages exclusive locks, spawns coding agents across harness adapters, executes independent zero-trust verification gates, applies delta specs, and archives completed changes.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Exclusive locking and stale lock reaping
 The system SHALL manage atomic task locks and reap stale locks.
@@ -97,37 +91,6 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 #### Scenario: SIGINT interruption handling
 - **WHEN** SIGINT is received during task execution
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
-
-### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/run/**, src/core/lifecycle/**, tests/retry*.test.ts, tests/reject.test.ts, tests/done-manual.test.ts -->
-The Watcher and Harness capability SHALL own the reactive watch loop, runner,
-process execution, deterministic task-scope resolution and hashing, shared
-verification execution, agent harnesses, adapter registration, execution
-manifest construction, and append-only execution lifecycle event contracts.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for watcher, scope, verification, harness execution, or retry and rejection lifecycle events
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/run/**`, `src/core/lifecycle/**`, `tests/retry*.test.ts`, `tests/reject.test.ts`, and `tests/done-manual.test.ts` to watcher-and-harness
-
-### Requirement: Capability rule prompt injection
-The harness runner SHALL extract rules from capability specifications written
-by the active change and inject them into the executor prompt. It SHALL leave
-out a delta requirement whose statement, with HTML comments stripped and
-whitespace collapsed, equals the statement of the living requirement with the
-same name. Every requirement of a capability with no living spec SHALL keep
-its rule.
-
-#### Scenario: Prompt injection on change with capability writes
-- **WHEN** an approved change writes capability deltas under `specs/<capability>/spec.md`
-- **THEN** runner extracts capability requirements and injects them under a dedicated section within the prompt's `Rules:` block
-
-#### Scenario: Fallback when no capability rules exist
-- **WHEN** an approved change has no capability delta rules
-- **THEN** runner provides standard operational rules without empty rule headers
-
-#### Scenario: Unchanged requirement left out
-- **WHEN** a delta modifies requirement `Totals` without changing its statement, and adds requirement `Refunds`
-- **THEN** the executor prompt carries a rule for `Refunds` and none for `Totals`
 
 ### Requirement: Test modification gating
 The runner SHALL snapshot every preexisting file under `tests/**` before agent
@@ -509,21 +472,6 @@ the deltas and sidecars itself for callers that archive without these gates.
 #### Scenario: Interrupted archive in a worktree
 - **WHEN** a change runs in an osq worktree and the worktree holds `.run/archive-specs.json` and living specs modified by an interrupted archive
 - **THEN** the next watcher cycle archives the change instead of halting it with `worktree_dirty`
-
-### Requirement: Deterministic delta spec archival and appender removal
-The archiver SHALL apply delta specifications into `openspec/specs/<capability>/spec.md` exclusively through deterministic delta merges using `applyOpenSpecDeltas`, SHALL NOT append legacy prose sections to feature documents, and the legacy prose appender function `applyDelta` SHALL NOT exist in the codebase. `applyOpenSpecDeltas` SHALL be defined in `src/core/spec/apply-deltas.ts`, which the default branch sync also uses, and `src/watcher/archiver.ts` SHALL import and re-export it.
-
-#### Scenario: Archiving applies deltas via deterministic merge
-- **WHEN** an approved change with delta specs completes all tasks
-- **THEN** the archiver deterministically merges delta specs into living capability documents without prose appends
-
-#### Scenario: Prose appender identifier is deleted
-- **WHEN** the engine source code is inspected
-- **THEN** the identifier `applyDelta` is completely absent from `src/`
-
-#### Scenario: One merge for archive and sync
-- **WHEN** `src/watcher/archiver.ts` and `src/core/vcs/sync-specs.ts` are inspected
-- **THEN** both use the `applyOpenSpecDeltas` that `src/core/spec/apply-deltas.ts` defines, and neither defines its own
 
 ### Requirement: Marker retention under run directory
 The task runner, watcher loop, and approval command SHALL NOT delete, rename, or
@@ -2345,29 +2293,3 @@ state again before it picks the task.
 #### Scenario: Dependency lands during the dependent's run
 - **WHEN** `002` was cut from `001`'s archive commit, and while `002`'s task runs the default branch gains an unrelated commit and `osq land 001` lands `001`
 - **THEN** `002` archives after `osq: 002 sync main`, and `osq land 002` then lands it
-
-### Requirement: Test gate paths
-`src/core/run/test-gate.ts` SHALL export `TEST_GATE_DIR`, `tests`, and
-`isGatedTestPath`, true for `tests` and paths under `tests/`. These are the
-paths the frozen-test gate governs; unlike traceability's "Test paths", a
-`.test.` file outside `tests/` is not one. The runner's test snapshot, the git
-guard and task commit's new test files, and spec lint's gate checks SHALL use
-them and define none of their own.
-
-#### Scenario: Gated and ungated paths
-- **WHEN** `isGatedTestPath` is called with `tests`, `tests/a.test.ts`, `tests/sub/b.ts`, `src/a.test.ts`, `testsuite/a.ts`, and `src/tests/a.ts`
-- **THEN** it returns true, true, true, false, false, and false
-
-#### Scenario: One gate definition
-- **WHEN** the sources of `src/watcher/verify.ts`, `src/watcher/git-guard.ts`, `src/core/run/task-commit.ts`, `src/core/spec/linter.ts`, `src/core/spec/test-impact.ts`, and `src/core/spec/digest.ts` are read
-- **THEN** none compares a path with `'tests'` or `'tests/'` itself, and each imports from `src/core/run/test-gate.ts`
-
-### Requirement: Throwing spawn kills the task
-When a harness adapter's `spawn` throws, the runner SHALL handle it as an
-agent that exited with code -1 and the thrown message as its error: it writes
-`.run/dead/<n>.md` with `reason: crashed`, emits a `dead` event, and returns a
-failed task result. The throw SHALL NOT reach the watcher loop.
-
-#### Scenario: Spawn E2BIG
-- **WHEN** the adapter's `spawn` throws an error with message `spawn E2BIG`
-- **THEN** `runTask` resolves as failed with reason `crashed`, and `.run/dead/<n>.md` holds `reason: crashed` and `spawn E2BIG`

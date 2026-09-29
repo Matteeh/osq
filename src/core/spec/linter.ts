@@ -41,6 +41,7 @@ import {
   resolveChangeDoc,
 } from './parser.js';
 import { collectSidecarFindings } from './sidecar-lint.js';
+import { sourceCommentFindings } from './source-comment-lint.js';
 import { collectTraceabilityFindings } from './traceability-lint.js';
 import {
   listNamedPaths,
@@ -865,6 +866,9 @@ export async function verifyDeltaTargets(
       deltaFile,
       [...delta.added, ...delta.modified, ...delta.removed],
       findings,
+    );
+    findings.push(
+      ...sourceCommentFindings(capability, deltaFile, [...delta.added, ...delta.modified]),
     );
 
     try {

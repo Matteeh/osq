@@ -1,10 +1,4 @@
-# spec-lint-and-approve Specification
-
-## Purpose
-
-Governs the human gate: parsing change specifications, validating limits and OpenSpec conventions, computing deterministic SHA-256 folder hashes, and sealing approved changes.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Change folder structure and parsing
 The system SHALL parse change proposals, delta specs, and task definitions.
@@ -93,50 +87,12 @@ was found.
 - **WHEN** confirmation is declined or refused
 - **THEN** no planning record, manifest, or approval seal is written
 
-### Requirement: Code ownership
-<!-- source: src/core/spec/**, src/cli/lint.ts, src/cli/migrate.ts -->
-The Spec Lint and Approve capability SHALL own specification parsing, linting,
-approval sealing without failure-state transitions, hashing, dependency
-existence validation, and migration logic.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for spec validation and parsing
-- **THEN** system maps `src/core/spec/**`, `src/cli/lint.ts`, and `src/cli/migrate.ts` to `spec-lint-and-approve`
-
 ### Requirement: Capability code ownership parsing
 The system SHALL parse `### Requirement: Code ownership` blocks by header name across living and delta specifications.
 
 #### Scenario: Parsing ownership globs from header
 - **WHEN** parser inspects any capability specification containing `### Requirement: Code ownership`
 - **THEN** system extracts the declared glob list and associates it with the capability
-
-### Requirement: Test modification declaration validation
-The linter SHALL validate that tasks altering existing tests explicitly declare
-`tests.modify: true`. It SHALL identify existing test files through the shared
-deterministic scope resolver without maintaining another glob matcher or tree
-walker. A test file is one that `isGatedTestPath` accepts, as
-watcher-and-harness's "Test gate paths" says. The frozen test reach warning and
-the approval digest's existing tests SHALL use the same function.
-
-#### Scenario: Valid test modification declaration
-- **WHEN** task frontmatter declares `tests.modify: true` as a boolean
-- **THEN** linter accepts the declaration and permits exact or glob-resolved existing test paths in task scope
-
-#### Scenario: Existing test lacks declaration
-- **WHEN** an exact path or glob resolves to an existing test file and `tests.modify` is false
-- **THEN** linter rejects the task and identifies the resolved test file
-
-#### Scenario: New exact test path
-- **WHEN** task scope names an exact test path that does not yet exist
-- **THEN** lint does not treat that null resolver entry as modification of an existing test
-
-#### Scenario: Invalid test modification type
-- **WHEN** task frontmatter provides a non-boolean value for `tests.modify`
-- **THEN** linter rejects the task with a schema validation error
-
-#### Scenario: Named test outside tests
-- **WHEN** a task's scope resolves to an existing `src/quote.test.ts` and `tests.modify` is false
-- **THEN** linter raises no `tests.modify` finding for it
 
 ### Requirement: Architecture Decision Record 004: Pinned OpenSpec Validator
 The project SHALL record and accept ADR 004 documenting the pinned `@fission-ai/openspec` dependency, exact version pin, validator execution semantics, and drift diagnostics.
@@ -1395,6 +1351,8 @@ still fail with `unsupported migrate target`.
 #### Scenario: Run twice
 - **WHEN** it runs again
 - **THEN** it writes nothing and prints `wrote 0 sidecar(s)`
+
+## ADDED Requirements
 
 ### Requirement: Source comment warning
 `osq lint` SHALL warn, and never fail, once for each ADDED or MODIFIED

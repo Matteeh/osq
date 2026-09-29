@@ -1,21 +1,4 @@
-# traceability Specification
-
-## Purpose
-Links each test to the spec scenario it proves and each exported function to the
-scenario it serves and the ADR it follows, through a test helper osq ships, doc
-comment tags, and a scenario index built from the source tree.
-
-## Requirements
-
-### Requirement: Code ownership
-<!-- source: src/testing/**, src/core/trace/**, tests/trace*.test.ts, fixture/trace/** -->
-The Traceability capability SHALL own the scenario test helper, effective
-scenario lookup, the tag and scenario call scanner, the scenario index, their
-tests, and their fixtures.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for the test helper, scenario lookup, or scanner files
-- **THEN** system maps `src/testing/**`, `src/core/trace/**`, `tests/trace*.test.ts`, and `fixture/trace/**` to traceability
+## MODIFIED Requirements
 
 ### Requirement: Effective scenario lookup
 osq SHALL look up a scenario by capability and exact name and return its
@@ -324,24 +307,3 @@ SHALL be ordered by file, then start line.
 #### Scenario: Unchanged and untested
 - **WHEN** a task changes neither `quote` nor any scenario test covering it
 - **THEN** `quote` is not picked
-
-### Requirement: Test paths
-`isTestPath(relativePath)` in `src/core/trace/test-path.ts` SHALL return true
-for `tests`, for a path under `tests/`, and for a path whose file name holds
-`.test.` or `.spec.`, and false otherwise. Traceability lint's planned
-scenarios, the report's traceability gaps, the system graph, and `osq show`'s
-task scenarios SHALL call it and SHALL NOT define their own. It is wider than
-the frozen-test gate on purpose; watcher-and-harness's "Test gate paths"
-defines that one.
-
-#### Scenario: Test and source paths
-- **WHEN** `isTestPath` is called with `tests/pricing.ts`, `src/pricing/quote.test.ts`, `src/pricing/quote.spec.ts`, and `src/pricing/quote.ts`
-- **THEN** it returns true, true, true, and false
-
-#### Scenario: One definition
-- **WHEN** the sources of `src/core/spec/traceability-lint.ts` and `src/core/report/report-traceability.ts` are read
-- **THEN** neither defines a function named `isTestPath`, and both import it from `src/core/trace/test-path.ts`
-
-#### Scenario: Show uses it
-- **WHEN** the source of `src/core/status/show.ts` is read
-- **THEN** it defines no test-path function of its own and imports `isTestPath` from `src/core/trace/test-path.ts`

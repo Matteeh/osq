@@ -1,10 +1,4 @@
-# status-inspection Specification
-
-## Purpose
-
-Provides operational visibility into active and archived specifications, task states, locks, and event timelines through `osq status` and `osq show`.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Specification queue status inspection
 The system SHALL display an overview of active specifications, an archived
@@ -47,17 +41,6 @@ details as JSON with a `digest` field, null for an approved change.
 #### Scenario: JSON output
 - **WHEN** user executes `osq show <id> --json`
 - **THEN** stdout is one JSON object with the change details and a `digest` field holding the digest structure, or null when the change is approved
-
-### Requirement: Code ownership
-<!-- source: src/core/status/**, tests/queue*.test.ts -->
-The Status Inspection capability SHALL own execution queue overview formatting,
-detailed change inspection, state derivation, rejected-change presentation,
-runtime dependency completion resolution, human attention projection, and
-read-only brief queue parsing and state projection.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for status, inbox, or brief queue inspection
-- **THEN** system maps `src/core/status/**` and `tests/queue*.test.ts` to status-inspection
 
 ### Requirement: Undeclared test change status inspection
 The status and show commands SHALL present `undeclared_test_change` dead status and diagnostic details.
@@ -511,19 +494,6 @@ unchanged.
 - **WHEN** task 1's stream holds a `dependencies_added` event adding `zod` to `package.json`
 - **THEN** `osq show` prints `      Dependencies added: zod (package.json)` under task 1
 
-### Requirement: Scenarios in show
-`osq show` SHALL print, under each task whose resolved scope holds scenario test
-files naming scenarios, the line
-`      Scenarios: <capability>: <name>; <capability>: <name>`, with the distinct
-pairs sorted by capability and then name. It comes after the
-`Dependencies added:` line. Other tasks' output SHALL be unchanged. It SHALL
-look for scenario test files only when some task's resolved scope holds a test
-path, as traceability's "Test paths" defines it.
-
-#### Scenario: Task with a scenario test
-- **WHEN** task 1's scope holds `tests/pricing-quote.test.ts`, which names both pricing scenarios
-- **THEN** `osq show` prints `      Scenarios: pricing: A percentage code comes off the tiered subtotal; pricing: Volume discount tiers` under task 1
-
 ### Requirement: Focused runs in show
 `osq show` SHALL print, under each task whose stream holds `focused_ran`
 events, the line `      Focused runs: <entry>, <entry>`, with one entry per
@@ -724,64 +694,6 @@ under `NoVcs`, there SHALL be no leftovers and no git read.
 #### Scenario: Removing it clears the flag
 - **WHEN** the printed `rm -r` command has run
 - **THEN** status prints no `Leftover drafts:` section
-
-### Requirement: Dispatch items
-`readDispatchItems(projectRoot, config)` SHALL derive, on every call and
-without writing anything, the items that need a human, and a
-`watcherIdle` flag. It SHALL read active changes, their next steps, and
-pending verifications from `getStatusOverview`. Each item SHALL carry its
-kind, the change's id, folder name, title, and folder path, the task number
-and title when there is one, and the commands osq already has for it. The
-items SHALL be in numeric change order, then task order. The kinds are:
-
-- `approval`: an active change whose next step is `ready-for-approval`,
-  with commands `osq approve <id>` and `osq show <id>`.
-- `halt`: one per dead or regressed task, with commands
-  `osq retry <id> <n>` and `osq show <id>`; and one per change-level
-  regression, with commands `osq retry <id> change`,
-  `osq reject <id> --reason <text>`, and `osq show <id>`.
-- `land`: with `vcs.enabled` and `GitVcs`, one per change archived in an
-  osq worktree whose `readDependencyState` is `archived`, with commands
-  `osq land <id>` and `osq show <id>`. With `vcs.enabled` off and `GitVcs`,
-  one per folder in the project root's archive directory that `Vcs` status
-  lists as untracked or modified, itself or any path under it, with command
-  `osq show <id>`. Under `NoVcs` there SHALL be no land items.
-- `verify`: one per pending verification, with its next step's command and
-  `osq show <id>`.
-
-`watcherIdle` SHALL be true when no active change's next step is `running`.
-
-#### Scenario: Each kind
-- **WHEN** a project has an unapproved change ready for approval, an approved change with a dead task, and an archived change whose verification is pending
-- **THEN** the items are an `approval`, a `halt` for that task, and a `verify`, each with its commands
-
-#### Scenario: Unplanned draft
-- **WHEN** an unapproved change still has the planning sentinel verify
-- **THEN** it yields no item
-
-#### Scenario: Items follow state
-- **WHEN** the dead task's marker is removed and the approval is written
-- **THEN** the next call has neither the halt nor the approval item
-
-#### Scenario: Change regression
-- **WHEN** an approved change has `.run/regressed/change.md`
-- **THEN** there is one `halt` item with no task and the `osq retry <id> change` command
-
-#### Scenario: Uncommitted archive with the flag off
-- **WHEN** `vcs.enabled` is off, the project is a git repository, and an archived folder is untracked
-- **THEN** there is one `land` item for it, and none once the folder is committed
-
-#### Scenario: Archived on its branch
-- **WHEN** `vcs.enabled` is on and a change has archived in its worktree and not landed
-- **THEN** there is one `land` item for it with the command `osq land <id>`, and none after `git merge --squash` and a commit put its archive on the default branch
-
-#### Scenario: No git
-- **WHEN** the project is not a git repository
-- **THEN** there are no `land` items
-
-#### Scenario: Watcher idle
-- **WHEN** no approved change has work left, and then an approved change has a pending task
-- **THEN** `watcherIdle` is true first and false second
 
 ### Requirement: Dispatch order
 `orderDispatchItems(projectRoot, config, dispatch, firstSeen)` SHALL return
@@ -1061,52 +973,6 @@ hub and cancels the poll. It SHALL derive once as soon as it starts.
 #### Scenario: Idle and first seen
 - **WHEN** the watcher has no runnable change and the wait log under `options.home` has the higher of two equal approval items first seen earlier
 - **THEN** `onItems` gets `idle` true and the higher change id first
-
-### Requirement: Card keys
-`cardKeys(item)` SHALL map each of the item's commands to keys, in the
-item's command order:
-
-- `osq approve <id>`: `a`.
-- `osq retry <id> <target>`: `r`.
-- `osq reject <id> --reason <text>`: `x`, which asks `Reason: `; its
-  arguments are `reject <id> --reason` and the answer.
-- `osq check <id>`: `c`.
-- `osq verified <id> --passed|--failed`: `p` with `verified <id> --passed`
-  and `f` with `verified <id> --failed`.
-- `osq show <id>`: `s`.
-
-Each key SHALL carry its label (the command with the chosen flag, or with
-`--reason <text>` for reject) and its argument list without the leading
-`osq`. A command that does not start with `osq `, or whose verb is not in
-this list, SHALL be returned among `manual` commands, unchanged.
-
-`formatCardScreen(total, item, card, keys)` SHALL return `Needs you (<total>):`,
-then the card as `osq inbox` prints it up to but not including `Actions:`,
-then `Keys:` with one `  <key>  <label>` line per key followed by
-`  n  skip` and `  q  quit`, then, when there are manual commands,
-`Run yourself:` with one `  <command>` line each. `dispatch-text.ts` SHALL
-export `formatDispatchCardBody(item, card)`, the card lines before
-`Actions:`, and `osq inbox` SHALL print what it printed before.
-
-#### Scenario: Approval keys
-- **WHEN** `cardKeys` runs on an approval item
-- **THEN** it returns `a` with arguments `approve <id>` and `s` with `show <id>`, and no manual commands
-
-#### Scenario: Change halt keys
-- **WHEN** `cardKeys` runs on a change-level halt item
-- **THEN** it returns `r`, `x` asking `Reason: `, and `s`
-
-#### Scenario: Verify keys
-- **WHEN** `cardKeys` runs on a verify item without a check command
-- **THEN** it returns `p` with `verified <id> --passed`, `f` with `verified <id> --failed`, and `s`
-
-#### Scenario: Land in a worktree
-- **WHEN** `cardKeys` runs on a land item archived in a worktree
-- **THEN** `osq land <id>` is a manual command and `s` is the only key
-
-#### Scenario: Screen
-- **WHEN** `formatCardScreen` formats an approval item's card
-- **THEN** it holds `Needs you (<n>):`, the card body without `Actions:`, and `Keys:` with `a`, `s`, `n`, and `q` lines
 
 ### Requirement: Card session
 `runCardSession(projectRoot, config, options)` SHALL run until the reviewer

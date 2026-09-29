@@ -1,10 +1,4 @@
-# metrics-and-reporting Specification
-
-## Purpose
-
-Collects, derives, and reports task execution metrics, token utilization, costs, failure categorizations, and file modifications across active and archived change specifications.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Task and specification metrics derivation
 The system SHALL derive specification metrics and current task state across active and archived changes via `osq report`. Current task state SHALL come only from marker files and SHALL contain total, done, verified, manual, dead, regressed, running, pending, and unmarked counts. Pending SHALL count only tasks in active changes that have no terminal or running marker. A task in an archived change without a done, dead, regressed, or running marker SHALL count as unmarked. Historical terminal events SHALL NOT override current marker state.
@@ -94,16 +88,6 @@ planning and non-planning report field.
 #### Scenario: No planning record exists
 - **WHEN** no active or archived change has a valid planning start
 - **THEN** both formats report zero covered changes without inventing usage or planner attribution
-
-### Requirement: Code ownership
-<!-- source: src/core/report/**, src/cli/report.ts, tests/report*.test.ts, fixture/report/** -->
-The Metrics and Reporting capability SHALL own planning-log parsing, metrics
-aggregation including rejection history, report generation, report CLI
-formatting, report tests, and the deterministic report fixture.
-
-#### Scenario: Codebase ownership boundaries
-- **WHEN** file ownership is resolved for planning records or delivery reporting
-- **THEN** system maps `src/core/report/**`, `src/cli/report.ts`, `tests/report*.test.ts`, and `fixture/report/**` to `metrics-and-reporting`
 
 ### Requirement: Undeclared test change failure metrics
 The reporting subsystem SHALL aggregate `undeclared_test_change` occurrences across failure reason breakdowns.
