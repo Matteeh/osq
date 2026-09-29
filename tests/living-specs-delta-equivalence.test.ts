@@ -7,9 +7,11 @@ import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
 import { readLandedAt } from '../src/core/web/web-data-lifecycle.js';
+import { archiveSpecsRecordPath } from '../src/watcher/archive-specs.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ARCHIVE_DIR = path.join(REPO_ROOT, 'openspec', 'changes', 'archive');
+const CHANGES_DIR = path.join(REPO_ROOT, 'openspec', 'changes');
+const ARCHIVE_DIR = path.join(CHANGES_DIR, 'archive');
 const LIVING_SPECS_DIR = path.join(REPO_ROOT, 'openspec', 'specs');
 const SRC_DIR = path.join(REPO_ROOT, 'src');
 
@@ -119,6 +121,32 @@ async function archivedChangeFolders(archiveDir: string = ARCHIVE_DIR): Promise<
     .map((entry) => entry.name);
 }
 
+/**
+ * The names of the active changes whose deltas archive has applied for their
+ * change-level `verify`, in folder-name order.
+ */
+async function applyingChangeFolders(changesDir: string = CHANGES_DIR): Promise<string[]> {
+  const entries = await fs.readdir(changesDir, { withFileTypes: true });
+  const names = entries
+    .filter((entry) => entry.isDirectory() && entry.name !== 'archive')
+    .map((entry) => entry.name)
+    .sort();
+
+  const applying: string[] = [];
+  for (const name of names) {
+    const recordPath = archiveSpecsRecordPath(path.join(changesDir, name));
+    if (
+      await fs
+        .stat(recordPath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      applying.push(name);
+    }
+  }
+  return applying;
+}
+
 /** Writes one temporary archived change that carries a single capability delta. */
 async function writeArchivedChange(
   archiveDir: string,
@@ -151,8 +179,12 @@ function withoutPurposeBlankLine(content: string): string {
 /** Replays the deterministic merge of every archived delta for one capability. */
 async function replayLivingSpec(capability: string): Promise<string> {
   let base: string | null = null;
-  for (const folder of await archivedChangeFolders()) {
-    const deltaPath = path.join(ARCHIVE_DIR, folder, 'specs', capability, 'spec.md');
+  const folders = [
+    ...(await archivedChangeFolders()).map((folder) => path.join(ARCHIVE_DIR, folder)),
+    ...(await applyingChangeFolders()).map((folder) => path.join(CHANGES_DIR, folder)),
+  ];
+  for (const folder of folders) {
+    const deltaPath = path.join(folder, 'specs', capability, 'spec.md');
     const content = await fs.readFile(deltaPath, 'utf8').catch(() => null);
     if (content === null) {
       continue;
@@ -265,6 +297,22 @@ describe('Living spec delta equivalence', () => {
     const archiver = await import('../src/watcher/archiver.js');
     assert.equal(typeof archiver.applyOpenSpecDeltas, 'function');
     assert.ok(!('applyDelta' in archiver), 'applyDelta must not be exported');
+  });
+
+  it('picks up active changes holding the archive record, in folder-name order', async () => {
+    const tempChangesDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-applying-changes-'));
+    try {
+      await fs.mkdir(path.join(tempChangesDir, 'archive'), { recursive: true });
+      await fs.mkdir(path.join(tempChangesDir, '001-a', '.run'), { recursive: true });
+      await fs.writeFile(archiveSpecsRecordPath(path.join(tempChangesDir, '001-a')), '{}', 'utf8');
+      await fs.mkdir(path.join(tempChangesDir, '002-b', '.run'), { recursive: true });
+      await fs.writeFile(archiveSpecsRecordPath(path.join(tempChangesDir, '002-b')), '{}', 'utf8');
+      await fs.mkdir(path.join(tempChangesDir, '003-c'), { recursive: true });
+
+      assert.deepEqual(await applyingChangeFolders(tempChangesDir), ['001-a', '002-b']);
+    } finally {
+      await fs.rm(tempChangesDir, { recursive: true, force: true });
+    }
   });
 
   it('orders archives by landing time and puts eventless folders first', async () => {

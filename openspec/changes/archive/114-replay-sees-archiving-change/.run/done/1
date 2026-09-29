@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f5d6668183656b9196e05edf996dcf0dc163ad5a5f231244e2118fe2809e583d"
+build_stamp: "2a446be"
+project_commit: "d4607c7"
+exit_code: 0
+scope_files: {"tests/living-specs-delta-equivalence.test.ts":"sha256:93af3489ac32e3269a12373fe1c434b03eda8244f6ab81a66eb31fa4729e76a1"}
+---
+2026-09-29T16:43:47.443Z
