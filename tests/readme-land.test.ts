@@ -7,20 +7,25 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 describe('README landing walkthrough', () => {
-  it('names osq land before the hand land fallback in the version control section', async () => {
+  it('ends the version control section with a walkthrough that lands only through osq land', async () => {
     const readme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
+    const version = readme.indexOf('## Version control');
+    assert.ok(version >= 0, 'README must hold the version control section');
+
+    const harnesses = readme.indexOf('## Harnesses', version);
+    assert.ok(harnesses > version, 'the version control section must sit before Harnesses');
+
     const heading = '### Working with version control on';
-    const start = readme.indexOf(heading);
-    assert.ok(start >= 0, 'README must hold the working-with-version-control heading');
+    const start = readme.indexOf(heading, version);
+    assert.ok(
+      start > version && start < harnesses,
+      'the walkthrough must follow the other version control text',
+    );
 
-    const harnesses = readme.indexOf('## Harnesses', start);
-    assert.ok(harnesses > start, 'the walkthrough must sit before the Harnesses section');
-
-    const section = readme.slice(start, harnesses);
-    const land = section.indexOf('osq land <id>');
-    const hand = section.indexOf('osq message <id> | git commit -F -');
-    assert.ok(land >= 0, 'the walkthrough must name osq land <id>');
-    assert.ok(hand >= 0, 'the walkthrough must keep the hand land command');
-    assert.ok(land < hand, 'osq land <id> must come before the hand land fallback');
+    const section = readme.slice(version, harnesses);
+    const walkthrough = readme.slice(start, harnesses);
+    assert.ok(walkthrough.includes('osq land <id>'), 'the walkthrough must hold osq land <id>');
+    assert.ok(!section.includes('git merge --squash'), 'the section must describe no hand squash');
+    assert.ok(!section.includes('| git commit -F -'), 'the section must describe no hand commit');
   });
 });

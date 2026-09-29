@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9d8fe3babe6f5a91a55c453b053a86cfdd0e78db960f89318692263e0b073b82"
+build_stamp: "eca179c"
+project_commit: "c04f99d"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs-land.ts":"sha256:23b9e3ef1c7bb24758dd8025ec480308192eefa1942117409ecc0e99655000d4","src/core/vcs/git-vcs-write.ts":"sha256:b6a55c8f8aab27b8c1813d2a44e595cb35a139356094755369611f9c1385cacb","src/core/vcs/git-vcs.ts":"sha256:d04683e34cace41a71dd9fc5cf8621f4deed8cfc5a4bf7c1d7c334ac79fca2c2","src/core/vcs/no-vcs.ts":"sha256:fd75c81b3479abed9e5d7f874ce1faa9122d8237172548cb36a86c43fc734e53","src/core/vcs/vcs.ts":"sha256:b686c95c5a9355d4af9cb692bac13e29842473903a80bd680a21930f42b48741","tests/vcs-land-ops.test.ts":"sha256:613aee3bfd76e637586cc755ba16020e911cfeae7d7600595574f2561e8c5b72","tests/vcs-write.test.ts":"sha256:0b7cfac8ef0830d19587d02f9b068e045214f16d81a5624f6b7dca816fbde288"}
+---
+2026-09-28T19:49:21.937Z

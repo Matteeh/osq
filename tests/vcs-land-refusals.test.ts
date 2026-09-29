@@ -339,21 +339,20 @@ async function snapshot(repo: string, worktree: string): Promise<Snapshot> {
 }
 
 describe('osq land refusals', () => {
-  it('refuses a modified tracked file and leaves the checkout and worktree alone', async () => {
+  it('Modified tracked file', async () => {
     const project = await makeRepo([ONE_ORDERS]);
-    const worktree = await approveAndArchive(project, ONE_ORDERS);
-    await writeAt(project.repo, 'src/seed.txt', 'edited\n');
-    const before = await snapshot(project.repo, worktree);
+    await writeAt(project.repo, 'README.md', 'original\n');
+    await git(['add', '--', 'README.md'], project.repo);
+    await git(['commit', '-qm', 'readme'], project.repo);
+    await approveAndArchive(project, ONE_ORDERS);
+    await writeAt(project.repo, 'README.md', 'edited\n');
 
     const capture = await captureLand(project.repo, project.config, '001');
 
-    assert.equal(capture.exitCode, 1);
-    assert.equal(capture.stdout, '');
-    assert.equal(
-      capture.stderr,
-      'The checkout has uncommitted changes: src/seed.txt; commit or stash them first\n',
-    );
-    assert.deepEqual(await snapshot(project.repo, worktree), before);
+    assert.equal(capture.exitCode, 0);
+    assert.equal(capture.stderr, '');
+    assert.ok(capture.stdout.startsWith('Landed 001-order-flow as '));
+    assert.equal(await fs.readFile(path.join(project.repo, 'README.md'), 'utf8'), 'edited\n');
   });
 
   it('lands a change when the checkout holds only an untracked draft of another change', async () => {

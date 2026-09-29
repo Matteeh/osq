@@ -14,6 +14,7 @@ import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
 import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
 import { applyArchiveSidecars } from './archive-sidecars.js';
+import { applyArchiveSpecs, archiveSpecsRecordPath, restoreArchiveSpecs } from './archive-specs.js';
 import { verifyArchiveStep } from './archive-verify.js';
 import { auditScopeRegressions } from './regression.js';
 
@@ -79,18 +80,23 @@ async function readArchivedVerification(
   return { afterLanding: steps.afterLanding !== '', check };
 }
 
-/** Apply deltas, move the folder to the canonical archive, and tick every `tasks.md`. */
-export async function archiveSpecFolder(
+/**
+ * Delete the transient archive record, remove `plan-prompt.md`, move the
+ * folder to the canonical archive, and tick every `tasks.md`. The caller has
+ * already applied the change's deltas and sidecars.
+ */
+async function relocateArchivedSpec(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
 ): Promise<string> {
+  // The record is transient; drop it before the move so the archive never
+  // holds it.
+  await fs.rm(archiveSpecsRecordPath(specFolderPath), { force: true });
+
   // The proposal's after-landing steps and `check` command must be read before
   // the folder moves, because the event is stamped after relocation.
   const verification = await readArchivedVerification(specFolderPath);
-
-  await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
-  await applyArchiveSidecars(projectRoot, specFolderPath, config);
 
   // The planning prompt is transient local context, not authored content. Remove
   // it once deltas are applied and only after every verification gate has
@@ -136,12 +142,27 @@ export async function archiveSpecFolder(
   return targetPath;
 }
 
+/** Apply deltas, move the folder to the canonical archive, and tick every `tasks.md`. */
+export async function archiveSpecFolder(
+  projectRoot: string,
+  specFolderPath: string,
+  config: OsqConfig,
+): Promise<string> {
+  await applyOpenSpecDeltas(projectRoot, specFolderPath, config);
+  await applyArchiveSidecars(projectRoot, specFolderPath, config);
+  return relocateArchivedSpec(projectRoot, specFolderPath, config);
+}
+
 /** Re-run every task verify, then the change-level verify, before archiving. */
 export async function checkAndArchiveSpec(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
 ): Promise<boolean> {
+  // A stopped archive leaves the living specs modified and a record behind.
+  // Put them back before the done check, so a fresh attempt starts clean.
+  await restoreArchiveSpecs(projectRoot, specFolderPath);
+
   const specState = await deriveSpecState(projectRoot, specFolderPath);
   if (specState.status !== 'done') {
     return false;
@@ -179,13 +200,19 @@ export async function checkAndArchiveSpec(
 
   const specData = await parseSpecMdFromFolder(specFolderPath);
   const changeCommand = specData?.verify ?? '';
+
+  // The change-level verify must see the tree the archive is about to seal, so
+  // the deltas and sidecars go in first.
+  await applyArchiveSpecs(projectRoot, specFolderPath, config);
+
   if (
     changeCommand &&
     !(await verifyArchiveStep(projectRoot, specFolderPath, runDir, config, 'change', changeCommand))
   ) {
+    await restoreArchiveSpecs(projectRoot, specFolderPath);
     return false;
   }
 
-  await archiveSpecFolder(projectRoot, specFolderPath, config);
+  await relocateArchivedSpec(projectRoot, specFolderPath, config);
   return true;
 }

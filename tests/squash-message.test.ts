@@ -391,7 +391,7 @@ describe('Squash commit message', () => {
 });
 
 describe('Message command', () => {
-  it('prints the message on stdout and the branch and land lines on stderr', async () => {
+  it('prints the message on stdout and the branch on stderr', async () => {
     const project = await setupProject();
     const adapter = new ActingAdapter();
     await runWatcherCycle(project.repo, project.config, adapter);
@@ -400,10 +400,7 @@ describe('Message command', () => {
     const capture = await runMessage(project.repo, project.config, '001');
 
     assert.equal(capture.exitCode, null);
-    assert.equal(
-      capture.stderr,
-      [`Branch: ${worktreeBranch(ONE)}`, 'Land: osq land 001', ''].join('\n'),
-    );
+    assert.equal(capture.stderr, `Branch: ${worktreeBranch(ONE)}\n`);
     assert.ok(capture.stdout.startsWith('osq: 001 order flow\n'));
     assert.ok(!capture.stdout.includes('Branch:'));
   });

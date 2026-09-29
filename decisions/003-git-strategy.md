@@ -5,7 +5,7 @@ rule: Agents never run git. osq alone writes to git, never rewrites history, and
 ---
 # 003. Git strategy
 
-Date: 2026-09-18. Revised: 2026-09-26.
+Date: 2026-09-18. Revised: 2026-09-26, 2026-09-28.
 
 Supersedes nothing. Retires the worktree and `scope_violation` entries under "Not yet" in README.md.
 
@@ -256,9 +256,9 @@ Mode B. The PR is where a human meets the change, three times at most: plan appr
 
 ### 7. Landing in mode A is a human command
 
-`osq land 012` first merges the default branch into `osq/012-observability-fixes` in the change's worktree, as decision 5 describes, when the default branch has moved; a conflict outside the living specs stops it with the paths named. It then runs `git merge --squash osq/012-observability-fixes` in the checkout, commits with the generated message, and removes the worktree. It refuses if the checkout has uncommitted changes, if the branch has not archived, or if the change is stacked on a dependency that has not landed. It removes the checkout's leftover copy of the draft when its hash matches the approved one. It does not push. It exists so that the trailers land in the trailer block of the surviving commit. A hand-run squash puts them into a "Squashed commit of the following" body where `git interpret-trailers` cannot see them.
+`osq land 012` first syncs the default branch into `osq/012-observability-fixes`, in the change's worktree, as decision 5 describes, when the default branch has moved; a conflict or a changed requirement stops it with the paths or the requirement named. It runs no other verify: when the sync merges, the change-level `verify` runs in the worktree and its `verify_ran` and `synced` events are committed with the sync, and when the sync does not merge, the branch tip is the tree archive verified. It takes the worktree's HEAD as the tip and the checkout's HEAD as the base, and stops when the base is not an ancestor of the tip. It builds the land commit from the branch tip's tree with `git commit-tree <tip>^{tree} -p <base>`, authored by `vcs.author`, and moves the checkout to it with `git merge --ff-only <commit>`. Unrelated uncommitted work in the checkout stays; when the commit changes a file the checkout has uncommitted, the fast-forward would refuse, so osq checks that overlap itself and stops naming those paths. It refuses if the branch has not archived, or if the change is stacked on a dependency that has not landed. It removes the checkout's leftover copy of the draft when its hash matches the approved one, and removes the worktree. It does not push. Building the commit with `git commit-tree` from the tree the branch verified, and moving only by `--ff-only`, is what makes the land end complete or change nothing, and it keeps the trailers in the trailer block of the surviving commit.
 
-`osq message 012` ships first, in stage 1. It prints the squash message with its trailer block and the branch to squash, and writes nothing. For a stacked change whose dependency has not landed, it names the dependency to land first. Until `osq land` exists, a change lands by hand with `git merge --squash osq/012-observability-fixes` followed by `git commit` using that message, and keeps its trailers.
+`osq message 012` prints the land commit's message with its trailer block and the branch, and writes nothing. For a stacked change whose dependency has not landed, it names the dependency to land first. Hand landing was a stopgap until `osq land` existed; ADR 006 retires it, so `osq land` is the only way a change lands.
 
 Rejected. Landing automatically when the branch archives. The constraint forbids it, and the human wants to read the diff.
 
@@ -268,7 +268,7 @@ Commits osq makes are authored by a configured bot identity, `vcs.author`, and c
 
 osq never signs and never disables signing. If the environment has `commit.gpgsign` set, the committer's key signs osq's commits. In mode B a signing setup that cannot run unattended is a `doctor` failure. Squash commits made through GitHub's merge button are signed by GitHub.
 
-The same goes for hooks. osq runs the repository's commit hooks and never passes `--no-verify`, because skipping them bypasses the repository's own policy the way disabling signing would. A commit that fails, whether from a hook, signing, or anything else, halts the change with git's output and is not retried. Commits have their own timeout, `timeouts.gitCommitSeconds`, longer than the one for reads, because hooks and signing are slow. With `vcs.enabled`, `doctor` warns when the repository has commit hooks or sets `commit.gpgsign`. A hook that reformats files could make the committed tree differ from the verified one. Comparing the two waits until a repository with such a hook needs it.
+The same goes for hooks. Commits osq makes on the branch run the repository's commit hooks and never pass `--no-verify`, because skipping them bypasses the repository's own policy the way disabling signing would. The land commit runs no commit hooks. `git commit-tree` runs none, the tree it commits is one osq already verified, and osq passes `-S` when `commit.gpgsign` is set because `git commit-tree` ignores it. A commit that fails, whether from a hook, signing, or anything else, halts the change with git's output and is not retried. Commits have their own timeout, `timeouts.gitCommitSeconds`, longer than the one for reads, because hooks and signing are slow. With `vcs.enabled`, `doctor` warns when the repository has commit hooks or sets `commit.gpgsign`. A hook that reformats files could make the committed tree differ from the verified one. Comparing the two waits until a repository with such a hook needs it.
 
 Things osq never does, in any mode, and the `Vcs` interface cannot express:
 

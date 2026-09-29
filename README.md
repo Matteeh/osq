@@ -353,29 +353,24 @@ export default defineConfig({
 
 With `vcs.enabled`, `osq approve` creates branch `osq/<folder>` and a linked worktree under `vcs.worktreeRoot`, runs `vcs.prepare` there, writes the seal plus `.run/base` and `.run/approver` into the worktree's copy, commits `osq: <id> approved`, and prints `Worktree:` and `Branch:` lines. Your checkout is left untouched, and `osq status` warns when the checkout's copy of the change is edited afterwards. The watcher runs the change inside that worktree: before every spawn and archive it checks that HEAD is on `osq/<folder>` and that status lists nothing outside the change folder's `.run/` (and its `tasks.md`), halting with `worktree_off_branch` or `worktree_dirty` otherwise; it commits each verified task as `osq: <id> task <n> verified` and the archive as `osq: <id> archived`; and when a task dies it commits the last verified state plus the dead record and the agent's edits in `.run/dead/<n>.patch`, halting with `commit_failed` when a commit hook rejects a commit. Inside a worktree, a `vcs_violation` or `scope_violation` the git guard records kills the task before verify. An approved change whose `depends_on` names an approved change that has not landed gets a stacked approval under `<vcs.worktreeRoot>/<repo>/.stacked/<folder>` instead of a branch: once the dependency's archive commit exists the watcher cuts the change's branch from it, creates its worktree, and commits its approved copy there. The dependent halts with `dependency_changed` when the dependency is rejected or approved again, with `dependency_diverged` when its dependencies are archived on separate branches, and with `stack_cut_failed` when a cut fails; approving it again starts from the new base. `osq reject` commits the rejection on the change's branch, removes the worktree when it is otherwise clean, and keeps the branch; rejecting a stacked change withdraws its stacked approval.
 
-To land a change, run `osq land <id>` from the checkout. It syncs the default branch into the change's worktree when it has moved, runs the change's `verify` on the merged tree, squashes the branch and commits with the message osq builds, then removes the leftover draft and the worktree. To land by hand instead, from the checkout squash the branch and commit with the message osq builds:
+To land a change, run `osq land <id>` from the checkout. It syncs the default branch into the change's worktree when it has moved and runs the change's `verify` there; it builds the land commit from the branch tip's tree, with the default branch as its only parent, and fast-forwards the default branch to it, so the land ends complete or changes nothing. It leaves unrelated uncommitted work in the checkout alone, stops naming any uncommitted file the land writes, and removes the leftover draft and the worktree.
 
 ```sh
 osq land <id>
-
-# or land by hand:
-git merge --squash osq/<folder>
-osq message <id> | git commit -F -
 ```
 
-`osq message <id>` prints the squash commit message to stdout and the branch and land command to stderr, and writes nothing. After a hand landing, `osq status` flags the checkout's leftover copy of the draft under `Leftover drafts:` while its contents still match the approved hash, and prints the command that removes it. A test that runs inside an `osq/<folder>` worktree finds its change from the worktree's branch when `OSQ_CHANGE` is unset.
+`osq message <id>` prints the land commit's message to stdout and the branch to stderr, and writes nothing. A test that runs inside an `osq/<folder>` worktree finds its change from the worktree's branch when `OSQ_CHANGE` is unset.
 
 ### Working with version control on
 
 1. Approve the change from the default branch, so osq cuts the `osq/<folder>` branch and its worktree there.
 2. Find the worktree at the `Worktree:` line `osq approve` prints, or under `vcs.worktreeRoot`.
 3. Leave the worktree alone while a task runs, and edit the change only from the default branch or another checkout.
-4. Land the archived change with `osq land <id>`. It syncs the default branch into the worktree when it has moved, runs `verify` on the merged tree, squashes the branch and commits, and removes the leftover draft and the worktree.
-5. To land by hand instead, use `git merge --squash osq/<folder>` and `osq message <id> | git commit -F -`, then remove the leftover draft that `osq status` names under `Leftover drafts:`.
+4. Land the archived change with `osq land <id>`. It syncs the default branch into the worktree when it has moved, runs `verify` on the merged tree, builds the land commit from the branch tip, and fast-forwards the default branch to it; the land ends complete or changes nothing.
 
 ## Harnesses
 
-`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `done_manual`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`. Hooks are optional shims that append to the same file. The loop works without them.
+`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `done_manual`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`; when its sync runs `verify`, `osq land` appends `verify_ran` and `synced` there. Hooks are optional shims that append to the same file. The loop works without them.
 
 Available adapters:
 
@@ -561,7 +556,7 @@ osq check <id>           run an archived change's recorded check command
 osq verified <id>        record an after-landing outcome (--passed or --failed, optional --note <text>)
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
-osq message <id>         print an archived change's squash commit message for a hand landing
+osq message <id>         print an archived change's land commit message
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq graph                print the system graph summary (node, edge, and gap counts)

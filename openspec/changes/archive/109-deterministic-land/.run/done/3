@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9b0de8e88cd0cce5b526ac08943e075afc64ad14b61513e972b97cb804fc3cb4"
+build_stamp: "eca179c"
+project_commit: "4c90acd"
+exit_code: 0
+scope_files: {"src/cli/land.ts":"sha256:8c6c3327142d30139ad9748d04449592bc9a30e2e0d1fd404bd15599c6b74910","src/core/vcs/land-checks.ts":"sha256:74b3470e042210f5059b0fe65540c13dc2f1df733a57fdc3f61763b2fd764f0b","src/core/vcs/land.ts":"sha256:754505198c44925c46749362f4ea19a5ec2bd8a523efb72dedc3c689391a35cf","src/core/vcs/sync-main.ts":"sha256:5939ba13ea156c72d45333f1a9e42094b94110e29ead43d3210212793d690b11","tests/vcs-land-commit.test.ts":"sha256:1ab9aa0f9ed752f8f45b58fc38840fa9cd30bd38f0f9d019b6fd18c312c18772","tests/vcs-land-refusals.test.ts":"sha256:07cef6ff4d20b66ba62b1471516e6cce11a7a4018c1afea4c1b864f1581a73cb","tests/vcs-land.test.ts":"sha256:43a97e6eaef652f197195a6466108d82c671964ddcf2f93384fe6712c9d6f8c0"}
+---
+2026-09-28T19:57:45.130Z

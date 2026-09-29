@@ -31,6 +31,13 @@ export interface VcsMergeResult {
   readonly conflicts: readonly string[];
 }
 
+/** A fast-forward's outcome: done, or blocked by uncommitted paths the commit changes. */
+export interface VcsFastForwardResult {
+  readonly status: 'done' | 'blocked';
+  /** Uncommitted paths the commit changes, relative to the project root, sorted; empty when done. */
+  readonly blocked: readonly string[];
+}
+
 /** One entry of `git worktree list`, with its branch and HEAD. */
 export interface VcsWorktree {
   /** Absolute path of the worktree. */
@@ -66,6 +73,9 @@ export interface Vcs {
   /** Drop git's records of worktrees whose directory no longer exists. */
   worktreePrune(): Promise<void>;
   commit(paths: readonly string[], message: string, author: string): Promise<string>;
+  commitTree(source: string, parent: string, message: string, author: string): Promise<string>;
+  fastForward(commit: string): Promise<VcsFastForwardResult>;
+  countCommits(from: string, to: string): Promise<number>;
   /** Merge `ref` without committing, or squash it, reporting unmerged paths. */
   merge(ref: string, squash: boolean): Promise<VcsMergeResult>;
   mergeAbort(): Promise<void>;

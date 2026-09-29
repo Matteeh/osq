@@ -13,9 +13,9 @@ export interface MessageCommandOptions {
 }
 
 /**
- * Print the squash commit message for an archived change on stdout, then the
- * branch and hand-landing command on stderr. A refusal prints only its message
- * to stderr and exits one. Writes no file and runs no git write.
+ * Print the land commit message for an archived change on stdout, then the
+ * branch on stderr. A refusal prints only its message to stderr and exits one.
+ * Writes no file and runs no git write.
  */
 export async function messageCommand(
   id: string,
@@ -36,7 +36,6 @@ export async function messageCommand(
     stdout(message);
     const branch = worktreeBranch(folder);
     stderr(`Branch: ${branch}\n`);
-    stderr(`Land: osq land ${id}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     stderr(`${message}\n`);
@@ -48,7 +47,7 @@ export async function messageCommand(
 export function registerMessageCommand(program: Command): void {
   program
     .command('message <id>')
-    .description("print an archived change's squash commit message and landing command")
+    .description("print an archived change's land commit message")
     .action(async (id: string) => {
       await messageCommand(id);
     });

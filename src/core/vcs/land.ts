@@ -9,16 +9,14 @@ import { findLeftoverDrafts } from '../status/leftover-drafts.js';
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
-  assertCheckoutClean,
   assertGit,
   assertNoEarlierChange,
   assertVcsEnabled,
   assertWorktreeClean,
-  runLandVerify,
 } from './land-checks.js';
 import { selectVcs } from './select.js';
 import { syncWithDefaultBranch } from './sync-main.js';
-import type { Vcs } from './vcs.js';
+import type { Vcs, VcsFastForwardResult } from './vcs.js';
 import { worktreeBranch, worktreePath } from './worktree.js';
 
 /** The lines a land prints and the code it exits with. */
@@ -76,27 +74,6 @@ async function resolveWorktree(
   return listed ? target : null;
 }
 
-/** The checkout HEAD, the checkout status, and the worktree HEAD all still line up. */
-async function assertStillLandable(
-  vcs: Vcs,
-  defaultBranch: string,
-  change: LocatedChange,
-  worktree: string,
-): Promise<void> {
-  const [head, status, entries] = await Promise.all([vcs.head(), vcs.status(), vcs.worktreeList()]);
-  const worktreeHead = entries.find(
-    (entry) => path.resolve(entry.path) === path.resolve(worktree),
-  )?.head;
-  const clean = status.every((entry) => entry.code === '??');
-  const ancestor =
-    worktreeHead != null &&
-    worktreeHead !== '' &&
-    (await vcs.isAncestor(defaultBranch, worktreeHead));
-  if (head.branch !== defaultBranch || !clean || !ancestor) {
-    throw new Error(`${defaultBranch} moved while landing; run osq land ${landId(change)} again`);
-  }
-}
-
 /** Remove the leftover draft and the worktree, reporting each attempt. */
 async function cleanupChange(
   projectRoot: string,
@@ -147,15 +124,54 @@ async function cleanupLanded(
 }
 
 /**
+ * Build the land commit from the branch tip and move the checkout to it with a
+ * fast-forward only. A failed move stops naming the checkout's overlap, a
+ * checkout that moved, or git's output.
+ */
+async function landCommit(
+  projectRoot: string,
+  config: OsqConfig,
+  vcs: Vcs,
+  change: LocatedChange,
+  defaultBranch: string,
+  base: string,
+  tip: string,
+  idOrPrefix: string,
+): Promise<string> {
+  const author = config.vcs?.author;
+  if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
+  const { message } = await buildSquashMessage(projectRoot, config, idOrPrefix);
+  const commit = await vcs.commitTree(tip, base, message, author);
+
+  let pushed: VcsFastForwardResult;
+  try {
+    pushed = await vcs.fastForward(commit);
+  } catch (error) {
+    if ((await vcs.head()).sha !== base) {
+      throw new Error(`${defaultBranch} moved while landing; run osq land ${landId(change)} again`);
+    }
+    throw error instanceof Error ? error : new Error(String(error));
+  }
+  if (pushed.status === 'blocked') {
+    throw new Error(
+      `The checkout has uncommitted changes in files this land writes: ${pushed.blocked.join(', ')}; commit or stash them, then run osq land ${landId(change)} again`,
+    );
+  }
+  return commit;
+}
+
+/**
  * Land an archived change onto the default branch. Refuses unsafe state before
- * writing anything, syncs the default branch into the change's worktree and
- * verifies it, squash-merges into the checkout, commits, and cleans up. Every
- * refusal and stop is an `Error` with the message the spec names.
+ * writing anything, syncs the default branch into the change's worktree, builds
+ * the land commit from the branch tip, fast-forwards the checkout to it, and
+ * cleans up. Every refusal and stop is an `Error` with the message the spec
+ * names.
  */
 export async function landChange(
   projectRoot: string,
   config: OsqConfig,
   idOrPrefix: string,
+  progress: (line: string) => void = () => {},
 ): Promise<LandResult> {
   const vcs = await requireGit(projectRoot, config);
   const change = await resolveChange(projectRoot, config, idOrPrefix);
@@ -172,7 +188,6 @@ export async function landChange(
 
   const defaultBranch = await vcs.defaultBranch();
   assertCheckoutBranch(await vcs.head(), defaultBranch);
-  assertCheckoutClean(await vcs.status());
 
   const worktree = await resolveWorktree(projectRoot, config, vcs, change);
   if (worktree !== null) {
@@ -187,34 +202,25 @@ export async function landChange(
   }
   if (worktree === null) throw new Error(OSQ_LAND_NEEDS_GIT);
 
-  const sync = await syncWithDefaultBranch(projectRoot, config, change);
-  if (!sync.merged) await runLandVerify(worktree, change, config);
-  await assertStillLandable(vcs, defaultBranch, change, worktree);
+  await syncWithDefaultBranch(projectRoot, config, change, progress);
 
-  const squashed = await vcs.merge(worktreeBranch(change.folderName), true);
-  if (squashed.status === 'conflict') {
-    await vcs.mergeAbort().catch(() => undefined);
+  const worktreeVcs = await selectVcs(worktree, config);
+  const tip = (await worktreeVcs.head()).sha;
+  const base = (await vcs.head()).sha;
+  if (base === null || tip === null || !(await vcs.isAncestor(base, tip))) {
     throw new Error(`${defaultBranch} moved while landing; run osq land ${landId(change)} again`);
   }
 
-  const author = config.vcs?.author;
-  if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
-  const { message } = await buildSquashMessage(projectRoot, config, idOrPrefix);
-  let commit: string;
-  try {
-    commit = await vcs.commit([], message, author);
-  } catch (error) {
-    const output = error instanceof Error ? error.message : String(error);
-    return {
-      lines: [
-        output,
-        `The squash is staged. Finish with: osq message ${landId(change)} | git commit -F -`,
-        'Or undo it with: git reset --merge',
-      ],
-      code: 1,
-    };
-  }
-
+  const commit = await landCommit(
+    projectRoot,
+    config,
+    vcs,
+    change,
+    defaultBranch,
+    base,
+    tip,
+    idOrPrefix,
+  );
   const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);
   return {
     lines: [

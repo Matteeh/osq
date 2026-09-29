@@ -28,7 +28,7 @@ export async function landCommand(id: string, options: LandCommandOptions = {}):
 
   try {
     const config = options.config || (await loadConfig(cwd));
-    const { lines, code } = await landChange(cwd, config, id);
+    const { lines, code } = await landChange(cwd, config, id, (line) => stderr(`${line}\n`));
     for (const line of lines) stdout(`${line}\n`);
     exit(code);
   } catch (error) {

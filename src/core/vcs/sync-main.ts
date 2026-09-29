@@ -66,37 +66,51 @@ function verifyStop(
   );
 }
 
-/** Run the proposal's verify in the worktree, throwing its stop on failure. */
-async function runSyncVerify(
-  worktreeRoot: string,
-  change: LocatedChange,
+/** The one progress line announcing the sync. */
+function progressLine(
   defaultBranch: string,
-  config: OsqConfig,
+  folderName: string,
+  commits: number,
+  verifyCommand: string,
+): string {
+  const noun = commits === 1 ? 'commit' : 'commits';
+  const verify = verifyCommand === '' ? '' : ` and running verify: ${verifyCommand}`;
+  return `${defaultBranch} has ${commits} new ${noun}; merging into ${worktreeBranch(folderName)}${verify}`;
+}
+
+/** Append one event to the archived folder's change stream, as the watcher does. */
+async function appendSyncEvent(
+  changeFolderPath: string,
+  type: string,
+  data: Record<string, unknown>,
 ): Promise<void> {
-  const proposal = await parseSpecMdFromFolder(change.folderPath).catch(() => null);
-  const command = proposal?.verify ?? '';
-  if (command === '') return;
-  const result = await runVerificationCommand(
-    worktreeRoot,
-    command,
-    config.timeouts.verifyTimeoutSeconds,
-    null,
-  );
-  if (result.exitCode !== 0) {
-    throw verifyStop(change, defaultBranch, result.output, config);
-  }
+  const eventsDir = path.join(changeFolderPath, '.run', 'events');
+  await fs.mkdir(eventsDir, { recursive: true });
+  const event = { type, timestamp: new Date().toISOString(), data };
+  await fs.appendFile(path.join(eventsDir, 'change.jsonl'), `${JSON.stringify(event)}\n`, 'utf8');
+}
+
+/** The archived change's change stream, relative to the worktree root. */
+function eventsRelative(worktreeRoot: string, changeFolderPath: string): string {
+  return path
+    .relative(worktreeRoot, path.join(changeFolderPath, '.run', 'events', 'change.jsonl'))
+    .split(path.sep)
+    .join('/');
 }
 
 /**
  * Take the default branch into an archived change's branch, in the change's
  * worktree, rebuilding each living spec the change writes from the default
- * branch's copy plus the change's deltas. Every stop aborts the merge and
- * leaves HEAD where it was with an empty status. Reports whether it merged.
+ * branch's copy plus the change's deltas. Announces itself through `progress`,
+ * runs the proposal's verify, and stages the sync's events. Every stop aborts
+ * the merge and leaves HEAD where it was with an empty status. Reports whether
+ * it merged.
  */
 export async function syncWithDefaultBranch(
   _projectRoot: string,
   config: OsqConfig,
   change: LocatedChange,
+  progress?: (line: string) => void,
 ): Promise<{ merged: boolean }> {
   const worktreeRoot = change.tree.root;
   const vcs = await selectVcs(worktreeRoot, config);
@@ -109,8 +123,14 @@ export async function syncWithDefaultBranch(
   const baseCommit = await readBaseCommit(change.folderPath);
   await assertRequirementsUnchanged(vcs, change, baseCommit, defaultBranch, config);
 
+  const proposal = await parseSpecMdFromFolder(change.folderPath).catch(() => null);
+  const verifyCommand = proposal?.verify ?? '';
+  const commits = await vcs.countCommits(head.sha ?? 'HEAD', defaultBranch);
+  progress?.(progressLine(defaultBranch, change.folderName, commits, verifyCommand));
+
   const capabilities = await listDeltaCapabilities(change.folderPath);
   const allowed = new Set(capabilities.map((capability) => livingSpecPath(config, capability)));
+  const mergeStart = Date.now();
   let merge: VcsMergeResult;
   try {
     merge = await vcs.merge(defaultBranch, false);
@@ -125,17 +145,32 @@ export async function syncWithDefaultBranch(
     }
   }
 
-  try {
-    await rebuildLivingSpecs(worktreeRoot, change.folderPath, vcs, defaultBranch, config);
-    await runPrepare(worktreeRoot, config, worktreeBranch(change.folderName));
-    await runSyncVerify(worktreeRoot, change, defaultBranch, config);
-  } catch (error) {
-    await abortMerge(vcs, error);
-  }
-
   const author = config.vcs?.author;
   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
   try {
+    await rebuildLivingSpecs(worktreeRoot, change.folderPath, vcs, defaultBranch, config);
+    await runPrepare(worktreeRoot, config, worktreeBranch(change.folderName));
+    if (verifyCommand !== '') {
+      const result = await runVerificationCommand(
+        worktreeRoot,
+        verifyCommand,
+        config.timeouts.verifyTimeoutSeconds,
+        null,
+      );
+      if (result.exitCode !== 0) throw verifyStop(change, defaultBranch, result.output, config);
+      await appendSyncEvent(change.folderPath, 'verify_ran', {
+        command: verifyCommand,
+        exitCode: result.exitCode,
+        duration: Math.round(result.duration * 1000),
+        ...(result.output.trim() ? { output: result.output } : {}),
+      });
+    }
+    await appendSyncEvent(change.folderPath, 'synced', {
+      defaultBranch,
+      commits,
+      duration: Date.now() - mergeStart,
+    });
+    await vcs.stage([eventsRelative(worktreeRoot, change.folderPath)]);
     await vcs.commit([], syncMessage(change.folderName, defaultBranch), author);
   } catch (error) {
     await abortMerge(vcs, error);

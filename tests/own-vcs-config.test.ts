@@ -26,9 +26,10 @@ describe('osq own version control configuration', () => {
     assert.ok(harnesses > start, 'the walkthrough must sit before the Harnesses section');
 
     const section = readme.slice(start, harnesses);
+    assert.ok(section.includes('osq land <id>'), 'the walkthrough must hold the land command');
     assert.ok(
-      section.includes('osq message <id> | git commit -F -'),
-      'the walkthrough must hold the land command',
+      !section.includes('| git commit -F -'),
+      'the walkthrough must not describe landing by hand',
     );
   });
 });

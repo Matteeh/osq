@@ -135,6 +135,11 @@ export async function worktreeRemove(ctx: GitWriteContext, worktreePath: string)
   ok(await ctx.run(['worktree', 'remove', worktreePath]));
 }
 
+/** Drop git's records of worktrees whose directory no longer exists. */
+export async function worktreePrune(ctx: GitWriteContext): Promise<void> {
+  ok(await ctx.run(['worktree', 'prune']));
+}
+
 /** Write the commit message to a temporary file git reads, never an argument. */
 async function commitMessage(
   ctx: GitWriteContext,

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { DEFAULT_BRANCH, DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
+import * as land from './git-vcs-land.js';
 import * as merges from './git-vcs-merge.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
@@ -203,17 +204,25 @@ export class GitVcs implements Vcs {
     return writes.worktreeList(this.context);
   }
 
-  async worktreePrune(): Promise<void> {
-    const result = await this.run(['worktree', 'prune']);
-    if (result.code !== 0) {
-      throw new Error([result.stdout, result.stderr].filter((part) => part.length > 0).join(''));
-    }
+  worktreePrune(): Promise<void> {
+    return writes.worktreePrune(this.context);
   }
 
   commit(paths: readonly string[], message: string, author: string): Promise<string> {
     return writes.commit(this.context, paths, message, author);
   }
 
+  commitTree(source: string, parent: string, message: string, author: string): Promise<string> {
+    return land.commitTree(this.context, source, parent, message, author);
+  }
+
+  async fastForward(commit: string) {
+    return land.fastForward(this.context, commit, await this.status());
+  }
+
+  countCommits(from: string, to: string): Promise<number> {
+    return land.countCommits(this.context, from, to);
+  }
   merge(ref: string, squash: boolean): Promise<VcsMergeResult> {
     return merges.merge(this.context, ref, squash);
   }

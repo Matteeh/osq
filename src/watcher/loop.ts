@@ -15,6 +15,7 @@ import {
 } from '../core/status/change-locations.js';
 import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { restoreArchiveSpecs } from './archive-specs.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
 import { type BuildInfo, checkStaleBuild, resolveBuildInfo } from './build.js';
@@ -287,6 +288,9 @@ export async function runWatcherCycle(
       // commit a hook rejected is retried by `osq retry <id> change`, then the
       // clean check runs against the resulting tree.
       if (worktree && specState.status !== 'regressed') {
+        // A stopped archive may have left the living specs modified and the
+        // record in the worktree; put them back before the dirty check.
+        await restoreArchiveSpecs(change.tree.root, change.folderPath);
         const pendingHalt = await commitPendingVerifiedTasks(change, config);
         if (pendingHalt) {
           await haltWorktreeChange(change, specId, pendingHalt, logger);

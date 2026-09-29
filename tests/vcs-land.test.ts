@@ -424,24 +424,17 @@ describe('osq land', () => {
     assert.deepEqual(await statusLines(project.repo), beforeStatus);
   });
 
-  it('leaves the squash staged when a hook rejects the land commit', async () => {
+  it('Land commit runs no hook', async () => {
     const project = await setupProject([ONE]);
     await archiveAll(project);
     await writeHook(project.repo, 'pre-commit', 'echo "blocked by hook"\nexit 1');
 
-    const beforeHead = await git(['rev-parse', 'HEAD'], project.repo);
-
     const capture = await captureLand(project.repo, project.config, '001');
 
-    assert.equal(capture.exitCode, 1);
-    assert.match(capture.stdout, /blocked by hook/);
-    assert.match(
-      capture.stdout,
-      /The squash is staged\. Finish with: osq message 001 \| git commit -F -/,
-    );
-    assert.match(capture.stdout, /Or undo it with: git reset --merge/);
-    assert.equal(await git(['rev-parse', 'HEAD'], project.repo), beforeHead);
-    assert.ok((await statusLines(project.repo)).some((line) => line.includes('openspec/')));
+    assert.equal(capture.exitCode, 0);
+    assert.equal(capture.stderr, '');
+    assert.ok(!capture.stdout.includes('blocked by hook'));
+    assert.match(capture.stdout, /^Landed 001-order-flow as [0-9a-f]{40}$/m);
   });
 });
 
@@ -497,16 +490,13 @@ describe('osq land command', () => {
   it('prints a refusal on stderr and nothing on stdout', async () => {
     const project = await setupProject([ONE]);
     await archiveAll(project);
-    await writeAt(project.repo, 'src/seed.txt', 'edited\n');
+    await git(['checkout', '-q', '-b', 'feature'], project.repo);
 
     const capture = await captureLand(project.repo, project.config, '001');
 
     assert.equal(capture.exitCode, 1);
     assert.equal(capture.stdout, '');
-    assert.equal(
-      capture.stderr,
-      'The checkout has uncommitted changes: src/seed.txt; commit or stash them first\n',
-    );
+    assert.equal(capture.stderr, 'osq land runs on main; the checkout is on feature\n');
   });
 
   it('registers land and doctor on the root program', () => {
