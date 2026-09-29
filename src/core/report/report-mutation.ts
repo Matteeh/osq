@@ -7,6 +7,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { hasOptedInCapability, isCapabilityOptedIn } from '../foundation/config-traceability.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { asData, eventTimestampMs, parseEventLines } from './report-events.js';
@@ -169,11 +170,6 @@ function latestByKey(measured: readonly MeasuredMutation[]): MeasuredMutation[] 
   return [...latest.values()];
 }
 
-/** True when the configuration opts a capability in. */
-function isOptedIn(capabilities: 'all' | readonly string[], capability: string): boolean {
-  return capabilities === 'all' || capabilities.includes(capability);
-}
-
 /** `killed / (killed + survived)` to three decimals, or null when both are zero. */
 function mutationScore(killed: number, survived: number): number | null {
   const total = killed + survived;
@@ -191,7 +187,7 @@ function addToGroups(
     const separator = label.indexOf(': ');
     if (separator < 0) continue;
     const capability = label.slice(0, separator).trim();
-    if (!capability || !isOptedIn(capabilities, capability)) continue;
+    if (!capability || !isCapabilityOptedIn(capabilities, capability)) continue;
     const group = groups.get(capability) ?? { killed: 0, survived: 0, survivors: [] };
     group.killed += event.killed;
     group.survived += event.survived;
@@ -210,7 +206,7 @@ export async function collectMutationScores(
   config: OsqConfig,
 ): Promise<CapabilityMutationScore[] | undefined> {
   const capabilities = config.traceability?.capabilities ?? [];
-  if (capabilities !== 'all' && capabilities.length === 0) return undefined;
+  if (!hasOptedInCapability(capabilities)) return undefined;
 
   const groups = new Map<string, MutationGroup>();
   for (const event of latestByKey(await readMeasuredEvents(folders))) {

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5bd64092b52bcfc0b387ecce008ab68777c7bb5ac1635fcb811c7175ba080a86"
+build_stamp: "2a446be"
+project_commit: "b206741"
+exit_code: 0
+scope_files: {"src/core/foundation/config-traceability.ts":"sha256:021a6fd4cc9c996709eb0bd119a69b1d90499b1e3dbe744e11a7021c5e5db028","src/core/report/report-mutation.ts":"sha256:c963ef779690e57a00793ee08dc0d7e9657baef6ffecf21e886c43f9fe8f241e","src/core/run/focused-tests.ts":"sha256:afd13aecdac97614b9aa8c0d058575de96646907f1aa0ea0debfcfb201cd7475","src/core/trace/mutation-pick.ts":"sha256:0743eb85258239079042070a8fb9c218bc23f643829233afd4aad6cff40290a5","src/watcher/mutation-check.ts":"sha256:a727d57a466425da12db5246476d6a10f0953c74c5b37b9a09dcff35d823564f","tests/traceability-opt-in.test.ts":"sha256:ba07961b4cc5d794ffcd07be8803b865dd6486ce978d2c983a2c7d5daf725d3c"}
+---
+2026-09-29T15:09:05.707Z

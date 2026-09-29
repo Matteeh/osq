@@ -1,0 +1,39 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:efc560289c9913ad8b6ab7b06133a24c5536cf62e50f16dceceb72a942b2c543",
+    "PLANNER.md": "sha256:387790b16f4ca3ea62adb95a7888daac30640e058119f2b23e08d6b397776df7",
+    "config": "sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39",
+    "traceability": "sha256:7ade4f9ba24dd0d0ab83fb0bab7209b66aa9ce5169a33af2935ce867065a40b4",
+    "traceability/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "watcher-and-harness": "sha256:48b1d352fe5cd707bd7dab998b9c160ba6e9e377c8bd33b6ae3bbda98c636090",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "metrics-and-reporting": "sha256:5746e43332672273fb887cff5da63246800d44f43faf508c7aa052130790155e",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:5d4f5be7d8c28511adddc785c13cbd5d0f136b48d9b428a32e7a683d8f8e5dd4",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "status-inspection": "sha256:e88fdf6b9e083ba2de1cc7d2d6e48fe6975e145d48a2f8466b80c16d89e3a87f",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "cli-foundation": "sha256:ad6b7f0d4f479ed31381abff340f2d6e27c4f16b7a15ed5754c098bddb1bd635",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b"
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-09-29T14:55:24.986Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-09-29T15:04:14.903Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "003": "sha256:391668d3e39fc37c46c6b8c05f9289732eb9d32632f926b12ad8e82dc15817d0",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f"
+  }
+}

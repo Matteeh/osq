@@ -35,6 +35,19 @@ function isCapabilities(value: unknown): value is 'all' | readonly string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
 
+/** True when `capabilities` is `'all'` or lists `capability`. */
+export function isCapabilityOptedIn(
+  capabilities: TraceabilityConfig['capabilities'],
+  capability: string,
+): boolean {
+  return capabilities === 'all' || capabilities.includes(capability);
+}
+
+/** True when `capabilities` is `'all'` or a non-empty list. */
+export function hasOptedInCapability(capabilities: TraceabilityConfig['capabilities']): boolean {
+  return capabilities === 'all' || capabilities.length > 0;
+}
+
 /** Validate an optional `mutation` block; the budget defaults when omitted. */
 function validateMutationConfig(mutation: unknown): MutationConfig {
   const record =

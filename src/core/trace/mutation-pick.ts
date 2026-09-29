@@ -7,7 +7,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { TraceabilityConfig } from '../foundation/config-traceability.js';
+import { type TraceabilityConfig, isCapabilityOptedIn } from '../foundation/config-traceability.js';
 import { resolveScope } from '../run/scope.js';
 import { hashFunctionRange, mutationRanges } from './function-ranges.js';
 import type { ScenarioIndex } from './scenario-index.js';
@@ -49,15 +49,10 @@ export interface MutationPickOptions {
   readonly end: MeasuresView | null;
 }
 
-/** True when the configuration opts a capability into traceability. */
-function isOptedIn(traceability: TraceabilityConfig, capability: string): boolean {
-  return traceability.capabilities === 'all' || traceability.capabilities.includes(capability);
-}
-
 /** A function's `@scenario` tags whose capability is opted in, sorted. */
 function optedScenarios(fn: ScannedFunction, traceability: TraceabilityConfig): TaggedScenario[] {
   return fn.scenarios
-    .filter((scenario) => isOptedIn(traceability, scenario.capability))
+    .filter((scenario) => isCapabilityOptedIn(traceability.capabilities, scenario.capability))
     .sort((a, b) => a.capability.localeCompare(b.capability) || a.name.localeCompare(b.name));
 }
 

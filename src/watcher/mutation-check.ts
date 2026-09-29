@@ -10,7 +10,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
   DEFAULT_TRACEABILITY_CONFIG,
-  type TraceabilityConfig,
+  hasOptedInCapability,
 } from '../core/foundation/config-traceability.js';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
@@ -60,11 +60,6 @@ const BUDGET_RESULT: CheckResult = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** True when the configuration opts at least one capability in. */
-function hasOptedInCapability(traceability: TraceabilityConfig): boolean {
-  return traceability.capabilities === 'all' || traceability.capabilities.length > 0;
 }
 
 /** The two `MeasuresView` fields a pick reads, extracted from one event. */
@@ -170,7 +165,7 @@ export async function runMutationCheck(
 ): Promise<void> {
   const traceability = config.traceability ?? DEFAULT_TRACEABILITY_CONFIG;
   const mutation = traceability.mutation;
-  if (mutation === undefined || !hasOptedInCapability(traceability)) return;
+  if (mutation === undefined || !hasOptedInCapability(traceability.capabilities)) return;
   try {
     const taskContent = await fs
       .readFile(path.join(specFolderPath, 'tasks', `${taskNumber}.md`), 'utf8')

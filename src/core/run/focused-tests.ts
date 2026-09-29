@@ -8,7 +8,7 @@
 
 import {
   DEFAULT_TRACEABILITY_CONFIG,
-  type TraceabilityConfig,
+  isCapabilityOptedIn,
 } from '../foundation/config-traceability.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { buildImportGraph } from '../spec/import-graph.js';
@@ -39,11 +39,6 @@ export interface FocusedRunResult {
 }
 
 const EMPTY_COLLECTION: FocusedCollection = { scenarios: [], files: [] };
-
-/** True when the configuration opts a capability into traceability. */
-function isOptedIn(traceability: TraceabilityConfig, capability: string): boolean {
-  return traceability.capabilities === 'all' || traceability.capabilities.includes(capability);
-}
 
 /** Scenario pairs sorted by capability and then name. */
 function sortScenarios(scenarios: Iterable<TaggedScenario>): TaggedScenario[] {
@@ -102,7 +97,7 @@ export async function collectFocusedTests(
   for (const file of index.scenarioTestFiles) {
     if (!scoped.has(file)) continue;
     for (const scenario of index.scenariosInFile(file)) {
-      if (!isOptedIn(traceability, scenario.capability)) continue;
+      if (!isCapabilityOptedIn(traceability.capabilities, scenario.capability)) continue;
       collected.set(`${scenario.capability}\u0000${scenario.name}`, scenario);
     }
   }
