@@ -24,6 +24,7 @@ import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
 import { runStackedChanges } from './stack-run.js';
+import { checkSync } from './sync-run.js';
 import {
   commitPendingVerifiedTasks,
   commitWorktreeArchive,
@@ -213,6 +214,14 @@ export async function runWatcherCycle(
         await haltWorktreeChange(change, specId, halt, logger);
         return;
       }
+      const archiveState = deriveSpecState(await readChangeFolder(root, folderPath));
+      if (archiveState.status === 'done') {
+        const syncHalt = await checkSync(projectRoot, change, config, logger);
+        if (syncHalt) {
+          await haltWorktreeChange(change, specId, syncHalt, logger);
+          return;
+        }
+      }
     }
     const proposalTitle = worktree
       ? ((await parseSpecMdFromFolder(folderPath).catch(() => null))?.title ?? '')
@@ -314,6 +323,17 @@ export async function runWatcherCycle(
       }
 
       if (specState.status === 'pending' && specState.nextTask) {
+        if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
+          const syncHalt = await checkSync(projectRoot, change, config, logger);
+          if (syncHalt) {
+            await haltWorktreeChange(change, specId, syncHalt, logger);
+            continue;
+          }
+          specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
+        }
+        if (!specState.nextTask) {
+          continue;
+        }
         const taskNumber = specState.nextTask.taskNumber;
         logger?.info(`${tag('▶ spec', '[spec]')} ${specState.id} picked up (${folder})`);
 

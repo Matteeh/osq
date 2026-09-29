@@ -361,6 +361,8 @@ osq land <id>
 
 `osq message <id>` prints the land commit's message to stdout and the branch to stderr, and writes nothing. A test that runs inside an `osq/<folder>` worktree finds its change from the worktree's branch when `OSQ_CHANGE` is unset.
 
+Before a change's first task, and again before it archives, when the default branch has moved the watcher merges the default branch into the change's branch and commits `osq: <id> sync <default branch>`. A conflict in a living spec or under the archive directory is resolved from the default branch; a conflict at any other path halts the change with `sync_conflict`, naming the files. A red verify, or a requirement the default branch changed since the change was approved, halts it with `sync_failed`. `osq sync <id>` does the same on request, in the change's worktree, and refuses while a task runs. A stopped `osq sync` halts nothing; it records a `sync_stopped` event, which `osq status` shows.
+
 ### Working with version control on
 
 1. Approve the change from the default branch, so osq cuts the `osq/<folder>` branch and its worktree there.

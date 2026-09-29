@@ -13,7 +13,9 @@ export type WorktreeHaltReason =
   | 'commit_failed'
   | 'dependency_changed'
   | 'dependency_diverged'
-  | 'stack_cut_failed';
+  | 'stack_cut_failed'
+  | 'sync_conflict'
+  | 'sync_failed';
 
 /** A halt: the regression reason and the detail its marker body carries. */
 export interface WorktreeHalt {

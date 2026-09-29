@@ -8,7 +8,9 @@ import {
   parseCapabilitySpec,
   parseDelta,
 } from '../spec/delta.js';
+import type { LocatedChange } from '../status/change-locations.js';
 import { getSpecsDir } from '../status/layout.js';
+import { SyncStop } from './sync-stop.js';
 import type { Vcs } from './vcs.js';
 
 /** One requirement the change rewrites whose text moved on the default branch. */
@@ -108,37 +110,85 @@ export async function assertRequirementsUnchanged(
   );
   if (changed.length === 0) return;
   const list = changed.map((entry) => `${entry.capability}: ${entry.requirement}`).join(', ');
-  throw new Error(
+  throw new SyncStop(
+    'sync_failed',
     `${change.folderName}: ${defaultBranch} changed requirements this change rewrites since it was approved: ${list}; reject the change and plan it again against ${defaultBranch}`,
   );
 }
 
+/** Write `content` at `target`, or remove `target` when there is none. */
+async function writeOrRemove(target: string, content: string | null): Promise<void> {
+  if (content === null) {
+    await fs.rm(target, { force: true });
+    return;
+  }
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, content, 'utf8');
+}
+
+/** Every capability folder directly under the merged worktree's living specs. */
+async function listLivingCapabilities(worktreeRoot: string, config: OsqConfig): Promise<string[]> {
+  const specsDir = getSpecsDir(config.paths.openspecRoot);
+  const entries = await fs
+    .readdir(path.join(worktreeRoot, specsDir), { withFileTypes: true })
+    .catch(() => []);
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/** Take the default branch's copy of every conflicting path under the archive. */
+async function resolveArchiveConflicts(
+  worktreeRoot: string,
+  change: LocatedChange,
+  vcs: Vcs,
+  defaultBranch: string,
+  conflicts: readonly string[],
+  staged: Set<string>,
+): Promise<void> {
+  const archive = path.relative(worktreeRoot, change.tree.archiveDir).split(path.sep).join('/');
+  for (const conflict of conflicts) {
+    if (conflict !== archive && !conflict.startsWith(`${archive}/`)) continue;
+    await writeOrRemove(path.join(worktreeRoot, conflict), await vcs.show(defaultBranch, conflict));
+    staged.add(conflict);
+  }
+}
+
 /**
- * Rebuild every living spec the change's deltas write from the default branch's
- * copy, then re-apply the archived folder's deltas and stage the result.
+ * Put the default branch's copy of every living spec in place, take the
+ * default branch's copy of any conflicting archive path, and, for an archived
+ * change only, re-apply the archived folder's deltas. Stages every file it
+ * writes or removes.
  */
 export async function rebuildLivingSpecs(
   worktreeRoot: string,
-  changeFolderPath: string,
+  change: LocatedChange,
   vcs: Vcs,
   defaultBranch: string,
   config: OsqConfig,
+  archived: boolean,
+  conflicts: readonly string[],
 ): Promise<void> {
-  const capabilities = await listDeltaCapabilities(changeFolderPath);
+  const changeFolderPath = change.folderPath;
+  const staged = new Set<string>();
+  await resolveArchiveConflicts(worktreeRoot, change, vcs, defaultBranch, conflicts, staged);
   const specsDir = getSpecsDir(config.paths.openspecRoot);
-  const staged: string[] = [];
+  const deltas = await listDeltaCapabilities(changeFolderPath);
+  const capabilities = [
+    ...new Set([...(await listLivingCapabilities(worktreeRoot, config)), ...deltas]),
+  ].sort();
   for (const capability of capabilities) {
     const relative = livingSpecPath(config, capability);
-    const content = await vcs.show(defaultBranch, relative);
-    const target = path.join(worktreeRoot, specsDir, capability, 'spec.md');
-    if (content === null) {
-      await fs.rm(target, { force: true });
-    } else {
-      await fs.mkdir(path.dirname(target), { recursive: true });
-      await fs.writeFile(target, content, 'utf8');
-    }
-    staged.push(relative);
+    await writeOrRemove(
+      path.join(worktreeRoot, specsDir, capability, 'spec.md'),
+      await vcs.show(defaultBranch, relative),
+    );
+    staged.add(relative);
   }
+  await vcs.stage([...staged]);
+  if (!archived) return;
   await applyOpenSpecDeltas(worktreeRoot, changeFolderPath, config);
-  await vcs.stage(staged);
+  for (const capability of deltas) staged.add(livingSpecPath(config, capability));
+  await vcs.stage([...staged]);
 }

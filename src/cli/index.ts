@@ -22,6 +22,7 @@ import { parsePortArgument, serveCommand } from './serve.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
 import { statusCommand } from './status.js';
+import { registerSyncCommand } from './sync.js';
 import { watchCommand } from './watch.js';
 
 const PACKAGE_MANIFEST_URL = new URL('../../package.json', import.meta.url);
@@ -224,6 +225,7 @@ export function createProgram(version?: string): Command {
   registerInboxDispatchCommand(program);
   registerLandCommand(program);
   registerMessageCommand(program);
+  registerSyncCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {

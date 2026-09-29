@@ -4,6 +4,12 @@ import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { changeTrees, listChanges } from './change-locations.js';
+import {
+  type LastSync,
+  type LastSyncStop,
+  formatLastSyncLines,
+  readLastSync,
+} from './last-sync.js';
 import { getRejectedMarkerPath } from './layout.js';
 import { type LeftoverDraft, findLeftoverDrafts } from './leftover-drafts.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
@@ -16,6 +22,10 @@ export interface ChangeWorktree {
   readonly path: string;
   /** Whether the checkout's copy differs from the worktree's `.run/approved`. */
   readonly checkoutChanged: boolean;
+  /** The last `synced` event in the change folder's stream. */
+  readonly lastSync?: LastSync;
+  /** The last `sync_stopped` event when it came after the last sync. */
+  readonly lastSyncStop?: LastSyncStop;
 }
 
 /**
@@ -110,12 +120,14 @@ export async function getStatusOverview(
     specs.push(specState);
     nextSteps[change.folderName] = await readNextStep(projectRoot, change.folderPath, config);
     if (change.tree.worktreeFolder !== undefined) {
+      const syncState = await readLastSync(change.folderPath);
       worktrees[change.folderName] = {
         path: change.tree.root,
         checkoutChanged: await checkoutCopyChanged(
           path.join(tree.changesDir, change.folderName),
           specState.approvedHash,
         ),
+        ...syncState,
       };
     }
   }
@@ -181,6 +193,7 @@ export function formatStatusOverview(overview: StatusOverview): string {
             `  warning: the checkout's copy of ${spec.folderName} changed since approval; edits there never reach the run`,
           );
         }
+        lines.push(...formatLastSyncLines(spec.folderName, worktree));
       }
       const next = overview.nextSteps?.[spec.folderName];
       if (next) {
