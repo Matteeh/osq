@@ -16,6 +16,7 @@ import {
   recordLifecycleEvent,
   writeDeadMarker,
 } from './outcome.js';
+import { spawnOrCrash } from './spawn-guard.js';
 import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
 
 export interface SpawnTaskAgentOptions {
@@ -89,7 +90,7 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     return startedPromise;
   };
   const spawnStartMs = Date.now();
-  const spawnResult = await adapter.spawn({
+  const spawnResult = await spawnOrCrash(adapter, {
     projectRoot,
     specFolderPath,
     taskNumber,

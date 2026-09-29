@@ -118,8 +118,12 @@ manifest construction, and append-only execution lifecycle event contracts.
 - **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/run/**`, `src/core/lifecycle/**`, `tests/retry*.test.ts`, `tests/reject.test.ts`, and `tests/done-manual.test.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
-<!-- source: src/harness/prompt.ts, src/harness/types.ts, tests/harness-prompt-injection.test.ts -->
-The harness runner SHALL extract rules from capability specifications written by the active change and inject them into the executor prompt.
+The harness runner SHALL extract rules from capability specifications written
+by the active change and inject them into the executor prompt. It SHALL leave
+out a delta requirement whose statement, with HTML comments stripped and
+whitespace collapsed, equals the statement of the living requirement with the
+same name. Every requirement of a capability with no living spec SHALL keep
+its rule.
 
 #### Scenario: Prompt injection on change with capability writes
 - **WHEN** an approved change writes capability deltas under `specs/<capability>/spec.md`
@@ -128,6 +132,10 @@ The harness runner SHALL extract rules from capability specifications written by
 #### Scenario: Fallback when no capability rules exist
 - **WHEN** an approved change has no capability delta rules
 - **THEN** runner provides standard operational rules without empty rule headers
+
+#### Scenario: Unchanged requirement left out
+- **WHEN** a delta modifies requirement `Totals` without changing its statement, and adds requirement `Refunds`
+- **THEN** the executor prompt carries a rule for `Refunds` and none for `Totals`
 
 ### Requirement: Test modification gating
 <!-- source: src/watcher/runner.ts, src/watcher/verify.ts, src/core/scope.ts, tests/runner-test-gating.test.ts -->
@@ -2463,3 +2471,13 @@ them and define none of their own.
 #### Scenario: One gate definition
 - **WHEN** the sources of `src/watcher/verify.ts`, `src/watcher/git-guard.ts`, `src/core/run/task-commit.ts`, `src/core/spec/linter.ts`, `src/core/spec/test-impact.ts`, and `src/core/spec/digest.ts` are read
 - **THEN** none compares a path with `'tests'` or `'tests/'` itself, and each imports from `src/core/run/test-gate.ts`
+
+### Requirement: Throwing spawn kills the task
+When a harness adapter's `spawn` throws, the runner SHALL handle it as an
+agent that exited with code -1 and the thrown message as its error: it writes
+`.run/dead/<n>.md` with `reason: crashed`, emits a `dead` event, and returns a
+failed task result. The throw SHALL NOT reach the watcher loop.
+
+#### Scenario: Spawn E2BIG
+- **WHEN** the adapter's `spawn` throws an error with message `spawn E2BIG`
+- **THEN** `runTask` resolves as failed with reason `crashed`, and `.run/dead/<n>.md` holds `reason: crashed` and `spawn E2BIG`

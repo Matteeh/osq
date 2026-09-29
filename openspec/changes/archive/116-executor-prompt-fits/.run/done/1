@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:950d1b0e2684486818562dc32553a10fbe7ecab07bde27b24c2247e274bcb05f"
+build_stamp: "8d4a454"
+project_commit: "f956278"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:31053068aec4be2a67f30fcd5b0077f3e0bd315c07c6d17ddf6aaabb79db2b49","tests/capability-rules-living.test.ts":"sha256:697830dc1d09210c56c60301b6ad581e6113af83db908a0b5b227031c65d5fb0"}
+---
+2026-09-29T20:16:04.603Z

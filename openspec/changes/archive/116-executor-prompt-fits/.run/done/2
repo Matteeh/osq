@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:295f74ba4df77d07b122c169592a6e4f5ba533af0a62d493b72a4f60086082b8"
+build_stamp: "8d4a454"
+project_commit: "465987e"
+exit_code: 0
+scope_files: {"src/watcher/spawn-guard.ts":"sha256:92390e5fa6d7aea10b3750c713ba5889d5fd0cec7f3b16ccd619be4b9f17fa6f","src/watcher/spawn.ts":"sha256:e80aa91bfc4db80ee3c6812ce941a51732e424b0b66bb0035e7be60168311361","tests/spawn-throw.test.ts":"sha256:4130f5521b45f8752491a18e64a78addca036318565c439e3789b12048875e5a"}
+---
+2026-09-29T20:20:24.334Z

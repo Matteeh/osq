@@ -513,14 +513,44 @@ function parseRequirementRules(content: string): ParsedRequirement[] {
 }
 
 /**
+ * Living requirement statements for one capability keyed by title, or
+ * `undefined` when there is no living spec directory or file. A missing living
+ * spec means every delta requirement of that capability keeps its rule.
+ */
+function livingRequirementStatements(
+  livingSpecsDir: string | undefined,
+  capability: string,
+): Map<string, string> | undefined {
+  if (!livingSpecsDir) {
+    return undefined;
+  }
+  let content: string;
+  try {
+    content = fsSync.readFileSync(path.join(livingSpecsDir, capability, 'spec.md'), 'utf8');
+  } catch {
+    return undefined;
+  }
+  const statements = new Map<string, string>();
+  for (const requirement of parseRequirementRules(content)) {
+    statements.set(requirement.title, requirement.statement);
+  }
+  return statements;
+}
+
+/**
  * Extracts capability-specific rules from the delta specs a change writes under
  * `specs/<capability>/spec.md`. Each rule is rendered as
  * `<capability>: <requirement title> — <requirement statement>`. Capabilities
  * are visited in sorted order and requirements keep document order, so the
  * resulting prompt is deterministic. Returns an empty array when the change
  * folder has no delta specs.
+ *
+ * When `livingSpecsDir` is given, a delta requirement whose statement equals the
+ * same-titled living requirement's statement is left out: it tells the executor
+ * nothing the living spec does not. A capability with no living spec keeps every
+ * one of its rules.
  */
-export function extractCapabilityRules(specFolderPath: string): string[] {
+export function extractCapabilityRules(specFolderPath: string, livingSpecsDir?: string): string[] {
   const specsDir = path.join(specFolderPath, 'specs');
   let entries: fsSync.Dirent[];
   try {
@@ -544,7 +574,11 @@ export function extractCapabilityRules(specFolderPath: string): string[] {
       continue;
     }
 
+    const living = livingRequirementStatements(livingSpecsDir, entry.name);
     for (const requirement of parseRequirementRules(content)) {
+      if (living?.get(requirement.title) === requirement.statement) {
+        continue;
+      }
       const detail = requirement.statement
         ? `${requirement.title} — ${requirement.statement}`
         : requirement.title;
@@ -558,10 +592,16 @@ export function extractCapabilityRules(specFolderPath: string): string[] {
 /**
  * Resolves the capability rules for a task. An explicit `capabilityRules`
  * option always wins, including an explicit empty array; when the option is
- * absent the change folder's delta specs are parsed.
+ * absent the change folder's delta specs are parsed. The living specs live at
+ * `paths.features` under the project root, defaulting to `openspec/specs`.
  */
 export function resolveCapabilityRules(options: SpawnTaskOptions): string[] {
-  return options.capabilityRules ?? extractCapabilityRules(options.specFolderPath);
+  if (options.capabilityRules !== undefined) {
+    return options.capabilityRules;
+  }
+  const featuresDir = options.config?.paths?.features || 'openspec/specs';
+  const livingSpecsDir = path.resolve(options.projectRoot, featuresDir);
+  return extractCapabilityRules(options.specFolderPath, livingSpecsDir);
 }
 
 /**
