@@ -67,6 +67,8 @@ export interface Vcs {
   pathExists(ref: string, path: string): Promise<boolean>;
   listBranches(prefix: string): Promise<string[]>;
   createBranch(name: string, base: string): Promise<void>;
+  /** Rename a branch, keeping its commits, and fail when the new name exists. */
+  renameBranch(from: string, to: string): Promise<void>;
   worktreeAdd(path: string, branch: string): Promise<void>;
   worktreeRemove(path: string): Promise<void>;
   worktreeList(): Promise<VcsWorktree[]>;

@@ -46,6 +46,7 @@ const PORT_MEMBERS = [
   'pathExists',
   'listBranches',
   'createBranch',
+  'renameBranch',
   'worktreeAdd',
   'worktreeRemove',
   'worktreeList',

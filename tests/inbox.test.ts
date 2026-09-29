@@ -152,7 +152,7 @@ describe('inbox needs-you projection', () => {
         'osq retry 002 1',
         'osq retry 002 2',
         'osq retry 003 1',
-        'osq reject 004 --reason <text>',
+        'osq retry 004 change',
       ],
     );
     assert.equal(items[0].task, null);
@@ -306,10 +306,7 @@ describe('inbox text and JSON contract', () => {
     const lines = formatInboxText(inbox).split('\n');
 
     assert.equal(lines[0], 'Needs you');
-    assert.equal(
-      lines[1],
-      '  001: Unapproved change — change regressed — osq reject 001 --reason <text>',
-    );
+    assert.equal(lines[1], '  001: Unapproved change — change regressed — osq retry 001 change');
     assert.ok(lines.includes('Running'));
     const runningRow = lines.find((line) => line.includes('osq show 001')) as string;
     assert.ok(runningRow.endsWith('osq show 001'));
@@ -413,7 +410,7 @@ describe('bare osq CLI inbox integration', () => {
     assert.ok(first.stdout.includes('osq approve 001'));
     assert.ok(first.stdout.includes('osq retry 002 1'));
     assert.ok(first.stdout.includes('osq retry 003 1'));
-    assert.ok(first.stdout.includes('osq reject 004 --reason <text>'));
+    assert.ok(first.stdout.includes('osq retry 004 change'));
 
     // Only the live lock projects; the stale lock stays visible in status space.
     const lines = first.stdout.split('\n');

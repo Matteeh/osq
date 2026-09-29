@@ -28,6 +28,17 @@ export function relativeChange(root: string, folderPath: string): string {
   return path.relative(root, folderPath).split(path.sep).join('/');
 }
 
+/** Whether the change's approval is committed at its HEAD; true without git. */
+export async function approvalCommitted(
+  change: LocatedChange,
+  config: OsqConfig,
+): Promise<boolean> {
+  const vcs = await selectVcs(change.tree.root, config);
+  if (vcs.kind !== 'git') return true;
+  const changeRel = relativeChange(change.tree.root, change.folderPath);
+  return vcs.pathExists('HEAD', `${changeRel}/.run/approved`);
+}
+
 /** The only uncommitted paths a worktree run tolerates: its `.run/` and `tasks.md`. */
 function allowedWorktreePath(candidate: string, changeRel: string): boolean {
   return candidate === `${changeRel}/tasks.md` || candidate.startsWith(`${changeRel}/.run/`);

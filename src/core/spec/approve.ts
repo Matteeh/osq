@@ -75,6 +75,8 @@ export interface ApproveResult {
   worktreePath?: string;
   /** For a worktree approval, the branch the commit landed on. */
   branch?: string;
+  /** A rejected branch from an earlier attempt, renamed aside and kept. */
+  keptBranch?: string;
   /** For a stacked approval, the directory that holds it. */
   stackedPath?: string;
   /** For a stacked approval, the awaited dependency folder names, in order. */

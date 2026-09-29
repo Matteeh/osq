@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b10686ef015e01c07e25aea8ab16c2924cc775c179ae16137121101f85f18098"
+build_stamp: "a58d549"
+project_commit: "eee36c3"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs-merge.ts":"sha256:f1e3bc79a3196c81d60249ff9165608501eddde812e6a04a8c22acab4a862a27","src/core/vcs/git-vcs-parse.ts":"sha256:0584247e7afde445ea70e83a7ef3140f3d8c725aa4b7ed4f192168c8437cf5b7","src/core/vcs/git-vcs.ts":"sha256:9cb9ef54a420cd49b7096e10117a91ec15b17532faad6e0bec608dea6ac26628","src/core/vcs/no-vcs.ts":"sha256:768b78295584d3a42b5a4db571be78643608c9c13b6f80e361c1d67b6ffd4250","src/core/vcs/vcs.ts":"sha256:dcdf689c17eb21b009729ae11d066fe7d1cbb169e0983f4e9fdab1116890031c","tests/vcs-rename-branch.test.ts":"sha256:8fa5331d73a0946106229565330cb9a055653ff9ba8b29cb244eee6bb6e0ff4e","tests/vcs-write.test.ts":"sha256:ac33a7ef08a54e969ff3ef799b725a1761e4d8963a2d7595d27813b3ed6f3a24"}
+---
+2026-09-29T21:08:30.827Z

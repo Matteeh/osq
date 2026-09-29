@@ -48,6 +48,12 @@ export async function stage(ctx: GitWriteContext, paths: readonly string[]): Pro
   if (result.code !== 0) throw new Error(combined(result));
 }
 
+/** Rename `from` to `to`, keeping every commit; git refuses a taken name. */
+export async function renameBranch(ctx: GitWriteContext, from: string, to: string): Promise<void> {
+  const result = await ctx.run(['branch', '-m', from, to]);
+  if (result.code !== 0) throw new Error(combined(result));
+}
+
 /** Whether `ancestor` is `descendant` or one of its ancestors. */
 export async function isAncestor(
   ctx: GitWriteContext,

@@ -267,7 +267,7 @@ describe('readNextStep for active changes', () => {
     assert.equal(step.command, 'osq retry 006 1');
   });
 
-  it('points a change regression at the reject command', async () => {
+  it('points a change regression at the retry command', async () => {
     const dir = await createActive(tmpDir, '007-reg', {
       title: 'Reg',
       approved: true,
@@ -275,7 +275,7 @@ describe('readNextStep for active changes', () => {
     });
     const step = await readNextStep(tmpDir, dir, CONFIG);
     assert.equal(step.state, 'dead');
-    assert.equal(step.command, 'osq reject 007 --reason <text>');
+    assert.equal(step.command, 'osq retry 007 change');
   });
 
   it('points a blocked change at its first unmet dependency', async () => {

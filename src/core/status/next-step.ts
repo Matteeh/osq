@@ -55,9 +55,7 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
     (task) => task.status === 'dead' || task.status === 'regressed',
   );
   if (state.status === 'dead' || state.status === 'regressed' || deadTask) {
-    const command = deadTask
-      ? `osq retry ${id} ${deadTask.taskNumber}`
-      : `osq reject ${id} --reason <text>`;
+    const command = deadTask ? `osq retry ${id} ${deadTask.taskNumber}` : `osq retry ${id} change`;
     return { state: 'dead', command, detail: null };
   }
 

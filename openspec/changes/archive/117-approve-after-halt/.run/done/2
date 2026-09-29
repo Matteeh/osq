@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:368298be12814761da1c945b627251658366ed219db4b8464ab45de2b7e7011b"
+build_stamp: "a58d549"
+project_commit: "03d5b08"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:5043d16055397f18ac8f71e6ebd4b835a8dc5717236bdc7507a89a8a00905e13","src/core/spec/approve-branch.ts":"sha256:47bc144df1a4cc5c0b580cc36176ca33c5fd79b03097040fdc03972ce7ff6371","src/core/spec/approve-worktree.ts":"sha256:e8a8d8cc107ac0025de20aa0f5c270aa2b3f5ff9a954609f2f8be3de16cad3e8","src/core/spec/approve.ts":"sha256:785750bab14973c3c5650387d31072c70972a493b801f10decbc8b6305cba90e","tests/approve-rejected-branch.test.ts":"sha256:6a33ab6d1021f5814d4e82068c8144087519357de3a739ae441896c501cb0c81"}
+---
+2026-09-29T21:13:43.911Z

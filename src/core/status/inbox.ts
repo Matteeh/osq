@@ -55,7 +55,6 @@ export interface Inbox {
 }
 /** Fallback number of archives surfaced when the per-project cursor is unusable. */
 export const LANDED_FALLBACK_LIMIT = 10;
-const CHANGE_REG_RETRY = '--reason <text>';
 
 function changeRef(spec: SpecState): InboxChangeRef {
   return { id: spec.id, title: spec.title };
@@ -100,7 +99,7 @@ export function projectNeedsYou(overview: StatusOverview): NeedsYouItem[] {
         kind: 'change-regressed',
         change,
         task: null,
-        command: `osq reject ${spec.id} ${CHANGE_REG_RETRY}`,
+        command: `osq retry ${spec.id} change`,
       });
     }
     for (const task of spec.tasks) {

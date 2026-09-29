@@ -89,7 +89,9 @@ SHALL select through this one function.
 
 ### Requirement: Vcs write operations
 The `Vcs` port SHALL offer these writes. `createBranch` SHALL create a branch
-at a base commit and fail when the branch exists. `worktreeAdd` SHALL add a
+at a base commit and fail when the branch exists. `renameBranch` SHALL rename
+a branch, keeping every commit it holds, and fail, changing nothing, when the
+new name exists. `worktreeAdd` SHALL add a
 worktree for an existing branch. `worktreeRemove` SHALL remove a worktree and
 fail, removing nothing, when it has changes outside ignored files.
 `worktreePrune` SHALL drop git's records of worktrees whose directory no
@@ -113,6 +115,14 @@ not hold. Under `NoVcs`, every write SHALL fail naming the reason git is off.
 #### Scenario: Branch exists
 - **WHEN** `createBranch` names a branch that already exists
 - **THEN** it fails and the branch still points where it did
+
+#### Scenario: Rename a branch
+- **WHEN** `renameBranch('osq/001-a', 'osq/001-a-rejected-1')` runs in a temporary repository where only `osq/001-a` exists
+- **THEN** `osq/001-a-rejected-1` points at the commit `osq/001-a` pointed at, and `listBranches('osq/001-a')` no longer lists `osq/001-a`
+
+#### Scenario: Rename onto a taken name
+- **WHEN** `renameBranch('osq/001-a', 'osq/001-b')` runs and `osq/001-b` exists
+- **THEN** it fails, and both branches still point where they did
 
 #### Scenario: Dirty worktree kept
 - **WHEN** `worktreeRemove` targets a worktree with a modified tracked file

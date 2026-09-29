@@ -1,0 +1,77 @@
+{"type":"verify_ran","timestamp":"2026-09-29T21:13:44.423Z","data":{"command":"node --import tsx --test tests/watcher-approval-pending.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/watcher-approval-pending.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/watcher-approval-pending.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-29T21:13:45.130Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":662,"repoFiles":1963,"repoLines":226795,"importFanIn":4,"proposalWords":972,"taskWords":229,"deltaRequirements":6,"deltaScenarios":26}}
+{"type":"started","timestamp":"2026-09-29T21:13:45.346Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"7db2e8f","pid":37208,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"a58d549"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:46.803Z","data":{"promptTokens":2201,"candidateTokens":175,"totalTokens":5576,"cachedTokens":3200,"reasoningTokens":17,"cost":0.0008895,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:46.804Z","data":{"tool":"read","summary":"openspec/changes/117-approve-after-halt/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:46.804Z","data":{"tool":"read","summary":"openspec/changes/117-approve-after-halt/proposal.md"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:48.221Z","data":{"promptTokens":2350,"candidateTokens":299,"totalTokens":8153,"cachedTokens":5504,"reasoningTokens":18,"cost":0.001096824,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:48.222Z","data":{"tool":"read","summary":"openspec/changes/117-approve-after-halt/specs/watcher-and-ha"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:48.222Z","data":{"tool":"read","summary":"openspec/changes/117-approve-after-halt/specs/status-inspect"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:48.223Z","data":{"tool":"bash","summary":"cat openspec/changes/117-approve-after-halt/.run/results/3.m"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:49.274Z","data":{"promptTokens":1075,"candidateTokens":149,"totalTokens":9288,"cachedTokens":8064,"reasoningTokens":8,"cost":0.0005496839999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:49.274Z","data":{"tool":"read","summary":"src/watcher/worktree-run.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:49.275Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:50.418Z","data":{"promptTokens":3360,"candidateTokens":88,"totalTokens":12664,"cachedTokens":9216,"reasoningTokens":13,"cost":0.001168896,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:50.418Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:51.481Z","data":{"promptTokens":2314,"candidateTokens":159,"totalTokens":15017,"cachedTokens":12544,"reasoningTokens":19,"cost":0.000960264,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:51.481Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:51.482Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:53.260Z","data":{"promptTokens":1443,"candidateTokens":391,"totalTokens":16810,"cachedTokens":14976,"reasoningTokens":250,"cost":0.000991956,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:53.261Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:53.261Z","data":{"tool":"read","summary":"tests/worktree-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:54.655Z","data":{"promptTokens":6318,"candidateTokens":193,"totalTokens":23279,"cachedTokens":16768,"reasoningTokens":53,"cost":0.002227608,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:54.656Z","data":{"tool":"read","summary":"tests/worktree-run.test.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:54.656Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:56.734Z","data":{"promptTokens":2915,"candidateTokens":397,"totalTokens":26480,"cachedTokens":23168,"reasoningTokens":190,"cost":0.0014899079999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:56.734Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:56.735Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:13:58.349Z","data":{"promptTokens":1840,"candidateTokens":256,"totalTokens":28464,"cachedTokens":26368,"reasoningTokens":49,"cost":0.001017408,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:58.349Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:58.350Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:13:58.350Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:06.932Z","data":{"promptTokens":1758,"candidateTokens":2065,"totalTokens":32239,"cachedTokens":28416,"reasoningTokens":1925,"cost":0.0031758959999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:06.932Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:06.933Z","data":{"tool":"read","summary":"src/watcher/attempt.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:09.120Z","data":{"promptTokens":2377,"candidateTokens":106,"totalTokens":34611,"cachedTokens":32128,"reasoningTokens":31,"cost":0.001033068,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:09.120Z","data":{"tool":"read","summary":"src/watcher/spawn.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:20.546Z","data":{"promptTokens":2011,"candidateTokens":2674,"totalTokens":39245,"cachedTokens":34560,"reasoningTokens":2532,"cost":0.00401946,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:20.547Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:20.547Z","data":{"tool":"read","summary":"src/watcher/worktree-commit.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:25.447Z","data":{"promptTokens":1803,"candidateTokens":929,"totalTokens":41900,"cachedTokens":39168,"reasoningTokens":789,"cost":0.001890708,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:25.448Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:25.448Z","data":{"tool":"read","summary":"tests/line-budget.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:28.269Z","data":{"promptTokens":2498,"candidateTokens":562,"totalTokens":44916,"cachedTokens":41856,"reasoningTokens":78,"cost":0.0016749360000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:28.270Z","data":{"tool":"edit","summary":"src/watcher/worktree-run.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:30.897Z","data":{"promptTokens":158,"candidateTokens":579,"totalTokens":45537,"cachedTokens":44800,"reasoningTokens":45,"cost":0.001011,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:30.898Z","data":{"tool":"edit","summary":"src/watcher/worktree-run.ts"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:30.898Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"file_changed","timestamp":"2026-09-29T21:14:30.901Z","data":{"path":"src/watcher/worktree-run.ts"}}
+{"type":"file_changed","timestamp":"2026-09-29T21:14:30.902Z","data":{"path":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:45.406Z","data":{"promptTokens":150,"candidateTokens":4335,"totalTokens":49925,"cachedTokens":45440,"reasoningTokens":2185,"cost":0.00551964,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:45.407Z","data":{"tool":"write","summary":"tests/watcher-approval-pending.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-29T21:14:45.408Z","data":{"path":"tests/watcher-approval-pending.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:46.793Z","data":{"promptTokens":160,"candidateTokens":128,"totalTokens":50080,"cachedTokens":49792,"reasoningTokens":26,"cost":0.000500352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:46.794Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:49.778Z","data":{"promptTokens":156,"candidateTokens":253,"totalTokens":50457,"cachedTokens":50048,"reasoningTokens":75,"cost":0.000650688,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:49.778Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:49.778Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:56.557Z","data":{"promptTokens":1088,"candidateTokens":161,"totalTokens":51681,"cachedTokens":50432,"reasoningTokens":44,"cost":0.000822192,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:56.558Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:14:58.449Z","data":{"promptTokens":250,"candidateTokens":165,"totalTokens":51871,"cachedTokens":51456,"reasoningTokens":27,"cost":0.000581736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:14:58.449Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:15:05.495Z","data":{"promptTokens":245,"candidateTokens":198,"totalTokens":52155,"cachedTokens":51712,"reasoningTokens":110,"cost":0.000621372,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:15:05.495Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:16:15.114Z","data":{"promptTokens":949,"candidateTokens":378,"totalTokens":53423,"cachedTokens":52096,"reasoningTokens":261,"cost":0.0010508759999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:16:15.115Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:17:10.509Z","data":{"promptTokens":138,"candidateTokens":296,"totalTokens":53810,"cachedTokens":53376,"reasoningTokens":158,"cost":0.0007168559999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:17:10.510Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-29T21:17:13.228Z","data":{"promptTokens":507,"candidateTokens":471,"totalTokens":54738,"cachedTokens":53760,"reasoningTokens":90,"cost":0.0010398599999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-29T21:17:13.228Z","data":{"tool":"write","summary":"openspec/changes/117-approve-after-halt/.run/results/3.md"}}
+{"type":"file_changed","timestamp":"2026-09-29T21:17:13.229Z","data":{"path":"openspec/changes/117-approve-after-halt/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-09-29T21:17:15.476Z","data":{"text":"Task complete.\n\n**Changes:**\n- `src/watcher/worktree-run.ts` — added exported `approvalCommitted(change, config)` with a one-line doc comment: true without git, otherwise `pathExists('HEAD', '<changeRel>/.run/approved')`.\n- `src/watcher/loop.ts` — per-change loop now skips a worktree change whose approval is not committed, before the reaper and all later steps, writing no marker/event. Non-worktree changes are unchecked.\n- `tests/watcher-approval-pending.test.ts` — new tests covering \"Seal before commit\" (skip, no marker/event) and \"Commit lands\" (spawns task 1) via `runWatcherCycle` with a counting adapter.\n\n**Verification:**\n- Task verify: `node --import tsx --test tests/watcher-approval-pending.test.ts` → 2 pass.\n- `tests/worktree-run.test.ts` + `tests/function-budget.test.ts` → 14 pass.\n- `pnpm verify` → CLI 2764 pass, UI 94 pass, typechecks/build/lint clean.\n\nResult written to `openspec/changes/117-approve-after-halt/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-29T21:17:15.476Z","data":{"promptTokens":245,"candidateTokens":282,"totalTokens":55055,"cachedTokens":54528,"reasoningTokens":9,"cost":0.0007390680000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-29T21:17:15.490Z","data":{"exitCode":0,"pid":37208,"timedOut":false,"elapsedSeconds":210.1}}
+{"type":"verify_ran","timestamp":"2026-09-29T21:17:16.660Z","data":{"command":"node --import tsx --test tests/watcher-approval-pending.test.ts","exitCode":0,"duration":0.99,"output":"▶ Approval commit pending\n  ✔ skips a sealed but uncommitted approval without writing any marker or event (233.922099ms)\n  ✔ spawns the pending task once the approval commit lands (482.620986ms)\n✔ Approval commit pending (717.518826ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 962.84886\n"}}
+{"type":"measures","timestamp":"2026-09-29T21:18:23.895Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":662,"repoFiles":1963,"repoLines":226795,"importFanIn":4,"proposalWords":972,"taskWords":229,"deltaRequirements":6,"deltaScenarios":26,"changedFiles":3,"changedLines":254,"scopeHashes":{"src/watcher/loop.ts":{"before":"sha256:03b05939b783fa4112b6373621b024d223f5def135d22d5d5f2c4bb3e99ff8d8","after":"sha256:44d8fe66a5f275c81c3ff49b4c3284e08cad01d5940e33877a82bac6cb397ed3"},"src/watcher/worktree-run.ts":{"before":"sha256:18f52e6bbe6769ae132e78ad49cb3410287237ddee0153e0ed024c4216b1cf85","after":"sha256:f556d207b3abedf9ed07e3bc3d12c215f4b790543874669fbf9dbcfb5acd0cc0"},"tests/watcher-approval-pending.test.ts":{"before":null,"after":"sha256:acf53ff15182e971775f987474fb020f855d1b36a5f4b96821e212f6b85d1234"}}}}
+{"type":"done","timestamp":"2026-09-29T21:18:23.899Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-29T21:24:16.236Z","data":{"command":"node --import tsx --test tests/watcher-approval-pending.test.ts","exitCode":0,"duration":1.06,"output":"▶ Approval commit pending\n  ✔ skips a sealed but uncommitted approval without writing any marker or event (252.695902ms)\n  ✔ spawns the pending task once the approval commit lands (497.684952ms)\n✔ Approval commit pending (751.819731ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1025.740495\n"}}

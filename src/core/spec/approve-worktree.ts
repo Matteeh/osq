@@ -14,6 +14,7 @@ import { runVerificationCommand } from '../run/verification.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs, VcsHead } from '../vcs/vcs.js';
 import { stackedPath, worktreeBranch, worktreePath } from '../vcs/worktree.js';
+import { claimBranch } from './approve-branch.js';
 import {
   confirmApproval,
   readBriefHash,
@@ -86,12 +87,6 @@ async function refuseDirtyScope(
   );
 }
 
-/** Refuse when the change's branch already exists. */
-async function refuseExistingBranch(vcs: Vcs, branch: string): Promise<void> {
-  const branches = await vcs.listBranches(branch);
-  if (branches.includes(branch)) throw new Error(`branch ${branch} already exists`);
-}
-
 /** Run `vcs.prepare` once in the worktree, stopping on a non-zero exit. */
 export async function runPrepare(
   worktreeRoot: string,
@@ -122,6 +117,7 @@ interface WorktreeApprovalResolved extends WorktreeApprovalInput {
   readonly mode: 'shown' | 'confirmed';
   readonly observations: readonly PlanningObservation[];
   readonly author: string;
+  readonly keptBranch: string | null;
 }
 
 /** Create the branch and worktree, seal the checkout's copy, and commit it. */
@@ -166,6 +162,7 @@ async function approveIntoNewWorktree(
     digest: input.digest,
     worktreePath: wtPath,
     branch,
+    ...(input.keptBranch !== null ? { keptBranch: input.keptBranch } : {}),
   };
 }
 
@@ -188,7 +185,7 @@ export async function approveIntoWorktree(
   const branch = worktreeBranch(folderName);
   const head = await resolveBase(vcs, options.baseOk);
   await refuseDirtyScope(folderPath, vcs, options.ignoreDirty);
-  await refuseExistingBranch(vcs, branch);
+  const keptBranch = await claimBranch(vcs, projectRoot, folderPath, folderName);
 
   const hash = await hashChangeFolder(folderPath);
   const { digest, mode } = await confirmApproval(projectRoot, folderPath, config, options);
@@ -228,6 +225,7 @@ export async function approveIntoWorktree(
       digest,
       stackedPath: stacked.path,
       waitingFor: awaited.map((entry) => entry.folder),
+      ...(keptBranch !== null ? { keptBranch } : {}),
     };
   }
 
@@ -240,5 +238,6 @@ export async function approveIntoWorktree(
     mode,
     observations,
     author: vcsConfig.author,
+    keptBranch,
   });
 }

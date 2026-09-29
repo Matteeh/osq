@@ -33,7 +33,7 @@ import {
   newArchiveName,
   readArchiveNames,
 } from './worktree-commit.js';
-import { checkWorktree, haltWorktreeChange } from './worktree-run.js';
+import { approvalCommitted, checkWorktree, haltWorktreeChange } from './worktree-run.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
 const EXIT_SIGINT = 130;
@@ -251,6 +251,11 @@ export async function runWatcherCycle(
     const worktree = change.tree.worktreeFolder !== undefined;
     const specId = folder.match(/^(\d+)/)?.[1] ?? folder;
     try {
+      // A worktree approval is not real until its commit lands: skip until
+      // `.run/approved` exists at HEAD so no later step sees a half-written seal.
+      if (worktree && !(await approvalCommitted(change, config))) {
+        continue;
+      }
       // The reaper only detects and unlinks expired locks; the watcher owns the
       // dead marker and event so every artifact is written through outcome.ts.
       const runDir = path.join(folderPath, '.run');

@@ -79,6 +79,10 @@ export class NoVcs implements Vcs {
     this.reject();
   }
 
+  async renameBranch(_from: string, _to: string): Promise<void> {
+    this.reject();
+  }
+
   async worktreeAdd(_path: string, _branch: string): Promise<void> {
     this.reject();
   }
