@@ -541,12 +541,13 @@ unchanged.
 - **THEN** `osq show` prints `      Dependencies added: zod (package.json)` under task 1
 
 ### Requirement: Scenarios in show
-<!-- source: src/core/status/show.ts, tests/trace-report.test.ts -->
 `osq show` SHALL print, under each task whose resolved scope holds scenario test
 files naming scenarios, the line
 `      Scenarios: <capability>: <name>; <capability>: <name>`, with the distinct
 pairs sorted by capability and then name. It comes after the
-`Dependencies added:` line. Other tasks' output SHALL be unchanged.
+`Dependencies added:` line. Other tasks' output SHALL be unchanged. It SHALL
+look for scenario test files only when some task's resolved scope holds a test
+path, as traceability's "Test paths" defines it.
 
 #### Scenario: Task with a scenario test
 - **WHEN** task 1's scope holds `tests/pricing-quote.test.ts`, which names both pricing scenarios

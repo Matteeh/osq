@@ -3,6 +3,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolveScope } from '../core/run/scope.js';
+import { TEST_GATE_DIR } from '../core/run/test-gate.js';
 import { type VerificationResult, runVerificationCommand } from '../core/run/verification.js';
 import { asRecord } from '../harness/stream.js';
 import { appendHarnessEvent } from '../harness/types.js';
@@ -63,8 +64,6 @@ export async function synthesizeResultFile(
   return resultPath;
 }
 
-const TEST_DIR_NAME = 'tests';
-
 function hashFileContent(content: Buffer | string): string {
   return createHash('sha256').update(content).digest('hex');
 }
@@ -90,7 +89,7 @@ export async function snapshotTestFiles(projectRoot: string): Promise<Map<string
     }
   };
 
-  await walk(path.join(projectRoot, TEST_DIR_NAME));
+  await walk(path.join(projectRoot, TEST_GATE_DIR));
   return snapshot;
 }
 

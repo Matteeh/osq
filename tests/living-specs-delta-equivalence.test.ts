@@ -35,7 +35,6 @@ const CAPABILITIES = [
 const PRESERVED_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   'cli-foundation': [
     'Code ownership',
-    'Test gating configuration',
     'Watch stale build and dev mode CLI options',
     'Repository health diagnostics',
     'Planner instruction scaffolding',

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolveScope } from '../run/scope.js';
+import { isGatedTestPath } from '../run/test-gate.js';
 import { type ImportGraph, reachImporters, reachImports } from './import-graph.js';
 import { type LintFinding, makeFinding } from './lint-findings.js';
 import { listNamedPaths } from './verify-paths.js';
@@ -26,18 +27,13 @@ export interface FrozenTestLimits {
   readonly maxListed: number;
 }
 
-/** Test files governed by the `tests.modify` gate; mirrors the `tests/**` default. */
-function isTestPath(relativePath: string): boolean {
-  return relativePath === 'tests' || relativePath.startsWith('tests/');
-}
-
 /** Every existing test a task in the change may modify through `tests.modify`. */
 function modifiableTests(tasks: readonly TestImpactTask[]): Set<string> {
   const modifiable = new Set<string>();
   for (const task of tasks) {
     if (!task.testsModify) continue;
     for (const existing of task.existingPaths) {
-      if (isTestPath(existing)) modifiable.add(existing);
+      if (isGatedTestPath(existing)) modifiable.add(existing);
     }
   }
   return modifiable;
@@ -83,7 +79,7 @@ export function frozenTestFindings(
     if (task.existingPaths.length === 0) continue;
     const scoped = new Set(task.existingPaths);
     const reachedTests = reachImporters(graph, task.existingPaths, limits.maxDepth).filter(
-      (entry) => isTestPath(entry.file) && !modifiable.has(entry.file),
+      (entry) => isGatedTestPath(entry.file) && !modifiable.has(entry.file),
     );
     if (reachedTests.length === 0) continue;
 
@@ -126,7 +122,7 @@ async function verifiedTestPaths(projectRoot: string, command: string): Promise<
   const tests: string[] = [];
 
   for (const named of listNamedPaths(command)) {
-    if (!isTestPath(named) || seen.has(named)) continue;
+    if (!isGatedTestPath(named) || seen.has(named)) continue;
     seen.add(named);
 
     if (isExactOperand(named)) {
@@ -136,7 +132,7 @@ async function verifiedTestPaths(projectRoot: string, command: string): Promise<
     }
 
     const matches = (await resolveScope(projectRoot, [named]))
-      .filter((entry) => entry.absolutePath !== null && isTestPath(entry.relativePath))
+      .filter((entry) => entry.absolutePath !== null && isGatedTestPath(entry.relativePath))
       .map((entry) => entry.relativePath);
     if (matches.length === 0) return null;
     tests.push(...matches);

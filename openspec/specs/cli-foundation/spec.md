@@ -131,14 +131,6 @@ agent and planner instructions, templates, and consumer guidance.
 - **WHEN** file ownership is resolved for CLI, configuration, retry, scaffolding, or managed guidance files
 - **THEN** system maps `src/core/foundation/**`, `src/cli/**`, `src/index.ts`, `osq.config.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
 
-### Requirement: Test gating configuration
-<!-- source: src/core/config.ts, tests/config.test.ts -->
-The configuration loader SHALL define test file patterns used for test modification gating.
-
-#### Scenario: Default test pattern resolution
-- **WHEN** no custom test patterns are declared in `osq.config.ts`
-- **THEN** system defaults test gating matchers to `tests/**`
-
 ### Requirement: Watch stale build and dev mode CLI options
 <!-- source: src/cli/index.ts, src/cli/watch.ts -->
 The CLI watch command SHALL support options to bypass stale build detection and enable reactive dev execution.

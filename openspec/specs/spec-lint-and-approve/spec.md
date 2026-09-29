@@ -117,11 +117,12 @@ The system SHALL parse `### Requirement: Code ownership` blocks by header name a
 - **THEN** system extracts the declared glob list and associates it with the capability
 
 ### Requirement: Test modification declaration validation
-<!-- source: src/core/scope.ts, src/core/linter.ts, tests/linter.test.ts, tests/scope-lint.test.ts -->
 The linter SHALL validate that tasks altering existing tests explicitly declare
 `tests.modify: true`. It SHALL identify existing test files through the shared
 deterministic scope resolver without maintaining another glob matcher or tree
-walker.
+walker. A test file is one that `isGatedTestPath` accepts, as
+watcher-and-harness's "Test gate paths" says. The frozen test reach warning and
+the approval digest's existing tests SHALL use the same function.
 
 #### Scenario: Valid test modification declaration
 - **WHEN** task frontmatter declares `tests.modify: true` as a boolean
@@ -138,6 +139,10 @@ walker.
 #### Scenario: Invalid test modification type
 - **WHEN** task frontmatter provides a non-boolean value for `tests.modify`
 - **THEN** linter rejects the task with a schema validation error
+
+#### Scenario: Named test outside tests
+- **WHEN** a task's scope resolves to an existing `src/quote.test.ts` and `tests.modify` is false
+- **THEN** linter raises no `tests.modify` finding for it
 
 ### Requirement: Architecture Decision Record 004: Pinned OpenSpec Validator
 <!-- source: decisions/004-pinned-openspec-validator.md, decisions/README.md -->

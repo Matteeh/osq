@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { type ResolvedScopeEntry, resolveScope } from '../run/scope.js';
+import { isGatedTestPath } from '../run/test-gate.js';
 import { readCreates } from './capability-relations.js';
 import { type ParsedDelta, parseDelta } from './delta.js';
 import { readLivingCapabilityNames, resemblingCapability } from './digest-capability.js';
@@ -101,10 +102,6 @@ export function firstTwoSentences(goal: string): string {
     .split(/(?<=[.!?])\s+/)
     .slice(0, 2)
     .join(' ');
-}
-
-function isTestPath(relativePath: string): boolean {
-  return relativePath === 'tests' || relativePath.startsWith('tests/');
 }
 
 async function resolveTasks(projectRoot: string, changeFolder: string): Promise<ResolvedTask[]> {
@@ -219,7 +216,7 @@ export async function buildApprovalDigest(
         testsModify: task.testsModify,
         existingTests: existing
           .map((entry) => entry.relativePath)
-          .filter(isTestPath)
+          .filter(isGatedTestPath)
           .sort(compareText),
       };
     }),

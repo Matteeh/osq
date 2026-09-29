@@ -2,6 +2,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import { resolveScope } from '../core/run/scope.js';
+import { isGatedTestPath } from '../core/run/test-gate.js';
 import { selectVcs } from '../core/vcs/select.js';
 import {
   type VcsComparison,
@@ -62,9 +63,7 @@ export function formatVcsViolationWarning(moved: readonly VcsMovedField[]): stri
 
 /** A file under `tests/` that is untracked now and was not listed before spawn. */
 function isNewUntrackedTest(before: VcsSnapshot, after: VcsSnapshot, file: string): boolean {
-  return (
-    file.startsWith('tests/') && after.files.get(file)?.code === '??' && !before.files.has(file)
-  );
+  return isGatedTestPath(file) && after.files.get(file)?.code === '??' && !before.files.has(file);
 }
 
 /** The sorted changed files that are outside the resolved scope and change folder. */

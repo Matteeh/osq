@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:03cc59fb150cd21c552f796cf5699903add4a43edf1ab101f6f257da8643a2e7"
+build_stamp: "eca179c"
+project_commit: "8fc4ac0"
+exit_code: 0
+scope_files: {"src/core/run/task-commit.ts":"sha256:24f2b4fd121dd9b1dcb0ae39b78e1379b0e1fb2ce7eeb762a84104dc4485bb72","src/core/run/test-gate.ts":"sha256:1bf94e644fff3b5db0344d50de7d46c4b6b866f9de09120b7d3001f6e5cb4b7f","src/core/spec/digest.ts":"sha256:ab58cac4d8d17fd0de76a8707941ac9f1527d90852e571146408fab10a7c20c7","src/core/spec/linter.ts":"sha256:bf5e4985618476582b922bea94c6cf0fda6e24e282f40759ed9fdbbf65543efe","src/core/spec/test-impact.ts":"sha256:4455993e3a824bca4f7c573ec7625b8c330cf3f0b4e22ceebceb895cfd1df06f","src/watcher/git-guard.ts":"sha256:f0bb97b53ff122ba729017ca376e6d07065591dc39fe5dc15848bfbf706101fb","src/watcher/verify.ts":"sha256:4fdc29e06fcb1b6109e875110082971c7d2f40eff0428f0acd67f42ade6f973e","tests/test-gate.test.ts":"sha256:bac83aae30b3cc08583b80955ce1c4809b42d14e3bbd17e9a4faa3da7ddd944f"}
+---
+2026-09-29T14:30:57.403Z

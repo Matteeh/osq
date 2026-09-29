@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
+import { isGatedTestPath } from '../run/test-gate.js';
 import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { collectCapabilityRelationFindings } from './capability-relations.js';
@@ -986,11 +987,6 @@ function collectHarnessFixtureWarnings(
   return warnings;
 }
 
-/** Test files governed by the `tests.modify` gate; mirrors the `tests/**` default. */
-function isTestFilePath(relativePath: string): boolean {
-  return relativePath === 'tests' || relativePath.startsWith('tests/');
-}
-
 interface TestsModifyDeclaration {
   readonly present: boolean;
   readonly valid: boolean;
@@ -1226,7 +1222,7 @@ export async function lintChangeFolder(
 
     // Check: touching an existing test file requires tests.modify: true
     if (!task.testsModify && existingPaths.length > 0) {
-      const touched = existingPaths.filter(isTestFilePath).sort();
+      const touched = existingPaths.filter(isGatedTestPath).sort();
       if (touched.length > 0) {
         findings.error(
           { file: taskRepoPath },

@@ -5,6 +5,7 @@ import { getDoneMarkerPath, getEventsPath, getResultPath } from '../status/layou
 import type { Vcs, VcsStatusEntry } from '../vcs/vcs.js';
 import { formatCommitMessage, readCommitTrailers } from './commit-message.js';
 import { scopeCoversPath } from './scope.js';
+import { isGatedTestPath } from './test-gate.js';
 
 /** The worktree-root-relative POSIX path of one absolute path. */
 function relativeToRoot(root: string, target: string): string {
@@ -52,7 +53,7 @@ async function existingPaths(root: string, paths: Iterable<string>): Promise<str
 function scopedStatusPaths(entries: readonly VcsStatusEntry[], scope: readonly string[]): string[] {
   const paths = new Set<string>();
   for (const entry of entries) {
-    if (entry.code === '??' && entry.path.startsWith('tests/')) paths.add(entry.path);
+    if (entry.code === '??' && isGatedTestPath(entry.path)) paths.add(entry.path);
     for (const candidate of [entry.path, entry.from]) {
       if (candidate !== undefined && scopeCoversPath(scope, candidate)) paths.add(candidate);
     }

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b42e8d3cf5f58b20e8fee03daa8cc7defff820444e8a66ad200c6939244cde33"
+build_stamp: "eca179c"
+project_commit: "dfe9a55"
+exit_code: 0
+scope_files: {"src/core/status/show.ts":"sha256:bed465dd469be59b6c5126956d5198dcb40f4065a35462ef17b008e1588c5b93","tests/show-test-path.test.ts":"sha256:1d6f54e3247d925aa0a6c93498d0dccfa44ed0c8369861f113a4010c2c9e6325"}
+---
+2026-09-29T14:34:54.109Z

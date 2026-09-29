@@ -10,6 +10,7 @@ import { buildImportGraph } from '../spec/import-graph.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
 import type { TaggedScenario } from '../trace/tag-scan.js';
+import { isTestPath } from '../trace/test-path.js';
 import { type ChangeLocation, listChanges, locateFolder } from './change-locations.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
@@ -343,13 +344,6 @@ export async function getSpecDetailsFromFolder(
   return buildSpecDetails(projectRoot, folderPath, location, config);
 }
 
-/** A test path is under `tests/`, or its file name holds `.test.` or `.spec.`. */
-function showIsTestPath(relativePath: string): boolean {
-  if (relativePath === 'tests' || relativePath.startsWith('tests/')) return true;
-  const base = relativePath.slice(relativePath.lastIndexOf('/') + 1);
-  return base.includes('.test.') || base.includes('.spec.');
-}
-
 /** Distinct scenario pairs named by a file list, sorted by capability and name. */
 function distinctScenarioPairs(files: readonly string[], index: ScenarioIndex): TaggedScenario[] {
   const seen = new Set<string>();
@@ -383,7 +377,7 @@ async function attachTaskScenarios(
     const resolved = await resolveScope(projectRoot, task.scope);
     const files = resolved.map((entry) => entry.relativePath);
     resolvedByTask.set(task.taskNumber, files);
-    if (files.some(showIsTestPath)) hasTestPath = true;
+    if (files.some(isTestPath)) hasTestPath = true;
   }
   if (!hasTestPath) return [...tasks];
 
