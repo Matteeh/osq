@@ -796,13 +796,14 @@ As of 2026-09-28, each trigger ends somewhere different:
 - A regression at archive writes `.run/regressed/<n>.md` or `change.md` and waits for `osq retry`.
 - A code conflict at land stops with the conflicting paths, and the human merges by hand in the worktree.
 - After `osq-sync`, a sync that finds a requirement changed on the default branch, or a code conflict, halts the change with a reason.
+- A red `verify` at land on an archived change has no way out inside osq. `osq reject` refuses archived changes, and the watcher no longer runs the change. On 2026-09-29, 112 archived under an osq build older than 109. That build ran the change-level `verify` before applying the deltas, and 112's delta removed a requirement that `tests/living-specs-delta-equivalence.test.ts` pins, so `osq land 112` failed. A human fixed it by hand in the worktree.
 - `osq plan <id> --session` reopens a planning session on an existing change that has a `brief.md`, and `osq plan` writes `plan-prompt.md` into the change folder.
 - ADR 003 decision 4: re-approval runs `osq approve` against the worktree and commits the edits with the new hash.
 - Transient deaths such as `verify_red`, `timeout` and `crashed` already retry automatically.
 
 ### Requirements
 
-- A fixed list of triggers halts a change for steering: a stuck task, a blocked task, a requirement the change rewrites that changed on the default branch, a code conflict at sync or land, and a regression at archive. The list lives in a spec, and adding a trigger is a spec change.
+- A fixed list of triggers halts a change for steering: a stuck task, a blocked task, a requirement the change rewrites that changed on the default branch, a code conflict at sync or land, a red `verify` at sync or land, and a regression at archive. An archived change that halts can still be planned and run again. The list lives in a spec, and adding a trigger is a spec change.
 - A halted change has one inbox item, "needs steering", naming the trigger, its reason and its evidence: the dead marker, the conflicting paths, or the changed requirement.
 - The item's one action plans the change: a planning session on the change's own folder, with the trigger, the reason and the evidence in its prompt.
 - After the revised plan is approved, tasks already verified stay done, and the run continues from the first task that isn't.
