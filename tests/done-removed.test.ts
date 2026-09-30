@@ -99,14 +99,4 @@ describe('osq done removed', () => {
     assert.notEqual(result.exitCode, 0);
     assert.equal(await exists(path.join(spec.folderPath, '.run', 'done', '1')), false);
   });
-
-  it('leaves no exported done command in the command sources', async () => {
-    const cli = (await import('../src/cli/done.js')) as unknown as Record<string, unknown>;
-    const lifecycle = (await import('../src/core/lifecycle/done.js')) as unknown as Record<
-      string,
-      unknown
-    >;
-    assert.equal(cli.doneCommand, undefined);
-    assert.equal(lifecycle.markTaskDoneManual, undefined);
-  });
 });

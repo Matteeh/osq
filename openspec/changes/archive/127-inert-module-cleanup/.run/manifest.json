@@ -1,0 +1,27 @@
+{
+  "hashes": {
+    "AGENTS.md": null,
+    "PLANNER.md": null,
+    "config": null,
+    "cli-foundation": null,
+    "cli-foundation/osq.yml": null,
+    "status-inspection": null,
+    "status-inspection/osq.yml": null,
+    "spec-lint-and-approve": null,
+    "spec-lint-and-approve/osq.yml": null
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-09-30T21:51:14.124Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-09-30T22:35:04.480Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {}
+}

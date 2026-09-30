@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0540260fab3de33c8eb883db4fcc61d14d5c26e7c66e5d8b8bd6d021c0016703"
+build_stamp: "9b67064"
+project_commit: "2159ef5"
+exit_code: 0
+scope_files: {"src/cli/done.ts":null,"src/core/lifecycle/done.ts":null,"src/core/spec/human-steps.ts":"sha256:810e19345d56a13bacac4c037da1984ac3d8806b11d0ebef9f1ccc1c2cd11e2b","src/core/status/leftover-drafts.ts":null,"tests/done-manual.test.ts":null,"tests/done-removed.test.ts":"sha256:2bebd323782ce022f14c9f2b43f586e2f6de81a4621d313b5082dbd0a375f256","tests/no-inert-modules.test.ts":"sha256:5c29f430f2e166e8e55b8a8c6e0357f1e3597210cabb4866da0b9b713332e22e","tests/status-leftover.test.ts":null}
+---
+2026-09-30T22:39:56.092Z

@@ -1,11 +1,5 @@
 import { extractSection } from './parser.js';
 
-/** The after-landing requirements an archived change records on its event. */
-export interface VerificationRequirement {
-  readonly afterLanding: boolean;
-  readonly check: string | null;
-}
-
 /** The two halves of `## Human steps`, split by their subsections. */
 export interface HumanSteps {
   readonly beforeApproval: string;
