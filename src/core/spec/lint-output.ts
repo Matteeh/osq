@@ -13,6 +13,12 @@ import type { LintFinding } from './lint-findings.js';
 export const REPOSITORY_HEADER =
   'repository: findings about other changes and living specs; they do not affect the exit code';
 
+/** The count line printed in place of the repository list, singular for one. */
+export function formatRepositoryCount(count: number): string {
+  const noun = count === 1 ? 'finding' : 'findings';
+  return `repository: ${count} ${noun} about other changes and living specs; osq lint --repository lists them`;
+}
+
 /** The minimal logger surface finding printing needs. */
 export interface FindingLogger {
   info(message: string): void;
@@ -106,6 +112,14 @@ export function printChangeFindings(
   if (result.valid) {
     logger.info(`${change}: valid`);
   }
+}
+
+/** Print the repository count line, or nothing when there are no findings. */
+export function printRepositoryCount(logger: FindingLogger, count: number): void {
+  if (count === 0) {
+    return;
+  }
+  logger.info(formatRepositoryCount(count));
 }
 
 /** Print the repository group, one line per unique finding, or nothing. */

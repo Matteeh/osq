@@ -272,6 +272,7 @@ describe('lint output', () => {
       cwd: root,
       config: openSpecConfig(),
       logger,
+      repository: true,
       exit: (code) => exitCodes.push(code),
     });
 

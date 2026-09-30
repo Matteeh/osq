@@ -10,6 +10,7 @@ import {
   buildLintJson,
   dedupeFindings,
   printChangeFindings,
+  printRepositoryCount,
   printRepositoryFindings,
 } from '../core/spec/lint-output.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
@@ -34,6 +35,8 @@ export interface LintCommandOptions {
   readonly exit?: (code: number) => void;
   /** Write the JSON document to the stdout sink instead of logger lines. */
   readonly json?: boolean;
+  /** List every repository finding in full instead of the count line. */
+  readonly repository?: boolean;
   readonly stdout?: (text: string) => void;
 }
 
@@ -105,7 +108,11 @@ export async function lintCommand(
     const stdout = options.stdout ?? ((text: string) => process.stdout.write(text));
     stdout(`${JSON.stringify(buildLintJson(valid, lintEntriesToJson(entries)))}\n`);
   } else if (logger) {
-    printRepositoryFindings(logger, repository);
+    if (options.repository === true) {
+      printRepositoryFindings(logger, repository);
+    } else {
+      printRepositoryCount(logger, repository.length);
+    }
   }
 
   if (!valid) {

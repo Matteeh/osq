@@ -107,9 +107,10 @@ export function createProgram(version?: string): Command {
     .command('lint [ids...]')
     .description('validate change folders and OpenSpec artifacts')
     .option('--json', 'print findings as JSON')
-    .action(async (ids: string[], options: { json?: boolean }) => {
+    .option('--repository', 'list every repository finding')
+    .action(async (ids: string[], options: { json?: boolean; repository?: boolean }) => {
       await lintCommand(ids, {
-        json: options.json,
+        ...options,
         stdout: (text) => process.stdout.write(text),
       });
     });
