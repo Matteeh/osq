@@ -14,6 +14,12 @@ On 2026-09-28 the Notion roadmap page "osq opus planner roadmap based on current
 
 Debt cleanup is three items, queued on 2026-09-28: `test-path-meanings`, `traceability-opt-in-once`, and `retire-source-comments`. None depends on stage 2, and none changes what a user sees except `retire-source-comments`, which removes comments from living specs.
 
+Planning cost is three items, queued on 2026-09-29 after recovering 113 took a planner through a 306 KB regressed report and 250 lint warnings: `lint-own-findings`, `regressed-report-short`, and `planner-reads-requirements`. Each cuts what an agent reads on every change.
+
+`approve-after-halt`, queued on 2026-09-29, fixes three bugs that blocked approving 115 and 116 that day. `stale-build-every-pass`, queued the same day after the third stale-build incident, follows it. Both come before the planning cost items.
+
+`ci-temp-repo-cleanup`, queued on 2026-09-30, is urgent: CI on `main` fails in test cleanup on the runner. It comes right after `approve-owns-draft`.
+
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
 ## [result-none-sections] A result section that says only None counts as empty, however it is written
@@ -655,13 +661,190 @@ Alternatives considered:
 - One task: the lint warning and its tests. Measure in a scratch worktree for tests that pin lint warning counts.
 - The warning is lint's only new rule. Keep it a warning so that an old habit never costs a retry.
 
+## [approve-after-halt] Approval never races the watcher, a halted change says retry, and a rejected change can be approved again
+
+Depends on: nothing
+
+### Goal
+
+`osq approve` into a worktree finishes before the watcher looks at the change. A change-level halt points the human at `osq retry <id> change`, not at `osq reject`. A change that was approved, rejected, and planned again can be approved again under the same folder name.
+
+### Context
+
+As of 2026-09-29:
+
+- `approveIntoNewWorktree` in `src/core/spec/approve-worktree.ts` creates the branch and worktree, copies the change folder in, writes the seal (`.run/approved`) with `writeApprovalSeal`, and only then commits `osq: <id> approved`.
+- The watcher treats a worktree change with `.run/approved` as approved. `checkWorktree` in `src/watcher/worktree-run.ts` runs before a spawn (`src/watcher/loop.ts`, around line 308) and before an archive (around line 212). It halts with `worktree_dirty` when status lists any path outside the change's `.run/` and `tasks.md`.
+- On 2026-09-29 the watcher halted 116 with `worktree_dirty` at 18:05:12.067Z, listing only the change's own `proposal.md`, delta spec, and task files. The approval commit landed in the same second. The halt came between the seal and the commit. `osq retry 116 change` cleared it, and 116 then ran and landed.
+- For a change-level regression, `readActiveNextStep` in `src/core/status/next-step.ts` returns `osq reject <id> --reason <text>`, so `osq status` printed `next: dead — osq reject 116`. The inbox's `change-regressed` item in `src/core/status/inbox.ts` also carries `osq reject`. The dispatcher's `haltItems` in `src/core/status/dispatch-items.ts` already lists `osq retry <id> change` first.
+- `osq reject` removes a worktree change's worktree but keeps its branch `osq/<folder>`, whose tip is the `osq: <id> rejected` commit holding the dead markers and events (`src/core/lifecycle/reject.ts`).
+- `refuseExistingBranch` in `approve-worktree.ts` refuses when `osq/<folder>` exists. 115 was approved, died with `spawn E2BIG`, was rejected, and was planned again in the checkout under the same folder. `osq approve 115` then failed with `branch osq/115-retire-source-comments already exists`. The human renamed the branch by hand to `osq/115-retire-source-comments-rejected-1`.
+
+### Requirements
+
+- The watcher neither spawns, archives, nor halts a worktree change whose `.run/approved` is not yet committed at HEAD. It skips that change on this pass, writes no marker or event for it, and picks it up on a later pass once the approval commit exists.
+- A change whose approval commit exists is checked exactly as today. A real `worktree_dirty` still halts.
+- For a change-level regression with no dead or regressed task, `osq status`, bare `osq`, and `osq inbox` name `osq retry <id> change`.
+- When `osq approve` finds `osq/<folder>` and its tip is osq's rejection commit for that change, it renames that branch to `osq/<folder>-rejected-<n>`, with the lowest `n` from 1 that is free, and then approves as usual. It prints one line naming the renamed branch.
+- A branch `osq/<folder>` whose tip is anything else still refuses, as today.
+
+### Non-goals
+
+- Changing what `osq reject` does to the branch at rejection time.
+- Deleting kept branches.
+- Recovering an approval whose commit failed after the seal. `osq approve` already reports that error.
+
+### Notes for planning
+
+- Skipping keeps the watcher filesystem-driven: whether `.run/approved` is committed is read from git status each pass, not remembered.
+- Recognize the rejection commit by what `osq reject` writes: its `osq: <id> rejected` subject and `Osq-Change: <folder>` trailer. Check `reject-vcs.ts` for the exact form and reuse it rather than matching a second copy of the text.
+- A branch rename needs a `Vcs` write method if none exists. Check `src/core/vcs/git-vcs-write.ts` first.
+- `tests/approve-worktree.test.ts` pins the `already exists` refusal. Keep that case for a non-rejection tip.
+- Measure in a scratch worktree for tests that pin the `osq reject` hint in status, inbox, or bare `osq` output.
+
+## [stale-build-every-pass] A watcher or land running an old build stops and says to rebuild
+
+Depends on: nothing
+
+### Goal
+
+osq never keeps running a compiled build that is older than its own source. The watcher checks before every spawn and archive, not only when it starts. `osq land` checks before it lands, and after landing a change to osq's own source it tells the human to rebuild and restart the watcher.
+
+### Context
+
+As of 2026-09-29:
+
+- `checkStaleBuild` in `src/watcher/build.ts` compares the newest mtime under the osq package root's `src/` with the newest under `dist/`. When `src/` is newer, it prints `osq build is stale: src/ is newer than dist/. Run 'npm run build' or pass --allow-stale.` and exits 1. It skips an installed package (no `src/`) and a run from TypeScript source.
+- `runWatcher` in `src/watcher/loop.ts` calls it once, at start, unless `--allow-stale` or `--dev` is set. `osq land` never calls it.
+- `resolveBuildInfo` caches the commit it reads at start. The banner and each done marker's `build_stamp` show that commit, even after later lands.
+- Three incidents, each recorded in the Notion page "Why 112 failed to land":
+  - 110 to 112 ran on a watcher started before 109 landed, so archive verified before applying deltas, and 113 was the first change to meet the new order.
+  - `osq land 112` ran on a `dist/` from before 109.
+  - On 2026-09-29, after `osq land 116`, the running watcher still used a `dist/` built before 116. 115 needed 116's smaller executor prompt, and it looped on `spawn E2BIG` until the human ran `pnpm build` and restarted the watcher. The banner said `8d4a454`, one commit behind main, and nothing flagged it.
+
+### Requirements
+
+- Before each spawn and each archive, the watcher runs the same stale check it runs at start, with the same skips and the same `--allow-stale` and `--dev` escapes.
+- A stale check during a run starts nothing new. It lets a running task finish and record its outcome, then prints the stale line and exits 1. It writes no marker for any change.
+- `osq land` runs the stale check before it touches git, and refuses with the stale line when stale. `osq land --allow-stale` skips it.
+- After a successful land whose commit changes files under the running osq package's own `src/`, `osq land` prints one line: `osq's own source changed; run the build and restart the watcher`.
+- In a consumer project, where the land commit changes nothing under the running osq package's `src/`, `osq land` prints nothing new.
+
+### Non-goals
+
+- Rebuilding automatically, or restarting the watcher itself.
+- Changing what the banner or `build_stamp` report.
+- Checking an installed osq package against its registry version.
+
+### Notes for planning
+
+- `checkStaleBuild` calls `process.exit`. The watcher may keep that, since the watcher-and-harness capability owns its exits. `osq land` is a command and must throw a `CommandError` with the same message, per change 111.
+- The mtime walk over `src/` and `dist/` runs on every pass. Measure its cost on this repository before deciding whether to cache the newest `dist/` mtime at start and walk only `src/`.
+- `tests/watcher-stale-preflight.test.ts` covers the start check. Add new tests rather than changing it unless a pinned line moves.
+- "The running osq package's own `src/`" is the package root `build.ts` already resolves. Compare real paths, as `resolveBuildInfo` does, so a linked global `osq` counts as the same package.
+
+## [lint-own-findings] osq lint prints the change's own findings and counts the rest
+
+Depends on: nothing
+
+### Goal
+
+`osq lint <id>` prints the findings for the change it was asked about. Repository findings, which are about other changes and the living specs, print as one count line with the command that lists them.
+
+### Context
+
+- `osq lint 114` on 2026-09-29 printed 250 `repository:` warnings, nearly all "Requirement text is very long (>500 characters)" from the openspec validator on living specs. The change's own findings were 3 lines at the end.
+- `REPOSITORY_HEADER` in `src/core/spec/lint-output.ts` already says repository findings don't affect the exit code. They are grouped and deduplicated there, then printed one per line.
+- Planners run `osq lint` several times per change, and every run puts all 250 lines into the planner's context.
+
+### Requirements
+
+- Text output for `osq lint <id>` prints the change's own findings as today, then one line: `repository: <n> findings about other changes and living specs; osq lint --repository lists them`. With no repository findings it prints nothing for them.
+- `osq lint --repository` prints every repository finding, one per line, as today.
+- `--json` still carries every repository finding.
+- The exit code is unchanged.
+
+### Non-goals
+
+- Changing which findings exist, or their severity.
+- Shortening the living specs to clear the validator warning.
+
+### Notes for planning
+
+- Tests that pin the repository group's text output need `tests.modify`. Measure in a scratch worktree.
+
+## [regressed-report-short] A regressed report holds the failure, not the whole verify log
+
+Depends on: nothing
+
+### Goal
+
+`.run/regressed/<target>.md` holds what a human or planner needs to see why archive verification failed: the failing tests and the end of the output. The full log stays in the `verify_ran` event.
+
+### Context
+
+- 113's `.run/regressed/change.md` on 2026-09-29 was 306 KB: the whole `pnpm verify` output, built by `verifyArchiveStep` in `src/watcher/archive-verify.ts` from the `verify_ran` event's `output`.
+- The one failure was in `tests/living-specs-delta-equivalence.test.ts`. Its `assert.equal` of two whole living specs printed both, about 8 KB each, so even a grep for the failure pulled in 16 KB of spec text.
+- `node --test` ends its output with a `✖ failing tests:` section that repeats every failure.
+
+### Requirements
+
+- The report body keeps the `✖ failing tests:` section to the end of the output when the output has one. Otherwise it keeps the last lines of the output, a count from config.
+- Any single line in the body is cut to a length from config, ending in `… (<n> more characters)`.
+- The report says where the full output is: the `verify_ran` event in `.run/events/<target>.jsonl`.
+- The same applies to every other writer of a verify log into a `.run/` marker, if any exists; the planner finds them.
+- `tests/living-specs-delta-equivalence.test.ts` reports a mismatch as the first differing lines with a few lines of context, not two whole specs.
+
+### Non-goals
+
+- Changing the `verify_ran` event or its `output`.
+- Summarizing output with a model.
+
+### Notes for planning
+
+- New config keys go under `DEFAULT_CONFIG` like every limit.
+- `osq show` and the dashboard read the regressed body; check what they pin.
+
+## [planner-reads-requirements] Planners and executors read the requirements they need, not whole capability specs
+
+Depends on: nothing
+
+### Goal
+
+The planner and executor instructions ask for the requirements a change touches, and osq prints one requirement on request, so no agent has to read a whole living spec.
+
+### Context
+
+- The living specs total about 600 KB. watcher-and-harness is 153 KB, cli-foundation 130 KB, spec-lint-and-approve 85 KB.
+- `PLANNER.md` (managed block from `src/core/foundation/init-blocks.ts`) says "Read `AGENTS.md`, the capability specs this change touches, and one recent archived change end to end." A literal planner reads 200 KB or more for a change touching two capabilities.
+- The executor protocol says "Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names." A task that names cli-foundation sends a cheap executor through 130 KB.
+- A careful planner already greps for the requirements it needs. The instructions should say so, and osq should make it one command.
+- `parseCapabilitySpec` already splits a living spec into requirements.
+
+### Requirements
+
+- A command prints one requirement of a living capability spec, with its scenarios, by capability and requirement name. With a capability alone it lists the requirement names. An unknown capability or requirement fails naming it. The planner picks the command's name and flags; `osq spec <capability> [requirement]` is one option.
+- The planner instructions ask for the requirements the change touches, found with that command, instead of whole capability specs.
+- The executor protocol asks for the requirements the task names.
+- The `osq plan` prompt says the same.
+
+### Non-goals
+
+- Splitting or shortening the living specs.
+- Changing what tasks or proposals must name.
+
+### Notes for planning
+
+- Both managed blocks change. Tests pin their text, and `osq doctor` checks the managed blocks; measure in a scratch worktree.
+- `templates/PLANNER.md` and this repository's `PLANNER.md` and `AGENTS.md` carry the blocks.
+
 ## [confinement-env] Agents and verify get only the environment they need, and osq init scaffolds a contained harness
 
 Depends on: adr-006-deterministic-core
 
 ### Goal
 
-Agent-written code never sees a secret it doesn't need. osq builds each spawned process's environment from an allowlist instead of passing on its own, writes each harness's permission settings as a guardrail, and `osq init` stops scaffolding a harness with its permission checks switched off. This is stage 1 of the confinement ADR, with no containers yet.
+Agent-written code never sees a secret it doesn't need. osq builds each spawned process's environment from an allowlist instead of passing on its own, writes each harness's permission settings as a guardrail, and `osq init` stops scaffolding a harness with its permission checks switched off. ADR 007 records this, and only this: stage 1 of the confinement draft, with no containers yet.
 
 ### Context
 
@@ -670,7 +853,8 @@ As of 2026-09-28:
 - `runVerificationCommand` in `src/core/run/verification.ts` starts from `{ ...process.env }`. The harness adapters pass `process.env`, or spread it and add `OSQ_TASK_NUMBER` and `OSQ_SPEC_FOLDER`: `claude-exec.ts`, `pi.ts`, `codex.ts`, `agy.ts`, `opencode.ts`, and the default in `src/harness/process.ts`. Every variable in the shell that starts osq reaches the agent and every test it writes.
 - `osq init` scaffolds `harness: process.env.OSQ_HARNESS || 'agy'` (`src/core/foundation/init.ts`), its `.env.example` sets `OSQ_HARNESS=agy`, and the agy adapter defaults `dangerouslySkipPermissions` to true.
 - `vcs.prepare` runs `pnpm install` through `runPrepare` in `src/core/spec/approve-worktree.ts`, which runs every dependency's install scripts.
-- The confinement ADR is drafted in Notion under Security, "Confinement ADR". It's numbered 004, which the pinned OpenSpec validator already has, so it becomes 007. This item is its stage 1. Its roles are prepare, agent, verify and planner, and its decision 1 says verify never gets the model API key.
+- The full confinement design is drafted in Notion under Security, "Confinement ADR". It stays there as direction, not as an ADR. On 2026-09-30 the human chose an ADR per stage: this item writes ADR 007 for stage 1 only, and each later stage gets its own ADR when it's planned. The draft's roles are prepare, agent, verify and planner, and its decision 1 says verify never gets the model API key.
+- `decisions/` holds ADRs 001 to 006. None covers confinement. ADR 003 says enforcement needs a sandbox, and ADR 006 decision 7 sets the target as a server driven by an app.
 - The old roadmap's "safer defaults" item is folded in here.
 
 ### Requirements
@@ -681,24 +865,27 @@ As of 2026-09-28:
 - Each harness adapter writes that harness's own permission settings for the agent where it has them: deny git, deny network tools, and deny or ask for destructive commands. For a harness without them, `osq doctor` says so.
 - `osq init` no longer scaffolds a harness with its permission checks disabled.
 - `osq doctor` reports how contained each role is.
+- `decisions/007-*.md` is accepted, written by a task in this change. Its rule is close to "Each role osq spawns gets only the environment it declares; verify never gets the model key, and harness permissions are a guardrail." It names the roles and fixes the per-role config block, says what stage 1 does not defend against (files the user can reach, any network host), says how it serves ADR 006, and claims nothing about containers or the network. The rule reaches AGENTS.md's generated block.
 
 ### Decide before planning
 
-- Whether this change accepts the confinement ADR as 007, with stages 2 to 4 marked provisional, or leaves it proposed. Either way its "mode B" rules become server-mode rules, and it says how it relates to ADR 006.
-- The base allowlist, for example `PATH`, `HOME`, `LANG`, `TERM` and `TMPDIR`, and the config shape for per-role names.
+- The base allowlist, for example `PATH`, `HOME`, `LANG`, `TERM` and `TMPDIR`.
+- The per-role config block. It must take stage 2's mounts, network hosts and limits later as new fields beside `env`, for example `confinement.roles.<role>.env: [...]`, never a flat key like `verifyEnv`.
 - Which harness `osq init` picks. The old roadmap suggested the most contained harness installed, printing what it chose and why.
 - Whether agy runs headless without the bypass flag or stalls waiting for approvals.
 
 ### Non-goals
 
-- Containers, the network allowlist, and resource limits. Those are the confinement ADR's stages 2 and 3.
+- Containers, the network allowlist, and resource limits. Those are the confinement draft's stages 2 and 3, each with its own ADR later.
 - Confining a planner osq runs. That's stage 4.
+- Accepting the full confinement draft, or any rule about server mode.
 
 ### Notes for planning
 
 - Research each harness's permission settings before writing tasks: Claude Code's settings, Codex's sandbox modes, opencode's agent permissions, pi, and agy.
 - Check that this repository's `pnpm verify` still passes with only the allowlist.
-- Probably two changes: the environment and permission settings first, then the init default and the doctor report.
+- Probably two changes: the ADR, the environment and permission settings first, then the init default and the doctor report.
+- The ADR is a task inside the change, never a hand edit, so lint and the watcher check it.
 
 ## [approve-owns-draft] Approval moves the draft out of the checkout, and osq done goes
 
@@ -738,6 +925,43 @@ As of 2026-09-28:
 
 - Removing a command removes surface from a published package. Say so in CHANGELOG.
 - Tests pin `osq done` and the leftover-draft section. Measure the fallout in a scratch worktree first.
+
+## [ci-temp-repo-cleanup] CI never fails because a test's temp repository is still being written when it is removed
+
+Depends on: nothing
+
+### Goal
+
+`pnpm verify` on the GitHub Actions runner passes whenever it passes locally. No test fails in its cleanup because something is still writing into the temp git repository the test is removing.
+
+### Context
+
+As of 2026-09-30:
+
+- CI on `main` is red. Two runs each failed one test in `tests/worktree-run.test.ts`, and a different one each time: "commits a new test file outside the task scope" and "archives with a commit that leaves the worktree clean". Both failed with `ENOTEMPTY: directory not empty, rmdir '/tmp/osq-worktree-run-<random>/repo/.git/objects/pack'`. Everything else passed: 2836 of 2838, with one skipped.
+- The same suite passes locally (WSL2, git 2.34.1).
+- The error comes from cleanup, not from an assertion. `afterEach` in `tests/worktree-run.test.ts` runs `fs.rm(dir, { recursive: true, force: true })` over every temp root. `ENOTEMPTY` on `rmdir` means a file appeared in `.git/objects/pack` while `fs.rm` was removing it, so some process was still writing into the repository after the test's last await.
+- About 300 test files clean up temp directories the same way, and many of them create git repositories.
+- Nothing in `src/` or `tests/` sets `gc.auto` or `maintenance.auto`. `git commit` can start `git gc --auto` or `git maintenance run --auto` in the background, and they write packs. The runner's git is newer than the local one and may have different defaults.
+- `runVerificationCommand` in `src/core/run/verification.ts` spawns verify with `detached: true`. A git child that osq times out and kills may also outlive the test.
+
+### Requirements
+
+- The writer is identified and named in the change: which process writes `.git/objects/pack` after a `worktree-run` test ends.
+- No test's temp git repository is still being written to when the test's cleanup runs. Test repositories either never start background git work, or the test waits for it to end.
+- A temp directory removal in a git-using test retries on `ENOTEMPTY` and `EBUSY` before it fails, for example with `fs.rm`'s `maxRetries`, so a late write cannot fail CI.
+- `pnpm verify` passes on the GitHub Actions runner three times in a row.
+
+### Non-goals
+
+- Changing the git settings osq uses in a user's repository, unless the writer turns out to be osq's own code leaving a child running. Then that is a bug to fix in `src/`.
+- Rewriting cleanup in test files that create no git repository.
+
+### Notes for planning
+
+- Reproduce first. Try `git -c gc.auto=1 commit` in a temp repository followed by an immediate `fs.rm`, and check `git config --system --list` and the git version on `ubuntu-latest`.
+- A shared test helper for temp roots, such as `tests/helpers/`, may be simpler than editing each `afterEach`, but every file it touches is a preexisting test and needs `tests.modify`. Measure how many files create git repositories, and keep each task under the 8-pattern scope limit.
+- If test repositories should turn off background git work, `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_0` and `GIT_CONFIG_VALUE_0` in the `test` script reach every git child without editing each test. osq's own git calls pass through `childGitEnv`; check that it keeps them.
 
 ## [checks-osq-runs] Checks after landing are commands osq runs, and nothing waits on a human's word
 
@@ -907,3 +1131,33 @@ As of 2026-09-28:
 - Reuse `delta.ts` and the ADR reader rather than parsing again.
 - Older archives may lack fields. Show what exists and mark the rest as not recorded, rather than failing.
 - osq's own archive is the first real input.
+
+## [done-marker-path-in-spec] The stale-build spec names the done marker the watcher really writes
+
+Depends on: nothing
+
+### Goal
+
+The living watcher-and-harness spec names a task's done marker as `.run/done/<n>`, the path the watcher writes, everywhere it names one.
+
+### Context
+
+As of 2026-09-30:
+
+- 118 (`stale-build-every-pass`) added the scenario "Source edited while a task runs" to "Stale build preflight detection" in `openspec/specs/watcher-and-harness/spec.md`. Its THEN says `` `.run/done/1.md` exists``.
+- `writeDoneMarker` in `src/watcher/outcome.ts` writes `.run/done/<n>` with no extension. 118's executor flagged the mismatch and tested the real path: `tests/watcher-stale-every-pass.test.ts` checks `.run/done/1`.
+- The mistake was the 118 planner's. No other living spec names a `.run/done/` file with an extension.
+
+### Requirements
+
+- The scenario "Source edited while a task runs" says `` `.run/done/1` exists``. Nothing else in the requirement changes.
+
+### Non-goals
+
+- Renaming the done marker.
+- Changing any code or test.
+
+### Notes for planning
+
+- A MODIFIED "Stale build preflight detection" that repeats the requirement word for word and keeps every scenario, with only that path changed.
+- The change adds no test and changes no code, so its one task's `verify` is `node --import tsx --test tests/watcher-stale-every-pass.test.ts` with `verify_starts: green`.
