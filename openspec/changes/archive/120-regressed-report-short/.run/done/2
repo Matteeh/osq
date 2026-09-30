@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f1c0fcb1fbc08de6f05f3b59b7a7c215c61788ee77919d65dfe432b2fc8fd4e4"
+build_stamp: "be07f8b"
+project_commit: "f7e0d86"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:7af94fa0ace80a7b53b4548daf84da6965875b9959074c7a8a6d403d36f3534b","src/watcher/baseline.ts":"sha256:f1ee78cf20cc7c29e77097d4e430fb2d8a09600c882a7c2882bc1c1c56d0a1b4","src/watcher/change-verify.ts":"sha256:ef7802c815afbace08acc5de52f55f56cc96d64ca90b3d83348e56e17403371f","src/watcher/focused-verify.ts":"sha256:55da72594e87bee788477b45def66b3890759b27a92b0ea7ff74109df67b7084","src/watcher/runner.ts":"sha256:ff598b98d9317daf6abb17af8915bccf59b99e556c502e4f157f25c1e5d621ba","src/watcher/task-verify.ts":"sha256:2c1137dd1539e85b078d6a36059181b5c918ed4fdaef2a4f2c789f2da0c70c17","tests/dead-marker-excerpt.test.ts":"sha256:75e63229f23a2e8ca57d8101524b5341ed63b7ee0a7d0594b65000449dde2778"}
+---
+2026-09-30T14:23:52.499Z

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
+import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { missingNamedPaths } from '../core/spec/verify-paths.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 import { runVerificationGate } from './verify.js';
@@ -90,7 +91,11 @@ export async function verifyArchiveStep(
     `exit_code: ${exitCode}`,
     '---',
     `Archive-time ${archiveTargetLabel(target)} verification failed.`,
-    output.trim() || '(no output)',
+    excerptVerifyOutput(
+      output,
+      `the verify_ran event in .run/events/${target}.jsonl`,
+      config.limits,
+    ),
     '',
   ].join('\n');
   await writeRegressedMarker(runDir, target, content);

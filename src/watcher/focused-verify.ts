@@ -5,11 +5,12 @@
  */
 
 import { collectFocusedTests, runFocusedTests } from '../core/run/focused-tests.js';
+import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { appendHarnessEvent } from '../harness/types.js';
 import type { RunTaskResult } from './outcome.js';
 import type { FailFn, TaskVerifyOptions } from './task-verify.js';
 
-/** Dead marker for a task whose focused scenario tests failed: reason, flag, command, output. */
+/** Dead marker for a task whose focused scenario tests failed: reason, flag, command, excerpt. */
 function formatFocusedDeadMarker(command: string, output: string): string {
   const body = output === '' || output.endsWith('\n') ? output : `${output}\n`;
   return [
@@ -57,5 +58,10 @@ export async function checkFocusedTests(
 
   if (run.outcome !== 'failed') return null;
   const error = 'Watcher focused scenario tests failed';
-  return fail('verify_red', formatFocusedDeadMarker(run.command, run.output), error);
+  const excerpt = excerptVerifyOutput(
+    run.output,
+    `the focused_ran event in .run/events/${taskNumber}.jsonl`,
+    config.limits,
+  );
+  return fail('verify_red', formatFocusedDeadMarker(run.command, excerpt), error);
 }

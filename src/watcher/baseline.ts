@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import { runVerificationCommand } from '../core/run/verification.js';
+import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { listChanges } from '../core/status/change-locations.js';
 import { selectVcs } from '../core/vcs/select.js';
 import { type BaselineRanEventData, appendHarnessEvent } from '../harness/types.js';
@@ -131,7 +132,7 @@ function specIdOf(specFolderPath: string): string {
 
 /**
  * Dead marker for a red baseline: the halt line first, then the command, its
- * exit code, and the retry that settles it again, then the captured output.
+ * exit code, and the retry that settles it again, then the output excerpt.
  */
 export function formatBaselineDeadMarker(
   command: string,
@@ -191,9 +192,15 @@ export async function settleBaseline(options: BaselineOptions): Promise<Baseline
     treeDigest: key?.treeDigest ?? null,
     exitCode: result.exitCode,
     durationSeconds: result.duration,
+    ...(result.exitCode !== 0 && result.output.trim().length > 0 ? { output: result.output } : {}),
   });
   if (result.exitCode === 0) return { ok: true };
 
+  const excerpt = excerptVerifyOutput(
+    result.output,
+    'the baseline_ran event in .run/events/change.jsonl',
+    config.limits,
+  );
   return {
     ok: false,
     marker: formatBaselineDeadMarker(
@@ -201,7 +208,7 @@ export async function settleBaseline(options: BaselineOptions): Promise<Baseline
       result.exitCode,
       specIdOf(specFolderPath),
       taskNumber,
-      result.output,
+      excerpt,
     ),
     error: `Baseline command failed: ${command} (exit code ${result.exitCode})`,
     extra: HALT_LINE,

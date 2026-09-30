@@ -54,6 +54,10 @@ export interface OsqLimits {
   readonly maxProjectRules: number;
   /** The most marker lines a dispatch halt card shows. */
   readonly cardOutputLines: number;
+  /** The most output lines a `.run/` marker keeps without a failing-tests section. */
+  readonly markerOutputLines: number;
+  /** The most characters a marker keeps of any one output line. */
+  readonly markerLineChars: number;
 }
 
 export interface OsqPaths {
@@ -74,11 +78,9 @@ export interface OsqTimeouts {
   readonly gitSeconds?: number;
   readonly gitCommitSeconds?: number;
 }
-
 export interface LogConfig {
   readonly heartbeatSeconds?: number;
 }
-
 export interface PlannerConfig {
   readonly harness: string;
   readonly model: string;
@@ -140,6 +142,8 @@ export const DEFAULT_CONFIG: OsqConfig = {
     maxRuleLength: 160,
     maxProjectRules: 10,
     cardOutputLines: 20,
+    markerOutputLines: 40,
+    markerLineChars: 400,
   },
   paths: {
     features: 'openspec/specs',

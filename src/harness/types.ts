@@ -275,6 +275,8 @@ export interface BaselineRanEventData {
   readonly durationSeconds: number;
   /** Folder name of the change whose green baseline was reused. */
   readonly reusedFrom?: string;
+  /** The failed command's full output, kept only when it is not blank. */
+  readonly output?: string;
 }
 
 /** How one focused scenario-test run ended. */

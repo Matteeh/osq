@@ -1,0 +1,114 @@
+{"type":"verify_ran","timestamp":"2026-09-30T14:23:53.718Z","data":{"command":"node --import tsx --test tests/scope-regression-excerpt.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/scope-regression-excerpt.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/scope-regression-excerpt.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-30T14:23:54.490Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":1327,"repoFiles":1995,"repoLines":230231,"importFanIn":7,"proposalWords":991,"taskWords":341,"deltaRequirements":3,"deltaScenarios":15}}
+{"type":"started","timestamp":"2026-09-30T14:23:54.750Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"8032280","pid":70547,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"be07f8b"}}
+{"type":"text","timestamp":"2026-09-30T14:23:56.417Z","data":{"text":"I'll start by reading the task file and parent proposal."}}
+{"type":"tokens","timestamp":"2026-09-30T14:23:56.417Z","data":{"promptTokens":1799,"candidateTokens":288,"totalTokens":5287,"cachedTokens":3200,"reasoningTokens":16,"cost":0.0009044999999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:56.419Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:56.420Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/proposal.md"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:56.420Z","data":{"tool":"bash","summary":"ls openspec/changes/120-regressed-report-short/ && echo \"---"}}
+{"type":"text","timestamp":"2026-09-30T14:23:57.837Z","data":{"text":"Let me read previous results, delta specs, and entry files."}}
+{"type":"tokens","timestamp":"2026-09-30T14:23:57.837Z","data":{"promptTokens":2830,"candidateTokens":352,"totalTokens":8430,"cachedTokens":5248,"reasoningTokens":17,"cost":0.0013028879999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:57.839Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/.run/results/1.m"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:57.840Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/.run/results/2.m"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:57.840Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/specs/watcher-an"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:57.841Z","data":{"tool":"read","summary":"openspec/changes/120-regressed-report-short/specs/cli-founda"}}
+{"type":"text","timestamp":"2026-09-30T14:23:59.332Z","data":{"text":"Now let me read the entry files and scope files."}}
+{"type":"tokens","timestamp":"2026-09-30T14:23:59.332Z","data":{"promptTokens":2998,"candidateTokens":231,"totalTokens":11549,"cachedTokens":8320,"reasoningTokens":11,"cost":0.0012265199999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:59.334Z","data":{"tool":"read","summary":"src/core/run/verify-excerpt.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:59.334Z","data":{"tool":"read","summary":"src/core/run/scope-hash.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:23:59.335Z","data":{"tool":"read","summary":"src/watcher/regression.ts"}}
+{"type":"text","timestamp":"2026-09-30T14:24:01.254Z","data":{"text":"Let me read the remaining scope files and tests."}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:01.254Z","data":{"promptTokens":5012,"candidateTokens":340,"totalTokens":16872,"cachedTokens":11520,"reasoningTokens":74,"cost":0.00198072,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:01.256Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:01.256Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:01.257Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"text","timestamp":"2026-09-30T14:24:03.090Z","data":{"text":"Now let me look at the tests and testing helper."}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:03.090Z","data":{"promptTokens":7589,"candidateTokens":215,"totalTokens":24572,"cachedTokens":16768,"reasoningTokens":63,"cost":0.002635308,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:03.092Z","data":{"tool":"read","summary":"tests/auto-recertify.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:03.093Z","data":{"tool":"read","summary":"tests/scope-recertification.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:05.094Z","data":{"promptTokens":10059,"candidateTokens":224,"totalTokens":34731,"cachedTokens":24448,"reasoningTokens":82,"cost":0.0034331879999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:05.095Z","data":{"tool":"read","summary":"tests/retry-recertification.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:05.096Z","data":{"tool":"read","summary":"tests/line-budget.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:07.692Z","data":{"promptTokens":7000,"candidateTokens":529,"totalTokens":42217,"cachedTokens":34688,"reasoningTokens":321,"cost":0.002942928,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:07.693Z","data":{"tool":"read","summary":"tests/function-budget.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:07.695Z","data":{"tool":"read","summary":"tests/verify-excerpt.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:07.696Z","data":{"tool":"read","summary":"src/watcher/auto-recertify.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:14.294Z","data":{"promptTokens":4644,"candidateTokens":1597,"totalTokens":48353,"cachedTokens":42112,"reasoningTokens":1416,"cost":0.003562272,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:14.295Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:21.546Z","data":{"promptTokens":200,"candidateTokens":1551,"totalTokens":50007,"cachedTokens":48256,"reasoningTokens":1375,"cost":0.002210736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:21.547Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:21.548Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:26.480Z","data":{"promptTokens":777,"candidateTokens":997,"totalTokens":51694,"cachedTokens":49920,"reasoningTokens":790,"cost":0.00172902,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:26.481Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:26.481Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:32.811Z","data":{"promptTokens":2681,"candidateTokens":1540,"totalTokens":55805,"cachedTokens":51584,"reasoningTokens":1358,"cost":0.0029618039999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:32.812Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:32.813Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:38.019Z","data":{"promptTokens":638,"candidateTokens":923,"totalTokens":57241,"cachedTokens":55680,"reasoningTokens":786,"cost":0.00163308,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:38.020Z","data":{"tool":"read","summary":"src/watcher/verify.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:38.021Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"text","timestamp":"2026-09-30T14:24:40.094Z","data":{"text":"Let me run the task's verify to see the expected red state, and check baseline tests."}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:40.094Z","data":{"promptTokens":1922,"candidateTokens":263,"totalTokens":59401,"cachedTokens":57216,"reasoningTokens":41,"cost":0.001235496,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:40.096Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:40.097Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"text","timestamp":"2026-09-30T14:24:47.601Z","data":{"text":"Now I'll create the new module."}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:47.601Z","data":{"promptTokens":405,"candidateTokens":1057,"totalTokens":60854,"cachedTokens":59392,"reasoningTokens":454,"cost":0.0017462520000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:47.604Z","data":{"tool":"write","summary":"src/core/run/scope-regression-marker.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:24:47.605Z","data":{"path":"src/core/run/scope-regression-marker.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:51.458Z","data":{"promptTokens":209,"candidateTokens":882,"totalTokens":61763,"cachedTokens":60672,"reasoningTokens":247,"cost":0.001485132,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:51.459Z","data":{"tool":"edit","summary":"src/core/run/scope-hash.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:24:51.465Z","data":{"path":"src/core/run/scope-hash.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:56.190Z","data":{"promptTokens":225,"candidateTokens":903,"totalTokens":62696,"cachedTokens":61568,"reasoningTokens":451,"cost":0.0015205079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:56.191Z","data":{"tool":"edit","summary":"src/watcher/regression.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:24:56.193Z","data":{"path":"src/watcher/regression.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:24:58.522Z","data":{"promptTokens":261,"candidateTokens":433,"totalTokens":63158,"cachedTokens":62464,"reasoningTokens":148,"cost":0.0009726839999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:58.523Z","data":{"tool":"edit","summary":"src/watcher/archiver.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:24:58.524Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:24:58.525Z","data":{"path":"src/watcher/archiver.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:24:58.525Z","data":{"path":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:02.378Z","data":{"promptTokens":235,"candidateTokens":730,"totalTokens":63941,"cachedTokens":62976,"reasoningTokens":587,"cost":0.001324356,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:02.379Z","data":{"tool":"read","summary":"src/core/run/verification.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:02.379Z","data":{"tool":"read","summary":"tests/dead-marker-excerpt.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:15.168Z","data":{"promptTokens":2446,"candidateTokens":4060,"totalTokens":70378,"cachedTokens":63872,"reasoningTokens":2466,"cost":0.005989031999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:15.169Z","data":{"tool":"write","summary":"tests/scope-regression-excerpt.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:25:15.170Z","data":{"path":"tests/scope-regression-excerpt.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:16.570Z","data":{"promptTokens":259,"candidateTokens":122,"totalTokens":70525,"cachedTokens":70144,"reasoningTokens":23,"cost":0.000644964,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:16.571Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:19.577Z","data":{"promptTokens":249,"candidateTokens":354,"totalTokens":71003,"cachedTokens":70400,"reasoningTokens":67,"cost":0.0009219,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:19.578Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:19.578Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:25.673Z","data":{"promptTokens":460,"candidateTokens":383,"totalTokens":71755,"cachedTokens":70912,"reasoningTokens":214,"cost":0.0010230719999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:25.673Z","data":{"tool":"edit","summary":"src/watcher/regression.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:25:25.674Z","data":{"path":"src/watcher/regression.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:27.483Z","data":{"promptTokens":232,"candidateTokens":191,"totalTokens":71975,"cachedTokens":71552,"reasoningTokens":53,"cost":0.0007281119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:27.484Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:32.861Z","data":{"promptTokens":303,"candidateTokens":225,"totalTokens":72464,"cachedTokens":71936,"reasoningTokens":62,"cost":0.000792516,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:32.862Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:40.386Z","data":{"promptTokens":266,"candidateTokens":139,"totalTokens":72597,"cachedTokens":72192,"reasoningTokens":0,"cost":0.000679752,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:40.387Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:42.757Z","data":{"promptTokens":371,"candidateTokens":171,"totalTokens":73118,"cachedTokens":72576,"reasoningTokens":10,"cost":0.000751956,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:42.758Z","data":{"tool":"edit","summary":"tests/scope-regression-excerpt.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:25:42.759Z","data":{"path":"tests/scope-regression-excerpt.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:45.297Z","data":{"promptTokens":188,"candidateTokens":374,"totalTokens":73522,"cachedTokens":72960,"reasoningTokens":211,"cost":0.0009429599999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:45.298Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"text","timestamp":"2026-09-30T14:25:47.844Z","data":{"text":"Now let me run the full proposal verify."}}
+{"type":"tokens","timestamp":"2026-09-30T14:25:47.844Z","data":{"promptTokens":216,"candidateTokens":163,"totalTokens":73723,"cachedTokens":73344,"reasoningTokens":68,"cost":0.000700464,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:25:47.846Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"text","timestamp":"2026-09-30T14:27:09.859Z","data":{"text":"Let me verify the final state of the edited files."}}
+{"type":"tokens","timestamp":"2026-09-30T14:27:09.859Z","data":{"promptTokens":762,"candidateTokens":1465,"totalTokens":75827,"cachedTokens":73600,"reasoningTokens":1245,"cost":0.0024281999999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:27:09.861Z","data":{"tool":"read","summary":"src/core/run/scope-hash.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:27:09.861Z","data":{"tool":"read","summary":"src/core/run/scope-hash.ts"}}
+{"type":"tool","timestamp":"2026-09-30T14:27:09.862Z","data":{"tool":"read","summary":"src/watcher/regression.ts"}}
+{"type":"text","timestamp":"2026-09-30T14:27:13.976Z","data":{"text":"All checks pass. Let me confirm the final line counts and write the result file."}}
+{"type":"tokens","timestamp":"2026-09-30T14:27:13.976Z","data":{"promptTokens":901,"candidateTokens":853,"totalTokens":77530,"cachedTokens":75776,"reasoningTokens":686,"cost":0.001748556,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:27:13.978Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/120-regressed-report-sho"}}
+{"type":"tokens","timestamp":"2026-09-30T14:27:17.094Z","data":{"promptTokens":139,"candidateTokens":640,"totalTokens":78219,"cachedTokens":77440,"reasoningTokens":0,"cost":0.00127434,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T14:27:17.095Z","data":{"tool":"write","summary":"openspec/changes/120-regressed-report-short/.run/results/3.m"}}
+{"type":"file_changed","timestamp":"2026-09-30T14:27:17.097Z","data":{"path":"openspec/changes/120-regressed-report-short/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-09-30T14:27:20.108Z","data":{"text":"Task 3 complete. Summary of what I did:\n\n**Implementation**\n- Created `src/core/run/scope-regression-marker.ts` with `buildScopeRegressionMarker` and `parseActiveStaleTask`, importing `StaleTaskAudit` from `scope-hash.js` as a type only.\n- `buildScopeRegressionMarker` now accepts optional `VerifyExcerptLimits` (defaulting to `DEFAULT_CONFIG.limits`) and uses `excerptVerifyOutput` pointing at the task's `verify_ran` event.\n- `scope-hash.ts` re-exports both functions, so existing importers are unchanged.\n- `ScopeAuditOptions.limits?: OsqConfig['limits']` added; `auditScopeRegressions` forwards it.\n- `guardScopeRegression`, `checkAndArchiveSpec`, and the loop's pre-dispatch audit pass `config.limits`.\n- Added `tests/scope-regression-excerpt.test.ts` covering the 40-line trailing excerpt, the missing line 1, the `Full output:` pointer, the full 100-line `regressed` event, and a `markerOutputLines: 5` override.\n\n**Verification**\n- Task verify: `node --import tsx --test tests/scope-regression-excerpt.test.ts` — 2 pass.\n- Full proposal verify: `pnpm verify` — all typechecks, build, 94 tests, and lint pass.\n- Line/function budgets pass; `scope-hash.ts` is 203 lines and `regression.ts` is exactly 250.\n\n**Deviation** (recorded in the result): the line-budget test uses `split('\\n').length`, so `regression.ts` started at 249; I removed one blank line between two interfaces to fit the two required additions at 250.\n\nResult written to `openspec/changes/120-regressed-report-short/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-30T14:27:20.108Z","data":{"promptTokens":173,"candidateTokens":539,"totalTokens":78792,"cachedTokens":78080,"reasoningTokens":131,"cost":0.00116718,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-30T14:27:20.129Z","data":{"exitCode":0,"pid":70547,"timedOut":false,"elapsedSeconds":205.4}}
+{"type":"verify_ran","timestamp":"2026-09-30T14:27:20.841Z","data":{"command":"node --import tsx --test tests/scope-regression-excerpt.test.ts","exitCode":0,"duration":0.51,"output":"▶ scope regression marker excerpt\n  ✔ holds the last 40 lines and points at the full verify_ran output (142.381803ms)\n  ✔ honors configured marker output lines from the audit options (119.049997ms)\n✔ scope regression marker excerpt (262.375116ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 479.190472\n"}}
+{"type":"measures","timestamp":"2026-09-30T14:28:33.322Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":1327,"repoFiles":1995,"repoLines":230231,"importFanIn":7,"proposalWords":991,"taskWords":341,"deltaRequirements":3,"deltaScenarios":15,"changedFiles":6,"changedLines":237,"scopeHashes":{"src/core/run/scope-hash.ts":{"before":"sha256:95a8535803e53d5823b21abe16d923ffb11c1567a659c3bbf59a77523526f0c6","after":"sha256:1b8b09c7646ef9d57ac0f6bdc0c699fd0f4e7238d6048b921ab8ac4846a4bdb2"},"src/core/run/scope-regression-marker.ts":{"before":null,"after":"sha256:52ef436fcd72760b22f9fc69502555b0e0316670446841babe5150768feb1a81"},"src/watcher/archiver.ts":{"before":"sha256:c7f7805a334e69e28a35e623bd557cf6736a497f228f55089ffec672ea72cd20","after":"sha256:6f9e75a4a5f5a38b02f05b42532830dcef60d5a467527739ef30db0c4f8b7c1a"},"src/watcher/loop.ts":{"before":"sha256:f13d398f357513a51a010ec2148651c2c8f8b91bdab7286b6af8ea3917cd4cee","after":"sha256:9035372353d3d5dbfa4f715b25cdd697fb722c72816942bcc6688c98ba67e1a9"},"src/watcher/regression.ts":{"before":"sha256:b27abe87a2b1645a3b98e9a6fae508be097610a3591d152c31b8d3004e92612c","after":"sha256:614b7dfdf42a73a50d31a5842df3a053bd9dc3c2eeaf347a0bf236f7fdf1e9de"},"tests/scope-regression-excerpt.test.ts":{"before":null,"after":"sha256:0278e645e04b8415d3ce92760ea229cce0ecff473ffc22b111b2299f49bc7099"}}}}
+{"type":"done","timestamp":"2026-09-30T14:28:33.329Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-30T14:33:10.914Z","data":{"command":"node --import tsx --test tests/scope-regression-excerpt.test.ts","exitCode":0,"duration":0.45,"output":"▶ scope regression marker excerpt\n  ✔ holds the last 40 lines and points at the full verify_ran output (136.382814ms)\n  ✔ honors configured marker output lines from the audit options (108.730549ms)\n✔ scope regression marker excerpt (246.017119ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 427.609969\n"}}

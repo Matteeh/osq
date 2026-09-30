@@ -177,7 +177,7 @@ export async function runTask(
       { specFolderPath, taskNumber },
     );
     if (!verifyResult.passed) {
-      return verifyRedFailure(taskData.verify, verifyResult, fail);
+      return verifyRedFailure(taskData.verify, taskNumber, config, verifyResult, fail);
     }
 
     const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config);

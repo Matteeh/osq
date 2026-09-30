@@ -179,6 +179,7 @@ export async function checkAndArchiveSpec(
     specFolderPath,
     eligibleTaskNumbers: await listCanonicalDoneNumbers(runDir),
     verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+    limits: config.limits,
   });
   if (audit.stale.length > 0) {
     return false;

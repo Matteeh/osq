@@ -31,12 +31,12 @@ export interface ScopeRegressionResult {
   recordedHash: string;
   currentHash: string;
 }
-
 export interface ScopeAuditOptions {
   projectRoot: string;
   specFolderPath: string;
   eligibleTaskNumbers: readonly string[];
   verifyTimeoutSeconds: number;
+  limits?: OsqConfig['limits'];
   /** When false, detect and attribute only; never verify or write artifacts. */
   record?: boolean;
 }
@@ -157,7 +157,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       }
     }
     if (gate) {
-      const marker = buildScopeRegressionMarker(audit).replace(
+      const marker = buildScopeRegressionMarker(audit, options.limits).replace(
         '\n---\n',
         `\nrecorded_resolver: ${JSON.stringify(recorded.scopeResolver)}\ncurrent_resolver: ${SCOPE_RESOLVER_VERSION}\n---\n`,
       );
@@ -236,6 +236,7 @@ export async function guardScopeRegression(
     specFolderPath,
     eligibleTaskNumbers: eligible,
     verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+    limits: config.limits,
   });
   const first = audit.stale[0];
   return first

@@ -6,6 +6,7 @@ import { compareNumericPrefix } from '../status/state.js';
 import { resolveScope } from './scope.js';
 
 export { SCOPE_RESOLVER_VERSION } from './scope.js';
+export { buildScopeRegressionMarker, parseActiveStaleTask } from './scope-regression-marker.js';
 
 /** Per-file content hashes plus a single combined digest for a task scope. */
 export interface ScopeHashResult {
@@ -145,49 +146,6 @@ export function attributeScopePaths(
     }
     return { path: entry.display, attribution };
   });
-}
-
-/** Render the structured regression marker body for humans and later retries. */
-export function buildScopeRegressionMarker(input: Omit<StaleTaskAudit, 'alreadyActive'>): string {
-  return [
-    '---',
-    'reason: scope_regression',
-    `task: ${JSON.stringify(input.taskNumber)}`,
-    `recorded_hash: ${JSON.stringify(input.recordedHash)}`,
-    `current_hash: ${JSON.stringify(input.currentHash)}`,
-    `verify_command: ${JSON.stringify(input.verifyCommand)}`,
-    `exit_code: ${input.exitCode}`,
-    `duration: ${input.duration}`,
-    `timed_out: ${input.timedOut}`,
-    `verification_passed: ${input.verificationPassed}`,
-    `attribution: ${JSON.stringify(input.attribution)}`,
-    '---',
-    `Task ${input.taskNumber} scope changed after completion:`,
-    ...input.differingPaths.map((entry) => `- ${entry}`),
-    '',
-    input.output.trim() || '(no output)',
-    '',
-  ].join('\n');
-}
-
-/** Recover a stale task's record from an already-active regression marker. */
-export function parseActiveStaleTask(
-  taskNumber: string,
-  content: string,
-  base: Pick<StaleTaskAudit, 'differingPaths' | 'attribution' | 'recordedHash' | 'currentHash'>,
-): StaleTaskAudit {
-  const { data, body } = parseFrontmatter(content);
-  return {
-    taskNumber,
-    ...base,
-    verifyCommand: typeof data.verify_command === 'string' ? data.verify_command : '',
-    exitCode: typeof data.exit_code === 'number' ? data.exit_code : 1,
-    duration: typeof data.duration === 'number' ? data.duration : 0,
-    output: body.trim(),
-    timedOut: data.timed_out === true,
-    verificationPassed: data.verification_passed === true,
-    alreadyActive: true,
-  };
 }
 
 export interface DoneMarkerInfo {

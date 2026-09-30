@@ -1,4 +1,5 @@
 import type { OsqConfig } from '../core/foundation/config.js';
+import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { parseSpecMdFromFolder } from '../core/spec/parser.js';
 import { type VerificationGateResult, runVerificationGateResult } from './verify.js';
 
@@ -11,9 +12,17 @@ export interface ChangeVerifyFailure {
 
 export type ChangeVerifyOutcome = { ok: true } | ({ ok: false } & ChangeVerifyFailure);
 
-/** Deterministic marker with reason, command, numeric exit code, timeout, output. */
-export function formatChangeVerifyMarker(command: string, result: VerificationGateResult): string {
-  const output = result.output.trim() || '(no output)';
+/** Deterministic marker with reason, command, numeric exit code, timeout, excerpt. */
+export function formatChangeVerifyMarker(
+  command: string,
+  config: OsqConfig,
+  result: VerificationGateResult,
+): string {
+  const excerpt = excerptVerifyOutput(
+    result.output,
+    'the verify_ran event in .run/events/change.jsonl',
+    config.limits,
+  );
   return [
     '---',
     'reason: change_verify_red',
@@ -22,7 +31,7 @@ export function formatChangeVerifyMarker(command: string, result: VerificationGa
     `exit_code: ${result.exitCode}`,
     '---',
     `Change-level verification ${result.timedOut ? 'timed out' : 'failed'} after task verification passed.`,
-    output,
+    excerpt,
     '',
   ].join('\n');
 }
@@ -72,7 +81,7 @@ export async function runChangeVerifyGate(
   const output = result.output.trim() || '(no output)';
   return {
     ok: false,
-    marker: formatChangeVerifyMarker(command, result),
+    marker: formatChangeVerifyMarker(command, config, result),
     error: result.error ?? `Change verify failed: ${output}`,
     ...(result.timedOut ? { extra: 'timed_out: true' } : {}),
   };

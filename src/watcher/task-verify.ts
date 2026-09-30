@@ -1,6 +1,7 @@
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { VerificationResult } from '../core/run/verification.js';
+import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import type { TaskData, VerifyStarts } from '../core/spec/parser.js';
 import { missingNamedPaths } from '../core/spec/verify-paths.js';
 import { formatPreSpawnStart } from '../core/status/pre-spawn-words.js';
@@ -34,12 +35,19 @@ export function isPreSpawnMismatch(
   return expected === 'red' ? passed && missingPaths.length === 0 : !passed;
 }
 
-/** Dead marker for a pre-spawn mismatch: reason, command, expected state, exit, output. */
+/** Dead marker for a pre-spawn mismatch: reason, command, expected state, exit, excerpt. */
 export function formatPreSpawnDeadMarker(
   verifyCommand: string,
   expected: VerifyStarts,
+  taskNumber: string,
+  config: OsqConfig,
   result: VerificationResult,
 ): string {
+  const excerpt = excerptVerifyOutput(
+    result.output,
+    `the verify_ran event in .run/events/${taskNumber}.jsonl`,
+    config.limits,
+  );
   return [
     '---',
     'reason: verify_precondition',
@@ -48,7 +56,7 @@ export function formatPreSpawnDeadMarker(
     `exit_code: ${result.exitCode}`,
     '---',
     `Pre-spawn verify precondition not met (expected ${expected}, exit code ${result.exitCode}):`,
-    result.output,
+    excerpt,
     '',
   ].join('\n');
 }
@@ -107,7 +115,7 @@ export async function runPreSpawnVerify(
   if (mode === 'warn') return { ok: true };
   return {
     ok: false,
-    marker: formatPreSpawnDeadMarker(taskData.verify, expected, result),
+    marker: formatPreSpawnDeadMarker(taskData.verify, expected, taskNumber, config, result),
     error: `Pre-spawn verify precondition not met: expected ${expected}, exit code ${result.exitCode}`,
   };
 }
@@ -171,17 +179,27 @@ export async function checkBlockedFirst(
 }
 
 /**
- * The `verify_red` dead marker and failure result for a failing task verify.
- * The marker text moved here unchanged from `runTask`.
+ * The `verify_red` dead marker and failure result for a failing task verify. A
+ * timed-out run keeps its timeout message; otherwise the marker holds the
+ * excerpt of the gate's output and points at the task's `verify_ran` event.
  */
 export function verifyRedFailure(
   verifyCommand: string,
+  taskNumber: string,
+  config: OsqConfig,
   result: { readonly error?: string; readonly timedOut: boolean },
   fail: FailFn,
 ): Promise<RunTaskResult> {
   const msg = result.error ?? 'Verify command failed';
-  const timeoutLine = result.timedOut ? 'timed_out: true\n' : '';
-  const marker = `---\nreason: verify_red\n${timeoutLine}command: "${verifyCommand}"\n---\nWatcher independent verify ${result.timedOut ? 'timed out' : 'failed'}:\n${msg}\n`;
-  const extra = result.timedOut ? 'timed_out: true' : undefined;
-  return fail('verify_red', marker, `Verify failed: ${msg}`, extra);
+  if (result.timedOut) {
+    const marker = `---\nreason: verify_red\ntimed_out: true\ncommand: "${verifyCommand}"\n---\nWatcher independent verify timed out:\n${msg}\n`;
+    return fail('verify_red', marker, `Verify failed: ${msg}`, 'timed_out: true');
+  }
+  const excerpt = excerptVerifyOutput(
+    msg,
+    `the verify_ran event in .run/events/${taskNumber}.jsonl`,
+    config.limits,
+  );
+  const marker = `---\nreason: verify_red\ncommand: "${verifyCommand}"\n---\nWatcher independent verify failed:\n${excerpt}\n`;
+  return fail('verify_red', marker, `Verify failed: ${excerpt}`);
 }

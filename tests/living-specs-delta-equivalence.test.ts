@@ -176,6 +176,36 @@ function withoutPurposeBlankLine(content: string): string {
   return content.replace(/(## Purpose\n)\n/, '$1');
 }
 
+/**
+ * Compares two texts line by line. Returns null when they are equal, otherwise
+ * a message naming the first differing line and up to three lines of context
+ * around it from each side. Expected lines are prefixed `- ` and actual
+ * lines `+ `, so a failure never prints either whole text.
+ */
+function firstLineDifference(label: string, expected: string, actual: string): string | null {
+  const expectedLines = expected.split('\n');
+  const actualLines = actual.split('\n');
+  const total = Math.max(expectedLines.length, actualLines.length);
+
+  for (let index = 0; index < total; index += 1) {
+    if (expectedLines[index] === actualLines[index]) {
+      continue;
+    }
+
+    const line = index + 1;
+    const lines = [`${label}: first difference at line ${line}`];
+    const start = Math.max(0, index - 3);
+    const end = Math.min(total, index + 4);
+    for (let context = start; context < end; context += 1) {
+      lines.push(`- ${expectedLines[context] ?? ''}`);
+      lines.push(`+ ${actualLines[context] ?? ''}`);
+    }
+    return lines.join('\n');
+  }
+
+  return null;
+}
+
 /** Replays the deterministic merge of every archived delta for one capability. */
 async function replayLivingSpec(capability: string): Promise<string> {
   let base: string | null = null;
@@ -222,15 +252,61 @@ describe('Living spec delta equivalence', () => {
       const expected = await replayLivingSpec(capability);
       const actual = await fs.readFile(path.join(LIVING_SPECS_DIR, capability, 'spec.md'), 'utf8');
 
-      assert.equal(
-        withoutPurposeBlankLine(actual),
-        withoutPurposeBlankLine(expected),
+      const livingMismatch = firstLineDifference(
         `${capability} living spec is not the deterministic merge`,
+        withoutPurposeBlankLine(expected),
+        withoutPurposeBlankLine(actual),
       );
+      if (livingMismatch !== null) {
+        assert.fail(livingMismatch);
+      }
 
       // Replaying twice must be byte-for-byte stable.
-      assert.equal(await replayLivingSpec(capability), expected);
+      const replayMismatch = firstLineDifference(
+        `${capability} replay is not byte-for-byte stable`,
+        expected,
+        await replayLivingSpec(capability),
+      );
+      if (replayMismatch !== null) {
+        assert.fail(replayMismatch);
+      }
     }
+  });
+
+  it('reports one differing line with context from each side', () => {
+    const expectedLines = Array.from({ length: 500 }, (_, index) => `line-${index + 1}`);
+    const actualLines = [...expectedLines];
+    actualLines[249] = 'line-250-changed';
+    const expected = expectedLines.join('\n');
+    const actual = actualLines.join('\n');
+
+    const message = firstLineDifference('spec mismatch', expected, actual);
+    assert.ok(message !== null, 'two differing texts must produce a message');
+
+    const rendered = message.split('\n');
+    assert.ok(message.includes('line 250'), `message must name line 250: ${message}`);
+    for (let line = 247; line <= 253; line += 1) {
+      assert.ok(
+        rendered.includes(`- line-${line}`),
+        `message must hold expected line ${line}: ${message}`,
+      );
+      if (line !== 250) {
+        assert.ok(
+          rendered.includes(`+ line-${line}`),
+          `message must hold actual line ${line}: ${message}`,
+        );
+      }
+    }
+    assert.ok(
+      rendered.includes('+ line-250-changed'),
+      `message must hold the changed actual line: ${message}`,
+    );
+    assert.ok(!rendered.includes('- line-1'), `message must not hold line 1: ${message}`);
+    assert.ok(!rendered.includes('+ line-1'), `message must not hold line 1: ${message}`);
+    assert.ok(!rendered.includes('- line-500'), `message must not hold line 500: ${message}`);
+    assert.ok(!rendered.includes('+ line-500'), `message must not hold line 500: ${message}`);
+
+    assert.equal(firstLineDifference('equal texts', expected, expected), null);
   });
 
   it('preserves requirements introduced by 017 and 020 through 027', async () => {

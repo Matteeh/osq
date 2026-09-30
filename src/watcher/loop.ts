@@ -364,6 +364,7 @@ export async function runWatcherCycle(
           specFolderPath: folderPath,
           eligibleTaskNumbers: earlier,
           verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
+          limits: config.limits,
         });
         for (const recertified of audit.recertified) {
           const paths = audit.recertifiedPaths[recertified] ?? [];
