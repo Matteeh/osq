@@ -12,7 +12,6 @@ import {
   getEventsPath,
   getRegressedMarkerPath,
 } from './layout.js';
-import { readVerification } from './verification.js';
 
 /** The approval evidence: the digest `osq approve` shows. */
 export interface ApprovalCard {
@@ -43,24 +42,18 @@ export interface HaltChangeCard {
 /** The halt card, for a task or a whole change. */
 export type HaltCard = HaltTaskCard | HaltChangeCard;
 
-/** The land evidence: what to land and the message to land it with. */
+/** The land evidence: what to land, the message, the check, and its notes. */
 export interface LandCard {
   readonly kind: 'land';
   readonly goal: string;
   readonly outcomes: readonly string[];
   readonly squash: string | null;
-}
-
-/** The verification evidence: what to check and how it fared. */
-export interface VerifyCard {
-  readonly kind: 'verify';
   readonly check: string | null;
   readonly afterLanding: string;
-  readonly outcome: string | null;
 }
 
 /** The card data for one dispatch item. */
-export type DispatchCard = ApprovalCard | HaltCard | LandCard | VerifyCard;
+export type DispatchCard = ApprovalCard | HaltCard | LandCard;
 
 /** A file's contents, or null when it does not exist. */
 async function readText(target: string): Promise<string | null> {
@@ -160,13 +153,14 @@ async function outcomeLines(folderPath: string): Promise<string[]> {
   return lines;
 }
 
-/** The land evidence: the goal, each outcome line, and the squash message. */
+/** The land evidence: the goal, outcomes, squash message, check, and notes. */
 async function landCard(
   projectRoot: string,
   config: OsqConfig,
   item: DispatchItem,
 ): Promise<LandCard> {
   const spec = await parseSpecMdFromFolder(item.change.folderPath).catch(() => null);
+  const { data, body } = parseFrontmatter(spec?.raw ?? '');
   let squash: string | null = null;
   if (config.vcs?.enabled === true) {
     squash = await buildSquashMessage(projectRoot, config, item.change.id)
@@ -178,20 +172,8 @@ async function landCard(
     goal: spec?.goal ?? '',
     outcomes: await outcomeLines(item.change.folderPath),
     squash,
-  };
-}
-
-/** The verification evidence: the check, the after-landing steps, the outcome. */
-async function verifyCard(item: DispatchItem): Promise<VerifyCard> {
-  const folderPath = item.change.folderPath;
-  const spec = await parseSpecMdFromFolder(folderPath).catch(() => null);
-  const { data, body } = parseFrontmatter(spec?.raw ?? '');
-  const verification = await readVerification(folderPath);
-  return {
-    kind: 'verify',
-    check: readCheckCommand(data) ?? verification.check,
+    check: readCheckCommand(data),
     afterLanding: parseHumanSteps(body).afterLanding,
-    outcome: verification.outcome,
   };
 }
 
@@ -216,7 +198,5 @@ export async function readDispatchCard(
         : haltTaskCard(projectRoot, config, item);
     case 'land':
       return landCard(projectRoot, config, item);
-    case 'verify':
-      return verifyCard(item);
   }
 }

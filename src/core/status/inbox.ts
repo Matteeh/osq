@@ -11,9 +11,7 @@ export type NeedsYouKind =
   | 'approval'
   | 'task-dead'
   | 'task-regressed'
-  | 'change-regressed'
-  | 'verification-pending'
-  | 'verification-failed';
+  | 'change-regressed';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;

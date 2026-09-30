@@ -94,10 +94,11 @@ your complete prompt; read it and follow it exactly.
   includes `osq approve`.
 - Split `## Human steps` into `### Before approval` and `### After landing`, and
   write `None` under one with no steps. A step during the run, such as an
-  expected `osq retry`, goes under Before approval. After-landing steps, or
-  `check: <command>` in the proposal frontmatter, keep the change verification
-  pending after it lands, and its dependents wait, until a human runs
-  `osq verified <id> --passed` or `--failed`.
+  expected `osq retry`, goes under Before approval. After-landing steps are
+  notes for the human, and nothing waits on them. A check osq can run goes in
+  `check: <command>` in the proposal frontmatter. osq runs it after the
+  change-level verify at archive and again when `osq land` merges a newer
+  default branch. A failed check stops the change like a failed verify.
 - Guidance a task needs about another capability's code, such as how to test
   against it, goes into that capability's spec through a delta, not only into the
   task.

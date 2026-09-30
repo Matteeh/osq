@@ -260,28 +260,26 @@ describe('dispatch cards', () => {
     assert.deepEqual(card.output, ['first', 'second']);
   });
 
-  it('verify card holds the check command, after-landing steps, and outcome', async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-card-verify-'));
-    tmpDirs.push(root);
-    await createArchived(root, '004-verify', {
-      verification: { afterLanding: true, check: 'node check.cjs' },
+  it('land card holds the check command and after-landing steps', async () => {
+    const root = await makeRepo();
+    await createArchived(root, '004-checks', {
       check: 'node check.cjs',
       humanSteps: 'Run the manual step.',
-      goal: 'Verify the archived change.',
-      outcome: 'failed',
+      goal: 'Land the checked change.',
     });
     const config = defineConfig({});
 
     const dispatch = await readDispatchItems(root, config);
-    const item = dispatch.items.find((candidate) => candidate.kind === 'verify');
-    assert.ok(item, 'a verify item exists');
+    const item = dispatch.items.find((candidate) => candidate.kind === 'land');
+    assert.ok(item, 'a land item exists');
     const card = await readDispatchCard(root, config, item);
-    assert.equal(card.kind, 'verify');
-    if (card.kind !== 'verify') return;
+    assert.equal(card.kind, 'land');
+    if (card.kind !== 'land') return;
 
+    assert.equal(card.goal, 'Land the checked change.');
     assert.equal(card.check, 'node check.cjs');
     assert.match(card.afterLanding, /Run the manual step\./);
-    assert.equal(card.outcome, 'failed');
+    assert.equal(card.squash, null);
   });
 
   it('land card without vcs holds the goal and outcomes and no squash message', async () => {
@@ -298,6 +296,8 @@ describe('dispatch cards', () => {
 
     assert.equal(card.goal, 'Land the change.');
     assert.deepEqual(card.outcomes, ['[verified] task 1: Task one']);
+    assert.equal(card.check, null);
+    assert.equal(card.afterLanding, '');
     assert.equal(card.squash, null);
   });
 });

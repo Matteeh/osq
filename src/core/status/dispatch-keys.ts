@@ -21,7 +21,7 @@ export interface CardKeys {
   readonly manual: string[];
 }
 
-const MAPPED_VERBS = new Set(['approve', 'retry', 'reject', 'check', 'verified', 'show']);
+const MAPPED_VERBS = new Set(['approve', 'retry', 'reject', 'show']);
 
 /** Split an `osq` command into its arguments without the leading `osq`. */
 function argsOf(command: string): string[] {
@@ -41,25 +41,6 @@ function keysForCommand(command: string): CardKey[] | null {
     case 'reject': {
       const id = command.split(' ')[2] ?? '';
       return [{ key: 'x', label: command, args: ['reject', id, '--reason'], asks: 'reason' }];
-    }
-    case 'check':
-      return [{ key: 'c', label: command, args: argsOf(command), asks: null }];
-    case 'verified': {
-      const id = command.split(' ')[2] ?? '';
-      return [
-        {
-          key: 'p',
-          label: `osq verified ${id} --passed`,
-          args: ['verified', id, '--passed'],
-          asks: null,
-        },
-        {
-          key: 'f',
-          label: `osq verified ${id} --failed`,
-          args: ['verified', id, '--failed'],
-          asks: null,
-        },
-      ];
     }
     default:
       return [{ key: 's', label: command, args: argsOf(command), asks: null }];

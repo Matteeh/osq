@@ -108,34 +108,29 @@ async function createArchived(
 }
 
 describe('dispatch items', () => {
-  it('derives an approval, a halt, and a verify item each with its commands', async () => {
+  it('derives an approval and a halt item each with its commands', async () => {
     await createChange(tmpDir, '001-approval', 'Approval change');
     const dead = await createChange(tmpDir, '002-dead', 'Dead change');
     await approve(dead);
     await writeMarker(dead, '.run/dead/1.md', '---\nreason: verify_red\n---\nboom\n');
-    await createArchived(tmpDir, '003-verify', {
-      verification: { afterLanding: false, check: null },
+    await createArchived(tmpDir, '003-checks', {
+      verification: { afterLanding: true, check: 'node check.cjs' },
     });
 
     const dispatch = await readDispatchItems(tmpDir, defineConfig({}));
 
     assert.deepEqual(
       dispatch.items.map((item) => item.kind),
-      ['approval', 'halt', 'verify'],
+      ['approval', 'halt'],
     );
     assert.deepEqual(
       dispatch.items.map((item) => item.change.id),
-      ['001', '002', '003'],
+      ['001', '002'],
     );
     assert.deepEqual(dispatch.items[0].commands, ['osq approve 001', 'osq show 001']);
     assert.equal(dispatch.items[0].task, null);
     assert.equal(dispatch.items[1].task?.number, '1');
     assert.deepEqual(dispatch.items[1].commands, ['osq retry 002 1', 'osq show 002']);
-    assert.equal(dispatch.items[2].task, null);
-    assert.deepEqual(dispatch.items[2].commands, [
-      'osq verified 003 --passed|--failed',
-      'osq show 003',
-    ]);
     assert.equal(dispatch.watcherIdle, true);
   });
 

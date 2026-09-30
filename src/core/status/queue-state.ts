@@ -3,7 +3,6 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { listChanges } from './change-locations.js';
-import { isVerificationPending } from './dependency-readiness.js';
 import { type QueueItem, readQueue } from './queue-parser.js';
 import {
   type SpecState,
@@ -15,7 +14,6 @@ import {
 
 export type QueueItemState =
   | 'landed'
-  | 'verification-pending'
   | 'dead'
   | 'running'
   | 'approved'
@@ -118,8 +116,7 @@ async function selectAssociation(
   if (archived.length > 1) throw ambiguous(item, archived, 'archived');
   if (active.length > 1) throw ambiguous(item, active, 'active');
   if (archived.length === 1) {
-    const pending = await isVerificationPending(archived[0].folderPath);
-    return { state: pending ? 'verification-pending' : 'landed', selected: archived[0] };
+    return { state: 'landed', selected: archived[0] };
   }
   if (active.length === 1) {
     try {

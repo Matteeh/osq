@@ -27,7 +27,7 @@ artifacts:
         line with `Departs from ADR <n>:`. Write `None` when no ADR governs it.
       - **Contract**: requirements, each with `#### Scenario:` blocks using
         WHEN/THEN bullets.
-      - **Human steps**: everything a task must not do itself, never including `osq approve`, under `### Before approval` and `### After landing`; write `None` when there is nothing. After-landing steps or a `check` command keep the change verification pending until `osq verified`.
+      - **Human steps**: everything a task must not do itself, never including `osq approve`, under `### Before approval` and `### After landing`; write `None` when there is nothing. After-landing steps are notes nothing waits on; a check osq can run goes in `check: <command>`, which osq runs after the change-level verify at archive and at land.
       - **Delta**: one line per delta spec, and any file two tasks share.
 
       Each capability the change adds or modifies needs a delta spec file at

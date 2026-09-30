@@ -130,7 +130,7 @@ describe('osq show next step and verification', () => {
     assert.ok(text.indexOf('Status:') < text.indexOf('Next: landed'));
   });
 
-  it('prints a failed outcome as verification pending with the failing detail', async () => {
+  it('prints a failed outcome as landed with the failing detail in the section', async () => {
     const folderPath = await createArchivedChange(root, '012-archived-failed', 'Archived Failed');
     await writeChangeEvents(folderPath, [
       archivedEvent({ afterLanding: true, check: null }),
@@ -143,26 +143,19 @@ describe('osq show next step and verification', () => {
 
     const details = await getSpecDetails(root, '012', DEFAULT_CONFIG);
     assert.ok(details.next);
-    assert.equal(details.next.state, 'verification-pending');
-    assert.equal(details.next.detail, 'failed');
-    assert.equal(details.next.command, 'osq verified 012 --passed|--failed');
+    assert.deepEqual(details.next, { state: 'landed', command: null, detail: null });
 
     const text = formatSpecDetails(details);
-    assert.equal(
-      formatNextStep(details.next),
-      'verification pending (failed) \u2014 osq verified 012 --passed|--failed',
-    );
-    assert.ok(
-      text.includes(
-        'Next: verification pending (failed) \u2014 osq verified 012 --passed|--failed',
-      ),
-    );
+    assert.equal(formatNextStep(details.next), 'landed');
+    assert.ok(text.includes('Next: landed'));
     assert.ok(
       text.includes('verification_recorded 2026-09-18T09:30:00.000Z: failed (note: broke staging)'),
     );
+    assert.ok(!text.includes('osq check'));
+    assert.ok(!text.includes('osq verified'));
   });
 
-  it('prints each check_ran row and moves the command after a check runs', async () => {
+  it('prints each check_ran row and never a pending command', async () => {
     const folderPath = await createArchivedChange(root, '013-archived-check', 'Archived Check');
     await writeChangeEvents(folderPath, [
       archivedEvent({ afterLanding: false, check: 'node check.cjs' }),
@@ -170,11 +163,10 @@ describe('osq show next step and verification', () => {
 
     const before = await getSpecDetails(root, '013', DEFAULT_CONFIG);
     assert.ok(before.next);
-    assert.equal(before.next.state, 'verification-pending');
-    assert.equal(before.next.command, 'osq check 013');
-    assert.ok(
-      formatSpecDetails(before).includes('Next: verification pending \u2014 osq check 013'),
-    );
+    assert.deepEqual(before.next, { state: 'landed', command: null, detail: null });
+    const beforeText = formatSpecDetails(before);
+    assert.ok(beforeText.includes('Next: landed'));
+    assert.ok(!beforeText.includes('Verification:'));
 
     await fs.appendFile(
       path.join(folderPath, '.run', 'events', 'change.jsonl'),
@@ -194,9 +186,11 @@ describe('osq show next step and verification', () => {
 
     const after = await getSpecDetails(root, '013', DEFAULT_CONFIG);
     assert.ok(after.next);
-    assert.equal(after.next.command, 'osq verified 013 --passed|--failed');
+    assert.deepEqual(after.next, { state: 'landed', command: null, detail: null });
     const text = formatSpecDetails(after);
     assert.ok(text.includes('check_ran 2026-09-18T10:00:00.000Z: node check.cjs (exit 1)'));
+    assert.ok(!text.includes('osq check'));
+    assert.ok(!text.includes('osq verified'));
   });
 
   it('prints the next step for an active unplanned change', async () => {

@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { runVerificationCommand } from '../run/verification.js';
-import { parseFrontmatter } from '../spec/parser.js';
+import { readCheckCommand } from '../spec/human-steps.js';
+import { parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
 import { SyncStop } from './sync-stop.js';
@@ -72,6 +73,7 @@ async function runOne(
   command: string,
   changeFolder: string | null,
   task: string | undefined,
+  kind: 'verify' | 'check' = 'verify',
 ): Promise<void> {
   const result = await runVerificationCommand(
     options.worktreeRoot,
@@ -82,9 +84,11 @@ async function runOne(
   );
   if (result.exitCode !== 0) {
     const subject =
-      task === undefined
-        ? `verify failed on ${worktreeBranch(options.change.folderName)}`
-        : `verify of task ${task} failed on ${worktreeBranch(options.change.folderName)}`;
+      kind === 'check'
+        ? `check failed on ${worktreeBranch(options.change.folderName)}`
+        : task === undefined
+          ? `verify failed on ${worktreeBranch(options.change.folderName)}`
+          : `verify of task ${task} failed on ${worktreeBranch(options.change.folderName)}`;
     throw new SyncStop(
       'sync_failed',
       `${options.change.folderName}: ${subject} merged with ${options.defaultBranch}:\n${outputTail(result.output, options.config.limits.cardOutputLines)}`,
@@ -99,6 +103,13 @@ async function runOne(
   });
 }
 
+/** The proposal's `check` command in the change folder, else null. */
+async function readCheck(changeFolderPath: string): Promise<string | null> {
+  const proposal = await parseSpecMdFromFolder(changeFolderPath).catch(() => null);
+  if (!proposal) return null;
+  return readCheckCommand(parseFrontmatter(proposal.raw).data);
+}
+
 /**
  * Step 5 of the sync: run the proposal's verify for an archived change, or
  * the done tasks' verifies for an active one, record each pass, then append
@@ -108,6 +119,10 @@ export async function runSyncVerify(options: SyncVerifyOptions): Promise<void> {
   if (options.archived) {
     if (options.verifyCommand !== '') {
       await runOne(options, options.verifyCommand, null, undefined);
+    }
+    const check = await readCheck(options.change.folderPath);
+    if (check !== null) {
+      await runOne(options, check, null, undefined, 'check');
     }
   } else {
     for (const task of options.tasks) {

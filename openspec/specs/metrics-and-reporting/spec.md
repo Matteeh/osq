@@ -660,21 +660,6 @@ estimated. No record SHALL be written.
 - **WHEN** such a session's model has no price entry
 - **THEN** it is not estimated and its cost stays unreported
 
-### Requirement: After-landing verification counts
-`osq report` SHALL count archived changes that require verification by their
-latest outcome as `passed`, `failed`, and `pending`, print `After-landing
-checks: <passed> passed, <failed> failed, <pending> pending` in text, and carry
-`history.verification: { passed, failed, pending }` in JSON. When no archived
-change requires verification, it SHALL print neither.
-
-#### Scenario: Mixed outcomes
-- **WHEN** three archived changes require verification, one passed, one failed, and one without an outcome
-- **THEN** the report prints `After-landing checks: 1 passed, 1 failed, 1 pending` and JSON carries the same counts
-
-#### Scenario: No verification required
-- **WHEN** no archived `archived` event carries `verification`
-- **THEN** the text has no `After-landing checks` line and JSON `history` has no `verification` key
-
 ### Requirement: ADR departure flag outcomes
 `osq report` SHALL report `adr_departure` in `approvalFlags.byFlag` after
 `verify_starts_conflict` and before `none`, counting fired and troubled
@@ -901,3 +886,13 @@ unchanged.
 #### Scenario: No living specs
 - **WHEN** a project has no living capability spec
 - **THEN** `coverage` has no `capabilities` key
+
+### Requirement: Report without verification counts
+`osq report` SHALL print no `After-landing checks` line and its JSON `history`
+SHALL have no `verification` key, whatever the archived changes' events hold.
+The `Inbox waiting` section SHALL keep its `verify` kind for wait logs written
+before change 125, though the inbox no longer produces `verify` items.
+
+#### Scenario: Archive with recorded outcomes
+- **WHEN** an archived change's `archived` event carries `verification` and a later `verification_recorded` event records `passed`
+- **THEN** the report text has no `After-landing checks` line and JSON `history` has no `verification` key

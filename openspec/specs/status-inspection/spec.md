@@ -180,18 +180,18 @@ The inbox object SHALL have exactly the top-level array properties `needsYou`,
 
 A needs-you item SHALL contain `kind`, `change: { id, title }`, nullable `task`,
 and `command`. Its kind SHALL be one of `planning`, `approval`, `task-dead`,
-`task-regressed`, `change-regressed`, `verification-pending`, or
-`verification-failed`; only task kinds SHALL carry `task: { number, title }`. A
-`task-dead` item for a stuck task SHALL also carry `stuck: { fingerprint }`; no
-other item carries `stuck`. An approval item whose change has steps before
-approval SHALL also carry `beforeApproval: true`; no other item carries
-`beforeApproval`. A running item SHALL contain `change`, `task`, numeric `pid`,
-ISO `startedAt`, integer non-negative `elapsedSeconds`, and `command`. A landed
-item SHALL contain `change`, ISO `archivedAt`, and `command`. A landed item
-whose tasks disclosed anything SHALL also carry `disclosures: { deviated,
-missingContext, outsideScope }`, the number of tasks with each real section; no
-other landed item carries `disclosures`. Empty groups SHALL be empty arrays and
-JSON output SHALL contain no additional prose or metadata.
+`task-regressed`, or `change-regressed`; only task kinds SHALL carry
+`task: { number, title }`. A `task-dead` item for a stuck task SHALL also carry
+`stuck: { fingerprint }`; no other item carries `stuck`. An approval item whose
+change has steps before approval SHALL also carry `beforeApproval: true`; no
+other item carries `beforeApproval`. A running item SHALL contain `change`,
+`task`, numeric `pid`, ISO `startedAt`, integer non-negative `elapsedSeconds`,
+and `command`. A landed item SHALL contain `change`, ISO `archivedAt`, and
+`command`. A landed item whose tasks disclosed anything SHALL also carry
+`disclosures: { deviated, missingContext, outsideScope }`, the number of tasks
+with each real section; no other landed item carries `disclosures`. Empty
+groups SHALL be empty arrays and JSON output SHALL contain no additional prose
+or metadata.
 
 #### Scenario: JSON contract projection
 - **WHEN** the inbox is serialized for `osq --json`
@@ -212,6 +212,10 @@ JSON output SHALL contain no additional prose or metadata.
 #### Scenario: Steps before approval
 - **WHEN** an unapproved planned change has `### Before approval` steps
 - **THEN** its approval item carries `beforeApproval: true` and every other item's JSON is unchanged
+
+#### Scenario: Archived change with after-landing steps
+- **WHEN** an archived change has `### After landing` steps and a `check` command
+- **THEN** it adds no needs-you item
 
 ### Requirement: Per-project last-look cursor
 Every bare inbox invocation SHALL read and then advance
@@ -294,20 +298,20 @@ Queue state SHALL be derived afresh from `queue_item` and `queue_hash` metadata
 in active, archived, and rejected change briefs plus canonical task markers.
 Unrelated folders SHALL not associate by name alone.
 
-An archived association SHALL derive as landed, or as `verification-pending`
-while its change is verification pending. An active association SHALL derive as
-dead for dead or regressed state, running for running state, approved for any
-other approved state, and planned when unapproved. Rejected history without an
-active or archived association SHALL derive as rejected; no association SHALL
-derive as unplanned. Rows SHALL include the selected change id, all retained
-rejection attempts, unmet queue dependencies, and a changed since planned
-annotation when the selected association's recorded section hash does not equal
-the current section hash.
+An archived association SHALL derive as landed, whatever its proposal's human
+steps and whatever its `archived` event carries. An active association SHALL
+derive as dead for dead or regressed state, running for running state,
+approved for any other approved state, and planned when unapproved. Rejected
+history without an active or archived association SHALL derive as rejected; no
+association SHALL derive as unplanned. Rows SHALL include the selected change
+id, all retained rejection attempts, unmet queue dependencies, and a changed
+since planned annotation when the selected association's recorded section hash
+does not equal the current section hash.
 
 Only a landed archived queue association SHALL satisfy a queue dependency.
-Verification pending, rejected, done-but-unarchived, manually name-matched, and
-missing associations SHALL not land an item. Ambiguous multiple active or
-archived associations SHALL be reported rather than silently selected.
+Rejected, done-but-unarchived, manually name-matched, and missing associations
+SHALL not land an item. Ambiguous multiple active or archived associations
+SHALL be reported rather than silently selected.
 
 #### Scenario: Mixed queue lifecycle
 - **WHEN** current queue items have active, archived, rejected, and absent associations
@@ -318,8 +322,8 @@ archived associations SHALL be reported rather than silently selected.
 - **THEN** inspection reports changed since planned without rewriting or changing the state of the associated change
 
 #### Scenario: Verification pending queue dependency
-- **WHEN** queue item `beta` depends on `alpha`, whose archived change is verification pending
-- **THEN** `alpha` shows as `verification-pending`, `beta` lists `alpha` as unmet, and `osq plan --next` does not select `beta`
+- **WHEN** queue item `beta` depends on `alpha`, whose archived change has `### After landing` steps and an `archived` event that carries `verification`, as archives before change 125 do
+- **THEN** `alpha` shows as `landed`, `beta` lists no unmet dependency, and `osq plan --next` may select `beta`
 
 ### Requirement: Recertification inspection
 `osq show <id>` SHALL derive an ordered recertification view only from typed
@@ -377,14 +381,14 @@ command, detail }` for an active or archived change. Unapproved, it SHALL be
 `unplanned` when its verify is missing or the placeholder, else
 `ready-for-approval`. Approved, it SHALL be `dead` for a dead or regressed task
 or change, `blocked` for unmet dependencies, else `running`. Archived, it SHALL
-be `verification-pending` or `landed`.
+be `landed`.
 
 #### Scenario: Fresh template
 - **WHEN** a change created by `osq plan` still has the placeholder verify
 - **THEN** its next step is `unplanned` with command `osq plan <id>`
 
 #### Scenario: Plain archived change
-- **WHEN** an archived change's `archived` event carries no `verification`
+- **WHEN** an archived change's `archived` event carries `verification: { afterLanding: true, check: null }` and no `verification_recorded` event follows
 - **THEN** its next step is `landed` with a null command
 
 ### Requirement: Next step commands
@@ -392,8 +396,7 @@ The command SHALL be `osq plan <id>` for `unplanned` with `brief.md`, else
 `osq lint <id>`; `osq approve <id>`; `osq show <id>` for `running`;
 `osq retry <id> <n>` for the first dead or regressed task, else
 `osq retry <id> change`; `osq show <dep>` for the first unmet
-dependency; `osq check <id>` while a check has not run since archive, else
-`osq verified <id> --passed|--failed`; and null for `landed`.
+dependency; and null for `landed`.
 
 #### Scenario: Blocked change
 - **WHEN** an approved change depends on 012, which is not landed
@@ -406,46 +409,21 @@ dependency; `osq check <id>` while a check has not run since archive, else
 ### Requirement: Next step detail and format
 `detail` SHALL be `do the steps before approval first` for a
 `ready-for-approval` change with steps before approval, `waiting for <ids>` for
-`blocked`, `failed` for a `verification-pending` change whose latest outcome
-failed, and null otherwise. `formatNextStep` SHALL render the state with spaces
-for hyphens, then ` (<detail>)` when set, then ` — <command>` when set.
+`blocked`, and null otherwise. `formatNextStep` SHALL render the state with
+spaces for hyphens, then ` (<detail>)` when set, then ` — <command>` when set.
 
 #### Scenario: Failed verification
 - **WHEN** an archived change's latest `verification_recorded` outcome is `failed`
-- **THEN** `formatNextStep` renders `verification pending (failed) — osq verified <id> --passed|--failed`
-
-### Requirement: Verification state
-`readVerification(folderPath)` SHALL read an archived change's
-`.run/events/change.jsonl`, skipping malformed lines. A change SHALL require
-verification when its latest `archived` event carries `verification`, and SHALL
-be verification pending while it requires verification and its latest
-`verification_recorded` outcome is not `passed`. `listPendingVerifications`
-SHALL return every pending archived change in numeric order.
-
-#### Scenario: Passed then failed
-- **WHEN** a change records `passed` and later `failed`
-- **THEN** it is verification pending with outcome `failed`
-
-### Requirement: Verification pending dependency
-Runtime dependency resolution SHALL treat an archived dependency as met only
-when it is not verification pending. A pending or failed dependency SHALL keep
-its dependents blocked. An archived dependency whose `archived` event carries no
-`verification` SHALL be met, as before.
-
-#### Scenario: Pending dependency
-- **WHEN** change 013 depends on archived change 012, which is verification pending
-- **THEN** 013 derives as blocked until 012 records `passed`
+- **THEN** `formatNextStep` renders `landed`
 
 ### Requirement: Explicit status with next steps
 `osq status` SHALL keep its task table, archive count, and rejected group, and
-print `  next: <next step>` under each active change. It SHALL list verification
-pending archived changes under `Verification pending:` before `Archived specs`,
-as `<folder>: <title> — <next step>`. It SHALL NOT read or advance last-look
-state.
+print `  next: <next step>` under each active change. It SHALL NOT print a
+`Verification pending:` section. It SHALL NOT read or advance last-look state.
 
 #### Scenario: Full status with next steps
-- **WHEN** a user executes `osq status` with an unplanned change and a pending archived change
-- **THEN** the change's line is followed by `  next: unplanned — osq plan <id>`, the pending change is listed, and no last-look cursor is mutated
+- **WHEN** a user executes `osq status` with an unplanned change and an archived change that has `### After landing` steps
+- **THEN** the change's line is followed by `  next: unplanned — osq plan <id>`, the output has no `Verification pending:` line, and no last-look cursor is mutated
 
 ### Requirement: Planning inbox items
 The inbox SHALL show an unapproved change whose next step is `unplanned` as a
@@ -458,27 +436,22 @@ its text line SHALL read `— do the steps before approval first — osq approve
 - **WHEN** a change still has the placeholder verify
 - **THEN** the inbox lists it as `planning` with `osq plan <id>` and offers no `osq approve <id>`
 
-### Requirement: Verification inbox items
-Every verification pending archived change SHALL add one needs-you item after
-the active items, in numeric order: `verification-failed` when its latest
-outcome failed, else `verification-pending`, with `task: null` and its next-step
-command. The text line SHALL read `— verification pending — <command>` or `—
-verification failed — <command>`.
-
-#### Scenario: Failed outcome in the inbox
-- **WHEN** archived change 012 records `failed`
-- **THEN** the inbox lists a `verification-failed` item for 012 with `osq verified 012 --passed|--failed`
-
 ### Requirement: Show next step
 `osq show <id>` SHALL print `Next: <next step>` after `Status:` for active and
 archived changes, and `--json` SHALL carry `next: { state, command, detail }`.
-For an archived change that requires verification, it SHALL print a
-`Verification:` section with each `check_ran` event's time, command, and exit
-code and each `verification_recorded` event's time, outcome, and note.
+For an archived change whose events hold `check_ran` or
+`verification_recorded`, as older archives may, it SHALL print a
+`Verification:` section, one line per event: a check's time, command, and exit
+code, and an outcome's time, outcome, and note. `--json` SHALL carry them as
+`verification`. Without such events there is neither.
 
 #### Scenario: Archived change with an outcome
-- **WHEN** `osq show 012` runs on an archived change that recorded `passed`
+- **WHEN** `osq show 012` runs on an archived change whose events record `passed`
 - **THEN** it prints `Next: landed` and a `Verification:` section with the outcome
+
+#### Scenario: Archive without verification events
+- **WHEN** `osq show 012` runs on an archived change whose events hold no `check_ran` and no `verification_recorded`
+- **THEN** it prints no `Verification:` line, and `--json` has no `verification` key
 
 ### Requirement: Blocked inbox items
 A `task-dead` inbox item whose task died with reason `blocked` SHALL carry
@@ -698,11 +671,11 @@ checkout's copy, and a folder an older approval left there is not the change.
 ### Requirement: Dispatch items
 `readDispatchItems(projectRoot, config)` SHALL derive, on every call and
 without writing anything, the items that need a human, and a
-`watcherIdle` flag. It SHALL read active changes, their next steps, and
-pending verifications from `getStatusOverview`. Each item SHALL carry its
-kind, the change's id, folder name, title, and folder path, the task number
-and title when there is one, and the commands osq already has for it. The
-items SHALL be in numeric change order, then task order. The kinds are:
+`watcherIdle` flag. It SHALL read active changes and their next steps from
+`getStatusOverview`. Each item SHALL carry its kind, the change's id, folder
+name, title, and folder path, the task number and title when there is one,
+and the commands osq already has for it. The items SHALL be in numeric change
+order, then task order. The kinds are:
 
 - `approval`: an active change whose next step is `ready-for-approval`,
   with commands `osq approve <id>` and `osq show <id>`.
@@ -716,14 +689,12 @@ items SHALL be in numeric change order, then task order. The kinds are:
   one per folder in the project root's archive directory that `Vcs` status
   lists as untracked or modified, itself or any path under it, with command
   `osq show <id>`. Under `NoVcs` there SHALL be no land items.
-- `verify`: one per pending verification, with its next step's command and
-  `osq show <id>`.
 
 `watcherIdle` SHALL be true when no active change's next step is `running`.
 
 #### Scenario: Each kind
-- **WHEN** a project has an unapproved change ready for approval, an approved change with a dead task, and an archived change whose verification is pending
-- **THEN** the items are an `approval`, a `halt` for that task, and a `verify`, each with its commands
+- **WHEN** a project has an unapproved change ready for approval, an approved change with a dead task, and an archived change with `### After landing` steps and a `check` command
+- **THEN** the items are an `approval` and a `halt` for that task, each with its commands, and there is no item for the archived change
 
 #### Scenario: Unplanned draft
 - **WHEN** an unapproved change still has the planning sentinel verify
@@ -787,7 +758,7 @@ there is no log, with `home` defaulting to `os.homedir()`.
 - **THEN** the first item has weight 4 and reason `holds up 3 changes` and comes first
 
 #### Scenario: Idle watcher
-- **WHEN** `watcherIdle` is true and there is a heavy `verify` item and a light `halt` item
+- **WHEN** `watcherIdle` is true and there is a heavy `land` item and a light `halt` item
 - **THEN** the `halt` item comes first with reason `watcher idle; this gives it work`
 
 #### Scenario: Equal items
@@ -819,10 +790,12 @@ for one item:
   the last `limits.cardOutputLines` lines of `.run/regressed/change.md`'s
   body.
 - `land`: the proposal's goal, one outcome line per task as
-  `osq message` writes it, and, with `vcs.enabled`, the message
-  `buildSquashMessage` builds, or its refusal message when it refuses.
-- `verify`: the check command when the change has one, the after-landing
-  steps from the proposal, and the verification outcome so far.
+  `osq message` writes it, with `vcs.enabled` the message
+  `buildSquashMessage` builds, or its refusal message when it refuses, the
+  proposal's `check` command or null, and its `### After landing` steps,
+  empty when it has none. `osq inbox` SHALL print the check as a `check:`
+  line and the steps as an `after landing:` block after the squash message,
+  and neither when it is null or empty.
 
 The marker lines come from files osq already writes with paths relative
 to the project root, and the card SHALL NOT add an absolute path.
@@ -844,8 +817,8 @@ to the project root, and the card SHALL NOT add an absolute path.
 - **THEN** the card holds the goal, one outcome line per task, and the squash message with `Osq-Change` among its trailers
 
 #### Scenario: Verify card
-- **WHEN** an archived change has a `check` command and after-landing steps
-- **THEN** the card holds the check command and the steps
+- **WHEN** a change with a `check` command and `### After landing` steps has archived in its worktree with `vcs.enabled`
+- **THEN** its land card holds the check command and the steps, and `osq inbox` prints them after the squash message
 
 ### Requirement: Inbox sound
 `createInboxSound(projectRoot, config, deps)` SHALL return an object with
@@ -1040,12 +1013,9 @@ item's command order:
 - `osq retry <id> <target>`: `r`.
 - `osq reject <id> --reason <text>`: `x`, which asks `Reason: `; its
   arguments are `reject <id> --reason` and the answer.
-- `osq check <id>`: `c`.
-- `osq verified <id> --passed|--failed`: `p` with `verified <id> --passed`
-  and `f` with `verified <id> --failed`.
 - `osq show <id>`: `s`.
 
-Each key SHALL carry its label (the command with the chosen flag, or with
+Each key SHALL carry its label (the command, or the command with
 `--reason <text>` for reject) and its argument list without the leading
 `osq`. A command that does not start with `osq `, or whose verb is not in
 this list, SHALL be returned among `manual` commands, unchanged.
@@ -1067,8 +1037,8 @@ export `formatDispatchCardBody(item, card)`, the card lines before
 - **THEN** it returns `r`, `x` asking `Reason: `, and `s`
 
 #### Scenario: Verify keys
-- **WHEN** `cardKeys` runs on a verify item without a check command
-- **THEN** it returns `p` with `verified <id> --passed`, `f` with `verified <id> --failed`, and `s`
+- **WHEN** `cardKeys` runs on an item whose commands are `osq check 012`, `osq verified 012 --passed|--failed`, and `osq show 012`
+- **THEN** it returns only `s`, and both other commands are manual
 
 #### Scenario: Land in a worktree
 - **WHEN** `cardKeys` runs on a land item archived in a worktree
@@ -1304,3 +1274,14 @@ line.
 #### Scenario: Stop cleared by a later sync
 - **WHEN** a change has a `sync_stopped` event followed by a `synced` event
 - **THEN** status prints only the `last sync:` line, and the overview has no `lastSyncStop`
+
+### Requirement: Show after-landing notes
+For an active or archived change whose proposal has `### After landing` steps,
+`osq show <id>` SHALL print `After landing:` after the `Verification:`
+section's place, then each line of the steps indented by two spaces, and
+`--json` SHALL carry the steps' text as `afterLanding`. A change without such
+steps SHALL have neither.
+
+#### Scenario: After-landing notes
+- **WHEN** `osq show 012` runs on an archived change whose `### After landing` reads `- Tell support the export moved.`
+- **THEN** it prints `After landing:` followed by `  - Tell support the export moved.`, and `--json` carries that text as `afterLanding`

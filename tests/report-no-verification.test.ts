@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 async function tempRoot(): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-report-verification-'));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-report-no-verification-'));
   tmpDirs.push(root);
   await fs.mkdir(path.join(root, 'openspec', 'changes'), { recursive: true });
   return root;
@@ -69,8 +69,8 @@ async function writeArchived(
   return folderPath;
 }
 
-describe('report after-landing verification counts', () => {
-  it('counts mixed outcomes and carries the same counts in text and JSON', async () => {
+describe('report without verification counts', () => {
+  it('prints no After-landing checks line and no JSON history.verification for archives with recorded outcomes', async () => {
     const root = await tempRoot();
     await writeArchived(root, '001-passed', {
       verification: { afterLanding: true, check: null },
@@ -89,7 +89,7 @@ describe('report after-landing verification counts', () => {
       config: DEFAULT_CONFIG,
       stdout: () => {},
     });
-    assert.ok(text.includes('After-landing checks: 1 passed, 1 failed, 1 pending'), text);
+    assert.equal(text.includes('After-landing checks'), false, text);
 
     const raw = await reportCommand({
       cwd: root,
@@ -97,11 +97,11 @@ describe('report after-landing verification counts', () => {
       json: true,
       stdout: () => {},
     });
-    const parsed = JSON.parse(raw) as { history: { verification?: unknown } };
-    assert.deepEqual(parsed.history.verification, { passed: 1, failed: 1, pending: 1 });
+    const parsed = JSON.parse(raw) as { history: Record<string, unknown> };
+    assert.equal('verification' in parsed.history, false);
   });
 
-  it('prints no line and no JSON key when no archived change requires verification', async () => {
+  it('prints no line and no JSON key when no archived change carries verification', async () => {
     const root = await tempRoot();
     await writeArchived(root, '001-plain');
 

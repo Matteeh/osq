@@ -315,7 +315,11 @@ not committed before the sync then survive a stop:
    worktree through `runVerificationCommand`, with no `OSQ_CHANGE`, bounded by
    `timeouts.verifyTimeoutSeconds`. A failure SHALL abort the merge and stop
    with `<folder>: verify failed on osq/<folder> merged with <default branch>:`
-   and the last `limits.cardOutputLines` lines of its output. For an active
+   and the last `limits.cardOutputLines` lines of its output. It SHALL then run
+   the proposal's `check` command, when `readCheckCommand` finds one, the same
+   way, and a failure SHALL abort the merge and stop with `<folder>: check
+   failed on osq/<folder> merged with <default branch>:` and the same tail.
+   The check SHALL run after the verify and before the `synced` event. For an active
    change, it SHALL instead run, in task order, the `verify` of every task
    whose `.run/done/<n>` marker exists and does not carry `manual: true`,
    through `runVerificationCommand` with `OSQ_CHANGE` set to the change folder
@@ -386,6 +390,14 @@ not committed before the sync then survive a stop:
 #### Scenario: Stacked dependent after its dependency landed
 - **WHEN** `002` was cut from `001`'s archive commit and is active, the default branch then moved, and `001` landed through `osq land`, whose sync appended to `001`'s archived `.run/events/change.jsonl`
 - **THEN** the sync of `002` commits `osq: 002 sync main`, `001`'s archive folder on `002`'s branch equals the default branch's copy, and no file on the branch holds a conflict marker
+
+#### Scenario: Red check after the merge
+- **WHEN** an archived change's proposal has `check: node check.cjs`, its `verify` passes on the merged tree, and `node check.cjs` exits 1 after printing `smoke failed`
+- **THEN** the sync throws a `SyncStop` with reason `sync_failed` whose message holds `check failed on osq/<folder>` and `smoke failed`, and the worktree's HEAD and status are unchanged
+
+#### Scenario: Sync records its check
+- **WHEN** an archived change's proposal has `check: node check.cjs`, the sync merges, and both its `verify` and its check pass
+- **THEN** the sync commit's `.run/events/change.jsonl` ends with a `verify_ran` event for the verify, a `verify_ran` event whose command is `node check.cjs`, then a `synced` event
 
 ### Requirement: Land refusals
 `landChange` in `src/core/vcs/land.ts` SHALL refuse, writing nothing, in this

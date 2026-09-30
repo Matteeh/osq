@@ -39,37 +39,6 @@ async function createChange(
   return dir;
 }
 
-async function createArchived(
-  root: string,
-  folderName: string,
-  title: string,
-  verification?: { afterLanding: boolean; check: string | null },
-  outcome?: 'passed' | 'failed',
-): Promise<string> {
-  const dir = path.join(root, 'openspec', 'changes', 'archive', folderName);
-  await fs.mkdir(path.join(dir, '.run', 'events'), { recursive: true });
-  await fs.writeFile(path.join(dir, 'proposal.md'), proposalMd(title), 'utf8');
-  const data = verification ? { archivePath: dir, verification } : { archivePath: dir };
-  const events = [
-    JSON.stringify({ type: 'archived', timestamp: '2026-01-01T00:00:01.000Z', data }),
-  ];
-  if (outcome) {
-    events.push(
-      JSON.stringify({
-        type: 'verification_recorded',
-        timestamp: '2026-01-02T00:00:01.000Z',
-        data: { outcome, note: null },
-      }),
-    );
-  }
-  await fs.writeFile(
-    path.join(dir, '.run', 'events', 'change.jsonl'),
-    `${events.join('\n')}\n`,
-    'utf8',
-  );
-  return dir;
-}
-
 let project: string;
 let home: string;
 
@@ -169,71 +138,9 @@ describe('steps before approval', () => {
   });
 });
 
-describe('verification inbox items', () => {
-  it('lists pending and failed archived changes after the active items', async () => {
-    await createChange(project, '001-template', 'Template change');
-    await createArchived(project, '010-pending', 'Pending change', {
-      afterLanding: true,
-      check: null,
-    });
-    await createArchived(
-      project,
-      '011-failed',
-      'Failed change',
-      { afterLanding: true, check: null },
-      'failed',
-    );
-
-    const inbox = await snapshotInbox(project);
-    assert.deepEqual(
-      inbox.needsYou.map((item) => item.kind),
-      ['planning', 'verification-pending', 'verification-failed'],
-    );
-    assert.deepEqual(
-      inbox.needsYou.map((item) => item.change.id),
-      ['001', '010', '011'],
-    );
-    for (const item of inbox.needsYou.slice(1)) {
-      assert.equal(item.task, null);
-      assert.deepEqual(Object.keys(item), ['kind', 'change', 'task', 'command']);
-    }
-    assert.equal(inbox.needsYou[1].change.title, 'Pending change');
-    assert.equal(inbox.needsYou[1].command, 'osq verified 010 --passed|--failed');
-    assert.equal(inbox.needsYou[2].command, 'osq verified 011 --passed|--failed');
-
-    const text = formatInboxText(await readInbox(project, { config: DEFAULT_CONFIG, home }));
-    assert.ok(
-      text.includes(
-        '  010: Pending change — verification pending — osq verified 010 --passed|--failed',
-      ),
-    );
-    assert.ok(
-      text.includes(
-        '  011: Failed change — verification failed — osq verified 011 --passed|--failed',
-      ),
-    );
-  });
-
-  it('adds no verification item for a passed or unrequired archive', async () => {
-    await createArchived(
-      project,
-      '012-passed',
-      'Passed change',
-      { afterLanding: true, check: null },
-      'passed',
-    );
-    await createArchived(project, '013-plain', 'Plain archive');
-
-    const inbox = await snapshotInbox(project);
-    assert.deepEqual(inbox.needsYou, []);
-  });
-});
-
 describe('planning label', () => {
   it('labels the new needs-you kinds', () => {
     assert.equal(needsYouKindLabel('planning'), 'needs planning');
-    assert.equal(needsYouKindLabel('verification-pending'), 'verification pending');
-    assert.equal(needsYouKindLabel('verification-failed'), 'verification failed');
     assert.equal(needsYouKindLabel('approval'), 'awaiting approval');
   });
 });

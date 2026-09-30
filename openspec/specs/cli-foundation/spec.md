@@ -1152,36 +1152,6 @@ the check list SHALL be unchanged.
 - **WHEN** every model with recorded planning tokens has a price entry, or none recorded tokens
 - **THEN** doctor prints no `planning-prices` line
 
-### Requirement: Check command
-`osq check <id>` SHALL run an archived change's recorded `check` command from
-the project root with `runVerificationCommand` and the verify timeout, append
-one `check_ran` event, print the exit code, output, and next step, and exit 0
-only when the check passed. It SHALL refuse, writing nothing, a change that is
-not archived or has no check command.
-
-#### Scenario: Check runs on request
-- **WHEN** `osq check 012` runs on an archived change with `check: node check.cjs`
-- **THEN** `node check.cjs` runs once and one `check_ran` event records its exit code and output
-
-#### Scenario: No check command
-- **WHEN** `osq check 012` runs on an archived change without a check command
-- **THEN** it exits 1 with an error and appends nothing
-
-### Requirement: Verified command
-`osq verified <id> --passed|--failed [--note <text>]` SHALL require exactly one
-of `--passed` and `--failed`, find an archived change that requires
-verification, append one `verification_recorded` event with its `outcome` and
-`note`, and print the change's next step. It SHALL refuse, writing nothing, any
-other change, and SHALL change nothing else in the archive.
-
-#### Scenario: Passed outcome
-- **WHEN** a human runs `osq verified 012 --passed` on a pending change
-- **THEN** one `verification_recorded` event is appended and it prints `Next: landed`
-
-#### Scenario: Both flags
-- **WHEN** a human runs `osq verified 012 --passed --failed`
-- **THEN** it exits 1 with an error and appends nothing
-
 ### Requirement: Plan handoff next step
 The one line the `osq plan` prompt handoff prints SHALL end with
 ` — next: <next step>` for the change it hands off.
@@ -1207,12 +1177,15 @@ does not exist, `next` SHALL be unset and no `Next:` line SHALL print.
 ### Requirement: Planner human steps guidance
 The planner block and osq schema SHALL tell planners to split `## Human steps`
 into `### Before approval` and `### After landing`, with steps during the run
-under Before approval, and that after-landing steps or a `check` command keep
-the change pending, and dependents waiting, until `osq verified`.
+under Before approval. They SHALL say that after-landing steps are notes that
+nothing waits on, and that a check osq can run goes in `check: <command>` in
+the proposal frontmatter, which osq runs after the change-level verify at
+archive and again when `osq land` merges a newer default branch. Neither
+SHALL name `osq verified`.
 
 #### Scenario: Planner block names the subsections
 - **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
-- **THEN** it names `### Before approval`, `### After landing`, `check: <command>`, and `osq verified`
+- **THEN** it names `### Before approval`, `### After landing`, and `check: <command>`, and does not contain `osq verified`
 
 ### Requirement: Import graph lint limits
 `limits` SHALL carry `importGraphDepth`, default 2, the import levels the
@@ -2075,22 +2048,6 @@ or the next step itself.
 - **WHEN** every file under `src/cli/` is read
 - **THEN** none contains `process.exit(`
 
-### Requirement: Command error output
-`runCli` SHALL catch a `CommandError`, print a non-empty message to stderr,
-then print `Next: <next>` to stdout when `next` is set, and set
-`process.exitCode` to its `exitCode` without ending the process. Any error
-that is neither a `CommandError` nor a `ConfigLoadError` SHALL propagate from
-`runCli` as before. Every command SHALL print the same text on the same
-streams, in the same order, and exit with the same code as before.
-
-#### Scenario: Refusal on the command line
-- **WHEN** `osq show 999` runs in a project without change 999
-- **THEN** stderr holds exactly `Show error: Spec "999" not found in specs or archive`, stdout is empty, the exit code is 1, and `process.exit` is never called
-
-#### Scenario: Failed check
-- **WHEN** `osq check 012` runs a recorded check that exits 3
-- **THEN** stdout holds `Exit code: 3` and the next step, stderr is empty, and the exit code is 1
-
 ### Requirement: Traceability opt-in check
 `src/core/foundation/config-traceability.ts` SHALL export
 `isCapabilityOptedIn(capabilities, capability)`, true when `capabilities` is
@@ -2368,3 +2325,25 @@ it. `tests/git-background-work.test.ts` SHALL enforce the rule.
 #### Scenario: A test script drops the preload
 - **WHEN** a `node --test` invocation in the `test` script of `package.json` does not import `./tests/git-test-env.ts`
 - **THEN** `tests/git-background-work.test.ts` fails, naming the invocation
+
+### Requirement: Command error streams
+`runCli` SHALL catch a `CommandError`, print a non-empty message to stderr,
+then print `Next: <next>` to stdout when `next` is set, and set
+`process.exitCode` to its `exitCode` without ending the process. Any error
+that is neither a `CommandError` nor a `ConfigLoadError` SHALL propagate from
+`runCli` as before. Every command SHALL print the same text on the same
+streams, in the same order, and exit with the same code as before.
+
+#### Scenario: Refusal on the command line
+- **WHEN** `osq show 999` runs in a project without change 999
+- **THEN** stderr holds exactly `Show error: Spec "999" not found in specs or archive`, stdout is empty, the exit code is 1, and `process.exit` is never called
+
+### Requirement: No command records a verification
+osq SHALL register no `check` and no `verified` command. A check osq can run
+is a proposal's `check:` command, which the watcher runs at archive and
+`osq land` runs in its sync. A step osq cannot run is an after-landing note,
+and no command records that a human did it.
+
+#### Scenario: Removed commands
+- **WHEN** `createProgram` builds the CLI
+- **THEN** it has no `check` and no `verified` command

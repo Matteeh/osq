@@ -1411,33 +1411,6 @@ along with `harnessVersion` from the first line of `claude --version`.
 - **WHEN** an adapter supplies no `harnessAuth`
 - **THEN** its `started` event carries no `harnessAuth`
 
-### Requirement: Archived verification requirement
-When an archived change's proposal has after-landing steps or a `check`
-command, its `archived` event SHALL carry `verification: { afterLanding, check
-}`, where `afterLanding` says whether after-landing steps exist and `check` is
-the command or null. Otherwise the event SHALL carry no `verification` key. The
-watcher SHALL archive exactly as before in both cases.
-
-#### Scenario: After-landing steps
-- **WHEN** a change whose `### After landing` lists a step is archived
-- **THEN** its `archived` event carries `verification: { afterLanding: true, check: null }`
-
-#### Scenario: No human steps
-- **WHEN** a change whose `## Human steps` reads `None` and has no `check` is archived
-- **THEN** its `archived` event carries only `archivePath`, as before
-
-### Requirement: Human verification events
-The CLI SHALL append `check_ran` events, with data `command`, `exitCode`,
-`duration`, `timedOut`, and `output`, and `verification_recorded` events, with
-data `outcome` (`passed` or `failed`) and `note` (text or null), only to an
-archived change's `.run/events/change.jsonl`. Their data types SHALL live in
-`src/core/lifecycle/verification-record.ts`, as the `rejected` event's shape
-lives in core.
-
-#### Scenario: Recorded outcome
-- **WHEN** a human records a failed outcome with a note
-- **THEN** the archived change's stream gains one `verification_recorded` event with `outcome: "failed"` and the note
-
 ### Requirement: Import fan-in from the shared graph
 `countImportFanIn` SHALL count the `src/**/*.ts` files outside the scope that
 import a scoped file under `src/`, read from `buildImportGraph`. It SHALL match
@@ -1613,17 +1586,17 @@ environment from "Role environments", the verify role unless the caller names
 prepare, plus `OSQ_CHANGE` set to that path. With null, it SHALL run with
 `OSQ_CHANGE` removed, even when osq's own environment has it. Every watcher
 verify SHALL pass the change folder it runs for: a task's pre-spawn and
-post-exit verify, the change-level verify, the archive-time verifies, and the
-scope-regression audit. So SHALL the recertification verify of `osq retry`.
-The `check` command of an archived change SHALL run with null, because its
-deltas are already in the living spec.
+post-exit verify, the change-level verify, the archive-time verifies and
+check, and the scope-regression audit. So SHALL the recertification verify of
+`osq retry`. A land's sync SHALL run an archived change's verify and `check`
+with null, because its deltas are already in the living spec.
 
 #### Scenario: Task verify sees its change
 - **WHEN** the watcher runs a task whose verify prints `OSQ_CHANGE`
 - **THEN** the recorded `verify_ran` output is the absolute path of the change folder
 
 #### Scenario: Archived check runs without it
-- **WHEN** `osq check` runs an archived change's check command while the shell has `OSQ_CHANGE` set
+- **WHEN** a land's sync runs an archived change's `check` command while osq's environment has `OSQ_CHANGE` set
 - **THEN** the command sees no `OSQ_CHANGE`
 
 ### Requirement: Focused file collection
@@ -2547,8 +2520,8 @@ environment with `buildRoleEnv`, then apply the `OSQ_CHANGE` rule from
 "Change folder in verify environment", then set `extraEnv`. `runPrepare`
 SHALL use the prepare role. Every other caller in `src/` SHALL use the verify
 role and pass the config it holds: task, change, archive, and regression
-verifies, focused runs, mutation checks, the baseline verify, `osq check`,
-retry recertification, and sync verify.
+verifies, a change's `check` command, focused runs, mutation checks, the
+baseline verify, retry recertification, and sync verify.
 
 #### Scenario: Base and OSQ variables pass
 - **WHEN** `buildRoleEnv('verify', { source })` runs with `PATH`, `HOME`, `OSQ_FAKE_MODE`, and `AWS_SECRET_ACCESS_KEY` in the source
@@ -2613,3 +2586,27 @@ frontmatter SHALL stay as it is.
 #### Scenario: Existing agent file keeps its permissions
 - **WHEN** `osq setup` runs with an existing agent file whose frontmatter sets `bash: allow`
 - **THEN** that line is unchanged and only the managed block is refreshed
+
+### Requirement: Change check at archive
+After the change-level verification passes, the watcher SHALL run the
+proposal's `check` command, when `readCheckCommand` finds one, through
+`verifyArchiveStep` with target `change`, as it runs that verify. A check that
+fails, times out, or names a missing path SHALL be handled exactly as a failed
+change-level verify: the living specs go back, the change stays unarchived,
+and `.run/regressed/change.md` records the regression.
+
+#### Scenario: Check passes
+- **WHEN** a change's verify passes and its `check: node check.cjs` exits 0
+- **THEN** the change archives, and `.run/events/change.jsonl` holds a `verify_ran` event whose command is `node check.cjs`
+
+#### Scenario: Check fails
+- **WHEN** a change's verify passes and its `check: node check.cjs` exits 1
+- **THEN** the change stays unarchived, `.run/regressed/change.md` has reason `verify_red` and command `node check.cjs`, and the living specs are what they were before archive began
+
+### Requirement: Archived event without a verification requirement
+The `archived` event SHALL carry only `archivePath`, whatever the proposal's
+human steps and `check` command are.
+
+#### Scenario: After-landing steps
+- **WHEN** a change whose `### After landing` lists a step and whose frontmatter has `check: node check.cjs` is archived
+- **THEN** its `archived` event's data is exactly `{ archivePath }`

@@ -6,12 +6,10 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { createNewSpec } from '../src/core/foundation/new.js';
-import { runCheck } from '../src/core/lifecycle/verification-record.js';
 import { approveSpec } from '../src/core/spec/approve.js';
 import { getArchiveDir } from '../src/core/status/layout.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
-import { archiveSpecFolder } from '../src/watcher/archiver.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
 import { runTask } from '../src/watcher/runner.js';
 import { installFakeValidator } from './helpers.js';
@@ -175,53 +173,6 @@ describe('OSQ_CHANGE in the change-level verify through the watcher cycle', () =
         String(event.data?.output).trim(),
         path.relative(root, folder).split(path.sep).join('/'),
       );
-    }
-  });
-});
-
-describe('OSQ_CHANGE removed from an archived check', () => {
-  let root: string;
-
-  beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-change-env-check-'));
-    await fs.writeFile(path.join(root, 'print-change.cjs'), PRINT_CHANGE, 'utf8');
-  });
-
-  afterEach(async () => {
-    await fs.rm(root, { recursive: true, force: true });
-  });
-
-  it('runs the check with no OSQ_CHANGE while the test process has it set', async () => {
-    const dir = path.join(root, 'openspec', 'changes', '001-check');
-    await fs.mkdir(path.join(dir, 'tasks'), { recursive: true });
-    await fs.writeFile(
-      path.join(dir, 'proposal.md'),
-      [
-        '---',
-        'title: Check environment',
-        'verify: node pass.cjs',
-        'check: node print-change.cjs',
-        '---',
-        '## Goal',
-        'A goal.',
-        '## Human steps',
-        '### After landing',
-        'A step',
-      ].join('\n'),
-      'utf8',
-    );
-    await fs.writeFile(path.join(dir, 'tasks', '1.md'), '# Task\n', 'utf8');
-    const archived = await archiveSpecFolder(root, dir, DEFAULT_CONFIG);
-
-    const previous = process.env.OSQ_CHANGE;
-    process.env.OSQ_CHANGE = archived;
-    try {
-      const result = await runCheck(root, '001', DEFAULT_CONFIG);
-      assert.equal(result.check.exitCode, 0);
-      assert.equal(result.check.output.trim(), '');
-    } finally {
-      if (previous === undefined) Reflect.deleteProperty(process.env, 'OSQ_CHANGE');
-      else process.env.OSQ_CHANGE = previous;
     }
   });
 });

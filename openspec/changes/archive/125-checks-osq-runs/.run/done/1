@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:eb2a6da0abbf32eaaa53d3fede59ccc4eb590b05a06911781835a6de0df7a146"
+build_stamp: "9b67064"
+project_commit: "5ce3d23"
+exit_code: 0
+scope_files: {"src/cli/check.ts":null,"src/cli/index.ts":"sha256:0b58974717bd6552578761237354823d10bd0ddeb56d5b283ec01318158ab13e","src/cli/verified.ts":null,"src/core/lifecycle/verification-record.ts":null,"tests/command-error-verification.test.ts":null,"tests/osq-change-env.test.ts":"sha256:e7f106499a6dc91c2ebaa100b63543a7640886bc5ee24f00954153de03584ed9","tests/verification-commands-removed.test.ts":"sha256:a88f67274a757ababd153df7e33a0c65fa017d55b677077bcc2e67b7ec71d172","tests/verification-record.test.ts":null}
+---
+2026-09-30T21:33:12.639Z

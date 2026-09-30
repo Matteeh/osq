@@ -33,11 +33,6 @@ import {
 } from './record-estimates.js';
 import { type ReworkEntry, collectRework, formatRework } from './record-rework.js';
 import {
-  type VerificationCounts,
-  collectVerificationCounts,
-  formatVerificationCounts,
-} from './record-verification.js';
-import {
   type DependencyEntry,
   collectDependencies,
   formatDependencies,
@@ -227,11 +222,6 @@ export interface HistoryMetrics {
    * Absent when no task stream holds a `dependencies_added` event.
    */
   readonly dependencies?: readonly DependencyEntry[];
-  /**
-   * After-landing verification counts by latest outcome. Absent when no
-   * archived change requires verification.
-   */
-  readonly verification?: VerificationCounts;
 }
 
 /**
@@ -1386,7 +1376,6 @@ export async function getMetricsReport(
   const approvalFlags = await collectApprovalFlagOutcomes(allSpecFolders, rework);
   const disclosures = await collectDisclosures(allSpecFolders);
   const dependencies = await collectDependencies(allSpecFolders);
-  const verification = await collectVerificationCounts(archivedFolders);
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
   const traceability = await collectTraceabilityGaps(projectRoot, config);
   const mutation = await collectMutationScores(allSpecFolders, config);
@@ -1475,7 +1464,6 @@ export async function getMetricsReport(
       rework,
       disclosures,
       ...(dependencies.length > 0 ? { dependencies } : {}),
-      ...(verification ? { verification } : {}),
     },
     coverage: {
       withEvents: withEventsCount,
@@ -1834,10 +1822,6 @@ export function formatMetricsReport(
   if ((report.history.dependencies ?? []).length > 0) {
     lines.push(...formatDependencies(report.history.dependencies ?? []));
   }
-  if (report.history.verification) {
-    lines.push(formatVerificationCounts(report.history.verification));
-  }
-
   const scopeSeries = report.history.sizes.scopeFileSeries;
   const legacySeries = scopeSeries.find((entry) => entry.resolver === 'legacy');
   const resolver2Series = scopeSeries.find((entry) => entry.resolver === 'resolver-2');

@@ -1,11 +1,5 @@
 import { formatApprovalDigest } from '../spec/digest-format.js';
-import type {
-  ApprovalCard,
-  DispatchCard,
-  HaltCard,
-  LandCard,
-  VerifyCard,
-} from './dispatch-cards.js';
+import type { ApprovalCard, DispatchCard, HaltCard, LandCard } from './dispatch-cards.js';
 import type { OrderedDispatchItem } from './dispatch-order.js';
 import type { DispatchPreview } from './dispatch.js';
 
@@ -45,21 +39,14 @@ function haltLines(card: HaltCard): string[] {
   return [...scalar('reason', card.reason), ...listBlock('output', card.output)];
 }
 
-/** The land evidence: goal, outcome lines, and the squash message. */
+/** The land evidence: goal, outcomes, squash, the check, and its notes. */
 function landLines(card: LandCard): string[] {
   return [
     ...scalar('goal', card.goal),
     ...listBlock('outcomes', card.outcomes),
     ...block('squash', card.squash ?? ''),
-  ];
-}
-
-/** The verification evidence: check, after-landing steps, and outcome. */
-function verifyLines(card: VerifyCard): string[] {
-  return [
     ...scalar('check', card.check),
     ...block('after landing', card.afterLanding),
-    ...scalar('outcome', card.outcome),
   ];
 }
 
@@ -75,9 +62,6 @@ export function formatDispatchCardBody(item: OrderedDispatchItem, card: Dispatch
       break;
     case 'land':
       lines.push(...landLines(card));
-      break;
-    case 'verify':
-      lines.push(...verifyLines(card));
       break;
   }
   return lines;

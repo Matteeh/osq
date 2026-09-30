@@ -1,13 +1,11 @@
-import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
-import { changeTrees } from './change-locations.js';
 import { findLandCandidates } from './dispatch-land.js';
 import { type SpecState, type TaskState, compareNumericPrefix } from './state.js';
-import { type StatusOverview, getStatusOverview } from './status.js';
+import { getStatusOverview } from './status.js';
 
-/** The four things that can need a human. */
-export type DispatchKind = 'approval' | 'halt' | 'land' | 'verify';
+/** The three things that can need a human. */
+export type DispatchKind = 'approval' | 'halt' | 'land';
 
 /** The change one dispatch item names. */
 export interface DispatchChangeRef {
@@ -37,7 +35,7 @@ export interface Dispatch {
   readonly items: DispatchItem[];
 }
 
-const KIND_RANK: Record<DispatchKind, number> = { approval: 0, halt: 1, land: 2, verify: 3 };
+const KIND_RANK: Record<DispatchKind, number> = { approval: 0, halt: 1, land: 2 };
 const REASON_PLACEHOLDER = '--reason <text>';
 
 function changeId(folderName: string): string {
@@ -122,35 +120,6 @@ async function landItems(projectRoot: string, config: OsqConfig): Promise<Dispat
   return items;
 }
 
-/** One verify item per pending verification, from the overview and the archive path. */
-async function verifyItems(
-  projectRoot: string,
-  config: OsqConfig,
-  overview: StatusOverview,
-): Promise<DispatchItem[]> {
-  const pending = overview.pendingVerifications ?? [];
-  if (pending.length === 0) return [];
-  const [tree] = await changeTrees(projectRoot, config);
-  const items: DispatchItem[] = [];
-  for (const entry of pending) {
-    const id = changeId(entry.folderName);
-    items.push({
-      kind: 'verify',
-      change: {
-        id,
-        folder: entry.folderName,
-        title: entry.title || entry.folderName,
-        folderPath: path.join(tree.archiveDir, entry.folderName),
-      },
-      task: null,
-      commands: [entry.next.command, `osq show ${id}`].filter(
-        (command): command is string => command !== null,
-      ),
-    });
-  }
-  return items;
-}
-
 /** Numeric change order, then task order, a change-level item before its tasks. */
 function compareItems(a: DispatchItem, b: DispatchItem): number {
   const byChange = compareNumericPrefix(a.change.id, b.change.id);
@@ -183,7 +152,6 @@ export async function readDispatchItems(
     items.push(...haltItems(spec));
   }
   items.push(...(await landItems(projectRoot, config)));
-  items.push(...(await verifyItems(projectRoot, config, overview)));
   items.sort(compareItems);
   return {
     watcherIdle: !Object.values(nextSteps).some((next) => next.state === 'running'),

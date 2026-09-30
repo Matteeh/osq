@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
-import { changeTrees, listChanges } from './change-locations.js';
+import { listChanges } from './change-locations.js';
 import {
   type LastSync,
   type LastSyncStop,
@@ -11,7 +11,6 @@ import {
 import { getRejectedMarkerPath } from './layout.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
-import { listPendingVerifications } from './verification.js';
 
 /** Where a change runs when it has its own worktree. */
 export interface ChangeWorktree {
@@ -44,8 +43,6 @@ export interface StatusOverview {
   nextSteps?: Record<string, NextStep>;
   /** Worktree path for each change running in a worktree. */
   worktrees?: Record<string, ChangeWorktree>;
-  /** Archived changes still awaiting a verification outcome. */
-  pendingVerifications?: Array<{ folderName: string; title: string; next: NextStep }>;
 }
 
 /** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
@@ -86,7 +83,6 @@ export async function getStatusOverview(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<StatusOverview> {
-  const [tree] = await changeTrees(projectRoot, config);
   const active = await listChanges(projectRoot, config, ['active']);
 
   const specs: SpecState[] = [];
@@ -108,14 +104,6 @@ export async function getStatusOverview(
     }
   }
 
-  const pendingVerifications = await Promise.all(
-    (await listPendingVerifications(tree.archiveDir)).map(async (pending) => ({
-      folderName: pending.folderName,
-      title: pending.title,
-      next: await readNextStep(projectRoot, pending.folderPath, config),
-    })),
-  );
-
   const archivedCount = (await listChanges(projectRoot, config, ['archived'])).length;
   const rejected = await readRejectedSummaries(projectRoot, config);
 
@@ -126,7 +114,6 @@ export async function getStatusOverview(
     archivedChangeFolders: archivedCount,
     nextSteps,
     ...(Object.keys(worktrees).length > 0 ? { worktrees } : {}),
-    pendingVerifications,
   };
 }
 
@@ -180,14 +167,6 @@ export function formatStatusOverview(overview: StatusOverview): string {
   }
 
   lines.push('');
-  const pending = overview.pendingVerifications;
-  if (pending && pending.length > 0) {
-    lines.push('Verification pending:');
-    for (const item of pending) {
-      lines.push(`${item.folderName}: ${item.title} — ${formatNextStep(item.next)}`);
-    }
-    lines.push('');
-  }
   lines.push(`Archived specs: ${overview.archivedCount}`);
 
   lines.push('');

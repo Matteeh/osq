@@ -6,6 +6,7 @@ import { type DependencyPair, addedPairs, distinctPairs } from '../report/report
 import { formatDuration } from '../report/report.js';
 import { parseResultSections } from '../report/result-sections.js';
 import { resolveScope } from '../run/scope.js';
+import { parseHumanSteps } from '../spec/human-steps.js';
 import { buildImportGraph } from '../spec/import-graph.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { type ScenarioIndex, buildScenarioIndex } from '../trace/scenario-index.js';
@@ -15,7 +16,6 @@ import { type ChangeLocation, listChanges, locateFolder } from './change-locatio
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { formatPreSpawnStart } from './pre-spawn-words.js';
 import { type SpecStatus, type TaskStatus, deriveSpecState } from './state.js';
-import { readVerification } from './verification.js';
 
 export interface TimelineEvent {
   taskNumber: string;
@@ -126,8 +126,10 @@ export interface SpecDetails {
   timeline: TimelineEvent[];
   /** What the change needs next; absent for rejected changes. */
   next?: NextStep;
-  /** Present only for an archived change that requires verification. */
+  /** Present only for an archived change whose events hold verification rows. */
   verification?: VerificationHistory;
+  /** The proposal's `### After landing` steps; absent when empty. */
+  afterLanding?: string;
 }
 
 function matchesFolder(folderName: string, query: string): boolean {
@@ -272,9 +274,20 @@ export async function getSpecDetails(
 }
 
 /**
- * Attach the change's next step for active and archived folders, and its
- * verification history for an archived folder that requires verification. A
- * rejected folder is returned unchanged, so no next step is invented for it.
+ * The proposal's `### After landing` steps, or an empty string when the folder
+ * has no proposal or no such steps.
+ */
+async function readAfterLanding(folderPath: string): Promise<string> {
+  const specData = await parseSpecMdFromFolder(folderPath).catch(() => null);
+  if (!specData) return '';
+  return parseHumanSteps(parseFrontmatter(specData.raw).body).afterLanding;
+}
+
+/**
+ * Attach the change's next step and after-landing notes for active and archived
+ * folders, and its verification history for an archived folder whose events
+ * hold at least one verification row. A rejected folder is returned unchanged,
+ * so no next step or notes are invented for it.
  */
 async function withNextStep(
   projectRoot: string,
@@ -286,11 +299,17 @@ async function withNextStep(
   if (location === 'rejected') return details;
 
   const next = await readNextStep(projectRoot, folderPath, config);
-  if (location !== 'archived') return { ...details, next };
+  const afterLanding = await readAfterLanding(folderPath);
+  const base: SpecDetails = {
+    ...details,
+    next,
+    ...(afterLanding ? { afterLanding } : {}),
+  };
+  if (location !== 'archived') return base;
 
-  const verification = await readVerification(folderPath);
-  if (!verification.required) return { ...details, next };
-  return { ...details, next, verification: buildVerificationHistory(details.timeline) };
+  const verification = buildVerificationHistory(details.timeline);
+  if (verification.checks.length === 0 && verification.outcomes.length === 0) return base;
+  return { ...base, verification };
 }
 
 /** A recorded timestamp when it parses, else `unavailable`. */
@@ -962,6 +981,12 @@ export function formatSpecDetails(details: SpecDetails): string {
   }
   if (details.verification) {
     lines.push(...formatVerificationHistory(details.verification));
+  }
+  if (details.afterLanding) {
+    lines.push('After landing:');
+    for (const afterLine of details.afterLanding.split('\n')) {
+      lines.push(`  ${afterLine}`);
+    }
   }
   lines.push(`Location: ${location}`);
   lines.push(`Approval: ${approval}`);

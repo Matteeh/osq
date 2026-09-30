@@ -4,11 +4,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { listCanonicalDoneNumbers } from '../core/run/scope-hash.js';
 import { applyOpenSpecDeltas } from '../core/spec/apply-deltas.js';
-import {
-  type VerificationRequirement,
-  parseHumanSteps,
-  readCheckCommand,
-} from '../core/spec/human-steps.js';
+import { readCheckCommand } from '../core/spec/human-steps.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
 import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
@@ -64,23 +60,6 @@ async function ensureArchivedTasksTicked(folderPath: string): Promise<void> {
 }
 
 /**
- * The archived verification requirement a proposal declares, or undefined when
- * it has neither after-landing steps nor a `check` command.
- */
-async function readArchivedVerification(
-  folderPath: string,
-): Promise<VerificationRequirement | undefined> {
-  const proposal = await parseSpecMdFromFolder(folderPath).catch(() => null);
-  if (!proposal) return undefined;
-
-  const { data, body } = parseFrontmatter(proposal.raw);
-  const steps = parseHumanSteps(body);
-  const check = readCheckCommand(data);
-  if (steps.afterLanding === '' && check === null) return undefined;
-  return { afterLanding: steps.afterLanding !== '', check };
-}
-
-/**
  * Delete the transient archive record, remove `plan-prompt.md`, move the
  * folder to the canonical archive, and tick every `tasks.md`. The caller has
  * already applied the change's deltas and sidecars.
@@ -93,10 +72,6 @@ async function relocateArchivedSpec(
   // The record is transient; drop it before the move so the archive never
   // holds it.
   await fs.rm(archiveSpecsRecordPath(specFolderPath), { force: true });
-
-  // The proposal's after-landing steps and `check` command must be read before
-  // the folder moves, because the event is stamped after relocation.
-  const verification = await readArchivedVerification(specFolderPath);
 
   // The planning prompt is transient local context, not authored content. Remove
   // it once deltas are applied and only after every verification gate has
@@ -130,9 +105,7 @@ async function relocateArchivedSpec(
   // Only after the folder is relocated and its tasks are projected do we stamp
   // the authoritative archive time. The event is always change-level; it never
   // lands in a numbered task event file.
-  const data: ArchivedEventData & { verification?: VerificationRequirement } = verification
-    ? { archivePath, verification }
-    : { archivePath };
+  const data: ArchivedEventData = { archivePath };
   await appendHarnessEvent(targetPath, 'change', {
     type: 'archived',
     timestamp: new Date().toISOString(),
@@ -201,6 +174,7 @@ export async function checkAndArchiveSpec(
 
   const specData = await parseSpecMdFromFolder(specFolderPath);
   const changeCommand = specData?.verify ?? '';
+  const checkCommand = specData ? readCheckCommand(parseFrontmatter(specData.raw).data) : null;
 
   // The change-level verify must see the tree the archive is about to seal, so
   // the deltas and sidecars go in first.
@@ -209,6 +183,15 @@ export async function checkAndArchiveSpec(
   if (
     changeCommand &&
     !(await verifyArchiveStep(projectRoot, specFolderPath, runDir, config, 'change', changeCommand))
+  ) {
+    await restoreArchiveSpecs(projectRoot, specFolderPath);
+    return false;
+  }
+
+  // The check is a second change-level gate next to the proposal's verify.
+  if (
+    checkCommand &&
+    !(await verifyArchiveStep(projectRoot, specFolderPath, runDir, config, 'change', checkCommand))
   ) {
     await restoreArchiveSpecs(projectRoot, specFolderPath);
     return false;

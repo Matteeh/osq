@@ -90,7 +90,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
 - **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
 - **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files. The watcher writes markers and checkboxes automatically; a human writes the rest through `osq approve`, `osq retry`, and `osq reject`.
-- **Role environments.** osq starts three roles, and none inherits osq's environment. Prepare runs `vcs.prepare`. The agent is the harness process. Verify covers every verify, focused run, mutation check, baseline, and `osq check`. Each role gets `PATH`, `HOME`, the locale, temp-folder, and certificate variables, every `OSQ_` variable, and the names the project lists for it under `confinement.roles.<role>.env`. The agent also gets the model key names its harness reads. Verify and prepare never get those, even when listed. A project whose tests need a variable, such as `DATABASE_URL`, must list it, for example `confinement: { roles: { verify: { env: ['DATABASE_URL'] } } }`. Until then those tests fail. See ADR 007.
+- **Role environments.** osq starts three roles, and none inherits osq's environment. Prepare runs `vcs.prepare`. The agent is the harness process. Verify covers every verify, focused run, mutation check, baseline, and a change's `check` command. Each role gets `PATH`, `HOME`, the locale, temp-folder, and certificate variables, every `OSQ_` variable, and the names the project lists for it under `confinement.roles.<role>.env`. The agent also gets the model key names its harness reads. Verify and prepare never get those, even when listed. A project whose tests need a variable, such as `DATABASE_URL`, must list it, for example `confinement: { roles: { verify: { env: ['DATABASE_URL'] } } }`. Until then those tests fail. See ADR 007.
 
 ## Change folder
 
@@ -125,7 +125,7 @@ A capability may carry a sidecar, `openspec/specs/<capability>/osq.yml`, holding
 
 A new capability's group is declared in `creates`, as a bare name or as `{ name: <name>, group: <group> }`. A bare name has no group, so `capabilities.requireGroups: true` in `osq.config.ts` makes `osq lint` require one: it fails a `creates` entry with no group or group `ungrouped`, and each capability the change writes a delta for that has no living sidecar or one whose group is `ungrouped`, unless the change carries a replacement sidecar with another group. With `requireGroups` off, a bare name in `creates` and a missing sidecar stay silent; osq's own `osq.config.ts` turns it on.
 
-`## Human steps` holds what osq cannot do. Steps under `### Before approval` show in the approval digest and on the inbox's approval item. Steps under `### After landing`, or a `check: <command>` in the frontmatter, leave the change **verification pending** once it archives: changes that depend on it wait until you run `osq check <id>` (for a `check` command) and record the outcome with `osq verified <id> --passed` or `--failed`. `osq status`, `osq show`, and the inbox list pending changes with their next command. Write `None` under a heading with no steps.
+`## Human steps` holds what osq cannot do. Steps under `### Before approval` show in the approval digest and on the inbox's approval item. Steps under `### After landing` are notes printed by `osq show` and the inbox's land card, and nothing waits on them. A `check: <command>` in the frontmatter runs after the change-level verify at archive and again when `osq land` merges a newer default branch; a failed check stops the change like a failed verify, and its result is a `verify_ran` event. Write `None` under a heading with no steps.
 
 `## Surface` lists the user-facing names the change adds, changes, or removes — commands, flags, config keys, frontmatter fields, document sections, dead reasons, and event types; a change with none of those writes `None`.
 
@@ -260,7 +260,7 @@ Lint reads tags only from a `/** ... */` doc comment directly above `export func
 
 A task lists the scenarios its tests prove under `## Scenarios`, one `- <capability>: <scenario name>` bullet each. A listed scenario counts as planned while the task's resolved scope holds a test path, so lint passes before the test exists; once a scoped test names it, only real `scenario(...)` calls count.
 
-The watcher sets `OSQ_CHANGE` to the absolute change folder for every verify, so the helper resolves scenarios from the change's delta while it is still active. `osq check` on an archived change runs without it, because its deltas are already in the living spec.
+The watcher sets `OSQ_CHANGE` to the absolute change folder for every verify, so the helper resolves scenarios from the change's delta while it is still active. A `check` command runs as the change-level verify does, without it on an archived change, because its deltas are already in the living spec.
 
 For an opted-in capability, `osq lint` reports each scenario an ADDED or MODIFIED requirement holds that no scoped test names and that is not planned (`<capability>: no test names scenario "<name>"`), a `@scenario` tag naming a missing scenario (`<fn>: names a scenario the <capability> spec doesn't have: "<name>"`) or one no test covers (`<fn>: no test for "<name>" covers it`), a bad `@adr` tag (`<fn>: ADR <n> doesn't exist or isn't accepted`, `<fn>: ADR <n> doesn't apply to any capability it serves`), and a duplicate scenario name (`<capability>: two scenarios named "<name>"`). For every capability it also lists the tests naming a scenario a MODIFIED or REMOVED requirement changes and warns `<file> names changed scenario "<name>" but no task scopes it with tests.modify: true`. Every finding is a warning under `mode: 'warn'` and an error under `mode: 'require'`.
 
@@ -554,8 +554,6 @@ osq lint [ids...]        validate change folders and OpenSpec artifacts against 
 osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
 osq reject <id>          move an unapproved or failed change intact into rejected history
-osq check <id>           run an archived change's recorded check command
-osq verified <id>        record an after-landing outcome (--passed or --failed, optional --note <text>)
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq message <id>         print an archived change's land commit message

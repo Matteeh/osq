@@ -1,0 +1,113 @@
+{"type":"verify_ran","timestamp":"2026-09-30T21:33:13.613Z","data":{"command":"node --import tsx --test tests/change-check.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/change-check.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/change-check.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-30T21:33:14.271Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":343,"repoFiles":2072,"repoLines":236808,"importFanIn":2,"proposalWords":1418,"taskWords":349,"deltaRequirements":31,"deltaScenarios":75}}
+{"type":"started","timestamp":"2026-09-30T21:33:14.449Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"291c0cd","pid":4512,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"9b67064"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:15.730Z","data":{"promptTokens":6572,"candidateTokens":173,"totalTokens":10073,"cachedTokens":3328,"reasoningTokens":15,"cost":0.002199168,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:15.731Z","data":{"tool":"read","summary":"openspec/changes/125-checks-osq-runs/tasks/2.md"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:15.732Z","data":{"tool":"read","summary":"openspec/changes/125-checks-osq-runs/proposal.md"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:16.947Z","data":{"promptTokens":3189,"candidateTokens":228,"totalTokens":13401,"cachedTokens":9984,"reasoningTokens":33,"cost":0.0012902039999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:16.947Z","data":{"tool":"bash","summary":"ls openspec/changes/125-checks-osq-runs/.run/results/ 2>/dev"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:16.948Z","data":{"tool":"read","summary":"openspec/changes/125-checks-osq-runs/specs/watcher-and-harne"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:17.999Z","data":{"promptTokens":1722,"candidateTokens":191,"totalTokens":15225,"cachedTokens":13312,"reasoningTokens":21,"cost":0.0008256720000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:17.999Z","data":{"tool":"read","summary":"openspec/changes/125-checks-osq-runs/specs/watcher-and-harne"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:18.000Z","data":{"tool":"read","summary":"openspec/changes/125-checks-osq-runs/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:19.077Z","data":{"promptTokens":976,"candidateTokens":177,"totalTokens":16257,"cachedTokens":15104,"reasoningTokens":20,"cost":0.0005958239999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:19.078Z","data":{"tool":"bash","summary":"grep -n \"Default branch sync\" -A 80 openspec/changes/125-che"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:19.078Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:20.244Z","data":{"promptTokens":3706,"candidateTokens":167,"totalTokens":20129,"cachedTokens":16256,"reasoningTokens":23,"cost":0.001409736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:20.245Z","data":{"tool":"read","summary":"src/watcher/archive-verify.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:20.245Z","data":{"tool":"read","summary":"src/core/vcs/sync-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:21.562Z","data":{"promptTokens":2083,"candidateTokens":226,"totalTokens":22405,"cachedTokens":20096,"reasoningTokens":83,"cost":0.001016676,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:21.563Z","data":{"tool":"read","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:21.563Z","data":{"tool":"read","summary":"src/core/spec/human-steps.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:22.698Z","data":{"promptTokens":2829,"candidateTokens":186,"totalTokens":25415,"cachedTokens":22400,"reasoningTokens":43,"cost":0.0012063,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:22.698Z","data":{"tool":"read","summary":"tests/archive-verify-path-missing.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:22.698Z","data":{"tool":"read","summary":"tests/vcs-sync.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:24.323Z","data":{"promptTokens":5584,"candidateTokens":278,"totalTokens":31206,"cachedTokens":25344,"reasoningTokens":73,"cost":0.0021608639999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:24.324Z","data":{"tool":"bash","summary":"wc -l tests/vcs-sync.test.ts src/core/vcs/sync-main.ts src/c"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:24.324Z","data":{"tool":"bash","summary":"cd . && n"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:27.780Z","data":{"promptTokens":268,"candidateTokens":825,"totalTokens":32197,"cachedTokens":31104,"reasoningTokens":750,"cost":0.001257024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:27.780Z","data":{"tool":"read","summary":"src/core/spec/parser.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:34.077Z","data":{"promptTokens":2010,"candidateTokens":1664,"totalTokens":35802,"cachedTokens":32128,"reasoningTokens":1459,"cost":0.002792568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:34.078Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:34.078Z","data":{"tool":"bash","summary":"cd . && l"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:35.358Z","data":{"promptTokens":417,"candidateTokens":167,"totalTokens":36296,"cachedTokens":35712,"reasoningTokens":27,"cost":0.000539772,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:35.358Z","data":{"tool":"read","summary":"tests/archiver.test.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:35.359Z","data":{"tool":"read","summary":"tests/archive-verification.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:36.382Z","data":{"promptTokens":4395,"candidateTokens":96,"totalTokens":40715,"cachedTokens":36224,"reasoningTokens":20,"cost":0.001651044,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:36.383Z","data":{"tool":"read","summary":"tests/archive-verification.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:37.771Z","data":{"promptTokens":3053,"candidateTokens":202,"totalTokens":43959,"cachedTokens":40704,"reasoningTokens":96,"cost":0.001402524,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:37.771Z","data":{"tool":"bash","summary":"cd . && s"}}
+{"type":"text","timestamp":"2026-09-30T21:33:40.958Z","data":{"text":"Now let me implement the archiver changes."}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:40.958Z","data":{"promptTokens":1433,"candidateTokens":959,"totalTokens":46296,"cachedTokens":43904,"reasoningTokens":20,"cost":0.001844124,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:40.959Z","data":{"tool":"edit","summary":"src/watcher/archiver.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T21:33:40.964Z","data":{"path":"src/watcher/archiver.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:44.554Z","data":{"promptTokens":245,"candidateTokens":1141,"totalTokens":47466,"cachedTokens":46080,"reasoningTokens":41,"cost":0.0017191799999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:44.554Z","data":{"tool":"edit","summary":"src/core/vcs/sync-verify.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T21:33:44.555Z","data":{"path":"src/core/vcs/sync-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:45.900Z","data":{"promptTokens":136,"candidateTokens":184,"totalTokens":47680,"cachedTokens":47360,"reasoningTokens":57,"cost":0.00054576,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:45.900Z","data":{"tool":"bash","summary":"cd . && w"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:52.625Z","data":{"promptTokens":1852,"candidateTokens":388,"totalTokens":49856,"cachedTokens":47616,"reasoningTokens":209,"cost":0.0013068959999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:52.626Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:52.626Z","data":{"tool":"read","summary":"src/core/status/state.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:54.015Z","data":{"promptTokens":1568,"candidateTokens":179,"totalTokens":51539,"cachedTokens":49792,"reasoningTokens":103,"cost":0.000983952,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:54.016Z","data":{"tool":"read","summary":"src/watcher/regression.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:55.693Z","data":{"promptTokens":1948,"candidateTokens":271,"totalTokens":53675,"cachedTokens":51456,"reasoningTokens":193,"cost":0.001218336,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:55.693Z","data":{"tool":"read","summary":"src/watcher/archive-specs.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:33:59.644Z","data":{"promptTokens":994,"candidateTokens":712,"totalTokens":55338,"cachedTokens":53632,"reasoningTokens":636,"cost":0.001474392,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:33:59.645Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:02.517Z","data":{"promptTokens":1132,"candidateTokens":500,"totalTokens":56928,"cachedTokens":55296,"reasoningTokens":425,"cost":0.0012713759999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:02.517Z","data":{"tool":"read","summary":"src/core/status/state.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:06.790Z","data":{"promptTokens":599,"candidateTokens":799,"totalTokens":58230,"cachedTokens":56832,"reasoningTokens":722,"cost":0.001479492,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:06.791Z","data":{"tool":"read","summary":"src/watcher/archive-sidecars.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:10.967Z","data":{"promptTokens":823,"candidateTokens":799,"totalTokens":59734,"cachedTokens":58112,"reasoningTokens":707,"cost":0.001554372,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:10.968Z","data":{"tool":"bash","summary":"cd . && s"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:12.703Z","data":{"promptTokens":829,"candidateTokens":224,"totalTokens":60701,"cachedTokens":59648,"reasoningTokens":58,"cost":0.000875388,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:12.703Z","data":{"tool":"read","summary":"src/core/vcs/sync-stop.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:12.704Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:16.933Z","data":{"promptTokens":458,"candidateTokens":780,"totalTokens":61910,"cachedTokens":60672,"reasoningTokens":581,"cost":0.001437432,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:16.933Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:16.934Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:20.982Z","data":{"promptTokens":565,"candidateTokens":939,"totalTokens":63328,"cachedTokens":61824,"reasoningTokens":766,"cost":0.0016672439999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:20.983Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:20.983Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:27.270Z","data":{"promptTokens":1072,"candidateTokens":1353,"totalTokens":65657,"cachedTokens":63232,"reasoningTokens":1177,"cost":0.002324592,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:27.270Z","data":{"tool":"bash","summary":"cd . && s"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:27.271Z","data":{"tool":"bash","summary":"cd . && s"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:28.627Z","data":{"promptTokens":1371,"candidateTokens":148,"totalTokens":67055,"cachedTokens":65536,"reasoningTokens":54,"cost":0.000982116,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:28.627Z","data":{"tool":"bash","summary":"cd . && s"}}
+{"type":"text","timestamp":"2026-09-30T21:34:39.405Z","data":{"text":"Now let me write the test file."}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:39.405Z","data":{"promptTokens":697,"candidateTokens":3661,"totalTokens":71302,"cachedTokens":66944,"reasoningTokens":156,"cost":0.0050039640000000005,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:39.406Z","data":{"tool":"write","summary":"tests/change-check.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T21:34:39.407Z","data":{"path":"tests/change-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:40.864Z","data":{"promptTokens":156,"candidateTokens":120,"totalTokens":71444,"cachedTokens":71168,"reasoningTokens":23,"cost":0.000617808,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:40.864Z","data":{"tool":"bash","summary":"cd . && n"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:43.815Z","data":{"promptTokens":252,"candidateTokens":243,"totalTokens":71919,"cachedTokens":71424,"reasoningTokens":140,"cost":0.0007957439999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:43.816Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:46.681Z","data":{"promptTokens":1310,"candidateTokens":548,"totalTokens":73666,"cachedTokens":71808,"reasoningTokens":474,"cost":0.0014814479999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:46.681Z","data":{"tool":"read","summary":"tests/archiver.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:48.639Z","data":{"promptTokens":1430,"candidateTokens":319,"totalTokens":75349,"cachedTokens":73600,"reasoningTokens":112,"cost":0.0012534,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:48.639Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:48.640Z","data":{"tool":"bash","summary":"cd . && r"}}
+{"type":"tokens","timestamp":"2026-09-30T21:34:50.857Z","data":{"promptTokens":1641,"candidateTokens":300,"totalTokens":77205,"cachedTokens":75264,"reasoningTokens":212,"cost":0.001303884,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:34:50.857Z","data":{"tool":"bash","summary":"cd . && p"}}
+{"type":"tokens","timestamp":"2026-09-30T21:35:54.369Z","data":{"promptTokens":1277,"candidateTokens":207,"totalTokens":78668,"cachedTokens":77184,"reasoningTokens":111,"cost":0.0010946039999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:35:54.370Z","data":{"tool":"bash","summary":"cd . && n"}}
+{"type":"tokens","timestamp":"2026-09-30T21:35:55.923Z","data":{"promptTokens":230,"candidateTokens":131,"totalTokens":78825,"cachedTokens":78464,"reasoningTokens":34,"cost":0.000696984,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:35:55.923Z","data":{"tool":"bash","summary":"cd . && n"}}
+{"type":"tokens","timestamp":"2026-09-30T21:35:58.174Z","data":{"promptTokens":290,"candidateTokens":88,"totalTokens":79098,"cachedTokens":78720,"reasoningTokens":0,"cost":0.0006649199999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:35:58.175Z","data":{"tool":"bash","summary":"cd . && p"}}
+{"type":"tokens","timestamp":"2026-09-30T21:36:58.141Z","data":{"promptTokens":858,"candidateTokens":313,"totalTokens":80147,"cachedTokens":78976,"reasoningTokens":167,"cost":0.0011068559999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:36:58.142Z","data":{"tool":"bash","summary":"cd . && p"}}
+{"type":"tokens","timestamp":"2026-09-30T21:38:02.210Z","data":{"promptTokens":690,"candidateTokens":497,"totalTokens":81315,"cachedTokens":80128,"reasoningTokens":354,"cost":0.001284168,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:38:02.211Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tool","timestamp":"2026-09-30T21:38:02.211Z","data":{"tool":"read","summary":"src/core/vcs/sync-verify.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:38:06.101Z","data":{"promptTokens":951,"candidateTokens":879,"totalTokens":83110,"cachedTokens":81280,"reasoningTokens":396,"cost":0.0018277800000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T21:38:06.101Z","data":{"tool":"write","summary":"openspec/changes/125-checks-osq-runs/.run/results/2.md"}}
+{"type":"file_changed","timestamp":"2026-09-30T21:38:06.102Z","data":{"path":"openspec/changes/125-checks-osq-runs/.run/results/2.md"}}
+{"type":"text","timestamp":"2026-09-30T21:38:08.438Z","data":{"text":"Task complete. Summary:\n\n**Changed**\n- `src/watcher/archiver.ts` — removed `readArchivedVerification`/`VerificationRequirement`; `archived` event data is now exactly `{ archivePath }`; `checkAndArchiveSpec` reads the proposal's `check` via `readCheckCommand` and runs it through `verifyArchiveStep` target `change` after the change-level verify, restoring specs and returning false on failure.\n- `src/core/vcs/sync-verify.ts` — added `readCheck` (via `parseSpecMdFromFolder` + `parseFrontmatter` + `readCheckCommand`); `runSyncVerify` runs an archived change's check through `runOne` after the verify and before `synced`, with null change folder; `runOne` gained a `kind` so a red check stops with the `check failed on osq/<folder>` message. `sync-main.ts` untouched.\n- `tests/change-check.test.ts` (new) — covers archive pass/fail/after-landing-event, plus sync red check, check recording order, and `OSQ_CHANGE` absence.\n\n**Verification**\n- Task verify: `node --import tsx --test tests/change-check.test.ts` → 6/6 pass.\n- Proposal verify: `pnpm verify` → exit 0 (typechecks, build, full suite, lint).\n\nResult written to `openspec/changes/125-checks-osq-runs/.run/results/2.md`.\n\nTouched: src/watcher/archiver.ts, src/core/vcs/sync-verify.ts, tests/change-check.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T21:38:08.438Z","data":{"promptTokens":201,"candidateTokens":448,"totalTokens":83593,"cachedTokens":82944,"reasoningTokens":96,"cost":0.0010955639999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-30T21:38:08.460Z","data":{"exitCode":0,"pid":4512,"timedOut":false,"elapsedSeconds":294}}
+{"type":"verify_ran","timestamp":"2026-09-30T21:38:09.475Z","data":{"command":"node --import tsx --test tests/change-check.test.ts","exitCode":0,"duration":0.81,"output":"▶ change check at archive\n  ✔ passes the check after the change-level verify and archives (89.686302ms)\n  ✔ fails the check and leaves the change unarchived with a regression (73.363505ms)\n  ✔ writes only the archive path on an archived event with after-landing steps (65.776281ms)\n✔ change check at archive (229.835924ms)\n▶ change check in a land sync\n  ✔ stops on a red check after the merge without moving HEAD (125.641718ms)\n  ✔ records the check after the verify and before the synced event (122.5422ms)\n  ✔ runs an archived check without the OSQ_CHANGE osq itself holds (119.586067ms)\n✔ change check in a land sync (368.286302ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 786.535715\n"}}
+{"type":"measures","timestamp":"2026-09-30T21:39:18.522Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":343,"repoFiles":2072,"repoLines":236808,"importFanIn":2,"proposalWords":1418,"taskWords":349,"deltaRequirements":31,"deltaScenarios":75,"changedFiles":3,"changedLines":399,"scopeHashes":{"src/core/vcs/sync-verify.ts":{"before":"sha256:fff811c5a5fcf77ac69268973114526a414eabec75ad0b5d395a5c76eb85acb3","after":"sha256:6bc7f23d0e523724812a519a322b592d7b2684bda7b71d5598fa599f555f7b69"},"src/watcher/archiver.ts":{"before":"sha256:6f9e75a4a5f5a38b02f05b42532830dcef60d5a467527739ef30db0c4f8b7c1a","after":"sha256:43c50f70dcc9a12cf0a2071ac7372233e5141737f69d555040e9a3187d1fc462"},"tests/change-check.test.ts":{"before":null,"after":"sha256:5845b1ed9cab4f57473ee0371c8f6bb31f993c219f9bb0343e276368aa5ca7bc"}}}}
+{"type":"done","timestamp":"2026-09-30T21:39:18.526Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-09-30T22:02:12.122Z","data":{"command":"node --import tsx --test tests/change-check.test.ts","exitCode":0,"duration":0.73,"output":"▶ change check at archive\n  ✔ passes the check after the change-level verify and archives (83.647216ms)\n  ✔ fails the check and leaves the change unarchived with a regression (63.069095ms)\n  ✔ writes only the archive path on an archived event with after-landing steps (60.201488ms)\n✔ change check at archive (207.889623ms)\n▶ change check in a land sync\n  ✔ stops on a red check after the merge without moving HEAD (115.526735ms)\n  ✔ records the check after the verify and before the synced event (109.938255ms)\n  ✔ runs an archived check without the OSQ_CHANGE osq itself holds (109.979913ms)\n✔ change check in a land sync (335.790162ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 706.166409\n"}}

@@ -8,7 +8,6 @@ import { parseHumanSteps, readCheckCommand } from '../src/core/spec/human-steps.
 import { readLastLook } from '../src/core/status/inbox-cursor.js';
 import { formatNextStep, readNextStep } from '../src/core/status/next-step.js';
 import { formatStatusOverview, getStatusOverview } from '../src/core/status/status.js';
-import { listPendingVerifications, readVerification } from '../src/core/status/verification.js';
 
 const CONFIG: OsqConfig = DEFAULT_CONFIG;
 const PLACEHOLDER = 'node -e "process.exit(0)"';
@@ -125,10 +124,6 @@ async function createArchived(
   const stream = options.rawStream ?? archivedStream(dir, options);
   await fs.writeFile(path.join(dir, '.run', 'events', 'change.jsonl'), stream, 'utf8');
   return dir;
-}
-
-function archiveDir(root: string): string {
-  return path.join(root, 'openspec', 'changes', 'archive');
 }
 
 let tmpDir: string;
@@ -299,43 +294,16 @@ describe('readNextStep for archived changes', () => {
     assert.equal(formatNextStep(step), 'landed');
   });
 
-  it('asks for the check before an outcome is recorded', async () => {
+  it('names an archived change with an after-landing requirement landed', async () => {
     const dir = await createArchived(tmpDir, '010-check', {
       title: 'Check',
       verification: { afterLanding: true, check: 'node check.cjs' },
     });
     const step = await readNextStep(tmpDir, dir, CONFIG);
-    assert.equal(step.state, 'verification-pending');
-    assert.equal(step.command, 'osq check 010');
-    assert.equal(step.detail, null);
+    assert.deepEqual(step, { state: 'landed', command: null, detail: null });
   });
 
-  it('asks for the outcome once the check has run since archive', async () => {
-    const dir = await createArchived(tmpDir, '011-ran', {
-      title: 'Ran',
-      verification: { afterLanding: true, check: 'node check.cjs' },
-      extraEvents: [
-        {
-          type: 'check_ran',
-          timestamp: '2026-01-02T00:00:00.000Z',
-          data: { command: 'node check.cjs', exitCode: 0 },
-        },
-      ],
-    });
-    const step = await readNextStep(tmpDir, dir, CONFIG);
-    assert.equal(step.command, 'osq verified 011 --passed|--failed');
-  });
-
-  it('asks for the outcome when there is no check command', async () => {
-    const dir = await createArchived(tmpDir, '012-steps', {
-      title: 'Steps',
-      verification: { afterLanding: true, check: null },
-    });
-    const step = await readNextStep(tmpDir, dir, CONFIG);
-    assert.equal(step.command, 'osq verified 012 --passed|--failed');
-  });
-
-  it('reports a failed outcome in the detail and format', async () => {
+  it('names an archived change with a failed outcome landed', async () => {
     const dir = await createArchived(tmpDir, '013-failed', {
       title: 'Failed',
       verification: { afterLanding: false, check: null },
@@ -348,15 +316,11 @@ describe('readNextStep for archived changes', () => {
       ],
     });
     const step = await readNextStep(tmpDir, dir, CONFIG);
-    assert.equal(step.state, 'verification-pending');
-    assert.equal(step.detail, 'failed');
-    assert.equal(
-      formatNextStep(step),
-      'verification pending (failed) — osq verified 013 --passed|--failed',
-    );
+    assert.deepEqual(step, { state: 'landed', command: null, detail: null });
+    assert.equal(formatNextStep(step), 'landed');
   });
 
-  it('treats a passed outcome as landed', async () => {
+  it('names an archived change with a passed outcome landed', async () => {
     const dir = await createArchived(tmpDir, '014-passed', {
       title: 'Passed',
       verification: { afterLanding: true, check: null },
@@ -369,130 +333,12 @@ describe('readNextStep for archived changes', () => {
       ],
     });
     const step = await readNextStep(tmpDir, dir, CONFIG);
-    assert.equal(step.state, 'landed');
-  });
-});
-
-describe('readVerification', () => {
-  it('reads the requirement, latest outcome, and check since archive', async () => {
-    const dir = await createArchived(tmpDir, '020-ver', {
-      title: 'Ver',
-      verification: { afterLanding: true, check: 'node check.cjs' },
-      extraEvents: [
-        {
-          type: 'verification_recorded',
-          timestamp: '2026-01-02T00:00:00.000Z',
-          data: { outcome: 'passed', note: null },
-        },
-        {
-          type: 'verification_recorded',
-          timestamp: '2026-01-03T00:00:00.000Z',
-          data: { outcome: 'failed', note: 'again' },
-        },
-        {
-          type: 'check_ran',
-          timestamp: '2026-01-04T00:00:00.000Z',
-          data: { command: 'node check.cjs', exitCode: 1 },
-        },
-      ],
-    });
-    assert.deepEqual(await readVerification(dir), {
-      required: true,
-      afterLanding: true,
-      check: 'node check.cjs',
-      outcome: 'failed',
-      checkRanSinceArchive: true,
-    });
-  });
-
-  it('skips malformed lines without dropping valid events', async () => {
-    const dir = await createArchived(tmpDir, '021-malformed', {
-      title: 'Malformed',
-      verification: { afterLanding: false, check: null },
-      rawStream: `${[
-        JSON.stringify({
-          type: 'archived',
-          timestamp: '2026-01-01T00:00:00.000Z',
-          data: { verification: { afterLanding: false, check: null } },
-        }),
-        'not json',
-        JSON.stringify({ type: 'verification_recorded', data: { outcome: 'passed' } }),
-      ].join('\n')}\n`,
-    });
-    const state = await readVerification(dir);
-    assert.equal(state.outcome, 'passed');
-    assert.equal(state.checkRanSinceArchive, false);
-  });
-
-  it('only counts a check that follows the archive event', async () => {
-    const dir = await createArchived(tmpDir, '022-order', {
-      title: 'Order',
-      rawStream: `${[
-        JSON.stringify({
-          type: 'check_ran',
-          timestamp: '2026-01-01T00:00:00.000Z',
-          data: { command: 'node check.cjs', exitCode: 0 },
-        }),
-        JSON.stringify({
-          type: 'archived',
-          timestamp: '2026-01-02T00:00:00.000Z',
-          data: { verification: { afterLanding: true, check: 'node check.cjs' } },
-        }),
-      ].join('\n')}\n`,
-    });
-    assert.equal((await readVerification(dir)).checkRanSinceArchive, false);
-  });
-
-  it('returns defaults when the stream is missing', async () => {
-    const dir = path.join(archiveDir(tmpDir), '023-missing');
-    await fs.mkdir(dir, { recursive: true });
-    assert.deepEqual(await readVerification(dir), {
-      required: false,
-      afterLanding: false,
-      check: null,
-      outcome: null,
-      checkRanSinceArchive: false,
-    });
-  });
-
-  it('lists pending archived changes in numeric order', async () => {
-    await createArchived(tmpDir, '030-first', {
-      title: 'First',
-      verification: { afterLanding: true, check: null },
-    });
-    await createArchived(tmpDir, '031-passed', {
-      title: 'Passed',
-      verification: { afterLanding: true, check: null },
-      extraEvents: [
-        {
-          type: 'verification_recorded',
-          timestamp: '2026-01-02T00:00:00.000Z',
-          data: { outcome: 'passed', note: null },
-        },
-      ],
-    });
-    await createArchived(tmpDir, '032-second', {
-      title: 'Second',
-      verification: { afterLanding: false, check: null },
-    });
-    await createArchived(tmpDir, '029-plain', { title: 'Plain' });
-
-    const pending = await listPendingVerifications(archiveDir(tmpDir));
-    assert.deepEqual(
-      pending.map((item) => item.folderName),
-      ['030-first', '032-second'],
-    );
-    assert.deepEqual(
-      pending.map((item) => item.title),
-      ['First', 'Second'],
-    );
-    assert.equal(pending[0].verification.outcome, null);
-    assert.equal(pending[0].verification.required, true);
+    assert.deepEqual(step, { state: 'landed', command: null, detail: null });
   });
 });
 
 describe('explicit status with next steps', () => {
-  it('fills next steps and lists pending verifications before archived specs', async () => {
+  it('fills next steps and prints no verification pending section', async () => {
     await createActive(tmpDir, '040-fresh', {
       title: 'Fresh',
       verify: PLACEHOLDER,
@@ -506,20 +352,13 @@ describe('explicit status with next steps', () => {
     const overview = await getStatusOverview(tmpDir, CONFIG);
     assert.equal(overview.nextSteps?.['040-fresh']?.state, 'unplanned');
     assert.equal(overview.nextSteps?.['040-fresh']?.command, 'osq plan 040');
-    assert.equal(overview.pendingVerifications?.length, 1);
-    assert.equal(overview.pendingVerifications?.[0].folderName, '041-pending');
-    assert.equal(overview.pendingVerifications?.[0].next.state, 'verification-pending');
+    assert.equal('pendingVerifications' in overview, false);
 
     const text = formatStatusOverview(overview);
     assert.ok(text.includes('  next: unplanned — osq plan 040'));
-    const pendingIndex = text.indexOf('Verification pending:');
-    const archivedIndex = text.indexOf('Archived specs:');
-    assert.ok(pendingIndex >= 0, text);
-    assert.ok(pendingIndex < archivedIndex, text);
+    assert.ok(!text.includes('Verification pending:'), text);
     assert.ok(
-      text.includes(
-        '041-pending: Pending — verification pending — osq verified 041 --passed|--failed',
-      ),
+      text.indexOf('  next: unplanned — osq plan 040') < text.indexOf('Archived specs:'),
       text,
     );
   });

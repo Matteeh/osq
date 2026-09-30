@@ -150,8 +150,8 @@ afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
 });
 
-describe('verification pending dependency', () => {
-  it('blocks a dependent of a pending archived change, then frees it on passed', async () => {
+describe('archived dependency readiness', () => {
+  it('treats a verification requirement on an archived change as met', async () => {
     const dependency = await createArchived(tmpDir, '012-pending', {
       title: 'Pending',
       verification: { afterLanding: true, check: null },
@@ -161,22 +161,17 @@ describe('verification pending dependency', () => {
       dependsOn: ['012'],
     });
 
-    const blocked = await deriveSpecState(tmpDir, dependent);
-    assert.equal(blocked.status, 'blocked');
-
-    const step = await readNextStep(tmpDir, dependent, CONFIG);
-    assert.deepEqual(step, {
-      state: 'blocked',
-      command: 'osq show 012',
-      detail: 'waiting for 012',
-    });
-
-    await appendEvent(dependency, passedEvent());
     const freed = await deriveSpecState(tmpDir, dependent);
     assert.equal(freed.status, 'pending');
+
+    const step = await readNextStep(tmpDir, dependent, CONFIG);
+    assert.deepEqual(step, { state: 'running', command: 'osq show 013', detail: null });
+
+    await appendEvent(dependency, passedEvent());
+    assert.equal((await deriveSpecState(tmpDir, dependent)).status, 'pending');
   });
 
-  it('keeps the dependent blocked while the archived outcome is failed', async () => {
+  it('does not hold a dependent back for a failed archived outcome', async () => {
     await createArchived(tmpDir, '014-failed', {
       title: 'Failed',
       verification: { afterLanding: false, check: null },
@@ -194,8 +189,8 @@ describe('verification pending dependency', () => {
     });
 
     const state = await deriveSpecState(tmpDir, dependent);
-    assert.equal(state.status, 'blocked');
-    assert.equal((await readNextStep(tmpDir, dependent, CONFIG)).state, 'blocked');
+    assert.equal(state.status, 'pending');
+    assert.equal((await readNextStep(tmpDir, dependent, CONFIG)).state, 'running');
   });
 
   it('treats an archived dependency without a verification requirement as met', async () => {
@@ -211,14 +206,14 @@ describe('verification pending dependency', () => {
   });
 });
 
-describe('verification pending queue dependency', () => {
-  it('derives the archived association as verification-pending and holds its dependent', async () => {
+describe('landed archived queue dependency', () => {
+  it('derives the archived association as landed and frees its dependent', async () => {
     const content = queueContent([
       { slug: 'alpha', title: 'Alpha' },
       { slug: 'beta', title: 'Beta', depends: 'alpha' },
     ]);
     await writeAt(tmpDir, 'openspec/queue.md', content);
-    const alpha = await createArchived(tmpDir, '020-alpha', {
+    await createArchived(tmpDir, '020-alpha', {
       title: 'Alpha',
       verification: { afterLanding: true, check: null },
     });
@@ -231,23 +226,14 @@ describe('verification pending queue dependency', () => {
     const projection = await projectQueue(tmpDir, CONFIG);
     const alphaRow = projection.items.find((item) => item.slug === 'alpha');
     const betaRow = projection.items.find((item) => item.slug === 'beta');
-    assert.equal(alphaRow?.state, 'verification-pending');
+    assert.equal(alphaRow?.state, 'landed');
     assert.equal(alphaRow?.changeId, '020');
-    assert.deepEqual(betaRow?.unmetDependencies, ['alpha']);
-    assert.equal(projection.landedCount, 0);
+    assert.deepEqual(betaRow?.unmetDependencies, []);
+    assert.equal(projection.landedCount, 1);
 
     const text = formatQueue(projection);
-    assert.ok(text.includes('alpha: Alpha [verification-pending]'), text);
+    assert.ok(text.includes('alpha: Alpha [landed]'), text);
 
-    const waiting = await prepareQueuePlan(tmpDir, CONFIG);
-    assert.equal(waiting.kind, 'refused');
-    if (waiting.kind === 'refused') {
-      assert.match(waiting.message, /beta: unplanned \(waiting on alpha\)/);
-    }
-
-    await appendEvent(alpha, passedEvent());
-    const after = await projectQueue(tmpDir, CONFIG);
-    assert.deepEqual(after.items.find((item) => item.slug === 'beta')?.unmetDependencies, []);
     const ready = await prepareQueuePlan(tmpDir, CONFIG);
     assert.equal(ready.kind, 'ready');
     if (ready.kind === 'ready') assert.equal(ready.selection.item.slug, 'beta');

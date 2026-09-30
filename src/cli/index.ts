@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { registerApproveCommand } from './approve.js';
-import { registerVerificationCommands } from './check.js';
 import { registerDoctorCommand } from './doctor.js';
 import { registerGraphCommand } from './graph.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
@@ -220,7 +219,6 @@ export function createProgram(version?: string): Command {
   registerMessageCommand(program);
   registerSpecCommand(program);
   registerSyncCommand(program);
-  registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
     const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));

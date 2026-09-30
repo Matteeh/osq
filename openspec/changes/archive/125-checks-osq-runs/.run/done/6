@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:384ce3e60b9b5bfb21cefcfb08c483c3ea1dabc2acc69776a0d30d3b02ebfcf8"
+build_stamp: "9b67064"
+project_commit: "a1d6720"
+exit_code: 0
+scope_files: {"PLANNER.md":"sha256:d0c722131d2e80246c43e8aaab05733e6cde5d95f282e01c135be7587a2d5faf","README.md":"sha256:7229612764ec124eeb31ecf70a67e00e693bafe36c0230945e94d6c748755f61","openspec/schemas/osq/schema.yaml":"sha256:b98d7700ccd0c7276820e5136e284ef9f4c8b4bc7557761c6ab313b64ee8e10c","src/core/foundation/init-blocks.ts":"sha256:896c02205d6d03387c1b3d5e341f6ef95eab319744405cd64f6c0c6ac12239f0","templates/PLANNER.md":"sha256:b45c8f1add4241975543075cc22f949c51281ea8264448cafb6b55e18fe4c73e","templates/openspec/schemas/osq/schema.yaml":"sha256:b98d7700ccd0c7276820e5136e284ef9f4c8b4bc7557761c6ab313b64ee8e10c","tests/human-steps-guidance.test.ts":"sha256:89c726e70a1b90df77b8d0281cb4401fd06e8b41695841e20500bdd720abbf56","tests/planner-check-guidance.test.ts":"sha256:5f019480e6908cd521ebfe9cee158f350b0032ac7a80d2d5fadb31aab101abbe"}
+---
+2026-09-30T22:02:10.517Z

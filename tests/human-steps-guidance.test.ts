@@ -27,20 +27,20 @@ const HUMAN_STEPS_BULLET =
   '- Anything a task must not do itself goes under `## Human steps`, which never includes `osq approve`.';
 
 const NEW_SUBSECTION_BULLET =
-  '- Split `## Human steps` into `### Before approval` and `### After landing`, and write `None` under one with no steps. A step during the run, such as an expected `osq retry`, goes under Before approval. After-landing steps, or `check: <command>` in the proposal frontmatter, keep the change verification pending after it lands, and its dependents wait, until a human runs `osq verified <id> --passed` or `--failed`.';
+  '- Split `## Human steps` into `### Before approval` and `### After landing`, and write `None` under one with no steps. A step during the run, such as an expected `osq retry`, goes under Before approval. After-landing steps are notes for the human, and nothing waits on them. A check osq can run goes in `check: <command>` in the proposal frontmatter. osq runs it after the change-level verify at archive and again when `osq land` merges a newer default branch. A failed check stops the change like a failed verify.';
 
 const EXPECTED_RETRY_LINE = 'list the expected `osq retry`';
 
 const SCHEMA_LINE =
-  '- **Human steps**: everything a task must not do itself, never including `osq approve`, under `### Before approval` and `### After landing`; write `None` when there is nothing. After-landing steps or a `check` command keep the change verification pending until `osq verified`.';
+  '- **Human steps**: everything a task must not do itself, never including `osq approve`, under `### Before approval` and `### After landing`; write `None` when there is nothing. After-landing steps are notes nothing waits on; a check osq can run goes in `check: <command>`, which osq runs after the change-level verify at archive and at land.';
 
 describe('planner human steps guidance', () => {
-  it('names the subsections, the check key, and osq verified', () => {
+  it('names the subsections and the check key without osq verified', () => {
     const block = flatten(MANAGED_PLANNER_BLOCK);
     assert.ok(block.includes('### Before approval'), 'must name ### Before approval');
     assert.ok(block.includes('### After landing'), 'must name ### After landing');
     assert.ok(block.includes('check: <command>'), 'must name check: <command>');
-    assert.ok(block.includes('osq verified'), 'must name osq verified');
+    assert.equal(block.includes('osq verified'), false, 'must not name osq verified');
   });
 
   it('adds the subsection bullet right after the Human steps bullet', () => {
@@ -68,12 +68,18 @@ describe('planner human steps guidance', () => {
 });
 
 describe('osq schema human steps guidance', () => {
-  it('states the subsections, the check key, and osq verified in both copies', async () => {
+  it('states the subsections and the check key in both copies', async () => {
     const template = await fs.readFile(TEMPLATE_SCHEMA, 'utf8');
     const repo = await fs.readFile(REPO_SCHEMA, 'utf8');
 
     assert.ok(template.includes(SCHEMA_LINE), 'template schema must carry the line');
     assert.ok(repo.includes(SCHEMA_LINE), 'repository schema must carry the line');
+    assert.equal(template.includes('osq verified'), false, 'template must not name osq verified');
+    assert.equal(
+      repo.includes('osq verified'),
+      false,
+      'repository schema must not name osq verified',
+    );
   });
 
   it('keeps both schema copies byte-identical', async () => {

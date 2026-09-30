@@ -142,22 +142,23 @@ describe('dispatch order', () => {
   });
 
   it('puts idle-work items first when the watcher is idle', async () => {
-    const dead = await createChange(tmpDir, '001-dead', 'Dead');
+    const repo = await makeRepo();
+    const dead = await createChange(repo, '001-dead', 'Dead');
     await approve(dead);
     await writeMarker(dead, '.run/dead/1.md', '---\nreason: verify_red\n---\nboom\n');
-    await createArchived(tmpDir, '010-verify', 'Verify');
-    await createChange(tmpDir, '020-dep', 'Dep', ['010']);
+    await createArchived(repo, '010-land', 'Land');
+    await createChange(repo, '020-dep', 'Dep', ['010']);
 
     const config = defineConfig({});
-    const dispatch = await readDispatchItems(tmpDir, config);
+    const dispatch = await readDispatchItems(repo, config);
     assert.equal(dispatch.watcherIdle, true);
 
-    const ordered = await orderDispatchItems(tmpDir, config, dispatch);
+    const ordered = await orderDispatchItems(repo, config, dispatch);
     const halt = ordered.find((item) => item.kind === 'halt');
-    const verify = ordered.find((item) => item.kind === 'verify');
+    const land = ordered.find((item) => item.kind === 'land');
     assert.ok(halt);
-    assert.ok(verify);
-    assert.equal(verify.weight, 2);
+    assert.ok(land);
+    assert.equal(land.weight, 2);
     assert.equal(halt.reason, 'watcher idle; this gives it work');
     assert.equal(ordered[0].kind, 'halt');
   });

@@ -130,7 +130,7 @@ export async function readQueueReportItem(
   groups: QueueAssociationGroups | undefined,
 ): Promise<QueueReportItem> {
   let plannedToLandedSeconds: number | null = null;
-  const archivedRow = row.state === 'landed' || row.state === 'verification-pending';
+  const archivedRow = row.state === 'landed';
   if (archivedRow && groups?.archived.length === 1) {
     plannedToLandedSeconds = elapsedSeconds(
       await earliestPlanStartMs(groups),

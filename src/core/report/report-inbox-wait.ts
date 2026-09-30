@@ -7,7 +7,8 @@ import {
   readWaitLog,
   waitEpisodes,
 } from '../status/wait-log.js';
-const KINDS: readonly DispatchKind[] = ['approval', 'halt', 'land', 'verify'];
+type WaitKind = DispatchKind | 'verify';
+const KINDS: readonly WaitKind[] = ['approval', 'halt', 'land', 'verify'];
 export interface InboxWaitKindReport {
   readonly handled: number;
   readonly medianSeconds: number | null;
@@ -24,7 +25,7 @@ export interface InboxWaitSessionsReport {
 export interface InboxWaitReport {
   readonly since: string | null;
   readonly until: string | null;
-  readonly kinds: Record<DispatchKind, InboxWaitKindReport>;
+  readonly kinds: Record<WaitKind, InboxWaitKindReport>;
   readonly idleSeconds: number | null;
   readonly sessions: InboxWaitSessionsReport | null;
 }
@@ -53,7 +54,7 @@ function inPeriod(at: string, sinceMs: number | null, untilMs: number | null): b
 /** One kind's observed waits; an unobserved gone counts only as endedUnseen. */
 function collectKind(
   episodes: readonly WaitEpisode[],
-  kind: DispatchKind,
+  kind: WaitKind,
   sinceMs: number | null,
   untilMs: number | null,
 ): InboxWaitKindReport {
@@ -181,7 +182,7 @@ export async function collectInboxWait(
   const sinceMs = since === null ? null : since.getTime();
   const untilMs = until === null ? null : until.getTime();
   const episodes = waitEpisodes(records);
-  const kinds = {} as Record<DispatchKind, InboxWaitKindReport>;
+  const kinds = {} as Record<WaitKind, InboxWaitKindReport>;
   for (const kind of KINDS) kinds[kind] = collectKind(episodes, kind, sinceMs, untilMs);
   return {
     since: since === null ? null : since.toISOString(),
@@ -212,7 +213,7 @@ function formatBound(iso: string | null, fallback: string): string {
   return midnight ? date.toISOString().slice(0, 10) : date.toISOString();
 }
 /** One kind's line, with the unseen markers appended when they are above zero. */
-function formatKindLine(kind: DispatchKind, entry: InboxWaitKindReport): string {
+function formatKindLine(kind: WaitKind, entry: InboxWaitKindReport): string {
   let line: string;
   if (entry.handled === 0) {
     line = `  ${kind}: not measured`;

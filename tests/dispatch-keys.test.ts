@@ -84,19 +84,6 @@ async function writeMarker(folderPath: string, rel: string, content: string): Pr
   await fs.writeFile(target, content, 'utf8');
 }
 
-async function createArchived(root: string, folderName: string): Promise<string> {
-  const dir = path.join(root, CHANGES, 'archive', folderName);
-  await fs.mkdir(path.join(dir, '.run', 'events'), { recursive: true });
-  await fs.writeFile(path.join(dir, 'proposal.md'), proposalMd(folderName), 'utf8');
-  const data = { archivePath: dir, verification: { afterLanding: false, check: null } };
-  await fs.writeFile(
-    path.join(dir, '.run', 'events', 'change.jsonl'),
-    `${JSON.stringify({ type: 'archived', timestamp: '2026-01-01T00:00:00.000Z', data })}\n`,
-    'utf8',
-  );
-  return dir;
-}
-
 async function itemOf(
   kind: string,
 ): Promise<import('../src/core/status/dispatch-items.js').DispatchItem> {
@@ -144,25 +131,6 @@ describe('card keys', () => {
     assert.deepEqual(reject?.args, ['reject', '004', '--reason']);
     assert.equal(reject?.label, 'osq reject 004 --reason <text>');
     assert.deepEqual(mapped.keys[2]?.args, ['show', '004']);
-    assert.deepEqual(mapped.manual, []);
-  });
-
-  it('maps a verify item to p, f, and s', async () => {
-    await createArchived(tmpDir, '003-verify');
-
-    const item = await itemOf('verify');
-    const mapped = cardKeys(item);
-
-    assert.deepEqual(
-      mapped.keys.map((key) => key.key),
-      ['p', 'f', 's'],
-    );
-    assert.deepEqual(mapped.keys[0]?.args, ['verified', '003', '--passed']);
-    assert.equal(mapped.keys[0]?.label, 'osq verified 003 --passed');
-    assert.equal(mapped.keys[0]?.asks, null);
-    assert.deepEqual(mapped.keys[1]?.args, ['verified', '003', '--failed']);
-    assert.equal(mapped.keys[1]?.label, 'osq verified 003 --failed');
-    assert.deepEqual(mapped.keys[2]?.args, ['show', '003']);
     assert.deepEqual(mapped.manual, []);
   });
 

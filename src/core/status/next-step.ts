@@ -6,7 +6,6 @@ import { analyzeVerifyCommand } from '../spec/linter.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { locateFolder } from './change-locations.js';
 import { deriveSpecState, readChangeFolder } from './state.js';
-import { readVerification } from './verification.js';
 
 /** What one change folder needs next. */
 export type NextStepState =
@@ -15,7 +14,6 @@ export type NextStepState =
   | 'dead'
   | 'blocked'
   | 'running'
-  | 'verification-pending'
   | 'landed';
 
 export interface NextStep {
@@ -71,21 +69,8 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
   return { state: 'running', command: `osq show ${id}`, detail: null };
 }
 
-async function readArchivedNextStep(folderPath: string): Promise<NextStep> {
-  const folderName = path.basename(folderPath);
-  const id = folderName.match(/^(\d+)/)?.[1] ?? folderName;
-  const verification = await readVerification(folderPath);
-
-  if (!verification.required || verification.outcome === 'passed') {
-    return { state: 'landed', command: null, detail: null };
-  }
-
-  const needsCheck = verification.check !== null && !verification.checkRanSinceArchive;
-  return {
-    state: 'verification-pending',
-    command: needsCheck ? `osq check ${id}` : `osq verified ${id} --passed|--failed`,
-    detail: verification.outcome === 'failed' ? 'failed' : null,
-  };
+async function readArchivedNextStep(): Promise<NextStep> {
+  return { state: 'landed', command: null, detail: null };
 }
 
 /**
@@ -100,7 +85,7 @@ export async function readNextStep(
 ): Promise<NextStep> {
   const located = await locateFolder(projectRoot, config, folderPath);
   if (located?.location === 'archived') {
-    return readArchivedNextStep(folderPath);
+    return readArchivedNextStep();
   }
   return readActiveNextStep(projectRoot, folderPath);
 }
