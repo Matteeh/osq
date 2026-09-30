@@ -23,7 +23,7 @@
     "clean:ui": "node scripts/stage-ui.mjs --clean",
     "lint": "biome check src tests packages/ui/src",
     "format": "biome format --write src tests packages/ui/src",
-    "test": "node --import tsx --test 'tests/**/*.test.ts' && TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.json node --import tsx --test 'tests/**/*.test.tsx'",
+    "test": "node --import tsx --import ./tests/git-test-env.ts --test 'tests/**/*.test.ts' && TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.json node --import tsx --import ./tests/git-test-env.ts --test 'tests/**/*.test.tsx'",
     "test:golden": "node --import tsx --test tests/golden-events.test.ts",
     "typecheck:cli": "tsc --noEmit -p packages/ui/tsconfig.cli.json",
     "typecheck:ui": "pnpm --filter @osq/ui typecheck",
