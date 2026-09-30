@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d5c39259561507e5d3c827a352ed54dd185ecb27fe44622eb991623f07b4604b"
+build_stamp: "916a5aa"
+project_commit: "2a2e312"
+exit_code: 0
+scope_files: {"src/core/run/task-commit.ts":"sha256:1980ecabf71f3295eb001a733c0ca59aab3f7449778ebb689dc0fa93bf6ca65c","src/watcher/git-guard.ts":"sha256:3bd0ce72953230a82f758cd4a612cfaba3575a54f4950fdff06cfc5e398c011f","tests/scope-deletions.test.ts":"sha256:30e725a003c3b6b3066d458c31cbbe90c890b0ad037c05c7f66773ee91ed03ef"}
+---
+2026-09-30T21:09:56.294Z

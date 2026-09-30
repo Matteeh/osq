@@ -1,0 +1,34 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:fd96c5e16964cfceab4b30df77192c6470356a94c027d6e8998cf8d185c25295",
+    "PLANNER.md": "sha256:40e84f0041d7c25bc31c0c6db18a2332c422dbd612620394fa63ae437cd83adb",
+    "config": "sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39",
+    "cli-foundation": "sha256:c6f3d3872b05a75f0d76f886ded461d1b03d11f9747deec97480cf69fae7151a",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "status-inspection": "sha256:6886dcfcd0eea09aba0105284d1a44286cb8438838f1c8d193e482fa459779b5",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "version-control": "sha256:1ac70914b8740601ce8ec1a5a55cb46ad55af3d3d43b9e8420f76fcff4196303",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "watcher-and-harness": "sha256:15c06998e4581619d0af2d031b5358067c83c88add74909be9402d4fd042763a",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d"
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-09-30T20:58:38.179Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-09-30T21:03:10.920Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "002": "sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14"
+  }
+}

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
-import { resolveScope } from '../core/run/scope.js';
+import { scopeCoversPath } from '../core/run/scope.js';
 import { isGatedTestPath } from '../core/run/test-gate.js';
 import { selectVcs } from '../core/vcs/select.js';
 import {
@@ -66,24 +66,20 @@ function isNewUntrackedTest(before: VcsSnapshot, after: VcsSnapshot, file: strin
   return isGatedTestPath(file) && after.files.get(file)?.code === '??' && !before.files.has(file);
 }
 
-/** The sorted changed files that are outside the resolved scope and change folder. */
-async function scopeViolations(
+/** The sorted changed files the scope cannot cover and that are outside the change folder. */
+function scopeViolations(
   options: GitGuardOptions,
   changedFiles: readonly string[],
   before: VcsSnapshot,
   after: VcsSnapshot,
-): Promise<string[]> {
+): string[] {
   const changePrefix = path
     .relative(options.projectRoot, options.specFolderPath)
     .split(path.sep)
     .join('/');
-  const resolved = await resolveScope(options.projectRoot, options.scope);
-  const inScope = new Set(
-    resolved.filter((entry) => entry.absolutePath !== null).map((entry) => entry.relativePath),
-  );
   return changedFiles
     .filter((file) => !isNewUntrackedTest(before, after, file))
-    .filter((file) => !inScope.has(file))
+    .filter((file) => !scopeCoversPath(options.scope, file))
     .filter((file) => file !== changePrefix && !file.startsWith(`${changePrefix}/`))
     .sort();
 }
@@ -142,7 +138,7 @@ async function checkGitGuard(
       vcsWarning = formatVcsViolationWarning(comparison.moved);
       await appendVcsViolation(options, before.values, after.values, comparison.moved);
     }
-    scopeFiles = await scopeViolations(options, comparison.changedFiles, before, after);
+    scopeFiles = scopeViolations(options, comparison.changedFiles, before, after);
     if (scopeFiles.length > 0) {
       await appendScopeViolation(options, scopeFiles);
     }

@@ -61,7 +61,7 @@ function scopedStatusPaths(entries: readonly VcsStatusEntry[], scope: readonly s
   return [...paths];
 }
 
-/** Every path one verified task's commit holds, root-relative and existing. */
+/** Every path one verified task's commit holds, root-relative and sorted. */
 async function verifiedCommitPaths(
   root: string,
   changeAbs: string,
@@ -70,15 +70,19 @@ async function verifiedCommitPaths(
   status: readonly VcsStatusEntry[],
 ): Promise<string[]> {
   const selected = new Set(scopedStatusPaths(status, scope));
-  for (const record of [
+  const records = [
     getDoneMarkerPath(changeAbs, task),
     getResultPath(changeAbs, task),
     getEventsPath(changeAbs, task),
     path.join(changeAbs, 'tasks.md'),
-  ]) {
-    selected.add(relativeToRoot(root, record));
+  ];
+  for (const record of await existingPaths(
+    root,
+    records.map((record) => relativeToRoot(root, record)),
+  )) {
+    selected.add(record);
   }
-  return existingPaths(root, selected);
+  return [...selected].sort();
 }
 
 /**
