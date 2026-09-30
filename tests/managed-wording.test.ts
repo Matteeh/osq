@@ -114,7 +114,8 @@ describe('plan prompt spec list label', () => {
       openspecRoot: 'openspec',
     });
 
-    const sentence = 'All living specs. Read the ones this change writes or whose code it uses.';
+    const sentence =
+      'All living specs. Read the requirements this change writes or whose code it uses, not whole specs: `osq spec <capability>` lists them and `osq spec <capability> <requirement>` prints one.';
     const headerIdx = prompt.indexOf('## Capability Specs');
     const sentenceIdx = prompt.indexOf(sentence);
     const alphaIdx = prompt.indexOf('- openspec/specs/alpha/spec.md');

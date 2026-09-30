@@ -11,6 +11,9 @@ permission:
     "osq lint*": allow
     "pnpm osq lint*": allow
     "npx osq lint*": allow
+    "osq spec*": allow
+    "pnpm osq spec*": allow
+    "npx osq spec*": allow
     "*;*": deny
     "*&*": deny
     "*|*": deny
@@ -25,4 +28,4 @@ permission:
 
 Follow PLANNER.md strictly for change planning rules and procedure.
 Writes are expected only under openspec/changes/<id>/.
-The only shell command you may run is `osq lint <slug>`.
+The only shell commands you may run are `osq lint <slug>` and `osq spec`.

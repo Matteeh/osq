@@ -28,7 +28,7 @@ export async function formatCapabilitySpecsSection(
       }
     }
   } catch {}
-  return `## Capability Specs\n\nAll living specs. Read the ones this change writes or whose code it uses.\n\n${specPaths
+  return `## Capability Specs\n\nAll living specs. Read the requirements this change writes or whose code it uses, not whole specs: \`osq spec <capability>\` lists them and \`osq spec <capability> <requirement>\` prints one.\n\n${specPaths
     .map((p) => `- ${p}`)
     .join('\n')}`;
 }

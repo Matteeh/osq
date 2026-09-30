@@ -15,7 +15,7 @@ Living Capability Specs:
 - openspec/specs/alpha/spec.md
 
 Rules:
-1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.
+1. Read your task file, its parent `proposal.md`, and the delta specs it names. From living capability specs, read only the requirements the task or proposal names; `osq spec <capability> <requirement>` prints one. Nothing else.
 2. Can't finish within your task's `scope`, or too big for one pass? Write what you need under `## Blocked` in `.run/results/<n>.md`, and exit without code.
 3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.
 4. Tests for each acceptance line before implementing.

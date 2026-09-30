@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:dd3216b07785367eb9871d3be2939b8869f6091b0125fa20545ce7fe47b1205f"
+build_stamp: "5c0cdf8"
+project_commit: "d258947"
+exit_code: 0
+scope_files: {".opencode/agent/osq-planner.md":"sha256:33e09e1a23122a4c5580fa8ab7a6042937edd7bd80151c5931e7f8228e7f026c","src/cli/plan-sections.ts":"sha256:e0392bdf7d703f9a4adc562625d657bbb57aaa03bdce95d454502ee05b4b176b","src/harness/opencode/opencode.ts":"sha256:54a6f9608149a7048fb1c08a72471857cdf5aa4e5b792cff0b213165fb798cdc","tests/managed-wording.test.ts":"sha256:d6fd84ac027a964269fa927b878ccad0ba33a60cc956ba20d83050e1576807c2","tests/opencode-planner-setup.test.ts":"sha256:eeca61f48ed4c3a697bdd9508a7c9cc218cda74d308add510385bf208ab49403","tests/planner-spec-command.test.ts":"sha256:62f906cf51b7a33bd61a21bf1c010ac3a59129c29d37c63a4f72975e5b9adabf"}
+---
+2026-09-30T15:02:06.361Z

@@ -162,7 +162,7 @@ skills: []
 - [ ] each line is a test in disguise
 ```
 
-Tasks run in order. The agent reads its task, the parent `proposal.md`, the delta specs and capability docs it names, `AGENTS.md`, and a previous result file for that task if there is one. The runner also injects capability-specific constraints and code ownership rules extracted from living capability specs. The delta is applied by the watcher, so the agent never edits living specs under `openspec/specs/`.
+Tasks run in order. The agent reads its task, the parent `proposal.md`, the delta specs it names, `AGENTS.md`, and a previous result file for that task if there is one. From the living capability specs it reads only the requirements its task names, through `osq spec <capability> <requirement>`, not whole capability specs. The runner also injects capability-specific constraints and code ownership rules extracted from living capability specs. The delta is applied by the watcher, so the agent never edits living specs under `openspec/specs/`.
 
 Before exiting, the agent writes `.run/results/<n>.md` with these headings, leaving out any that would be empty: `## Changed`, `## Deviated` (for the reviewer), `## Missing context` (for the planner), `## Outside scope` (for the human), `## Blocked`, and `## Next`, ending with a `Touched: <paths>` line. A task that cannot finish within its scope writes what it needs under `## Blocked` and no code; the watcher records it dead with reason `blocked`, never retries it automatically, and the inbox shows the stated need. `osq show` prints each task's disclosures, and the plan prompt quotes those from recent archived changes, bounded by `planning.disclosures.recentChanges` (default 3) and `planning.disclosures.maxCharacters` (default 4000).
 
@@ -560,6 +560,7 @@ osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq message <id>         print an archived change's land commit message
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
+osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON

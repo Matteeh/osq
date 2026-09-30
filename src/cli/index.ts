@@ -21,6 +21,7 @@ import { retryCommand } from './retry.js';
 import { parsePortArgument, serveCommand } from './serve.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
+import { registerSpecCommand } from './spec.js';
 import { statusCommand } from './status.js';
 import { registerSyncCommand } from './sync.js';
 import { watchCommand } from './watch.js';
@@ -226,12 +227,12 @@ export function createProgram(version?: string): Command {
   registerInboxDispatchCommand(program);
   registerLandCommand(program);
   registerMessageCommand(program);
+  registerSpecCommand(program);
   registerSyncCommand(program);
   registerVerificationCommands(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
-    const raw = argv || process.argv;
-    const normalized = raw.map((arg) => (arg === '-print' ? '--print' : arg));
+    const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));
     return origParse(normalized, parseOptions);
   };
 
@@ -240,8 +241,7 @@ export function createProgram(version?: string): Command {
     argv?: readonly string[],
     parseOptions?: Parameters<Command['parseAsync']>[1],
   ) => {
-    const raw = argv || process.argv;
-    const normalized = raw.map((arg) => (arg === '-print' ? '--print' : arg));
+    const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));
     return await origParseAsync(normalized, parseOptions);
   };
 

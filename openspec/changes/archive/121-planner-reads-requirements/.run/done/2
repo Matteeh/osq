@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d0085980342f5c3bc896a97ada7b4a0f38739ad79048755466dd68decc62e247"
+build_stamp: "5c0cdf8"
+project_commit: "c9d8a1e"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:77b3961acd4ec46804b584e2d18fb7be1da5681da6b6e4c4d323eec90ee76da6","AGENTS.md":"sha256:01a9a84c29a55c4bd0b407af3e278e4a073dbc8bdd2720e2a3427e2848baf222","PLANNER.md":"sha256:40e84f0041d7c25bc31c0c6db18a2332c422dbd612620394fa63ae437cd83adb","src/core/foundation/init-blocks.ts":"sha256:cb1b591b330fdbb55423b6d98d1a5b1e2e3dc5edb4e3a158865f446df9bd3ff4","templates/PLANNER.md":"sha256:0d692dffc6a56ec6d0e0fb2f56c8379a0e4d85421d6c2c27365bdd45f73eee47","tests/fixtures/prompts/agy.txt":"sha256:c54b24f8f837fe4daddf88a3ecf3c7746ca43ef41e175115bbb6810d18f97ea2","tests/fixtures/prompts/codex.txt":"sha256:c54b24f8f837fe4daddf88a3ecf3c7746ca43ef41e175115bbb6810d18f97ea2","tests/fixtures/prompts/opencode.txt":"sha256:c54b24f8f837fe4daddf88a3ecf3c7746ca43ef41e175115bbb6810d18f97ea2","tests/requirement-reading-blocks.test.ts":"sha256:380a20f06e9f47b84617322f98af2aa6e8a1d0b6e55337d4876e7562596bec7a"}
+---
+2026-09-30T14:58:26.250Z

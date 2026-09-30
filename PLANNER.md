@@ -10,8 +10,10 @@ sees only what you wrote, and reads it literally.
 
 When a human is in the session:
 
-1. Read `AGENTS.md`, the capability specs this change touches, and one recent
-   archived change end to end.
+1. Read `AGENTS.md`, the requirements this change touches, and one recent
+   archived change end to end. `osq spec <capability>` lists a living spec's
+   requirements and `osq spec <capability> <requirement>` prints one; read
+   those, not whole capability specs.
 2. Write the change folder. Stop after the task list only when the human asks to
    review it first; then reply with the parent spec, the task list (titles only),
    the capability specs this change will write, and any `## Human steps`, and say

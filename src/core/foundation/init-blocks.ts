@@ -8,7 +8,7 @@ export const OSQ_END_MARKER = '<!-- OSQ:END -->';
  * Task 2's shared executor prompt interpolates these verbatim.
  */
 export const EXECUTOR_STEPS: readonly string[] = [
-  '1. Read your task file, its parent `proposal.md`, then only the delta specs and capability specs it names. Nothing else.',
+  '1. Read your task file, its parent `proposal.md`, and the delta specs it names. From living capability specs, read only the requirements the task or proposal names; `osq spec <capability> <requirement>` prints one. Nothing else.',
   "2. Can't finish within your task's `scope`, or too big for one pass? Write what you need under `## Blocked` in `.run/results/<n>.md`, and exit without code.",
   "3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.",
   '4. Tests for each acceptance line before implementing.',
@@ -97,8 +97,10 @@ sees only what you wrote, and reads it literally.
 
 When a human is in the session:
 
-1. Read \`AGENTS.md\`, the capability specs this change touches, and one recent
-   archived change end to end.
+1. Read \`AGENTS.md\`, the requirements this change touches, and one recent
+   archived change end to end. \`osq spec <capability>\` lists a living spec's
+   requirements and \`osq spec <capability> <requirement>\` prints one; read
+   those, not whole capability specs.
 2. Write the change folder. Stop after the task list only when the human asks to
    review it first; then reply with the parent spec, the task list (titles only),
    the capability specs this change will write, and any \`## Human steps\`, and say
