@@ -46,7 +46,7 @@ capability's `Code ownership` requirement in `openspec/specs/<capability>/spec.m
 ## Principles
 
 - The filesystem is the protocol. State is marker files under `.run/`. Events are append-only jsonl. No in-memory state that matters; the watcher must survive a restart. Any index or cache is derived from the files and may be deleted at any time.
-- Writers are fixed. The watcher writes `.run/` markers. A human writes `approved`, retries, rejections, and manual `done` through the CLI. An executor writes only `.run/results/<n>.md` and files inside its task's `scope`.
+- Writers are fixed. The watcher writes `.run/` markers. A human writes `approved`, retries, and rejections through the CLI. An executor writes only `.run/results/<n>.md` and files inside its task's `scope`.
 - Trust nothing an agent says. `done` requires the watcher's own `verify` run.
 - Living capability specs change only when the watcher archives an approved change and applies its deltas.
 - Adapters vary spawn, setup, and event translation. If you want to add a method to the adapter interface, first prove the harness really differs.
@@ -68,7 +68,7 @@ Tests that submit fixture changes to lint or approval use a local `node verify.c
 <!-- OSQ:RULES:START -->
 ## Project rules
 
-- Agents never run git. osq alone writes to git, never rewrites history, and never writes the human's checkout or main except through osq land. ADR 003
+- Agents never run git. osq alone writes to git, never rewrites history, and writes the human's checkout or main only through commands the human runs. ADR 003
 - osq does every deterministic step, AI does judgement inside osq's gates, and a human only steers plans or taps decisions; a gate blocks or is removed. ADR 006
 - Each role osq spawns gets only the environment it declares; verify never gets the model key, and harness permissions are a guardrail. ADR 007
 <!-- OSQ:RULES:END -->

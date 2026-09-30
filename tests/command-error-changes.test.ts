@@ -42,22 +42,6 @@ describe('converted commands throw CommandError', () => {
     assert.equal(capture.lines[0]?.text, 'Error: Spec name cannot be empty');
   });
 
-  it('done throws when --manual is blank', async () => {
-    const capture = await oneStderrLine(['done', '999', '1', '--manual', ' ']);
-    assert.equal(
-      capture.lines[0]?.text,
-      'Error: --manual <reason> is required to mark a task done',
-    );
-  });
-
-  it('done throws when the spec is missing', async () => {
-    const capture = await oneStderrLine(['done', '999', '1', '--manual', 'x']);
-    assert.ok(
-      capture.lines[0]?.text.startsWith('Error marking task done:\n  Spec "999" not found'),
-      `got: ${capture.lines[0]?.text}`,
-    );
-  });
-
   it('reject throws when the spec is missing', async () => {
     const capture = await oneStderrLine(['reject', '999', '--reason', 'x']);
     assert.ok(

@@ -657,8 +657,8 @@ root, for display.
 The watcher loop, the baseline search, status and its next step, inbox, show,
 the queue and its report detail, report and recent disclosures, the web data
 and events, doctor and its price check, and the lifecycle commands `approve`,
-`retry`, `reject`, `done`, and `verified` SHALL find change folders through
-the change locations module. Outside it, only `layout.ts`, `foundation/new.ts`,
+`retry`, `reject`, and `verified` SHALL find change folders through the
+change locations module. Outside it, only `layout.ts`, `foundation/new.ts`,
 `spec/migrate.ts`, `spec/linter.ts`, `cli/lint.ts`, `cli/plan.ts`, and
 `watcher/archiver.ts` SHALL call `getChangesDir` or `getArchiveDir`.
 
@@ -675,63 +675,25 @@ the change locations module. Outside it, only `layout.ts`, `foundation/new.ts`,
 worktree, directly below its heading line. While a task of that change is
 running, it SHALL print, below the worktree line,
 `  warning: a task is running in this worktree; do not edit it until the task ends`.
-When the checkout still holds a
-folder of the same name whose authored-content hash differs from the
-worktree's `.run/approved`, it SHALL print, below those lines,
-`  warning: the checkout's copy of <folder> changed since approval; edits there never reach the run`.
-A checkout copy that matches, or is missing, SHALL print no warning.
+`osq status` SHALL NOT read or compare a folder of the same name in the
+checkout, and SHALL print no warning about one: approval removes the
+checkout's copy, and a folder an older approval left there is not the change.
 
 #### Scenario: Worktree path
 - **WHEN** `osq status` runs with `vcs.enabled` and a change approved into a worktree
 - **THEN** the change is listed once, as approved, followed by `  worktree: ` and the worktree path
 
 #### Scenario: Edited checkout copy
-- **WHEN** a task file in the checkout's copy of that change is edited after approval
-- **THEN** status prints the checkout copy warning naming the folder
+- **WHEN** the checkout holds a folder named like that change, and a task file in it differs from the worktree's copy
+- **THEN** status prints no warning about the checkout, and lists the change once, from its worktree
 
 #### Scenario: Untouched checkout copy
-- **WHEN** the checkout's copy is unchanged since approval
-- **THEN** status prints no warning
+- **WHEN** the checkout holds no folder named like that change
+- **THEN** status prints no warning about the checkout
 
 #### Scenario: Task running in the worktree
 - **WHEN** a task of a change in a worktree holds a live lock in `.run/running/`
 - **THEN** status prints the running-task warning directly below the worktree line, and prints no such warning once the lock is gone
-
-### Requirement: Leftover draft in status
-With `vcs.enabled` and `GitVcs` selected, a folder directly in the project
-root's changes directory, from the first `changeTrees` tree, that passes
-`isActiveChangeFolderName` SHALL be a leftover draft when the default branch
-holds `<archive>/<folder>/.run/approved` and the folder's `hashChangeFolder`
-hash equals that file's trimmed contents. `<archive>` is the first tree's
-archive directory relative to its root. `getStatusOverview` SHALL leave a
-leftover draft out of `specs` and SHALL list it in `leftovers`, with its
-folder name and its path relative to the project root. When `leftovers` is
-not empty, `osq status` SHALL print, after the pending verifications and
-before `Archived specs:`, the line `Leftover drafts:`, then one line
-`  <folder>: landed; remove the checkout copy with rm -r <path>` per
-leftover in folder order, then a blank line. A copy whose hash differs from
-the landed approved hash SHALL NOT be a leftover. With `vcs.enabled` off or
-under `NoVcs`, there SHALL be no leftovers and no git read.
-
-#### Scenario: Leftover after a hand landing
-- **WHEN** a change approved into a worktree has archived, the checkout ran `git merge --squash osq/<folder>` and `git commit`, and the checkout's copy of the folder is untouched
-- **THEN** `osq status` prints `Leftover drafts:` and `  <folder>: landed; remove the checkout copy with rm -r openspec/changes/<folder>`, and does not list the folder under `Active specs:`
-
-#### Scenario: Leftover after the worktree is removed
-- **WHEN** the same landing is followed by `git worktree remove` of the change's worktree
-- **THEN** status still prints the leftover line and still leaves the folder out of `Active specs:`
-
-#### Scenario: Edited copy is not a leftover
-- **WHEN** the checkout's copy was edited after approval and the change landed
-- **THEN** status prints no `Leftover drafts:` section
-
-#### Scenario: Not landed yet
-- **WHEN** the change has archived on its branch and the default branch does not hold its archive
-- **THEN** status prints no `Leftover drafts:` section
-
-#### Scenario: Removing it clears the flag
-- **WHEN** the printed `rm -r` command has run
-- **THEN** status prints no `Leftover drafts:` section
 
 ### Requirement: Dispatch items
 `readDispatchItems(projectRoot, config)` SHALL derive, on every call and

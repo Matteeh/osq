@@ -18,6 +18,7 @@ export async function rejectCommand(specId: string, options: RejectCommandOption
     console.log(`  Reason: ${result.reason}`);
     if (result.stackedPath !== undefined) {
       console.log(`  Withdrew stacked approval: ${result.stackedPath}`);
+      console.log(`  Restored draft: ${result.restoredPath}`);
     } else if (result.worktree !== undefined) {
       if (result.worktree.removed) {
         console.log(`  Worktree removed: ${result.worktree.path}`);

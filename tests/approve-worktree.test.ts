@@ -150,20 +150,24 @@ async function setTaskScope(folderPath: string, scope: string): Promise<void> {
 }
 
 describe('osq approve into a worktree', () => {
-  it('commits the draft onto osq/<folder> and writes nothing to the checkout', async () => {
+  it('commits the draft onto osq/<folder> and removes it from the checkout', async () => {
     const p = await makeProject();
     const wtPath = worktreePath(p.vcs, p.repo, p.folder001);
-    const before = await git(['status', '--porcelain'], p.repo);
+    const before = (await git(['status', '--porcelain'], p.repo)).split('\n');
 
     const result = await approveSpec(p.repo, '001', p.config);
 
     assert.equal(result.worktreePath, wtPath);
     assert.equal(result.branch, worktreeBranch(p.folder001));
-    assert.equal(await git(['status', '--porcelain'], p.repo), before);
-    assert.equal(await exists(path.join(p.spec001, '.run', 'approved')), false);
+    const after = (await git(['status', '--porcelain'], p.repo)).split('\n');
+    assert.deepEqual(
+      after,
+      before.filter((line) => !line.includes(p.folder001)),
+    );
+    assert.equal(await exists(p.spec001), false);
 
     const folder = path.join(wtPath, path.relative(p.repo, p.spec001));
-    assert.equal(await readRun(folder, 'approved'), await hashChangeFolder(p.spec001));
+    assert.equal(await readRun(folder, 'approved'), await hashChangeFolder(folder));
     assert.equal(await readRun(folder, 'base'), await git(['rev-parse', 'HEAD'], p.repo));
     assert.equal(await readRun(folder, 'approver'), 'osq <osq@example.invalid>');
 

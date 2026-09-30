@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { restoreStackedDraft } from '../spec/checkout-draft.js';
 import { type ChangeTree, findChange } from '../status/change-locations.js';
 import { getChangeRunDir } from '../status/layout.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
@@ -27,6 +28,8 @@ export interface RejectResult {
   readonly branch?: string;
   /** The stacked approval directory a stacked change withdrew. */
   readonly stackedPath?: string;
+  /** For a stacked change, the restored draft's path relative to the project root. */
+  readonly restoredPath?: string;
 }
 
 async function pathExists(target: string): Promise<boolean> {
@@ -137,7 +140,8 @@ export async function rejectSpec(
   // Resolve only beneath the active changes directory. Archived and rejected
   // folders live elsewhere and therefore never match. A change that runs in a
   // worktree is rejected inside that tree, never in the checkout.
-  const { folderPath: sourcePath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
+  const change = await findChange(projectRoot, config, specIdOrPrefix);
+  const { folderPath: sourcePath, tree } = change;
   const folderName = path.basename(sourcePath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
   const stacked = tree.stackedFolder !== undefined;
@@ -164,11 +168,13 @@ export async function rejectSpec(
     timestamp,
   };
 
-  // A stacked change has no branch and no worktree: withdraw the stacked
-  // approval, move nothing, and write no rejection record.
+  // A stacked change has no branch and no worktree: move its draft back into
+  // the checkout, withdraw the stacked approval, and write no rejection record.
   if (stacked) {
+    const restored = await restoreStackedDraft(projectRoot, config, change);
     await fs.rm(tree.root, { recursive: true, force: true });
-    return { ...base, stackedPath: tree.root };
+    const restoredPath = path.relative(projectRoot, restored).split(path.sep).join('/');
+    return { ...base, stackedPath: tree.root, restoredPath };
   }
 
   await fs.mkdir(rejectedDir, { recursive: true });

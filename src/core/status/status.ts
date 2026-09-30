@@ -1,7 +1,5 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
-import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { changeTrees, listChanges } from './change-locations.js';
 import {
@@ -11,7 +9,6 @@ import {
   readLastSync,
 } from './last-sync.js';
 import { getRejectedMarkerPath } from './layout.js';
-import { type LeftoverDraft, findLeftoverDrafts } from './leftover-drafts.js';
 import { type NextStep, formatNextStep, readNextStep } from './next-step.js';
 import { type SpecState, type TaskState, deriveSpecState } from './state.js';
 import { listPendingVerifications } from './verification.js';
@@ -20,8 +17,6 @@ import { listPendingVerifications } from './verification.js';
 export interface ChangeWorktree {
   /** Absolute path of the linked worktree the change runs in. */
   readonly path: string;
-  /** Whether the checkout's copy differs from the worktree's `.run/approved`. */
-  readonly checkoutChanged: boolean;
   /** The last `synced` event in the change folder's stream. */
   readonly lastSync?: LastSync;
   /** The last `sync_stopped` event when it came after the last sync. */
@@ -47,22 +42,10 @@ export interface StatusOverview {
   archivedChangeFolders: number;
   /** Next step for each active change, keyed by folder name. */
   nextSteps?: Record<string, NextStep>;
-  /** Worktree path and checkout drift for each change running in a worktree. */
+  /** Worktree path for each change running in a worktree. */
   worktrees?: Record<string, ChangeWorktree>;
   /** Archived changes still awaiting a verification outcome. */
   pendingVerifications?: Array<{ folderName: string; title: string; next: NextStep }>;
-  /** Checkout copies of changes already landed on the default branch. */
-  leftovers?: LeftoverDraft[];
-}
-
-/** Whether the checkout's copy changed since approval; a missing copy does not. */
-async function checkoutCopyChanged(
-  checkoutFolder: string,
-  approvedHash: string | null,
-): Promise<boolean> {
-  if (!approvedHash) return false;
-  const current = await hashChangeFolder(checkoutFolder).catch(() => null);
-  return current !== null && current !== approvedHash.trim();
 }
 
 /** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
@@ -105,14 +88,11 @@ export async function getStatusOverview(
 ): Promise<StatusOverview> {
   const [tree] = await changeTrees(projectRoot, config);
   const active = await listChanges(projectRoot, config, ['active']);
-  const leftovers = await findLeftoverDrafts(projectRoot, config);
-  const leftoverNames = new Set(leftovers.map((leftover) => leftover.folderName));
 
   const specs: SpecState[] = [];
   const nextSteps: Record<string, NextStep> = {};
   const worktrees: Record<string, ChangeWorktree> = {};
   for (const change of active) {
-    if (leftoverNames.has(change.folderName)) continue;
     const changeDoc = await resolveChangeDoc(change.folderPath);
     if (!changeDoc) continue;
     const specState = await deriveSpecState(projectRoot, change.folderPath);
@@ -123,10 +103,6 @@ export async function getStatusOverview(
       const syncState = await readLastSync(change.folderPath);
       worktrees[change.folderName] = {
         path: change.tree.root,
-        checkoutChanged: await checkoutCopyChanged(
-          path.join(tree.changesDir, change.folderName),
-          specState.approvedHash,
-        ),
         ...syncState,
       };
     }
@@ -151,7 +127,6 @@ export async function getStatusOverview(
     nextSteps,
     ...(Object.keys(worktrees).length > 0 ? { worktrees } : {}),
     pendingVerifications,
-    ...(leftovers.length > 0 ? { leftovers } : {}),
   };
 }
 
@@ -188,11 +163,6 @@ export function formatStatusOverview(overview: StatusOverview): string {
             '  warning: a task is running in this worktree; do not edit it until the task ends',
           );
         }
-        if (worktree.checkoutChanged) {
-          lines.push(
-            `  warning: the checkout's copy of ${spec.folderName} changed since approval; edits there never reach the run`,
-          );
-        }
         lines.push(...formatLastSyncLines(spec.folderName, worktree));
       }
       const next = overview.nextSteps?.[spec.folderName];
@@ -215,16 +185,6 @@ export function formatStatusOverview(overview: StatusOverview): string {
     lines.push('Verification pending:');
     for (const item of pending) {
       lines.push(`${item.folderName}: ${item.title} — ${formatNextStep(item.next)}`);
-    }
-    lines.push('');
-  }
-  const leftovers = overview.leftovers;
-  if (leftovers && leftovers.length > 0) {
-    lines.push('Leftover drafts:');
-    for (const leftover of leftovers) {
-      lines.push(
-        `  ${leftover.folderName}: landed; remove the checkout copy with rm -r ${leftover.path}`,
-      );
     }
     lines.push('');
   }

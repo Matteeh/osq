@@ -354,9 +354,8 @@ describe('osq land', () => {
     assert.equal(capture.stderr, '');
     const lines = capture.stdout.split('\n');
     assert.match(lines[0] ?? '', /^Landed 001-order-flow as [0-9a-f]{40}$/);
-    assert.equal(lines[1], `Removed leftover draft ${CHANGES}/001-order-flow`);
-    assert.match(lines[2] ?? '', /^Removed worktree .*001-order-flow$/);
-    assert.equal(lines[3], `Kept branch ${branch}`);
+    assert.match(lines[1] ?? '', /^Removed worktree .*001-order-flow$/);
+    assert.equal(lines[2], `Kept branch ${branch}`);
 
     const head = await git(['rev-parse', 'HEAD'], project.repo);
     assert.notEqual(head, tip);
@@ -371,7 +370,6 @@ describe('osq land', () => {
       await git(['log', '-1', '--format=%an <%ae>'], project.repo),
       project.config.vcs?.author,
     );
-    assert.equal(await exists(checkoutFolder(project.repo, ONE.folder)), false);
     assert.equal(await exists(worktree), false);
     assert.equal(await git(['branch', '--list', branch], project.repo), branch);
   });
@@ -453,10 +451,8 @@ describe('osq land cleanup', () => {
     assert.equal(capture.stderr, '');
     const lines = capture.stdout.split('\n');
     assert.equal(lines[0], '001-order-flow has already landed');
-    assert.equal(lines[1], `Removed leftover draft ${CHANGES}/001-order-flow`);
-    assert.match(lines[2] ?? '', /^Removed worktree .*001-order-flow$/);
+    assert.match(lines[1] ?? '', /^Removed worktree .*001-order-flow$/);
     assert.equal(await git(['rev-parse', 'HEAD'], project.repo), head);
-    assert.equal(await exists(checkoutFolder(project.repo, ONE.folder)), false);
     assert.equal(await exists(worktree), false);
   });
 
@@ -476,12 +472,13 @@ describe('osq land cleanup', () => {
     const project = await setupProject([ONE]);
     await archiveAll(project);
     const draft = checkoutFolder(project.repo, ONE.folder);
-    await fs.appendFile(path.join(draft, 'tasks', '1.md'), '\nedited\n', 'utf8');
+    await fs.mkdir(path.join(draft, 'tasks'), { recursive: true });
+    await fs.writeFile(path.join(draft, 'proposal.md'), proposalMarkdown(ONE), 'utf8');
+    await fs.writeFile(path.join(draft, 'tasks', '1.md'), '# edited\n', 'utf8');
 
     const capture = await captureLand(project.repo, project.config, '001');
 
     assert.equal(capture.exitCode, 0);
-    assert.ok(!capture.stdout.includes('Removed leftover draft'));
     assert.equal(await exists(draft), true);
   });
 });

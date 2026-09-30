@@ -1,0 +1,150 @@
+{"type":"verify_ran","timestamp":"2026-09-30T17:55:41.125Z","data":{"command":"node --import tsx --test tests/approve-owns-draft.test.ts","exitCode":1,"duration":0.02,"output":"Could not find 'tests/approve-owns-draft.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/approve-owns-draft.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-09-30T17:55:41.790Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":9,"scopeLines":2188,"repoFiles":2044,"repoLines":234967,"importFanIn":7,"proposalWords":1146,"taskWords":523,"deltaRequirements":18,"deltaScenarios":56}}
+{"type":"started","timestamp":"2026-09-30T17:55:41.966Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"e197e22","pid":47338,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"9db81c6"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:43.598Z","data":{"promptTokens":3727,"candidateTokens":175,"totalTokens":7230,"cachedTokens":3328,"reasoningTokens":15,"cost":0.0013480679999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:43.598Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:43.599Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/proposal.md"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:45.016Z","data":{"promptTokens":3020,"candidateTokens":237,"totalTokens":10425,"cachedTokens":7168,"reasoningTokens":21,"cost":0.0012334079999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:45.017Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:45.017Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/specs/spec-lint-and-"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:47.034Z","data":{"promptTokens":2696,"candidateTokens":360,"totalTokens":13424,"cachedTokens":10368,"reasoningTokens":60,"cost":0.0013030079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:47.034Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/.run/results/1.md"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:47.035Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:47.035Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:47.035Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:48.466Z","data":{"promptTokens":5574,"candidateTokens":238,"totalTokens":19124,"cachedTokens":13312,"reasoningTokens":31,"cost":0.002037672,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:48.466Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:48.467Z","data":{"tool":"read","summary":"src/core/lifecycle/reject.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:48.467Z","data":{"tool":"read","summary":"src/cli/reject.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:49.981Z","data":{"promptTokens":4347,"candidateTokens":261,"totalTokens":23680,"cachedTokens":19072,"reasoningTokens":54,"cost":0.001731732,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:49.981Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:49.981Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:49.982Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:51.405Z","data":{"promptTokens":3666,"candidateTokens":149,"totalTokens":27495,"cachedTokens":23680,"reasoningTokens":73,"cost":0.00142068,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:51.406Z","data":{"tool":"read","summary":"tests/approve-stacked.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:52.590Z","data":{"promptTokens":3683,"candidateTokens":92,"totalTokens":31167,"cachedTokens":27392,"reasoningTokens":16,"cost":0.001379652,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:52.591Z","data":{"tool":"read","summary":"tests/approve-worktree.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:53.789Z","data":{"promptTokens":3299,"candidateTokens":85,"totalTokens":34488,"cachedTokens":31104,"reasoningTokens":10,"cost":0.0012783240000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:53.790Z","data":{"tool":"read","summary":"tests/reject-worktree.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:56.844Z","data":{"promptTokens":3917,"candidateTokens":678,"totalTokens":39027,"cachedTokens":34432,"reasoningTokens":468,"cost":0.0021952919999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:56.844Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:56.845Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree-shared.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:55:58.172Z","data":{"promptTokens":1244,"candidateTokens":146,"totalTokens":40302,"cachedTokens":38912,"reasoningTokens":11,"cost":0.000781872,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:55:58.173Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:08.600Z","data":{"promptTokens":786,"candidateTokens":2712,"totalTokens":43690,"cachedTokens":40192,"reasoningTokens":2636,"cost":0.003731352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:08.600Z","data":{"tool":"read","summary":"tests/approve-confirm.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:10.459Z","data":{"promptTokens":2063,"candidateTokens":246,"totalTokens":45957,"cachedTokens":43648,"reasoningTokens":113,"cost":0.001175988,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:10.460Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:12.182Z","data":{"promptTokens":213,"candidateTokens":210,"totalTokens":46375,"cachedTokens":45952,"reasoningTokens":132,"cost":0.000591612,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:12.182Z","data":{"tool":"read","summary":"tests/approve-rejected-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:17.642Z","data":{"promptTokens":2380,"candidateTokens":1164,"totalTokens":49880,"cachedTokens":46336,"reasoningTokens":1088,"cost":0.0023888159999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:17.643Z","data":{"tool":"read","summary":"src/core/spec/hasher.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:20.265Z","data":{"promptTokens":849,"candidateTokens":395,"totalTokens":51036,"cachedTokens":49792,"reasoningTokens":230,"cost":0.0010274519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:20.265Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:20.266Z","data":{"tool":"read","summary":"src/core/vcs/git.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:21.377Z","data":{"promptTokens":170,"candidateTokens":97,"totalTokens":51211,"cachedTokens":50944,"reasoningTokens":0,"cost":0.000473064,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:21.378Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:22.826Z","data":{"promptTokens":144,"candidateTokens":174,"totalTokens":51518,"cachedTokens":51200,"reasoningTokens":0,"cost":0.0005591999999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:22.826Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:22.827Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:43.417Z","data":{"promptTokens":1586,"candidateTokens":5391,"totalTokens":58433,"cachedTokens":51456,"reasoningTokens":5254,"cost":0.007253736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:43.417Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:43.418Z","data":{"tool":"read","summary":"src/core/spec/linter.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:46.477Z","data":{"promptTokens":1066,"candidateTokens":561,"totalTokens":59995,"cachedTokens":58368,"reasoningTokens":439,"cost":0.001343208,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:46.477Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:48.269Z","data":{"promptTokens":1186,"candidateTokens":105,"totalTokens":61195,"cachedTokens":59904,"reasoningTokens":14,"cost":0.000841224,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:48.270Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:50.355Z","data":{"promptTokens":262,"candidateTokens":202,"totalTokens":61648,"cachedTokens":61184,"reasoningTokens":127,"cost":0.0006881039999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:50.355Z","data":{"tool":"read","summary":"src/core/foundation/new.ts"}}
+{"type":"text","timestamp":"2026-09-30T17:56:54.905Z","data":{"text":"Now let me look at the change-locations import types and check the line/function budgets."}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:54.905Z","data":{"promptTokens":1708,"candidateTokens":857,"totalTokens":64133,"cachedTokens":61568,"reasoningTokens":707,"cost":0.001910208,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:54.905Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:56:57.735Z","data":{"promptTokens":183,"candidateTokens":605,"totalTokens":64788,"cachedTokens":64000,"reasoningTokens":33,"cost":0.0011649,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:56:57.735Z","data":{"tool":"write","summary":"src/core/spec/checkout-draft.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:56:57.736Z","data":{"path":"src/core/spec/checkout-draft.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:00.827Z","data":{"promptTokens":174,"candidateTokens":624,"totalTokens":65438,"cachedTokens":64640,"reasoningTokens":305,"cost":0.00118884,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:00.827Z","data":{"tool":"edit","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:00.831Z","data":{"path":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:08.518Z","data":{"promptTokens":189,"candidateTokens":2429,"totalTokens":67898,"cachedTokens":65280,"reasoningTokens":1296,"cost":0.00336318,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:08.519Z","data":{"tool":"edit","summary":"src/core/spec/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:08.521Z","data":{"path":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:11.445Z","data":{"promptTokens":215,"candidateTokens":641,"totalTokens":68568,"cachedTokens":67712,"reasoningTokens":84,"cost":0.001239972,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:11.446Z","data":{"tool":"edit","summary":"src/core/lifecycle/reject.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:11.447Z","data":{"path":"src/core/lifecycle/reject.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:15.503Z","data":{"promptTokens":245,"candidateTokens":888,"totalTokens":69485,"cachedTokens":68352,"reasoningTokens":508,"cost":0.001549212,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:15.503Z","data":{"tool":"edit","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:15.504Z","data":{"tool":"edit","summary":"src/core/lifecycle/reject.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:15.505Z","data":{"path":"src/core/spec/approve-worktree.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:15.505Z","data":{"path":"src/core/lifecycle/reject.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:18.907Z","data":{"promptTokens":165,"candidateTokens":205,"totalTokens":69746,"cachedTokens":69376,"reasoningTokens":26,"cost":0.000711756,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:18.908Z","data":{"tool":"edit","summary":"src/cli/reject.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:18.908Z","data":{"path":"src/cli/reject.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:21.463Z","data":{"promptTokens":141,"candidateTokens":574,"totalTokens":70347,"cachedTokens":69632,"reasoningTokens":24,"cost":0.0011488919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:21.463Z","data":{"tool":"edit","summary":"tests/approve-worktree.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:21.465Z","data":{"path":"tests/approve-worktree.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:27.382Z","data":{"promptTokens":232,"candidateTokens":1830,"totalTokens":72206,"cachedTokens":70144,"reasoningTokens":774,"cost":0.002686464,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:27.382Z","data":{"tool":"edit","summary":"tests/approve-stacked.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:27.384Z","data":{"path":"tests/approve-stacked.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:33.753Z","data":{"promptTokens":171,"candidateTokens":1618,"totalTokens":73853,"cachedTokens":72064,"reasoningTokens":1494,"cost":0.0024252839999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:33.754Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:39.146Z","data":{"promptTokens":369,"candidateTokens":1494,"totalTokens":75591,"cachedTokens":73728,"reasoningTokens":442,"cost":0.002345868,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:39.146Z","data":{"tool":"edit","summary":"tests/reject-worktree.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:39.147Z","data":{"path":"tests/reject-worktree.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:41.507Z","data":{"promptTokens":227,"candidateTokens":413,"totalTokens":76032,"cachedTokens":75392,"reasoningTokens":311,"cost":0.001016052,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:41.508Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:43.515Z","data":{"promptTokens":285,"candidateTokens":218,"totalTokens":76535,"cachedTokens":76032,"reasoningTokens":103,"cost":0.0008032919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:43.516Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:51.950Z","data":{"promptTokens":934,"candidateTokens":1398,"totalTokens":78748,"cachedTokens":76416,"reasoningTokens":1062,"cost":0.002416296,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:51.951Z","data":{"tool":"edit","summary":"tests/approve-stacked.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:57:51.952Z","data":{"path":"tests/approve-stacked.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:57:53.853Z","data":{"promptTokens":185,"candidateTokens":100,"totalTokens":78877,"cachedTokens":78592,"reasoningTokens":0,"cost":0.000647052,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:57:53.854Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:06.311Z","data":{"promptTokens":312,"candidateTokens":2617,"totalTokens":81777,"cachedTokens":78848,"reasoningTokens":2516,"cost":0.003707088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:06.312Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:15.437Z","data":{"promptTokens":251,"candidateTokens":3063,"totalTokens":84978,"cachedTokens":81664,"reasoningTokens":247,"cost":0.0042408839999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:15.438Z","data":{"tool":"write","summary":"tests/approve-owns-draft.test.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T17:58:15.439Z","data":{"path":"tests/approve-owns-draft.test.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:17.393Z","data":{"promptTokens":140,"candidateTokens":180,"totalTokens":85184,"cachedTokens":84864,"reasoningTokens":78,"cost":0.000767184,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:17.394Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:20.471Z","data":{"promptTokens":275,"candidateTokens":168,"totalTokens":85563,"cachedTokens":85120,"reasoningTokens":35,"cost":0.00079482,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:20.471Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:22.349Z","data":{"promptTokens":146,"candidateTokens":136,"totalTokens":85786,"cachedTokens":85504,"reasoningTokens":45,"cost":0.0007200239999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:22.349Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:28.641Z","data":{"promptTokens":224,"candidateTokens":127,"totalTokens":85983,"cachedTokens":85632,"reasoningTokens":39,"cost":0.000733392,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:28.641Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:30.951Z","data":{"promptTokens":921,"candidateTokens":261,"totalTokens":87070,"cachedTokens":85888,"reasoningTokens":95,"cost":0.001104828,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:30.951Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:32.610Z","data":{"promptTokens":184,"candidateTokens":88,"totalTokens":87184,"cachedTokens":86912,"reasoningTokens":0,"cost":0.000682272,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:32.610Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:34.798Z","data":{"promptTokens":215,"candidateTokens":164,"totalTokens":87419,"cachedTokens":87040,"reasoningTokens":39,"cost":0.00078354,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:34.798Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:58:39.829Z","data":{"promptTokens":299,"candidateTokens":364,"totalTokens":87959,"cachedTokens":87296,"reasoningTokens":275,"cost":0.001050276,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:58:39.830Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T17:59:29.419Z","data":{"promptTokens":1246,"candidateTokens":584,"totalTokens":89766,"cachedTokens":87936,"reasoningTokens":465,"cost":0.001602216,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T17:59:29.419Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:29.933Z","data":{"promptTokens":602,"candidateTokens":157,"totalTokens":90487,"cachedTokens":89728,"reasoningTokens":47,"cost":0.000907368,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:29.933Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:33.919Z","data":{"promptTokens":188,"candidateTokens":499,"totalTokens":91055,"cachedTokens":90368,"reasoningTokens":379,"cost":0.001197408,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:33.920Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:35.585Z","data":{"promptTokens":177,"candidateTokens":169,"totalTokens":91354,"cachedTokens":91008,"reasoningTokens":25,"cost":0.000801948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:35.585Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:35.586Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:38.724Z","data":{"promptTokens":1163,"candidateTokens":618,"totalTokens":93045,"cachedTokens":91264,"reasoningTokens":410,"cost":0.001638084,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:38.724Z","data":{"tool":"edit","summary":"src/core/spec/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-09-30T18:00:38.725Z","data":{"path":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:43.775Z","data":{"promptTokens":146,"candidateTokens":940,"totalTokens":94014,"cachedTokens":92928,"reasoningTokens":817,"cost":0.001729368,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:43.775Z","data":{"tool":"bash","summary":"cd . &"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:51.523Z","data":{"promptTokens":140,"candidateTokens":1406,"totalTokens":95498,"cachedTokens":93952,"reasoningTokens":518,"cost":0.002292912,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:51.523Z","data":{"tool":"write","summary":"openspec/changes/123-approve-owns-draft/.run/results/3.md"}}
+{"type":"file_changed","timestamp":"2026-09-30T18:00:51.524Z","data":{"path":"openspec/changes/123-approve-owns-draft/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:53.960Z","data":{"promptTokens":174,"candidateTokens":326,"totalTokens":95860,"cachedTokens":95360,"reasoningTokens":238,"cost":0.00101556,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:53.960Z","data":{"tool":"read","summary":"openspec/changes/123-approve-owns-draft/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-09-30T18:00:56.143Z","data":{"promptTokens":945,"candidateTokens":258,"totalTokens":96947,"cachedTokens":95744,"reasoningTokens":180,"cost":0.001167564,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-09-30T18:00:56.143Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"text","timestamp":"2026-09-30T18:01:02.166Z","data":{"text":"Task complete. All acceptance lines are implemented and both verifies pass.\n\n## Summary\n\n**New module** `src/core/spec/checkout-draft.ts`:\n- `removeCheckoutDraft(vcs, projectRoot, folderPath)` — removes the folder unless `vcs.pathExists('HEAD', <repo-relative path>)` is true.\n- `restoreStackedDraft(projectRoot, config, change)` — copies a stacked copy into the checkout, replaces any existing folder, prunes `.run/` except `manifest.json` and `plan.jsonl`, leaves the stacked dir untouched, returns the absolute path.\n\n**Wired in**:\n- `approve-worktree.ts`: `removeCheckoutDraft` after the worktree commit and after `recordStackedApproval`; 247 lines, no other change.\n- `approve.ts`: a stacked change is restored and approved like a checkout draft; the whole path runs in a try/catch that removes the restored draft and rethrows on any failure (declined confirmation included); the old `not found` refusal for stacked changes is gone.\n- `reject.ts` / `cli/reject.ts`: stacked rejection restores the draft before deleting the stacked dir, returns `restoredPath`, and prints `  Restored draft: <path>`.\n\n**Tests**: new `tests/approve-owns-draft.test.ts` covers all five delta scenarios plus the lint-failing stacked re-approval; `approve-worktree`, `approve-stacked`, and `reject-worktree` were updated to read worktree/stacked copies, expect the checkout draft gone, and expect the restored draft.\n\n**Verification**:\n- Task verify `node --import tsx --test tests/approve-owns-draft.test.ts` — 6/6 pass.\n- Proposal verify `pnpm verify` — exit 0 (2850 + 94 tests, 0 fail; typechecks, build, lint clean).\n\nResult written to `openspec/changes/123-approve-owns-draft/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-09-30T18:01:02.166Z","data":{"promptTokens":389,"candidateTokens":1076,"totalTokens":98361,"cachedTokens":96896,"reasoningTokens":635,"cost":0.001989276,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-09-30T18:01:02.185Z","data":{"exitCode":0,"pid":47338,"timedOut":false,"elapsedSeconds":320.2}}
+{"type":"verify_ran","timestamp":"2026-09-30T18:01:03.670Z","data":{"command":"node --import tsx --test tests/approve-owns-draft.test.ts","exitCode":0,"duration":1.3,"output":"▶ approval owns the draft\n  ✔ removes an uncommitted draft from the checkout (168.090093ms)\n  ✔ keeps a draft the checkout HEAD holds (158.271971ms)\n  ✔ keeps the draft when approval refuses (100.575166ms)\n  ✔ leaves the folder and seal in the checkout when vcs is off (91.163343ms)\n✔ approval owns the draft (519.217765ms)\n▶ stacked draft restore\n  ✔ restores a halted stacked change as an unapproved draft (269.564551ms)\n  ✔ removes the restored draft and keeps the stacked copy when approval fails (321.015372ms)\n✔ stacked draft restore (590.860902ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1271.684981\n"}}
+{"type":"measures","timestamp":"2026-09-30T18:02:01.472Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":9,"scopeLines":2188,"repoFiles":2044,"repoLines":234967,"importFanIn":7,"proposalWords":1146,"taskWords":523,"deltaRequirements":18,"deltaScenarios":56,"changedFiles":9,"changedLines":383,"scopeHashes":{"src/cli/reject.ts":{"before":"sha256:f8138c096e54f0434fd06e01b821f76abb5f147f0df50c9688b55379336b6e24","after":"sha256:cc00778cd299fb4a8b73eed05503b33efad56f3b9ef7655be0a8f0da34bc7731"},"src/core/lifecycle/reject.ts":{"before":"sha256:a6cee449481371ea1bd52aeece9b0c3703f63e43e2656e27b8ff2e4a5bd91d93","after":"sha256:0c7049469092a1bc7c6629e2988ec8698faed9aff954ab8114e33d9eeb380df3"},"src/core/spec/approve-worktree.ts":{"before":"sha256:e57705cf9fffec7865371cd3880b9f8c77932954c1ee23994d9d38c4ea423790","after":"sha256:959cf327b23401d354e6bb9c594d6819f240d63ecfa1f440d251101852e88a48"},"src/core/spec/approve.ts":{"before":"sha256:785750bab14973c3c5650387d31072c70972a493b801f10decbc8b6305cba90e","after":"sha256:7277a45cc06bf0ad77698944d40351143b311ab4b35e92cfdcf4abab67da1abc"},"src/core/spec/checkout-draft.ts":{"before":null,"after":"sha256:4447e4d14c456bc8c736cd9f4fe11b23b07a5defa47b944a3220a5bba06951c6"},"tests/approve-confirm.test.ts":{"before":"sha256:c02923f9e570b429f6453ea570bc9eeb80cd93094c5a8c4008f9e4fb4fe09001","after":"sha256:c02923f9e570b429f6453ea570bc9eeb80cd93094c5a8c4008f9e4fb4fe09001"},"tests/approve-rejected-branch.test.ts":{"before":"sha256:6a33ab6d1021f5814d4e82068c8144087519357de3a739ae441896c501cb0c81","after":"sha256:6a33ab6d1021f5814d4e82068c8144087519357de3a739ae441896c501cb0c81"},"tests/approve-stacked.test.ts":{"before":"sha256:a47aa6f561c283169276c7068803c656a7479403f51411a23bc7e4ed1dc644a1","after":"sha256:a751609ee01afef4f90ac49034288e630fcf220b9574e3fd08a6b9846d74a0ed"},"tests/approve-worktree.test.ts":{"before":"sha256:896bad0916a6eb9128b3efa4c79ce68a8e11cf274dbd99c5a1facab978edc1db","after":"sha256:856e274f4947967e063d77034018c8c075bf018f64eb34c4c5b17d207bc918e9"},"tests/reject-worktree.test.ts":{"before":"sha256:7c68e94fdacd59aa8778266bb4f7f533af03ac7300a2be0d030f2d15c8141172","after":"sha256:dc82563b9586dc55a15f698f8e6e4eb53a36452bd6d51235557f7136c80d42c5"},"tests/approve-owns-draft.test.ts":{"before":null,"after":"sha256:71bea0ddca2aaef0ccd98c4f394cd78ade4bcc67dab90c7e8f7ffacc13eed147"}}}}
+{"type":"done","timestamp":"2026-09-30T18:02:01.489Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-09-30T18:16:07.185Z","data":{"command":"node --import tsx --test tests/approve-owns-draft.test.ts","exitCode":0,"duration":1.25,"output":"▶ approval owns the draft\n  ✔ removes an uncommitted draft from the checkout (167.037525ms)\n  ✔ keeps a draft the checkout HEAD holds (149.881545ms)\n  ✔ keeps the draft when approval refuses (95.710812ms)\n  ✔ leaves the folder and seal in the checkout when vcs is off (83.123085ms)\n✔ approval owns the draft (496.838921ms)\n▶ stacked draft restore\n  ✔ restores a halted stacked change as an unapproved draft (264.535315ms)\n  ✔ removes the restored draft and keeps the stacked copy when approval fails (302.151287ms)\n✔ stacked draft restore (567.045263ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1224.258318\n"}}

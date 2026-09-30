@@ -403,7 +403,7 @@ describe('Land command', () => {
 
     assert.equal(capture.exitCode, 0);
     assert.ok(capture.stderr.startsWith('main has 1 new commit; merging into osq/001-order-flow'));
-    assert.equal(capture.stdout.split('\n').filter((line) => line.length > 0).length, 4);
+    assert.equal(capture.stdout.split('\n').filter((line) => line.length > 0).length, 3);
     assert.ok(!capture.stdout.includes('merging into'));
   });
 });

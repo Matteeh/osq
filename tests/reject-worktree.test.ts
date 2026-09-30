@@ -279,7 +279,7 @@ describe('rejection under version control', () => {
     assert.equal(await exists(change.worktree), false);
   });
 
-  it('withdraws a halted stacked approval without moving the checkout copy', async () => {
+  it('withdraws a halted stacked approval and restores its draft', async () => {
     const project = await makeProject();
     await addChange(project, 'One');
     const two = await addChange(project, 'Two', ['001']);
@@ -289,16 +289,30 @@ describe('rejection under version control', () => {
     const stackedRoot = stackedPath(project.vcs, project.repo, two.folderName);
     const stackedCopy = path.join(stackedRoot, path.relative(project.repo, two.folderPath));
     await writeRegressedChange(stackedCopy);
-    const before = await snapshotTree(two.folderPath);
+    assert.equal(await exists(two.folderPath), false);
+    const before = await snapshotTree(stackedCopy);
 
     const result = await rejectSpec(project.repo, '002', 'stop', project.config);
 
     assert.equal(result.stackedPath, stackedRoot);
+    assert.equal(result.restoredPath, path.posix.join(CHANGES, two.folderName));
     assert.equal(result.branch, undefined);
     assert.equal(result.worktree, undefined);
     assert.equal(await exists(stackedRoot), false);
     assert.equal(await git(['branch', '--list', `osq/${two.folderName}`], project.repo), '');
-    assertSameTree(before, await snapshotTree(two.folderPath), "checkout's copy");
+
+    const authored = (map: Map<string, string>): Map<string, string> =>
+      new Map([...map].filter(([rel]) => !rel.startsWith('.run/')));
+    assertSameTree(
+      authored(before),
+      authored(await snapshotTree(two.folderPath)),
+      'restored draft',
+    );
+    const runEntries = await fs.readdir(path.join(two.folderPath, '.run'));
+    assert.ok(runEntries.includes('manifest.json'));
+    for (const marker of ['approved', 'approver', 'stacked-on', 'regressed']) {
+      assert.equal(runEntries.includes(marker), false, `${marker} should be pruned`);
+    }
   });
 
   it('refuses a healthy stacked approval and leaves it in place', async () => {
@@ -362,6 +376,7 @@ describe('osq reject output with version control', () => {
     );
 
     assert.ok(lines.includes(`  Withdrew stacked approval: ${stackedRoot}`));
+    assert.ok(lines.includes(`  Restored draft: ${path.posix.join(CHANGES, two.folderName)}`));
     assert.equal(
       lines.some((line) => line.startsWith('  Destination: ')),
       false,

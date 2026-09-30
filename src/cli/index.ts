@@ -3,7 +3,6 @@ import { Command, InvalidArgumentError } from 'commander';
 import { registerApproveCommand } from './approve.js';
 import { registerVerificationCommands } from './check.js';
 import { registerDoctorCommand } from './doctor.js';
-import { doneCommand } from './done.js';
 import { registerGraphCommand } from './graph.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
@@ -136,14 +135,6 @@ export function createProgram(version?: string): Command {
     .requiredOption('--reason <text>', 'reason for rejecting the change', parseRejectReason)
     .action(async (id: string, options: { reason: string }) => {
       await rejectCommand(id, options);
-    });
-
-  program
-    .command('done <id> <task>')
-    .description('mark a task done manually with required justification')
-    .requiredOption('--manual <reason>', 'reason for manual completion')
-    .action(async (id: string, task: string, options: { manual: string }) => {
-      await doneCommand(id, task, options);
     });
 
   program

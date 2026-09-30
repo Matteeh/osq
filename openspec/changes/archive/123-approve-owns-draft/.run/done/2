@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b83a8a7c9b676c88d0fe0da3de7e70618a5896c4eac32438ddacc07b1fc21390"
+build_stamp: "9db81c6"
+project_commit: "76f41d0"
+exit_code: 0
+scope_files: {"src/core/status/leftover-drafts.ts":"sha256:d9f2c4d9e442554f12febccdc7cbbb426dd6136a27d23ba1e41bc9a4d84ea5e7","src/core/status/status.ts":"sha256:8781e7b855315ca0a80f73a555a74842e7d8f32a878614412a5886270e566afd","src/core/vcs/land.ts":"sha256:9a06791d7d220053f7f604755055b5e3aded17840782f3861467f2b387dab272","tests/checkout-copy-ignored.test.ts":"sha256:0ec0e8e3e8871988e341fe97ca90352a033b5435621ca1b97ceeef0e14a54f6d","tests/status-leftover.test.ts":"sha256:9dc85df84e5f5b766a2be03cb70370dc41c032cbf0011e27a5377f18dbc7292d","tests/status-sync.test.ts":"sha256:9e72d49c5500faa0a56a3db98cf48fd3e424b49cc8a4e3dd0f422f92dbcb6c3d","tests/status-worktree.test.ts":"sha256:26868639d3a18f519a0d9889cc0e492f3ba371ed2c4dd5b3d92d4224e1a4d592","tests/vcs-land-commit.test.ts":"sha256:273d9dec0a8e5e186e9322851d6995580af830cb08caf84627cf2d5601910670","tests/vcs-land-ops.test.ts":"sha256:372be275290b088f45ea28edb186c06047ea29b864bd60d3690a83b30019535a","tests/vcs-land-refusals.test.ts":"sha256:07cef6ff4d20b66ba62b1471516e6cce11a7a4018c1afea4c1b864f1581a73cb","tests/vcs-land-stale.test.ts":"sha256:eaf3b93fae45ff521a84cbdca0b1a1bd445f6f68b46e88be122a2ab598c0c3f8","tests/vcs-land.test.ts":"sha256:5ed94c422746d427959cc69b90c5a1567ac40a79da055d21f90c2fac5d28d494"}
+---
+2026-09-30T17:55:39.695Z

@@ -89,7 +89,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 - **Scope recertification.** Before each task and again before archiving, the watcher re-hashes the resolved `scope` of every done task. When a later task whose `scope` covers a changed file changed it, the recorded hashes show nothing else did, and the task's `verify` still passes, the watcher recertifies that task by itself. Every other change halts the change until you run `osq retry <id> <n>`.
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
 - **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
-- **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files. The watcher writes markers and checkboxes automatically; a human writes the rest through `osq approve`, `osq retry`, `osq reject`, and `osq done`.
+- **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files. The watcher writes markers and checkboxes automatically; a human writes the rest through `osq approve`, `osq retry`, and `osq reject`.
 - **Role environments.** osq starts three roles, and none inherits osq's environment. Prepare runs `vcs.prepare`. The agent is the harness process. Verify covers every verify, focused run, mutation check, baseline, and `osq check`. Each role gets `PATH`, `HOME`, the locale, temp-folder, and certificate variables, every `OSQ_` variable, and the names the project lists for it under `confinement.roles.<role>.env`. The agent also gets the model key names its harness reads. Verify and prepare never get those, even when listed. A project whose tests need a variable, such as `DATABASE_URL`, must list it, for example `confinement: { roles: { verify: { env: ['DATABASE_URL'] } } }`. Until then those tests fail. See ADR 007.
 
 ## Change folder
@@ -352,9 +352,9 @@ export default defineConfig({
 });
 ```
 
-With `vcs.enabled`, `osq approve` creates branch `osq/<folder>` and a linked worktree under `vcs.worktreeRoot`, runs `vcs.prepare` there, writes the seal plus `.run/base` and `.run/approver` into the worktree's copy, commits `osq: <id> approved`, and prints `Worktree:` and `Branch:` lines. Your checkout is left untouched, and `osq status` warns when the checkout's copy of the change is edited afterwards. The watcher runs the change inside that worktree: before every spawn and archive it checks that HEAD is on `osq/<folder>` and that status lists nothing outside the change folder's `.run/` (and its `tasks.md`), halting with `worktree_off_branch` or `worktree_dirty` otherwise; it commits each verified task as `osq: <id> task <n> verified` and the archive as `osq: <id> archived`; and when a task dies it commits the last verified state plus the dead record and the agent's edits in `.run/dead/<n>.patch`, halting with `commit_failed` when a commit hook rejects a commit. Inside a worktree, a `vcs_violation` or `scope_violation` the git guard records kills the task before verify. An approved change whose `depends_on` names an approved change that has not landed gets a stacked approval under `<vcs.worktreeRoot>/<repo>/.stacked/<folder>` instead of a branch: once the dependency's archive commit exists the watcher cuts the change's branch from it, creates its worktree, and commits its approved copy there. The dependent halts with `dependency_changed` when the dependency is rejected or approved again, with `dependency_diverged` when its dependencies are archived on separate branches, and with `stack_cut_failed` when a cut fails; approving it again starts from the new base. `osq reject` commits the rejection on the change's branch, removes the worktree when it is otherwise clean, and keeps the branch; rejecting a stacked change withdraws its stacked approval.
+With `vcs.enabled`, `osq approve` creates branch `osq/<folder>` and a linked worktree under `vcs.worktreeRoot`, runs `vcs.prepare` there, writes the seal plus `.run/base` and `.run/approver` into the worktree's copy, commits `osq: <id> approved`, and prints `Worktree:` and `Branch:` lines. Approval then removes the change folder from your checkout, unless it is committed there, so the approved change lives only on its branch. The watcher runs the change inside that worktree: before every spawn and archive it checks that HEAD is on `osq/<folder>` and that status lists nothing outside the change folder's `.run/` (and its `tasks.md`), halting with `worktree_off_branch` or `worktree_dirty` otherwise; it commits each verified task as `osq: <id> task <n> verified` and the archive as `osq: <id> archived`; and when a task dies it commits the last verified state plus the dead record and the agent's edits in `.run/dead/<n>.patch`, halting with `commit_failed` when a commit hook rejects a commit. Inside a worktree, a `vcs_violation` or `scope_violation` the git guard records kills the task before verify. An approved change whose `depends_on` names an approved change that has not landed gets a stacked approval under `<vcs.worktreeRoot>/<repo>/.stacked/<folder>` instead of a branch: once the dependency's archive commit exists the watcher cuts the change's branch from it, creates its worktree, and commits its approved copy there. The dependent halts with `dependency_changed` when the dependency is rejected or approved again, with `dependency_diverged` when its dependencies are archived on separate branches, and with `stack_cut_failed` when a cut fails; approving it again starts from the new base. `osq reject` commits the rejection on the change's branch, removes the worktree when it is otherwise clean, and keeps the branch; rejecting a stacked change withdraws its stacked approval and moves the change back into your checkout as a draft (`Restored draft:`). To change a stacked plan, edit it under the stacked directory and run `osq approve <id>` again.
 
-To land a change, run `osq land <id>` from the checkout. It syncs the default branch into the change's worktree when it has moved and runs the change's `verify` there; it builds the land commit from the branch tip's tree, with the default branch as its only parent, and fast-forwards the default branch to it, so the land ends complete or changes nothing. It leaves unrelated uncommitted work in the checkout alone, stops naming any uncommitted file the land writes, and removes the leftover draft and the worktree.
+To land a change, run `osq land <id>` from the checkout. It syncs the default branch into the change's worktree when it has moved and runs the change's `verify` there; it builds the land commit from the branch tip's tree, with the default branch as its only parent, and fast-forwards the default branch to it, so the land ends complete or changes nothing. It leaves unrelated uncommitted work in the checkout alone, stops naming any uncommitted file the land writes, and removes the worktree.
 
 ```sh
 osq land <id>
@@ -368,12 +368,12 @@ Before a change's first task, and again before it archives, when the default bra
 
 1. Approve the change from the default branch, so osq cuts the `osq/<folder>` branch and its worktree there.
 2. Find the worktree at the `Worktree:` line `osq approve` prints, or under `vcs.worktreeRoot`.
-3. Leave the worktree alone while a task runs, and edit the change only from the default branch or another checkout.
+3. Leave the worktree alone while a task runs. Approval moved the change folder out of your checkout, so edit a stacked change in its stacked directory and approve it again.
 4. Land the archived change with `osq land <id>`. It syncs the default branch into the worktree when it has moved, runs `verify` on the merged tree, builds the land commit from the branch tip, and fast-forwards the default branch to it; the land ends complete or changes nothing.
 
 ## Harnesses
 
-`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `done_manual`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`; when its sync runs `verify`, `osq land` appends `verify_ran` and `synced` there. Hooks are optional shims that append to the same file. The loop works without them.
+`OSQ_HARNESS` picks an adapter. An adapter does two things: spawn an agent for a tier (`coding` or `smart`) and write its harness's config files (`osq setup`). Adapters translate the harness's own event stream into typed events (`started`, `tokens`, `tool`, `text`, `file_changed`, `result_written`, `exited`), and the watcher appends its own, among them `measures`, `verify_ran`, `baseline_ran`, `focused_ran`, `mutation_ran`, `dependencies_added`, `done`, `dead`, `stuck`, `regressed`, `retry`, `recertification`, and `rejected`, to the task's `.run/events/<n>.jsonl`. Change-level events such as `archived`, `check_ran`, and `verification_recorded` go to `.run/events/change.jsonl`; when its sync runs `verify`, `osq land` appends `verify_ran` and `synced` there. Hooks are optional shims that append to the same file. The loop works without them.
 
 Available adapters:
 
@@ -554,7 +554,6 @@ osq lint [ids...]        validate change folders and OpenSpec artifacts against 
 osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
 osq reject <id>          move an unapproved or failed change intact into rejected history
-osq done <id> <task>     mark a task done manually with required justification (--manual)
 osq check <id>           run an archived change's recorded check command
 osq verified <id>        record an after-landing outcome (--passed or --failed, optional --note <text>)
 osq watch                run the watcher loop
@@ -733,7 +732,6 @@ reported input and output tokens.
 osq retry <id> <task>           # retry a dead task or recertify a regressed one (e.g. osq retry 042 1)
 osq retry <id> change           # clear an active change-level regression after fixing root cause
 osq reject <id> --reason <text> # move an unapproved or failed change to openspec/changes/rejected/
-osq done <id> <task> --manual "<reason>" # manually satisfy a task with required reason
 ```
 
 ### Watcher options
@@ -812,7 +810,7 @@ Run `osq doctor` to verify repository health:
 - `managed-blocks`: verifies the `AGENTS.md`, `PLANNER.md`, and `.claude/commands/osq-plan.md` managed sections match the installed osq version (run `osq init` to repair drift)
 - `locks`: checks for orphaned `.run/running/*.pid` locks and processes
 - `archives`: validates integrity of archived change folders
-- `done-markers`: flags any done marker in an active change that neither the watcher nor `osq done --manual` wrote
+- `done-markers`: flags any done marker in an active change that neither the watcher nor an older osq wrote when marking a task done by hand
 - `validator`: ensures `@fission-ai/openspec` is installed and matches the pinned version (`1.13.1`)
 
 ## Release Procedure

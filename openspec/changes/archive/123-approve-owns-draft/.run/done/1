@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:922a7e0a096420e66f27e1fc23fa26d7bf85e2a96b8b512020b87d7ba8d0cdc3"
+build_stamp: "9db81c6"
+project_commit: "b23bce5"
+exit_code: 0
+scope_files: {"src/cli/new.ts":"sha256:35f76c1f8ab0a37d98708cd2064adf2dbda09cc26ef174341b332aea7874c2f0","src/cli/plan-queue.ts":"sha256:c0d2647145f6efb964fe4306b753a094c82989b13d93319cec954486354ee8b0","src/cli/plan.ts":"sha256:b15666f3c12770f29810a6db065865c87bc7ac8753b293448c5d84979702e159","src/core/foundation/change-number.ts":"sha256:137c5e89e7d614e4a2f2dcf8ebb3962ed17e0cd5c8aad607e97d6935ccc608f8","src/core/foundation/new.ts":"sha256:ff6f83690fddafba0a8bd194f61ccac09f7739770a49de7055f6594c8f4bbb76","src/core/spec/linter.ts":"sha256:c21d07450ce9116c0f5fd98547d86e73bde595997dedf83e3e77f344ae3c2931","tests/change-number.test.ts":"sha256:e2124e73f3fc1e174fe4f8ba65fd3203cd1acc3d0fdc7cea991471ce24788148"}
+---
+2026-09-30T17:45:37.659Z

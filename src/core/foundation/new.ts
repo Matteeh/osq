@@ -1,8 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getChangesDir } from '../status/layout.js';
-import { DEFAULT_CONFIG } from './config.js';
+import { nextChangeNumber } from './change-number.js';
+import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
 import { TEMPLATES_ROOT } from './package-root.js';
+
+export { getNextSpecNumber } from './change-number.js';
 
 export { TEMPLATES_ROOT } from './package-root.js';
 
@@ -107,34 +110,6 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export async function getNextSpecNumber(specsDir: string): Promise<string> {
-  // Rejected attempts are numbered too, so a rejection followed by a replan
-  // never reuses an identifier.
-  const dirsToScan = [specsDir, path.join(specsDir, 'archive'), path.join(specsDir, 'rejected')];
-  let maxNum = 0;
-
-  for (const dir of dirsToScan) {
-    let entries: string[] = [];
-    try {
-      entries = await fs.readdir(dir);
-    } catch {
-      continue;
-    }
-
-    for (const entry of entries) {
-      const match = entry.match(/^(\d+)/);
-      if (match) {
-        const num = Number.parseInt(match[1], 10);
-        if (!Number.isNaN(num) && num > maxNum) {
-          maxNum = num;
-        }
-      }
-    }
-  }
-
-  return String(maxNum + 1).padStart(3, '0');
-}
-
 export interface NewSpecResult {
   specId: string;
   folderName: string;
@@ -163,7 +138,13 @@ function seedProposal(content: string, title: string, dependsOn?: IdList, fixes?
 export async function createNewSpec(
   projectDir: string,
   title: string,
-  options: { specsDirName?: string; slug?: string; dependsOn?: IdList; fixes?: IdList } = {},
+  options: {
+    specsDirName?: string;
+    slug?: string;
+    dependsOn?: IdList;
+    fixes?: IdList;
+    config?: OsqConfig;
+  } = {},
 ): Promise<NewSpecResult> {
   const trimmedTitle = title.trim();
   if (!trimmedTitle) {
@@ -183,7 +164,7 @@ export async function createNewSpec(
     .stat(legacyTemplateDir)
     .then(() => true)
     .catch(() => false);
-  const specId = await getNextSpecNumber(specsDir);
+  const specId = await nextChangeNumber(projectDir, specsDir, options.config);
   const folderName = `${specId}-${slug}`;
   const targetDir = path.join(specsDir, folderName);
   const targetExists = await fs

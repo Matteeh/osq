@@ -99,7 +99,7 @@ The system SHALL watch specifications reactively and respond cleanly to terminat
 - **THEN** watcher clears status line, restores cursor, awaits active task exit, and terminates immediately on second SIGINT
 
 ### Requirement: Code ownership
-<!-- source: src/watcher/**, src/harness/**, src/core/run/**, src/core/lifecycle/**, tests/retry*.test.ts, tests/reject.test.ts, tests/done-manual.test.ts -->
+<!-- source: src/watcher/**, src/harness/**, src/core/run/**, src/core/lifecycle/**, tests/retry*.test.ts, tests/reject.test.ts -->
 The Watcher and Harness capability SHALL own the reactive watch loop, runner,
 process execution, deterministic task-scope resolution and hashing, shared
 verification execution, agent harnesses, adapter registration, execution
@@ -107,7 +107,7 @@ manifest construction, and append-only execution lifecycle event contracts.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for watcher, scope, verification, harness execution, or retry and rejection lifecycle events
-- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/run/**`, `src/core/lifecycle/**`, `tests/retry*.test.ts`, `tests/reject.test.ts`, and `tests/done-manual.test.ts` to watcher-and-harness
+- **THEN** system maps `src/watcher/**`, `src/harness/**`, `src/core/run/**`, `src/core/lifecycle/**`, `tests/retry*.test.ts`, and `tests/reject.test.ts` to watcher-and-harness
 
 ### Requirement: Capability rule prompt injection
 The harness runner SHALL extract rules from capability specifications written
@@ -573,11 +573,14 @@ active done markers without removing historical diagnostics.
 - **THEN** watcher still observes the active failure until explicit retry
 
 ### Requirement: Manual task completion lifecycle event
-The harness event stream SHALL support a typed `done_manual` event recording human task completion with justification.
+The harness event stream SHALL keep the typed `done_manual` event, with
+payload `task` and `reason`, so task streams that older osq versions wrote
+when a human marked a task done still parse. osq SHALL NOT append a
+`done_manual` event.
 
 #### Scenario: Typed done_manual event emission
-- **WHEN** a task is marked done manually
-- **THEN** system appends an event to `.run/events/<n>.jsonl` with `type: "done_manual"` and payload containing `task` and `reason`
+- **WHEN** an archived task stream holds a `done_manual` event with `task` and `reason`
+- **THEN** it parses as a typed `done_manual` event, and no osq command appends one
 
 ### Requirement: Interactive harness adapter spawning
 Harness adapters SHALL implement `spawnInteractive` inheriting terminal stdio and returning the process exit code.
@@ -2118,17 +2121,18 @@ one per line, for `scope_violation`. When both happen, the reason SHALL be
 - **THEN** a `scope_violation` event is recorded and the task is done
 
 ### Requirement: Lifecycle commands in a worktree
-`retry`, `reject`, `done`, and `verified` SHALL act on the folder the change
+`retry`, `reject`, and `verified` SHALL act on the folder the change
 locations module returns, so for a change that runs in a worktree they write
 their markers in the worktree and never in the checkout. `rejectSpec` SHALL
 read a change's markers in the change's own tree, move the change into that
 tree's rejected directory, and then commit and remove the worktree as
 "Rejection under version control" says. `retrySpec`'s recertification SHALL
-run the task's verify and hash its scope in the change's own tree.
+run the task's verify and hash its scope in the change's own tree. osq SHALL
+have no command that writes a done marker; only the watcher writes one.
 
 #### Scenario: Reject a dead change in a worktree
 - **WHEN** a change in a worktree has a dead task and a human runs `osq reject <id> --reason stop`
-- **THEN** the change's branch holds the folder and its `.run/rejected.md` under the rejected directory, and the checkout's copy of the change and its rejected directory are unchanged
+- **THEN** the change's branch holds the folder and its `.run/rejected.md` under the rejected directory, and the checkout's changes and rejected directories are unchanged
 
 #### Scenario: Recertify in the worktree
 - **WHEN** a done task in a worktree has a scope regression and its verify passes only in the worktree
@@ -2136,7 +2140,7 @@ run the task's verify and hash its scope in the change's own tree.
 
 #### Scenario: Manual done in the worktree
 - **WHEN** a human runs `osq done <id> <n> --manual <reason>` for a change in a worktree
-- **THEN** `.run/done/<n>` is written in the worktree's change folder and not in the checkout's copy
+- **THEN** osq fails with an unknown command, and no `.run/done/<n>` is written in the worktree or the checkout
 
 ### Requirement: Stacked cut
 With `vcs.enabled` and `GitVcs` selected, each watcher cycle SHALL, before it
@@ -2231,10 +2235,13 @@ still has other changes, or the commit or the removal fails, it SHALL keep
 the worktree and report why. `osq reject` SHALL print
 `  Worktree removed: <path>` or `  Worktree kept: <path> (<why>)`, then
 `  Branch kept: osq/<folder>`. For a change in a stacked tree, `rejectSpec`
-SHALL apply the same eligibility rules, then delete the stacked approval
-directory, move nothing, and write no rejection record, and `osq reject`
-SHALL print `  Withdrew stacked approval: <path>` in place of its
-`Destination` line.
+SHALL apply the same eligibility rules, then restore the change to the
+checkout as "Stacked draft restore" says, delete the stacked approval
+directory, move nothing else, and write no rejection record, because a
+stacked approval has no branch to keep the plan. `osq reject` SHALL print
+`  Withdrew stacked approval: <path>` in place of its `Destination` line,
+then `  Restored draft: <path>`, the restored folder's path relative to the
+project root.
 
 #### Scenario: Reject removes a clean worktree
 - **WHEN** a change in a worktree has a dead task and a human runs `osq reject <id> --reason stop`
@@ -2250,7 +2257,7 @@ SHALL print `  Withdrew stacked approval: <path>` in place of its
 
 #### Scenario: Reject a halted stacked change
 - **WHEN** a stacked change halted with `dependency_changed` is rejected
-- **THEN** its stacked approval directory is gone, no branch exists for it, the checkout's copy is unchanged, and the output has the `Withdrew stacked approval:` line
+- **THEN** its stacked approval directory is gone, no branch exists for it, the checkout holds its folder with the stacked copy's authored files and no `.run/approved`, and the output has the `Withdrew stacked approval:` line and then `  Restored draft: openspec/changes/<folder>`
 
 ### Requirement: Squash commit message
 osq SHALL build the squash commit message for a change from the archived
@@ -2303,7 +2310,7 @@ osq SHALL refuse, writing nothing, in these cases:
 - **THEN** the trailers hold `Osq-Model: pi deepseek-flash` and then `Osq-Model: pi deepseek-pro`
 
 #### Scenario: Manual task
-- **WHEN** task 2 was completed with `osq done --manual`
+- **WHEN** task 2's `.run/done/2` frontmatter holds `manual: true`, as markers an older osq's `osq done --manual` wrote do
 - **THEN** its outcome line is `[manual] task 2: <title>`
 
 #### Scenario: Not archived yet

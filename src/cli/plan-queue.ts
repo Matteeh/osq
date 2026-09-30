@@ -189,13 +189,14 @@ export async function createChange(
   projectRoot: string,
   quiet: boolean | undefined,
   title: string,
-  options: { slug?: string; dependsOn?: readonly string[]; fixes?: readonly string[] },
+  options: {
+    slug?: string;
+    dependsOn?: readonly string[];
+    fixes?: readonly string[];
+    config?: OsqConfig;
+  },
 ): Promise<{ folderPath: string; specId: string }> {
-  const newResult = await createNewSpec(projectRoot, title, {
-    slug: options.slug,
-    dependsOn: options.dependsOn,
-    fixes: options.fixes,
-  });
+  const newResult = await createNewSpec(projectRoot, title, options);
   if (!quiet) {
     console.log(`Created spec ${newResult.specId}: ${newResult.folderName}`);
     console.log(`  Path: ${newResult.folderPath}`);
@@ -234,6 +235,7 @@ export async function createQueueChange(
     slug: selection.item.slug,
     dependsOn: selection.landedDependencies.map((dep) => dep.changeId),
     fixes: selection.landedFixes.map((fix) => fix.changeId),
+    config,
   });
   await writeBriefAndManifest(
     projectRoot,

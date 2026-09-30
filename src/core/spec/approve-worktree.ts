@@ -22,6 +22,7 @@ import {
   writeApprovalSeal,
 } from './approve-worktree-shared.js';
 import type { ApproveOptions, ApproveResult } from './approve.js';
+import { removeCheckoutDraft } from './checkout-draft.js';
 import type { ApprovalDigest } from './digest.js';
 import { hashChangeFolder } from './hasher.js';
 import { parseTaskMd } from './parser.js';
@@ -151,6 +152,7 @@ async function approveIntoNewWorktree(
   const worktreeVcs = await selectVcs(wtPath, config);
   await worktreeVcs.commit([relativeFolder], `osq: ${specId} approved`, author);
   await fs.rm(stackedPath(vcsConfig, repoRoot, folderName), { recursive: true, force: true });
+  await removeCheckoutDraft(vcs, projectRoot, folderPath);
 
   return {
     specId,
@@ -212,6 +214,7 @@ export async function approveIntoWorktree(
       observations,
       awaited,
     });
+    await removeCheckoutDraft(vcs, projectRoot, folderPath);
     return {
       specId,
       folderName,

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:adf9bcff7392ad380f71b9d654290163d67669a5e1a6f739e526af88a18eec98"
+build_stamp: "9db81c6"
+project_commit: "e197e22"
+exit_code: 0
+scope_files: {"src/cli/reject.ts":"sha256:cc00778cd299fb4a8b73eed05503b33efad56f3b9ef7655be0a8f0da34bc7731","src/core/lifecycle/reject.ts":"sha256:0c7049469092a1bc7c6629e2988ec8698faed9aff954ab8114e33d9eeb380df3","src/core/spec/approve-worktree.ts":"sha256:959cf327b23401d354e6bb9c594d6819f240d63ecfa1f440d251101852e88a48","src/core/spec/approve.ts":"sha256:7277a45cc06bf0ad77698944d40351143b311ab4b35e92cfdcf4abab67da1abc","src/core/spec/checkout-draft.ts":"sha256:4447e4d14c456bc8c736cd9f4fe11b23b07a5defa47b944a3220a5bba06951c6","tests/approve-confirm.test.ts":"sha256:c02923f9e570b429f6453ea570bc9eeb80cd93094c5a8c4008f9e4fb4fe09001","tests/approve-owns-draft.test.ts":"sha256:71bea0ddca2aaef0ccd98c4f394cd78ade4bcc67dab90c7e8f7ffacc13eed147","tests/approve-rejected-branch.test.ts":"sha256:6a33ab6d1021f5814d4e82068c8144087519357de3a739ae441896c501cb0c81","tests/approve-stacked.test.ts":"sha256:a751609ee01afef4f90ac49034288e630fcf220b9574e3fd08a6b9846d74a0ed","tests/approve-worktree.test.ts":"sha256:856e274f4947967e063d77034018c8c075bf018f64eb34c4c5b17d207bc918e9","tests/reject-worktree.test.ts":"sha256:dc82563b9586dc55a15f698f8e6e4eb53a36452bd6d51235557f7136c80d42c5"}
+---
+2026-09-30T18:02:01.489Z

@@ -183,7 +183,11 @@ describe('Stack dependency state', () => {
 
     const state = await readDependencyState(p.repo, p.config, vcs, p.one.folderName);
     assert.equal(state.state, 'approved');
-    assert.equal(state.hash, await hashChangeFolder(p.one.folderPath));
+    const oneCopy = path.join(
+      worktreePath(p.vcs, p.repo, p.one.folderName),
+      path.relative(p.repo, p.one.folderPath),
+    );
+    assert.equal(state.hash, await hashChangeFolder(oneCopy));
   });
 
   it('reads archived from the branch tip with the archive hash and base', async () => {
@@ -197,7 +201,8 @@ describe('Stack dependency state', () => {
 
     const state = await readDependencyState(p.repo, p.config, vcs, p.one.folderName);
     assert.equal(state.state, 'archived');
-    assert.equal(state.hash, await hashChangeFolder(p.one.folderPath));
+    const archived = path.join(wtPath, 'openspec', 'changes', 'archive', p.one.folderName);
+    assert.equal(state.hash, await hashChangeFolder(archived));
     assert.equal(state.base, worktreeBranch(p.one.folderName));
   });
 
@@ -254,7 +259,9 @@ describe('Stacked approval', () => {
   it('records a stacked approval for a dependent of a running change', async () => {
     const p = await makeProject();
     await approveSpec(p.repo, '001', p.config);
-    const before = await git(['status', '--porcelain'], p.repo);
+    const before = (await git(['status', '--porcelain', '--untracked-files=all'], p.repo)).split(
+      '\n',
+    );
 
     const result = await approveSpec(p.repo, '002', p.config);
 
@@ -271,9 +278,11 @@ describe('Stacked approval', () => {
       'osq <osq@example.invalid>',
     );
     const on = parseStackedOn(await fs.readFile(path.join(copy, '.run', 'stacked-on'), 'utf8'));
-    assert.deepEqual(on, [
-      { folder: p.one.folderName, hash: await hashChangeFolder(p.one.folderPath) },
-    ]);
+    const oneCopy = path.join(
+      worktreePath(p.vcs, p.repo, p.one.folderName),
+      path.relative(p.repo, p.one.folderPath),
+    );
+    assert.deepEqual(on, [{ folder: p.one.folderName, hash: await hashChangeFolder(oneCopy) }]);
 
     assert.equal(
       await git(
@@ -282,7 +291,13 @@ describe('Stacked approval', () => {
       ),
       '',
     );
-    assert.equal(await git(['status', '--porcelain'], p.repo), before);
+    const after = (await git(['status', '--porcelain', '--untracked-files=all'], p.repo)).split(
+      '\n',
+    );
+    assert.deepEqual(
+      after,
+      before.filter((line) => !line.includes(p.two.folderName)),
+    );
   });
 
   it('approves into a worktree when the dependency already landed', async () => {
@@ -306,7 +321,7 @@ describe('Stacked approval', () => {
     await approveSpec(p.repo, '001', p.config);
     await approveSpec(p.repo, '002', p.config);
 
-    const taskPath = path.join(p.two.folderPath, 'tasks', '1.md');
+    const taskPath = path.join(stackedCopy(p, p.two), 'tasks', '1.md');
     await fs.appendFile(taskPath, '\nEdited after stacking.\n', 'utf8');
     const result = await approveSpec(p.repo, '002', p.config);
 

@@ -237,17 +237,6 @@ planner rules beyond its `## Planning a change` section.
 - **WHEN** `MANAGED_AGENTS_MD_BODY` is inspected
 - **THEN** it contains `## Executing a task`, `tests.modify: true`, the instruction to run the proposal's `verify` after the task's, and the statement that the task's `scope` wins over any other ownership rule
 
-### Requirement: Manual task completion command
-The CLI SHALL provide `osq done <id> <n> --manual "<reason>"` allowing a human to mark a task done with required justification, writing a frontmatter-annotated marker and event.
-
-#### Scenario: Executing osq done with reason
-- **WHEN** user runs `osq done <id> <n> --manual "<reason>"`
-- **THEN** system writes `.run/done/<n>` with frontmatter declaring `manual: true` and `reason`, and appends `done_manual` event
-
-#### Scenario: Missing manual flag fails command
-- **WHEN** user runs `osq done <id> <n>` without `--manual`
-- **THEN** command exits non-zero and refuses to mark the task done
-
 ### Requirement: Hand-placed done marker detection in doctor
 The `osq doctor` command SHALL inspect all `.run/done/` markers across active change folders and fail if any marker lacks valid frontmatter.
 
@@ -1998,7 +1987,7 @@ behaviour unchanged.
 
 #### Scenario: Land prints its lines
 - **WHEN** `osq land <id>` lands an archived change
-- **THEN** stdout holds `Landed <folder> as <commit>`, `Removed leftover draft <path>`, `Removed worktree <path>`, and `Kept branch osq/<folder>`, and the exit code is zero
+- **THEN** stdout holds `Landed <folder> as <commit>`, `Removed worktree <path>`, and `Kept branch osq/<folder>`, in that order and nothing else, and the exit code is zero
 
 #### Scenario: Refusal on stderr
 - **WHEN** `osq land <id>` refuses
@@ -2320,3 +2309,34 @@ hosted model, is listed by the project in `confinement.roles.agent.env`.
 #### Scenario: Every entry declares names
 - **WHEN** the catalog is read
 - **THEN** every entry has an `agentEnv` array, `mock`'s is empty, and `claude`'s holds `ANTHROPIC_API_KEY`
+
+### Requirement: Change numbers across trees
+`src/core/foundation/change-number.ts` SHALL export `getNextSpecNumber`,
+unchanged from `new.ts`, which still re-exports it, and
+`knownChangeFolders(projectRoot, config)`. `knownChangeFolders` SHALL return
+the folder name of every change `listChanges` returns, active, archived, and
+rejected, and, with `vcs.enabled` and `GitVcs` selected, the name of every
+branch `listBranches('osq/')` lists, without its `osq/` prefix and without a
+trailing `-rejected-<n>`. `createNewSpec` SHALL take an optional `config`.
+With it, the new change's number SHALL be one more than the highest numeric
+prefix among the folders `getNextSpecNumber` scans and the folders
+`knownChangeFolders` returns, zero-padded to three digits. Without it, the
+number SHALL be what `getNextSpecNumber` returns. `osq new` SHALL load the
+project's config and pass it, and `osq plan` SHALL pass the config it loaded,
+for a queue item and for a named change alike.
+
+#### Scenario: Running change keeps its number
+- **WHEN** `vcs.enabled` is on, the checkout holds only archived `001-a` and `002-b`, and `003-c` runs in its worktree
+- **THEN** `osq new next` creates `004-next`
+
+#### Scenario: Stacked change keeps its number
+- **WHEN** the checkout holds no `004-d` and the stacked approval directory holds `004-d`
+- **THEN** the next change created is `005-<slug>`
+
+#### Scenario: Rejected branch keeps its number
+- **WHEN** no tree holds `006-f`, and branches `osq/006-f` and `osq/006-f-rejected-1` exist
+- **THEN** the next change created is `007-<slug>`, and `knownChangeFolders` lists `006-f` for both branches
+
+#### Scenario: Version control off
+- **WHEN** `vcs.enabled` is off and the checkout holds active `001-a` and archived `002-b`
+- **THEN** the next change created is `003-<slug>`, and no git command runs

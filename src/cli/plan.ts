@@ -125,7 +125,7 @@ export async function planCommand(
     folderPath = created.folderPath;
     specId = created.specId;
   } else if (!isResumed) {
-    const created = await createChange(cwd, quiet, name, {});
+    const created = await createChange(cwd, quiet, name, { config });
     folderPath = created.folderPath;
     specId = created.specId;
     const rawBrief = await readBriefInput(options.brief);

@@ -434,27 +434,26 @@ verified tree" stops only for those in files the land writes.
 
 ### Requirement: Land cleanup
 After a land commit, and for a change the default branch already holds,
-`landChange` SHALL remove the change's leftover draft when `findLeftoverDrafts`
-lists it, printing `Removed leftover draft <path>`. It SHALL then remove the
-worktree at the path "Worktree location" gives when `worktreeList` lists it,
-printing `Removed worktree <path>`. When `worktreeRemove` fails, it SHALL print
-`Kept worktree <path>:` and git's output, and still exit zero. When `osq land
-<id>` names a change the default branch already holds, as `readDependencyState`
-reads it, it SHALL print `<folder> has already landed`, clean up, and exit
-zero. When nothing is left to remove, it SHALL print `<folder> has already
-landed; nothing to clean up`.
+`landChange` SHALL remove the worktree at the path "Worktree location" gives
+when `worktreeList` lists it, printing `Removed worktree <path>`. When
+`worktreeRemove` fails, it SHALL print `Kept worktree <path>:` and git's
+output, and still exit zero. It SHALL neither read nor remove a folder of the
+change's name in the checkout. When `osq land <id>` names a change the default
+branch already holds, as `readDependencyState` reads it, it SHALL print
+`<folder> has already landed`, clean up, and exit zero. When nothing is left
+to remove, it SHALL print `<folder> has already landed; nothing to clean up`.
 
 #### Scenario: Landed by hand, worktree kept
-- **WHEN** a change was landed with `git merge --squash` and `osq message <id> | git commit -F -`, and its worktree and leftover draft remain
-- **THEN** `osq land <id>` prints `<folder> has already landed`, removes both, and makes no commit
+- **WHEN** a change was landed with `git merge --squash` and `osq message <id> | git commit -F -`, and its worktree remains
+- **THEN** `osq land <id>` prints `<folder> has already landed`, removes the worktree, and makes no commit
 
 #### Scenario: Nothing to clean up
 - **WHEN** `osq land <id>` runs again for the same change
 - **THEN** it prints `<folder> has already landed; nothing to clean up` and exits zero
 
 #### Scenario: Edited leftover copy is kept
-- **WHEN** the checkout's copy of the change was edited after approval
-- **THEN** `osq land` lands the change and leaves the copy in place
+- **WHEN** the checkout holds an untracked folder named like the change, as an approval before change 123 left behind, and the change lands
+- **THEN** `osq land` lands the change, leaves that folder in place, and prints no line about it
 
 ### Requirement: Vcs land operations
 The `Vcs` port SHALL also offer `commitTree`, `fastForward`, and
@@ -534,7 +533,7 @@ push.
 
 #### Scenario: Land after archive
 - **WHEN** a change approved into a worktree has archived and the default branch has not moved
-- **THEN** `osq land <id>` makes one commit on the default branch whose only parent is the old tip, whose tree equals the branch tip, whose message equals what `osq message <id>` printed before, whose `Osq-Head` is the branch tip, and whose author is `vcs.author`; the leftover draft and the worktree are gone, and `osq/<folder>` still exists
+- **THEN** `osq land <id>` makes one commit on the default branch whose only parent is the old tip, whose tree equals the branch tip, whose message equals what `osq message <id>` printed before, whose `Osq-Head` is the branch tip, and whose author is `vcs.author`; the worktree is gone, the checkout holds the change only under the archive directory, and `osq/<folder>` still exists
 
 #### Scenario: Two changes land in order
 - **WHEN** `001` and `002` were cut from the same default branch and both add a requirement to `orders`, and `osq land 001` then `osq land 002` run

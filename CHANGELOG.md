@@ -2,6 +2,13 @@
 
 All notable changes to `osq` are documented in this file.
 
+## [Unreleased]
+
+- With `vcs.enabled`, `osq approve` removes the change folder from your checkout once its branch or stacked approval holds it, unless the folder is committed. `osq status` no longer prints `Leftover drafts:` or the checkout-copy warning, and `osq land` no longer removes a leftover draft. A copy an older approval left behind now lists as an unapproved draft; remove it with `rm -r openspec/changes/<folder>` once the change has landed (123).
+- A stacked change is edited in its stacked directory and approved again from there; `osq reject` of a stacked change moves it back into your checkout as a draft (123).
+- `osq new`, `osq plan`, and `osq lint` see changes in worktrees, stacked approvals, and `osq/` branches, so numbers are never reused (123).
+- Removed: `osq done <id> <task> --manual`, which marked a task done without its verify. Fix the cause and run `osq retry <id> <n>`, or reject the change. Archives with manual done markers read as before (123).
+
 ## [0.2.3] - 2026-09-27
 
 - Stage 1 of git (ADR 003) is complete. With `vcs.enabled`, the watcher runs a change in its worktree on `osq/<folder>`, commits each verified task and the archive, and keeps a dead task's edits in `.run/dead/<n>.patch` (093). `vcs.enabled` still defaults to off.

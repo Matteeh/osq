@@ -1,11 +1,9 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { VcsConfig } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { buildSquashMessage } from '../run/squash-message.js';
 import { readDependencyState } from '../spec/stack-dependencies.js';
 import { type LocatedChange, listChanges, matchesFolder } from '../status/change-locations.js';
-import { findLeftoverDrafts } from '../status/leftover-drafts.js';
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
@@ -75,7 +73,7 @@ async function resolveWorktree(
   return listed ? target : null;
 }
 
-/** Remove the leftover draft and the worktree, reporting each attempt. */
+/** Remove the change's worktree, reporting the attempt. */
 async function cleanupChange(
   projectRoot: string,
   config: OsqConfig,
@@ -83,23 +81,14 @@ async function cleanupChange(
   folder: string,
 ): Promise<{ lines: string[]; removed: boolean }> {
   const lines: string[] = [];
-  let removed = false;
-  const draft = (await findLeftoverDrafts(projectRoot, config)).find(
-    (entry) => entry.folderName === folder,
-  );
-  if (draft !== undefined) {
-    await fs.rm(path.join(projectRoot, draft.path), { recursive: true, force: true });
-    lines.push(`Removed leftover draft ${draft.path}`);
-    removed = true;
-  }
-  if (config.vcs === undefined) return { lines, removed };
+  if (config.vcs === undefined) return { lines, removed: false };
 
   const repoRoot = (await vcs.root()) ?? projectRoot;
   const target = worktreePath(config.vcs as VcsConfig, repoRoot, folder);
   const listed = (await vcs.worktreeList()).some(
     (entry) => path.resolve(entry.path) === path.resolve(target),
   );
-  if (!listed) return { lines, removed };
+  if (!listed) return { lines, removed: false };
   try {
     await vcs.worktreeRemove(target);
     lines.push(`Removed worktree ${target}`);

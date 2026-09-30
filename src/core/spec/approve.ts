@@ -9,7 +9,7 @@ import {
 } from '../report/planning-observed.js';
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
-import { changeTrees, findChange } from '../status/change-locations.js';
+import { findChange } from '../status/change-locations.js';
 import { selectVcs } from '../vcs/select.js';
 import {
   type ApprovalReviewOptions,
@@ -19,6 +19,7 @@ import {
   writeApprovalSeal,
 } from './approve-worktree-shared.js';
 import { approveIntoWorktree } from './approve-worktree.js';
+import { restoreStackedDraft } from './checkout-draft.js';
 import type { ApprovalDigest } from './digest.js';
 import { hashChangeFolder } from './hasher.js';
 import { lintChangeFolder } from './linter.js';
@@ -146,8 +147,9 @@ async function approveInPlace(projectRoot: string, input: InPlaceApproval): Prom
 
 /**
  * Approve one change. Lint always runs in the checkout. With `vcs.enabled` and
- * git selected, the seal and commit go to a linked worktree and the checkout
- * is left untouched; otherwise approval writes in place as before.
+ * git selected, the seal and commit go to a linked worktree or a stacked
+ * approval and the checkout's draft is then removed; a stacked change is
+ * restored to the checkout first. Otherwise approval writes in place.
  */
 export async function approveSpec(
   projectRoot: string,
@@ -158,49 +160,53 @@ export async function approveSpec(
   const change = await findChange(projectRoot, config, specIdOrPrefix);
   let folderPath = change.folderPath;
   let specsDir = change.tree.changesDir;
+  let restoredDraft: string | null = null;
   if (change.tree.stackedFolder !== undefined) {
-    // The stacked copy holds the approved seal; approve the checkout's draft.
-    const [checkout] = await changeTrees(projectRoot, config);
-    folderPath = path.join(checkout.changesDir, change.folderName);
-    specsDir = checkout.changesDir;
-    const stat = await fs.stat(folderPath).catch(() => null);
-    if (!stat?.isDirectory()) {
-      throw new Error(`Spec "${specIdOrPrefix}" not found in ${checkout.changesDir}`);
-    }
+    // A stacked approval holds the approved seal; restore the draft it edits.
+    restoredDraft = await restoreStackedDraft(projectRoot, config, change);
+    folderPath = restoredDraft;
+    specsDir = path.dirname(restoredDraft);
   }
   const folderName = change.folderName;
   const specId = folderName.match(/^(\d+)/)?.[1] || folderName;
 
-  const lintResult = await lintChangeFolder(projectRoot, folderPath, config);
-  if (!lintResult.valid) {
-    throw new Error(
-      `Lint failed for spec "${folderName}":\n  - ${lintResult.errors.join('\n  - ')}`,
-    );
-  }
-
-  if (config.vcs?.enabled === true) {
-    const vcs = await selectVcs(projectRoot, config);
-    if (vcs.kind === 'git') {
-      return approveIntoWorktree(projectRoot, {
-        specId,
-        folderName,
-        folderPath,
-        specsDir,
-        config,
-        options,
-        vcs,
-        warnings: lintResult.warnings,
-      });
+  try {
+    const lintResult = await lintChangeFolder(projectRoot, folderPath, config);
+    if (!lintResult.valid) {
+      throw new Error(
+        `Lint failed for spec "${folderName}":\n  - ${lintResult.errors.join('\n  - ')}`,
+      );
     }
-  }
 
-  return approveInPlace(projectRoot, {
-    specId,
-    folderName,
-    folderPath,
-    specsDir,
-    config,
-    options,
-    warnings: lintResult.warnings,
-  });
+    if (config.vcs?.enabled === true) {
+      const vcs = await selectVcs(projectRoot, config);
+      if (vcs.kind === 'git') {
+        return await approveIntoWorktree(projectRoot, {
+          specId,
+          folderName,
+          folderPath,
+          specsDir,
+          config,
+          options,
+          vcs,
+          warnings: lintResult.warnings,
+        });
+      }
+    }
+
+    return await approveInPlace(projectRoot, {
+      specId,
+      folderName,
+      folderPath,
+      specsDir,
+      config,
+      options,
+      warnings: lintResult.warnings,
+    });
+  } catch (error) {
+    if (restoredDraft !== null) {
+      await fs.rm(restoredDraft, { recursive: true, force: true });
+    }
+    throw error;
+  }
 }

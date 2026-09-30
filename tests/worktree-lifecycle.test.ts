@@ -9,7 +9,6 @@ import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { createNewSpec } from '../src/core/foundation/new.js';
-import { markTaskDoneManual } from '../src/core/lifecycle/done.js';
 import { rejectSpec } from '../src/core/lifecycle/reject.js';
 import { retrySpec } from '../src/core/lifecycle/retry.js';
 import { acquireLock, releaseLock } from '../src/core/run/lock.js';
@@ -244,18 +243,6 @@ describe('lifecycle commands in a worktree', () => {
     const refreshed = parseFrontmatter(await fs.readFile(path.join(doneDir, '1'), 'utf8')).data;
     const scopeFiles = refreshed.scope_files as Record<string, string | null>;
     assert.match(scopeFiles['src/app.ts'] ?? '', /^sha256:/);
-    assertSameTree(before, await snapshotTree(p.checkoutFolder), "checkout's copy");
-  });
-
-  it('manual done writes the marker in the worktree and not in the checkout', async () => {
-    const p = await makeApprovedProject();
-    const before = await snapshotTree(p.checkoutFolder);
-
-    const result = await markTaskDoneManual(p.repo, '001', '1', 'human says done', p.config);
-
-    assert.equal(result.folderPath, p.worktreeFolder);
-    assert.equal(await exists(path.join(p.worktreeFolder, '.run', 'done', '1')), true);
-    assert.equal(await exists(path.join(p.checkoutFolder, '.run', 'done', '1')), false);
     assertSameTree(before, await snapshotTree(p.checkoutFolder), "checkout's copy");
   });
 });

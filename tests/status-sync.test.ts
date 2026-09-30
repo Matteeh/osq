@@ -161,9 +161,10 @@ describe('osq status last sync', () => {
     assert.equal(lines[nextIndex - 1], line);
   });
 
-  it('prints the sync line below the worktree line and warnings', async () => {
+  it('prints the sync line below the worktree line', async () => {
     const p = await makeApprovedProject();
-    await fs.appendFile(path.join(p.checkoutFolder, 'tasks', '1.md'), '\nedited\n', 'utf8');
+    await fs.mkdir(path.join(p.checkoutFolder, 'tasks'), { recursive: true });
+    await fs.writeFile(path.join(p.checkoutFolder, 'tasks', '1.md'), '# edited\n', 'utf8');
     await appendEvent(
       p,
       'synced',
@@ -173,10 +174,8 @@ describe('osq status last sync', () => {
 
     const lines = formatStatusOverview(await getStatusOverview(p.repo, p.config)).split('\n');
     const worktreeIndex = lines.findIndex((entry) => entry.startsWith('  worktree: '));
-    const warningIndex = lines.findIndex((entry) => entry.startsWith('  warning: '));
     const syncIndex = lines.findIndex((entry) => entry.startsWith('  last sync: '));
-    assert.ok(worktreeIndex >= 0 && warningIndex > worktreeIndex);
-    assert.ok(syncIndex > warningIndex);
+    assert.ok(worktreeIndex >= 0 && syncIndex > worktreeIndex);
     assert.equal(lines[syncIndex], '  last sync: 2026-09-29T10:00:00.000Z, 2 commits from main');
   });
 

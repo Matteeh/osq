@@ -126,7 +126,6 @@ describe('osq status with a change in a worktree', () => {
     const worktree = overview.worktrees?.[p.folderName];
     assert.ok(worktree);
     assert.equal(await fs.realpath(worktree.path), await fs.realpath(p.worktree));
-    assert.equal(worktree.checkoutChanged, false);
 
     const heading = `${p.folderName}: Order Flow [`;
     const index = captured.indexOf(heading);
@@ -140,19 +139,14 @@ describe('osq status with a change in a worktree', () => {
     assert.ok(!captured.includes('warning:'));
   });
 
-  it('warns when the checkout copy changed after approval', async () => {
+  it('prints no warning when the checkout holds an edited copy', async () => {
     const p = await makeApprovedProject();
-    await fs.appendFile(path.join(p.checkoutFolder, 'tasks', '1.md'), '\nedited\n', 'utf8');
+    await fs.mkdir(path.join(p.checkoutFolder, 'tasks'), { recursive: true });
+    await fs.writeFile(path.join(p.checkoutFolder, 'tasks', '1.md'), '# edited\n', 'utf8');
 
     const overview = await getStatusOverview(p.repo, p.config);
-    assert.equal(overview.worktrees?.[p.folderName]?.checkoutChanged, true);
 
-    const formatted = formatStatusOverview(overview);
-    assert.ok(
-      formatted.includes(
-        `  warning: the checkout's copy of ${p.folderName} changed since approval; edits there never reach the run`,
-      ),
-    );
+    assert.ok(!formatStatusOverview(overview).includes('warning:'));
   });
 
   it('prints no warning when the checkout copy is untouched', async () => {
@@ -160,7 +154,6 @@ describe('osq status with a change in a worktree', () => {
 
     const overview = await getStatusOverview(p.repo, p.config);
 
-    assert.equal(overview.worktrees?.[p.folderName]?.checkoutChanged, false);
     assert.ok(!formatStatusOverview(overview).includes('warning:'));
   });
 
@@ -170,7 +163,6 @@ describe('osq status with a change in a worktree', () => {
 
     const overview = await getStatusOverview(p.repo, p.config);
 
-    assert.equal(overview.worktrees?.[p.folderName]?.checkoutChanged, false);
     assert.ok(!formatStatusOverview(overview).includes('warning:'));
   });
 });

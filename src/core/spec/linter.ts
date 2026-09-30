@@ -1,10 +1,10 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { knownChangeFolders } from '../foundation/change-number.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { isGatedTestPath } from '../run/test-gate.js';
-import { getArchiveDir, getChangesDir, getRejectedDir } from '../status/layout.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
@@ -756,29 +756,9 @@ async function checkDependencyExists(
   depId: string,
   config: OsqConfig,
 ): Promise<boolean> {
-  const dirsToCheck = [
-    getChangesDir(config.paths.openspecRoot, projectRoot),
-    getArchiveDir(config.paths.openspecRoot, projectRoot),
-    // A rejected change is a historical change: the reference stays auditable
-    // even though it never satisfies dependency completion.
-    getRejectedDir(config.paths.openspecRoot, projectRoot),
-  ];
   const paddedDep = depId.padStart(3, '0');
-
-  for (const dir of dirsToCheck) {
-    try {
-      const entries = await fs.readdir(dir);
-      for (const entry of entries) {
-        if (entry.startsWith(`${paddedDep}-`) || entry === paddedDep) {
-          return true;
-        }
-      }
-    } catch {
-      // Directory may not exist yet
-    }
-  }
-
-  return false;
+  const folders = await knownChangeFolders(projectRoot, config);
+  return folders.some((entry) => entry.startsWith(`${paddedDep}-`) || entry === paddedDep);
 }
 
 /** Returns the leading instruction verb in a requirement name, else null. */
