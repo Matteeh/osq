@@ -8,6 +8,8 @@ import {
 } from './config-capability-groups.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
+import { type ConfinementConfig, DEFAULT_CONFINEMENT_CONFIG } from './config-confinement.js';
+import { validateConfinementConfig } from './config-confinement.js';
 import { applyHarnessModelEnv } from './config-env.js';
 import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
@@ -32,6 +34,7 @@ export { ConfigLoadError } from './config-file.js';
 export type { AgyConfig, OpencodeConfig } from './config-agents.js';
 export type { ClaudeConfig } from './config-claude.js';
 export type { CodexConfig } from './config-codex.js';
+export type { ConfinementConfig } from './config-confinement.js';
 export type { CapabilitiesConfig } from './config-capability-groups.js';
 export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
@@ -108,6 +111,7 @@ export interface OsqConfig {
   readonly traceability?: TraceabilityConfig;
   readonly inbox?: InboxConfig;
   readonly capabilities?: CapabilitiesConfig;
+  readonly confinement?: ConfinementConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -117,6 +121,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   inbox: DEFAULT_INBOX_CONFIG,
   vcs: DEFAULT_VCS_CONFIG,
   capabilities: DEFAULT_CAPABILITIES_CONFIG,
+  confinement: DEFAULT_CONFINEMENT_CONFIG,
   gates: DEFAULT_GATES_CONFIG,
   traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
@@ -183,6 +188,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     gates: validateGatesConfig(config.gates),
     traceability: validateTraceabilityConfig(config.traceability),
     capabilities: validateCapabilitiesConfig(config.capabilities),
+    confinement: validateConfinementConfig(config.confinement),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     agy: {
@@ -196,14 +202,8 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     codex,
     pi,
     claude,
-    log: {
-      ...DEFAULT_CONFIG.log,
-      ...(config.log || {}),
-    },
-    limits: {
-      ...DEFAULT_CONFIG.limits,
-      ...(config.limits || {}),
-    },
+    log: { ...DEFAULT_CONFIG.log, ...(config.log || {}) },
+    limits: { ...DEFAULT_CONFIG.limits, ...(config.limits || {}) },
     paths: {
       ...DEFAULT_CONFIG.paths,
       ...(config.paths || {}),

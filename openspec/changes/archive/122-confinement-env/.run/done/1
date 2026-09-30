@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:abf577de0465eed57444583f74fd563a8dfdec3e24f0f888ec8f7e8d25bd4425"
+build_stamp: "f6fb77a"
+project_commit: "78ff885"
+exit_code: 0
+scope_files: {"src/core/foundation/config-confinement.ts":"sha256:01f562aa3723b9aedd698d3541be0df23d631d531500c518f9351b38a5a7412b","src/core/foundation/config-user.ts":"sha256:ee6ecdb939f9184124faa31fdfb716c158618245617bb8e4c269273181bfd4f8","src/core/foundation/config.ts":"sha256:2a230a04dff2809567523a82a56d654c0e424f8a82f4ec72b0c48e819edf760b","src/core/foundation/harness-catalog.ts":"sha256:3374c7ebd1595108497f9ca1b51e73102facb5ba64ac55c93b8fe36a8f9b8477","src/core/run/role-env.ts":"sha256:a1ab16b1e7d5d379b65252e06e4f3fb91b42cac084cc1805c45319510fe3fb82","tests/confinement-env.test.ts":"sha256:3de5926bea94d9846a252d2e6b991c7db7a94aa6e92c5472c9e92a6fcec26910"}
+---
+2026-09-30T16:30:50.833Z

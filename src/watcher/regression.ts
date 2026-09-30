@@ -37,10 +37,10 @@ export interface ScopeAuditOptions {
   eligibleTaskNumbers: readonly string[];
   verifyTimeoutSeconds: number;
   limits?: OsqConfig['limits'];
+  config?: OsqConfig;
   /** When false, detect and attribute only; never verify or write artifacts. */
   record?: boolean;
 }
-
 export interface ScopeAuditResult {
   stale: StaleTaskAudit[];
   /** Task numbers automatically recertified in this audit, numerically ordered. */
@@ -59,10 +59,10 @@ export interface ScopeAuditResult {
  * writes.
  */
 export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
-  const { projectRoot, specFolderPath, eligibleTaskNumbers, verifyTimeoutSeconds } = options;
+  const { projectRoot, specFolderPath, eligibleTaskNumbers, config } = options;
+  const timeoutSeconds = options.verifyTimeoutSeconds;
   const record = options.record ?? true;
   const runDir = path.join(specFolderPath, '.run');
-
   const doneInfo = new Map<string, Awaited<ReturnType<typeof readDoneMarker>>>();
   const changesByPath = new Map<string, Set<string>>();
   const completionHashes = new Map<string, Record<string, string | null>>();
@@ -89,6 +89,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       .catch(() => null);
     if (taskContent === null) continue;
     const taskData = parseTaskMd(taskContent);
+    const command = taskData.verify;
     const current = await computeTaskScopeHash(projectRoot, taskData.scope);
     if (current.hash === recorded.scopeHash && recorded.scopeResolver === SCOPE_RESOLVER_VERSION) {
       continue;
@@ -120,11 +121,9 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       stale.push(parseActiveStaleTask(taskNumber, active, base));
       continue;
     }
+    const gateContext = { specFolderPath, taskNumber };
     const gate = record
-      ? await runVerificationGateResult(projectRoot, taskData.verify, verifyTimeoutSeconds, {
-          specFolderPath,
-          taskNumber,
-        })
+      ? await runVerificationGateResult(projectRoot, command, timeoutSeconds, gateContext, config)
       : null;
     const audit: StaleTaskAudit = {
       taskNumber,
@@ -182,7 +181,6 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
   }
   return { stale, recertified, recertifiedPaths };
 }
-
 async function eligibleEarlierTasks(runDir: string, currentTask: number): Promise<string[]> {
   return (await listCanonicalDoneNumbers(runDir)).filter(
     (number) => Number.parseInt(number, 10) < currentTask,
@@ -237,6 +235,7 @@ export async function guardScopeRegression(
     eligibleTaskNumbers: eligible,
     verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
     limits: config.limits,
+    config,
   });
   const first = audit.stale[0];
   return first

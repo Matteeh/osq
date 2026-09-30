@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8394c23f9a2dbb09e5d279facc35aaab499387041741437434448dc50928ebdf"
+build_stamp: "f6fb77a"
+project_commit: "a2531a6"
+exit_code: 0
+scope_files: {"src/harness/agy/agy.ts":"sha256:5bc97871e96de46d17ccca13ab4c7453cf9fc370b0170c3fdf71f078556d156b","src/harness/claude/claude-exec-args.ts":"sha256:c4fed7627b228673f2ee2b7ef0d54d2dd6b47653460add610e73af8fcb09b518","src/harness/claude/claude-exec.ts":"sha256:b132b6e300281beafe328cde4e4525eb910af9b20ae65fb788bbe8a3059e56a0","src/harness/codex/codex.ts":"sha256:4bfbf6ca2821b108ab4d39c76b20b21b70fde04b6c8364240c4ef80b6392c68c","src/harness/opencode/opencode.ts":"sha256:d96d7686a34492c92b2413bd5ddc73276c63783fd638195fb72aba40d7eb20b5","src/harness/pi/pi.ts":"sha256:f12dc8faee23aa690b11011379517c2808965a0882e6a659e00b8536bc5fb527","tests/agent-role-env.test.ts":"sha256:4cb6937eb03cb4e1418be2e706c3b8d039ecf3435850422a0f9161b8f3e2046f","tests/claude/exec-adapter.test.ts":"sha256:ee3a5dad7351b092aeb5b053bddc8b56800ffca6f92d834093d8faa334c6df37","tests/opencode-setup.test.ts":"sha256:96f837048437da0a65cadbce335347f66e6ff83312755da0153e06447cc9e8a4"}
+---
+2026-09-30T16:53:57.157Z

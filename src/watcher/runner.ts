@@ -175,6 +175,7 @@ export async function runTask(
       taskData.verify,
       config.timeouts.verifyTimeoutSeconds ?? 600,
       { specFolderPath, taskNumber },
+      config,
     );
     if (!verifyResult.passed) {
       return verifyRedFailure(taskData.verify, taskNumber, config, verifyResult, fail);

@@ -5,15 +5,12 @@ import {
   resolveClaudeModel,
 } from './config-claude.js';
 import { codexExecutable, codexModel } from './config-codex-resolve.js';
+import { HARNESS_AGENT_ENV } from './config-confinement.js';
 import { diagnoseOpencode } from './config-opencode.js';
 import * as piConfig from './config-pi.js';
 import type { OsqConfig } from './config.js';
 
-/**
- * Canonical, immutable catalog of first-party harness capabilities. Every
- * shared consumer derives its harness knowledge from here, so adding a harness
- * never means editing a generic workflow branch.
- */
+/** Canonical, immutable catalog of first-party harness capabilities. */
 export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex', 'pi', 'claude'] as const;
 
 export type HarnessName = (typeof HARNESS_NAMES)[number];
@@ -36,6 +33,8 @@ export interface HarnessCatalogEntry {
   readonly configKey?: HarnessConfigKey;
   /** `OSQ_MODEL` applies even when this harness is not the selected executor. */
   readonly envModelWhenUnselected: boolean;
+  /** Environment variable names the harness reads for its model and config. */
+  readonly agentEnv: readonly string[];
   /** Resolve the external executable, or `null` when none is required. */
   readonly executable: (config: OsqConfig) => string | null;
   /** Effective configured model, or `undefined` to defer to native defaults. */
@@ -50,7 +49,6 @@ export interface HarnessCatalogEntry {
     context: piConfig.HarnessDiagnoseContext,
   ) => Promise<readonly piConfig.HarnessDiagnosis[]>;
 }
-
 type HarnessCatalogDefinitions = {
   readonly [K in HarnessName]: Omit<HarnessCatalogEntry, 'name'>;
 };
@@ -61,6 +59,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
     // Agent is the historical default harness, so OSQ_MODEL feeds its section
     // regardless of the selected executor.
     envModelWhenUnselected: true,
+    agentEnv: HARNESS_AGENT_ENV.agy,
     executable: () => process.env.AGY_PATH || 'agy',
     model: (config) => config.agy?.model?.trim() || undefined,
     effort: () => null,
@@ -69,6 +68,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   opencode: {
     configKey: 'opencode',
     envModelWhenUnselected: false,
+    agentEnv: HARNESS_AGENT_ENV.opencode,
     executable: (config) => process.env.OPENCODE_PATH || config.opencode?.bin || 'opencode',
     model: (config) => config.opencode?.model?.trim() || undefined,
     effort: () => null,
@@ -77,6 +77,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   },
   mock: {
     envModelWhenUnselected: false,
+    agentEnv: HARNESS_AGENT_ENV.mock,
     executable: () => null,
     model: () => undefined,
     effort: () => null,
@@ -85,6 +86,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   codex: {
     configKey: 'codex',
     envModelWhenUnselected: false,
+    agentEnv: HARNESS_AGENT_ENV.codex,
     executable: codexExecutable,
     model: (config) => codexModel(config, normalizeHarnessName(config.harness) === 'codex'),
     effort: (config) => config.codex?.effort?.trim() || null,
@@ -93,6 +95,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   pi: {
     configKey: 'pi',
     envModelWhenUnselected: false,
+    agentEnv: HARNESS_AGENT_ENV.pi,
     executable: piConfig.resolvePiBinary,
     model: resolvePiModel,
     effort: piConfig.resolvePiEffort,
@@ -102,6 +105,7 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
   claude: {
     configKey: 'claude',
     envModelWhenUnselected: false,
+    agentEnv: HARNESS_AGENT_ENV.claude,
     executable: resolveClaudeBinary,
     model: (config) =>
       resolveClaudeModel(config, normalizeHarnessName(config.harness) === 'claude'),
@@ -153,11 +157,7 @@ export interface ExecutorIdentity {
   readonly model: string;
   readonly effort: string | null;
 }
-
-/**
- * Identity of the executor selected by configuration. Never borrows a model or
- * effort from a harness that is not the selected one.
- */
+/** Identity of the selected executor; never borrows another harness's model. */
 export function resolveExecutorIdentity(config: OsqConfig): ExecutorIdentity {
   const entry = lookupHarness(config.harness);
   return {

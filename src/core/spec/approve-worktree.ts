@@ -100,6 +100,7 @@ export async function runPrepare(
     prepare,
     config.timeouts.verifyTimeoutSeconds,
     null,
+    { role: 'prepare', config },
   );
   if (result.exitCode !== 0) {
     throw new Error(

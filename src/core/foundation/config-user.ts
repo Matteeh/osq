@@ -1,6 +1,7 @@
 import type { CapabilitiesConfig } from './config-capability-groups.js';
 import type { ClaudeConfig } from './config-claude.js';
 import type { CodexConfig } from './config-codex.js';
+import type { ConfinementRole } from './config-confinement.js';
 import type { GatesConfig } from './config-gates.js';
 import type { InboxConfig } from './config-inbox.js';
 import type { PiConfig } from './config-pi.js';
@@ -42,6 +43,7 @@ export type OsqUserConfig = Partial<
     | 'vcs'
     | 'inbox'
     | 'capabilities'
+    | 'confinement'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -61,4 +63,7 @@ export type OsqUserConfig = Partial<
   readonly vcs?: Partial<VcsConfig>;
   readonly inbox?: Partial<InboxConfig>;
   readonly capabilities?: Partial<CapabilitiesConfig>;
+  readonly confinement?: {
+    readonly roles?: Partial<Record<ConfinementRole, { readonly env?: readonly string[] }>>;
+  };
 };

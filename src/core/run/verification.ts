@@ -1,5 +1,17 @@
 import { spawn } from 'node:child_process';
+import type { OsqConfig } from '../foundation/config.js';
+import { buildRoleEnv } from './role-env.js';
 import { relativizeToolSummary } from './summary.js';
+
+/** How `runVerificationCommand` builds the child's environment. */
+export interface VerificationCommandOptions {
+  /** The role whose allowlist the command gets; verify unless the caller is prepare. */
+  readonly role?: 'verify' | 'prepare';
+  /** The config whose `confinement.roles.<role>.env` names the command may see. */
+  readonly config?: OsqConfig;
+  /** Variables set after `OSQ_CHANGE`, so a caller can pass mutation inputs. */
+  readonly extraEnv?: Readonly<Record<string, string>>;
+}
 
 /** Raw outcome of one timeout-bounded verification command. */
 export interface VerificationResult {
@@ -36,9 +48,11 @@ function killTree(child: ReturnType<typeof spawn>, signal: NodeJS.Signals): void
  * for a command whose deltas are already in the living spec. It becomes
  * `OSQ_CHANGE`, or is removed from the child environment when null.
  *
- * `extraEnv` holds additional variables for the command, set after the
- * `OSQ_CHANGE` handling so a caller can pass mutation inputs without touching
- * the base environment.
+ * `options.role` is the role whose allowlisted environment `buildRoleEnv`
+ * builds, `verify` unless the caller names `prepare`. `options.extraEnv` holds
+ * additional variables set last, after the `OSQ_CHANGE` handling, so a caller
+ * can pass mutation inputs without touching the base environment. `process.env`
+ * is not spread.
  *
  * The captured output is passed through `relativizeToolSummary`, so every gate,
  * event, and marker that reads it carries project-relative paths.
@@ -48,7 +62,7 @@ export async function runVerificationCommand(
   command: string,
   timeoutSeconds: number,
   changeFolder: string | null,
-  extraEnv?: Readonly<Record<string, string>>,
+  options: VerificationCommandOptions = {},
 ): Promise<VerificationResult> {
   const startMs = Date.now();
   const timeoutMs = timeoutSeconds * 1000;
@@ -56,13 +70,15 @@ export async function runVerificationCommand(
   let exitCode = 1;
   let output = '';
   let spawnError: string | undefined;
-  const env: NodeJS.ProcessEnv = { ...process.env };
+  const env: NodeJS.ProcessEnv = buildRoleEnv(options.role ?? 'verify', {
+    config: options.config,
+  });
   if (changeFolder === null) {
     Reflect.deleteProperty(env, 'OSQ_CHANGE');
   } else {
     env.OSQ_CHANGE = changeFolder;
   }
-  for (const [name, value] of Object.entries(extraEnv ?? {})) env[name] = value;
+  for (const [name, value] of Object.entries(options.extraEnv ?? {})) env[name] = value;
 
   await new Promise<void>((resolve) => {
     const child = spawn(command, {

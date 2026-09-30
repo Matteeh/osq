@@ -78,6 +78,7 @@ async function runOne(
     command,
     options.config.timeouts.verifyTimeoutSeconds,
     changeFolder,
+    { config: options.config },
   );
   if (result.exitCode !== 0) {
     const subject =

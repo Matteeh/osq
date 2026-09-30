@@ -103,6 +103,7 @@ export async function runPreSpawnVerify(
         mismatch: isPreSpawnMismatch(expected, value, missingPaths),
       }),
     },
+    config,
   );
   const mismatch = isPreSpawnMismatch(expected, result, missingPaths);
   const line = `task ${taskNumber} ${formatPreSpawnStart(expected, result.exitCode, missingPaths)}`;

@@ -13,6 +13,7 @@ import {
   OSQ_START_MARKER,
 } from '../../core/foundation/init.js';
 import type { Logger } from '../../core/foundation/logger.js';
+import { buildRoleEnv } from '../../core/run/role-env.js';
 import { relativizeToolSummary } from '../../core/run/summary.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../../core/spec/parser.js';
 import { type SpawnProcessResult, spawnWithTimeout } from '../process.js';
@@ -83,7 +84,15 @@ mode: all
 permission:
   read: allow
   edit: allow
-  bash: allow
+  bash:
+    "*": allow
+    "git": deny
+    "git *": deny
+    "curl *": deny
+    "wget *": deny
+    "ssh *": deny
+    "scp *": deny
+    "sudo *": deny
   glob: allow
   grep: allow
   webfetch: deny
@@ -601,11 +610,11 @@ export class OpencodeAdapter implements HarnessAdapter {
       command: bin,
       args,
       cwd: projectRoot,
-      env: {
-        ...process.env,
-        OSQ_TASK_NUMBER: taskNumber,
-        OSQ_SPEC_FOLDER: specFolderPath,
-      },
+      env: buildRoleEnv('agent', {
+        config,
+        harness: 'opencode',
+        extraEnv: { OSQ_TASK_NUMBER: taskNumber, OSQ_SPEC_FOLDER: specFolderPath },
+      }),
       timeoutSeconds,
       onStdout: (chunk) => {
         streamParser.feed(chunk);

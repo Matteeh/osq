@@ -1,0 +1,44 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:01a9a84c29a55c4bd0b407af3e278e4a073dbc8bdd2720e2a3427e2848baf222",
+    "PLANNER.md": "sha256:40e84f0041d7c25bc31c0c6db18a2332c422dbd612620394fa63ae437cd83adb",
+    "config": "sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39",
+    "spec-lint-and-approve": "sha256:d9067402813f16db12eee2fc451a04eab2edf5f4e8be4d4fe1c41e4558d7377c",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "version-control": "sha256:69b483073c7e3e4aa536c6e374a128a4f3426b52abee769329577ef44ff35820",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "metrics-and-reporting": "sha256:8fc12f509e6adad1b838aadcb34682b3b5902575b433a433e19431bbb52fc009",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "status-inspection": "sha256:072a5ac58c96140e1e210675b473e8ca7a4a1af78f40c991402d442f98d0d218",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "traceability": "sha256:570cae8d1bb7a23f088011fc1dddcf683af6b2e491ff686042684c5ac89055c7",
+    "traceability/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "cli-foundation": "sha256:16cbf94334bca56d4d87a1ac3ab907d92207f5caea6e4333b62d20a3c5ba4827",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "watcher-and-harness": "sha256:967535127eae2c90b88bef45f4f67fabc482825f69854491ce6e93d92f8ed9ff",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d"
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-09-30T15:55:22.440Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-09-30T16:21:35.348Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path"
+    ],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "002": "sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7",
+    "003": "sha256:391668d3e39fc37c46c6b8c05f9289732eb9d32632f926b12ad8e82dc15817d0",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f"
+  }
+}

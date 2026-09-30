@@ -144,6 +144,7 @@ export async function runFocusedTests(
     resolvedCommand,
     config.timeouts.verifyTimeoutSeconds,
     changeFolder,
+    { config },
   );
   const names = new Set(collection.scenarios.map((scenario) => scenario.name));
   return {

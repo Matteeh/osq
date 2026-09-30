@@ -8,6 +8,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import type { OsqConfig } from '../foundation/config.js';
 import type { MutationPick } from '../trace/mutation-pick.js';
 import { type MutationSurvivor, readMutationReport } from './mutation-report.js';
 import { runVerificationCommand } from './verification.js';
@@ -73,7 +74,8 @@ function resolveCommand(pick: MutationPick, command: string, reportPath: string)
  * arrays, and the report path to `{report}` and `OSQ_MUTATION_REPORT`. The
  * command also receives `OSQ_CHANGE` through `runVerificationCommand`. A pick
  * whose ranges are unknown is not run. The fresh temporary folder is removed
- * after the report is read, whether or not it was readable.
+ * after the report is read, whether or not it was readable. `config` names the
+ * verify role's allowed environment.
  */
 export async function runMutationPick(
   pick: MutationPick,
@@ -81,6 +83,7 @@ export async function runMutationPick(
   changeFolder: string,
   command: string,
   timeoutSeconds: number,
+  config?: OsqConfig,
 ): Promise<MutationRunResult> {
   if (pick.ranges === null) return notMeasured('range_unknown', null, 0, '');
   const folder = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-mutation-'));
@@ -92,9 +95,12 @@ export async function runMutationPick(
       timeoutSeconds,
       changeFolder,
       {
-        OSQ_MUTATE: JSON.stringify([...pick.ranges]),
-        OSQ_MUTATION_TESTS: JSON.stringify([...pick.tests]),
-        OSQ_MUTATION_REPORT: reportPath,
+        config,
+        extraEnv: {
+          OSQ_MUTATE: JSON.stringify([...pick.ranges]),
+          OSQ_MUTATION_TESTS: JSON.stringify([...pick.tests]),
+          OSQ_MUTATION_REPORT: reportPath,
+        },
       },
     );
     if (result.timedOut) {

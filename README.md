@@ -90,6 +90,7 @@ Smart models author specs and never execute them. Cheap models execute specs and
 - **Archive verification.** Before archiving, the watcher re-runs every task's `verify` and the change-level `verify` against the final tree, halting with `.run/regressed/<n>.md` (or `.run/regressed/change.md`) if any fails.
 - **State from disk.** The only authoritative state is which marker files exist under `.run/`: `running/<n>.pid`, `done/<n>`, `dead/<n>.md`, `regressed/<n>.md`, and `approved`. There is no in-memory state that matters, so the watcher can be killed and restarted at any time.
 - **Executor permissions.** A coding agent may write only `.run/results/<n>.md` and files inside its task's `scope`. It may not edit living capability specs, `tasks.md`, or marker files. The watcher writes markers and checkboxes automatically; a human writes the rest through `osq approve`, `osq retry`, `osq reject`, and `osq done`.
+- **Role environments.** osq starts three roles, and none inherits osq's environment. Prepare runs `vcs.prepare`. The agent is the harness process. Verify covers every verify, focused run, mutation check, baseline, and `osq check`. Each role gets `PATH`, `HOME`, the locale, temp-folder, and certificate variables, every `OSQ_` variable, and the names the project lists for it under `confinement.roles.<role>.env`. The agent also gets the model key names its harness reads. Verify and prepare never get those, even when listed. A project whose tests need a variable, such as `DATABASE_URL`, must list it, for example `confinement: { roles: { verify: { env: ['DATABASE_URL'] } } }`. Until then those tests fail. See ADR 007.
 
 ## Change folder
 
@@ -529,7 +530,7 @@ Each task loads only six built-in tools: `Bash`, `Read`, `Edit`, `Write`, `Glob`
 
 #### Claude Code permissions
 
-Executor tasks run with `--permission-mode dontAsk`, so anything not allowed is denied rather than prompting. `Read`, `Glob`, and `Grep` are allowed; `Edit` and `Write` are confined to the project through `Edit(./**)` and `Write(./**)`; `Bash` is allowed but `git` is denied by `Bash(git:*)`, which still denies `git` inside compound commands such as `echo a && git status`.
+Executor tasks run with `--permission-mode dontAsk`, so anything not allowed is denied rather than prompting. `Read`, `Glob`, and `Grep` are allowed; `Edit` and `Write` are confined to the project through `Edit(./**)` and `Write(./**)`; `Bash` is allowed but `git` is denied by `Bash(git:*)`. `curl`, `wget`, `ssh`, `scp`, and `sudo` are denied the same way by `Bash(curl:*)`, `Bash(wget:*)`, `Bash(ssh:*)`, `Bash(scp:*)`, and `Bash(sudo:*)`, which still deny them inside compound commands such as `echo a && git status`.
 
 Without `claude.sandbox`, Bash is not confined: a shell command can still write outside the project or reach the network. Set `claude.sandbox: true` to add Claude Code's Bash sandbox with no network. It fails at startup if the sandbox is unavailable instead of running unconfined, and on Linux and WSL2 it needs the OS packages `bubblewrap` and `socat` (`apt install bubblewrap socat`).
 

@@ -75,6 +75,7 @@ export async function runChangeVerifyGate(
     command,
     config.timeouts.verifyTimeoutSeconds ?? 600,
     { specFolderPath, taskNumber: 'change' },
+    config,
   );
   if (result.passed) return { ok: true };
 

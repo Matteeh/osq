@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a0ec8cba85b8ea860700258987566bfd51cca41feb629ae1844778452287df96"
+build_stamp: "f6fb77a"
+project_commit: "5f11bb0"
+exit_code: 0
+scope_files: {"src/watcher/archive-verify.ts":"sha256:30003d58940f49bf3e820115c54b577eb1e2cbeb5049cf6af144ce2bbc1302dd","src/watcher/baseline.ts":"sha256:2f3ecb4016be5bfe85b34f0b86dae29b3f16ea6d184e26d09051c014255f50ee","src/watcher/change-verify.ts":"sha256:df6f12169b33643e9644521164e9eafef71d76d9d80799728a96a4535b06998a","src/watcher/focused-verify.ts":"sha256:55da72594e87bee788477b45def66b3890759b27a92b0ea7ff74109df67b7084","src/watcher/mutation-check.ts":"sha256:2352ee23765c4f811be0d2074400c44dcade7a603802f9fe255606fc7f094d03","src/watcher/regression.ts":"sha256:b08e52eba5ef17b0072eb6bedc6d7c52f3a54249aefbacef3b08e5a0e8a11f26","src/watcher/runner.ts":"sha256:79587091fd29c0c7c37f070cc900aa86b52aaf013cc2523f896e970d05ac64cf","src/watcher/task-verify.ts":"sha256:4ffd3c2071cd2dba105b476983ca1720e99df345a54d4786e3cf76411db9f405","src/watcher/verify.ts":"sha256:166881e353ea27bab45aa6b67c631d6ee955e9681726864ac86def728386a8b1","tests/watcher-verify-role-env.test.ts":"sha256:9b368f4a82408ab81de9ece11954388be2951affe6297c77791e630895dc6f77"}
+---
+2026-09-30T16:46:42.015Z

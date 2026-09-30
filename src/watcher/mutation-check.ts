@@ -134,6 +134,7 @@ async function runPicks(
   picks: readonly MutationPick[],
   command: string,
   budgetSeconds: number,
+  config: OsqConfig,
 ): Promise<void> {
   const deadline = Date.now() + budgetSeconds * 1000;
   for (const pick of picks) {
@@ -141,7 +142,7 @@ async function runPicks(
     const result =
       remaining <= 0
         ? BUDGET_RESULT
-        : await runMutationPick(pick, projectRoot, specFolderPath, command, remaining);
+        : await runMutationPick(pick, projectRoot, specFolderPath, command, remaining, config);
     await appendHarnessEvent(specFolderPath, taskNumber, {
       type: 'mutation_ran',
       timestamp: new Date().toISOString(),
@@ -190,6 +191,7 @@ export async function runMutationCheck(
       picks,
       mutation.command,
       mutation.budgetSeconds,
+      config,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

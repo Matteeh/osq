@@ -41,3 +41,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [004. Pinned OpenSpec Validator](004-pinned-openspec-validator.md)
 - [005. OpenSpec Validator Peer Range](005-openspec-validator-peer-range.md)
 - [006. osq is the deterministic core](006-deterministic-core.md)
+- [007. Role environments](007-role-environments.md)

@@ -57,7 +57,7 @@ describe('OpenCode Adapter Setup', () => {
     );
   });
 
-  it('Frontmatter permissions allow read, edit, bash, glob, grep, denying webfetch, websearch', async () => {
+  it('Frontmatter permissions allow read, edit, glob, grep and deny webfetch, websearch with bash a map that denies git and network tools', async () => {
     await adapter.setup(tmpDir, DEFAULT_CONFIG);
 
     const agentFile = path.join(tmpDir, '.opencode', 'agent', 'osq-coder.md');
@@ -69,7 +69,20 @@ describe('OpenCode Adapter Setup', () => {
 
     assert.equal(perms.read, 'allow', 'read permission should be allow');
     assert.equal(perms.edit, 'allow', 'edit permission should be allow');
-    assert.equal(perms.bash, 'allow', 'bash permission should be allow');
+    assert.deepEqual(
+      perms.bash,
+      {
+        '*': 'allow',
+        git: 'deny',
+        'git *': 'deny',
+        'curl *': 'deny',
+        'wget *': 'deny',
+        'ssh *': 'deny',
+        'scp *': 'deny',
+        'sudo *': 'deny',
+      },
+      'bash should be a map that allows all but denies git and network tools',
+    );
     assert.equal(perms.glob, 'allow', 'glob permission should be allow');
     assert.equal(perms.grep, 'allow', 'grep permission should be allow');
     assert.equal(perms.webfetch, 'deny', 'webfetch permission should be deny');

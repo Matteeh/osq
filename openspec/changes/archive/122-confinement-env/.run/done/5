@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:32840ee75c6628d9350d9ec57913283dc6457312d132cd344c35c3f67763d428"
+build_stamp: "f6fb77a"
+project_commit: "c8eeef9"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:64509e69ad909019432439451c301fa104bdc657ebb50247669c1db29485727c","README.md":"sha256:ad658cd0ca74e4c1a3d30de1c42fbe321c41fed0fbf592c872ed1a43ff1a769c","decisions/007-role-environments.md":"sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14","decisions/README.md":"sha256:47539ffc71a690d3ec2cceb8a3594700facd93d63f6cbdb5b602c9b826c6bd46","tests/adr-007.test.ts":"sha256:76b0e8b9d3292be2b78ef9670ba3caf5979c11cf3ae9b99c88d456bbdeda658c"}
+---
+2026-09-30T16:58:33.297Z

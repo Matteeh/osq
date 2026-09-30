@@ -66,6 +66,7 @@ export async function verifyArchiveStep(
     command,
     config.timeouts.verifyTimeoutSeconds ?? 600,
     { specFolderPath, taskNumber: target },
+    config,
   );
   if (gate.passed) return true;
 

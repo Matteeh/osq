@@ -128,6 +128,7 @@ export async function runCheck(
     check,
     config.timeouts.verifyTimeoutSeconds,
     null,
+    { config },
   );
   const data: CheckRanEventData = {
     command: result.command,

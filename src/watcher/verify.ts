@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { OsqConfig } from '../core/foundation/config.js';
 import { resolveScope } from '../core/run/scope.js';
 import { TEST_GATE_DIR } from '../core/run/test-gate.js';
 import { type VerificationResult, runVerificationCommand } from '../core/run/verification.js';
@@ -143,12 +144,14 @@ export async function runVerificationGateResult(
   verifyCommand: string,
   verifyTimeoutSeconds: number,
   context?: { specFolderPath: string; taskNumber: string; extraData?: VerifyEventDataFn },
+  config?: OsqConfig,
 ): Promise<VerificationGateResult> {
   const result = await runVerificationCommand(
     projectRoot,
     verifyCommand,
     verifyTimeoutSeconds,
     context?.specFolderPath ?? null,
+    { config },
   );
   const error = result.timedOut
     ? `Verify command timed out after ${verifyTimeoutSeconds}s`
@@ -182,16 +185,14 @@ export async function runVerificationGate(
   verifyCommand: string,
   verifyTimeoutSeconds: number,
   context?: { specFolderPath: string; taskNumber: string },
+  config?: OsqConfig,
 ): Promise<{ passed: boolean; timedOut: boolean; error?: string }> {
-  const result = await runVerificationGateResult(
+  const { passed, timedOut, error } = await runVerificationGateResult(
     projectRoot,
     verifyCommand,
     verifyTimeoutSeconds,
     context,
+    config,
   );
-  return {
-    passed: result.passed,
-    timedOut: result.timedOut,
-    ...(result.error ? { error: result.error } : {}),
-  };
+  return { passed, timedOut, ...(error ? { error } : {}) };
 }

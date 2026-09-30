@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f296562be929eed9087477048ab30889dd52250341fc30b5527d7bc66ae76c64"
+build_stamp: "f6fb77a"
+project_commit: "8f72714"
+exit_code: 0
+scope_files: {"src/core/lifecycle/retry.ts":"sha256:d7b26c0a6b963e996b152af7b7bbfdf67ef2a6acba6b07826037af91313ec130","src/core/lifecycle/verification-record.ts":"sha256:bf8a50f4d811f68877ea1f3c155f5d78116aa273eb0ff7e99f41a7e60c12c3f4","src/core/run/focused-tests.ts":"sha256:0a1f2225dfde6f80e811cc35a47803e67beedcb96cdd7e125f6f0ba3ff12b0fd","src/core/run/mutation-run.ts":"sha256:32b84f4b30c303a5d2e7a78f9073d95c02436c246168089e34a5c24a4c24f84b","src/core/run/verification.ts":"sha256:72b0dc07328d805511e988422ac8dd3dcfe24a78d313dc7df03c101b941dc05d","src/core/spec/approve-worktree.ts":"sha256:e57705cf9fffec7865371cd3880b9f8c77932954c1ee23994d9d38c4ea423790","src/core/vcs/sync-verify.ts":"sha256:fff811c5a5fcf77ac69268973114526a414eabec75ad0b5d395a5c76eb85acb3","tests/verify-role-env.test.ts":"sha256:cb2106619152e514a79514a4ae9a17c8df88bc727691b29f7a5a66f2d98a4b75"}
+---
+2026-09-30T16:35:47.811Z

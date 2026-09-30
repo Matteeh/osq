@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { resolveCodexBinary } from '../../core/foundation/config-codex.js';
 import { type OsqConfig, loadConfig } from '../../core/foundation/config.js';
+import { buildRoleEnv } from '../../core/run/role-env.js';
 import { spawnWithTimeout } from '../process.js';
 import { EventStreamParser } from '../stream.js';
 import type {
@@ -69,11 +70,11 @@ export class CodexAdapter implements HarnessAdapter {
       command: bin,
       args,
       cwd: projectRoot,
-      env: {
-        ...process.env,
-        OSQ_TASK_NUMBER: taskNumber,
-        OSQ_SPEC_FOLDER: specFolderPath,
-      },
+      env: buildRoleEnv('agent', {
+        config: resolved,
+        harness: 'codex',
+        extraEnv: { OSQ_TASK_NUMBER: taskNumber, OSQ_SPEC_FOLDER: specFolderPath },
+      }),
       timeoutSeconds: options.timeoutSeconds ?? resolved?.timeouts?.taskTimeoutSeconds ?? 1800,
       killGracePeriodMs: resolved?.timeouts?.harnessKillGracePeriodMs,
       onStdout: (chunk) => {

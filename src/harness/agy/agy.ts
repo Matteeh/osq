@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { type OsqConfig, loadConfig } from '../../core/foundation/config.js';
 import type { Logger } from '../../core/foundation/logger.js';
+import { buildRoleEnv } from '../../core/run/role-env.js';
 import { relativizeToolSummary } from '../../core/run/summary.js';
 import { spawnWithTimeout } from '../process.js';
 import { buildExecutorPrompt } from '../prompt.js';
@@ -316,11 +317,11 @@ export class AgyAdapter implements HarnessAdapter {
       command: agyBin,
       args,
       cwd: projectRoot,
-      env: {
-        ...process.env,
-        OSQ_TASK_NUMBER: taskNumber,
-        OSQ_SPEC_FOLDER: specFolderPath,
-      },
+      env: buildRoleEnv('agent', {
+        config: options.config,
+        harness: 'agy',
+        extraEnv: { OSQ_TASK_NUMBER: taskNumber, OSQ_SPEC_FOLDER: specFolderPath },
+      }),
       timeoutSeconds,
       onStdout: (chunk) => {
         streamParser.feed(chunk);

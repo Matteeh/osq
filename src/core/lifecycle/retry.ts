@@ -165,6 +165,7 @@ export async function retrySpec(
       taskData.verify,
       config.timeouts.verifyTimeoutSeconds,
       folderPath,
+      { config },
     );
     const current = await computeTaskScopeHash(tree.root, taskData.scope);
     recertification = gate.exitCode === 0 && !gate.error ? 'passed' : 'requeued';

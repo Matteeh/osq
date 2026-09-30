@@ -184,7 +184,9 @@ export async function settleBaseline(options: BaselineOptions): Promise<Baseline
   }
 
   const timeoutSeconds = config.timeouts.verifyTimeoutSeconds ?? 600;
-  const result = await runVerificationCommand(projectRoot, command, timeoutSeconds, null);
+  const result = await runVerificationCommand(projectRoot, command, timeoutSeconds, null, {
+    config,
+  });
   await appendBaselineEvent(specFolderPath, {
     outcome: result.exitCode === 0 ? 'passed' : 'failed',
     command,

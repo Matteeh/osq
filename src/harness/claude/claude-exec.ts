@@ -4,6 +4,7 @@ import {
   resolveClaudeBinary,
 } from '../../core/foundation/config-claude.js';
 import { type OsqConfig, loadConfig } from '../../core/foundation/config.js';
+import { buildRoleEnv } from '../../core/run/role-env.js';
 import { spawnWithTimeout } from '../process.js';
 import { EventStreamParser } from '../stream.js';
 import type { HarnessAdapter, SpawnDetails, SpawnResult, SpawnTaskOptions } from '../types.js';
@@ -77,7 +78,11 @@ export class ClaudeAdapter implements HarnessAdapter {
       command: bin,
       args,
       cwd: projectRoot,
-      env: { ...process.env, OSQ_TASK_NUMBER: taskNumber, OSQ_SPEC_FOLDER: specFolderPath },
+      env: buildRoleEnv('agent', {
+        config: resolved,
+        harness: 'claude',
+        extraEnv: { OSQ_TASK_NUMBER: taskNumber, OSQ_SPEC_FOLDER: specFolderPath },
+      }),
       timeoutSeconds: options.timeoutSeconds ?? resolved?.timeouts?.taskTimeoutSeconds ?? 1800,
       killGracePeriodMs: resolved?.timeouts?.harnessKillGracePeriodMs,
       onStdout: (chunk) => parser.feed(chunk),
