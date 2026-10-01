@@ -42,3 +42,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [005. OpenSpec Validator Peer Range](005-openspec-validator-peer-range.md)
 - [006. osq is the deterministic core](006-deterministic-core.md)
 - [007. Role environments](007-role-environments.md)
+- [008. SQLite read index](008-sqlite-read-index.md)

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c01d5efdf6eb306c2b8624844cbb1fa0e6bcd3a1737722372dc92ece571c4e63"
+build_stamp: "8f30467"
+project_commit: "f577ddd"
+exit_code: 0
+scope_files: {"decisions/008-sqlite-read-index.md":"sha256:6092cd51f69465f5761f730d7b7de20357d5a4356215b5dfd62f90ffbc498f3e","decisions/README.md":"sha256:dd27a6bcb15a142d3eb57f9a35e1278a8bc6756563777bc2df8925c75ee51a57","src/cli/report.ts":"sha256:da52b539044846ecb012778e3dafae82207b0228cb0f2f3e4ccbec6325366238","src/core/report/report.ts":"sha256:4d91041cede010ad1efebed999999c5555d2e57281f0d4179db69a511f7c0a72","src/core/report/stream-reads.ts":"sha256:dd7d73c49f86f4aa709c6cb82ae5efdbae5c0a776d75f0f6bda30f9755010ae7","tests/report-index.test.ts":"sha256:0fd562968b4be0f488501bc9995e1f4260871884b994b3245d067bf3ad007a10"}
+---
+2026-10-01T17:22:39.432Z

@@ -69,6 +69,7 @@ import {
   formatTraceability,
 } from './report-traceability.js';
 import { taskScopeSize } from './scope-size.js';
+import { openStreamIndex } from './stream-index.js';
 import { readEventStream, withStreamReads } from './stream-reads.js';
 
 export interface SpecMetrics {
@@ -857,12 +858,35 @@ function aggregatePhase(
   };
 }
 
-export function getMetricsReport(
+/** Report options: inbox-wait bounds plus the optional derived stream index. */
+export interface MetricsReportOptions extends InboxWaitOptions {
+  /** Read archived event streams through the derived index when true. */
+  readonly index?: boolean;
+}
+
+export async function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
-  options: InboxWaitOptions = {},
+  options: MetricsReportOptions = {},
 ): Promise<MetricsReport> {
-  return withStreamReads(() => buildMetricsReport(projectRoot, config, options));
+  const { index = false, ...inboxOptions } = options;
+  if (!index) {
+    return withStreamReads(() => buildMetricsReport(projectRoot, config, inboxOptions));
+  }
+
+  const [tree] = await changeTrees(projectRoot, config);
+  const streamIndex = await openStreamIndex(projectRoot, tree.archiveDir);
+  if (!streamIndex) {
+    return withStreamReads(() => buildMetricsReport(projectRoot, config, inboxOptions));
+  }
+  try {
+    return await withStreamReads(
+      () => buildMetricsReport(projectRoot, config, inboxOptions),
+      streamIndex,
+    );
+  } finally {
+    streamIndex.close();
+  }
 }
 
 async function buildMetricsReport(

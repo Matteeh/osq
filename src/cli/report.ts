@@ -333,6 +333,7 @@ export async function reportCommand(options: ReportCommandOptions = {}): Promise
       home: options.home,
       since: period.since,
       until: period.until,
+      index: true,
     });
     const output = options.json
       ? serializeSortedJson(toStableMetrics(report))
