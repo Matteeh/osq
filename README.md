@@ -22,6 +22,14 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 
 ## Upgrading
 
+To 0.2.4:
+
+- Verify, `vcs.prepare`, and the harness no longer inherit osq's environment (ADR 007). A project whose tests need a variable such as `DATABASE_URL` must list it under `confinement.roles.verify.env`; see Role environments below.
+- Removed `osq verified`, `osq check`, and `osq done <id> <task> --manual`. A proposal's `check:` command now runs at archive and when `osq land` merges a newer default branch.
+- With `vcs.enabled`, land with `osq land <id>` instead of committing `osq message <id>` by hand, and `osq approve` removes the approved change folder from your checkout.
+- `osq report` keeps a read index in `.osq/index.sqlite`. The folder ignores itself in git, and deleting it only costs the next report's speed.
+- The managed `AGENTS.md` and `PLANNER.md` blocks changed. Run `osq init` to refresh them; until you do, `osq doctor` reports the drift.
+
 To 0.2.2:
 
 - The opencode adapter needs opencode 2. `osq doctor` and the watcher's preflight refuse opencode 1.
@@ -57,6 +65,7 @@ openspec/
     archive/       finished change folders, moved whole
     rejected/      rejected change folders, preserved with audit reason
 decisions/         ADRs, superseded not edited
+.osq/              read index `osq report` and `osq query` keep; ignored by git, safe to delete
 ```
 
 A change folder is a feature. A task is one unit of work for one agent. After approval the folder is read-only until every task is done or one is dead. State is which marker files exist under `.run/`, never a field in a document.
@@ -552,16 +561,19 @@ osq setup                write harness config for OSQ_HARNESS
 osq new <name>           new change folder from template in openspec/changes/
 osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool
 osq queue                print the read-only brief queue from openspec/queue.md
-osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints (--json for JSON)
+osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints (--json for JSON, --repository for findings about other changes)
 osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
 osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
 osq reject <id>          move an unapproved or failed change intact into rejected history
 osq watch                run the watcher loop
 osq status               overview of all changes, tasks, and runtime states
 osq message <id>         print an archived change's land commit message
+osq land <id>            land an archived change onto the default branch (vcs.enabled)
+osq sync <id>            merge the default branch into a running change's branch (vcs.enabled)
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
 osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
+osq query [select]       run one read-only SELECT over the history tables (--json for JSON)
 osq digest [ids...]      deterministic Markdown or JSON digest of archived changes (--since, --until, --json, --out, --no-cost)
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON
@@ -602,20 +614,19 @@ Use `osq --json` to consume this contract programmatically without extra termina
 
 `osq inbox` is the dispatcher view: it lists the items that need a human — an
 unapproved change ready for approval, a dead or regressed task, a change-level
-regression, an archived change waiting to land, and a pending verification —
+regression, and an archived change waiting to land —
 then prints the first item's card with its reason, evidence, and exact commands.
 It orders the queue by taking approval and halt items first while the watcher is
 idle, then the item that holds up the most changes, then the lower change id and
 task number. `osq inbox --json` carries every item's card data.
 
 On a terminal, `osq inbox` opens the first item as a card instead of printing:
-the same header and card, then a `Keys:` block with `a` approve, `r` retry,
-`x` reject (it asks for a reason), `c` check, `p` verified passed, `f` verified
-failed, `s` show, `n` skip, and `q` quit. Pressing a key runs that osq command
+the same header and card, then a `Keys:` block with `a` approve, `p` plan,
+`r` retry, `x` reject (it asks for a reason), `s` show, `n` skip, and `q` quit. Pressing a key runs that osq command
 as a child process on the same terminal, so its output and prompts are exactly
 what you would see typing it, and its exit code prints before the queue is
-re-read. A key only runs a command the card already lists; the land command is
-a shell pipeline, so it appears under `Run yourself:` to copy rather than run.
+re-read. A key only runs a command the card already lists; `osq land <id>`
+gets no key, so it appears under `Run yourself:` to copy rather than run.
 When stdout is not a terminal, or with `--json` or `--follow`, `osq inbox`
 prints as before, so piping and scripts are unaffected.
 
@@ -761,8 +772,12 @@ osq digest --no-cost     # leave cost and executor models out
 
 `osq digest` reads only archives and the decisions folder, runs no model, and prints the same bytes for the same archives and arguments. It prints Markdown by default, JSON with `--json`, and writes to `--out <file>` instead of stdout. `--no-cost` omits cost and models.
 
+`osq query "<select>"` answers questions about archived changes as rows: which tasks died and why, which changes touched a requirement, what executors disclosed. It runs one read-only `SELECT` over the tables `changes`, `requirements`, `tasks`, `dead_attempts`, and `disclosures`; `osq query` alone lists them and their columns, and any other statement is refused. Add `LIMIT` to keep the answer short.
+
+`osq report` and `osq query` read archived event streams through a SQLite index at `.osq/index.sqlite`, rebuilt per file when a file's size or modification time changes. The files stay the only source of truth: deleting the index, or a corrupt one, changes nothing but the next run's speed (ADR 008).
+
 `osq report`'s `Inbox waiting` section shows, for its period, how long each
-approval, halt, land, and verify item waited, the time the watcher sat idle on
+approval, halt, and land item waited, the time the watcher sat idle on
 a human's item, and how many items each card session handled; `--since` and
 `--until` choose that period.
 
