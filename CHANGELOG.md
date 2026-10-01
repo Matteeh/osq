@@ -4,6 +4,7 @@ All notable changes to `osq` are documented in this file.
 
 ## [Unreleased]
 
+- `osq digest [ids...]` prints a deterministic Markdown or JSON digest of archived changes, by id or by `--since`/`--until` range, with `--out` and `--no-cost` (130).
 - A change the default branch stops — a `sync_conflict`, a `requirement_changed`, or a red verify or check after osq merges the default branch (`sync_verify_red`) — now shows once in the inbox with `osq plan <id>`, archived or not, and `osq land` records the stop on an archived change's branch. Approval of the revised plan restarts the branch from the default branch after a conflict, or merges the default branch without running verify otherwise, keeping done tasks (129).
 - A stuck, blocked, or regressed change now shows once in the inbox with `osq plan <id>`. `osq plan` writes the prompt into the change's own folder, and `osq approve` continues the run from the first task that is not done (128).
 - Removed `osq verified` and `osq check`. A proposal's `check:` command now runs after the change-level verify at archive and again in an `osq land` sync that merges a newer default branch; a failure stops the change as a failed verify does. `### After landing` steps are notes that `osq show` prints, and nothing waits on them. Archives with recorded verifications still show them in `osq show` (125).

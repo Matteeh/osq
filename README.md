@@ -562,6 +562,7 @@ osq message <id>         print an archived change's land commit message
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
 osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
+osq digest [ids...]      deterministic Markdown or JSON digest of archived changes (--since, --until, --json, --out, --no-cost)
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON
 osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
@@ -751,7 +752,14 @@ osq watch -q, --quiet    # suppress info and verbose output
 osq report               # formatted terminal report
 osq report --json        # raw JSON report for scripting and CI pipelines
 osq report --since <date> --until <date>  # limit the Inbox waiting section's period
+osq digest <ids...>      # digest the archived changes with those ids
+osq digest --since <date> [--until <date>]  # digest every change archived in the range
+osq digest --json        # print the versioned digest JSON document
+osq digest --out <file>  # write the digest to a file instead of stdout
+osq digest --no-cost     # leave cost and executor models out
 ```
+
+`osq digest` reads only archives and the decisions folder, runs no model, and prints the same bytes for the same archives and arguments. It prints Markdown by default, JSON with `--json`, and writes to `--out <file>` instead of stdout. `--no-cost` omits cost and models.
 
 `osq report`'s `Inbox waiting` section shows, for its period, how long each
 approval, halt, land, and verify item waited, the time the watcher sat idle on

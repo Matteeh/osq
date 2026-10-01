@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { registerApproveCommand } from './approve.js';
+import { registerDigestCommand } from './digest.js';
 import { registerDoctorCommand } from './doctor.js';
 import { registerGraphCommand } from './graph.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
@@ -195,6 +196,7 @@ export function createProgram(version?: string): Command {
       await reportCommand(options);
     });
 
+  registerDigestCommand(program);
   registerDoctorCommand(program);
 
   program

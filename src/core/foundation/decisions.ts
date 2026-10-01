@@ -9,6 +9,7 @@ import type { OsqConfig } from './config.js';
 export interface Adr {
   readonly number: string; // leading digits of the file name, as written: '007'
   readonly title: string; // first `# ` heading without its leading `<number>.`
+  readonly date: string | null; // first YYYY-MM-DD on the first `Date:` body line, else null
   readonly path: string; // repository-relative, forward slashes
   readonly hash: string; // `sha256:<hex>` of the UTF-8 file content
   readonly status: string; // raw frontmatter value; validation rejects others
@@ -85,6 +86,16 @@ function readTitle(body: string): string {
     .trim();
 }
 
+/** First `YYYY-MM-DD` on the first body line starting with `Date:`, or null. */
+function readDate(body: string): string | null {
+  for (const line of body.split(/\r?\n/)) {
+    if (!line.startsWith('Date:')) continue;
+    const match = /\d{4}-\d{2}-\d{2}/.exec(line);
+    return match ? match[0] : null;
+  }
+  return null;
+}
+
 function readAppliesTo(value: unknown): 'all' | readonly string[] | null {
   if (value === 'all') return 'all';
   if (!Array.isArray(value) || value.length === 0) return null;
@@ -127,6 +138,7 @@ function toAdr(content: string, relativePath: string, number: string): Adr | nul
   return {
     number,
     title: readTitle(body),
+    date: readDate(body),
     path: relativePath,
     hash: hashContent(content),
     status: readStatus(data.status),

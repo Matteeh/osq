@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:23faaff9efaca7efcd2b6eba838fab8cc6990f19bc2fa05b5b66db15f530b531"
+build_stamp: "5e1a58c"
+project_commit: "5165a15"
+exit_code: 0
+scope_files: {"src/core/report/change-digest-period.ts":"sha256:7ca10f75d57d4ef19f82bb2664c2fc25df2b0cd3b97a59ffc0c985161f833099","src/core/report/change-digest.ts":"sha256:fe097235804f96728a577fce098a9cb1d59700a2905f48ae8b332b0f7d73b502","tests/change-digest-select.test.ts":"sha256:10de1b33b131ab337e2a1e3691410a1d85832358b46159c99e3e7d8aad541b69"}
+---
+2026-10-01T14:12:31.689Z
