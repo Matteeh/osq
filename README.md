@@ -25,7 +25,7 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 To 0.2.4:
 
 - Verify, `vcs.prepare`, and the harness no longer inherit osq's environment (ADR 007). A project whose tests need a variable such as `DATABASE_URL` must list it under `confinement.roles.verify.env`; see Role environments below.
-- Removed `osq verified`, `osq check`, and `osq done <id> <task> --manual`. A proposal's `check:` command now runs at archive and when `osq land` merges a newer default branch.
+- The commands that recorded a check by hand, or marked a task done without its verify, are gone. A proposal's `check:` command now runs at archive and when `osq land` merges a newer default branch; to finish a dead task, fix the cause and run `osq retry <id> <n>`.
 - With `vcs.enabled`, land with `osq land <id>` instead of committing `osq message <id>` by hand, and `osq approve` removes the approved change folder from your checkout.
 - `osq report` keeps a read index in `.osq/index.sqlite`. The folder ignores itself in git, and deleting it only costs the next report's speed.
 - The managed `AGENTS.md` and `PLANNER.md` blocks changed. Run `osq init` to refresh them; until you do, `osq doctor` reports the drift.

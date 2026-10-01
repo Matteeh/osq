@@ -2,8 +2,9 @@
 
 All notable changes to `osq` are documented in this file.
 
-## [Unreleased]
+## [0.2.4] - 2026-10-02
 
+- `osq report` reads each task file, `brief.md`, `.run/manifest.json`, and `proposal.md` once per run: 2,113 reads to 880 on osq's own repository. Parsed proposals are now frozen (135).
 - `osq query "<select>"` runs one read-only `SELECT` over five history tables (`changes`, `requirements`, `tasks`, `dead_attempts`, `disclosures`) and prints rows, or JSON with `--json`. `PLANNER.md` and the executor protocol point agents at it instead of event files (134).
 - `osq report` reads archived event streams through a SQLite index at `.osq/index.sqlite`, using Node's built-in `node:sqlite`. Deleting it only costs speed (ADR 008) (133).
 - `osq report` reads and parses each event file once per run, without holding verify logs in memory: about 4.0 s to 2.4 s on osq's own repository (132).
