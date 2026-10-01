@@ -14,6 +14,7 @@ import {
   formatApprovalFlagOutcomes,
 } from './approval-flags.js';
 import { readBriefToApprovalSeconds } from './brief-to-approval.js';
+import { readBriefData } from './change-reads.js';
 import {
   type PlanningChangeEconomics,
   type PlanningComparison,
@@ -70,7 +71,7 @@ import {
 } from './report-traceability.js';
 import { taskScopeSize } from './scope-size.js';
 import { openStreamIndex } from './stream-index.js';
-import { readEventStream, withStreamReads } from './stream-reads.js';
+import { readEventStream, readTextFile, withStreamReads } from './stream-reads.js';
 
 export interface SpecMetrics {
   readonly total: number;
@@ -516,9 +517,9 @@ async function readTaskMetadata(
   folderPath: string,
   taskNumber: string,
 ): Promise<{ title: string; acceptanceLines: number }> {
-  const content = await fs
-    .readFile(path.join(folderPath, 'tasks', `${taskNumber}.md`), 'utf8')
-    .catch(() => null);
+  const content = await readTextFile(path.join(folderPath, 'tasks', `${taskNumber}.md`)).catch(
+    () => null,
+  );
   if (content === null) return { title: '', acceptanceLines: 0 };
   const task = parseTaskMd(content);
   return { title: task.title, acceptanceLines: task.acceptance.length };
@@ -805,9 +806,9 @@ async function hasRejectedEvent(folderPath: string): Promise<boolean> {
 
 /** Non-empty `planner` value from `brief.md` frontmatter, else `unknown`. */
 async function readPlannerModel(folderPath: string): Promise<string> {
-  const content = await fs.readFile(path.join(folderPath, 'brief.md'), 'utf8').catch(() => null);
-  if (content === null) return 'unknown';
-  const value = parseFrontmatter(content).data.planner;
+  const data = await readBriefData(folderPath);
+  if (data === null) return 'unknown';
+  const value = data.planner;
   if (typeof value === 'string' && value.trim()) return value.trim();
   return 'unknown';
 }

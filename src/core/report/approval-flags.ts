@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ApprovalFlagId } from '../spec/digest.js';
+import { readManifestObject } from './change-reads.js';
 import { type ReworkEntry, changeIdOfFolder } from './record-rework.js';
 import { readEventStream } from './stream-reads.js';
 
@@ -77,19 +78,11 @@ function emptyFlagOutcome(): MutableFlagOutcome {
 }
 
 /**
- * The recorded `approvalFlags` of a manifest, or null when the file is
- * malformed or the field is absent or does not carry a valid `ids` array and
- * `shown`/`confirmed` mode.
+ * The recorded `approvalFlags` of a parsed manifest, or null when the field is
+ * absent or does not carry a valid `ids` array and `shown`/`confirmed` mode.
  */
-function parseRecordedFlags(content: string): RecordedFlags | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-  const flags = (parsed as Record<string, unknown>).approvalFlags;
+function parseRecordedFlags(manifest: Record<string, unknown>): RecordedFlags | null {
+  const flags = manifest.approvalFlags;
   if (!flags || typeof flags !== 'object' || Array.isArray(flags)) return null;
   const record = flags as Record<string, unknown>;
   if (record.mode !== 'shown' && record.mode !== 'confirmed') return null;
@@ -170,11 +163,9 @@ export async function collectApprovalFlagOutcomes(
   let changes = 0;
 
   for (const folderPath of folders) {
-    const content = await fs
-      .readFile(path.join(folderPath, '.run', 'manifest.json'), 'utf8')
-      .catch(() => null);
-    if (content === null) continue;
-    const recorded = parseRecordedFlags(content);
+    const manifest = await readManifestObject(folderPath);
+    if (manifest === null) continue;
+    const recorded = parseRecordedFlags(manifest);
     if (!recorded) continue;
 
     changes++;

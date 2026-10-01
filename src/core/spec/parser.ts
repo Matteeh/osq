@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
+import { freezeDeep, readSharedFile } from '../report/stream-reads.js';
 
 export interface FrontmatterResult {
   data: Record<string, unknown>;
@@ -192,9 +193,14 @@ export async function resolveChangeDoc(folderPath: string): Promise<ResolvedChan
   return null;
 }
 
+/** Module-level parser so one report run shares one frozen parse per path. */
+const parseFrozenSpecMd = (content: string): SpecData => freezeDeep(parseSpecMd(content));
+
 /**
  * Parses `proposal.md` when present, otherwise falls back to `spec.md`.
- * Returns null when neither file exists in the change folder.
+ * Returns null when neither file exists in the change folder. Inside one report
+ * run every caller gets the same frozen parse from one read; a read error
+ * rejects with the file-system error.
  */
 export async function parseSpecMdFromFolder(folderPath: string): Promise<SpecData | null> {
   const resolved = await resolveChangeDoc(folderPath);
@@ -202,8 +208,7 @@ export async function parseSpecMdFromFolder(folderPath: string): Promise<SpecDat
     return null;
   }
 
-  const content = await fs.readFile(resolved.path, 'utf8');
-  return parseSpecMd(content);
+  return readSharedFile(resolved.path, parseFrozenSpecMd);
 }
 
 export type VerifyStarts = 'red' | 'green' | 'any';

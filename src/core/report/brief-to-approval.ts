@@ -1,6 +1,5 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { readManifestApprovedAt } from '../run/manifest-approval.js';
+import { readManifestObject } from './change-reads.js';
 
 /**
  * Seconds from a manifest `createdAt` marked `createdAtSource: "created"` to a
@@ -8,18 +7,8 @@ import { readManifestApprovedAt } from '../run/manifest-approval.js';
  * or a trusted approval is missing, or when the approval precedes creation.
  */
 export async function readBriefToApprovalSeconds(folderPath: string): Promise<number | null> {
-  const content = await fs
-    .readFile(path.join(folderPath, '.run', 'manifest.json'), 'utf8')
-    .catch(() => null);
-  if (content === null) return null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    return null;
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-  const manifest = parsed as { createdAt?: unknown; createdAtSource?: unknown };
+  const manifest = await readManifestObject(folderPath);
+  if (manifest === null) return null;
   if (manifest.createdAtSource !== 'created') return null;
   if (typeof manifest.createdAt !== 'string') return null;
   const createdMs = Date.parse(manifest.createdAt);

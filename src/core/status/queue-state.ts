@@ -1,7 +1,5 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
-import { parseFrontmatter } from '../spec/parser.js';
+import { readBriefData } from '../report/change-reads.js';
 import { listChanges } from './change-locations.js';
 import { type QueueItem, readQueue } from './queue-parser.js';
 import {
@@ -71,11 +69,8 @@ export async function scanQueueAssociations(
 ): Promise<Map<string, QueueAssociationGroups>> {
   const result = new Map<string, QueueAssociationGroups>();
   for (const change of await listChanges(projectRoot, config)) {
-    const content = await fs
-      .readFile(path.join(change.folderPath, 'brief.md'), 'utf8')
-      .catch(() => null);
-    if (content === null) continue;
-    const { data } = parseFrontmatter(content);
+    const data = await readBriefData(change.folderPath);
+    if (data === null) continue;
     const item = typeof data.queue_item === 'string' ? data.queue_item.trim() : '';
     if (!item || (slugs && !slugs.has(item))) continue;
     const groups = result.get(item) ?? { active: [], archived: [], rejected: [] };
