@@ -9,9 +9,10 @@ import type { StreamIndex } from './stream-index.js';
 /** One file's parsers, each with the parsed result its callers share. */
 type ParserCache = Map<(content: string) => unknown, Promise<unknown>>;
 
-/** One read scope: the shared parser cache plus an optional archived-stream index. */
+/** One read scope: the shared parser caches plus an optional archived-stream index. */
 interface StreamReadScope {
   readonly parsers: Map<string, ParserCache>;
+  readonly shared: Map<string, ParserCache>;
   readonly index?: StreamIndex;
 }
 
@@ -38,7 +39,9 @@ async function readAndParse<T>(filePath: string, parse: (content: string) => T):
  */
 export function withStreamReads<T>(work: () => Promise<T>, index?: StreamIndex): Promise<T> {
   if (storage.getStore()) return work();
-  const scope: StreamReadScope = index ? { parsers: new Map(), index } : { parsers: new Map() };
+  const scope: StreamReadScope = index
+    ? { parsers: new Map(), shared: new Map(), index }
+    : { parsers: new Map(), shared: new Map() };
   return storage.run(scope, work);
 }
 
@@ -66,6 +69,56 @@ export async function readParsedFile<T>(
   const pending = readAndParse(resolved, parse);
   parsers.set(parse, pending);
   return pending;
+}
+
+/**
+ * Reads and parses one file, rejecting with the file-system error a direct
+ * `fs.readFile` would give. Inside a scope, one absolute path and one parser
+ * read the file once and give every caller the same parsed result; a failed
+ * read is cached too, so it is not retried. Outside a scope, every call goes
+ * to disk.
+ */
+export async function readSharedFile<T>(
+  filePath: string,
+  parse: (content: string) => T,
+): Promise<T> {
+  const resolved = path.resolve(filePath);
+  const scope = storage.getStore();
+  if (!scope) return parse(await fs.readFile(resolved, 'utf8'));
+
+  let parsers = scope.shared.get(resolved);
+  if (!parsers) {
+    parsers = new Map();
+    scope.shared.set(resolved, parsers);
+  }
+  const cached = parsers.get(parse);
+  if (cached) return cached as Promise<T>;
+
+  const pending = fs.readFile(resolved, 'utf8').then(parse);
+  parsers.set(parse, pending);
+  return pending;
+}
+
+/** The shared parser that returns a file's text unchanged. */
+const identity = (content: string): string => content;
+
+/** Reads one file as text through the shared scope, rejecting on a read error. */
+export function readTextFile(filePath: string): Promise<string> {
+  return readSharedFile(filePath, identity);
+}
+
+/**
+ * Freezes one value and every object and array inside it, and returns the same
+ * value. Already-frozen values are left alone; primitives pass through
+ * unchanged.
+ */
+export function freezeDeep<T>(value: T): T {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  Object.freeze(value);
+  for (const nested of Object.values(value as Record<string, unknown>)) {
+    freezeDeep(nested);
+  }
+  return value;
 }
 
 /** Strips a log-carrying event's `output` and freezes the event and its data. */

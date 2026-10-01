@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2545c7ea8e90aad242ef0ece423e9f12a3587619da21e009b386b746e7f0b489"
+build_stamp: "9ed8e9b"
+project_commit: "085a07e"
+exit_code: 0
+scope_files: {"src/core/report/approval-flags.ts":"sha256:45dbd308dce853d5deb11e0531b885fd9a08fb8632bd057bcb6e174d266b18a1","src/core/report/brief-to-approval.ts":"sha256:e9507d4943331ba3b217bfd00266f28e973ef8301d3f17b475032428e94c9dd8","src/core/report/report.ts":"sha256:d9f418f191a76163d830885f098bf9fce3f0d8deae892037896ffa6ef7ae650c","src/core/run/manifest-approval.ts":"sha256:f27b261281d3eefec59d802e6914a2d8218184082d7e54775d8e6e321f1a3a01","src/core/spec/parser.ts":"sha256:f4abf7f5d96a110a0da473b4f22bce94606a84d2dc8d6b327111fe0de0937dc0","src/core/status/queue-state.ts":"sha256:fbbff634be902fd9208dd66752966391baf60394711014fe6e7dd841ceaba072","src/core/status/state.ts":"sha256:f69da0c1aff020df59bfb1115a3b64b25a062a18bc0b0e8313c28c06a84e571a","tests/report-small-reads-once.test.ts":"sha256:2ce1e89ae08bb810c46a22f7ced46f69c697e98096f243eb7570e86565f1a15b"}
+---
+2026-10-01T22:20:43.980Z

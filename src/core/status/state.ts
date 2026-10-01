@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { readTextFile } from '../report/stream-reads.js';
 /* biome-ignore format: single line keeps this file inside the 250-line source budget */ import { type SpecData, parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { isDependencyDone, listDir } from './dependency-readiness.js';
 import * as layout from './layout.js';
@@ -183,7 +184,7 @@ export async function readChangeFolder(
   for (const entry of (await listDir(tasksDir))
     .filter((item) => item.endsWith('.md'))
     .sort(compareNumericPrefix)) {
-    taskFiles.set(entry, await fs.readFile(path.join(tasksDir, entry), 'utf8'));
+    taskFiles.set(entry, await readTextFile(path.join(tasksDir, entry)));
   }
   const readMarkerMap = async (dir: string, suffix: string): Promise<Map<string, string>> => {
     const markers = new Map<string, string>();

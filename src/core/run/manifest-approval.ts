@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
+import { readManifestObject } from '../report/change-reads.js';
 import { getApprovedMarkerPath } from '../status/layout.js';
 
 /**
@@ -13,19 +13,8 @@ export async function readManifestApprovedAt(changeFolder: string): Promise<stri
     () => false,
   );
   if (!marked) return null;
-  const raw = await fs
-    .readFile(path.join(changeFolder, '.run', 'manifest.json'), 'utf8')
-    .catch(() => null);
-  if (raw === null) return null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return null;
-  }
-  const value =
-    parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? (parsed as { approvedAt?: unknown }).approvedAt
-      : null;
+  const manifest = await readManifestObject(changeFolder);
+  if (manifest === null) return null;
+  const value = manifest.approvedAt;
   return typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
 }

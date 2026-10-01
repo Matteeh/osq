@@ -1,0 +1,43 @@
+diff --git a/openspec/changes/135-report-small-reads-once/.run/dead/1.1.md b/openspec/changes/135-report-small-reads-once/.run/dead/1.1.md
+new file mode 100644
+index 0000000..0ed6c5d
+--- /dev/null
++++ b/openspec/changes/135-report-small-reads-once/.run/dead/1.1.md
+@@ -0,0 +1,6 @@
++---
++reason: timeout
++exit_code: 143
++fingerprint: sha256:4f01c4d9fd9c99a28ca5bd32e84198076950b693b6b74dd40481a77a71284df4
++---
++Agent timed out with code 143: Task execution timed out
+diff --git a/openspec/changes/135-report-small-reads-once/.run/events/1.jsonl b/openspec/changes/135-report-small-reads-once/.run/events/1.jsonl
+index f1226a6..92296b2 100644
+--- a/openspec/changes/135-report-small-reads-once/.run/events/1.jsonl
++++ b/openspec/changes/135-report-small-reads-once/.run/events/1.jsonl
+@@ -6,3 +6,19 @@
+ {"type":"exited","timestamp":"2026-10-01T20:44:21.080Z","data":{"exitCode":143,"pid":64124,"timedOut":true,"elapsedSeconds":1800}}
+ {"type":"dead","timestamp":"2026-10-01T20:44:21.083Z","data":{"task":"1","reason":"timeout"}}
+ {"type":"measures","timestamp":"2026-10-01T20:44:21.109Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":134,"repoFiles":2190,"repoLines":252321,"importFanIn":9,"proposalWords":1027,"taskWords":443,"deltaRequirements":4,"deltaScenarios":8,"changedFiles":0,"changedLines":0,"scopeHashes":{"src/core/report/change-reads.ts":{"before":null,"after":null},"src/core/report/stream-reads.ts":{"before":"sha256:dd7d73c49f86f4aa709c6cb82ae5efdbae5c0a776d75f0f6bda30f9755010ae7","after":"sha256:dd7d73c49f86f4aa709c6cb82ae5efdbae5c0a776d75f0f6bda30f9755010ae7"},"tests/report-shared-reads.test.ts":{"before":null,"after":null}}}}
++{"type":"retry","data":{"target":"1","reason":"timeout","attempt":2,"automatic":true},"timestamp":"2026-10-01T20:44:21.962Z"}
++{"type":"measures","timestamp":"2026-10-01T20:44:22.952Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":134,"repoFiles":2190,"repoLines":252321,"importFanIn":9,"proposalWords":1027,"taskWords":443,"deltaRequirements":4,"deltaScenarios":8}}
++{"type":"started","timestamp":"2026-10-01T20:44:23.170Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":2,"projectCommit":"d3fbb77","pid":96665,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"9ed8e9b"}}
++{"type":"tokens","timestamp":"2026-10-01T20:59:30.222Z","data":{"promptTokens":0,"candidateTokens":0,"totalTokens":0,"cachedTokens":0,"cost":0,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"harness_retry","timestamp":"2026-10-01T20:59:30.225Z","data":{"phase":"start","attempt":1,"maxAttempts":3,"delayMs":2000,"error":"We were unable to start processing your request within the 900-second timeout limit. Please try again later."}}
++{"type":"tokens","timestamp":"2026-10-01T21:09:18.378Z","data":{"promptTokens":4404,"candidateTokens":267,"totalTokens":5183,"cachedTokens":512,"reasoningTokens":22,"cost":0.001644672,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"harness_retry","timestamp":"2026-10-01T21:09:18.378Z","data":{"phase":"end","attempt":1,"success":true}}
++{"type":"tool","timestamp":"2026-10-01T21:09:18.379Z","data":{"tool":"read","summary":"openspec/changes/135-report-small-reads-once/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-01T21:09:18.380Z","data":{"tool":"read","summary":"openspec/changes/135-report-small-reads-once/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-01T21:09:18.380Z","data":{"tool":"bash","summary":"ls -la openspec/changes/135-report-small-reads-once/.run/res"}}
++{"type":"tokens","timestamp":"2026-10-01T21:09:28.682Z","data":{"promptTokens":2737,"candidateTokens":234,"totalTokens":8091,"cachedTokens":5120,"reasoningTokens":30,"cost":0.0011326199999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-01T21:09:28.682Z","data":{"tool":"read","summary":"src/core/report/stream-reads.ts"}}
++{"type":"tool","timestamp":"2026-10-01T21:09:28.683Z","data":{"tool":"bash","summary":"ls tests/report-shared-reads.test.ts 2>/dev/null; echo \"---e"}}
++{"type":"exited","timestamp":"2026-10-01T21:14:23.155Z","data":{"exitCode":143,"pid":96665,"timedOut":true,"elapsedSeconds":1800}}
++{"type":"dead","timestamp":"2026-10-01T21:14:23.157Z","data":{"task":"1","reason":"timeout"}}
++{"type":"measures","timestamp":"2026-10-01T21:14:23.187Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":134,"repoFiles":2190,"repoLines":252321,"importFanIn":9,"proposalWords":1027,"taskWords":443,"deltaRequirements":4,"deltaScenarios":8,"changedFiles":0,"changedLines":0,"scopeHashes":{"src/core/report/change-reads.ts":{"before":null,"after":null},"src/core/report/stream-reads.ts":{"before":"sha256:dd7d73c49f86f4aa709c6cb82ae5efdbae5c0a776d75f0f6bda30f9755010ae7","after":"sha256:dd7d73c49f86f4aa709c6cb82ae5efdbae5c0a776d75f0f6bda30f9755010ae7"},"tests/report-shared-reads.test.ts":{"before":null,"after":null}}}}
+diff --git a/openspec/changes/135-report-small-reads-once/.run/events/change.jsonl b/openspec/changes/135-report-small-reads-once/.run/events/change.jsonl
+new file mode 100644
+index 0000000..2408e04
+--- /dev/null
++++ b/openspec/changes/135-report-small-reads-once/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-01T20:14:20.120Z","data":{"outcome":"passed","command":"pnpm verify","commit":"6048dbbb2219e408c633f093bfda8d25063885a4","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":104.89}}
