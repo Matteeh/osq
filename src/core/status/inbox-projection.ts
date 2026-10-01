@@ -1,5 +1,5 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
-import { applyBlockedItems } from './blocked-item.js';
+import { applySteeringItems } from './blocked-item.js';
 import { changeTrees } from './change-locations.js';
 import { readLastLook } from './inbox-cursor.js';
 import { type Inbox, collectLandedItems, projectInbox } from './inbox.js';
@@ -28,6 +28,6 @@ export async function readInbox(
   const [tree] = await changeTrees(projectRoot, config);
   const landed = await collectLandedItems(tree.archiveDir, lastLookMs);
   const inbox = projectInbox(overview, landed, now.getTime());
-  const needsYou = await applyBlockedItems(overview, inbox.needsYou);
+  const needsYou = await applySteeringItems(overview, inbox.needsYou);
   return { ...inbox, needsYou };
 }

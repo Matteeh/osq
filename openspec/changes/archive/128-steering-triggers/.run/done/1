@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d44c0f7b40cc7140857baaaeff8be26c9d168bc5fc97a80762b4e72676f804ea"
+build_stamp: "0263b67"
+project_commit: "5de3d2f"
+exit_code: 0
+scope_files: {"src/core/status/state.ts":"sha256:e55155e303fc6620853db19e78828a4cae85b964abd0d701093ac274ab51bb7c","src/core/status/steering.ts":"sha256:e521fbce7b2c022e9078d2b7f0f009b3c61fe0f64cbabc0d5e23fc4c8c8c4e15","src/watcher/loop.ts":"sha256:87b5066b8dd6b6e35aa6e5977fedefd5b7b45a6d181ee30e5769e4874c82704a","tests/steering-triggers.test.ts":"sha256:cafadf501083b0c22d6098961877938346541283cbf3c24e11d9c63ac503d5b7"}
+---
+2026-09-30T23:19:18.799Z

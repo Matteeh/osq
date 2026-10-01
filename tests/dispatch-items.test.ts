@@ -163,7 +163,7 @@ describe('dispatch items', () => {
   it('derives one task-less halt for a change-level regression', async () => {
     const change = await createChange(tmpDir, '004-change', 'Change regression');
     await approve(change);
-    await writeMarker(change, '.run/regressed/change.md', '---\nreason: verify_red\n---\nx\n');
+    await writeMarker(change, '.run/regressed/change.md', '---\nreason: worktree_dirty\n---\nx\n');
 
     const dispatch = await readDispatchItems(tmpDir, defineConfig({}));
     const halts = dispatch.items.filter((item) => item.kind === 'halt');

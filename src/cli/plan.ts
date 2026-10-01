@@ -25,6 +25,7 @@ import {
   writeBriefAndManifest,
   writePromptHandoff,
 } from './plan-queue.js';
+import { readSteeringPlan } from './plan-steer.js';
 
 export { formatBriefContent } from './plan-queue.js';
 export { readBriefInput };
@@ -97,6 +98,8 @@ export async function planCommand(
   let folderPath: string | null = null;
   let specId: string | null = null;
   let isResumed = false;
+  let steeringSection: string | null = null;
+  let planningCwd = cwd;
 
   if (options.next) {
     const selection = await prepareQueueSelection(cwd, config, {
@@ -106,18 +109,27 @@ export async function planCommand(
     if (!selection) return;
     queueSelection = selection;
   } else {
-    try {
-      folderPath = await findSpecFolder(changesDir, name);
-      const briefExists = await fs
-        .stat(path.join(folderPath, 'brief.md'))
-        .then(() => true)
-        .catch(() => false);
-      if (briefExists) {
-        isResumed = true;
-        const folderName = path.basename(folderPath);
-        specId = folderName.match(/^(\d+)/)?.[1] || folderName;
-      }
-    } catch {}
+    const steering = await readSteeringPlan(cwd, config, name);
+    if (steering) {
+      folderPath = steering.change.folderPath;
+      specId = steering.id;
+      isResumed = true;
+      steeringSection = steering.section;
+      planningCwd = steering.change.tree.root;
+    } else {
+      try {
+        folderPath = await findSpecFolder(changesDir, name);
+        const briefExists = await fs
+          .stat(path.join(folderPath, 'brief.md'))
+          .then(() => true)
+          .catch(() => false);
+        if (briefExists) {
+          isResumed = true;
+          const folderName = path.basename(folderPath);
+          specId = folderName.match(/^(\d+)/)?.[1] || folderName;
+        }
+      } catch {}
+    }
   }
 
   if (queueSelection) {
@@ -159,14 +171,16 @@ export async function planCommand(
     config,
   });
 
+  const prompt = steeringSection ? `${openingPrompt}\n\n${steeringSection}` : openingPrompt;
+
   if (options.print) {
-    process.stdout.write(`${openingPrompt}\n`);
+    process.stdout.write(`${prompt}\n`);
     return;
   }
 
   if (!plannerSelection) {
-    const nextStep = await readNextStep(cwd, folderPath, config);
-    await writePromptHandoff(folderPath, openingPrompt, formatNextStep(nextStep));
+    const nextStep = await readNextStep(planningCwd, folderPath, config);
+    await writePromptHandoff(folderPath, prompt, formatNextStep(nextStep));
     return;
   }
 
@@ -188,8 +202,8 @@ export async function planCommand(
       );
     }
     exitCode = await adapter.spawnInteractive({
-      prompt: openingPrompt,
-      cwd,
+      prompt,
+      cwd: planningCwd,
       model: plannerSelection.model,
       agent: plannerSelection.agent,
     });
@@ -199,7 +213,7 @@ export async function planCommand(
 
   const endedAtMs = Date.now();
   const usage = await readPlanningUsage(adapter.readInteractiveUsage, {
-    cwd,
+    cwd: planningCwd,
     startedAt: started.timestamp,
     endedAt: new Date(endedAtMs).toISOString(),
   });

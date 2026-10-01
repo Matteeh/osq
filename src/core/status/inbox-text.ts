@@ -1,7 +1,5 @@
 import { formatDuration } from '../report/report.js';
-import type { Inbox, InboxTaskRef, LandedItem, NeedsYouItem, RunningItem } from './inbox.js';
-
-const REJECT_HINT = '--reason <text>';
+import type { Inbox, LandedItem, NeedsYouItem, RunningItem } from './inbox.js';
 
 function needsYouLine(item: NeedsYouItem): string {
   const head = `  ${item.change.id}: ${item.change.title}`;
@@ -11,15 +9,16 @@ function needsYouLine(item: NeedsYouItem): string {
       ? `${head} — do the steps before approval first — ${item.command}`
       : `${head} — ${item.command}`;
   }
-  if (item.kind === 'change-regressed') return `${head} — change regressed — ${item.command}`;
-  const task = item.task as InboxTaskRef;
-  const row = `${head} — task ${task.number}: ${task.title}`;
-  if (item.blocked) {
-    const need = item.blocked.need.replace(/\s+/g, ' ');
-    return `${row} — blocked: ${need} — reject, then osq plan --next --replan — ${item.command}`;
+  if (item.kind === 'change-regressed' && !item.steering) {
+    return `${head} — change regressed — ${item.command}`;
   }
-  if (!item.stuck) return `${row} — ${item.command}`;
-  return `${row} — stuck: same failure twice; amend the spec or osq reject ${item.change.id} ${REJECT_HINT} — ${item.command}`;
+  const task = item.task;
+  const row = task ? `${head} — task ${task.number}: ${task.title}` : head;
+  if (item.steering) {
+    const need = item.blocked ? `: ${item.blocked.need.replace(/\s+/g, ' ')}` : '';
+    return `${row} — needs steering: ${item.steering.trigger} (${item.steering.reason})${need} — ${item.command}`;
+  }
+  return `${row} — ${item.command}`;
 }
 
 function runningLine(item: RunningItem): string {

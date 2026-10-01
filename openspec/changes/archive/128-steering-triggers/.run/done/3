@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8eb3aa02cd70f1739aeb9188ec033dff79e1667b3d39e968c5a6f4e1de9700d3"
+build_stamp: "0263b67"
+project_commit: "4833a0e"
+exit_code: 0
+scope_files: {"src/cli/lint.ts":"sha256:3d0429852728cbc282674a1652b38f2e718b7eee1d5cb5e721505126b0284faf","src/cli/plan-steer.ts":"sha256:034e1cbc03f63345f45d0e83e608cff20a01ef3202ea69eca2fbe4d99d24077d","src/cli/plan.ts":"sha256:cf66894b1acb8b7fe841ae6a9f29a05eb434c7612ab5d9c92a9a8fc82e7ad221","tests/steering-plan.test.ts":"sha256:fcd8230c00aeb36cfa98f8b28b76e9837cb3c16c63ce90258dd0120d0a1e751a"}
+---
+2026-09-30T23:30:16.539Z

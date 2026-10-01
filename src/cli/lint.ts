@@ -14,6 +14,7 @@ import {
   printRepositoryFindings,
 } from '../core/spec/lint-output.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
+import { findChange } from '../core/status/change-locations.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 
 export interface LintCommandEntry {
@@ -50,6 +51,20 @@ function lintEntriesToJson(entries: readonly LintCommandEntry[]): LintJsonEntry[
   }));
 }
 
+/** Resolve an explicit id in any tree, falling back to the checkout's folder. */
+async function resolveLintFolder(
+  projectRoot: string,
+  specsDir: string,
+  config: OsqConfig,
+  id: string,
+): Promise<string> {
+  try {
+    return (await findChange(projectRoot, config, id)).folderPath;
+  } catch {
+    return findSpecFolder(specsDir, id);
+  }
+}
+
 async function listChangeFolders(specsDir: string): Promise<string[]> {
   let entries: Dirent[] = [];
   try {
@@ -84,7 +99,7 @@ export async function lintCommand(
 
   const folders =
     specIds.length > 0
-      ? await Promise.all(specIds.map((id) => findSpecFolder(specsDir, id)))
+      ? await Promise.all(specIds.map((id) => resolveLintFolder(cwd, specsDir, config, id)))
       : await listChangeFolders(specsDir);
 
   const entries: LintCommandEntry[] = [];

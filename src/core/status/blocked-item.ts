@@ -2,24 +2,10 @@ import fs from 'node:fs/promises';
 import { parseResultSections } from '../report/result-sections.js';
 import type { NeedsYouItem } from './inbox.js';
 import { getResultPath } from './layout.js';
-import type { TaskState } from './state.js';
 import type { StatusOverview } from './status.js';
+import type { SteeringTrigger } from './steering.js';
 
 const NOT_STATED = '(not stated)';
-const REJECT_REASON = '--reason <text>';
-
-/** The task state behind a task-dead item, when the overview still holds it. */
-function findTask(
-  overview: StatusOverview,
-  item: NeedsYouItem,
-): { spec: { folderPath: string }; task: TaskState } | null {
-  const spec = overview.specs.find((candidate) => candidate.id === item.change.id);
-  if (!spec) return null;
-  const taskNumber = item.task?.number;
-  if (!taskNumber) return null;
-  const task = spec.tasks.find((candidate) => candidate.taskNumber === taskNumber);
-  return task ? { spec, task } : null;
-}
 
 /** The task result file's stated need, or `(not stated)` when it has none. */
 async function readNeed(folderPath: string, taskNumber: string): Promise<string> {
@@ -30,25 +16,49 @@ async function readNeed(folderPath: string, taskNumber: string): Promise<string>
   return parseResultSections(content).blocked ?? NOT_STATED;
 }
 
+/** Whether a needs-you item is the halt item a trigger's target names. */
+function isTriggerItem(item: NeedsYouItem, trigger: SteeringTrigger): boolean {
+  if (trigger.target === 'change') return item.kind === 'change-regressed';
+  return (
+    (item.kind === 'task-dead' || item.kind === 'task-regressed') &&
+    item.task?.number === trigger.target
+  );
+}
+
 /**
- * Annotate `task-dead` items whose task died blocked with the stated need and
- * the reject-and-replan command. Every other item is returned unchanged.
+ * Collapse each change that needs steering to its first trigger's halt item,
+ * with `osq plan <id>`, the trigger, and, for a blocked task, the stated need.
+ * Every other item, and every other change, is returned unchanged.
  */
-export async function applyBlockedItems(
+export async function applySteeringItems(
   overview: StatusOverview,
   items: NeedsYouItem[],
 ): Promise<NeedsYouItem[]> {
-  return Promise.all(
-    items.map(async (item) => {
-      if (item.kind !== 'task-dead') return item;
-      const found = findTask(overview, item);
-      if (!found || found.task.deadReason !== 'blocked') return item;
-      const need = await readNeed(found.spec.folderPath, found.task.taskNumber);
-      return {
-        ...item,
-        command: `osq reject ${item.change.id} ${REJECT_REASON}`,
-        blocked: { need },
-      } satisfies NeedsYouItem;
-    }),
+  const steered = new Map(
+    overview.specs
+      .filter((spec) => (spec.steering?.length ?? 0) > 0)
+      .map((spec) => [spec.id, spec] as const),
   );
+  const result: NeedsYouItem[] = [];
+  for (const item of items) {
+    const spec = steered.get(item.change.id);
+    if (spec === undefined) {
+      result.push(item);
+      continue;
+    }
+    const first = spec.steering?.[0];
+    if (first === undefined || !isTriggerItem(item, first)) continue;
+    const transformed = {
+      ...item,
+      command: `osq plan ${spec.id}`,
+      steering: { trigger: first.trigger, reason: first.reason },
+    } satisfies NeedsYouItem;
+    if (first.trigger !== 'blocked' || item.task === null) {
+      result.push(transformed);
+      continue;
+    }
+    const need = await readNeed(spec.folderPath, item.task.number);
+    result.push({ ...transformed, blocked: { need } });
+  }
+  return result;
 }

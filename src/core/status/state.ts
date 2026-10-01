@@ -3,6 +3,7 @@ import path from 'node:path';
 /* biome-ignore format: single line keeps this file inside the 250-line source budget */ import { type SpecData, parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import { isDependencyDone, listDir } from './dependency-readiness.js';
 import * as layout from './layout.js';
+import { type SteeringTrigger, deriveSteering } from './steering.js';
 export type TaskStatus = 'pending' | 'running' | 'done' | 'dead' | 'regressed';
 export interface TaskState {
   taskNumber: string;
@@ -34,6 +35,7 @@ export interface SpecState {
   nextTask: TaskState | null;
   changeRegressed?: boolean;
   hasProposal?: boolean;
+  steering?: SteeringTrigger[];
 }
 /** Immutable change-folder view; {@link readChangeFolder} captures everything, so derivation is pure. */
 export interface ChangeFolderSnapshot {
@@ -120,6 +122,7 @@ export function deriveSpecState(
     .sort(compareNumericPrefix)
     .map((fileName) => deriveTaskStateFromSnapshot(snapshotOrRoot, fileName));
   const changeRegressed = snapshotOrRoot.regressedMarkers?.has('change') ?? false;
+  const steering = deriveSteering(snapshotOrRoot);
   let status: SpecStatus = 'pending';
   let nextTask: TaskState | null = null;
   if (!snapshotOrRoot.approvedHash) {
@@ -148,6 +151,7 @@ export function deriveSpecState(
     tasks,
     nextTask,
     changeRegressed,
+    ...(steering.length > 0 ? { steering } : {}),
   };
 }
 async function resolveUnmetDependencies(

@@ -5,6 +5,7 @@ import { isPidRunning } from '../run/lock.js';
 import { parseSpecMd, resolveChangeDoc } from '../spec/parser.js';
 import { type SpecState, compareNumericPrefix } from './state.js';
 import type { StatusOverview } from './status.js';
+import type { SteeringTriggerName } from './steering.js';
 export { formatInboxText } from './inbox-text.js';
 export type NeedsYouKind =
   | 'planning'
@@ -26,6 +27,8 @@ export interface NeedsYouItem {
   readonly task: InboxTaskRef | null;
   readonly command: string;
   readonly stuck?: { readonly fingerprint: string };
+  /** Present only for the one item of a change that needs steering. */
+  readonly steering?: { readonly trigger: SteeringTriggerName; readonly reason: string };
   /** Present only for a task-dead item whose task died with reason `blocked`. */
   readonly blocked?: { readonly need: string };
   /** Present only when an approval item's change has steps before approval. */

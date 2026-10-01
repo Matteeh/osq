@@ -114,6 +114,9 @@ export async function approveCommand(
         console.log(`  Worktree: ${result.worktreePath}`);
         console.log(`  Branch: ${result.branch}`);
       }
+      if (result.continuesFrom !== undefined) {
+        console.log(`  Continues from task ${result.continuesFrom}`);
+      }
       for (const warning of result.warnings) {
         console.warn(`  Warning: ${warning}`);
       }

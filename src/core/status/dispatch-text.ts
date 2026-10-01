@@ -2,6 +2,7 @@ import { formatApprovalDigest } from '../spec/digest-format.js';
 import type { ApprovalCard, DispatchCard, HaltCard, LandCard } from './dispatch-cards.js';
 import type { OrderedDispatchItem } from './dispatch-order.js';
 import type { DispatchPreview } from './dispatch.js';
+import { describeTrigger } from './steering.js';
 
 /** A `label:` line with each value line indented under it, or nothing. */
 function block(label: string, value: string): string[] {
@@ -53,6 +54,7 @@ function landLines(card: LandCard): string[] {
 /** The card header, its reason, and the body for its kind, before `Actions:`. */
 export function formatDispatchCardBody(item: OrderedDispatchItem, card: DispatchCard): string[] {
   const lines: string[] = [`${item.kind}: ${item.change.folder}`, `  why: ${item.reason}`];
+  if (item.steering) lines.push(`  needs steering: ${describeTrigger(item.steering)}`);
   switch (card.kind) {
     case 'approval':
       lines.push(...approvalLines(card));

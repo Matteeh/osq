@@ -84,9 +84,11 @@ describe('Failure marker retention across approval and retry', () => {
 
     const regressedDir = path.join(specFolder, '.run', 'regressed');
     await fs.mkdir(regressedDir, { recursive: true });
+    // A change-level regression with `worktree_dirty` is not a steering
+    // trigger, so it stays active across the re-seal.
     await fs.writeFile(
-      path.join(regressedDir, '1.md'),
-      '---\nreason: verify_red\n---\nprior regression\n',
+      path.join(regressedDir, 'change.md'),
+      '---\nreason: worktree_dirty\n---\nprior regression\n',
       'utf8',
     );
 
@@ -94,7 +96,7 @@ describe('Failure marker retention across approval and retry', () => {
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), true);
     assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.1.md')), false);
-    assert.equal(await exists(path.join(specFolder, '.run', 'regressed', '1.md')), true);
+    assert.equal(await exists(path.join(specFolder, '.run', 'regressed', 'change.md')), true);
   });
 
   it('retains dead/1.1.md alongside done/1 after an explicit retry and successful rerun', async () => {

@@ -115,7 +115,7 @@ describe('card keys', () => {
   it('maps a change-level halt to r, x asking for a reason, and s', async () => {
     const change = await createChange(tmpDir, '004-change', 'Change regression');
     await approve(change);
-    await writeMarker(change, '.run/regressed/change.md', '---\nreason: verify_red\n---\nx\n');
+    await writeMarker(change, '.run/regressed/change.md', '---\nreason: worktree_dirty\n---\nx\n');
 
     const item = await itemOf('halt');
     assert.equal(item.task, null);

@@ -130,7 +130,9 @@ projected from the existing status/state snapshot rather than independent
 marker reads.
 
 `needsYou` SHALL contain unapproved active changes with `proposal.md`, active
-dead and regressed tasks, and active change-level regressions. `running` SHALL
+dead and regressed tasks, and active change-level regressions, except that a
+change that needs steering contributes the one item "Steering inbox items"
+names. `running` SHALL
 contain only derived running tasks whose parsed lock PID is currently live,
 with PID, lock start time, and non-negative elapsed seconds. `landed` SHALL use
 only valid typed `archived` events as authoritative archive timestamps. Needs
@@ -182,7 +184,9 @@ A needs-you item SHALL contain `kind`, `change: { id, title }`, nullable `task`,
 and `command`. Its kind SHALL be one of `planning`, `approval`, `task-dead`,
 `task-regressed`, or `change-regressed`; only task kinds SHALL carry
 `task: { number, title }`. A `task-dead` item for a stuck task SHALL also carry
-`stuck: { fingerprint }`; no other item carries `stuck`. An approval item whose
+`stuck: { fingerprint }`; no other item carries `stuck`. The one item of a
+change that needs steering SHALL also carry `steering: { trigger, reason }`; no
+other item carries `steering`. An approval item whose
 change has steps before approval SHALL also carry `beforeApproval: true`; no
 other item carries `beforeApproval`. A running item SHALL contain `change`,
 `task`, numeric `pid`, ISO `startedAt`, integer non-negative `elapsedSeconds`,
@@ -216,6 +220,10 @@ or metadata.
 #### Scenario: Archived change with after-landing steps
 - **WHEN** an archived change has `### After landing` steps and a `check` command
 - **THEN** it adds no needs-you item
+
+#### Scenario: Steering field
+- **WHEN** a change needs steering because task 1 is blocked, and another change has a `verify_red` dead task that is not stuck
+- **THEN** only the first change's item carries `steering`, and the second change's item has the keys `kind`, `change`, `task`, and `command`
 
 ### Requirement: Per-project last-look cursor
 Every bare inbox invocation SHALL read and then advance
@@ -352,14 +360,14 @@ rendering.
 
 ### Requirement: Stuck and automatic retry inspection
 A dead task whose active marker has `stuck: true` SHALL derive `stuck` with its
-fingerprint. Its inbox text row SHALL say the same failure happened twice and
-suggest amending the spec or `osq reject`, before its unchanged `osq retry`
-command. `osq show` SHALL print `Retries: <n> (<a> automatic)` for a task with
+fingerprint. A stuck task is a steering trigger, so its inbox item SHALL command
+`osq plan <id>` and its text row SHALL be the one "Steering inbox items" gives.
+`osq show` SHALL print `Retries: <n> (<a> automatic)` for a task with
 retry events and `Stuck: same failure twice (<fingerprint>)` for a stuck task.
 
 #### Scenario: Stuck task in the inbox
-- **WHEN** a dead task's active marker has `stuck: true` and a fingerprint
-- **THEN** its inbox row reads `task <n>: <title> — stuck: same failure twice; amend the spec or osq reject <id> --reason <text> — osq retry <id> <n>`
+- **WHEN** a dead task's active marker has `stuck: true`, a fingerprint, and `reason: verify_red`
+- **THEN** its inbox row reads `task <n>: <title> — needs steering: stuck (verify_red) — osq plan <id>`
 
 #### Scenario: Retries in show
 - **WHEN** a task's event stream has one manual and one automatic `retry` event
@@ -394,7 +402,8 @@ be `landed`.
 ### Requirement: Next step commands
 The command SHALL be `osq plan <id>` for `unplanned` with `brief.md`, else
 `osq lint <id>`; `osq approve <id>`; `osq show <id>` for `running`;
-`osq retry <id> <n>` for the first dead or regressed task, else
+`osq plan <id>` for `dead` when the change's derived state has `steering`;
+otherwise `osq retry <id> <n>` for the first dead or regressed task, else
 `osq retry <id> change`; `osq show <dep>` for the first unmet
 dependency; and null for `landed`.
 
@@ -403,18 +412,27 @@ dependency; and null for `landed`.
 - **THEN** its next step is `blocked` with command `osq show 012` and detail `waiting for 012`
 
 #### Scenario: Change regression next step
-- **WHEN** approved change 007 has `.run/regressed/change.md` and no dead or regressed task
+- **WHEN** approved change 007 has `.run/regressed/change.md` with `reason: worktree_dirty` and no dead or regressed task
 - **THEN** its next step is `dead` with command `osq retry 007 change`
+
+#### Scenario: Steering next step
+- **WHEN** approved change 007 has a stuck task 2
+- **THEN** its next step is `dead` with command `osq plan 007` and detail `needs steering`
 
 ### Requirement: Next step detail and format
 `detail` SHALL be `do the steps before approval first` for a
 `ready-for-approval` change with steps before approval, `waiting for <ids>` for
-`blocked`, and null otherwise. `formatNextStep` SHALL render the state with
+`blocked`, `needs steering` for a `dead` change whose derived state has
+`steering`, and null otherwise. `formatNextStep` SHALL render the state with
 spaces for hyphens, then ` (<detail>)` when set, then ` — <command>` when set.
 
 #### Scenario: Failed verification
 - **WHEN** an archived change's latest `verification_recorded` outcome is `failed`
 - **THEN** `formatNextStep` renders `landed`
+
+#### Scenario: Steering format
+- **WHEN** change 007 needs steering
+- **THEN** `formatNextStep` renders `dead (needs steering) — osq plan 007`
 
 ### Requirement: Explicit status with next steps
 `osq status` SHALL keep its task table, archive count, and rejected group, and
@@ -457,15 +475,16 @@ code, and an outcome's time, outcome, and note. `--json` SHALL carry them as
 A `task-dead` inbox item whose task died with reason `blocked` SHALL carry
 `blocked: { need }`, where `need` is the task result file's `## Blocked` text as
 `parseResultSections` reads it. When the result file has no such section, `need`
-SHALL be `(not stated)`. The item's command SHALL be
-`osq reject <id> --reason <text>`. Its text row SHALL be
-`<task row> — blocked: <need> — reject, then osq plan --next --replan — osq reject <id> --reason <text>`,
+SHALL be `(not stated)`. A blocked task is a steering trigger, so the item's
+command SHALL be `osq plan <id>` and its text row the one "Steering inbox
+items" gives:
+`<task row> — needs steering: blocked (blocked): <need> — osq plan <id>`,
 with whitespace in the need, line breaks included, collapsed to single spaces.
 Every other `task-dead` item SHALL stay exactly as before.
 
 #### Scenario: Blocked task in the inbox
 - **WHEN** task 1 of change 001 died with `blocked` and its result file's `## Blocked` says `Needs src/b.ts in scope`
-- **THEN** `osq --json` gives its `task-dead` item `blocked: { need: "Needs src/b.ts in scope" }` and the command `osq reject 001 --reason <text>`, and the text row shows the need and `osq plan --next --replan`
+- **THEN** `osq --json` gives its `task-dead` item `blocked: { need: "Needs src/b.ts in scope" }`, `steering: { trigger: "blocked", reason: "blocked" }`, and the command `osq plan 001`, and the text row shows the need and `osq plan 001`
 
 #### Scenario: Other dead task
 - **WHEN** a task died with `verify_red`
@@ -682,7 +701,10 @@ order, then task order. The kinds are:
 - `halt`: one per dead or regressed task, with commands
   `osq retry <id> <n>` and `osq show <id>`; and one per change-level
   regression, with commands `osq retry <id> change`,
-  `osq reject <id> --reason <text>`, and `osq show <id>`.
+  `osq reject <id> --reason <text>`, and `osq show <id>`. A change whose
+  derived state has `steering` SHALL instead have exactly one `halt` item,
+  naming its first trigger's task when the target is a task, carrying that
+  trigger as `steering`, with commands `osq plan <id>` and `osq show <id>`.
 - `land`: with `vcs.enabled` and `GitVcs`, one per change archived in an
   osq worktree whose `readDependencyState` is `archived`, with commands
   `osq land <id>` and `osq show <id>`. With `vcs.enabled` off and `GitVcs`,
@@ -705,7 +727,7 @@ order, then task order. The kinds are:
 - **THEN** the next call has neither the halt nor the approval item
 
 #### Scenario: Change regression
-- **WHEN** an approved change has `.run/regressed/change.md`
+- **WHEN** an approved change has `.run/regressed/change.md` with `reason: worktree_dirty`
 - **THEN** there is one `halt` item with no task and the `osq retry <id> change` command
 
 #### Scenario: Uncommitted archive with the flag off
@@ -723,6 +745,10 @@ order, then task order. The kinds are:
 #### Scenario: Watcher idle
 - **WHEN** no approved change has work left, and then an approved change has a pending task
 - **THEN** `watcherIdle` is true first and false second
+
+#### Scenario: Steering halt
+- **WHEN** an approved change has a `verify_red` change regression and a blocked task 2
+- **THEN** there is exactly one `halt` item for it, with no task, `steering` of trigger `regression`, and the commands `osq plan <id>` and `osq show <id>`
 
 ### Requirement: Dispatch order
 `orderDispatchItems(projectRoot, config, dispatch, firstSeen)` SHALL return
@@ -1010,6 +1036,7 @@ hub and cancels the poll. It SHALL derive once as soon as it starts.
 item's command order:
 
 - `osq approve <id>`: `a`.
+- `osq plan <id>`: `p`.
 - `osq retry <id> <target>`: `r`.
 - `osq reject <id> --reason <text>`: `x`, which asks `Reason: `; its
   arguments are `reject <id> --reason` and the answer.
@@ -1047,6 +1074,10 @@ export `formatDispatchCardBody(item, card)`, the card lines before
 #### Scenario: Screen
 - **WHEN** `formatCardScreen` formats an approval item's card
 - **THEN** it holds `Needs you (<n>):`, the card body without `Actions:`, and `Keys:` with `a`, `s`, `n`, and `q` lines
+
+#### Scenario: Steering keys
+- **WHEN** `cardKeys` runs on a halt item of a change that needs steering
+- **THEN** it returns `p` with arguments `plan <id>` and `s` with `show <id>`, and no manual commands
 
 ### Requirement: Card session
 `runCardSession(projectRoot, config, options)` SHALL run until the reviewer
@@ -1285,3 +1316,68 @@ steps SHALL have neither.
 #### Scenario: After-landing notes
 - **WHEN** `osq show 012` runs on an archived change whose `### After landing` reads `- Tell support the export moved.`
 - **THEN** it prints `After landing:` followed by `  - Tell support the export moved.`, and `--json` carries that text as `afterLanding`
+
+### Requirement: Steering triggers
+A change needs steering when one of a fixed list of triggers is active. The
+list SHALL be exactly these, and adding a trigger SHALL be a change to this
+requirement:
+
+- `stuck`: a task whose active `.run/dead/<n>.md` has `stuck: true`.
+- `blocked`: a task whose active `.run/dead/<n>.md` has `reason: blocked`.
+- `regression`: a task with an active `.run/regressed/<n>.md`, whatever its
+  reason, or an active `.run/regressed/change.md` whose reason is
+  `verify_red` or `verify_path_missing`.
+
+`deriveSteering(snapshot)` in `src/core/status/steering.ts` SHALL return,
+without reading anything beyond the `ChangeFolderSnapshot`, one
+`{ target, trigger, reason }` per active trigger of an approved change, where
+`target` is `change` or the task number and `reason` is the marker's `reason`.
+The change-level trigger SHALL come first, then tasks in numeric order. An
+unapproved change, a dead task with a done marker, and a change-level
+regression with any other reason, such as `worktree_dirty` or `sync_conflict`,
+SHALL yield none. `deriveSpecState` SHALL set `steering` to that list on the
+derived state only when it is not empty. `describeTrigger(trigger)` SHALL
+render `task <n> <trigger> (<reason>)`, or `change <trigger> (<reason>)` for
+the change target.
+
+#### Scenario: Stuck task
+- **WHEN** an approved change's task 2 has an active dead marker with `reason: verify_red` and `stuck: true`
+- **THEN** `deriveSteering` returns `{ target: "2", trigger: "stuck", reason: "verify_red" }` and the derived state carries it as `steering`
+
+#### Scenario: Blocked task
+- **WHEN** a task's active dead marker has `reason: blocked`
+- **THEN** it is a `blocked` trigger
+
+#### Scenario: Archive regression
+- **WHEN** `.run/regressed/change.md` has `reason: verify_red`
+- **THEN** it is a `regression` trigger with target `change`, listed before any task trigger
+
+#### Scenario: Not a trigger
+- **WHEN** a task's active dead marker has `reason: verify_red` without `stuck`, and `.run/regressed/change.md` has `reason: worktree_dirty`
+- **THEN** `deriveSteering` returns no trigger and the derived state has no `steering` key
+
+### Requirement: Steering inbox items
+A change whose derived state has `steering` SHALL have exactly one needs-you
+item and at most one dispatch item. The needs-you item SHALL be the halt item
+of its first trigger's target (`change-regressed` for `change`, else
+`task-dead` or `task-regressed` for that task), with command `osq plan <id>`
+and `steering: { trigger, reason }` from that trigger; for a `blocked` trigger
+it SHALL also carry `blocked: { need }` as "Blocked inbox items" says. Every
+other halt item of that change SHALL be left out. Its text row SHALL be
+`<row> — needs steering: <trigger> (<reason>) — osq plan <id>`, where `<row>`
+is the task row for a task target and `  <id>: <title>` for the change target,
+and a blocked trigger adds `: <need>` after `(<reason>)`, with whitespace in the
+need collapsed to single spaces. In `osq inbox`, the item's card SHALL print
+`  needs steering: <describeTrigger>` on the line after `  why:`.
+
+#### Scenario: One item for a change with two triggers
+- **WHEN** an approved change has a `verify_red` change regression and a stuck task 2
+- **THEN** `osq --json` holds one needs-you item for it, a `change-regressed` item with `steering: { trigger: "regression", reason: "verify_red" }` and command `osq plan <id>`, and no item for task 2
+
+#### Scenario: Stuck task row
+- **WHEN** task 1 of change 002, titled `First dead`, is stuck with reason `verify_red`
+- **THEN** its text row is `  002: <title> — task 1: First dead — needs steering: stuck (verify_red) — osq plan 002`
+
+#### Scenario: Steering card
+- **WHEN** `osq inbox` prints the card of a change whose task 3 is blocked
+- **THEN** the card's line after `  why:` is `  needs steering: task 3 blocked (blocked)`

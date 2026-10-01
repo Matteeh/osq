@@ -304,8 +304,16 @@ export async function runWatcherCycle(
         const count = await runAutomaticRetries(treeRoot, folderPath, config, logger);
         if (count > 0) {
           retried += count;
-          specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
         }
+        // Re-derive so a task the automatic-retry step just marked stuck is
+        // seen as steering in this same cycle.
+        specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
+      }
+
+      // A change that needs steering waits for `osq plan` and `osq approve`:
+      // leave its folder alone so a planner can edit it.
+      if (specState.steering) {
+        continue;
       }
 
       // A worktree change commits its pending done tasks before any check, so a

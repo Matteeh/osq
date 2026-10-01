@@ -82,13 +82,6 @@ function runBin(cwd: string, home: string, args: string[] = []): Promise<BinResu
   });
 }
 
-const PLAIN_ITEM = {
-  kind: 'task-dead',
-  change: { id: '002', title: 'Dead change' },
-  task: { number: '2', title: 'Second dead' },
-  command: 'osq retry 002 2',
-};
-
 let project: string;
 let home: string;
 
@@ -111,41 +104,46 @@ describe('stuck task inbox projection', () => {
     assert.equal(plainTask.stuck, undefined);
   });
 
-  it('marks the stuck JSON item and leaves the plain item byte-identical', async () => {
+  it('keeps one steering item for the stuck task and drops the other halt', async () => {
     const result = await runBin(project, home, ['--json']);
     assert.equal(result.code, 0, result.stderr);
     const parsed = JSON.parse(result.stdout) as Inbox;
 
-    const [stuckItem, plainItem] = parsed.needsYou as NeedsYouItem[];
-    assert.deepEqual(Object.keys(stuckItem), ['kind', 'change', 'task', 'command', 'stuck']);
+    assert.equal(parsed.needsYou.length, 1);
+    const [stuckItem] = parsed.needsYou as NeedsYouItem[];
+    assert.deepEqual(Object.keys(stuckItem), [
+      'kind',
+      'change',
+      'task',
+      'command',
+      'stuck',
+      'steering',
+    ]);
     assert.deepEqual(stuckItem.stuck, { fingerprint: FINGERPRINT });
+    assert.deepEqual(stuckItem.steering, { trigger: 'stuck', reason: 'verify_red' });
     assert.equal(
       JSON.stringify(stuckItem),
       JSON.stringify({
         kind: 'task-dead',
         change: { id: '002', title: 'Dead change' },
         task: { number: '1', title: 'First dead' },
-        command: 'osq retry 002 1',
+        command: 'osq plan 002',
         stuck: { fingerprint: FINGERPRINT },
+        steering: { trigger: 'stuck', reason: 'verify_red' },
       }),
     );
-
-    assert.deepEqual(Object.keys(plainItem), ['kind', 'change', 'task', 'command']);
-    assert.equal('stuck' in plainItem, false);
-    assert.equal(JSON.stringify(plainItem), JSON.stringify(PLAIN_ITEM));
   });
 
-  it('renders the stuck row before its retry command and leaves the plain row unchanged', async () => {
+  it('renders only the stuck task row with the steering trigger', async () => {
     const result = await runBin(project, home);
     assert.equal(result.code, 0, result.stderr);
 
     const lines = result.stdout.split('\n');
     assert.ok(
       lines.includes(
-        '  002: Dead change — task 1: First dead — stuck: same failure twice; amend the spec or osq reject 002 --reason <text> — osq retry 002 1',
+        '  002: Dead change — task 1: First dead — needs steering: stuck (verify_red) — osq plan 002',
       ),
     );
-    assert.ok(lines.includes('  002: Dead change — task 2: Second dead — osq retry 002 2'));
-    assert.ok(!lines.some((line) => line.includes('task 2: Second dead — stuck')));
+    assert.ok(!lines.some((line) => line.includes('task 2: Second dead')));
   });
 });

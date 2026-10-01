@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ff8120dd8a0df24a3504f0d7181dd51a37cc21191fb62005bacc9556674d8d1d"
+build_stamp: "0263b67"
+project_commit: "0c96ff1"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:68cd22817c38ea924f03e5571f4e92fef633f8957a1499cfebf1a2dbf65cff8b","src/core/spec/approve-steer.ts":"sha256:12819b08812aa1aec8e4c7ecead93af4e5789e699895cfc640a645a53d0714e6","src/core/spec/approve.ts":"sha256:00e782012bfc53f8b19811e5471a5e416f1fcbf8274a830ab7ef8cb9b44e858c","tests/dead-marker-retention.test.ts":"sha256:73011096ea6f8af4a585299fabd66a1780253a19531aca5012e7ad8bd4c0a95b","tests/steering-approve.test.ts":"sha256:6059ea2bb99fa1b15c8e39980507533e53b52677412126cddad3127daa089ec2"}
+---
+2026-09-30T23:37:32.182Z

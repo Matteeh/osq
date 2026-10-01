@@ -49,6 +49,10 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
     };
   }
 
+  if (state.steering && state.steering.length > 0) {
+    return { state: 'dead', command: `osq plan ${id}`, detail: 'needs steering' };
+  }
+
   const deadTask = state.tasks.find(
     (task) => task.status === 'dead' || task.status === 'regressed',
   );

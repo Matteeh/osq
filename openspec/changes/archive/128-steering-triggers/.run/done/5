@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5506ad3bfd7c25a6810affdde8abc7c5223c8b274965bf6aacf580d7490a3d26"
+build_stamp: "0263b67"
+project_commit: "5eede4d"
+exit_code: 0
+scope_files: {"CHANGELOG.md":"sha256:fd49a4742260b6028093d86a9d3c2abc10f4e1d41f42ed2cd24201c7dec4229e","README.md":"sha256:6b1e3c474933c8a5c8cf8d860471710f008eb6c01f71c77cd60da16bc4e8ac85","tests/steering-docs.test.ts":"sha256:b5acdb5e616a3245860fc10a8b81e0ce2d66f0eaadb161a745ad8445e5bc2061"}
+---
+2026-09-30T23:40:28.457Z

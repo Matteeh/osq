@@ -86,7 +86,7 @@ async function createActive(
     await writeMarker(
       dir,
       path.join('.run', 'regressed', 'change.md'),
-      '---\nreason: verify_red\n---\n',
+      '---\nreason: worktree_dirty\n---\n',
     );
   }
   return dir;

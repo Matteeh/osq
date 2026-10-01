@@ -10,7 +10,9 @@ import {
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import { findChange } from '../status/change-locations.js';
+import { deriveSpecState, readChangeFolder } from '../status/state.js';
 import { selectVcs } from '../vcs/select.js';
+import { approveSteeredChange, retireSteering } from './approve-steer.js';
 import {
   type ApprovalReviewOptions,
   confirmApproval,
@@ -82,6 +84,8 @@ export interface ApproveResult {
   stackedPath?: string;
   /** For a stacked approval, the awaited dependency folder names, in order. */
   waitingFor?: string[];
+  /** The first task still not done after steering triggers were retired. */
+  continuesFrom?: string;
 }
 
 export interface ApproveOptions extends ApprovalReviewOptions {
@@ -169,8 +173,16 @@ export async function approveSpec(
   }
   const folderName = change.folderName;
   const specId = folderName.match(/^(\d+)/)?.[1] || folderName;
+  // Steering is read before any write: a worktree change whose revised plan
+  // needs sealing goes to its own path, and an in-place change retires its
+  // triggers after the new seal lands.
+  const state = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
 
   try {
+    if (change.tree.worktreeFolder !== undefined && state.steering) {
+      return await approveSteeredChange(projectRoot, change, config, options);
+    }
+
     const lintResult = await lintChangeFolder(projectRoot, folderPath, config);
     if (!lintResult.valid) {
       throw new Error(
@@ -194,7 +206,7 @@ export async function approveSpec(
       }
     }
 
-    return await approveInPlace(projectRoot, {
+    const result = await approveInPlace(projectRoot, {
       specId,
       folderName,
       folderPath,
@@ -203,6 +215,11 @@ export async function approveSpec(
       options,
       warnings: lintResult.warnings,
     });
+    if (state.steering) {
+      const continuesFrom = await retireSteering(projectRoot, config, change, state.steering);
+      return continuesFrom === null ? result : { ...result, continuesFrom };
+    }
+    return result;
   } catch (error) {
     if (restoredDraft !== null) {
       await fs.rm(restoredDraft, { recursive: true, force: true });

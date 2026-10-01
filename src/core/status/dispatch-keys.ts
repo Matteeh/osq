@@ -21,7 +21,7 @@ export interface CardKeys {
   readonly manual: string[];
 }
 
-const MAPPED_VERBS = new Set(['approve', 'retry', 'reject', 'show']);
+const MAPPED_VERBS = new Set(['approve', 'plan', 'retry', 'reject', 'show']);
 
 /** Split an `osq` command into its arguments without the leading `osq`. */
 function argsOf(command: string): string[] {
@@ -36,6 +36,8 @@ function keysForCommand(command: string): CardKey[] | null {
   switch (verb) {
     case 'approve':
       return [{ key: 'a', label: command, args: argsOf(command), asks: null }];
+    case 'plan':
+      return [{ key: 'p', label: command, args: argsOf(command), asks: null }];
     case 'retry':
       return [{ key: 'r', label: command, args: argsOf(command), asks: null }];
     case 'reject': {

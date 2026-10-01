@@ -4,6 +4,7 @@ All notable changes to `osq` are documented in this file.
 
 ## [Unreleased]
 
+- A stuck, blocked, or regressed change now shows once in the inbox with `osq plan <id>`. `osq plan` writes the prompt into the change's own folder, and `osq approve` continues the run from the first task that is not done (128).
 - Removed `osq verified` and `osq check`. A proposal's `check:` command now runs after the change-level verify at archive and again in an `osq land` sync that merges a newer default branch; a failure stops the change as a failed verify does. `### After landing` steps are notes that `osq show` prints, and nothing waits on them. Archives with recorded verifications still show them in `osq show` (125).
 - With `vcs.enabled`, `osq approve` removes the change folder from your checkout once its branch or stacked approval holds it, unless the folder is committed. `osq status` no longer prints `Leftover drafts:` or the checkout-copy warning, and `osq land` no longer removes a leftover draft. A copy an older approval left behind now lists as an unapproved draft; remove it with `rm -r openspec/changes/<folder>` once the change has landed (123).
 - A stacked change is edited in its stacked directory and approved again from there; `osq reject` of a stacked change moves it back into your checkout as a draft (123).

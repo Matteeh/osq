@@ -3,6 +3,7 @@ import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { findLandCandidates } from './dispatch-land.js';
 import { type SpecState, type TaskState, compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
+import type { SteeringTrigger } from './steering.js';
 
 /** The three things that can need a human. */
 export type DispatchKind = 'approval' | 'halt' | 'land';
@@ -27,6 +28,8 @@ export interface DispatchItem {
   readonly change: DispatchChangeRef;
   readonly task: DispatchTaskRef | null;
   readonly commands: string[];
+  /** Present only for the one halt item of a change that needs steering. */
+  readonly steering?: SteeringTrigger;
 }
 
 /** Every item that needs a human, plus whether the watcher has work. */
@@ -72,6 +75,23 @@ function approvalItem(spec: SpecState, nextState: string | undefined): DispatchI
 function haltItems(spec: SpecState): DispatchItem[] {
   const items: DispatchItem[] = [];
   const id = spec.id;
+  const steering = spec.steering;
+  if (steering && steering.length > 0) {
+    const first = steering[0] as SteeringTrigger;
+    const target =
+      first.target === 'change'
+        ? null
+        : (spec.tasks.find((task) => task.taskNumber === first.target) ?? null);
+    return [
+      {
+        kind: 'halt',
+        change: changeRef(spec),
+        task: target ? taskRef(target) : null,
+        commands: [`osq plan ${id}`, `osq show ${id}`],
+        steering: first,
+      },
+    ];
+  }
   if (spec.changeRegressed) {
     items.push({
       kind: 'halt',

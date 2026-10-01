@@ -409,8 +409,8 @@ describe('bare osq CLI inbox integration', () => {
     assert.ok(first.stdout.includes('Landed since last look'));
     assert.ok(first.stdout.includes('osq approve 001'));
     assert.ok(first.stdout.includes('osq retry 002 1'));
-    assert.ok(first.stdout.includes('osq retry 003 1'));
-    assert.ok(first.stdout.includes('osq retry 004 change'));
+    assert.ok(first.stdout.includes('osq plan 003'));
+    assert.ok(first.stdout.includes('osq plan 004'));
 
     // Only the live lock projects; the stale lock stays visible in status space.
     const lines = first.stdout.split('\n');
@@ -457,10 +457,19 @@ describe('bare osq CLI inbox integration', () => {
       parsed.needsYou.map((item) => item.kind),
       ['approval', 'task-dead', 'task-regressed', 'change-regressed'],
     );
-    assert.equal(parsed.landed.length, 10);
+    assert.deepEqual(parsed.landed.length, 10);
 
     for (const item of parsed.needsYou) {
-      assert.deepEqual(Object.keys(item), ['kind', 'change', 'task', 'command']);
+      const steering = item.steering;
+      assert.deepEqual(
+        Object.keys(item),
+        steering === undefined
+          ? ['kind', 'change', 'task', 'command']
+          : ['kind', 'change', 'task', 'command', 'steering'],
+      );
+      if (steering !== undefined) {
+        assert.equal(item.command, `osq plan ${item.change.id}`);
+      }
       assert.deepEqual(Object.keys(item.change), ['id', 'title']);
       if (item.kind === 'approval' || item.kind === 'change-regressed')
         assert.equal(item.task, null);

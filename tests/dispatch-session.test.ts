@@ -118,7 +118,7 @@ async function buildRegression(): Promise<string> {
   await writeMarker(
     change,
     path.join('.run', 'regressed', 'change.md'),
-    '---\nreason: verify_red\n---\nx\n',
+    '---\nreason: worktree_dirty\n---\nx\n',
   );
   return change;
 }
