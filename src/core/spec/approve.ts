@@ -11,6 +11,7 @@ import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import { findChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
+import { findSteeringChange } from '../status/steering-change.js';
 import { selectVcs } from '../vcs/select.js';
 import { approveSteeredChange, retireSteering } from './approve-steer.js';
 import {
@@ -86,6 +87,10 @@ export interface ApproveResult {
   waitingFor?: string[];
   /** The first task still not done after steering triggers were retired. */
   continuesFrom?: string;
+  /** After a restart, the default branch it was cut from and the kept branch. */
+  restarted?: { defaultBranch: string; keptBranch: string };
+  /** After a merge, the default branch merged into the change's branch. */
+  merged?: { defaultBranch: string };
 }
 
 export interface ApproveOptions extends ApprovalReviewOptions {
@@ -161,7 +166,8 @@ export async function approveSpec(
   config: OsqConfig,
   options: ApproveOptions = {},
 ): Promise<ApproveResult> {
-  const change = await findChange(projectRoot, config, specIdOrPrefix);
+  const located = await findSteeringChange(projectRoot, config, specIdOrPrefix);
+  const change = located?.change ?? (await findChange(projectRoot, config, specIdOrPrefix));
   let folderPath = change.folderPath;
   let specsDir = change.tree.changesDir;
   let restoredDraft: string | null = null;

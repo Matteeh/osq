@@ -14,8 +14,8 @@ import {
   printRepositoryFindings,
 } from '../core/spec/lint-output.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
-import { findChange } from '../core/status/change-locations.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
+import { findSteeringChange } from '../core/status/steering-change.js';
 
 export interface LintCommandEntry {
   readonly folder: string;
@@ -59,7 +59,9 @@ async function resolveLintFolder(
   id: string,
 ): Promise<string> {
   try {
-    return (await findChange(projectRoot, config, id)).folderPath;
+    const found = await findSteeringChange(projectRoot, config, id);
+    if (found !== null) return found.change.folderPath;
+    return await findSpecFolder(specsDir, id);
   } catch {
     return findSpecFolder(specsDir, id);
   }

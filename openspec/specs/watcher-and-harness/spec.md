@@ -2360,8 +2360,10 @@ It SHALL skip both while `awaitedDependencies`, given the checkout's project
 root, lists any entry for the change, because a stacked dependent's branch
 holds its dependency's archive until the dependency lands. When the sync
 stops, the watcher SHALL halt the change as "Worktree halt" says, with the
-stop's `reason`, `sync_conflict` or `sync_failed`, and the stop's message as
-the detail. It SHALL then spawn nothing and archive nothing for that change in
+stop's `reason`, `requirement_changed`, `sync_conflict`, `sync_verify_red`,
+or `sync_failed`, and the stop's message as the detail. The first three are
+steering triggers, so the watcher then leaves the change alone as "Watcher
+leaves a change that needs steering" says. It SHALL then spawn nothing and archive nothing for that change in
 that cycle. Any other error the sync throws SHALL halt it the same way with
 `sync_failed`. After a sync that merged, the cycle SHALL derive the change's
 state again before it picks the task.
@@ -2385,6 +2387,10 @@ state again before it picks the task.
 #### Scenario: Dependency lands during the dependent's run
 - **WHEN** `002` was cut from `001`'s archive commit, and while `002`'s task runs the default branch gains an unrelated commit and `osq land 001` lands `001`
 - **THEN** `002` archives after `osq: 002 sync main`, and `osq land 002` then lands it
+
+#### Scenario: Red verify before archive needs steering
+- **WHEN** the default branch gains a commit that makes the only task's `verify` exit 1, after the task is verified and before archive
+- **THEN** `.run/regressed/change.md` has reason `sync_verify_red`, and later cycles write no commit and spawn nothing for the change
 
 ### Requirement: Test gate paths
 `src/core/run/test-gate.ts` SHALL export `TEST_GATE_DIR`, `tests`, and

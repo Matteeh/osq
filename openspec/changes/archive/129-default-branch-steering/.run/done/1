@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:42c109392ee7d45e69c48660c01be631a4c7508e336591d61feaf5a6453ed1b9"
+build_stamp: "602723e"
+project_commit: "7820c82"
+exit_code: 0
+scope_files: {"src/core/status/steering.ts":"sha256:bd34fe6f65e2eecba04c76cf41fdd917859d931653e0f332aacf9d77575a01cf","src/core/vcs/sync-change.ts":"sha256:adfcb416220f2fa15868ebd01ddb255cc1e17cb1e7c55f64cb365a592633d27a","src/core/vcs/sync-files.ts":"sha256:1069997be28dd86da547f0b8f6b64a95467e0fdedb4f1bb005c21d8f6768f5ed","src/core/vcs/sync-main.ts":"sha256:79d52dd5fea00747ac3a382a37cc9726edd85e6c27c51f9f3fe567752ee2cdc4","src/core/vcs/sync-specs.ts":"sha256:8e7fe9e7aec573b7d6225b3b85caf0d04dc45ed54a2664f3de61f84e68fa575d","src/core/vcs/sync-stop.ts":"sha256:9c13f6a7f3a8a527268a1eafde78988d41bd87b6bd534429132a72710c83e917","src/core/vcs/sync-verify.ts":"sha256:6813cc569e0acf2771e4aa95a48f61f708cb448a5d70e1766cf94be4b7b09257","src/watcher/worktree-run.ts":"sha256:552d120c80992cf2b3f43dc5375ddf9c1e02f6ddc18ae3693338c49b6fe0bbe2","tests/change-check.test.ts":"sha256:128b5d1ee82c3136d099c6626dc4c321b27bfddfe9a60cc9bb5597e86b82b332","tests/steering-sync.test.ts":"sha256:4a204b923fdb21679a3e0d06a5c011edadac8c1da5e73cdbbfbcc4b20db8747e","tests/vcs-land.test.ts":"sha256:350de9094a0fafcd5a9d712a874ccafdfac0dbc678c790cb853ce4ae3cfffb3b","tests/vcs-sync-active.test.ts":"sha256:57f5ad3ce2f4d464ee83e02980e090834abb856bdc6f8eb590bbd57770ae2d2e","tests/vcs-sync-command.test.ts":"sha256:a2d66745fda3ea3c04ccbd1d82fea6a708a702b8755169be58dff5d1fa3b6efb","tests/vcs-sync.test.ts":"sha256:75d21768658ff4c6c84b29f5f9697f149d8be96a7f937e0b89225f00ec707f4d"}
+---
+2026-10-01T08:17:14.432Z

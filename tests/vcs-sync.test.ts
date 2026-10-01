@@ -285,7 +285,7 @@ describe('syncWithDefaultBranch', () => {
 
     await assert.rejects(
       () => syncWithDefaultBranch(root, config, change),
-      /002-two-words: main changed requirements this change rewrites since it was approved: orders: Order totals; reject the change and plan it again against main/,
+      /002-two-words: main changed requirements this change rewrites since it was approved: orders: Order totals; run osq plan 002 to revise the plan against main/,
     );
 
     assert.equal(await headOf(worktree), before);
@@ -302,7 +302,7 @@ describe('syncWithDefaultBranch', () => {
 
     await assert.rejects(
       () => syncWithDefaultBranch(root, config, change),
-      /002-two-words: src\/app\.txt conflict with main; merge it into osq\/002-two-words by hand in .*, then run osq land 002 again/,
+      /002-two-words: src\/app\.txt conflict with main; run osq plan 002, and approving the revised plan restarts osq\/002-two-words from main/,
     );
 
     assert.equal(await headOf(worktree), before);

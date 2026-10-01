@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4a66f2e7b8298f89c77a11a3b0df9bc4e38415ca1882b5c2084071bf7ceafa26"
+build_stamp: "602723e"
+project_commit: "800067c"
+exit_code: 0
+scope_files: {"src/core/vcs/land-checks.ts":"sha256:c43677fdfffa54410a23c96b1e5f653f25f60d589027d395154b4036722e0d75","src/core/vcs/land-stop.ts":"sha256:cad86eea9f06317cf12029b7e5bdf5cb524aa582172a0a10d1fbed3734aa067d","src/core/vcs/land.ts":"sha256:9c11ecd11f93a3bebb6939393c36d7b326273e1c203b07b6d7f59a4c61d35697","tests/vcs-land-steering.test.ts":"sha256:3a208c0db6da2a765c7f791c9d0badcefb92a71024d7b5dd7a1f5acd36e44ef2"}
+---
+2026-10-01T08:22:42.947Z

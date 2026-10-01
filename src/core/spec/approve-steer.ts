@@ -10,9 +10,10 @@ import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
-import type { SteeringTrigger } from '../status/steering.js';
+import { type SteeringTrigger, isDefaultBranchTrigger } from '../status/steering.js';
 import { selectVcs } from '../vcs/select.js';
 import { worktreeBranch } from '../vcs/worktree.js';
+import { approveDefaultBranchSteering } from './approve-default-branch.js';
 import {
   confirmApproval,
   readBriefHash,
@@ -60,6 +61,9 @@ export async function approveSteeredChange(
     throw new Error(`${folderName} has a task running; approve it after the task ends`);
   }
   const triggers = state.steering ?? [];
+  if (triggers.some(isDefaultBranchTrigger)) {
+    return approveDefaultBranchSteering(projectRoot, change, config, options);
+  }
 
   const lintResult = await lintChangeFolder(projectRoot, folderPath, config);
   if (!lintResult.valid) {

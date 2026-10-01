@@ -9,11 +9,14 @@ import {
   assertCheckoutBranch,
   assertGit,
   assertNoEarlierChange,
+  assertNoSteering,
   assertVcsEnabled,
   assertWorktreeClean,
 } from './land-checks.js';
+import { recordLandStop, recordsLandStop } from './land-stop.js';
 import { selectVcs } from './select.js';
 import { syncWithDefaultBranch } from './sync-main.js';
+import { SyncStop } from './sync-stop.js';
 import type { Vcs, VcsFastForwardResult } from './vcs.js';
 import { worktreeBranch, worktreePath } from './worktree.js';
 
@@ -185,6 +188,7 @@ export async function landChange(
     assertWorktreeClean(worktree, await worktreeVcs.status());
   }
   if (!alreadyLanded) {
+    await assertNoSteering(change);
     await assertNoEarlierChange(projectRoot, config, change);
   }
   if (alreadyLanded) {
@@ -192,7 +196,19 @@ export async function landChange(
   }
   if (worktree === null) throw new Error(OSQ_LAND_NEEDS_GIT);
 
-  await syncWithDefaultBranch(projectRoot, config, change, progress);
+  try {
+    await syncWithDefaultBranch(projectRoot, config, change, progress);
+  } catch (error) {
+    if (error instanceof SyncStop && recordsLandStop(error.reason)) {
+      try {
+        await recordLandStop(config, change, error);
+      } catch (recordError) {
+        const detail = recordError instanceof Error ? recordError.message : String(recordError);
+        throw new Error(`${error.message}\n${detail}`);
+      }
+    }
+    throw error;
+  }
 
   const worktreeVcs = await selectVcs(worktree, config);
   const tip = (await worktreeVcs.head()).sha;

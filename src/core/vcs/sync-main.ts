@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { runPrepare } from '../spec/approve-worktree.js';
@@ -6,6 +5,7 @@ import { parseSpecMdFromFolder } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { getSpecsDir } from '../status/layout.js';
 import { selectVcs } from './select.js';
+import { eventsRelative, readEvents, readRequirementsBase, restoreEvents } from './sync-files.js';
 import { assertRequirementsUnchanged, rebuildLivingSpecs } from './sync-specs.js';
 import { SyncStop } from './sync-stop.js';
 import { type SyncVerifyTask, runSyncVerify, syncVerifyTasks } from './sync-verify.js';
@@ -27,28 +27,6 @@ interface SyncContext {
 function syncMessage(folderName: string, defaultBranch: string): string {
   const id = folderName.split('-')[0] ?? folderName;
   return `osq: ${id} sync ${defaultBranch}\n\nOsq-Change: ${folderName}`;
-}
-
-/** The `.run/base` commit, or null when the marker is absent or blank. */
-async function readBaseCommit(folderPath: string): Promise<string | null> {
-  const content = await fs.readFile(path.join(folderPath, '.run', 'base'), 'utf8').catch(() => '');
-  const trimmed = content.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-/** The events file's contents before the sync, or null when it was absent. */
-async function readEvents(eventsPath: string): Promise<string | null> {
-  return fs.readFile(eventsPath, 'utf8').catch(() => null);
-}
-
-/** Put the events file back as it was, or remove it when it was absent. */
-async function restoreEvents(eventsPath: string, before: string | null): Promise<void> {
-  if (before === null) {
-    await fs.rm(eventsPath, { force: true });
-    return;
-  }
-  await fs.mkdir(path.dirname(eventsPath), { recursive: true });
-  await fs.writeFile(eventsPath, before, 'utf8');
 }
 
 /** Abort the merge, restore the events, and stop with `error`. */
@@ -85,13 +63,11 @@ function conflictStop(
   change: LocatedChange,
   defaultBranch: string,
   blocked: readonly string[],
-  archived: boolean,
 ): SyncStop {
   const id = change.folderName.split('-')[0] ?? change.folderName;
-  const ending = archived ? `then run osq land ${id} again` : `then run osq retry ${id} change`;
   return new SyncStop(
     'sync_conflict',
-    `${change.folderName}: ${blocked.join(', ')} conflict with ${defaultBranch}; merge it into ${worktreeBranch(change.folderName)} by hand in ${change.tree.root}, ${ending}`,
+    `${change.folderName}: ${blocked.join(', ')} conflict with ${defaultBranch}; run osq plan ${id}, and approving the revised plan restarts ${worktreeBranch(change.folderName)} from ${defaultBranch}`,
   );
 }
 
@@ -111,18 +87,12 @@ function verifySuffix(
   archived: boolean,
   verifyCommand: string,
   tasks: readonly SyncVerifyTask[],
+  skipVerify: boolean,
 ): string {
+  if (skipVerify) return '';
   if (archived) return verifyCommand === '' ? '' : ` and running verify: ${verifyCommand}`;
   if (tasks.length === 0) return '';
   return ` and re-running verify for tasks ${tasks.map((task) => task.task).join(', ')}`;
-}
-
-/** The change stream's path relative to the worktree root. */
-function eventsRelative(worktreeRoot: string, changeFolderPath: string): string {
-  return path
-    .relative(worktreeRoot, path.join(changeFolderPath, '.run', 'events', 'change.jsonl'))
-    .split(path.sep)
-    .join('/');
 }
 
 /** Refuse the sync's early stops and capture what step 5 needs. */
@@ -132,7 +102,8 @@ async function prepareSync(
   config: OsqConfig,
   defaultBranch: string,
   headSha: string | null,
-  progress?: (line: string) => void,
+  progress: ((line: string) => void) | undefined,
+  skipVerify: boolean,
 ): Promise<SyncContext> {
   const archived = change.location !== 'active';
   const eventsPath = path.join(change.folderPath, '.run', 'events', 'change.jsonl');
@@ -140,7 +111,7 @@ async function prepareSync(
   await assertRequirementsUnchanged(
     vcs,
     change,
-    await readBaseCommit(change.folderPath),
+    await readRequirementsBase(change.folderPath),
     defaultBranch,
     config,
   );
@@ -157,7 +128,7 @@ async function prepareSync(
       defaultBranch,
       change.folderName,
       commits,
-      verifySuffix(archived, verifyCommand, tasks),
+      verifySuffix(archived, verifyCommand, tasks, skipVerify),
     ),
   );
   return { archived, eventsPath, eventsBefore, author, verifyCommand, tasks, commits };
@@ -177,7 +148,7 @@ async function assertResolvableConflict(
   if (blocked.length === 0) return;
   await vcs.mergeAbort().catch(() => undefined);
   await restoreEvents(context.eventsPath, context.eventsBefore);
-  throw conflictStop(change, defaultBranch, blocked, context.archived);
+  throw conflictStop(change, defaultBranch, blocked);
 }
 
 /** Steps 3 through 6 of a started merge. */
@@ -190,6 +161,7 @@ async function finishSync(
   merge: VcsMergeResult,
   mergeStart: number,
   context: SyncContext,
+  skipVerify: boolean,
 ): Promise<void> {
   await rebuildLivingSpecs(
     worktreeRoot,
@@ -211,6 +183,7 @@ async function finishSync(
     commits: context.commits,
     mergeStart,
     tasks: context.tasks,
+    skipVerify,
   });
   await vcs.stage([eventsRelative(worktreeRoot, change.folderPath)]);
   await vcs.commit([], syncMessage(change.folderName, defaultBranch), context.author);
@@ -222,6 +195,7 @@ export async function syncWithDefaultBranch(
   config: OsqConfig,
   change: LocatedChange,
   progress?: (line: string) => void,
+  options: { skipVerify?: boolean } = {},
 ): Promise<{ merged: boolean }> {
   const worktreeRoot = change.tree.root;
   const vcs = await selectVcs(worktreeRoot, config);
@@ -230,7 +204,16 @@ export async function syncWithDefaultBranch(
   if (head.sha !== null && (await vcs.isAncestor(defaultBranch, head.sha))) {
     return { merged: false };
   }
-  const context = await prepareSync(change, vcs, config, defaultBranch, head.sha, progress);
+  const skipVerify = options.skipVerify === true;
+  const context = await prepareSync(
+    change,
+    vcs,
+    config,
+    defaultBranch,
+    head.sha,
+    progress,
+    skipVerify,
+  );
 
   const mergeStart = Date.now();
   let merge: VcsMergeResult;
@@ -241,7 +224,17 @@ export async function syncWithDefaultBranch(
   }
   await assertResolvableConflict(vcs, config, change, defaultBranch, merge, context);
   try {
-    await finishSync(worktreeRoot, change, vcs, config, defaultBranch, merge, mergeStart, context);
+    await finishSync(
+      worktreeRoot,
+      change,
+      vcs,
+      config,
+      defaultBranch,
+      merge,
+      mergeStart,
+      context,
+      skipVerify,
+    );
   } catch (error) {
     throw await stopAfter(vcs, error, context.eventsPath, context.eventsBefore);
   }

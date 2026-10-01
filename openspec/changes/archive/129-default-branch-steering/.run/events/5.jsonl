@@ -1,0 +1,217 @@
+{"type":"verify_ran","timestamp":"2026-10-01T08:33:05.051Z","data":{"command":"node --import tsx --test tests/steering-approve-default-branch.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/steering-approve-default-branch.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/steering-approve-default-branch.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-01T08:33:05.742Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":501,"repoFiles":2116,"repoLines":244050,"importFanIn":4,"proposalWords":1760,"taskWords":434,"deltaRequirements":14,"deltaScenarios":83}}
+{"type":"started","timestamp":"2026-10-01T08:33:05.921Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"7c9021b","pid":95926,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"602723e"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:07.503Z","data":{"promptTokens":7517,"candidateTokens":171,"totalTokens":11016,"cachedTokens":3328,"reasoningTokens":15,"cost":0.002480268,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:07.504Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/tasks/5.md"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:07.505Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/proposal.md"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:09.040Z","data":{"promptTokens":3739,"candidateTokens":230,"totalTokens":14977,"cachedTokens":11008,"reasoningTokens":24,"cost":0.001463748,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:09.041Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:09.042Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/specs/spec-lint"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:10.893Z","data":{"promptTokens":2936,"candidateTokens":187,"totalTokens":18099,"cachedTokens":14976,"reasoningTokens":35,"cost":0.001195056,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:10.894Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/.run/results/4."}}
+{"type":"tool","timestamp":"2026-10-01T08:33:10.895Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:12.525Z","data":{"promptTokens":2717,"candidateTokens":182,"totalTokens":20947,"cachedTokens":18048,"reasoningTokens":34,"cost":0.001141788,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:12.526Z","data":{"tool":"read","summary":"src/core/spec/approve-steer.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:12.527Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree-shared.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:14.542Z","data":{"promptTokens":2043,"candidateTokens":285,"totalTokens":23192,"cachedTokens":20864,"reasoningTokens":55,"cost":0.001080084,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:14.542Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/.run/results/3."}}
+{"type":"tool","timestamp":"2026-10-01T08:33:14.543Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/.run/results/2."}}
+{"type":"tool","timestamp":"2026-10-01T08:33:14.544Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:16.364Z","data":{"promptTokens":3538,"candidateTokens":298,"totalTokens":27004,"cachedTokens":23168,"reasoningTokens":90,"cost":0.0015580079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:16.365Z","data":{"tool":"read","summary":"src/core/status/steering-change.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:16.365Z","data":{"tool":"read","summary":"src/core/status/steering.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:16.366Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:17.872Z","data":{"promptTokens":2738,"candidateTokens":184,"totalTokens":29802,"cachedTokens":26880,"reasoningTokens":42,"cost":0.00120348,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:17.873Z","data":{"tool":"read","summary":"tests/steering-approve.test.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:17.873Z","data":{"tool":"read","summary":"src/cli/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:19.447Z","data":{"promptTokens":5788,"candidateTokens":263,"totalTokens":35747,"cachedTokens":29696,"reasoningTokens":74,"cost":0.002230176,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:19.448Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:19.449Z","data":{"tool":"read","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:21.637Z","data":{"promptTokens":2910,"candidateTokens":282,"totalTokens":38904,"cachedTokens":35712,"reasoningTokens":69,"cost":0.001425672,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:21.638Z","data":{"tool":"read","summary":"src/core/vcs/sync-specs.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:21.639Z","data":{"tool":"read","summary":"src/core/vcs/sync-files.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:21.640Z","data":{"tool":"read","summary":"src/core/spec/approve-branch.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:23.461Z","data":{"promptTokens":2875,"candidateTokens":252,"totalTokens":41911,"cachedTokens":38784,"reasoningTokens":40,"cost":0.001397604,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:23.462Z","data":{"tool":"read","summary":"src/core/lifecycle/retry.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:23.463Z","data":{"tool":"read","summary":"src/core/lifecycle/recertify.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:23.464Z","data":{"tool":"read","summary":"src/core/run/scope-hash.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:25.364Z","data":{"promptTokens":4564,"candidateTokens":300,"totalTokens":46720,"cachedTokens":41856,"reasoningTokens":91,"cost":0.0019803359999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:25.365Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:25.366Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:25.367Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:27.794Z","data":{"promptTokens":3035,"candidateTokens":415,"totalTokens":50170,"cachedTokens":46720,"reasoningTokens":197,"cost":0.00168882,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:27.795Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:27.796Z","data":{"tool":"read","summary":"openspec/changes/129-default-branch-steering/.run/results/1."}}
+{"type":"tool","timestamp":"2026-10-01T08:33:27.797Z","data":{"tool":"read","summary":"src/core/vcs/land.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:29.841Z","data":{"promptTokens":3641,"candidateTokens":301,"totalTokens":53990,"cachedTokens":50048,"reasoningTokens":225,"cost":0.001753788,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:29.842Z","data":{"tool":"read","summary":"tests/steering-sync.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:31.164Z","data":{"promptTokens":4718,"candidateTokens":114,"totalTokens":58720,"cachedTokens":53888,"reasoningTokens":38,"cost":0.001875528,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:31.164Z","data":{"tool":"read","summary":"tests/vcs-land-steering.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:33.160Z","data":{"promptTokens":3752,"candidateTokens":244,"totalTokens":62620,"cachedTokens":58624,"reasoningTokens":166,"cost":0.001770144,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:33.161Z","data":{"tool":"read","summary":"tests/steering-plan-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:55.160Z","data":{"promptTokens":3659,"candidateTokens":5613,"totalTokens":71864,"cachedTokens":62592,"reasoningTokens":5422,"cost":0.008208851999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:55.161Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:55.162Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-write.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:57.229Z","data":{"promptTokens":2690,"candidateTokens":272,"totalTokens":74770,"cachedTokens":71808,"reasoningTokens":106,"cost":0.0015642479999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:57.229Z","data":{"tool":"read","summary":"src/core/report/planning-observed.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:57.230Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:33:59.067Z","data":{"promptTokens":704,"candidateTokens":198,"totalTokens":75654,"cachedTokens":74752,"reasoningTokens":20,"cost":0.0008973119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:59.068Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:33:59.069Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:34:06.469Z","data":{"promptTokens":841,"candidateTokens":1697,"totalTokens":78186,"cachedTokens":75648,"reasoningTokens":1517,"cost":0.002742588,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:06.469Z","data":{"tool":"read","summary":"src/core/spec/hasher.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:06.470Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:34:14.851Z","data":{"promptTokens":1094,"candidateTokens":1744,"totalTokens":80918,"cachedTokens":78080,"reasoningTokens":1580,"cost":0.0028894799999999994,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:14.852Z","data":{"tool":"read","summary":"src/core/status/layout.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:14.852Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:34:19.455Z","data":{"promptTokens":1070,"candidateTokens":911,"totalTokens":82877,"cachedTokens":80896,"reasoningTokens":834,"cost":0.001899576,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:19.456Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:34:54.739Z","data":{"promptTokens":1871,"candidateTokens":8178,"totalTokens":92865,"cachedTokens":82816,"reasoningTokens":8009,"cost":0.010871796,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:54.740Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:54.740Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:34:56.424Z","data":{"promptTokens":1936,"candidateTokens":158,"totalTokens":94894,"cachedTokens":92800,"reasoningTokens":18,"cost":0.0013272000000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:56.425Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:34:56.426Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:10.058Z","data":{"promptTokens":1232,"candidateTokens":2796,"totalTokens":98876,"cachedTokens":94848,"reasoningTokens":2637,"cost":0.004293888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:10.059Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:10.060Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:37.900Z","data":{"promptTokens":294,"candidateTokens":7344,"totalTokens":106454,"cachedTokens":98816,"reasoningTokens":7122,"cost":0.009493896,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:37.901Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:37.902Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:35:43.870Z","data":{"text":"Now let me look at the remaining test infrastructure and a couple more details before implementing."}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:43.870Z","data":{"promptTokens":1363,"candidateTokens":1227,"totalTokens":108958,"cachedTokens":106368,"reasoningTokens":1016,"cost":0.002519508,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:43.871Z","data":{"tool":"read","summary":"tests/steering-sync.test.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:43.872Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:35:46.435Z","data":{"text":"Now I have enough context. Let me implement the code changes."}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:46.435Z","data":{"promptTokens":1846,"candidateTokens":439,"totalTokens":111213,"cachedTokens":108928,"reasoningTokens":42,"cost":0.0017341680000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:46.437Z","data":{"tool":"edit","summary":"src/core/spec/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:35:46.441Z","data":{"path":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:48.597Z","data":{"promptTokens":138,"candidateTokens":280,"totalTokens":111522,"cachedTokens":111104,"reasoningTokens":39,"cost":0.001044024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:48.597Z","data":{"tool":"edit","summary":"src/core/spec/approve-steer.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:35:48.598Z","data":{"path":"src/core/spec/approve-steer.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:53.041Z","data":{"promptTokens":193,"candidateTokens":1144,"totalTokens":112697,"cachedTokens":111360,"reasoningTokens":257,"cost":0.00209886,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:53.042Z","data":{"tool":"write","summary":"src/core/spec/approve-default-branch.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:35:53.043Z","data":{"path":"src/core/spec/approve-default-branch.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:35:59.191Z","data":{"promptTokens":212,"candidateTokens":1504,"totalTokens":114228,"cachedTokens":112512,"reasoningTokens":193,"cost":0.0025434719999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:35:59.192Z","data":{"tool":"write","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:35:59.193Z","data":{"path":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:01.972Z","data":{"promptTokens":209,"candidateTokens":479,"totalTokens":114736,"cachedTokens":114048,"reasoningTokens":194,"cost":0.001321788,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:01.972Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:01.973Z","data":{"path":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:04.080Z","data":{"promptTokens":210,"candidateTokens":205,"totalTokens":114975,"cachedTokens":114560,"reasoningTokens":115,"cost":0.00099636,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:04.081Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:06.078Z","data":{"promptTokens":180,"candidateTokens":159,"totalTokens":115155,"cachedTokens":114816,"reasoningTokens":0,"cost":0.000933696,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:06.079Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:06.080Z","data":{"path":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:17.327Z","data":{"promptTokens":245,"candidateTokens":2875,"totalTokens":118064,"cachedTokens":114944,"reasoningTokens":2685,"cost":0.004213164,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:17.327Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:17.328Z","data":{"path":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:19.350Z","data":{"promptTokens":210,"candidateTokens":124,"totalTokens":118222,"cachedTokens":117888,"reasoningTokens":43,"cost":0.000919128,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:19.350Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:24.684Z","data":{"promptTokens":321,"candidateTokens":1548,"totalTokens":120013,"cachedTokens":118144,"reasoningTokens":183,"cost":0.0026627639999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:24.685Z","data":{"tool":"write","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:24.686Z","data":{"path":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:27.317Z","data":{"promptTokens":234,"candidateTokens":362,"totalTokens":120404,"cachedTokens":119808,"reasoningTokens":229,"cost":0.001223448,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:27.318Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:27.319Z","data":{"path":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:30.665Z","data":{"promptTokens":246,"candidateTokens":516,"totalTokens":120954,"cachedTokens":120192,"reasoningTokens":218,"cost":0.001414152,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:30.666Z","data":{"tool":"edit","summary":"src/cli/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:36:30.667Z","data":{"path":"src/cli/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:32.315Z","data":{"promptTokens":150,"candidateTokens":121,"totalTokens":121103,"cachedTokens":120832,"reasoningTokens":33,"cost":0.000915192,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:32.316Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:33.702Z","data":{"promptTokens":735,"candidateTokens":89,"totalTokens":121912,"cachedTokens":121088,"reasoningTokens":0,"cost":0.0010538280000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:33.703Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:40.015Z","data":{"promptTokens":252,"candidateTokens":148,"totalTokens":122128,"cachedTokens":121728,"reasoningTokens":39,"cost":0.000983568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:40.016Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:53.915Z","data":{"promptTokens":230,"candidateTokens":3245,"totalTokens":125459,"cachedTokens":121984,"reasoningTokens":3067,"cost":0.004694904,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:53.916Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:53.916Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:36:55.855Z","data":{"promptTokens":254,"candidateTokens":76,"totalTokens":125642,"cachedTokens":125312,"reasoningTokens":0,"cost":0.0009192720000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:36:55.855Z","data":{"tool":"read","summary":"src/watcher/archiver.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:37:12.346Z","data":{"promptTokens":759,"candidateTokens":3740,"totalTokens":130067,"cachedTokens":125568,"reasoningTokens":3664,"cost":0.0054691079999999994,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:37:12.347Z","data":{"tool":"read","summary":"src/core/foundation/init.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:37:54.446Z","data":{"promptTokens":775,"candidateTokens":10716,"totalTokens":141539,"cachedTokens":130048,"reasoningTokens":10621,"cost":0.013871988,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:37:54.447Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:38:13.736Z","data":{"text":"Now let me write the test file:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:13.736Z","data":{"promptTokens":407,"candidateTokens":6213,"totalTokens":148060,"cachedTokens":141440,"reasoningTokens":1031,"cost":0.00842634,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:13.738Z","data":{"tool":"write","summary":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:38:13.739Z","data":{"path":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:25.133Z","data":{"promptTokens":248,"candidateTokens":2380,"totalTokens":150468,"cachedTokens":147840,"reasoningTokens":2179,"cost":0.00381744,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:25.134Z","data":{"tool":"edit","summary":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:38:25.135Z","data":{"path":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:27.185Z","data":{"promptTokens":229,"candidateTokens":135,"totalTokens":150636,"cachedTokens":150272,"reasoningTokens":33,"cost":0.001132332,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:27.186Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:42.506Z","data":{"promptTokens":1262,"candidateTokens":2064,"totalTokens":153854,"cachedTokens":150528,"reasoningTokens":1940,"cost":0.0037585680000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:42.507Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:46.293Z","data":{"promptTokens":955,"candidateTokens":600,"totalTokens":155283,"cachedTokens":153728,"reasoningTokens":265,"cost":0.001928868,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:46.294Z","data":{"tool":"edit","summary":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:38:46.295Z","data":{"path":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:38:49.147Z","data":{"promptTokens":180,"candidateTokens":265,"totalTokens":155581,"cachedTokens":155136,"reasoningTokens":150,"cost":0.001302816,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:38:49.148Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:03.125Z","data":{"promptTokens":628,"candidateTokens":2719,"totalTokens":158867,"cachedTokens":155520,"reasoningTokens":2484,"cost":0.00438432,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:03.126Z","data":{"tool":"edit","summary":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:39:03.127Z","data":{"path":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:04.691Z","data":{"promptTokens":180,"candidateTokens":125,"totalTokens":159025,"cachedTokens":158720,"reasoningTokens":0,"cost":0.00115632,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:04.693Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:39:14.153Z","data":{"text":"Found the issues. The merge path must stage the archived folder's deletion. Let me fix:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:14.153Z","data":{"promptTokens":545,"candidateTokens":1720,"totalTokens":161241,"cachedTokens":158976,"reasoningTokens":1312,"cost":0.0031813559999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:14.155Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:39:14.155Z","data":{"path":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:18.161Z","data":{"promptTokens":251,"candidateTokens":811,"totalTokens":162086,"cachedTokens":161024,"reasoningTokens":52,"cost":0.002014644,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:18.162Z","data":{"tool":"edit","summary":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:39:18.163Z","data":{"path":"tests/steering-approve-default-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:20.549Z","data":{"promptTokens":199,"candidateTokens":112,"totalTokens":162231,"cachedTokens":161920,"reasoningTokens":10,"cost":0.00116562,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:20.550Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:39:28.375Z","data":{"text":"All 6 pass. Now let me run the related existing tests and budget checks:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:28.375Z","data":{"promptTokens":310,"candidateTokens":294,"totalTokens":162780,"cachedTokens":162176,"reasoningTokens":153,"cost":0.001418856,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:28.377Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:39.421Z","data":{"promptTokens":540,"candidateTokens":1743,"totalTokens":164971,"cachedTokens":162688,"reasoningTokens":661,"cost":0.003229728,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:39.422Z","data":{"tool":"edit","summary":"src/cli/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:39:39.424Z","data":{"path":"src/cli/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:41.229Z","data":{"promptTokens":135,"candidateTokens":173,"totalTokens":165172,"cachedTokens":164864,"reasoningTokens":54,"cost":0.001237284,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:41.230Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:49.188Z","data":{"promptTokens":311,"candidateTokens":133,"totalTokens":165564,"cachedTokens":165120,"reasoningTokens":35,"cost":0.00124362,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:49.189Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:39:51.770Z","data":{"promptTokens":431,"candidateTokens":284,"totalTokens":166219,"cachedTokens":165504,"reasoningTokens":155,"cost":0.001463124,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:39:51.770Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:40:01.978Z","data":{"text":"All targeted tests pass. Let me run lint and then the full verify:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:40:01.978Z","data":{"promptTokens":827,"candidateTokens":147,"totalTokens":167118,"cachedTokens":166144,"reasoningTokens":47,"cost":0.001421364,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:40:01.981Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:40:05.293Z","data":{"promptTokens":660,"candidateTokens":364,"totalTokens":168064,"cachedTokens":167040,"reasoningTokens":200,"cost":0.00163704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:40:05.294Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:40:07.758Z","data":{"promptTokens":154,"candidateTokens":86,"totalTokens":168176,"cachedTokens":167936,"reasoningTokens":0,"cost":0.001157016,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:40:07.759Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:40:10.430Z","data":{"promptTokens":181,"candidateTokens":198,"totalTokens":168443,"cachedTokens":168064,"reasoningTokens":111,"cost":0.001300284,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:40:10.431Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:41:09.611Z","data":{"promptTokens":1166,"candidateTokens":268,"totalTokens":169754,"cachedTokens":168320,"reasoningTokens":173,"cost":0.00168132,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:41:09.612Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:41:11.232Z","data":{"promptTokens":186,"candidateTokens":113,"totalTokens":169899,"cachedTokens":169600,"reasoningTokens":0,"cost":0.001209,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:41:11.233Z","data":{"tool":"edit","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-01T08:41:11.234Z","data":{"path":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:41:13.957Z","data":{"promptTokens":205,"candidateTokens":335,"totalTokens":170268,"cachedTokens":169728,"reasoningTokens":199,"cost":0.001481868,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:41:13.958Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"tokens","timestamp":"2026-10-01T08:41:16.381Z","data":{"promptTokens":170,"candidateTokens":87,"totalTokens":170369,"cachedTokens":170112,"reasoningTokens":0,"cost":0.001176072,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:41:16.382Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:42:20.502Z","data":{"text":"Let me confirm the task's specific verify command and check the final state of my changes:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:42:20.502Z","data":{"promptTokens":300,"candidateTokens":687,"totalTokens":171355,"cachedTokens":170368,"reasoningTokens":568,"cost":0.0019366079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:42:20.503Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:42:37.045Z","data":{"text":"Let me review the final formatted source files:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:42:37.045Z","data":{"promptTokens":272,"candidateTokens":2813,"totalTokens":174349,"cachedTokens":171264,"reasoningTokens":2655,"cost":0.0044847839999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:42:37.046Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch.ts"}}
+{"type":"tool","timestamp":"2026-10-01T08:42:37.047Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-01T08:42:38.794Z","data":{"promptTokens":2143,"candidateTokens":86,"totalTokens":176565,"cachedTokens":174336,"reasoningTokens":5,"cost":0.001792116,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:42:38.795Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"text","timestamp":"2026-10-01T08:42:47.317Z","data":{"text":"Let me confirm the full proposal verify passes with an explicit exit code:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:42:47.317Z","data":{"promptTokens":1401,"candidateTokens":1782,"totalTokens":179695,"cachedTokens":176512,"reasoningTokens":1659,"cost":0.003617772,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:42:47.319Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/129-default-branch-steer"}}
+{"type":"text","timestamp":"2026-10-01T08:43:59.540Z","data":{"text":"Both verify commands pass. Let me write the result file:"}}
+{"type":"tokens","timestamp":"2026-10-01T08:43:59.540Z","data":{"promptTokens":233,"candidateTokens":3109,"totalTokens":182926,"cachedTokens":179584,"reasoningTokens":2110,"cost":0.004878204,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-01T08:43:59.543Z","data":{"tool":"write","summary":"openspec/changes/129-default-branch-steering/.run/results/5."}}
+{"type":"file_changed","timestamp":"2026-10-01T08:43:59.544Z","data":{"path":"openspec/changes/129-default-branch-steering/.run/results/5.md"}}
+{"type":"text","timestamp":"2026-10-01T08:44:03.799Z","data":{"text":"I've completed task 5. Here's a summary of what was implemented:\n\n## Summary\n\n**Routing** (`approve.ts`, `approve-steer.ts`)\n- `approveSpec` now resolves ids with `findSteeringChange`, falling back to `findChange`'s error message when nothing matches.\n- `approveSteeredChange` keeps the running-task refusal first, then routes any change with a default-branch trigger (`isDefaultBranchTrigger`) to the new `approveDefaultBranchSteering`; all other changes keep the 128 path.\n\n**New modules** (`src/core/spec/approve-default-branch*.ts`)\n- `approve-default-branch.ts` — shared prelude: lint, review digest, commit `osq: <id> replanned`, then restart on `conflict` or merge otherwise.\n- `approve-default-branch-restart.ts` — copies the folder aside, removes/recreates the worktree on a fresh branch at the default tip, renames the old branch to `osq/<folder>-restarted-<n>`, trims `.run/` to `events/`+`plan.jsonl`, seals, writes provenance, commits `osq: <id> approved`.\n- `approve-default-branch-merge.ts` — moves archived folders to changes, rebuilds living specs from the default branch, writes `.run/requirements-base`, seals and commits, runs the sync with `skipVerify`, restarts on a `sync_conflict` stop, refreshes merged-scope done markers, and retires triggers.\n\n**CLI** (`cli/approve.ts`) — prints the restart/merge line between `Branch:` and `Continues from task <n>`; extracted `printApprovalResult` to stay within the function budget.\n\n**Tests** (`tests/steering-approve-default-branch.test.ts`) — 6 scenarios in temporary git repos, including the two watcher-driven flows and the `landChange` run.\n\nBoth the task verify (`node --import tsx --test tests/steering-approve-default-branch.test.ts`) and the proposal verify (`pnpm verify`) pass (2911 tests, exit 0). The result is written to `openspec/changes/129-default-branch-steering/.run/results/5.md`."}}
+{"type":"tokens","timestamp":"2026-10-01T08:44:03.799Z","data":{"promptTokens":176,"candidateTokens":687,"totalTokens":183647,"cachedTokens":182784,"reasoningTokens":200,"cost":0.001973904,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-01T08:44:03.832Z","data":{"exitCode":0,"pid":95926,"timedOut":false,"elapsedSeconds":657.9}}
+{"type":"verify_ran","timestamp":"2026-10-01T08:44:08.735Z","data":{"command":"node --import tsx --test tests/steering-approve-default-branch.test.ts","exitCode":0,"duration":4.73,"output":"▶ Approval after a default-branch trigger\n  ✔ restarts the change from the default branch and keeps the old branch (690.089624ms)\n  ✔ runs every task again after a restart and lands (925.987688ms)\n✔ Approval after a default-branch trigger (1616.884249ms)\n▶ Reopening after a red verify\n  ✔ merges the default branch and keeps done tasks (794.303659ms)\n  ✔ runs only the new task and archives (1013.875624ms)\n✔ Reopening after a red verify (1808.553767ms)\n▶ A changed requirement on the default branch\n  ✔ is judged against the default branch and later syncs do not stop (407.247429ms)\n  ✔ restarts the change when the merge itself conflicts (650.18305ms)\n✔ A changed requirement on the default branch (1057.783509ms)\nℹ tests 6\nℹ suites 3\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4702.42618\n"}}
+{"type":"measures","timestamp":"2026-10-01T08:45:07.220Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":501,"repoFiles":2116,"repoLines":244050,"importFanIn":4,"proposalWords":1760,"taskWords":434,"deltaRequirements":14,"deltaScenarios":83,"changedFiles":7,"changedLines":938,"scopeHashes":{"src/cli/approve.ts":{"before":"sha256:68cd22817c38ea924f03e5571f4e92fef633f8957a1499cfebf1a2dbf65cff8b","after":"sha256:da8cc1a0dfe7f32972320fec685a9e5ba87db96d7e3daecad4a08af4fe10ed80"},"src/core/spec/approve-steer.ts":{"before":"sha256:12819b08812aa1aec8e4c7ecead93af4e5789e699895cfc640a645a53d0714e6","after":"sha256:e94df75d40b393941664342746a134cdc3ac6aa6d9223448dd0999aa1db9d436"},"src/core/spec/approve.ts":{"before":"sha256:00e782012bfc53f8b19811e5471a5e416f1fcbf8274a830ab7ef8cb9b44e858c","after":"sha256:b981a519c93706f5f56de59def06d46dd656cce739309b8a318b5dec32824431"},"tests/steering-approve-default-branch.test.ts":{"before":null,"after":"sha256:696f9a5aafaaf0f9861f963d79d07c84ee2a605c40fbd8be21c66d4bd0e14e1c"},"src/core/spec/approve-default-branch-merge.ts":{"before":null,"after":"sha256:3dcc6bcff0fa6e8cea9057d9cb5d2986822144e97814b30f6c0f8b76b6233932"},"src/core/spec/approve-default-branch-restart.ts":{"before":null,"after":"sha256:2573a246527cb5511ab53ae4a17f4d9a1ee78032ae01120283a1d4bebf09d9de"},"src/core/spec/approve-default-branch.ts":{"before":null,"after":"sha256:18c91c109cb1495ce1ed3d1763bf2058207037b88dd3e9c2d8aa996d01a1ccbe"}}}}
+{"type":"done","timestamp":"2026-10-01T08:45:07.225Z","data":{"task":"5"}}
+{"type":"verify_ran","timestamp":"2026-10-01T08:49:25.915Z","data":{"command":"node --import tsx --test tests/steering-approve-default-branch.test.ts","exitCode":0,"duration":4.71,"output":"▶ Approval after a default-branch trigger\n  ✔ restarts the change from the default branch and keeps the old branch (686.152587ms)\n  ✔ runs every task again after a restart and lands (927.805662ms)\n✔ Approval after a default-branch trigger (1614.831588ms)\n▶ Reopening after a red verify\n  ✔ merges the default branch and keeps done tasks (787.800299ms)\n  ✔ runs only the new task and archives (1012.591761ms)\n✔ Reopening after a red verify (1800.787793ms)\n▶ A changed requirement on the default branch\n  ✔ is judged against the default branch and later syncs do not stop (403.378608ms)\n  ✔ restarts the change when the merge itself conflicts (649.400384ms)\n✔ A changed requirement on the default branch (1053.105408ms)\nℹ tests 6\nℹ suites 3\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4684.87809\n"}}

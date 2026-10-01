@@ -1,6 +1,8 @@
 import type { OsqConfig } from '../foundation/config.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { findLandCandidates } from '../status/dispatch-land.js';
+import { deriveSpecState } from '../status/state.js';
+import { describeTrigger } from '../status/steering.js';
 import { readLandedAt } from '../web/web-data-lifecycle.js';
 import { listDeltaCapabilities } from './sync-specs.js';
 import type { Vcs, VcsHead, VcsStatusEntry } from './vcs.js';
@@ -30,6 +32,20 @@ export function assertWorktreeClean(worktree: string, status: readonly VcsStatus
   if (status.length === 0) return;
   const paths = status.map((entry) => entry.path).join(', ');
   throw new Error(`${worktree} has uncommitted changes: ${paths}; commit or discard them first`);
+}
+
+/**
+ * Refuse a change whose derived state in its own worktree has a steering
+ * trigger, naming the first one.
+ */
+export async function assertNoSteering(change: LocatedChange): Promise<void> {
+  const state = await deriveSpecState(change.tree.root, change.folderPath);
+  const first = state.steering?.[0];
+  if (first === undefined) return;
+  const id = change.folderName.split('-')[0] ?? change.folderName;
+  throw new Error(
+    `${change.folderName} needs steering: ${describeTrigger(first)}; run osq plan ${id}`,
+  );
 }
 
 /**

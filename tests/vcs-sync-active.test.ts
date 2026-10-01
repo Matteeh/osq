@@ -297,7 +297,7 @@ describe('syncWithDefaultBranch on an active change', () => {
       () => syncWithDefaultBranch(root, config, change),
       (error: unknown) => {
         assert.ok(error instanceof SyncStop, 'the stop should be a SyncStop');
-        assert.equal(error.reason, 'sync_failed');
+        assert.equal(error.reason, 'sync_verify_red');
         assert.match(
           error.message,
           /^002-two-words: verify of task 1 failed on osq\/002-two-words merged with main:/,
@@ -326,7 +326,10 @@ describe('syncWithDefaultBranch on an active change', () => {
         assert.ok(error instanceof SyncStop, 'the stop should be a SyncStop');
         assert.equal(error.reason, 'sync_conflict');
         assert.match(error.message, /src\/app\.txt/);
-        assert.match(error.message, /then run osq retry 002 change/);
+        assert.match(
+          error.message,
+          /run osq plan 002, and approving the revised plan restarts osq\/002-two-words from main$/,
+        );
         return true;
       },
     );

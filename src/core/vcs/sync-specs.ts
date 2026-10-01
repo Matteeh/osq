@@ -109,10 +109,11 @@ export async function assertRequirementsUnchanged(
     config,
   );
   if (changed.length === 0) return;
+  const id = change.folderName.split('-')[0] ?? change.folderName;
   const list = changed.map((entry) => `${entry.capability}: ${entry.requirement}`).join(', ');
   throw new SyncStop(
-    'sync_failed',
-    `${change.folderName}: ${defaultBranch} changed requirements this change rewrites since it was approved: ${list}; reject the change and plan it again against ${defaultBranch}`,
+    'requirement_changed',
+    `${change.folderName}: ${defaultBranch} changed requirements this change rewrites since it was approved: ${list}; run osq plan ${id} to revise the plan against ${defaultBranch}`,
   );
 }
 

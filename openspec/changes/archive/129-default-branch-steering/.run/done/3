@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8320afadb9dce08d7d13a9de539b728f6a4deafc514912c8a4cbf79712befbab"
+build_stamp: "602723e"
+project_commit: "ec61484"
+exit_code: 0
+scope_files: {"src/core/status/dispatch-items.ts":"sha256:95a6af481332f35d75fbbdf359bcf36572ee7202137b63abaf491a41d10a51c3","src/core/status/inbox-projection.ts":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","src/core/status/next-step.ts":"sha256:4aa48d9a65dfeca30de4c5e1bd873f2caeb714ac7af1b4447882b8c1c79132b9","src/core/status/steering-change.ts":"sha256:555504eb8db5f03d6c543a71085372b09960c305041e8bc190b8c895edaa9917","tests/steering-archived.test.ts":"sha256:021c22a58183959cf99c957ab397aeb042cfba360cea7b4febf968ca93f0b90f"}
+---
+2026-10-01T08:27:36.124Z

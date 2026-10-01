@@ -314,7 +314,7 @@ describe('change check in a land sync', () => {
       stop = error;
     }
     assert.ok(stop, 'the red check should stop the sync');
-    assert.equal(stop.reason, 'sync_failed');
+    assert.equal(stop.reason, 'sync_verify_red');
     assert.match(
       stop.message,
       /002-two-words: check failed on osq\/002-two-words merged with main:/,

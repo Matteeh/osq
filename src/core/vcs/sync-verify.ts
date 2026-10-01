@@ -26,6 +26,7 @@ export interface SyncVerifyOptions {
   readonly commits: number;
   readonly mergeStart: number;
   readonly tasks: readonly SyncVerifyTask[];
+  readonly skipVerify: boolean;
 }
 
 /** The last `limit` non-blank lines of command output. */
@@ -90,7 +91,7 @@ async function runOne(
           ? `verify failed on ${worktreeBranch(options.change.folderName)}`
           : `verify of task ${task} failed on ${worktreeBranch(options.change.folderName)}`;
     throw new SyncStop(
-      'sync_failed',
+      'sync_verify_red',
       `${options.change.folderName}: ${subject} merged with ${options.defaultBranch}:\n${outputTail(result.output, options.config.limits.cardOutputLines)}`,
     );
   }
@@ -113,20 +114,23 @@ async function readCheck(changeFolderPath: string): Promise<string | null> {
 /**
  * Step 5 of the sync: run the proposal's verify for an archived change, or
  * the done tasks' verifies for an active one, record each pass, then append
- * the `synced` event. Every failure is a `SyncStop` with reason `sync_failed`.
+ * the `synced` event. Every failure is a `SyncStop` with reason
+ * `sync_verify_red`. With `skipVerify` set no command runs at all.
  */
 export async function runSyncVerify(options: SyncVerifyOptions): Promise<void> {
-  if (options.archived) {
-    if (options.verifyCommand !== '') {
-      await runOne(options, options.verifyCommand, null, undefined);
-    }
-    const check = await readCheck(options.change.folderPath);
-    if (check !== null) {
-      await runOne(options, check, null, undefined, 'check');
-    }
-  } else {
-    for (const task of options.tasks) {
-      await runOne(options, task.verify, options.change.folderPath, task.task);
+  if (!options.skipVerify) {
+    if (options.archived) {
+      if (options.verifyCommand !== '') {
+        await runOne(options, options.verifyCommand, null, undefined);
+      }
+      const check = await readCheck(options.change.folderPath);
+      if (check !== null) {
+        await runOne(options, check, null, undefined, 'check');
+      }
+    } else {
+      for (const task of options.tasks) {
+        await runOne(options, task.verify, options.change.folderPath, task.task);
+      }
     }
   }
   await appendEvent(options.change.folderPath, 'synced', {

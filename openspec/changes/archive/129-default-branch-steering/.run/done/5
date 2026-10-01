@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6805e5e20209351228010214116b7fad267d0ee82990acd714a9460ae728cfc8"
+build_stamp: "602723e"
+project_commit: "7c9021b"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:da8cc1a0dfe7f32972320fec685a9e5ba87db96d7e3daecad4a08af4fe10ed80","src/core/spec/approve-default-branch-merge.ts":"sha256:3dcc6bcff0fa6e8cea9057d9cb5d2986822144e97814b30f6c0f8b76b6233932","src/core/spec/approve-default-branch-restart.ts":"sha256:2573a246527cb5511ab53ae4a17f4d9a1ee78032ae01120283a1d4bebf09d9de","src/core/spec/approve-default-branch.ts":"sha256:18c91c109cb1495ce1ed3d1763bf2058207037b88dd3e9c2d8aa996d01a1ccbe","src/core/spec/approve-steer.ts":"sha256:e94df75d40b393941664342746a134cdc3ac6aa6d9223448dd0999aa1db9d436","src/core/spec/approve.ts":"sha256:b981a519c93706f5f56de59def06d46dd656cce739309b8a318b5dec32824431","tests/steering-approve-default-branch.test.ts":"sha256:696f9a5aafaaf0f9861f963d79d07c84ee2a605c40fbd8be21c66d4bd0e14e1c"}
+---
+2026-10-01T08:45:07.224Z

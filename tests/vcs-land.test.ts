@@ -416,7 +416,7 @@ describe('osq land', () => {
     assert.equal(capture.stdout, '');
     assert.match(
       capture.stderr,
-      /src\/one\.txt conflict with main; merge it into osq\/001-order-flow by hand in .*then run osq land 001 again/,
+      /src\/one\.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq\/001-order-flow from main/,
     );
     assert.equal(await git(['rev-parse', 'HEAD'], project.repo), beforeHead);
     assert.deepEqual(await statusLines(project.repo), beforeStatus);

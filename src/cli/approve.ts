@@ -3,7 +3,7 @@ import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
 import { formatPriceKey } from '../core/report/planning-price-gaps.js';
-import { type ApprovalReview, approveSpec } from '../core/spec/approve.js';
+import { type ApprovalReview, type ApproveResult, approveSpec } from '../core/spec/approve.js';
 import {
   type ApprovalDigest,
   formatApprovalDigest,
@@ -59,6 +59,44 @@ async function defaultAsk(question: string): Promise<string | null> {
   }
 }
 
+/** Print the approval lines for one approved change. */
+function printApprovalResult(result: ApproveResult): void {
+  const summary = summarizeApprovalFlags(result.digest.flags);
+  console.log(
+    `Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}`,
+  );
+  console.log(`  Hash: ${result.hash}`);
+  if (result.keptBranch !== undefined) {
+    console.log(`  Kept rejected branch: ${result.keptBranch}`);
+  }
+  if (result.stackedPath !== undefined) {
+    console.log(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}`);
+    console.log(`  Stacked: ${result.stackedPath}`);
+  } else if (result.worktreePath !== undefined && result.branch !== undefined) {
+    console.log(`  Worktree: ${result.worktreePath}`);
+    console.log(`  Branch: ${result.branch}`);
+    if (result.restarted !== undefined) {
+      console.log(
+        `  Restarted from ${result.restarted.defaultBranch}; kept the old branch as ${result.restarted.keptBranch}`,
+      );
+    } else if (result.merged !== undefined) {
+      console.log(`  Merged ${result.merged.defaultBranch} into ${result.branch}`);
+    }
+  }
+  if (result.continuesFrom !== undefined) {
+    console.log(`  Continues from task ${result.continuesFrom}`);
+  }
+  for (const warning of result.warnings) {
+    console.warn(`  Warning: ${warning}`);
+  }
+  if (result.planningMatches === 0) {
+    console.log(`No planning record found for ${result.specId}.`);
+  }
+  for (const model of result.missingPrices) {
+    console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
+  }
+}
+
 export async function approveCommand(
   specIds: string[],
   options: ApproveCommandOptions = {},
@@ -99,33 +137,7 @@ export async function approveCommand(
         baseOk: options.baseOk,
         ignoreDirty: options.ignoreDirty,
       });
-      const summary = summarizeApprovalFlags(result.digest.flags);
-      console.log(
-        `Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}`,
-      );
-      console.log(`  Hash: ${result.hash}`);
-      if (result.keptBranch !== undefined) {
-        console.log(`  Kept rejected branch: ${result.keptBranch}`);
-      }
-      if (result.stackedPath !== undefined) {
-        console.log(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}`);
-        console.log(`  Stacked: ${result.stackedPath}`);
-      } else if (result.worktreePath !== undefined && result.branch !== undefined) {
-        console.log(`  Worktree: ${result.worktreePath}`);
-        console.log(`  Branch: ${result.branch}`);
-      }
-      if (result.continuesFrom !== undefined) {
-        console.log(`  Continues from task ${result.continuesFrom}`);
-      }
-      for (const warning of result.warnings) {
-        console.warn(`  Warning: ${warning}`);
-      }
-      if (result.planningMatches === 0) {
-        console.log(`No planning record found for ${result.specId}.`);
-      }
-      for (const model of result.missingPrices) {
-        console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
-      }
+      printApprovalResult(result);
     } catch (error) {
       if (error instanceof CommandError) throw error;
       const message = error instanceof Error ? error.message : String(error);

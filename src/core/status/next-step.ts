@@ -4,7 +4,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { analyzeVerifyCommand } from '../spec/linter.js';
 import { parseFrontmatter } from '../spec/parser.js';
-import { locateFolder } from './change-locations.js';
+import { type LocatedChange, locateFolder } from './change-locations.js';
 import { deriveSpecState, readChangeFolder } from './state.js';
 
 /** What one change folder needs next. */
@@ -73,7 +73,11 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
   return { state: 'running', command: `osq show ${id}`, detail: null };
 }
 
-async function readArchivedNextStep(): Promise<NextStep> {
+async function readArchivedNextStep(located: LocatedChange): Promise<NextStep> {
+  const state = deriveSpecState(await readChangeFolder(located.tree.root, located.folderPath));
+  if ((state.steering?.length ?? 0) > 0) {
+    return { state: 'dead', command: `osq plan ${state.id}`, detail: 'needs steering' };
+  }
   return { state: 'landed', command: null, detail: null };
 }
 
@@ -89,7 +93,7 @@ export async function readNextStep(
 ): Promise<NextStep> {
   const located = await locateFolder(projectRoot, config, folderPath);
   if (located?.location === 'archived') {
-    return readArchivedNextStep();
+    return readArchivedNextStep(located);
   }
   return readActiveNextStep(projectRoot, folderPath);
 }

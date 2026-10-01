@@ -3,6 +3,7 @@ import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { findLandCandidates } from './dispatch-land.js';
 import { type SpecState, type TaskState, compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
+import { listArchivedSteering } from './steering-change.js';
 import type { SteeringTrigger } from './steering.js';
 
 /** The three things that can need a human. */
@@ -71,27 +72,29 @@ function approvalItem(spec: SpecState, nextState: string | undefined): DispatchI
   };
 }
 
+/** The one halt item a change whose derived state has steering contributes. */
+function steeringHaltItem(spec: SpecState): DispatchItem | null {
+  const first = spec.steering?.[0] as SteeringTrigger | undefined;
+  if (first === undefined) return null;
+  const target =
+    first.target === 'change'
+      ? null
+      : (spec.tasks.find((task) => task.taskNumber === first.target) ?? null);
+  return {
+    kind: 'halt',
+    change: changeRef(spec),
+    task: target ? taskRef(target) : null,
+    commands: [`osq plan ${spec.id}`, `osq show ${spec.id}`],
+    steering: first,
+  };
+}
+
 /** A change-level halt first, then one halt per dead or regressed task. */
 function haltItems(spec: SpecState): DispatchItem[] {
   const items: DispatchItem[] = [];
   const id = spec.id;
-  const steering = spec.steering;
-  if (steering && steering.length > 0) {
-    const first = steering[0] as SteeringTrigger;
-    const target =
-      first.target === 'change'
-        ? null
-        : (spec.tasks.find((task) => task.taskNumber === first.target) ?? null);
-    return [
-      {
-        kind: 'halt',
-        change: changeRef(spec),
-        task: target ? taskRef(target) : null,
-        commands: [`osq plan ${id}`, `osq show ${id}`],
-        steering: first,
-      },
-    ];
-  }
+  const steeringHalt = steeringHaltItem(spec);
+  if (steeringHalt !== null) return [steeringHalt];
   if (spec.changeRegressed) {
     items.push({
       kind: 'halt',
@@ -121,9 +124,14 @@ async function readTitle(folderPath: string, fallback: string): Promise<string> 
   return spec?.title || fallback;
 }
 
-async function landItems(projectRoot: string, config: OsqConfig): Promise<DispatchItem[]> {
+async function landItems(
+  projectRoot: string,
+  config: OsqConfig,
+  steeredFolders: ReadonlySet<string>,
+): Promise<DispatchItem[]> {
   const items: DispatchItem[] = [];
   for (const candidate of await findLandCandidates(projectRoot, config)) {
+    if (steeredFolders.has(candidate.folder)) continue;
     const id = changeId(candidate.folder);
     items.push({
       kind: 'land',
@@ -165,13 +173,19 @@ export async function readDispatchItems(
 ): Promise<Dispatch> {
   const overview = await getStatusOverview(projectRoot, config);
   const nextSteps = overview.nextSteps ?? {};
+  const archivedSteering = await listArchivedSteering(projectRoot, config);
+  const steeredFolders = new Set(archivedSteering.map((entry) => entry.change.folderName));
   const items: DispatchItem[] = [];
   for (const spec of overview.specs) {
     const approval = approvalItem(spec, nextSteps[spec.folderName]?.state);
     if (approval !== null) items.push(approval);
     items.push(...haltItems(spec));
   }
-  items.push(...(await landItems(projectRoot, config)));
+  for (const entry of archivedSteering) {
+    const halt = steeringHaltItem(entry.state);
+    if (halt !== null) items.push(halt);
+  }
+  items.push(...(await landItems(projectRoot, config, steeredFolders)));
   items.sort(compareItems);
   return {
     watcherIdle: !Object.values(nextSteps).some((next) => next.state === 'running'),
