@@ -13,6 +13,7 @@ import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { planCommand } from './plan.js';
+import { registerQueryCommand } from './query.js';
 import { queueCommand } from './queue.js';
 import { rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
@@ -198,6 +199,7 @@ export function createProgram(version?: string): Command {
 
   registerDigestCommand(program);
   registerDoctorCommand(program);
+  registerQueryCommand(program);
 
   program
     .command('serve')

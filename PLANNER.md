@@ -33,6 +33,7 @@ your complete prompt; read it and follow it exactly.
   is written and `osq lint` passes, and the exact `osq approve <id>` to run. The
   human should not approve before that message.
 - Grep for what already exists; verify every version, flag, or API before use.
+- For osq's own history, such as earlier changes to a requirement, dead reasons, or executor disclosures, run `osq query "<select>"` and add `LIMIT`; `osq query` alone lists its tables. Don't open event files for it.
 - Write files with the file tool, never through a shell echo.
 
 ### Tasks

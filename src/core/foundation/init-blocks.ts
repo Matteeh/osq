@@ -74,6 +74,7 @@ ${EXECUTOR_EXIT_LINES.join('\n')}
 - In-flight changes live under \`openspec/changes/<id>-<slug>/\`: \`proposal.md\`, delta specs as \`specs/<capability>/spec.md\`, and one \`tasks/<n>.md\` per task.
 - Executors never edit \`tasks.md\` or any file under \`.run/\` except their result file; those belong to the watcher and the human. Planners write \`tasks.md\` and the task files.
 - Approval gate: only \`osq approve\`, run by a human, writes \`.run/approved\`. Verification gate: only the watcher's own \`verify\` run marks a task done.
+- Archived changes live under \`openspec/changes/archive/\`. For facts about them, such as why tasks died or which changes touched a requirement, run \`osq query "<select>"\` and add \`LIMIT\`; \`osq query\` alone lists its tables. Don't open event files for history.
 
 ## Planning a change
 
@@ -120,6 +121,7 @@ your complete prompt; read it and follow it exactly.
   is written and \`osq lint\` passes, and the exact \`osq approve <id>\` to run. The
   human should not approve before that message.
 - Grep for what already exists; verify every version, flag, or API before use.
+- For osq's own history, such as earlier changes to a requirement, dead reasons, or executor disclosures, run \`osq query "<select>"\` and add \`LIMIT\`; \`osq query\` alone lists its tables. Don't open event files for it.
 - Write files with the file tool, never through a shell echo.
 
 ### Tasks

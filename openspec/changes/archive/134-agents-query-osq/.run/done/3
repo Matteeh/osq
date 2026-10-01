@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3a8bf5612fb11290350d5d4d7da0171dfb5a78f46ef7f0788c547fb5a16a80ea"
+build_stamp: "a003632"
+project_commit: "f7ea87f"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:2b5e396ec9a8df2559a0ae6d02a561b005fa4dba96458bf7ea2af1f4fd7a795b","AGENTS.md":"sha256:018f114a2fa162dc7fb19f069f32b4300590150e9eb302ce0e3e4ddec5eaab3b","PLANNER.md":"sha256:a7c592905cd1053807bc28a9b324741d1986d45d91334c31615495742b20864c","src/core/foundation/init-blocks.ts":"sha256:4e99f7ff98340f390df778d6a5e6a10567106c88b310a658796270154fda3284","templates/PLANNER.md":"sha256:8020d164b9351d1aaa5c73182ebf6c5f87f9a9c59ab3d4ded0d3b185b7ef6616","tests/query-blocks.test.ts":"sha256:3d5a87298b94ca2e1afb05dc3f5247a7bc84ed28cec6f1156ff50920542a1395"}
+---
+2026-10-01T18:23:31.441Z

@@ -3,8 +3,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { LocatedChange } from '../status/change-locations.js';
-import { asData, observeTaskStream, parseEventLines } from './report-events.js';
+import { asData, observeTaskStream } from './report-events.js';
 import { observeRetries } from './report-retries.js';
+import { readEventStream } from './stream-reads.js';
 
 /** One `dead` event: the task that died and why. */
 export interface ArchivedDeadAttempt {
@@ -60,10 +61,9 @@ function collectDead(
   }
 }
 
-/** Parses one stream, reading a missing or unreadable file as no events. */
-async function readStream(filePath: string): Promise<Record<string, unknown>[]> {
-  const content = await fs.readFile(filePath, 'utf8').catch(() => null);
-  return content === null ? [] : parseEventLines(content);
+/** Reads one stream through the shared reader, missing file as no events. */
+async function readStream(filePath: string): Promise<readonly Record<string, unknown>[]> {
+  return (await readEventStream(filePath)) ?? [];
 }
 
 /** Adds one task stream's attempts, retries, dead events, cost, and models. */
