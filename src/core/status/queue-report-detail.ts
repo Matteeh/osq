@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { readPlanRecords } from '../report/planning.js';
+import { readEventStream } from '../report/stream-reads.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import { findChange } from './change-locations.js';
 import { getDeadMarkerPath, getRegressedMarkerPath, getRejectedMarkerPath } from './layout.js';
@@ -102,21 +103,9 @@ async function earliestPlanStartMs(
 
 /** Timestamp of the first valid typed `archived` event in a change-level stream. */
 async function archivedEventMs(folderPath: string): Promise<number | null> {
-  const content = await fs
-    .readFile(path.join(folderPath, '.run', 'events', 'change.jsonl'), 'utf8')
-    .catch(() => null);
-  if (content === null) return null;
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch {
-      continue;
-    }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) continue;
-    const event = parsed as Record<string, unknown>;
+  const events = await readEventStream(path.join(folderPath, '.run', 'events', 'change.jsonl'));
+  if (events === null) return null;
+  for (const event of events) {
     if (event.type !== 'archived') continue;
     const ms = finiteTimestamp(event.timestamp);
     if (ms !== null) return ms;

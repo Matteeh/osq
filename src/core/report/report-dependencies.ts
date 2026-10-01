@@ -6,7 +6,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { compareNumericPrefix } from '../status/state.js';
-import { asData, parseEventLines } from './report-events.js';
+import { asData } from './report-events.js';
+import { readEventStream } from './stream-reads.js';
 
 /** One package added to one manifest. */
 export interface DependencyPair {
@@ -56,9 +57,9 @@ export function distinctPairs(pairs: readonly DependencyPair[]): DependencyPair[
 
 /** Pairs from every `dependencies_added` event in one numbered task stream. */
 async function streamPairs(eventFilePath: string): Promise<DependencyPair[]> {
-  const content = await fs.readFile(eventFilePath, 'utf8').catch(() => '');
+  const events = (await readEventStream(eventFilePath)) ?? [];
   const pairs: DependencyPair[] = [];
-  for (const event of parseEventLines(content)) {
+  for (const event of events) {
     if (event.type !== 'dependencies_added') continue;
     pairs.push(...addedPairs(asData(event)?.added));
   }

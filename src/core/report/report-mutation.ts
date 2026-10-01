@@ -10,7 +10,8 @@ import path from 'node:path';
 import { hasOptedInCapability, isCapabilityOptedIn } from '../foundation/config-traceability.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { compareNumericPrefix } from '../status/state.js';
-import { asData, eventTimestampMs, parseEventLines } from './report-events.js';
+import { asData, eventTimestampMs } from './report-events.js';
+import { readEventStream } from './stream-reads.js';
 
 /** One mutant that survived, with the function it belongs to. */
 export interface MutationSurvivorEntry {
@@ -146,8 +147,8 @@ async function readMeasuredEvents(folders: readonly string[]): Promise<MeasuredM
       continue;
     }
     for (const eventFile of eventFiles.sort(compareNumericPrefix)) {
-      const content = await fs.readFile(path.join(eventsDir, eventFile), 'utf8').catch(() => '');
-      for (const event of parseEventLines(content)) {
+      const events = (await readEventStream(path.join(eventsDir, eventFile))) ?? [];
+      for (const event of events) {
         if (event.type !== 'mutation_ran') continue;
         const timestamp = eventTimestampMs(event);
         if (timestamp === null) continue;

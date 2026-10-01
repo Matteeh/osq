@@ -1436,3 +1436,12 @@ is the change row of "Steering inbox items".
 #### Scenario: Inbox row for an archived change
 - **WHEN** change 002, titled `Orders`, archived in its worktree with a recorded `sync_conflict` stop
 - **THEN** `osq --json` holds one needs-you item for it, a `change-regressed` item with `steering: { trigger: "conflict", reason: "sync_conflict" }` and command `osq plan 002`, and its text row is `  002: Orders — needs steering: conflict (sync_conflict) — osq plan 002`
+
+### Requirement: Queue report shares the report's reads
+The queue report's archive time SHALL come from the first valid `archived`
+event in the change's `change.jsonl`, read through the report's shared event
+reader, so a report run that already read that stream does not read it again.
+
+#### Scenario: Archived queue item inside a report run
+- **WHEN** `osq report` lists a queue item whose change is archived
+- **THEN** that change's `change.jsonl` is read once in the run, and the item's archive time is the first valid `archived` event's timestamp

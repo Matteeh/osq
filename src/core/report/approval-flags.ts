@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ApprovalFlagId } from '../spec/digest.js';
 import { type ReworkEntry, changeIdOfFolder } from './record-rework.js';
-import { parseEventLines } from './report-events.js';
+import { readEventStream } from './stream-reads.js';
 
 /** The fixed flag ids in the order the digest emits them. */
 const FLAG_IDS: readonly ApprovalFlagId[] = [
@@ -126,9 +126,9 @@ async function changeEventTrouble(folderPath: string): Promise<EventTrouble> {
   for (const entry of entries) {
     if (!entry.endsWith('.jsonl')) continue;
     if (!isTaskStream(entry) && entry !== 'change.jsonl') continue;
-    const content = await fs.readFile(path.join(eventsDir, entry), 'utf8').catch(() => '');
     const taskStream = isTaskStream(entry);
-    for (const event of parseEventLines(content)) {
+    const events = (await readEventStream(path.join(eventsDir, entry))) ?? [];
+    for (const event of events) {
       if (event.type === 'regressed') trouble.regressed = true;
       if (taskStream && event.type === 'dead') trouble.dead = true;
     }

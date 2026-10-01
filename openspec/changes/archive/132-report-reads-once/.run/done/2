@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7aa4c5fb8e4ed24482e8ccd13ce46e9e95b6fa6c0d7d0003afbe592c7b40d0e8"
+build_stamp: "4e32785"
+project_commit: "018c693"
+exit_code: 0
+scope_files: {"src/core/report/approval-flags.ts":"sha256:1c41b406c968cc987a5675f4d6e974a037b6eb84df424584e8198e8ee81c7146","src/core/report/planning-economics.ts":"sha256:da0119ec87e4417443002bfd82c0110b4821ba5fd2cfc05232ffb398ecd5ef0e","src/core/report/planning-records.ts":"sha256:c3499ebac72d5bd9ef4c74a9cc10fb05d37c9721ce565d63995c96c9f980153c","src/core/report/report-dependencies.ts":"sha256:d0ea4cd3c68d363a1abaad42492f565094410638ae6690218b1c2851bc40b22e","src/core/report/report-events.ts":"sha256:754ae7e8c493cbdaaf38e3369bffabea20bfc6d0b881d4807d16f182b1f817e1","src/core/report/report-inbox-wait.ts":"sha256:6e9a8e709c54d929a5f9284186b416f28c0d693bc520682b43992f2d0faafc4c","src/core/report/report-mutation.ts":"sha256:f0a07fd300211b85e4dc993dd7b3f5aad4cdd48b8aa7303fda735a66b3562fcc","src/core/report/report-pre-spawn.ts":"sha256:e2d1f00368f1008306534d108ef0c69872c681c03783f2795612a7349ea8306d","src/core/report/report-retries.ts":"sha256:74f8c6bae037049ddee97f805e30b69c4b3a7e180317bb6d0945f423ff4c17e3","src/core/report/report-scope.ts":"sha256:390fe578d98d7acaa819c5bcf6c37ed0dce284f60ee8f52ddb7c82f6e13e3e20","src/core/report/report-traceability.ts":"sha256:e7237fb1a840b8512a23132322ac2ebbccfdd32ff58f0a973260123c81bff1f0","src/core/report/report.ts":"sha256:fb7a9bc08cbba2f887dc663615278f0ded1f95ae0f402ecca2dd3a0831333700","src/core/status/queue-report-detail.ts":"sha256:3d9c80e8edf0f3ab44cab66f3d8b3948010a9b11b2a122b6f533b727f3e6a564","tests/function-budget.test.ts":"sha256:29c9f31c78cb385e4f124c48aab987e2b10b7a7d38687d007e4c35dc9e0b9e04","tests/report-reads-once.test.ts":"sha256:444843261523be2201ae0dfe91bc63d421daf70a47811328c89827a23386ff3a"}
+---
+2026-10-01T15:48:41.306Z

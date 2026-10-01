@@ -42,7 +42,6 @@ import {
   eventTimestampMs,
   observeAttempts,
   observeTaskStream,
-  parseEventLines,
   parseTokenEvent,
 } from './report-events.js';
 import {
@@ -70,6 +69,7 @@ import {
   formatTraceability,
 } from './report-traceability.js';
 import { taskScopeSize } from './scope-size.js';
+import { readEventStream, withStreamReads } from './stream-reads.js';
 
 export interface SpecMetrics {
   readonly total: number;
@@ -598,11 +598,11 @@ async function projectMeasuredTasks(folders: readonly string[]): Promise<Measure
 
     for (const taskFile of taskFiles) {
       const taskNumber = taskFile.replace(/\.md$/, '');
-      const eventContent = await fs
-        .readFile(path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
-        .catch(() => null);
-      if (eventContent === null) continue;
-      const derived = deriveMeasuredTask(change, taskNumber, parseEventLines(eventContent));
+      const events = await readEventStream(
+        path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`),
+      );
+      if (events === null) continue;
+      const derived = deriveMeasuredTask(change, taskNumber, events);
       if (!derived) continue;
       const metadata = await readTaskMetadata(folderPath, taskNumber);
       measured.push({
@@ -763,8 +763,9 @@ async function readFirstTaskStartMs(folderPath: string): Promise<number | null> 
 
   let earliest: number | null = null;
   for (const entry of entries) {
-    const content = await fs.readFile(path.join(eventsDir, entry), 'utf8').catch(() => '');
-    for (const event of parseEventLines(content)) {
+    const events = await readEventStream(path.join(eventsDir, entry));
+    if (events === null) continue;
+    for (const event of events) {
       if (event.type !== 'started' || typeof event.timestamp !== 'string') continue;
       const ms = Date.parse(event.timestamp);
       if (!Number.isFinite(ms)) continue;
@@ -776,11 +777,9 @@ async function readFirstTaskStartMs(folderPath: string): Promise<number | null> 
 
 /** Authoritative archive time from a `change.jsonl` `archived` event, if any. */
 async function readArchivedAtMs(folderPath: string): Promise<number | null> {
-  const content = await fs
-    .readFile(path.join(folderPath, '.run', 'events', 'change.jsonl'), 'utf8')
-    .catch(() => null);
-  if (content === null) return null;
-  for (const event of parseEventLines(content)) {
+  const events = await readEventStream(path.join(folderPath, '.run', 'events', 'change.jsonl'));
+  if (events === null) return null;
+  for (const event of events) {
     if (event.type !== 'archived' || typeof event.timestamp !== 'string') continue;
     const ms = Date.parse(event.timestamp);
     if (Number.isFinite(ms)) return ms;
@@ -798,11 +797,9 @@ function phaseSeconds(startMs: number | null, endMs: number | null): number | nu
 
 /** True when a change-level stream contains at least one valid `rejected` event. */
 async function hasRejectedEvent(folderPath: string): Promise<boolean> {
-  const content = await fs
-    .readFile(path.join(folderPath, '.run', 'events', 'change.jsonl'), 'utf8')
-    .catch(() => null);
-  if (content === null) return false;
-  return parseEventLines(content).some((event) => event.type === 'rejected');
+  const events = await readEventStream(path.join(folderPath, '.run', 'events', 'change.jsonl'));
+  if (events === null) return false;
+  return events.some((event) => event.type === 'rejected');
 }
 
 /** Non-empty `planner` value from `brief.md` frontmatter, else `unknown`. */
@@ -860,10 +857,18 @@ function aggregatePhase(
   };
 }
 
-export async function getMetricsReport(
+export function getMetricsReport(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
   options: InboxWaitOptions = {},
+): Promise<MetricsReport> {
+  return withStreamReads(() => buildMetricsReport(projectRoot, config, options));
+}
+
+async function buildMetricsReport(
+  projectRoot: string,
+  config: OsqConfig,
+  options: InboxWaitOptions,
 ): Promise<MetricsReport> {
   const [tree] = await changeTrees(projectRoot, config);
   let specsDir = tree.changesDir;
@@ -1093,11 +1098,7 @@ export async function getMetricsReport(
       changeCoverage.withoutEvents.push(task.taskNumber);
     }
 
-    const content = hasEventFile
-      ? await fs.readFile(task.eventFilePath, 'utf8').catch(() => '')
-      : '';
-
-    const events = parseEventLines(content);
+    const events = (hasEventFile ? await readEventStream(task.eventFilePath) : null) ?? [];
     const observation = observeTaskStream(events);
     const preSpawnEvents = observePreSpawnEvents(events);
     preSpawnMissingPathRuns += preSpawnEvents.missingPathRuns;
@@ -1173,15 +1174,15 @@ export async function getMetricsReport(
     for (const eventFile of eventFiles) {
       const isChangeStream = eventFile === 'change.jsonl';
       const eventFilePath = path.join(eventsDir, eventFile);
-      const fileContent = await fs.readFile(eventFilePath, 'utf8').catch(() => '');
-      if (!fileContent) continue;
+      const events = await readEventStream(eventFilePath);
+      if (events === null) continue;
 
       let startedTime: number | null = null;
       let exitedTime: number | null = null;
       let minTime: number | null = null;
       let maxTime: number | null = null;
 
-      for (const event of parseEventLines(fileContent)) {
+      for (const event of events) {
         const data = asData(event);
         const ts = event.timestamp ? new Date(String(event.timestamp)).getTime() : Number.NaN;
         if (!Number.isNaN(ts)) {
@@ -1598,12 +1599,12 @@ async function collectDeadOutcomes(folders: readonly string[]): Promise<Reposito
 
     for (const taskFile of taskFiles) {
       const taskNumber = taskFile.replace(/\.md$/, '');
-      const eventContent = await fs
-        .readFile(path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
-        .catch(() => null);
-      if (eventContent === null) continue;
+      const events = await readEventStream(
+        path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`),
+      );
+      if (events === null) continue;
       const metadata = await readTaskMetadata(folderPath, taskNumber);
-      for (const event of parseEventLines(eventContent)) {
+      for (const event of events) {
         if (event.type !== 'dead') continue;
         const rawReason = asData(event)?.reason;
         const reason =

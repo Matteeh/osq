@@ -1,8 +1,8 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { getChangeRunDir } from '../status/layout.js';
 import { parsePlanningSlice } from './planning-slice-record.js';
 import type { PlanningSlice } from './planning-slice.js';
+import { readParsedFile } from './stream-reads.js';
 
 // Append-only planning telemetry at `<change>/.run/plan.jsonl` (outside the hash).
 const PLAN_LOG_NAME = 'plan.jsonl';
@@ -172,11 +172,8 @@ export function parsePlanRecords(content: string): PlanRecord[] {
 }
 /** Reads `<change>/.run/plan.jsonl`; a missing log yields an empty array. */
 export async function readPlanRecords(changeFolder: string): Promise<PlanRecord[]> {
-  try {
-    return parsePlanRecords(await fs.readFile(getPlanLogPath(changeFolder), 'utf8'));
-  } catch {
-    return [];
-  }
+  const records = await readParsedFile(getPlanLogPath(changeFolder), parsePlanRecords);
+  return records ?? [];
 }
 /** Correlates records by session id, returning sessions in start order. */
 export function correlatePlanSessions(records: readonly PlanRecord[]): PlanningSession[] {

@@ -19,7 +19,7 @@ const MAX_LINES = 80;
  * that work.
  */
 const GRANDFATHERED = new Set([
-  'core/report/report.ts#getMetricsReport',
+  'core/report/report.ts#buildMetricsReport',
   'core/status/show.ts#buildSpecDetails',
   'core/report/report.ts#formatMetricsReport',
   'cli/index.ts#createProgram',

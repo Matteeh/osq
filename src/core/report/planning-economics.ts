@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { compareNumericPrefix } from '../status/state.js';
 import { readPlanningSessions } from './planning-records.js';
-import { asData, parseEventLines } from './report-events.js';
+import { asData } from './report-events.js';
+import { readEventStream } from './stream-reads.js';
 
 /** Per-kind planning token totals of one change; null means nothing reported. */
 export interface PlanningChangeTokens {
@@ -93,11 +94,10 @@ async function readMeasuresTotals(folderPath: string): Promise<MeasuresTotals> {
   let changedLines: number | null = null;
 
   for (const entry of entries) {
-    const content = await fs.readFile(path.join(eventsDir, entry), 'utf8').catch(() => null);
-    if (content === null) continue;
+    const events = (await readEventStream(path.join(eventsDir, entry))) ?? [];
     let firstStart: Record<string, unknown> | null = null;
     let lastEndChanged: number | null = null;
-    for (const event of parseEventLines(content)) {
+    for (const event of events) {
       if (event.type !== 'measures') continue;
       const data = asData(event);
       if (!data) continue;
