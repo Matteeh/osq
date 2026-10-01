@@ -4,174 +4,175 @@ The remaining work on osq itself, as an osq brief queue.
 
 Each item's body becomes that change's `brief.md` word for word. Drive the run with `osq plan --next`, then plan the change in a Claude Code session, review it, and `osq approve`.
 
-The previous queue drove changes 103 to 131 and finished on 2026-10-01. A copy is in Notion under OSQ > Archive, "osq queue, 2026-09-27 to 2026-10-01 (completed)", and in git history.
+The read-cost queue drove changes 132 to 135 and finished on 2026-10-02. A summary is in Notion under OSQ > Archive, "osq queue, 2026-10-01 to 2026-10-02 (completed)", and the full file is in git history (commit 50b1cd5). The queue before it drove 103 to 131; see "osq queue, 2026-09-27 to 2026-10-01 (completed)" in the same place.
 
-This queue makes osq's own data cheap to read, for people and for agents. It is three items, queued on 2026-10-01 from the Notion page "SQLite read index: fast queries over osq's files". `report-reads-once` comes first, because that page says to profile `osq report` before building an index, and profiling found most reads are repeats. `sqlite-read-index` builds the index. `agents-query-osq` gives agents rows instead of event files, which is what is left of the planning-cost work after 119 to 121.
-
-`report-small-reads-once`, queued on 2026-10-01 while planning 133, extends 132's read-once to the small files the report still reads several times. Measuring 133 showed they, not event streams, are most of what is left.
+This queue is five items, picked on 2026-10-02 from the Notion roadmap and checked against the code that day. They make the core more reliable: a provider outage stops counting as a task failure, the last M1 item makes the default harness safe, two gates stop leaking or tripping planners, and every command reports failure one way, which M2's browser actions need. None depends on another.
 
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
-## [report-reads-once] osq report reads each event file once
+## [provider-outage-deaths] A provider outage is not a task failure
 
 Depends on: nothing
 
 ### Goal
 
-One `osq report` run reads each `.jsonl` file under `.run/events/` and each `plan.jsonl` at most once, and prints exactly what it prints today.
+When a task dies because the model provider never answered, osq records that as its own dead reason, does not count it toward the stuck rule, and does not wait out the whole task timeout to find out.
 
 ### Context
 
-As of 2026-10-01, measured on osq's own repository:
+As of 2026-10-02:
 
-- `osq report` takes about 5.8 s. It took 4.2 s on 2026-09-29; it grows with every archived change. `osq status` takes about 0.3 s.
-- The archive holds 644 `.jsonl` files and 109 MB of event data.
-- One report run opens 730 distinct `.jsonl` files 3,593 times, up to 7 times each. By caller: `src/core/report/report.ts` 2,064, `planning-records.ts` 461, `report-dependencies.ts` 454, `approval-flags.ts` 303, `planning-economics.ts` 283, `src/core/status/queue-report-detail.ts` 27.
-- A CPU profile puts about 0.9 s in `parseEventLines` in `src/core/report/report-events.ts` and about 0.5 s in string decoding, both proportional to the number of reads.
-- `report.ts` reads task and change streams in several functions, each with its own `fs.readFile`: `readTaskMetadata`, `readFirstTaskStartMs`, `readArchivedAtMs`, the change-stream scan in `getMetricsReport`, and the rejection check. `report.ts` is 2,027 lines and on the line-budget allow list; `getMetricsReport` and `formatMetricsReport` are on the function-budget grandfather list.
-
-### Requirements
-
-- A report run reads each event stream and each `plan.jsonl` at most once, and parses it at most once.
-- `osq report`, `osq report --json`, and every other command that uses these readers print byte-identical output before and after.
-- Whatever holds the parsed streams lives for one command run and is never written to disk. Nothing about it survives the command.
-- A test proves the read count: it runs the report over a fixture with several archived changes and asserts no event file is opened twice.
-
-### Non-goals
-
-- A persistent index or cache. That is `sqlite-read-index`.
-- Changing what events carry, including the full verify log in `verify_ran`.
-- Making `status`, the inbox, or the dashboard faster; they are not slow.
-
-### Notes for planning
-
-- Measure the fallout first: report output is pinned by tests, and `report.ts`'s grandfathered functions must not grow.
-- Report the before-and-after time for `osq report` on this repository in the proposal's Background, so `sqlite-read-index` starts from the real number.
-
-## [sqlite-read-index] osq report reads archived changes from a SQLite index that is always safe to delete
-
-Depends on: report-reads-once
-
-### Goal
-
-`osq report` stays fast as the archive grows, because what it needs from archived changes is read once into a local SQLite index and reused. The files stay the only source of truth: deleting the index changes nothing but the next run's speed.
-
-### Context
-
-As of 2026-10-01:
-
-- Node 24.21 ships `node:sqlite` (`DatabaseSync`, SQLite 3.53.4). It loads without an experimental warning, and `@types/node` 24 types it. `package.json` requires Node 24 or later. So the index needs no new runtime dependency and no dependency ADR. Check its stability level in the Node 24 docs before relying on it, and fall back to reading the files when the module is missing.
-- AGENTS.md: "Any index or cache is derived from the files and may be deleted at any time."
-- An archived change never changes once landed, except that `osq land` can append to its `change.jsonl`. Active changes live in their own worktrees, each with its own `.run/`.
-- `osq land` commits each change's `.run/events/*.jsonl` to the default branch, so the index must stay out of git.
-- `report-reads-once` leaves one place where report reads and parses each stream. Its proposal records the report time after that change; start from that number.
-- The Notion page "SQLite read index: fast queries over osq's files" has the full reasoning: why the files stay truth (git, worktrees, fixed writers, restart safety), the incremental rebuild by size and mtime, and the AI access idea that `agents-query-osq` takes up.
+- 135 task 1 died twice with `timeout` during a DeepSeek outage. Each time the provider answered after 900 s with "We were unable to start processing your request within the 900-second timeout limit. Please try again later.", pi retried, and osq killed the task at `timeouts.taskTimeoutSeconds` (1800). The first attempt spent 0 tokens and changed no file. The second got five tool calls in after DeepSeek recovered, then hit the timeout.
+- Both deaths had the same fingerprint, so `src/watcher/auto-retry.ts` marked the task stuck and the inbox asked for `osq plan 135`. The plan was fine; `osq retry 135 1` finished it.
+- The pi adapter already writes `harness_retry` events, `phase: start` with the provider `error` and `phase: end` with `success`, from pi's `auto_retry_start` and `auto_retry_end` (`src/harness/pi/pi-stream.ts`). A `tokens` event with all zeros comes before each failed request. Nothing in the watcher reads either.
+- Only the pi adapter emits `harness_retry`. The Notion page "Provider outages are not task failures" under ROADMAP has the timeline.
 
 ### Requirements
 
-- osq keeps a SQLite index of what `osq report` reads from archived changes. It lives outside git: either a git-ignored path in the project or under the user's `~/.osq/`, next to the worktrees. Decide which in planning. If it lives in the project, `osq init` adds it to the consumer's `.gitignore`.
-- The index is rebuilt, per file, whenever that file's size or mtime differs from what the index recorded. A file that no longer exists drops out of the index.
-- Deleting the index, or a corrupt or unreadable index, is never an error. The next command rebuilds what it needs and prints the same result.
-- `osq report` reads archived changes through the index and active changes from the files. Its output is byte-identical to reading everything from the files.
-- An ADR records the decision: SQLite is a derived read index, files remain the source of truth, nothing writes state only to the index, and only osq's own code opens it.
-- Two osq commands running at once never corrupt the index. A command that can't write it reads the files instead and prints the same result.
+- A task that dies while its harness is in a provider retry (a `harness_retry` start with no matching end), or that never got a model response, dies with a new reason instead of `timeout`, and its dead marker quotes the provider's error.
+- That reason never marks a task stuck, and an automatic retry of it waits before starting again instead of retrying straight into the outage. The wait comes from config.
+- osq stops a task early when its harness has been in a provider retry longer than a configured limit, instead of waiting for `timeouts.taskTimeoutSeconds`.
+- `osq report` and `osq query` show these deaths as their own reason, so they don't count against a plan.
+- Every limit and wait comes from config, with defaults in `DEFAULT_CONFIG`.
 
 ### Non-goals
 
-- Moving any state, marker or event out of files.
-- Indexing anything `osq report` does not read.
-- `status`, the inbox and the dashboard reading through the index. A later change can, once this one shows the shape holds.
-- A query command. That is `agents-query-osq`.
-
-### Verify
-
-`pnpm verify`, plus tests:
-
-- report output from the index equals report output from the files, over a fixture archive
-- deleting the index, then reporting, gives the same output and rebuilds it
-- a corrupt index file is replaced, not reported as an error
-- appending a line to an archived `change.jsonl` updates that change in the index on the next run
-- a removed archive drops out of the index
+- Teaching the other adapters to report provider errors. Record in the proposal which of claude, codex, opencode and agy could, and leave the adapter interface alone unless one really differs.
+- Pausing the task timeout during a retry.
+- Switching to another provider or model automatically.
 
 ### Notes for planning
 
-- Name the capability that owns the index in its Code ownership; a new capability needs `creates` and a reason it isn't metrics-and-reporting.
-- Record the report time on this repository before and after in the proposal's Background.
+- The new dead reason, its marker text and any config keys are Surface.
+- Measure test fallout in a scratch worktree first: the dead-reason list is pinned in tests, README and the auto-retry eligibility set.
 
-## [agents-query-osq] Agents read osq's history as rows, through osq
-
-Depends on: sqlite-read-index
-
-### Goal
-
-A planner or executor that needs a fact from osq's history, such as which tasks died of `scope_violation` in a capability, or what the last five changes to a requirement did, gets it from one osq command as a few rows instead of opening event files.
-
-### Context
-
-As of 2026-10-01:
-
-- A planner today gets history from the plan prompt's "This repository's record" and "Recent executor disclosures", and otherwise opens files under `openspec/changes/archive/`. The archive holds 109 MB of event data.
-- `sqlite-read-index` builds the index this command reads.
-- The Notion page "SQLite read index" proposes access through osq rather than the raw database file: no `sqlite3` program needed, the layout stays free to change, and it fits ADR 006 (osq does the data work, AI the judgement).
-- `PLANNER.md` and the executor protocol in `AGENTS.md` are managed blocks that `osq init` writes into consumer projects, and tests pin their text.
-
-### Requirements
-
-- `osq query "<select>"` runs one read-only SQL `SELECT` against a fixed set of documented views and prints the rows as a table, or as JSON with `--json`. Any statement that would write, and any table that isn't one of those views, is refused with a message that lists the views.
-- The views cover changes, tasks and attempts with their outcomes and dead reasons, requirements touched per change, and executor disclosures. Their column names are documented in a living spec, and the index's base tables can change without changing them.
-- The query builds or refreshes the index first, so its answer always matches the files.
-- `PLANNER.md` and the executor protocol name `osq query` as the way to look up history, and say not to open event files for it.
-- Output never holds verify logs, tool summaries, or absolute paths.
-
-### Non-goals
-
-- Network access to the index, or any server endpoint. The dashboard and the server (M3) can use the views later.
-- Writing through `osq query`.
-- Replacing the plan prompt's record sections.
-
-### Verify
-
-`pnpm verify`, plus tests:
-
-- a select over each view returns the expected rows for a fixture archive
-- an `INSERT`, `UPDATE`, `DELETE`, `ATTACH` or `PRAGMA`, and a select from a base table, are refused and exit non-zero
-- `--json` and table output hold the same rows
-- the managed blocks name `osq query`
-
-### Notes for planning
-
-- Check `node:sqlite`'s read-only open mode and authorizer support before relying on either for the refusal; a statement allowlist checked by osq is the fallback.
-
-## [report-small-reads-once] osq report reads each task file, brief, manifest and proposal once
+## [safer-harness-defaults] A new project starts with a contained harness
 
 Depends on: nothing
 
 ### Goal
 
-One `osq report` run reads each task file, `brief.md`, `.run/manifest.json` and `proposal.md` at most once, and prints exactly what it prints today.
+`osq init` and `DEFAULT_CONFIG` no longer give a new project an agent with its permissions switched off, and `osq doctor` says how each harness confines its agent. This is the last open item of milestone M1.
 
 ### Context
 
-As of 2026-10-01, measured while planning 133 on this repository, with 132 built and a prototype event index in place:
+As of 2026-10-02:
 
-- A warm `osq report` takes about 2.15 s and makes about 14,000 file-system calls. About 0.67 s is idle time waiting on small reads made one after another.
-- Per run: 827 reads of task files (about two per file), 532 of `brief.md` (about four per change), 456 of `manifest.json` (about three and a half), 269 of `proposal.md` (two), and 461 of done markers. `change-locations` makes about 660 `stat` calls on archive folders, and `manifest-approval` 192 on `.run/approved`.
-- 132 added a read scope, `withStreamReads` in `src/core/report/stream-reads.ts`, that `getMetricsReport` opens for one call. `readParsedFile` shares one read and one parse per path and parser inside it. Event streams and `plan.jsonl` already go through it.
-- Readers to look at first: `readTaskMetadata` and `projectMeasuredTasks` in `report.ts`, `readPlannerModel`, `readBriefToApprovalSeconds` in `brief-to-approval.ts`, the manifest reads in `approval-flags.ts` and `planning-slice-lookup.ts`, and `parseSpecMdFromFolder` in `src/core/spec/parser.ts`.
+- `DEFAULT_CONFIG` in `src/core/foundation/config.ts` sets `agy.dangerouslySkipPermissions: true`, and `osq init` scaffolds `harness: process.env.OSQ_HARNESS || 'agy'` (`src/core/foundation/init.ts`). A fresh project therefore runs agents with every permission prompt bypassed.
+- Change 122 wrote ADR 007 (role environments) and added Claude and opencode denials for git, network tools and sudo. Its brief split off this follow-up: the `osq init` harness default, agy's permission bypass, and the `osq doctor` containment report.
+- `osq doctor` has a `harness-containment` check only for Claude Code (`src/core/foundation/config-claude.ts`).
+- Still open from the to-do page: does agy work headless without the bypass flag? Check before choosing its default.
 
 ### Requirements
 
-- Inside one report run, each of those files is read at most once and parsed at most once per parser. Outside a run, every reader goes to disk as today.
-- `osq report` and `osq report --json` print byte-identical output.
-- A test counts reads over a fixture with several archived changes and fails when any of those files is read twice.
+- A project that never sets `agy.dangerouslySkipPermissions` does not run agy with the bypass. If agy cannot run headless without it, `osq init` stops scaffolding agy as the default harness instead, and the proposal says which harness it picks and why.
+- `osq doctor` reports a `harness-containment` line for every harness: what confines its agent, and a warning when the configured settings bypass it.
+- A project that sets the bypass explicitly keeps working, and `osq doctor` warns about it.
+- README's harness sections and the Upgrading notes say what changed.
 
 ### Non-goals
 
-- Indexing these files in SQLite.
-- Fewer `stat` or `readdir` calls, unless a reader's read moves into the scope with them.
-- `status`, the inbox, the dashboard or `osq digest`.
+- Containers or any confinement stage after ADR 007's stage 1.
+- Changing role environments.
 
 ### Notes for planning
 
-- Measure first in a scratch worktree, as 132 did: count reads per file kind before and after, and record the report time in Background.
-- Several readers live outside `src/core/report/` (`spec/parser.ts`, `run/manifest-approval.ts`, `status/change-locations.ts`). Route only those the report reaches, and check the shared parsed results are never changed by a caller.
+- ADR 007 governs this. Say whether this change stays inside it or needs a revision.
+- Changing a default is a consumer-visible change; list it in Surface.
+
+## [removed-requirement-pins] Removing a requirement never breaks the living-spec pin test
+
+Depends on: nothing
+
+### Goal
+
+A change whose delta removes or renames a requirement lands without a task that edits `tests/living-specs-delta-equivalence.test.ts`, and a requirement lost by accident still fails that test.
+
+### Context
+
+As of 2026-10-02:
+
+- `PRESERVED_REQUIREMENTS` in `tests/living-specs-delta-equivalence.test.ts` pins requirement names per capability, from the 017 and 020 to 027 re-seed that change 028 did on 2026-09-19. The test fails when a pinned name is missing from a living spec.
+- So every change that removes or renames a pinned requirement needs a `tests.modify` task for that file. Change 112 removed one without it, and its land failed `pnpm verify` on 2026-09-29. Planners now have to remember it every time.
+- The same file replays every archived delta and checks the living specs equal the result. That replay is what proves the specs are the sum of approved changes; the pin list only guards the one-time re-seed.
+
+### Requirements
+
+- The pin check skips a pinned name when an archived change's delta removes or renames that requirement in that capability. It still fails, naming the capability and requirement, when a pinned name is missing and no archived delta removed or renamed it.
+- Nothing else in the test changes, and the replay check is untouched.
+
+### Non-goals
+
+- Dropping the pin list.
+- Any change to delta application or archive.
+
+### Notes for planning
+
+- Read the removed and renamed names from the archived deltas with the delta parser osq already has; don't write a second one.
+- Check the planner guidance that tells planners to add a `tests.modify` task for removed requirements, and remove it if this makes it unnecessary.
+
+## [line-budget-full-paths] The line budget exempts files by full path
+
+Depends on: nothing
+
+### Goal
+
+`tests/line-budget.test.ts` exempts only the exact files on its allow list, so a new file over 250 lines fails however it is named.
+
+### Context
+
+As of 2026-10-02:
+
+- The test skips any file whose basename is on `ALLOW_LIST`: `report.ts`, `show.ts`, `opencode.ts`, `agy.ts`, `linter.ts`, `loop.ts`, `migrate.ts`, `delta.ts`, `parser.ts`, `types.ts`.
+- So `src/cli/report.ts` passes only because it shares a name with `src/core/report/report.ts`, and any future `types.ts` or `parser.ts` anywhere is exempt. Under ADR 006 a gate either blocks or goes.
+- From "Refactoring candidates" on the Notion roadmap, item 4.
+
+### Requirements
+
+- The allow list holds paths relative to `src/`, and the test matches them exactly.
+- Every file it exempts today that is over 250 lines stays exempt by its full path. A listed path that no longer exists, or is now under 250 lines, fails the test, so the list only shrinks.
+- A file over 250 lines that isn't listed fails, naming the file and its line count.
+
+### Non-goals
+
+- Splitting any file.
+- The function budget, which already keys by path and function name.
+
+### Notes for planning
+
+- Measure which basename matches are over the budget today; any that pass only by name either get split or get listed by full path, and the proposal says which.
+
+## [commands-report-failure] Every command reports failure the same way
+
+Depends on: nothing
+
+### Goal
+
+Every osq command reports failure by throwing a `CommandError`, takes its output writers as arguments, and the inbox card session runs actions in its own process, showing the error's message instead of only an exit code.
+
+### Context
+
+As of 2026-10-02:
+
+- Change 111 moved the commands that called `process.exit` to `CommandError`, which `runCli` prints once. A second group never called `process.exit` and still sets `process.exitCode` itself: `land`, `message`, `sync` and `graph` (through an injectable `exit` option), `lint`, `doctor`, `migrate`, the `plan` and `serve` wrappers in `src/cli/index.ts`, `inbox-dispatch.ts`, and `plan-queue.ts`.
+- The inbox card session runs each action as a child process (`createChildLauncher` in `src/cli/inbox-terminal.ts`), paying a Node start and a config load each time, and sees only the exit code.
+- M2 (tap in the browser) needs commands it can call in-process and carry on after.
+- The Notion page "Follow-up to 111: every command reports failure the same way, and the inbox runs actions in-process" has the full analysis.
+
+### Requirements
+
+- No file in `src/cli/` other than `run.ts` sets `process.exitCode`, and a test enforces it next to 111's `process.exit` guard.
+- Each command's stdout, stderr and exit code stay byte-identical.
+- Commands take config, working directory, and stdout and stderr writers as arguments. The injectable `exit` option goes.
+- The inbox card session calls the command function in-process, prints the `CommandError` message and its next step on failure, and keeps the terminal usable after a failed action.
+
+### Non-goals
+
+- `process.exit` outside `src/cli/`: the watcher's signal and preflight exits, and the harness adapters.
+- Web write actions. This only prepares for them.
+
+### Notes for planning
+
+- Measure test fallout in a scratch worktree first. `land`, `message`, `sync` and `graph` tests use the injected `exit`, and any test that calls `runCli` must restore `process.exitCode` (`tests/cli-capture.ts`).
+- Through `runCli`, a successful `osq approve` runs the planning readers, so tests point `CODEX_HOME`, `OSQ_CLAUDE_PROJECTS_DIR`, `CLAUDE_CONFIG_DIR` and `OPENCODE_PATH` at a temporary folder.
+- This may be two changes, commands first and the in-process inbox second; split it if the scope is over the limits.
