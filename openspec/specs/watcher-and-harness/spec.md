@@ -212,7 +212,7 @@ stderr, and exit 1, in continuous and in `once` mode.
 
 #### Scenario: Source edited while a task runs
 - **WHEN** a watcher starts with a fresh build, and the adapter's spawn for task 1 of a one-task change writes a file under `src/` newer than `dist/`
-- **THEN** `.run/done/1.md` exists, the change is not archived, stderr holds the stale line, the exit code is 1, and no `watcher error` is logged
+- **THEN** `.run/done/1` exists, the change is not archived, stderr holds the stale line, the exit code is 1, and no `watcher error` is logged
 
 #### Scenario: Stale before the first spawn
 - **WHEN** `runWatcherCycle` runs with a stale check that returns the stale line, for a change whose task 1 is pending
