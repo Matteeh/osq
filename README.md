@@ -24,7 +24,7 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 
 Unreleased:
 
-- `osq init` now scaffolds Codex instead of agy.
+- `osq init` now scaffolds pi instead of agy.
 - agy no longer bypasses its permission prompts by default, so a headless agy task cannot answer them and `osq watch` refuses to start.
 - An agy project must set `agy: { dangerouslySkipPermissions: true }` in `osq.config.ts` or switch harness.
 
@@ -491,7 +491,7 @@ Offline tests use a deterministic fake Codex executable and require no authentic
 
 ### Pi
 
-Select Pi as the executor in `osq.config.ts`:
+`osq init` scaffolds pi as the default harness. Select Pi as the executor in `osq.config.ts`:
 
 ```ts
 import { defineConfig } from '@matteeh/osq';
@@ -518,7 +518,7 @@ Install Pi with `npm install -g @earendil-works/pi-coding-agent`. This release i
 
 #### Pi permissions
 
-Each task is a fresh noninteractive process in the project root with stdin closed. osq passes `--mode json --no-session --no-approve --offline --no-extensions --no-skills --no-prompt-templates`, then `--provider`, `--model`, and `--thinking` for the settings you configured, then `--` and the executor prompt as one literal argument. Extensions, skills, and prompt templates are off, so no consumer-supplied Pi customization runs. Pi applies no filesystem sandbox and asks no permission prompts, and its network access stays open.
+Each task is a fresh noninteractive process in the project root with stdin closed. osq passes `--mode json --no-session --no-approve --offline --no-extensions --no-skills --no-prompt-templates`, then `--provider`, `--model`, and `--thinking` for the settings you configured, then `--` and the executor prompt as one literal argument. Extensions, skills, and prompt templates are off, so no consumer-supplied Pi customization runs. Pi applies no filesystem sandbox and asks no permission prompts, and its network access stays open. `osq doctor`'s `harness-containment` line states plainly that nothing confines the agent.
 
 As with every harness, scope is a protocol, not confinement: the prompt and the watcher's checks restrict the agent to its declared files, but they do not confine the filesystem or network beyond what Pi itself enforces. osq does not provide OS or container isolation.
 

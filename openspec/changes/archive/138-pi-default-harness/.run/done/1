@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1c5b28cbff9933bd6c4d026c927c9f4e2300f3fb78d0c9096d8e3f70abd3b376"
+build_stamp: "5f649ef"
+project_commit: "a78ab05"
+exit_code: 0
+scope_files: {".env.example":"sha256:4bc4ee6d8afed340957a667cbf6bafada7732b5cfe4511fcdca1f6b336844b58","src/core/foundation/init.ts":"sha256:afd0cb2e69aa7d0e13ba28e4091f398fb39d92727268d05a10a41f315439d23e","templates/.env.example":"sha256:4bc4ee6d8afed340957a667cbf6bafada7732b5cfe4511fcdca1f6b336844b58","tests/codex-guidance.test.ts":"sha256:bb9d7476a0982dec7c5d6b6ad0bf9300a4237a5b1c43c51d5e9f396126985d6d","tests/config-load-errors.test.ts":"sha256:5b0ef1186f0102adf13cec098a8fc454d1e4a6c8128cd4f2d9097066294b3e41","tests/harness-defaults-docs.test.ts":"sha256:bd22ef2ea33a862a5e1705756ec42f9cf204facf3736d2ea1f751079197dbd67","tests/pi-default-scaffold.test.ts":"sha256:3e9db87d06f517879293e3a13538a727a671b95cb6840b54473427c2cca7c052"}
+---
+2026-10-02T17:37:54.326Z

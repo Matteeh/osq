@@ -28,12 +28,12 @@ export type { ManagedBlockProblem } from './init-managed.js';
 const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from '@matteeh/osq';
 
 export default defineConfig({
-  harness: process.env.OSQ_HARNESS || 'codex',
+  harness: process.env.OSQ_HARNESS || 'pi',
   maxConcurrency: 1,
 });
 `;
 
-const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=codex
+const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=pi
 # GEMINI_API_KEY=
 # ANTHROPIC_API_KEY=
 

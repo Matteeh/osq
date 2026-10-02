@@ -70,7 +70,7 @@ describe('config load errors', () => {
     await scaffoldProject(tmpDir);
     const file = path.join(tmpDir, 'osq.config.ts');
     const scaffolded = await fs.readFile(file, 'utf8');
-    await fs.writeFile(file, scaffolded.replace("'agy'", "'codex'"), 'utf8');
+    await fs.writeFile(file, scaffolded.replace("'pi'", "'codex'"), 'utf8');
 
     const config = await withoutHarnessEnv(() => loadConfig(tmpDir));
 

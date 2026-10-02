@@ -4,7 +4,8 @@ All notable changes to `osq` are documented in this file.
 
 ## [Unreleased]
 
-- `osq init` scaffolds the contained Codex harness by default. agy asks before every tool call, so a headless task cannot answer and `osq watch` refuses to start an agy change until `osq.config.ts` sets `agy: { dangerouslySkipPermissions: true }`; `osq doctor` now reports a `harness-containment` line for every harness (137).
+- agy asks before every tool call, so a headless task cannot answer and `osq watch` refuses to start an agy change until `osq.config.ts` sets `agy: { dangerouslySkipPermissions: true }`; `osq doctor` now reports a `harness-containment` line for every harness (137).
+- `osq init` scaffolds pi as the default harness (138).
 - `osq digest [ids...]` prints a deterministic Markdown or JSON digest of archived changes, by id or by `--since`/`--until` range, with `--out` and `--no-cost` (130).
 - A change the default branch stops — a `sync_conflict`, a `requirement_changed`, or a red verify or check after osq merges the default branch (`sync_verify_red`) — now shows once in the inbox with `osq plan <id>`, archived or not, and `osq land` records the stop on an archived change's branch. Approval of the revised plan restarts the branch from the default branch after a conflict, or merges the default branch without running verify otherwise, keeping done tasks (129).
 - A stuck, blocked, or regressed change now shows once in the inbox with `osq plan <id>`. `osq plan` writes the prompt into the change's own folder, and `osq approve` continues the run from the first task that is not done (128).

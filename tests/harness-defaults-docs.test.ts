@@ -31,18 +31,18 @@ describe('safer harness defaults: scaffolded project', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('scaffolds codex as the harness selection', async () => {
+  it('scaffolds pi as the harness selection', async () => {
     await scaffoldProject(tmpDir);
     const config = await fs.readFile(path.join(tmpDir, 'osq.config.ts'), 'utf8');
-    assert.match(config, /harness: process\.env\.OSQ_HARNESS \|\| 'codex'/);
+    assert.match(config, /harness: process\.env\.OSQ_HARNESS \|\| 'pi'/);
   });
 
-  it('starts .env.example with OSQ_HARNESS=codex and keeps Codex guidance plus the agy note', async () => {
+  it('starts .env.example with OSQ_HARNESS=pi and keeps Codex guidance plus the agy note', async () => {
     await scaffoldProject(tmpDir);
     const content = await fs.readFile(path.join(tmpDir, '.env.example'), 'utf8');
     const lines = content.split('\n');
 
-    assert.equal(lines[0], 'OSQ_HARNESS=codex');
+    assert.equal(lines[0], 'OSQ_HARNESS=pi');
     assert.match(content, /# Codex CLI \(optional\)/);
     assert.match(content, /CODEX_PATH/);
     assert.match(content, /OSQ_MODEL/);
@@ -98,7 +98,6 @@ describe('safer harness defaults: README', () => {
     const to022 = upgrading.indexOf('To 0.2.2:');
     assert.ok(unreleased >= 0, 'Unreleased: must be present');
     assert.ok(unreleased < to022, 'Unreleased: must come before To 0.2.2:');
-    assert.match(upgrading, /scaffolds Codex/i);
     assert.match(upgrading, /agy no longer bypasses/i);
     assert.match(upgrading, /agy: \{ dangerouslySkipPermissions: true \}/);
     assert.match(upgrading, /switch harness/i);

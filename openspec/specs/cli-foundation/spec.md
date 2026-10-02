@@ -420,21 +420,6 @@ Planner configuration SHALL accept codex with the existing required non-empty pl
 - **WHEN** planning reopens an existing change with a brief or uses the existing print option
 - **THEN** the existing change is reused for a fresh file-seeded session, while print mode emits the ordered opening prompt without launching Codex
 
-### Requirement: Codex consumer guidance
-The README and scaffolded environment example SHALL describe Codex selection, independent planning configuration, optional model/effort, precedence, setup and authentication prerequisites, permissions, diagnostics, fresh sessions, watcher verification, and observed-only metrics. The scaffolded `osq.config.ts` SHALL select `process.env.OSQ_HARNESS || 'codex'`, and the scaffolded environment example SHALL start with `OSQ_HARNESS=codex`. Examples SHALL contain no credentials or hard-coded recommended model.
-
-#### Scenario: Scaffold preservation
-- **WHEN** a clean project is scaffolded and later scaffolded again after its environment example is edited
-- **THEN** the original generated example includes commented Codex guidance and the repeat run preserves consumer edits
-
-#### Scenario: Honest support boundaries
-- **WHEN** a consumer reads the Codex guidance
-- **THEN** it distinguishes task scope from sandbox permissions, leaves unreported cost unestimated, and describes optional live validation without claiming an untested minimum CLI version
-
-#### Scenario: Codex is the scaffolded default
-- **WHEN** `osq init` runs in an empty directory
-- **THEN** `osq.config.ts` contains `harness: process.env.OSQ_HARNESS || 'codex'` and the first line of `.env.example` is `OSQ_HARNESS=codex`
-
 ### Requirement: Canonical harness capability catalog
 The configuration subsystem SHALL maintain one immutable catalog of supported harness names and shared capabilities for executable resolution, execution identity, effort attribution, and planner-agent support. Supported-name validation, available-name diagnostics, and shared harness resolution SHALL derive from this catalog without independent harness-name sets. Adapter factories SHALL be statically exhaustive over the catalog-derived harness name type.
 
@@ -985,10 +970,11 @@ runs `pi auth check --provider <name> --json` and fails unless the status is
 - **THEN** doctor runs no auth check
 
 ### Requirement: Pi consumer guidance
-The README SHALL describe the Pi harness: its settings and their precedence,
-installation, the tested version range, credentials and `pi auth check`, that
-setup writes no Pi files because Pi reads `AGENTS.md`, the flags osq passes,
-that Pi has no sandbox or permission prompts, and that Pi cannot plan.
+The README SHALL describe the Pi harness: that `osq init` scaffolds it as the
+default harness, its settings and their precedence, installation, the tested
+version range, credentials and `pi auth check`, that setup writes no Pi files
+because Pi reads `AGENTS.md`, the flags osq passes, that Pi has no sandbox or
+permission prompts so nothing confines its agent, and that Pi cannot plan.
 
 #### Scenario: Reading the Pi section
 - **WHEN** a consumer reads the README's Pi section
@@ -1613,7 +1599,7 @@ config file SHALL load the defaults as before.
 - **THEN** `loadConfig` rejects with a `ConfigLoadError` naming the file
 
 #### Scenario: Scaffolded config without node_modules
-- **WHEN** a temporary project has only the `osq.config.ts` that `osq init` writes, with its `'agy'` replaced by `'codex'`, `OSQ_HARNESS` unset, and no `node_modules`
+- **WHEN** a temporary project has only the `osq.config.ts` that `osq init` writes, with its `'pi'` replaced by `'codex'`, `OSQ_HARNESS` unset, and no `node_modules`
 - **THEN** `loadConfig` resolves with harness `codex` from that file
 
 #### Scenario: Doctor
@@ -2542,3 +2528,28 @@ be:
 #### Scenario: Containment follows diagnoses
 - **WHEN** doctor runs with harness `pi` and `pi.provider` set
 - **THEN** the checks run `config`, `harness`, `harness-version`, `harness-auth`, `harness-containment`, then `managed-blocks`
+
+### Requirement: Codex guidance
+The README and scaffolded environment example SHALL describe Codex selection, independent planning configuration, optional model/effort, precedence, setup and authentication prerequisites, permissions, diagnostics, fresh sessions, watcher verification, and observed-only metrics. Codex selection in the scaffolded environment example SHALL stay commented. Examples SHALL contain no credentials or hard-coded recommended model.
+
+#### Scenario: Scaffold preservation
+- **WHEN** a clean project is scaffolded and later scaffolded again after its environment example is edited
+- **THEN** the original generated example includes commented Codex guidance and the repeat run preserves consumer edits
+
+#### Scenario: Honest support boundaries
+- **WHEN** a consumer reads the Codex guidance
+- **THEN** it distinguishes task scope from sandbox permissions, leaves unreported cost unestimated, and describes optional live validation without claiming an untested minimum CLI version
+
+### Requirement: Scaffolded harness default
+`osq init` SHALL write `harness: process.env.OSQ_HARNESS || 'pi'` in
+`osq.config.ts`, and the scaffolded `.env.example` SHALL start with
+`OSQ_HARNESS=pi`. The repository's `.env.example` and `templates/.env.example`
+SHALL equal the scaffolded `.env.example` byte for byte.
+
+#### Scenario: Pi is the scaffolded default
+- **WHEN** `osq init` runs in an empty directory
+- **THEN** `osq.config.ts` contains `harness: process.env.OSQ_HARNESS || 'pi'` and the first line of `.env.example` is `OSQ_HARNESS=pi`
+
+#### Scenario: Scaffold copies match
+- **WHEN** `osq init` runs in an empty directory
+- **THEN** its `.env.example` equals the repository's `.env.example` and `templates/.env.example`

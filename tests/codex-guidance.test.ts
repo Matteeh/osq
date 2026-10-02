@@ -26,14 +26,19 @@ describe('codex consumer guidance: scaffolded .env.example', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('scaffolds Codex as the active default with its selection/binary/model guidance', async () => {
+  it('scaffolds pi as the active default with the Codex guidance kept as comments', async () => {
     const result = await scaffoldProject(tmpDir);
     assert.ok(result.createdFiles.includes('.env.example'));
 
     const content = await fs.readFile(path.join(tmpDir, '.env.example'), 'utf8');
     const lines = content.split('\n').map((line) => line.trim());
 
-    assert.ok(lines.includes('OSQ_HARNESS=codex'), 'codex must be the active default harness');
+    assert.ok(lines.includes('OSQ_HARNESS=pi'), 'pi must be the active default harness');
+    assert.equal(
+      lines.some((line) => /^OSQ_HARNESS=codex\b/.test(line)),
+      false,
+      'codex must not be the active default',
+    );
     assert.equal(
       lines.some((line) => /^OSQ_HARNESS=agy\b/.test(line)),
       false,
