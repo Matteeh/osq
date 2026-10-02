@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { planCommand } from '../src/cli/plan.js';
 import { queueCommand } from '../src/cli/queue.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
@@ -170,6 +171,17 @@ async function writeConfig(
 
 function usage(sessions: number, cost: number, costCoverageComplete: boolean): QueuePlanningUsage {
   return { sessions, cost, costCoverageComplete };
+}
+
+/** Run a command and return the `CommandError` it rejects with. */
+async function captureCommandError(run: () => Promise<void>): Promise<CommandError> {
+  try {
+    await run();
+  } catch (error) {
+    if (error instanceof CommandError) return error;
+    throw error;
+  }
+  throw new Error('expected the command to reject with a CommandError');
 }
 
 let tmpDir: string;
@@ -415,7 +427,7 @@ describe('planCommand budget refusals', () => {
     await writeAt(tmpDir, QUEUE_PATH, QUEUE);
     const before = await snapshotTree(tmpDir);
 
-    const stderr = await captureStderr(() =>
+    const error = await captureCommandError(() =>
       planCommand(undefined, {
         next: true,
         session: true,
@@ -424,8 +436,9 @@ describe('planCommand budget refusals', () => {
       }),
     );
 
-    assert.equal(process.exitCode, 1);
-    assert.match(stderr, /requires queue\.maxPlanningSessions/);
+    assert.equal(error.exitCode, 1);
+    assert.match(error.message, /requires queue\.maxPlanningSessions/);
+    assert.equal(process.exitCode, undefined);
     assert.deepEqual([...(await snapshotTree(tmpDir)).entries()], [...before.entries()]);
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 0);
   });
@@ -491,7 +504,7 @@ describe('planCommand budget refusals', () => {
     });
     const before = await snapshotTree(tmpDir);
 
-    const stderr = await captureStderr(() =>
+    const error = await captureCommandError(() =>
       planCommand(undefined, {
         next: true,
         session: true,
@@ -500,8 +513,9 @@ describe('planCommand budget refusals', () => {
       }),
     );
 
-    assert.equal(process.exitCode, 1);
-    assert.match(stderr, /session limit reached/);
+    assert.equal(error.exitCode, 1);
+    assert.match(error.message, /session limit reached/);
+    assert.equal(process.exitCode, undefined);
     assert.deepEqual([...(await snapshotTree(tmpDir)).entries()], [...before.entries()]);
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 0);
   });
@@ -510,7 +524,7 @@ describe('planCommand budget refusals', () => {
     await writeConfig(tmpDir, { maxPlanningSessions: 0, maxPlanningCost: 100 });
     await writeAt(tmpDir, QUEUE_PATH, QUEUE);
     const zeroBefore = await snapshotTree(tmpDir);
-    const zeroStderr = await captureStderr(() =>
+    const zeroError = await captureCommandError(() =>
       planCommand(undefined, {
         next: true,
         session: true,
@@ -518,11 +532,11 @@ describe('planCommand budget refusals', () => {
         adapter: new MockAdapter(),
       }),
     );
-    assert.equal(process.exitCode, 1);
-    assert.match(zeroStderr, /session limit reached/);
+    assert.equal(zeroError.exitCode, 1);
+    assert.match(zeroError.message, /session limit reached/);
+    assert.equal(process.exitCode, undefined);
     assert.deepEqual([...(await snapshotTree(tmpDir)).entries()], [...zeroBefore.entries()]);
 
-    process.exitCode = undefined;
     await writeConfig(tmpDir, { maxPlanningSessions: 10, maxPlanningCost: 0.5 });
     await createChange(tmpDir, 'rejected', '090-retired', {
       slug: 'retired',
@@ -532,7 +546,7 @@ describe('planCommand budget refusals', () => {
       ],
     });
     const costBefore = await snapshotTree(tmpDir);
-    const costStderr = await captureStderr(() =>
+    const costError = await captureCommandError(() =>
       planCommand(undefined, {
         next: true,
         session: true,
@@ -540,8 +554,9 @@ describe('planCommand budget refusals', () => {
         adapter: new MockAdapter(),
       }),
     );
-    assert.equal(process.exitCode, 1);
-    assert.match(costStderr, /cost limit reached/);
+    assert.equal(costError.exitCode, 1);
+    assert.match(costError.message, /cost limit reached/);
+    assert.equal(process.exitCode, undefined);
     assert.deepEqual([...(await snapshotTree(tmpDir)).entries()], [...costBefore.entries()]);
     assert.equal(MockAdapter.recordedInteractiveSpawns.length, 0);
   });

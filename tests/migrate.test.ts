@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { migrateCommand } from '../src/cli/migrate.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
@@ -408,35 +409,36 @@ describe('osq migrate openspec', () => {
     assert.equal(migrateCmd.registeredArguments[0].required, true);
   });
 
-  it('migrate command rejects unsupported targets with a non-zero exit', async () => {
-    const exitCodes: number[] = [];
+  it('migrate command rejects unsupported targets with a CommandError', async () => {
     const messages: string[] = [];
-    const result = await migrateCommand('legacy', {
-      cwd: tmpDir,
-      config: DEFAULT_CONFIG,
-      logger: { info: () => {}, error: (message) => messages.push(message) },
-      exit: (code) => exitCodes.push(code),
-    });
-
-    assert.equal(result, null);
-    assert.deepEqual(exitCodes, [1]);
+    await assert.rejects(
+      migrateCommand('legacy', {
+        cwd: tmpDir,
+        config: DEFAULT_CONFIG,
+        logger: { info: () => {}, error: (message) => messages.push(message) },
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+        assert.equal(error.name, 'CommandError');
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
     assert.ok(messages.some((message) => message.includes('unsupported migrate target')));
   });
 
   it('migrate command runs the openspec migration and reports a summary', async () => {
     await seedLegacyProject(tmpDir);
     const messages: string[] = [];
-    const exitCodes: number[] = [];
 
     const result = await migrateCommand('openspec', {
       cwd: tmpDir,
       config: DEFAULT_CONFIG,
       logger: { info: (message) => messages.push(message), error: () => {} },
-      exit: (code) => exitCodes.push(code),
     });
 
     assert.ok(result);
-    assert.deepEqual(exitCodes, []);
     assert.equal(result.migratedFeatures.length, 1);
     assert.equal(result.migratedArchives.length, 1);
     assert.ok(messages.some((message) => message.includes('openspec/specs/')));

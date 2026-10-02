@@ -16,6 +16,7 @@ import {
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 import { findSteeringChange } from '../core/status/steering-change.js';
+import { CommandError } from './command-error.js';
 
 export interface LintCommandEntry {
   readonly folder: string;
@@ -33,7 +34,6 @@ export interface LintCommandOptions {
   readonly cwd?: string;
   readonly config?: OsqConfig;
   readonly logger?: LintCommandLogger;
-  readonly exit?: (code: number) => void;
   /** Write the JSON document to the stdout sink instead of logger lines. */
   readonly json?: boolean;
   /** List every repository finding in full instead of the count line. */
@@ -83,9 +83,8 @@ async function listChangeFolders(specsDir: string): Promise<string[]> {
 
 /**
  * Lints one or more change folders (or every folder under the configured specs
- * root when no IDs are given) and exits non-zero on failure. The exit sink is
- * injectable so callers can test the failure path without terminating the
- * process.
+ * root when no IDs are given), printing findings as before. When any folder is
+ * invalid it throws a `CommandError` with an empty message and exit code 1.
  */
 export async function lintCommand(
   specIds: string[] = [],
@@ -133,12 +132,7 @@ export async function lintCommand(
   }
 
   if (!valid) {
-    const exit =
-      options.exit ??
-      ((code: number) => {
-        process.exitCode = code;
-      });
-    exit(1);
+    throw new CommandError('', { exitCode: 1 });
   }
 
   return { valid, entries };

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1abec00ffbd3d3df3308430e2e9ff210a403930ed431b4170e8a86df08e31efd"
+build_stamp: "9dddb68"
+project_commit: "63c3fd8"
+exit_code: 0
+scope_files: {"src/cli/inbox-dispatch.ts":"sha256:8fe8a9de5b02faa734f056ad38240cf1037522c170ec4c6ea9c9f52022675694","tests/cli-no-exit-code.test.ts":"sha256:ca790dbee8f9aaae2eda202d094981814fa0da53b723457e4f39f53cd96b1839","tests/inbox-follow.test.ts":"sha256:a9135919dba34e6100acf27caafdacaddf30fc56938e6a4f50ab0781d74b48b6"}
+---
+2026-10-02T22:01:40.752Z

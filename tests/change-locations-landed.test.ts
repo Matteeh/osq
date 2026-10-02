@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { promisify } from 'node:util';
+import { CommandError } from '../src/cli/command-error.js';
 import { inboxDispatchCommand } from '../src/cli/inbox-dispatch.js';
 import { inboxCommand } from '../src/cli/inbox.js';
 import { messageCommand } from '../src/cli/message.js';
@@ -313,19 +314,22 @@ async function captureMessage(cwd: string, config: OsqConfig, id: string): Promi
   let stdout = '';
   let stderr = '';
   let exitCode: number | null = null;
-  await messageCommand(id, {
-    cwd,
-    config,
-    stdout: (msg) => {
-      stdout += msg;
-    },
-    stderr: (msg) => {
-      stderr += msg;
-    },
-    exit: (code) => {
-      exitCode = code;
-    },
-  });
+  try {
+    await messageCommand(id, {
+      cwd,
+      config,
+      stdout: (msg) => {
+        stdout += msg;
+      },
+      stderr: (msg) => {
+        stderr += msg;
+      },
+    });
+  } catch (error) {
+    if (!(error instanceof CommandError)) throw error;
+    stderr += error.message.length > 0 ? `${error.message}\n` : '';
+    exitCode = error.exitCode;
+  }
   return { stdout, stderr, exitCode };
 }
 

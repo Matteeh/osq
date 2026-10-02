@@ -96,17 +96,14 @@ describe('lint skips the rejected folder', () => {
     await writeTask1(spec.folderPath);
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
     const result = await lintCommand([], {
       cwd: tmpDir,
       config: DEFAULT_CONFIG,
       logger,
-      exit: (code) => exitCodes.push(code),
     });
 
     const errors = result.entries.flatMap((entry) => entry.result.errors);
     assert.equal(result.valid, true, errors.join('\n'));
-    assert.deepEqual(exitCodes, []);
     assert.equal(result.entries.length, 1);
     const findings = logger.entries.filter(
       (entry) => entry.level === 'error' || entry.level === 'warn',

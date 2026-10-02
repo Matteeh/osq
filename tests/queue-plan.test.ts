@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { buildOpeningPrompt, formatBriefContent, planCommand } from '../src/cli/plan.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
@@ -412,19 +413,16 @@ describe('queue rejection gate', () => {
     const rejectedBefore = await snapshot(rejected);
 
     // Without --replan the real command refuses and creates nothing.
-    let stderr = '';
-    const originalError = console.error;
-    console.error = ((chunk: unknown) => {
-      stderr += String(chunk);
-      return true;
-    }) as typeof console.error;
+    let caught: unknown;
     try {
       await planCommand(undefined, { next: true, print: true, cwd: tmpDir });
-    } finally {
-      console.error = originalError;
+    } catch (error) {
+      caught = error;
     }
-    assert.equal(process.exitCode, 1);
-    assert.match(stderr, /--replan/);
+    assert.ok(caught instanceof CommandError, `expected a CommandError, got ${String(caught)}`);
+    assert.equal(caught.exitCode, 1);
+    assert.match(caught.message, /--replan/);
+    assert.equal(process.exitCode, undefined);
     assert.deepEqual(await activeFolders(tmpDir), []);
     assert.deepEqual(await snapshot(rejected), rejectedBefore);
 

@@ -1,26 +1,22 @@
 import type { Command } from 'commander';
 import { type DoctorReport, runDoctorChecks } from '../core/foundation/doctor.js';
+import { CommandError } from './command-error.js';
 
 export interface DoctorCommandOptions {
   readonly cwd?: string;
   readonly stdout?: (line: string) => void;
   readonly report?: DoctorReport;
-  readonly exit?: (code: number) => void;
 }
 
 /**
- * Runs repository diagnostics and prints one line per check. Sets a non-zero
- * exit code when any check fails. Sinks are injectable for testing.
+ * Runs repository diagnostics and prints one line per check. Throws a
+ * `CommandError` with exit code 1 when any check fails. Sinks are injectable
+ * for testing.
  */
 export async function doctorCommand(options: DoctorCommandOptions = {}): Promise<DoctorReport> {
   const cwd = options.cwd ?? process.cwd();
   const report = options.report ?? (await runDoctorChecks(cwd));
   const write = options.stdout ?? ((line: string) => console.log(line));
-  const exit =
-    options.exit ??
-    ((code: number) => {
-      process.exitCode = code;
-    });
 
   for (const check of report.checks) {
     const prefix = check.ok ? (check.warning === true ? '[warn]' : '[ok]') : '[fail]';
@@ -28,7 +24,7 @@ export async function doctorCommand(options: DoctorCommandOptions = {}): Promise
   }
 
   if (!report.ok) {
-    exit(1);
+    throw new CommandError('', { exitCode: 1 });
   }
 
   return report;

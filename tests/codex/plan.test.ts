@@ -28,8 +28,14 @@ function runPlanInSubprocess(options: {
 }): Promise<SubprocessResult> {
   const runnerPath = path.join(options.root, `plan-runner-${Date.now()}.mts`);
   const runner = [
+    `import { CommandError } from ${JSON.stringify(path.join(PROJECT_ROOT, 'src/cli/command-error.js'))};`,
     `import { planCommand } from ${JSON.stringify(path.join(PROJECT_ROOT, 'src/cli/plan.js'))};`,
-    `await planCommand(${JSON.stringify(options.name)}, { brief: ${JSON.stringify(options.brief)}, session: true, cwd: ${JSON.stringify(options.root)} });`,
+    'try {',
+    `  await planCommand(${JSON.stringify(options.name)}, { brief: ${JSON.stringify(options.brief)}, session: true, cwd: ${JSON.stringify(options.root)} });`,
+    '} catch (error) {',
+    '  if (!(error instanceof CommandError)) throw error;',
+    '  process.exitCode = error.exitCode;',
+    '}',
     '',
   ].join('\n');
 

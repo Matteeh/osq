@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:478e806fbb7efd11e5748e6f2f1570568ff4dce9c3fe7f7c70f7fc242b0bf5d2"
+build_stamp: "9dddb68"
+project_commit: "84165bf"
+exit_code: 0
+scope_files: {"src/cli/graph.ts":"sha256:e2ad43c93899ca00c5bf487ac9c9bea0b01aaeb0fcd8de7f06285d0680aea94c","src/cli/migrate.ts":"sha256:4a4eee6e828bd41feeefe36408af44dc7d3b724cb14e3a665b5a2621a31fa366","src/cli/sync.ts":"sha256:3057e67999c5471677ac4a568c1504b0960f68395cbe488e91f4ca003026bd88","tests/migrate-sidecars.test.ts":"sha256:744a67ce46fba235719f29907cd65eda3d63a550f48a4a96eb43308c4c928229","tests/migrate.test.ts":"sha256:cac2724d472ba5570bd780a53286912bd8f19d9b98e888bdef7527e56fb27f26","tests/sync-graph-migrate-command-error.test.ts":"sha256:ac81d03c4599205f88ab43eac4891772c53dbac3f482acb08301aabd874200df","tests/vcs-sync-command.test.ts":"sha256:9d8cfb1cff069055a8228ff21a4a17f2a3edbc1378fcf1dd1a9a992c11eb8bdf","tests/web-graph-command.test.ts":"sha256:a63b44635020e0c28b88e8c1bb14a4e0ae50a63501bbb51bba6f11fd4e5d3b7f"}
+---
+2026-10-02T21:47:14.634Z

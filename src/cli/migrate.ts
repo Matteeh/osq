@@ -2,12 +2,12 @@ import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { type Logger, createLogger } from '../core/foundation/logger.js';
 import { type MigrateSidecarsResult, migrateSidecars } from '../core/spec/migrate-sidecars.js';
 import { type MigrateResult, migrateToOpenSpec } from '../core/spec/migrate.js';
+import { CommandError } from './command-error.js';
 
 export interface MigrateCommandOptions {
   readonly cwd?: string;
   readonly config?: OsqConfig;
   readonly logger?: Pick<Logger, 'info' | 'error'>;
-  readonly exit?: (code: number) => void;
 }
 
 export type MigrateCommandLogger = Pick<Logger, 'info' | 'error'>;
@@ -16,37 +16,32 @@ export type MigrateCommandLogger = Pick<Logger, 'info' | 'error'>;
  * Runs `osq migrate <target>`. The `openspec` target moves the legacy layout to
  * `openspec/`, converts `spec.md` to `proposal.md`, ticks archived tasks, and
  * creates the next-spec stub; the `sidecars` target scaffolds an `osq.yml` for
- * every living capability without one. Returns `null` when the target is
- * unsupported or migration throws, after signalling a non-zero exit.
+ * every living capability without one. Returns the migration's result on
+ * success; an unsupported target or a failed migration logs as before and
+ * throws a `CommandError` with an empty message and exit code 1.
  */
 export function migrateCommand(
   target: 'openspec',
   options?: MigrateCommandOptions,
-): Promise<MigrateResult | null>;
+): Promise<MigrateResult>;
 export function migrateCommand(
   target: 'sidecars',
   options?: MigrateCommandOptions,
-): Promise<MigrateSidecarsResult | null>;
+): Promise<MigrateSidecarsResult>;
 export function migrateCommand(
   target: string,
   options?: MigrateCommandOptions,
-): Promise<MigrateResult | MigrateSidecarsResult | null>;
+): Promise<MigrateResult | MigrateSidecarsResult>;
 export async function migrateCommand(
   target: string,
   options: MigrateCommandOptions = {},
-): Promise<MigrateResult | MigrateSidecarsResult | null> {
+): Promise<MigrateResult | MigrateSidecarsResult> {
   const cwd = options.cwd ?? process.cwd();
   const logger = options.logger ?? createLogger('normal', 'osq');
-  const exit =
-    options.exit ??
-    ((code: number) => {
-      process.exitCode = code;
-    });
 
   if (target !== 'openspec' && target !== 'sidecars') {
     logger.error(`unsupported migrate target "${target}"; expected "openspec" or "sidecars"`);
-    exit(1);
-    return null;
+    throw new CommandError('', { exitCode: 1 });
   }
 
   try {
@@ -78,7 +73,6 @@ export async function migrateCommand(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error(`migration failed: ${message}`);
-    exit(1);
-    return null;
+    throw new CommandError('', { exitCode: 1 });
   }
 }

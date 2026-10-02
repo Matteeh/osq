@@ -15,6 +15,7 @@ import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import type { QueuePlanSelection } from '../core/status/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { CommandError } from './command-error.js';
 import {
   buildBaseOpeningPrompt,
   createChange,
@@ -226,5 +227,5 @@ export async function planCommand(
   });
 
   if (spawnError) throw spawnError;
-  if (exitCode !== 0) process.exitCode = exitCode;
+  if (exitCode !== 0) throw new CommandError('', { exitCode });
 }

@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { inboxDispatchCommand } from '../src/cli/inbox-dispatch.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import type { ChangeTree } from '../src/core/status/change-locations.js';
@@ -18,6 +19,7 @@ import type {
   WatcherLike,
 } from '../src/core/web/web-events.js';
 import { singleChangeTree } from '../src/core/web/web-trees.js';
+import { runCliCaptured } from './cli-capture.js';
 
 const CHANGES = path.join('openspec', 'changes');
 const AT = new Date(2026, 0, 1, 9, 30);
@@ -527,21 +529,41 @@ describe('inboxDispatchCommand follow', () => {
     await done;
   });
 
-  it('refuses --follow with --json and sets exit code 1', async () => {
+  it('rejects --follow with --json as a CommandError and prints nothing', async () => {
     const stderr = collector();
     const previous = process.exitCode;
+    process.exitCode = undefined;
     try {
-      await inboxDispatchCommand({
-        cwd: tmpDir,
-        config: defineConfig({}),
-        follow: true,
-        json: true,
-        stderr: stderr.write,
-      });
-      assert.equal(stderr.text(), 'osq inbox: --follow prints text; drop --json');
-      assert.equal(process.exitCode, 1);
+      await assert.rejects(
+        () =>
+          inboxDispatchCommand({
+            cwd: tmpDir,
+            config: defineConfig({}),
+            follow: true,
+            json: true,
+            stderr: stderr.write,
+          }),
+        (error: unknown) => {
+          assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+          assert.equal(error.name, 'CommandError');
+          assert.equal(error.message, 'osq inbox: --follow prints text; drop --json');
+          assert.equal(error.exitCode, 1);
+          return true;
+        },
+      );
+      assert.equal(process.exitCode, undefined, 'the command leaves the exit code alone');
     } finally {
       process.exitCode = previous;
     }
+    assert.equal(stderr.text(), '', 'the command prints nothing itself');
+  });
+
+  it('prints the refusal and exits 1 through runCli', async () => {
+    const capture = await runCliCaptured(tmpDir, ['inbox', '--follow', '--json']);
+
+    assert.equal(capture.exitCode, 1);
+    assert.deepEqual(capture.lines, [
+      { stream: 'stderr', text: 'osq inbox: --follow prints text; drop --json' },
+    ]);
   });
 });

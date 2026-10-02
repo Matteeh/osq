@@ -386,16 +386,13 @@ describe('impact lint', () => {
     const change = await createChange(root, 'Python Only');
     await writeTask(change, ['app/main.py']);
 
-    const exits: number[] = [];
     const command = await lintCommand([], {
       cwd: root,
       config: lintConfig(),
       logger: silentLogger,
-      exit: (code) => exits.push(code),
     });
 
     assert.equal(command.valid, true, JSON.stringify(command.entries));
-    assert.deepEqual(exits, []);
     const findings = command.entries.flatMap((entry) => [...entry.result.findings]);
     assert.deepEqual(findings, []);
   });
@@ -417,7 +414,6 @@ describe('impact lint', () => {
       cwd: root,
       config: lintConfig(),
       logger: silentLogger,
-      exit: () => {},
     });
 
     assert.equal(command.valid, true, JSON.stringify(command.entries));

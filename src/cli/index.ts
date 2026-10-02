@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command, InvalidArgumentError } from 'commander';
 import { registerApproveCommand } from './approve.js';
+import { CommandError } from './command-error.js';
 import { registerDigestCommand } from './digest.js';
 import { registerDoctorCommand } from './doctor.js';
 import { registerGraphCommand } from './graph.js';
@@ -97,9 +98,9 @@ export function createProgram(version?: string): Command {
         try {
           await planCommand(name, options);
         } catch (error) {
+          if (error instanceof CommandError) throw error;
           const message = error instanceof Error ? error.message : String(error);
-          console.error(`Error: ${message}`);
-          process.exitCode = 1;
+          throw new CommandError(`Error: ${message}`);
         }
       },
     );
@@ -211,9 +212,9 @@ export function createProgram(version?: string): Command {
       try {
         await serveCommand(options);
       } catch (error) {
+        if (error instanceof CommandError) throw error;
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`Error: ${message}`);
-        process.exitCode = 1;
+        throw new CommandError(`Error: ${message}`);
       }
     });
   registerApproveCommand(program);

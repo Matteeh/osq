@@ -292,17 +292,14 @@ describe('Resolved scope lint integration', () => {
     await writeTask(specFolder, '2', ['src/shared.ts']);
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
     const result = await lintCommand(['001'], {
       cwd: tmpDir,
       config: DEFAULT_CONFIG,
       logger,
-      exit: (code) => exitCodes.push(code),
     });
 
     const errors = result.entries.flatMap((entry) => entry.result.errors);
     assert.equal(result.valid, true, errors.join('\n'));
-    assert.deepEqual(exitCodes, []);
     assert.ok(
       logger.entries.some(
         (entry) =>

@@ -261,16 +261,13 @@ describe('lint findings', () => {
     });
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
     const result = await lintCommand([], {
       cwd: root,
       config: openSpecConfig(),
       logger,
-      exit: (code) => exitCodes.push(code),
     });
 
     assert.equal(result.valid, true, JSON.stringify(result.entries));
-    assert.deepEqual(exitCodes, []);
   });
 
   it("keeps another change's error out of the linted change", async () => {

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { doctorCommand } from '../src/cli/doctor.js';
 import { planCommand } from '../src/cli/plan.js';
 import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
@@ -272,7 +273,10 @@ describe('doctor harness diagnostics resolve through the catalog', () => {
     );
 
     const lines: string[] = [];
-    await doctorCommand({ cwd: root, stdout: (line) => lines.push(line), exit: () => {} });
+    await assert.rejects(
+      doctorCommand({ cwd: root, stdout: (line) => lines.push(line) }),
+      (error: unknown) => error instanceof CommandError && error.exitCode === 1,
+    );
 
     assert.ok(
       lines.some((line) => line.startsWith('[ok] harness:') && line.includes('opencode 5.5.5')),

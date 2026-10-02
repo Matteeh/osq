@@ -201,14 +201,11 @@ describe('doctor version control warnings', () => {
     );
 
     const lines: string[] = [];
-    const codes: number[] = [];
     await doctorCommand({
       report,
       stdout: (line) => lines.push(line),
-      exit: (code) => codes.push(code),
     });
 
-    assert.deepEqual(codes, []);
     for (const name of VCS_WARNING_NAMES) {
       assert.ok(
         lines.some((line) => line.startsWith(`[warn] ${name}:`)),

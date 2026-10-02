@@ -132,16 +132,13 @@ describe('doctor git check', () => {
       });
       const report = { ok: checks.every((check) => check.ok), checks };
       const lines: string[] = [];
-      const codes: number[] = [];
 
       await doctorCommand({
         stdout: (line) => lines.push(line),
-        exit: (code) => codes.push(code),
         report,
       });
 
       assert.equal(report.ok, true);
-      assert.deepEqual(codes, []);
       assert.ok(lines.some((line) => line.startsWith('[warn] git:')));
       assert.ok(lines.some((line) => line.startsWith('[warn] git-env:')));
     } finally {

@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
@@ -1191,29 +1192,29 @@ skills: []
 - [ ] fails`,
     );
 
-    const exitCodes: number[] = [];
-    const result = await lintCommand(['001'], {
-      cwd: tmpDir,
-      config: DEFAULT_CONFIG,
-      logger: createRecordingLogger(),
-      exit: (code) => exitCodes.push(code),
-    });
-
-    assert.equal(result.valid, false);
-    assert.deepEqual(exitCodes, [1]);
+    await assert.rejects(
+      lintCommand(['001'], {
+        cwd: tmpDir,
+        config: DEFAULT_CONFIG,
+        logger: createRecordingLogger(),
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
   });
 
   it('lint command exits zero when all change folders are valid', async () => {
-    const exitCodes: number[] = [];
     const result = await lintCommand(['001'], {
       cwd: tmpDir,
       config: DEFAULT_CONFIG,
       logger: createRecordingLogger(),
-      exit: (code) => exitCodes.push(code),
     });
 
     assert.equal(result.valid, true);
-    assert.deepEqual(exitCodes, []);
   });
 
   it('excludes a root plan-prompt.md from artifact scanning without changing findings', async () => {

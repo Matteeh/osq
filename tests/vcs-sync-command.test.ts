@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { promisify } from 'node:util';
+import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { syncCommand } from '../src/cli/sync.js';
 import { DEFAULT_GATES_CONFIG } from '../src/core/foundation/config-gates.js';
@@ -12,7 +13,7 @@ import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { approveSpec } from '../src/core/spec/approve.js';
-import { syncChange } from '../src/core/vcs/sync-change.js';
+import { OSQ_SYNC_NEEDS_GIT, syncChange } from '../src/core/vcs/sync-change.js';
 import { worktreeBranch } from '../src/core/vcs/worktree.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
@@ -471,7 +472,6 @@ describe('osq sync command', () => {
 
     let stdout = '';
     let stderr = '';
-    let exitCode: number | null = null;
     await syncCommand('001', {
       cwd: project.repo,
       config: project.config,
@@ -481,39 +481,38 @@ describe('osq sync command', () => {
       stderr: (msg) => {
         stderr += msg;
       },
-      exit: (code) => {
-        exitCode = code;
-      },
     });
 
-    assert.equal(exitCode, 0);
     assert.equal(stdout, 'Synced osq/001-order-flow with main\n');
     assert.match(stderr, /main has 1 new commit; merging into osq\/001-order-flow/);
   });
 
-  it('prints a refusal on stderr and sets exit one', async () => {
+  it('rejects with the refusal CommandError and prints nothing', async () => {
     const project = await setupProject([PAIR]);
     const off = defineConfig({ vcs: { enabled: false } });
     let stdout = '';
     let stderr = '';
-    let exitCode: number | null = null;
-    await syncCommand('001', {
-      cwd: project.repo,
-      config: off,
-      stdout: (msg) => {
-        stdout += msg;
+    await assert.rejects(
+      syncCommand('001', {
+        cwd: project.repo,
+        config: off,
+        stdout: (msg) => {
+          stdout += msg;
+        },
+        stderr: (msg) => {
+          stderr += msg;
+        },
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+        assert.equal(error.message, OSQ_SYNC_NEEDS_GIT);
+        assert.equal(error.exitCode, 1);
+        return true;
       },
-      stderr: (msg) => {
-        stderr += msg;
-      },
-      exit: (code) => {
-        exitCode = code;
-      },
-    });
+    );
 
-    assert.equal(exitCode, 1);
     assert.equal(stdout, '');
-    assert.equal(stderr, 'osq sync needs vcs.enabled and git\n');
+    assert.equal(stderr, '');
   });
 
   it('registers sync on the root program', () => {

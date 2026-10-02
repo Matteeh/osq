@@ -3,6 +3,7 @@ import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import type { SystemEdgeKind, SystemGraphNode } from '../core/web/system-graph-types.js';
 import { getSystemGraph } from '../core/web/system-graph.js';
 import { serializeWebJson } from '../core/web/web-server.js';
+import { CommandError } from './command-error.js';
 
 /** Node kinds in the order the document lists them. */
 const NODE_KINDS: readonly SystemGraphNode['kind'][] = [
@@ -37,8 +38,6 @@ export interface GraphCommandOptions {
   json?: boolean;
   stdout?: (msg: string) => void;
   stderr?: (msg: string) => void;
-  /** Injectable process exit; defaults to setting `process.exitCode`. */
-  exit?: (code: number) => void;
 }
 
 /** Render `Nodes: <kind> <count>, ...` for the kinds with a non-zero count. */
@@ -76,18 +75,12 @@ function gapCounts(graph: Awaited<ReturnType<typeof getSystemGraph>>): string {
 
 /**
  * Print the system graph as `serializeWebJson` with a trailing newline, or as
- * three summary lines. A failure prints its message to stderr and exits one.
- * Writes no file.
+ * three summary lines. A failure throws a `CommandError` whose message is the
+ * line it would have printed to stderr. Writes no file.
  */
 export async function graphCommand(options: GraphCommandOptions = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();
   const stdout = options.stdout ?? ((msg: string) => process.stdout.write(msg));
-  const stderr = options.stderr ?? ((msg: string) => process.stderr.write(msg));
-  const exit =
-    options.exit ??
-    ((code: number) => {
-      process.exitCode = code;
-    });
 
   try {
     const config = options.config || (await loadConfig(cwd));
@@ -101,8 +94,7 @@ export async function graphCommand(options: GraphCommandOptions = {}): Promise<v
     stdout(gapCounts(graph));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    stderr(`${message}\n`);
-    exit(1);
+    throw new CommandError(message);
   }
 }
 

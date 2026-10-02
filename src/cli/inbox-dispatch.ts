@@ -18,6 +18,7 @@ import { readDispatch, readDispatchQueue } from '../core/status/dispatch.js';
 import { type InboxSound, createInboxSound } from '../core/status/inbox-sound.js';
 import { createWaitRecorder } from '../core/status/wait-recorder.js';
 import type { ScheduleFn, WatcherFactory } from '../core/web/web-events.js';
+import { CommandError } from './command-error.js';
 import { createChildLauncher, createTerminalInput } from './inbox-terminal.js';
 
 export interface InboxDispatchOptions {
@@ -107,9 +108,7 @@ export async function inboxDispatchCommand(options: InboxDispatchOptions = {}): 
   const home = options.home ?? os.homedir();
   const stderr = options.stderr ?? ((msg: string) => console.error(msg));
   if (options.follow && options.json) {
-    stderr('osq inbox: --follow prints text; drop --json');
-    process.exitCode = 1;
-    return;
+    throw new CommandError('osq inbox: --follow prints text; drop --json');
   }
   if (options.follow) {
     await followDispatch(cwd, config, followOptions(options, cwd, config, home, stderr));

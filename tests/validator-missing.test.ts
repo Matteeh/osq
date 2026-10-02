@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { approveSpec } from '../src/core/spec/approve.js';
@@ -47,20 +48,6 @@ skills: []
 ## Acceptance
 - [ ] validator enforced
 `;
-
-interface SilentLogger {
-  info(): void;
-  verbose(): void;
-  warn(): void;
-  error(): void;
-}
-
-const silentLogger: SilentLogger = {
-  info: () => {},
-  verbose: () => {},
-  warn: () => {},
-  error: () => {},
-};
 
 async function writeChange(projectRoot: string): Promise<string> {
   const folder = path.join(projectRoot, 'openspec', 'changes', '001-validator-pin');
@@ -146,21 +133,29 @@ describe('pinned OpenSpec validator failure gating', () => {
   });
 
   it('fails osq lint when the validator binary is missing', async () => {
-    const exitCodes: number[] = [];
-    const result = await lintCommand(['001'], {
-      cwd: tmpDir,
-      config: DEFAULT_CONFIG,
-      logger: silentLogger,
-      exit: (code) => exitCodes.push(code),
-    });
+    const logged: string[] = [];
+    await assert.rejects(
+      lintCommand(['001'], {
+        cwd: tmpDir,
+        config: DEFAULT_CONFIG,
+        logger: {
+          info: () => {},
+          verbose: () => {},
+          warn: () => {},
+          error: (message: string) => logged.push(message),
+        },
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
 
-    assert.equal(result.valid, false);
-    assert.deepEqual(exitCodes, [1]);
-
-    const errors = result.entries.flatMap((entry) => entry.result.errors);
     assert.ok(
-      errors.some((error) => error.includes(ADR_FRAGMENT) && error.includes(INSTALL_COMMAND)),
-      JSON.stringify(errors),
+      logged.some((line) => line.includes(ADR_FRAGMENT) && line.includes(INSTALL_COMMAND)),
+      JSON.stringify(logged),
     );
   });
 
@@ -175,26 +170,31 @@ describe('pinned OpenSpec validator failure gating', () => {
   it('fails osq lint when the validator version drifts', async () => {
     await installFakeValidator(tmpDir, '1.12.0');
 
-    const exitCodes: number[] = [];
-    const result = await lintCommand(['001'], {
-      cwd: tmpDir,
-      config: DEFAULT_CONFIG,
-      logger: silentLogger,
-      exit: (code) => exitCodes.push(code),
-    });
+    const logged: string[] = [];
+    await assert.rejects(
+      lintCommand(['001'], {
+        cwd: tmpDir,
+        config: DEFAULT_CONFIG,
+        logger: {
+          info: () => {},
+          verbose: () => {},
+          warn: () => {},
+          error: (message: string) => logged.push(message),
+        },
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
 
-    assert.equal(result.valid, false);
-    assert.deepEqual(exitCodes, [1]);
-
-    const errors = result.entries.flatMap((entry) => entry.result.errors);
     assert.ok(
-      errors.some(
-        (error) =>
-          error.includes('1.12.0') &&
-          error.includes(ADR_FRAGMENT) &&
-          error.includes(INSTALL_COMMAND),
+      logged.some(
+        (line) =>
+          line.includes('1.12.0') && line.includes(ADR_FRAGMENT) && line.includes(INSTALL_COMMAND),
       ),
-      JSON.stringify(errors),
+      JSON.stringify(logged),
     );
   });
 

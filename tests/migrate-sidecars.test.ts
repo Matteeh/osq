@@ -25,19 +25,16 @@ The system SHALL work.
 
 interface CommandRun {
   readonly messages: string[];
-  readonly exitCodes: number[];
 }
 
 async function runMigrate(root: string): Promise<CommandRun> {
   const messages: string[] = [];
-  const exitCodes: number[] = [];
   await migrateCommand('sidecars', {
     cwd: root,
     config: DEFAULT_CONFIG,
     logger: { info: (message) => messages.push(message), error: () => {} },
-    exit: (code) => exitCodes.push(code),
   });
-  return { messages, exitCodes };
+  return { messages };
 }
 
 describe('osq migrate sidecars', () => {
@@ -72,9 +69,8 @@ describe('osq migrate sidecars', () => {
       'utf8',
     );
 
-    const { messages, exitCodes } = await runMigrate(tmpDir);
+    const { messages } = await runMigrate(tmpDir);
 
-    assert.deepEqual(exitCodes, []);
     assert.ok(messages.includes('wrote 1 sidecar(s)'), messages.join('\n'));
     assert.ok(messages.includes('  pricing'), messages.join('\n'));
     assert.equal(await readSidecar('pricing'), formatSidecar({ group: UNGROUPED }));
@@ -93,7 +89,6 @@ describe('osq migrate sidecars', () => {
 
     const second = await runMigrate(tmpDir);
 
-    assert.deepEqual(second.exitCodes, []);
     assert.deepEqual(second.messages, ['wrote 0 sidecar(s)']);
     assert.equal(await readSidecar('pricing'), 'group: ungrouped\n');
     assert.equal(await readSidecar('orders'), 'group: ungrouped\n');

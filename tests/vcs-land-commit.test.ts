@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { promisify } from 'node:util';
+import { CommandError } from '../src/cli/command-error.js';
 import { landCommand } from '../src/cli/land.js';
 import { messageCommand } from '../src/cli/message.js';
 import { DEFAULT_GATES_CONFIG } from '../src/core/foundation/config-gates.js';
@@ -97,19 +98,23 @@ async function captureLand(cwd: string, config: OsqConfig, id: string): Promise<
   let stdout = '';
   let stderr = '';
   let exitCode: number | null = null;
-  await landCommand(id, {
-    cwd,
-    config,
-    stdout: (msg) => {
-      stdout += msg;
-    },
-    stderr: (msg) => {
-      stderr += msg;
-    },
-    exit: (code) => {
-      exitCode = code;
-    },
-  });
+  try {
+    await landCommand(id, {
+      cwd,
+      config,
+      stdout: (msg) => {
+        stdout += msg;
+      },
+      stderr: (msg) => {
+        stderr += msg;
+      },
+    });
+    exitCode = 0;
+  } catch (error) {
+    if (!(error instanceof CommandError)) throw error;
+    stderr += error.message.length > 0 ? `${error.message}\n` : '';
+    exitCode = error.exitCode;
+  }
   return { stdout, stderr, exitCode };
 }
 
@@ -117,19 +122,22 @@ async function captureMessage(cwd: string, config: OsqConfig, id: string): Promi
   let stdout = '';
   let stderr = '';
   let exitCode: number | null = null;
-  await messageCommand(id, {
-    cwd,
-    config,
-    stdout: (msg) => {
-      stdout += msg;
-    },
-    stderr: (msg) => {
-      stderr += msg;
-    },
-    exit: (code) => {
-      exitCode = code;
-    },
-  });
+  try {
+    await messageCommand(id, {
+      cwd,
+      config,
+      stdout: (msg) => {
+        stdout += msg;
+      },
+      stderr: (msg) => {
+        stderr += msg;
+      },
+    });
+  } catch (error) {
+    if (!(error instanceof CommandError)) throw error;
+    stderr += error.message.length > 0 ? `${error.message}\n` : '';
+    exitCode = error.exitCode;
+  }
   return { stdout, stderr, exitCode };
 }
 

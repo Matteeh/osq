@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { buildManifest } from '../src/core/run/manifest.js';
@@ -167,15 +168,19 @@ describe('proposal writes schema', () => {
       ),
     );
 
-    const exitCodes: number[] = [];
-    const result = await lintCommand(['001'], {
-      cwd: tmpDir,
-      config: DEFAULT_CONFIG,
-      logger: { info: () => {}, verbose: () => {}, warn: () => {}, error: () => {} },
-      exit: (code) => exitCodes.push(code),
-    });
-    assert.equal(result.valid, false);
-    assert.deepEqual(exitCodes, [1]);
+    await assert.rejects(
+      lintCommand(['001'], {
+        cwd: tmpDir,
+        config: DEFAULT_CONFIG,
+        logger: { info: () => {}, verbose: () => {}, warn: () => {}, error: () => {} },
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
   });
 
   it('osq lint passes when features.writes is absent and deltas exist in specs/', async () => {

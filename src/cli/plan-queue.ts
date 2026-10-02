@@ -7,6 +7,7 @@ import { createNewSpec } from '../core/foundation/new.js';
 import { buildManifest, writeManifest } from '../core/run/manifest.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { type QueuePlanSelection, prepareQueuePlan } from '../core/status/queue.js';
+import { CommandError } from './command-error.js';
 import {
   formatArchitectureDecisionsSection,
   formatCapabilitySpecsSection,
@@ -177,9 +178,7 @@ export async function prepareQueueSelection(
     enforceBudget: !options.print,
   });
   if (preparation.kind === 'refused') {
-    console.error(preparation.message);
-    process.exitCode = 1;
-    return null;
+    throw new CommandError(preparation.message);
   }
   if (preparation.notice) console.error(preparation.notice);
   return preparation.selection;

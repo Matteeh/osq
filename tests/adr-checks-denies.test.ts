@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { doctorCommand } from '../src/cli/doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
 import { readDecisions, validateDecisions } from '../src/core/foundation/decisions.js';
@@ -177,15 +178,17 @@ describe('decision check files in doctor', () => {
     assert.equal(check?.message.includes('tests/adapter-imports.test.ts'), true);
 
     const lines: string[] = [];
-    await doctorCommand({
-      cwd: tmpDir,
-      stdout: (line) => lines.push(line),
-      exit: () => {},
-      report: await runDoctorChecks(tmpDir, {
-        loadConfig: async () => CONFIG,
-        probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+    await assert.rejects(
+      doctorCommand({
+        cwd: tmpDir,
+        stdout: (line) => lines.push(line),
+        report: await runDoctorChecks(tmpDir, {
+          loadConfig: async () => CONFIG,
+          probeValidator: async () => OPENSPEC_EXPECTED_VERSION,
+        }),
       }),
-    });
+      (error: unknown) => error instanceof CommandError && error.exitCode === 1,
+    );
     assert.equal(
       lines.some(
         (line) =>

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5421fbd6c250ad996305f177db4e6b91190379a1f2cddd1fff172b9425a6cd97"
+build_stamp: "9dddb68"
+project_commit: "9981c90"
+exit_code: 0
+scope_files: {"src/cli/land.ts":"sha256:9e77ea76f1d13b0911caf81b38b2b12d202c3f71784c7a39b6c936145584646a","src/cli/message.ts":"sha256:d77a37eaec8667b82ee45b233406cd1ee537c6bcdc6df9066879dad014d88d2a","tests/change-locations-landed.test.ts":"sha256:52155b61ba08f9f81d1b3d4553ca491af75db3cd8a4347b82ff6324e5087c596","tests/checkout-copy-ignored.test.ts":"sha256:40dfb1ffdaee911137795603f4604350786fba7fb36a351147d5c12b66784905","tests/squash-message.test.ts":"sha256:5da27a61a23486f77c0d781ab82c5b4a18fb9695c0ee5275e65f3f459b195507","tests/steering-archived.test.ts":"sha256:4914d9e9100dbabebbd7b3603ad031f96b6d9ece9f42a2b8db461b2fcae3f04f","tests/steering-plan-default-branch.test.ts":"sha256:2262445addf978d377e602c27a6494fc3150230a15b62a7b387b1b748c9d2e8f","tests/vcs-land-command-error.test.ts":"sha256:8232def60bc4530ce6cef0c46690fbe1685f9b93851127f6f0b37c38f200f55c","tests/vcs-land-commit.test.ts":"sha256:9ba5843581f6efdefd395a09469a9614fa71b9cadaf2871a0775006667bab9fa","tests/vcs-land-ops.test.ts":"sha256:372be275290b088f45ea28edb186c06047ea29b864bd60d3690a83b30019535a","tests/vcs-land-refusals.test.ts":"sha256:08ae57a6eac64004b3616e2b2cf73ae0587c1ccaf66ef90232736479ae8b5691","tests/vcs-land-stale.test.ts":"sha256:a7f55059c2b4a230ef7f76872b03008a4f5b3e7c5dc615e48d9fd2d64e21ec45","tests/vcs-land-steering.test.ts":"sha256:1ef37f6e93e9b7288f256882cd49d7e1121e52e5f21423966b5e2fbda129f4b6","tests/vcs-land.test.ts":"sha256:f61533ea16c4d9d75ef1fc98d73b502b8c9c467179a0993c527789e503d2ac36"}
+---
+2026-10-02T21:40:48.278Z

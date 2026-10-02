@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:aab69f6d1478cca9ebcb92be79eba219bc09d561719c1572d1653d01ee3579d2"
+build_stamp: "9dddb68"
+project_commit: "f251af3"
+exit_code: 0
+scope_files: {"src/cli/doctor.ts":"sha256:2d79e1a7ca22446baa4a3f36efccc3702601ca29e6b849dacd326a7a6acaf8fa","tests/adr-checks-denies.test.ts":"sha256:1806a82be076d584d78eae356ae7f1d6a0f2a31893a0438e83bb4f96308c2ef7","tests/codex/adapter.test.ts":"sha256:d7f8cbb2ed4d3a513e04d7d36c8e8ab3f476e100b7fb72d7ef6e355b06f70eeb","tests/doctor-agent-file.test.ts":"sha256:9a707a3db29245e1a44a32ff4f8236a267fa416db2d984e180c5df7a75ee3f72","tests/doctor-command-error.test.ts":"sha256:4556d262f965fba8221d0aaaf5cd43db80dd5d7adf0635eb7ddf44e1c5864554","tests/doctor.test.ts":"sha256:aa2898046629540868ae85cd7171900f2754c0810de7c5e1371f31964d2c78ff","tests/harness-generic-workflows.test.ts":"sha256:cfd826616c0196f6a02d0729fe484f5d93ff7278c3b8f50367762d64ec9f704c","tests/impact-lint.test.ts":"sha256:d69328d854e3189a8df39386c46782cca5e345a0676e9894a686cf14b1576722","tests/opencode-doctor.test.ts":"sha256:d8d9a1bd570bd57ee1fef263c88356dcbaea6dbfbf50e46e5bfd75e18af19b26","tests/openspec-version.test.ts":"sha256:402de10e61828cc7734e6d2f9a27341cbf7aab62d91d813f606940a83d1d5cff","tests/vcs-doctor-warnings.test.ts":"sha256:18f05367918d7f8e86bea5f7975bf91fb31b85997616d75e36ba342daa218750","tests/vcs-doctor.test.ts":"sha256:0b763ec1cfe2c6264d0e3b90d15cc60126c81bd0c50384080e69f1927b3a9fd3"}
+---
+2026-10-02T21:04:47.655Z

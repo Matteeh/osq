@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { CommandError } from '../src/cli/command-error.js';
 import { graphCommand } from '../src/cli/graph.js';
 import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { getSystemGraph } from '../src/core/web/system-graph.js';
@@ -48,32 +49,33 @@ function capabilitySpec(name: string, requirements: readonly string[]): string {
 interface Capture {
   readonly stdout: string;
   readonly stderr: string;
-  readonly exitCode: number | null;
+  readonly error: unknown;
 }
 
-/** Run `graphCommand` with every stream captured. */
+/** Run `graphCommand` with every stream captured and any thrown error kept. */
 async function runGraph(
   cwd: string,
   options: { json?: boolean; config?: OsqConfig } = {},
 ): Promise<Capture> {
   let stdout = '';
   let stderr = '';
-  let exitCode: number | null = null;
-  await graphCommand({
-    cwd,
-    ...(options.config ? { config: options.config } : {}),
-    json: options.json,
-    stdout: (msg) => {
-      stdout += msg;
-    },
-    stderr: (msg) => {
-      stderr += msg;
-    },
-    exit: (code) => {
-      exitCode = code;
-    },
-  });
-  return { stdout, stderr, exitCode };
+  let error: unknown;
+  try {
+    await graphCommand({
+      cwd,
+      ...(options.config ? { config: options.config } : {}),
+      json: options.json,
+      stdout: (msg) => {
+        stdout += msg;
+      },
+      stderr: (msg) => {
+        stderr += msg;
+      },
+    });
+  } catch (caught) {
+    error = caught;
+  }
+  return { stdout, stderr, error };
 }
 
 describe('graph command', () => {
@@ -82,12 +84,12 @@ describe('graph command', () => {
     await fs.cp(PRICING, root, { recursive: true });
 
     const expected = await getSystemGraph(root, DEFAULT_CONFIG);
-    const { stdout, stderr, exitCode } = await runGraph(root, {
+    const { stdout, stderr, error } = await runGraph(root, {
       json: true,
       config: DEFAULT_CONFIG,
     });
 
-    assert.equal(exitCode, null);
+    assert.equal(error, undefined);
     assert.equal(stderr, '');
     assert.equal(stdout, `${serializeWebJson(expected)}\n`);
     assert.deepEqual(JSON.parse(stdout), expected);
@@ -99,9 +101,9 @@ describe('graph command', () => {
     await write(root, 'openspec/specs/beta/spec.md', capabilitySpec('beta', ['Three']));
     await write(root, 'src/seed.ts', 'export const seed = 1;\n');
 
-    const { stdout, stderr, exitCode } = await runGraph(root, { config: DEFAULT_CONFIG });
+    const { stdout, stderr, error } = await runGraph(root, { config: DEFAULT_CONFIG });
 
-    assert.equal(exitCode, null);
+    assert.equal(error, undefined);
     assert.equal(stderr, '');
     const lines = stdout.split('\n');
     assert.equal(lines[0], 'Nodes: capability 2, requirement 3, file 1');
@@ -120,16 +122,19 @@ describe('graph command', () => {
     assert.deepEqual(await fs.readdir(root), before);
   });
 
-  it('prints a config error to stderr and exits one', async () => {
+  it('rejects with the config error without printing it', async () => {
     const root = await tempDir();
     await write(root, 'osq.config.ts', "throw new Error('config exploded');\n");
 
-    const { stdout, stderr, exitCode } = await runGraph(root, { json: true });
+    const { stdout, stderr, error } = await runGraph(root, { json: true });
 
-    assert.equal(exitCode, 1);
+    assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+    assert.equal(error.name, 'CommandError');
+    assert.equal(error.exitCode, 1);
+    assert.match(error.message, /config exploded/);
+    assert.match(error.message, /osq\.config\.ts/);
     assert.equal(stdout, '');
-    assert.match(stderr, /config exploded/);
-    assert.match(stderr, /osq\.config\.ts/);
+    assert.equal(stderr, '');
   });
 
   it('names osq graph in the README command list', async () => {

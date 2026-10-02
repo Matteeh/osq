@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { CommandError } from '../src/cli/command-error.js';
 import { doctorCommand } from '../src/cli/doctor.js';
 import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from '../src/core/foundation/config.js';
 import { runDoctorChecks } from '../src/core/foundation/doctor.js';
@@ -505,32 +506,34 @@ describe('doctorCommand', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('prints one line per check and exits non-zero only on failure', async () => {
+  it('prints one line per check and rejects non-zero only on failure', async () => {
     const lines: string[] = [];
-    const codes: number[] = [];
 
     const report = await doctorCommand({
       cwd: tmpDir,
       stdout: (line) => lines.push(line),
-      exit: (code) => codes.push(code),
     });
 
     assert.equal(report.checks.length, 9);
     assert.equal(lines.length, 9);
     assert.ok(lines.every((line) => line.startsWith('[ok]') || line.startsWith('[warn] git:')));
-    assert.equal(codes.length, 0);
 
     await fs.writeFile(path.join(tmpDir, 'PLANNER.md'), '# no markers\n');
 
     const failLines: string[] = [];
-    await doctorCommand({
-      cwd: tmpDir,
-      stdout: (line) => failLines.push(line),
-      exit: (code) => codes.push(code),
-    });
+    await assert.rejects(
+      doctorCommand({
+        cwd: tmpDir,
+        stdout: (line) => failLines.push(line),
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
 
     assert.ok(failLines.some((line) => line.startsWith('[fail]')));
-    assert.deepEqual(codes, [1]);
   });
 });
 

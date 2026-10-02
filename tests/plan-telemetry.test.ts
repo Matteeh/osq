@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { CommandError } from '../src/cli/command-error.js';
 import { planCommand } from '../src/cli/plan.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
@@ -272,11 +273,16 @@ describe('planning telemetry', () => {
       process.env.OSQ_FAKE_DELAY_MS = '80';
       process.env.OSQ_FAKE_EXIT_CODE = '3';
 
-      await planCommand('telemetry-exit', {
-        brief: path.join(tmp, 'brief-source.md'),
-        session: true,
-        cwd: tmp,
-      });
+      await assert.rejects(
+        () =>
+          planCommand('telemetry-exit', {
+            brief: path.join(tmp, 'brief-source.md'),
+            session: true,
+            cwd: tmp,
+          }),
+        (error: unknown) =>
+          error instanceof CommandError && error.exitCode === 3 && error.message === '',
+      );
 
       const records = await readPlanRecords(await changeFolder(tmp, 'telemetry-exit'));
       assert.equal(records.length, 2);
@@ -286,18 +292,23 @@ describe('planning telemetry', () => {
       }
       assert.equal(exited.data.exitCode, 3);
       assert.deepEqual(exited.data.usage, NULL_PLANNING_USAGE);
-      assert.equal(process.exitCode, 3);
+      assert.equal(process.exitCode, undefined);
     });
 
     it('records plan_exited when the planner binary cannot spawn', async () => {
       tmp = await createProject(OPENCODE_CONFIG);
       process.env.OPENCODE_PATH = path.join(tmp, 'missing-opencode');
 
-      await planCommand('telemetry-nospawn', {
-        brief: path.join(tmp, 'brief-source.md'),
-        session: true,
-        cwd: tmp,
-      });
+      await assert.rejects(
+        () =>
+          planCommand('telemetry-nospawn', {
+            brief: path.join(tmp, 'brief-source.md'),
+            session: true,
+            cwd: tmp,
+          }),
+        (error: unknown) =>
+          error instanceof CommandError && error.exitCode === 1 && error.message === '',
+      );
 
       const records = await readPlanRecords(await changeFolder(tmp, 'telemetry-nospawn'));
       assert.equal(records.length, 2);
@@ -307,7 +318,7 @@ describe('planning telemetry', () => {
       }
       assert.equal(exited.data.exitCode, 1);
       assert.deepEqual(exited.data.usage, NULL_PLANNING_USAGE);
-      assert.equal(process.exitCode, 1);
+      assert.equal(process.exitCode, undefined);
     });
 
     it('resumes without rewriting the brief and keeps the approved hash independent', async () => {

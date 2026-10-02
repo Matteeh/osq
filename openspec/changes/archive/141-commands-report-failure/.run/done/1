@@ -1,0 +1,33 @@
+---
+scope_resolver: 2
+scope_hash: sha256:0794809e630c31d2593e23335155173d889f933db55fa58fb12d1fb8f554b364
+build_stamp: 9dddb68
+project_commit: 04c0936
+exit_code: 0
+scope_files:
+  src/cli/lint.ts: sha256:442ee7275e5e8c8a570180a1860bb0db7f38003ce4c4383733376261a9102ea3
+  tests/decisions-lint.test.ts: sha256:2ee9586482606116bd849ca0a8090849d18811ca7e15dc5bde45ae3259025af0
+  tests/impact-lint.test.ts: sha256:d69328d854e3189a8df39386c46782cca5e345a0676e9894a686cf14b1576722
+  tests/instruction-delta-lint.test.ts: sha256:0a114b90c81dd9ba54d2da4d39f81dd615c88c96dfe0dd5d0dc61d877c078efd
+  tests/lint-command-error.test.ts: sha256:ae9e95984b6381e056dddbf76382ed45284e961e899a5bdcc222d8c6fdfb4c11
+  tests/lint-findings.test.ts: sha256:9f5b41f3cca7d73389949197ae58e30b916684f9f542a483c6ad6dac2efe8da1
+  tests/lint-output.test.ts: sha256:1ff84c6d063efaf523f7a8a3db19907f406aaa0ae661fc8d9e7b3434ea482825
+  tests/lint-repository-count.test.ts: sha256:ad503f4fbb1323f89c714eebc371c3a7c669d5d6898a6421a203623787ad970d
+  tests/lint-skip-rejected.test.ts: sha256:250a2106373bdeb70d816e5184f8402d6db4a3ce150d722855a4cc5d867312b6
+  tests/lint-verify-starts.test.ts: sha256:1298acbd97762cdb3e548419d539835971a28b1390cf4e89286343a449a04f06
+  tests/linter.test.ts: sha256:1db906f4458c52c5bb08ed39de0919b92f5c4f68ff05945a0d3fe5844c1c873a
+  tests/mangled-lint.test.ts: sha256:00a5ba92e5b439fb8d8ffd08d5e7bcf4d032e0f230f26bc0b662adb78be90d22
+  tests/proposal-surface-lint.test.ts: sha256:012a7aeed9558ee778ee3726bcdc63681bddcaa9116cd27ea80e9c5723cdeab5
+  tests/proposal-writes-schema.test.ts: sha256:f863524e2d856324746b845837ac13c2a9ec29b9e9734d0df3dacc122ca264e9
+  tests/scope-lint.test.ts: sha256:45fa542deef3de914a851d8f5b16f02a1e7f5c4421f0e3641df0c2d279f395d3
+  tests/source-comment-lint.test.ts: sha256:8073022a460b3d01068464ee2654d0380dcfe3ff233f4b8ce77800f28e7b636d
+  tests/steering-plan-default-branch.test.ts: sha256:2262445addf978d377e602c27a6494fc3150230a15b62a7b387b1b748c9d2e8f
+  tests/steering-plan.test.ts: sha256:e6365a8178a4625357a0e05b008c5f246d8faa69a0c9bbdabbb006abdeac434e
+  tests/trace-impact-lint.test.ts: sha256:70bb380e965b1bded86bc76f82d5d50639591079cdd04db9ae0caf2191d47b5e
+  tests/trace-lint.test.ts: sha256:0f3bacea4d843548b183d9d2da4120c3abf7ac2cdfbdf43d784ee240ba4bd3e4
+  tests/validator-missing.test.ts: sha256:bed641cc18fc02672d07ee7cb7bcf7e5f780def4405bd904170e52da3810a939
+original_scope_hash: sha256:ac77c67255ca29bfe5534b55e1181d27a668ffb6251e4e133b576aee27bdf66b
+recertified_at: 2026-10-02T21:40:49.878Z
+recertification_count: 1
+---
+2026-10-02T21:00:03.505Z

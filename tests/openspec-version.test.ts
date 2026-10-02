@@ -237,11 +237,9 @@ describe('doctor peer-range warnings', () => {
     await installFakeValidator(tmpDir, IN_RANGE_VERSION);
 
     const lines: string[] = [];
-    const codes: number[] = [];
     const report = await doctorCommand({
       cwd: tmpDir,
       stdout: (line) => lines.push(line),
-      exit: (code) => codes.push(code),
     });
 
     assert.equal(report.ok, true, JSON.stringify(report.checks));
@@ -249,7 +247,6 @@ describe('doctor peer-range warnings', () => {
       lines.some((line) => line.startsWith('[warn] validator:') && line.includes('ADR 005')),
       lines.join('\n'),
     );
-    assert.deepEqual(codes, []);
   });
 
   it('keeps the failing message outside the peer range', async () => {

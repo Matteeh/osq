@@ -185,16 +185,13 @@ describe('repository lint count', () => {
     });
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
     const result = await lintCommand(['001'], {
       cwd: root,
       config: openSpecConfig(),
       logger,
-      exit: (code) => exitCodes.push(code),
     });
 
     assert.equal(result.valid, true, JSON.stringify(result.entries));
-    assert.deepEqual(exitCodes, []);
     const last = logger.entries.at(-1);
     assert.equal(last?.message, COUNT_TWO, JSON.stringify(logger.entries));
     assert.equal(

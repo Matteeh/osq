@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { promisify } from 'node:util';
+import { CommandError } from '../src/cli/command-error.js';
 import { landCommand } from '../src/cli/land.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { planCommand } from '../src/cli/plan.js';
@@ -309,7 +310,6 @@ async function captureLand(project: Project, id: string): Promise<void> {
     config: project.config,
     stdout: () => {},
     stderr: () => {},
-    exit: () => {},
   }).catch(() => {});
 }
 
@@ -397,22 +397,34 @@ describe('osq lint a change the default branch stopped', () => {
     const content = await fs.readFile(taskPath, 'utf8');
     await fs.writeFile(taskPath, content.replace(/^verify:.*$/m, 'verify:'), 'utf8');
 
-    const exits: number[] = [];
-    const result = await lintCommand(['001'], {
-      cwd: project.repo,
-      config: project.config,
-      json: true,
-      stdout: () => {},
-      exit: (code) => exits.push(code),
-    });
-
-    assert.equal(result.valid, false);
-    assert.equal(result.entries.length, 1);
-    assert.equal(result.entries[0]?.folder, project.archivedFolder);
-    assert.ok(
-      result.entries[0]?.result.errors.some((error) => error.includes('verify command is empty')),
-      JSON.stringify(result.entries[0]?.result.errors),
+    const chunks: string[] = [];
+    await assert.rejects(
+      lintCommand(['001'], {
+        cwd: project.repo,
+        config: project.config,
+        json: true,
+        stdout: (text) => chunks.push(text),
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
     );
-    assert.deepEqual(exits, [1]);
+
+    const document = JSON.parse(chunks.join('')) as {
+      valid: boolean;
+      changes: Array<{ change: string; findings: Array<{ message: string }> }>;
+    };
+    assert.equal(document.valid, false);
+    assert.equal(document.changes.length, 1);
+    assert.equal(document.changes[0]?.change, path.basename(project.archivedFolder));
+    assert.ok(
+      document.changes[0]?.findings.some((finding) =>
+        finding.message.includes('verify command is empty'),
+      ),
+      JSON.stringify(document.changes[0]?.findings),
+    );
   });
 });

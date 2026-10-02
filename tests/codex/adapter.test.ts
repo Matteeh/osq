@@ -176,7 +176,6 @@ describe('Codex adapter registration, setup, and diagnostics', () => {
       await doctorCommand({
         stdout: (line) => lines.push(line),
         report: healthy,
-        exit: () => {},
       });
       assert.equal(lines.length, 9);
 

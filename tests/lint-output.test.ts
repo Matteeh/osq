@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { CommandError } from '../src/cli/command-error.js';
 import { lintCommand } from '../src/cli/lint.js';
 import { DEFAULT_CONFIG, type OsqConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
@@ -156,13 +157,15 @@ describe('lint output', () => {
     await fs.writeFile(change.taskPath, task.replace(/^verify:.*$/m, 'verify: pnpm a && pnpm b'));
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
-    await lintCommand([], {
-      cwd: root,
-      config: openSpecConfig(),
-      logger,
-      exit: (code) => exitCodes.push(code),
-    });
+    await assert.rejects(
+      lintCommand([], { cwd: root, config: openSpecConfig(), logger }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
 
     const errorLine = logger.entries.find(
       (entry) => entry.level === 'error' && entry.message.includes('chains commands'),
@@ -187,8 +190,6 @@ describe('lint output', () => {
       warningLine.message,
     );
     assert.ok(warningLine.message.includes('(No shall here)'), warningLine.message);
-
-    assert.deepEqual(exitCodes, [1]);
   });
 
   it('carries the same fields in --json and prints no text lines', async () => {
@@ -201,15 +202,21 @@ describe('lint output', () => {
 
     const logger = createRecordingLogger();
     const chunks: string[] = [];
-    const exitCodes: number[] = [];
-    await lintCommand([], {
-      cwd: root,
-      config: openSpecConfig(),
-      logger,
-      json: true,
-      stdout: (text) => chunks.push(text),
-      exit: (code) => exitCodes.push(code),
-    });
+    await assert.rejects(
+      lintCommand([], {
+        cwd: root,
+        config: openSpecConfig(),
+        logger,
+        json: true,
+        stdout: (text) => chunks.push(text),
+      }),
+      (error: unknown) => {
+        assert.ok(error instanceof CommandError);
+        assert.equal(error.message, '');
+        assert.equal(error.exitCode, 1);
+        return true;
+      },
+    );
 
     const stdout = chunks.join('');
     assert.ok(stdout.endsWith('\n'), stdout);
@@ -250,7 +257,6 @@ describe('lint output', () => {
     assert.equal(warning.section, null);
 
     assert.deepEqual(logger.entries, []);
-    assert.deepEqual(exitCodes, [1]);
   });
 
   it('prints one repository finding once after two changes and never exits', async () => {
@@ -267,17 +273,14 @@ describe('lint output', () => {
     });
 
     const logger = createRecordingLogger();
-    const exitCodes: number[] = [];
     const result = await lintCommand([], {
       cwd: root,
       config: openSpecConfig(),
       logger,
       repository: true,
-      exit: (code) => exitCodes.push(code),
     });
 
     assert.equal(result.valid, true, JSON.stringify(result.entries));
-    assert.deepEqual(exitCodes, []);
 
     const headers = logger.entries.filter((entry) =>
       entry.message.includes('repository: findings about other changes and living specs'),

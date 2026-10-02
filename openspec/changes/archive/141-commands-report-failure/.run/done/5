@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ebd5d7ed4b7dfbf2501a55823a0cd9db3e06f476e9c633ce8371899a60a7ac22"
+build_stamp: "9dddb68"
+project_commit: "3811cd4"
+exit_code: 0
+scope_files: {"src/cli/index.ts":"sha256:16b8dd0031bcf3e0c68ec9c5d681d4b81c837fa8c68481764f5fc06658ada7db","src/cli/plan-queue.ts":"sha256:65ee7c9bb44e5798c3d1d36fec5b92f16b816330ade6a9bb93107b9f1b01a5fc","src/cli/plan.ts":"sha256:871cbf760de5ff3292e8660ff0052423a4689e8b61c04ecf6677570228cd77d5","tests/codex/plan.test.ts":"sha256:d41bda609f15d1313acfead489cb2a9b6ea1bf5718510c3209571f02511c71a6","tests/plan-command-error.test.ts":"sha256:1045277390b12b9e131425c0d101d318eb6fa72350ce6c8b67ff80a713f05f32","tests/plan-telemetry.test.ts":"sha256:91016373f111bab440d3e518ff3899574a322ffdb8c58838e2ebb0b2a01a6c53","tests/queue-budget.test.ts":"sha256:30d24b2f4642fd687e30fafa841aa0cd8cc194df876f1daf2f8d2f10c3bd24fc","tests/queue-plan.test.ts":"sha256:7bf801585c1fdaef0c83125a5e3b7dae130d83bbff2b61cfe7ad0015a45dd0bc"}
+---
+2026-10-02T21:55:47.686Z
