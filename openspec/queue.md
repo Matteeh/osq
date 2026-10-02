@@ -6,7 +6,7 @@ Each item's body becomes that change's `brief.md` word for word. Drive the run w
 
 The read-cost queue drove changes 132 to 135 and finished on 2026-10-02. A summary is in Notion under OSQ > Archive, "osq queue, 2026-10-01 to 2026-10-02 (completed)", and the full file is in git history (commit 50b1cd5). The queue before it drove 103 to 131; see "osq queue, 2026-09-27 to 2026-10-01 (completed)" in the same place.
 
-This queue is five items, picked on 2026-10-02 from the Notion roadmap and checked against the code that day. They make the core more reliable: a provider outage stops counting as a task failure, the last M1 item makes the default harness safe, two gates stop leaking or tripping planners, and every command reports failure one way, which M2's browser actions need. None depends on another.
+This queue is five items, picked on 2026-10-02 from the Notion roadmap and checked against the code that day. They make the core more reliable: a provider outage stops counting as a task failure, the last M1 item makes the default harness safe, two gates stop leaking or tripping planners, and every command reports failure one way, which M2's browser actions need. None depends on another. A sixth item, pi-default-harness, was added the same day after 137 was approved; it depends on safer-harness-defaults.
 
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
@@ -79,6 +79,41 @@ As of 2026-10-02:
 
 - ADR 007 governs this. Say whether this change stays inside it or needs a revision.
 - Changing a default is a consumer-visible change; list it in Surface.
+
+## [pi-default-harness] A new project starts on pi
+
+Depends on: safer-harness-defaults
+
+### Goal
+
+`osq init` scaffolds pi as the default harness instead of codex, and the docs say so.
+
+### Context
+
+As of 2026-10-02:
+
+- Change 137 (safer-harness-defaults) turns agy's permission bypass off by default, adds `harness-containment` to `osq doctor` for every harness, and scaffolds `harness: process.env.OSQ_HARNESS || 'codex'` and `OSQ_HARNESS=codex` (`src/core/foundation/init.ts`, `.env.example`, `templates/.env.example`). It picked codex for its sandbox. The human chose pi afterwards: it runs any command headless, needs no generated files, reads `AGENTS.md` itself, and is what this repository runs.
+- Pi has no permission prompts and no sandbox. 137's doctor line for pi says so as a passing check, not a warning.
+- The confinement draft in Notion (ROADMAP > Security, "Confinement ADR") makes a container per role the boundary from its stage 2 on, and harness permissions only a guardrail. So the default harness is not where confinement comes from.
+- A prototype on 2026-10-02 with pi scaffolded failed only `tests/codex-guidance.test.ts`, which pins the scaffolded default, and `tests/config-load-errors.test.ts`, which swaps the scaffold's harness for `'codex'` by string replace. The living requirement "Config file errors" describes that swap in its "Scaffolded config without node_modules" scenario.
+
+### Requirements
+
+- `osq init` writes `harness: process.env.OSQ_HARNESS || 'pi'` in `osq.config.ts`, and `.env.example` starts with `OSQ_HARNESS=pi`. The repository's `.env.example` and `templates/.env.example` match the scaffold.
+- The Codex guidance comments in `.env.example` stay, so codex remains one `OSQ_HARNESS=codex` away.
+- README's Pi section says pi is the scaffolded default and that nothing confines its agent. The Upgrading notes and CHANGELOG replace 137's codex wording with pi.
+- `DEFAULT_CONFIG.harness` stays as 137 leaves it.
+
+### Non-goals
+
+- Containers or any confinement stage after ADR 007's stage 1.
+- Making doctor warn about pi.
+- Scaffolding a `pi` config block with a provider or model.
+
+### Notes for planning
+
+- The scaffolded default is consumer-visible; list it in Surface.
+- Read 137's archived proposal first: its Background records the agy probe and the measured fallout.
 
 ## [removed-requirement-pins] Removing a requirement never breaks the living-spec pin test
 
