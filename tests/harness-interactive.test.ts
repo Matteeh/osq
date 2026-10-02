@@ -135,6 +135,12 @@ process.exit(0);
     const adapter = new AgyAdapter();
     const prompt = 'Plan change 031 in agy';
 
+    await fs.writeFile(
+      path.join(tmpDir, 'osq.config.ts'),
+      'export default { agy: { dangerouslySkipPermissions: true } };',
+      'utf8',
+    );
+
     const originalPath = process.env.AGY_PATH;
     process.env.AGY_PATH = fakeBin;
 

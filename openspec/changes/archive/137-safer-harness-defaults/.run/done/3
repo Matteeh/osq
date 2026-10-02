@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:905ca852e9d9af6b8766d22d34135cddb098172b5103c6011dfe6edb55123543"
+build_stamp: "55b4c0c"
+project_commit: "c4b3eac"
+exit_code: 0
+scope_files: {".env.example":"sha256:a675466e6e1426c9679636d086dec013e3323a69170f4aa0cd70b82f205459b4","CHANGELOG.md":"sha256:f5f0f431ad716314748aa08631de7f6326f230a42355bca6a903645fb6f9d94d","README.md":"sha256:79ff28b35233334611037bfdcfe7654b6e2bd11004ef677b2cb768051e04469a","src/core/foundation/init.ts":"sha256:007c94bf746cbe2c94324b591f14770036da9e4ed2d5d061e07dda675453a989","templates/.env.example":"sha256:a675466e6e1426c9679636d086dec013e3323a69170f4aa0cd70b82f205459b4","tests/codex-guidance.test.ts":"sha256:b113d045f3014d0eedb9aa0e68b3a35bc9fe7d565873437637801d6c59d3124f","tests/harness-defaults-docs.test.ts":"sha256:b513694ced4d70299a72bb2b8f36326eb641776b1827fa02b99b8a9fbbef4ed0"}
+---
+2026-10-02T17:09:54.508Z

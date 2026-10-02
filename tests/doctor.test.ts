@@ -123,6 +123,7 @@ describe('runDoctorChecks', () => {
       [
         'config',
         'harness',
+        'harness-containment',
         'managed-blocks',
         'locks',
         'archives',
@@ -514,8 +515,8 @@ describe('doctorCommand', () => {
       exit: (code) => codes.push(code),
     });
 
-    assert.equal(report.checks.length, 8);
-    assert.equal(lines.length, 8);
+    assert.equal(report.checks.length, 9);
+    assert.equal(lines.length, 9);
     assert.ok(lines.every((line) => line.startsWith('[ok]') || line.startsWith('[warn] git:')));
     assert.equal(codes.length, 0);
 

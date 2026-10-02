@@ -54,7 +54,7 @@ export function buildAgyArgs(options: SpawnTaskOptions): string[] {
 
   const taskPrompt = buildAgyPrompt(options);
   const model = config?.agy?.model || process.env.OSQ_MODEL || 'gemini-3.8-flash-high';
-  const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions ?? true;
+  const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions === true;
 
   const args = [
     '-p',
@@ -304,6 +304,14 @@ export class AgyAdapter implements HarnessAdapter {
     await fs.mkdir(agentsDir, { recursive: true });
   }
 
+  async preflight(_projectRoot: string, config: OsqConfig): Promise<void> {
+    if (config.agy?.dangerouslySkipPermissions !== true) {
+      throw new Error(
+        'agy runs headless and denies every tool call it cannot prompt for; set agy.dangerouslySkipPermissions: true to accept that, or choose another harness',
+      );
+    }
+  }
+
   async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
     const { projectRoot, specFolderPath, taskNumber, timeoutSeconds = 1800 } = options;
 
@@ -353,7 +361,7 @@ export class AgyAdapter implements HarnessAdapter {
     if (agent) {
       args.push('--agent', agent);
     }
-    const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions ?? true;
+    const dangerouslySkipPermissions = config?.agy?.dangerouslySkipPermissions === true;
     if (dangerouslySkipPermissions) {
       args.push('--dangerously-skip-permissions');
     }

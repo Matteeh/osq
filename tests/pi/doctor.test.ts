@@ -54,6 +54,7 @@ describe('Pi doctor diagnostics', () => {
         'harness',
         'harness-version',
         'harness-auth',
+        'harness-containment',
         'managed-blocks',
         'locks',
         'archives',
@@ -80,6 +81,7 @@ describe('Pi doctor diagnostics', () => {
         [
           'config',
           'harness',
+          'harness-containment',
           'managed-blocks',
           'locks',
           'archives',

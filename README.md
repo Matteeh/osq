@@ -22,6 +22,12 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 
 ## Upgrading
 
+Unreleased:
+
+- `osq init` now scaffolds Codex instead of agy.
+- agy no longer bypasses its permission prompts by default, so a headless agy task cannot answer them and `osq watch` refuses to start.
+- An agy project must set `agy: { dangerouslySkipPermissions: true }` in `osq.config.ts` or switch harness.
+
 To 0.2.2:
 
 - The opencode adapter needs opencode 2. `osq doctor` and the watcher's preflight refuse opencode 1.
@@ -406,6 +412,25 @@ export default defineConfig({
 The adapter needs opencode 2; `osq doctor` reports a failing `harness-version` check for opencode 1 and a warning above the tested range. Tasks run with `opencode run --standalone` from the project root, and a configured `variant` is appended to the model as `<model>#<variant>`.
 
 Running `osq setup` with the `opencode` harness scaffolds `.opencode/agent/osq-coder.md` with restricted permissions (denying `webfetch` and `websearch`) and the managed `AGENTS.md` execution procedure. Note that the `--auto` flag approves any action the agent file does not deny. The agent file must have mode `all` or `primary`; a subagent cannot be selected with --agent and OpenCode silently falls back to an unrestricted default. `webfetch` and `websearch` are denied at the tool level, but `bash` is allowed and unrestricted, so the agent can reach the network through the shell. Network isolation requires a sandbox, which osq does not provide.
+
+### Antigravity (agy)
+
+Select Antigravity as the executor in `osq.config.ts`:
+
+```ts
+import { defineConfig } from '@matteeh/osq';
+
+export default defineConfig({
+  harness: 'agy',
+  // agy: { dangerouslySkipPermissions: true }, // required for headless tasks
+});
+```
+
+Setting `OSQ_HARNESS=agy` in the environment or `.env` also selects agy, but an explicit `harness` in `osq.config.ts` wins over that fallback.
+
+#### agy permissions
+
+agy asks before every tool call by default. A headless task cannot answer those prompts, so agy auto-denies the call and the watcher refuses to start before any task spawns. Set `agy: { dangerouslySkipPermissions: true }` in `osq.config.ts` to have agy approve every tool call and run headless; `osq doctor` then reports a `harness-containment` warning saying that nothing stops git, network tools, or sudo. Interactive planning with agy needs no bypass, because a human answers the prompts.
 
 ### Codex CLI
 
@@ -811,7 +836,7 @@ Run `osq doctor` to verify repository health:
 - `harness`: checks that the configured harness binary (e.g. `opencode`, `agy`) exists and is executable
 - `harness-version`: the installed harness's version. Pi warns outside its tested range; Claude Code fails under `2.1.278`; opencode fails under 2 and warns from 3
 - `harness-auth`: with Pi and `pi.provider` set, fails unless `pi auth check` reports `ready`
-- `harness-containment`: with Claude Code, states what confines the agent's Bash
+- `harness-containment`: doctor reports it for every harness, stating what confines the agent. It fails for agy without `agy.dangerouslySkipPermissions: true`, and warns for agy with it or for an opencode agent other than `osq-coder`
 - `decisions`: validates every ADR, the AGENTS.md rules block, and each accepted ADR's check files
 - `planning-prices`: warns, only when it applies, that a model with recorded planning tokens has no price in `planning.prices`
 - `git`: git's version, or a warning saying why git is off. `git-env` warns when a variable such as `GIT_DIR` is set

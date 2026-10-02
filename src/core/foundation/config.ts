@@ -127,7 +127,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   planning: DEFAULT_PLANNING_CONFIG,
   agy: {
     model: 'gemini-3.8-flash-high',
-    dangerouslySkipPermissions: true,
+    dangerouslySkipPermissions: false,
   },
   opencode: {
     bin: 'opencode',

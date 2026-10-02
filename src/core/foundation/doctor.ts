@@ -15,6 +15,7 @@ import { checkDecisions } from './doctor-decisions.js';
 import { checkManagedBlocks } from './doctor-managed.js';
 import { checkPlanningPrices } from './doctor-prices.js';
 import { findHarness } from './harness-catalog.js';
+import type { HarnessContainment } from './harness-containment.js';
 
 export interface DoctorCheckResult {
   name: string;
@@ -200,15 +201,26 @@ async function checkDoneMarkers(
   );
 }
 
+/** Normalize a catalog containment report into a doctor check. */
+function containmentCheck(result: HarnessContainment | string): DoctorCheckResult {
+  if (typeof result === 'string') return make('harness-containment', true, result);
+  return {
+    ...make('harness-containment', result.ok, result.message),
+    ...(result.warning ? { warning: true } : {}),
+  };
+}
+
 export async function runDoctorChecks(
   projectRoot: string,
   deps: DoctorDependencies = {},
 ): Promise<DoctorReport> {
   const { check: configCheck, config } = await checkConfig(projectRoot, deps);
   const harness = await checkHarness(projectRoot, config);
+  const entry = findHarness(config.harness);
   // A catalog entry may add checks for its own executable after a passing probe.
-  const diagnose = harness.check.ok ? findHarness(config.harness)?.diagnose : undefined;
+  const diagnose = harness.check.ok ? entry?.diagnose : undefined;
   const extra = diagnose ? await diagnose({ config, projectRoot, version: harness.version }) : [];
+  const containment = configCheck.ok && entry ? [containmentCheck(entry.containment(config))] : [];
   const decisionsCheck = await checkDecisions(projectRoot, config);
   const checks: DoctorCheckResult[] = [
     configCheck,
@@ -217,6 +229,7 @@ export async function runDoctorChecks(
       ...make(diagnosis.name, diagnosis.ok, diagnosis.message),
       ...(diagnosis.warning ? { warning: true } : {}),
     })),
+    ...containment,
     await checkManaged(projectRoot, config),
     ...(decisionsCheck ? [decisionsCheck] : []),
     await checkLocks(projectRoot, config),

@@ -112,9 +112,9 @@ export function claudeContainment(config: OsqConfig): string {
 }
 
 /**
- * Version floor plus containment report for `osq doctor`. A version below the
- * minimum fails; the containment line always passes and states the truth for
- * the configured sandbox setting.
+ * Version floor for `osq doctor`. A version below the minimum fails and names
+ * the observed version and the minimum. Containment is reported separately by
+ * the catalog's `claudeContainment`.
  */
 export async function diagnoseClaude(
   context: HarnessDiagnoseContext,
@@ -131,8 +131,5 @@ export async function diagnoseClaude(
         ok: false,
         message: `Claude Code ${assessment.version} is below the required ${CLAUDE_MINIMUM_VERSION}`,
       };
-  return [
-    versionCheck,
-    { name: 'harness-containment', ok: true, message: containmentText(context.config) },
-  ];
+  return [versionCheck];
 }

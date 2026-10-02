@@ -26,18 +26,18 @@ describe('codex consumer guidance: scaffolded .env.example', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('scaffolds commented Codex selection/binary/model guidance under the agy default', async () => {
+  it('scaffolds Codex as the active default with its selection/binary/model guidance', async () => {
     const result = await scaffoldProject(tmpDir);
     assert.ok(result.createdFiles.includes('.env.example'));
 
     const content = await fs.readFile(path.join(tmpDir, '.env.example'), 'utf8');
     const lines = content.split('\n').map((line) => line.trim());
 
-    assert.ok(lines.includes('OSQ_HARNESS=agy'), 'agy must stay the active default harness');
+    assert.ok(lines.includes('OSQ_HARNESS=codex'), 'codex must be the active default harness');
     assert.equal(
-      lines.some((line) => /^OSQ_HARNESS=codex\b/.test(line)),
+      lines.some((line) => /^OSQ_HARNESS=agy\b/.test(line)),
       false,
-      'Codex selection must be commented, not the active default',
+      'agy must not be the active default',
     );
     assert.match(content, /codex/i);
 

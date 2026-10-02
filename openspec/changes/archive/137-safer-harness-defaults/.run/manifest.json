@@ -1,0 +1,39 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:018f114a2fa162dc7fb19f069f32b4300590150e9eb302ce0e3e4ddec5eaab3b",
+    "PLANNER.md": "sha256:a7c592905cd1053807bc28a9b324741d1986d45d91334c31615495742b20864c",
+    "config": "sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39",
+    "spec-lint-and-approve": "sha256:cab36d8e0c2e9dfe02b0db287eca52c596b64713c4af70148a968e6f660c8813",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "status-inspection": "sha256:727a74a5ea755b2bf56c391d7c3e8d2e175d21d015c3d7fed8fa91ecb017fa5a",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "version-control": "sha256:c4691b6bd82ce10fae293739ff05431b3e0526348d9e3c1fbf7b820a98851fe5",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "cli-foundation": "sha256:722c2664f3b56e35ea8f4fed4fac8c1884d191abded2642c50d1ce25aaecc8d6",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "watcher-and-harness": "sha256:07cc2eddfb528554094cfe9c0154873ded1a499b8f48b39161abcd5a93db427d",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d"
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-02T16:25:31.072Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-02T16:39:48.271Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "002": "sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14"
+  }
+}

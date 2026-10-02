@@ -1,14 +1,10 @@
-import {
-  claudeContainment,
-  diagnoseClaude,
-  resolveClaudeBinary,
-  resolveClaudeModel,
-} from './config-claude.js';
+import { diagnoseClaude, resolveClaudeBinary, resolveClaudeModel } from './config-claude.js';
 import { codexExecutable, codexModel } from './config-codex-resolve.js';
 import { HARNESS_AGENT_ENV } from './config-confinement.js';
 import { diagnoseOpencode } from './config-opencode.js';
 import * as piConfig from './config-pi.js';
 import type { OsqConfig } from './config.js';
+import { type HarnessContainment, attachContainment } from './harness-containment.js';
 
 /** Canonical, immutable catalog of first-party harness capabilities. */
 export const HARNESS_NAMES = ['agy', 'opencode', 'mock', 'codex', 'pi', 'claude'] as const;
@@ -42,15 +38,15 @@ export interface HarnessCatalogEntry {
   /** Applicable reasoning effort, or `null` when the harness has no such knob. */
   readonly effort: (config: OsqConfig) => string | null;
   readonly planner: PlannerCapability;
-  /** What the harness confines for this configuration, when the entry declares it. */
-  readonly containment?: (config: OsqConfig) => string;
+  /** What the harness confines for this configuration. */
+  readonly containment: (config: OsqConfig) => HarnessContainment;
   /** Optional extra doctor checks run after a passing `harness` probe. */
   readonly diagnose?: (
     context: piConfig.HarnessDiagnoseContext,
   ) => Promise<readonly piConfig.HarnessDiagnosis[]>;
 }
 type HarnessCatalogDefinitions = {
-  readonly [K in HarnessName]: Omit<HarnessCatalogEntry, 'name'>;
+  readonly [K in HarnessName]: Omit<HarnessCatalogEntry, 'name' | 'containment'>;
 };
 
 const DEFINITIONS: HarnessCatalogDefinitions = {
@@ -111,7 +107,6 @@ const DEFINITIONS: HarnessCatalogDefinitions = {
       resolveClaudeModel(config, normalizeHarnessName(config.harness) === 'claude'),
     effort: () => null,
     planner: { agent: false, briefModelWhenNative: 'default' },
-    containment: claudeContainment,
     diagnose: diagnoseClaude,
   },
 };
@@ -123,7 +118,7 @@ export function normalizeHarnessName(name: string): string {
 
 /** The frozen catalog, ordered by {@link HARNESS_NAMES}. */
 export const HARNESS_CATALOG: readonly HarnessCatalogEntry[] = Object.freeze(
-  HARNESS_NAMES.map((name) => Object.freeze({ name, ...DEFINITIONS[name] })),
+  HARNESS_NAMES.map((name) => Object.freeze(attachContainment(name, DEFINITIONS[name]))),
 );
 
 /** Ordered available harness names. */

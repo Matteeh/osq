@@ -28,12 +28,12 @@ export type { ManagedBlockProblem } from './init-managed.js';
 const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from '@matteeh/osq';
 
 export default defineConfig({
-  harness: process.env.OSQ_HARNESS || 'agy',
+  harness: process.env.OSQ_HARNESS || 'codex',
   maxConcurrency: 1,
 });
 `;
 
-const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=agy
+const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=codex
 # GEMINI_API_KEY=
 # ANTHROPIC_API_KEY=
 
@@ -43,6 +43,8 @@ const DEFAULT_ENV_EXAMPLE = `OSQ_HARNESS=agy
 # CODEX_PATH=/path/to/codex        # binary: codex.bin -> CODEX_PATH -> codex
 # OSQ_MODEL=<your-codex-model>     # model: codex.model -> OSQ_MODEL (Codex executor) -> native
 # codex.effort in osq.config.ts sets reasoning effort; the default is native.
+
+# agy needs agy: { dangerouslySkipPermissions: true } in osq.config.ts to run headless; without it osq watch refuses to start.
 `;
 
 export interface InitResult {

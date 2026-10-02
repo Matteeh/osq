@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:584cec13cea0758b2b98e3796fbd89051c8b96fe0f42bb762db29acf4e8a33db"
+build_stamp: "55b4c0c"
+project_commit: "bc531fd"
+exit_code: 0
+scope_files: {"src/core/foundation/config-claude.ts":"sha256:82efe7897752d27d853dae7f139b087d41b9d4038ae439f8031b71bdbc5e5c88","src/core/foundation/doctor.ts":"sha256:41c2cfcb0054f5552ebb957c022591fa85f4ac54fb90b3c18dd77d7be63a431e","src/core/foundation/harness-catalog.ts":"sha256:457f2062f398a3f2e4c00d19f88fe75db75ce83de145ef3dba4e25553e62ad34","src/core/foundation/harness-containment.ts":"sha256:a42abe00f5ed7722c7a27a6080e8f2aa6f24398a735f8190dac954c0906e2600","tests/codex/adapter.test.ts":"sha256:b6d60466b9b5f88c2ab74121f6fc75c60c4d25b27ca05026edf392f9e5424a24","tests/doctor.test.ts":"sha256:9fe772ca9378264602896b19ab52caed93a8a8300e3f11166707169fc8980f6d","tests/harness-containment.test.ts":"sha256:fb467bfdea9241a83c9c381583a47e7e3612e5bc9dc8ab5c28c990ef1c89b7ad","tests/pi/doctor.test.ts":"sha256:5eb77c1ef963db24061493f560e118732ed37ab66ca997c8b9fa074a992f2699"}
+---
+2026-10-02T17:02:33.851Z

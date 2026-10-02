@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:261caa80fbc93361390a8705f30c30d90256f6db88af6d9f376c4639023ada4a"
+build_stamp: "55b4c0c"
+project_commit: "0708059"
+exit_code: 0
+scope_files: {"src/core/foundation/config.ts":"sha256:c77c8a3c369dfc2f90bd3472e7ded27003e8ae6e8b28cb090afe13a3200305ef","src/harness/agy/agy.ts":"sha256:888dcec56e8c12290a018602ffb8254865bb8baf42f68e70648c63efc2f4ea2c","tests/agy-permissions.test.ts":"sha256:d8e1a1ab84d0041cc7936cab766680cb128abe6f3836de1d5052cc3c38cae1b4","tests/config.test.ts":"sha256:cfb05c101720b86128ca46b46e75524f5d383ab2caac5b2e43e91a95458cfab6","tests/harness-interactive.test.ts":"sha256:7b4bea777371d7681801fe8d7a86ef8c8ce142a1366d9009993ec9d1186b7756"}
+---
+2026-10-02T16:47:24.782Z

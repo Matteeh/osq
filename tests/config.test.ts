@@ -39,7 +39,7 @@ describe('OsqConfig', () => {
     );
 
     assert.equal(DEFAULT_CONFIG.agy?.model, 'gemini-3.8-flash-high');
-    assert.equal(DEFAULT_CONFIG.agy?.dangerouslySkipPermissions, true);
+    assert.equal(DEFAULT_CONFIG.agy?.dangerouslySkipPermissions, false);
   });
 
   it('allows overriding specific limits while retaining default paths and timeouts', () => {
