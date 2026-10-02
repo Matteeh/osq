@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { checkLineBudget } from './line-budget-check.js';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const SRC_DIR = path.join(ROOT, 'src');
@@ -13,41 +14,24 @@ const MAX_LINES = 250;
 const UI_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.css']);
 
 /**
- * Explicit allow list of oversized legacy modules.
- *
- * The first four are the exceptions named by the change proposal. The
- * remaining files were already over the budget before this ratchet landed
- * and cannot be split from within this task's scope; they are grandfathered
- * so the suite passes while still preventing any *new* file from exceeding
- * the budget. Remove an entry once that module is split.
+ * Explicit allow list of oversized legacy modules, keyed by their path under
+ * `src/`. This list only shrinks: remove an entry once its file is split back
+ * within the budget. A path that no longer exists, or whose file is within
+ * the budget, fails the source line budget case below.
  */
-const ALLOW_LIST = new Set([
-  'report.ts',
-  'show.ts',
-  'opencode.ts',
-  'agy.ts',
-  'linter.ts',
-  'loop.ts',
-  'migrate.ts',
-  'delta.ts',
-  'parser.ts',
-  'types.ts',
-]);
-
-/** Recursively collect every non-declaration TypeScript file under `dir`. */
-async function listSourceFiles(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await listSourceFiles(fullPath)));
-    } else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts')) {
-      files.push(fullPath);
-    }
-  }
-  return files;
-}
+const ALLOW_LIST = [
+  'core/report/report.ts',
+  'core/spec/linter.ts',
+  'core/status/show.ts',
+  'core/spec/delta.ts',
+  'harness/opencode/opencode.ts',
+  'harness/types.ts',
+  'watcher/loop.ts',
+  'harness/agy/agy.ts',
+  'core/spec/migrate.ts',
+  'cli/report.ts',
+  'core/spec/parser.ts',
+];
 
 /** Recursively collect authored `.ts`, `.tsx`, and `.css` files under `dir`. */
 async function listUiSourceFiles(dir: string): Promise<string[]> {
@@ -70,17 +54,7 @@ async function listUiSourceFiles(dir: string): Promise<string[]> {
 
 describe('source line budget', () => {
   it('keeps every non-allow-listed source file at or under 250 lines', async () => {
-    const files = await listSourceFiles(SRC_DIR);
-    const violations: string[] = [];
-
-    for (const file of files) {
-      if (ALLOW_LIST.has(path.basename(file))) continue;
-      const source = await fs.readFile(file, 'utf8');
-      const lineCount = source.split('\n').length;
-      if (lineCount > MAX_LINES) {
-        violations.push(`${path.relative(ROOT, file)} has ${lineCount} lines (max ${MAX_LINES})`);
-      }
-    }
+    const violations = await checkLineBudget(SRC_DIR, ALLOW_LIST, MAX_LINES);
 
     assert.deepEqual(
       violations,
