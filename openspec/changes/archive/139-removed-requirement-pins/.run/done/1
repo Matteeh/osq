@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9a498a0b27f2a4a14631fd678d95894bf5df15ce35f1f8bf6c7a6fb09f49ea57"
+build_stamp: "9dddb68"
+project_commit: "ca3125c"
+exit_code: 0
+scope_files: {"tests/living-specs-delta-equivalence.test.ts":"sha256:b2da3f8ea0b8fe381c00b087faf64e5d243ef5f3ba8f649264ff2d983d42727d","tests/living-specs-pins.test.ts":"sha256:51b541a399fb7fb529771c44ea43b4f60c652de018c93359c22949a254ce38fb"}
+---
+2026-10-02T17:55:09.433Z

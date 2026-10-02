@@ -31,59 +31,6 @@ const CAPABILITIES = [
 ] as const;
 
 /**
- * Requirements that MUST survive the re-seed. 017 owns the baseline Code
- * ownership and test gating blocks; 020 through 027 own the rest.
- */
-const PRESERVED_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
-  'cli-foundation': [
-    'Code ownership',
-    'Watch stale build and dev mode CLI options',
-    'Repository health diagnostics',
-    'Planner instruction scaffolding',
-    'Canonical OpenSpec path layout',
-    'Complete layout consumer cut-over',
-    'Managed block coexistence',
-    'Canonical migration layout authority',
-  ],
-  'metrics-and-reporting': [
-    'Code ownership',
-    'Undeclared test change failure metrics',
-    'Manifest and measures schema',
-  ],
-  'spec-lint-and-approve': [
-    'Code ownership',
-    'Capability code ownership parsing',
-    'Test modification declaration validation',
-    'Architecture Decision Record 004: Pinned OpenSpec Validator',
-    'OpenSpec schema execution authority instructions',
-    'Proposal change-level verify command declaration',
-  ],
-  'status-inspection': ['Code ownership', 'Undeclared test change status inspection'],
-  'watcher-and-harness': [
-    'Code ownership',
-    'Capability rule prompt injection',
-    'Test modification gating',
-    'Build identity metadata',
-    'Stale build preflight detection',
-    'Reactive dev mode execution',
-    'Runner lifecycle modularization',
-    'Architectural import graph boundaries',
-    'Typed event hygiene and single emission path',
-    'Golden event stream validation',
-    'Consolidated marker writing and pure state derivation',
-    'Source module line budget enforcement',
-    'Backward-compatible state derivation and watcher layout cut-over',
-    'Run manifest at approval',
-    'Raw measures events on task lifecycle',
-    'Emitted verify_ran event exit code and duration',
-    'Done marker scope hash frontmatter',
-    'Pre-spawn scope comparison and regression detection',
-    'Regressed marker, event, and status lifecycle',
-    'Archive-time verification re-run',
-  ],
-};
-
-/**
  * The deterministic re-seed strips every legacy prose-appender reference so the
  * living specs never resurrect the retired `## Delta from ...` sections.
  */
@@ -228,10 +175,6 @@ async function replayLivingSpec(capability: string): Promise<string> {
   return stripLegacyDeltaReferences(base);
 }
 
-function requirementNames(content: string): string[] {
-  return [...content.matchAll(/^### Requirement:[ \t]*(.+)$/gm)].map((match) => match[1].trim());
-}
-
 async function listFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files: string[] = [];
@@ -307,20 +250,6 @@ describe('Living spec delta equivalence', () => {
     assert.ok(!rendered.includes('+ line-500'), `message must not hold line 500: ${message}`);
 
     assert.equal(firstLineDifference('equal texts', expected, expected), null);
-  });
-
-  it('preserves requirements introduced by 017 and 020 through 027', async () => {
-    for (const capability of CAPABILITIES) {
-      const content = await fs.readFile(path.join(LIVING_SPECS_DIR, capability, 'spec.md'), 'utf8');
-      const names = requirementNames(content);
-
-      for (const requirement of PRESERVED_REQUIREMENTS[capability]) {
-        assert.ok(
-          names.includes(requirement),
-          `${capability} is missing preserved requirement "${requirement}"`,
-        );
-      }
-    }
   });
 
   it('contains zero legacy "Delta from" references and no loose spec markdown files', async () => {
