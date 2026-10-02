@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c1881dee49a21328f0d798d20baac70069e890dc3b34b9d09246d7958d23ef71"
+build_stamp: "11a7364"
+project_commit: "665b708"
+exit_code: 0
+scope_files: {"src/core/foundation/config-gates.ts":"sha256:ba36de398c7db728c0103d1f8d0c3288756a81c1771cfaff2b9d909cbac6039d","src/watcher/failure-reason.ts":"sha256:d249f001b2f24988b244c29d6995323633ad61f315ce4ad8be80ca007f82bac0","src/watcher/provider-outage.ts":"sha256:852e9636ca32b2ee3a19370cad29cc81781efb683806aa0be8b6a29984f759d7","src/watcher/spawn-guard.ts":"sha256:550fc1cafb41bc1f26d534686e3e8da47fba3a736787f7acaad747292a11f1f0","src/watcher/spawn.ts":"sha256:d9760a68cabad6fe8b3ec4885900abb428df3b59bcc87e7679e8f1a62194b86d","tests/provider-outage.test.ts":"sha256:b4d4183a3ec7461aab8b298126d1c43461723f7f8d8305b5e92506bdbea3ba9d"}
+---
+2026-10-02T06:20:35.319Z

@@ -8,6 +8,15 @@ import { readManifestApprovedAt } from '../core/run/manifest-approval.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { appendHarnessEvent } from '../harness/types.js';
 import { markerFingerprint } from './fingerprint.js';
+import {
+  PROVIDER_DEFAULTS,
+  PROVIDER_REASON,
+  automaticRetriesSince,
+  decideProviderRetry,
+  lastManualRetryAt,
+  laterOf,
+  readStream,
+} from './provider-retry.js';
 
 // Automatic retry spends one agent attempt on a dead task when a fresh run
 // could plausibly fix it. The decision is re-derived from disk every cycle; the
@@ -24,6 +33,7 @@ export const ELIGIBLE_AUTO_RETRY_REASONS = [
   'no_result',
   'crashed',
   'timeout',
+  'provider_unavailable',
 ] as const;
 
 export type EligibleAutoRetryReason = (typeof ELIGIBLE_AUTO_RETRY_REASONS)[number];
@@ -31,62 +41,6 @@ export type EligibleAutoRetryReason = (typeof ELIGIBLE_AUTO_RETRY_REASONS)[numbe
 const ELIGIBLE: ReadonlySet<string> = new Set(ELIGIBLE_AUTO_RETRY_REASONS);
 const ACTIVE_DEAD = /^\d+\.md$/;
 const RETAINED_DEAD = /^(\d+)\.(\d+)\.md$/;
-
-interface StreamEvent {
-  readonly type?: unknown;
-  readonly timestamp?: unknown;
-  readonly data?: unknown;
-}
-
-async function readStream(folderPath: string, taskNumber: string): Promise<StreamEvent[]> {
-  const raw = await fs
-    .readFile(path.join(folderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
-    .catch(() => '');
-  const events: StreamEvent[] = [];
-  for (const line of raw.split('\n')) {
-    if (!line.trim()) continue;
-    try {
-      events.push(JSON.parse(line) as StreamEvent);
-    } catch {
-      // A malformed line never blocks the decision.
-    }
-  }
-  return events;
-}
-
-function dataOf(event: StreamEvent): Record<string, unknown> {
-  return event.data !== null && typeof event.data === 'object'
-    ? (event.data as Record<string, unknown>)
-    : {};
-}
-
-function laterOf(a: string | undefined, b: string | undefined): string | undefined {
-  if (a === undefined) return b;
-  if (b === undefined) return a;
-  return a > b ? a : b;
-}
-
-function lastManualRetryAt(events: readonly StreamEvent[]): string | undefined {
-  let latest: string | undefined;
-  for (const event of events) {
-    if (event.type !== 'retry' || dataOf(event).automatic === true) continue;
-    if (typeof event.timestamp !== 'string') continue;
-    latest = laterOf(latest, event.timestamp);
-  }
-  return latest;
-}
-
-function automaticRetriesSince(events: readonly StreamEvent[], cutoff?: string): number {
-  let count = 0;
-  for (const event of events) {
-    if (event.type !== 'retry' || dataOf(event).automatic !== true) continue;
-    if (cutoff !== undefined && typeof event.timestamp === 'string' && event.timestamp < cutoff) {
-      continue;
-    }
-    count += 1;
-  }
-  return count;
-}
 
 /** Stored fingerprint, falling back to a content-derived one for legacy markers. */
 function fingerprintOf(content: string, projectRoot: string): string {
@@ -162,6 +116,7 @@ async function decideDeadTask(
   deadPath: string,
   config: OsqConfig,
   limit: number,
+  now: number,
   logger?: Logger,
 ): Promise<Decision> {
   const content = await fs.readFile(deadPath, 'utf8').catch(() => '');
@@ -170,16 +125,31 @@ async function decideDeadTask(
   const runDir = path.join(folderPath, '.run');
   const events = await readStream(folderPath, taskNumber);
   const fingerprint = fingerprintOf(content, projectRoot);
-  const previous = await highestRetained(path.join(runDir, 'dead'), taskNumber, projectRoot);
-  if (previous !== undefined && previous === fingerprint) {
-    await markStuck(folderPath, specId, taskNumber, deadPath, fingerprint, logger);
-    return 'stuck';
+  const provider = reason === PROVIDER_REASON;
+  // A provider outage is never the attempt's fault; it is never stuck.
+  if (!provider) {
+    const previous = await highestRetained(path.join(runDir, 'dead'), taskNumber, projectRoot);
+    if (previous !== undefined && previous === fingerprint) {
+      await markStuck(folderPath, specId, taskNumber, deadPath, fingerprint, logger);
+      return 'stuck';
+    }
   }
   const cutoff = laterOf(
     (await readManifestApprovedAt(folderPath)) ?? undefined,
     lastManualRetryAt(events),
   );
-  if (automaticRetriesSince(events, cutoff) >= limit) return 'none';
+  if (provider) {
+    const retry = decideProviderRetry({
+      events,
+      providerRetries: config.gates?.providerRetries ?? PROVIDER_DEFAULTS.retries,
+      delaySeconds: config.gates?.providerRetryDelaySeconds ?? PROVIDER_DEFAULTS.delaySeconds,
+      ...(cutoff !== undefined ? { cutoff } : {}),
+      now,
+    });
+    if (!retry) return 'none';
+  } else if (automaticRetriesSince(events, cutoff) >= limit) {
+    return 'none';
+  }
   try {
     const result = await retrySpec(projectRoot, specId, taskNumber, config, { automatic: true });
     logger?.info(
@@ -202,6 +172,7 @@ export async function runAutomaticRetries(
   folderPath: string,
   config: OsqConfig,
   logger?: Logger,
+  now: number = Date.now(),
 ): Promise<number> {
   const limit = config.gates?.autoRetries ?? 1;
   if (limit <= 0) return 0;
@@ -221,6 +192,7 @@ export async function runAutomaticRetries(
       path.join(deadDir, entry),
       config,
       limit,
+      now,
       logger,
     );
     if (decision === 'retried') retried += 1;

@@ -16,6 +16,7 @@ import {
   recordLifecycleEvent,
   writeDeadMarker,
 } from './outcome.js';
+import { describeAgentFailure } from './provider-outage.js';
 import { spawnOrCrash } from './spawn-guard.js';
 import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
 
@@ -130,14 +131,12 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
   );
 
   if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
-    const failureReason: RunTaskFailureReason = spawnResult.timedOut ? 'timeout' : 'crashed';
-    const lines = ['---', `reason: ${failureReason}`, `exit_code: ${spawnResult.exitCode}`];
-    if (spawnResult.signal) lines.push(`signal: ${spawnResult.signal}`);
-    lines.push('---');
-    lines.push(
-      `Agent ${spawnResult.timedOut ? 'timed out' : 'crashed'} with code ${spawnResult.exitCode}: ${spawnResult.error || ''}\n`,
+    const { reason: failureReason, marker } = await describeAgentFailure(
+      specFolderPath,
+      taskNumber,
+      spawnResult,
     );
-    await writeDeadMarker(runDir, taskNumber, lines.join('\n'), projectRoot);
+    await writeDeadMarker(runDir, taskNumber, marker, projectRoot);
     await recordDeadEvent(specFolderPath, taskNumber, failureReason);
     const extra = failureReason === 'crashed' ? `code: ${spawnResult.exitCode}` : undefined;
     logOutcome(false, failureReason, extra);

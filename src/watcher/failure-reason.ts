@@ -14,6 +14,7 @@ export type RunTaskFailureReason =
   | 'change_verify_red'
   | 'crashed'
   | 'timeout'
+  | 'provider_unavailable'
   | 'undeclared_test_change'
   | 'blocked'
   | 'baseline_red'
