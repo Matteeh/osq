@@ -7,6 +7,7 @@ import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import {
+  captureLogs,
   createChange,
   createProject,
   readManifest,
@@ -35,37 +36,22 @@ async function useRunnerVerify(root: string, folderPath: string): Promise<void> 
   }
 }
 
-/** Captures logs and reads a `CommandError` so refusal and decline stay testable. */
+/** Captures stream output and reads a `CommandError` so refusal and decline stay testable. */
 async function captureExitAndLogs(
   run: () => Promise<void>,
 ): Promise<{ lines: string[]; exitCode: number | undefined }> {
-  const lines: string[] = [];
-  const originalLog = console.log;
-  const originalWarn = console.warn;
-  const originalError = console.error;
-  let exitCode: number | undefined;
-
-  const push = (...args: unknown[]): void => {
-    lines.push(args.map(String).join(' '));
-  };
-  console.log = push;
-  console.warn = push;
-  console.error = push;
-
-  try {
-    await run();
-  } catch (error) {
-    if (!(error instanceof CommandError)) throw error;
-    exitCode = error.exitCode;
-    if (error.message) lines.push(error.message);
-    if (error.next) lines.push(`Next: ${error.next}`);
-  } finally {
-    console.log = originalLog;
-    console.warn = originalWarn;
-    console.error = originalError;
-  }
-
-  return { lines, exitCode };
+  let caught: CommandError | undefined;
+  const lines = await captureLogs(async () => {
+    try {
+      await run();
+    } catch (error) {
+      if (!(error instanceof CommandError)) throw error;
+      caught = error;
+    }
+  });
+  if (caught?.message) lines.push(caught.message);
+  if (caught?.next) lines.push(`Next: ${caught.next}`);
+  return { lines, exitCode: caught?.exitCode };
 }
 
 describe('osq approve confirmation', () => {

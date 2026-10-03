@@ -1,14 +1,9 @@
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { syncChange } from '../core/vcs/sync-change.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface SyncCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
-  stdout?: (msg: string) => void;
-  stderr?: (msg: string) => void;
-}
+export type SyncCommandOptions = CommandInputs;
 
 /**
  * Take the default branch into a change's branch. Prints the result line to
@@ -16,14 +11,14 @@ export interface SyncCommandOptions {
  * `CommandError` whose message is the line it would have printed to stderr.
  */
 export async function syncCommand(id: string, options: SyncCommandOptions = {}): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const stdout = options.stdout ?? ((msg: string) => process.stdout.write(msg));
-  const stderr = options.stderr ?? ((msg: string) => process.stderr.write(msg));
+  const inputs = resolveInputs(options);
 
   try {
-    const config = options.config || (await loadConfig(cwd));
-    const line = await syncChange(cwd, config, id, (progress) => stderr(`${progress}\n`));
-    stdout(`${line}\n`);
+    const config = await inputs.config();
+    const line = await syncChange(inputs.cwd, config, id, (progress) =>
+      inputs.stderr(`${progress}\n`),
+    );
+    inputs.stdout(`${line}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new CommandError(message);

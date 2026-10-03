@@ -1,6 +1,6 @@
 import os from 'node:os';
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import type { OsqConfig } from '../core/foundation/config.js';
 import type { ChangeTree } from '../core/status/change-locations.js';
 import {
   type EveryFn,
@@ -19,13 +19,10 @@ import { type InboxSound, createInboxSound } from '../core/status/inbox-sound.js
 import { createWaitRecorder } from '../core/status/wait-recorder.js';
 import type { ScheduleFn, WatcherFactory } from '../core/web/web-events.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
 import { createChildLauncher, createTerminalInput } from './inbox-terminal.js';
 
-export interface InboxDispatchOptions {
-  cwd?: string;
-  config?: OsqConfig;
-  stdout?: (msg: string) => void;
-  stderr?: (msg: string) => void;
+export interface InboxDispatchOptions extends CommandInputs {
   json?: boolean;
   follow?: boolean;
   /** The home the wait log lives under; defaults to the user's home. */
@@ -49,22 +46,38 @@ function defaultIsTerminal(): boolean {
   return process.stdin.isTTY === true && process.stdout.isTTY === true;
 }
 
+const BELL = '\u0007';
+
+/** Append a newline to `writer`'s text, as an error line was printed before. */
+function lineWriter(writer: Writer): Writer {
+  return (message) => writer(`${message}\n`);
+}
+
+/** The default sound, ringing through `stdout` and warning through `stderr`. */
+function defaultSound(cwd: string, config: OsqConfig, stdout: Writer, stderr: Writer): InboxSound {
+  return createInboxSound(cwd, config, {
+    bell: () => stdout(BELL),
+    warn: (message) => stderr(`${message}\n`),
+  });
+}
+
 /** The seams the card session consumes, filling the terminal defaults. */
 function sessionOptions(
   options: InboxDispatchOptions,
   cwd: string,
   config: OsqConfig,
   home: string,
-  stderr: (message: string) => void,
+  stdout: Writer,
+  stderr: Writer,
 ): CardSessionOptions {
   return {
-    input: options.input ?? createTerminalInput(process.stdin),
+    input: options.input ?? createTerminalInput(process.stdin, stdout),
     launch: options.launch ?? createChildLauncher(cwd),
-    sound: options.sound ?? createInboxSound(cwd, config),
+    sound: options.sound ?? defaultSound(cwd, config, stdout, stderr),
     home,
-    recorder: createWaitRecorder(cwd, 'cards', { home, stderr }),
-    ...(options.stdout ? { stdout: options.stdout } : {}),
-    ...(options.stderr ? { stderr: options.stderr } : {}),
+    stdout,
+    stderr,
+    recorder: createWaitRecorder(cwd, 'cards', { home, stderr: lineWriter(stderr) }),
     ...(options.now ? { now: options.now } : {}),
     ...(options.watch ? { watch: options.watch } : {}),
     ...(options.schedule ? { schedule: options.schedule } : {}),
@@ -79,15 +92,15 @@ function followOptions(
   cwd: string,
   config: OsqConfig,
   home: string,
-  stderr: (message: string) => void,
+  stdout: Writer,
+  stderr: Writer,
 ): FollowDispatchOptions {
-  const sound = options.sound ?? createInboxSound(cwd, config);
   return {
-    sound,
+    sound: options.sound ?? defaultSound(cwd, config, stdout, stderr),
     home,
-    recorder: createWaitRecorder(cwd, 'follow', { home, stderr }),
-    ...(options.stdout ? { stdout: options.stdout } : {}),
-    ...(options.stderr ? { stderr: options.stderr } : {}),
+    stdout,
+    stderr,
+    recorder: createWaitRecorder(cwd, 'follow', { home, stderr: lineWriter(stderr) }),
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.watch ? { watch: options.watch } : {}),
     ...(options.schedule ? { schedule: options.schedule } : {}),
@@ -103,36 +116,27 @@ function followOptions(
  * Read-only: it writes no marker and never advances the inbox cursor.
  */
 export async function inboxDispatchCommand(options: InboxDispatchOptions = {}): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
+  const { cwd, stdout, stderr } = inputs;
   const home = options.home ?? os.homedir();
-  const stderr = options.stderr ?? ((msg: string) => console.error(msg));
   if (options.follow && options.json) {
     throw new CommandError('osq inbox: --follow prints text; drop --json');
   }
   if (options.follow) {
-    await followDispatch(cwd, config, followOptions(options, cwd, config, home, stderr));
+    await followDispatch(cwd, config, followOptions(options, cwd, config, home, stdout, stderr));
     return;
   }
   if (options.json) {
-    print(options, JSON.stringify(await readDispatchQueue(cwd, config, home), null, 2));
+    stdout(`${JSON.stringify(await readDispatchQueue(cwd, config, home), null, 2)}\n`);
     return;
   }
   const isTerminal = options.isTerminal ?? defaultIsTerminal;
   if (isTerminal()) {
-    await runCardSession(cwd, config, sessionOptions(options, cwd, config, home, stderr));
+    await runCardSession(cwd, config, sessionOptions(options, cwd, config, home, stdout, stderr));
     return;
   }
-  print(options, formatDispatchText(await readDispatch(cwd, config, home)));
-}
-
-/** Write `output` through the injected writer, or stdout. */
-function print(options: InboxDispatchOptions, output: string): void {
-  if (options.stdout) {
-    options.stdout(output);
-  } else {
-    console.log(output);
-  }
+  stdout(`${formatDispatchText(await readDispatch(cwd, config, home))}\n`);
 }
 
 /** Register `osq inbox [--json] [--follow]` on the root program. */

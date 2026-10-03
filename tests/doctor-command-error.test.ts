@@ -88,6 +88,10 @@ describe('doctor command errors', () => {
     assert.equal(report.ok, true, JSON.stringify(report.checks));
     assert.equal(lines.length, report.checks.length);
     assert.ok(lines.some((line) => line.startsWith('[ok] config:')));
+    assert.ok(
+      lines.every((line) => line.endsWith('\n')),
+      JSON.stringify(lines),
+    );
   });
 
   it('prints one line per check then rejects with an empty CommandError and leaves the exit code alone', async () => {
@@ -113,7 +117,10 @@ describe('doctor command errors', () => {
       process.exitCode = originalExitCode;
     }
 
-    assert.deepEqual(lines, ['[ok] config: loaded', '[fail] managed-blocks: PLANNER.md drifted']);
+    assert.deepEqual(lines, [
+      '[ok] config: loaded\n',
+      '[fail] managed-blocks: PLANNER.md drifted\n',
+    ]);
   });
 
   it('exits 0 through the CLI when every check passes', async () => {

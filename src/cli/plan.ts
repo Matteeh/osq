@@ -16,6 +16,7 @@ import type { QueuePlanSelection } from '../core/status/queue.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
 import {
   buildBaseOpeningPrompt,
   createChange,
@@ -24,7 +25,6 @@ import {
   readBriefInput,
   validatePlanModeOptions,
   writeBriefAndManifest,
-  writePromptHandoff,
 } from './plan-queue.js';
 import { readSteeringPlan } from './plan-steer.js';
 
@@ -67,13 +67,28 @@ export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise
   return prompt;
 }
 
-export interface PlanCommandOptions {
+/**
+ * Default handoff: persist the transient prompt beside the change and name the
+ * exact change an available planning tool should pick up, with its next step.
+ */
+export async function writePromptHandoff(
+  folderPath: string,
+  openingPrompt: string,
+  nextStep: string,
+  stdout: Writer,
+): Promise<void> {
+  await fs.writeFile(path.join(folderPath, 'plan-prompt.md'), openingPrompt, 'utf8');
+  stdout(
+    `${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)} \u2014 next: ${nextStep}\n`,
+  );
+}
+
+export interface PlanCommandOptions extends CommandInputs {
   brief?: string;
   print?: boolean;
   session?: boolean;
   next?: boolean;
   replan?: boolean;
-  cwd?: string;
   adapter?: HarnessAdapter;
 }
 
@@ -84,8 +99,9 @@ export async function planCommand(
   const name = (nameOrId ?? '').trim();
   validatePlanModeOptions(name, options);
 
-  const cwd = options.cwd || process.cwd();
-  const config = await loadConfig(cwd);
+  const inputs = resolveInputs(options);
+  const cwd = inputs.cwd;
+  const config = await inputs.config();
   const changesDir = getChangesDir(config.paths.openspecRoot, cwd);
 
   // The planner is resolved only for an explicit owned session; the default
@@ -93,7 +109,7 @@ export async function planCommand(
   const isSession = options.session === true;
   const plannerSelection = isSession ? resolvePlannerSelection(config) : null;
   const briefModel = plannerSelection?.briefModel ?? null;
-  const quiet = !isSession;
+  const createdOutput: Writer | null = isSession ? inputs.stdout : null;
 
   let queueSelection: QueuePlanSelection | null = null;
   let folderPath: string | null = null;
@@ -103,10 +119,12 @@ export async function planCommand(
   let planningCwd = cwd;
 
   if (options.next) {
-    const selection = await prepareQueueSelection(cwd, config, {
-      replan: options.replan,
-      print: options.print,
-    });
+    const selection = await prepareQueueSelection(
+      cwd,
+      config,
+      { replan: options.replan, print: options.print },
+      inputs.stderr,
+    );
     if (!selection) return;
     queueSelection = selection;
   } else {
@@ -134,11 +152,11 @@ export async function planCommand(
   }
 
   if (queueSelection) {
-    const created = await createQueueChange(cwd, config, quiet, queueSelection, briefModel);
+    const created = await createQueueChange(cwd, config, createdOutput, queueSelection, briefModel);
     folderPath = created.folderPath;
     specId = created.specId;
   } else if (!isResumed) {
-    const created = await createChange(cwd, quiet, name, { config });
+    const created = await createChange(cwd, createdOutput, name, { config });
     folderPath = created.folderPath;
     specId = created.specId;
     const rawBrief = await readBriefInput(options.brief);
@@ -175,13 +193,13 @@ export async function planCommand(
   const prompt = steeringSection ? `${openingPrompt}\n\n${steeringSection}` : openingPrompt;
 
   if (options.print) {
-    process.stdout.write(`${prompt}\n`);
+    inputs.stdout(`${prompt}\n`);
     return;
   }
 
   if (!plannerSelection) {
     const nextStep = await readNextStep(planningCwd, folderPath, config);
-    await writePromptHandoff(folderPath, prompt, formatNextStep(nextStep));
+    await writePromptHandoff(folderPath, prompt, formatNextStep(nextStep), inputs.stdout);
     return;
   }
 

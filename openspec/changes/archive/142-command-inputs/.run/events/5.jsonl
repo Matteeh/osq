@@ -1,0 +1,113 @@
+{"type":"verify_ran","timestamp":"2026-10-03T09:02:03.005Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-vcs.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/command-inputs-vcs.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/command-inputs-vcs.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-03T09:02:03.720Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":352,"repoFiles":2274,"repoLines":259011,"importFanIn":1,"proposalWords":1219,"taskWords":256,"deltaRequirements":4,"deltaScenarios":11}}
+{"type":"started","timestamp":"2026-10-03T09:02:03.929Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"491749b","pid":64497,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"3449045"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:05.701Z","data":{"promptTokens":1714,"candidateTokens":247,"totalTokens":5289,"cachedTokens":3328,"reasoningTokens":15,"cost":0.0008305680000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:05.702Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/tasks/5.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:05.703Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/proposal.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:05.703Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/specs/cli-foundation/spe"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:08.111Z","data":{"promptTokens":4129,"candidateTokens":473,"totalTokens":9850,"cachedTokens":5248,"reasoningTokens":13,"cost":0.001837788,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.112Z","data":{"tool":"read","summary":"src/cli/command-inputs.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.113Z","data":{"tool":"read","summary":"src/cli/land.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.114Z","data":{"tool":"read","summary":"src/cli/message.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.114Z","data":{"tool":"read","summary":"src/cli/sync.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.115Z","data":{"tool":"read","summary":"src/cli/graph.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.115Z","data":{"tool":"read","summary":"src/cli/spec.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:08.116Z","data":{"tool":"read","summary":"tests/cli-capture.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:10.214Z","data":{"promptTokens":4671,"candidateTokens":253,"totalTokens":14652,"cachedTokens":9728,"reasoningTokens":80,"cost":0.001763268,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:10.215Z","data":{"tool":"bash","summary":"ls tests/ | grep -i command-inputs; echo \"---\"; ls tests/ | "}}
+{"type":"tool","timestamp":"2026-10-03T09:02:10.216Z","data":{"tool":"bash","summary":"ls openspec/changes/142-command-inputs/.run/results/ 2>/dev/"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:12.452Z","data":{"promptTokens":409,"candidateTokens":340,"totalTokens":15341,"cachedTokens":14592,"reasoningTokens":52,"cost":0.000618252,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:12.453Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/tasks/1.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:12.453Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/tasks/4.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:12.454Z","data":{"tool":"read","summary":"tests/command-inputs-views.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:12.455Z","data":{"tool":"read","summary":"tests/command-inputs.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:15.565Z","data":{"promptTokens":4345,"candidateTokens":623,"totalTokens":20200,"cachedTokens":15232,"reasoningTokens":438,"cost":0.002142492,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:15.567Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:15.567Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:17.554Z","data":{"promptTokens":1849,"candidateTokens":320,"totalTokens":22265,"cachedTokens":20096,"reasoningTokens":45,"cost":0.001059276,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:17.555Z","data":{"tool":"read","summary":"src/cli/status.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:17.556Z","data":{"tool":"read","summary":"src/cli/doctor.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:17.556Z","data":{"tool":"read","summary":"tests/sync-graph-migrate-command-error.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:17.557Z","data":{"tool":"read","summary":"tests/web-graph-command.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:21.755Z","data":{"promptTokens":3130,"candidateTokens":772,"totalTokens":26046,"cachedTokens":22144,"reasoningTokens":633,"cost":0.001998264,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:21.755Z","data":{"tool":"read","summary":"src/cli/run.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:21.756Z","data":{"tool":"read","summary":"tests/spec-command.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:25.985Z","data":{"promptTokens":1999,"candidateTokens":729,"totalTokens":28712,"cachedTokens":25984,"reasoningTokens":536,"cost":0.0016304040000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:25.985Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:25.986Z","data":{"tool":"read","summary":"tests/vcs-land-command-error.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:32.435Z","data":{"promptTokens":2573,"candidateTokens":1197,"totalTokens":32442,"cachedTokens":28672,"reasoningTokens":1058,"cost":0.0023803319999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:32.436Z","data":{"tool":"read","summary":"src/watcher/build.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:32.437Z","data":{"tool":"read","summary":"tests/git-test-env.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:41.840Z","data":{"promptTokens":2008,"candidateTokens":2138,"totalTokens":36530,"cachedTokens":32384,"reasoningTokens":1929,"cost":0.003362304,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:41.840Z","data":{"tool":"read","summary":"src/core/vcs/land.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:41.841Z","data":{"tool":"read","summary":"src/core/vcs/sync-change.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:41.842Z","data":{"tool":"read","summary":"src/core/run/squash-message.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:44.117Z","data":{"promptTokens":2745,"candidateTokens":341,"totalTokens":39566,"cachedTokens":36480,"reasoningTokens":118,"cost":0.00145158,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:44.118Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:44.119Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:45.391Z","data":{"promptTokens":245,"candidateTokens":77,"totalTokens":39874,"cachedTokens":39552,"reasoningTokens":0,"cost":0.000403212,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:45.392Z","data":{"tool":"read","summary":"src/core/foundation/config-vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:50.763Z","data":{"promptTokens":715,"candidateTokens":907,"totalTokens":41430,"cachedTokens":39808,"reasoningTokens":765,"cost":0.0015417480000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:50.764Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:50.765Z","data":{"tool":"read","summary":"src/core/vcs/land-checks.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:02:55.213Z","data":{"promptTokens":1025,"candidateTokens":761,"totalTokens":43130,"cachedTokens":41344,"reasoningTokens":595,"cost":0.001468764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:55.214Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:02:55.215Z","data":{"tool":"read","summary":"tests/vcs-sync-command.test.ts"}}
+{"type":"text","timestamp":"2026-10-03T09:03:01.816Z","data":{"text":"Now I have enough context. Let me convert the five command files."}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:01.816Z","data":{"promptTokens":919,"candidateTokens":1658,"totalTokens":45585,"cachedTokens":43008,"reasoningTokens":761,"cost":0.0025233479999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:01.817Z","data":{"tool":"edit","summary":"src/cli/land.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:01.821Z","data":{"path":"src/cli/land.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:03.864Z","data":{"promptTokens":172,"candidateTokens":529,"totalTokens":46141,"cachedTokens":45440,"reasoningTokens":0,"cost":0.0009590399999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:03.865Z","data":{"tool":"edit","summary":"src/cli/message.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:03.866Z","data":{"path":"src/cli/message.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:06.675Z","data":{"promptTokens":216,"candidateTokens":568,"totalTokens":46736,"cachedTokens":45952,"reasoningTokens":67,"cost":0.001022112,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:06.676Z","data":{"tool":"edit","summary":"src/cli/sync.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:06.677Z","data":{"path":"src/cli/sync.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:09.789Z","data":{"promptTokens":171,"candidateTokens":684,"totalTokens":47447,"cachedTokens":46592,"reasoningTokens":0,"cost":0.001151652,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:09.790Z","data":{"tool":"edit","summary":"src/cli/graph.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:09.791Z","data":{"path":"src/cli/graph.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:11.926Z","data":{"promptTokens":242,"candidateTokens":483,"totalTokens":47957,"cachedTokens":47232,"reasoningTokens":0,"cost":0.0009355920000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:11.927Z","data":{"tool":"edit","summary":"src/cli/spec.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:11.928Z","data":{"path":"src/cli/spec.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:13.709Z","data":{"promptTokens":240,"candidateTokens":278,"totalTokens":48262,"cachedTokens":47744,"reasoningTokens":12,"cost":0.000692064,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:13.710Z","data":{"tool":"read","summary":"src/cli/land.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:13.710Z","data":{"tool":"read","summary":"src/cli/message.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:13.711Z","data":{"tool":"read","summary":"src/cli/sync.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:13.712Z","data":{"tool":"read","summary":"src/cli/spec.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:15.406Z","data":{"promptTokens":1889,"candidateTokens":189,"totalTokens":50334,"cachedTokens":48256,"reasoningTokens":51,"cost":0.001083036,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:15.407Z","data":{"tool":"read","summary":"src/cli/graph.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:15.408Z","data":{"tool":"read","summary":"src/cli/graph.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:25.249Z","data":{"promptTokens":462,"candidateTokens":2128,"totalTokens":52894,"cachedTokens":50304,"reasoningTokens":2053,"cost":0.002994024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:25.250Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:28.173Z","data":{"promptTokens":767,"candidateTokens":394,"totalTokens":54025,"cachedTokens":52864,"reasoningTokens":304,"cost":0.001020084,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:28.174Z","data":{"tool":"bash","summary":"cd . && se"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:31.907Z","data":{"promptTokens":759,"candidateTokens":740,"totalTokens":55515,"cachedTokens":54016,"reasoningTokens":644,"cost":0.0014397960000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:31.908Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:33.673Z","data":{"promptTokens":240,"candidateTokens":118,"totalTokens":55654,"cachedTokens":55296,"reasoningTokens":0,"cost":0.000545376,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:33.674Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:42.342Z","data":{"promptTokens":1335,"candidateTokens":2716,"totalTokens":59603,"cachedTokens":55552,"reasoningTokens":2642,"cost":0.003993012,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:42.343Z","data":{"tool":"read","summary":"src/watcher/build.ts"}}
+{"type":"text","timestamp":"2026-10-03T09:03:51.953Z","data":{"text":"Now let me create the new test file."}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:51.953Z","data":{"promptTokens":436,"candidateTokens":3001,"totalTokens":62957,"cachedTokens":59520,"reasoningTokens":489,"cost":0.00408912,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:51.955Z","data":{"tool":"write","summary":"tests/command-inputs-vcs.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:03:51.955Z","data":{"path":"tests/command-inputs-vcs.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:53.916Z","data":{"promptTokens":134,"candidateTokens":118,"totalTokens":63100,"cachedTokens":62848,"reasoningTokens":10,"cost":0.000558888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:53.917Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"text","timestamp":"2026-10-03T09:03:58.110Z","data":{"text":"All new tests pass. Now let me run the proposal's full verify."}}
+{"type":"tokens","timestamp":"2026-10-03T09:03:58.110Z","data":{"promptTokens":374,"candidateTokens":330,"totalTokens":63680,"cachedTokens":62976,"reasoningTokens":230,"cost":0.000886056,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:03:58.112Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"tokens","timestamp":"2026-10-03T09:05:06.091Z","data":{"promptTokens":1268,"candidateTokens":358,"totalTokens":65242,"cachedTokens":63616,"reasoningTokens":215,"cost":0.001191696,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:05:06.092Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"tokens","timestamp":"2026-10-03T09:06:15.127Z","data":{"promptTokens":1096,"candidateTokens":755,"totalTokens":67003,"cachedTokens":65152,"reasoningTokens":625,"cost":0.0016257119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:06:15.128Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"text","timestamp":"2026-10-03T09:06:20.438Z","data":{"text":"All green. Now I'll write the result file."}}
+{"type":"tokens","timestamp":"2026-10-03T09:06:20.438Z","data":{"promptTokens":201,"candidateTokens":1084,"totalTokens":68101,"cachedTokens":66816,"reasoningTokens":221,"cost":0.0017619959999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:06:20.440Z","data":{"tool":"write","summary":"openspec/changes/142-command-inputs/.run/results/5.md"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:06:20.441Z","data":{"path":"openspec/changes/142-command-inputs/.run/results/5.md"}}
+{"type":"text","timestamp":"2026-10-03T09:06:22.858Z","data":{"text":"Done. I converted the five commands to use `src/cli/command-inputs.ts` and added the new test.\n\nSummary:\n- `src/cli/land.ts` — `LandCommandOptions extends CommandInputs`, resolves inputs, loads config inside error handling.\n- `src/cli/message.ts` — `MessageCommandOptions = CommandInputs`, config still outside `try`.\n- `src/cli/sync.ts` — `SyncCommandOptions = CommandInputs`, config inside `try`.\n- `src/cli/graph.ts` — `GraphCommandOptions extends CommandInputs`, `json` kept.\n- `src/cli/spec.ts` — `SpecCommandOptions = CommandInputs`.\n- `tests/command-inputs-vcs.test.ts` — new; compares `graph`/`graph --json`/`spec`/`spec <capability>` via `runCliCaptured` vs direct writers, and proves `sync`/`message`/`land` use a passed config.\n\nVerification:\n- Task verify `node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-vcs.test.ts` → 6 pass.\n- Proposal verify `pnpm verify` → EXIT=0 (typechecks, build, all tests, lint).\n\nResult written to `openspec/changes/142-command-inputs/.run/results/5.md`."}}
+{"type":"tokens","timestamp":"2026-10-03T09:06:22.858Z","data":{"promptTokens":166,"candidateTokens":408,"totalTokens":68542,"cachedTokens":67968,"reasoningTokens":110,"cost":0.000947208,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-03T09:06:22.880Z","data":{"exitCode":0,"pid":64497,"timedOut":false,"elapsedSeconds":259}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:06:23.623Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-vcs.test.ts","exitCode":0,"duration":0.56,"output":"▶ command inputs for graph and spec\n  ✔ osq graph prints the same text directly and through runCli (21.176246ms)\n  ✔ osq graph --json prints the same text directly and through runCli (9.912388ms)\n  ✔ osq spec lists capabilities the same way directly and through runCli (5.438516ms)\n  ✔ osq spec <capability> lists requirements the same way directly and through runCli (5.392953ms)\n✔ command inputs for graph and spec (42.944597ms)\n▶ command inputs for land, message, and sync\n  ✔ sync uses the passed config and rejects with its refusal (16.724118ms)\n  ✔ message and land use the passed config and match runCli on an unknown id (166.359868ms)\n✔ command inputs for land, message, and sync (183.435651ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 533.139039\n"}}
+{"type":"measures","timestamp":"2026-10-03T09:07:27.701Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":352,"repoFiles":2274,"repoLines":259011,"importFanIn":1,"proposalWords":1219,"taskWords":256,"deltaRequirements":4,"deltaScenarios":11,"changedFiles":6,"changedLines":281,"scopeHashes":{"src/cli/graph.ts":{"before":"sha256:e2ad43c93899ca00c5bf487ac9c9bea0b01aaeb0fcd8de7f06285d0680aea94c","after":"sha256:6992962465e8a2fb469aba95ae096b7c5b3cd4b6ef0a117282cc655f019c08de"},"src/cli/land.ts":{"before":"sha256:9e77ea76f1d13b0911caf81b38b2b12d202c3f71784c7a39b6c936145584646a","after":"sha256:38938be0bb09bbbf008dc4f6a79fe5752c419768e55050d0dc8f1129821149b7"},"src/cli/message.ts":{"before":"sha256:d77a37eaec8667b82ee45b233406cd1ee537c6bcdc6df9066879dad014d88d2a","after":"sha256:5b06193e1399eeda3432131a556ea6c69165db1422e3f3c98123013bab98aa52"},"src/cli/spec.ts":{"before":"sha256:5ff12335f43a48b15aa0bce3be2c0e817d8d42deb6c5f15b480819fa478b6a17","after":"sha256:0765f98cc383b63758d4ecab7f2a1bfa4dfb264b22c946e14d6c0da1556bf7cc"},"src/cli/sync.ts":{"before":"sha256:3057e67999c5471677ac4a568c1504b0960f68395cbe488e91f4ca003026bd88","after":"sha256:452de564981613df112ad78fa401802158fbd48a63c819464ee815d2b79c16cf"},"tests/command-inputs-vcs.test.ts":{"before":null,"after":"sha256:89acf0aeca9d6bce7dd89b5fda724deed189288ae891e7d96dee2bd75bfd9145"}}}}
+{"type":"done","timestamp":"2026-10-03T09:07:27.707Z","data":{"task":"5"}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:45:40.326Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-vcs.test.ts","exitCode":0,"duration":0.55,"output":"▶ command inputs for graph and spec\n  ✔ osq graph prints the same text directly and through runCli (20.696953ms)\n  ✔ osq graph --json prints the same text directly and through runCli (9.891934ms)\n  ✔ osq spec lists capabilities the same way directly and through runCli (5.268518ms)\n  ✔ osq spec <capability> lists requirements the same way directly and through runCli (4.730254ms)\n✔ command inputs for graph and spec (41.644272ms)\n▶ command inputs for land, message, and sync\n  ✔ sync uses the passed config and rejects with its refusal (16.862222ms)\n  ✔ message and land use the passed config and match runCli on an unknown id (175.387639ms)\n✔ command inputs for land, message, and sync (192.552391ms)\nℹ tests 6\nℹ suites 2\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 523.689472\n"}}

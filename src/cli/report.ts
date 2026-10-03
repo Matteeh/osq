@@ -1,15 +1,12 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import {
   type MetricsReport,
   formatMetricsReport,
   getMetricsReport,
 } from '../core/report/report.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface ReportCommandOptions {
-  cwd?: string;
-  stdout?: (msg: string) => void;
-  config?: OsqConfig;
+export interface ReportCommandOptions extends CommandInputs {
   json?: boolean;
   /** Home holding the per-project wait log; defaults to the real home. */
   home?: string;
@@ -324,12 +321,12 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
 }
 
 export async function reportCommand(options: ReportCommandOptions = {}): Promise<string> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   try {
     const period = parseReportPeriod(options.since, options.until);
-    const report = await getMetricsReport(cwd, config, {
+    const report = await getMetricsReport(inputs.cwd, config, {
       home: options.home,
       since: period.since,
       until: period.until,
@@ -339,11 +336,7 @@ export async function reportCommand(options: ReportCommandOptions = {}): Promise
       ? serializeSortedJson(toStableMetrics(report))
       : formatMetricsReport(report, config);
 
-    if (options.stdout) {
-      options.stdout(output);
-    } else {
-      console.log(output);
-    }
+    inputs.stdout(`${output}\n`);
     return output;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

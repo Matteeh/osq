@@ -162,7 +162,7 @@ describe('osq inbox ordered list and first card', () => {
 
     const out = collector();
     await inboxDispatchCommand({ cwd: tmpDir, config, stdout: out.write });
-    assert.equal(out.text(), formatDispatchText(preview));
+    assert.equal(out.text(), `${formatDispatchText(preview)}\n`);
   });
 
   it('lists a halt task with its attempts, output, and commands', async () => {
@@ -227,7 +227,7 @@ describe('osq inbox empty output', () => {
   it('prints Nothing needs you. when nothing needs a human', async () => {
     const out = collector();
     await inboxDispatchCommand({ cwd: tmpDir, config: defineConfig({}), stdout: out.write });
-    assert.equal(out.text(), 'Nothing needs you.');
+    assert.equal(out.text(), 'Nothing needs you.\n');
 
     const config = defineConfig({});
     assert.equal(formatDispatchText(await readDispatch(tmpDir, config)), 'Nothing needs you.');

@@ -1,26 +1,18 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { formatQueue, projectQueue } from '../core/status/queue.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface QueueCommandOptions {
-  cwd?: string;
-  stdout?: (msg: string) => void;
-  config?: OsqConfig;
-}
+export interface QueueCommandOptions extends CommandInputs {}
 
 /** Thin CLI wrapper: load config, project the read-only queue, and print it. */
 export async function queueCommand(options: QueueCommandOptions = {}): Promise<string> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   try {
-    const projection = await projectQueue(cwd, config);
+    const projection = await projectQueue(inputs.cwd, config);
     const formatted = formatQueue(projection);
-    if (options.stdout) {
-      options.stdout(formatted);
-    } else {
-      console.log(formatted);
-    }
+    inputs.stdout(`${formatted}\n`);
     return formatted;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

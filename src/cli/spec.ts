@@ -1,13 +1,9 @@
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { lookupRequirement } from '../core/spec/requirement-lookup.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface SpecCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
-  stdout?: (msg: string) => void;
-}
+export type SpecCommandOptions = CommandInputs;
 
 /**
  * List living capabilities, list one capability's requirement names, or print
@@ -19,14 +15,18 @@ export async function specCommand(
   requirement?: string,
   options: SpecCommandOptions = {},
 ): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const stdout = options.stdout ?? ((msg: string) => process.stdout.write(msg));
+  const inputs = resolveInputs(options);
 
   try {
-    const config = options.config || (await loadConfig(cwd));
-    const result = await lookupRequirement(cwd, config.paths.openspecRoot, capability, requirement);
+    const config = await inputs.config();
+    const result = await lookupRequirement(
+      inputs.cwd,
+      config.paths.openspecRoot,
+      capability,
+      requirement,
+    );
     const text = Array.isArray(result) ? result.map((line) => `${line}\n`).join('') : `${result}\n`;
-    stdout(text);
+    inputs.stdout(text);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new CommandError(message);

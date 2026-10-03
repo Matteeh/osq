@@ -1,21 +1,15 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { formatStatusOverview, getStatusOverview } from '../core/status/status.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export async function statusCommand(
-  options: { cwd?: string; stdout?: (msg: string) => void; config?: OsqConfig } = {},
-): Promise<string> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+export async function statusCommand(options: CommandInputs = {}): Promise<string> {
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   try {
-    const overview = await getStatusOverview(cwd, config);
+    const overview = await getStatusOverview(inputs.cwd, config);
     const formatted = formatStatusOverview(overview);
-    if (options.stdout) {
-      options.stdout(formatted);
-    } else {
-      console.log(formatted);
-    }
+    inputs.stdout(`${formatted}\n`);
     return formatted;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

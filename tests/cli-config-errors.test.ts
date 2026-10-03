@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { runCli } from '../src/cli/run.js';
+import { runCliCaptured } from './cli-capture.js';
 
 const BROKEN_VALIDATION = `import { defineConfig } from '@matteeh/osq';
 
@@ -11,11 +11,6 @@ export default defineConfig({ vcs: { author: 'osq' } });
 `;
 
 const VALIDATION_MESSAGE = 'vcs.author must look like "Name <email>"';
-
-interface CliRun {
-  readonly exitCode: number | undefined;
-  readonly errors: readonly string[];
-}
 
 async function writeBrokenConfig(root: string): Promise<string> {
   const file = path.join(root, 'osq.config.ts');
@@ -28,36 +23,6 @@ async function exists(target: string): Promise<boolean> {
     () => true,
     () => false,
   );
-}
-
-/**
- * Run `runCli` with `cwd` as the process directory, capturing stderr and the
- * exit code it leaves on `process.exitCode`. The directory, the exit code, and
- * `console.error` are restored afterwards.
- */
-async function runInProject(cwd: string, argv: readonly string[]): Promise<CliRun> {
-  const originalCwd = process.cwd();
-  const originalExitCode = process.exitCode;
-  const originalError = console.error;
-  const errors: string[] = [];
-  let exitCode: number | undefined;
-
-  console.error = ((...args: unknown[]) => {
-    errors.push(args.map(String).join(' '));
-  }) as typeof console.error;
-
-  try {
-    process.chdir(cwd);
-    process.exitCode = undefined;
-    await runCli(['node', 'osq', ...argv]);
-    exitCode = process.exitCode;
-  } finally {
-    process.chdir(originalCwd);
-    process.exitCode = originalExitCode;
-    console.error = originalError;
-  }
-
-  return { exitCode, errors };
 }
 
 describe('cli config errors', () => {
@@ -74,25 +39,31 @@ describe('cli config errors', () => {
   it('prints the ConfigLoadError and exits 1 for status', async () => {
     const file = await writeBrokenConfig(tmpDir);
 
-    const { exitCode, errors } = await runInProject(tmpDir, ['status']);
+    const capture = await runCliCaptured(tmpDir, ['status']);
 
-    assert.equal(exitCode, 1);
-    assert.deepEqual(errors, [`Error: Failed to load ${file}: ${VALIDATION_MESSAGE}`]);
+    assert.equal(capture.exitCode, 1);
+    assert.equal(capture.stderr, `Error: Failed to load ${file}: ${VALIDATION_MESSAGE}\n`);
+    assert.deepEqual(capture.lines, [
+      { stream: 'stderr', text: `Error: Failed to load ${file}: ${VALIDATION_MESSAGE}` },
+    ]);
   });
 
   it('prints the ConfigLoadError, exits 1, and scaffolds nothing for init', async () => {
     const file = await writeBrokenConfig(tmpDir);
 
-    const { exitCode, errors } = await runInProject(tmpDir, ['init']);
+    const capture = await runCliCaptured(tmpDir, ['init']);
 
-    assert.equal(exitCode, 1);
-    assert.deepEqual(errors, [`Error: Failed to load ${file}: ${VALIDATION_MESSAGE}`]);
+    assert.equal(capture.exitCode, 1);
+    assert.equal(capture.stderr, `Error: Failed to load ${file}: ${VALIDATION_MESSAGE}\n`);
+    assert.deepEqual(capture.lines, [
+      { stream: 'stderr', text: `Error: Failed to load ${file}: ${VALIDATION_MESSAGE}` },
+    ]);
     assert.equal(await exists(path.join(tmpDir, 'openspec')), false);
   });
 
   it('propagates a non-ConfigLoadError thrown by a command action', async () => {
     await assert.rejects(
-      runInProject(tmpDir, ['lint', '999']),
+      runCliCaptured(tmpDir, ['lint', '999']),
       /not found/,
       'a non-ConfigLoadError must still reject runCli',
     );

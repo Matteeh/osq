@@ -281,21 +281,21 @@ Process terminated unexpectedly
       cwd: tmpDir,
       config: DEFAULT_CONFIG,
       stdout: (msg) => {
-        capturedText = msg;
+        capturedText += msg;
       },
     });
 
-    const output = capturedText || textOutput;
     const directFormatted = formatMetricsReport(await generateReport(tmpDir, DEFAULT_CONFIG));
-    assert.equal(output, directFormatted);
-    assert.ok(output.includes('Specs Summary'));
-    assert.ok(output.includes('Now:'));
-    assert.ok(output.includes('History:'));
-    assert.ok(output.includes('Coverage:'));
-    assert.ok(output.includes('Completion rate: 100'));
-    assert.ok(output.includes('Execution Durations'));
-    assert.ok(output.includes('Token Usage'));
-    assert.ok(output.includes('File Changes'));
+    assert.equal(capturedText, `${textOutput}\n`);
+    assert.equal(textOutput, directFormatted);
+    assert.ok(textOutput.includes('Specs Summary'));
+    assert.ok(textOutput.includes('Now:'));
+    assert.ok(textOutput.includes('History:'));
+    assert.ok(textOutput.includes('Coverage:'));
+    assert.ok(textOutput.includes('Completion rate: 100'));
+    assert.ok(textOutput.includes('Execution Durations'));
+    assert.ok(textOutput.includes('Token Usage'));
+    assert.ok(textOutput.includes('File Changes'));
 
     // 2. JSON output
     let capturedJson = '';
@@ -304,12 +304,12 @@ Process terminated unexpectedly
       config: DEFAULT_CONFIG,
       json: true,
       stdout: (msg) => {
-        capturedJson = msg;
+        capturedJson += msg;
       },
     });
 
-    const jsonStr = capturedJson || jsonOutput;
-    const parsed = JSON.parse(jsonStr) as MetricsReport;
+    assert.equal(capturedJson, `${jsonOutput}\n`);
+    const parsed = JSON.parse(jsonOutput) as MetricsReport;
     assert.equal(parsed.specs.total, 1);
     assert.equal(parsed.now.total, 1);
     assert.equal(parsed.now.done, 1);
@@ -363,11 +363,12 @@ Preexisting test files were modified or deleted without tests.modify: true:
       config: DEFAULT_CONFIG,
       json: true,
       stdout: (msg) => {
-        capturedJson = msg;
+        capturedJson += msg;
       },
     });
 
-    const parsed = JSON.parse(capturedJson || jsonOutput) as MetricsReport;
+    assert.equal(capturedJson, `${jsonOutput}\n`);
+    const parsed = JSON.parse(jsonOutput) as MetricsReport;
     assert.equal(parsed.history.deadByReason.undeclared_test_change, 1);
     assert.equal(parsed.now.dead, 1);
   });

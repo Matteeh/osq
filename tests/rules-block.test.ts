@@ -358,15 +358,10 @@ describe('osq init command', () => {
     await writeDecision(tmpDir, '003-a.md', adr('accepted', 'all', 'Rule A.'));
 
     const lines: string[] = [];
-    const original = console.log;
-    console.log = ((...args: unknown[]) => {
-      lines.push(args.join(' '));
-    }) as typeof console.log;
-    try {
-      await initCommand({ cwd: tmpDir });
-    } finally {
-      console.log = original;
-    }
+    await initCommand({
+      cwd: tmpDir,
+      stdout: (text) => lines.push(text.replace(/\n$/, '')),
+    });
 
     assert.ok(lines.includes('  updated  AGENTS.md (refreshed managed block)'));
     assert.ok(lines.includes('  updated  AGENTS.md (project rules)'));

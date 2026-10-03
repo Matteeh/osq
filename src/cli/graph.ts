@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import type { SystemEdgeKind, SystemGraphNode } from '../core/web/system-graph-types.js';
 import { getSystemGraph } from '../core/web/system-graph.js';
 import { serializeWebJson } from '../core/web/web-server.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
 /** Node kinds in the order the document lists them. */
 const NODE_KINDS: readonly SystemGraphNode['kind'][] = [
@@ -32,12 +32,8 @@ const EDGE_KINDS: readonly SystemEdgeKind[] = [
   'follows',
 ];
 
-export interface GraphCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
+export interface GraphCommandOptions extends CommandInputs {
   json?: boolean;
-  stdout?: (msg: string) => void;
-  stderr?: (msg: string) => void;
 }
 
 /** Render `Nodes: <kind> <count>, ...` for the kinds with a non-zero count. */
@@ -79,19 +75,18 @@ function gapCounts(graph: Awaited<ReturnType<typeof getSystemGraph>>): string {
  * line it would have printed to stderr. Writes no file.
  */
 export async function graphCommand(options: GraphCommandOptions = {}): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const stdout = options.stdout ?? ((msg: string) => process.stdout.write(msg));
+  const inputs = resolveInputs(options);
 
   try {
-    const config = options.config || (await loadConfig(cwd));
-    const graph = await getSystemGraph(cwd, config);
+    const config = await inputs.config();
+    const graph = await getSystemGraph(inputs.cwd, config);
     if (options.json) {
-      stdout(`${serializeWebJson(graph)}\n`);
+      inputs.stdout(`${serializeWebJson(graph)}\n`);
       return;
     }
-    stdout(summaryLine('Nodes', NODE_KINDS, countNodes(graph)));
-    stdout(summaryLine('Edges', EDGE_KINDS, countEdges(graph)));
-    stdout(gapCounts(graph));
+    inputs.stdout(summaryLine('Nodes', NODE_KINDS, countNodes(graph)));
+    inputs.stdout(summaryLine('Edges', EDGE_KINDS, countEdges(graph)));
+    inputs.stdout(gapCounts(graph));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new CommandError(message);

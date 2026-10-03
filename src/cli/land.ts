@@ -1,19 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { landChange } from '../core/vcs/land.js';
 import { findStaleBuild, osqPackageRoot } from '../watcher/build.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
 /** The line a land prints when it changed osq's own source. */
 export const REBUILD_MESSAGE = "osq's own source changed; run the build and restart the watcher";
 
-export interface LandCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
-  stdout?: (msg: string) => void;
-  stderr?: (msg: string) => void;
+export interface LandCommandOptions extends CommandInputs {
   /** Skip the stale-build refusal. */
   allowStale?: boolean;
   /** osq's own package root; defaults to the running package. */
@@ -61,9 +57,7 @@ async function changedOwnSource(changed: readonly string[], packageRoot: string)
  * throws an empty `CommandError` with that code after its lines print.
  */
 export async function landCommand(id: string, options: LandCommandOptions = {}): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const stdout = options.stdout ?? ((msg: string) => process.stdout.write(msg));
-  const stderr = options.stderr ?? ((msg: string) => process.stderr.write(msg));
+  const inputs = resolveInputs(options);
 
   try {
     const stale = await findStaleBuild({
@@ -73,13 +67,13 @@ export async function landCommand(id: string, options: LandCommandOptions = {}):
     if (stale !== null) {
       throw new CommandError(stale);
     }
-    const config = options.config || (await loadConfig(cwd));
-    const { lines, code, changed } = await landChange(cwd, config, id, (line) =>
-      stderr(`${line}\n`),
+    const config = await inputs.config();
+    const { lines, code, changed } = await landChange(inputs.cwd, config, id, (line) =>
+      inputs.stderr(`${line}\n`),
     );
-    for (const line of lines) stdout(`${line}\n`);
+    for (const line of lines) inputs.stdout(`${line}\n`);
     if (code === 0 && (await changedOwnSource(changed, options.packageRoot ?? osqPackageRoot()))) {
-      stdout(`${REBUILD_MESSAGE}\n`);
+      inputs.stdout(`${REBUILD_MESSAGE}\n`);
     }
     if (code !== 0) {
       throw new CommandError('', { exitCode: code });

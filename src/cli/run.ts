@@ -1,5 +1,6 @@
 import { ConfigLoadError } from '../core/foundation/config.js';
 import { CommandError } from './command-error.js';
+import { processStderr, processStdout } from './command-inputs.js';
 import { createProgram, resolvePackageVersion } from './index.js';
 
 /**
@@ -17,16 +18,16 @@ export async function runCli(argv: readonly string[]): Promise<void> {
   } catch (error) {
     if (error instanceof CommandError) {
       if (error.message) {
-        console.error(error.message);
+        processStderr(`${error.message}\n`);
       }
       if (error.next) {
-        console.log(`Next: ${error.next}`);
+        processStdout(`Next: ${error.next}\n`);
       }
       process.exitCode = error.exitCode;
       return;
     }
     if (error instanceof ConfigLoadError) {
-      console.error(`Error: ${error.message}`);
+      processStderr(`Error: ${error.message}\n`);
       process.exitCode = 1;
       return;
     }

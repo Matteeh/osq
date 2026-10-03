@@ -1,31 +1,29 @@
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { QueryError, runQuery } from '../core/report/query-run.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface QueryCommandOptions {
-  readonly cwd?: string;
-  readonly stdout?: (msg: string) => void;
-  readonly config?: OsqConfig;
+export interface QueryCommandOptions extends CommandInputs {
   readonly json?: boolean;
   readonly select?: string;
 }
 
 /** Runs one history query and prints it, turning a refusal into a CommandError. */
 export async function queryCommand(options: QueryCommandOptions): Promise<string> {
-  const cwd = options.cwd ?? process.cwd();
-  const config = options.config ?? (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   let output: string;
   try {
-    output = await runQuery(cwd, config, options.select ?? null, { json: options.json ?? false });
+    output = await runQuery(inputs.cwd, config, options.select ?? null, {
+      json: options.json ?? false,
+    });
   } catch (error) {
     if (error instanceof QueryError) throw new CommandError(error.message);
     throw error;
   }
 
-  if (options.stdout) options.stdout(output);
-  else console.log(output);
+  inputs.stdout(`${output}\n`);
   return output;
 }
 

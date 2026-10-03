@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:704d6dd5d76dd6bf70fea10933697c8ddad3336d451e6edd02eb91fb0b7ea24e"
+build_stamp: "3449045"
+project_commit: "2775d66"
+exit_code: 0
+scope_files: {"src/cli/lint.ts":"sha256:114c74cd3390dac84c4ac35ad24aa19b6b915238840544ef33d69299f4769d4d","src/cli/migrate.ts":"sha256:5f37046cedf2076f4e82c3be17e5015e3f3b6a1273685749fb255b8a4013c3ce","src/cli/watch.ts":"sha256:92a03d31f0ec9edb1c89dfd881a01c7fdd1ec337946afcf641ace655ad08e2f2","tests/command-inputs-logger.test.ts":"sha256:6c63fcb5212d6d8cd0a234004adcc27cd3540868696971f1253861f2d849da5b"}
+---
+2026-10-03T09:41:20.777Z

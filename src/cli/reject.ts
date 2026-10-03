@@ -1,34 +1,35 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { rejectSpec } from '../core/lifecycle/reject.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface RejectCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
+export interface RejectCommandOptions extends CommandInputs {
   reason: string;
 }
 
 export async function rejectCommand(specId: string, options: RejectCommandOptions): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   try {
-    const result = await rejectSpec(cwd, specId, options.reason, config);
-    console.log(`Rejected ${result.specId} (${result.folderName})`);
-    console.log(`  Reason: ${result.reason}`);
+    const result = await rejectSpec(inputs.cwd, specId, options.reason, config);
+    const lines = [
+      `Rejected ${result.specId} (${result.folderName})`,
+      `  Reason: ${result.reason}`,
+    ];
     if (result.stackedPath !== undefined) {
-      console.log(`  Withdrew stacked approval: ${result.stackedPath}`);
-      console.log(`  Restored draft: ${result.restoredPath}`);
+      lines.push(`  Withdrew stacked approval: ${result.stackedPath}`);
+      lines.push(`  Restored draft: ${result.restoredPath}`);
     } else if (result.worktree !== undefined) {
       if (result.worktree.removed) {
-        console.log(`  Worktree removed: ${result.worktree.path}`);
+        lines.push(`  Worktree removed: ${result.worktree.path}`);
       } else {
-        console.log(`  Worktree kept: ${result.worktree.path} (${result.worktree.why ?? ''})`);
+        lines.push(`  Worktree kept: ${result.worktree.path} (${result.worktree.why ?? ''})`);
       }
-      console.log(`  Branch kept: ${result.branch}`);
+      lines.push(`  Branch kept: ${result.branch}`);
     } else {
-      console.log(`  Destination: ${result.destinationPath}`);
+      lines.push(`  Destination: ${result.destinationPath}`);
     }
+    for (const line of lines) inputs.stdout(`${line}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new CommandError(`Error rejecting ${specId}:\n  ${message}`);

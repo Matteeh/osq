@@ -86,8 +86,8 @@ describe('osq serve --export', () => {
 
     const target = path.join(projectDir, 'snapshot');
     assert.deepEqual(lines, [
-      `exported dashboard to ${target}`,
-      'scrubbed: project root and home directory paths only; read the export before publishing',
+      `exported dashboard to ${target}\n`,
+      'scrubbed: project root and home directory paths only; read the export before publishing\n',
     ]);
     assert.equal(opened, false);
     assert.ok((await fs.stat(path.join(target, 'data.js'))).isFile());
@@ -139,7 +139,7 @@ describe('osq serve --export', () => {
       signal: controller.signal,
       stdout: (value: string) => resolveLine(value),
     });
-    assert.equal(await line, `http://127.0.0.1:${port}/`);
+    assert.equal(await line, `http://127.0.0.1:${port}/\n`);
     controller.abort();
     await done;
   });

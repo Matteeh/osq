@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:faf618d8b36806ceb11ccc56cb6f0eecd73d76111ef90e510cd3e6b2b10aa81c"
+build_stamp: "3449045"
+project_commit: "779bb66"
+exit_code: 0
+scope_files: {"src/cli/doctor.ts":"sha256:c6c666d97d1aa62a9b3aca09f69aa560af46812577fc2087711e813285e70fa7","src/cli/serve.ts":"sha256:c73278ddb5a4640c874cb9486c8ec8a20653540758f54fb10ae394996b1017b4","tests/command-inputs-doctor-serve.test.ts":"sha256:c40254a9f2ecf276afe0ca3bc9a38a67616c4b298f0bc38bed83f9fa23297ac8","tests/doctor-command-error.test.ts":"sha256:7d1e477543ea28bf272c1d7c9cea7de9d7d3c165092632b704fec51a728fe627","tests/serve-export.test.ts":"sha256:e576f87d490a77625fb2bfea5d6fa40a9983a65b0411cd73954c0333f9f4b52d","tests/serve.test.ts":"sha256:50d44c5a8d5eaef26a608c52d81b8c3461e68261a6eb7cd76b4a44c7e557135d"}
+---
+2026-10-03T09:02:01.956Z

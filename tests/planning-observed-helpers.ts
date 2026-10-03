@@ -73,19 +73,20 @@ export async function createChange(
 
 export async function captureLogs(run: () => Promise<void>): Promise<string[]> {
   const lines: string[] = [];
-  const originalLog = console.log;
-  const originalError = console.error;
-  console.log = (...args: unknown[]) => {
-    lines.push(args.map(String).join(' '));
+  const originalStdoutWrite = process.stdout.write;
+  const originalStderrWrite = process.stderr.write;
+  const record = (chunk: string | Uint8Array): boolean => {
+    const text = typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
+    lines.push(text.endsWith('\n') ? text.slice(0, -1) : text);
+    return true;
   };
-  console.error = (...args: unknown[]) => {
-    lines.push(args.map(String).join(' '));
-  };
+  process.stdout.write = record as typeof process.stdout.write;
+  process.stderr.write = record as typeof process.stderr.write;
   try {
     await run();
   } finally {
-    console.log = originalLog;
-    console.error = originalError;
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
   }
   return lines;
 }

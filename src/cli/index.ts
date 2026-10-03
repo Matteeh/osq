@@ -111,10 +111,7 @@ export function createProgram(version?: string): Command {
     .option('--json', 'print findings as JSON')
     .option('--repository', 'list every repository finding')
     .action(async (ids: string[], options: { json?: boolean; repository?: boolean }) => {
-      await lintCommand(ids, {
-        ...options,
-        stdout: (text) => process.stdout.write(text),
-      });
+      await lintCommand(ids, options);
     });
 
   program

@@ -8,6 +8,7 @@ import { buildManifest, writeManifest } from '../core/run/manifest.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
 import { type QueuePlanSelection, prepareQueuePlan } from '../core/status/queue.js';
 import { CommandError } from './command-error.js';
+import { type Writer, processStderr } from './command-inputs.js';
 import {
   formatArchitectureDecisionsSection,
   formatCapabilitySpecsSection,
@@ -124,21 +125,6 @@ export async function readBriefInput(briefOption?: string): Promise<string> {
   throw new Error('No brief provided. Specify --brief <file> or set $EDITOR.');
 }
 
-/**
- * Default handoff: persist the transient prompt beside the change and name the
- * exact change an available planning tool should pick up, with its next step.
- */
-export async function writePromptHandoff(
-  folderPath: string,
-  openingPrompt: string,
-  nextStep: string,
-): Promise<void> {
-  await fs.writeFile(path.join(folderPath, 'plan-prompt.md'), openingPrompt, 'utf8');
-  console.log(
-    `${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)} \u2014 next: ${nextStep}`,
-  );
-}
-
 /** Reject ordinary and queue mode combinations before any file is touched. */
 export function validatePlanModeOptions(
   name: string,
@@ -172,6 +158,7 @@ export async function prepareQueueSelection(
   projectRoot: string,
   config: OsqConfig,
   options: { replan?: boolean; print?: boolean },
+  stderr: Writer = processStderr,
 ): Promise<QueuePlanSelection | null> {
   const preparation = await prepareQueuePlan(projectRoot, config, {
     replan: options.replan,
@@ -180,13 +167,13 @@ export async function prepareQueueSelection(
   if (preparation.kind === 'refused') {
     throw new CommandError(preparation.message);
   }
-  if (preparation.notice) console.error(preparation.notice);
+  if (preparation.notice) stderr(`${preparation.notice}\n`);
   return preparation.selection;
 }
 
 export async function createChange(
   projectRoot: string,
-  quiet: boolean | undefined,
+  output: Writer | null,
   title: string,
   options: {
     slug?: string;
@@ -196,9 +183,9 @@ export async function createChange(
   },
 ): Promise<{ folderPath: string; specId: string }> {
   const newResult = await createNewSpec(projectRoot, title, options);
-  if (!quiet) {
-    console.log(`Created spec ${newResult.specId}: ${newResult.folderName}`);
-    console.log(`  Path: ${newResult.folderPath}`);
+  if (output) {
+    output(`Created spec ${newResult.specId}: ${newResult.folderName}\n`);
+    output(`  Path: ${newResult.folderPath}\n`);
   }
   return { folderPath: newResult.folderPath, specId: newResult.specId };
 }
@@ -226,11 +213,11 @@ export async function writeBriefAndManifest(
 export async function createQueueChange(
   projectRoot: string,
   config: OsqConfig,
-  quiet: boolean | undefined,
+  output: Writer | null,
   selection: QueuePlanSelection,
   plannerModel: string | null,
 ): Promise<{ folderPath: string; specId: string }> {
-  const created = await createChange(projectRoot, quiet, selection.item.title, {
+  const created = await createChange(projectRoot, output, selection.item.title, {
     slug: selection.item.slug,
     dependsOn: selection.landedDependencies.map((dep) => dep.changeId),
     fixes: selection.landedFixes.map((fix) => fix.changeId),

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2702acc5b8331bcda081fc50cbcce8a221f7f61fe7e701e4aa9b1dc45d199fd6"
+build_stamp: "3449045"
+project_commit: "491749b"
+exit_code: 0
+scope_files: {"src/cli/graph.ts":"sha256:6992962465e8a2fb469aba95ae096b7c5b3cd4b6ef0a117282cc655f019c08de","src/cli/land.ts":"sha256:38938be0bb09bbbf008dc4f6a79fe5752c419768e55050d0dc8f1129821149b7","src/cli/message.ts":"sha256:5b06193e1399eeda3432131a556ea6c69165db1422e3f3c98123013bab98aa52","src/cli/spec.ts":"sha256:0765f98cc383b63758d4ecab7f2a1bfa4dfb264b22c946e14d6c0da1556bf7cc","src/cli/sync.ts":"sha256:452de564981613df112ad78fa401802158fbd48a63c819464ee815d2b79c16cf","tests/command-inputs-vcs.test.ts":"sha256:89acf0aeca9d6bce7dd89b5fda724deed189288ae891e7d96dee2bd75bfd9145"}
+---
+2026-10-03T09:07:27.706Z

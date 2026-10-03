@@ -1,12 +1,10 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
-import { type Logger, createLogger } from '../core/foundation/logger.js';
+import type { Logger } from '../core/foundation/logger.js';
 import { type MigrateSidecarsResult, migrateSidecars } from '../core/spec/migrate-sidecars.js';
 import { type MigrateResult, migrateToOpenSpec } from '../core/spec/migrate.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, commandLogger, resolveInputs } from './command-inputs.js';
 
-export interface MigrateCommandOptions {
-  readonly cwd?: string;
-  readonly config?: OsqConfig;
+export interface MigrateCommandOptions extends CommandInputs {
   readonly logger?: Pick<Logger, 'info' | 'error'>;
 }
 
@@ -36,8 +34,9 @@ export async function migrateCommand(
   target: string,
   options: MigrateCommandOptions = {},
 ): Promise<MigrateResult | MigrateSidecarsResult> {
-  const cwd = options.cwd ?? process.cwd();
-  const logger = options.logger ?? createLogger('normal', 'osq');
+  const inputs = resolveInputs(options);
+  const cwd = inputs.cwd;
+  const logger = options.logger ?? commandLogger(options);
 
   if (target !== 'openspec' && target !== 'sidecars') {
     logger.error(`unsupported migrate target "${target}"; expected "openspec" or "sidecars"`);
@@ -45,7 +44,7 @@ export async function migrateCommand(
   }
 
   try {
-    const config = options.config ?? (await loadConfig(cwd));
+    const config = await inputs.config();
 
     if (target === 'sidecars') {
       const result = await migrateSidecars({ cwd, openspecRoot: config.paths.openspecRoot });

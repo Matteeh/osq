@@ -174,18 +174,13 @@ async function changeSource(fixture: Fixture): Promise<void> {
   await fs.writeFile(path.join(fixture.tmpDir, 'src', 'a.ts'), 'export const value = 2;\n', 'utf8');
 }
 
-async function captureLog(fn: () => Promise<void>): Promise<string> {
-  const original = console.log;
-  const lines: string[] = [];
-  console.log = (...args: unknown[]) => {
-    lines.push(args.map(String).join(' '));
-  };
-  try {
-    await fn();
-  } finally {
-    console.log = original;
-  }
-  return lines.join('\n');
+/** Capture the exact text `retryCommand` writes to its `stdout` writer. */
+async function captureOutput(
+  fn: (stdout: (text: string) => void) => Promise<unknown>,
+): Promise<string> {
+  const chunks: string[] = [];
+  await fn((text) => chunks.push(text));
+  return chunks.join('');
 }
 
 describe('scope regression recertification', () => {
@@ -531,8 +526,8 @@ describe('scope regression recertification', () => {
     await markRegressed(fixture, 1, 'sha256:old');
     await changeSource(fixture);
 
-    const passed = await captureLog(() =>
-      retryCommand('001', '1', { cwd: fixture.tmpDir, config: DEFAULT_CONFIG }),
+    const passed = await captureOutput((stdout) =>
+      retryCommand('001', '1', { cwd: fixture.tmpDir, config: DEFAULT_CONFIG, stdout }),
     );
     assert.match(passed, /Recertified 001 task 1/);
     assert.ok(!passed.includes('Retried 001'));
@@ -540,8 +535,8 @@ describe('scope regression recertification', () => {
     // Recreate the regression over the refreshed done marker and fail it.
     await markRegressed(fixture, 1, 'sha256:refreshed');
     await fs.writeFile(path.join(fixture.tmpDir, 'recert-fail'), '1', 'utf8');
-    const requeued = await captureLog(() =>
-      retryCommand('001', '1', { cwd: fixture.tmpDir, config: DEFAULT_CONFIG }),
+    const requeued = await captureOutput((stdout) =>
+      retryCommand('001', '1', { cwd: fixture.tmpDir, config: DEFAULT_CONFIG, stdout }),
     );
     assert.match(requeued, /Requeued 001 task 1 for agent work/);
     assert.match(requeued, /next attempt: 3/);

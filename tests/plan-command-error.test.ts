@@ -116,21 +116,15 @@ describe('prepareQueueSelection', () => {
       })}\n`,
     );
 
-    const lines: string[] = [];
-    const originalError = console.error;
-    console.error = ((...args: unknown[]) => {
-      lines.push(args.map(String).join(' '));
-    }) as typeof console.error;
-    let selection: Awaited<ReturnType<typeof prepareQueueSelection>>;
-    try {
-      selection = await prepareQueueSelection(project, await loadConfig(project), {});
-    } finally {
-      console.error = originalError;
-    }
+    const stderr: string[] = [];
+    const selection = await prepareQueueSelection(project, await loadConfig(project), {}, (text) =>
+      stderr.push(text),
+    );
 
     assert.ok(selection, 'a ready selection is returned');
     assert.equal(selection.item.slug, 'alpha');
-    assert.match(lines.join('\n'), /coverage is incomplete/);
+    assert.match(stderr.join(''), /coverage is incomplete/);
+    assert.ok(stderr.join('').endsWith('\n'), 'the notice ends with a newline');
   });
 });
 

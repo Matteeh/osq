@@ -1,8 +1,8 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
-import { type Logger, createLogger } from '../core/foundation/logger.js';
+import type { OsqConfig } from '../core/foundation/config.js';
+import type { Logger } from '../core/foundation/logger.js';
 import { findSpecFolder } from '../core/spec/approve.js';
 import { buildImportGraph } from '../core/spec/import-graph.js';
 import {
@@ -17,6 +17,7 @@ import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 import { findSteeringChange } from '../core/status/steering-change.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, commandLogger, resolveInputs } from './command-inputs.js';
 
 export interface LintCommandEntry {
   readonly folder: string;
@@ -30,15 +31,12 @@ export interface LintCommandResult {
 
 export type LintCommandLogger = Pick<Logger, 'info' | 'verbose' | 'warn' | 'error'>;
 
-export interface LintCommandOptions {
-  readonly cwd?: string;
-  readonly config?: OsqConfig;
+export interface LintCommandOptions extends CommandInputs {
   readonly logger?: LintCommandLogger;
   /** Write the JSON document to the stdout sink instead of logger lines. */
   readonly json?: boolean;
   /** List every repository finding in full instead of the count line. */
   readonly repository?: boolean;
-  readonly stdout?: (text: string) => void;
 }
 
 /** Project the linted entries onto the JSON builder's view. */
@@ -90,13 +88,14 @@ export async function lintCommand(
   specIds: string[] = [],
   options: LintCommandOptions = {},
 ): Promise<LintCommandResult> {
-  const cwd = options.cwd ?? process.cwd();
-  const config = options.config ?? (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const cwd = inputs.cwd;
+  const config = await inputs.config();
   const specsDir = getChangesDir(config.paths.openspecRoot, cwd);
   const json = options.json === true;
   // JSON mode prints no logger lines and passes no logger into the lint pass,
   // so even the OpenSpec version info line stays out of the document.
-  const logger = json ? null : (options.logger ?? createLogger('normal', 'osq'));
+  const logger = json ? null : (options.logger ?? commandLogger(options));
 
   const folders =
     specIds.length > 0
@@ -121,8 +120,7 @@ export async function lintCommand(
   const repository = dedupeFindings(entries.flatMap((entry) => [...entry.result.repository]));
 
   if (json) {
-    const stdout = options.stdout ?? ((text: string) => process.stdout.write(text));
-    stdout(`${JSON.stringify(buildLintJson(valid, lintEntriesToJson(entries)))}\n`);
+    inputs.stdout(`${JSON.stringify(buildLintJson(valid, lintEntriesToJson(entries)))}\n`);
   } else if (logger) {
     if (options.repository === true) {
       printRepositoryFindings(logger, repository);

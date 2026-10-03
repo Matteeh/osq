@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d845b584edfeee124e6604938a6dfc1b572e1dcb8fef4b90355db8072d8f9d12"
+build_stamp: "3449045"
+project_commit: "7faf400"
+exit_code: 0
+scope_files: {"src/cli/inbox-dispatch.ts":"sha256:db1ec7b85d605d19fda18f2882a629b3322f7932cb07002431e28aa961f0f362","src/cli/inbox-terminal.ts":"sha256:751d4887cfef6b146e86f088f94707c7269698c1464534a57b64f752847790e0","tests/command-inputs-inbox.test.ts":"sha256:dac085a0fb42defad0a96b7e6a18149a04e8c6aab28a2cd8a6e0cb8c8a34430e","tests/inbox-cards.test.ts":"sha256:6a3a23ecf1b66802489d5a3e740ce442720e38f5190857adcb52db9b6af74293","tests/inbox-dispatch.test.ts":"sha256:53b436e1e80556cecb2a00beca256e32d145bd4bdac577e8a3cf38d61a4b7c3e"}
+---
+2026-10-03T09:27:02.330Z

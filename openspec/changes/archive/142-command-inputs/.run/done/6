@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:031101ed36361a3174c302dfe03d31814bf3ac60e79f5e0bbd309a41c1806d2c"
+build_stamp: "3449045"
+project_commit: "f3e3904"
+exit_code: 0
+scope_files: {"src/cli/init.ts":"sha256:16373a49c122028c2f66bc40f8156e5f40faa4bfc11a9938ebc4da031f6a7917","src/cli/new.ts":"sha256:a1038819052561ff4e4726198e6e01d2e6eb6c02fa3537e559692c0b5294c753","src/cli/setup.ts":"sha256:a97b388ac7bc1ef0402e0b58f93b8840b89b35b257d36919e8406b1fd12775b5","tests/command-inputs-scaffold.test.ts":"sha256:981091da0fa782f373c94f674098d42c0cfa222cc61db456baaabcdd7f9f18b6","tests/init-refresh-schema.test.ts":"sha256:39c5c8c8a4a8db538d772f3fbd4551a8d6935fd1a484ce61fcdbb22d2538a901","tests/rules-block.test.ts":"sha256:cf6cc05f829acb26213356ab24293e74749e3e98be8b8f21dff715c1de873762"}
+---
+2026-10-03T09:12:02.290Z

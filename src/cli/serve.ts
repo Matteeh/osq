@@ -2,20 +2,17 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { InvalidArgumentError } from 'commander';
 import { DEFAULT_SERVE_CONFIG, isValidPort } from '../core/foundation/config-serve.js';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { exportDashboard } from '../core/web/web-export.js';
 import { startWebServer } from '../core/web/web-server.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
 /** Injectable inputs so tests never bind a fixed port, open a browser, or wait on signals. */
-export interface ServeCommandOptions {
-  readonly cwd?: string;
+export interface ServeCommandOptions extends CommandInputs {
   readonly port?: number;
   readonly open?: boolean;
   readonly exportDir?: string;
-  readonly config?: OsqConfig;
   readonly uiDir?: string;
   readonly home?: string;
-  readonly stdout?: (line: string) => void;
   readonly signal?: AbortSignal;
   readonly launchBrowser?: (url: string) => Promise<void>;
   readonly now?: () => Date;
@@ -104,12 +101,16 @@ function wireShutdown(signal?: AbortSignal): { done: Promise<void>; dispose: () 
  * close server resources. Every failure closes the listener before surfacing.
  */
 export async function serveCommand(options: ServeCommandOptions = {}): Promise<void> {
-  const cwd = options.cwd ?? process.cwd();
-  const config = options.config ?? (await loadConfig(cwd));
-  const write = options.stdout ?? ((line: string) => process.stdout.write(`${line}\n`));
+  const inputs = resolveInputs(options);
+  const cwd = inputs.cwd;
+  const config = await inputs.config();
+  // Commander derives `export` from `--export <dir>`; accept it so the CLI and
+  // an in-process caller with `exportDir` reach the same export branch.
+  const raw = options as ServeCommandOptions & { export?: string };
+  const exportDir = raw.exportDir ?? raw.export;
 
-  if (options.exportDir) {
-    const target = path.resolve(cwd, options.exportDir);
+  if (exportDir) {
+    const target = path.resolve(cwd, exportDir);
     await exportDashboard({
       projectRoot: cwd,
       config,
@@ -118,9 +119,9 @@ export async function serveCommand(options: ServeCommandOptions = {}): Promise<v
       home: options.home,
       now: options.now?.(),
     });
-    write(`exported dashboard to ${target}`);
-    write(
-      'scrubbed: project root and home directory paths only; read the export before publishing',
+    inputs.stdout(`exported dashboard to ${target}\n`);
+    inputs.stdout(
+      'scrubbed: project root and home directory paths only; read the export before publishing\n',
     );
     return;
   }
@@ -139,7 +140,7 @@ export async function serveCommand(options: ServeCommandOptions = {}): Promise<v
     home: options.home,
     now: options.now,
   });
-  write(handle.url);
+  inputs.stdout(`${handle.url}\n`);
 
   if (options.open) {
     try {

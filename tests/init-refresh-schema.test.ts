@@ -103,15 +103,11 @@ describe('osq init --refresh-schema', () => {
     await fs.writeFile(path.join(tmpDir, PROPOSAL), '# stale local proposal\n', 'utf8');
 
     const lines: string[] = [];
-    const original = console.log;
-    console.log = ((...args: unknown[]) => {
-      lines.push(args.join(' '));
-    }) as typeof console.log;
-    try {
-      await initCommand({ cwd: tmpDir, refreshSchema: true });
-    } finally {
-      console.log = original;
-    }
+    await initCommand({
+      cwd: tmpDir,
+      refreshSchema: true,
+      stdout: (text) => lines.push(text.replace(/\n$/, '')),
+    });
 
     const refreshedIndex = lines.indexOf(`  refreshed ${PROPOSAL}`);
     const currentIndex = lines.findIndex((line) => line.startsWith('  current   '));
@@ -129,15 +125,10 @@ describe('osq init --refresh-schema', () => {
     await scaffoldProject(tmpDir);
 
     const lines: string[] = [];
-    const original = console.log;
-    console.log = ((...args: unknown[]) => {
-      lines.push(args.join(' '));
-    }) as typeof console.log;
-    try {
-      await initCommand({ cwd: tmpDir });
-    } finally {
-      console.log = original;
-    }
+    await initCommand({
+      cwd: tmpDir,
+      stdout: (text) => lines.push(text.replace(/\n$/, '')),
+    });
 
     assert.equal(
       lines.some((line) => line.startsWith('  refreshed ')),

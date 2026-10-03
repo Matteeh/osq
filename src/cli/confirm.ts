@@ -8,8 +8,8 @@ import {
 export interface ApprovalConfirmOptions {
   /** Defaults to a `node:readline/promises` question on stdin/stdout. */
   ask: (question: string) => Promise<string | null>;
-  /** Defaults to `console.log`. */
-  print?: (line: string) => void;
+  /** Receives every flag line without its trailing newline. */
+  print: (line: string) => void;
 }
 
 /** The exact confirmation prompt; defaults to no. */
@@ -38,9 +38,8 @@ export async function requestApproval(
   digest: ApprovalDigest,
   options: ApprovalConfirmOptions,
 ): Promise<'confirmed' | 'declined'> {
-  const print = options.print ?? ((line: string) => console.log(line));
   for (const line of formatApprovalFlags(digest.flags)) {
-    print(line);
+    options.print(line);
   }
   const answer = await options.ask(approvalQuestion(id, digest.flags.length));
   return isAffirmative(answer) ? 'confirmed' : 'declined';

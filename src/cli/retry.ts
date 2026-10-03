@@ -1,36 +1,35 @@
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { retrySpec } from '../core/lifecycle/retry.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface RetryCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
-}
+export type RetryCommandOptions = CommandInputs;
 
 export async function retryCommand(
   specId: string,
   target: string,
   options: RetryCommandOptions = {},
 ): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   try {
-    const result = await retrySpec(cwd, specId, target, config);
+    const result = await retrySpec(inputs.cwd, specId, target, config);
     const label = result.target === 'change' ? 'change' : `task ${result.target}`;
+    const lines: string[] = [];
     if (result.recertification === 'passed') {
-      console.log(`Recertified ${result.specId} ${label} (scope regression cleared)`);
+      lines.push(`Recertified ${result.specId} ${label} (scope regression cleared)`);
     } else if (result.recertification === 'requeued') {
-      console.log(
+      lines.push(
         `Requeued ${result.specId} ${label} for agent work (next attempt: ${result.attempt})`,
       );
     } else {
-      console.log(`Retried ${result.specId} ${label} (next attempt: ${result.attempt})`);
+      lines.push(`Retried ${result.specId} ${label} (next attempt: ${result.attempt})`);
     }
-    console.log(`  Reason: ${result.reason}`);
+    lines.push(`  Reason: ${result.reason}`);
     for (const marker of result.retainedMarkers) {
-      console.log(`  Retained: ${marker}`);
+      lines.push(`  Retained: ${marker}`);
     }
+    for (const line of lines) inputs.stdout(`${line}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new CommandError(`Error retrying ${specId} ${target}:\n  ${message}`);

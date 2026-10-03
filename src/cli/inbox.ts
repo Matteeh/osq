@@ -1,11 +1,11 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { readLastLook, resolveLastLookPath } from '../core/status/inbox-cursor.js';
 import { readInbox } from '../core/status/inbox-projection.js';
 import { type Inbox, formatInboxText } from '../core/status/inbox.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
 export { readLastLook, resolveLastLookPath };
 
@@ -20,10 +20,7 @@ export async function writeLastLook(
   await fs.writeFile(cursorPath, `${JSON.stringify({ lastLook: timestamp })}\n`, 'utf8');
 }
 
-export interface InboxCommandOptions {
-  cwd?: string;
-  stdout?: (msg: string) => void;
-  config?: OsqConfig;
+export interface InboxCommandOptions extends CommandInputs {
   json?: boolean;
   /** Injectable invocation clock; also stamped into the advanced cursor. */
   now?: Date;
@@ -36,20 +33,16 @@ export interface InboxCommandOptions {
  * or the stable JSON object. Only this command advances last-look state.
  */
 export async function inboxCommand(options: InboxCommandOptions = {}): Promise<Inbox> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
   const now = options.now ?? new Date();
 
   try {
-    const inbox = await readInbox(cwd, { config, now, home: options.home });
-    await writeLastLook(cwd, now.toISOString(), options.home);
+    const inbox = await readInbox(inputs.cwd, { config, now, home: options.home });
+    await writeLastLook(inputs.cwd, now.toISOString(), options.home);
 
     const output = options.json ? JSON.stringify(inbox, null, 2) : formatInboxText(inbox);
-    if (options.stdout) {
-      options.stdout(output);
-    } else {
-      console.log(output);
-    }
+    inputs.stdout(`${output}\n`);
     return inbox;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -1951,10 +1951,9 @@ name `osq graph`.
 print each of its lines to stdout, and exit with its code. It SHALL pass
 `landChange` a progress callback that prints each progress line to stderr, so
 stdout holds only the land's result. On a refusal or a stop it SHALL print
-only the message to stderr and exit one. `landCommand` SHALL take injectable
-`cwd`, `config`, `stdout`, `stderr`, and `exit`, as `messageCommand` does, and
-SHALL load `osq.config.ts` inside its error handling, so a configuration error
-prints its message and exits one. `createProgram` SHALL register it through
+only the message to stderr and exit one. `landCommand` SHALL take the command
+inputs, as `messageCommand` does, and SHALL load `osq.config.ts` inside its
+error handling, so a configuration error prints its message and exits one. `createProgram` SHALL register it through
 `registerLandCommand`, and the `doctor` command through
 `registerDoctorCommand` in `src/cli/doctor.ts`, with its description and
 behaviour unchanged.
@@ -2009,10 +2008,9 @@ that writes.
 print its line to stdout, and exit zero. It SHALL pass `syncChange` a progress
 callback that prints each progress line to stderr, so stdout holds only the
 result. On a refusal or a stop it SHALL print only the message to stderr and
-exit one. `syncCommand` in `src/cli/sync.ts` SHALL take injectable `cwd`,
-`config`, `stdout`, `stderr`, and `exit`, as `landCommand` does, and SHALL
-load `osq.config.ts` inside its error handling, so a configuration error
-prints its message and exits one. `createProgram` SHALL register it through
+exit one. `syncCommand` in `src/cli/sync.ts` SHALL take the command inputs,
+as `landCommand` does, and SHALL load `osq.config.ts` inside its error
+handling, so a configuration error prints its message and exits one. `createProgram` SHALL register it through
 `registerSyncCommand` with the description `merge the default branch into a
 change's branch`.
 
@@ -2572,3 +2570,41 @@ SHALL equal the scaffolded `.env.example` byte for byte.
 #### Scenario: Scaffold copies match
 - **WHEN** `osq init` runs in an empty directory
 - **THEN** its `.env.example` equals the repository's `.env.example` and `templates/.env.example`
+
+### Requirement: Command inputs
+`src/cli/command-inputs.ts` SHALL export `Writer`, a function that receives
+exactly the text a command prints, newlines included; `CommandInputs`, with
+optional `cwd`, `config`, `stdout` and `stderr`; `processStdout` and
+`processStderr`, the writers to the process streams; `resolveInputs`, which
+fills `cwd` with `process.cwd()` and each missing writer with its process
+writer, and gives `config()`, the passed config or `loadConfig(cwd)`; and
+`commandLogger`, the `osq` logger at a level, writing to the process stderr
+when no `stderr` is passed and to the passed `stderr` otherwise. Every
+exported command function under `src/cli/` SHALL accept `CommandInputs` in
+its options, with those names and meaning.
+
+#### Scenario: Captured in-process
+- **WHEN** a caller awaits `statusCommand({ cwd, config, stdout, stderr })`
+- **THEN** `stdout` receives the text `osq status` prints in `cwd`, ending in a newline, and nothing reaches the process streams
+
+#### Scenario: Same bytes by default
+- **WHEN** `osq status`, `osq report` or `osq doctor` runs through `runCli`
+- **THEN** stdout, stderr and the exit code are the same as when the command is called directly with writers that append to strings
+
+### Requirement: Commands print through their inputs
+A command SHALL print only through its `stdout` and `stderr`, or through a
+logger from `commandLogger`, and SHALL pass its writers to every helper and
+core seam that prints for it. When a caller passes none of the inputs, the
+command SHALL print the same bytes, on the same streams, in the same order,
+and exit with the same code as before. No file under `src/cli/` other than
+`command-inputs.ts` SHALL call `console.*`, `process.stdout.write` or
+`process.stderr.write`; `runCli` prints through `processStdout` and
+`processStderr`.
+
+#### Scenario: Logger output captured
+- **WHEN** a caller awaits `lintCommand([id], { cwd, config, stderr })` on a change with an error finding
+- **THEN** `stderr` receives the finding lines, and the command rejects with a `CommandError` with an empty message
+
+#### Scenario: No direct output
+- **WHEN** every file under `src/cli/` other than `command-inputs.ts` is read
+- **THEN** none contains `console.`, `process.stdout.write` or `process.stderr.write`

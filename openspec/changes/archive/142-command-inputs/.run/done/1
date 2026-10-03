@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:387bd7a4f6d10f41c1ad4ec6de8c0d3170386e001cedd659ded7d494530ce152"
+build_stamp: "3449045"
+project_commit: "b21454c"
+exit_code: 0
+scope_files: {"src/cli/command-inputs.ts":"sha256:437b39d91ef427762512f7c12e016c69fe30e98a1c4cbdb6778d754798ca34ca","tests/cli-capture.ts":"sha256:f1e6dfb286edeb3e50e27bdebbc9b2db027b6d5d74cc1328901a453fd80cee01","tests/command-inputs.test.ts":"sha256:3d81f81a042843c6f36d07373e542ef1daf621932551bda00ac2dffe4ab16ffa","tests/lint-command-error.test.ts":"sha256:9925732b976bedd04c31b9d02b84ae2a87d576c07c151e55d53fbc5e031920d9","tests/planning-observed-helpers.ts":"sha256:3577561b50f2adfd9d2f329c1e652ee3b7e569b41a468fa963400ca4c02bb7e5","tests/sync-graph-migrate-command-error.test.ts":"sha256:dbb56bc64194cef6c426d903e26767583f470080ab0ad0f10709c81f742139e4"}
+---
+2026-10-03T08:34:17.103Z

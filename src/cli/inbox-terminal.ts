@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import type { CardInput, Launcher } from '../core/status/dispatch-session.js';
+import { type Writer, processStdout } from './command-inputs.js';
 
 /** The readable stream `createTerminalInput` reads keys and lines from. */
 export type TerminalStream = NodeJS.ReadableStream & {
@@ -23,7 +24,10 @@ function setRawMode(stream: TerminalStream, mode: boolean): void {
  * Read the terminal one key at a time. Raw mode is on only while a key read is
  * pending; `line` writes the question and reads with raw mode off.
  */
-export function createTerminalInput(stream: TerminalStream): CardInput {
+export function createTerminalInput(
+  stream: TerminalStream,
+  stdout: Writer = processStdout,
+): CardInput {
   let buffered = '';
 
   /** Resolve with the next chunk of input, or null at end of input. */
@@ -88,7 +92,7 @@ export function createTerminalInput(stream: TerminalStream): CardInput {
     },
 
     async line(question: string): Promise<string | null> {
-      process.stdout.write(question);
+      stdout(question);
       setRawMode(stream, false);
       return readLine();
     },

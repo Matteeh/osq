@@ -1,42 +1,53 @@
 import { runCli } from '../src/cli/run.js';
 
-/** One line a command wrote, tagged with the stream that received it. */
+/** One write a command made, tagged with the stream that received it. */
 export interface CliLine {
   readonly stream: 'stdout' | 'stderr';
   readonly text: string;
 }
 
-/** The lines `runCli` wrote and the exit code it left on `process.exitCode`. */
+/** The writes `runCli` made and the exit code it left on `process.exitCode`. */
 export interface CliCapture {
   readonly exitCode: number | undefined;
   readonly lines: readonly CliLine[];
+  /** The exact text written to `process.stdout`. */
+  readonly stdout: string;
+  /** The exact text written to `process.stderr`. */
+  readonly stderr: string;
 }
 
 /**
- * Run `runCli` in `cwd`, capturing every line each console method writes and
- * the exit code it leaves on `process.exitCode`. The working directory, the
- * previous `process.exitCode`, the console methods, and `process.exit` are
- * restored even when `runCli` rejects; `process.exit` itself throws so a
- * command that ends the process fails the test.
+ * Run `runCli` in `cwd`, capturing every write to `process.stdout` and
+ * `process.stderr` (console calls included) and the exit code it leaves on
+ * `process.exitCode`. Each write becomes one `CliLine` with one trailing
+ * newline removed. The working directory, the previous `process.exitCode`, the
+ * stream writes, and `process.exit` are restored even when `runCli` rejects;
+ * `process.exit` itself throws so a command that ends the process fails the
+ * test.
  */
 export async function runCliCaptured(cwd: string, argv: readonly string[]): Promise<CliCapture> {
   const originalCwd = process.cwd();
   const originalExitCode = process.exitCode;
-  const originalLog = console.log;
-  const originalError = console.error;
-  const originalWarn = console.warn;
+  const originalStdoutWrite = process.stdout.write;
+  const originalStderrWrite = process.stderr.write;
   const originalExit = process.exit;
+  const stdoutChunks: string[] = [];
+  const stderrChunks: string[] = [];
   const lines: CliLine[] = [];
   let exitCode: number | undefined;
 
-  const push = (stream: 'stdout' | 'stderr') => {
-    return (...args: unknown[]): void => {
-      lines.push({ stream, text: args.map(String).join(' ') });
-    };
+  const record = (stream: 'stdout' | 'stderr', chunk: string | Uint8Array): boolean => {
+    const text = typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
+    if (stream === 'stdout') stdoutChunks.push(text);
+    else stderrChunks.push(text);
+    lines.push({ stream, text: text.endsWith('\n') ? text.slice(0, -1) : text });
+    return true;
   };
-  console.log = push('stdout');
-  console.error = push('stderr');
-  console.warn = push('stderr');
+
+  process.stdout.write = ((chunk: string | Uint8Array) =>
+    record('stdout', chunk)) as typeof process.stdout.write;
+  process.stderr.write = ((chunk: string | Uint8Array) =>
+    record('stderr', chunk)) as typeof process.stderr.write;
   process.exit = ((_code?: number) => {
     throw new Error('process.exit called');
   }) as unknown as typeof process.exit;
@@ -49,11 +60,15 @@ export async function runCliCaptured(cwd: string, argv: readonly string[]): Prom
   } finally {
     process.chdir(originalCwd);
     process.exitCode = originalExitCode;
-    console.log = originalLog;
-    console.error = originalError;
-    console.warn = originalWarn;
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
     process.exit = originalExit;
   }
 
-  return { exitCode, lines };
+  return {
+    exitCode,
+    lines,
+    stdout: stdoutChunks.join(''),
+    stderr: stderrChunks.join(''),
+  };
 }

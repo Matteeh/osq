@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:cea127962c4c74393c9248cd1f3419e60752fe867d36d8754b45ed0865d783fa"
+build_stamp: "3449045"
+project_commit: "b9b2530"
+exit_code: 0
+scope_files: {"src/cli/plan-queue.ts":"sha256:8ea0d3d62abcf97fa62c5df789e3b7f958ea0f98a5fed333fabc12ccda2e2d40","src/cli/plan.ts":"sha256:cccf02c176f992e4f894a39a8b66e35f66b626f474363ce0bfe0210cc45d0840","tests/command-inputs-plan.test.ts":"sha256:92978583a1ebba54289ea5568b713ef3afb988de2ab24307706760b02f6062b2","tests/plan-command-error.test.ts":"sha256:5f09341fc92ec4a0a44d8cfcbb5bc77d8900c5c0a3a0c7c1b46b41b19d0d12f8"}
+---
+2026-10-03T09:33:24.557Z

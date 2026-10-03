@@ -93,30 +93,11 @@ describe('lint command errors', () => {
   });
 
   it('prints the finding and exits 1 through the CLI for an invalid change', async () => {
-    const stderr: string[] = [];
-    const stdout: string[] = [];
-    const originalStderr = process.stderr.write;
-    const originalStdout = process.stdout.write;
-    process.stderr.write = ((chunk: string | Uint8Array) => {
-      stderr.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'));
-      return true;
-    }) as typeof process.stderr.write;
-    process.stdout.write = ((chunk: string | Uint8Array) => {
-      stdout.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'));
-      return true;
-    }) as typeof process.stdout.write;
-
-    let capture: Awaited<ReturnType<typeof runCliCaptured>>;
-    try {
-      capture = await runCliCaptured(root, ['lint', invalid.specId]);
-    } finally {
-      process.stderr.write = originalStderr;
-      process.stdout.write = originalStdout;
-    }
+    const capture = await runCliCaptured(root, ['lint', invalid.specId]);
 
     assert.equal(capture.exitCode, 1);
-    assert.equal(stdout.join(''), '');
-    assert.ok(stderr.join('').includes('verify command is empty'), JSON.stringify(stderr.join('')));
+    assert.equal(capture.stdout, '');
+    assert.ok(capture.stderr.includes('verify command is empty'), JSON.stringify(capture.stderr));
   });
 
   it('exits 0 through the CLI for a valid change', async () => {

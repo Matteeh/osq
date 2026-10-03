@@ -1,33 +1,38 @@
-import { loadConfig } from '../core/foundation/config.js';
 import { scaffoldProject } from '../core/foundation/init.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export async function initCommand(
-  options: { cwd?: string; refreshSchema?: boolean } = {},
-): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = await loadConfig(cwd);
-  const result = await scaffoldProject(cwd, { refreshSchema: options.refreshSchema, config });
+export interface InitCommandOptions extends CommandInputs {
+  refreshSchema?: boolean;
+}
+
+export async function initCommand(options: InitCommandOptions = {}): Promise<void> {
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
+  const result = await scaffoldProject(inputs.cwd, {
+    refreshSchema: options.refreshSchema,
+    config,
+  });
 
   for (const dir of result.createdDirs) {
-    console.log(`  created  ${dir}/`);
+    inputs.stdout(`  created  ${dir}/\n`);
   }
   for (const file of result.createdFiles) {
-    console.log(`  created  ${file}`);
+    inputs.stdout(`  created  ${file}\n`);
   }
   for (const file of result.existingFiles) {
-    console.log(`  exists   ${file}`);
+    inputs.stdout(`  exists   ${file}\n`);
   }
   for (const file of result.refreshedFiles) {
-    console.log(`  refreshed ${file}`);
+    inputs.stdout(`  refreshed ${file}\n`);
   }
   for (const file of result.currentFiles) {
-    console.log(`  current   ${file}`);
+    inputs.stdout(`  current   ${file}\n`);
   }
   if (result.updatedAgentsMd) {
-    console.log('  updated  AGENTS.md (refreshed managed block)');
+    inputs.stdout('  updated  AGENTS.md (refreshed managed block)\n');
   }
   if (result.updatedProjectRules) {
-    console.log('  updated  AGENTS.md (project rules)');
+    inputs.stdout('  updated  AGENTS.md (project rules)\n');
   }
-  console.log('\nosq initialized successfully.');
+  inputs.stdout('\nosq initialized successfully.\n');
 }

@@ -172,7 +172,7 @@ describe('osq inbox on a terminal', () => {
     });
 
     assert.equal(inputUsed, false);
-    assert.equal(out.text(), formatDispatchText(await readDispatch(tmpDir, config)));
+    assert.equal(out.text(), `${formatDispatchText(await readDispatch(tmpDir, config))}\n`);
   });
 
   it('prints JSON instead of the session when json is set', async () => {
@@ -215,14 +215,16 @@ describe('createTerminalInput', () => {
     assert.equal(await pending, 'b');
   });
 
-  it('writes the question and reads a line with raw mode off', async () => {
+  it('writes the question to stdout and reads a line with raw mode off', async () => {
     const { stream, modes } = recordingStream();
-    const input = createTerminalInput(stream);
+    const questions: string[] = [];
+    const input = createTerminalInput(stream, (text) => questions.push(text));
 
     const pending = input.line('Reason: ');
     assert.deepEqual(modes, [false]);
     stream.write('wrong approach\n');
     assert.equal(await pending, 'wrong approach');
+    assert.deepEqual(questions, ['Reason: ']);
     assert.equal(modes.includes(true), false);
   });
 });

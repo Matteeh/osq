@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createProgram } from '../src/cli/index.js';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { formatQueue, parseQueue, projectQueue, readQueue } from '../src/core/status/queue.js';
+import { runCliCaptured } from './cli-capture.js';
 
 const OPENSPEC = 'openspec';
 const QUEUE_PATH = 'openspec/queue.md';
@@ -126,21 +127,8 @@ function bySlug(projection: Awaited<ReturnType<typeof projectQueue>>) {
 }
 
 async function runQueueCli(cwd: string): Promise<string> {
-  const originalCwd = process.cwd();
-  const originalLog = console.log;
-  let captured = '';
-  console.log = (...args: unknown[]) => {
-    captured += `${args.map((arg) => String(arg)).join(' ')}\n`;
-  };
-  try {
-    process.chdir(cwd);
-    const program = createProgram();
-    await program.parseAsync(['node', 'osq', 'queue']);
-  } finally {
-    process.chdir(originalCwd);
-    console.log = originalLog;
-  }
-  return captured.trimEnd();
+  const capture = await runCliCaptured(cwd, ['queue']);
+  return capture.stdout.trimEnd();
 }
 
 let tmpDir: string;

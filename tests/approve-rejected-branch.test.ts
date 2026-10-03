@@ -12,6 +12,7 @@ import { scaffoldProject } from '../src/core/foundation/init.js';
 import { createNewSpec } from '../src/core/foundation/new.js';
 import { approveSpec } from '../src/core/spec/approve.js';
 import { worktreeBranch, worktreePath } from '../src/core/vcs/worktree.js';
+import { captureLogs } from './planning-observed-helpers.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -204,21 +205,14 @@ describe('approve reclaims a rejected branch', () => {
     const p = await makeProject();
     const branch = worktreeBranch(p.folder001);
     await createRejectedBranch(p);
-    const logs: string[] = [];
-    const original = console.log;
-    console.log = (...args: unknown[]) => {
-      logs.push(args.map(String).join(' '));
-    };
-    try {
-      await approveCommand(['001'], {
+    const logs = await captureLogs(() =>
+      approveCommand(['001'], {
         cwd: p.repo,
         config: p.config,
         planningReaders: [],
         isTerminal: () => false,
-      });
-    } finally {
-      console.log = original;
-    }
+      }),
+    );
 
     const hashIndex = logs.findIndex((line) => line.startsWith('  Hash: '));
     assert.ok(hashIndex >= 0, `no hash line in ${JSON.stringify(logs)}`);

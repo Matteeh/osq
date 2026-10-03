@@ -43,25 +43,6 @@ async function rejectCommand(promise: Promise<unknown>): Promise<CommandError> {
   return caught;
 }
 
-/** Run `runCliCaptured` while also collecting what the logger writes to stderr. */
-async function runCliWithStderr(
-  cwd: string,
-  argv: readonly string[],
-): Promise<{ capture: Awaited<ReturnType<typeof runCliCaptured>>; stderr: string }> {
-  const original = process.stderr.write;
-  const chunks: string[] = [];
-  process.stderr.write = ((chunk: string | Uint8Array) => {
-    chunks.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8'));
-    return true;
-  }) as typeof process.stderr.write;
-  try {
-    const capture = await runCliCaptured(cwd, argv);
-    return { capture, stderr: chunks.join('') };
-  } finally {
-    process.stderr.write = original;
-  }
-}
-
 describe('sync, graph, and migrate command errors', () => {
   it('the three option types have no exit option', () => {
     // @ts-expect-error `exit` was removed from `SyncCommandOptions`.
@@ -222,10 +203,10 @@ describe('sync, graph, and migrate command errors', () => {
   it('osq migrate logs the refusal and exits 1 through runCli', async () => {
     const root = await tempDir('osq-migrate-command-cli-');
 
-    const { capture, stderr } = await runCliWithStderr(root, ['migrate', 'legacy']);
+    const capture = await runCliCaptured(root, ['migrate', 'legacy']);
 
     assert.equal(capture.exitCode, 1);
-    assert.deepEqual(capture.lines, []);
-    assert.match(stderr, /unsupported migrate target/);
+    assert.equal(capture.stdout, '');
+    assert.match(capture.stderr, /unsupported migrate target/);
   });
 });

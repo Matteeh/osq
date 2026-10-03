@@ -190,7 +190,7 @@ describe('serve configuration and CLI registration', () => {
       signal: configuredController.signal,
       stdout: configuredCapture.write,
     });
-    assert.equal(await configuredCapture.line, `http://127.0.0.1:${configured}/`);
+    assert.equal(await configuredCapture.line, `http://127.0.0.1:${configured}/\n`);
     configuredController.abort();
     await configuredDone;
 
@@ -205,7 +205,7 @@ describe('serve configuration and CLI registration', () => {
       signal: overrideController.signal,
       stdout: overrideCapture.write,
     });
-    assert.equal(await overrideCapture.line, `http://127.0.0.1:${overridden}/`);
+    assert.equal(await overrideCapture.line, `http://127.0.0.1:${overridden}/\n`);
     overrideController.abort();
     await overrideDone;
   });
@@ -229,8 +229,9 @@ describe('serve configuration and CLI registration', () => {
         assert.equal(response.status, 200);
       },
     });
-    const url = await capture.line;
-    assert.equal(url, `http://127.0.0.1:${port}/`);
+    const line = await capture.line;
+    assert.equal(line, `http://127.0.0.1:${port}/\n`);
+    const url = line.trimEnd();
     controller.abort();
     await done;
     assert.deepEqual(opened, [url]);

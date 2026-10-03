@@ -1,9 +1,9 @@
-import { loadConfig } from '../core/foundation/config.js';
-import { type LogLevel, createLogger } from '../core/foundation/logger.js';
+import type { LogLevel } from '../core/foundation/logger.js';
 import { recreateWorktrees } from '../core/vcs/worktree-recreate.js';
 import { getHarnessAdapter } from '../harness/index.js';
 import type { WatchCommandOptions } from '../watcher/dev.js';
 import { startWatcher } from '../watcher/loop.js';
+import { type CommandInputs, commandLogger, resolveInputs } from './command-inputs.js';
 
 export type { WatchCommandOptions };
 
@@ -25,20 +25,20 @@ export function shouldRunDevSupervisor(
   return options.dev === true && env.OSQ_DEV_WORKER !== '1';
 }
 
-export async function watchCommand(options: WatchCommandOptions): Promise<void> {
+export async function watchCommand(options: WatchCommandOptions & CommandInputs): Promise<void> {
   if (shouldRunDevSupervisor(options)) {
     const { runDevSupervisor } = await import('../watcher/dev.js');
     await runDevSupervisor(options);
     return;
   }
 
-  const cwd = process.cwd();
-  const config = await loadConfig(cwd);
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
   const adapter = getHarnessAdapter(config.harness);
-  const logger = createLogger(resolveLogLevel(options), 'osq');
-  for (const line of await recreateWorktrees(cwd, config)) {
+  const logger = commandLogger(options, resolveLogLevel(options));
+  for (const line of await recreateWorktrees(inputs.cwd, config)) {
     logger.info(line);
   }
   const watcherOptions = { ...options, logger };
-  await startWatcher(cwd, config, adapter, watcherOptions);
+  await startWatcher(inputs.cwd, config, adapter, watcherOptions);
 }

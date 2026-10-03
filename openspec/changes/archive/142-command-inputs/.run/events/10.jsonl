@@ -1,0 +1,111 @@
+{"type":"verify_ran","timestamp":"2026-10-03T09:27:03.332Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-plan.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/command-inputs-plan.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/command-inputs-plan.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-03T09:27:04.109Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":716,"repoFiles":2279,"repoLines":259925,"importFanIn":1,"proposalWords":1219,"taskWords":342,"deltaRequirements":4,"deltaScenarios":11}}
+{"type":"started","timestamp":"2026-10-03T09:27:04.291Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"b9b2530","pid":31292,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"3449045"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:05.728Z","data":{"promptTokens":1703,"candidateTokens":169,"totalTokens":5200,"cachedTokens":3328,"reasoningTokens":15,"cost":0.000733668,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:05.729Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/tasks/10.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:05.730Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/proposal.md"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:07.347Z","data":{"promptTokens":2963,"candidateTokens":237,"totalTokens":8320,"cachedTokens":5120,"reasoningTokens":19,"cost":0.0012040199999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:07.348Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/specs/cli-foundation/spe"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:07.349Z","data":{"tool":"read","summary":"src/cli/command-inputs.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:07.349Z","data":{"tool":"read","summary":"tests/cli-capture.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:08.403Z","data":{"promptTokens":2636,"candidateTokens":158,"totalTokens":11114,"cachedTokens":8320,"reasoningTokens":18,"cost":0.00103032,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:08.405Z","data":{"tool":"read","summary":"src/cli/plan.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:08.405Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:09.767Z","data":{"promptTokens":4172,"candidateTokens":190,"totalTokens":15370,"cachedTokens":11008,"reasoningTokens":19,"cost":0.0015456479999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:09.768Z","data":{"tool":"read","summary":"tests/plan-command-error.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:09.769Z","data":{"tool":"bash","summary":"ls tests/ | grep -i plan; echo \"---\"; ls openspec/changes/14"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:11.458Z","data":{"promptTokens":2767,"candidateTokens":316,"totalTokens":18443,"cachedTokens":15360,"reasoningTokens":107,"cost":0.00130146,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:11.459Z","data":{"tool":"read","summary":"tests/command-inputs-vcs.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:11.460Z","data":{"tool":"read","summary":"tests/command-inputs-views.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:11.461Z","data":{"tool":"read","summary":"tests/git-test-env.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:12.857Z","data":{"promptTokens":4383,"candidateTokens":227,"totalTokens":23042,"cachedTokens":18432,"reasoningTokens":45,"cost":0.0016978919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:12.858Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:12.859Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/.run/results/9.md"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:15.545Z","data":{"promptTokens":665,"candidateTokens":589,"totalTokens":24294,"cachedTokens":23040,"reasoningTokens":389,"cost":0.00104454,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:15.545Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:15.546Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:17.305Z","data":{"promptTokens":9749,"candidateTokens":266,"totalTokens":34207,"cachedTokens":24192,"reasoningTokens":64,"cost":0.0033890519999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:17.306Z","data":{"tool":"read","summary":"src/cli/index.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:17.308Z","data":{"tool":"read","summary":"src/cli/run.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:17.308Z","data":{"tool":"read","summary":"tests/plan-handoff.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:25.120Z","data":{"promptTokens":3116,"candidateTokens":1738,"totalTokens":39030,"cachedTokens":34176,"reasoningTokens":1572,"cost":0.003225456,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:25.121Z","data":{"tool":"bash","summary":"cd . && wc"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:27.508Z","data":{"promptTokens":1279,"candidateTokens":330,"totalTokens":40521,"cachedTokens":38912,"reasoningTokens":175,"cost":0.001013172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:27.509Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:29.124Z","data":{"promptTokens":205,"candidateTokens":137,"totalTokens":40790,"cachedTokens":40448,"reasoningTokens":59,"cost":0.0004685879999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:29.125Z","data":{"tool":"read","summary":"tests/plan-approve-next-step.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:32.767Z","data":{"promptTokens":1187,"candidateTokens":659,"totalTokens":42550,"cachedTokens":40704,"reasoningTokens":455,"cost":0.001391124,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:32.768Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:32.769Z","data":{"tool":"bash","summary":"cd . && se"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:35.164Z","data":{"promptTokens":2482,"candidateTokens":203,"totalTokens":45181,"cachedTokens":42496,"reasoningTokens":89,"cost":0.0012431760000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:35.165Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:36.850Z","data":{"promptTokens":849,"candidateTokens":245,"totalTokens":46150,"cachedTokens":45056,"reasoningTokens":137,"cost":0.000819036,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:36.851Z","data":{"tool":"bash","summary":"cd . && rg"}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:38.650Z","data":{"promptTokens":246,"candidateTokens":106,"totalTokens":46432,"cachedTokens":46080,"reasoningTokens":29,"cost":0.00047748,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:38.652Z","data":{"tool":"read","summary":"src/core/status/queue-planning.ts"}}
+{"type":"text","timestamp":"2026-10-03T09:27:53.527Z","data":{"text":"Now let me look at the rest of the command-inputs-plan-related patterns and check line budget/test conventions."}}
+{"type":"tokens","timestamp":"2026-10-03T09:27:53.527Z","data":{"promptTokens":1162,"candidateTokens":3296,"totalTokens":50794,"cachedTokens":46336,"reasoningTokens":3079,"cost":0.004581816,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:53.529Z","data":{"tool":"read","summary":"tests/command-inputs-scaffold.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:27:53.530Z","data":{"tool":"bash","summary":"cd . && se"}}
+{"type":"text","timestamp":"2026-10-03T09:28:05.898Z","data":{"text":"Now I'll write the new test file and update `plan-command-error.test.ts`."}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:05.898Z","data":{"promptTokens":949,"candidateTokens":3535,"totalTokens":55172,"cachedTokens":50688,"reasoningTokens":1945,"cost":0.004830828,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:05.899Z","data":{"tool":"write","summary":"tests/command-inputs-plan.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:05.900Z","data":{"path":"tests/command-inputs-plan.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:07.724Z","data":{"promptTokens":156,"candidateTokens":366,"totalTokens":55562,"cachedTokens":55040,"reasoningTokens":11,"cost":0.00081624,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:07.725Z","data":{"tool":"edit","summary":"tests/plan-command-error.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:07.729Z","data":{"path":"tests/plan-command-error.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:09.490Z","data":{"promptTokens":167,"candidateTokens":151,"totalTokens":55742,"cachedTokens":55424,"reasoningTokens":44,"cost":0.000563844,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:09.491Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"text","timestamp":"2026-10-03T09:28:19.903Z","data":{"text":"Now let me implement the changes. First `plan.ts`:"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:19.903Z","data":{"promptTokens":2548,"candidateTokens":2609,"totalTokens":60837,"cachedTokens":55680,"reasoningTokens":1593,"cost":0.004229279999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:19.905Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:19.907Z","data":{"path":"src/cli/plan.ts"}}
+{"type":"text","timestamp":"2026-10-03T09:28:24.362Z","data":{"text":"Now `plan-queue.ts`:"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:24.362Z","data":{"promptTokens":192,"candidateTokens":1286,"totalTokens":62150,"cachedTokens":60672,"reasoningTokens":79,"cost":0.001964832,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:24.364Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:24.365Z","data":{"path":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:26.550Z","data":{"promptTokens":227,"candidateTokens":240,"totalTokens":62419,"cachedTokens":61952,"reasoningTokens":164,"cost":0.000727812,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:26.551Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:29.530Z","data":{"promptTokens":774,"candidateTokens":552,"totalTokens":63662,"cachedTokens":62336,"reasoningTokens":156,"cost":0.001268616,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:29.531Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:29.532Z","data":{"path":"src/cli/plan-queue.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:31.859Z","data":{"promptTokens":203,"candidateTokens":286,"totalTokens":63977,"cachedTokens":63488,"reasoningTokens":92,"cost":0.000785028,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:31.860Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:31.861Z","data":{"tool":"bash","summary":"cd . && wc"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:33.547Z","data":{"promptTokens":409,"candidateTokens":152,"totalTokens":64433,"cachedTokens":63872,"reasoningTokens":78,"cost":0.000688332,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:33.548Z","data":{"tool":"read","summary":"src/cli/plan.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:35.171Z","data":{"promptTokens":1320,"candidateTokens":116,"totalTokens":65820,"cachedTokens":64384,"reasoningTokens":9,"cost":0.0009215040000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:35.172Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:38.745Z","data":{"promptTokens":2416,"candidateTokens":236,"totalTokens":68444,"cachedTokens":65792,"reasoningTokens":70,"cost":0.001402752,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:38.746Z","data":{"tool":"edit","summary":"tests/command-inputs-plan.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:28:38.747Z","data":{"path":"tests/command-inputs-plan.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:40.039Z","data":{"promptTokens":249,"candidateTokens":107,"totalTokens":68580,"cachedTokens":68224,"reasoningTokens":0,"cost":0.000612444,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:40.040Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:43.201Z","data":{"promptTokens":226,"candidateTokens":183,"totalTokens":68889,"cachedTokens":68480,"reasoningTokens":76,"cost":0.00069828,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:43.202Z","data":{"tool":"bash","summary":"cd . && no"}}
+{"type":"tokens","timestamp":"2026-10-03T09:28:46.119Z","data":{"promptTokens":284,"candidateTokens":180,"totalTokens":69328,"cachedTokens":68864,"reasoningTokens":94,"cost":0.000714384,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:28:46.120Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"tokens","timestamp":"2026-10-03T09:29:54.013Z","data":{"promptTokens":844,"candidateTokens":443,"totalTokens":70535,"cachedTokens":69248,"reasoningTokens":151,"cost":0.0012002879999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:29:54.014Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:29:54.015Z","data":{"tool":"edit","summary":"tests/plan-command-error.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:29:54.016Z","data":{"path":"src/cli/plan-queue.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:29:54.016Z","data":{"path":"tests/plan-command-error.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:29:56.100Z","data":{"promptTokens":189,"candidateTokens":194,"totalTokens":70783,"cachedTokens":70400,"reasoningTokens":109,"cost":0.0007119,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:29:56.101Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"tokens","timestamp":"2026-10-03T09:29:58.214Z","data":{"promptTokens":195,"candidateTokens":121,"totalTokens":70972,"cachedTokens":70656,"reasoningTokens":35,"cost":0.000627636,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:29:58.215Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"tokens","timestamp":"2026-10-03T09:31:05.441Z","data":{"promptTokens":358,"candidateTokens":224,"totalTokens":71494,"cachedTokens":70912,"reasoningTokens":117,"cost":0.000801672,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:31:05.442Z","data":{"tool":"bash","summary":"cd . && pn"}}
+{"type":"text","timestamp":"2026-10-03T09:32:15.159Z","data":{"text":"Everything passes. Now writing the result file."}}
+{"type":"tokens","timestamp":"2026-10-03T09:32:15.159Z","data":{"promptTokens":142,"candidateTokens":941,"totalTokens":72507,"cachedTokens":71424,"reasoningTokens":379,"cost":0.001600344,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:32:15.162Z","data":{"tool":"write","summary":"openspec/changes/142-command-inputs/.run/results/10.md"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:32:15.163Z","data":{"path":"openspec/changes/142-command-inputs/.run/results/10.md"}}
+{"type":"tokens","timestamp":"2026-10-03T09:32:16.756Z","data":{"promptTokens":220,"candidateTokens":168,"totalTokens":72708,"cachedTokens":72320,"reasoningTokens":49,"cost":0.00070152,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:32:16.757Z","data":{"tool":"bash","summary":"cd . && se"}}
+{"type":"text","timestamp":"2026-10-03T09:32:19.350Z","data":{"text":"Done. All acceptance lines are implemented and both the task verify and the proposal's `pnpm verify` exit 0.\n\nSummary of changes:\n\n- **`src/cli/plan.ts`**: `PlanCommandOptions` now extends `CommandInputs` (dropping its own `cwd`); `planCommand` uses `resolveInputs` for `cwd`, `config()`, `stdout`, and `stderr`. `--print` writes through `inputs.stdout`, the handoff writes through a local `writePromptHandoff(..., stdout)`, and `createChange`/`createQueueChange` receive `inputs.stdout` only for `--session`. `prepareQueueSelection` receives `inputs.stderr`.\n- **`src/cli/plan-queue.ts`**: moved `writePromptHandoff` out to its only caller; `prepareQueueSelection` takes an optional `stderr` writer (default `processStderr`) and writes the notice plus `\\n`; `createChange`/`createQueueChange` take `output: Writer | null` and write the two created lines with `\\n`.\n- **`tests/command-inputs-plan.test.ts`** (new): compares `osq plan --next --print` through `runCliCaptured` against a direct call on a freshly reset copy of the same project, and asserts a handoff run writes its line to the passed `stdout`.\n- **`tests/plan-command-error.test.ts`**: reads the incomplete-coverage notice from a passed `stderr` writer instead of `console.error`.\n\nResult written to `openspec/changes/142-command-inputs/.run/results/10.md`."}}
+{"type":"tokens","timestamp":"2026-10-03T09:32:19.350Z","data":{"promptTokens":725,"candidateTokens":354,"totalTokens":73783,"cachedTokens":72704,"reasoningTokens":0,"cost":0.001078524,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-03T09:32:19.365Z","data":{"exitCode":0,"pid":31292,"timedOut":false,"elapsedSeconds":315.1}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:32:20.104Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-plan.test.ts","exitCode":0,"duration":0.54,"output":"▶ command inputs for plan\n  ✔ osq plan --next --print prints the same bytes directly and through runCli (162.706417ms)\n  ✔ writes the handoff line to the passed stdout (32.693513ms)\n✔ command inputs for plan (196.201757ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 504.757543\n"}}
+{"type":"measures","timestamp":"2026-10-03T09:33:24.553Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":716,"repoFiles":2279,"repoLines":259925,"importFanIn":1,"proposalWords":1219,"taskWords":342,"deltaRequirements":4,"deltaScenarios":11,"changedFiles":4,"changedLines":201,"scopeHashes":{"src/cli/plan-queue.ts":{"before":"sha256:65ee7c9bb44e5798c3d1d36fec5b92f16b816330ade6a9bb93107b9f1b01a5fc","after":"sha256:8ea0d3d62abcf97fa62c5df789e3b7f958ea0f98a5fed333fabc12ccda2e2d40"},"src/cli/plan.ts":{"before":"sha256:871cbf760de5ff3292e8660ff0052423a4689e8b61c04ecf6677570228cd77d5","after":"sha256:cccf02c176f992e4f894a39a8b66e35f66b626f474363ce0bfe0210cc45d0840"},"tests/command-inputs-plan.test.ts":{"before":null,"after":"sha256:92978583a1ebba54289ea5568b713ef3afb988de2ab24307706760b02f6062b2"},"tests/plan-command-error.test.ts":{"before":"sha256:1045277390b12b9e131425c0d101d318eb6fa72350ce6c8b67ff80a713f05f32","after":"sha256:5f09341fc92ec4a0a44d8cfcbb5bc77d8900c5c0a3a0c7c1b46b41b19d0d12f8"}}}}
+{"type":"done","timestamp":"2026-10-03T09:33:24.558Z","data":{"task":"10"}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:45:44.393Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-plan.test.ts","exitCode":0,"duration":0.51,"output":"▶ command inputs for plan\n  ✔ osq plan --next --print prints the same bytes directly and through runCli (166.787987ms)\n  ✔ writes the handoff line to the passed stdout (29.945368ms)\n✔ command inputs for plan (197.46967ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 485.450029\n"}}

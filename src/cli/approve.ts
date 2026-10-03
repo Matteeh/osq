@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import type { OsqConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
 import { formatPriceKey } from '../core/report/planning-price-gaps.js';
@@ -16,11 +16,10 @@ import { readClaudePlanningSessions } from '../harness/claude/claude-usage.js';
 import { readCodexPlanningSessions } from '../harness/codex/codex-observe-usage.js';
 import { readOpencodePlanningSessions } from '../harness/opencode/opencode-observe-usage.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
 import { refusalMessage, requestApproval } from './confirm.js';
 
-export interface ApproveCommandOptions {
-  cwd?: string;
-  config?: OsqConfig;
+export interface ApproveCommandOptions extends CommandInputs {
   planningReaders?: readonly PlanningSessionReader[];
   now?: Date | string;
   /** Block on flagged approvals by asking before the seal is written. */
@@ -60,40 +59,38 @@ async function defaultAsk(question: string): Promise<string | null> {
 }
 
 /** Print the approval lines for one approved change. */
-function printApprovalResult(result: ApproveResult): void {
+function printApprovalResult(result: ApproveResult, stdout: Writer, stderr: Writer): void {
   const summary = summarizeApprovalFlags(result.digest.flags);
-  console.log(
-    `Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}`,
-  );
-  console.log(`  Hash: ${result.hash}`);
+  stdout(`Approved ${result.specId} (${result.folderName})${summary ? ` with ${summary}` : ''}\n`);
+  stdout(`  Hash: ${result.hash}\n`);
   if (result.keptBranch !== undefined) {
-    console.log(`  Kept rejected branch: ${result.keptBranch}`);
+    stdout(`  Kept rejected branch: ${result.keptBranch}\n`);
   }
   if (result.stackedPath !== undefined) {
-    console.log(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}`);
-    console.log(`  Stacked: ${result.stackedPath}`);
+    stdout(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}\n`);
+    stdout(`  Stacked: ${result.stackedPath}\n`);
   } else if (result.worktreePath !== undefined && result.branch !== undefined) {
-    console.log(`  Worktree: ${result.worktreePath}`);
-    console.log(`  Branch: ${result.branch}`);
+    stdout(`  Worktree: ${result.worktreePath}\n`);
+    stdout(`  Branch: ${result.branch}\n`);
     if (result.restarted !== undefined) {
-      console.log(
-        `  Restarted from ${result.restarted.defaultBranch}; kept the old branch as ${result.restarted.keptBranch}`,
+      stdout(
+        `  Restarted from ${result.restarted.defaultBranch}; kept the old branch as ${result.restarted.keptBranch}\n`,
       );
     } else if (result.merged !== undefined) {
-      console.log(`  Merged ${result.merged.defaultBranch} into ${result.branch}`);
+      stdout(`  Merged ${result.merged.defaultBranch} into ${result.branch}\n`);
     }
   }
   if (result.continuesFrom !== undefined) {
-    console.log(`  Continues from task ${result.continuesFrom}`);
+    stdout(`  Continues from task ${result.continuesFrom}\n`);
   }
   for (const warning of result.warnings) {
-    console.warn(`  Warning: ${warning}`);
+    stderr(`  Warning: ${warning}\n`);
   }
   if (result.planningMatches === 0) {
-    console.log(`No planning record found for ${result.specId}.`);
+    stdout(`No planning record found for ${result.specId}.\n`);
   }
   for (const model of result.missingPrices) {
-    console.log(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.`);
+    stdout(`Planning cost for ${model} stays unreported; add ${formatPriceKey(model)}.\n`);
   }
 }
 
@@ -101,8 +98,8 @@ export async function approveCommand(
   specIds: string[],
   options: ApproveCommandOptions = {},
 ): Promise<void> {
-  const cwd = options.cwd || process.cwd();
-  const config = options.config || (await loadConfig(cwd));
+  const inputs = resolveInputs(options);
+  const config = await inputs.config();
 
   if (!specIds || specIds.length === 0) {
     throw new CommandError('Error: specify at least one spec ID to approve (e.g. osq approve 001)');
@@ -116,35 +113,38 @@ export async function approveCommand(
     // The digest prints before the seal is written; `--confirm` turns any
     // fired flag into a prompted, default-no gate.
     const review = async (digest: ApprovalDigest): Promise<ApprovalReview> => {
-      console.log(formatApprovalDigest(digest));
+      inputs.stdout(`${formatApprovalDigest(digest)}\n`);
       if (!options.confirm || digest.flags.length === 0) {
         for (const line of formatApprovalFlags(digest.flags)) {
-          console.log(line);
+          inputs.stdout(`${line}\n`);
         }
         return 'proceed';
       }
       if (!isTerminal()) {
         throw new CommandError(refusalMessage(specId, digest));
       }
-      return requestApproval(specId, digest, { ask });
+      return requestApproval(specId, digest, {
+        ask,
+        print: (line) => inputs.stdout(`${line}\n`),
+      });
     };
 
     try {
-      const result = await approveSpec(cwd, specId, config, {
+      const result = await approveSpec(inputs.cwd, specId, config, {
         planningReaders,
         now: options.now,
         review,
         baseOk: options.baseOk,
         ignoreDirty: options.ignoreDirty,
       });
-      printApprovalResult(result);
+      printApprovalResult(result, inputs.stdout, inputs.stderr);
     } catch (error) {
       if (error instanceof CommandError) throw error;
       const message = error instanceof Error ? error.message : String(error);
       let next: string | undefined;
       try {
-        const { folderPath } = await findChange(cwd, config, specId);
-        const nextStep = await readNextStep(cwd, folderPath, config);
+        const { folderPath } = await findChange(inputs.cwd, config, specId);
+        const nextStep = await readNextStep(inputs.cwd, folderPath, config);
         next = formatNextStep(nextStep);
       } catch {}
       throw new CommandError(`Error approving ${specId}:\n  ${message}`, { next });

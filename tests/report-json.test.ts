@@ -69,11 +69,12 @@ describe('report --json', () => {
       cwd: fixtureReportRoot,
       json: true,
       stdout: (msg) => {
-        captured = msg;
+        captured += msg;
       },
     });
 
-    const raw = captured || returned;
+    assert.equal(captured, `${returned}\n`);
+    const raw = returned;
     // Exactly one JSON document, no prefixes, suffixes, or extra lines.
     assert.ok(raw.startsWith('{'), `expected JSON object, got: ${raw.slice(0, 40)}`);
     assert.ok(raw.endsWith('}'), `expected JSON object, got: ${raw.slice(-40)}`);

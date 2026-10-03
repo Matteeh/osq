@@ -93,24 +93,13 @@ function assertSameTree(
   }
 }
 
-/** Capture every line `console.log` and `console.error` receive during `run`. */
-async function captureLogs(run: () => Promise<void>): Promise<string[]> {
-  const lines: string[] = [];
-  const originalLog = console.log;
-  const originalError = console.error;
-  console.log = (...args: unknown[]) => {
-    lines.push(args.map(String).join(' '));
-  };
-  console.error = (...args: unknown[]) => {
-    lines.push(args.map(String).join(' '));
-  };
-  try {
-    await run();
-  } finally {
-    console.log = originalLog;
-    console.error = originalError;
-  }
-  return lines;
+/** Capture every line `rejectCommand` writes to its `stdout` writer. */
+async function captureLines(
+  run: (stdout: (text: string) => void) => Promise<unknown>,
+): Promise<string[]> {
+  const chunks: string[] = [];
+  await run((text) => chunks.push(text));
+  return chunks.join('').split('\n').slice(0, -1);
 }
 
 interface Project {
@@ -336,8 +325,8 @@ describe('osq reject output with version control', () => {
     const { project, change } = await approvedWorktree('Reject Target');
     await writeDead(change.worktreeFolder);
 
-    const lines = await captureLogs(() =>
-      rejectCommand('001', { cwd: project.repo, config: project.config, reason: 'stop' }),
+    const lines = await captureLines((stdout) =>
+      rejectCommand('001', { cwd: project.repo, config: project.config, reason: 'stop', stdout }),
     );
 
     assert.ok(lines.includes(`  Worktree removed: ${change.worktree}`));
@@ -353,8 +342,8 @@ describe('osq reject output with version control', () => {
     await writeDead(change.worktreeFolder);
     await fs.writeFile(path.join(change.worktree, 'dirty.txt'), 'kept\n', 'utf8');
 
-    const lines = await captureLogs(() =>
-      rejectCommand('001', { cwd: project.repo, config: project.config, reason: 'stop' }),
+    const lines = await captureLines((stdout) =>
+      rejectCommand('001', { cwd: project.repo, config: project.config, reason: 'stop', stdout }),
     );
 
     const kept = lines.find((line) => line.startsWith('  Worktree kept: '));
@@ -371,8 +360,8 @@ describe('osq reject output with version control', () => {
     const stackedRoot = stackedPath(project.vcs, project.repo, two.folderName);
     await writeRegressedChange(path.join(stackedRoot, path.relative(project.repo, two.folderPath)));
 
-    const lines = await captureLogs(() =>
-      rejectCommand('002', { cwd: project.repo, config: project.config, reason: 'stop' }),
+    const lines = await captureLines((stdout) =>
+      rejectCommand('002', { cwd: project.repo, config: project.config, reason: 'stop', stdout }),
     );
 
     assert.ok(lines.includes(`  Withdrew stacked approval: ${stackedRoot}`));
@@ -388,8 +377,8 @@ describe('osq reject output with version control', () => {
     const change = await addChange(project, 'Reject Target');
     const off = defineConfig({});
 
-    const lines = await captureLogs(() =>
-      rejectCommand('001', { cwd: project.repo, config: off, reason: 'stop' }),
+    const lines = await captureLines((stdout) =>
+      rejectCommand('001', { cwd: project.repo, config: off, reason: 'stop', stdout }),
     );
 
     const destination = path.join(project.repo, CHANGES, 'rejected', change.folderName);

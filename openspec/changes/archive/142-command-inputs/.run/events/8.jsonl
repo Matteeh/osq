@@ -1,0 +1,106 @@
+{"type":"verify_ran","timestamp":"2026-10-03T09:16:29.200Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-approve.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/command-inputs-approve.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/command-inputs-approve.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-03T09:16:29.886Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":684,"repoFiles":2277,"repoLines":259477,"importFanIn":1,"proposalWords":1219,"taskWords":310,"deltaRequirements":4,"deltaScenarios":11}}
+{"type":"started","timestamp":"2026-10-03T09:16:30.075Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"e9ffe70","pid":59860,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"3449045"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:31.441Z","data":{"promptTokens":1724,"candidateTokens":247,"totalTokens":5299,"cachedTokens":3328,"reasoningTokens":15,"cost":0.000833568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:31.441Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/tasks/8.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:31.442Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/proposal.md"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:31.443Z","data":{"tool":"read","summary":"openspec/changes/142-command-inputs/specs/cli-foundation/spe"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:33.061Z","data":{"promptTokens":4224,"candidateTokens":321,"totalTokens":9793,"cachedTokens":5248,"reasoningTokens":17,"cost":0.0016838880000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:33.062Z","data":{"tool":"bash","summary":"ls openspec/changes/142-command-inputs/.run/results/ 2>/dev/"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:33.063Z","data":{"tool":"read","summary":"src/cli/approve.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:33.064Z","data":{"tool":"read","summary":"src/cli/confirm.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:33.064Z","data":{"tool":"read","summary":"src/cli/command-inputs.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:35.041Z","data":{"promptTokens":2848,"candidateTokens":285,"totalTokens":12861,"cachedTokens":9728,"reasoningTokens":10,"cost":0.0012547679999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:35.042Z","data":{"tool":"read","summary":"tests/approve-confirm.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:35.043Z","data":{"tool":"read","summary":"tests/approve-rejected-branch.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:35.043Z","data":{"tool":"read","summary":"tests/cli-capture.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:35.045Z","data":{"tool":"read","summary":"tests/planning-observed-helpers.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:37.051Z","data":{"promptTokens":6437,"candidateTokens":337,"totalTokens":19574,"cachedTokens":12800,"reasoningTokens":105,"cost":0.0024123,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:37.052Z","data":{"tool":"bash","summary":"ls src/cli/; echo \"---\"; cat openspec/changes/142-command-in"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:37.053Z","data":{"tool":"read","summary":"src/cli/land.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:37.054Z","data":{"tool":"read","summary":"src/cli/message.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:38.507Z","data":{"promptTokens":2885,"candidateTokens":213,"totalTokens":22554,"cachedTokens":19456,"reasoningTokens":50,"cost":0.001237836,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:38.508Z","data":{"tool":"bash","summary":"ls tests/ | grep -i command-inputs; echo \"---\"; ls tests/com"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:38.509Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:40.383Z","data":{"promptTokens":146,"candidateTokens":234,"totalTokens":22908,"cachedTokens":22528,"reasoningTokens":91,"cost":0.00045976799999999994,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:40.384Z","data":{"tool":"read","summary":"tests/command-inputs-lifecycle.test.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:40.385Z","data":{"tool":"read","summary":"src/core/spec/digest.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:42.204Z","data":{"promptTokens":3248,"candidateTokens":173,"totalTokens":26205,"cachedTokens":22784,"reasoningTokens":22,"cost":0.001318704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:42.205Z","data":{"tool":"bash","summary":"rg -n \"formatApprovalDigest|formatApprovalFlags|summarizeApp"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:42.206Z","data":{"tool":"read","summary":"tests/command-inputs-vcs.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:45.525Z","data":{"promptTokens":2569,"candidateTokens":568,"totalTokens":29249,"cachedTokens":26112,"reasoningTokens":424,"cost":0.001608972,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:45.526Z","data":{"tool":"bash","summary":"rg -n \"review|ApprovalReview|print\" src/core/spec/approve.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:45.527Z","data":{"tool":"read","summary":"src/core/spec/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:46.676Z","data":{"promptTokens":1224,"candidateTokens":102,"totalTokens":30510,"cachedTokens":29184,"reasoningTokens":22,"cost":0.000664704,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:46.677Z","data":{"tool":"read","summary":"src/core/spec/approve-worktree-shared.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:48.412Z","data":{"promptTokens":894,"candidateTokens":167,"totalTokens":31525,"cachedTokens":30464,"reasoningTokens":25,"cost":0.000651384,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:48.413Z","data":{"tool":"read","summary":"src/core/spec/digest-format.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:48.413Z","data":{"tool":"read","summary":"src/cli/reject.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:16:50.676Z","data":{"promptTokens":900,"candidateTokens":253,"totalTokens":32641,"cachedTokens":31488,"reasoningTokens":97,"cost":0.0007625280000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:50.677Z","data":{"tool":"bash","summary":"rg -n \"requestApproval|approvalQuestion|ApprovalConfirmOptio"}}
+{"type":"tool","timestamp":"2026-10-03T09:16:50.678Z","data":{"tool":"read","summary":"src/cli/run.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:00.897Z","data":{"promptTokens":506,"candidateTokens":2475,"totalTokens":35621,"cachedTokens":32640,"reasoningTokens":2318,"cost":0.00331764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:00.899Z","data":{"tool":"bash","summary":"rg -ln \"runCliCaptured.*approve|approve.*runCliCaptured\" tes"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:00.900Z","data":{"tool":"bash","summary":"rg -ln \"approve\" tests/*.test.ts | head -40"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:02.261Z","data":{"promptTokens":594,"candidateTokens":77,"totalTokens":36255,"cachedTokens":35584,"reasoningTokens":0,"cost":0.00048410399999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:02.263Z","data":{"tool":"read","summary":"tests/command-error-approve.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:23.975Z","data":{"promptTokens":1501,"candidateTokens":5551,"totalTokens":43276,"cachedTokens":36224,"reasoningTokens":5405,"cost":0.007328844,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:23.976Z","data":{"tool":"bash","summary":"rg -n \"Warning:|warnings\" tests/*.test.ts | head -30"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:23.977Z","data":{"tool":"bash","summary":"rg -n \"requestApproval|print\" tests/approve*.test.ts tests/*"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:26.831Z","data":{"promptTokens":899,"candidateTokens":437,"totalTokens":44600,"cachedTokens":43264,"reasoningTokens":98,"cost":0.001053684,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:26.832Z","data":{"tool":"edit","summary":"src/cli/confirm.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:26.835Z","data":{"path":"src/cli/confirm.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:32.409Z","data":{"promptTokens":211,"candidateTokens":1844,"totalTokens":46471,"cachedTokens":44416,"reasoningTokens":17,"cost":0.0025425960000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:32.410Z","data":{"tool":"edit","summary":"src/cli/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:32.413Z","data":{"path":"src/cli/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:34.004Z","data":{"promptTokens":163,"candidateTokens":169,"totalTokens":46668,"cachedTokens":46336,"reasoningTokens":29,"cost":0.000529716,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:34.005Z","data":{"tool":"read","summary":"src/cli/approve.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:34.005Z","data":{"tool":"read","summary":"src/cli/approve.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:36.705Z","data":{"promptTokens":1221,"candidateTokens":665,"totalTokens":48478,"cachedTokens":46592,"reasoningTokens":40,"cost":0.001443852,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:36.706Z","data":{"tool":"edit","summary":"tests/approve-confirm.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:36.708Z","data":{"path":"tests/approve-confirm.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:39.287Z","data":{"promptTokens":251,"candidateTokens":419,"totalTokens":48926,"cachedTokens":48256,"reasoningTokens":101,"cost":0.000867636,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:39.288Z","data":{"tool":"edit","summary":"tests/approve-rejected-branch.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:39.288Z","data":{"path":"tests/approve-rejected-branch.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:41.366Z","data":{"promptTokens":189,"candidateTokens":216,"totalTokens":49173,"cachedTokens":48768,"reasoningTokens":73,"cost":0.000608508,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:41.367Z","data":{"tool":"read","summary":"src/core/foundation/new.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:41.367Z","data":{"tool":"read","summary":"tests/command-inputs-scaffold.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:46.681Z","data":{"promptTokens":1426,"candidateTokens":1402,"totalTokens":51980,"cachedTokens":49152,"reasoningTokens":238,"cost":0.002405112,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:46.682Z","data":{"tool":"write","summary":"tests/command-inputs-approve.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:46.683Z","data":{"path":"tests/command-inputs-approve.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:48.241Z","data":{"promptTokens":166,"candidateTokens":145,"totalTokens":52151,"cachedTokens":51840,"reasoningTokens":56,"cost":0.00053484,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:48.242Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:51.945Z","data":{"promptTokens":828,"candidateTokens":209,"totalTokens":53133,"cachedTokens":52096,"reasoningTokens":78,"cost":0.000811776,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:51.946Z","data":{"tool":"edit","summary":"tests/command-inputs-approve.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:17:51.947Z","data":{"path":"tests/command-inputs-approve.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:53.118Z","data":{"promptTokens":172,"candidateTokens":89,"totalTokens":53253,"cachedTokens":52992,"reasoningTokens":0,"cost":0.000476352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:53.119Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:56.340Z","data":{"promptTokens":255,"candidateTokens":140,"totalTokens":53515,"cachedTokens":53120,"reasoningTokens":43,"cost":0.0005632199999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:56.341Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
+{"type":"tokens","timestamp":"2026-10-03T09:17:59.685Z","data":{"promptTokens":291,"candidateTokens":312,"totalTokens":54107,"cachedTokens":53504,"reasoningTokens":152,"cost":0.000782724,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:59.686Z","data":{"tool":"bash","summary":"wc -l src/cli/approve.ts src/cli/confirm.ts tests/approve-co"}}
+{"type":"tool","timestamp":"2026-10-03T09:17:59.687Z","data":{"tool":"bash","summary":"cat package.json | rg -n '\"verify\"|\"test\"|\"lint\"'"}}
+{"type":"tokens","timestamp":"2026-10-03T09:18:01.944Z","data":{"promptTokens":297,"candidateTokens":205,"totalTokens":54518,"cachedTokens":54016,"reasoningTokens":140,"cost":0.0006591959999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:18:01.945Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -80"}}
+{"type":"tokens","timestamp":"2026-10-03T09:19:07.973Z","data":{"promptTokens":1295,"candidateTokens":287,"totalTokens":55982,"cachedTokens":54400,"reasoningTokens":15,"cost":0.0010593,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:19:07.974Z","data":{"tool":"edit","summary":"src/cli/approve.ts"}}
+{"type":"tool","timestamp":"2026-10-03T09:19:07.976Z","data":{"tool":"edit","summary":"tests/command-inputs-approve.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:19:07.976Z","data":{"path":"src/cli/approve.ts"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:19:07.977Z","data":{"path":"tests/command-inputs-approve.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-03T09:19:10.540Z","data":{"promptTokens":229,"candidateTokens":315,"totalTokens":56352,"cachedTokens":55808,"reasoningTokens":205,"cost":0.000781548,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:19:10.541Z","data":{"tool":"bash","summary":"pnpm lint 2>&1 | tail -20 && echo \"===LINT OK===\" && node --"}}
+{"type":"tokens","timestamp":"2026-10-03T09:19:14.231Z","data":{"promptTokens":216,"candidateTokens":106,"totalTokens":56642,"cachedTokens":56320,"reasoningTokens":41,"cost":0.00052992,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:19:14.231Z","data":{"tool":"bash","summary":"pnpm verify 2>&1 | tail -25"}}
+{"type":"tokens","timestamp":"2026-10-03T09:20:20.459Z","data":{"promptTokens":364,"candidateTokens":320,"totalTokens":57260,"cachedTokens":56576,"reasoningTokens":170,"cost":0.0008326560000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:20:20.460Z","data":{"tool":"bash","summary":"rg -n \"console\\.|process\\.stdout|process\\.stderr\" src/cli/ap"}}
+{"type":"tool","timestamp":"2026-10-03T09:20:20.461Z","data":{"tool":"bash","summary":"git diff --stat 2>/dev/null || echo \"no git (expected)\""}}
+{"type":"tokens","timestamp":"2026-10-03T09:20:27.774Z","data":{"promptTokens":200,"candidateTokens":1710,"totalTokens":59126,"cachedTokens":57216,"reasoningTokens":1019,"cost":0.002455296,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-03T09:20:27.775Z","data":{"tool":"write","summary":"openspec/changes/142-command-inputs/.run/results/8.md"}}
+{"type":"file_changed","timestamp":"2026-10-03T09:20:27.776Z","data":{"path":"openspec/changes/142-command-inputs/.run/results/8.md"}}
+{"type":"text","timestamp":"2026-10-03T09:20:30.697Z","data":{"text":"Done. Summary of changes:\n\n- **`src/cli/approve.ts`**: `ApproveCommandOptions` extends `CommandInputs`; `approveCommand` uses `resolveInputs`/`inputs.config()` at the same load point; all output goes through `inputs.stdout` and `inputs.stderr` (warnings to stderr); `requestApproval` gets a `print` that appends `\\n`.\n- **`src/cli/confirm.ts`**: `print` is now required and receives the flag line without its newline; removed the `console.log` default.\n- **`tests/approve-confirm.test.ts`** and **`tests/approve-rejected-branch.test.ts`**: capture through `captureLogs`/process writes instead of console methods.\n- **`tests/command-inputs-approve.test.ts`** (new): flagged approve parity via `runCliCaptured` vs. direct writers on separate copies, plus a `--confirm` run proving flag lines reach stdout.\n\nTask verify passes; `pnpm verify` exits 0. Result written to `openspec/changes/142-command-inputs/.run/results/8.md`."}}
+{"type":"tokens","timestamp":"2026-10-03T09:20:30.697Z","data":{"promptTokens":151,"candidateTokens":458,"totalTokens":59617,"cachedTokens":59008,"reasoningTokens":203,"cost":0.000948948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-03T09:20:30.713Z","data":{"exitCode":0,"pid":59860,"timedOut":false,"elapsedSeconds":240.6}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:20:32.018Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-approve.test.ts","exitCode":0,"duration":1.12,"output":"▶ command inputs for approve\n  ✔ osq approve prints the same text directly and through runCli (581.374931ms)\n  ✔ a confirmed run prints its flag lines to stdout (215.091558ms)\n✔ command inputs for approve (797.30414ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1092.934558\n"}}
+{"type":"measures","timestamp":"2026-10-03T09:21:36.210Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":684,"repoFiles":2277,"repoLines":259477,"importFanIn":1,"proposalWords":1219,"taskWords":310,"deltaRequirements":4,"deltaScenarios":11,"changedFiles":5,"changedLines":141,"scopeHashes":{"src/cli/approve.ts":{"before":"sha256:da8cc1a0dfe7f32972320fec685a9e5ba87db96d7e3daecad4a08af4fe10ed80","after":"sha256:a500878314530ff706334ed8afa5edc257cb716ceda6079e7a15e7705ad0d301"},"src/cli/confirm.ts":{"before":"sha256:f6f54213985e92942741b875780d3f3cee1ef8abeed2e83f63c2c127e20c7f94","after":"sha256:522a4137d53d0bc31d57a2a96747c879014361cdf8f4de0f687ad02e522b7d2d"},"tests/approve-confirm.test.ts":{"before":"sha256:c02923f9e570b429f6453ea570bc9eeb80cd93094c5a8c4008f9e4fb4fe09001","after":"sha256:00840e65ec47a2373677e99ed59601303ef702e3e879e0a04ec6e2a91951a8ee"},"tests/approve-rejected-branch.test.ts":{"before":"sha256:6a33ab6d1021f5814d4e82068c8144087519357de3a739ae441896c501cb0c81","after":"sha256:d53d5d7be8386545aa616b6dd6ad31149180816c9e5cea9372e973aea3967b44"},"tests/command-inputs-approve.test.ts":{"before":null,"after":"sha256:a05d8bea8f8fda66835517d11c4af8130f5d506d09bf41bd73b0a3c14877de8c"}}}}
+{"type":"done","timestamp":"2026-10-03T09:21:36.214Z","data":{"task":"8"}}
+{"type":"verify_ran","timestamp":"2026-10-03T09:45:43.396Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/command-inputs-approve.test.ts","exitCode":0,"duration":1.14,"output":"▶ command inputs for approve\n  ✔ osq approve prints the same text directly and through runCli (586.860399ms)\n  ✔ a confirmed run prints its flag lines to stdout (208.202235ms)\n✔ command inputs for approve (796.078444ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1115.697193\n"}}

@@ -1,10 +1,9 @@
 import type { Command } from 'commander';
 import { type DoctorReport, runDoctorChecks } from '../core/foundation/doctor.js';
 import { CommandError } from './command-error.js';
+import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
-export interface DoctorCommandOptions {
-  readonly cwd?: string;
-  readonly stdout?: (line: string) => void;
+export interface DoctorCommandOptions extends CommandInputs {
   readonly report?: DoctorReport;
 }
 
@@ -14,13 +13,14 @@ export interface DoctorCommandOptions {
  * for testing.
  */
 export async function doctorCommand(options: DoctorCommandOptions = {}): Promise<DoctorReport> {
-  const cwd = options.cwd ?? process.cwd();
-  const report = options.report ?? (await runDoctorChecks(cwd));
-  const write = options.stdout ?? ((line: string) => console.log(line));
+  const inputs = resolveInputs(options);
+  const report =
+    options.report ??
+    (await runDoctorChecks(inputs.cwd, { loadConfig: async () => inputs.config() }));
 
   for (const check of report.checks) {
     const prefix = check.ok ? (check.warning === true ? '[warn]' : '[ok]') : '[fail]';
-    write(`${prefix} ${check.name}: ${check.message}`);
+    inputs.stdout(`${prefix} ${check.name}: ${check.message}\n`);
   }
 
   if (!report.ok) {
