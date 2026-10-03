@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1eca38da7a35cfb275c72b93677da57836ce9788ddbd7c120be0f10d691136e4"
+build_stamp: "0133c93"
+project_commit: "6485611"
+exit_code: 0
+scope_files: {"README.md":"sha256:df11e28cadec108ae715a6bfa775b60a51940ff1c1e7bd73b594725cad01f618","src/cli/inbox-actions.ts":"sha256:8d6b942a03b5e66ddc1bc87e7d9037369eb1a7c546f24775672e0f4c4f19df58","src/cli/inbox-dispatch.ts":"sha256:82773efc164a6e8b177ed1041c1227d2b5421b163b3dd7abe108d15d0530319f","src/cli/inbox-terminal.ts":"sha256:2390a6eb2f4ce62d33806770ff6ad98f969665f3384309d6a66345b67141451c","tests/inbox-cards.test.ts":"sha256:59a9e0a91aadac84d5573a477971199550cde0879f6805ec2535dc2f43eedd46","tests/inbox-in-process.test.ts":"sha256:267a2836e912e56dadead4a5d5d6755dbddb23dc37f20b803713d2a599928f05"}
+---
+2026-10-03T20:37:22.300Z

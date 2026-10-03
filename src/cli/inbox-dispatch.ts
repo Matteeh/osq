@@ -20,7 +20,8 @@ import { createWaitRecorder } from '../core/status/wait-recorder.js';
 import type { ScheduleFn, WatcherFactory } from '../core/web/web-events.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
-import { createChildLauncher, createTerminalInput } from './inbox-terminal.js';
+import { createActionLauncher } from './inbox-actions.js';
+import { createTerminalInput } from './inbox-terminal.js';
 
 export interface InboxDispatchOptions extends CommandInputs {
   json?: boolean;
@@ -31,7 +32,7 @@ export interface InboxDispatchOptions extends CommandInputs {
   isTerminal?: () => boolean;
   /** Injectable card input; defaults to the terminal input. */
   input?: CardInput;
-  /** Injectable child launcher; defaults to the osq bin child launcher. */
+  /** Injectable action launcher; defaults to the in-process action launcher. */
   launch?: Launcher;
   signal?: AbortSignal;
   sound?: InboxSound;
@@ -72,7 +73,7 @@ function sessionOptions(
 ): CardSessionOptions {
   return {
     input: options.input ?? createTerminalInput(process.stdin, stdout),
-    launch: options.launch ?? createChildLauncher(cwd),
+    launch: options.launch ?? createActionLauncher({ cwd, config, stdout, stderr }),
     sound: options.sound ?? defaultSound(cwd, config, stdout, stderr),
     home,
     stdout,

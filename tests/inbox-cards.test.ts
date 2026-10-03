@@ -5,7 +5,7 @@ import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { inboxDispatchCommand } from '../src/cli/inbox-dispatch.js';
-import { createChildLauncher, createTerminalInput } from '../src/cli/inbox-terminal.js';
+import { createTerminalInput } from '../src/cli/inbox-terminal.js';
 import { defineConfig } from '../src/core/foundation/config.js';
 import type { CardInput, Launcher } from '../src/core/status/dispatch-session.js';
 import { formatDispatchText } from '../src/core/status/dispatch-text.js';
@@ -226,17 +226,5 @@ describe('createTerminalInput', () => {
     assert.equal(await pending, 'wrong approach');
     assert.deepEqual(questions, ['Reason: ']);
     assert.equal(modes.includes(true), false);
-  });
-});
-
-describe('createChildLauncher', () => {
-  it('runs osq --version as a real child and resolves with 0', async () => {
-    const code = await createChildLauncher(tmpDir)(['--version']);
-    assert.equal(code, 0);
-  });
-
-  it('resolves with 1 when the child fails', async () => {
-    const code = await createChildLauncher(tmpDir)(['no-such-command']);
-    assert.equal(code, 1);
   });
 });

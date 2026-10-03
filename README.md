@@ -635,15 +635,15 @@ idle, then the item that holds up the most changes, then the lower change id and
 task number. `osq inbox --json` carries every item's card data.
 
 On a terminal, `osq inbox` opens the first item as a card instead of printing:
-the same header and card, then a `Keys:` block with `a` approve, `r` retry,
-`x` reject (it asks for a reason), `c` check, `p` verified passed, `f` verified
-failed, `s` show, `n` skip, and `q` quit. Pressing a key runs that osq command
-as a child process on the same terminal, so its output and prompts are exactly
-what you would see typing it, and its exit code prints before the queue is
-re-read. A key only runs a command the card already lists; the land command is
-a shell pipeline, so it appears under `Run yourself:` to copy rather than run.
-When stdout is not a terminal, or with `--json` or `--follow`, `osq inbox`
-prints as before, so piping and scripts are unaffected.
+the same header and card, then a `Keys:` block with `a` approve, `p` plan,
+`r` retry, `x` reject (it asks for a reason), `s` show, `n` skip, and `q` quit.
+Pressing a key runs that osq command inside the same `osq inbox` process on the
+same terminal, so on failure it prints the command's own error message and its
+next step before the exit code, and the terminal stays usable after any action.
+A key only runs a command the card already lists; the land command is a shell
+pipeline, so it appears under `Run yourself:` to copy rather than run. When
+stdout is not a terminal, or with `--json` or `--follow`, `osq inbox` prints as
+before, so piping and scripts are unaffected.
 
 `osq inbox --follow` prints the same text, then
 `Waiting for new items (Ctrl-C to stop).`, and keeps running until you press
