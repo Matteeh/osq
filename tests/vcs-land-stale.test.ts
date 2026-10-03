@@ -15,7 +15,7 @@ import { scaffoldProject } from '../src/core/foundation/init.js';
 import { approveSpec } from '../src/core/spec/approve.js';
 import { landChange } from '../src/core/vcs/land.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
-import { STALE_BUILD_MESSAGE } from '../src/watcher/build.js';
+import { staleBuildMessage } from '../src/watcher/build.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
 
@@ -316,7 +316,7 @@ describe('osq land stale build', () => {
 
     assert.equal(capture.exitCode, 1);
     assert.equal(capture.stdout, '');
-    assert.equal(capture.stderr, `${STALE_BUILD_MESSAGE}\n`);
+    assert.equal(capture.stderr, `${staleBuildMessage(packageRoot)}\n`);
     assert.equal(await git(['rev-parse', 'HEAD'], project.repo), before);
   });
 

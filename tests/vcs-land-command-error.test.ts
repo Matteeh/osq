@@ -10,7 +10,7 @@ import { type LandCommandOptions, landCommand } from '../src/cli/land.js';
 import { type MessageCommandOptions, messageCommand } from '../src/cli/message.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
-import { STALE_BUILD_MESSAGE } from '../src/watcher/build.js';
+import { staleBuildMessage } from '../src/watcher/build.js';
 import { runCliCaptured } from './cli-capture.js';
 
 const execFileAsync = promisify(execFile);
@@ -163,7 +163,7 @@ describe('land and message command errors', () => {
 
     const error = capture.error;
     assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
-    assert.equal(error.message, STALE_BUILD_MESSAGE);
+    assert.equal(error.message, staleBuildMessage(packageRoot));
     assert.equal(error.exitCode, 1);
     assert.equal(capture.stdout, '');
     assert.equal(capture.stderr, '');

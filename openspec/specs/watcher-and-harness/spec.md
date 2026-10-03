@@ -191,8 +191,11 @@ source, and SHALL not run at all when `allowStale` or `dev` is set. A check
 during a run SHALL compare the newest file mtime under `src/` with the newest
 under `dist/` as read when the watcher started, because the running code is
 what it loaded then. `findStaleBuild` in `src/watcher/build.ts` SHALL return
-the stale line, `osq build is stale: src/ is newer than dist/. Run 'npm run
-build' or pass --allow-stale.`, or null, without printing or exiting.
+the stale line, `osq build is stale: src/ is newer than dist/ in <package
+root>. Run 'npm run build' there or pass --allow-stale.`, where `<package
+root>` is the absolute package root it compared, or null, without printing or
+exiting. `staleBuildMessage(packageRoot)` in the same file SHALL build that
+line, and `StaleBuildError` SHALL carry the line it was given as its message.
 `checkStaleBuild` SHALL print that line and exit 1 when `findStaleBuild`
 returns it. The start check in `startWatcher` SHALL print the line and exit 1
 the same way. The pass check SHALL run at the top of the step that picks up a
@@ -225,6 +228,14 @@ stderr, and exit 1, in continuous and in `once` mode.
 #### Scenario: Allow stale during a run
 - **WHEN** a watcher started with `allowStale`, and `src/` gets a newer file while task 1 runs
 - **THEN** the change archives and the watcher does not exit
+
+#### Scenario: Stale line names the package root
+- **WHEN** `findStaleBuild` runs with a relative package root whose `src/` is newer than its `dist/`
+- **THEN** it returns the stale line with that root resolved to an absolute path in place of `<package root>`
+
+#### Scenario: Error carries the found line
+- **WHEN** `runWatcherCycle` runs with a stale check that returns a line naming some package root
+- **THEN** it rejects with a `StaleBuildError` whose message is exactly that line
 
 ### Requirement: Reactive dev mode execution
 The watcher in dev mode SHALL execute from source via tsx and restart the watch loop on source file changes.

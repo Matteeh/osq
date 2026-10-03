@@ -1,0 +1,381 @@
+diff --git a/openspec/changes/143-stale-build-names-root/.run/dead/1.md b/openspec/changes/143-stale-build-names-root/.run/dead/1.md
+new file mode 100644
+index 0000000..c9a5132
+--- /dev/null
++++ b/openspec/changes/143-stale-build-names-root/.run/dead/1.md
+@@ -0,0 +1,8 @@
++---
++reason: crashed
++pid: 75902
++started_at: 2026-10-03T17:56:36.686Z
++reaped_at: 2026-10-03T18:07:27.809Z
++fingerprint: sha256:c0d7f94d6155e0a95721649b815b7052f5ccdb9af12f765c07fa491acffa8f0e
++---
++Task execution terminated by watcher reaper (crashed).
+diff --git a/openspec/changes/143-stale-build-names-root/.run/events/1.jsonl b/openspec/changes/143-stale-build-names-root/.run/events/1.jsonl
+new file mode 100644
+index 0000000..481bdc1
+--- /dev/null
++++ b/openspec/changes/143-stale-build-names-root/.run/events/1.jsonl
+@@ -0,0 +1,60 @@
++{"type":"verify_ran","timestamp":"2026-10-03T17:59:19.707Z","data":{"command":"node --import tsx --test tests/stale-build-root.test.ts","exitCode":1,"duration":0.06,"output":"Could not find 'tests/stale-build-root.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/stale-build-root.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-03T17:59:20.707Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":1200,"repoFiles":2285,"repoLines":260408,"importFanIn":4,"proposalWords":593,"taskWords":281,"deltaRequirements":1,"deltaScenarios":8}}
++{"type":"started","timestamp":"2026-10-03T17:59:20.994Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"b45383b","pid":44918,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"350a9d1"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:22.669Z","data":{"promptTokens":4211,"candidateTokens":256,"totalTokens":4979,"cachedTokens":512,"reasoningTokens":15,"cost":0.0015735719999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:22.670Z","data":{"tool":"read","summary":"openspec/changes/143-stale-build-names-root/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:22.670Z","data":{"tool":"read","summary":"openspec/changes/143-stale-build-names-root/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:22.671Z","data":{"tool":"read","summary":"openspec/changes/143-stale-build-names-root/specs/watcher-an"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:24.117Z","data":{"promptTokens":2805,"candidateTokens":151,"totalTokens":7820,"cachedTokens":4864,"reasoningTokens":11,"cost":0.001051884,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:24.117Z","data":{"tool":"read","summary":"src/watcher/build.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:24.118Z","data":{"tool":"read","summary":"src/watcher/stale-pass.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:25.748Z","data":{"promptTokens":2565,"candidateTokens":227,"totalTokens":10600,"cachedTokens":7808,"reasoningTokens":15,"cost":0.001088748,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:25.748Z","data":{"tool":"read","summary":"tests/watcher-stale-every-pass.test.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:25.748Z","data":{"tool":"read","summary":"tests/vcs-land-stale.test.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:25.749Z","data":{"tool":"read","summary":"tests/vcs-land-command-error.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:27.047Z","data":{"promptTokens":7261,"candidateTokens":163,"totalTokens":17920,"cachedTokens":10496,"reasoningTokens":19,"cost":0.002436876,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:27.048Z","data":{"tool":"read","summary":"tests/vcs-land-stale.test.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:27.048Z","data":{"tool":"read","summary":"tests/watcher-stale-preflight.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:28.572Z","data":{"promptTokens":2497,"candidateTokens":127,"totalTokens":20544,"cachedTokens":17920,"reasoningTokens":52,"cost":0.00100902,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:28.572Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:29.992Z","data":{"promptTokens":3912,"candidateTokens":95,"totalTokens":24487,"cachedTokens":20480,"reasoningTokens":20,"cost":0.0014104799999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:29.992Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:31.367Z","data":{"promptTokens":1651,"candidateTokens":186,"totalTokens":26285,"cachedTokens":24448,"reasoningTokens":21,"cost":0.0008651879999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:31.367Z","data":{"tool":"bash","summary":"ls -la openspec/changes/143-stale-build-names-root/.run/resu"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:31.368Z","data":{"tool":"bash","summary":"grep -rn \"STALE_BUILD_MESSAGE\\|staleBuildMessage\" src tests "}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:32.913Z","data":{"promptTokens":399,"candidateTokens":179,"totalTokens":26818,"cachedTokens":26240,"reasoningTokens":55,"cost":0.00049194,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:32.914Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/143-stale-build-names-ro"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:47.453Z","data":{"promptTokens":246,"candidateTokens":3639,"totalTokens":30509,"cachedTokens":26624,"reasoningTokens":3565,"cost":0.004600343999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:47.454Z","data":{"tool":"read","summary":"src/cli/land.ts"}}
++{"type":"text","timestamp":"2026-10-03T17:59:51.500Z","data":{"text":"Now I'll make the source changes in `build.ts` and `stale-pass.ts`."}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:51.500Z","data":{"promptTokens":952,"candidateTokens":1255,"totalTokens":32671,"cachedTokens":30464,"reasoningTokens":594,"cost":0.001974384,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:51.501Z","data":{"tool":"edit","summary":"src/watcher/build.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:51.502Z","data":{"tool":"edit","summary":"src/watcher/stale-pass.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T17:59:51.505Z","data":{"path":"src/watcher/stale-pass.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T17:59:51.506Z","data":{"path":"src/watcher/build.ts"}}
++{"type":"text","timestamp":"2026-10-03T17:59:56.367Z","data":{"text":"Now update the existing tests."}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:56.367Z","data":{"promptTokens":211,"candidateTokens":1290,"totalTokens":34013,"cachedTokens":32512,"reasoningTokens":990,"cost":0.0018063719999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:56.368Z","data":{"tool":"edit","summary":"tests/vcs-land-command-error.test.ts"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:56.369Z","data":{"tool":"edit","summary":"tests/vcs-land-stale.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T17:59:56.369Z","data":{"path":"tests/vcs-land-command-error.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T17:59:56.369Z","data":{"path":"tests/vcs-land-stale.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T17:59:59.223Z","data":{"promptTokens":148,"candidateTokens":831,"totalTokens":34899,"cachedTokens":33920,"reasoningTokens":146,"cost":0.00124512,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T17:59:59.224Z","data":{"tool":"edit","summary":"tests/watcher-stale-every-pass.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T17:59:59.225Z","data":{"path":"tests/watcher-stale-every-pass.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:09.620Z","data":{"promptTokens":243,"candidateTokens":2821,"totalTokens":37752,"cachedTokens":34688,"reasoningTokens":2684,"cost":0.0036662279999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:09.621Z","data":{"tool":"read","summary":"src/harness/mock.ts"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:09.621Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
++{"type":"text","timestamp":"2026-10-03T18:00:15.642Z","data":{"text":"Now create the new test file."}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:15.642Z","data":{"promptTokens":958,"candidateTokens":1751,"totalTokens":40341,"cachedTokens":37632,"reasoningTokens":445,"cost":0.002614392,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:15.643Z","data":{"tool":"write","summary":"tests/stale-build-root.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T18:00:15.644Z","data":{"path":"tests/stale-build-root.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:17.407Z","data":{"promptTokens":172,"candidateTokens":169,"totalTokens":40533,"cachedTokens":40192,"reasoningTokens":56,"cost":0.000495552,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:17.407Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/143-stale-build-names-ro"}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:19.392Z","data":{"promptTokens":673,"candidateTokens":144,"totalTokens":41265,"cachedTokens":40448,"reasoningTokens":46,"cost":0.000617388,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:19.392Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/143-stale-build-names-ro"}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:24.012Z","data":{"promptTokens":707,"candidateTokens":727,"totalTokens":42650,"cachedTokens":41216,"reasoningTokens":451,"cost":0.0013317959999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:24.013Z","data":{"tool":"edit","summary":"tests/stale-build-root.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-03T18:00:24.014Z","data":{"path":"tests/stale-build-root.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-03T18:00:25.332Z","data":{"promptTokens":182,"candidateTokens":98,"totalTokens":42776,"cachedTokens":42496,"reasoningTokens":0,"cost":0.00042717600000000003,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-03T18:00:25.333Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/143-stale-build-names-ro"}}
++{"type":"dead","timestamp":"2026-10-03T18:07:27.818Z","data":{"task":"1","reason":"crashed"}}
+diff --git a/openspec/changes/143-stale-build-names-root/.run/events/change.jsonl b/openspec/changes/143-stale-build-names-root/.run/events/change.jsonl
+new file mode 100644
+index 0000000..472030b
+--- /dev/null
++++ b/openspec/changes/143-stale-build-names-root/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-03T17:59:19.634Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b45383bf65adff09a5b3e9def9b9fd2352465016","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":162.13}}
+diff --git a/src/watcher/build.ts b/src/watcher/build.ts
+index cb668a2..5fd6b36 100644
+--- a/src/watcher/build.ts
++++ b/src/watcher/build.ts
+@@ -153,14 +153,18 @@ async function newestMtimeMs(dir: string): Promise<number> {
+   return newest;
+ }
+ 
+-/** The one line every stale-build refusal prints, byte for byte. */
+-export const STALE_BUILD_MESSAGE =
+-  "osq build is stale: src/ is newer than dist/. Run 'npm run build' or pass --allow-stale.";
++/**
++ * The stale-build refusal line, naming the package root that was checked so a
++ * linked checkout run from another project points at osq's own build.
++ */
++export function staleBuildMessage(packageRoot: string): string {
++  return `osq build is stale: src/ is newer than dist/ in ${packageRoot}. Run 'npm run build' there or pass --allow-stale.`;
++}
+ 
+ /** Thrown by the in-run stale check so the watcher stops without an error line. */
+ export class StaleBuildError extends Error {
+-  constructor() {
+-    super(STALE_BUILD_MESSAGE);
++  constructor(message: string) {
++    super(message);
+     this.name = 'StaleBuildError';
+   }
+ }
+@@ -211,7 +215,7 @@ export async function findStaleBuild(options: FindStaleBuildOptions = {}): Promi
+ 
+   const srcNewest = await newestMtimeMs(srcDir);
+   const distNewest = options.distMtimeMs ?? (await newestDistMtimeMs(packageRoot));
+-  return srcNewest > distNewest ? STALE_BUILD_MESSAGE : null;
++  return srcNewest > distNewest ? staleBuildMessage(packageRoot) : null;
+ }
+ 
+ /**
+diff --git a/src/watcher/stale-pass.ts b/src/watcher/stale-pass.ts
+index 29a0747..b7db66e 100644
+--- a/src/watcher/stale-pass.ts
++++ b/src/watcher/stale-pass.ts
+@@ -12,8 +12,9 @@ export async function assertNotStale(check?: StaleCheck): Promise<void> {
+   if (!check) {
+     return;
+   }
+-  if ((await check()) !== null) {
+-    throw new StaleBuildError();
++  const stale = await check();
++  if (stale !== null) {
++    throw new StaleBuildError(stale);
+   }
+ }
+ 
+@@ -33,8 +34,9 @@ export async function startStaleCheck(options: StaleStartOptions): Promise<Stale
+   if (options.allowStale === true || options.dev === true) {
+     return undefined;
+   }
+-  if ((await findStaleBuild({ packageRoot: options.packageRoot })) !== null) {
+-    throw new StaleBuildError();
++  const stale = await findStaleBuild({ packageRoot: options.packageRoot });
++  if (stale !== null) {
++    throw new StaleBuildError(stale);
+   }
+   const distMtimeMs = await newestDistMtimeMs(options.packageRoot);
+   return () => findStaleBuild({ packageRoot: options.packageRoot, distMtimeMs });
+diff --git a/tests/stale-build-root.test.ts b/tests/stale-build-root.test.ts
+new file mode 100644
+index 0000000..4fc0b98
+--- /dev/null
++++ b/tests/stale-build-root.test.ts
+@@ -0,0 +1,124 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, beforeEach, describe, it } from 'node:test';
++import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
++import { scaffoldProject } from '../src/core/foundation/init.js';
++import { createNewSpec } from '../src/core/foundation/new.js';
++import { approveSpec } from '../src/core/spec/approve.js';
++import { MockAdapter } from '../src/harness/mock.js';
++import { StaleBuildError, findStaleBuild, staleBuildMessage } from '../src/watcher/build.js';
++import { runWatcherCycle, startWatcher } from '../src/watcher/loop.js';
++import { installFakeValidator } from './helpers.js';
++
++const PASSING_VERIFY = 'node verify.cjs';
++const LOCAL_VERIFIER = `const fs = require('node:fs');
++if (!fs.existsSync('openspec')) {
++  process.exit(1);
++}
++process.exit(0);
++`;
++
++const NEWER_SRC_TIME = new Date('2024-01-03T00:00:00Z');
++const OLDER_DIST_TIME = new Date('2024-01-01T00:00:00Z');
++
++/** Write `src/` newer than `dist/` under `root`, returning the package root. */
++async function makeStalePackage(root: string): Promise<string> {
++  const srcFile = path.join(root, 'src', 'index.ts');
++  const distFile = path.join(root, 'dist', 'index.js');
++  await fs.mkdir(path.dirname(srcFile), { recursive: true });
++  await fs.mkdir(path.dirname(distFile), { recursive: true });
++  await fs.writeFile(srcFile, 'source', 'utf8');
++  await fs.writeFile(distFile, 'compiled', 'utf8');
++  await fs.utimes(srcFile, NEWER_SRC_TIME, NEWER_SRC_TIME);
++  await fs.utimes(distFile, OLDER_DIST_TIME, OLDER_DIST_TIME);
++  return root;
++}
++
++async function writeTask1(specFolder: string): Promise<void> {
++  const task = [
++    '---',
++    'title: A stale root test task',
++    `verify: ${PASSING_VERIFY}`,
++    'scope: []',
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] completes',
++  ].join('\n');
++  await fs.writeFile(path.join(specFolder, 'tasks', '1.md'), `${task}\n`, 'utf8');
++}
++
++/** An approved one-task change with a local verifier, ready for a cycle. */
++async function setupApprovedSpec(projectRoot: string): Promise<void> {
++  const spec = await createNewSpec(projectRoot, 'Stale Build Root');
++  await fs.writeFile(path.join(projectRoot, 'verify.cjs'), LOCAL_VERIFIER, 'utf8');
++  const proposalPath = path.join(spec.folderPath, 'proposal.md');
++  const proposal = await fs.readFile(proposalPath, 'utf8');
++  await fs.writeFile(
++    proposalPath,
++    proposal.replace(/^verify:\s*.*$/m, `verify: ${PASSING_VERIFY}`),
++    'utf8',
++  );
++  await writeTask1(spec.folderPath);
++  await approveSpec(projectRoot, '001', DEFAULT_CONFIG);
++}
++
++describe('Stale build line names the package root', () => {
++  let tmpDir: string;
++  let originalError: typeof console.error;
++
++  beforeEach(async () => {
++    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-stale-build-root-'));
++    await installFakeValidator(tmpDir);
++    await scaffoldProject(tmpDir);
++    originalError = console.error;
++  });
++
++  afterEach(async () => {
++    console.error = originalError;
++    await fs.rm(tmpDir, { recursive: true, force: true });
++  });
++
++  it('names the absolute root when findStaleBuild is given a relative one', async () => {
++    const packageRoot = await makeStalePackage(path.join(tmpDir, 'package'));
++    const relativeRoot = path.relative(process.cwd(), packageRoot);
++
++    assert.equal(
++      await findStaleBuild({ packageRoot: relativeRoot }),
++      staleBuildMessage(packageRoot),
++    );
++  });
++
++  it('prints the absolute-root line and exits 1 at watcher start in once mode', async () => {
++    const packageRoot = await makeStalePackage(path.join(tmpDir, 'package'));
++    const relativeRoot = path.relative(process.cwd(), packageRoot);
++    const errorLines: string[] = [];
++    const exits: number[] = [];
++    console.error = (...args: unknown[]) => {
++      errorLines.push(args.map(String).join(' '));
++    };
++
++    await startWatcher(tmpDir, DEFAULT_CONFIG, new MockAdapter(), {
++      once: true,
++      packageRoot: relativeRoot,
++      exit: (code) => exits.push(code),
++    });
++
++    assert.deepEqual(errorLines, [staleBuildMessage(packageRoot)]);
++    assert.deepEqual(exits, [1]);
++  });
++
++  it('rejects with a StaleBuildError carrying the line the check returned', async () => {
++    await setupApprovedSpec(tmpDir);
++    const line = staleBuildMessage('/some/other/package/root');
++
++    await assert.rejects(
++      () =>
++        runWatcherCycle(tmpDir, DEFAULT_CONFIG, new MockAdapter(), undefined, async () => line),
++      (err: unknown) => err instanceof StaleBuildError && err.message === line,
++    );
++  });
++});
+diff --git a/tests/vcs-land-command-error.test.ts b/tests/vcs-land-command-error.test.ts
+index 3ea438b..8466786 100644
+--- a/tests/vcs-land-command-error.test.ts
++++ b/tests/vcs-land-command-error.test.ts
+@@ -10,7 +10,7 @@ import { type LandCommandOptions, landCommand } from '../src/cli/land.js';
+ import { type MessageCommandOptions, messageCommand } from '../src/cli/message.js';
+ import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
+ import { scaffoldProject } from '../src/core/foundation/init.js';
+-import { STALE_BUILD_MESSAGE } from '../src/watcher/build.js';
++import { staleBuildMessage } from '../src/watcher/build.js';
+ import { runCliCaptured } from './cli-capture.js';
+ 
+ const execFileAsync = promisify(execFile);
+@@ -163,7 +163,7 @@ describe('land and message command errors', () => {
+ 
+     const error = capture.error;
+     assert.ok(error instanceof CommandError, `expected a CommandError, got ${String(error)}`);
+-    assert.equal(error.message, STALE_BUILD_MESSAGE);
++    assert.equal(error.message, staleBuildMessage(packageRoot));
+     assert.equal(error.exitCode, 1);
+     assert.equal(capture.stdout, '');
+     assert.equal(capture.stderr, '');
+diff --git a/tests/vcs-land-stale.test.ts b/tests/vcs-land-stale.test.ts
+index 9c862bd..abaa99d 100644
+--- a/tests/vcs-land-stale.test.ts
++++ b/tests/vcs-land-stale.test.ts
+@@ -15,7 +15,7 @@ import { scaffoldProject } from '../src/core/foundation/init.js';
+ import { approveSpec } from '../src/core/spec/approve.js';
+ import { landChange } from '../src/core/vcs/land.js';
+ import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
+-import { STALE_BUILD_MESSAGE } from '../src/watcher/build.js';
++import { staleBuildMessage } from '../src/watcher/build.js';
+ import { runWatcherOnce } from '../src/watcher/loop.js';
+ import { installFakeValidator } from './helpers.js';
+ 
+@@ -316,7 +316,7 @@ describe('osq land stale build', () => {
+ 
+     assert.equal(capture.exitCode, 1);
+     assert.equal(capture.stdout, '');
+-    assert.equal(capture.stderr, `${STALE_BUILD_MESSAGE}\n`);
++    assert.equal(capture.stderr, `${staleBuildMessage(packageRoot)}\n`);
+     assert.equal(await git(['rev-parse', 'HEAD'], project.repo), before);
+   });
+ 
+diff --git a/tests/watcher-stale-every-pass.test.ts b/tests/watcher-stale-every-pass.test.ts
+index 726a330..e4aa717 100644
+--- a/tests/watcher-stale-every-pass.test.ts
++++ b/tests/watcher-stale-every-pass.test.ts
+@@ -12,7 +12,7 @@ import { getArchiveDir } from '../src/core/status/layout.js';
+ import { MockAdapter } from '../src/harness/mock.js';
+ import type { SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
+ import {
+-  STALE_BUILD_MESSAGE,
++  staleBuildMessage,
+   StaleBuildError,
+   findStaleBuild,
+   newestDistMtimeMs,
+@@ -194,7 +194,7 @@ describe('Watcher stale build every pass', () => {
+       await exists(path.join(spec.folderPath, '.run', 'done', '1')),
+       'the running task finished and wrote its done marker',
+     );
+-    assert.deepEqual(errorLines, [STALE_BUILD_MESSAGE], 'exactly the stale line on stderr');
++    assert.deepEqual(errorLines, [staleBuildMessage(packageRoot)], 'exactly the stale line on stderr');
+     assert.deepEqual(exits, [1], 'the watcher exits 1');
+     assert.equal(logger.errors.length, 0, 'no watcher error is logged');
+     assert.equal(
+@@ -240,7 +240,13 @@ describe('Watcher stale build every pass', () => {
+ 
+     await assert.rejects(
+       () =>
+-        runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger, async () => STALE_BUILD_MESSAGE),
++        runWatcherCycle(
++          tmpDir,
++          DEFAULT_CONFIG,
++          adapter,
++          logger,
++          async () => staleBuildMessage(path.join(tmpDir, 'stale-package')),
++        ),
+       (err: unknown) => err instanceof StaleBuildError,
+     );
+ 
+@@ -267,7 +273,7 @@ describe('Watcher stale build every pass', () => {
+     await fs.utimes(srcFile, EDITED_SRC_TIME, EDITED_SRC_TIME);
+     assert.equal(
+       await findStaleBuild({ packageRoot, distMtimeMs: startDistMtimeMs }),
+-      STALE_BUILD_MESSAGE,
++      staleBuildMessage(packageRoot),
+       'an edited src/ is stale against the start dist/',
+     );
+ 
+@@ -275,7 +281,7 @@ describe('Watcher stale build every pass', () => {
+     await fs.utimes(distFile, REBUILT_DIST_TIME, REBUILT_DIST_TIME);
+     assert.equal(
+       await findStaleBuild({ packageRoot, distMtimeMs: startDistMtimeMs }),
+-      STALE_BUILD_MESSAGE,
++      staleBuildMessage(packageRoot),
+       'a rebuild on disk does not refresh the cached mtime',
+     );
+     assert.equal(

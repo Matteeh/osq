@@ -12,8 +12,9 @@ export async function assertNotStale(check?: StaleCheck): Promise<void> {
   if (!check) {
     return;
   }
-  if ((await check()) !== null) {
-    throw new StaleBuildError();
+  const line = await check();
+  if (line !== null) {
+    throw new StaleBuildError(line);
   }
 }
 
@@ -33,8 +34,9 @@ export async function startStaleCheck(options: StaleStartOptions): Promise<Stale
   if (options.allowStale === true || options.dev === true) {
     return undefined;
   }
-  if ((await findStaleBuild({ packageRoot: options.packageRoot })) !== null) {
-    throw new StaleBuildError();
+  const startLine = await findStaleBuild({ packageRoot: options.packageRoot });
+  if (startLine !== null) {
+    throw new StaleBuildError(startLine);
   }
   const distMtimeMs = await newestDistMtimeMs(options.packageRoot);
   return () => findStaleBuild({ packageRoot: options.packageRoot, distMtimeMs });

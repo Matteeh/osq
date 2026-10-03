@@ -12,10 +12,10 @@ import { getArchiveDir } from '../src/core/status/layout.js';
 import { MockAdapter } from '../src/harness/mock.js';
 import type { SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import {
-  STALE_BUILD_MESSAGE,
   StaleBuildError,
   findStaleBuild,
   newestDistMtimeMs,
+  staleBuildMessage,
 } from '../src/watcher/build.js';
 import { runWatcherCycle, startWatcher } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
@@ -194,7 +194,11 @@ describe('Watcher stale build every pass', () => {
       await exists(path.join(spec.folderPath, '.run', 'done', '1')),
       'the running task finished and wrote its done marker',
     );
-    assert.deepEqual(errorLines, [STALE_BUILD_MESSAGE], 'exactly the stale line on stderr');
+    assert.deepEqual(
+      errorLines,
+      [staleBuildMessage(packageRoot)],
+      'exactly the stale line on stderr',
+    );
     assert.deepEqual(exits, [1], 'the watcher exits 1');
     assert.equal(logger.errors.length, 0, 'no watcher error is logged');
     assert.equal(
@@ -240,7 +244,9 @@ describe('Watcher stale build every pass', () => {
 
     await assert.rejects(
       () =>
-        runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger, async () => STALE_BUILD_MESSAGE),
+        runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger, async () =>
+          staleBuildMessage(tmpDir),
+        ),
       (err: unknown) => err instanceof StaleBuildError,
     );
 
@@ -267,7 +273,7 @@ describe('Watcher stale build every pass', () => {
     await fs.utimes(srcFile, EDITED_SRC_TIME, EDITED_SRC_TIME);
     assert.equal(
       await findStaleBuild({ packageRoot, distMtimeMs: startDistMtimeMs }),
-      STALE_BUILD_MESSAGE,
+      staleBuildMessage(packageRoot),
       'an edited src/ is stale against the start dist/',
     );
 
@@ -275,7 +281,7 @@ describe('Watcher stale build every pass', () => {
     await fs.utimes(distFile, REBUILT_DIST_TIME, REBUILT_DIST_TIME);
     assert.equal(
       await findStaleBuild({ packageRoot, distMtimeMs: startDistMtimeMs }),
-      STALE_BUILD_MESSAGE,
+      staleBuildMessage(packageRoot),
       'a rebuild on disk does not refresh the cached mtime',
     );
     assert.equal(

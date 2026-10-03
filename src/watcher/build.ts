@@ -153,14 +153,19 @@ async function newestMtimeMs(dir: string): Promise<number> {
   return newest;
 }
 
-/** The one line every stale-build refusal prints, byte for byte. */
-export const STALE_BUILD_MESSAGE =
-  "osq build is stale: src/ is newer than dist/. Run 'npm run build' or pass --allow-stale.";
+/**
+ * The one line every stale-build refusal prints, byte for byte, naming the
+ * package root whose `src/` outpaced its `dist/` so a linked checkout can be
+ * told apart from the consumer project.
+ */
+export function staleBuildMessage(packageRoot: string): string {
+  return `osq build is stale: src/ is newer than dist/ in ${packageRoot}. Run 'npm run build' there or pass --allow-stale.`;
+}
 
-/** Thrown by the in-run stale check so the watcher stops without an error line. */
+/** Thrown by the stale checks so the watcher stops without logging an error. */
 export class StaleBuildError extends Error {
-  constructor() {
-    super(STALE_BUILD_MESSAGE);
+  constructor(line: string) {
+    super(line);
     this.name = 'StaleBuildError';
   }
 }
@@ -211,7 +216,7 @@ export async function findStaleBuild(options: FindStaleBuildOptions = {}): Promi
 
   const srcNewest = await newestMtimeMs(srcDir);
   const distNewest = options.distMtimeMs ?? (await newestDistMtimeMs(packageRoot));
-  return srcNewest > distNewest ? STALE_BUILD_MESSAGE : null;
+  return srcNewest > distNewest ? staleBuildMessage(packageRoot) : null;
 }
 
 /**

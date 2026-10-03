@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:faf71fca095bd84ccfe3d90010ed718470e700ed88b0d467c396d4a205cb0013"
+build_stamp: "350a9d1"
+project_commit: "10f80a8"
+exit_code: 0
+scope_files: {"src/watcher/build.ts":"sha256:0bc7a9bd837a77b56c34634fdc1adf735184e0fc7028de240f25587baa6189f8","src/watcher/stale-pass.ts":"sha256:344745dfcf8f2dc318f7d8b27d7dfbef5eb7d9526060053896b12359cd3e0370","tests/stale-build-root.test.ts":"sha256:182d2ba2f976c8ea3b2feaae72b232bcd765f07ef0311fe04c2b71fc142303ea","tests/vcs-land-command-error.test.ts":"sha256:dc879a2c85ed3fc8e92a69a16db7bd2d9ed49da3d017f35e49668a1a55179a7c","tests/vcs-land-stale.test.ts":"sha256:753fe5447a69209d0a506912619e80cbec0f236d485d676b32880c27056c9bca","tests/watcher-stale-every-pass.test.ts":"sha256:d2b728b86c6bebf10a885d15648146b1689585cea37c3aad7f15e8c15819f829"}
+---
+2026-10-03T18:12:55.672Z
