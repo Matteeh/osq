@@ -20,14 +20,12 @@ const MAX_LINES = 80;
  */
 const GRANDFATHERED = new Set([
   'core/report/report.ts#buildMetricsReport',
-  'core/status/show.ts#buildSpecDetails',
   'core/report/report.ts#formatMetricsReport',
   'cli/index.ts#createProgram',
   'core/lifecycle/retry.ts#retrySpec',
   'core/spec/linter.ts#lintChangeFolder',
   'watcher/loop.ts#runWatcherCycle',
   'watcher/runner.ts#runTask',
-  'core/status/show.ts#formatSpecDetails',
   'cli/plan.ts#planCommand',
   'cli/report.ts#toStableMetrics',
   'harness/opencode/opencode.ts#buildOpencodeArgs',

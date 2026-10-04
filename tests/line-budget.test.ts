@@ -22,7 +22,6 @@ const UI_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.css']);
 const ALLOW_LIST = [
   'core/report/report.ts',
   'core/spec/linter.ts',
-  'core/status/show.ts',
   'core/spec/delta.ts',
   'harness/opencode/opencode.ts',
   'harness/types.ts',

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:dd7b6c4dc2742bfe04f4c9ff075528965c5d0197a884a45ff07271a3fc38cfc1"
+build_stamp: "1b13a17"
+project_commit: "4be1430"
+exit_code: 0
+scope_files: {"src/cli/show.ts":"sha256:5a0121c81070e4ab6205dde134c6f932e2cab7f73276c9973d31bede3a76ef40","src/core/status/show-model-events.ts":"sha256:e6a7760fcb4b7afc5fdc530f538fef23716fb8729b23a1968b3c461919e9007c","src/core/status/show-model-folder.ts":"sha256:af6c665082097d9a8f7f74947f37684d0544a3caa72ff161654a9e060bddd290","src/core/status/show-model-tasks.ts":"sha256:5724d02311474a93e75eed2ab76a611023c27ee8e9582521721db48307127337","src/core/status/show-model.ts":"sha256:bcf1d4fa62542342b9db5bf503de88fbc1b3c9c23326a4d2992d39ddc5d5e03c","src/core/status/show-output.ts":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","src/core/status/show-run-lines.ts":"sha256:a28d388b102914024afb4b88ad9815f048129dffdf815df98371bb2e482bdbf2","src/core/status/show-task-lines.ts":"sha256:1a464c643f574f83e7242a84bbf149af1596b7f3f2f72c56456ed6f1ebe929fe","src/core/status/show-text.ts":"sha256:df47136b96a900e48727fb3afc30d189e54ef718add7f12733f79a55801b3a2d","src/core/status/show-types.ts":"sha256:f7d72926e9ff72983aa5521a9fb941f9d34dfe8c847cd15088d70926faa2afdf","src/core/status/show.ts":"sha256:5c32c075337e899372523855da07e7a2a96d7be03f1418710088a597fbb829ad","tests/function-budget.test.ts":"sha256:626f390df24d5e1186cd85141e687ab78ea5a6264b82d895cca137e65494ccf4","tests/line-budget.test.ts":"sha256:78e630c2d15045a7c084c1bda15488c91418f99b2f875929a6d3739444a67069","tests/show-model.test.ts":"sha256:d7661cfbc56b5061cb727cf1cd83a01524321447bbbf7b1ed60108ccd07e41d5","tests/show-test-path.test.ts":"sha256:9815c1c6866a259469c6db75d6072b9c92e53edfcce519af6fb876792d8e252e"}
+---
+2026-10-04T12:22:02.831Z

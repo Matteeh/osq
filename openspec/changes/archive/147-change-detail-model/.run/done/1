@@ -1,0 +1,19 @@
+---
+scope_resolver: 2
+scope_hash: sha256:c910f9cdaac4c4f54df25d2ea141b837e49c3e9731ddb5f52a1cb4b9476d91f7
+build_stamp: 1b13a17
+project_commit: ca80224
+exit_code: 0
+scope_files:
+  src/core/status/show-run-lines.ts: sha256:a28d388b102914024afb4b88ad9815f048129dffdf815df98371bb2e482bdbf2
+  src/core/status/show-task-lines.ts: sha256:1a464c643f574f83e7242a84bbf149af1596b7f3f2f72c56456ed6f1ebe929fe
+  src/core/status/show-text.ts: sha256:df47136b96a900e48727fb3afc30d189e54ef718add7f12733f79a55801b3a2d
+  src/core/status/show-types.ts: sha256:f7d72926e9ff72983aa5521a9fb941f9d34dfe8c847cd15088d70926faa2afdf
+  src/core/status/show.ts: sha256:5c32c075337e899372523855da07e7a2a96d7be03f1418710088a597fbb829ad
+  tests/function-budget.test.ts: sha256:626f390df24d5e1186cd85141e687ab78ea5a6264b82d895cca137e65494ccf4
+  tests/show-text.test.ts: sha256:366de44160839302ec4884991378460d622d26e45e358f96c017f0ea7db3ee2b
+original_scope_hash: sha256:05ab3041d361e8a426e368c6b5a3e38d574ff2e396598fd7e4bc75577bfda9c9
+recertified_at: 2026-10-04T12:24:49.334Z
+recertification_count: 1
+---
+2026-10-04T12:06:04.487Z
