@@ -7,6 +7,7 @@ import { type DashboardSnapshot, createDashboardData } from './data.js';
 import type { Route } from './router.js';
 import { createHashRouter } from './router.js';
 import './change/actions.css';
+import './change/review.css';
 import './styles.css';
 
 const EMPTY: DashboardSnapshot = { report: null, graph: null, inbox: null, change: null };

@@ -1,4 +1,5 @@
 import type { MetricsReport } from '../../../src/core/report/report.js';
+import type { ApprovalFlag } from '../../../src/core/spec/digest.js';
 import type { Inbox } from '../../../src/core/status/inbox.js';
 import type {
   WebAction,
@@ -6,9 +7,16 @@ import type {
   WebActionResult,
   WebActionsDocument,
 } from '../../../src/core/web/web-actions.js';
-import type { WebChange, WebGraph } from '../../../src/core/web/web-data.js';
+import type {
+  WebChange,
+  WebDeltaCapability,
+  WebDeltaRequirement,
+  WebGraph,
+  WebReview,
+} from '../../../src/core/web/web-data.js';
 
 export type {
+  ApprovalFlag,
   Inbox,
   MetricsReport,
   WebAction,
@@ -16,7 +24,10 @@ export type {
   WebActionResult,
   WebActionsDocument,
   WebChange,
+  WebDeltaCapability,
+  WebDeltaRequirement,
   WebGraph,
+  WebReview,
 };
 
 /**

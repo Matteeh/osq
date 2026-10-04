@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import type { WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
+import type { ApprovalFlag, WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
 import { ChangeActions } from './ChangeActions.js';
 import type { ActionClient, WebActionInput } from './actions-client.js';
 
@@ -8,6 +8,7 @@ export interface ChangeActionsPanelProps {
   readonly selector: string;
   readonly asOf: string;
   readonly client: ActionClient;
+  readonly flags?: readonly ApprovalFlag[];
 }
 
 /** The request body for one tap, without the selector the client adds. */
@@ -43,6 +44,7 @@ export function ChangeActionsPanel({
   selector,
   asOf,
   client,
+  flags = [],
 }: ChangeActionsPanelProps): ReactElement | null {
   const [actions, setActions] = useState<WebActionsDocument | null>(null);
   const [pending, setPending] = useState(false);
@@ -97,6 +99,7 @@ export function ChangeActionsPanel({
       reason={reason}
       onReasonChange={setReason}
       onRun={run}
+      flags={flags}
     />
   );
 }

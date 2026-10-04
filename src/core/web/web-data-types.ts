@@ -1,3 +1,5 @@
+import type { ApprovalDigest } from '../spec/digest.js';
+
 /**
  * Public read-only web documents derived from the current project tree. These
  * contracts are data only: no function in this module performs I/O, caches an
@@ -154,6 +156,40 @@ export interface WebTask {
   readonly result: string | null;
 }
 
+export type WebDeltaOperation = 'added' | 'modified' | 'removed' | 'renamed';
+
+/** One delta requirement beside the living requirement it replaces. */
+export interface WebDeltaRequirement {
+  readonly operation: WebDeltaOperation;
+  /** The requirement's name; the new name for a rename. */
+  readonly name: string;
+  /** The old name for a rename; null otherwise. */
+  readonly from: string | null;
+  /** The delta's verbatim block for added and modified; null otherwise. */
+  readonly proposed: string | null;
+  /** The living block `osq spec` prints; null for added or when none matches. */
+  readonly living: string | null;
+}
+
+/** One capability folder of a change's delta specs. */
+export interface WebDeltaCapability {
+  readonly capability: string;
+  readonly requirements: readonly WebDeltaRequirement[];
+}
+
+/** What a reviewer reads before approving an unapproved change. */
+export interface WebReview {
+  readonly goal: string;
+  readonly nonGoals: string;
+  readonly surface: string;
+  readonly decisions: string;
+  readonly humanSteps: string;
+  readonly contract: string;
+  readonly deltas: readonly WebDeltaCapability[];
+  readonly digest: ApprovalDigest;
+  readonly digestText: string;
+}
+
 /** One unambiguous change with its proposal, brief, and task detail. */
 export interface WebChange {
   readonly folderKey: string;
@@ -172,4 +208,10 @@ export interface WebChange {
   /** Derivation timestamp supplied by the caller. */
   readonly asOf: string;
   readonly tasks: readonly WebTask[];
+  /**
+   * The approve review for an active change without `.run/approved`, else
+   * null. Optional so documents built before this field stay valid; a missing
+   * value reads the same as null.
+   */
+  readonly review?: WebReview | null;
 }

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
-import type { WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
+import type { ApprovalFlag, WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
+import { ApprovalFlags } from './ApprovalFlags.js';
 
 export interface ChangeActionsProps {
   readonly document: WebActionsDocument;
@@ -8,6 +9,7 @@ export interface ChangeActionsProps {
   readonly reason: string;
   readonly onReasonChange: (reason: string) => void;
   readonly onRun: (action: WebAction) => void;
+  readonly flags?: readonly ApprovalFlag[];
 }
 
 function buttonLabel(action: WebAction): string {
@@ -43,12 +45,14 @@ function ActionButton({
   reason,
   onReasonChange,
   onRun,
+  flags,
 }: {
   readonly action: WebAction;
   readonly pending: boolean;
   readonly reason: string;
   readonly onReasonChange: (reason: string) => void;
   readonly onRun: (action: WebAction) => void;
+  readonly flags: readonly ApprovalFlag[];
 }): ReactElement {
   const reject = action.verb === 'reject';
   const needsReason = reject && reason.trim().length === 0;
@@ -62,6 +66,7 @@ function ActionButton({
       >
         {buttonLabel(action)}
       </button>
+      <ApprovalFlags flags={flags} />
       {reject ? (
         <label className="action-reason">
           Reason
@@ -90,10 +95,13 @@ export function ChangeActions({
   reason,
   onReasonChange,
   onRun,
+  flags = [],
 }: ChangeActionsProps): ReactElement {
+  const hasApprove = document.actions.some((action) => action.verb === 'approve');
   return (
     <section className="change-actions" aria-label="Actions">
       <h3>Actions</h3>
+      {hasApprove ? null : <ApprovalFlags flags={flags} />}
       <div className="action-buttons">
         {document.actions.map((action) => (
           <ActionButton
@@ -103,6 +111,7 @@ export function ChangeActions({
             reason={reason}
             onReasonChange={onReasonChange}
             onRun={onRun}
+            flags={action.verb === 'approve' ? flags : []}
           />
         ))}
       </div>

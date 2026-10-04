@@ -10,6 +10,7 @@ import {
   readRejection,
 } from './web-data-lifecycle.js';
 import { observeTaskFile } from './web-data-observations.js';
+import { readWebReview } from './web-data-review.js';
 import type { WebChange, WebRecertification, WebResolvedScope, WebTask } from './web-data-types.js';
 
 function groupRecertifications(
@@ -110,6 +111,7 @@ export async function getWebChange(
   const brief = await readBriefMetadata(folder.folderPath);
   const manifest = await readManifestMetadata(folder.folderPath);
   const planner = await readPlannerAttribution(brief, manifest);
+  const review = await readWebReview(projectRoot, details, config);
 
   const taskObservations = new Map<
     string,
@@ -145,6 +147,7 @@ export async function getWebChange(
     planner,
     brief: brief.body,
     goal: details.goal,
+    review,
     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
     dependsOn: [...details.dependsOn],
     reads: [...details.features.reads],

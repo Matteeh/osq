@@ -11,6 +11,9 @@ export type {
   WebChange,
   WebChangeNode,
   WebCoverage,
+  WebDeltaCapability,
+  WebDeltaOperation,
+  WebDeltaRequirement,
   WebEdgeKind,
   WebGraph,
   WebGraphEdge,
@@ -19,6 +22,7 @@ export type {
   WebRecertification,
   WebRecertificationAttribution,
   WebResolvedScope,
+  WebReview,
   WebTask,
   WebTokenGroup,
 } from './web-data-types.js';
