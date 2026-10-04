@@ -43,3 +43,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [006. osq is the deterministic core](006-deterministic-core.md)
 - [007. Role environments](007-role-environments.md)
 - [008. SQLite read index](008-sqlite-read-index.md)
+- [009. Loopback write actions](009-loopback-write-actions.md)

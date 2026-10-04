@@ -5,6 +5,7 @@ import { DEFAULT_SERVE_CONFIG, isValidPort } from '../core/foundation/config-ser
 import { exportDashboard } from '../core/web/web-export.js';
 import { startWebServer } from '../core/web/web-server.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
+import { createWebActionRunner } from './serve-actions.js';
 
 /** Injectable inputs so tests never bind a fixed port, open a browser, or wait on signals. */
 export interface ServeCommandOptions extends CommandInputs {
@@ -139,6 +140,7 @@ export async function serveCommand(options: ServeCommandOptions = {}): Promise<v
     uiDir: options.uiDir,
     home: options.home,
     now: options.now,
+    runAction: createWebActionRunner({ cwd, config }),
   });
   inputs.stdout(`${handle.url}\n`);
 

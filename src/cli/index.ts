@@ -202,7 +202,9 @@ export function createProgram(version?: string): Command {
 
   program
     .command('serve')
-    .description('serve the read-only delivery dashboard on loopback')
+    .description(
+      'serve the delivery dashboard on loopback; approve, land, reject and retry from the browser',
+    )
     .option('--port <n>', 'loopback port from 0 through 65535', parsePortArgument)
     .option('--open', 'open the dashboard URL in the default browser')
     .option('--export <dir>', 'write a static dashboard snapshot to <dir> and exit')

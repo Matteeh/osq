@@ -603,7 +603,7 @@ osq query [select]       run one read-only SELECT over the osq history tables
 osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON
-osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
+osq serve [--port <n>]   local delivery dashboard on 127.0.0.1 that can approve, land, reject and retry (--open to launch it)
 osq serve --export <dir> write a static dashboard snapshot to <dir> and exit
 osq doctor               validate repository health, harness availability, and pinned validator
 ```
@@ -837,18 +837,24 @@ opening a browser. The snapshot needs a static host and cannot be opened
 directly from `file://`, and it scrubs only the project root and home directory
 paths, so read the export before publishing it.
 
-The dashboard is one hash-routed read-only page: `#/report` renders delivery
+The dashboard is one hash-routed page: `#/report` renders delivery
 charts, `#/graph` renders the capability archive graph, and `#/changes/<key>`
 renders detailed change evidence. Every request recomputes its document from
 the current filesystem and keeps no cache, and the page treats filesystem
 notifications only as a signal to refetch. It uses system fonts, same-origin
 requests, and no external asset, and respects `prefers-color-scheme`.
 
-`osq serve` is for local inspection only. It has no write endpoint, no
-authentication, no remote binding, and no hosting story; it never starts the
-execution watcher or writes project, cursor, or marker files. SIGINT and SIGTERM
-close the HTTP listener and its filesystem watcher. Startup failures such as an
-address already in use print one actionable error and exit nonzero.
+From the change view, `osq serve` can approve, land, reject and retry. A tap
+runs the same command function `osq approve`, `osq land`, `osq reject` and
+`osq retry` run, in the server process, and shows the exit code, output, error
+and next step. It refuses every write that does not carry an allowed loopback
+`Host` and `Origin`, a JSON content type, and the per-server token, and it runs
+one action at a time. `osq serve` is otherwise for local inspection only: no
+authentication, no remote binding, and no hosting story. It never starts the
+execution watcher or writes a project, cursor, or marker file except through an
+action the dashboard asked for. SIGINT and SIGTERM close the HTTP listener and
+its filesystem watcher. Startup failures such as an address already in use
+print one actionable error and exit nonzero.
 
 ## Diagnostics & Health
 

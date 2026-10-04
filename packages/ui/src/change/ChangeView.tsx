@@ -1,13 +1,16 @@
 import type { ReactElement } from 'react';
 import type { WebChange } from '../contracts.js';
 import { BriefPanel } from './BriefPanel.js';
+import { ChangeActionsPanel } from './ChangeActionsPanel.js';
 import { ChangeHeader } from './ChangeHeader.js';
 import { TaskTable } from './TaskTable.js';
+import type { ActionClient } from './actions-client.js';
 
 export interface ChangeViewProps {
   readonly change: WebChange;
   readonly error?: string | null;
   readonly onRefresh?: () => void;
+  readonly actionClient?: ActionClient;
 }
 
 /**
@@ -15,7 +18,12 @@ export interface ChangeViewProps {
  * and per-task summary and evidence. The view owns no subscription, timer, or
  * marker read; it renders exactly the `WebChange` it is given.
  */
-export function ChangeView({ change, error = null, onRefresh }: ChangeViewProps): ReactElement {
+export function ChangeView({
+  change,
+  error = null,
+  onRefresh,
+  actionClient,
+}: ChangeViewProps): ReactElement {
   return (
     <section className="view change-view" aria-labelledby="change-view-title">
       <h2 id="change-view-title">{change.title}</h2>
@@ -31,6 +39,9 @@ export function ChangeView({ change, error = null, onRefresh }: ChangeViewProps)
         </p>
       ) : null}
       <BriefPanel brief={change.brief} goal={change.goal} />
+      {actionClient !== undefined ? (
+        <ChangeActionsPanel selector={change.folderKey} asOf={change.asOf} client={actionClient} />
+      ) : null}
       <TaskTable tasks={change.tasks} />
     </section>
   );

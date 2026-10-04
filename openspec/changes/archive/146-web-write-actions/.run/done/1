@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:73d10ac4773c42bbd08b053be3d48c853220d84728204da7a7b540b78b3c47b5"
+build_stamp: "1a02e63"
+project_commit: "dfeb8a1"
+exit_code: 0
+scope_files: {"decisions/009-loopback-write-actions.md":"sha256:aea3ecd3d202ccd17552ee96305efb44ca94b6843c48e92c98d3713236618075","decisions/README.md":"sha256:e212f0c502ac8b2c8ec07912d529729a3b8557ce060be5016c925cd5fd014bda","src/core/web/web-actions.ts":"sha256:450490daba128a5e5f202a91e3a695bc5cf66cd9ec749812f5c1bf9a3c9eea1a","src/core/web/web-http.ts":"sha256:9b461ed565f412b8a0eae7932bc0e3a4b8c25c2fb44959d3880283b19160b784","src/core/web/web-server.ts":"sha256:58044fb7b6ef8ad09c2e9485ab25434ea14475f1bd3a7d2dfe1111490ee0e87a","src/core/web/web-write.ts":"sha256:2d4cb977c8f7539fa44193613e0c347b4ba4c03c810b7a7b7e57c990f8b2d915","tests/web-actions.test.ts":"sha256:4161bb8482ef0e68afde88fafd2ae1a4ea160a0face602033cc538def5d7da76"}
+---
+2026-10-04T10:04:35.127Z

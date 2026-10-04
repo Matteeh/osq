@@ -2,15 +2,22 @@ import type { ReactElement } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app.js';
+import { createActionClient } from './change/actions-client.js';
 import { type DashboardSnapshot, createDashboardData } from './data.js';
 import type { Route } from './router.js';
 import { createHashRouter } from './router.js';
+import './change/actions.css';
 import './styles.css';
 
 const EMPTY: DashboardSnapshot = { report: null, graph: null, inbox: null, change: null };
 
 const router = createHashRouter();
 const data = createDashboardData();
+// A static export carries its documents inline and must never call an action.
+const nativeFetch = window.fetch;
+const actionClient = data.inline
+  ? undefined
+  : createActionClient((input, init) => nativeFetch(input, init));
 
 function Root(): ReactElement {
   const [route, setRoute] = useState<Route>(() => router.current());
@@ -44,6 +51,7 @@ function Root(): ReactElement {
       error={error}
       onNavigate={(next) => router.navigate(next)}
       onRefresh={() => void refresh(route)}
+      actionClient={actionClient}
     />
   );
 }

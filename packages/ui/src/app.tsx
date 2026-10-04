@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { ActionClient } from './change/actions-client.js';
 import { ChangeView } from './change/index.js';
 import { ChangesView } from './changes/index.js';
 import type { DashboardSnapshot } from './data.js';
@@ -15,6 +16,7 @@ export interface AppProps {
   readonly error: string | null;
   readonly onNavigate: (route: Route) => void;
   readonly onRefresh: () => void;
+  readonly actionClient?: ActionClient;
 }
 
 interface NavLinkProps {
@@ -99,10 +101,12 @@ function ChangeRoute({
   documents,
   error,
   onRefresh,
+  actionClient,
 }: {
   readonly documents: DashboardSnapshot;
   readonly error: string | null;
   readonly onRefresh: () => void;
+  readonly actionClient?: ActionClient;
 }): ReactElement {
   const change = documents.change;
   if (change === null) {
@@ -114,7 +118,9 @@ function ChangeRoute({
       <EmptyState>No change is selected.</EmptyState>
     );
   }
-  return <ChangeView change={change} error={error} onRefresh={onRefresh} />;
+  return (
+    <ChangeView change={change} error={error} onRefresh={onRefresh} actionClient={actionClient} />
+  );
 }
 
 /** The route-independent shell: navigation, state messaging, and one view. */
@@ -125,6 +131,7 @@ export function App({
   error,
   onNavigate,
   onRefresh,
+  actionClient,
 }: AppProps): ReactElement {
   return (
     <div className="app">
@@ -164,7 +171,12 @@ export function App({
           <GraphRoute documents={documents} onNavigate={onNavigate} />
         ) : null}
         {route.name === 'change' ? (
-          <ChangeRoute documents={documents} error={error} onRefresh={onRefresh} />
+          <ChangeRoute
+            documents={documents}
+            error={error}
+            onRefresh={onRefresh}
+            actionClient={actionClient}
+          />
         ) : null}
       </main>
     </div>

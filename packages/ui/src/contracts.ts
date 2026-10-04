@@ -1,8 +1,23 @@
 import type { MetricsReport } from '../../../src/core/report/report.js';
 import type { Inbox } from '../../../src/core/status/inbox.js';
+import type {
+  WebAction,
+  WebActionRequest,
+  WebActionResult,
+  WebActionsDocument,
+} from '../../../src/core/web/web-actions.js';
 import type { WebChange, WebGraph } from '../../../src/core/web/web-data.js';
 
-export type { Inbox, MetricsReport, WebChange, WebGraph };
+export type {
+  Inbox,
+  MetricsReport,
+  WebAction,
+  WebActionRequest,
+  WebActionResult,
+  WebActionsDocument,
+  WebChange,
+  WebGraph,
+};
 
 /**
  * Optional typed documents inlined into the served page. Each field is

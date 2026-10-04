@@ -8,6 +8,7 @@ import { type ReadInboxOptions, readInbox } from '../status/inbox-projection.js'
 import type { Inbox } from '../status/inbox.js';
 import type { SystemGraph } from './system-graph-types.js';
 import { getSystemGraph } from './system-graph.js';
+import { type WebActionRunner, type WebActions, getWebActions } from './web-actions.js';
 import { getWebChange } from './web-data-change.js';
 import { getWebGraph } from './web-data-graph.js';
 import type { WebChange, WebGraph } from './web-data-types.js';
@@ -18,10 +19,15 @@ import {
   createEventStream,
   createInvalidationHub,
 } from './web-events.js';
+import { decodeChangeSelector, send, sendFailure, sendJson } from './web-http.js';
 import { UI_CONTENT_SECURITY_POLICY, resolveStaticFile, resolveUiDir } from './web-static.js';
+import { createActionRoutes } from './web-write.js';
+
+export { serializeWebJson } from './web-http.js';
 
 const SERVE_HOST = '127.0.0.1';
 const CHANGE_PREFIX = '/api/changes/';
+const ACTIONS_PREFIX = '/api/actions/';
 const EVENTS_PATH = '/api/events';
 
 type ChangeDocumentFn = (
@@ -30,6 +36,12 @@ type ChangeDocumentFn = (
   config: OsqConfig,
   now: Date,
 ) => Promise<WebChange>;
+
+type ActionDocumentFn = (
+  projectRoot: string,
+  selector: string,
+  config: OsqConfig,
+) => Promise<WebActions>;
 
 /** Dependency-injected composition root for the read-only loopback server. */
 export interface WebServerOptions {
@@ -44,6 +56,8 @@ export interface WebServerOptions {
   readonly getSystem?: (projectRoot: string, config: OsqConfig) => Promise<SystemGraph>;
   readonly getChange?: ChangeDocumentFn;
   readonly getInbox?: (projectRoot: string, options: ReadInboxOptions) => Promise<Inbox>;
+  readonly getActions?: ActionDocumentFn;
+  readonly runAction?: WebActionRunner;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
 }
@@ -53,72 +67,6 @@ export interface WebServerHandle {
   readonly url: string;
   readonly port: number;
   close(): Promise<void>;
-}
-
-function sortKeysDeep(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortKeysDeep);
-  if (value === null || typeof value !== 'object') return value;
-  const source = value as Record<string, unknown>;
-  const sorted: Record<string, unknown> = {};
-  for (const key of Object.keys(source).sort()) sorted[key] = sortKeysDeep(source[key]);
-  return sorted;
-}
-
-/** Deterministic UTF-8 JSON shared by every API document. */
-export function serializeWebJson(data: unknown): string {
-  return JSON.stringify(sortKeysDeep(data));
-}
-
-function send(
-  res: http.ServerResponse,
-  status: number,
-  body: Buffer,
-  contentType: string,
-  cache: string,
-  head: boolean,
-  headers: Record<string, string> = {},
-): void {
-  res.writeHead(status, {
-    'Content-Type': contentType,
-    'Content-Length': body.byteLength,
-    'Cache-Control': cache,
-    ...headers,
-  });
-  if (head) res.end();
-  else res.end(body);
-}
-
-function sendJson(
-  res: http.ServerResponse,
-  status: number,
-  data: unknown,
-  head: boolean,
-  headers: Record<string, string> = {},
-): void {
-  const body = Buffer.from(serializeWebJson(data), 'utf8');
-  send(res, status, body, 'application/json; charset=utf-8', 'no-store', head, headers);
-}
-
-function sendFailure(res: http.ServerResponse, error: unknown, head = false): void {
-  if (res.headersSent) {
-    res.end();
-    return;
-  }
-  sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) }, head);
-}
-
-/** Decode a change selector once, rejecting separators, traversal, and bad escapes. */
-function decodeChangeSelector(raw: string): string | null {
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    return null;
-  }
-  if (decoded.length === 0 || decoded.includes('\0')) return null;
-  if (decoded.includes('/') || decoded.includes('\\')) return null;
-  if (decoded === '.' || decoded === '..') return null;
-  return decoded;
 }
 
 /** Start one loopback-only HTTP server over the current project tree. */
@@ -134,6 +82,14 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   const getChange = options.getChange ?? getWebChange;
   const getInbox =
     options.getInbox ?? ((root: string, inbox: ReadInboxOptions) => readInbox(root, inbox));
+  const runAction = options.runAction;
+  let boundPort = 0;
+  const actions = createActionRoutes({
+    projectRoot,
+    config,
+    getActions: options.getActions ?? getWebActions,
+    getPort: () => boundPort,
+  });
 
   const trees = await changeTrees(projectRoot, config);
   const hub = createInvalidationHub({
@@ -166,9 +122,17 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
     }
   }
 
-  async function handleApi(res: http.ServerResponse, pathname: string, head: boolean) {
+  async function handleApi(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    head: boolean,
+  ) {
     try {
       if (pathname === EVENTS_PATH) return events.handle(res, head);
+      if (runAction !== undefined && pathname.startsWith(ACTIONS_PREFIX)) {
+        return await actions.handleGet(req, res, pathname, head);
+      }
       const documents: Record<string, () => Promise<unknown>> = {
         '/api/report': () => getReport(projectRoot, config),
         '/api/graph': () => getGraph(projectRoot, config),
@@ -198,14 +162,24 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
 
   async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
     const method = req.method ?? 'GET';
-    if (method !== 'GET' && method !== 'HEAD') {
-      return sendJson(res, 405, { error: 'method not allowed' }, false, { Allow: 'GET, HEAD' });
-    }
-    const head = method === 'HEAD';
     const rawUrl = req.url ?? '/';
     const pathname = rawUrl.startsWith('/') ? rawUrl.replace(/[?#].*$/, '') : null;
-    if (pathname === null) return sendJson(res, 400, { error: 'malformed request url' }, head);
-    if (pathname.startsWith('/api/')) await handleApi(res, pathname, head);
+    if (pathname === null) {
+      return sendJson(res, 400, { error: 'malformed request url' }, method === 'HEAD');
+    }
+    const isActionPath = pathname.startsWith(ACTIONS_PREFIX);
+    if (method === 'POST') {
+      if (runAction !== undefined && isActionPath) {
+        return await actions.handlePost(req, res, pathname, runAction);
+      }
+      return sendJson(res, 405, { error: 'method not allowed' }, false, { Allow: 'GET, HEAD' });
+    }
+    if (method !== 'GET' && method !== 'HEAD') {
+      const allow = runAction !== undefined && isActionPath ? 'GET, HEAD, POST' : 'GET, HEAD';
+      return sendJson(res, 405, { error: 'method not allowed' }, false, { Allow: allow });
+    }
+    const head = method === 'HEAD';
+    if (pathname.startsWith('/api/')) await handleApi(req, res, pathname, head);
     else await handleStatic(res, pathname, head);
   }
 
@@ -227,6 +201,7 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   }
 
   const address = server.address() as AddressInfo;
+  boundPort = address.port;
   let closed = false;
   const close = async (): Promise<void> => {
     if (closed) return;
