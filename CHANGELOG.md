@@ -4,6 +4,7 @@ All notable changes to `osq` are documented in this file.
 
 ## [Unreleased]
 
+- `osq --help` groups the commands as everyday, setup and running, inspection, and plumbing, and says to run bare `osq` first (145).
 - agy asks before every tool call, so a headless task cannot answer and `osq watch` refuses to start an agy change until `osq.config.ts` sets `agy: { dangerouslySkipPermissions: true }`; `osq doctor` now reports a `harness-containment` line for every harness (137).
 - `osq init` scaffolds pi as the default harness (138).
 - `osq digest [ids...]` prints a deterministic Markdown or JSON digest of archived changes, by id or by `--since`/`--until` range, with `--out` and `--no-cost` (130).

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:681f95758b95854299cce7e13641cf1bd40767857773fa8153c2e7ed157620a9"
+build_stamp: "dba4cf3"
+project_commit: "6599bda"
+exit_code: 0
+scope_files: {"src/cli/help-groups.ts":"sha256:3dc750cc89276dd13b63d388554ae8bfea071a1fa867363932091eb54965ad3a","src/cli/index.ts":"sha256:fe1f5ce18247e45c53aaf571d351d23cbe1e0ed30cdf74f6f870b758c41a57c8","tests/help-groups.test.ts":"sha256:96af5cda2d39432d657352a2b468ecc81509bf036158f34f892d816efd467301"}
+---
+2026-10-04T08:44:30.790Z

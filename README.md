@@ -566,34 +566,56 @@ As with every harness, scope is a protocol, not confinement beyond what the harn
 
 ## Commands
 
+The groups below match the groups `osq --help` prints.
+
+**Everyday**
+
 ```
 osq                      human attention inbox: needs you, running, landed since last look
 osq --json               print human attention inbox as stable JSON
 osq inbox                what needs a human; opens as cards on a terminal, prints otherwise
 osq inbox --follow       print new and departed items as they change, and sound when new work appears
 osq inbox --json         the dispatch queue and every item's card data as JSON
+osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool
+osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
+osq land <id>            land an archived change onto the default branch
+osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
+osq reject <id>          move an unapproved or failed change intact into rejected history
+```
+
+**Setup and running**
+
+```
 osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md, and the Claude plan command
 osq init --refresh-schema  overwrite the six scaffolded OpenSpec schema files from the installed templates
 osq setup                write harness config for OSQ_HARNESS
-osq new <name>           new change folder from template in openspec/changes/
-osq plan [name]          create a change, write plan-prompt.md, and hand off to your planning tool
-osq queue                print the read-only brief queue from openspec/queue.md
-osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints (--json for JSON)
-osq approve <ids...>     lint, print the digest, approve change; write .run/approved and .run/manifest.json
-osq retry <id> <target>  retry a dead or regressed task, or a change-level regression
-osq reject <id>          move an unapproved or failed change intact into rejected history
 osq watch                run the watcher loop
+```
+
+**Inspection**
+
+```
 osq status               overview of all changes, tasks, and runtime states
-osq message <id>         print an archived change's land commit message
 osq show <id>            change details, tasks, results, dead markers, and event timeline (--json for JSON)
-osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq report               delivery metrics, completion rates, failure reasons, durations, and costs
 osq digest [ids...]      deterministic Markdown or JSON digest of archived changes (--since, --until, --json, --out, --no-cost)
+osq query [select]       run one read-only SELECT over the osq history tables
+osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON
 osq serve [--port <n>]   local read-only delivery dashboard on 127.0.0.1 (--open to launch it)
 osq serve --export <dir> write a static dashboard snapshot to <dir> and exit
 osq doctor               validate repository health, harness availability, and pinned validator
+```
+
+**Plumbing**
+
+```
+osq new <name>           new change folder from template in openspec/changes/
+osq lint [ids...]        validate change folders and OpenSpec artifacts against constraints (--json for JSON)
+osq queue                print the read-only brief queue from openspec/queue.md
+osq sync <id>            merge the default branch into a change's branch
+osq message <id>         print an archived change's land commit message
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
 ```
 

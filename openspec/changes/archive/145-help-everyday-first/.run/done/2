@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6c4eb6d944a8988a1c7fd3b8ecf0e1158314c164f32cf6bf16ee08db13608479"
+build_stamp: "dba4cf3"
+project_commit: "440c8f9"
+exit_code: 0
+scope_files: {"CHANGELOG.md":"sha256:628ffacc8c503beef0c9c988860715dcdd8435436d43bee554f30cb66e3073d1","README.md":"sha256:fef12514220fb02335ffadbc2d6a2e3cb4c7e722604d8de4cb61d56bafe144fe","tests/readme-command-groups.test.ts":"sha256:959a73a918ff0fc5e2afe5046b79e12b8cf768fa21e5939f17c1aa18e46ec10b"}
+---
+2026-10-04T08:49:53.050Z

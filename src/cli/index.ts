@@ -5,6 +5,7 @@ import { CommandError } from './command-error.js';
 import { registerDigestCommand } from './digest.js';
 import { registerDoctorCommand } from './doctor.js';
 import { registerGraphCommand } from './graph.js';
+import { configureGroupedHelp } from './help-groups.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
@@ -221,6 +222,7 @@ export function createProgram(version?: string): Command {
   registerMessageCommand(program);
   registerSpecCommand(program);
   registerSyncCommand(program);
+  configureGroupedHelp(program);
   const origParse = program.parse.bind(program);
   program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
     const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));

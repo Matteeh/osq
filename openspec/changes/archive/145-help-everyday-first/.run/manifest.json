@@ -1,0 +1,30 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:018f114a2fa162dc7fb19f069f32b4300590150e9eb302ce0e3e4ddec5eaab3b",
+    "PLANNER.md": "sha256:a7c592905cd1053807bc28a9b324741d1986d45d91334c31615495742b20864c",
+    "config": "sha256:95a5e99ab7526c9402906db5114710b8b5006ea6ecd050aad335d210e372af39",
+    "cli-foundation": "sha256:957b12c04391fdc0fe507c484eb168793608bced68410e1e34d8cb4b74794b16",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b"
+  },
+  "osqVersion": "0.2.3",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-03T23:26:32.450Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-03T23:34:45.158Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14"
+  }
+}
