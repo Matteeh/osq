@@ -135,12 +135,16 @@ describe('steering documentation', () => {
     assert.match(inbox, /optional/i, 'the inbox section must call the stuck field optional');
   });
 
-  it('CHANGELOG Unreleased records the steering change under 128', async () => {
+  it('CHANGELOG records the steering change under 128', async () => {
     const changelog = await fs.readFile(path.join(REPO_ROOT, 'CHANGELOG.md'), 'utf8');
-    const start = changelog.indexOf('## [Unreleased]');
-    assert.ok(start >= 0, 'CHANGELOG.md must have an [Unreleased] section');
-    const nextRelease = changelog.indexOf('## [', start + '## [Unreleased]'.length);
-    assert.ok(nextRelease > start, 'the [Unreleased] section must be followed by a release');
+    const entry = changelog.indexOf('(128)');
+    assert.ok(entry >= 0, 'CHANGELOG.md must hold an entry ending (128)');
+    const start = changelog.lastIndexOf('## [', entry);
+    const nextRelease = changelog.indexOf('## [', entry);
+    assert.ok(
+      start >= 0 && nextRelease > entry,
+      'the entry must sit in a section followed by a release',
+    );
     const unreleased = changelog.slice(start, nextRelease);
 
     assert.match(unreleased, /\(128\)/, 'the entry must end (128)');

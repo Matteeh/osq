@@ -7,6 +7,13 @@ All notable changes to `osq` are documented in this file.
 - `osq --help` groups the commands as everyday, setup and running, inspection, and plumbing, and says to run bare `osq` first (145).
 - agy asks before every tool call, so a headless task cannot answer and `osq watch` refuses to start an agy change until `osq.config.ts` sets `agy: { dangerouslySkipPermissions: true }`; `osq doctor` now reports a `harness-containment` line for every harness (137).
 - `osq init` scaffolds pi as the default harness (138).
+
+## [0.2.4] - 2026-10-02
+
+- `osq report` reads each task file, `brief.md`, `.run/manifest.json`, and `proposal.md` once per run: 2,113 reads to 880 on osq's own repository. Parsed proposals are now frozen (135).
+- `osq query "<select>"` runs one read-only `SELECT` over five history tables (`changes`, `requirements`, `tasks`, `dead_attempts`, `disclosures`) and prints rows, or JSON with `--json`. `PLANNER.md` and the executor protocol point agents at it instead of event files (134).
+- `osq report` reads archived event streams through a SQLite index at `.osq/index.sqlite`, using Node's built-in `node:sqlite`. Deleting it only costs speed (ADR 008) (133).
+- `osq report` reads and parses each event file once per run, without holding verify logs in memory: about 4.0 s to 2.4 s on osq's own repository (132).
 - `osq digest [ids...]` prints a deterministic Markdown or JSON digest of archived changes, by id or by `--since`/`--until` range, with `--out` and `--no-cost` (130).
 - A change the default branch stops — a `sync_conflict`, a `requirement_changed`, or a red verify or check after osq merges the default branch (`sync_verify_red`) — now shows once in the inbox with `osq plan <id>`, archived or not, and `osq land` records the stop on an archived change's branch. Approval of the revised plan restarts the branch from the default branch after a conflict, or merges the default branch without running verify otherwise, keeping done tasks (129).
 - A stuck, blocked, or regressed change now shows once in the inbox with `osq plan <id>`. `osq plan` writes the prompt into the change's own folder, and `osq approve` continues the run from the first task that is not done (128).
@@ -15,6 +22,24 @@ All notable changes to `osq` are documented in this file.
 - A stacked change is edited in its stacked directory and approved again from there; `osq reject` of a stacked change moves it back into your checkout as a draft (123).
 - `osq new`, `osq plan`, and `osq lint` see changes in worktrees, stacked approvals, and `osq/` branches, so numbers are never reused (123).
 - Removed: `osq done <id> <task> --manual`, which marked a task done without its verify. Fix the cause and run `osq retry <id> <n>`, or reject the change. Archives with manual done markers read as before (123).
+- Role environments (ADR 007): verify, `vcs.prepare`, and harness tasks no longer inherit osq's environment. Each role gets a fixed base set plus the names listed under `confinement.roles.<role>.env`; verify never gets the model key. Claude tasks also deny `curl`, `wget`, `ssh`, `scp`, and `sudo` (122).
+- `osq spec [capability] [requirement]` lists living capabilities and their requirements, or prints one; planners and executors read the requirements they need instead of whole specs (121).
+- A regressed or dead marker for a red verify holds an output excerpt and a `Full output:` line instead of the whole log. New config keys `limits.markerOutputLines` (40) and `limits.markerLineChars` (400) (120).
+- `osq lint` prints the change's own findings and counts the repository's; `osq lint --repository` lists those (119).
+- A watcher or `osq land` running an old build stops and says to rebuild; `osq land --allow-stale` overrides (118).
+- Approval never races the watcher, a change-level halt names `osq retry <id> change`, and a rejected change's branch is kept so it can be approved again (117).
+- Executor prompts carry only changed rules, and a spawn that throws kills the task (116).
+- Lint warns about a `source` comment on any requirement other than Code ownership (115).
+- `osq sync <id>` merges the default branch into a running change's branch, and the watcher does the same before a change's first task and before archive. A sync resolves living specs and the archive from the default branch (110).
+- `osq land <id>` lands an archived change in one command: it syncs and verifies, builds the land commit from the verified tree, and fast-forwards the default branch, so a land ends complete or changes nothing. Living specs never conflict (107, 109).
+- ADR 006, osq is the deterministic core, and its rule in AGENTS.md (108).
+- `osq graph` prints the system as one versioned graph; `GET /api/system` serves it to the dashboard (106).
+- Each capability can carry an `osq.yml` with its `group` and `tags`, and `osq migrate sidecars` writes them; config key `capabilities.requireGroups` (105).
+- Every change relates to a capability through a delta or `features.reads`, and a new capability is declared in the proposal's `creates` (102).
+- `osq inbox` records how long items waited, and `osq report --since/--until` shows it in an `Inbox waiting` section (101).
+- On a terminal, `osq inbox` opens the first item as a card with keys that run its commands (099).
+- `osq inbox --follow` prints items as they arrive and leave, and plays a sound for new work; `inbox.*` config keys tune it (098).
+- Fixes: a landed change counts once while its worktree is kept (104); a result section that says only None counts as empty (103); a task may delete a file its scope names (126); CI no longer fails while a test's temp repository is being written (124).
 
 ## [0.2.3] - 2026-09-27
 
