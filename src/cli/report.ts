@@ -308,6 +308,20 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
           })),
         }
       : {}),
+    ...(report.validation
+      ? {
+          validation: {
+            changes: report.validation.changes,
+            validated: report.validation.validated,
+            findings: report.validation.findings,
+            perChange: report.validation.perChange.map((entry) => ({
+              change: entry.change,
+              outcome: entry.outcome,
+              findings: entry.findings,
+            })),
+          },
+        }
+      : {}),
     ...(report.inboxWait ? { inboxWait: report.inboxWait } : {}),
     tokens: {
       input: report.tokens.input,

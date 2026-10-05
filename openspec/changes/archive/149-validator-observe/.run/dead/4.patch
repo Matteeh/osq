@@ -1,0 +1,710 @@
+diff --git a/src/harness/prompt.ts b/src/harness/prompt.ts
+index 36db7d2..0517833 100644
+--- a/src/harness/prompt.ts
++++ b/src/harness/prompt.ts
+@@ -70,6 +70,7 @@ export function livingSpecPaths(options: SpawnTaskOptions): string[] {
+ 
+ /** Full one-attempt executor prompt naming every file the task needs. */
+ export function buildExecutorPrompt(options: SpawnTaskOptions): string {
++  if (options.prompt !== undefined) return options.prompt;
+   const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
+     options;
+   const taskRel = path.relative(
+diff --git a/src/harness/types.ts b/src/harness/types.ts
+index 5489f4a..ada5b17 100644
+--- a/src/harness/types.ts
++++ b/src/harness/types.ts
+@@ -34,7 +34,8 @@ export type HarnessEventType =
+   | 'focused_ran'
+   | 'mutation_ran'
+   | 'vcs_violation'
+-  | 'scope_violation';
++  | 'scope_violation'
++  | 'validator_ran';
+ 
+ /** Payload of the lifecycle `started` event emitted by the runner. */
+ export interface StartedEventData {
+@@ -348,6 +349,43 @@ export interface ScopeViolationEventData {
+   readonly files: readonly string[];
+ }
+ 
++/** The one problem kind a validator finding names, for now. */
++export type ValidatorProblem = 'no_code' | 'no_test' | 'passes_without_change';
++
++/** One `scenario` finding a validator wrote. */
++export interface ValidatorFinding {
++  readonly kind: 'scenario';
++  readonly capability: string;
++  readonly requirement: string;
++  readonly scenario: string;
++  readonly problem: ValidatorProblem;
++  readonly detail: string;
++}
++
++/** How one validator run ended. */
++export type ValidatorOutcome = 'validated' | 'failed' | 'timed_out' | 'unreadable' | 'skipped';
++
++/** Why a validator run was skipped without spawning. */
++export type ValidatorSkipReason = 'no_base' | 'no_scenarios';
++
++/** Payload of the change-level `validator_ran` event. */
++export interface ValidatorRanEventData {
++  readonly outcome: ValidatorOutcome;
++  readonly harness: string;
++  readonly model: string;
++  /** Wall seconds from just before the spawn to just after it; 0 when skipped. */
++  readonly duration: number;
++  readonly exitCode: number | null;
++  /** How many scenarios the validator was asked to judge. */
++  readonly scenarios: number;
++  /** Present only on a validated run; empty otherwise. */
++  readonly findings: readonly ValidatorFinding[];
++  /** Project-relative paths osq put back after the run, sorted. */
++  readonly restored: readonly string[];
++  readonly reason?: ValidatorSkipReason;
++  readonly output?: string;
++}
++
+ /** Event type to payload mapping for every lifecycle and observed event. */
+ export interface OsqEventData {
+   started: StartedEventPayload;
+@@ -375,6 +413,7 @@ export interface OsqEventData {
+   mutation_ran: MutationRanEventData;
+   vcs_violation: VcsViolationEventData;
+   scope_violation: ScopeViolationEventData;
++  validator_ran: ValidatorRanEventData;
+ }
+ 
+ /**
+@@ -408,6 +447,8 @@ export interface SpawnTaskOptions {
+   entry: string[];
+   skills: string[];
+   tier: 'coding' | 'smart';
++  /** Replaces the executor prompt, for a role other than the executor. */
++  prompt?: string;
+   timeoutSeconds?: number;
+   config?: OsqConfig;
+   logger?: Logger;
+diff --git a/src/watcher/validator-findings.ts b/src/watcher/validator-findings.ts
+new file mode 100644
+index 0000000..06a224b
+--- /dev/null
++++ b/src/watcher/validator-findings.ts
+@@ -0,0 +1,61 @@
++import type { ValidatorFinding, ValidatorProblem } from '../harness/types.js';
++
++const PROBLEMS: ReadonlySet<string> = new Set<ValidatorProblem>([
++  'no_code',
++  'no_test',
++  'passes_without_change',
++]);
++
++function nonEmptyString(value: unknown): string | null {
++  if (typeof value !== 'string') return null;
++  const trimmed = value.trim();
++  return trimmed.length > 0 ? trimmed : null;
++}
++
++function parseFinding(entry: unknown): ValidatorFinding | null {
++  if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return null;
++  const record = entry as Record<string, unknown>;
++  if (record.kind !== 'scenario') return null;
++  const capability = nonEmptyString(record.capability);
++  const requirement = nonEmptyString(record.requirement);
++  const scenario = nonEmptyString(record.scenario);
++  const detail = nonEmptyString(record.detail);
++  const problem = record.problem;
++  if (capability === null || requirement === null || scenario === null || detail === null) {
++    return null;
++  }
++  if (typeof problem !== 'string' || !PROBLEMS.has(problem)) return null;
++  return {
++    kind: 'scenario',
++    capability,
++    requirement,
++    scenario,
++    problem: problem as ValidatorProblem,
++    detail,
++  };
++}
++
++/**
++ * Parse the validator's `findings.json`. Returns the findings in file order
++ * with their strings trimmed, or null when the text is not JSON, has no
++ * `findings` array, or holds any malformed finding.
++ */
++export function parseValidatorFindings(text: string): ValidatorFinding[] | null {
++  let data: unknown;
++  try {
++    data = JSON.parse(text);
++  } catch {
++    return null;
++  }
++  if (typeof data !== 'object' || data === null || Array.isArray(data)) return null;
++  const findings = (data as Record<string, unknown>).findings;
++  if (!Array.isArray(findings)) return null;
++
++  const parsed: ValidatorFinding[] = [];
++  for (const entry of findings) {
++    const finding = parseFinding(entry);
++    if (finding === null) return null;
++    parsed.push(finding);
++  }
++  return parsed;
++}
+diff --git a/src/watcher/validator-inputs.ts b/src/watcher/validator-inputs.ts
+new file mode 100644
+index 0000000..07ac503
+--- /dev/null
++++ b/src/watcher/validator-inputs.ts
+@@ -0,0 +1,230 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import type { OsqConfig } from '../core/foundation/config.js';
++import { normalizeRequirementName, parseCapabilitySpec, parseDelta } from '../core/spec/delta.js';
++import { compareNumericPrefix } from '../core/status/state.js';
++import { isTestPath } from '../core/trace/test-path.js';
++import type { Vcs } from '../core/vcs/vcs.js';
++import type { ValidatorSkipReason } from '../harness/types.js';
++
++/** One scenario the validator is asked to judge. */
++export interface JudgedScenario {
++  readonly capability: string;
++  readonly requirement: string;
++  readonly scenario: string;
++  /** The scenario's block as the delta spec writes it, trimmed. */
++  readonly text: string;
++}
++
++/** Everything osq gives the validator for one run. */
++export interface ValidatorInputs {
++  readonly base: string;
++  readonly deltaPaths: readonly string[];
++  readonly scenarios: readonly JudgedScenario[];
++  readonly patch: string;
++  readonly testPaths: readonly string[];
++  readonly resultPaths: readonly string[];
++}
++
++interface DeltaFile {
++  readonly capability: string;
++  readonly absolute: string;
++  readonly relative: string;
++}
++
++const PATCH_HEADER_REGEX = /^diff --git a\/(.+) b\/(.+)$/;
++
++/** The file a `diff --git` header names, or null when it cannot be read. */
++function patchBlockPath(header: string): string | null {
++  const match = PATCH_HEADER_REGEX.exec(header);
++  if (!match) return null;
++  return match[2] === '/dev/null' ? match[1] : match[2];
++}
++
++/** The `diff --git` blocks of a patch, in order, each with its verbatim text. */
++function patchSections(patch: string): { path: string; text: string }[] {
++  const sections: { path: string; text: string }[] = [];
++  let current: { path: string; text: string } | null = null;
++  for (const line of patch.split('\n')) {
++    if (line.startsWith('diff --git a/')) {
++      if (current) sections.push(current);
++      current = { path: patchBlockPath(line) ?? line, text: line };
++    } else if (current) {
++      current.text += `\n${line}`;
++    }
++  }
++  if (current) sections.push(current);
++  return sections;
++}
++
++/** Drop every `openspecRoot` block, keeping the rest byte for byte. */
++function filterPatch(patch: string, openspecRoot: string): { patch: string; paths: string[] } {
++  const prefix = `${openspecRoot}/`;
++  const kept: string[] = [];
++  const paths: string[] = [];
++  for (const section of patchSections(patch)) {
++    if (section.path.startsWith(prefix)) continue;
++    kept.push(section.text);
++    paths.push(section.path);
++  }
++  return { patch: kept.join('\n'), paths };
++}
++
++async function readBase(specFolderPath: string): Promise<string | null> {
++  try {
++    const content = await fs.readFile(path.join(specFolderPath, '.run', 'base'), 'utf8');
++    const trimmed = content.trim();
++    return trimmed.length > 0 ? trimmed : null;
++  } catch {
++    return null;
++  }
++}
++
++/** The change's delta spec files, in capability name order. */
++async function readDeltaFiles(
++  projectRoot: string,
++  specFolderPath: string,
++): Promise<{ deltaPaths: string[]; deltas: Map<string, string> }> {
++  const dir = path.join(specFolderPath, 'specs');
++  const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
++  const files: DeltaFile[] = entries
++    .filter((entry) => entry.isDirectory())
++    .map((entry) => {
++      const absolute = path.join(dir, entry.name, 'spec.md');
++      return {
++        capability: entry.name,
++        absolute,
++        relative: path.relative(projectRoot, absolute),
++      };
++    })
++    .sort((a, b) => a.capability.localeCompare(b.capability));
++
++  const deltaPaths: string[] = [];
++  const deltas = new Map<string, string>();
++  for (const file of files) {
++    const content = await fs.readFile(file.absolute, 'utf8').catch(() => null);
++    if (content === null) continue;
++    deltaPaths.push(file.relative);
++    deltas.set(file.capability, content);
++  }
++  return { deltaPaths, deltas };
++}
++
++/** Requirements the living spec at the base has, keyed by name then scenario. */
++function livingScenarios(living: string | null | undefined): Map<string, Map<string, string>> {
++  const byRequirement = new Map<string, Map<string, string>>();
++  if (!living) return byRequirement;
++  for (const requirement of parseCapabilitySpec(living).requirements) {
++    const scenarios = new Map<string, string>();
++    for (const scenario of requirement.scenarios) {
++      scenarios.set(scenario.name, scenario.raw.trim());
++    }
++    byRequirement.set(normalizeRequirementName(requirement.name), scenarios);
++  }
++  return byRequirement;
++}
++
++/**
++ * The scenarios of the delta specs that a base did not already hold: those of
++ * ADDED or MODIFIED requirements whose name and text the living spec at the
++ * base lacks. Capability order, then document order.
++ */
++export function judgedScenarios(
++  deltas: ReadonlyMap<string, string>,
++  livingAtBase: ReadonlyMap<string, string | null>,
++): JudgedScenario[] {
++  const judged: JudgedScenario[] = [];
++  for (const capability of [...deltas.keys()].sort()) {
++    const content = deltas.get(capability);
++    if (content === undefined) continue;
++    const living = livingScenarios(livingAtBase.get(capability));
++    const parsed = parseDelta(content);
++    for (const requirement of [...parsed.added, ...parsed.modified]) {
++      const requirementName = normalizeRequirementName(requirement.name);
++      const prior = living.get(requirementName);
++      for (const scenario of requirement.scenarios) {
++        if (prior?.get(scenario.name) === scenario.raw.trim()) continue;
++        judged.push({
++          capability,
++          requirement: requirementName,
++          scenario: scenario.name,
++          text: scenario.raw.trim(),
++        });
++      }
++    }
++  }
++  return judged;
++}
++
++/** The scenarios file's text: a heading per requirement over its scenarios. */
++export function formatScenariosFile(scenarios: readonly JudgedScenario[]): string {
++  const lines = ['# Scenarios to judge'];
++  let current: string | null = null;
++  for (const scenario of scenarios) {
++    const key = `${scenario.capability}: ${scenario.requirement}`;
++    if (key !== current) {
++      lines.push('', `## ${key}`);
++      current = key;
++    }
++    lines.push('', scenario.text);
++  }
++  return `${lines.join('\n')}\n`;
++}
++
++async function existingTestPaths(
++  candidates: readonly string[],
++  projectRoot: string,
++): Promise<string[]> {
++  const existing = new Set<string>();
++  for (const candidate of candidates) {
++    if (!isTestPath(candidate)) continue;
++    const stat = await fs.stat(path.resolve(projectRoot, candidate)).catch(() => null);
++    if (stat?.isFile()) existing.add(candidate);
++  }
++  return [...existing].sort();
++}
++
++async function existingResultPaths(projectRoot: string, specFolderPath: string): Promise<string[]> {
++  const dir = path.join(specFolderPath, '.run', 'results');
++  const entries = await fs.readdir(dir).catch(() => []);
++  const numbers: string[] = [];
++  for (const name of entries) {
++    if (!name.endsWith('.md')) continue;
++    const stat = await fs.stat(path.join(dir, name)).catch(() => null);
++    if (stat?.isFile()) numbers.push(name.slice(0, -'.md'.length));
++  }
++  numbers.sort(compareNumericPrefix);
++  return numbers.map((number) => path.relative(projectRoot, path.join(dir, `${number}.md`)));
++}
++
++/**
++ * Gather the scenarios to judge, the diff and tests under review, and the
++ * executor results for one validator run. Returns a skip reason instead when
++ * git is off, `.run/base` is missing or empty, or no scenario is judged.
++ */
++export async function readValidatorInputs(
++  projectRoot: string,
++  specFolderPath: string,
++  vcs: Vcs,
++  config: OsqConfig,
++): Promise<ValidatorInputs | { readonly skipped: ValidatorSkipReason }> {
++  if (vcs.kind === 'none') return { skipped: 'no_base' };
++  const base = await readBase(specFolderPath);
++  if (base === null) return { skipped: 'no_base' };
++
++  const { deltaPaths, deltas } = await readDeltaFiles(projectRoot, specFolderPath);
++  const livingAtBase = new Map<string, string | null>();
++  for (const capability of deltas.keys()) {
++    const livingPath = `${config.paths.features}/${capability}/spec.md`;
++    livingAtBase.set(capability, await vcs.show(base, livingPath));
++  }
++
++  const scenarios = judgedScenarios(deltas, livingAtBase);
++  if (scenarios.length === 0) return { skipped: 'no_scenarios' };
++
++  const { patch, paths } = filterPatch(await vcs.patch(base), config.paths.openspecRoot);
++  const testPaths = await existingTestPaths(paths, projectRoot);
++  const resultPaths = await existingResultPaths(projectRoot, specFolderPath);
++
++  return { base, deltaPaths, scenarios, patch, testPaths, resultPaths };
++}
+diff --git a/src/watcher/validator-prompt.ts b/src/watcher/validator-prompt.ts
+new file mode 100644
+index 0000000..6a68286
+--- /dev/null
++++ b/src/watcher/validator-prompt.ts
+@@ -0,0 +1,61 @@
++import type { ValidatorInputs } from './validator-inputs.js';
++
++/** Where the validator run's files live, all project-relative. */
++export interface ValidatorPromptPaths {
++  readonly changeFolder: string;
++  readonly scenariosFile: string;
++  readonly patchFile: string;
++  readonly findingsFile: string;
++}
++
++const INTRO = [
++  'You are the validator for one osq change.',
++  'You judge whether the change does what its delta specs say.',
++  'You read code, tests, and specs but never edit them, and you never run git.',
++];
++
++const RULES = [
++  'Rules:',
++  '- Judge only the scenarios listed in the scenarios file.',
++  '- You may read any file in the repository, including tests the change did not touch.',
++  '- Do not run any build or test command.',
++  '- Report a finding only for one of these three problems:',
++  '  - no_code: no code meets the scenario.',
++  '  - no_test: no test checks its THEN.',
++  '  - passes_without_change: the scenario describes behavior the base did not have and its',
++  '    test would still pass on the base code.',
++  '- Report nothing about style, naming, or architecture.',
++];
++
++const FINDINGS_FORMAT = [
++  'Write your findings to the findings file as JSON:',
++  '{"findings": [{"kind": "scenario", "capability": "<capability>", "requirement": "<requirement>", "scenario": "<scenario>", "problem": "no_code", "detail": "<one sentence>"}]}',
++  'Write {"findings": []} when every scenario holds.',
++];
++
++function bulletList(title: string, values: readonly string[]): string[] {
++  if (values.length === 0) return [`${title} (none)`];
++  return [title, ...values.map((value) => `- ${value}`)];
++}
++
++/** The validator's whole prompt, naming every path and the file it must write. */
++export function buildValidatorPrompt(inputs: ValidatorInputs, paths: ValidatorPromptPaths): string {
++  return [
++    ...INTRO,
++    '',
++    `Change folder: ${paths.changeFolder}`,
++    ...bulletList('Delta specs:', inputs.deltaPaths),
++    `Scenarios to judge: ${paths.scenariosFile}`,
++    `Patch under review: ${paths.patchFile}`,
++    ...bulletList('Tests the change added or changed:', inputs.testPaths),
++    `Findings file: ${paths.findingsFile}`,
++    '',
++    ...RULES,
++    '',
++    'Executor claims (check them; do not start from them):',
++    ...inputs.resultPaths.map((resultPath) => `- ${resultPath}`),
++    '',
++    ...FINDINGS_FORMAT,
++    `CRITICAL: Before exiting, write ${paths.findingsFile}. Change no other file. Never run git.`,
++  ].join('\n');
++}
+diff --git a/tests/validator-inputs.test.ts b/tests/validator-inputs.test.ts
+new file mode 100644
+index 0000000..b3863de
+--- /dev/null
++++ b/tests/validator-inputs.test.ts
+@@ -0,0 +1,247 @@
++import assert from 'node:assert/strict';
++import { execFile } from 'node:child_process';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, describe, it } from 'node:test';
++import { promisify } from 'node:util';
++import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
++import { GitVcs } from '../src/core/vcs/git-vcs.js';
++import { NoVcs } from '../src/core/vcs/no-vcs.js';
++import { buildClaudeArgs } from '../src/harness/claude/claude-exec-args.js';
++import { buildPiArgs } from '../src/harness/pi/pi-args.js';
++import { buildExecutorPrompt } from '../src/harness/prompt.js';
++import type { SpawnTaskOptions } from '../src/harness/types.js';
++import { parseValidatorFindings } from '../src/watcher/validator-findings.js';
++import {
++  type ValidatorInputs,
++  formatScenariosFile,
++  judgedScenarios,
++  readValidatorInputs,
++} from '../src/watcher/validator-inputs.js';
++import { buildValidatorPrompt } from '../src/watcher/validator-prompt.js';
++
++const execFileAsync = promisify(execFile);
++const tmpDirs: string[] = [];
++afterEach(async () => {
++  for (const dir of tmpDirs.splice(0)) await fs.rm(dir, { recursive: true, force: true });
++});
++async function makeTempDir(prefix: string): Promise<string> {
++  const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
++  tmpDirs.push(dir);
++  return dir;
++}
++async function git(args: string[], cwd: string): Promise<string> {
++  const env = { ...process.env };
++  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'])
++    Reflect.deleteProperty(env, key);
++  const { stdout } = await execFileAsync('git', args, { cwd, env });
++  return stdout.trim();
++}
++
++/** One scenario block, as a delta or living spec writes it. */
++function scenario(name: string, when: string, then: string): string {
++  return `#### Scenario: ${name}\n- **WHEN** ${when}\n- **THEN** ${then}`;
++}
++
++const LIVING_SPEC = `# x Specification\n\n## Purpose\n\nTest capability.\n\n## Requirements\n\n### Requirement: Existing\nThe system SHALL exist.\n\n${scenario('Existing scenario', 'it runs', 'it works')}\n`;
++const NEW_DELTA = `# x\n\n## ADDED Requirements\n\n### Requirement: Added thing\nThe system SHALL do a new thing.\n\n${scenario('New scenario', 'it is new', 'it works')}\n`;
++const UNCHANGED_DELTA = `# x\n\n## MODIFIED Requirements\n\n### Requirement: Existing\nThe system SHALL exist.\n\n${scenario('Existing scenario', 'it runs', 'it works')}\n`;
++
++interface Repo {
++  root: string;
++  change: string;
++  vcs: GitVcs;
++  base: string;
++}
++
++/** A temporary repository with a living `x` spec and a change folder. */
++async function makeRepo(prefix: string, withBase: boolean): Promise<Repo> {
++  const root = await makeTempDir(prefix);
++  await git(['init', '-q', '-b', 'main'], root);
++  await git(['config', 'user.name', 'osq'], root);
++  await git(['config', 'user.email', 'osq@example.invalid'], root);
++  await fs.mkdir(path.join(root, 'openspec', 'specs', 'x'), { recursive: true });
++  await fs.writeFile(path.join(root, 'openspec', 'specs', 'x', 'spec.md'), LIVING_SPEC, 'utf8');
++  await fs.mkdir(path.join(root, 'src'), { recursive: true });
++  await fs.writeFile(path.join(root, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
++  await git(['add', '-A'], root);
++  await git(['commit', '-qm', 'base'], root);
++  const base = await git(['rev-parse', 'HEAD'], root);
++  const change = path.join(root, 'openspec', 'changes', '001-x');
++  await fs.mkdir(path.join(change, 'specs', 'x'), { recursive: true });
++  await fs.writeFile(path.join(change, 'specs', 'x', 'spec.md'), NEW_DELTA, 'utf8');
++  if (withBase) {
++    await fs.mkdir(path.join(change, '.run'), { recursive: true });
++    await fs.writeFile(path.join(change, '.run', 'base'), `${base}\n`, 'utf8');
++  }
++  return { root, change, vcs: new GitVcs(root, DEFAULT_CONFIG), base };
++}
++
++describe('validator inputs', () => {
++  it('judges only scenarios the living spec at the base lacks', () => {
++    const living = `# x\n\n## Requirements\n\n### Requirement: Behavior\nThe system SHALL behave.\n\n${scenario('Keep', 'it keeps', 'it holds')}\n`;
++    const delta = `# x\n\n## MODIFIED Requirements\n\n### Requirement: Behavior\nThe system SHALL behave better.\n\n${scenario('Keep', 'it keeps', 'it holds')}\n\n${scenario('Fresh', 'it is fresh', 'it is new')}\n`;
++    const judged = judgedScenarios(new Map([['x', delta]]), new Map([['x', living]]));
++    assert.deepEqual(
++      judged.map((scenario) => scenario.scenario),
++      ['Fresh'],
++    );
++  });
++
++  it('leaves spec files out of the patch and names existing test paths', async () => {
++    const repo = await makeRepo('osq-vi-patch-', true);
++    await fs.mkdir(path.join(repo.root, 'tests'), { recursive: true });
++    await fs.writeFile(path.join(repo.root, 'tests', 'a.test.ts'), 'export {};\n', 'utf8');
++    await fs.writeFile(path.join(repo.root, 'src', 'a.ts'), 'export const a = 2;\n', 'utf8');
++    await fs.writeFile(
++      path.join(repo.root, 'openspec', 'specs', 'x', 'spec.md'),
++      `${LIVING_SPEC}\n## Extra\n`,
++      'utf8',
++    );
++    const inputs = await readValidatorInputs(repo.root, repo.change, repo.vcs, DEFAULT_CONFIG);
++    assert.ok(!('skipped' in inputs));
++    if ('skipped' in inputs) return;
++    assert.equal(inputs.base, repo.base);
++    assert.ok(inputs.patch.includes('src/a.ts'));
++    assert.ok(!inputs.patch.includes('openspec/'));
++    assert.deepEqual(inputs.testPaths, ['tests/a.test.ts']);
++    assert.deepEqual(inputs.deltaPaths, ['openspec/changes/001-x/specs/x/spec.md']);
++    assert.deepEqual(
++      inputs.scenarios.map((scenario) => scenario.scenario),
++      ['New scenario'],
++    );
++    assert.ok(formatScenariosFile(inputs.scenarios).includes('## x: Added thing'));
++  });
++
++  it('skips with no_base when .run/base is missing', async () => {
++    const repo = await makeRepo('osq-vi-nobase-', false);
++    const inputs = await readValidatorInputs(repo.root, repo.change, repo.vcs, DEFAULT_CONFIG);
++    assert.deepEqual(inputs, { skipped: 'no_base' });
++  });
++
++  it('skips with no_base when git is off', async () => {
++    const repo = await makeRepo('osq-vi-novcs-', true);
++    const inputs = await readValidatorInputs(
++      repo.root,
++      repo.change,
++      new NoVcs('git not found'),
++      DEFAULT_CONFIG,
++    );
++    assert.deepEqual(inputs, { skipped: 'no_base' });
++  });
++
++  it('skips with no_scenarios when every scenario is unchanged', async () => {
++    const repo = await makeRepo('osq-vi-noscen-', true);
++    await fs.writeFile(path.join(repo.change, 'specs', 'x', 'spec.md'), UNCHANGED_DELTA, 'utf8');
++    const inputs = await readValidatorInputs(repo.root, repo.change, repo.vcs, DEFAULT_CONFIG);
++    assert.deepEqual(inputs, { skipped: 'no_scenarios' });
++  });
++});
++
++describe('validator prompt', () => {
++  const inputs: ValidatorInputs = {
++    base: 'abc123',
++    deltaPaths: ['openspec/changes/001-x/specs/x/spec.md'],
++    scenarios: [],
++    patch: 'diff --git a/src/a.ts b/src/a.ts\n',
++    testPaths: ['tests/a.test.ts'],
++    resultPaths: ['openspec/changes/001-x/.run/results/1.md'],
++  };
++  const paths = {
++    changeFolder: 'openspec/changes/001-x',
++    scenariosFile: 'openspec/changes/001-x/.run/validator/scenarios.md',
++    patchFile: 'openspec/changes/001-x/.run/validator/diff.patch',
++    findingsFile: 'openspec/changes/001-x/.run/validator/findings.json',
++  };
++
++  it('puts the claims heading after the paths and the result after it', () => {
++    const prompt = buildValidatorPrompt(inputs, paths);
++    const claims = prompt.indexOf('Executor claims (check them; do not start from them):');
++    assert.ok(claims > 0);
++    for (const before of [
++      inputs.deltaPaths[0],
++      paths.scenariosFile,
++      paths.patchFile,
++      inputs.testPaths[0],
++      paths.findingsFile,
++    ]) {
++      assert.ok(prompt.indexOf(before) < claims, before);
++    }
++    assert.ok(prompt.indexOf(inputs.resultPaths[0]) > claims);
++    const lines = prompt.split('\n');
++    assert.equal(
++      lines.at(-1),
++      `CRITICAL: Before exiting, write ${paths.findingsFile}. Change no other file. Never run git.`,
++    );
++    for (const problem of ['no_code', 'no_test', 'passes_without_change']) {
++      assert.ok(prompt.includes(problem));
++    }
++    assert.ok(prompt.includes('{"findings": []}'));
++  });
++});
++
++describe('validator findings', () => {
++  const finding = {
++    kind: 'scenario',
++    capability: ' x ',
++    requirement: ' r ',
++    scenario: ' s ',
++    problem: 'no_code',
++    detail: ' d ',
++  };
++
++  it('returns valid findings with their strings trimmed', () => {
++    const parsed = parseValidatorFindings(JSON.stringify({ findings: [finding] }));
++    assert.deepEqual(parsed, [
++      {
++        kind: 'scenario',
++        capability: 'x',
++        requirement: 'r',
++        scenario: 's',
++        problem: 'no_code',
++        detail: 'd',
++      },
++    ]);
++  });
++
++  it('returns null for an unknown problem', () => {
++    assert.equal(
++      parseValidatorFindings(JSON.stringify({ findings: [{ ...finding, problem: 'style' }] })),
++      null,
++    );
++  });
++
++  it('returns an empty list for no findings', () => {
++    assert.deepEqual(parseValidatorFindings('{"findings": []}'), []);
++  });
++
++  it('returns null when the text is not JSON', () => {
++    assert.equal(parseValidatorFindings('not json'), null);
++  });
++});
++
++describe('prompt override', () => {
++  const options: SpawnTaskOptions = {
++    projectRoot: '/tmp/project',
++    specFolderPath: '/tmp/project/openspec/changes/001-x',
++    taskNumber: 'validator',
++    taskTitle: 'validate',
++    verifyCommand: 'true',
++    scope: [],
++    entry: [],
++    skills: [],
++    tier: 'smart',
++    prompt: 'judge this',
++    config: DEFAULT_CONFIG,
++  };
++
++  it('returns the override unchanged from buildExecutorPrompt', () => {
++    assert.equal(buildExecutorPrompt(options), 'judge this');
++  });
++
++  it('delivers the override last in the claude and pi argv', () => {
++    assert.equal(buildClaudeArgs(options, DEFAULT_CONFIG).at(-1), 'judge this');
++    assert.equal(buildPiArgs(options, DEFAULT_CONFIG).at(-1), 'judge this');
++  });
++});

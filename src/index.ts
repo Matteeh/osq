@@ -30,6 +30,7 @@ export type {
   OsqUserConfig,
   PiConfig,
   QueueConfig,
+  ValidatorConfig,
 } from './core/foundation/config.js';
 export {
   CLAUDE_MINIMUM_VERSION,

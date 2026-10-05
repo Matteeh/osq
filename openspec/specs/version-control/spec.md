@@ -102,8 +102,9 @@ given message and author, leaving anything else staged as it was, or commit
 the index as it stands when given no paths, run the
 repository's hooks, and return the new commit. A commit that fails or exceeds
 `timeouts.gitCommitSeconds` SHALL fail with git's combined output. `patch`
-SHALL return a binary diff against HEAD of every change, untracked files
-included, built through a temporary index so the real index is unchanged.
+SHALL return a binary diff of every change, untracked files included, against
+HEAD, or against the commit `base` when one is given, built through a
+temporary index so the real index is unchanged.
 `discard` SHALL restore the given paths to HEAD in the index and the working
 tree, remove files under them that HEAD lacks, staged or untracked, and never
 remove ignored ones. Under `GitVcs`, given no paths, it SHALL return without
@@ -135,6 +136,10 @@ not hold. Under `NoVcs`, every write SHALL fail naming the reason git is off.
 #### Scenario: Patch with a new file
 - **WHEN** a worktree has a modified tracked file and a new untracked file
 - **THEN** `patch` returns a diff containing both, applying it to a clean copy reproduces them, and `indexDigest` is unchanged
+
+#### Scenario: Patch against a base
+- **WHEN** a repository has a commit after commit `B` changing `a.txt`, plus an uncommitted change to `b.txt` and an untracked `c.txt`
+- **THEN** `patch(B)` returns a diff holding all three files, `patch()` returns one holding `b.txt` and `c.txt` but not `a.txt`, and `indexDigest` is unchanged
 
 #### Scenario: Discard outside an osq worktree
 - **WHEN** `discard` runs in a checkout, or in a linked worktree on branch `feature/x`

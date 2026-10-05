@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:4f796ae0458c0b89be5815a80659305400814268721a4661f702ac8dadfbffa2
+build_stamp: 2f6d14d
+project_commit: 995fef5
+exit_code: 0
+scope_files:
+  decisions/010-validator-role.md: sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807
+  decisions/README.md: sha256:de1ea95897f4ea0b98794ddb98ca6c349cd65233d43844d8a18d8df6c3dfec2d
+  src/core/foundation/config-limits.ts: sha256:0ce8bbda9024296c93a2599c96995b3d290304e19c39d3fb6f43c2b408cf66d8
+  src/core/foundation/config-user.ts: sha256:51e97bc99609e9d82fdd36f6389c171abe2a4fd3c57ece97962b0e1e7723dd78
+  src/core/foundation/config-validator.ts: sha256:e7665e3d1b379ba028cb569969a952e0acd81fe199558d4f79829b44768e63ee
+  src/core/foundation/config.ts: sha256:c8ae999dd5812954086b75332fcd5918f8471f4204df08c033a1e4c7ad4b1e25
+  src/index.ts: sha256:67cc47484be0abb6cd831a6d3b3208d6194e25a0e65a47447c9ae3625b5df5a9
+  tests/validator-config.test.ts: sha256:5f4b902859024ce3893a3f48e7e25e0d5003b04ab77e1d418a787179776d26fa
+original_scope_hash: sha256:92c4f96683514d751d74e0c4eed872146263b1afe65bf141099168a75b3d51df
+recertified_at: 2026-10-05T13:47:12.024Z
+recertification_count: 1
+---
+2026-10-04T20:43:18.047Z

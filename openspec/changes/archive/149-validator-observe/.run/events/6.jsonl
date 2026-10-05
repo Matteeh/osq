@@ -1,0 +1,129 @@
+{"type":"verify_ran","timestamp":"2026-10-05T13:55:01.080Z","data":{"command":"node --import tsx --test tests/show-validation.test.ts","exitCode":1,"duration":0.04,"output":"Could not find 'tests/show-validation.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/show-validation.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-05T13:55:01.892Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":586,"repoFiles":2385,"repoLines":272158,"importFanIn":7,"proposalWords":2234,"taskWords":238,"deltaRequirements":13,"deltaScenarios":50}}
+{"type":"instructions_changed","timestamp":"2026-10-05T13:55:01.934Z","data":{"changed":["ADR 010 changed"]}}
+{"type":"started","timestamp":"2026-10-05T13:55:02.157Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"939d133","pid":96293,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"9cdbbe5"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:04.101Z","data":{"promptTokens":4509,"candidateTokens":169,"totalTokens":8006,"cachedTokens":3328,"reasoningTokens":15,"cost":0.0015754679999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:04.102Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/tasks/6.md"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:04.103Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/proposal.md"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:05.906Z","data":{"promptTokens":4342,"candidateTokens":319,"totalTokens":12597,"cachedTokens":7936,"reasoningTokens":37,"cost":0.001733016,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:05.907Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/specs/status-inspecti"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:05.908Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:05.909Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:05.909Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:07.910Z","data":{"promptTokens":9192,"candidateTokens":368,"totalTokens":22104,"cachedTokens":12544,"reasoningTokens":94,"cost":0.0032744639999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:07.910Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:07.912Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:07.913Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:07.914Z","data":{"tool":"read","summary":"src/core/status/show-task-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:09.469Z","data":{"promptTokens":6432,"candidateTokens":225,"totalTokens":28673,"cachedTokens":22016,"reasoningTokens":47,"cost":0.002331696,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:09.470Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:09.471Z","data":{"tool":"read","summary":"tests/show-model.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:11.553Z","data":{"promptTokens":1825,"candidateTokens":270,"totalTokens":30767,"cachedTokens":28672,"reasoningTokens":61,"cost":0.001043532,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:11.553Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/.run/results/5.md"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:11.554Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:13.406Z","data":{"promptTokens":2727,"candidateTokens":145,"totalTokens":33592,"cachedTokens":30720,"reasoningTokens":46,"cost":0.00117642,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:13.407Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:15.626Z","data":{"promptTokens":5568,"candidateTokens":275,"totalTokens":39379,"cachedTokens":33536,"reasoningTokens":117,"cost":0.002201616,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:15.627Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:15.627Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:18.892Z","data":{"promptTokens":226,"candidateTokens":670,"totalTokens":40192,"cachedTokens":39296,"reasoningTokens":493,"cost":0.0011075759999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:18.893Z","data":{"tool":"read","summary":"src/watcher/validator.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:18.893Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:29.519Z","data":{"promptTokens":2393,"candidateTokens":2285,"totalTokens":44870,"cachedTokens":40192,"reasoningTokens":2017,"cost":0.0037010520000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:29.520Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:29.521Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T13:55:47.304Z","data":{"text":"Now I have a clear picture. Let me check a couple more things before implementing."}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:47.304Z","data":{"promptTokens":367,"candidateTokens":4295,"totalTokens":49462,"cachedTokens":44800,"reasoningTokens":4037,"cost":0.0055328999999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:47.306Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:47.307Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:49.616Z","data":{"promptTokens":1298,"candidateTokens":221,"totalTokens":50927,"cachedTokens":49408,"reasoningTokens":148,"cost":0.0009510479999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:49.618Z","data":{"tool":"read","summary":"tests/show-text.test.ts"}}
+{"type":"text","timestamp":"2026-10-05T13:55:52.770Z","data":{"text":"Now let me implement. First the new `buildValidation` module:"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:52.770Z","data":{"promptTokens":373,"candidateTokens":498,"totalTokens":51687,"cachedTokens":50816,"reasoningTokens":151,"cost":0.0010143959999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:52.772Z","data":{"tool":"write","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:55:52.773Z","data":{"path":"src/core/status/show-model-validation.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:55.990Z","data":{"promptTokens":146,"candidateTokens":711,"totalTokens":52441,"cachedTokens":51584,"reasoningTokens":104,"cost":0.001206504,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:55.991Z","data":{"tool":"write","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:55:55.993Z","data":{"path":"src/core/status/show-validation-lines.ts"}}
+{"type":"text","timestamp":"2026-10-05T13:55:58.037Z","data":{"text":"Now update `show-types.ts`:"}}
+{"type":"tokens","timestamp":"2026-10-05T13:55:58.037Z","data":{"promptTokens":261,"candidateTokens":285,"totalTokens":52770,"cachedTokens":52224,"reasoningTokens":11,"cost":0.000733644,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:55:58.040Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:55:58.042Z","data":{"path":"src/core/status/show-types.ts"}}
+{"type":"text","timestamp":"2026-10-05T13:56:00.345Z","data":{"text":"Now update `show-model.ts` to build and attach validation:"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:00.345Z","data":{"promptTokens":209,"candidateTokens":323,"totalTokens":53140,"cachedTokens":52608,"reasoningTokens":0,"cost":0.000765948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:00.347Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:56:00.348Z","data":{"path":"src/core/status/show-model.ts"}}
+{"type":"text","timestamp":"2026-10-05T13:56:02.210Z","data":{"text":"Now update `show-text.ts` to place validation lines right after the task section:"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:02.210Z","data":{"promptTokens":195,"candidateTokens":202,"totalTokens":53389,"cachedTokens":52992,"reasoningTokens":0,"cost":0.000618852,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:02.211Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:56:02.212Z","data":{"path":"src/core/status/show-text.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:04.517Z","data":{"promptTokens":188,"candidateTokens":157,"totalTokens":53593,"cachedTokens":53248,"reasoningTokens":11,"cost":0.000564288,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:04.518Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:12.229Z","data":{"promptTokens":2058,"candidateTokens":130,"totalTokens":55692,"cachedTokens":53504,"reasoningTokens":45,"cost":0.0010944239999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:12.230Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:13.899Z","data":{"promptTokens":501,"candidateTokens":88,"totalTokens":56269,"cachedTokens":55680,"reasoningTokens":0,"cost":0.0005899799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:13.900Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T13:56:38.708Z","data":{"text":"Now the test file:"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:38.708Z","data":{"promptTokens":144,"candidateTokens":5616,"totalTokens":61952,"cachedTokens":56192,"reasoningTokens":2912,"cost":0.007119552,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:38.710Z","data":{"tool":"write","summary":"tests"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:56:38.711Z","data":{"path":"tests/show-validation.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:42.050Z","data":{"promptTokens":169,"candidateTokens":733,"totalTokens":62726,"cachedTokens":61824,"reasoningTokens":81,"cost":0.001301244,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:42.052Z","data":{"tool":"edit","summary":"tests"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:56:42.053Z","data":{"path":"tests/show-validation.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:43.607Z","data":{"promptTokens":180,"candidateTokens":94,"totalTokens":62866,"cachedTokens":62592,"reasoningTokens":0,"cost":0.000542352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:43.609Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:46.579Z","data":{"promptTokens":228,"candidateTokens":228,"totalTokens":63304,"cachedTokens":62848,"reasoningTokens":92,"cost":0.0007190879999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:46.580Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:49.904Z","data":{"promptTokens":510,"candidateTokens":198,"totalTokens":63940,"cachedTokens":63232,"reasoningTokens":69,"cost":0.0007699919999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:49.905Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:52.091Z","data":{"promptTokens":619,"candidateTokens":228,"totalTokens":64719,"cachedTokens":63872,"reasoningTokens":97,"cost":0.000842532,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:52.093Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:54.036Z","data":{"promptTokens":233,"candidateTokens":129,"totalTokens":64874,"cachedTokens":64512,"reasoningTokens":0,"cost":0.000611772,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:54.037Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:56.305Z","data":{"promptTokens":259,"candidateTokens":166,"totalTokens":65065,"cachedTokens":64640,"reasoningTokens":23,"cost":0.0006647399999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:56.306Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:56.307Z","data":{"tool":"read","summary":"src/core/status/show-model-validation.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:56:58.047Z","data":{"promptTokens":852,"candidateTokens":122,"totalTokens":65998,"cachedTokens":65024,"reasoningTokens":28,"cost":0.0007921439999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:56:58.047Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:57:00.870Z","data":{"promptTokens":257,"candidateTokens":200,"totalTokens":66377,"cachedTokens":65920,"reasoningTokens":114,"cost":0.00071262,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:57:00.871Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:19.646Z","data":{"promptTokens":1114,"candidateTokens":150,"totalTokens":67568,"cachedTokens":66304,"reasoningTokens":60,"cost":0.000912024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:19.649Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:22.050Z","data":{"promptTokens":2330,"candidateTokens":250,"totalTokens":70036,"cachedTokens":67456,"reasoningTokens":121,"cost":0.0014037359999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:22.050Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:25.518Z","data":{"promptTokens":498,"candidateTokens":532,"totalTokens":71046,"cachedTokens":70016,"reasoningTokens":356,"cost":0.001207896,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:25.519Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:32.326Z","data":{"promptTokens":1033,"candidateTokens":1323,"totalTokens":73396,"cachedTokens":71040,"reasoningTokens":1134,"cost":0.00232374,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:32.327Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:34.916Z","data":{"promptTokens":651,"candidateTokens":354,"totalTokens":74349,"cachedTokens":73344,"reasoningTokens":235,"cost":0.001060164,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:34.917Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T13:58:55.659Z","data":{"text":"The import-graph architecture test forbids `src/core` importing `src/harness`. Task 7's acceptance confirms the pattern (\"without importing `src/harness/`\"). I must define the type locally in core. Let me check how core handles event payloads and then adjust."}}
+{"type":"tokens","timestamp":"2026-10-05T13:58:55.659Z","data":{"promptTokens":2232,"candidateTokens":4339,"totalTokens":80811,"cachedTokens":74240,"reasoningTokens":4140,"cost":0.0063218400000000004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:55.663Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tool","timestamp":"2026-10-05T13:58:55.664Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:59:00.550Z","data":{"promptTokens":444,"candidateTokens":1171,"totalTokens":82383,"cachedTokens":80768,"reasoningTokens":574,"cost":0.0020230079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:59:00.551Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:59:00.552Z","data":{"path":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:59:03.076Z","data":{"promptTokens":254,"candidateTokens":302,"totalTokens":82732,"cachedTokens":82176,"reasoningTokens":21,"cost":0.0009316559999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:59:03.077Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"tool","timestamp":"2026-10-05T13:59:03.078Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:59:03.079Z","data":{"path":"src/core/status/show-model-validation.ts"}}
+{"type":"file_changed","timestamp":"2026-10-05T13:59:03.079Z","data":{"path":"src/core/status/show-validation-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T13:59:05.241Z","data":{"promptTokens":137,"candidateTokens":217,"totalTokens":83042,"cachedTokens":82688,"reasoningTokens":96,"cost":0.000797628,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:59:05.241Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T13:59:15.506Z","data":{"promptTokens":466,"candidateTokens":450,"totalTokens":83860,"cachedTokens":82944,"reasoningTokens":364,"cost":0.001177464,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T13:59:15.508Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T14:00:41.354Z","data":{"text":"`pnpm verify` passed. Let me confirm the new modules stay within budget and review the final diffs."}}
+{"type":"tokens","timestamp":"2026-10-05T14:00:41.354Z","data":{"promptTokens":546,"candidateTokens":1088,"totalTokens":85474,"cachedTokens":83840,"reasoningTokens":880,"cost":0.00197244,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:00:41.357Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T14:00:45.890Z","data":{"text":"All checks pass. Now I'll write the required result file."}}
+{"type":"tokens","timestamp":"2026-10-05T14:00:45.890Z","data":{"promptTokens":514,"candidateTokens":848,"totalTokens":86738,"cachedTokens":85376,"reasoningTokens":76,"cost":0.001684056,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:00:45.892Z","data":{"tool":"write","summary":"opens"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:00:45.896Z","data":{"path":"openspec/changes/149-validator-observe/.run/results/6.md"}}
+{"type":"text","timestamp":"2026-10-05T14:00:49.792Z","data":{"text":"Done. Summary of the work:\n\n**Implemented** the `osq show` validation rendering:\n\n- `src/core/status/show-model-validation.ts` — new `buildValidation(timeline)` picks the latest `validator_ran` event on the change stream by timestamp, or `undefined`. No `node:fs`.\n- `src/core/status/show-validation-lines.ts` — new `validationLines(details)` renders the blank line + headline, finding lines with the three problem wordings, the `Restored:` line, and `not_run (<reason>)`.\n- `src/core/status/show-types.ts` — `SpecDetails.validation?`.\n- `src/core/status/show-model.ts` — `withNextStep` attaches `validation` for archived changes only when an event exists.\n- `src/core/status/show-text.ts` — validation lines placed right after the task section.\n- `src/core/status/show-output.ts` untouched, so JSON keeps `digest` last.\n\n**Tests**: `tests/show-validation.test.ts` covers all three spec scenarios plus latest-by-timestamp, problem wording, restored paths, and no-file reads.\n\n**Verification**: `node --import tsx --test tests/show-validation.test.ts` (8 pass) and `pnpm verify` (full typecheck, build, all tests, lint) both pass.\n\n**One deviation** (documented in the result): the acceptance asked to type `validation` with `ValidatorRanEventData` from `src/harness/types.ts`, but the existing `tests/import-graph.test.ts` forbids `src/core` importing `src/harness` (\"core stays inside core\"). I defined a structurally identical core-local type in `show-types.ts` to keep every existing test passing unchanged; task 7's acceptance confirms this pattern."}}
+{"type":"tokens","timestamp":"2026-10-05T14:00:49.792Z","data":{"promptTokens":135,"candidateTokens":597,"totalTokens":87388,"cachedTokens":86656,"reasoningTokens":221,"cost":0.001276836,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-05T14:00:49.847Z","data":{"exitCode":0,"pid":96293,"timedOut":false,"elapsedSeconds":347.7}}
+{"type":"verify_ran","timestamp":"2026-10-05T14:00:50.668Z","data":{"command":"node --import tsx --test tests/show-validation.test.ts","exitCode":0,"duration":0.47,"output":"▶ osq show validation\n  ✔ Findings shown (29.883127ms)\n  ✔ Run that never started shown (12.431801ms)\n  ✔ No validator event (10.728235ms)\n  ✔ takes the latest event by timestamp and ignores task streams (10.939789ms)\n  ✔ words every problem and prints restored paths (0.742363ms)\n  ✔ rounds a failed run to whole seconds without findings (0.652153ms)\n  ✔ reads no files in the new validation modules (1.401009ms)\n  ✔ places validation after the task section in the plain text renderer (10.112383ms)\n✔ osq show validation (78.165699ms)\nℹ tests 8\nℹ suites 1\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 408.535297\n"}}
+{"type":"measures","timestamp":"2026-10-05T14:02:09.209Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":586,"repoFiles":2385,"repoLines":272158,"importFanIn":7,"proposalWords":2234,"taskWords":238,"deltaRequirements":13,"deltaScenarios":50,"changedFiles":6,"changedLines":414,"scopeHashes":{"src/core/status/show-model-validation.ts":{"before":null,"after":"sha256:35ad03a27ea052e946530bfab21041f7c148ad4183882525593959c581392aa3"},"src/core/status/show-model.ts":{"before":"sha256:bcf1d4fa62542342b9db5bf503de88fbc1b3c9c23326a4d2992d39ddc5d5e03c","after":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe"},"src/core/status/show-text.ts":{"before":"sha256:df47136b96a900e48727fb3afc30d189e54ef718add7f12733f79a55801b3a2d","after":"sha256:50905c1d1dc96cd78cd5082b9fe139c6a7dd0cb344786a273e5c8b1824d53dfb"},"src/core/status/show-types.ts":{"before":"sha256:f7d72926e9ff72983aa5521a9fb941f9d34dfe8c847cd15088d70926faa2afdf","after":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989"},"src/core/status/show-validation-lines.ts":{"before":null,"after":"sha256:34b9a1aa81f0137697f2dec7cdf54df0de19f5331278ec55d39c8f35c1eb368b"},"tests/show-validation.test.ts":{"before":null,"after":"sha256:f5cf015e4c08c4f5d3556ac8825730168156586f2218c7a1ef271fe42b5250bd"}}}}
+{"type":"done","timestamp":"2026-10-05T14:02:09.216Z","data":{"task":"6"}}
+{"type":"verify_ran","timestamp":"2026-10-05T16:43:51.396Z","data":{"command":"node --import tsx --test tests/show-validation.test.ts","exitCode":0,"duration":0.7,"output":"▶ osq show validation\n  ✔ Findings shown (66.546403ms)\n  ✔ Run that never started shown (27.139234ms)\n  ✔ No validator event (25.266679ms)\n  ✔ takes the latest event by timestamp and ignores task streams (32.579635ms)\n  ✔ words every problem and prints restored paths (4.630613ms)\n  ✔ rounds a failed run to whole seconds without findings (2.547892ms)\n  ✔ reads no files in the new validation modules (4.279851ms)\n  ✔ places validation after the task section in the plain text renderer (22.292111ms)\n✔ osq show validation (189.153219ms)\nℹ tests 8\nℹ suites 1\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 648.922991\n"}}

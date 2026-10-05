@@ -87,6 +87,7 @@ export interface Vcs {
   stage(paths: readonly string[]): Promise<void>;
   /** Whether `ancestor` is `descendant` or one of its ancestors. */
   isAncestor(ancestor: string, descendant: string): Promise<boolean>;
-  patch(): Promise<string>;
+  /** A binary diff of every change against HEAD, or against `base` when given. */
+  patch(base?: string): Promise<string>;
   discard(paths: readonly string[]): Promise<void>;
 }

@@ -10,6 +10,37 @@ export interface TimelineEvent {
   data?: Record<string, unknown>;
 }
 
+/** The three problems a validator finding can name. */
+export type ValidatorProblem = 'no_code' | 'no_test' | 'passes_without_change';
+
+/** One scenario problem the validator reports. */
+export interface ValidatorFinding {
+  readonly kind: 'scenario';
+  readonly capability: string;
+  readonly requirement: string;
+  readonly scenario: string;
+  readonly problem: ValidatorProblem;
+  readonly detail: string;
+}
+
+/**
+ * The change-level `validator_ran` event data. It mirrors the emitted payload
+ * so status inspection stays inside `src/core`, which the import graph
+ * requires; it is structurally identical to the harness payload.
+ */
+export interface ValidatorRanEventData {
+  readonly outcome: 'validated' | 'failed' | 'timed_out' | 'unreadable' | 'not_run';
+  readonly harness: string;
+  readonly model: string;
+  readonly duration: number;
+  readonly exitCode: number | null;
+  readonly scenarios: number;
+  readonly findings: readonly ValidatorFinding[];
+  readonly restored: readonly string[];
+  readonly reason?: 'no_base' | 'no_scenarios';
+  readonly output?: string;
+}
+
 /** One differing path paired with its recorded later-task attribution. */
 export interface RecertificationAttribution {
   path: string;
@@ -122,6 +153,8 @@ export interface SpecDetails {
   next?: NextStep;
   /** Present only for an archived change whose events hold verification rows. */
   verification?: VerificationHistory;
+  /** The data of an archived change's latest `validator_ran` event; absent without one. */
+  validation?: ValidatorRanEventData;
   /** The proposal's `### After landing` steps; absent when empty. */
   afterLanding?: string;
 }

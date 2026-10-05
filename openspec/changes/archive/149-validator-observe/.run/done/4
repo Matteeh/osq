@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b44ffbbcfe900d15ff9dee26684260a24306095f109233b5f4ae2db409e1de9e"
+build_stamp: "9cdbbe5"
+project_commit: "4211863"
+exit_code: 0
+scope_files: {"README.md":"sha256:1e0ebb433eeeecbcd29bebdd1ac531314cb4d8f159b29b6556e173473d058841","decisions/010-validator-role.md":"sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807","src/harness/prompt.ts":"sha256:54e243d49ecd559d37de0d201d9df45d52e189f6993b6dff9361bc0270a2a7e1","src/harness/types.ts":"sha256:4269a97311d384eb6b4932fe6034e748862dab1ace7f3f24e3d1f693b38d410d","src/watcher/validator-findings.ts":"sha256:cbfe3d0ebc2f80c93ce96b1e02af93b8a794ac55eb4471539973277143afbe33","src/watcher/validator-inputs.ts":"sha256:17800e56ded6a1dcb7798b7871c041199c2cd912bccb6101e906fdd9ae3c10ff","src/watcher/validator-prompt.ts":"sha256:82ee6b7d9e7535de4397cf8e2e5c9ba334f2f3148341d88952253e4f8c8434ac","tests/validator-inputs.test.ts":"sha256:458ff4ef4221b3694832d08e789a205157f89a4699065d5c2ca87f82eb0739b2"}
+---
+2026-10-05T13:47:11.136Z

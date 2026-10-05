@@ -1,0 +1,111 @@
+{"type":"verify_ran","timestamp":"2026-10-05T14:02:10.176Z","data":{"command":"node --import tsx --test tests/report-validation.test.ts","exitCode":1,"duration":0.03,"output":"Could not find 'tests/report-validation.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/report-validation.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-05T14:02:10.978Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":2400,"repoFiles":2388,"repoLines":272572,"importFanIn":8,"proposalWords":2234,"taskWords":231,"deltaRequirements":13,"deltaScenarios":50}}
+{"type":"instructions_changed","timestamp":"2026-10-05T14:02:11.017Z","data":{"changed":["ADR 010 changed"]}}
+{"type":"started","timestamp":"2026-10-05T14:02:11.232Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.2.3","attempt":1,"projectCommit":"0e392b4","pid":83854,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.2.3","commit":"9cdbbe5"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:12.786Z","data":{"promptTokens":4483,"candidateTokens":169,"totalTokens":7980,"cachedTokens":3328,"reasoningTokens":15,"cost":0.001567668,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:12.787Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/tasks/7.md"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:12.788Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/proposal.md"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:14.592Z","data":{"promptTokens":4278,"candidateTokens":247,"totalTokens":12461,"cachedTokens":7936,"reasoningTokens":24,"cost":0.001627416,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:14.593Z","data":{"tool":"read","summary":"openspec/changes/149-validator-observe/specs/metrics-and-rep"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:14.594Z","data":{"tool":"read","summary":"src/core/report/report-mutation.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:14.594Z","data":{"tool":"read","summary":"src/core/report/stream-reads.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:16.037Z","data":{"promptTokens":4387,"candidateTokens":239,"totalTokens":17042,"cachedTokens":12416,"reasoningTokens":33,"cost":0.001677396,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:16.038Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:16.038Z","data":{"tool":"read","summary":"src/cli/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:16.039Z","data":{"tool":"read","summary":"src/core/report/report-events.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:17.642Z","data":{"promptTokens":6626,"candidateTokens":261,"totalTokens":23911,"cachedTokens":17024,"reasoningTokens":37,"cost":0.0024031440000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:17.643Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:17.643Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:19.448Z","data":{"promptTokens":665,"candidateTokens":208,"totalTokens":24681,"cachedTokens":23808,"reasoningTokens":0,"cost":0.000591948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:19.449Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:19.450Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:19.451Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:21.686Z","data":{"promptTokens":3515,"candidateTokens":259,"totalTokens":28350,"cachedTokens":24576,"reasoningTokens":60,"cost":0.0015127559999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:21.687Z","data":{"tool":"read","summary":"src/cli/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:21.688Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:23.506Z","data":{"promptTokens":1074,"candidateTokens":206,"totalTokens":29568,"cachedTokens":28288,"reasoningTokens":42,"cost":0.0007391279999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:23.506Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:23.508Z","data":{"tool":"read","summary":"src/core/status/show-model-validation.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:25.030Z","data":{"promptTokens":365,"candidateTokens":174,"totalTokens":30107,"cachedTokens":29568,"reasoningTokens":17,"cost":0.000495708,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:25.031Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:25.032Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:26.810Z","data":{"promptTokens":778,"candidateTokens":178,"totalTokens":31036,"cachedTokens":30080,"reasoningTokens":37,"cost":0.0006274799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:26.811Z","data":{"tool":"read","summary":"tests/mutation-report.test.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:26.811Z","data":{"tool":"read","summary":"tests/report-reads-once.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:29.096Z","data":{"promptTokens":3065,"candidateTokens":269,"totalTokens":34310,"cachedTokens":30976,"reasoningTokens":194,"cost":0.001428156,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:29.097Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:32.571Z","data":{"promptTokens":2262,"candidateTokens":541,"totalTokens":37107,"cachedTokens":34304,"reasoningTokens":401,"cost":0.0015336240000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:32.572Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:35.321Z","data":{"promptTokens":877,"candidateTokens":359,"totalTokens":38228,"cachedTokens":36992,"reasoningTokens":189,"cost":0.0009158519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:35.322Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:35.323Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:43.718Z","data":{"promptTokens":2009,"candidateTokens":1757,"totalTokens":41910,"cachedTokens":38144,"reasoningTokens":1582,"cost":0.0029399639999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:43.719Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:43.720Z","data":{"tool":"read","summary":"src/core/report/stream-index.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:46.514Z","data":{"promptTokens":1269,"candidateTokens":378,"totalTokens":43503,"cachedTokens":41856,"reasoningTokens":212,"cost":0.001085436,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:46.515Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:46.516Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:48.735Z","data":{"promptTokens":747,"candidateTokens":227,"totalTokens":44366,"cachedTokens":43392,"reasoningTokens":68,"cost":0.0007568519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:48.736Z","data":{"tool":"read","summary":"tests/report-scope-regressions.test.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:48.737Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:50.694Z","data":{"promptTokens":1445,"candidateTokens":102,"totalTokens":45835,"cachedTokens":44288,"reasoningTokens":25,"cost":0.000821628,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:50.694Z","data":{"tool":"read","summary":"tests/report-scope-regressions.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:02:55.483Z","data":{"promptTokens":1123,"candidateTokens":808,"totalTokens":47755,"cachedTokens":45824,"reasoningTokens":617,"cost":0.001581444,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:55.484Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:02:55.485Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:03.658Z","data":{"promptTokens":1012,"candidateTokens":1860,"totalTokens":50616,"cachedTokens":47744,"reasoningTokens":1677,"cost":0.002822064,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:03.659Z","data":{"tool":"read","summary":"src/core/status/state.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:03.660Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:06.470Z","data":{"promptTokens":814,"candidateTokens":380,"totalTokens":51754,"cachedTokens":50560,"reasoningTokens":240,"cost":0.0010035600000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:06.471Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:06.472Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:10.853Z","data":{"promptTokens":319,"candidateTokens":1131,"totalTokens":53162,"cachedTokens":51712,"reasoningTokens":67,"cost":0.001763172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:10.854Z","data":{"tool":"write","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:03:10.855Z","data":{"path":"src/core/report/report-validation.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:13.983Z","data":{"promptTokens":213,"candidateTokens":724,"totalTokens":53929,"cachedTokens":52992,"reasoningTokens":25,"cost":0.0012506519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:13.984Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:03:13.994Z","data":{"path":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:16.754Z","data":{"promptTokens":216,"candidateTokens":341,"totalTokens":54317,"cachedTokens":53760,"reasoningTokens":112,"cost":0.00079656,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:16.755Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:03:16.757Z","data":{"path":"src/cli/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:19.336Z","data":{"promptTokens":219,"candidateTokens":451,"totalTokens":54814,"cachedTokens":54144,"reasoningTokens":352,"cost":0.000931764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:19.338Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:22.392Z","data":{"promptTokens":203,"candidateTokens":442,"totalTokens":55429,"cachedTokens":54784,"reasoningTokens":274,"cost":0.000920004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:22.393Z","data":{"tool":"edit","summary":"src/c"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:03:22.396Z","data":{"path":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:24.168Z","data":{"promptTokens":180,"candidateTokens":121,"totalTokens":55597,"cachedTokens":55296,"reasoningTokens":46,"cost":0.0005309760000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:24.169Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:28.704Z","data":{"promptTokens":377,"candidateTokens":790,"totalTokens":56719,"cachedTokens":55552,"reasoningTokens":587,"cost":0.0013944119999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:28.705Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:28.706Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:38.787Z","data":{"promptTokens":395,"candidateTokens":2928,"totalTokens":60027,"cachedTokens":56704,"reasoningTokens":527,"cost":0.003972324,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:38.788Z","data":{"tool":"write","summary":"tests"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:03:38.789Z","data":{"path":"tests/report-validation.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:40.575Z","data":{"promptTokens":165,"candidateTokens":101,"totalTokens":60170,"cachedTokens":59904,"reasoningTokens":6,"cost":0.000530124,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:40.577Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:43.283Z","data":{"promptTokens":205,"candidateTokens":188,"totalTokens":60553,"cachedTokens":60160,"reasoningTokens":44,"cost":0.00064806,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:43.284Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:03:46.178Z","data":{"promptTokens":545,"candidateTokens":140,"totalTokens":61229,"cachedTokens":60544,"reasoningTokens":54,"cost":0.0006947640000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:03:46.179Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:05:07.368Z","data":{"promptTokens":827,"candidateTokens":254,"totalTokens":62265,"cachedTokens":61184,"reasoningTokens":138,"cost":0.0009200040000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:05:07.369Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:05:09.429Z","data":{"promptTokens":211,"candidateTokens":111,"totalTokens":62402,"cachedTokens":62080,"reasoningTokens":16,"cost":0.00056898,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:05:09.430Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:05:12.244Z","data":{"promptTokens":257,"candidateTokens":86,"totalTokens":62679,"cachedTokens":62336,"reasoningTokens":0,"cost":0.000554316,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:05:12.245Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:06:32.968Z","data":{"promptTokens":772,"candidateTokens":291,"totalTokens":63655,"cachedTokens":62592,"reasoningTokens":161,"cost":0.0009563519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:06:32.969Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"tokens","timestamp":"2026-10-05T14:07:52.790Z","data":{"promptTokens":141,"candidateTokens":137,"totalTokens":63894,"cachedTokens":63616,"reasoningTokens":61,"cost":0.0005883959999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:07:52.792Z","data":{"tool":"read","summary":"src/core/report/report-validation.ts"}}
+{"type":"tokens","timestamp":"2026-10-05T14:07:58.836Z","data":{"promptTokens":1024,"candidateTokens":1242,"totalTokens":66138,"cachedTokens":63872,"reasoningTokens":810,"cost":0.0021808319999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:07:58.837Z","data":{"tool":"write","summary":"openspec/changes/149-validator-observe/.run/results/7.md"}}
+{"type":"file_changed","timestamp":"2026-10-05T14:07:58.839Z","data":{"path":"openspec/changes/149-validator-observe/.run/results/7.md"}}
+{"type":"tokens","timestamp":"2026-10-05T14:08:01.192Z","data":{"promptTokens":251,"candidateTokens":270,"totalTokens":66441,"cachedTokens":65920,"reasoningTokens":154,"cost":0.0007948199999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-05T14:08:01.193Z","data":{"tool":"bash","summary":"cd . &&"}}
+{"type":"text","timestamp":"2026-10-05T14:08:03.423Z","data":{"text":"Task complete.\n\nSummary:\n- Added `src/core/report/report-validation.ts` with `collectValidation` / `formatValidation`, reading `change.jsonl` through the shared reader, latest `validator_ran` per archived change, findings counted only for `validated`.\n- Wired `validation` into `MetricsReport`, `buildMetricsReport`, `formatMetricsReport` (after `Mutation:`), and `toStableMetrics`.\n- Added `tests/report-validation.test.ts` covering all three spec scenarios plus edge cases.\n- Task verify passes; full `pnpm verify` (typechecks, build, all tests, lint) exits 0.\n- Wrote `openspec/changes/149-validator-observe/.run/results/7.md`."}}
+{"type":"tokens","timestamp":"2026-10-05T14:08:03.423Z","data":{"promptTokens":228,"candidateTokens":158,"totalTokens":66690,"cachedTokens":66304,"reasoningTokens":0,"cost":0.000655824,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-05T14:08:03.454Z","data":{"exitCode":0,"pid":83854,"timedOut":false,"elapsedSeconds":352.2}}
+{"type":"verify_ran","timestamp":"2026-10-05T14:08:04.270Z","data":{"command":"node --import tsx --test tests/report-validation.test.ts","exitCode":0,"duration":0.55,"output":"▶ report validation\n  ✔ returns undefined and leaves the report unchanged when no change ran a validator (78.688803ms)\n  ✔ counts two validated changes and one failed in folder name order (90.722057ms)\n  ✔ takes the latest event per change, regardless of order in the stream (19.621036ms)\n  ✔ counts findings only for validated runs (17.03897ms)\n  ✔ ignores malformed validator events and changes without a change stream (16.050038ms)\n  ✔ prints the Validation section after the Mutation section (15.141935ms)\n✔ report validation (238.545379ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 469.954927\n"}}
+{"type":"measures","timestamp":"2026-10-05T14:09:21.330Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":2400,"repoFiles":2388,"repoLines":272572,"importFanIn":8,"proposalWords":2234,"taskWords":231,"deltaRequirements":13,"deltaScenarios":50,"changedFiles":4,"changedLines":397,"scopeHashes":{"src/cli/report.ts":{"before":"sha256:517138e713ddf39fb129327c8cbc397825ddbd0860a5202d8067a53e79ef4cee","after":"sha256:acd43f29dfa7166befb16e253113f127d16ced8e03d10c691d2def2c6a889b3a"},"src/core/report/report-validation.ts":{"before":null,"after":"sha256:7afe9157bcea1caa33a643669da8dc4b87375598ccb6e72cea66f40ec4a7bf2e"},"src/core/report/report.ts":{"before":"sha256:d9f418f191a76163d830885f098bf9fce3f0d8deae892037896ffa6ef7ae650c","after":"sha256:92641358bd7c534917dce73f3dbac1470b47d8c888ebe129ea9166a6101b2352"},"tests/report-validation.test.ts":{"before":null,"after":"sha256:4bb570c1f9cff35fd473b834bba2101d2f69886a4bf33e4e45e5422f871ee125"}}}}
+{"type":"done","timestamp":"2026-10-05T14:09:21.337Z","data":{"task":"7"}}
+{"type":"verify_ran","timestamp":"2026-10-05T16:43:52.220Z","data":{"command":"node --import tsx --test tests/report-validation.test.ts","exitCode":0,"duration":0.82,"output":"▶ report validation\n  ✔ returns undefined and leaves the report unchanged when no change ran a validator (155.404936ms)\n  ✔ counts two validated changes and one failed in folder name order (155.885318ms)\n  ✔ takes the latest event per change, regardless of order in the stream (36.274822ms)\n  ✔ counts findings only for validated runs (34.242069ms)\n  ✔ ignores malformed validator events and changes without a change stream (30.12995ms)\n  ✔ prints the Validation section after the Mutation section (34.72656ms)\n✔ report validation (448.794938ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 774.571512\n"}}

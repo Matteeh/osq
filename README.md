@@ -336,6 +336,60 @@ export default {
 
 The config assumes `tsc` compiles `tests/` to `build/tests/`; follow the project's own layout if it differs. Leave `thresholds.break` unset so survivors never change the command's exit code, and add `.stryker-tmp` to `.gitignore`.
 
+### Validator
+
+Set the optional `validator` block to have a second agent judge each change
+against its delta specs at archive. It records what it finds and never stops
+the change:
+
+```ts
+export default defineConfig({
+  validator: {
+    enabled: true,             // default true when the block is set
+    harness: 'claude',         // a harness in the catalog
+    model: 'claude-opus-5-5',  // required while enabled
+    timeoutSeconds: 900,       // optional, default 900
+  },
+});
+```
+
+The validator runs once per change, after the change-level verify and the
+`check`, and before the folder moves to the archive. It is spawned on its own
+`harness` and `model`, never the executor's or `OSQ_MODEL`. `osq init` writes
+the block commented out, and osq's own config turns it on. While the validator
+is enabled and its harness and model match the executor's, `osq doctor` adds a
+`validator-model` warning (`validator uses the executor's harness and model
+(...); its findings share the executor's blind spots`); it stays a warning so a
+project with one provider key can still run.
+
+osq gives it the delta spec paths, the scenarios the change adds or changes,
+the patch against the change's base with `openspec/` left out, the tests the
+patch adds or changes, and the executor result paths last, labeled as claims to
+check. It may read any file in the repository, including tests the change did
+not touch, but runs no build or test command and never edits code, tests, or
+specs. It reports a finding only for one of three problems:
+
+- `no_code`: no code meets the scenario.
+- `no_test`: no test checks its THEN.
+- `passes_without_change`: the scenario describes behavior the base did not
+  have and its test would still pass on the base.
+
+It says nothing about style, naming, or architecture. Each run appends one
+`validator_ran` event to the change's `.run/events/change.jsonl` with outcomes
+`validated`, `failed`, `timed_out`, `unreadable`, or `not_run` (reasons
+`no_base` when git is off or `.run/base` is missing or empty, `no_scenarios`
+when no scenario is judged). Only a `validated` run carries findings; after the
+event osq removes `.run/validator/`. Edits the validator makes anywhere else
+are put back and listed in the event's `restored`.
+
+`osq show` prints a `Validation:` block after the task section: the headline
+`Validation: <outcome> by <harness>/<model> in <duration>s`, the findings for a
+validated run, and any `Restored:` paths. `osq report` prints a `Validation:`
+section with `<validated> of <changes> changes validated, <findings> findings`
+and one line per archived change. Both also carry `validation` in JSON. The
+validator is observe only: every outcome is recorded and the archive goes on.
+See ADR 010.
+
 ## What the watcher guarantees
 
 - **Rebuilt from disk**: State is rebuilt from `openspec/` on every change. Kill it and restart it any time.

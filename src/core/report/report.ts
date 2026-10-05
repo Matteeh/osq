@@ -69,6 +69,11 @@ import {
   collectTraceabilityGaps,
   formatTraceability,
 } from './report-traceability.js';
+import {
+  type ValidationSummary,
+  collectValidation,
+  formatValidation,
+} from './report-validation.js';
 import { taskScopeSize } from './scope-size.js';
 import { openStreamIndex } from './stream-index.js';
 import { readEventStream, readTextFile, withStreamReads } from './stream-reads.js';
@@ -297,6 +302,12 @@ export interface MetricsReport {
    * measured event names an opted-in capability, so the report is unchanged.
    */
   readonly mutation?: readonly CapabilityMutationScore[];
+  /**
+   * Latest validator run per archived change, in folder name order. Absent
+   * when no archived change has a `validator_ran` event, so the report is
+   * unchanged for a project that never ran a validator.
+   */
+  readonly validation?: ValidationSummary;
   /**
    * Inbox waiting summary from the per-project wait log. Absent when no log
    * exists, so the report is unchanged for a project that never ran an inbox.
@@ -890,7 +901,7 @@ export async function getMetricsReport(
   }
 }
 
-async function buildMetricsReport(
+export async function buildMetricsReport(
   projectRoot: string,
   config: OsqConfig,
   options: InboxWaitOptions,
@@ -1405,6 +1416,7 @@ async function buildMetricsReport(
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
   const traceability = await collectTraceabilityGaps(projectRoot, config);
   const mutation = await collectMutationScores(allSpecFolders, config);
+  const validation = await collectValidation(archivedFolders);
   const inboxWait = await collectInboxWait(projectRoot, options);
 
   const measuredTasks = await projectMeasuredTasks(allSpecFolders);
@@ -1552,6 +1564,7 @@ async function buildMetricsReport(
     queue,
     ...(traceability ? { traceability } : {}),
     ...(mutation ? { mutation } : {}),
+    ...(validation ? { validation } : {}),
     ...(inboxWait ? { inboxWait } : {}),
   };
 }
@@ -1888,6 +1901,11 @@ export function formatMetricsReport(
   if (report.mutation) {
     lines.push('');
     lines.push(...formatMutation(report.mutation));
+  }
+
+  if (report.validation) {
+    lines.push('');
+    lines.push(...formatValidation(report.validation));
   }
 
   if (report.inboxWait) {

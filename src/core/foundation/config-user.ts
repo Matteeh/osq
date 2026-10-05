@@ -8,6 +8,7 @@ import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
 import type { TraceabilityConfig } from './config-traceability.js';
+import type { ValidatorConfig } from './config-validator.js';
 import type { VcsConfig } from './config-vcs.js';
 import type {
   AgyConfig,
@@ -44,6 +45,7 @@ export type OsqUserConfig = Partial<
     | 'inbox'
     | 'capabilities'
     | 'confinement'
+    | 'validator'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -66,4 +68,5 @@ export type OsqUserConfig = Partial<
   readonly confinement?: {
     readonly roles?: Partial<Record<ConfinementRole, { readonly env?: readonly string[] }>>;
   };
+  readonly validator?: Partial<ValidatorConfig>;
 };

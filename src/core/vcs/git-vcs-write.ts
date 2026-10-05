@@ -174,8 +174,8 @@ export async function commit(
   return ok(await ctx.run(['rev-parse', '--verify', 'HEAD'])).trim();
 }
 
-/** A binary diff against HEAD through a copy of the index, leaving it unchanged. */
-export async function patch(ctx: GitWriteContext): Promise<string> {
+/** A binary diff against `base`, defaulting to HEAD, through a copy of the index. */
+export async function patch(ctx: GitWriteContext, base?: string): Promise<string> {
   const indexPath = await ctx.run(['rev-parse', '--git-path', 'index']);
   const realIndex = path.resolve(ctx.projectRoot, indexPath.stdout.trim());
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-patch-'));
@@ -184,7 +184,7 @@ export async function patch(ctx: GitWriteContext): Promise<string> {
     await fs.copyFile(realIndex, tempIndex).catch(() => undefined);
     const env = { GIT_INDEX_FILE: tempIndex };
     ok(await ctx.run(['add', '-A'], env));
-    return ok(await ctx.run(['diff', '--cached', '--binary', 'HEAD'], env));
+    return ok(await ctx.run(['diff', '--cached', '--binary', base ?? 'HEAD'], env));
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }

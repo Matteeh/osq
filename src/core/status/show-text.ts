@@ -17,6 +17,7 @@ import type {
   TaskDetail,
   VerificationHistory,
 } from './show-types.js';
+import { validationLines } from './show-validation-lines.js';
 
 function formatEventData(data?: Record<string, unknown>): string {
   if (!data || Object.keys(data).length === 0) return '';
@@ -225,6 +226,7 @@ export function formatSpecDetails(details: SpecDetails): string {
     ...proseLines('Goal:', details.goal),
     ...proseLines('Contract:', details.contract),
     ...taskSectionLines(details),
+    ...validationLines(details),
     ...planningSessionLines(details),
     ...recertificationLines(details),
     ...timelineLines(details),

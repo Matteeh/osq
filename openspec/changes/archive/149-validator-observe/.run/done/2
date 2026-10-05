@@ -1,0 +1,18 @@
+---
+scope_resolver: 2
+scope_hash: sha256:554db2b21562c4b18fc430bb65302081ad973830ed574a635a7837b3ef9a3fa3
+build_stamp: 2f6d14d
+project_commit: 2cfd4f7
+exit_code: 0
+scope_files:
+  README.md: sha256:1e0ebb433eeeecbcd29bebdd1ac531314cb4d8f159b29b6556e173473d058841
+  osq.config.ts: sha256:73f66bc96f890832a07fb7c25399a9b25796e557148a4855477ce004d1b0e290
+  src/core/foundation/doctor-validator.ts: sha256:2b57aa7757797f559259f81b4205b364641be2fa088688df1d2d0c0d3e363d2f
+  src/core/foundation/doctor.ts: sha256:09fb45e67c543c336483698687536f5a8cf66882673db15ae6662a1206fdd428
+  src/core/foundation/init.ts: sha256:aeaef509c366924fded5456ff6e51500cd9949d362018e4682dae5fc53e5a122
+  tests/validator-doctor.test.ts: sha256:026a8b8793b7ccb059616630d1da6155fa38404566140e3f4ced3e66382d690a
+original_scope_hash: sha256:b003f079ecd0b8355bfb5d9bb28432e02bedb1a1020f4db7cb22e0e70a663a9d
+recertified_at: 2026-10-05T13:47:13.110Z
+recertification_count: 1
+---
+2026-10-04T20:48:39.749Z

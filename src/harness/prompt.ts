@@ -70,6 +70,9 @@ export function livingSpecPaths(options: SpawnTaskOptions): string[] {
 
 /** Full one-attempt executor prompt naming every file the task needs. */
 export function buildExecutorPrompt(options: SpawnTaskOptions): string {
+  if (options.prompt !== undefined) {
+    return options.prompt;
+  }
   const { projectRoot, specFolderPath, taskNumber, taskTitle, scope, entry, verifyCommand } =
     options;
   const taskRel = path.relative(

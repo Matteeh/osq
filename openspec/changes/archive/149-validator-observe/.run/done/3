@@ -1,0 +1,17 @@
+---
+scope_resolver: 2
+scope_hash: sha256:24023124f962f1db359bdba8afeacf3ae677a241e3f199403cc0c24ac9883ebc
+build_stamp: 2f6d14d
+project_commit: e88016e
+exit_code: 0
+scope_files:
+  src/core/vcs/git-vcs-write.ts: sha256:3214eefd7ab16a98ac04edad6cb67b2bea85036e3385cfc241ef8365ac372149
+  src/core/vcs/git-vcs.ts: sha256:116ed9ddc5afafba86dfba685b4f316086538cb6fcf1dd01679c5f8f5efec2f8
+  src/core/vcs/no-vcs.ts: sha256:8348b34a1ba637fde13378423603308c4a0a62efbd286fdb56b5516ebfbfdf28
+  src/core/vcs/vcs.ts: sha256:be7c9a56ee3a8f4691fbed894c9e9a3f4a4e798913be0aa1a295f9a78fa39c55
+  tests/vcs-patch-base.test.ts: sha256:fafcb2d3a6a275e4d4753841124e3c209ed0f3ee4f0ebeeddc8a701a24deb22d
+original_scope_hash: sha256:e15a3104ed2bbb2b773742db3babd8fab25ea1444b613595a7b4e61bef322825
+recertified_at: 2026-10-05T16:43:45.098Z
+recertification_count: 1
+---
+2026-10-04T20:52:09.744Z

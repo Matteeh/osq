@@ -30,6 +30,10 @@ const DEFAULT_CONFIG_CONTENT = `import { defineConfig } from '@matteeh/osq';
 export default defineConfig({
   harness: process.env.OSQ_HARNESS || 'pi',
   maxConcurrency: 1,
+  // A validator judges each change against its delta specs at archive and
+  // records what it finds without stopping the change. Pick a model other
+  // than the executor's.
+  // validator: { harness: 'claude', model: '<a-different-model>' },
 });
 `;
 

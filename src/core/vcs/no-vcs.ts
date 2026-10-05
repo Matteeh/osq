@@ -128,7 +128,7 @@ export class NoVcs implements Vcs {
     return false;
   }
 
-  async patch(): Promise<string> {
+  async patch(_base?: string): Promise<string> {
     this.reject();
   }
 

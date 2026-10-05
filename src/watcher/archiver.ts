@@ -2,17 +2,19 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
+import type { Logger } from '../core/foundation/logger.js';
 import { listCanonicalDoneNumbers } from '../core/run/scope-hash.js';
 import { applyOpenSpecDeltas } from '../core/spec/apply-deltas.js';
 import { readCheckCommand } from '../core/spec/human-steps.js';
 import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../core/spec/parser.js';
 import { getArchiveDir } from '../core/status/layout.js';
 import { compareNumericPrefix, deriveSpecState } from '../core/status/state.js';
-import { type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
+import { type HarnessAdapter, type HarnessEvent, appendHarnessEvent } from '../harness/types.js';
 import { applyArchiveSidecars } from './archive-sidecars.js';
 import { applyArchiveSpecs, archiveSpecsRecordPath, restoreArchiveSpecs } from './archive-specs.js';
 import { verifyArchiveStep } from './archive-verify.js';
 import { auditScopeRegressions } from './regression.js';
+import { runValidator } from './validator.js';
 
 /**
  * Payload of the change-level `archived` event. The event timestamp is the
@@ -126,11 +128,18 @@ export async function archiveSpecFolder(
   return relocateArchivedSpec(projectRoot, specFolderPath, config);
 }
 
+/** Optional roles a caller supplies for the validator run at archive. */
+export interface CheckAndArchiveOptions {
+  readonly validatorAdapter?: HarnessAdapter;
+  readonly logger?: Logger;
+}
+
 /** Re-run every task verify, then the change-level verify, before archiving. */
 export async function checkAndArchiveSpec(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
+  options?: CheckAndArchiveOptions,
 ): Promise<boolean> {
   // A stopped archive leaves the living specs modified and a record behind.
   // Put them back before the done check, so a fresh attempt starts clean.
@@ -197,6 +206,10 @@ export async function checkAndArchiveSpec(
     return false;
   }
 
+  await runValidator(projectRoot, specFolderPath, config, {
+    adapter: options?.validatorAdapter,
+    logger: options?.logger,
+  });
   await relocateArchivedSpec(projectRoot, specFolderPath, config);
   return true;
 }

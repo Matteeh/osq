@@ -13,6 +13,7 @@ import {
 } from './show-model-events.js';
 import { resolveSpecFolder } from './show-model-folder.js';
 import { attachTaskScenarios, readTaskDetails } from './show-model-tasks.js';
+import { buildValidation } from './show-model-validation.js';
 import type { PlanningSessionDetail, SpecDetails, TaskDetail } from './show-types.js';
 import { type SpecStatus, deriveSpecState } from './state.js';
 
@@ -62,9 +63,14 @@ async function withNextStep(
   };
   if (location !== 'archived') return base;
 
+  const validation = buildValidation(details.timeline);
+  const withValidation: SpecDetails = validation === undefined ? base : { ...base, validation };
+
   const verification = buildVerificationHistory(details.timeline);
-  if (verification.checks.length === 0 && verification.outcomes.length === 0) return base;
-  return { ...base, verification };
+  if (verification.checks.length === 0 && verification.outcomes.length === 0) {
+    return withValidation;
+  }
+  return { ...withValidation, verification };
 }
 
 /** Capability writes are declared solely by delta spec folders under `specs/`. */

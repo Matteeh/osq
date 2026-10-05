@@ -205,8 +205,8 @@ export class GitVcs implements Vcs {
     return merges.isAncestor(this.context, ancestor, descendant);
   }
 
-  patch(): Promise<string> {
-    return writes.patch(this.context);
+  patch(base?: string): Promise<string> {
+    return writes.patch(this.context, base);
   }
 
   discard(paths: readonly string[]): Promise<void> {

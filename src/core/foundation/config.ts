@@ -14,6 +14,7 @@ import { applyHarnessModelEnv } from './config-env.js';
 import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { DEFAULT_INBOX_CONFIG, type InboxConfig, validateInboxConfig } from './config-inbox.js';
+import type { OsqLimits } from './config-limits.js';
 import { type PiConfig, validatePiConfig } from './config-pi.js';
 import {
   DEFAULT_PLANNING_CONFIG,
@@ -28,6 +29,7 @@ import {
   validateTraceabilityConfig,
 } from './config-traceability.js';
 import type { OsqUserConfig } from './config-user.js';
+import { type ValidatorConfig, validateValidatorConfig } from './config-validator.js';
 import { DEFAULT_VCS_CONFIG, type VcsConfig, validateVcsConfig } from './config-vcs.js';
 
 export { ConfigLoadError } from './config-file.js';
@@ -42,26 +44,8 @@ export type { ServeConfig } from './config-serve.js';
 export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
 
-export interface OsqLimits {
-  readonly maxScopeFiles: number;
-  readonly maxFeatureWrites: number;
-  readonly maxContractTables: number;
-  readonly maxAcceptanceLines: number;
-  /** Import levels the frozen-test reach warning follows. */
-  readonly importGraphDepth: number;
-  /** The most tests or files one import-graph warning lists. */
-  readonly maxListedImporters: number;
-  /** The most characters an accepted ADR's rule may have. */
-  readonly maxRuleLength: number;
-  /** The most system-wide rules the AGENTS.md block may hold. */
-  readonly maxProjectRules: number;
-  /** The most marker lines a dispatch halt card shows. */
-  readonly cardOutputLines: number;
-  /** The most output lines a `.run/` marker keeps without a failing-tests section. */
-  readonly markerOutputLines: number;
-  /** The most characters a marker keeps of any one output line. */
-  readonly markerLineChars: number;
-}
+export type { OsqLimits } from './config-limits.js';
+export type { ValidatorConfig } from './config-validator.js';
 
 export interface OsqPaths {
   readonly features: string;
@@ -112,6 +96,7 @@ export interface OsqConfig {
   readonly inbox?: InboxConfig;
   readonly capabilities?: CapabilitiesConfig;
   readonly confinement?: ConfinementConfig;
+  readonly validator?: ValidatorConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -166,12 +151,13 @@ export const DEFAULT_CONFIG: OsqConfig = {
 };
 
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const { planner, queue: rawQueue, ...restConfig } = config;
+  const { planner, queue: rawQueue, validator: rawValidator, ...restConfig } = config;
   let validatedPlanner: PlannerConfig | undefined;
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
   }
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
+  const validator = validateValidatorConfig(rawValidator);
   const codex = validateCodexConfig(config.codex);
   const pi = validatePiConfig(config.pi);
   const claude = validateClaudeConfig(config.claude);
@@ -191,6 +177,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     confinement: validateConfinementConfig(config.confinement),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
+    ...(validator ? { validator } : {}),
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),

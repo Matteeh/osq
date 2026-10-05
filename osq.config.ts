@@ -19,6 +19,7 @@ export default defineConfig({
     agent: "osq-coder",
     variant: "thinking",
   },
+  validator: { harness: "claude", model: "claude-opus-5-5" },
   queue: {
     maxPlanningSessions: 100,
     maxPlanningCost: 20,

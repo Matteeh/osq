@@ -33,6 +33,7 @@ export type HarnessEventType =
   | 'baseline_ran'
   | 'focused_ran'
   | 'mutation_ran'
+  | 'validator_ran'
   | 'vcs_violation'
   | 'scope_violation';
 
@@ -329,6 +330,40 @@ export interface MutationRanEventData {
   readonly output?: string;
 }
 
+/** The three problems a validator finding can name. */
+export type ValidatorProblem = 'no_code' | 'no_test' | 'passes_without_change';
+
+/** One scenario problem the validator reports. */
+export interface ValidatorFinding {
+  readonly kind: 'scenario';
+  readonly capability: string;
+  readonly requirement: string;
+  readonly scenario: string;
+  readonly problem: ValidatorProblem;
+  readonly detail: string;
+}
+
+export type ValidatorOutcome = 'validated' | 'failed' | 'timed_out' | 'unreadable' | 'not_run';
+export type ValidatorNotRunReason = 'no_base' | 'no_scenarios';
+
+/** Payload of the change-level `validator_ran` event. */
+export interface ValidatorRanEventData {
+  readonly outcome: ValidatorOutcome;
+  readonly harness: string;
+  readonly model: string;
+  /** Wall seconds from just before the spawn to just after it; 0 when not run. */
+  readonly duration: number;
+  readonly exitCode: number | null;
+  /** How many scenarios the validator was asked to judge. */
+  readonly scenarios: number;
+  /** Present only on a validated run; empty otherwise. */
+  readonly findings: readonly ValidatorFinding[];
+  /** Project-relative paths osq put back after the run, sorted. */
+  readonly restored: readonly string[];
+  readonly reason?: ValidatorNotRunReason;
+  readonly output?: string;
+}
+
 /**
  * Payload of a `vcs_violation` event: the git state fields that moved during a
  * task, with each field's value before the agent spawned and after it exited.
@@ -373,6 +408,7 @@ export interface OsqEventData {
   baseline_ran: BaselineRanEventData;
   focused_ran: FocusedRanEventData;
   mutation_ran: MutationRanEventData;
+  validator_ran: ValidatorRanEventData;
   vcs_violation: VcsViolationEventData;
   scope_violation: ScopeViolationEventData;
 }
@@ -419,6 +455,8 @@ export interface SpawnTaskOptions {
   priorFailureReason?: string;
   /** Failed verification output carried from a requeued recertification, when any. */
   priorFailureOutput?: string;
+  /** Replaces the executor prompt, for a role other than the executor. */
+  prompt?: string;
 }
 
 export interface SpawnResult {
