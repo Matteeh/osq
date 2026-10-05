@@ -42,7 +42,13 @@ export function runGit(
     execFile(
       binary,
       args,
-      { cwd, timeout: timeoutSeconds * 1000, env: childGitEnv(extraEnv) },
+      // A patch carries a change's event logs, which outgrow execFile's 1 MiB default.
+      {
+        cwd,
+        timeout: timeoutSeconds * 1000,
+        env: childGitEnv(extraEnv),
+        maxBuffer: Number.POSITIVE_INFINITY,
+      },
       (error, stdout, stderr) => {
         let code = 0;
         if (error) code = typeof error.code === 'number' ? error.code : 1;
