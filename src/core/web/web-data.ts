@@ -7,6 +7,12 @@ export { getWebChange } from './web-data-change.js';
 export { WebDataError } from './web-data-types.js';
 export type { WebDataErrorKind } from './web-data-types.js';
 export type {
+  LandDisclosure,
+  LandGate,
+  LandGateKind,
+  LandView,
+} from '../status/show-land-types.js';
+export type {
   WebCapabilityNode,
   WebChange,
   WebChangeNode,

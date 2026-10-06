@@ -1,0 +1,76 @@
+.land {
+  margin-top: 1.25rem;
+}
+
+.land-headline {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+}
+
+.land h4 {
+  margin: 1rem 0 0.35rem;
+}
+
+.land-gates,
+.land-spec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.land-gate {
+  color: var(--muted);
+}
+
+.land-gate strong,
+.land-outcome,
+.land-spec-list li {
+  color: var(--text);
+}
+
+.land-command,
+.land-text,
+.land-disclosure .review-text {
+  overflow-wrap: anywhere;
+}
+
+.land-command {
+  padding: 0 0.25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  color: var(--text);
+}
+
+.land-capability {
+  margin-top: 0.5rem;
+}
+
+.land-capability-name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.land-label {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+}
+
+.land-task {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.land-subsection {
+  margin-top: 1rem;
+}
+
+.land-reason {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}

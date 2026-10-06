@@ -8,6 +8,9 @@ import type {
   WebActionsDocument,
 } from '../../../src/core/web/web-actions.js';
 import type {
+  LandDisclosure,
+  LandGate,
+  LandView,
   WebChange,
   WebDeltaCapability,
   WebDeltaRequirement,
@@ -18,6 +21,9 @@ import type {
 export type {
   ApprovalFlag,
   Inbox,
+  LandDisclosure,
+  LandGate,
+  LandView,
   MetricsReport,
   WebAction,
   WebActionRequest,

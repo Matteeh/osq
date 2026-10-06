@@ -1,4 +1,5 @@
 import type { ApprovalDigest } from '../spec/digest.js';
+import type { LandView } from '../status/show-land-types.js';
 
 /**
  * Public read-only web documents derived from the current project tree. These
@@ -214,4 +215,9 @@ export interface WebChange {
    * value reads the same as null.
    */
   readonly review?: WebReview | null;
+  /**
+   * The land view of an archived change, else null. Optional so documents
+   * built before this field stay valid; a missing value reads the same as null.
+   */
+  readonly land?: LandView | null;
 }

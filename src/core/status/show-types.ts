@@ -1,6 +1,7 @@
 import type { ApprovalDigest } from '../spec/digest.js';
 import type { TaggedScenario } from '../trace/tag-scan.js';
 import type { NextStep } from './next-step.js';
+import type { LandView } from './show-land-types.js';
 import type { SpecStatus, TaskStatus } from './state.js';
 
 export interface TimelineEvent {
@@ -157,6 +158,8 @@ export interface SpecDetails {
   validation?: ValidatorRanEventData;
   /** The proposal's `### After landing` steps; absent when empty. */
   afterLanding?: string;
+  /** The land view of an archived change; absent for every other change. */
+  land?: LandView;
 }
 
 /** A list of trimmed non-empty strings, or an empty list for any other value. */

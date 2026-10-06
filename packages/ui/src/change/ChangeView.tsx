@@ -4,6 +4,7 @@ import { BriefPanel } from './BriefPanel.js';
 import { ChangeActionsPanel } from './ChangeActionsPanel.js';
 import { ChangeHeader } from './ChangeHeader.js';
 import { DigestPanel } from './DigestPanel.js';
+import { LandPanel } from './LandPanel.js';
 import { ReviewPanel } from './ReviewPanel.js';
 import { TaskTable } from './TaskTable.js';
 import type { ActionClient } from './actions-client.js';
@@ -27,6 +28,7 @@ export function ChangeView({
   actionClient,
 }: ChangeViewProps): ReactElement {
   const review = change.review ?? null;
+  const land = change.land ?? null;
   if (review === null) {
     return (
       <section className="view change-view" aria-labelledby="change-view-title">
@@ -43,6 +45,7 @@ export function ChangeView({
           </p>
         ) : null}
         <BriefPanel brief={change.brief} goal={change.goal} />
+        {land !== null ? <LandPanel land={land} /> : null}
         {actionClient !== undefined ? (
           <ChangeActionsPanel
             selector={change.folderKey}
@@ -69,6 +72,7 @@ export function ChangeView({
         </p>
       ) : null}
       <BriefPanel brief={change.brief} goal={change.goal} />
+      {land !== null ? <LandPanel land={land} /> : null}
       <ReviewPanel review={review} />
       <TaskTable tasks={change.tasks} />
       <DigestPanel

@@ -24,6 +24,14 @@ export interface VcsStatusEntry {
   readonly from?: string;
 }
 
+/** What `to` changed since its merge base with `from`. */
+export interface VcsDiffStat {
+  /** Files changed; a binary file counts once with no lines. */
+  readonly files: number;
+  readonly added: number;
+  readonly removed: number;
+}
+
 /** The result of a merge, clean or holding the unmerged paths. */
 export interface VcsMergeResult {
   readonly status: 'clean' | 'conflict';
@@ -67,6 +75,12 @@ export interface Vcs {
   show(ref: string, path: string): Promise<string | null>;
   /** Whether a file or directory exists at a ref; false when the ref is unknown. */
   pathExists(ref: string, path: string): Promise<boolean>;
+  /**
+   * The files changed and lines added and removed between the merge base of
+   * `from` and `to` and `to`, leaving out each path of `exclude`; a binary
+   * file counts as one file with no lines. Null when either ref is unknown.
+   */
+  diffStat(from: string, to: string, exclude: readonly string[]): Promise<VcsDiffStat | null>;
   listBranches(prefix: string): Promise<string[]>;
   createBranch(name: string, base: string): Promise<void>;
   /** Rename a branch, keeping its commits, and fail when the new name exists. */

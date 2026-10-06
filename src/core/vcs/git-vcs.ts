@@ -3,12 +3,21 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { DEFAULT_BRANCH, DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
+import * as diff from './git-vcs-diff.js';
 import * as land from './git-vcs-land.js';
 import * as merges from './git-vcs-merge.js';
 import { nonEmpty, parseStashes, parseStatus } from './git-vcs-parse.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
-import type { Vcs, VcsHead, VcsMergeResult, VcsStash, VcsStatusEntry, VcsWorktree } from './vcs.js';
+import type {
+  Vcs,
+  VcsDiffStat,
+  VcsHead,
+  VcsMergeResult,
+  VcsStash,
+  VcsStatusEntry,
+  VcsWorktree,
+} from './vcs.js';
 
 /** Default bound in seconds for each git read when `timeouts.gitSeconds` is unset. */
 export const DEFAULT_GIT_SECONDS = 10;
@@ -189,6 +198,11 @@ export class GitVcs implements Vcs {
   countCommits(from: string, to: string): Promise<number> {
     return land.countCommits(this.context, from, to);
   }
+
+  diffStat(from: string, to: string, exclude: readonly string[]): Promise<VcsDiffStat | null> {
+    return diff.diffStat(this.context, from, to, exclude);
+  }
+
   merge(ref: string, squash: boolean): Promise<VcsMergeResult> {
     return merges.merge(this.context, ref, squash);
   }

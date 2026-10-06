@@ -1,0 +1,485 @@
+{"type":"verify_ran","timestamp":"2026-10-06T16:54:33.356Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":1,"duration":0.04,"log":".run/logs/2-1.log","output":"Could not find 'tests/land-view.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/land-view.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-06T16:54:34.497Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16}}
+{"type":"started","timestamp":"2026-10-06T16:54:34.550Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":1,"projectCommit":"7541aa9","pid":82529,"timeoutSeconds":1800,"version":"0.2.4","commit":"245110a"}}
+{"type":"text","timestamp":"2026-10-06T16:54:43.060Z","data":{"text":"I'll start by exploring the task context and entry files."}}
+{"type":"tool","timestamp":"2026-10-06T16:54:43.126Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:43.131Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:43.180Z","data":{"promptTokens":204236,"candidateTokens":202,"totalTokens":204438,"cachedTokens":0,"reasoningTokens":57,"cost":0.0307908}}
+{"type":"tool","timestamp":"2026-10-06T16:54:45.416Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:45.420Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:45.473Z","data":{"promptTokens":2145,"candidateTokens":145,"totalTokens":2290,"cachedTokens":204416,"reasoningTokens":25,"cost":0.0010369980000000001}}
+{"type":"tool","timestamp":"2026-10-06T16:54:48.521Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:48.524Z","data":{"tool":"read","summary":"src/core/status/last-sync.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:48.526Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:48.529Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:48.573Z","data":{"promptTokens":3440,"candidateTokens":214,"totalTokens":3654,"cachedTokens":206720,"reasoningTokens":51,"cost":0.0012951599999999998}}
+{"type":"tool","timestamp":"2026-10-06T16:54:51.518Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:51.521Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:51.563Z","data":{"promptTokens":6060,"candidateTokens":113,"totalTokens":6173,"cachedTokens":210304,"reasoningTokens":58,"cost":0.0016425120000000003}}
+{"type":"tool","timestamp":"2026-10-06T16:54:54.822Z","data":{"tool":"read","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:54.825Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:54.864Z","data":{"promptTokens":4335,"candidateTokens":109,"totalTokens":4444,"cachedTokens":216448,"reasoningTokens":42,"cost":0.001390194}}
+{"type":"tool","timestamp":"2026-10-06T16:54:57.742Z","data":{"tool":"read","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:54:57.744Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:54:57.810Z","data":{"promptTokens":2064,"candidateTokens":112,"totalTokens":2176,"cachedTokens":220928,"reasoningTokens":0,"cost":0.0010395839999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:55:01.417Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:01.419Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:01.420Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:01.462Z","data":{"promptTokens":4939,"candidateTokens":162,"totalTokens":5101,"cachedTokens":223104,"reasoningTokens":42,"cost":0.001532562}}
+{"type":"tool","timestamp":"2026-10-06T16:55:04.388Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:04.390Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:04.392Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:04.432Z","data":{"promptTokens":2684,"candidateTokens":159,"totalTokens":2843,"cachedTokens":228224,"reasoningTokens":59,"cost":0.0012180720000000002}}
+{"type":"tool","timestamp":"2026-10-06T16:55:07.646Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:07.651Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:07.692Z","data":{"promptTokens":3758,"candidateTokens":181,"totalTokens":3939,"cachedTokens":231040,"reasoningTokens":94,"cost":0.0014218199999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:55:11.030Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:11.070Z","data":{"promptTokens":2709,"candidateTokens":70,"totalTokens":2779,"cachedTokens":235008,"reasoningTokens":63,"cost":0.001191174}}
+{"type":"tool","timestamp":"2026-10-06T16:55:14.485Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:14.488Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:14.537Z","data":{"promptTokens":2532,"candidateTokens":224,"totalTokens":2756,"cachedTokens":237824,"reasoningTokens":156,"cost":0.0013212719999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:55:17.507Z","data":{"tool":"read","summary":"src/cli/show.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:55:17.509Z","data":{"tool":"read","summary":"src/core/spec/human-steps.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:17.554Z","data":{"promptTokens":1387,"candidateTokens":110,"totalTokens":1497,"cachedTokens":240640,"reasoningTokens":109,"cost":0.0010613699999999998}}
+{"type":"tool","timestamp":"2026-10-06T16:55:36.264Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:36.311Z","data":{"promptTokens":1071,"candidateTokens":161,"totalTokens":1232,"cachedTokens":242176,"reasoningTokens":3771,"cost":0.003246378}}
+{"type":"tool","timestamp":"2026-10-06T16:55:39.281Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:39.321Z","data":{"promptTokens":1115,"candidateTokens":69,"totalTokens":1184,"cachedTokens":247168,"reasoningTokens":43,"cost":0.0009759539999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:55:42.454Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:55:42.510Z","data":{"promptTokens":1634,"candidateTokens":86,"totalTokens":1720,"cachedTokens":248320,"reasoningTokens":90,"cost":0.00109566}}
+{"type":"tool","timestamp":"2026-10-06T16:56:25.780Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:25.826Z","data":{"promptTokens":169,"candidateTokens":98,"totalTokens":267,"cachedTokens":249984,"reasoningTokens":10592,"cost":0.007189302000000001}}
+{"type":"tool","timestamp":"2026-10-06T16:56:29.152Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:29.189Z","data":{"promptTokens":1515,"candidateTokens":124,"totalTokens":1639,"cachedTokens":260736,"reasoningTokens":157,"cost":0.001178058}}
+{"type":"tool","timestamp":"2026-10-06T16:56:33.576Z","data":{"tool":"read","summary":"src/core/status/show-model-folder.ts"}}
+{"type":"tool","timestamp":"2026-10-06T16:56:33.578Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:33.615Z","data":{"promptTokens":1553,"candidateTokens":146,"totalTokens":1699,"cachedTokens":262528,"reasoningTokens":193,"cost":0.001223934}}
+{"type":"tool","timestamp":"2026-10-06T16:56:50.383Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:50.430Z","data":{"promptTokens":1524,"candidateTokens":103,"totalTokens":1627,"cachedTokens":264320,"reasoningTokens":4672,"cost":0.00388656}}
+{"type":"tool","timestamp":"2026-10-06T16:56:54.050Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:54.093Z","data":{"promptTokens":761,"candidateTokens":87,"totalTokens":848,"cachedTokens":270592,"reasoningTokens":148,"cost":0.001066926}}
+{"type":"text","timestamp":"2026-10-06T16:56:58.259Z","data":{"text":"Now I'll implement the source files. Starting with the types."}}
+{"type":"tool","timestamp":"2026-10-06T16:56:58.265Z","data":{"tool":"write","summary":"src/core/status/show-land-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:56:58.306Z","data":{"promptTokens":317,"candidateTokens":548,"totalTokens":865,"cachedTokens":271488,"reasoningTokens":26,"cost":0.001206414}}
+{"type":"tool","timestamp":"2026-10-06T16:57:07.384Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:07.426Z","data":{"promptTokens":147,"candidateTokens":2376,"totalTokens":2523,"cachedTokens":272256,"reasoningTokens":0,"cost":0.002264418}}
+{"type":"tool","timestamp":"2026-10-06T16:57:13.603Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:13.647Z","data":{"promptTokens":243,"candidateTokens":1172,"totalTokens":1415,"cachedTokens":274560,"reasoningTokens":7,"cost":0.0015675300000000001}}
+{"type":"text","timestamp":"2026-10-06T16:57:16.237Z","data":{"text":"Now wire it into `show-types.ts`, `show-model.ts`, and `show-output.ts`."}}
+{"type":"tool","timestamp":"2026-10-06T16:57:16.248Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:16.305Z","data":{"promptTokens":167,"candidateTokens":238,"totalTokens":405,"cachedTokens":275840,"reasoningTokens":0,"cost":0.00099537}}
+{"type":"tool","timestamp":"2026-10-06T16:57:20.204Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:20.248Z","data":{"promptTokens":172,"candidateTokens":225,"totalTokens":397,"cachedTokens":276096,"reasoningTokens":93,"cost":0.001044888}}
+{"type":"tool","timestamp":"2026-10-06T16:57:25.632Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:25.686Z","data":{"promptTokens":257,"candidateTokens":321,"totalTokens":578,"cachedTokens":276352,"reasoningTokens":277,"cost":0.001226406}}
+{"type":"tool","timestamp":"2026-10-06T16:57:29.318Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:29.367Z","data":{"promptTokens":238,"candidateTokens":133,"totalTokens":371,"cachedTokens":276992,"reasoningTokens":0,"cost":0.000946476}}
+{"type":"tool","timestamp":"2026-10-06T16:57:32.841Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:32.885Z","data":{"promptTokens":138,"candidateTokens":171,"totalTokens":309,"cachedTokens":277248,"reasoningTokens":168,"cost":0.001055844}}
+{"type":"tool","timestamp":"2026-10-06T16:57:36.113Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:36.187Z","data":{"promptTokens":244,"candidateTokens":145,"totalTokens":389,"cachedTokens":277504,"reasoningTokens":0,"cost":0.0009561120000000001}}
+{"type":"text","timestamp":"2026-10-06T16:57:39.784Z","data":{"text":"Now update `show-output.ts` to append land lines."}}
+{"type":"tool","timestamp":"2026-10-06T16:57:39.791Z","data":{"tool":"write","summary":"src/core/status/show-output.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:39.844Z","data":{"promptTokens":156,"candidateTokens":356,"totalTokens":512,"cachedTokens":277760,"reasoningTokens":0,"cost":0.00107028}}
+{"type":"tool","timestamp":"2026-10-06T16:57:43.143Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:43.194Z","data":{"promptTokens":152,"candidateTokens":136,"totalTokens":288,"cachedTokens":278144,"reasoningTokens":125,"cost":0.001013832}}
+{"type":"tool","timestamp":"2026-10-06T16:57:45.919Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:45.999Z","data":{"promptTokens":180,"candidateTokens":163,"totalTokens":343,"cachedTokens":278400,"reasoningTokens":0,"cost":0.00096}}
+{"type":"text","timestamp":"2026-10-06T16:57:49.693Z","data":{"text":"Now `web-data-change.ts` sets `land`."}}
+{"type":"tool","timestamp":"2026-10-06T16:57:49.698Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:49.742Z","data":{"promptTokens":238,"candidateTokens":202,"totalTokens":440,"cachedTokens":278528,"reasoningTokens":0,"cost":0.000992484}}
+{"type":"tool","timestamp":"2026-10-06T16:57:53.339Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:53.385Z","data":{"promptTokens":207,"candidateTokens":170,"totalTokens":377,"cachedTokens":278784,"reasoningTokens":124,"cost":0.001043802}}
+{"type":"tool","timestamp":"2026-10-06T16:57:57.804Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:57:57.860Z","data":{"promptTokens":140,"candidateTokens":163,"totalTokens":303,"cachedTokens":279168,"reasoningTokens":0,"cost":0.0009563039999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:58:01.553Z","data":{"tool":"edit","summary":"src/core/web/web-data.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:58:01.604Z","data":{"promptTokens":198,"candidateTokens":155,"totalTokens":353,"cachedTokens":279296,"reasoningTokens":108,"cost":0.001025388}}
+{"type":"tool","timestamp":"2026-10-06T16:58:07.942Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:58:07.991Z","data":{"promptTokens":227,"candidateTokens":136,"totalTokens":363,"cachedTokens":279552,"reasoningTokens":567,"cost":0.0012945060000000002}}
+{"type":"tool","timestamp":"2026-10-06T16:58:19.075Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:58:19.119Z","data":{"promptTokens":188,"candidateTokens":69,"totalTokens":257,"cachedTokens":280320,"reasoningTokens":53,"cost":0.00094236}}
+{"type":"tool","timestamp":"2026-10-06T16:58:40.508Z","data":{"tool":"read","summary":"src/core/status/next-step.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:58:40.560Z","data":{"promptTokens":247,"candidateTokens":61,"totalTokens":308,"cachedTokens":280448,"reasoningTokens":4459,"cost":0.0035903940000000002}}
+{"type":"tool","timestamp":"2026-10-06T16:58:44.600Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:58:44.650Z","data":{"promptTokens":1334,"candidateTokens":99,"totalTokens":1433,"cachedTokens":285184,"reasoningTokens":128,"cost":0.0011918519999999998}}
+{"type":"tool","timestamp":"2026-10-06T16:59:12.320Z","data":{"tool":"read","summary":"src/core/spec/parser.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:12.364Z","data":{"promptTokens":1359,"candidateTokens":76,"totalTokens":1435,"cachedTokens":286720,"reasoningTokens":6999,"cost":0.00530901}}
+{"type":"text","timestamp":"2026-10-06T16:59:30.181Z","data":{"text":"Now the test file."}}
+{"type":"tool","timestamp":"2026-10-06T16:59:30.188Z","data":{"tool":"write","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:30.233Z","data":{"promptTokens":599,"candidateTokens":5879,"totalTokens":6478,"cachedTokens":295040,"reasoningTokens":69,"cost":0.00454377}}
+{"type":"tool","timestamp":"2026-10-06T16:59:34.728Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:34.776Z","data":{"promptTokens":169,"candidateTokens":248,"totalTokens":417,"cachedTokens":301440,"reasoningTokens":303,"cost":0.00126027}}
+{"type":"tool","timestamp":"2026-10-06T16:59:38.508Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:38.548Z","data":{"promptTokens":230,"candidateTokens":353,"totalTokens":583,"cachedTokens":301952,"reasoningTokens":0,"cost":0.0011521559999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:59:42.075Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:42.135Z","data":{"promptTokens":221,"candidateTokens":258,"totalTokens":479,"cachedTokens":302336,"reasoningTokens":119,"cost":0.001166358}}
+{"type":"tool","timestamp":"2026-10-06T16:59:45.847Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:45.902Z","data":{"promptTokens":236,"candidateTokens":76,"totalTokens":312,"cachedTokens":302720,"reasoningTokens":15,"cost":0.0009981599999999999}}
+{"type":"tool","timestamp":"2026-10-06T16:59:51.329Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:51.368Z","data":{"promptTokens":225,"candidateTokens":86,"totalTokens":311,"cachedTokens":302848,"reasoningTokens":0,"cost":0.000993894}}
+{"type":"tool","timestamp":"2026-10-06T16:59:57.568Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T16:59:57.612Z","data":{"promptTokens":1032,"candidateTokens":171,"totalTokens":1203,"cachedTokens":303104,"reasoningTokens":735,"cost":0.001607712}}
+{"type":"tool","timestamp":"2026-10-06T17:00:00.717Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:00:00.761Z","data":{"promptTokens":168,"candidateTokens":121,"totalTokens":289,"cachedTokens":304896,"reasoningTokens":0,"cost":0.001012488}}
+{"type":"tool","timestamp":"2026-10-06T17:00:06.435Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:00:06.479Z","data":{"promptTokens":183,"candidateTokens":86,"totalTokens":269,"cachedTokens":305024,"reasoningTokens":93,"cost":0.001049922}}
+{"type":"tool","timestamp":"2026-10-06T17:00:21.016Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:00:21.076Z","data":{"promptTokens":457,"candidateTokens":89,"totalTokens":546,"cachedTokens":305280,"reasoningTokens":114,"cost":0.00110619}}
+{"type":"tool","timestamp":"2026-10-06T17:00:24.887Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T17:00:32.408Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:00:32.655Z","data":{"promptTokens":143,"candidateTokens":233,"totalTokens":376,"cachedTokens":305920,"reasoningTokens":76,"cost":0.0011246099999999998}}
+{"type":"text","timestamp":"2026-10-06T17:00:39.400Z","data":{"text":"All checks pass locally. Now the full proposal verify."}}
+{"type":"tool","timestamp":"2026-10-06T17:04:00.835Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:04:01.051Z","data":{"promptTokens":499,"candidateTokens":95,"totalTokens":594,"cachedTokens":306304,"reasoningTokens":752,"cost":0.001501962}}
+{"type":"tool","timestamp":"2026-10-06T17:04:04.904Z","data":{"tool":"read","summary":"tests/show-text.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:04:04.975Z","data":{"promptTokens":851,"candidateTokens":59,"totalTokens":910,"cachedTokens":307584,"reasoningTokens":129,"cost":0.001163202}}
+{"type":"text","timestamp":"2026-10-06T17:04:13.573Z","data":{"text":"The renderer test restricts show imports. Let me make `show-land-lines.ts` import only `show-types`."}}
+{"type":"tool","timestamp":"2026-10-06T17:04:13.586Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:04:13.651Z","data":{"promptTokens":1053,"candidateTokens":1192,"totalTokens":2245,"cachedTokens":308608,"reasoningTokens":781,"cost":0.002267574}}
+{"type":"tool","timestamp":"2026-10-06T17:04:28.328Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:04:28.355Z","data":{"promptTokens":236,"candidateTokens":145,"totalTokens":381,"cachedTokens":311424,"reasoningTokens":73,"cost":0.001100472}}
+{"type":"tool","timestamp":"2026-10-06T17:06:30.683Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:06:30.828Z","data":{"promptTokens":421,"candidateTokens":85,"totalTokens":506,"cachedTokens":311808,"reasoningTokens":175,"cost":0.001154574}}
+{"type":"tool","timestamp":"2026-10-06T17:09:46.625Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:09:47.385Z","data":{"promptTokens":339,"candidateTokens":144,"totalTokens":483,"cachedTokens":312448,"reasoningTokens":74,"cost":0.001118994}}
+{"type":"tool","timestamp":"2026-10-06T17:09:50.869Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:09:51.098Z","data":{"promptTokens":234,"candidateTokens":80,"totalTokens":314,"cachedTokens":312832,"reasoningTokens":15,"cost":0.001030596}}
+{"type":"tool","timestamp":"2026-10-06T17:09:54.816Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:09:54.966Z","data":{"promptTokens":578,"candidateTokens":87,"totalTokens":665,"cachedTokens":313088,"reasoningTokens":202,"cost":0.001199364}}
+{"type":"tool","timestamp":"2026-10-06T17:10:17.291Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:10:17.460Z","data":{"promptTokens":236,"candidateTokens":112,"totalTokens":348,"cachedTokens":313856,"reasoningTokens":170,"cost":0.001146168}}
+{"type":"text","timestamp":"2026-10-06T17:11:17.209Z","data":{"text":"Isolated runs pass; the full-suite failures look like load-related flakes. Re-running the full verify to confirm stability."}}
+{"type":"tool","timestamp":"2026-10-06T17:15:30.234Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:15:31.380Z","data":{"promptTokens":315145,"candidateTokens":1030,"totalTokens":316175,"cachedTokens":0,"reasoningTokens":0,"cost":0.04788975}}
+{"type":"text","timestamp":"2026-10-06T17:15:46.990Z","data":{"text":"Full verify passes (exit 0, 3370 + 114 tests). Let me do a final review of the changed files and re-run the task verify once more."}}
+{"type":"tool","timestamp":"2026-10-06T17:15:47.486Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:15:47.503Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:15:48.271Z","data":{"promptTokens":56,"candidateTokens":726,"totalTokens":782,"cachedTokens":316160,"reasoningTokens":0,"cost":0.00139248}}
+{"type":"tool","timestamp":"2026-10-06T17:16:01.018Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:16:01.187Z","data":{"promptTokens":816,"candidateTokens":279,"totalTokens":1095,"cachedTokens":316928,"reasoningTokens":0,"cost":0.001240584}}
+{"type":"text","timestamp":"2026-10-06T17:16:20.327Z","data":{"text":"Everything is green. Writing the result file."}}
+{"type":"tool","timestamp":"2026-10-06T17:16:20.434Z","data":{"tool":"write","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T17:16:20.728Z","data":{"promptTokens":135,"candidateTokens":1177,"totalTokens":1312,"cachedTokens":317952,"reasoningTokens":0,"cost":0.0016803060000000001}}
+{"type":"text","timestamp":"2026-10-06T17:16:33.416Z","data":{"text":"Task complete. Summary:\n\n**Implemented** (`src/` scope):\n- `show-land-types.ts` (new): `LandGateKind`, `LandGate`, `LandDisclosure`, `LandView` per the task's Ports block.\n- `show-land-model.ts` (new): `readLandView` — null unless archived; otherwise archive gates from the timeline up to the last `archived` event (task/verify/check/validator in order), capabilities via `readArchivedChange`, disclosures via `readChangeDisclosures`, halt via `parseFrontmatter` on `.run/regressed/change.md`, `lastSync`/`lastSyncStop` via `readLastSync`, and git state via `selectVcs` + `readDependencyState` + `countCommits` + `diffStat` for `worktreeBranch(folderName)`; all four git fields null with git off.\n- `show-land-lines.ts` (new): `landLines` rendering the `Land:` headline, gates, diff, spec changes, disclosures, halt and sync lines; no `node:fs`, and it imports only `show-types` so the renderer import test passes.\n- `show-types.ts`, `show-model.ts`, `show-output.ts`: `SpecDetails.land`, set in `withNextStep`, carried before `digest` in JSON; text appends the land section after the change detail and before the digest.\n- `web-data-types.ts`, `web-data-change.ts`, `web-data.ts`: `WebChange.land` always set from `readLandView`; Ports types re-exported.\n- `tests/land-view.test.ts` (new, 13 tests): all \"Land view model\" and \"Land in show\" scenarios plus both \"Land view document\" scenarios and direct `landLines` rendering, including the git worktree cases, the `diffStat` cross-check, the landed case, a disclosure result file, and git-off coverage.\n\n**Verification**: task verify (`node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts`) passes 13/13; proposal verify (`pnpm verify`) passes cleanly — 3370 CLI tests + 114 UI tests, both typechecks, build, and biome lint. (Two vcs-land tests flaked once under full-suite load but pass in isolation and in the final full run.)\n\nResult file written to `openspec/changes/153-land-view/.run/results/2.md`."}}
+{"type":"exited","timestamp":"2026-10-06T17:16:35.437Z","data":{"exitCode":0,"pid":82529,"timedOut":false,"elapsedSeconds":1319.6}}
+{"type":"verify_ran","timestamp":"2026-10-06T17:16:37.381Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":1.43,"log":".run/logs/2-2.log","output":"▶ readLandView\n  ✔ reads the archived change, its gates, diff, state, halt and sync (319.130483ms)\n  ✔ reads disclosures from a result file with two sections (169.818513ms)\n  ✔ returns null for an active change (15.96137ms)\n  ✔ reads gates, capabilities and disclosures with git off (29.194459ms)\n  ✔ reports a landed change (104.165724ms)\n✔ readLandView (639.6365ms)\n▶ landLines\n  ✔ renders each headline (0.355278ms)\n  ✔ renders gate names, exit codes and findings (0.180493ms)\n  ✔ renders no gates, diff, spec changes and disclosures (0.245232ms)\n  ✔ prints no lines without a land view (0.207982ms)\n✔ landLines (1.318745ms)\n▶ land in osq show\n  ✔ prints the land summary and JSON before digest (120.688005ms)\n  ✔ leaves an active change unchanged (15.328267ms)\n✔ land in osq show (136.360244ms)\n▶ land in the web change document\n  ✔ sets land for an archived change (226.596039ms)\n  ✔ sets land null for an active change (14.22971ms)\n✔ land in the web change document (241.157787ms)\nℹ tests 13\nℹ suites 4\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1382.972809\n"}}
+{"type":"measures","timestamp":"2026-10-06T17:18:37.701Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":10,"changedLines":1033,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:97c9403ca5a37e649422a68ac6843ff3cced07dc75a63c6253923566edf052aa"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:2fa3e9234960858f6b09b0b161e1dfbc7f8b26d6f2ecce74f51a298816cffdb0"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:97e499e83ee6a2813b392233f4db0c41a3a4cf6d716d59f1d684791a6815e825"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:09819e5d873cb8bc2cd4c48a2e6caa05173351bc8bb7ea8c9b9ea0928fd60626"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:90c7bb424d2bc01a69abc358d1ca1571308eefd2361f3abfaa9b2e717526f7c6"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:0caf9ea9455b57e8762b7c1d4ff31457490c5fc32c1906e6bfc7d47fcbbedc96"},"tests/land-view.test.ts":{"before":null,"after":"sha256:4c8271e7259986bb86207808a65403d0cf7c913cc94159097d91f48a47159d11"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:8a2e1c9209d0bba94a8292588e7f9f79e98d561eaa79d83a339f57a629cafba9"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:8b87277a7b7640d92c43542e81f6c35b292fd0ebf8b1ccfe74c5197d85b28566"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:edef0d01a8d3988cb02b6873f856e7cae14281247225768209e7253ba0e7dc35"}}}}
+{"type":"dead","timestamp":"2026-10-06T17:18:37.724Z","data":{"task":"2","reason":"change_verify_red"}}
+{"type":"retry","data":{"target":"2","reason":"change_verify_red","attempt":2,"automatic":true},"timestamp":"2026-10-06T17:18:38.525Z"}
+{"type":"measures","timestamp":"2026-10-06T17:18:40.268Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16}}
+{"type":"started","timestamp":"2026-10-06T17:18:40.323Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":2,"projectCommit":"e610215","pid":81906,"timeoutSeconds":1800,"version":"0.2.4","commit":"245110a"}}
+{"type":"tool","timestamp":"2026-10-06T17:18:48.706Z","data":{"tool":"read","summary":"."}}
+{"type":"tool","timestamp":"2026-10-06T17:18:48.711Z","data":{"tool":"read","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T17:18:48.759Z","data":{"promptTokens":204531,"candidateTokens":112,"totalTokens":204643,"cachedTokens":0,"reasoningTokens":203,"cost":0.030868649999999997}}
+{"type":"tool","timestamp":"2026-10-06T17:18:51.933Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la src/core/status/ | grep -i land; echo \\\"-"}}
+{"type":"tokens","timestamp":"2026-10-06T17:18:51.983Z","data":{"promptTokens":1211,"candidateTokens":118,"totalTokens":1329,"cachedTokens":204800,"reasoningTokens":83,"cost":0.00091665}}
+{"type":"tool","timestamp":"2026-10-06T17:18:55.234Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"diffStat\\\\|VcsDiffStat\\\" src/core/vcs"}}
+{"type":"tokens","timestamp":"2026-10-06T17:18:55.285Z","data":{"promptTokens":177,"candidateTokens":105,"totalTokens":282,"cachedTokens":206208,"reasoningTokens":61,"cost":0.000744774}}
+{"type":"tool","timestamp":"2026-10-06T17:18:58.348Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:18:58.351Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:18:58.355Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:18:58.404Z","data":{"promptTokens":746,"candidateTokens":160,"totalTokens":906,"cachedTokens":206464,"reasoningTokens":86,"cost":0.000878892}}
+{"type":"tool","timestamp":"2026-10-06T17:19:01.968Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:01.971Z","data":{"tool":"read","summary":"src/core/status/last-sync.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:01.973Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:01.976Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:02.025Z","data":{"promptTokens":4500,"candidateTokens":217,"totalTokens":4717,"cachedTokens":207360,"reasoningTokens":101,"cost":0.00148788}}
+{"type":"tool","timestamp":"2026-10-06T17:19:04.791Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:04.794Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:04.844Z","data":{"promptTokens":6346,"candidateTokens":114,"totalTokens":6460,"cachedTokens":212096,"reasoningTokens":36,"cost":0.0016781880000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:19:07.578Z","data":{"tool":"read","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:07.580Z","data":{"tool":"read","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:07.626Z","data":{"promptTokens":5535,"candidateTokens":110,"totalTokens":5645,"cachedTokens":218496,"reasoningTokens":15,"cost":0.001560738}}
+{"type":"tool","timestamp":"2026-10-06T17:19:10.324Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:10.326Z","data":{"tool":"read","summary":"src/core/status/show-model-folder.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:10.327Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:10.371Z","data":{"promptTokens":3913,"candidateTokens":160,"totalTokens":4073,"cachedTokens":224128,"reasoningTokens":5,"cost":0.0013583339999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:19:13.220Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' tests/vcs-land.test.ts\",\"workdir"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:13.222Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"readCheckCommand\\\\|export function pa"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:13.275Z","data":{"promptTokens":1298,"candidateTokens":183,"totalTokens":1481,"cachedTokens":228096,"reasoningTokens":74,"cost":0.0010331880000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:19:16.838Z","data":{"tool":"read","summary":"tests/show-validation.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:16.880Z","data":{"promptTokens":1950,"candidateTokens":59,"totalTokens":2009,"cachedTokens":229632,"reasoningTokens":156,"cost":0.001110396}}
+{"type":"tool","timestamp":"2026-10-06T17:19:20.285Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:20.347Z","data":{"promptTokens":3385,"candidateTokens":60,"totalTokens":3445,"cachedTokens":231680,"reasoningTokens":54,"cost":0.00127119}}
+{"type":"tool","timestamp":"2026-10-06T17:19:24.724Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"no-skipped-in-src\\\\|skipped\\\" tests/n"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:24.773Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"node:fs\\\" tests/*.test.ts | grep -i \\"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:24.829Z","data":{"promptTokens":2991,"candidateTokens":209,"totalTokens":3200,"cachedTokens":235136,"reasoningTokens":252,"cost":0.0014306579999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:19:27.696Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"node:fs\\\\|renderer\\\\|STATUS_DIR\\\\|show"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:27.752Z","data":{"promptTokens":454,"candidateTokens":119,"totalTokens":573,"cachedTokens":238464,"reasoningTokens":52,"cost":0.0008860920000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:19:31.273Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '520,600p' tests/inbox.test.ts\",\"workdir\""}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:31.313Z","data":{"promptTokens":936,"candidateTokens":83,"totalTokens":1019,"cachedTokens":238976,"reasoningTokens":264,"cost":0.001065528}}
+{"type":"tool","timestamp":"2026-10-06T17:19:35.013Z","data":{"tool":"shell","summary":"{\"command\":\"awk 'NR>=565 && NR<=575 {printf \\\"%d: %s\\\\n\\\", N"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:35.054Z","data":{"promptTokens":700,"candidateTokens":97,"totalTokens":797,"cachedTokens":240256,"reasoningTokens":93,"cost":0.000939768}}
+{"type":"tool","timestamp":"2026-10-06T17:19:44.816Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:44.818Z","data":{"tool":"read","summary":"src/core/vcs/no-vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:44.867Z","data":{"promptTokens":283,"candidateTokens":111,"totalTokens":394,"cachedTokens":241024,"reasoningTokens":1745,"cost":0.0018791219999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:19:49.096Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"kind\\\" src/core/vcs/git-vcs.ts src/cor"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:49.149Z","data":{"promptTokens":1855,"candidateTokens":116,"totalTokens":1971,"cachedTokens":243072,"reasoningTokens":210,"cost":0.001203066}}
+{"type":"tool","timestamp":"2026-10-06T17:19:53.594Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"openspecRoot\\\\|getOpenspecRoot\\\\|open"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:53.596Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-diff.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:53.647Z","data":{"promptTokens":968,"candidateTokens":189,"totalTokens":1157,"cachedTokens":245248,"reasoningTokens":212,"cost":0.001121544}}
+{"type":"tool","timestamp":"2026-10-06T17:19:56.696Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:19:56.700Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,40p' src/core/spec/parser.ts; echo \\\"="}}
+{"type":"tokens","timestamp":"2026-10-06T17:19:56.748Z","data":{"promptTokens":832,"candidateTokens":161,"totalTokens":993,"cachedTokens":246528,"reasoningTokens":48,"cost":0.000989784}}
+{"type":"tool","timestamp":"2026-10-06T17:20:00.230Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"export async function parseSpecMdFromF"}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:00.274Z","data":{"promptTokens":1035,"candidateTokens":131,"totalTokens":1166,"cachedTokens":247552,"reasoningTokens":60,"cost":0.001012506}}
+{"type":"tool","timestamp":"2026-10-06T17:20:03.671Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"export async function listChanges\\\\|ex"}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:03.714Z","data":{"promptTokens":1019,"candidateTokens":162,"totalTokens":1181,"cachedTokens":248704,"reasoningTokens":89,"cost":0.001049562}}
+{"type":"tool","timestamp":"2026-10-06T17:20:23.354Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"git.*worktree.*add\\\\|worktree add\\\" "}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:23.402Z","data":{"promptTokens":579,"candidateTokens":126,"totalTokens":705,"cachedTokens":249856,"reasoningTokens":4204,"cost":0.003434418}}
+{"type":"tool","timestamp":"2026-10-06T17:20:26.635Z","data":{"tool":"read","summary":"tests/change-locations-worktrees.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:26.680Z","data":{"promptTokens":587,"candidateTokens":80,"totalTokens":667,"cachedTokens":254720,"reasoningTokens":32,"cost":0.00091941}}
+{"type":"tool","timestamp":"2026-10-06T17:20:44.036Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"vcs\\\" src/core/foundation/config.ts | "}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:44.087Z","data":{"promptTokens":2060,"candidateTokens":111,"totalTokens":2171,"cachedTokens":255360,"reasoningTokens":4318,"cost":0.00373248}}
+{"type":"tool","timestamp":"2026-10-06T17:20:56.193Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"formatShowJson\\\\|formatShowText\\\\|ge"}}
+{"type":"tokens","timestamp":"2026-10-06T17:20:56.432Z","data":{"promptTokens":240,"candidateTokens":92,"totalTokens":332,"cachedTokens":261760,"reasoningTokens":1887,"cost":0.0020086799999999997}}
+{"type":"tool","timestamp":"2026-10-06T17:21:00.225Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"formatShowJson\\\\|formatShowText\\\\|deep"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:00.543Z","data":{"promptTokens":261,"candidateTokens":151,"totalTokens":412,"cachedTokens":263808,"reasoningTokens":0,"cost":0.000921174}}
+{"type":"tool","timestamp":"2026-10-06T17:21:03.612Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"land\\\\|archived\\\\|JSON.parse\\\\|deepEqu"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:03.848Z","data":{"promptTokens":222,"candidateTokens":93,"totalTokens":315,"cachedTokens":264064,"reasoningTokens":23,"cost":0.000895092}}
+{"type":"tool","timestamp":"2026-10-06T17:21:25.839Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' src/core/web/web-data-folders.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:26.144Z","data":{"promptTokens":812,"candidateTokens":86,"totalTokens":898,"cachedTokens":264320,"reasoningTokens":4694,"cost":0.00378276}}
+{"type":"tool","timestamp":"2026-10-06T17:21:31.867Z","data":{"tool":"write","summary":"src/core/status/show-land-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:32.099Z","data":{"promptTokens":1223,"candidateTokens":575,"totalTokens":1798,"cachedTokens":269824,"reasoningTokens":104,"cost":0.0014003219999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:21:41.140Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:41.342Z","data":{"promptTokens":134,"candidateTokens":2468,"totalTokens":2602,"cachedTokens":271616,"reasoningTokens":6,"cost":0.002319348}}
+{"type":"tool","timestamp":"2026-10-06T17:21:48.677Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:48.793Z","data":{"promptTokens":200,"candidateTokens":1009,"totalTokens":1209,"cachedTokens":274048,"reasoningTokens":7,"cost":0.001461744}}
+{"type":"tool","timestamp":"2026-10-06T17:21:52.886Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:53.036Z","data":{"promptTokens":217,"candidateTokens":219,"totalTokens":436,"cachedTokens":275072,"reasoningTokens":28,"cost":0.001005966}}
+{"type":"tool","timestamp":"2026-10-06T17:21:56.460Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:21:56.591Z","data":{"promptTokens":231,"candidateTokens":165,"totalTokens":396,"cachedTokens":275328,"reasoningTokens":0,"cost":0.000959634}}
+{"type":"tool","timestamp":"2026-10-06T17:21:59.975Z","data":{"tool":"edit","summary":"src/core/status/show-output.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:00.175Z","data":{"promptTokens":163,"candidateTokens":329,"totalTokens":492,"cachedTokens":275584,"reasoningTokens":0,"cost":0.001048602}}
+{"type":"tool","timestamp":"2026-10-06T17:22:04.393Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:04.528Z","data":{"promptTokens":259,"candidateTokens":171,"totalTokens":430,"cachedTokens":275840,"reasoningTokens":5,"cost":0.0009719700000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:22:07.828Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:07.956Z","data":{"promptTokens":202,"candidateTokens":320,"totalTokens":522,"cachedTokens":276096,"reasoningTokens":0,"cost":0.0010505879999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:22:11.084Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n '\\\"verify\\\"\\\\|\\\"lint\\\"\\\\|\\\"test\\\"\\\\|\\\"ty"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:11.228Z","data":{"promptTokens":161,"candidateTokens":108,"totalTokens":269,"cachedTokens":276480,"reasoningTokens":95,"cost":0.0009753900000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:22:14.734Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:14.845Z","data":{"promptTokens":492,"candidateTokens":136,"totalTokens":628,"cachedTokens":276736,"reasoningTokens":100,"cost":0.001045608}}
+{"type":"tool","timestamp":"2026-10-06T17:22:17.940Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:18.091Z","data":{"promptTokens":239,"candidateTokens":158,"totalTokens":397,"cachedTokens":277248,"reasoningTokens":0,"cost":0.000962394}}
+{"type":"tool","timestamp":"2026-10-06T17:22:21.202Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:21.340Z","data":{"promptTokens":164,"candidateTokens":160,"totalTokens":324,"cachedTokens":277504,"reasoningTokens":0,"cost":0.0009531120000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:22:25.331Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:25.475Z","data":{"promptTokens":219,"candidateTokens":175,"totalTokens":394,"cachedTokens":277632,"reasoningTokens":0,"cost":0.0009707460000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:22:28.460Z","data":{"tool":"edit","summary":"src/core/web/web-data.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:28.628Z","data":{"promptTokens":161,"candidateTokens":177,"totalTokens":338,"cachedTokens":277888,"reasoningTokens":0,"cost":0.000964014}}
+{"type":"tool","timestamp":"2026-10-06T17:22:47.608Z","data":{"tool":"shell","summary":"{\"command\":\"npx tsc --noEmit -p packages/ui/tsconfig.cli.jso"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:47.702Z","data":{"promptTokens":232,"candidateTokens":95,"totalTokens":327,"cachedTokens":278016,"reasoningTokens":12,"cost":0.000933048}}
+{"type":"tool","timestamp":"2026-10-06T17:22:51.481Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write src/core/status/show-lan"}}
+{"type":"tokens","timestamp":"2026-10-06T17:22:51.542Z","data":{"promptTokens":225,"candidateTokens":149,"totalTokens":374,"cachedTokens":278144,"reasoningTokens":24,"cost":0.0009719819999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:23:23.332Z","data":{"tool":"write","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:23.410Z","data":{"promptTokens":168,"candidateTokens":5159,"totalTokens":5327,"cachedTokens":278400,"reasoningTokens":4409,"cost":0.0066012}}
+{"type":"tool","timestamp":"2026-10-06T17:23:28.814Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:28.868Z","data":{"promptTokens":158,"candidateTokens":227,"totalTokens":385,"cachedTokens":288000,"reasoningTokens":432,"cost":0.0012831}}
+{"type":"tool","timestamp":"2026-10-06T17:23:39.677Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write tests/land-view.test.ts "}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:39.729Z","data":{"promptTokens":199,"candidateTokens":122,"totalTokens":321,"cachedTokens":288640,"reasoningTokens":10,"cost":0.00097497}}
+{"type":"tool","timestamp":"2026-10-06T17:23:44.221Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:44.268Z","data":{"promptTokens":233,"candidateTokens":118,"totalTokens":351,"cachedTokens":288768,"reasoningTokens":38,"cost":0.0009948539999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:23:48.512Z","data":{"tool":"shell","summary":"{\"command\":\"awk 'NR>=200 && NR<=245 {printf \\\"%d: %s\\\\n\\\", N"}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:48.560Z","data":{"promptTokens":953,"candidateTokens":98,"totalTokens":1051,"cachedTokens":289152,"reasoningTokens":286,"cost":0.0012408060000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:23:53.636Z","data":{"tool":"edit","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:53.689Z","data":{"promptTokens":699,"candidateTokens":161,"totalTokens":860,"cachedTokens":290432,"reasoningTokens":362,"cost":0.001289946}}
+{"type":"tool","timestamp":"2026-10-06T17:23:58.736Z","data":{"tool":"shell","summary":"{\"command\":\"cat > /tmp/dbg.mts <<'EOF'\\nimport { execFile } "}}
+{"type":"tokens","timestamp":"2026-10-06T17:23:58.777Z","data":{"promptTokens":223,"candidateTokens":715,"totalTokens":938,"cachedTokens":291456,"reasoningTokens":0,"cost":0.001336818}}
+{"type":"tool","timestamp":"2026-10-06T17:24:02.969Z","data":{"tool":"shell","summary":"{\"command\":\"cat > .run/dbg.mts <<'EOF'\\nimport { execFile } "}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:03.011Z","data":{"promptTokens":520,"candidateTokens":725,"totalTokens":1245,"cachedTokens":292352,"reasoningTokens":7,"cost":0.0013942560000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:24:07.908Z","data":{"tool":"shell","summary":"{\"command\":\"cat > dbg.mts <<'EOF'\\nimport { execFile } from "}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:07.964Z","data":{"promptTokens":637,"candidateTokens":719,"totalTokens":1356,"cachedTokens":293504,"reasoningTokens":61,"cost":0.0014440619999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:24:14.452Z","data":{"tool":"shell","summary":"{\"command\":\"cat > dbg.mts <<'EOF'\\nimport { execFile } from "}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:14.504Z","data":{"promptTokens":207,"candidateTokens":762,"totalTokens":969,"cachedTokens":294912,"reasoningTokens":78,"cost":0.0014197860000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:24:21.386Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:21.427Z","data":{"promptTokens":338,"candidateTokens":129,"totalTokens":467,"cachedTokens":295936,"reasoningTokens":719,"cost":0.001447308}}
+{"type":"tool","timestamp":"2026-10-06T17:24:27.399Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:27.446Z","data":{"promptTokens":374,"candidateTokens":166,"totalTokens":540,"cachedTokens":297088,"reasoningTokens":705,"cost":0.001469964}}
+{"type":"tool","timestamp":"2026-10-06T17:24:30.040Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:30.087Z","data":{"promptTokens":243,"candidateTokens":114,"totalTokens":357,"cachedTokens":298112,"reasoningTokens":0,"cost":0.000999186}}
+{"type":"tool","timestamp":"2026-10-06T17:24:33.701Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:33.753Z","data":{"promptTokens":251,"candidateTokens":125,"totalTokens":376,"cachedTokens":298240,"reasoningTokens":0,"cost":0.00100737}}
+{"type":"tool","timestamp":"2026-10-06T17:24:40.420Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write tests/land-view.test.ts "}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:40.473Z","data":{"promptTokens":142,"candidateTokens":148,"totalTokens":290,"cachedTokens":298496,"reasoningTokens":71,"cost":0.001048188}}
+{"type":"tool","timestamp":"2026-10-06T17:24:46.216Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:46.293Z","data":{"promptTokens":428,"candidateTokens":161,"totalTokens":589,"cachedTokens":298752,"reasoningTokens":152,"cost":0.0011482559999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:24:49.292Z","data":{"tool":"read","summary":"tests/show-text.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:24:49.339Z","data":{"promptTokens":660,"candidateTokens":75,"totalTokens":735,"cachedTokens":299392,"reasoningTokens":75,"cost":0.001087176}}
+{"type":"tool","timestamp":"2026-10-06T17:25:02.858Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:25:02.909Z","data":{"promptTokens":975,"candidateTokens":2410,"totalTokens":3385,"cachedTokens":300160,"reasoningTokens":1506,"cost":0.00339633}}
+{"type":"tool","timestamp":"2026-10-06T17:25:12.236Z","data":{"tool":"edit","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:25:12.285Z","data":{"promptTokens":180,"candidateTokens":174,"totalTokens":354,"cachedTokens":304896,"reasoningTokens":56,"cost":0.001079688}}
+{"type":"tool","timestamp":"2026-10-06T17:25:17.728Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write src/core/status/show-lan"}}
+{"type":"tokens","timestamp":"2026-10-06T17:25:17.775Z","data":{"promptTokens":179,"candidateTokens":195,"totalTokens":374,"cachedTokens":305152,"reasoningTokens":60,"cost":0.001095306}}
+{"type":"tool","timestamp":"2026-10-06T17:25:21.940Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T17:25:21.990Z","data":{"promptTokens":426,"candidateTokens":118,"totalTokens":544,"cachedTokens":305536,"reasoningTokens":30,"cost":0.001069308}}
+{"type":"tool","timestamp":"2026-10-06T17:27:41.529Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"workdir\":\"/home/ma"}}
+{"type":"tokens","timestamp":"2026-10-06T17:27:41.976Z","data":{"promptTokens":308,"candidateTokens":97,"totalTokens":405,"cachedTokens":306048,"reasoningTokens":78,"cost":0.001069344}}
+{"type":"tool","timestamp":"2026-10-06T17:27:53.071Z","data":{"tool":"write","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T17:27:53.127Z","data":{"promptTokens":962,"candidateTokens":1229,"totalTokens":2191,"cachedTokens":306432,"reasoningTokens":941,"cost":0.002365596}}
+{"type":"tool","timestamp":"2026-10-06T17:27:56.318Z","data":{"tool":"shell","summary":"{\"command\":\"ls dbg.mts 2>&1; ls .run 2>&1; ls src/core/statu"}}
+{"type":"tokens","timestamp":"2026-10-06T17:27:56.373Z","data":{"promptTokens":220,"candidateTokens":97,"totalTokens":317,"cachedTokens":309376,"reasoningTokens":54,"cost":0.001051728}}
+{"type":"text","timestamp":"2026-10-06T17:28:00.245Z","data":{"text":"Done. Implemented the land view model, renderer, and web document wiring, with a new `tests/land-view.test.ts` covering the delta-spec scenarios.\n\nVerification:\n- Task verify `node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts` — 10/10 pass.\n- Change verify `pnpm verify` — typechecks, build, full test run, and lint all pass.\n\nResult written to `openspec/changes/153-land-view/.run/results/2.md`."}}
+{"type":"exited","timestamp":"2026-10-06T17:28:02.636Z","data":{"exitCode":0,"pid":81906,"timedOut":false,"elapsedSeconds":560.7}}
+{"type":"verify_ran","timestamp":"2026-10-06T17:28:04.332Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":1.04,"log":".run/logs/2-3.log","output":"▶ land view model\n  ✔ collects the archive gates and ignores events after archived (85.384197ms)\n  ✔ returns a gate-less view without an archived event (39.183694ms)\n  ✔ reads the spec changes, disclosures, halt and sync stop without git (45.605115ms)\n  ✔ returns null for an active or rejected change (24.445251ms)\n  ✔ renders every headline and git-off readout from a literal view (0.603801ms)\n  ✔ imports no files in the land renderer (1.131251ms)\n✔ land view model (198.018395ms)\n▶ land view in show\n  ✔ prints no Land line for an active change and no land key in JSON (14.717575ms)\n  ✔ prints the land summary for an archived change two commits behind main (137.511814ms)\n✔ land view in show (152.79974ms)\n▶ land view document\n  ✔ sets land for an archived change and null for an active one (212.713344ms)\n  ✔ reports a landed change with no main commits (135.662569ms)\n✔ land view document (348.813564ms)\nℹ tests 10\nℹ suites 3\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 995.05657\n"}}
+{"type":"measures","timestamp":"2026-10-06T17:30:13.792Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":10,"changedLines":908,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:3fa1e5e05b2b5811c4a7454514ebe86537ef73dcd036906c7077538632ac40f3"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:ab94417504bb790de28787d2342c416b4804ed56c563b4b42d24f1594c83c7be"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:5af91007c0490e96dfa120f42381e3c43904e094e883919709d6b5eb5954e77f"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:a67a01466951a796bd601b9ffc51d5da6b08847e4f3f9c66e2321bf277a170f2"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:c31bf10d7d8d2d85946fa0102a63c397047652ed67c39089ffe529499ad231d5"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:fa4df83d2c968cfeede06fdd936334d8c04b05214d53609ba37ea04fb3c47220"},"tests/land-view.test.ts":{"before":null,"after":"sha256:2622f493f236e677879e2ae871690ee3e96af23eebc2270a233f4c7b1909b95d"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:70741d9bbea86f8b46de98c531c427382410239a6f64c1eab06ee06a3dfa6077"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:ec7f4e111fc4f4658850b41cf3291aeb3c86c91e1aefaf2d606821eb92e73921"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:5410355570984d4b44e579c929f9f044ed46be592498c65b1c201848479b7d3e"}}}}
+{"type":"dead","timestamp":"2026-10-06T17:30:14.016Z","data":{"task":"2","reason":"change_verify_red"}}
+{"type":"stuck","timestamp":"2026-10-06T17:30:14.875Z","data":{"task":"2","fingerprint":"sha256:1076539f1d68fbdb86d1906b68ca3983e970d9d29343769e4118a9f04cd21e49"}}
+{"type":"retry","data":{"target":"2","reason":"change_verify_red","attempt":3},"timestamp":"2026-10-06T17:42:27.816Z"}
+{"type":"measures","timestamp":"2026-10-06T17:42:29.803Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16}}
+{"type":"started","timestamp":"2026-10-06T17:42:29.850Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":3,"projectCommit":"784e89a","pid":27722,"timeoutSeconds":1800,"version":"0.2.4","commit":"245110a"}}
+{"type":"text","timestamp":"2026-10-06T17:42:40.212Z","data":{"text":"I'll start by reading the prior result and checking the current state."}}
+{"type":"tool","timestamp":"2026-10-06T17:42:40.266Z","data":{"tool":"read","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:40.336Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:40.389Z","data":{"promptTokens":204533,"candidateTokens":191,"totalTokens":204724,"cachedTokens":0,"reasoningTokens":42,"cost":0.030819749999999996}}
+{"type":"tool","timestamp":"2026-10-06T17:42:44.503Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:44.561Z","data":{"promptTokens":1539,"candidateTokens":124,"totalTokens":1663,"cachedTokens":204672,"reasoningTokens":445,"cost":0.001186266}}
+{"type":"tool","timestamp":"2026-10-06T17:42:49.709Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:49.768Z","data":{"promptTokens":378,"candidateTokens":143,"totalTokens":521,"cachedTokens":206720,"reasoningTokens":405,"cost":0.00100566}}
+{"type":"text","timestamp":"2026-10-06T17:42:53.383Z","data":{"text":"The prior attempt's source changes were discarded by the dead-task cleanup. I'm starting fresh. Let me read the key files."}}
+{"type":"tool","timestamp":"2026-10-06T17:42:53.389Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:53.392Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:53.393Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:53.438Z","data":{"promptTokens":903,"candidateTokens":134,"totalTokens":1037,"cachedTokens":207616,"reasoningTokens":320,"cost":0.0010306979999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:42:56.042Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:56.043Z","data":{"tool":"read","summary":"src/core/status/last-sync.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:56.044Z","data":{"tool":"read","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:56.045Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:56.092Z","data":{"promptTokens":4430,"candidateTokens":148,"totalTokens":4578,"cachedTokens":208896,"reasoningTokens":89,"cost":0.0014333879999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:42:58.688Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:58.689Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:42:58.690Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:42:58.730Z","data":{"promptTokens":6392,"candidateTokens":112,"totalTokens":6504,"cachedTokens":213504,"reasoningTokens":61,"cost":0.0017031120000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:43:02.035Z","data":{"tool":"read","summary":"src/core/status/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:02.037Z","data":{"tool":"read","summary":"tests/show-validation.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:02.038Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:02.039Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:02.085Z","data":{"promptTokens":7178,"candidateTokens":141,"totalTokens":7319,"cachedTokens":220032,"reasoningTokens":124,"cost":0.0018957960000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:43:05.824Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:05.872Z","data":{"promptTokens":4971,"candidateTokens":190,"totalTokens":5161,"cachedTokens":227456,"reasoningTokens":143,"cost":0.001627818}}
+{"type":"tool","timestamp":"2026-10-06T17:43:10.988Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:10.989Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:10.991Z","data":{"tool":"read","summary":"src/core/spec/human-steps.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:10.994Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:11.035Z","data":{"promptTokens":1048,"candidateTokens":237,"totalTokens":1285,"cachedTokens":232704,"reasoningTokens":345,"cost":0.001204512}}
+{"type":"tool","timestamp":"2026-10-06T17:43:14.735Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:14.736Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:14.779Z","data":{"promptTokens":4831,"candidateTokens":103,"totalTokens":4934,"cachedTokens":234240,"reasoningTokens":88,"cost":0.00154197}}
+{"type":"tool","timestamp":"2026-10-06T17:43:17.547Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:17.586Z","data":{"promptTokens":1737,"candidateTokens":70,"totalTokens":1807,"cachedTokens":239232,"reasoningTokens":34,"cost":0.0010406459999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:43:43.809Z","data":{"tool":"read","summary":"src/core/status/show-model-folder.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:43.817Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:43.861Z","data":{"promptTokens":1544,"candidateTokens":183,"totalTokens":1727,"cachedTokens":241024,"reasoningTokens":6155,"cost":0.004757472}}
+{"type":"tool","timestamp":"2026-10-06T17:43:47.534Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:47.574Z","data":{"promptTokens":943,"candidateTokens":45,"totalTokens":988,"cachedTokens":248832,"reasoningTokens":190,"cost":0.001028946}}
+{"type":"tool","timestamp":"2026-10-06T17:43:55.063Z","data":{"tool":"read","summary":"src/core/status/landed-copies.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:43:55.064Z","data":{"tool":"read","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:43:55.103Z","data":{"promptTokens":2856,"candidateTokens":79,"totalTokens":2935,"cachedTokens":249984,"reasoningTokens":1133,"cost":0.0019055519999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:44:16.603Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:16.646Z","data":{"promptTokens":2608,"candidateTokens":161,"totalTokens":2769,"cachedTokens":253952,"reasoningTokens":5347,"cost":0.004457856}}
+{"type":"tool","timestamp":"2026-10-06T17:44:22.932Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:22.974Z","data":{"promptTokens":1083,"candidateTokens":95,"totalTokens":1178,"cachedTokens":262016,"reasoningTokens":801,"cost":0.001486098}}
+{"type":"tool","timestamp":"2026-10-06T17:44:28.434Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:28.475Z","data":{"promptTokens":1550,"candidateTokens":130,"totalTokens":1680,"cachedTokens":263936,"reasoningTokens":499,"cost":0.001401708}}
+{"type":"tool","timestamp":"2026-10-06T17:44:33.271Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:33.311Z","data":{"promptTokens":847,"candidateTokens":97,"totalTokens":944,"cachedTokens":266112,"reasoningTokens":155,"cost":0.001076586}}
+{"type":"tool","timestamp":"2026-10-06T17:44:38.551Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:38.588Z","data":{"promptTokens":1159,"candidateTokens":142,"totalTokens":1301,"cachedTokens":267136,"reasoningTokens":443,"cost":0.001326258}}
+{"type":"tool","timestamp":"2026-10-06T17:44:41.145Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:41.186Z","data":{"promptTokens":453,"candidateTokens":86,"totalTokens":539,"cachedTokens":268800,"reasoningTokens":15,"cost":0.00093495}}
+{"type":"tool","timestamp":"2026-10-06T17:44:44.641Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:44.684Z","data":{"promptTokens":363,"candidateTokens":101,"totalTokens":464,"cachedTokens":269312,"reasoningTokens":103,"cost":0.000984786}}
+{"type":"tool","timestamp":"2026-10-06T17:44:47.426Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:47.464Z","data":{"promptTokens":994,"candidateTokens":71,"totalTokens":1065,"cachedTokens":269824,"reasoningTokens":39,"cost":0.0010245719999999999}}
+{"type":"text","timestamp":"2026-10-06T17:44:50.575Z","data":{"text":"Now let me run the task verify to confirm the starting state."}}
+{"type":"tool","timestamp":"2026-10-06T17:44:50.665Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:50.705Z","data":{"promptTokens":708,"candidateTokens":98,"totalTokens":806,"cachedTokens":270848,"reasoningTokens":86,"cost":0.001029144}}
+{"type":"tool","timestamp":"2026-10-06T17:44:54.111Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-diff.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:44:54.116Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:54.157Z","data":{"promptTokens":147,"candidateTokens":195,"totalTokens":342,"cachedTokens":271616,"reasoningTokens":48,"cost":0.0009826980000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:44:57.163Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/trees/osq/153-land-view 2>"}}
+{"type":"tokens","timestamp":"2026-10-06T17:44:57.200Z","data":{"promptTokens":888,"candidateTokens":152,"totalTokens":1040,"cachedTokens":272000,"reasoningTokens":17,"cost":0.0010505999999999998}}
+{"type":"text","timestamp":"2026-10-06T17:45:16.542Z","data":{"text":"Now I'll implement. Starting with the types file."}}
+{"type":"tool","timestamp":"2026-10-06T17:45:16.551Z","data":{"tool":"write","summary":"src/core/status/show-land-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:16.593Z","data":{"promptTokens":824,"candidateTokens":554,"totalTokens":1378,"cachedTokens":273024,"reasoningTokens":4996,"cost":0.004272672}}
+{"type":"tool","timestamp":"2026-10-06T17:45:22.135Z","data":{"tool":"write","summary":"src/core/status/show-land-gates.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:22.183Z","data":{"promptTokens":254,"candidateTokens":1258,"totalTokens":1512,"cachedTokens":279168,"reasoningTokens":0,"cost":0.001630404}}
+{"type":"tool","timestamp":"2026-10-06T17:45:28.861Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:28.905Z","data":{"promptTokens":257,"candidateTokens":1363,"totalTokens":1620,"cachedTokens":280448,"reasoningTokens":4,"cost":0.001700094}}
+{"type":"tool","timestamp":"2026-10-06T17:45:33.931Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:33.974Z","data":{"promptTokens":240,"candidateTokens":1052,"totalTokens":1292,"cachedTokens":281856,"reasoningTokens":0,"cost":0.001512768}}
+{"type":"text","timestamp":"2026-10-06T17:45:37.939Z","data":{"text":"Now the edits to existing files."}}
+{"type":"tool","timestamp":"2026-10-06T17:45:37.948Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:45:37.951Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:38.015Z","data":{"promptTokens":165,"candidateTokens":406,"totalTokens":571,"cachedTokens":283008,"reasoningTokens":0,"cost":0.001117374}}
+{"type":"tool","timestamp":"2026-10-06T17:45:42.175Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:45:42.179Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:42.218Z","data":{"promptTokens":229,"candidateTokens":485,"totalTokens":714,"cachedTokens":283392,"reasoningTokens":12,"cost":0.001182726}}
+{"type":"tool","timestamp":"2026-10-06T17:45:46.761Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:46.805Z","data":{"promptTokens":256,"candidateTokens":107,"totalTokens":363,"cachedTokens":283904,"reasoningTokens":416,"cost":0.0012039120000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:45:49.451Z","data":{"tool":"read","summary":"biome.json"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:49.493Z","data":{"promptTokens":156,"candidateTokens":39,"totalTokens":195,"cachedTokens":284672,"reasoningTokens":0,"cost":0.0009008159999999999}}
+{"type":"tool","timestamp":"2026-10-06T17:45:53.327Z","data":{"tool":"edit","summary":"src/core/status/show-output.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:53.371Z","data":{"promptTokens":346,"candidateTokens":425,"totalTokens":771,"cachedTokens":284800,"reasoningTokens":119,"cost":0.0012326999999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:45:57.204Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:45:57.207Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:45:57.246Z","data":{"promptTokens":145,"candidateTokens":344,"totalTokens":489,"cachedTokens":285568,"reasoningTokens":15,"cost":0.001093854}}
+{"type":"tool","timestamp":"2026-10-06T17:46:00.936Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:46:00.942Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:46:00.946Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:46:01.000Z","data":{"promptTokens":162,"candidateTokens":422,"totalTokens":584,"cachedTokens":285952,"reasoningTokens":0,"cost":0.001135356}}
+{"type":"tool","timestamp":"2026-10-06T17:46:04.167Z","data":{"tool":"edit","summary":"src/core/web/web-data.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:46:04.207Z","data":{"promptTokens":261,"candidateTokens":214,"totalTokens":475,"cachedTokens":286336,"reasoningTokens":71,"cost":0.0010691580000000002}}
+{"type":"tool","timestamp":"2026-10-06T17:46:07.459Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:46:07.499Z","data":{"promptTokens":184,"candidateTokens":73,"totalTokens":257,"cachedTokens":286720,"reasoningTokens":86,"cost":0.00098316}}
+{"type":"tool","timestamp":"2026-10-06T17:46:20.536Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:46:20.578Z","data":{"promptTokens":180,"candidateTokens":69,"totalTokens":249,"cachedTokens":286976,"reasoningTokens":0,"cost":0.000929328}}
+{"type":"text","timestamp":"2026-10-06T17:47:06.348Z","data":{"text":"Now the test file — the largest part."}}
+{"type":"tool","timestamp":"2026-10-06T17:47:06.365Z","data":{"tool":"write","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:06.414Z","data":{"promptTokens":186,"candidateTokens":4738,"totalTokens":4924,"cachedTokens":287104,"reasoningTokens":8399,"cost":0.008771412000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:47:14.393Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:14.434Z","data":{"promptTokens":161,"candidateTokens":249,"totalTokens":410,"cachedTokens":300288,"reasoningTokens":1064,"cost":0.0017128139999999998}}
+{"type":"tool","timestamp":"2026-10-06T17:47:19.229Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:47:19.232Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T17:47:19.235Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:19.273Z","data":{"promptTokens":216,"candidateTokens":1018,"totalTokens":1234,"cachedTokens":301568,"reasoningTokens":57,"cost":0.001582104}}
+{"type":"tool","timestamp":"2026-10-06T17:47:23.663Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:23.701Z","data":{"promptTokens":197,"candidateTokens":86,"totalTokens":283,"cachedTokens":302720,"reasoningTokens":6,"cost":0.00099291}}
+{"type":"text","timestamp":"2026-10-06T17:47:28.620Z","data":{"text":"The validator gate wrongly added `exit 0`. A failed gate means outcome `failed`, not \"not passed\". Fixing:"}}
+{"type":"tool","timestamp":"2026-10-06T17:47:28.624Z","data":{"tool":"edit","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:28.663Z","data":{"promptTokens":929,"candidateTokens":178,"totalTokens":1107,"cachedTokens":302976,"reasoningTokens":407,"cost":0.0013992780000000001}}
+{"type":"tool","timestamp":"2026-10-06T17:47:33.850Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:33.913Z","data":{"promptTokens":259,"candidateTokens":117,"totalTokens":376,"cachedTokens":304256,"reasoningTokens":0,"cost":0.001021818}}
+{"type":"tool","timestamp":"2026-10-06T17:47:38.721Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:38.761Z","data":{"promptTokens":134,"candidateTokens":86,"totalTokens":220,"cachedTokens":304512,"reasoningTokens":0,"cost":0.000985236}}
+{"type":"text","timestamp":"2026-10-06T17:47:42.574Z","data":{"text":"All 13 pass. Now lint and typecheck."}}
+{"type":"tool","timestamp":"2026-10-06T17:47:43.613Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:43.655Z","data":{"promptTokens":479,"candidateTokens":76,"totalTokens":555,"cachedTokens":304640,"reasoningTokens":134,"cost":0.00111177}}
+{"type":"tool","timestamp":"2026-10-06T17:47:48.923Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:48.963Z","data":{"promptTokens":633,"candidateTokens":117,"totalTokens":750,"cachedTokens":305280,"reasoningTokens":0,"cost":0.00108099}}
+{"type":"tool","timestamp":"2026-10-06T17:47:52.958Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:53.000Z","data":{"promptTokens":419,"candidateTokens":151,"totalTokens":570,"cachedTokens":305920,"reasoningTokens":164,"cost":0.00116961}}
+{"type":"tool","timestamp":"2026-10-06T17:47:56.437Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:47:56.478Z","data":{"promptTokens":248,"candidateTokens":66,"totalTokens":314,"cachedTokens":306432,"reasoningTokens":0,"cost":0.000996096}}
+{"type":"tool","timestamp":"2026-10-06T17:48:00.977Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:48:01.017Z","data":{"promptTokens":252,"candidateTokens":108,"totalTokens":360,"cachedTokens":306560,"reasoningTokens":30,"cost":0.00104028}}
+{"type":"text","timestamp":"2026-10-06T17:48:04.866Z","data":{"text":"Now the change-level verify. This is heavy; running it."}}
+{"type":"tool","timestamp":"2026-10-06T17:49:50.857Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:49:50.985Z","data":{"promptTokens":254,"candidateTokens":97,"totalTokens":351,"cachedTokens":306816,"reasoningTokens":48,"cost":0.001045548}}
+{"type":"tool","timestamp":"2026-10-06T17:51:27.659Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:51:27.715Z","data":{"promptTokens":878,"candidateTokens":136,"totalTokens":1014,"cachedTokens":307200,"reasoningTokens":498,"cost":0.0014336999999999998}}
+{"type":"text","timestamp":"2026-10-06T17:51:38.299Z","data":{"text":"Full verify passes (3370 + 114 tests, exit 0). Let me review the final new files after formatting."}}
+{"type":"tool","timestamp":"2026-10-06T17:51:38.318Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tool","timestamp":"2026-10-06T17:51:38.321Z","data":{"tool":"read","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T17:51:38.361Z","data":{"promptTokens":159,"candidateTokens":210,"totalTokens":369,"cachedTokens":308608,"reasoningTokens":1980,"cost":0.002263674}}
+{"type":"text","timestamp":"2026-10-06T17:51:43.230Z","data":{"text":"All green. Let me confirm the exact set of changed files."}}
+{"type":"tool","timestamp":"2026-10-06T17:51:43.248Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+{"type":"tokens","timestamp":"2026-10-06T17:51:43.287Z","data":{"promptTokens":1261,"candidateTokens":74,"totalTokens":1335,"cachedTokens":310912,"reasoningTokens":495,"cost":0.001463286}}
+{"type":"tool","timestamp":"2026-10-06T17:51:50.234Z","data":{"tool":"write","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T17:51:50.276Z","data":{"promptTokens":153,"candidateTokens":1329,"totalTokens":1482,"cachedTokens":312704,"reasoningTokens":51,"cost":0.001789062}}
+{"type":"text","timestamp":"2026-10-06T17:51:54.652Z","data":{"text":"Done. Summary:\n\n**Implemented task 2 of change 153-land-view** — the land view model plus its `osq show` and web document wiring.\n\n**New modules**\n- `src/core/status/show-land-types.ts` — the Ports types (`LandGateKind`, `LandGate`, `LandDisclosure`, `LandHalt`, `LandView`).\n- `src/core/status/show-land-gates.ts` — `buildLandGates`: archive gates cut at the last `archived` event (per-task last non-`phase` verify, then proposal verify, declared check, validator).\n- `src/core/status/show-land-model.ts` — `readLandView`, returning null for non-archived changes and otherwise the gates, diff, spec changes, disclosures, landed state, default-branch movement, halt and last sync.\n- `src/core/status/show-land-lines.ts` — `landLines(details)`, no file reads.\n\n**Edits**\n- `show-types.ts` (`SpecDetails.land`), `show-model.ts` (`withNextStep` attaches it for archived folders), `show-output.ts` (`formatShowText` appends it before the digest).\n- `web-data-types.ts`, `web-data-change.ts` (`getWebChange` sets `land`), `web-data.ts` (type re-exports).\n\n**Tests**: new `tests/land-view.test.ts` (13 tests) covering every \"Land view model\", \"Land in show\" and \"Land view document\" scenario, including a temporary git repo with an `osq/042-pricing` worktree, a `diffStat` cross-check, a landed case, and a disclosure result file.\n\n**Verification**\n- Task verify: `node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts` → 13 pass, 0 fail.\n- Change verify: `pnpm verify` → exit 0 (3370 CLI tests + 114 UI tests pass, typechecks, build, lint).\n\nResult written to `openspec/changes/153-land-view/.run/results/2.md`."}}
+{"type":"exited","timestamp":"2026-10-06T17:51:55.431Z","data":{"exitCode":0,"pid":27722,"timedOut":false,"elapsedSeconds":565}}
+{"type":"verify_ran","timestamp":"2026-10-06T17:51:56.707Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":0.98,"log":".run/logs/2-4.log","output":"▶ land view model\n  ✔ Default branch moved after archive: landed is false and mainCommits is 2 (157.311545ms)\n  ✔ Landed change: landed is true and mainCommits is null (88.824608ms)\n  ✔ Gates at archive: task 1, verify, check and validator, and no event after archived (119.509362ms)\n  ✔ reads capabilities, disclosures and a halt, and compares diff to diffStat (126.363703ms)\n  ✔ reads a halt marker and a sync stop (27.83599ms)\n  ✔ Active change: readLandView returns null for active and rejected changes (17.128937ms)\n  ✔ Git off: git fields are null while gates, capabilities and disclosures are read (22.008794ms)\n✔ land view model (560.15425ms)\n▶ land in show\n  ✔ Show prints the land summary: two commits behind, with gates (87.371717ms)\n  ✔ Show prints a git-off headline (21.492418ms)\n  ✔ Active change unchanged: no Land line and no land key (10.666958ms)\n  ✔ names one commit, no movement and a missing branch (0.239551ms)\n✔ land in show (120.143302ms)\n▶ land view document\n  ✔ Archived change document: land equals readLandView for the same change (33.019041ms)\n  ✔ Active change document: land is null (9.441701ms)\n✔ land view document (42.694542ms)\nℹ tests 13\nℹ suites 3\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 946.362477\n"}}
+{"type":"measures","timestamp":"2026-10-06T17:53:25.383Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":11,"changedLines":951,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:ce6646fe1426a957fbad00121744d9958092c9626e132f1f20736a47f6fc7d84"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:82c3646926f10b1baaeec679daa9ebc59d471e90c604e0383192286e44e58b52"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:5708d35df0828574d5a61d11983bab7d5b391b0537ddb2fba30fe8c87bd44455"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:09819e5d873cb8bc2cd4c48a2e6caa05173351bc8bb7ea8c9b9ea0928fd60626"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:9a764539ca0a6dc6abecd60ccfaeac0c039ccbedc626fde9eb1a91925c27a723"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:fa4df83d2c968cfeede06fdd936334d8c04b05214d53609ba37ea04fb3c47220"},"tests/land-view.test.ts":{"before":null,"after":"sha256:804fa636ff54b4d51c39ba1b55ba540b0fe4a8d7581b0aebcce81cd07eebb645"},"src/core/status/show-land-gates.ts":{"before":null,"after":"sha256:63d26b692d35aa12cde417087f65c0bcf9dae70e8d404e43159c543bda41ca6d"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:221c96e96e433c40a58ff21389be5a45b06aa6a14e171968cc9d1de3b01a6eaa"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:9c554e62c1616a17f984724c9672d418dc8b6b239d0ef299cd51847e38786adf"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:c629e79ce2e51c6617d0418c6375b21205a39309776c06da6a2c8f1a21b805be"}}}}
+{"type":"done","timestamp":"2026-10-06T17:53:25.396Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-10-06T18:01:57.522Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":0.98,"log":".run/logs/2-5.log","output":"▶ land view model\n  ✔ Default branch moved after archive: landed is false and mainCommits is 2 (154.53614ms)\n  ✔ Landed change: landed is true and mainCommits is null (89.412374ms)\n  ✔ Gates at archive: task 1, verify, check and validator, and no event after archived (121.443285ms)\n  ✔ reads capabilities, disclosures and a halt, and compares diff to diffStat (126.342494ms)\n  ✔ reads a halt marker and a sync stop (26.647922ms)\n  ✔ Active change: readLandView returns null for active and rejected changes (17.839131ms)\n  ✔ Git off: git fields are null while gates, capabilities and disclosures are read (24.422376ms)\n✔ land view model (561.811161ms)\n▶ land in show\n  ✔ Show prints the land summary: two commits behind, with gates (92.947469ms)\n  ✔ Show prints a git-off headline (22.694735ms)\n  ✔ Active change unchanged: no Land line and no land key (10.524274ms)\n  ✔ names one commit, no movement and a missing branch (0.242171ms)\n✔ land in show (126.782201ms)\n▶ land view document\n  ✔ Archived change document: land equals readLandView for the same change (32.898394ms)\n  ✔ Active change document: land is null (9.558336ms)\n✔ land view document (42.65223ms)\nℹ tests 13\nℹ suites 3\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 953.503015\n"}}

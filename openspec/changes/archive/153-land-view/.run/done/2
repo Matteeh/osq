@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f9d8f6fc9caa3efb4819f4801e990c05884a9b9b7609cb63a1dd7df5b55c610a"
+build_stamp: "245110a"
+project_commit: "784e89a"
+exit_code: 0
+scope_files: {"src/core/status/show-land-gates.ts":"sha256:63d26b692d35aa12cde417087f65c0bcf9dae70e8d404e43159c543bda41ca6d","src/core/status/show-land-lines.ts":"sha256:221c96e96e433c40a58ff21389be5a45b06aa6a14e171968cc9d1de3b01a6eaa","src/core/status/show-land-model.ts":"sha256:9c554e62c1616a17f984724c9672d418dc8b6b239d0ef299cd51847e38786adf","src/core/status/show-land-types.ts":"sha256:c629e79ce2e51c6617d0418c6375b21205a39309776c06da6a2c8f1a21b805be","src/core/status/show-model.ts":"sha256:ce6646fe1426a957fbad00121744d9958092c9626e132f1f20736a47f6fc7d84","src/core/status/show-output.ts":"sha256:82c3646926f10b1baaeec679daa9ebc59d471e90c604e0383192286e44e58b52","src/core/status/show-types.ts":"sha256:5708d35df0828574d5a61d11983bab7d5b391b0537ddb2fba30fe8c87bd44455","src/core/web/web-data-change.ts":"sha256:09819e5d873cb8bc2cd4c48a2e6caa05173351bc8bb7ea8c9b9ea0928fd60626","src/core/web/web-data-types.ts":"sha256:9a764539ca0a6dc6abecd60ccfaeac0c039ccbedc626fde9eb1a91925c27a723","src/core/web/web-data.ts":"sha256:fa4df83d2c968cfeede06fdd936334d8c04b05214d53609ba37ea04fb3c47220","tests/land-view.test.ts":"sha256:804fa636ff54b4d51c39ba1b55ba540b0fe4a8d7581b0aebcce81cd07eebb645"}
+---
+2026-10-06T17:53:25.395Z

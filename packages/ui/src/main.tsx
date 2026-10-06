@@ -8,6 +8,7 @@ import type { Route } from './router.js';
 import { createHashRouter } from './router.js';
 import './change/actions.css';
 import './change/review.css';
+import './change/land.css';
 import './styles.css';
 
 const EMPTY: DashboardSnapshot = { report: null, graph: null, inbox: null, change: null };

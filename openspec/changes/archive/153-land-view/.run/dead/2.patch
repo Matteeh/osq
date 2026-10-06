@@ -1,0 +1,2770 @@
+diff --git a/openspec/changes/153-land-view/.run/dead/2.1.md b/openspec/changes/153-land-view/.run/dead/2.1.md
+new file mode 100644
+index 0000000..44e0a4b
+--- /dev/null
++++ b/openspec/changes/153-land-view/.run/dead/2.1.md
+@@ -0,0 +1,29 @@
++---
++reason: change_verify_red
++command: "pnpm verify"
++exit_code: 1
++fingerprint: sha256:1076539f1d68fbdb86d1906b68ca3983e970d9d29343769e4118a9f04cd21e49
++---
++Change-level verification failed after task verification passed.
++✖ failing tests:
++
++test at tests/inbox.test.ts:2:14782
++✖ reads the inbox through a core helper without advancing the cursor (3148.737208ms)
++  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
++  
++    assert.ok(
++  
++      at TestContext.<anonymous> (tests/inbox.test.ts:571:14)
++      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
++      at async Test.run (node:internal/test_runner/test:1409:7)
++      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
++    generatedMessage: true,
++    code: 'ERR_ASSERTION',
++    actual: false,
++    expected: true,
++    operator: '==',
++    diff: 'simple'
++  }
++ ELIFECYCLE  Test failed. See above for more details.
++ ELIFECYCLE  Command failed with exit code 1.
++Full output: .run/logs/change-2.log
+diff --git a/openspec/changes/153-land-view/.run/dead/2.md b/openspec/changes/153-land-view/.run/dead/2.md
+index 44e0a4b..01505dd 100644
+--- a/openspec/changes/153-land-view/.run/dead/2.md
++++ b/openspec/changes/153-land-view/.run/dead/2.md
+@@ -8,7 +8,7 @@ Change-level verification failed after task verification passed.
+ ✖ failing tests:
+ 
+ test at tests/inbox.test.ts:2:14782
+-✖ reads the inbox through a core helper without advancing the cursor (3148.737208ms)
++✖ reads the inbox through a core helper without advancing the cursor (3809.709806ms)
+   AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+   
+     assert.ok(
+@@ -26,4 +26,4 @@ test at tests/inbox.test.ts:2:14782
+   }
+  ELIFECYCLE  Test failed. See above for more details.
+  ELIFECYCLE  Command failed with exit code 1.
+-Full output: .run/logs/change-2.log
++Full output: .run/logs/change-3.log
+diff --git a/openspec/changes/153-land-view/.run/dead/2.patch b/openspec/changes/153-land-view/.run/dead/2.patch
+deleted file mode 100644
+index 5bc6f9b..0000000
+--- a/openspec/changes/153-land-view/.run/dead/2.patch
++++ /dev/null
+@@ -1,1435 +0,0 @@
+-diff --git a/openspec/changes/153-land-view/.run/dead/2.md b/openspec/changes/153-land-view/.run/dead/2.md
+-new file mode 100644
+-index 0000000..44e0a4b
+---- /dev/null
+-+++ b/openspec/changes/153-land-view/.run/dead/2.md
+-@@ -0,0 +1,29 @@
+-+---
+-+reason: change_verify_red
+-+command: "pnpm verify"
+-+exit_code: 1
+-+fingerprint: sha256:1076539f1d68fbdb86d1906b68ca3983e970d9d29343769e4118a9f04cd21e49
+-+---
+-+Change-level verification failed after task verification passed.
+-+✖ failing tests:
+-+
+-+test at tests/inbox.test.ts:2:14782
+-+✖ reads the inbox through a core helper without advancing the cursor (3148.737208ms)
+-+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+-+  
+-+    assert.ok(
+-+  
+-+      at TestContext.<anonymous> (tests/inbox.test.ts:571:14)
+-+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+-+      at async Test.run (node:internal/test_runner/test:1409:7)
+-+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+-+    generatedMessage: true,
+-+    code: 'ERR_ASSERTION',
+-+    actual: false,
+-+    expected: true,
+-+    operator: '==',
+-+    diff: 'simple'
+-+  }
+-+ ELIFECYCLE  Test failed. See above for more details.
+-+ ELIFECYCLE  Command failed with exit code 1.
+-+Full output: .run/logs/change-2.log
+-diff --git a/openspec/changes/153-land-view/.run/events/2.jsonl b/openspec/changes/153-land-view/.run/events/2.jsonl
+-new file mode 100644
+-index 0000000..4c51214
+---- /dev/null
+-+++ b/openspec/changes/153-land-view/.run/events/2.jsonl
+-@@ -0,0 +1,167 @@
+-+{"type":"verify_ran","timestamp":"2026-10-06T16:54:33.356Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":1,"duration":0.04,"log":".run/logs/2-1.log","output":"Could not find 'tests/land-view.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/land-view.test.ts"],"mismatch":false}}
+-+{"type":"measures","timestamp":"2026-10-06T16:54:34.497Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16}}
+-+{"type":"started","timestamp":"2026-10-06T16:54:34.550Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":1,"projectCommit":"7541aa9","pid":82529,"timeoutSeconds":1800,"version":"0.2.4","commit":"245110a"}}
+-+{"type":"text","timestamp":"2026-10-06T16:54:43.060Z","data":{"text":"I'll start by exploring the task context and entry files."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:43.126Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:43.131Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:43.180Z","data":{"promptTokens":204236,"candidateTokens":202,"totalTokens":204438,"cachedTokens":0,"reasoningTokens":57,"cost":0.0307908}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:45.416Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:45.420Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:45.473Z","data":{"promptTokens":2145,"candidateTokens":145,"totalTokens":2290,"cachedTokens":204416,"reasoningTokens":25,"cost":0.0010369980000000001}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:48.521Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:48.524Z","data":{"tool":"read","summary":"src/core/status/last-sync.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:48.526Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:48.529Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:48.573Z","data":{"promptTokens":3440,"candidateTokens":214,"totalTokens":3654,"cachedTokens":206720,"reasoningTokens":51,"cost":0.0012951599999999998}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:51.518Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:51.521Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:51.563Z","data":{"promptTokens":6060,"candidateTokens":113,"totalTokens":6173,"cachedTokens":210304,"reasoningTokens":58,"cost":0.0016425120000000003}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:54.822Z","data":{"tool":"read","summary":"src/core/web/web-data-change.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:54.825Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:54.864Z","data":{"promptTokens":4335,"candidateTokens":109,"totalTokens":4444,"cachedTokens":216448,"reasoningTokens":42,"cost":0.001390194}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:57.742Z","data":{"tool":"read","summary":"src/core/web/web-data-types.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:54:57.744Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:54:57.810Z","data":{"promptTokens":2064,"candidateTokens":112,"totalTokens":2176,"cachedTokens":220928,"reasoningTokens":0,"cost":0.0010395839999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:01.417Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:01.419Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:01.420Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:01.462Z","data":{"promptTokens":4939,"candidateTokens":162,"totalTokens":5101,"cachedTokens":223104,"reasoningTokens":42,"cost":0.001532562}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:04.388Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:04.390Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:04.392Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:04.432Z","data":{"promptTokens":2684,"candidateTokens":159,"totalTokens":2843,"cachedTokens":228224,"reasoningTokens":59,"cost":0.0012180720000000002}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:07.646Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:07.651Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:07.692Z","data":{"promptTokens":3758,"candidateTokens":181,"totalTokens":3939,"cachedTokens":231040,"reasoningTokens":94,"cost":0.0014218199999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:11.030Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:11.070Z","data":{"promptTokens":2709,"candidateTokens":70,"totalTokens":2779,"cachedTokens":235008,"reasoningTokens":63,"cost":0.001191174}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:14.485Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:14.488Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:14.537Z","data":{"promptTokens":2532,"candidateTokens":224,"totalTokens":2756,"cachedTokens":237824,"reasoningTokens":156,"cost":0.0013212719999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:17.507Z","data":{"tool":"read","summary":"src/cli/show.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:17.509Z","data":{"tool":"read","summary":"src/core/spec/human-steps.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:17.554Z","data":{"promptTokens":1387,"candidateTokens":110,"totalTokens":1497,"cachedTokens":240640,"reasoningTokens":109,"cost":0.0010613699999999998}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:36.264Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:36.311Z","data":{"promptTokens":1071,"candidateTokens":161,"totalTokens":1232,"cachedTokens":242176,"reasoningTokens":3771,"cost":0.003246378}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:39.281Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:39.321Z","data":{"promptTokens":1115,"candidateTokens":69,"totalTokens":1184,"cachedTokens":247168,"reasoningTokens":43,"cost":0.0009759539999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:55:42.454Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:55:42.510Z","data":{"promptTokens":1634,"candidateTokens":86,"totalTokens":1720,"cachedTokens":248320,"reasoningTokens":90,"cost":0.00109566}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:25.780Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:25.826Z","data":{"promptTokens":169,"candidateTokens":98,"totalTokens":267,"cachedTokens":249984,"reasoningTokens":10592,"cost":0.007189302000000001}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:29.152Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:29.189Z","data":{"promptTokens":1515,"candidateTokens":124,"totalTokens":1639,"cachedTokens":260736,"reasoningTokens":157,"cost":0.001178058}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:33.576Z","data":{"tool":"read","summary":"src/core/status/show-model-folder.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:33.578Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:33.615Z","data":{"promptTokens":1553,"candidateTokens":146,"totalTokens":1699,"cachedTokens":262528,"reasoningTokens":193,"cost":0.001223934}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:50.383Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:50.430Z","data":{"promptTokens":1524,"candidateTokens":103,"totalTokens":1627,"cachedTokens":264320,"reasoningTokens":4672,"cost":0.00388656}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:54.050Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:54.093Z","data":{"promptTokens":761,"candidateTokens":87,"totalTokens":848,"cachedTokens":270592,"reasoningTokens":148,"cost":0.001066926}}
+-+{"type":"text","timestamp":"2026-10-06T16:56:58.259Z","data":{"text":"Now I'll implement the source files. Starting with the types."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:56:58.265Z","data":{"tool":"write","summary":"src/core/status/show-land-types.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:56:58.306Z","data":{"promptTokens":317,"candidateTokens":548,"totalTokens":865,"cachedTokens":271488,"reasoningTokens":26,"cost":0.001206414}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:07.384Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:07.426Z","data":{"promptTokens":147,"candidateTokens":2376,"totalTokens":2523,"cachedTokens":272256,"reasoningTokens":0,"cost":0.002264418}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:13.603Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:13.647Z","data":{"promptTokens":243,"candidateTokens":1172,"totalTokens":1415,"cachedTokens":274560,"reasoningTokens":7,"cost":0.0015675300000000001}}
+-+{"type":"text","timestamp":"2026-10-06T16:57:16.237Z","data":{"text":"Now wire it into `show-types.ts`, `show-model.ts`, and `show-output.ts`."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:16.248Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:16.305Z","data":{"promptTokens":167,"candidateTokens":238,"totalTokens":405,"cachedTokens":275840,"reasoningTokens":0,"cost":0.00099537}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:20.204Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:20.248Z","data":{"promptTokens":172,"candidateTokens":225,"totalTokens":397,"cachedTokens":276096,"reasoningTokens":93,"cost":0.001044888}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:25.632Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:25.686Z","data":{"promptTokens":257,"candidateTokens":321,"totalTokens":578,"cachedTokens":276352,"reasoningTokens":277,"cost":0.001226406}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:29.318Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:29.367Z","data":{"promptTokens":238,"candidateTokens":133,"totalTokens":371,"cachedTokens":276992,"reasoningTokens":0,"cost":0.000946476}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:32.841Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:32.885Z","data":{"promptTokens":138,"candidateTokens":171,"totalTokens":309,"cachedTokens":277248,"reasoningTokens":168,"cost":0.001055844}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:36.113Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:36.187Z","data":{"promptTokens":244,"candidateTokens":145,"totalTokens":389,"cachedTokens":277504,"reasoningTokens":0,"cost":0.0009561120000000001}}
+-+{"type":"text","timestamp":"2026-10-06T16:57:39.784Z","data":{"text":"Now update `show-output.ts` to append land lines."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:39.791Z","data":{"tool":"write","summary":"src/core/status/show-output.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:39.844Z","data":{"promptTokens":156,"candidateTokens":356,"totalTokens":512,"cachedTokens":277760,"reasoningTokens":0,"cost":0.00107028}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:43.143Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:43.194Z","data":{"promptTokens":152,"candidateTokens":136,"totalTokens":288,"cachedTokens":278144,"reasoningTokens":125,"cost":0.001013832}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:45.919Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:45.999Z","data":{"promptTokens":180,"candidateTokens":163,"totalTokens":343,"cachedTokens":278400,"reasoningTokens":0,"cost":0.00096}}
+-+{"type":"text","timestamp":"2026-10-06T16:57:49.693Z","data":{"text":"Now `web-data-change.ts` sets `land`."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:49.698Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:49.742Z","data":{"promptTokens":238,"candidateTokens":202,"totalTokens":440,"cachedTokens":278528,"reasoningTokens":0,"cost":0.000992484}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:53.339Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:53.385Z","data":{"promptTokens":207,"candidateTokens":170,"totalTokens":377,"cachedTokens":278784,"reasoningTokens":124,"cost":0.001043802}}
+-+{"type":"tool","timestamp":"2026-10-06T16:57:57.804Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:57:57.860Z","data":{"promptTokens":140,"candidateTokens":163,"totalTokens":303,"cachedTokens":279168,"reasoningTokens":0,"cost":0.0009563039999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:58:01.553Z","data":{"tool":"edit","summary":"src/core/web/web-data.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:58:01.604Z","data":{"promptTokens":198,"candidateTokens":155,"totalTokens":353,"cachedTokens":279296,"reasoningTokens":108,"cost":0.001025388}}
+-+{"type":"tool","timestamp":"2026-10-06T16:58:07.942Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:58:07.991Z","data":{"promptTokens":227,"candidateTokens":136,"totalTokens":363,"cachedTokens":279552,"reasoningTokens":567,"cost":0.0012945060000000002}}
+-+{"type":"tool","timestamp":"2026-10-06T16:58:19.075Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:58:19.119Z","data":{"promptTokens":188,"candidateTokens":69,"totalTokens":257,"cachedTokens":280320,"reasoningTokens":53,"cost":0.00094236}}
+-+{"type":"tool","timestamp":"2026-10-06T16:58:40.508Z","data":{"tool":"read","summary":"src/core/status/next-step.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:58:40.560Z","data":{"promptTokens":247,"candidateTokens":61,"totalTokens":308,"cachedTokens":280448,"reasoningTokens":4459,"cost":0.0035903940000000002}}
+-+{"type":"tool","timestamp":"2026-10-06T16:58:44.600Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:58:44.650Z","data":{"promptTokens":1334,"candidateTokens":99,"totalTokens":1433,"cachedTokens":285184,"reasoningTokens":128,"cost":0.0011918519999999998}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:12.320Z","data":{"tool":"read","summary":"src/core/spec/parser.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:12.364Z","data":{"promptTokens":1359,"candidateTokens":76,"totalTokens":1435,"cachedTokens":286720,"reasoningTokens":6999,"cost":0.00530901}}
+-+{"type":"text","timestamp":"2026-10-06T16:59:30.181Z","data":{"text":"Now the test file."}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:30.188Z","data":{"tool":"write","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:30.233Z","data":{"promptTokens":599,"candidateTokens":5879,"totalTokens":6478,"cachedTokens":295040,"reasoningTokens":69,"cost":0.00454377}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:34.728Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:34.776Z","data":{"promptTokens":169,"candidateTokens":248,"totalTokens":417,"cachedTokens":301440,"reasoningTokens":303,"cost":0.00126027}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:38.508Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:38.548Z","data":{"promptTokens":230,"candidateTokens":353,"totalTokens":583,"cachedTokens":301952,"reasoningTokens":0,"cost":0.0011521559999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:42.075Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:42.135Z","data":{"promptTokens":221,"candidateTokens":258,"totalTokens":479,"cachedTokens":302336,"reasoningTokens":119,"cost":0.001166358}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:45.847Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:45.902Z","data":{"promptTokens":236,"candidateTokens":76,"totalTokens":312,"cachedTokens":302720,"reasoningTokens":15,"cost":0.0009981599999999999}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:51.329Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:51.368Z","data":{"promptTokens":225,"candidateTokens":86,"totalTokens":311,"cachedTokens":302848,"reasoningTokens":0,"cost":0.000993894}}
+-+{"type":"tool","timestamp":"2026-10-06T16:59:57.568Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T16:59:57.612Z","data":{"promptTokens":1032,"candidateTokens":171,"totalTokens":1203,"cachedTokens":303104,"reasoningTokens":735,"cost":0.001607712}}
+-+{"type":"tool","timestamp":"2026-10-06T17:00:00.717Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:00:00.761Z","data":{"promptTokens":168,"candidateTokens":121,"totalTokens":289,"cachedTokens":304896,"reasoningTokens":0,"cost":0.001012488}}
+-+{"type":"tool","timestamp":"2026-10-06T17:00:06.435Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:00:06.479Z","data":{"promptTokens":183,"candidateTokens":86,"totalTokens":269,"cachedTokens":305024,"reasoningTokens":93,"cost":0.001049922}}
+-+{"type":"tool","timestamp":"2026-10-06T17:00:21.016Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:00:21.076Z","data":{"promptTokens":457,"candidateTokens":89,"totalTokens":546,"cachedTokens":305280,"reasoningTokens":114,"cost":0.00110619}}
+-+{"type":"tool","timestamp":"2026-10-06T17:00:24.887Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tool","timestamp":"2026-10-06T17:00:32.408Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:00:32.655Z","data":{"promptTokens":143,"candidateTokens":233,"totalTokens":376,"cachedTokens":305920,"reasoningTokens":76,"cost":0.0011246099999999998}}
+-+{"type":"text","timestamp":"2026-10-06T17:00:39.400Z","data":{"text":"All checks pass locally. Now the full proposal verify."}}
+-+{"type":"tool","timestamp":"2026-10-06T17:04:00.835Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:04:01.051Z","data":{"promptTokens":499,"candidateTokens":95,"totalTokens":594,"cachedTokens":306304,"reasoningTokens":752,"cost":0.001501962}}
+-+{"type":"tool","timestamp":"2026-10-06T17:04:04.904Z","data":{"tool":"read","summary":"tests/show-text.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:04:04.975Z","data":{"promptTokens":851,"candidateTokens":59,"totalTokens":910,"cachedTokens":307584,"reasoningTokens":129,"cost":0.001163202}}
+-+{"type":"text","timestamp":"2026-10-06T17:04:13.573Z","data":{"text":"The renderer test restricts show imports. Let me make `show-land-lines.ts` import only `show-types`."}}
+-+{"type":"tool","timestamp":"2026-10-06T17:04:13.586Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:04:13.651Z","data":{"promptTokens":1053,"candidateTokens":1192,"totalTokens":2245,"cachedTokens":308608,"reasoningTokens":781,"cost":0.002267574}}
+-+{"type":"tool","timestamp":"2026-10-06T17:04:28.328Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:04:28.355Z","data":{"promptTokens":236,"candidateTokens":145,"totalTokens":381,"cachedTokens":311424,"reasoningTokens":73,"cost":0.001100472}}
+-+{"type":"tool","timestamp":"2026-10-06T17:06:30.683Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:06:30.828Z","data":{"promptTokens":421,"candidateTokens":85,"totalTokens":506,"cachedTokens":311808,"reasoningTokens":175,"cost":0.001154574}}
+-+{"type":"tool","timestamp":"2026-10-06T17:09:46.625Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:09:47.385Z","data":{"promptTokens":339,"candidateTokens":144,"totalTokens":483,"cachedTokens":312448,"reasoningTokens":74,"cost":0.001118994}}
+-+{"type":"tool","timestamp":"2026-10-06T17:09:50.869Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:09:51.098Z","data":{"promptTokens":234,"candidateTokens":80,"totalTokens":314,"cachedTokens":312832,"reasoningTokens":15,"cost":0.001030596}}
+-+{"type":"tool","timestamp":"2026-10-06T17:09:54.816Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:09:54.966Z","data":{"promptTokens":578,"candidateTokens":87,"totalTokens":665,"cachedTokens":313088,"reasoningTokens":202,"cost":0.001199364}}
+-+{"type":"tool","timestamp":"2026-10-06T17:10:17.291Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:10:17.460Z","data":{"promptTokens":236,"candidateTokens":112,"totalTokens":348,"cachedTokens":313856,"reasoningTokens":170,"cost":0.001146168}}
+-+{"type":"text","timestamp":"2026-10-06T17:11:17.209Z","data":{"text":"Isolated runs pass; the full-suite failures look like load-related flakes. Re-running the full verify to confirm stability."}}
+-+{"type":"tool","timestamp":"2026-10-06T17:15:30.234Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:15:31.380Z","data":{"promptTokens":315145,"candidateTokens":1030,"totalTokens":316175,"cachedTokens":0,"reasoningTokens":0,"cost":0.04788975}}
+-+{"type":"text","timestamp":"2026-10-06T17:15:46.990Z","data":{"text":"Full verify passes (exit 0, 3370 + 114 tests). Let me do a final review of the changed files and re-run the task verify once more."}}
+-+{"type":"tool","timestamp":"2026-10-06T17:15:47.486Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+-+{"type":"tool","timestamp":"2026-10-06T17:15:47.503Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:15:48.271Z","data":{"promptTokens":56,"candidateTokens":726,"totalTokens":782,"cachedTokens":316160,"reasoningTokens":0,"cost":0.00139248}}
+-+{"type":"tool","timestamp":"2026-10-06T17:16:01.018Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/153-land-vie"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:16:01.187Z","data":{"promptTokens":816,"candidateTokens":279,"totalTokens":1095,"cachedTokens":316928,"reasoningTokens":0,"cost":0.001240584}}
+-+{"type":"text","timestamp":"2026-10-06T17:16:20.327Z","data":{"text":"Everything is green. Writing the result file."}}
+-+{"type":"tool","timestamp":"2026-10-06T17:16:20.434Z","data":{"tool":"write","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
+-+{"type":"tokens","timestamp":"2026-10-06T17:16:20.728Z","data":{"promptTokens":135,"candidateTokens":1177,"totalTokens":1312,"cachedTokens":317952,"reasoningTokens":0,"cost":0.0016803060000000001}}
+-+{"type":"text","timestamp":"2026-10-06T17:16:33.416Z","data":{"text":"Task complete. Summary:\n\n**Implemented** (`src/` scope):\n- `show-land-types.ts` (new): `LandGateKind`, `LandGate`, `LandDisclosure`, `LandView` per the task's Ports block.\n- `show-land-model.ts` (new): `readLandView` — null unless archived; otherwise archive gates from the timeline up to the last `archived` event (task/verify/check/validator in order), capabilities via `readArchivedChange`, disclosures via `readChangeDisclosures`, halt via `parseFrontmatter` on `.run/regressed/change.md`, `lastSync`/`lastSyncStop` via `readLastSync`, and git state via `selectVcs` + `readDependencyState` + `countCommits` + `diffStat` for `worktreeBranch(folderName)`; all four git fields null with git off.\n- `show-land-lines.ts` (new): `landLines` rendering the `Land:` headline, gates, diff, spec changes, disclosures, halt and sync lines; no `node:fs`, and it imports only `show-types` so the renderer import test passes.\n- `show-types.ts`, `show-model.ts`, `show-output.ts`: `SpecDetails.land`, set in `withNextStep`, carried before `digest` in JSON; text appends the land section after the change detail and before the digest.\n- `web-data-types.ts`, `web-data-change.ts`, `web-data.ts`: `WebChange.land` always set from `readLandView`; Ports types re-exported.\n- `tests/land-view.test.ts` (new, 13 tests): all \"Land view model\" and \"Land in show\" scenarios plus both \"Land view document\" scenarios and direct `landLines` rendering, including the git worktree cases, the `diffStat` cross-check, the landed case, a disclosure result file, and git-off coverage.\n\n**Verification**: task verify (`node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts`) passes 13/13; proposal verify (`pnpm verify`) passes cleanly — 3370 CLI tests + 114 UI tests, both typechecks, build, and biome lint. (Two vcs-land tests flaked once under full-suite load but pass in isolation and in the final full run.)\n\nResult file written to `openspec/changes/153-land-view/.run/results/2.md`."}}
+-+{"type":"exited","timestamp":"2026-10-06T17:16:35.437Z","data":{"exitCode":0,"pid":82529,"timedOut":false,"elapsedSeconds":1319.6}}
+-+{"type":"verify_ran","timestamp":"2026-10-06T17:16:37.381Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":1.43,"log":".run/logs/2-2.log","output":"▶ readLandView\n  ✔ reads the archived change, its gates, diff, state, halt and sync (319.130483ms)\n  ✔ reads disclosures from a result file with two sections (169.818513ms)\n  ✔ returns null for an active change (15.96137ms)\n  ✔ reads gates, capabilities and disclosures with git off (29.194459ms)\n  ✔ reports a landed change (104.165724ms)\n✔ readLandView (639.6365ms)\n▶ landLines\n  ✔ renders each headline (0.355278ms)\n  ✔ renders gate names, exit codes and findings (0.180493ms)\n  ✔ renders no gates, diff, spec changes and disclosures (0.245232ms)\n  ✔ prints no lines without a land view (0.207982ms)\n✔ landLines (1.318745ms)\n▶ land in osq show\n  ✔ prints the land summary and JSON before digest (120.688005ms)\n  ✔ leaves an active change unchanged (15.328267ms)\n✔ land in osq show (136.360244ms)\n▶ land in the web change document\n  ✔ sets land for an archived change (226.596039ms)\n  ✔ sets land null for an active change (14.22971ms)\n✔ land in the web change document (241.157787ms)\nℹ tests 13\nℹ suites 4\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1382.972809\n"}}
+-+{"type":"measures","timestamp":"2026-10-06T17:18:37.701Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":10,"changedLines":1033,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:97c9403ca5a37e649422a68ac6843ff3cced07dc75a63c6253923566edf052aa"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:2fa3e9234960858f6b09b0b161e1dfbc7f8b26d6f2ecce74f51a298816cffdb0"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:97e499e83ee6a2813b392233f4db0c41a3a4cf6d716d59f1d684791a6815e825"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:09819e5d873cb8bc2cd4c48a2e6caa05173351bc8bb7ea8c9b9ea0928fd60626"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:90c7bb424d2bc01a69abc358d1ca1571308eefd2361f3abfaa9b2e717526f7c6"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:0caf9ea9455b57e8762b7c1d4ff31457490c5fc32c1906e6bfc7d47fcbbedc96"},"tests/land-view.test.ts":{"before":null,"after":"sha256:4c8271e7259986bb86207808a65403d0cf7c913cc94159097d91f48a47159d11"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:8a2e1c9209d0bba94a8292588e7f9f79e98d561eaa79d83a339f57a629cafba9"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:8b87277a7b7640d92c43542e81f6c35b292fd0ebf8b1ccfe74c5197d85b28566"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:edef0d01a8d3988cb02b6873f856e7cae14281247225768209e7253ba0e7dc35"}}}}
+-+{"type":"dead","timestamp":"2026-10-06T17:18:37.724Z","data":{"task":"2","reason":"change_verify_red"}}
+-diff --git a/openspec/changes/153-land-view/.run/events/change.jsonl b/openspec/changes/153-land-view/.run/events/change.jsonl
+-new file mode 100644
+-index 0000000..886af71
+---- /dev/null
+-+++ b/openspec/changes/153-land-view/.run/events/change.jsonl
+-@@ -0,0 +1,3 @@
+-+{"type":"baseline_ran","timestamp":"2026-10-06T16:44:50.261Z","data":{"outcome":"passed","command":"pnpm verify","commit":"c09c921e651dfc368e53e1827fe1dcf984245f41","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":180.72}}
+-+{"type":"verify_ran","timestamp":"2026-10-06T16:54:32.422Z","data":{"command":"pnpm verify","exitCode":0,"duration":113.89,"log":".run/logs/change-1.log","output":"  ✔ never mutates the MetricsReport or WebGraph inputs (76.532152ms)\n✔ scope evidence and empty history (221.554719ms)\n▶ report module line budget\n  ✔ keeps every report source file at or under 250 lines (69.448463ms)\n✔ report module line budget (69.676807ms)\n▶ approve review view\n  ✔ shows the review sections in order, then the tasks and the digest (14.45449ms)\n  ✔ says None for an empty review section (2.095268ms)\n  ✔ lists the digest flags when there is no action client (6.394715ms)\n  ✔ shows New requirement, Removed, and Renamed from wording (1.902837ms)\n  ✔ renders exactly as before when the review is missing or null (2.15405ms)\n  ✔ styles the review text and the delta pair to wrap at phone width (9.514909ms)\n✔ approve review view (38.88264ms)\n▶ approval flags\n  ✔ renders nothing for an empty flag list (0.68799ms)\n  ✔ places each flag and excerpt inside the Approve button item (1.367178ms)\n  ✔ places the flags before the buttons when there is no approve action (1.128134ms)\n✔ approval flags (3.451415ms)\n▶ approve review against a real document\n  ✔ renders the living and proposed text and the removed requirement flag (86.885299ms)\n✔ approve review against a real document (87.144817ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (12.209475ms)\n  ✔ maps every derived task state onto the status vocabulary (0.200594ms)\n  ✔ defines the whole palette for light and dark schemes (13.211359ms)\n  ✔ never centers table cells (2.086343ms)\n✔ status badge (29.283767ms)\nℹ tests 114\nℹ suites 30\nℹ pass 114\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2982.865833\n\n> @matteeh/osq@0.2.4 lint .\n> biome check src tests packages/ui/src\n\nChecked 946 files in 567ms. No fixes applied."}}
+-+{"type":"verify_ran","timestamp":"2026-10-06T17:18:37.668Z","data":{"command":"pnpm verify","exitCode":1,"duration":120.25,"log":".run/logs/change-2.log","output":"▶ Automatic retry\n  ✔ retries a scope violation and names the violating file (602.108105ms)\n✔ Automatic retry (602.402216ms)\n▶ Watcher sync\n  ✔ syncs the default branch before the first task (1499.611451ms)\n  ✔ does not sync between tasks, only before archive (1297.527988ms)\n  ✔ halts with sync_conflict when main changed the same line before archive (628.775901ms)\n  ✔ skips both syncs for a stacked dependent while its dependency waits (1387.383473ms)\n  ✔ syncs after the dependency lands during the dependent run (1778.958222ms)\n✔ Watcher sync (6595.29003ms)\nℹ tests 3370\nℹ suites 870\nℹ pass 3369\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 100614.97243\n\n✖ failing tests:\n\ntest at tests/inbox.test.ts:2:14782\n✖ reads the inbox through a core helper without advancing the cursor (3148.737208ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(\n  \n      at TestContext.<anonymous> (tests/inbox.test.ts:571:14)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+-diff --git a/openspec/changes/153-land-view/.run/results/2.md b/openspec/changes/153-land-view/.run/results/2.md
+-new file mode 100644
+-index 0000000..060dfe2
+---- /dev/null
+-+++ b/openspec/changes/153-land-view/.run/results/2.md
+-@@ -0,0 +1,57 @@
+-+## Changed
+-+
+-+- New `src/core/status/show-land-types.ts` holds the Ports types (`LandGateKind`,
+-+  `LandGate`, `LandDisclosure`, `LandView`).
+-+- New `src/core/status/show-land-model.ts` exports `readLandView`, which returns
+-+  null unless `details.location` is `archived` and otherwise builds the land
+-+  view from the details it is given: archive gates from `details.timeline` at
+-+  or before the last `archived` event (last per-task `verify_ran` without a
+-+  `phase`, then the proposal verify, then the declared `check`, then the
+-+  validator), `capabilities` from `readArchivedChange` for the change's own
+-+  archived entry, disclosures from `readChangeDisclosures`, halt from
+-+  `.run/regressed/change.md` via `parseFrontmatter`, last sync from
+-+  `readLastSync`, and — through `selectVcs` — `defaultBranch`,
+-+  `readDependencyState` (landed), `countCommits` and `diffStat` for
+-+  `worktreeBranch(folderName)`; with git off all four git fields are null.
+-+  It writes nothing.
+-+- New `src/core/status/show-land-lines.ts` exports `landLines(details)`,
+-+  rendering the `Land:` headline, `Gates at archive:`, `Diff:`, `Spec changes:`,
+-+  `Disclosures:`, `Halted:` and `Sync stopped:` lines; it imports no `node:fs`
+-+  and, per the renderer import test, only `show-types`.
+-+- `src/core/status/show-types.ts`: `SpecDetails` gains `land?: LandView`.
+-+- `src/core/status/show-model.ts`: `withNextStep` sets `land` from
+-+  `readLandView` for an archived folder, so `formatShowJson` carries it before
+-+  `digest`.
+-+- `src/core/status/show-output.ts`: `formatShowText` appends the land lines
+-+  after `formatSpecDetails` and before the digest lines.
+-+- `src/core/web/web-data-types.ts`: `WebChange` gains `readonly land?:
+-+  LandView | null`.
+-+- `src/core/web/web-data-change.ts`: `getWebChange` always sets `land` from
+-+  `readLandView` with the details it already builds.
+-+- `src/core/web/web-data.ts`: re-exports the Ports types as types.
+-+- New `tests/land-view.test.ts` (13 tests): covers the "Land view model"
+-+  scenarios (default branch moved, landed, gates at archive, active change,
+-+  git off), both "Land in show" scenarios through `getSpecDetails` with
+-+  `formatShowText`/`formatShowJson`, both "Land view document" scenarios
+-+  through `getWebChange`, plus direct `landLines` rendering of every headline,
+-+  gate form, diff, spec changes, disclosures, halt and sync lines, and a
+-+  disclosure case writing a result file with `## Deviated` and
+-+  `## Outside scope`. The git cases build a temporary repository with
+-+  `vcs.enabled`, an `osq/042-pricing` worktree holding the archived change
+-+  and a code commit with the default branch two commits ahead, and a landed
+-+  case committing the archive folder on the default branch; the branch case
+-+  checks `diff` against `diffStat` for the same refs.
+-+
+-+## Deviated
+-+
+-+None.
+-+
+-+## Missing context
+-+
+-+None.
+-+
+-+## Outside scope
+-+
+-+None.
+-+
+-+Touched: src/core/status/show-land-types.ts, src/core/status/show-land-model.ts, src/core/status/show-land-lines.ts, src/core/status/show-types.ts, src/core/status/show-model.ts, src/core/status/show-output.ts, src/core/web/web-data-types.ts, src/core/web/web-data-change.ts, src/core/web/web-data.ts, tests/land-view.test.ts
+-\ No newline at end of file
+-diff --git a/src/core/status/show-land-lines.ts b/src/core/status/show-land-lines.ts
+-new file mode 100644
+-index 0000000..8525575
+---- /dev/null
+-+++ b/src/core/status/show-land-lines.ts
+-@@ -0,0 +1,113 @@
+-+import type { SpecDetails } from './show-types.js';
+-+
+-+type Land = NonNullable<SpecDetails['land']>;
+-+type Gate = Land['gates'][number];
+-+
+-+/** The `task <n>` / `verify` / `check` / `validator` name of a gate. */
+-+function gateName(gate: Gate): string {
+-+  return gate.kind === 'task' ? `task ${gate.task ?? ''}` : gate.kind;
+-+}
+-+
+-+/** The rounded whole seconds a gate reports, or `?` when absent. */
+-+function gateSeconds(gate: Gate): string {
+-+  return gate.durationSeconds === null ? '?' : String(Math.round(gate.durationSeconds));
+-+}
+-+
+-+/** One `    <name>: <outcome> in <s>s (<command>)` gate line. */
+-+function gateLine(gate: Gate): string {
+-+  let outcome = gate.outcome;
+-+  if (gate.exitCode !== null && gate.exitCode !== 0) outcome += ` exit ${gate.exitCode}`;
+-+  const findings =
+-+    gate.kind === 'validator' && gate.findings !== null ? `, ${gate.findings} findings` : '';
+-+  return `    ${gateName(gate)}: ${outcome} in ${gateSeconds(gate)}s (${gate.command})${findings}`;
+-+}
+-+
+-+/** The `Land:` headline for a land view. */
+-+function headline(land: Land): string {
+-+  if (land.landed === null) return 'Land: git is off';
+-+  if (land.landed) return 'Land: landed';
+-+  if (land.mainCommits === null) {
+-+    return `Land: not landed; branch osq/${land.folderName} not found`;
+-+  }
+-+  if (land.mainCommits === 0) {
+-+    return `Land: not landed; ${land.defaultBranch} has not moved since archive`;
+-+  }
+-+  const noun = land.mainCommits === 1 ? 'commit' : 'commits';
+-+  return `Land: not landed; ${land.defaultBranch} has ${land.mainCommits} new ${noun} since archive, so osq land will sync and verify again`;
+-+}
+-+
+-+/** The `Gates at archive:` section lines. */
+-+function gateLines(land: Land): string[] {
+-+  if (land.gates.length === 0) return ['  Gates at archive: none recorded'];
+-+  return ['  Gates at archive:', ...land.gates.map(gateLine)];
+-+}
+-+
+-+/** The `Diff:` line when a diff is set. */
+-+function diffLines(land: Land): string[] {
+-+  if (!land.diff) return [];
+-+  return [`  Diff: ${land.diff.files} files, +${land.diff.added} -${land.diff.removed}`];
+-+}
+-+
+-+/** The `Spec changes:` section when the change wrote any capability. */
+-+function capabilityLines(land: Land): string[] {
+-+  if (land.capabilities.length === 0) return [];
+-+  return [
+-+    '  Spec changes:',
+-+    ...land.capabilities.map((capability) => {
+-+      const counts = [
+-+        `${capability.added.length} added`,
+-+        `${capability.modified.length} modified`,
+-+        `${capability.removed.length} removed`,
+-+        `${capability.renamed.length} renamed`,
+-+      ].join(', ');
+-+      return `    ${capability.name}: ${counts}`;
+-+    }),
+-+  ];
+-+}
+-+
+-+/** The `Disclosures:` line naming each present section, in task order. */
+-+function disclosureLines(land: Land): string[] {
+-+  const names: string[] = [];
+-+  for (const disclosure of land.disclosures) {
+-+    if (disclosure.deviated !== null) names.push(`task ${disclosure.task} deviated`);
+-+    if (disclosure.outsideScope !== null) names.push(`task ${disclosure.task} outside scope`);
+-+  }
+-+  if (names.length === 0) return [];
+-+  return [`  Disclosures: ${names.join(', ')}`];
+-+}
+-+
+-+function firstLine(text: string): string {
+-+  return text.split('\n')[0] ?? '';
+-+}
+-+
+-+/** The `Halted:` and `Sync stopped:` lines when their state is set. */
+-+function closingLines(land: Land): string[] {
+-+  const lines: string[] = [];
+-+  if (land.halt) {
+-+    lines.push(`  Halted: ${land.halt.reason ?? 'unknown'}: ${firstLine(land.halt.message)}`);
+-+  }
+-+  if (land.lastSyncStop) {
+-+    lines.push(
+-+      `  Sync stopped: ${land.lastSyncStop.reason}: ${firstLine(land.lastSyncStop.message)}`,
+-+    );
+-+  }
+-+  return lines;
+-+}
+-+
+-+/**
+-+ * The `Land:` section lines for an archived change whose detail carries a land
+-+ * view, or no lines otherwise. It reads no files.
+-+ */
+-+export function landLines(details: SpecDetails): string[] {
+-+  const land = details.land;
+-+  if (!land) return [];
+-+  return [
+-+    '',
+-+    headline(land),
+-+    ...gateLines(land),
+-+    ...diffLines(land),
+-+    ...capabilityLines(land),
+-+    ...disclosureLines(land),
+-+    ...closingLines(land),
+-+  ];
+-+}
+-diff --git a/src/core/status/show-land-model.ts b/src/core/status/show-land-model.ts
+-new file mode 100644
+-index 0000000..5a22268
+---- /dev/null
+-+++ b/src/core/status/show-land-model.ts
+-@@ -0,0 +1,244 @@
+-+import fs from 'node:fs/promises';
+-+import path from 'node:path';
+-+import type { OsqConfig } from '../foundation/config.js';
+-+import { readArchivedChange } from '../report/archive-record.js';
+-+import { readChangeDisclosures } from '../report/result-sections.js';
+-+import { readCheckCommand } from '../spec/human-steps.js';
+-+import { parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
+-+import { readDependencyState } from '../spec/stack-dependencies.js';
+-+import { selectVcs } from '../vcs/select.js';
+-+import type { VcsDiffStat } from '../vcs/vcs.js';
+-+import { worktreeBranch } from '../vcs/worktree.js';
+-+import { listChanges } from './change-locations.js';
+-+import { readLastSync } from './last-sync.js';
+-+import type { LandDisclosure, LandGate, LandGateKind, LandView } from './show-land-types.js';
+-+import type { SpecDetails, TimelineEvent } from './show-types.js';
+-+
+-+const TASK_STREAM = /^\d+$/;
+-+
+-+/** The last event matching `predicate`, scanning backwards, or null. */
+-+function lastMatching(
+-+  events: readonly TimelineEvent[],
+-+  predicate: (event: TimelineEvent) => boolean,
+-+): TimelineEvent | null {
+-+  for (let index = events.length - 1; index >= 0; index -= 1) {
+-+    const event = events[index];
+-+    if (event && predicate(event)) return event;
+-+  }
+-+  return null;
+-+}
+-+
+-+function finiteNumber(value: unknown): number | null {
+-+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+-+}
+-+
+-+function eventCommand(event: TimelineEvent): string {
+-+  const value = event.data?.command;
+-+  return typeof value === 'string' ? value : '';
+-+}
+-+
+-+function outcomeOf(exitCode: number | null): string {
+-+  return exitCode === 0 ? 'passed' : 'failed';
+-+}
+-+
+-+/** One task, verify or check gate from its `verify_ran` event. */
+-+function gateFromRun(
+-+  kind: LandGateKind,
+-+  task: string | null,
+-+  command: string,
+-+  event: TimelineEvent,
+-+): LandGate {
+-+  const exitCode = finiteNumber(event.data?.exitCode);
+-+  return {
+-+    kind,
+-+    task,
+-+    command,
+-+    outcome: outcomeOf(exitCode),
+-+    exitCode,
+-+    durationSeconds: finiteNumber(event.data?.duration),
+-+    timestamp: event.timestamp,
+-+    findings: null,
+-+  };
+-+}
+-+
+-+/** The last `verify_ran` without a `phase` of each task stream, in task order. */
+-+function taskGates(events: readonly TimelineEvent[]): LandGate[] {
+-+  const taskNumbers = [
+-+    ...new Set(
+-+      events.filter((event) => TASK_STREAM.test(event.taskNumber)).map((e) => e.taskNumber),
+-+    ),
+-+  ].sort((a, b) => Number(a) - Number(b));
+-+  const gates: LandGate[] = [];
+-+  for (const task of taskNumbers) {
+-+    const run = lastMatching(
+-+      events,
+-+      (event) =>
+-+        event.taskNumber === task && event.type === 'verify_ran' && event.data?.phase === undefined,
+-+    );
+-+    if (run) gates.push(gateFromRun('task', task, eventCommand(run), run));
+-+  }
+-+  return gates;
+-+}
+-+
+-+/** The last change-stream `verify_ran` whose command is `command`, or null. */
+-+function changeGate(
+-+  events: readonly TimelineEvent[],
+-+  command: string,
+-+  kind: 'verify' | 'check',
+-+): LandGate | null {
+-+  const run = lastMatching(
+-+    events,
+-+    (event) =>
+-+      event.taskNumber === 'change' &&
+-+      event.type === 'verify_ran' &&
+-+      eventCommand(event) === command,
+-+  );
+-+  return run ? gateFromRun(kind, null, command, run) : null;
+-+}
+-+
+-+/** The last `validator_ran` gate, or null. */
+-+function validatorGate(events: readonly TimelineEvent[]): LandGate | null {
+-+  const run = lastMatching(events, (event) => event.type === 'validator_ran');
+-+  if (!run) return null;
+-+  const data = run.data ?? {};
+-+  const harness = typeof data.harness === 'string' ? data.harness : '';
+-+  const model = typeof data.model === 'string' ? data.model : '';
+-+  return {
+-+    kind: 'validator',
+-+    task: null,
+-+    command: `${harness}/${model}`,
+-+    outcome: typeof data.outcome === 'string' ? data.outcome : 'failed',
+-+    exitCode: finiteNumber(data.exitCode),
+-+    durationSeconds: finiteNumber(data.duration),
+-+    timestamp: run.timestamp,
+-+    findings: Array.isArray(data.findings) ? data.findings.length : 0,
+-+  };
+-+}
+-+
+-+/** The timeline events at or before the last `archived` event. */
+-+function archiveEvents(timeline: readonly TimelineEvent[]): TimelineEvent[] {
+-+  const archived = lastMatching(timeline, (event) => event.type === 'archived');
+-+  if (!archived) return [];
+-+  const limit = Date.parse(archived.timestamp);
+-+  if (!Number.isFinite(limit)) return [...timeline];
+-+  return timeline.filter((event) => {
+-+    const at = Date.parse(event.timestamp);
+-+    return !Number.isFinite(at) || at <= limit;
+-+  });
+-+}
+-+
+-+/** The archive gates of a change, from the proposal's verify and check. */
+-+async function readGates(details: SpecDetails): Promise<LandGate[]> {
+-+  const events = archiveEvents(details.timeline);
+-+  if (events.length === 0) return [];
+-+  const specData = await parseSpecMdFromFolder(details.folderPath).catch(() => null);
+-+  const verify = specData?.verify ?? '';
+-+  const check = specData ? readCheckCommand(parseFrontmatter(specData.raw).data) : null;
+-+  const gates = taskGates(events);
+-+  const verifyGate = changeGate(events, verify, 'verify');
+-+  if (verifyGate) gates.push(verifyGate);
+-+  if (check) {
+-+    const checkGate = changeGate(events, check, 'check');
+-+    if (checkGate) gates.push(checkGate);
+-+  }
+-+  const validator = validatorGate(events);
+-+  if (validator) gates.push(validator);
+-+  return gates;
+-+}
+-+
+-+/** The `capabilities` of `readArchivedChange` for the change's own folder. */
+-+async function readCapabilities(
+-+  projectRoot: string,
+-+  config: OsqConfig,
+-+  folderPath: string,
+-+): Promise<LandView['capabilities']> {
+-+  const archived = await listChanges(projectRoot, config, ['archived']);
+-+  const match =
+-+    archived.find((change) => change.folderPath === folderPath) ??
+-+    archived.find((change) => path.resolve(change.folderPath) === path.resolve(folderPath));
+-+  if (!match) return [];
+-+  return (await readArchivedChange(match)).capabilities;
+-+}
+-+
+-+/** Each task with a `## Deviated` or `## Outside scope` section. */
+-+async function readDisclosures(folderPath: string): Promise<LandDisclosure[]> {
+-+  const tasks = await readChangeDisclosures(folderPath);
+-+  return tasks
+-+    .filter((task) => task.deviated !== null || task.outsideScope !== null)
+-+    .map((task) => ({
+-+      task: task.task,
+-+      deviated: task.deviated,
+-+      outsideScope: task.outsideScope,
+-+    }));
+-+}
+-+
+-+/** The change-level `.run/regressed/change.md` marker, or null. */
+-+async function readHalt(folderPath: string): Promise<LandView['halt']> {
+-+  const marker = path.join(folderPath, '.run', 'regressed', 'change.md');
+-+  const content = await fs.readFile(marker, 'utf8').catch(() => null);
+-+  if (content === null) return null;
+-+  const { data, body } = parseFrontmatter(content);
+-+  const reason = typeof data.reason === 'string' && data.reason.trim() ? data.reason.trim() : null;
+-+  return { reason, message: body.trim() };
+-+}
+-+
+-+interface LandGitState {
+-+  readonly landed: boolean | null;
+-+  readonly defaultBranch: string | null;
+-+  readonly mainCommits: number | null;
+-+  readonly diff: VcsDiffStat | null;
+-+}
+-+
+-+/** The landed state, default-branch movement and diff, or all null with git off. */
+-+async function readGitState(
+-+  projectRoot: string,
+-+  config: OsqConfig,
+-+  folderName: string,
+-+): Promise<LandGitState> {
+-+  const vcs = await selectVcs(projectRoot, config);
+-+  if (vcs.kind !== 'git') {
+-+    return { landed: null, defaultBranch: null, mainCommits: null, diff: null };
+-+  }
+-+  const defaultBranch = await vcs.defaultBranch();
+-+  const branch = worktreeBranch(folderName);
+-+  const dependency = await readDependencyState(projectRoot, config, vcs, folderName);
+-+  const landed = dependency.state === 'landed';
+-+  const branchExists = (await vcs.listBranches(branch)).includes(branch);
+-+  if (!branchExists) {
+-+    return { landed, defaultBranch, mainCommits: null, diff: null };
+-+  }
+-+  const mainCommits = landed ? null : await vcs.countCommits(branch, defaultBranch);
+-+  const diff = await vcs.diffStat(defaultBranch, branch, [config.paths.openspecRoot]);
+-+  return { landed, defaultBranch, mainCommits, diff };
+-+}
+-+
+-+/**
+-+ * Everything a human needs before landing an archived change, built only from
+-+ * files and refs osq already writes. Null for every other change. Writes
+-+ * nothing.
+-+ */
+-+export async function readLandView(
+-+  projectRoot: string,
+-+  details: SpecDetails,
+-+  config: OsqConfig,
+-+): Promise<LandView | null> {
+-+  if (details.location !== 'archived') return null;
+-+  const [gates, capabilities, disclosures, halt, sync, git] = await Promise.all([
+-+    readGates(details),
+-+    readCapabilities(projectRoot, config, details.folderPath),
+-+    readDisclosures(details.folderPath),
+-+    readHalt(details.folderPath),
+-+    readLastSync(details.folderPath),
+-+    readGitState(projectRoot, config, details.folderName),
+-+  ]);
+-+  return {
+-+    folderName: details.folderName,
+-+    gates,
+-+    capabilities,
+-+    disclosures,
+-+    halt,
+-+    lastSync: sync.lastSync ?? null,
+-+    lastSyncStop: sync.lastSyncStop ?? null,
+-+    ...git,
+-+  };
+-+}
+-diff --git a/src/core/status/show-land-types.ts b/src/core/status/show-land-types.ts
+-new file mode 100644
+-index 0000000..007c256
+---- /dev/null
+-+++ b/src/core/status/show-land-types.ts
+-@@ -0,0 +1,47 @@
+-+import type { ArchivedCapability } from '../report/archive-record.js';
+-+import type { VcsDiffStat } from '../vcs/vcs.js';
+-+import type { LastSync, LastSyncStop } from './last-sync.js';
+-+
+-+/** The four gate runs an archive can record. */
+-+export type LandGateKind = 'task' | 'verify' | 'check' | 'validator';
+-+
+-+/** One gate run osq recorded while archiving the change. */
+-+export interface LandGate {
+-+  readonly kind: LandGateKind;
+-+  /** The task number for a `task` gate; null otherwise. */
+-+  readonly task: string | null;
+-+  /** The command run; `<harness>/<model>` for the validator. */
+-+  readonly command: string;
+-+  /** `passed` or `failed` from the exit code; the validator's own outcome. */
+-+  readonly outcome: string;
+-+  readonly exitCode: number | null;
+-+  /** The event's `duration` in seconds; null when absent. */
+-+  readonly durationSeconds: number | null;
+-+  readonly timestamp: string;
+-+  /** The validator's finding count; null for every other gate. */
+-+  readonly findings: number | null;
+-+}
+-+
+-+/** One task's disclosures a lander should read. */
+-+export interface LandDisclosure {
+-+  readonly task: string;
+-+  readonly deviated: string | null;
+-+  readonly outsideScope: string | null;
+-+}
+-+
+-+/** Everything a human needs before landing an archived change. */
+-+export interface LandView {
+-+  readonly folderName: string;
+-+  /** Null when git is off. */
+-+  readonly landed: boolean | null;
+-+  readonly defaultBranch: string | null;
+-+  /** Commits the default branch has that `osq/<folder>` lacks; null when landed, git is off or the branch is gone. */
+-+  readonly mainCommits: number | null;
+-+  readonly gates: readonly LandGate[];
+-+  readonly diff: VcsDiffStat | null;
+-+  readonly capabilities: readonly ArchivedCapability[];
+-+  readonly disclosures: readonly LandDisclosure[];
+-+  readonly halt: { readonly reason: string | null; readonly message: string } | null;
+-+  readonly lastSync: LastSync | null;
+-+  readonly lastSyncStop: LastSyncStop | null;
+-+}
+-diff --git a/src/core/status/show-model.ts b/src/core/status/show-model.ts
+-index c8abef2..3ea2473 100644
+---- a/src/core/status/show-model.ts
+-+++ b/src/core/status/show-model.ts
+-@@ -6,6 +6,7 @@ import { buildApprovalDigest } from '../spec/digest.js';
+- import { parseHumanSteps } from '../spec/human-steps.js';
+- import { extractSection, parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
+- import { readNextStep } from './next-step.js';
+-+import { readLandView } from './show-land-model.js';
+- import {
+-   buildRecertifications,
+-   buildVerificationHistory,
+-@@ -63,8 +64,11 @@ async function withNextStep(
+-   };
+-   if (location !== 'archived') return base;
+- 
+-+  const land = await readLandView(projectRoot, details, config);
+-+  const withLand: SpecDetails = land === null ? base : { ...base, land };
+-   const validation = buildValidation(details.timeline);
+--  const withValidation: SpecDetails = validation === undefined ? base : { ...base, validation };
+-+  const withValidation: SpecDetails =
+-+    validation === undefined ? withLand : { ...withLand, validation };
+- 
+-   const verification = buildVerificationHistory(details.timeline);
+-   if (verification.checks.length === 0 && verification.outcomes.length === 0) {
+-diff --git a/src/core/status/show-output.ts b/src/core/status/show-output.ts
+-index 41faff0..e5e1847 100644
+---- a/src/core/status/show-output.ts
+-+++ b/src/core/status/show-output.ts
+-@@ -1,10 +1,14 @@
+- import { formatApprovalDigest, formatApprovalFlags } from '../spec/digest.js';
+-+import { landLines } from './show-land-lines.js';
+- import { formatSpecDetails } from './show-text.js';
+- import type { SpecDetails } from './show-types.js';
+- 
+--/** Render the model as text, appending the digest and flag lines when present. */
+-+/** Render the model as text, appending the land lines and then the digest when present. */
+- export function formatShowText(details: SpecDetails): string {
+-   let formatted = formatSpecDetails(details);
+-+  for (const line of landLines(details)) {
+-+    formatted += `\n${line}`;
+-+  }
+-   if (details.digest) {
+-     formatted += `\n${formatApprovalDigest(details.digest)}`;
+-     for (const line of formatApprovalFlags(details.digest.flags)) {
+-diff --git a/src/core/status/show-types.ts b/src/core/status/show-types.ts
+-index 55c5e66..c723a1c 100644
+---- a/src/core/status/show-types.ts
+-+++ b/src/core/status/show-types.ts
+-@@ -1,6 +1,7 @@
+- import type { ApprovalDigest } from '../spec/digest.js';
+- import type { TaggedScenario } from '../trace/tag-scan.js';
+- import type { NextStep } from './next-step.js';
+-+import type { LandView } from './show-land-types.js';
+- import type { SpecStatus, TaskStatus } from './state.js';
+- 
+- export interface TimelineEvent {
+-@@ -157,6 +158,8 @@ export interface SpecDetails {
+-   validation?: ValidatorRanEventData;
+-   /** The proposal's `### After landing` steps; absent when empty. */
+-   afterLanding?: string;
+-+  /** The land view for an archived change; absent for every other change. */
+-+  land?: LandView;
+- }
+- 
+- /** A list of trimmed non-empty strings, or an empty list for any other value. */
+-diff --git a/src/core/web/web-data-change.ts b/src/core/web/web-data-change.ts
+-index 6b7bf2d..588bac0 100644
+---- a/src/core/web/web-data-change.ts
+-+++ b/src/core/web/web-data-change.ts
+-@@ -1,5 +1,6 @@
+- import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+- import { resolveScope } from '../run/scope.js';
+-+import { readLandView } from '../status/show-land-model.js';
+- import { getSpecDetailsFromFolder } from '../status/show.js';
+- import { deriveSpecState } from '../status/state.js';
+- import { numericIdOf, resolveChangeFolder, slugOf } from './web-data-folders.js';
+-@@ -112,6 +113,7 @@ export async function getWebChange(
+-   const manifest = await readManifestMetadata(folder.folderPath);
+-   const planner = await readPlannerAttribution(brief, manifest);
+-   const review = await readWebReview(projectRoot, details, config);
+-+  const land = await readLandView(projectRoot, details, config);
+- 
+-   const taskObservations = new Map<
+-     string,
+-@@ -148,6 +150,7 @@ export async function getWebChange(
+-     brief: brief.body,
+-     goal: details.goal,
+-     review,
+-+    land,
+-     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
+-     dependsOn: [...details.dependsOn],
+-     reads: [...details.features.reads],
+-diff --git a/src/core/web/web-data-types.ts b/src/core/web/web-data-types.ts
+-index 0fded29..22ab8e6 100644
+---- a/src/core/web/web-data-types.ts
+-+++ b/src/core/web/web-data-types.ts
+-@@ -1,4 +1,5 @@
+- import type { ApprovalDigest } from '../spec/digest.js';
+-+import type { LandView } from '../status/show-land-types.js';
+- 
+- /**
+-  * Public read-only web documents derived from the current project tree. These
+-@@ -214,4 +215,10 @@ export interface WebChange {
+-    * value reads the same as null.
+-    */
+-   readonly review?: WebReview | null;
+-+  /**
+-+   * The land view for an archived change and null for every other change.
+-+   * Optional so documents built before this field stay valid; a missing value
+-+   * reads the same as null.
+-+   */
+-+  readonly land?: LandView | null;
+- }
+-diff --git a/src/core/web/web-data.ts b/src/core/web/web-data.ts
+-index ab5fcc5..f3b60e1 100644
+---- a/src/core/web/web-data.ts
+-+++ b/src/core/web/web-data.ts
+-@@ -26,3 +26,9 @@ export type {
+-   WebTask,
+-   WebTokenGroup,
+- } from './web-data-types.js';
+-+export type {
+-+  LandDisclosure,
+-+  LandGate,
+-+  LandGateKind,
+-+  LandView,
+-+} from '../status/show-land-types.js';
+-diff --git a/tests/land-view.test.ts b/tests/land-view.test.ts
+-new file mode 100644
+-index 0000000..b4dbb6e
+---- /dev/null
+-+++ b/tests/land-view.test.ts
+-@@ -0,0 +1,598 @@
+-+import assert from 'node:assert/strict';
+-+import { execFile } from 'node:child_process';
+-+import fs from 'node:fs/promises';
+-+import os from 'node:os';
+-+import path from 'node:path';
+-+import { afterEach, describe, it } from 'node:test';
+-+import { promisify } from 'node:util';
+-+import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
+-+import { landLines } from '../src/core/status/show-land-lines.js';
+-+import { readLandView } from '../src/core/status/show-land-model.js';
+-+import type { LandView } from '../src/core/status/show-land-types.js';
+-+import type { SpecDetails } from '../src/core/status/show-types.js';
+-+import { formatShowJson, formatShowText, getSpecDetails } from '../src/core/status/show.js';
+-+import { selectVcs } from '../src/core/vcs/select.js';
+-+import { getWebChange } from '../src/core/web/web-data.js';
+-+
+-+const execFileAsync = promisify(execFile);
+-+const TMP = os.tmpdir();
+-+const ARCHIVE = path.posix.join('openspec', 'changes', 'archive');
+-+const DELTA = path.posix.join('specs', 'orders', 'spec.md');
+-+
+-+const tmpDirs: string[] = [];
+-+
+-+afterEach(async () => {
+-+  for (const dir of tmpDirs.splice(0)) {
+-+    await fs.rm(dir, { recursive: true, force: true });
+-+  }
+-+});
+-+
+-+async function makeTempDir(prefix: string): Promise<string> {
+-+  const dir = await fs.mkdtemp(path.join(TMP, prefix));
+-+  tmpDirs.push(dir);
+-+  return dir;
+-+}
+-+
+-+/** The test's own git calls ignore redirecting variables, like osq's reads. */
+-+function cleanGitEnv(): NodeJS.ProcessEnv {
+-+  const env = { ...process.env };
+-+  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']) {
+-+    Reflect.deleteProperty(env, key);
+-+  }
+-+  return env;
+-+}
+-+
+-+async function git(args: string[], cwd: string): Promise<string> {
+-+  const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
+-+  return stdout.trim();
+-+}
+-+
+-+async function writeAt(root: string, relative: string, content: string): Promise<void> {
+-+  const target = path.join(root, relative);
+-+  await fs.mkdir(path.dirname(target), { recursive: true });
+-+  await fs.writeFile(target, content, 'utf8');
+-+}
+-+
+-+async function writeJsonl(file: string, events: readonly unknown[]): Promise<void> {
+-+  await fs.mkdir(path.dirname(file), { recursive: true });
+-+  await fs.writeFile(file, `${events.map((event) => JSON.stringify(event)).join('\n')}\n`, 'utf8');
+-+}
+-+
+-+function proposalMd(): string {
+-+  return [
+-+    '---',
+-+    'title: Pricing',
+-+    'depends_on: []',
+-+    'verify: node verify.cjs',
+-+    'features:',
+-+    '  reads: []',
+-+    '---',
+-+    '## Goal',
+-+    'Land the pricing change.',
+-+    '',
+-+    '## Surface',
+-+    'None.',
+-+    '',
+-+    '## Human steps',
+-+    'None',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+function deltaMd(): string {
+-+  return [
+-+    '# Spec Delta: orders',
+-+    '',
+-+    '## ADDED Requirements',
+-+    '',
+-+    '### Requirement: Pricing 042',
+-+    'The system SHALL price 042.',
+-+    '',
+-+    '#### Scenario: 042 runs',
+-+    '- **WHEN** 042 runs',
+-+    '- **THEN** 042 is priced',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+function taskMd(): string {
+-+  return [
+-+    '---',
+-+    'title: Only task',
+-+    'verify: node verify.cjs',
+-+    'scope: ["src/one.txt"]',
+-+    'entry: []',
+-+    'skills: []',
+-+    '---',
+-+    '## Acceptance',
+-+    '- [ ] does the thing',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+const TASK_EVENTS = [
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T08:00:00.000Z',
+-+    data: {
+-+      command: 'node verify.cjs',
+-+      exitCode: 1,
+-+      duration: 1,
+-+      phase: 'pre_spawn',
+-+      expected: 'red',
+-+      mismatch: false,
+-+    },
+-+  },
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T08:10:00.000Z',
+-+    data: { command: 'node verify.cjs', exitCode: 0, duration: 2.4 },
+-+  },
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T08:20:00.000Z',
+-+    data: { command: 'node verify.cjs', exitCode: 0, duration: 1.6 },
+-+  },
+-+];
+-+
+-+const CHANGE_EVENTS = [
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T08:30:00.000Z',
+-+    data: { command: 'node verify.cjs', exitCode: 0, duration: 3.2 },
+-+  },
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T08:40:00.000Z',
+-+    data: { command: 'node verify.cjs', exitCode: 0, duration: 3.9 },
+-+  },
+-+  {
+-+    type: 'validator_ran',
+-+    timestamp: '2026-10-04T08:50:00.000Z',
+-+    data: {
+-+      outcome: 'validated',
+-+      harness: 'claude',
+-+      model: 'claude-opus-5-5',
+-+      duration: 12.4,
+-+      exitCode: 0,
+-+      scenarios: 1,
+-+      findings: [
+-+        {
+-+          kind: 'scenario',
+-+          capability: 'orders',
+-+          requirement: 'Pricing 042',
+-+          scenario: '042 runs',
+-+          problem: 'no_test',
+-+          detail: 'No test.',
+-+        },
+-+      ],
+-+      restored: [],
+-+    },
+-+  },
+-+  {
+-+    type: 'archived',
+-+    timestamp: '2026-10-04T09:00:00.000Z',
+-+    data: { archivePath: `${ARCHIVE}/042-pricing` },
+-+  },
+-+  {
+-+    type: 'synced',
+-+    timestamp: '2026-10-04T09:05:00.000Z',
+-+    data: { defaultBranch: 'main', commits: 1, duration: 100 },
+-+  },
+-+  {
+-+    type: 'sync_stopped',
+-+    timestamp: '2026-10-04T09:06:00.000Z',
+-+    data: { reason: 'sync_conflict', message: 'src/one.txt conflict with main' },
+-+  },
+-+  {
+-+    type: 'verify_ran',
+-+    timestamp: '2026-10-04T09:30:00.000Z',
+-+    data: { command: 'node verify.cjs', exitCode: 1, duration: 5000 },
+-+  },
+-+];
+-+
+-+const HALT_MD = [
+-+  '---',
+-+  'reason: sync_conflict',
+-+  '---',
+-+  'src/one.txt conflict with main; run osq plan 042 to revise.',
+-+  '',
+-+].join('\n');
+-+
+-+interface ArchivedOptions {
+-+  readonly result?: string;
+-+  readonly halt?: boolean;
+-+}
+-+
+-+async function writeArchivedChange(
+-+  folderPath: string,
+-+  options: ArchivedOptions = {},
+-+): Promise<void> {
+-+  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
+-+  await fs.mkdir(path.join(folderPath, '.run'), { recursive: true });
+-+  await fs.writeFile(path.join(folderPath, 'proposal.md'), proposalMd(), 'utf8');
+-+  await fs.writeFile(path.join(folderPath, 'tasks.md'), '# Tasks\n\n- [x] 1. Only task\n', 'utf8');
+-+  await fs.writeFile(path.join(folderPath, 'tasks', '1.md'), taskMd(), 'utf8');
+-+  await writeAt(folderPath, DELTA, deltaMd());
+-+  await fs.writeFile(path.join(folderPath, '.run', 'approved'), 'sha256:abc\n', 'utf8');
+-+  await writeJsonl(path.join(folderPath, '.run', 'events', '1.jsonl'), TASK_EVENTS);
+-+  await writeJsonl(path.join(folderPath, '.run', 'events', 'change.jsonl'), CHANGE_EVENTS);
+-+  if (options.result !== undefined) {
+-+    await writeAt(folderPath, path.posix.join('.run', 'results', '1.md'), options.result);
+-+  }
+-+  if (options.halt) {
+-+    await writeAt(folderPath, path.posix.join('.run', 'regressed', 'change.md'), HALT_MD);
+-+  }
+-+}
+-+
+-+async function initRepo(dir: string): Promise<void> {
+-+  await git(['init', '-q', '-b', 'main'], dir);
+-+  await git(['config', 'user.name', 'osq'], dir);
+-+  await git(['config', 'user.email', 'osq@example.invalid'], dir);
+-+  await writeAt(dir, 'src/seed.txt', 'seed\n');
+-+  await git(['add', '-A'], dir);
+-+  await git(['commit', '-qm', 'seed'], dir);
+-+}
+-+
+-+function vcsConfig(parent: string): OsqConfig {
+-+  return defineConfig({
+-+    vcs: {
+-+      enabled: true,
+-+      author: 'Osq <osq@example.invalid>',
+-+      worktreeRoot: path.join(parent, 'worktrees'),
+-+      defaultBranch: 'main',
+-+    },
+-+  });
+-+}
+-+
+-+interface BranchProject {
+-+  readonly repo: string;
+-+  readonly worktree: string;
+-+  readonly archiveFolder: string;
+-+  readonly branch: string;
+-+  readonly config: OsqConfig;
+-+}
+-+
+-+/**
+-+ * A temp repository whose archived `042-pricing` lives in an `osq/042-pricing`
+-+ * worktree, with the default branch two commits ahead of the branch's cut.
+-+ */
+-+async function setupBranchProject(): Promise<BranchProject> {
+-+  const parent = await makeTempDir('osq-land-branch-');
+-+  const repo = path.join(parent, 'repo');
+-+  await fs.mkdir(repo, { recursive: true });
+-+  await initRepo(repo);
+-+
+-+  const folder = '042-pricing';
+-+  const branch = `osq/${folder}`;
+-+  const worktree = path.join(parent, 'worktree');
+-+  await git(['branch', branch], repo);
+-+  await git(['worktree', 'add', worktree, branch], repo);
+-+
+-+  const archiveFolder = path.join(worktree, ARCHIVE, folder);
+-+  await writeArchivedChange(archiveFolder, { halt: true });
+-+  await writeAt(worktree, 'src/one.txt', 'work\n');
+-+  await git(['add', '-A'], worktree);
+-+  await git(['commit', '-qm', 'archive'], worktree);
+-+
+-+  await writeAt(repo, 'src/a.txt', 'a\n');
+-+  await git(['add', '-A'], repo);
+-+  await git(['commit', '-qm', 'a'], repo);
+-+  await writeAt(repo, 'src/b.txt', 'b\n');
+-+  await git(['add', '-A'], repo);
+-+  await git(['commit', '-qm', 'b'], repo);
+-+
+-+  return { repo, worktree, archiveFolder, branch, config: vcsConfig(parent) };
+-+}
+-+
+-+const DISCLOSURE_RESULT = [
+-+  '## Changed',
+-+  '- did the thing',
+-+  '',
+-+  '## Deviated',
+-+  '- used a helper instead',
+-+  '',
+-+  '## Outside scope',
+-+  '- fixed the seed',
+-+  '',
+-+  'Touched: src/one.txt',
+-+  '',
+-+].join('\n');
+-+
+-+describe('readLandView', () => {
+-+  it('reads the archived change, its gates, diff, state, halt and sync', async () => {
+-+    const project = await setupBranchProject();
+-+    const details = await getSpecDetails(project.repo, '042', project.config);
+-+    const land = await readLandView(project.repo, details, project.config);
+-+    assert.ok(land, 'expected a land view');
+-+
+-+    // Default branch moved after archive.
+-+    assert.equal(land.landed, false);
+-+    assert.equal(land.defaultBranch, 'main');
+-+    assert.equal(land.mainCommits, 2);
+-+
+-+    // Gates at archive: task 1's last run, the second proposal verify, the
+-+    // validator with one finding, and nothing after `archived`.
+-+    assert.deepEqual(
+-+      land.gates.map((gate) => gate.kind),
+-+      ['task', 'verify', 'validator'],
+-+    );
+-+    assert.equal(land.gates[0]?.task, '1');
+-+    assert.equal(land.gates[0]?.command, 'node verify.cjs');
+-+    assert.equal(land.gates[0]?.outcome, 'passed');
+-+    assert.equal(land.gates[0]?.exitCode, 0);
+-+    assert.equal(land.gates[0]?.durationSeconds, 1.6);
+-+    assert.equal(land.gates[1]?.durationSeconds, 3.9);
+-+    assert.equal(land.gates[2]?.command, 'claude/claude-opus-5-5');
+-+    assert.equal(land.gates[2]?.outcome, 'validated');
+-+    assert.equal(land.gates[2]?.findings, 1);
+-+    assert.ok(
+-+      land.gates.every((gate) => gate.timestamp <= '2026-10-04T09:00:00.000Z'),
+-+      'no gate after archived',
+-+    );
+-+
+-+    // Capabilities, halt and last sync.
+-+    assert.deepEqual(
+-+      land.capabilities.map((capability) => capability.name),
+-+      ['orders'],
+-+    );
+-+    assert.deepEqual(land.capabilities[0]?.added, ['Pricing 042']);
+-+    assert.equal(land.halt?.reason, 'sync_conflict');
+-+    assert.equal(land.halt?.message, 'src/one.txt conflict with main; run osq plan 042 to revise.');
+-+    assert.equal(land.lastSync?.defaultBranch, 'main');
+-+    assert.equal(land.lastSync?.commits, 1);
+-+    assert.equal(land.lastSyncStop?.reason, 'sync_conflict');
+-+
+-+    // The diff equals diffStat for the same refs.
+-+    const vcs = await selectVcs(project.repo, project.config);
+-+    assert.deepEqual(land.diff, await vcs.diffStat('main', project.branch, ['openspec']));
+-+    assert.ok(land.diff, 'expected a diff');
+-+    assert.equal(land.diff.files, 1);
+-+  });
+-+
+-+  it('reads disclosures from a result file with two sections', async () => {
+-+    const project = await setupBranchProject();
+-+    await writeAt(
+-+      project.archiveFolder,
+-+      path.posix.join('.run', 'results', '1.md'),
+-+      DISCLOSURE_RESULT,
+-+    );
+-+    const details = await getSpecDetails(project.repo, '042', project.config);
+-+    const land = await readLandView(project.repo, details, project.config);
+-+    assert.deepEqual(land?.disclosures, [
+-+      { task: '1', deviated: '- used a helper instead', outsideScope: '- fixed the seed' },
+-+    ]);
+-+    assert.ok(
+-+      formatShowText(details).includes('  Disclosures: task 1 deviated, task 1 outside scope'),
+-+      formatShowText(details),
+-+    );
+-+  });
+-+
+-+  it('returns null for an active change', async () => {
+-+    const root = await makeTempDir('osq-land-active-');
+-+    const activeFolder = path.join(root, 'openspec', 'changes', '001-active');
+-+    await fs.mkdir(path.join(activeFolder, 'tasks'), { recursive: true });
+-+    await fs.writeFile(path.join(activeFolder, 'proposal.md'), proposalMd(), 'utf8');
+-+    await fs.writeFile(path.join(activeFolder, 'tasks', '1.md'), taskMd(), 'utf8');
+-+    await writeAt(activeFolder, path.posix.join('.run', 'approved'), 'sha256:abc\n');
+-+
+-+    const details = await getSpecDetails(root, '001', DEFAULT_CONFIG);
+-+    assert.equal(details.location, 'active');
+-+    assert.equal(await readLandView(root, details, DEFAULT_CONFIG), null);
+-+  });
+-+
+-+  it('reads gates, capabilities and disclosures with git off', async () => {
+-+    const root = await makeTempDir('osq-land-nogit-');
+-+    const archiveFolder = path.join(root, ARCHIVE, '042-pricing');
+-+    await writeArchivedChange(archiveFolder, { result: DISCLOSURE_RESULT });
+-+
+-+    const details = await getSpecDetails(root, '042', DEFAULT_CONFIG);
+-+    const land = await readLandView(root, details, DEFAULT_CONFIG);
+-+    assert.ok(land, 'expected a land view');
+-+    assert.equal(land.landed, null);
+-+    assert.equal(land.defaultBranch, null);
+-+    assert.equal(land.mainCommits, null);
+-+    assert.equal(land.diff, null);
+-+    assert.equal(land.gates.length, 3);
+-+    assert.equal(land.capabilities.length, 1);
+-+    assert.equal(land.disclosures.length, 1);
+-+  });
+-+
+-+  it('reports a landed change', async () => {
+-+    const parent = await makeTempDir('osq-land-landed-');
+-+    const repo = path.join(parent, 'repo');
+-+    await fs.mkdir(repo, { recursive: true });
+-+    await initRepo(repo);
+-+    const archiveFolder = path.join(repo, ARCHIVE, '042-pricing');
+-+    await writeArchivedChange(archiveFolder);
+-+    await git(['add', '-A'], repo);
+-+    await git(['commit', '-qm', 'archive'], repo);
+-+
+-+    const config = vcsConfig(parent);
+-+    const details = await getSpecDetails(repo, '042', config);
+-+    const land = await readLandView(repo, details, config);
+-+    assert.equal(land?.landed, true);
+-+    assert.equal(land?.mainCommits, null);
+-+    assert.equal(land?.defaultBranch, 'main');
+-+    assert.equal(land?.diff, null);
+-+    assert.ok(formatShowText(details).includes('Land: landed'));
+-+  });
+-+});
+-+
+-+describe('landLines', () => {
+-+  const base: LandView = {
+-+    folderName: '009-x',
+-+    landed: false,
+-+    defaultBranch: 'main',
+-+    mainCommits: 0,
+-+    gates: [],
+-+    diff: null,
+-+    capabilities: [],
+-+    disclosures: [],
+-+    halt: null,
+-+    lastSync: null,
+-+    lastSyncStop: null,
+-+  };
+-+
+-+  function lines(patch: Partial<LandView>): string[] {
+-+    return landLines({ land: { ...base, ...patch } } as SpecDetails);
+-+  }
+-+
+-+  it('renders each headline', () => {
+-+    const cases: readonly (readonly [Partial<LandView>, string])[] = [
+-+      [{ landed: true, mainCommits: null }, 'Land: landed'],
+-+      [{ landed: null, mainCommits: null }, 'Land: git is off'],
+-+      [{ mainCommits: 0 }, 'Land: not landed; main has not moved since archive'],
+-+      [
+-+        { mainCommits: 1 },
+-+        'Land: not landed; main has 1 new commit since archive, so osq land will sync and verify again',
+-+      ],
+-+      [
+-+        { mainCommits: 2 },
+-+        'Land: not landed; main has 2 new commits since archive, so osq land will sync and verify again',
+-+      ],
+-+      [{ mainCommits: null }, 'Land: not landed; branch osq/009-x not found'],
+-+    ];
+-+    for (const [patch, expected] of cases) {
+-+      assert.equal(lines(patch)[1], expected);
+-+    }
+-+  });
+-+
+-+  it('renders gate names, exit codes and findings', () => {
+-+    const rendered = lines({
+-+      gates: [
+-+        {
+-+          kind: 'task',
+-+          task: '2',
+-+          command: 'node verify.cjs',
+-+          outcome: 'failed',
+-+          exitCode: 1,
+-+          durationSeconds: 3.5,
+-+          timestamp: '2026-10-04T09:00:00.000Z',
+-+          findings: null,
+-+        },
+-+        {
+-+          kind: 'check',
+-+          task: null,
+-+          command: 'node check.cjs',
+-+          outcome: 'passed',
+-+          exitCode: 0,
+-+          durationSeconds: 1,
+-+          timestamp: '2026-10-04T09:00:00.000Z',
+-+          findings: null,
+-+        },
+-+        {
+-+          kind: 'validator',
+-+          task: null,
+-+          command: 'pi/deepseek',
+-+          outcome: 'validated',
+-+          exitCode: 0,
+-+          durationSeconds: 2,
+-+          timestamp: '2026-10-04T09:00:00.000Z',
+-+          findings: 2,
+-+        },
+-+      ],
+-+    });
+-+    assert.deepEqual(rendered, [
+-+      '',
+-+      'Land: not landed; main has not moved since archive',
+-+      '  Gates at archive:',
+-+      '    task 2: failed exit 1 in 4s (node verify.cjs)',
+-+      '    check: passed in 1s (node check.cjs)',
+-+      '    validator: validated in 2s (pi/deepseek), 2 findings',
+-+    ]);
+-+  });
+-+
+-+  it('renders no gates, diff, spec changes and disclosures', () => {
+-+    const rendered = lines({
+-+      diff: { files: 3, added: 10, removed: 2 },
+-+      capabilities: [{ name: 'orders', added: ['a'], modified: ['b'], removed: [], renamed: [] }],
+-+      disclosures: [{ task: '1', deviated: 'x', outsideScope: null }],
+-+      halt: { reason: 'sync_conflict', message: 'first line\nsecond' },
+-+      lastSyncStop: { timestamp: 't', reason: 'sync_failed', message: 'prepare boom\nmore' },
+-+    });
+-+    assert.deepEqual(rendered, [
+-+      '',
+-+      'Land: not landed; main has not moved since archive',
+-+      '  Gates at archive: none recorded',
+-+      '  Diff: 3 files, +10 -2',
+-+      '  Spec changes:',
+-+      '    orders: 1 added, 1 modified, 0 removed, 0 renamed',
+-+      '  Disclosures: task 1 deviated',
+-+      '  Halted: sync_conflict: first line',
+-+      '  Sync stopped: sync_failed: prepare boom',
+-+    ]);
+-+  });
+-+
+-+  it('prints no lines without a land view', () => {
+-+    assert.deepEqual(landLines({} as SpecDetails), []);
+-+  });
+-+});
+-+
+-+describe('land in osq show', () => {
+-+  it('prints the land summary and JSON before digest', async () => {
+-+    const project = await setupBranchProject();
+-+    const details = await getSpecDetails(project.repo, '042', project.config);
+-+    const text = formatShowText(details);
+-+    assert.ok(
+-+      text.includes(
+-+        'Land: not landed; main has 2 new commits since archive, so osq land will sync and verify again',
+-+      ),
+-+      text,
+-+    );
+-+    assert.ok(text.includes('  Gates at archive:'), text);
+-+    assert.ok(text.includes('    task 1: passed in 2s (node verify.cjs)'), text);
+-+    assert.ok(text.includes('    verify: passed in 4s (node verify.cjs)'), text);
+-+    assert.ok(
+-+      text.includes('    validator: validated in 12s (claude/claude-opus-5-5), 1 findings'),
+-+      text,
+-+    );
+-+    assert.ok(text.includes('  Diff: 1 files, +1 -0'), text);
+-+    assert.ok(text.includes('    orders: 1 added, 0 modified, 0 removed, 0 renamed'), text);
+-+    assert.ok(
+-+      text.includes('  Halted: sync_conflict: src/one.txt conflict with main; run osq plan 042'),
+-+      text,
+-+    );
+-+
+-+    const document = JSON.parse(formatShowJson(details)) as Record<string, unknown>;
+-+    const keys = Object.keys(document);
+-+    assert.ok(keys.indexOf('land') < keys.indexOf('digest'), 'land before digest');
+-+    assert.equal((document.land as LandView).mainCommits, 2);
+-+  });
+-+
+-+  it('leaves an active change unchanged', async () => {
+-+    const root = await makeTempDir('osq-land-active-show-');
+-+    const activeFolder = path.join(root, 'openspec', 'changes', '001-active');
+-+    await fs.mkdir(path.join(activeFolder, 'tasks'), { recursive: true });
+-+    await fs.writeFile(path.join(activeFolder, 'proposal.md'), proposalMd(), 'utf8');
+-+    await fs.writeFile(path.join(activeFolder, 'tasks', '1.md'), taskMd(), 'utf8');
+-+    await writeAt(activeFolder, path.posix.join('.run', 'approved'), 'sha256:abc\n');
+-+
+-+    const details = await getSpecDetails(root, '001', DEFAULT_CONFIG);
+-+    assert.ok(!formatShowText(details).includes('Land:'));
+-+    const document = JSON.parse(formatShowJson(details)) as Record<string, unknown>;
+-+    assert.equal('land' in document, false);
+-+  });
+-+});
+-+
+-+describe('land in the web change document', () => {
+-+  it('sets land for an archived change', async () => {
+-+    const project = await setupBranchProject();
+-+    const details = await getSpecDetails(project.repo, '042', project.config);
+-+    const expected = await readLandView(project.repo, details, project.config);
+-+    const document = await getWebChange(project.repo, '042', project.config);
+-+    assert.deepEqual(document.land, expected);
+-+  });
+-+
+-+  it('sets land null for an active change', async () => {
+-+    const root = await makeTempDir('osq-land-active-web-');
+-+    const activeFolder = path.join(root, 'openspec', 'changes', '001-active');
+-+    await fs.mkdir(path.join(activeFolder, 'tasks'), { recursive: true });
+-+    await fs.writeFile(path.join(activeFolder, 'proposal.md'), proposalMd(), 'utf8');
+-+    await fs.writeFile(path.join(activeFolder, 'tasks', '1.md'), taskMd(), 'utf8');
+-+    await writeAt(activeFolder, path.posix.join('.run', 'approved'), 'sha256:abc\n');
+-+
+-+    const document = await getWebChange(root, '001', DEFAULT_CONFIG);
+-+    assert.equal(document.land, null);
+-+  });
+-+});
+diff --git a/openspec/changes/153-land-view/.run/events/2.jsonl b/openspec/changes/153-land-view/.run/events/2.jsonl
+index 4c51214..4ab30b8 100644
+--- a/openspec/changes/153-land-view/.run/events/2.jsonl
++++ b/openspec/changes/153-land-view/.run/events/2.jsonl
+@@ -165,3 +165,162 @@
+ {"type":"verify_ran","timestamp":"2026-10-06T17:16:37.381Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":1.43,"log":".run/logs/2-2.log","output":"▶ readLandView\n  ✔ reads the archived change, its gates, diff, state, halt and sync (319.130483ms)\n  ✔ reads disclosures from a result file with two sections (169.818513ms)\n  ✔ returns null for an active change (15.96137ms)\n  ✔ reads gates, capabilities and disclosures with git off (29.194459ms)\n  ✔ reports a landed change (104.165724ms)\n✔ readLandView (639.6365ms)\n▶ landLines\n  ✔ renders each headline (0.355278ms)\n  ✔ renders gate names, exit codes and findings (0.180493ms)\n  ✔ renders no gates, diff, spec changes and disclosures (0.245232ms)\n  ✔ prints no lines without a land view (0.207982ms)\n✔ landLines (1.318745ms)\n▶ land in osq show\n  ✔ prints the land summary and JSON before digest (120.688005ms)\n  ✔ leaves an active change unchanged (15.328267ms)\n✔ land in osq show (136.360244ms)\n▶ land in the web change document\n  ✔ sets land for an archived change (226.596039ms)\n  ✔ sets land null for an active change (14.22971ms)\n✔ land in the web change document (241.157787ms)\nℹ tests 13\nℹ suites 4\nℹ pass 13\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1382.972809\n"}}
+ {"type":"measures","timestamp":"2026-10-06T17:18:37.701Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":10,"changedLines":1033,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:97c9403ca5a37e649422a68ac6843ff3cced07dc75a63c6253923566edf052aa"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:2fa3e9234960858f6b09b0b161e1dfbc7f8b26d6f2ecce74f51a298816cffdb0"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:97e499e83ee6a2813b392233f4db0c41a3a4cf6d716d59f1d684791a6815e825"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:09819e5d873cb8bc2cd4c48a2e6caa05173351bc8bb7ea8c9b9ea0928fd60626"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:90c7bb424d2bc01a69abc358d1ca1571308eefd2361f3abfaa9b2e717526f7c6"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:0caf9ea9455b57e8762b7c1d4ff31457490c5fc32c1906e6bfc7d47fcbbedc96"},"tests/land-view.test.ts":{"before":null,"after":"sha256:4c8271e7259986bb86207808a65403d0cf7c913cc94159097d91f48a47159d11"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:8a2e1c9209d0bba94a8292588e7f9f79e98d561eaa79d83a339f57a629cafba9"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:8b87277a7b7640d92c43542e81f6c35b292fd0ebf8b1ccfe74c5197d85b28566"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:edef0d01a8d3988cb02b6873f856e7cae14281247225768209e7253ba0e7dc35"}}}}
+ {"type":"dead","timestamp":"2026-10-06T17:18:37.724Z","data":{"task":"2","reason":"change_verify_red"}}
++{"type":"retry","data":{"target":"2","reason":"change_verify_red","attempt":2,"automatic":true},"timestamp":"2026-10-06T17:18:38.525Z"}
++{"type":"measures","timestamp":"2026-10-06T17:18:40.268Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16}}
++{"type":"started","timestamp":"2026-10-06T17:18:40.323Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":2,"projectCommit":"e610215","pid":81906,"timeoutSeconds":1800,"version":"0.2.4","commit":"245110a"}}
++{"type":"tool","timestamp":"2026-10-06T17:18:48.706Z","data":{"tool":"read","summary":"."}}
++{"type":"tool","timestamp":"2026-10-06T17:18:48.711Z","data":{"tool":"read","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
++{"type":"tokens","timestamp":"2026-10-06T17:18:48.759Z","data":{"promptTokens":204531,"candidateTokens":112,"totalTokens":204643,"cachedTokens":0,"reasoningTokens":203,"cost":0.030868649999999997}}
++{"type":"tool","timestamp":"2026-10-06T17:18:51.933Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la src/core/status/ | grep -i land; echo \\\"-"}}
++{"type":"tokens","timestamp":"2026-10-06T17:18:51.983Z","data":{"promptTokens":1211,"candidateTokens":118,"totalTokens":1329,"cachedTokens":204800,"reasoningTokens":83,"cost":0.00091665}}
++{"type":"tool","timestamp":"2026-10-06T17:18:55.234Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"diffStat\\\\|VcsDiffStat\\\" src/core/vcs"}}
++{"type":"tokens","timestamp":"2026-10-06T17:18:55.285Z","data":{"promptTokens":177,"candidateTokens":105,"totalTokens":282,"cachedTokens":206208,"reasoningTokens":61,"cost":0.000744774}}
++{"type":"tool","timestamp":"2026-10-06T17:18:58.348Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:18:58.351Z","data":{"tool":"read","summary":"src/core/status/show-types.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:18:58.355Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:18:58.404Z","data":{"promptTokens":746,"candidateTokens":160,"totalTokens":906,"cachedTokens":206464,"reasoningTokens":86,"cost":0.000878892}}
++{"type":"tool","timestamp":"2026-10-06T17:19:01.968Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:01.971Z","data":{"tool":"read","summary":"src/core/status/last-sync.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:01.973Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:01.976Z","data":{"tool":"read","summary":"src/core/report/result-sections.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:02.025Z","data":{"promptTokens":4500,"candidateTokens":217,"totalTokens":4717,"cachedTokens":207360,"reasoningTokens":101,"cost":0.00148788}}
++{"type":"tool","timestamp":"2026-10-06T17:19:04.791Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:04.794Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:04.844Z","data":{"promptTokens":6346,"candidateTokens":114,"totalTokens":6460,"cachedTokens":212096,"reasoningTokens":36,"cost":0.0016781880000000002}}
++{"type":"tool","timestamp":"2026-10-06T17:19:07.578Z","data":{"tool":"read","summary":"src/core/web/web-data-change.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:07.580Z","data":{"tool":"read","summary":"src/core/web/web-data-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:07.626Z","data":{"promptTokens":5535,"candidateTokens":110,"totalTokens":5645,"cachedTokens":218496,"reasoningTokens":15,"cost":0.001560738}}
++{"type":"tool","timestamp":"2026-10-06T17:19:10.324Z","data":{"tool":"read","summary":"src/core/web/web-data.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:10.326Z","data":{"tool":"read","summary":"src/core/status/show-model-folder.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:10.327Z","data":{"tool":"read","summary":"src/core/status/show.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:10.371Z","data":{"promptTokens":3913,"candidateTokens":160,"totalTokens":4073,"cachedTokens":224128,"reasoningTokens":5,"cost":0.0013583339999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:19:13.220Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' tests/vcs-land.test.ts\",\"workdir"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:13.222Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"readCheckCommand\\\\|export function pa"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:13.275Z","data":{"promptTokens":1298,"candidateTokens":183,"totalTokens":1481,"cachedTokens":228096,"reasoningTokens":74,"cost":0.0010331880000000002}}
++{"type":"tool","timestamp":"2026-10-06T17:19:16.838Z","data":{"tool":"read","summary":"tests/show-validation.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:16.880Z","data":{"promptTokens":1950,"candidateTokens":59,"totalTokens":2009,"cachedTokens":229632,"reasoningTokens":156,"cost":0.001110396}}
++{"type":"tool","timestamp":"2026-10-06T17:19:20.285Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:20.347Z","data":{"promptTokens":3385,"candidateTokens":60,"totalTokens":3445,"cachedTokens":231680,"reasoningTokens":54,"cost":0.00127119}}
++{"type":"tool","timestamp":"2026-10-06T17:19:24.724Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"no-skipped-in-src\\\\|skipped\\\" tests/n"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:24.773Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"node:fs\\\" tests/*.test.ts | grep -i \\"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:24.829Z","data":{"promptTokens":2991,"candidateTokens":209,"totalTokens":3200,"cachedTokens":235136,"reasoningTokens":252,"cost":0.0014306579999999998}}
++{"type":"tool","timestamp":"2026-10-06T17:19:27.696Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"node:fs\\\\|renderer\\\\|STATUS_DIR\\\\|show"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:27.752Z","data":{"promptTokens":454,"candidateTokens":119,"totalTokens":573,"cachedTokens":238464,"reasoningTokens":52,"cost":0.0008860920000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:19:31.273Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '520,600p' tests/inbox.test.ts\",\"workdir\""}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:31.313Z","data":{"promptTokens":936,"candidateTokens":83,"totalTokens":1019,"cachedTokens":238976,"reasoningTokens":264,"cost":0.001065528}}
++{"type":"tool","timestamp":"2026-10-06T17:19:35.013Z","data":{"tool":"shell","summary":"{\"command\":\"awk 'NR>=565 && NR<=575 {printf \\\"%d: %s\\\\n\\\", N"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:35.054Z","data":{"promptTokens":700,"candidateTokens":97,"totalTokens":797,"cachedTokens":240256,"reasoningTokens":93,"cost":0.000939768}}
++{"type":"tool","timestamp":"2026-10-06T17:19:44.816Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:44.818Z","data":{"tool":"read","summary":"src/core/vcs/no-vcs.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:44.867Z","data":{"promptTokens":283,"candidateTokens":111,"totalTokens":394,"cachedTokens":241024,"reasoningTokens":1745,"cost":0.0018791219999999998}}
++{"type":"tool","timestamp":"2026-10-06T17:19:49.096Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"kind\\\" src/core/vcs/git-vcs.ts src/cor"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:49.149Z","data":{"promptTokens":1855,"candidateTokens":116,"totalTokens":1971,"cachedTokens":243072,"reasoningTokens":210,"cost":0.001203066}}
++{"type":"tool","timestamp":"2026-10-06T17:19:53.594Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"openspecRoot\\\\|getOpenspecRoot\\\\|open"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:53.596Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-diff.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:53.647Z","data":{"promptTokens":968,"candidateTokens":189,"totalTokens":1157,"cachedTokens":245248,"reasoningTokens":212,"cost":0.001121544}}
++{"type":"tool","timestamp":"2026-10-06T17:19:56.696Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
++{"type":"tool","timestamp":"2026-10-06T17:19:56.700Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,40p' src/core/spec/parser.ts; echo \\\"="}}
++{"type":"tokens","timestamp":"2026-10-06T17:19:56.748Z","data":{"promptTokens":832,"candidateTokens":161,"totalTokens":993,"cachedTokens":246528,"reasoningTokens":48,"cost":0.000989784}}
++{"type":"tool","timestamp":"2026-10-06T17:20:00.230Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"export async function parseSpecMdFromF"}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:00.274Z","data":{"promptTokens":1035,"candidateTokens":131,"totalTokens":1166,"cachedTokens":247552,"reasoningTokens":60,"cost":0.001012506}}
++{"type":"tool","timestamp":"2026-10-06T17:20:03.671Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"export async function listChanges\\\\|ex"}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:03.714Z","data":{"promptTokens":1019,"candidateTokens":162,"totalTokens":1181,"cachedTokens":248704,"reasoningTokens":89,"cost":0.001049562}}
++{"type":"tool","timestamp":"2026-10-06T17:20:23.354Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"git.*worktree.*add\\\\|worktree add\\\" "}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:23.402Z","data":{"promptTokens":579,"candidateTokens":126,"totalTokens":705,"cachedTokens":249856,"reasoningTokens":4204,"cost":0.003434418}}
++{"type":"tool","timestamp":"2026-10-06T17:20:26.635Z","data":{"tool":"read","summary":"tests/change-locations-worktrees.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:26.680Z","data":{"promptTokens":587,"candidateTokens":80,"totalTokens":667,"cachedTokens":254720,"reasoningTokens":32,"cost":0.00091941}}
++{"type":"tool","timestamp":"2026-10-06T17:20:44.036Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"vcs\\\" src/core/foundation/config.ts | "}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:44.087Z","data":{"promptTokens":2060,"candidateTokens":111,"totalTokens":2171,"cachedTokens":255360,"reasoningTokens":4318,"cost":0.00373248}}
++{"type":"tool","timestamp":"2026-10-06T17:20:56.193Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"formatShowJson\\\\|formatShowText\\\\|ge"}}
++{"type":"tokens","timestamp":"2026-10-06T17:20:56.432Z","data":{"promptTokens":240,"candidateTokens":92,"totalTokens":332,"cachedTokens":261760,"reasoningTokens":1887,"cost":0.0020086799999999997}}
++{"type":"tool","timestamp":"2026-10-06T17:21:00.225Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"formatShowJson\\\\|formatShowText\\\\|deep"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:00.543Z","data":{"promptTokens":261,"candidateTokens":151,"totalTokens":412,"cachedTokens":263808,"reasoningTokens":0,"cost":0.000921174}}
++{"type":"tool","timestamp":"2026-10-06T17:21:03.612Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"land\\\\|archived\\\\|JSON.parse\\\\|deepEqu"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:03.848Z","data":{"promptTokens":222,"candidateTokens":93,"totalTokens":315,"cachedTokens":264064,"reasoningTokens":23,"cost":0.000895092}}
++{"type":"tool","timestamp":"2026-10-06T17:21:25.839Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' src/core/web/web-data-folders.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:26.144Z","data":{"promptTokens":812,"candidateTokens":86,"totalTokens":898,"cachedTokens":264320,"reasoningTokens":4694,"cost":0.00378276}}
++{"type":"tool","timestamp":"2026-10-06T17:21:31.867Z","data":{"tool":"write","summary":"src/core/status/show-land-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:32.099Z","data":{"promptTokens":1223,"candidateTokens":575,"totalTokens":1798,"cachedTokens":269824,"reasoningTokens":104,"cost":0.0014003219999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:21:41.140Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:41.342Z","data":{"promptTokens":134,"candidateTokens":2468,"totalTokens":2602,"cachedTokens":271616,"reasoningTokens":6,"cost":0.002319348}}
++{"type":"tool","timestamp":"2026-10-06T17:21:48.677Z","data":{"tool":"write","summary":"src/core/status/show-land-lines.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:48.793Z","data":{"promptTokens":200,"candidateTokens":1009,"totalTokens":1209,"cachedTokens":274048,"reasoningTokens":7,"cost":0.001461744}}
++{"type":"tool","timestamp":"2026-10-06T17:21:52.886Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:53.036Z","data":{"promptTokens":217,"candidateTokens":219,"totalTokens":436,"cachedTokens":275072,"reasoningTokens":28,"cost":0.001005966}}
++{"type":"tool","timestamp":"2026-10-06T17:21:56.460Z","data":{"tool":"edit","summary":"src/core/status/show-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:21:56.591Z","data":{"promptTokens":231,"candidateTokens":165,"totalTokens":396,"cachedTokens":275328,"reasoningTokens":0,"cost":0.000959634}}
++{"type":"tool","timestamp":"2026-10-06T17:21:59.975Z","data":{"tool":"edit","summary":"src/core/status/show-output.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:00.175Z","data":{"promptTokens":163,"candidateTokens":329,"totalTokens":492,"cachedTokens":275584,"reasoningTokens":0,"cost":0.001048602}}
++{"type":"tool","timestamp":"2026-10-06T17:22:04.393Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:04.528Z","data":{"promptTokens":259,"candidateTokens":171,"totalTokens":430,"cachedTokens":275840,"reasoningTokens":5,"cost":0.0009719700000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:22:07.828Z","data":{"tool":"edit","summary":"src/core/status/show-model.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:07.956Z","data":{"promptTokens":202,"candidateTokens":320,"totalTokens":522,"cachedTokens":276096,"reasoningTokens":0,"cost":0.0010505879999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:22:11.084Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n '\\\"verify\\\"\\\\|\\\"lint\\\"\\\\|\\\"test\\\"\\\\|\\\"ty"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:11.228Z","data":{"promptTokens":161,"candidateTokens":108,"totalTokens":269,"cachedTokens":276480,"reasoningTokens":95,"cost":0.0009753900000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:22:14.734Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:14.845Z","data":{"promptTokens":492,"candidateTokens":136,"totalTokens":628,"cachedTokens":276736,"reasoningTokens":100,"cost":0.001045608}}
++{"type":"tool","timestamp":"2026-10-06T17:22:17.940Z","data":{"tool":"edit","summary":"src/core/web/web-data-types.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:18.091Z","data":{"promptTokens":239,"candidateTokens":158,"totalTokens":397,"cachedTokens":277248,"reasoningTokens":0,"cost":0.000962394}}
++{"type":"tool","timestamp":"2026-10-06T17:22:21.202Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:21.340Z","data":{"promptTokens":164,"candidateTokens":160,"totalTokens":324,"cachedTokens":277504,"reasoningTokens":0,"cost":0.0009531120000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:22:25.331Z","data":{"tool":"edit","summary":"src/core/web/web-data-change.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:25.475Z","data":{"promptTokens":219,"candidateTokens":175,"totalTokens":394,"cachedTokens":277632,"reasoningTokens":0,"cost":0.0009707460000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:22:28.460Z","data":{"tool":"edit","summary":"src/core/web/web-data.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:28.628Z","data":{"promptTokens":161,"candidateTokens":177,"totalTokens":338,"cachedTokens":277888,"reasoningTokens":0,"cost":0.000964014}}
++{"type":"tool","timestamp":"2026-10-06T17:22:47.608Z","data":{"tool":"shell","summary":"{\"command\":\"npx tsc --noEmit -p packages/ui/tsconfig.cli.jso"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:47.702Z","data":{"promptTokens":232,"candidateTokens":95,"totalTokens":327,"cachedTokens":278016,"reasoningTokens":12,"cost":0.000933048}}
++{"type":"tool","timestamp":"2026-10-06T17:22:51.481Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write src/core/status/show-lan"}}
++{"type":"tokens","timestamp":"2026-10-06T17:22:51.542Z","data":{"promptTokens":225,"candidateTokens":149,"totalTokens":374,"cachedTokens":278144,"reasoningTokens":24,"cost":0.0009719819999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:23:23.332Z","data":{"tool":"write","summary":"tests/land-view.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:23.410Z","data":{"promptTokens":168,"candidateTokens":5159,"totalTokens":5327,"cachedTokens":278400,"reasoningTokens":4409,"cost":0.0066012}}
++{"type":"tool","timestamp":"2026-10-06T17:23:28.814Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:28.868Z","data":{"promptTokens":158,"candidateTokens":227,"totalTokens":385,"cachedTokens":288000,"reasoningTokens":432,"cost":0.0012831}}
++{"type":"tool","timestamp":"2026-10-06T17:23:39.677Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write tests/land-view.test.ts "}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:39.729Z","data":{"promptTokens":199,"candidateTokens":122,"totalTokens":321,"cachedTokens":288640,"reasoningTokens":10,"cost":0.00097497}}
++{"type":"tool","timestamp":"2026-10-06T17:23:44.221Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:44.268Z","data":{"promptTokens":233,"candidateTokens":118,"totalTokens":351,"cachedTokens":288768,"reasoningTokens":38,"cost":0.0009948539999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:23:48.512Z","data":{"tool":"shell","summary":"{\"command\":\"awk 'NR>=200 && NR<=245 {printf \\\"%d: %s\\\\n\\\", N"}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:48.560Z","data":{"promptTokens":953,"candidateTokens":98,"totalTokens":1051,"cachedTokens":289152,"reasoningTokens":286,"cost":0.0012408060000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:23:53.636Z","data":{"tool":"edit","summary":"src/core/status/show-land-lines.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:53.689Z","data":{"promptTokens":699,"candidateTokens":161,"totalTokens":860,"cachedTokens":290432,"reasoningTokens":362,"cost":0.001289946}}
++{"type":"tool","timestamp":"2026-10-06T17:23:58.736Z","data":{"tool":"shell","summary":"{\"command\":\"cat > /tmp/dbg.mts <<'EOF'\\nimport { execFile } "}}
++{"type":"tokens","timestamp":"2026-10-06T17:23:58.777Z","data":{"promptTokens":223,"candidateTokens":715,"totalTokens":938,"cachedTokens":291456,"reasoningTokens":0,"cost":0.001336818}}
++{"type":"tool","timestamp":"2026-10-06T17:24:02.969Z","data":{"tool":"shell","summary":"{\"command\":\"cat > .run/dbg.mts <<'EOF'\\nimport { execFile } "}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:03.011Z","data":{"promptTokens":520,"candidateTokens":725,"totalTokens":1245,"cachedTokens":292352,"reasoningTokens":7,"cost":0.0013942560000000002}}
++{"type":"tool","timestamp":"2026-10-06T17:24:07.908Z","data":{"tool":"shell","summary":"{\"command\":\"cat > dbg.mts <<'EOF'\\nimport { execFile } from "}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:07.964Z","data":{"promptTokens":637,"candidateTokens":719,"totalTokens":1356,"cachedTokens":293504,"reasoningTokens":61,"cost":0.0014440619999999999}}
++{"type":"tool","timestamp":"2026-10-06T17:24:14.452Z","data":{"tool":"shell","summary":"{\"command\":\"cat > dbg.mts <<'EOF'\\nimport { execFile } from "}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:14.504Z","data":{"promptTokens":207,"candidateTokens":762,"totalTokens":969,"cachedTokens":294912,"reasoningTokens":78,"cost":0.0014197860000000001}}
++{"type":"tool","timestamp":"2026-10-06T17:24:21.386Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:21.427Z","data":{"promptTokens":338,"candidateTokens":129,"totalTokens":467,"cachedTokens":295936,"reasoningTokens":719,"cost":0.001447308}}
++{"type":"tool","timestamp":"2026-10-06T17:24:27.399Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:27.446Z","data":{"promptTokens":374,"candidateTokens":166,"totalTokens":540,"cachedTokens":297088,"reasoningTokens":705,"cost":0.001469964}}
++{"type":"tool","timestamp":"2026-10-06T17:24:30.040Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:30.087Z","data":{"promptTokens":243,"candidateTokens":114,"totalTokens":357,"cachedTokens":298112,"reasoningTokens":0,"cost":0.000999186}}
++{"type":"tool","timestamp":"2026-10-06T17:24:33.701Z","data":{"tool":"edit","summary":"tests/land-view.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:33.753Z","data":{"promptTokens":251,"candidateTokens":125,"totalTokens":376,"cachedTokens":298240,"reasoningTokens":0,"cost":0.00100737}}
++{"type":"tool","timestamp":"2026-10-06T17:24:40.420Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write tests/land-view.test.ts "}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:40.473Z","data":{"promptTokens":142,"candidateTokens":148,"totalTokens":290,"cachedTokens":298496,"reasoningTokens":71,"cost":0.001048188}}
++{"type":"tool","timestamp":"2026-10-06T17:24:46.216Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:46.293Z","data":{"promptTokens":428,"candidateTokens":161,"totalTokens":589,"cachedTokens":298752,"reasoningTokens":152,"cost":0.0011482559999999998}}
++{"type":"tool","timestamp":"2026-10-06T17:24:49.292Z","data":{"tool":"read","summary":"tests/show-text.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:24:49.339Z","data":{"promptTokens":660,"candidateTokens":75,"totalTokens":735,"cachedTokens":299392,"reasoningTokens":75,"cost":0.001087176}}
++{"type":"tool","timestamp":"2026-10-06T17:25:02.858Z","data":{"tool":"write","summary":"src/core/status/show-land-model.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:25:02.909Z","data":{"promptTokens":975,"candidateTokens":2410,"totalTokens":3385,"cachedTokens":300160,"reasoningTokens":1506,"cost":0.00339633}}
++{"type":"tool","timestamp":"2026-10-06T17:25:12.236Z","data":{"tool":"edit","summary":"src/core/status/show-land-lines.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T17:25:12.285Z","data":{"promptTokens":180,"candidateTokens":174,"totalTokens":354,"cachedTokens":304896,"reasoningTokens":56,"cost":0.001079688}}
++{"type":"tool","timestamp":"2026-10-06T17:25:17.728Z","data":{"tool":"shell","summary":"{\"command\":\"npx biome check --write src/core/status/show-lan"}}
++{"type":"tokens","timestamp":"2026-10-06T17:25:17.775Z","data":{"promptTokens":179,"candidateTokens":195,"totalTokens":374,"cachedTokens":305152,"reasoningTokens":60,"cost":0.001095306}}
++{"type":"tool","timestamp":"2026-10-06T17:25:21.940Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T17:25:21.990Z","data":{"promptTokens":426,"candidateTokens":118,"totalTokens":544,"cachedTokens":305536,"reasoningTokens":30,"cost":0.001069308}}
++{"type":"tool","timestamp":"2026-10-06T17:27:41.529Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"workdir\":\"/home/ma"}}
++{"type":"tokens","timestamp":"2026-10-06T17:27:41.976Z","data":{"promptTokens":308,"candidateTokens":97,"totalTokens":405,"cachedTokens":306048,"reasoningTokens":78,"cost":0.001069344}}
++{"type":"tool","timestamp":"2026-10-06T17:27:53.071Z","data":{"tool":"write","summary":"openspec/changes/153-land-view/.run/results/2.md"}}
++{"type":"tokens","timestamp":"2026-10-06T17:27:53.127Z","data":{"promptTokens":962,"candidateTokens":1229,"totalTokens":2191,"cachedTokens":306432,"reasoningTokens":941,"cost":0.002365596}}
++{"type":"tool","timestamp":"2026-10-06T17:27:56.318Z","data":{"tool":"shell","summary":"{\"command\":\"ls dbg.mts 2>&1; ls .run 2>&1; ls src/core/statu"}}
++{"type":"tokens","timestamp":"2026-10-06T17:27:56.373Z","data":{"promptTokens":220,"candidateTokens":97,"totalTokens":317,"cachedTokens":309376,"reasoningTokens":54,"cost":0.001051728}}
++{"type":"text","timestamp":"2026-10-06T17:28:00.245Z","data":{"text":"Done. Implemented the land view model, renderer, and web document wiring, with a new `tests/land-view.test.ts` covering the delta-spec scenarios.\n\nVerification:\n- Task verify `node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts` — 10/10 pass.\n- Change verify `pnpm verify` — typechecks, build, full test run, and lint all pass.\n\nResult written to `openspec/changes/153-land-view/.run/results/2.md`."}}
++{"type":"exited","timestamp":"2026-10-06T17:28:02.636Z","data":{"exitCode":0,"pid":81906,"timedOut":false,"elapsedSeconds":560.7}}
++{"type":"verify_ran","timestamp":"2026-10-06T17:28:04.332Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/land-view.test.ts","exitCode":0,"duration":1.04,"log":".run/logs/2-3.log","output":"▶ land view model\n  ✔ collects the archive gates and ignores events after archived (85.384197ms)\n  ✔ returns a gate-less view without an archived event (39.183694ms)\n  ✔ reads the spec changes, disclosures, halt and sync stop without git (45.605115ms)\n  ✔ returns null for an active or rejected change (24.445251ms)\n  ✔ renders every headline and git-off readout from a literal view (0.603801ms)\n  ✔ imports no files in the land renderer (1.131251ms)\n✔ land view model (198.018395ms)\n▶ land view in show\n  ✔ prints no Land line for an active change and no land key in JSON (14.717575ms)\n  ✔ prints the land summary for an archived change two commits behind main (137.511814ms)\n✔ land view in show (152.79974ms)\n▶ land view document\n  ✔ sets land for an archived change and null for an active one (212.713344ms)\n  ✔ reports a landed change with no main commits (135.662569ms)\n✔ land view document (348.813564ms)\nℹ tests 10\nℹ suites 3\nℹ pass 10\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 995.05657\n"}}
++{"type":"measures","timestamp":"2026-10-06T17:30:13.792Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":822,"repoFiles":2445,"repoLines":279285,"importFanIn":18,"proposalWords":974,"taskWords":723,"deltaRequirements":5,"deltaScenarios":16,"changedFiles":10,"changedLines":908,"scopeHashes":{"src/core/status/show-model.ts":{"before":"sha256:b021f7386bce67f2c3b6e2c1d9f8535c7645f6737eac98736b9945f12c79bfbe","after":"sha256:3fa1e5e05b2b5811c4a7454514ebe86537ef73dcd036906c7077538632ac40f3"},"src/core/status/show-output.ts":{"before":"sha256:3a8cfce7d20bdf690b489d126c6dcc180aec0dc0255eb9ef51374e1b92f3d2ad","after":"sha256:ab94417504bb790de28787d2342c416b4804ed56c563b4b42d24f1594c83c7be"},"src/core/status/show-types.ts":{"before":"sha256:57d9d72ab0c0ec31fc676d7d431d2dbd47dbe64fa065c59de0c84038381e8989","after":"sha256:5af91007c0490e96dfa120f42381e3c43904e094e883919709d6b5eb5954e77f"},"src/core/web/web-data-change.ts":{"before":"sha256:6b2a003c00c077cdee4ef5aa333ed63475337cd2b25dadcb71f3794de609496c","after":"sha256:a67a01466951a796bd601b9ffc51d5da6b08847e4f3f9c66e2321bf277a170f2"},"src/core/web/web-data-types.ts":{"before":"sha256:f52f3121e798bfc0dfb7db0551c36c65a486d1d16b4cd12e80aca9d154019d90","after":"sha256:c31bf10d7d8d2d85946fa0102a63c397047652ed67c39089ffe529499ad231d5"},"src/core/web/web-data.ts":{"before":"sha256:8c9fa3a009f0f19fc3d69c9447efd6fd25bad728a310765bb87161194b66bca3","after":"sha256:fa4df83d2c968cfeede06fdd936334d8c04b05214d53609ba37ea04fb3c47220"},"tests/land-view.test.ts":{"before":null,"after":"sha256:2622f493f236e677879e2ae871690ee3e96af23eebc2270a233f4c7b1909b95d"},"src/core/status/show-land-lines.ts":{"before":null,"after":"sha256:70741d9bbea86f8b46de98c531c427382410239a6f64c1eab06ee06a3dfa6077"},"src/core/status/show-land-model.ts":{"before":null,"after":"sha256:ec7f4e111fc4f4658850b41cf3291aeb3c86c91e1aefaf2d606821eb92e73921"},"src/core/status/show-land-types.ts":{"before":null,"after":"sha256:5410355570984d4b44e579c929f9f044ed46be592498c65b1c201848479b7d3e"}}}}
++{"type":"dead","timestamp":"2026-10-06T17:30:14.016Z","data":{"task":"2","reason":"change_verify_red"}}
+diff --git a/openspec/changes/153-land-view/.run/events/change.jsonl b/openspec/changes/153-land-view/.run/events/change.jsonl
+new file mode 100644
+index 0000000..9bd87d8
+--- /dev/null
++++ b/openspec/changes/153-land-view/.run/events/change.jsonl
+@@ -0,0 +1,4 @@
++{"type":"baseline_ran","timestamp":"2026-10-06T16:44:50.261Z","data":{"outcome":"passed","command":"pnpm verify","commit":"c09c921e651dfc368e53e1827fe1dcf984245f41","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":180.72}}
++{"type":"verify_ran","timestamp":"2026-10-06T16:54:32.422Z","data":{"command":"pnpm verify","exitCode":0,"duration":113.89,"log":".run/logs/change-1.log","output":"  ✔ never mutates the MetricsReport or WebGraph inputs (76.532152ms)\n✔ scope evidence and empty history (221.554719ms)\n▶ report module line budget\n  ✔ keeps every report source file at or under 250 lines (69.448463ms)\n✔ report module line budget (69.676807ms)\n▶ approve review view\n  ✔ shows the review sections in order, then the tasks and the digest (14.45449ms)\n  ✔ says None for an empty review section (2.095268ms)\n  ✔ lists the digest flags when there is no action client (6.394715ms)\n  ✔ shows New requirement, Removed, and Renamed from wording (1.902837ms)\n  ✔ renders exactly as before when the review is missing or null (2.15405ms)\n  ✔ styles the review text and the delta pair to wrap at phone width (9.514909ms)\n✔ approve review view (38.88264ms)\n▶ approval flags\n  ✔ renders nothing for an empty flag list (0.68799ms)\n  ✔ places each flag and excerpt inside the Approve button item (1.367178ms)\n  ✔ places the flags before the buttons when there is no approve action (1.128134ms)\n✔ approval flags (3.451415ms)\n▶ approve review against a real document\n  ✔ renders the living and proposed text and the removed requirement flag (86.885299ms)\n✔ approve review against a real document (87.144817ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (12.209475ms)\n  ✔ maps every derived task state onto the status vocabulary (0.200594ms)\n  ✔ defines the whole palette for light and dark schemes (13.211359ms)\n  ✔ never centers table cells (2.086343ms)\n✔ status badge (29.283767ms)\nℹ tests 114\nℹ suites 30\nℹ pass 114\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2982.865833\n\n> @matteeh/osq@0.2.4 lint .\n> biome check src tests packages/ui/src\n\nChecked 946 files in 567ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-06T17:18:37.668Z","data":{"command":"pnpm verify","exitCode":1,"duration":120.25,"log":".run/logs/change-2.log","output":"▶ Automatic retry\n  ✔ retries a scope violation and names the violating file (602.108105ms)\n✔ Automatic retry (602.402216ms)\n▶ Watcher sync\n  ✔ syncs the default branch before the first task (1499.611451ms)\n  ✔ does not sync between tasks, only before archive (1297.527988ms)\n  ✔ halts with sync_conflict when main changed the same line before archive (628.775901ms)\n  ✔ skips both syncs for a stacked dependent while its dependency waits (1387.383473ms)\n  ✔ syncs after the dependency lands during the dependent run (1778.958222ms)\n✔ Watcher sync (6595.29003ms)\nℹ tests 3370\nℹ suites 870\nℹ pass 3369\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 100614.97243\n\n✖ failing tests:\n\ntest at tests/inbox.test.ts:2:14782\n✖ reads the inbox through a core helper without advancing the cursor (3148.737208ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(\n  \n      at TestContext.<anonymous> (tests/inbox.test.ts:571:14)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
++{"type":"verify_ran","timestamp":"2026-10-06T17:30:13.748Z","data":{"command":"pnpm verify","exitCode":1,"duration":129.29,"log":".run/logs/change-3.log","output":"▶ Automatic retry\n  ✔ retries a scope violation and names the violating file (688.085395ms)\n✔ Automatic retry (688.358408ms)\n▶ Watcher sync\n  ✔ syncs the default branch before the first task (1104.517803ms)\n  ✔ does not sync between tasks, only before archive (1187.335468ms)\n  ✔ halts with sync_conflict when main changed the same line before archive (496.206985ms)\n  ✔ skips both syncs for a stacked dependent while its dependency waits (1299.150653ms)\n  ✔ syncs after the dependency lands during the dependent run (1724.987679ms)\n✔ Watcher sync (5814.406138ms)\nℹ tests 3367\nℹ suites 869\nℹ pass 3366\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 106567.549492\n\n✖ failing tests:\n\ntest at tests/inbox.test.ts:2:14782\n✖ reads the inbox through a core helper without advancing the cursor (3809.709806ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(\n  \n      at TestContext.<anonymous> (tests/inbox.test.ts:571:14)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+diff --git a/openspec/changes/153-land-view/.run/results/2.md b/openspec/changes/153-land-view/.run/results/2.md
+new file mode 100644
+index 0000000..18d54fa
+--- /dev/null
++++ b/openspec/changes/153-land-view/.run/results/2.md
+@@ -0,0 +1,67 @@
++## Changed
++
++- New `src/core/status/show-land-types.ts` holds the Ports types
++  (`LandGateKind`, `LandGate`, `LandDisclosure`, `LandHalt`, `LandView`).
++- New `src/core/status/show-land-model.ts` exports `readLandView`, which
++  returns null unless `details.location` is `archived` and otherwise builds
++  the view from files and refs osq already writes: archive gates from
++  `details.timeline` at or before the last `archived` event (last per-task
++  `verify_ran` without a `phase`, then the proposal `verify`, then the
++  declared `check:`, then `validator_ran`), `capabilities` from
++  `readArchivedChange` for the `listChanges(projectRoot, config, ['archived'])`
++  entry whose path resolves to `details.folderPath`, disclosures from
++  `readChangeDisclosures`, halt from `.run/regressed/change.md` through
++  `parseFrontmatter`, `lastSync`/`lastSyncStop` from `readLastSync`, and the
++  git fields through `selectVcs` with `defaultBranch`, `readDependencyState`,
++  `listBranches`, `countCommits` and `diffStat` for `worktreeBranch(folderName)`.
++  With git off the four git fields are null. It writes nothing.
++- New `src/core/status/show-land-lines.ts` exports `landLines(details)`,
++  rendering the headline, `Gates at archive:`, `Diff:`, `Spec changes:`,
++  `Disclosures:`, `Halted:` and `Sync stopped:` lines. It imports no
++  `node:fs` and only `./show-types.js` (the gate/view shapes are derived from
++  `SpecDetails['land']`), so the existing renderer-import test stays green.
++- `src/core/status/show-types.ts`: `SpecDetails` gains `land?: LandView`.
++- `src/core/status/show-model.ts`: `withNextStep` sets `land` from
++  `readLandView` for an archived folder, so `formatShowJson` carries it before
++  `digest`.
++- `src/core/status/show-output.ts`: `formatShowText` appends the land lines
++  after `formatSpecDetails` and before the digest lines.
++- `src/core/web/web-data-types.ts`: `WebChange` gains
++  `readonly land?: LandView | null`.
++- `src/core/web/web-data-change.ts`: `getWebChange` always sets `land` from
++  `readLandView` with the details it already builds.
++- `src/core/web/web-data.ts`: re-exports `LandDisclosure`, `LandGate`,
++  `LandGateKind` and `LandView` as types.
++- New `tests/land-view.test.ts` (10 tests): covers archive gates (pre-spawn
++  and post-archive events excluded), gate-less archives, spec changes,
++  disclosures, halt, sync stop and git-off nulls; null for active/rejected;
++  every headline from a literal view; `osq show` text and `--json` order;
++  `getWebChange` for an archived and an active change; and the landed case.
++  The git cases build a temporary repository with an `osq/042-pricing` worktree
++  holding the archived change plus a code commit and the default branch two
++  commits ahead, and assert `land.diff` equals `vcs.diffStat` for the same
++  refs; the landed case commits the archive folder on the default branch.
++
++## Deviated
++
++- The renderer computes `LandView`/`LandGate` structurally from
++  `SpecDetails['land']` instead of importing `show-land-types.ts`, because
++  `tests/show-text.test.ts` only allows a `show-*-lines.ts` module to import
++  `./show-types.js` and other renderer modules. The Ports types still live in
++  `show-land-types.ts` and `show-types.ts` imports them.
++- Failed gates append ` exit <code>` only when `outcome` is `failed`; the
++  validator's `validated` outcome therefore reads
++  `validator: validated, <n> findings in <s>s (<command>)`.
++- Added a `LandHalt` interface (the inline shape the Ports block shows) for
++  readability.
++
++## Outside scope
++
++- The previous attempt's change-verify failure was
++  `tests/inbox.test.ts` "reads the inbox through a core helper without
++  advancing the cursor": it compares `running[].elapsedSeconds` from a core
++  read against a later spawned CLI run and fails when the two projections are
++  more than 2 seconds apart. It is timing-sensitive and unrelated to this
++  task; it passed in the `pnpm verify` run for this attempt.
++
++Touched: src/core/status/show-land-types.ts, src/core/status/show-land-model.ts, src/core/status/show-land-lines.ts, src/core/status/show-types.ts, src/core/status/show-model.ts, src/core/status/show-output.ts, src/core/web/web-data-types.ts, src/core/web/web-data-change.ts, src/core/web/web-data.ts, tests/land-view.test.ts
+diff --git a/src/core/status/show-land-lines.ts b/src/core/status/show-land-lines.ts
+new file mode 100644
+index 0000000..e65726a
+--- /dev/null
++++ b/src/core/status/show-land-lines.ts
+@@ -0,0 +1,93 @@
++import type { SpecDetails } from './show-types.js';
++
++/** The land view and gate shape the model carries on the detail. */
++type LandView = NonNullable<SpecDetails['land']>;
++type LandGate = LandView['gates'][number];
++
++/** `task <n>`, `verify`, `check` or `validator`. */
++function gateName(gate: LandGate): string {
++  switch (gate.kind) {
++    case 'task':
++      return `task ${gate.task ?? ''}`.trim();
++    case 'verify':
++      return 'verify';
++    case 'check':
++      return 'check';
++    default:
++      return 'validator';
++  }
++}
++
++/** One `Gates at archive:` entry. */
++function gateLine(gate: LandGate): string {
++  const seconds = Math.round(gate.durationSeconds ?? 0);
++  let outcome = gate.outcome;
++  if (gate.outcome === 'failed' && gate.exitCode !== null) outcome += ` exit ${gate.exitCode}`;
++  if (gate.kind === 'validator') outcome += `, ${gate.findings ?? 0} findings`;
++  return `    ${gateName(gate)}: ${outcome} in ${seconds}s (${gate.command})`;
++}
++
++/** The `Land:` headline for the change's landed state. */
++function headline(land: LandView): string {
++  if (land.landed === null) return 'Land: git is off';
++  if (land.landed) return 'Land: landed';
++
++  const branch = `osq/${land.folderName}`;
++  const commits = land.mainCommits;
++  if (commits === null) return `Land: not landed; branch ${branch} not found`;
++  const defaultBranch = land.defaultBranch ?? 'the default branch';
++  if (commits === 0) return `Land: not landed; ${defaultBranch} has not moved since archive`;
++  const noun = commits === 1 ? 'commit' : 'commits';
++  return `Land: not landed; ${defaultBranch} has ${commits} new ${noun} since archive, so osq land will sync and verify again`;
++}
++
++/** The first line of a multi-line message, or an empty string. */
++function firstLine(message: string): string {
++  return message.split('\n')[0] ?? '';
++}
++
++/** Every narrative part below the headline. */
++function detailLines(land: LandView): string[] {
++  const lines: string[] = [];
++  if (land.gates.length === 0) {
++    lines.push('  Gates at archive: none recorded');
++  } else {
++    lines.push('  Gates at archive:');
++    for (const gate of land.gates) lines.push(gateLine(gate));
++  }
++  if (land.diff) {
++    lines.push(`  Diff: ${land.diff.files} files, +${land.diff.added} -${land.diff.removed}`);
++  }
++  if (land.capabilities.length > 0) {
++    lines.push('  Spec changes:');
++    for (const capability of land.capabilities) {
++      lines.push(
++        `    ${capability.name}: ${capability.added.length} added, ${capability.modified.length} modified, ${capability.removed.length} removed, ${capability.renamed.length} renamed`,
++      );
++    }
++  }
++  const disclosures: string[] = [];
++  for (const disclosure of land.disclosures) {
++    if (disclosure.deviated !== null) disclosures.push(`task ${disclosure.task} deviated`);
++    if (disclosure.outsideScope !== null) disclosures.push(`task ${disclosure.task} outside scope`);
++  }
++  if (disclosures.length > 0) lines.push(`  Disclosures: ${disclosures.join(', ')}`);
++  if (land.halt)
++    lines.push(`  Halted: ${land.halt.reason ?? 'unknown'}: ${firstLine(land.halt.message)}`);
++  if (land.lastSyncStop) {
++    lines.push(
++      `  Sync stopped: ${land.lastSyncStop.reason}: ${firstLine(land.lastSyncStop.message)}`,
++    );
++  }
++  return lines;
++}
++
++/**
++ * The `Land:` section lines for a change whose detail carries a land view, or
++ * no lines when it does not. It reads no files.
++ */
++export function landLines(details: SpecDetails): string[] {
++  const land = details.land;
++  if (!land) return [];
++  return ['', headline(land), ...detailLines(land)];
++}
+diff --git a/src/core/status/show-land-model.ts b/src/core/status/show-land-model.ts
+new file mode 100644
+index 0000000..744af78
+--- /dev/null
++++ b/src/core/status/show-land-model.ts
+@@ -0,0 +1,225 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import type { OsqConfig } from '../foundation/config.js';
++import { readArchivedChange } from '../report/archive-record.js';
++import { readChangeDisclosures } from '../report/result-sections.js';
++import { readCheckCommand } from '../spec/human-steps.js';
++import { parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
++import { readDependencyState } from '../spec/stack-dependencies.js';
++import { selectVcs } from '../vcs/select.js';
++import type { Vcs } from '../vcs/vcs.js';
++import { worktreeBranch } from '../vcs/worktree.js';
++import { listChanges } from './change-locations.js';
++import { readLastSync } from './last-sync.js';
++import type { LandDisclosure, LandGate, LandView } from './show-land-types.js';
++import type { SpecDetails, TimelineEvent } from './show-types.js';
++
++/** A finite number, else null. */
++function finiteOrNull(value: unknown): number | null {
++  return typeof value === 'number' && Number.isFinite(value) ? value : null;
++}
++/** A trimmed non-empty string, else null. */
++function stringOrNull(value: unknown): string | null {
++  return typeof value === 'string' && value.trim() ? value.trim() : null;
++}
++/** Whether `timestamp` falls at or before `cutoff`; malformed values compare literally. */
++function atOrBefore(timestamp: string, cutoff: string): boolean {
++  const a = Date.parse(timestamp);
++  const b = Date.parse(cutoff);
++  if (Number.isFinite(a) && Number.isFinite(b)) return a <= b;
++  return timestamp <= cutoff;
++}
++/** The timeline up to and including the last `archived` event, or null. */
++function archiveWindow(timeline: readonly TimelineEvent[]): TimelineEvent[] | null {
++  let cutoff: string | null = null;
++  for (const event of timeline) if (event.type === 'archived') cutoff = event.timestamp;
++  if (cutoff === null) return null;
++  const boundary = cutoff;
++  return timeline.filter((event) => atOrBefore(event.timestamp, boundary));
++}
++/** The last event matching `match`, scanning backwards. */
++function lastEvent(
++  events: readonly TimelineEvent[],
++  match: (event: TimelineEvent) => boolean,
++): TimelineEvent | undefined {
++  for (let index = events.length - 1; index >= 0; index -= 1) {
++    const event = events[index];
++    if (event && match(event)) return event;
++  }
++  return undefined;
++}
++/** One verify/check gate from a `verify_ran` event. */
++function verifyGate(
++  kind: 'task' | 'verify' | 'check',
++  task: string | null,
++  event: TimelineEvent,
++): LandGate {
++  const data = event.data ?? {};
++  const exitCode = finiteOrNull(data.exitCode);
++  return {
++    kind,
++    task,
++    command: typeof data.command === 'string' ? data.command : '',
++    outcome: exitCode === 0 ? 'passed' : 'failed',
++    exitCode,
++    durationSeconds: finiteOrNull(data.duration),
++    timestamp: event.timestamp,
++    findings: null,
++  };
++}
++/** The validator gate from a `validator_ran` event. */
++function validatorGate(event: TimelineEvent): LandGate {
++  const data = event.data ?? {};
++  const harness = typeof data.harness === 'string' ? data.harness : '';
++  const model = typeof data.model === 'string' ? data.model : '';
++  return {
++    kind: 'validator',
++    task: null,
++    command: `${harness}/${model}`,
++    outcome: typeof data.outcome === 'string' ? data.outcome : 'failed',
++    exitCode: finiteOrNull(data.exitCode),
++    durationSeconds: finiteOrNull(data.duration),
++    timestamp: event.timestamp,
++    findings: Array.isArray(data.findings) ? data.findings.length : 0,
++  };
++}
++/** The archived change's gate runs at or before its last `archived` event. */
++function buildGates(
++  timeline: readonly TimelineEvent[],
++  proposalVerify: string,
++  check: string | null,
++): LandGate[] {
++  const window = archiveWindow(timeline);
++  if (window === null) return [];
++
++  const gates: LandGate[] = [];
++  const taskNumbers = [
++    ...new Set(window.filter((event) => /^\d+$/.test(event.taskNumber)).map((e) => e.taskNumber)),
++  ].sort((a, b) => Number(a) - Number(b));
++  for (const task of taskNumbers) {
++    const event = lastEvent(
++      window,
++      (entry) =>
++        entry.taskNumber === task && entry.type === 'verify_ran' && entry.data?.phase === undefined,
++    );
++    if (event) gates.push(verifyGate('task', task, event));
++  }
++
++  const changeEvent = (command: string | null): TimelineEvent | undefined =>
++    command === null
++      ? undefined
++      : lastEvent(
++          window,
++          (entry) =>
++            entry.taskNumber === 'change' &&
++            entry.type === 'verify_ran' &&
++            entry.data?.command === command,
++        );
++  const verifyEvent = changeEvent(proposalVerify || null);
++  if (verifyEvent) gates.push(verifyGate('verify', null, verifyEvent));
++  const checkEvent = changeEvent(check);
++  if (checkEvent) gates.push(verifyGate('check', null, checkEvent));
++
++  const validator = lastEvent(window, (entry) => entry.type === 'validator_ran');
++  if (validator) gates.push(validatorGate(validator));
++  return gates;
++}
++type ProposalCommands = { readonly verify: string; readonly check: string | null };
++/** The proposal's change-level `verify` and optional `check` commands. */
++async function readProposalCommands(folderPath: string): Promise<ProposalCommands> {
++  const spec = await parseSpecMdFromFolder(folderPath).catch(() => null);
++  if (!spec) return { verify: '', check: null };
++  const { data } = parseFrontmatter(spec.raw);
++  return { verify: spec.verify, check: readCheckCommand(data) };
++}
++/** The `capabilities` of `readArchivedChange` for this change. */
++async function readCapabilities(
++  projectRoot: string,
++  config: OsqConfig,
++  folderPath: string,
++): Promise<LandView['capabilities']> {
++  const target = path.resolve(folderPath);
++  const archived = (await listChanges(projectRoot, config, ['archived'])).find(
++    (change) => path.resolve(change.folderPath) === target,
++  );
++  if (!archived) return [];
++  return (await readArchivedChange(archived)).capabilities;
++}
++/** Each task with a real `## Deviated` or `## Outside scope` section. */
++async function readDisclosures(folderPath: string): Promise<LandDisclosure[]> {
++  const tasks = await readChangeDisclosures(folderPath);
++  return tasks
++    .filter((task) => task.deviated !== null || task.outsideScope !== null)
++    .map((task) => ({
++      task: task.task,
++      deviated: task.deviated,
++      outsideScope: task.outsideScope,
++    }));
++}
++/** The change-level `.run/regressed/change.md` halt, or null without one. */
++async function readHalt(folderPath: string): Promise<LandView['halt']> {
++  const raw = await fs
++    .readFile(path.join(folderPath, '.run', 'regressed', 'change.md'), 'utf8')
++    .catch(() => null);
++  if (raw === null) return null;
++  const { data, body } = parseFrontmatter(raw);
++  return { reason: stringOrNull(data.reason), message: body.trim() };
++}
++/** The four git-derived fields; all null when git is off. */
++type GitLandState = Pick<LandView, 'landed' | 'defaultBranch' | 'mainCommits' | 'diff'>;
++/** Default-branch movement and the branch's diff, read only when git is on. */
++async function readGitLandState(
++  projectRoot: string,
++  config: OsqConfig,
++  vcs: Vcs,
++  folderName: string,
++): Promise<GitLandState> {
++  if (vcs.kind !== 'git' || config.vcs?.enabled !== true) {
++    return { landed: null, defaultBranch: null, mainCommits: null, diff: null };
++  }
++  const defaultBranch = await vcs.defaultBranch();
++  const landed =
++    (await readDependencyState(projectRoot, config, vcs, folderName)).state === 'landed';
++  const branch = worktreeBranch(folderName);
++  const branchExists = (await vcs.listBranches('osq/')).includes(branch);
++  if (landed || !branchExists) return { landed, defaultBranch, mainCommits: null, diff: null };
++  const mainCommits = await vcs.countCommits(branch, defaultBranch);
++  const diff = await vcs.diffStat(defaultBranch, branch, [config.paths.openspecRoot]);
++  return { landed, defaultBranch, mainCommits, diff };
++}
++/**
++ * Everything a human needs before landing an archived change, read from files
++ * and refs osq already writes. Returns null for every other change and writes
++ * nothing.
++ */
++export async function readLandView(
++  projectRoot: string,
++  details: SpecDetails,
++  config: OsqConfig,
++): Promise<LandView | null> {
++  if (details.location !== 'archived') return null;
++
++  const [commands, capabilities, disclosures, halt, sync, vcs] = await Promise.all([
++    readProposalCommands(details.folderPath),
++    readCapabilities(projectRoot, config, details.folderPath),
++    readDisclosures(details.folderPath),
++    readHalt(details.folderPath),
++    readLastSync(details.folderPath),
++    selectVcs(projectRoot, config),
++  ]);
++  const git = await readGitLandState(projectRoot, config, vcs, details.folderName);
++
++  return {
++    folderName: details.folderName,
++    landed: git.landed,
++    defaultBranch: git.defaultBranch,
++    mainCommits: git.mainCommits,
++    gates: buildGates(details.timeline, commands.verify, commands.check),
++    diff: git.diff,
++    capabilities,
++    disclosures,
++    halt,
++    lastSync: sync.lastSync ?? null,
++    lastSyncStop: sync.lastSyncStop ?? null,
++  };
++}
+diff --git a/src/core/status/show-land-types.ts b/src/core/status/show-land-types.ts
+new file mode 100644
+index 0000000..c64d06f
+--- /dev/null
++++ b/src/core/status/show-land-types.ts
+@@ -0,0 +1,56 @@
++import type { ArchivedCapability } from '../report/archive-record.js';
++import type { VcsDiffStat } from '../vcs/vcs.js';
++import type { LastSync, LastSyncStop } from './last-sync.js';
++
++/** The four kinds of gate run that osq records while archiving a change. */
++export type LandGateKind = 'task' | 'verify' | 'check' | 'validator';
++
++/** One gate run osq recorded while archiving the change. */
++export interface LandGate {
++  readonly kind: LandGateKind;
++  /** The task number for a `task` gate; null otherwise. */
++  readonly task: string | null;
++  /** The command run; `<harness>/<model>` for the validator. */
++  readonly command: string;
++  /** `passed` or `failed` from the exit code; the validator's own outcome. */
++  readonly outcome: string;
++  readonly exitCode: number | null;
++  /** The event's `duration` in seconds; null when absent. */
++  readonly durationSeconds: number | null;
++  readonly timestamp: string;
++  /** The validator's finding count; null for every other gate. */
++  readonly findings: number | null;
++}
++
++/** One task's disclosures a lander should read. */
++export interface LandDisclosure {
++  readonly task: string;
++  readonly deviated: string | null;
++  readonly outsideScope: string | null;
++}
++
++/** A change-level land halt recorded on the change's own branch. */
++export interface LandHalt {
++  readonly reason: string | null;
++  readonly message: string;
++}
++
++/** Everything a human needs before landing an archived change. */
++export interface LandView {
++  readonly folderName: string;
++  /** Null when git is off. */
++  readonly landed: boolean | null;
++  readonly defaultBranch: string | null;
++  /**
++   * Commits the default branch has that `osq/<folder>` lacks; null when
++   * landed, git is off or the branch is gone.
++   */
++  readonly mainCommits: number | null;
++  readonly gates: readonly LandGate[];
++  readonly diff: VcsDiffStat | null;
++  readonly capabilities: readonly ArchivedCapability[];
++  readonly disclosures: readonly LandDisclosure[];
++  readonly halt: LandHalt | null;
++  readonly lastSync: LastSync | null;
++  readonly lastSyncStop: LastSyncStop | null;
++}
+diff --git a/src/core/status/show-model.ts b/src/core/status/show-model.ts
+index c8abef2..daa2a12 100644
+--- a/src/core/status/show-model.ts
++++ b/src/core/status/show-model.ts
+@@ -6,6 +6,7 @@ import { buildApprovalDigest } from '../spec/digest.js';
+ import { parseHumanSteps } from '../spec/human-steps.js';
+ import { extractSection, parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
+ import { readNextStep } from './next-step.js';
++import { readLandView } from './show-land-model.js';
+ import {
+   buildRecertifications,
+   buildVerificationHistory,
+@@ -63,8 +64,12 @@ async function withNextStep(
+   };
+   if (location !== 'archived') return base;
+ 
++  const land = await readLandView(projectRoot, details, config);
++  const withLand: SpecDetails = land === null ? base : { ...base, land };
++
+   const validation = buildValidation(details.timeline);
+-  const withValidation: SpecDetails = validation === undefined ? base : { ...base, validation };
++  const withValidation: SpecDetails =
++    validation === undefined ? withLand : { ...withLand, validation };
+ 
+   const verification = buildVerificationHistory(details.timeline);
+   if (verification.checks.length === 0 && verification.outcomes.length === 0) {
+diff --git a/src/core/status/show-output.ts b/src/core/status/show-output.ts
+index 41faff0..9fd39b3 100644
+--- a/src/core/status/show-output.ts
++++ b/src/core/status/show-output.ts
+@@ -1,10 +1,13 @@
+ import { formatApprovalDigest, formatApprovalFlags } from '../spec/digest.js';
++import { landLines } from './show-land-lines.js';
+ import { formatSpecDetails } from './show-text.js';
+ import type { SpecDetails } from './show-types.js';
+ 
+-/** Render the model as text, appending the digest and flag lines when present. */
++/** Render the model as text, appending the land, digest, and flag lines when present. */
+ export function formatShowText(details: SpecDetails): string {
+   let formatted = formatSpecDetails(details);
++  const land = landLines(details);
++  if (land.length > 0) formatted += `\n${land.join('\n')}`;
+   if (details.digest) {
+     formatted += `\n${formatApprovalDigest(details.digest)}`;
+     for (const line of formatApprovalFlags(details.digest.flags)) {
+diff --git a/src/core/status/show-types.ts b/src/core/status/show-types.ts
+index 55c5e66..9522aa4 100644
+--- a/src/core/status/show-types.ts
++++ b/src/core/status/show-types.ts
+@@ -1,6 +1,7 @@
+ import type { ApprovalDigest } from '../spec/digest.js';
+ import type { TaggedScenario } from '../trace/tag-scan.js';
+ import type { NextStep } from './next-step.js';
++import type { LandView } from './show-land-types.js';
+ import type { SpecStatus, TaskStatus } from './state.js';
+ 
+ export interface TimelineEvent {
+@@ -157,6 +158,8 @@ export interface SpecDetails {
+   validation?: ValidatorRanEventData;
+   /** The proposal's `### After landing` steps; absent when empty. */
+   afterLanding?: string;
++  /** The land view for an archived change; absent for an active or rejected one. */
++  land?: LandView;
+ }
+ 
+ /** A list of trimmed non-empty strings, or an empty list for any other value. */
+diff --git a/src/core/web/web-data-change.ts b/src/core/web/web-data-change.ts
+index 6b7bf2d..7a126a0 100644
+--- a/src/core/web/web-data-change.ts
++++ b/src/core/web/web-data-change.ts
+@@ -1,5 +1,6 @@
+ import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+ import { resolveScope } from '../run/scope.js';
++import { readLandView } from '../status/show-land-model.js';
+ import { getSpecDetailsFromFolder } from '../status/show.js';
+ import { deriveSpecState } from '../status/state.js';
+ import { numericIdOf, resolveChangeFolder, slugOf } from './web-data-folders.js';
+@@ -148,6 +149,7 @@ export async function getWebChange(
+     brief: brief.body,
+     goal: details.goal,
+     review,
++    land: await readLandView(projectRoot, details, config),
+     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
+     dependsOn: [...details.dependsOn],
+     reads: [...details.features.reads],
+diff --git a/src/core/web/web-data-types.ts b/src/core/web/web-data-types.ts
+index 0fded29..935cb90 100644
+--- a/src/core/web/web-data-types.ts
++++ b/src/core/web/web-data-types.ts
+@@ -1,4 +1,5 @@
+ import type { ApprovalDigest } from '../spec/digest.js';
++import type { LandView } from '../status/show-land-types.js';
+ 
+ /**
+  * Public read-only web documents derived from the current project tree. These
+@@ -214,4 +215,9 @@ export interface WebChange {
+    * value reads the same as null.
+    */
+   readonly review?: WebReview | null;
++  /**
++   * The land view for an archived change, else null. Optional so documents
++   * built before this field stay valid; a missing value reads the same as null.
++   */
++  readonly land?: LandView | null;
+ }
+diff --git a/src/core/web/web-data.ts b/src/core/web/web-data.ts
+index ab5fcc5..3840a1c 100644
+--- a/src/core/web/web-data.ts
++++ b/src/core/web/web-data.ts
+@@ -6,6 +6,12 @@ export { getWebGraph } from './web-data-graph.js';
+ export { getWebChange } from './web-data-change.js';
+ export { WebDataError } from './web-data-types.js';
+ export type { WebDataErrorKind } from './web-data-types.js';
++export type {
++  LandDisclosure,
++  LandGate,
++  LandGateKind,
++  LandView,
++} from '../status/show-land-types.js';
+ export type {
+   WebCapabilityNode,
+   WebChange,
+diff --git a/tests/land-view.test.ts b/tests/land-view.test.ts
+new file mode 100644
+index 0000000..eef8c48
+--- /dev/null
++++ b/tests/land-view.test.ts
+@@ -0,0 +1,505 @@
++import assert from 'node:assert/strict';
++import { execFile } from 'node:child_process';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, describe, it } from 'node:test';
++import { promisify } from 'node:util';
++import { DEFAULT_CONFIG, defineConfig } from '../src/core/foundation/config.js';
++import { landLines } from '../src/core/status/show-land-lines.js';
++import { readLandView } from '../src/core/status/show-land-model.js';
++import type { LandView } from '../src/core/status/show-land-types.js';
++import type { SpecDetails } from '../src/core/status/show-types.js';
++import { formatShowJson, formatShowText, getSpecDetails } from '../src/core/status/show.js';
++import { selectVcs } from '../src/core/vcs/select.js';
++import { worktreeBranch } from '../src/core/vcs/worktree.js';
++import { getWebChange } from '../src/core/web/web-data.js';
++
++const execFileAsync = promisify(execFile);
++const CHANGES = path.posix.join('openspec', 'changes');
++const ARCHIVE = path.posix.join(CHANGES, 'archive');
++const STATUS_DIR = path.join(process.cwd(), 'src', 'core', 'status');
++
++const tmpDirs: string[] = [];
++
++afterEach(async () => {
++  for (const dir of tmpDirs.splice(0)) {
++    await fs.rm(dir, { recursive: true, force: true });
++  }
++});
++
++async function tempDir(prefix: string): Promise<string> {
++  const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
++  tmpDirs.push(dir);
++  return dir;
++}
++
++/** Ignore the redirecting variables, like osq's own git reads. */
++function cleanGitEnv(): NodeJS.ProcessEnv {
++  const env = { ...process.env };
++  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']) {
++    Reflect.deleteProperty(env, key);
++  }
++  return env;
++}
++
++async function git(args: string[], cwd: string): Promise<string> {
++  const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
++  return stdout.trim();
++}
++
++async function initRepo(dir: string): Promise<void> {
++  await git(['init', '-q', '-b', 'main'], dir);
++  await git(['config', 'user.name', 'osq'], dir);
++  await git(['config', 'user.email', 'osq@example.invalid'], dir);
++}
++
++async function writeAt(root: string, relative: string, content: string): Promise<void> {
++  const target = path.join(root, relative);
++  await fs.mkdir(path.dirname(target), { recursive: true });
++  await fs.writeFile(target, content, 'utf8');
++}
++
++function proposalMd(title: string): string {
++  return [
++    '---',
++    `title: ${title}`,
++    'verify: node verify.cjs',
++    'depends_on: []',
++    'features:',
++    '  reads: []',
++    '---',
++    '## Goal',
++    `${title} goal.`,
++    '',
++  ].join('\n');
++}
++
++function taskMd(): string {
++  return [
++    '---',
++    'title: A task',
++    'verify: node verify.cjs',
++    'scope: []',
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] does work',
++    '',
++  ].join('\n');
++}
++
++/** Create an approved archived change folder in `root`. */
++async function createArchivedChange(root: string, folder: string): Promise<string> {
++  const folderPath = path.join(root, ARCHIVE, folder);
++  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
++  await fs.mkdir(path.join(folderPath, '.run', 'events'), { recursive: true });
++  await fs.writeFile(path.join(folderPath, 'proposal.md'), proposalMd(folder), 'utf8');
++  await fs.writeFile(path.join(folderPath, 'tasks', '1.md'), taskMd(), 'utf8');
++  await fs.writeFile(path.join(folderPath, '.run', 'approved'), 'sha256:abc\n', 'utf8');
++  return folderPath;
++}
++
++/** Create an unapproved active change folder in `root`. */
++async function createActiveChange(root: string, folder: string): Promise<string> {
++  const folderPath = path.join(root, CHANGES, folder);
++  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
++  await fs.writeFile(path.join(folderPath, 'proposal.md'), proposalMd(folder), 'utf8');
++  await fs.writeFile(path.join(folderPath, 'tasks', '1.md'), taskMd(), 'utf8');
++  return folderPath;
++}
++
++async function writeEvents(folderPath: string, file: string, events: unknown[]): Promise<void> {
++  const body = `${events.map((event) => JSON.stringify(event)).join('\n')}\n`;
++  await fs
++    .writeFile(path.join(folderPath, '.run', 'events', file), body, 'utf8')
++    .catch(async (error: NodeJS.ErrnoException) => {
++      if (error.code !== 'ENOENT') throw error;
++      await fs.mkdir(path.join(folderPath, '.run', 'events'), { recursive: true });
++      await fs.writeFile(path.join(folderPath, '.run', 'events', file), body, 'utf8');
++    });
++}
++
++function event(
++  type: string,
++  taskNumber: string,
++  timestamp: string,
++  data: Record<string, unknown>,
++): Record<string, unknown> {
++  return { type, taskNumber, timestamp, data };
++}
++
++function archivedEvent(timestamp = '2026-10-01T12:10:00.000Z'): Record<string, unknown> {
++  return event('archived', 'change', timestamp, {
++    archivePath: 'openspec/changes/archive/042-pricing',
++  });
++}
++
++function fakeDetails(land: LandView): SpecDetails {
++  return { location: 'archived', land } as unknown as SpecDetails;
++}
++
++function baseLand(overrides: Partial<LandView> = {}): LandView {
++  return {
++    folderName: '042-pricing',
++    landed: false,
++    defaultBranch: 'main',
++    mainCommits: 0,
++    gates: [],
++    diff: null,
++    capabilities: [],
++    disclosures: [],
++    halt: null,
++    lastSync: null,
++    lastSyncStop: null,
++    ...overrides,
++  };
++}
++
++describe('land view model', () => {
++  it('collects the archive gates and ignores events after archived', async () => {
++    const root = await tempDir('osq-land-gates-');
++    const folderPath = await createArchivedChange(root, '042-pricing');
++    await writeEvents(folderPath, '1.jsonl', [
++      event('verify_ran', '1', '2026-10-01T09:00:00.000Z', {
++        phase: 'pre_spawn',
++        command: 'node verify.cjs',
++        exitCode: 1,
++        duration: 1,
++      }),
++      event('verify_ran', '1', '2026-10-01T10:00:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 1,
++        duration: 2,
++      }),
++      event('verify_ran', '1', '2026-10-01T10:30:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 0,
++        duration: 2,
++      }),
++    ]);
++    await writeEvents(folderPath, 'change.jsonl', [
++      event('verify_ran', 'change', '2026-10-01T11:00:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 1,
++        duration: 3,
++      }),
++      event('verify_ran', 'change', '2026-10-01T11:30:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 0,
++        duration: 3,
++      }),
++      event('validator_ran', 'change', '2026-10-01T12:00:00.000Z', {
++        outcome: 'validated',
++        harness: 'claude',
++        model: 'claude-opus-5-5',
++        duration: 61.4,
++        exitCode: 0,
++        findings: [{ kind: 'scenario' }],
++        restored: [],
++      }),
++      archivedEvent(),
++      event('verify_ran', 'change', '2026-10-01T13:00:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 0,
++        duration: 500,
++      }),
++    ]);
++
++    const details = await getSpecDetails(root, '042', DEFAULT_CONFIG);
++    const land = await readLandView(root, details, DEFAULT_CONFIG);
++    assert.ok(land, 'expected a land view');
++    assert.deepEqual(
++      land.gates.map((gate) => [gate.kind, gate.task, gate.outcome, gate.exitCode, gate.timestamp]),
++      [
++        ['task', '1', 'passed', 0, '2026-10-01T10:30:00.000Z'],
++        ['verify', null, 'passed', 0, '2026-10-01T11:30:00.000Z'],
++        ['validator', null, 'validated', 0, '2026-10-01T12:00:00.000Z'],
++      ],
++    );
++    assert.equal(land.gates[2]?.findings, 1);
++
++    const lines = landLines(details);
++    assert.ok(lines.includes('  Gates at archive:'), lines.join('\n'));
++    assert.ok(lines.some((line) => line.startsWith('    task 1: passed in 2s (node verify.cjs)')));
++    assert.ok(lines.some((line) => line.startsWith('    verify: passed in 3s (node verify.cjs)')));
++    assert.ok(
++      lines.some((line) =>
++        line.startsWith('    validator: validated, 1 findings in 61s (claude/claude-opus-5-5)'),
++      ),
++    );
++  });
++
++  it('returns a gate-less view without an archived event', async () => {
++    const root = await tempDir('osq-land-noarchive-');
++    const folderPath = await createArchivedChange(root, '042-pricing');
++    await writeEvents(folderPath, 'change.jsonl', [
++      event('verify_ran', 'change', '2026-10-01T11:00:00.000Z', {
++        command: 'node verify.cjs',
++        exitCode: 0,
++        duration: 3,
++      }),
++    ]);
++    const details = await getSpecDetails(root, '042', DEFAULT_CONFIG);
++    const land = await readLandView(root, details, DEFAULT_CONFIG);
++    assert.deepEqual(land?.gates, []);
++    assert.ok(landLines(details).includes('  Gates at archive: none recorded'));
++  });
++
++  it('reads the spec changes, disclosures, halt and sync stop without git', async () => {
++    const root = await tempDir('osq-land-readouts-');
++    const folderPath = await createArchivedChange(root, '042-pricing');
++    await writeAt(
++      folderPath,
++      path.posix.join('specs', 'orders', 'spec.md'),
++      [
++        '## ADDED Requirements',
++        '### Requirement: New thing',
++        'The system SHALL do a new thing.',
++        '',
++        '#### Scenario: It works',
++        '- **WHEN** it runs',
++        '- **THEN** it works',
++        '',
++        '## MODIFIED Requirements',
++        '### Requirement: Old thing',
++        'The system SHALL do the old thing.',
++        '',
++        '#### Scenario: Still works',
++        '- **WHEN** it runs',
++        '- **THEN** it still works',
++        '',
++      ].join('\n'),
++    );
++    await writeAt(
++      folderPath,
++      path.posix.join('.run', 'results', '1.md'),
++      [
++        '## Deviated',
++        '- Renamed the helper.',
++        '',
++        '## Outside scope',
++        '- Fixed a driver.',
++        '',
++      ].join('\n'),
++    );
++    await writeAt(
++      folderPath,
++      path.posix.join('.run', 'regressed', 'change.md'),
++      ['---', 'reason: sync_conflict', '---', 'one.txt conflict', 'second line', ''].join('\n'),
++    );
++    await writeEvents(folderPath, 'change.jsonl', [
++      event('sync_stopped', 'change', '2026-10-02T09:00:00.000Z', {
++        reason: 'sync_conflict',
++        message: 'one.txt conflict\nsecond line',
++      }),
++    ]);
++
++    const details = await getSpecDetails(root, '042', DEFAULT_CONFIG);
++    const land = await readLandView(root, details, DEFAULT_CONFIG);
++    assert.ok(land, 'expected a land view');
++    assert.equal(land.landed, null);
++    assert.equal(land.defaultBranch, null);
++    assert.equal(land.mainCommits, null);
++    assert.equal(land.diff, null);
++    assert.deepEqual(land.capabilities, [
++      { name: 'orders', added: ['New thing'], modified: ['Old thing'], removed: [], renamed: [] },
++    ]);
++    assert.deepEqual(land.disclosures, [
++      { task: '1', deviated: '- Renamed the helper.', outsideScope: '- Fixed a driver.' },
++    ]);
++    assert.deepEqual(land.halt, {
++      reason: 'sync_conflict',
++      message: 'one.txt conflict\nsecond line',
++    });
++    assert.equal(land.lastSyncStop?.reason, 'sync_conflict');
++
++    const lines = landLines(details);
++    assert.ok(lines.includes('  Spec changes:'));
++    assert.ok(lines.includes('    orders: 1 added, 1 modified, 0 removed, 0 renamed'));
++    assert.ok(lines.includes('  Disclosures: task 1 deviated, task 1 outside scope'));
++    assert.ok(lines.includes('  Halted: sync_conflict: one.txt conflict'));
++    assert.ok(lines.includes('  Sync stopped: sync_conflict: one.txt conflict'));
++  });
++
++  it('returns null for an active or rejected change', async () => {
++    const root = await tempDir('osq-land-other-');
++    await createActiveChange(root, '003-active');
++    const active = await getSpecDetails(root, '003', DEFAULT_CONFIG);
++    assert.equal(await readLandView(root, active, DEFAULT_CONFIG), null);
++
++    const rejected = await tempDir('osq-land-rejected-');
++    const rejectedPath = path.join(rejected, CHANGES, 'rejected', '004-rej');
++    await fs.mkdir(rejectedPath, { recursive: true });
++    await fs.writeFile(path.join(rejectedPath, 'proposal.md'), proposalMd('Rejected'), 'utf8');
++    const rejectedDetails = await getSpecDetails(rejected, '004', DEFAULT_CONFIG);
++    assert.equal(await readLandView(rejected, rejectedDetails, DEFAULT_CONFIG), null);
++  });
++
++  it('renders every headline and git-off readout from a literal view', () => {
++    assert.ok(landLines(fakeDetails(baseLand({ landed: null }))).includes('Land: git is off'));
++    assert.ok(landLines(fakeDetails(baseLand({ landed: true }))).includes('Land: landed'));
++    assert.ok(
++      landLines(fakeDetails(baseLand({ mainCommits: 0 }))).includes(
++        'Land: not landed; main has not moved since archive',
++      ),
++    );
++    assert.ok(
++      landLines(fakeDetails(baseLand({ mainCommits: 1 }))).includes(
++        'Land: not landed; main has 1 new commit since archive, so osq land will sync and verify again',
++      ),
++    );
++    assert.ok(
++      landLines(fakeDetails(baseLand({ mainCommits: null }))).includes(
++        'Land: not landed; branch osq/042-pricing not found',
++      ),
++    );
++    const diff = landLines(fakeDetails(baseLand({ diff: { files: 2, added: 3, removed: 1 } })));
++    assert.ok(diff.includes('  Diff: 2 files, +3 -1'));
++    assert.deepEqual(landLines({ location: 'active' } as unknown as SpecDetails), []);
++  });
++
++  it('imports no files in the land renderer', async () => {
++    const source = await fs.readFile(path.join(STATUS_DIR, 'show-land-lines.ts'), 'utf8');
++    assert.doesNotMatch(source, /node:fs/);
++  });
++});
++
++describe('land view in show', () => {
++  it('prints no Land line for an active change and no land key in JSON', async () => {
++    const root = await tempDir('osq-land-show-active-');
++    await createActiveChange(root, '003-active');
++    const details = await getSpecDetails(root, '003', DEFAULT_CONFIG);
++    assert.equal(details.land, undefined);
++    assert.ok(!formatShowText(details).includes('Land:'), 'printed a Land line');
++    const document = JSON.parse(formatShowJson(details)) as Record<string, unknown>;
++    assert.equal('land' in document, false);
++  });
++
++  it('prints the land summary for an archived change two commits behind main', async () => {
++    const repo = await makeArchivedInWorktree();
++    const details = await getSpecDetails(repo.root, '042', repo.config);
++    const vcs = await selectVcs(repo.root, repo.config);
++    const expectedDiff = await vcs.diffStat('main', worktreeBranch('042-pricing'), ['openspec']);
++    assert.deepEqual(details.land?.diff, expectedDiff);
++    assert.ok(expectedDiff && expectedDiff.files >= 1);
++
++    const text = formatShowText(details);
++    assert.ok(
++      text.includes(
++        'Land: not landed; main has 2 new commits since archive, so osq land will sync and verify again',
++      ),
++      text,
++    );
++    assert.ok(text.includes('  Gates at archive:'), text);
++
++    const document = JSON.parse(formatShowJson(details)) as Record<string, unknown>;
++    assert.ok(document.land, 'expected a land key');
++    const keys = Object.keys(document);
++    assert.ok(keys.indexOf('land') < keys.indexOf('digest'), 'land before digest');
++    assert.ok(keys.indexOf('land') > keys.indexOf('timeline'), 'land after the change detail');
++  });
++});
++
++describe('land view document', () => {
++  it('sets land for an archived change and null for an active one', async () => {
++    const repo = await makeArchivedInWorktree();
++    const details = await getSpecDetails(repo.root, '042', repo.config);
++    const expected = await readLandView(repo.root, details, repo.config);
++
++    const web = await getWebChange(repo.root, '042', repo.config);
++    assert.deepEqual(web.land, expected);
++    assert.equal(web.land?.landed, false);
++    assert.equal(web.land?.mainCommits, 2);
++    assert.equal(web.land?.diff?.files, 1);
++
++    const active = await tempDir('osq-land-web-active-');
++    await createActiveChange(active, '003-active');
++    const activeWeb = await getWebChange(active, '003', DEFAULT_CONFIG);
++    assert.equal(activeWeb.land, null);
++  });
++
++  it('reports a landed change with no main commits', async () => {
++    const repo = await tempDir('osq-land-landed-');
++    await fs.mkdir(repo, { recursive: true });
++    await initRepo(repo);
++    const folderPath = await createArchivedChange(repo, '042-pricing');
++    await writeEvents(folderPath, 'change.jsonl', [archivedEvent()]);
++    await git(['add', '-A'], repo);
++    await git(['commit', '-qm', 'archive 042'], repo);
++
++    const config = defineConfig({
++      vcs: {
++        enabled: true,
++        author: 'osq <osq@example.invalid>',
++        worktreeRoot: path.join(repo, 'wt'),
++      },
++    });
++    const details = await getSpecDetails(repo, '042', config);
++    const land = await readLandView(repo, details, config);
++    assert.ok(land, 'expected a land view');
++    assert.equal(land.landed, true);
++    assert.equal(land.mainCommits, null);
++    assert.equal(land.diff, null);
++    assert.equal(land.defaultBranch, 'main');
++    assert.ok(landLines(details).includes('Land: landed'));
++
++    const web = await getWebChange(repo, '042', config);
++    assert.equal(web.land?.landed, true);
++  });
++});
++
++interface WorktreeRepo {
++  /** The checkout, which is the project root. */
++  readonly root: string;
++  readonly wt: string;
++  readonly config: ReturnType<typeof defineConfig>;
++}
++
++/**
++ * A temporary repository whose archived `042-pricing` change lives in an
++ * `osq/042-pricing` worktree, with a code commit there and two commits on the
++ * default branch after the branch was cut.
++ */
++async function makeArchivedInWorktree(): Promise<WorktreeRepo> {
++  const root = await tempDir('osq-land-worktree-');
++  const repo = path.join(root, 'repo');
++  const wtRoot = path.join(root, 'wt');
++  await fs.mkdir(repo, { recursive: true });
++  await fs.mkdir(wtRoot, { recursive: true });
++  await initRepo(repo);
++  await writeAt(repo, 'README.md', 'init\n');
++  await git(['add', '-A'], repo);
++  await git(['commit', '-qm', 'init'], repo);
++
++  const branch = worktreeBranch('042-pricing');
++  await git(['branch', branch], repo);
++  const wt = path.join(wtRoot, '042-pricing');
++  await git(['worktree', 'add', wt, branch], repo);
++
++  const folderPath = await createArchivedChange(wt, '042-pricing');
++  await writeEvents(folderPath, 'change.jsonl', [
++    event('verify_ran', 'change', '2026-10-01T11:00:00.000Z', {
++      command: 'node verify.cjs',
++      exitCode: 0,
++      duration: 3,
++    }),
++    archivedEvent(),
++  ]);
++  await writeAt(wt, 'src/one.txt', 'one\n');
++  await git(['add', '-A'], wt);
++  await git(['commit', '-qm', 'archive 042'], wt);
++
++  await writeAt(repo, 'src/two.txt', 'two\n');
++  await git(['add', '-A'], repo);
++  await git(['commit', '-qm', 'second'], repo);
++  await writeAt(repo, 'src/three.txt', 'three\n');
++  await git(['add', '-A'], repo);
++  await git(['commit', '-qm', 'third'], repo);
++
++  const config = defineConfig({
++    vcs: { enabled: true, author: 'osq <osq@example.invalid>', worktreeRoot: wtRoot },
++  });
++  return { root: repo, wt, config };
++}

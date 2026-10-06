@@ -1,6 +1,7 @@
 import { DEFAULT_BRANCH } from '../foundation/config-vcs.js';
 import type {
   Vcs,
+  VcsDiffStat,
   VcsFastForwardResult,
   VcsHead,
   VcsMergeResult,
@@ -61,6 +62,14 @@ export class NoVcs implements Vcs {
 
   async pathExists(_ref: string, _path: string): Promise<boolean> {
     return false;
+  }
+
+  async diffStat(
+    _from: string,
+    _to: string,
+    _exclude: readonly string[],
+  ): Promise<VcsDiffStat | null> {
+    return null;
   }
 
   async listBranches(_prefix: string): Promise<string[]> {

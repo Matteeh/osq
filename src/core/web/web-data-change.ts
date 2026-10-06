@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
+import { readLandView } from '../status/show-land-model.js';
 import { getSpecDetailsFromFolder } from '../status/show.js';
 import { deriveSpecState } from '../status/state.js';
 import { numericIdOf, resolveChangeFolder, slugOf } from './web-data-folders.js';
@@ -112,6 +113,7 @@ export async function getWebChange(
   const manifest = await readManifestMetadata(folder.folderPath);
   const planner = await readPlannerAttribution(brief, manifest);
   const review = await readWebReview(projectRoot, details, config);
+  const land = await readLandView(projectRoot, details, config);
 
   const taskObservations = new Map<
     string,
@@ -148,6 +150,7 @@ export async function getWebChange(
     brief: brief.body,
     goal: details.goal,
     review,
+    land,
     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
     dependsOn: [...details.dependsOn],
     reads: [...details.features.reads],

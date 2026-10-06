@@ -1,0 +1,42 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:018f114a2fa162dc7fb19f069f32b4300590150e9eb302ce0e3e4ddec5eaab3b",
+    "PLANNER.md": "sha256:b8107ae6e7101454597d5908a961b283bc361652273b853f178220136fecd7bb",
+    "config": "sha256:73f66bc96f890832a07fb7c25399a9b25796e557148a4855477ce004d1b0e290",
+    "cli-foundation": "sha256:f2c10f6bfd6f37ce4c669ffce6faf076604f108240c27b5fa35dd67c390dbd24",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "metrics-and-reporting": "sha256:b2bdbd78f664489ac3ac6b7ee2d323cd5395de0feb83d5d5f24f0b3ca6ee8c1b",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:f33522766ee2f8e8878243140fcc95aeff272d1505c305f3220647a7a5693e36",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "traceability": "sha256:570cae8d1bb7a23f088011fc1dddcf683af6b2e491ff686042684c5ac89055c7",
+    "traceability/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "watcher-and-harness": "sha256:3d8d8ba3403e739f8745711b7feca0a452480d998cb7b1246cf176ee6be6dfe4",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "status-inspection": "sha256:04ccc5b90591fd8b36beed8c8ddeb4bffc21616b1bf69fac5b02403a72020730",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "version-control": "sha256:afb73a6fa3f3ab49b0e5cdce84c8228be5b09271f8daff50bf02dab7b6134b05",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "web-inspection": "sha256:fa51996447fb880b927c23c705ef0edc14481933d75b1815b49eda8927eaaa55",
+    "web-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef"
+  },
+  "osqVersion": "0.2.4",
+  "harness": "opencode",
+  "model": "opencode-go/deepseek-v4-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-10-06T11:37:24.732Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-06T16:41:48.069Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "009": "sha256:aea3ecd3d202ccd17552ee96305efb44ca94b6843c48e92c98d3713236618075"
+  }
+}

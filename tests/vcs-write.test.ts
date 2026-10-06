@@ -55,6 +55,7 @@ const PORT_MEMBERS = [
   'commitTree',
   'fastForward',
   'countCommits',
+  'diffStat',
   'merge',
   'mergeAbort',
   'stage',

@@ -6,6 +6,7 @@ import { buildApprovalDigest } from '../spec/digest.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { extractSection, parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
 import { readNextStep } from './next-step.js';
+import { readLandView } from './show-land-model.js';
 import {
   buildRecertifications,
   buildVerificationHistory,
@@ -66,11 +67,14 @@ async function withNextStep(
   const validation = buildValidation(details.timeline);
   const withValidation: SpecDetails = validation === undefined ? base : { ...base, validation };
 
+  const land = await readLandView(projectRoot, details, config);
+  const withLand: SpecDetails = land === null ? withValidation : { ...withValidation, land };
+
   const verification = buildVerificationHistory(details.timeline);
   if (verification.checks.length === 0 && verification.outcomes.length === 0) {
-    return withValidation;
+    return withLand;
   }
-  return { ...withValidation, verification };
+  return { ...withLand, verification };
 }
 
 /** Capability writes are declared solely by delta spec folders under `specs/`. */
