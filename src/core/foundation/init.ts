@@ -71,6 +71,45 @@ async function pathExists(targetPath: string): Promise<boolean> {
     .catch(() => false);
 }
 
+/** True when `dir` holds a markdown file other than `README.md` and `except`. */
+async function hasOtherMarkdown(dir: string, except: string): Promise<boolean> {
+  const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
+  return entries.some(
+    (entry) =>
+      entry.isFile() &&
+      entry.name.endsWith('.md') &&
+      entry.name !== 'README.md' &&
+      entry.name !== except,
+  );
+}
+
+/** Writes the decisions README and, for a folder without other ADRs, the starter. */
+async function writeDecisionsScaffold(
+  targetDir: string,
+  config: OsqConfig,
+  result: InitResult,
+): Promise<void> {
+  const decisionsDir = path.join(targetDir, config.paths.decisions);
+  const readme = await fs.readFile(path.join(TEMPLATES_ROOT, 'decisions', 'README.md'), 'utf8');
+  await writeOrRefreshFile(
+    targetDir,
+    { relPath: path.join(config.paths.decisions, 'README.md'), content: readme },
+    false,
+    result,
+  );
+
+  const starterName = '000-how-this-project-is-built.md';
+  const starterExists = await pathExists(path.join(decisionsDir, starterName));
+  if (!starterExists && (await hasOtherMarkdown(decisionsDir, starterName))) return;
+  const starter = await fs.readFile(path.join(TEMPLATES_ROOT, 'decisions', starterName), 'utf8');
+  await writeOrRefreshFile(
+    targetDir,
+    { relPath: path.join(config.paths.decisions, starterName), content: starter },
+    false,
+    result,
+  );
+}
+
 /**
  * Create a scaffolded file, or, when `refresh` is set, overwrite it from the
  * template only if its bytes differ. Matching files stay untouched.
@@ -163,6 +202,8 @@ export async function scaffoldProject(
       result,
     );
   }
+
+  await writeDecisionsScaffold(targetDir, options.config ?? DEFAULT_CONFIG, result);
 
   const claudeCommandExisted = await pathExists(path.join(targetDir, CLAUDE_PLAN_COMMAND_PATH));
   result.updatedAgentsMd = await updateAgentsMd(targetDir);

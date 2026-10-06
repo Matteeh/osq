@@ -328,6 +328,11 @@ describe('decisions lint', () => {
         appliesTo: ['other'],
         rule: 'A proposed decision does not take effect.',
       });
+      await writeAdr(tmpDir, '008-other-accepted.md', {
+        status: 'accepted',
+        appliesTo: ['other'],
+        rule: 'Other stays separate.',
+      });
       const folder = await writeChangeFolder(tmpDir, {
         decisions: '- ADR 003: a proposed decision.',
       });

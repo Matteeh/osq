@@ -8,8 +8,8 @@ import { type LintFinding, makeFinding } from './lint-findings.js';
 
 /**
  * Decisions lint: the proposal's `## Decisions` section and the AGENTS.md
- * project rules block, checked only when the project has at least one ADR with
- * osq frontmatter. A project without ADRs returns no findings.
+ * project rules block, checked only when the project has at least one accepted
+ * ADR. A project without an accepted ADR returns no findings.
  */
 
 /** HTML comments are structural scaffolding, not declared decision text. */
@@ -147,13 +147,13 @@ function unknownAdrFindings(
 }
 
 /**
- * Checks a proposal's Decisions section and, when the project has ADRs, the
- * AGENTS.md project rules block. Returns the change's own findings; a project
- * whose decisions folder holds no ADR with osq frontmatter returns none.
+ * Checks a proposal's Decisions section and, when the project has an accepted
+ * ADR, the AGENTS.md project rules block. Returns the change's own findings; a
+ * project whose decisions folder holds no accepted ADR returns none.
  */
 export async function collectDecisionsFindings(input: DecisionsLintInput): Promise<LintFinding[]> {
   const records = await readDecisions(input.projectRoot, input.config);
-  if (records.adrs.length === 0) {
+  if (!records.adrs.some((adr) => adr.status === 'accepted')) {
     return [];
   }
 

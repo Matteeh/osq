@@ -12,6 +12,7 @@ osq requires Node.js 24 LTS or newer (`engines.node: >=24.0.0`).
 
 ```sh
 npx @matteeh/osq init          # scaffolds the folders below and configuration
+# answer and accept decisions/000-how-this-project-is-built.md, write the other architecture and style ADRs, then plan the first feature brief
 pnpm add -D @matteeh/osq       # adds osq as a devDependency (or npm i -D @matteeh/osq)
 pnpm osq watch                 # start the watcher
 ```
@@ -70,7 +71,7 @@ openspec/
       .run/        approved (hash), manifest.json, running/, done/, dead/, regressed/, results/, events/
     archive/       finished change folders, moved whole
     rejected/      rejected change folders, preserved with audit reason
-decisions/         ADRs, superseded not edited
+decisions/ *       ADRs, superseded not edited; init writes a README and a starter ADR
 .osq/              read index `osq report` and `osq query` keep; ignored by git, safe to delete
 ```
 
@@ -222,9 +223,9 @@ The rules lint can't check live in the managed `PLANNER.md` block: titles read "
 
 Architecture decision records live under `paths.decisions` (default `decisions/`). A markdown file there is an ADR when its YAML frontmatter carries `status` (`proposed`, `accepted`, or `superseded`); its number is the leading digits of the file name, its title the first `# ` heading without that number prefix. Only accepted ADRs take effect. An accepted ADR states `applies_to`, either `all` or a list of capability names, and a one-line `rule`; a superseded ADR states `superseded_by`. `limits.maxRuleLength` (default 160) caps a rule's length. A file without frontmatter is ignored and reported.
 
-`osq init` writes the rules block for every accepted system-wide ADR into `AGENTS.md` between `<!-- OSQ:RULES:START -->` and `<!-- OSQ:RULES:END -->`: a `## Project rules` heading and one `- <rule> ADR <number>` line per ADR, in number order. `limits.maxProjectRules` (default 10) caps how many lines the block may hold. The `decisions` check in `osq doctor` validates every ADR, fails on a stale or oversized rules block, and warns about ignored files and capability names with no living spec.
+`osq init` writes the rules block for every accepted system-wide ADR into `AGENTS.md` between `<!-- OSQ:RULES:START -->` and `<!-- OSQ:RULES:END -->`: a `## Project rules` heading and one `- <rule> ADR <number>` line per ADR, in number order. `limits.maxProjectRules` (default 10) caps how many lines the block may hold. The `decisions` check in `osq doctor` validates every ADR, fails on a stale or oversized rules block, warns about ignored files and capability names with no living spec, and warns until an accepted ADR applies to `all`.
 
-When the project has any ADR with osq frontmatter, every proposal needs a `## Decisions` section after `## Surface`. Name each accepted ADR that governs a capability the change writes, or write `None` when none does. A departure line begins `Departs from ADR <n>:` and gives the reason. `osq lint` and `osq approve` reject a missing or empty section, reject an unnamed governing ADR, and fail while the AGENTS.md rules block is out of date.
+When the project has an accepted ADR, every proposal needs a `## Decisions` section after `## Surface`. Name each accepted ADR that governs a capability the change writes, or write `None` when none does. A departure line begins `Departs from ADR <n>:` and gives the reason. `osq lint` and `osq approve` reject a missing or empty section, reject an unnamed governing ADR, and fail while the AGENTS.md rules block is out of date.
 
 An accepted ADR may also name `checks`, the repository-relative test files that enforce it, and `denies`, the package names it forbids. A check path is trimmed, uses forward slashes, and drops a leading `./`; only accepted ADRs' checks and denials take effect. The `decisions` doctor check fails when an accepted ADR names a check file that does not exist. When a task declares `tests.modify: true` and its resolved scope covers an accepted ADR's check file, approval raises one `adr_check_modified` flag labelled `task <n> may modify a check of ADR <number>`, and `osq report` counts it in `approvalFlags.byFlag`.
 

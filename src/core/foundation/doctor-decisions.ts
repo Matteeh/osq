@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readLivingCapabilityNames } from '../spec/digest-capability.js';
 import type { OsqConfig } from './config.js';
 import type { DecisionRecords } from './decisions.js';
-import { readDecisions, validateDecisions } from './decisions.js';
+import { readDecisions, systemWideAdrs, validateDecisions } from './decisions.js';
 import type { DoctorCheckResult } from './doctor.js';
 import { RULES_START_MARKER, checkProjectRules } from './rules-block.js';
 
@@ -40,8 +40,12 @@ export async function checkDecisions(
   if (errors.length > 0) {
     return { name: 'decisions', ok: false, message: errors.join('; ') };
   }
-  if (problems.warnings.length > 0) {
-    return { name: 'decisions', ok: true, warning: true, message: problems.warnings.join('; ') };
+  const warnings = [...problems.warnings];
+  if (systemWideAdrs(records).length === 0) {
+    warnings.push('no accepted ADR applies to all; write the architecture and style ADRs first');
+  }
+  if (warnings.length > 0) {
+    return { name: 'decisions', ok: true, warning: true, message: warnings.join('; ') };
   }
   return { name: 'decisions', ok: true, message: `${records.adrs.length} ADRs valid` };
 }

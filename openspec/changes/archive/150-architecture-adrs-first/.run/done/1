@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b18693a4a78f3bd72f73426cf87e11be2123abca7f4312950aaf60cc17843c10"
+build_stamp: "d208064"
+project_commit: "fbd3e3b"
+exit_code: 0
+scope_files: {"src/core/foundation/doctor-decisions.ts":"sha256:aba198c5b0bfdc8a5920caada218c2c79fef438d1d3f489b138861b820b3ae24","src/core/foundation/init.ts":"sha256:79fed69a61b2c88b3ed7aae3d07f68be6354c37756c18fedc6bde53e87f869d4","src/core/spec/decisions-lint.ts":"sha256:a6b1966abd18245fbe0790a14147cdb9cfcead44d9fe2411ac2c510ea1541006","templates/decisions/000-how-this-project-is-built.md":"sha256:26a98fc4ba6f403321516f25728e89e0f04434e96b59ad57d21283ee1f7a8d62","templates/decisions/README.md":"sha256:602907b7b9d34c2454872cba27ead41748c41c6306787422911db7fa6c270f46","tests/codex/adapter.test.ts":"sha256:f7f90bfcd1a771a0eaa286297b0eea6946f5ed8c5cbdfb005da97c23f7892a95","tests/decisions-lint.test.ts":"sha256:88696d43d16ca09f608c8f0f5097584404fdc855e6d2ca399ccb9c76586ecab4","tests/decisions-scaffold.test.ts":"sha256:20519f1f9c91ec32c82a54886ea2a13c90f2dac878e93df95ef187c0f6fadf86","tests/pi/doctor.test.ts":"sha256:454cda3f9ae61d4a545a65763b610faac8a9877abc7c95dd504fc21c1fa4ba16"}
+---
+2026-10-05T21:24:28.624Z

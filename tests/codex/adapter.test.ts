@@ -177,7 +177,7 @@ describe('Codex adapter registration, setup, and diagnostics', () => {
         stdout: (line) => lines.push(line),
         report: healthy,
       });
-      assert.equal(lines.length, 9);
+      assert.equal(lines.length, 10);
 
       await fs.writeFile(
         path.join(root, 'osq.config.ts'),
