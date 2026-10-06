@@ -126,14 +126,14 @@ describe('archive-time verify excerpt', () => {
     assert.ok(!/noise \d+/.test(marker), 'none of the 500 earlier lines survive');
     assert.match(marker, /✖ failing tests:/);
     assert.match(marker, /tests\/living\.test\.ts/);
-    assert.ok(marker.trimEnd().endsWith(FULL_OUTPUT_LINE));
 
     const verifyRan = (await readEvents(specFolder)).filter((event) => event.type === 'verify_ran');
     assert.equal(verifyRan.length, 1);
-    const fullOutput = verifyRan[0].data?.output;
-    assert.equal(typeof fullOutput, 'string');
-    assert.match(fullOutput as string, /noise 500/);
-    assert.match(fullOutput as string, /✖ failing tests:/);
+    const log = String(verifyRan[0].data?.log);
+    assert.ok(marker.trimEnd().endsWith(`Full output: ${log}`));
+    const full = await fs.readFile(path.join(specFolder, log), 'utf8');
+    assert.match(full, /noise 500/);
+    assert.match(full, /✖ failing tests:/);
   });
 
   it('keeps only the configured number of trailing lines', async () => {
@@ -160,6 +160,9 @@ describe('archive-time verify excerpt', () => {
     assert.equal(archived, false);
 
     const marker = await fs.readFile(path.join(runDir, 'regressed', 'change.md'), 'utf8');
+    const log = String(
+      (await readEvents(specFolder)).find((event) => event.type === 'verify_ran')?.data?.log,
+    );
     const lines = marker.trimEnd().split('\n');
     assert.deepEqual(lines.slice(-6), [
       'line 96',
@@ -167,7 +170,7 @@ describe('archive-time verify excerpt', () => {
       'line 98',
       'line 99',
       'line 100',
-      FULL_OUTPUT_LINE,
+      `Full output: ${log}`,
     ]);
     assert.ok(!marker.includes('line 95'));
   });

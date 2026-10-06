@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
+import type { VerifyExcerptLimits } from '../core/run/verify-excerpt.js';
 import { cutStackedChange, decideStackCut } from '../core/spec/stack-cut.js';
 import { type LocatedChange, listChanges } from '../core/status/change-locations.js';
 import { selectVcs } from '../core/vcs/select.js';
@@ -29,9 +30,10 @@ async function halt(
   change: LocatedChange,
   specId: string,
   halt_: WorktreeHalt,
-  logger?: Logger,
+  logger: Logger | undefined,
+  limits: VerifyExcerptLimits,
 ): Promise<void> {
-  await haltWorktreeChange(change, specId, halt_, logger);
+  await haltWorktreeChange(change, specId, halt_, logger, limits);
 }
 
 /**
@@ -57,7 +59,13 @@ export async function runStackedChanges(
       const decision = await decideStackCut({ projectRoot, config, change, vcs });
       if (decision.kind === 'wait') continue;
       if (decision.kind === 'halt') {
-        await halt(change, specId, { reason: decision.reason, detail: decision.detail }, logger);
+        await halt(
+          change,
+          specId,
+          { reason: decision.reason, detail: decision.detail },
+          logger,
+          config.limits,
+        );
         continue;
       }
       const worktree = await cutStackedChange({
@@ -69,7 +77,13 @@ export async function runStackedChanges(
       });
       logger?.info(`stacked ${change.folderName} on ${decision.base}: worktree ${worktree}`);
     } catch (err) {
-      await halt(change, specId, { reason: 'stack_cut_failed', detail: errorMessage(err) }, logger);
+      await halt(
+        change,
+        specId,
+        { reason: 'stack_cut_failed', detail: errorMessage(err) },
+        logger,
+        config.limits,
+      );
     }
   }
 }

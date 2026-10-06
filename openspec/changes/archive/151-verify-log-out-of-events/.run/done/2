@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f89c06dae1f2b17f428e7abc2004433326169201df4fcb0473afe5e320609209"
+build_stamp: "d208064"
+project_commit: "1654298"
+exit_code: 0
+scope_files: {"src/core/lifecycle/retry.ts":"sha256:c250db8b04724490069cfb457a9819dc931712ab368936a2a0f6b43b731855f7","src/core/vcs/sync-verify.ts":"sha256:a5a2d67bc45928a1211dc4cb66a1bbf689791823c6d3954c6b5ba9b6a371c32a","src/watcher/loop.ts":"sha256:fb7a214ea1c13222b998e5abce8ed4ca5117c6f1cad7d12f8b3b2d5aaf2d03e5","src/watcher/stack-run.ts":"sha256:81fc9482c224a25d3ad0df4acb559b228b4d8d23755b8e51fce50671511ab864","src/watcher/worktree-run.ts":"sha256:fc64bedd62d469a7a5b741ba9bc54a2781945279a8c48a4172a9a0cae935c16b","tests/event-output-tail.test.ts":"sha256:dc6a52ddcdea7d39e7a8ce915b3abec63e7b8b8eb210d5c1e2360771b7b5096f","tests/verify-log-sync.test.ts":"sha256:c92f9705bfbe387ec44ab996c8577ae156193c37ede23b2ba3b446eb75ee666c"}
+---
+2026-10-06T06:35:14.687Z

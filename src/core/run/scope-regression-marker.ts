@@ -26,7 +26,7 @@ export function buildScopeRegressionMarker(
     '',
     excerptVerifyOutput(
       input.output,
-      `the verify_ran event in .run/events/${input.taskNumber}.jsonl`,
+      input.log ?? `the verify_ran event in .run/events/${input.taskNumber}.jsonl`,
       limits,
     ),
     '',

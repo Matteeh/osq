@@ -7,7 +7,7 @@ import { resolveScope } from '../core/run/scope.js';
 import { TEST_GATE_DIR } from '../core/run/test-gate.js';
 import { type VerificationResult, runVerificationCommand } from '../core/run/verification.js';
 import { asRecord } from '../harness/stream.js';
-import { appendHarnessEvent } from '../harness/types.js';
+import { recordVerifyRan } from './record-verify.js';
 
 /** Last first-class `text` event on the agent stream, or null when absent. */
 export async function extractFinalTextFromStream(
@@ -41,7 +41,6 @@ export async function extractFinalTextFromStream(
 
   return finalText?.trim() ? finalText : null;
 }
-
 /** Write a result file synthesized from the agent's final stream message. */
 export async function synthesizeResultFile(
   resultsDir: string,
@@ -64,7 +63,6 @@ export async function synthesizeResultFile(
   await fs.writeFile(resultPath, content, 'utf8');
   return resultPath;
 }
-
 function hashFileContent(content: Buffer | string): string {
   return createHash('sha256').update(content).digest('hex');
 }
@@ -135,10 +133,12 @@ export async function findUndeclaredTestChanges(
 /** Full verification outcome plus the pass/fail projection callers branch on. */
 export interface VerificationGateResult extends VerificationResult {
   passed: boolean;
+  /** Change-folder-relative log of the whole output, or null without a context. */
+  log: string | null;
 }
 /** Extra `verify_ran` data derived from the completed result (e.g. pre-spawn fields). */
 export type VerifyEventDataFn = (result: VerificationResult) => Record<string, unknown>;
-/** Run the verify command, then append one `verify_ran` event from that one path. */
+/** Run the verify command, then record one `verify_ran` event with its log and tail. */
 export async function runVerificationGateResult(
   projectRoot: string,
   verifyCommand: string,
@@ -159,22 +159,21 @@ export async function runVerificationGateResult(
       (result.exitCode !== 0
         ? result.output || `Process exited with code ${result.exitCode}`
         : undefined));
+  let log: string | null = null;
   if (context) {
-    await appendHarnessEvent(context.specFolderPath, context.taskNumber, {
-      type: 'verify_ran',
-      timestamp: new Date().toISOString(),
-      data: {
-        command: verifyCommand,
-        exitCode: result.exitCode,
-        duration: result.duration,
-        ...(result.output.trim() ? { output: result.output } : {}),
-        ...(context.extraData ? context.extraData(result) : {}),
-      },
-    });
+    log = await recordVerifyRan(
+      context.specFolderPath,
+      context.taskNumber,
+      verifyCommand,
+      result,
+      config,
+      context.extraData,
+    );
   }
   return {
     ...result,
     passed: result.exitCode === 0 && !result.error,
+    log,
     ...(error ? { error } : {}),
   };
 }
@@ -186,13 +185,13 @@ export async function runVerificationGate(
   verifyTimeoutSeconds: number,
   context?: { specFolderPath: string; taskNumber: string },
   config?: OsqConfig,
-): Promise<{ passed: boolean; timedOut: boolean; error?: string }> {
-  const { passed, timedOut, error } = await runVerificationGateResult(
+): Promise<{ passed: boolean; timedOut: boolean; log?: string | null; error?: string }> {
+  const { passed, timedOut, error, log } = await runVerificationGateResult(
     projectRoot,
     verifyCommand,
     verifyTimeoutSeconds,
     context,
     config,
   );
-  return { passed, timedOut, ...(error ? { error } : {}) };
+  return { passed, timedOut, ...(log ? { log } : {}), ...(error ? { error } : {}) };
 }

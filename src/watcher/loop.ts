@@ -221,14 +221,14 @@ export async function runWatcherCycle(
     if (worktree) {
       const halt = await checkWorktree(change, config);
       if (halt) {
-        await haltWorktreeChange(change, specId, halt, logger);
+        await haltWorktreeChange(change, specId, halt, logger, config.limits);
         return;
       }
       const archiveState = deriveSpecState(await readChangeFolder(root, folderPath));
       if (archiveState.status === 'done') {
         const syncHalt = await checkSync(projectRoot, change, config, logger);
         if (syncHalt) {
-          await haltWorktreeChange(change, specId, syncHalt, logger);
+          await haltWorktreeChange(change, specId, syncHalt, logger, config.limits);
           return;
         }
       }
@@ -287,7 +287,7 @@ export async function runWatcherCycle(
             reaped.reason,
           );
           if (halt) {
-            await haltWorktreeChange(change, specId, halt, logger);
+            await haltWorktreeChange(change, specId, halt, logger, config.limits);
             reaperHalted = true;
             break;
           }
@@ -325,12 +325,12 @@ export async function runWatcherCycle(
         await restoreArchiveSpecs(change.tree.root, change.folderPath);
         const pendingHalt = await commitPendingVerifiedTasks(change, config);
         if (pendingHalt) {
-          await haltWorktreeChange(change, specId, pendingHalt, logger);
+          await haltWorktreeChange(change, specId, pendingHalt, logger, config.limits);
           continue;
         }
         const worktreeHalt = await checkWorktree(change, config);
         if (worktreeHalt) {
-          await haltWorktreeChange(change, specId, worktreeHalt, logger);
+          await haltWorktreeChange(change, specId, worktreeHalt, logger, config.limits);
           continue;
         }
         specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
@@ -350,7 +350,7 @@ export async function runWatcherCycle(
         if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
           const syncHalt = await checkSync(projectRoot, change, config, logger);
           if (syncHalt) {
-            await haltWorktreeChange(change, specId, syncHalt, logger);
+            await haltWorktreeChange(change, specId, syncHalt, logger, config.limits);
             continue;
           }
           specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
@@ -406,7 +406,7 @@ export async function runWatcherCycle(
           if (worktree) {
             const halt = await commitWorktreeVerifiedTask(change, config, taskNumber);
             if (halt) {
-              await haltWorktreeChange(change, specId, halt, logger);
+              await haltWorktreeChange(change, specId, halt, logger, config.limits);
               continue;
             }
           }
@@ -425,7 +425,7 @@ export async function runWatcherCycle(
               taskResult.reason,
             );
             if (halt) {
-              await haltWorktreeChange(change, specId, halt, logger);
+              await haltWorktreeChange(change, specId, halt, logger, config.limits);
               continue;
             }
           }

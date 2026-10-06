@@ -1,0 +1,43 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:018f114a2fa162dc7fb19f069f32b4300590150e9eb302ce0e3e4ddec5eaab3b",
+    "PLANNER.md": "sha256:a7c592905cd1053807bc28a9b324741d1986d45d91334c31615495742b20864c",
+    "config": "sha256:73f66bc96f890832a07fb7c25399a9b25796e557148a4855477ce004d1b0e290",
+    "status-inspection": "sha256:04ccc5b90591fd8b36beed8c8ddeb4bffc21616b1bf69fac5b02403a72020730",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:6388d5561b77d437bb148cdbe9a0ea9a3958fd38ed609a1cbf823d9292634edc",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "cli-foundation": "sha256:64035915a117d3b71ad7c0d64a12a838c721a750d773702fec31fc613bfff71c",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "metrics-and-reporting": "sha256:6c61152eef86084643d894079a09a6de40c9962e476f6eefa301f2dbfd6b766f",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "version-control": "sha256:2a0323b3c058731d2fa50544a65e9308f3304d99bf5adba0ede51dfcacdebf51",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "watcher-and-harness": "sha256:34a45bd55c378e7b1129d392b28b6532afd3702689fdcceb8a39c70f19807407",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d"
+  },
+  "osqVersion": "0.2.4",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-05T19:54:15.823Z",
+  "planningSessions": 2,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-06T06:19:38.139Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "002": "sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "008": "sha256:6092cd51f69465f5761f730d7b7de20357d5a4356215b5dfd62f90ffbc498f3e",
+    "010": "sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807"
+  }
+}

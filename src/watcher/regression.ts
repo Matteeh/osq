@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { OsqConfig } from '../core/foundation/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../core/foundation/config.js';
 import {
   SCOPE_RESOLVER_VERSION,
   type StaleTaskAudit,
@@ -13,16 +13,15 @@ import {
   readDoneMarker,
   readFileChangedPaths,
 } from '../core/run/scope-hash.js';
+import { tailVerifyOutput } from '../core/run/verify-excerpt.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import { compareNumericPrefix } from '../core/status/state.js';
 import { autoRecertify } from './auto-recertify.js';
 import { type RunTaskResult, recordRegressedEvent, writeRegressedMarker } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
-
 export { buildDoneMetadata } from './done-metadata.js';
 export { computeTaskScopeHash } from '../core/run/scope-hash.js';
 export type { ScopeHashResult } from '../core/run/scope-hash.js';
-
 /** Outcome of comparing a previously completed task's scope to the tree. */
 export interface ScopeRegressionResult {
   regressed: true;
@@ -60,6 +59,7 @@ export interface ScopeAuditResult {
  */
 export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
   const { projectRoot, specFolderPath, eligibleTaskNumbers, config } = options;
+  const limits = options.limits ?? DEFAULT_CONFIG.limits;
   const timeoutSeconds = options.verifyTimeoutSeconds;
   const record = options.record ?? true;
   const runDir = path.join(specFolderPath, '.run');
@@ -132,6 +132,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
       exitCode: gate?.exitCode ?? 1,
       duration: gate?.duration ?? 0,
       output: gate?.output ?? '',
+      log: gate?.log ?? undefined,
       timedOut: gate?.timedOut ?? false,
       verificationPassed: gate?.passed ?? false,
       alreadyActive: false,
@@ -146,7 +147,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
         recorded,
         current,
         verifyCommand: taskData.verify,
-        verify: gate,
+        verify: { ...gate, output: tailVerifyOutput(gate.output, limits) },
         attribution: base.attribution,
       });
       if (qualified) {
@@ -170,7 +171,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
         command: audit.verifyCommand,
         exitCode: audit.exitCode,
         duration: audit.duration,
-        output: audit.output,
+        output: tailVerifyOutput(audit.output, limits),
         timedOut: audit.timedOut,
         verificationPassed: audit.verificationPassed,
         recordedResolver: recorded.scopeResolver,

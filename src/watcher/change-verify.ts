@@ -20,7 +20,7 @@ export function formatChangeVerifyMarker(
 ): string {
   const excerpt = excerptVerifyOutput(
     result.output,
-    'the verify_ran event in .run/events/change.jsonl',
+    result.log ?? 'the verify_ran event in .run/events/change.jsonl',
     config.limits,
   );
   return [

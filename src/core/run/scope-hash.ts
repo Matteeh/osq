@@ -33,6 +33,8 @@ export interface StaleTaskAudit {
   exitCode: number;
   duration: number;
   output: string;
+  /** Change-folder-relative log of the whole output, when the gate wrote one. */
+  log?: string;
   timedOut: boolean;
   verificationPassed: boolean;
   /** True when a canonical active regression marker already covers this task. */

@@ -7,6 +7,7 @@ import {
   readDoneMarker,
 } from '../run/scope-hash.js';
 import { runVerificationCommand } from '../run/verification.js';
+import { tailVerifyOutput } from '../run/verify-excerpt.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { findChange } from '../status/change-locations.js';
@@ -176,7 +177,7 @@ export async function retrySpec(
       attribution,
       command: taskData.verify,
       exitCode: gate.exitCode,
-      output: gate.output,
+      output: tailVerifyOutput(gate.output, config.limits),
       timedOut: gate.timedOut,
       recordedHash: done.scopeHash,
       currentHash: current.hash,

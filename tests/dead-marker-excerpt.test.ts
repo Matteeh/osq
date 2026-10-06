@@ -130,6 +130,25 @@ function assertTrailingExcerpt(marker: string, source: string, firstLine = 61): 
   assert.equal(excerpt.at(-1), 'line 100');
 }
 
+/** The `log` of the last `verify_ran` event for `target`. */
+async function logOf(folder: string, target: string): Promise<string> {
+  const events = await readEvents(folder, target);
+  const event = [...events].reverse().find((candidate) => candidate.type === 'verify_ran');
+  return String(event?.data?.log ?? '');
+}
+
+/** Assert the marker points at `log` and excerpt the log holds all 100 lines. */
+async function assertLogExcerpt(folder: string, target: string): Promise<void> {
+  const marker = await readMarker(folder);
+  const log = await logOf(folder, target);
+  assertTrailingExcerpt(marker, log);
+  const raw = await fs.readFile(path.join(folder, log), 'utf8');
+  const all = raw.trimEnd().split('\n');
+  assert.equal(all.length, 100);
+  assert.equal(all[0], 'line 1');
+  assert.equal(all.at(-1), 'line 100');
+}
+
 function outputOf(events: ParsedEvent[], type: string): string {
   return String(events.find((candidate) => candidate.type === type)?.data?.output ?? '');
 }
@@ -148,11 +167,8 @@ describe('dead marker holds the verify excerpt', () => {
     assert.equal(result.reason, 'verify_red');
     const marker = await readMarker(folder);
     assert.match(marker, /^reason: verify_red$/m);
-    assertTrailingExcerpt(marker, 'the verify_ran event in .run/events/1.jsonl');
+    await assertLogExcerpt(folder, '1');
     assert.ok(!marker.includes('line 60'));
-    const output = outputOf(await readEvents(folder, '1'), 'verify_ran');
-    assert.match(output, /line 1\n/);
-    assert.match(output, /line 100/);
   });
 
   it('keeps the change verify excerpt and points at the change event', async () => {
@@ -168,11 +184,7 @@ describe('dead marker holds the verify excerpt', () => {
     assert.equal(result.reason, 'change_verify_red');
     const marker = await readMarker(folder);
     assert.match(marker, /^reason: change_verify_red$/m);
-    assertTrailingExcerpt(marker, 'the verify_ran event in .run/events/change.jsonl');
-
-    const output = outputOf(await readEvents(folder, 'change'), 'verify_ran');
-    assert.match(output, /line 1\n/);
-    assert.match(output, /line 100/);
+    await assertLogExcerpt(folder, 'change');
   });
 
   it('keeps the focused run excerpt and points at the focused event', async () => {
@@ -245,6 +257,6 @@ describe('dead marker holds the verify excerpt', () => {
     assert.equal(result.reason, 'verify_precondition');
     const marker = await readMarker(folder);
     assert.match(marker, /^reason: verify_precondition$/m);
-    assertTrailingExcerpt(marker, 'the verify_ran event in .run/events/1.jsonl');
+    await assertLogExcerpt(folder, '1');
   });
 });

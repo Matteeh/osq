@@ -18,7 +18,6 @@ interface ParsedEvent {
 const PASSING = 'process.exit(0);\n';
 const FAILING = "for (let i = 1; i <= 100; i += 1) console.log('line ' + i);\nprocess.exit(1);\n";
 const TIMEOUT_SECONDS = DEFAULT_CONFIG.timeouts.verifyTimeoutSeconds ?? 600;
-const FULL_OUTPUT_LINE = 'Full output: the verify_ran event in .run/events/1.jsonl';
 const roots: string[] = [];
 
 afterEach(async () => {
@@ -80,6 +79,13 @@ async function readEvents(folder: string): Promise<ParsedEvent[]> {
     .map((line) => JSON.parse(line) as ParsedEvent);
 }
 
+/** The `log` of the last `verify_ran` event in the task stream. */
+async function verifyRanLog(folder: string): Promise<string> {
+  const events = await readEvents(folder);
+  const event = [...events].reverse().find((candidate) => candidate.type === 'verify_ran');
+  return String(event?.data?.log ?? '');
+}
+
 describe('scope regression marker excerpt', () => {
   it('holds the last 40 lines and points at the full verify_ran output', async () => {
     const { root, folder, runDir } = await setup();
@@ -99,14 +105,20 @@ describe('scope regression marker excerpt', () => {
     assert.ok(marker.includes('line 100'), 'keeps the last line');
     assert.ok(!marker.includes('line 60'), 'drops the line before the excerpt window');
     assert.ok(!/^line 1$/m.test(marker), 'drops line 1');
-    assert.ok(marker.trimEnd().endsWith(FULL_OUTPUT_LINE));
+    const log = await verifyRanLog(folder);
+    assert.ok(marker.trimEnd().endsWith(`Full output: ${log}`));
+    const full = await fs.readFile(path.join(folder, log), 'utf8');
+    assert.equal(full.trim().split('\n').length, 100);
+    assert.match(full, /line 1\n/);
+    assert.match(full, /line 100/);
 
     const regressed = (await readEvents(folder)).find((event) => event.type === 'regressed');
-    const fullOutput = regressed?.data?.output;
-    assert.equal(typeof fullOutput, 'string');
-    assert.equal((fullOutput as string).trim().split('\n').length, 100);
-    assert.match(fullOutput as string, /line 1\n/);
-    assert.match(fullOutput as string, /line 100/);
+    const tail = regressed?.data?.output;
+    assert.equal(typeof tail, 'string');
+    assert.equal((tail as string).trim().split('\n').length, 40);
+    assert.equal((tail as string).trim().split('\n')[0], 'line 61');
+    assert.match(tail as string, /line 100/);
+    assert.ok(!(tail as string).includes('line 60'));
   });
 
   it('honors configured marker output lines from the audit options', async () => {
@@ -122,6 +134,7 @@ describe('scope regression marker excerpt', () => {
     });
 
     const marker = await fs.readFile(path.join(runDir, 'regressed', '1.md'), 'utf8');
+    const log = await verifyRanLog(folder);
     const lines = marker.trimEnd().split('\n');
     assert.deepEqual(lines.slice(-6), [
       'line 96',
@@ -129,8 +142,10 @@ describe('scope regression marker excerpt', () => {
       'line 98',
       'line 99',
       'line 100',
-      FULL_OUTPUT_LINE,
+      `Full output: ${log}`,
     ]);
     assert.ok(!marker.includes('line 95'));
+    const regressed = (await readEvents(folder)).find((event) => event.type === 'regressed');
+    assert.equal((regressed?.data?.output as string).trim().split('\n').length, 5);
   });
 });

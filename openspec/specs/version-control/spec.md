@@ -336,15 +336,16 @@ not committed before the sync then survive a stop:
    and the same bound. A failure SHALL abort the merge and stop with
    `<folder>: verify of task <n> failed on osq/<folder> merged with <default
    branch>:` and the same tail. With `skipVerify` set it SHALL run no command.
-   For each passing command, it SHALL append to
+   For each passing command, it SHALL write the command's log and append to
    the change folder's `.run/events/change.jsonl` a `verify_ran` event whose
-   data holds `command`, `exitCode`, `duration` in milliseconds, `output` when
-   the output is not blank, and `task` for a task's `verify`, as the
-   watcher's verify gate writes it. It SHALL then append a `synced` event
+   data holds `command`, `exitCode`, `duration` in milliseconds, `log`, the
+   output's tail as `output` when that tail is not blank, and `task` for a
+   task's `verify`, as watcher-and-harness's "Verify output logs" says. It
+   SHALL then append a `synced` event
    whose data holds `defaultBranch`, `commits` (the `<n>` of step 2), and
    `duration`, the milliseconds from the merge's start to this step's end, and
    stage that file. With no command to run, only the `synced` event is
-   appended.
+   appended. The log files are ignored by git, and no commit holds them.
 6. It SHALL commit the merge with no paths, so the commit holds the staged
    events, authored by `vcs.author`, with the message `osq: <id> sync <default
    branch>`, a blank line, and `Osq-Change: <folder>`. A failed commit SHALL
@@ -380,7 +381,7 @@ not committed before the sync then survive a stop:
 
 #### Scenario: Sync records its verify
 - **WHEN** the sync merges and its `verify` passes
-- **THEN** the sync commit's `.run/events/change.jsonl` in the archived folder ends with a `verify_ran` event holding the command, exit code 0, and a duration, then a `synced` event holding `main`, the commit count, and a duration
+- **THEN** the sync commit's `.run/events/change.jsonl` in the archived folder ends with a `verify_ran` event holding the command, exit code 0, a duration and a `log`, then a `synced` event holding `main`, the commit count, and a duration
 
 #### Scenario: Active change before its first task
 - **WHEN** `002` is active in its worktree with a delta for `orders` and no done task, and the default branch has one commit that changes `orders`'s living spec and adds `src/other.txt`

@@ -1,6 +1,7 @@
 import path from 'node:path';
-import type { OsqConfig } from '../core/foundation/config.js';
+import { DEFAULT_CONFIG, type OsqConfig } from '../core/foundation/config.js';
 import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
+import { type VerifyExcerptLimits, tailVerifyOutput } from '../core/run/verify-excerpt.js';
 import type { LocatedChange } from '../core/status/change-locations.js';
 import { selectVcs } from '../core/vcs/select.js';
 import type { VcsStatusEntry } from '../core/vcs/vcs.js';
@@ -86,16 +87,14 @@ export async function haltWorktreeChange(
   specId: string,
   halt: WorktreeHalt,
   logger?: Logger,
+  limits: VerifyExcerptLimits = DEFAULT_CONFIG.limits,
 ): Promise<void> {
+  const detail = tailVerifyOutput(halt.detail, limits);
   const runDir = path.join(change.folderPath, '.run');
-  await writeRegressedMarker(
-    runDir,
-    'change',
-    `---\nreason: ${halt.reason}\n---\n${halt.detail}\n`,
-  );
+  await writeRegressedMarker(runDir, 'change', `---\nreason: ${halt.reason}\n---\n${detail}\n`);
   await recordRegressedEvent(change.folderPath, 'change', {
     reason: halt.reason,
-    output: halt.detail,
+    output: detail,
   });
   const symbols = logger?.symbols === true;
   logger?.info(`${resolveSymbol('■', '[halted]', symbols)} spec ${specId} halted (${halt.reason})`);

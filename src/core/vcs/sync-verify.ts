@@ -2,6 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { runVerificationCommand } from '../run/verification.js';
+import { tailVerifyOutput } from '../run/verify-excerpt.js';
+import { writeVerifyLog } from '../run/verify-log.js';
 import { readCheckCommand } from '../spec/human-steps.js';
 import { parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
@@ -95,11 +97,14 @@ async function runOne(
       `${options.change.folderName}: ${subject} merged with ${options.defaultBranch}:\n${outputTail(result.output, options.config.limits.cardOutputLines)}`,
     );
   }
+  const log = await writeVerifyLog(options.change.folderPath, 'change', result.output);
+  const tail = tailVerifyOutput(result.output, options.config.limits);
   await appendEvent(options.change.folderPath, 'verify_ran', {
     command,
     exitCode: result.exitCode,
     duration: Math.round(result.duration * 1000),
-    ...(result.output.trim() ? { output: result.output } : {}),
+    log,
+    ...(tail ? { output: tail } : {}),
     ...(task !== undefined ? { task } : {}),
   });
 }

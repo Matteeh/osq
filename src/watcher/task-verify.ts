@@ -41,11 +41,11 @@ export function formatPreSpawnDeadMarker(
   expected: VerifyStarts,
   taskNumber: string,
   config: OsqConfig,
-  result: VerificationResult,
+  result: VerificationResult & { readonly log?: string | null },
 ): string {
   const excerpt = excerptVerifyOutput(
     result.output,
-    `the verify_ran event in .run/events/${taskNumber}.jsonl`,
+    result.log ?? `the verify_ran event in .run/events/${taskNumber}.jsonl`,
     config.limits,
   );
   return [
@@ -188,7 +188,11 @@ export function verifyRedFailure(
   verifyCommand: string,
   taskNumber: string,
   config: OsqConfig,
-  result: { readonly error?: string; readonly timedOut: boolean },
+  result: {
+    readonly error?: string;
+    readonly timedOut: boolean;
+    readonly log?: string | null;
+  },
   fail: FailFn,
 ): Promise<RunTaskResult> {
   const msg = result.error ?? 'Verify command failed';
@@ -198,7 +202,7 @@ export function verifyRedFailure(
   }
   const excerpt = excerptVerifyOutput(
     msg,
-    `the verify_ran event in .run/events/${taskNumber}.jsonl`,
+    result.log ?? `the verify_ran event in .run/events/${taskNumber}.jsonl`,
     config.limits,
   );
   const marker = `---\nreason: verify_red\ncommand: "${verifyCommand}"\n---\nWatcher independent verify failed:\n${excerpt}\n`;

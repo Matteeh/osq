@@ -23,6 +23,27 @@ function cutLine(line: string, maxChars: number): string {
 }
 
 /**
+ * The tail a `verify_ran`, `regressed` or `recertification` event keeps of a
+ * recorded output. A text within both marker limits is kept exactly, trailing
+ * newline included; any other text keeps its last `markerOutputLines` lines,
+ * each cut to `markerLineChars`; blank output becomes the empty string.
+ */
+export function tailVerifyOutput(output: string, limits: VerifyExcerptLimits): string {
+  const trimmed = output.trimEnd();
+  if (trimmed.length === 0) return '';
+  const lines = trimmed.split('\n');
+  const withinLimits =
+    lines.length <= limits.markerOutputLines &&
+    lines.every((line) => line.length <= limits.markerLineChars);
+  if (withinLimits) return output;
+  const start = Math.max(0, lines.length - limits.markerOutputLines);
+  return lines
+    .slice(start)
+    .map((line) => cutLine(line, limits.markerLineChars))
+    .join('\n');
+}
+
+/**
  * Build the excerpt of a command's output that a `.run/` marker keeps. The
  * excerpt is the last `✖ failing tests:` line through the end when there is
  * one, otherwise the last `markerOutputLines` lines. Each kept line is cut to

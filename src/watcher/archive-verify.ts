@@ -1,10 +1,8 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { missingNamedPaths } from '../core/spec/verify-paths.js';
 import { recordRegressedEvent, writeRegressedMarker } from './outcome.js';
-import { runVerificationGate } from './verify.js';
+import { runVerificationGateResult } from './verify.js';
 
 /** Human label for the change-level target versus a numbered task. */
 function archiveTargetLabel(target: string): string {
@@ -61,7 +59,7 @@ export async function verifyArchiveStep(
     return false;
   }
 
-  const gate = await runVerificationGate(
+  const gate = await runVerificationGateResult(
     projectRoot,
     command,
     config.timeouts.verifyTimeoutSeconds ?? 600,
@@ -70,39 +68,24 @@ export async function verifyArchiveStep(
   );
   if (gate.passed) return true;
 
-  // The shared gate is the sole `verify_ran` writer; recover its payload.
-  const raw = await fs
-    .readFile(path.join(specFolderPath, '.run', 'events', `${target}.jsonl`), 'utf8')
-    .catch(() => '');
-  let exitCode = 1;
-  let duration = 0;
-  let output = '';
-  for (const line of raw.split('\n')) {
-    if (!line.includes('"verify_ran"')) continue;
-    const data = (JSON.parse(line) as { data?: Record<string, unknown> }).data ?? {};
-    exitCode = typeof data.exitCode === 'number' ? data.exitCode : 1;
-    duration = typeof data.duration === 'number' ? data.duration : 0;
-    output = typeof data.output === 'string' ? data.output : '';
-  }
-
   const content = [
     '---',
     'reason: verify_red',
     `command: ${JSON.stringify(command)}`,
-    `exit_code: ${exitCode}`,
+    `exit_code: ${gate.exitCode}`,
     '---',
     `Archive-time ${archiveTargetLabel(target)} verification failed.`,
     excerptVerifyOutput(
-      output,
-      `the verify_ran event in .run/events/${target}.jsonl`,
+      gate.output,
+      gate.log ?? `the verify_ran event in .run/events/${target}.jsonl`,
       config.limits,
     ),
     '',
   ].join('\n');
   await writeRegressedMarker(runDir, target, content);
   await recordRegressedEvent(specFolderPath, target, {
-    exitCode,
-    duration,
+    exitCode: gate.exitCode,
+    duration: gate.duration,
     command,
     reason: 'verify_red',
   });

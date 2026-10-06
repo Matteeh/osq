@@ -16,6 +16,9 @@ const DURATION = /\(?\b\d+(?:\.\d+)?(?:ms|s|m|h)\b\)?/g;
 // and TAP prints `# duration_ms 92.9`, keeping the key and separator.
 const DURATION_KEY = /(\bduration(?:_ms|_s)?\b[ \t]*[:=]?[ \t]*)\d+(?:\.\d+)?/gi;
 const PID = /\bpid\s*[:=]?\s*\d+/gi;
+// A verify log path is per run, `.run/logs/1-1.log` then `.run/logs/1-2.log`;
+// keep the target so different tasks still differ, drop the run number.
+const LOG_RUN = /\.run\/logs\/([^/\s]+)-\d+\.log/g;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -57,6 +60,7 @@ export function normalizeFailureBody(body: string, projectRoot?: string): string
     normalized = normalized.replace(TEMP_PATH, '<tmp>');
   }
   return normalized
+    .replace(LOG_RUN, '.run/logs/$1-<n>.log')
     .replace(ISO_TIMESTAMP, '<time>')
     .replace(DURATION, '<duration>')
     .replace(DURATION_KEY, '$1<duration>')

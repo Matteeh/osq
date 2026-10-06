@@ -90,6 +90,8 @@ export interface VerifyRanEventData {
   command: string;
   exitCode: number;
   duration: number;
+  /** Change-folder-relative log of the whole output, when the gate writes one. */
+  log?: string;
   /** Legacy field name retained so older emitted lines still type-check. */
   verifyCommand?: string;
   output?: string;

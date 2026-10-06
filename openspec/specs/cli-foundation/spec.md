@@ -2078,8 +2078,9 @@ Without it, `lintCommand` SHALL print the repository count line that
 
 ### Requirement: Marker output limits
 `limits` SHALL carry `markerOutputLines`, default 40, the most output lines a
-`.run/` marker keeps when the output has no `✖ failing tests:` section, and
-`markerLineChars`, default 400, the most characters a marker keeps of any one
+`.run/` marker keeps when the output has no `✖ failing tests:` section and
+the most lines an event's output tail keeps, and `markerLineChars`, default
+400, the most characters a marker or an event's output tail keeps of any one
 output line. Both SHALL merge from `osq.config.ts` like the other limits.
 
 #### Scenario: Default marker limits
