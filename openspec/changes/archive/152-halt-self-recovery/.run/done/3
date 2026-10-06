@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d5fa207cc7d9b717608ed475619d4a363358510361cbf1223a26aba561cf44ca"
+build_stamp: "5711320"
+project_commit: "59eb597"
+exit_code: 0
+scope_files: {"src/cli/approve.ts":"sha256:56b114f8742f082c3e3c7ac3631352cc10475748cbc3d15235921c26eb4144b1","src/core/vcs/checkout-root.ts":"sha256:4ad71bf63e20ba4d973dfd65b76d1a170a0a6383ff6ef5d5d5d26e7024a1c0cd"}
+---
+2026-10-06T09:15:52.638Z

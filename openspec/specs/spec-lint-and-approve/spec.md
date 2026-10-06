@@ -476,7 +476,7 @@ delta capability with no living spec that is not deliberately created, and
 
 #### Scenario: Shared file
 - **WHEN** tasks 1 and 2 both resolve `src/a.ts`
-- **THEN** one `shared_file` flag labelled `shared files in tasks 1 and 2` names the file and says the watcher will halt for recertification when task 2 changes it
+- **THEN** one `shared_file` flag labelled `shared files in tasks 1 and 2` reads `src/a.ts; when task 2 changes them, the watcher re-runs task 1's verify and halts only if it fails`
 
 #### Scenario: Env file templates
 - **WHEN** a scope resolves `.env.example`, `.env.sample`, or `.env.template`
@@ -1746,3 +1746,26 @@ record at `archiveSpecsRecordPath`, parsed with `parseDelta`.
 #### Scenario: Pinned requirement lost by accident
 - **WHEN** a pinned requirement is missing from its living spec and no delta removed or renamed it
 - **THEN** the pin check fails naming the capability and the requirement
+
+### Requirement: Approve from a worktree
+Before it loads anything else, `approveCommand` in `src/cli/approve.ts` SHALL
+pass its `cwd` to `resolveCheckoutRoot` in `src/core/vcs/checkout-root.ts`.
+When `vcs.enabled` is on, git is selected, the git root of `cwd` is a linked
+worktree whose HEAD is on a branch starting with `osq/`, and the main entry of
+`worktreeList()` is another path, `resolveCheckoutRoot` SHALL return that main
+path; otherwise it SHALL return `cwd` unchanged. When the result differs from
+`cwd`, `approveCommand` SHALL print `Approving from the checkout <path>` to
+stderr and then run exactly as if `cwd` were that path, loading that path's
+configuration unless a config was passed in.
+
+#### Scenario: Approve run inside a change's worktree
+- **WHEN** change `001` runs in its worktree, a human writes change `002` in the checkout, and runs `osq approve 002` with `cwd` inside `001`'s worktree
+- **THEN** stderr holds `Approving from the checkout <checkout>`, `002` is approved as from the checkout, and nothing is written in `001`'s worktree
+
+#### Scenario: Steering approved from its own worktree
+- **WHEN** a change that needs steering has its plan edited in its worktree and `osq approve <id>` runs with `cwd` in that worktree
+- **THEN** approval succeeds as "Approval after steering" says, with no lint finding about existing test files
+
+#### Scenario: Checkout or other worktree
+- **WHEN** `cwd` is the checkout, or a linked worktree on a branch not starting with `osq/`
+- **THEN** `resolveCheckoutRoot` returns `cwd` and nothing is printed

@@ -19,6 +19,7 @@ import { restoreArchiveSpecs } from './archive-specs.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
 import { type BuildInfo, StaleBuildError, resolveBuildInfo } from './build.js';
+import { catchUpWorktreeCommits } from './commit-catch-up.js';
 import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
@@ -294,6 +295,10 @@ export async function runWatcherCycle(
         }
       }
       if (reaperHalted) continue;
+
+      if (worktree && !(await catchUpWorktreeCommits(change, specId, config, logger))) {
+        continue;
+      }
 
       let specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
 

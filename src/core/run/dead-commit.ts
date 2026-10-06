@@ -72,6 +72,7 @@ export async function commitDeadTask(
   const events = getEventsPath(changeAbs, task);
 
   await fs.mkdir(path.dirname(deadPatch), { recursive: true });
+  await fs.rm(deadPatch, { force: true });
   await fs.writeFile(deadPatch, await vcs.patch(), 'utf8');
 
   await vcs.discard(outsideChange(await vcs.status(), changeRel));

@@ -6,6 +6,7 @@ import type { LocatedChange } from '../status/change-locations.js';
 import { getSpecsDir } from '../status/layout.js';
 import { selectVcs } from './select.js';
 import { eventsRelative, readEvents, readRequirementsBase, restoreEvents } from './sync-files.js';
+import { createSyncRecertifyState, restoreSyncRecertified } from './sync-recertify.js';
 import { assertRequirementsUnchanged, rebuildLivingSpecs } from './sync-specs.js';
 import { SyncStop } from './sync-stop.js';
 import { type SyncVerifyTask, runSyncVerify, syncVerifyTasks } from './sync-verify.js';
@@ -21,6 +22,7 @@ interface SyncContext {
   readonly verifyCommand: string;
   readonly tasks: readonly SyncVerifyTask[];
   readonly commits: number;
+  readonly recertify: ReturnType<typeof createSyncRecertifyState>;
 }
 
 /** The sync commit's subject and change trailer. */
@@ -30,14 +32,10 @@ function syncMessage(folderName: string, defaultBranch: string): string {
 }
 
 /** Abort the merge, restore the events, and stop with `error`. */
-async function stopAfter(
-  vcs: Vcs,
-  error: unknown,
-  eventsPath: string,
-  before: string | null,
-): Promise<SyncStop> {
+async function stopAfter(vcs: Vcs, error: unknown, context: SyncContext): Promise<SyncStop> {
   await vcs.mergeAbort().catch(() => undefined);
-  await restoreEvents(eventsPath, before);
+  await restoreEvents(context.eventsPath, context.eventsBefore);
+  await restoreSyncRecertified(context.recertify);
   if (error instanceof SyncStop) return error;
   return new SyncStop('sync_failed', error instanceof Error ? error.message : String(error));
 }
@@ -131,7 +129,8 @@ async function prepareSync(
       verifySuffix(archived, verifyCommand, tasks, skipVerify),
     ),
   );
-  return { archived, eventsPath, eventsBefore, author, verifyCommand, tasks, commits };
+  const recertify = createSyncRecertifyState();
+  return { archived, eventsPath, eventsBefore, author, verifyCommand, tasks, commits, recertify };
 }
 
 /** Abort and stop on a conflict the sync cannot resolve, else return. */
@@ -184,6 +183,8 @@ async function finishSync(
     mergeStart,
     tasks: context.tasks,
     skipVerify,
+    vcs,
+    recertify: context.recertify,
   });
   await vcs.stage([eventsRelative(worktreeRoot, change.folderPath)]);
   await vcs.commit([], syncMessage(change.folderName, defaultBranch), context.author);
@@ -220,7 +221,7 @@ export async function syncWithDefaultBranch(
   try {
     merge = await vcs.merge(defaultBranch, false);
   } catch (error) {
-    throw await stopAfter(vcs, error, context.eventsPath, context.eventsBefore);
+    throw await stopAfter(vcs, error, context);
   }
   await assertResolvableConflict(vcs, config, change, defaultBranch, merge, context);
   try {
@@ -236,7 +237,7 @@ export async function syncWithDefaultBranch(
       skipVerify,
     );
   } catch (error) {
-    throw await stopAfter(vcs, error, context.eventsPath, context.eventsBefore);
+    throw await stopAfter(vcs, error, context);
   }
   return { merged: true };
 }

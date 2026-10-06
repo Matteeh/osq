@@ -1,20 +1,29 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { type DoneMarkerInfo, computeTaskScopeHash, readDoneMarker } from '../run/scope-hash.js';
 import { runVerificationCommand } from '../run/verification.js';
 import { tailVerifyOutput } from '../run/verify-excerpt.js';
 import { writeVerifyLog } from '../run/verify-log.js';
 import { readCheckCommand } from '../spec/human-steps.js';
-import { parseFrontmatter, parseSpecMdFromFolder } from '../spec/parser.js';
+import { parseFrontmatter, parseSpecMdFromFolder, parseTaskMd } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
+import {
+  type SyncRecertifyState,
+  type SyncRecertifyTask,
+  recertifySyncTasks,
+} from './sync-recertify.js';
 import { SyncStop } from './sync-stop.js';
+import type { Vcs } from './vcs.js';
 import { worktreeBranch } from './worktree.js';
 
-/** One done task whose verify the sync re-runs. */
+/** One done task whose verify the sync re-runs, with step 1's recertification record. */
 export interface SyncVerifyTask {
   readonly task: string;
   readonly verify: string;
+  readonly scope?: readonly string[];
+  readonly recorded?: DoneMarkerInfo;
 }
 
 /** Everything step 5 of a sync needs. */
@@ -29,6 +38,8 @@ export interface SyncVerifyOptions {
   readonly mergeStart: number;
   readonly tasks: readonly SyncVerifyTask[];
   readonly skipVerify: boolean;
+  readonly vcs: Vcs;
+  readonly recertify: SyncRecertifyState;
 }
 
 /** The last `limit` non-blank lines of command output. */
@@ -46,14 +57,35 @@ async function isManual(folderPath: string, task: string): Promise<boolean> {
   return parseFrontmatter(marker).data.manual === true;
 }
 
-/** Every done, non-manual task with a verify, in task order. */
+/** The scope a task file declares, for step 1's pre-merge hash. */
+async function taskScope(changeFolderPath: string, taskNumber: string): Promise<string[]> {
+  const content = await fs
+    .readFile(path.join(changeFolderPath, 'tasks', `${taskNumber}.md`), 'utf8')
+    .catch(() => '');
+  return parseTaskMd(content).scope;
+}
+
+/**
+ * Every done, non-manual task with a verify, in task order. For each whose
+ * done marker reads and whose pre-merge scope hash equals the marker's, step 1
+ * also records the scope and marker so a later merge can recertify it.
+ */
 export async function syncVerifyTasks(change: LocatedChange): Promise<SyncVerifyTask[]> {
   const state = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+  const runDir = path.join(change.folderPath, '.run');
   const tasks: SyncVerifyTask[] = [];
   for (const task of state.tasks) {
     if (task.status !== 'done' || task.verify === '') continue;
     if (await isManual(change.folderPath, task.taskNumber)) continue;
-    tasks.push({ task: task.taskNumber, verify: task.verify });
+    const base = { task: task.taskNumber, verify: task.verify };
+    const recorded = await readDoneMarker(runDir, task.taskNumber);
+    if (recorded === null) {
+      tasks.push(base);
+      continue;
+    }
+    const scope = await taskScope(change.folderPath, task.taskNumber);
+    const current = await computeTaskScopeHash(change.tree.root, scope);
+    tasks.push(current.hash === recorded.scopeHash ? { ...base, scope, recorded } : base);
   }
   return tasks;
 }
@@ -122,6 +154,21 @@ async function readCheck(changeFolderPath: string): Promise<string | null> {
  * the `synced` event. Every failure is a `SyncStop` with reason
  * `sync_verify_red`. With `skipVerify` set no command runs at all.
  */
+/** The kept step-1 tasks, as the recertification's own inputs. */
+function recertifyInputs(tasks: readonly SyncVerifyTask[]): SyncRecertifyTask[] {
+  const inputs: SyncRecertifyTask[] = [];
+  for (const task of tasks) {
+    if (task.scope === undefined || task.recorded === undefined) continue;
+    inputs.push({
+      task: task.task,
+      command: task.verify,
+      scope: task.scope,
+      recorded: task.recorded,
+    });
+  }
+  return inputs;
+}
+
 export async function runSyncVerify(options: SyncVerifyOptions): Promise<void> {
   if (!options.skipVerify) {
     if (options.archived) {
@@ -136,6 +183,13 @@ export async function runSyncVerify(options: SyncVerifyOptions): Promise<void> {
       for (const task of options.tasks) {
         await runOne(options, task.verify, options.change.folderPath, task.task);
       }
+      await recertifySyncTasks(
+        options.worktreeRoot,
+        options.change.folderPath,
+        recertifyInputs(options.tasks),
+        options.vcs,
+        options.recertify,
+      );
     }
   }
   await appendEvent(options.change.folderPath, 'synced', {

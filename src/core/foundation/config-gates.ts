@@ -7,7 +7,9 @@
  * dead task before a human must intervene; zero disables them. The
  * `provider*` keys govern provider outage deaths: how long an open provider
  * retry may last before the agent is stopped, and the wait and budget of the
- * automatic retries that follow.
+ * automatic retries that follow. `commitRetries` bounds the catch-ups the
+ * watcher tries after a `commit_failed` halt before a human must run
+ * `osq retry <id> change`; zero turns the catch-up after a halt off.
  */
 export type PreSpawnVerifyMode = 'warn' | 'fail' | 'off';
 
@@ -15,6 +17,8 @@ export interface GatesConfig {
   readonly changeVerifyAfterTask: boolean;
   readonly preSpawnVerify?: PreSpawnVerifyMode;
   readonly autoRetries?: number;
+  /** Catch-ups after a `commit_failed` halt before a human must retry. */
+  readonly commitRetries?: number;
   /** Seconds an open provider retry may last before the watcher stops the agent; 0 disables. */
   readonly providerStallSeconds?: number;
   /** Automatic retries a provider outage earns before a human must intervene. */
@@ -29,6 +33,7 @@ export const DEFAULT_GATES_CONFIG: GatesConfig = {
   changeVerifyAfterTask: true,
   preSpawnVerify: 'warn',
   autoRetries: 1,
+  commitRetries: 2,
   providerStallSeconds: 300,
   providerRetries: 3,
   providerRetryDelaySeconds: 300,
@@ -75,6 +80,11 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     throw new Error('gates.preSpawnVerify must be one of warn, fail, off');
   }
   const autoRetries = nonNegativeInteger(record, 'autoRetries', DEFAULT_GATES_CONFIG.autoRetries);
+  const commitRetries = nonNegativeInteger(
+    record,
+    'commitRetries',
+    DEFAULT_GATES_CONFIG.commitRetries,
+  );
   const providerStallSeconds = nonNegativeInteger(
     record,
     'providerStallSeconds',
@@ -101,6 +111,7 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     changeVerifyAfterTask: value,
     preSpawnVerify: preSpawnRaw as PreSpawnVerifyMode,
     autoRetries,
+    commitRetries,
     providerStallSeconds,
     providerRetries,
     providerRetryDelaySeconds,

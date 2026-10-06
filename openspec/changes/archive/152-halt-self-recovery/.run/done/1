@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:456a8a2e26c4bc1371b953d27ce08e11aa918c44a617341f45013c574f916702"
+build_stamp: "5711320"
+project_commit: "6f00d47"
+exit_code: 0
+scope_files: {"src/core/foundation/config-gates.ts":"sha256:7ab599ce8145950386ca63d93008b98e64f24b9786ce467183222ccc09da23f0","src/core/run/dead-commit.ts":"sha256:b59ba20b952544aec3236004a94650a39a092e6d6506e011da6729a3d995b36e","src/watcher/commit-catch-up.ts":"sha256:bcc1b92b8bda61e623300256402b034dba25998a1750ab6d7aa5f1bdd19170f4","src/watcher/loop.ts":"sha256:4c5d5ebd7836f7a6ffd86df1676d7bded913c75d72d9ca3744c50574dde0daa6"}
+---
+2026-10-06T08:56:12.823Z

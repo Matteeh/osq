@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import type { OsqConfig } from '../core/foundation/config.js';
+import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
 import { resolveHarnessExecutable } from '../core/foundation/harness-catalog.js';
 import type { PlanningSessionReader } from '../core/report/planning-observed.js';
 import { formatPriceKey } from '../core/report/planning-price-gaps.js';
@@ -12,6 +12,7 @@ import {
 } from '../core/spec/digest.js';
 import { findChange } from '../core/status/change-locations.js';
 import { formatNextStep, readNextStep } from '../core/status/next-step.js';
+import { resolveCheckoutRoot } from '../core/vcs/checkout-root.js';
 import { readClaudePlanningSessions } from '../harness/claude/claude-usage.js';
 import { readCodexPlanningSessions } from '../harness/codex/codex-observe-usage.js';
 import { readOpencodePlanningSessions } from '../harness/opencode/opencode-observe-usage.js';
@@ -99,7 +100,13 @@ export async function approveCommand(
   options: ApproveCommandOptions = {},
 ): Promise<void> {
   const inputs = resolveInputs(options);
-  const config = await inputs.config();
+  const rootConfig = await inputs.config();
+  const checkoutRoot = await resolveCheckoutRoot(inputs.cwd, rootConfig);
+  const config =
+    options.config ?? (checkoutRoot === inputs.cwd ? rootConfig : await loadConfig(checkoutRoot));
+  if (checkoutRoot !== inputs.cwd) {
+    inputs.stderr(`Approving from the checkout ${checkoutRoot}\n`);
+  }
 
   if (!specIds || specIds.length === 0) {
     throw new CommandError('Error: specify at least one spec ID to approve (e.g. osq approve 001)');
@@ -130,7 +137,7 @@ export async function approveCommand(
     };
 
     try {
-      const result = await approveSpec(inputs.cwd, specId, config, {
+      const result = await approveSpec(checkoutRoot, specId, config, {
         planningReaders,
         now: options.now,
         review,
@@ -143,8 +150,8 @@ export async function approveCommand(
       const message = error instanceof Error ? error.message : String(error);
       let next: string | undefined;
       try {
-        const { folderPath } = await findChange(inputs.cwd, config, specId);
-        const nextStep = await readNextStep(inputs.cwd, folderPath, config);
+        const { folderPath } = await findChange(checkoutRoot, config, specId);
+        const nextStep = await readNextStep(checkoutRoot, folderPath, config);
         next = formatNextStep(nextStep);
       } catch {}
       throw new CommandError(`Error approving ${specId}:\n  ${message}`, { next });

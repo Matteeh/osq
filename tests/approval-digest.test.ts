@@ -211,7 +211,7 @@ The system SHALL do a thing.
     assert.equal(shared.label, 'shared files in tasks 1 and 2');
     assert.equal(
       shared.excerpt,
-      'src/missing.ts, src/shared.ts; the watcher will halt for recertification when task 2 changes them',
+      "src/missing.ts, src/shared.ts; when task 2 changes them, the watcher re-runs task 1's verify and halts only if it fails",
     );
     assert.deepEqual(
       digest.flags.map((flag) => flag.id),
@@ -396,7 +396,7 @@ The system SHALL do a thing.
     );
 
     assert.deepEqual(formatApprovalFlags(digest.flags), [
-      'Flag: shared files in tasks 1 and 2 \u2014 src/shared.ts; the watcher will halt for recertification when task 2 changes them',
+      "Flag: shared files in tasks 1 and 2 \u2014 src/shared.ts; when task 2 changes them, the watcher re-runs task 1's verify and halts only if it fails",
       'Flag: package manifest in scope \u2014 package.json in task 1',
       'Flag: verify without a test in task 1 \u2014 npx tsc --noEmit',
       'Flag: removes 1 requirements from spec-lint-and-approve \u2014 Legacy requirement',

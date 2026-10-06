@@ -84,7 +84,7 @@ function sharedFileFlags(tasks: readonly ApprovalFlagTask[]): ApprovalFlag[] {
       flags.push({
         id: 'shared_file',
         label: `shared files in tasks ${first.number} and ${second.number}`,
-        excerpt: `${shared.join(', ')}; the watcher will halt for recertification when task ${second.number} changes them`,
+        excerpt: `${shared.join(', ')}; when task ${second.number} changes them, the watcher re-runs task ${first.number}'s verify and halts only if it fails`,
       });
     }
   }
