@@ -6,8 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { after, describe, it } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { scenario } from '@matteeh/osq/testing';
 import { buildImportGraph, reachImports } from '../src/core/spec/import-graph.js';
-import { scenario } from '../src/testing/index.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TESTING_URL = pathToFileURL(path.join(REPO_ROOT, 'src', 'testing', 'index.ts')).href;
@@ -204,6 +204,42 @@ scenario('pricing', 'changed', { covers: quote }, ({ run, then }) => {
   then('the total is 200', () => assert.equal(result, 200));
 });
 `;
+
+scenario(
+  'traceability',
+  'Property test inside then',
+  { covers: runChild },
+  async ({ run, then }) => {
+    const root = await makeProject({
+      'openspec/specs/pricing/spec.md': PASS_SPEC,
+      'tests/helper-passes.test.ts': PASS_TEST,
+    });
+    const result = run(root, 'tests/helper-passes.test.ts', null);
+    await then('the outcome counts as asserted and the test passes', () => {
+      assert.equal(result.status, 0, result.output);
+    });
+  },
+);
+
+scenario(
+  'traceability',
+  'Check before an async function settles',
+  { covers: runChild },
+  async ({ run, then }) => {
+    const root = await makeProject({
+      'openspec/specs/pricing/spec.md': FAILURE_SPEC,
+      'tests/helper-cases.test.ts': FAILURE_TEST,
+    });
+    const result = run(root, 'tests/helper-cases.test.ts', null);
+    await then('the test fails with `THEN <text>: checked before <fn> settled`', () => {
+      assert.notEqual(result.status, 0, result.output);
+      assert.ok(
+        result.output.includes('THEN the total is 100: checked before slowQuote settled'),
+        result.output,
+      );
+    });
+  },
+);
 
 describe('scenario helper failures', () => {
   it('fails each scenario with its exact message', { timeout: 120_000 }, async () => {

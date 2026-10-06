@@ -1,0 +1,283 @@
+diff --git a/decisions/011-traceability-trial.md b/decisions/011-traceability-trial.md
+new file mode 100644
+index 0000000..0d50765
+--- /dev/null
++++ b/decisions/011-traceability-trial.md
+@@ -0,0 +1,100 @@
++---
++status: accepted
++applies_to: [traceability]
++rule: Traceability warns on osq's own traceability capability until its trial decides to block, widen, or drop it.
++checks: [tests/trace-own-config.test.ts]
++---
++# 011. Traceability trial
++
++Date: 2026-10-06
++
++## Status
++
++Accepted
++
++## Context
++
++ADR 006 decision 4 says a gate either stops the flow or is removed, and a
++warning is allowed only while its signal is being measured. Traceability and
++mutation checks have shipped, but until now no capability has been opted in, so
++neither warning has produced a signal and neither can be judged. Change 154 is
++the first opt-in.
++
++It opts in `traceability` alone, because it is the smallest capability: 36
++untested scenarios and 16 unclaimed functions across 8 files. Version-control,
++where the 149 bug lived, is the next candidate at 98 scenarios and 58 functions
++in 20 files, so it would take several changes before its trial even started.
++Measuring the smallest capability first keeps the window short and the cost
++bounded.
++
++The validator (ADR 010) does not read traceability results. It judges a
++change's code against its delta scenarios, and its findings are a separate
++signal with its own measurement. Nothing here feeds it.
++
++## Decision
++
++osq opts `traceability` in under `warn` mode with focused tests and StrykerJS
++10 mutation checks, run through `tsx` under a 300-second budget per task. All
++three are observe-only: a finding or a mutation result never blocks a change,
++changes a task's done state, or triggers a retry.
++
++A **trial change** is a change whose approval prints a traceability lint
++finding, or whose task streams hold a `focused_ran` or `mutation_ran` event.
++For each trial change osq records four signals:
++
++1. **Link findings.** Every finding of the traceability lint, with each
++   unreadable form counted among them.
++2. **Mutation picks.** Each pick by outcome and, when it was not measured, its
++   reason.
++3. **Survivors.** Each surviving mutant a measured pick reports.
++4. **Time added per task.** The sum of that task's `focused_ran` and
++   `mutation_ran` durations.
++
++## Measurement
++
++The decision is due after 8 trial changes, or on 2026-12-15, whichever comes
++first. In the brief that follows, a human labels each link finding true (a real
++missing or stale link) or false, and each survivor true (a missing assertion)
++or false (noise).
++
++- **Block.** `traceability` moves to `require` mode when at least three
++  quarters of the link findings are true, at least three quarters of the picks
++  are measured, and the median time added per task with a pick is at most
++  120 s.
++- **Widen.** `version-control` is opted in, still in `warn` mode, for one more
++  window of the same size, when the block thresholds hold but the window holds
++  fewer than 10 link findings and picks in all.
++- **Drop.** The opt-in and the mutation command are removed when fewer than
++  half the link findings are true, fewer than half the picks are measured, or
++  the median time added per task is over 300 s.
++- **Anything else.** One more window of the same size, and then traceability
++  must block or go.
++- **Mutation checks** stay only if at least one in four labeled survivors is
++  true. Otherwise the command is dropped, whatever the link decision.
++
++## Consequences
++
++- Most mutation picks cost about 5 s, but a pick of `scenario` costs about
++  171 s. A task that changes the helper and another tagged function can
++  therefore spend more than half the 300-second budget on one pick and record
++  `budget` for a third.
++- Twelve prose mentions of `@scenario` in `src/` are already reported
++  unreadable, so lint warns about them whenever a change scopes one of those
++  files. They are false positives, and this trial counts them as such.
++- `scanSource`'s picks are `range_unknown`, because its helpers hold regular
++  expression literals whose brackets osq's range counter cannot balance. Every
++  pick of it is a not-measured pick until that is fixed.
++- Until the measurement says otherwise, the opt-in, the focused run, and the
++  mutation checks are all advice a human reads, not gates.
++
++## Rejected
++
++- **Opting in every capability at once.** Version-control alone spans 20 files
++  and nearly three times the scenarios, so the window would start late and the
++  cost would hide in the noise.
++- **A homegrown mutator.** The trial measures what osq tells projects to run.
++  StrykerJS is the README's reference setup and a dev dependency, so the
++  runtime dependency rule needs no ADR.
++- **Starting in `require` mode.** Traceability has never run against a real
++  capability. Its false-positive rate is unknown, and ADR 006 decision 4 does
++  not allow a warning to block before its signal has been measured.
+diff --git a/decisions/README.md b/decisions/README.md
+index 419f753..bbe12cb 100644
+--- a/decisions/README.md
++++ b/decisions/README.md
+@@ -45,3 +45,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
+ - [008. SQLite read index](008-sqlite-read-index.md)
+ - [009. Loopback write actions](009-loopback-write-actions.md)
+ - [010. Validator role](010-validator-role.md)
++- [011. Traceability trial](011-traceability-trial.md)
+diff --git a/openspec/changes/154-traceability-trial/.run/dead/2.md b/openspec/changes/154-traceability-trial/.run/dead/2.md
+new file mode 100644
+index 0000000..8dd4629
+--- /dev/null
++++ b/openspec/changes/154-traceability-trial/.run/dead/2.md
+@@ -0,0 +1,30 @@
++---
++reason: change_verify_red
++command: "pnpm verify"
++exit_code: 1
++fingerprint: sha256:d560f8f1bac11720244781903169e635e97391d02c06863d6b73b3062b4e6ff1
++---
++Change-level verification failed after task verification passed.
++✖ failing tests:
++
++test at tests/report-reads-once.test.ts:1:1966
++✖ never reads a jsonl file twice and covers every archived stream once (53.692449ms)
++  Error: ENOENT: no such file or directory, lstat 'fixture/report/.osq/index.sqlite-shm'
++      at async lstat (node:internal/fs/promises:1734:18)
++      at async Promise.all (index 0)
++      at async checkPaths (node:internal/fs/cp/cp:77:39)
++      at async copyDir (node:internal/fs/cp/cp:329:35)
++      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)
++      at async copyDir (node:internal/fs/cp/cp:330:19)
++      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)
++      at async copyFixture (tests/report-reads-once.test.ts:34:3)
++      at async TestContext.<anonymous> (tests/report-reads-once.test.ts:67:28)
++      at async Test.run (node:internal/test_runner/test:1409:7) {
++    errno: -2,
++    code: 'ENOENT',
++    syscall: 'lstat',
++    path: 'fixture/report/.osq/index.sqlite-shm'
++  }
++ ELIFECYCLE  Test failed. See above for more details.
++ ELIFECYCLE  Command failed with exit code 1.
++Full output: .run/logs/change-2.log
+diff --git a/openspec/changes/154-traceability-trial/.run/events/2.jsonl b/openspec/changes/154-traceability-trial/.run/events/2.jsonl
+new file mode 100644
+index 0000000..7aef897
+--- /dev/null
++++ b/openspec/changes/154-traceability-trial/.run/events/2.jsonl
+@@ -0,0 +1,50 @@
++{"type":"verify_ran","timestamp":"2026-10-06T19:42:29.337Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/2-1.log","output":"Could not find 'tests/trace-trial-adr.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/trace-trial-adr.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-06T19:42:30.315Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6}}
++{"type":"instructions_changed","timestamp":"2026-10-06T19:42:30.368Z","data":{"changed":["AGENTS.md"]}}
++{"type":"started","timestamp":"2026-10-06T19:42:30.379Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":1,"projectCommit":"d8d3aef","pid":48639,"timeoutSeconds":1800,"version":"0.2.4","commit":"cf7ea53"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:37.606Z","data":{"tool":"read","summary":"decisions/010-validator-role.md"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:37.609Z","data":{"tool":"read","summary":"decisions/006-deterministic-core.md"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:37.611Z","data":{"tool":"read","summary":"decisions/README.md"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:37.614Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:37.617Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/tasks/2.md"}}
++{"type":"tokens","timestamp":"2026-10-06T19:42:37.661Z","data":{"promptTokens":162442,"candidateTokens":188,"totalTokens":162630,"cachedTokens":0,"reasoningTokens":31,"cost":0.0244977}}
++{"type":"tool","timestamp":"2026-10-06T19:42:40.454Z","data":{"tool":"shell","summary":"{\"command\":\"cat osq.config.ts; echo \\\"---\\\"; ls -la tests/tr"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:40.459Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la openspec/changes/154-traceability-trial/ "}}
++{"type":"tokens","timestamp":"2026-10-06T19:42:40.546Z","data":{"promptTokens":7859,"candidateTokens":145,"totalTokens":8004,"cachedTokens":162560,"reasoningTokens":45,"cost":0.00178053}}
++{"type":"tool","timestamp":"2026-10-06T19:42:43.098Z","data":{"tool":"read","summary":"tests/trace-own-config.test.ts"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:43.101Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-06T19:42:43.144Z","data":{"promptTokens":987,"candidateTokens":88,"totalTokens":1075,"cachedTokens":170496,"reasoningTokens":41,"cost":0.000736938}}
++{"type":"tool","timestamp":"2026-10-06T19:42:47.532Z","data":{"tool":"shell","summary":"{\"command\":\"ls tests/ | grep -i -E 'adr|decision'\"}"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:47.577Z","data":{"tool":"grep","summary":"{\"pattern\":\"readDecisions\",\"include\":\"*.test.ts\",\"path\":\"tes"}}
++{"type":"tokens","timestamp":"2026-10-06T19:42:47.620Z","data":{"promptTokens":1981,"candidateTokens":115,"totalTokens":2096,"cachedTokens":171520,"reasoningTokens":529,"cost":0.00119811}}
++{"type":"tool","timestamp":"2026-10-06T19:42:50.377Z","data":{"tool":"read","summary":"tests/adr-007.test.ts"}}
++{"type":"tool","timestamp":"2026-10-06T19:42:50.381Z","data":{"tool":"read","summary":"tests/decisions-own.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T19:42:50.433Z","data":{"promptTokens":932,"candidateTokens":77,"totalTokens":1009,"cachedTokens":174080,"reasoningTokens":34,"cost":0.00072864}}
++{"type":"tool","timestamp":"2026-10-06T19:43:01.127Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:01.172Z","data":{"promptTokens":1885,"candidateTokens":88,"totalTokens":1973,"cachedTokens":175104,"reasoningTokens":2476,"cost":0.002346462}}
++{"type":"text","timestamp":"2026-10-06T19:43:04.584Z","data":{"text":"Red as expected. Now let me write the test file first."}}
++{"type":"tool","timestamp":"2026-10-06T19:43:04.595Z","data":{"tool":"write","summary":"tests/trace-trial-adr.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:04.636Z","data":{"promptTokens":251,"candidateTokens":509,"totalTokens":760,"cachedTokens":179328,"reasoningTokens":81,"cost":0.000929634}}
++{"type":"text","timestamp":"2026-10-06T19:43:13.670Z","data":{"text":"Now the ADR file."}}
++{"type":"tool","timestamp":"2026-10-06T19:43:13.676Z","data":{"tool":"write","summary":"decisions/011-traceability-trial.md"}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:13.720Z","data":{"promptTokens":226,"candidateTokens":1207,"totalTokens":1433,"cachedTokens":179968,"reasoningTokens":721,"cost":0.001730604}}
++{"type":"tool","timestamp":"2026-10-06T19:43:16.285Z","data":{"tool":"edit","summary":"decisions/README.md"}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:16.323Z","data":{"promptTokens":259,"candidateTokens":117,"totalTokens":376,"cachedTokens":181888,"reasoningTokens":0,"cost":0.0006547139999999999}}
++{"type":"tool","timestamp":"2026-10-06T19:43:19.858Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:19.900Z","data":{"promptTokens":140,"candidateTokens":88,"totalTokens":228,"cachedTokens":182144,"reasoningTokens":19,"cost":0.000631632}}
++{"type":"tool","timestamp":"2026-10-06T19:43:23.022Z","data":{"tool":"shell","summary":"{\"command\":\"cat package.json | sed -n '1,80p'\"}"}}
++{"type":"tokens","timestamp":"2026-10-06T19:43:23.061Z","data":{"promptTokens":253,"candidateTokens":49,"totalTokens":302,"cachedTokens":182272,"reasoningTokens":161,"cost":0.000710766}}
++{"type":"tool","timestamp":"2026-10-06T19:45:06.335Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"timeout\":900000}"}}
++{"type":"tokens","timestamp":"2026-10-06T19:45:06.526Z","data":{"promptTokens":917,"candidateTokens":65,"totalTokens":982,"cachedTokens":182656,"reasoningTokens":36,"cost":0.0007461179999999999}}
++{"type":"tool","timestamp":"2026-10-06T19:45:10.370Z","data":{"tool":"grep","summary":"{\"pattern\":\"decisions/README|index is complete|011-traceabil"}}
++{"type":"tool","timestamp":"2026-10-06T19:45:10.723Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-06T19:45:10.766Z","data":{"promptTokens":988,"candidateTokens":170,"totalTokens":1158,"cachedTokens":183552,"reasoningTokens":329,"cost":0.000998256}}
++{"type":"text","timestamp":"2026-10-06T19:45:17.678Z","data":{"text":"Both verifies pass. Writing the result file."}}
++{"type":"tool","timestamp":"2026-10-06T19:45:17.690Z","data":{"tool":"write","summary":"openspec/changes/154-traceability-trial/.run/results/2.md"}}
++{"type":"tokens","timestamp":"2026-10-06T19:45:17.739Z","data":{"promptTokens":488,"candidateTokens":616,"totalTokens":1104,"cachedTokens":184960,"reasoningTokens":682,"cost":0.0014068800000000001}}
++{"type":"text","timestamp":"2026-10-06T19:45:20.704Z","data":{"text":"Done. Summary:\n\n- Created `decisions/011-traceability-trial.md` (ADR 011) following ADR 010's layout with the required frontmatter (`status: accepted`, `applies_to: [traceability]`, the exact rule, `checks: [tests/trace-own-config.test.ts]`), Context, Decision, Measurement, Consequences, and Rejected content.\n- Added the index line to `decisions/README.md` after ADR 010.\n- Added `tests/trace-trial-adr.test.ts`, which reads osq's own decisions via `readDecisions` + `loadConfig` and checks the ADR's status/scope/rule/check plus the `2026-12-15` deadline and the `Block`/`Widen`/`Drop` outcomes.\n\nTask verify passes (2/2) and the proposal verify (`pnpm verify`) passes. Result written to `openspec/changes/154-traceability-trial/.run/results/2.md`."}}
++{"type":"tokens","timestamp":"2026-10-06T19:45:21.563Z","data":{"promptTokens":159,"candidateTokens":228,"totalTokens":387,"cachedTokens":330998,"reasoningTokens":0,"cost":0.01876592200000001}}
++{"type":"exited","timestamp":"2026-10-06T19:45:21.564Z","data":{"exitCode":0,"pid":48639,"timedOut":false,"elapsedSeconds":170.6}}
++{"type":"verify_ran","timestamp":"2026-10-06T19:45:22.213Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":0,"duration":0.4,"log":".run/logs/2-2.log","output":"▶ ADR 011: traceability trial\n  ✔ is accepted, applies to traceability, and names its check (211.203236ms)\n  ✔ names the deadline and the Block, Widen, and Drop outcomes (0.972443ms)\n✔ ADR 011: traceability trial (213.271596ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 366.200281\n"}}
++{"type":"measures","timestamp":"2026-10-06T19:46:51.036Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6,"changedFiles":2,"changedLines":102,"scopeHashes":{"decisions/011-traceability-trial.md":{"before":null,"after":"sha256:6cce13adc6cab4bf8d000de53c48d1259e9ecf4126a55dccff4595ed4b8b90de"},"decisions/README.md":{"before":"sha256:de1ea95897f4ea0b98794ddb98ca6c349cd65233d43844d8a18d8df6c3dfec2d","after":"sha256:d08e742bea2cd372b0b4a9cdeb8e717ecd4d580c201ad6ae65d3e2a1274118ef"}}}}
++{"type":"dead","timestamp":"2026-10-06T19:46:51.040Z","data":{"task":"2","reason":"change_verify_red"}}
+diff --git a/openspec/changes/154-traceability-trial/.run/events/change.jsonl b/openspec/changes/154-traceability-trial/.run/events/change.jsonl
+new file mode 100644
+index 0000000..a2d091d
+--- /dev/null
++++ b/openspec/changes/154-traceability-trial/.run/events/change.jsonl
+@@ -0,0 +1,3 @@
++{"type":"baseline_ran","timestamp":"2026-10-06T19:33:30.649Z","data":{"outcome":"passed","command":"pnpm verify","commit":"430c23a3fe4c6a5ade908d51f39a6b5dd8c0ad6a","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":157.19}}
++{"type":"verify_ran","timestamp":"2026-10-06T19:42:27.660Z","data":{"command":"pnpm verify","exitCode":0,"duration":104.46,"log":".run/logs/change-1.log","output":"  ✔ never mutates the MetricsReport or WebGraph inputs (68.846644ms)\n✔ scope evidence and empty history (211.328214ms)\n▶ report module line budget\n  ✔ keeps every report source file at or under 250 lines (64.505801ms)\n✔ report module line budget (64.693333ms)\n▶ approve review view\n  ✔ shows the review sections in order, then the tasks and the digest (12.649237ms)\n  ✔ says None for an empty review section (6.367709ms)\n  ✔ lists the digest flags when there is no action client (3.87419ms)\n  ✔ shows New requirement, Removed, and Renamed from wording (2.438378ms)\n  ✔ renders exactly as before when the review is missing or null (2.716412ms)\n  ✔ styles the review text and the delta pair to wrap at phone width (14.006832ms)\n✔ approve review view (45.184304ms)\n▶ approval flags\n  ✔ renders nothing for an empty flag list (0.508656ms)\n  ✔ places each flag and excerpt inside the Approve button item (1.197206ms)\n  ✔ places the flags before the buttons when there is no approve action (0.774036ms)\n✔ approval flags (2.855979ms)\n▶ approve review against a real document\n  ✔ renders the living and proposed text and the removed requirement flag (101.517445ms)\n✔ approve review against a real document (101.811777ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (11.136281ms)\n  ✔ maps every derived task state onto the status vocabulary (1.352339ms)\n  ✔ defines the whole palette for light and dark schemes (7.730812ms)\n  ✔ never centers table cells (1.202883ms)\n✔ status badge (23.000521ms)\nℹ tests 130\nℹ suites 34\nℹ pass 130\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3005.477106\n\n> @matteeh/osq@0.2.4 lint .\n> biome check src tests packages/ui/src\n\nChecked 955 files in 509ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-06T19:46:51.029Z","data":{"command":"pnpm verify","exitCode":1,"duration":88.81,"log":".run/logs/change-2.log","output":"  ✔ retries a scope violation and names the violating file (511.563904ms)\n✔ Automatic retry (511.752394ms)\n▶ Watcher sync\n  ✔ syncs the default branch before the first task (985.159737ms)\n  ✔ does not sync between tasks, only before archive (944.486575ms)\n  ✔ halts with sync_conflict when main changed the same line before archive (406.708703ms)\n  ✔ skips both syncs for a stacked dependent while its dependency waits (975.166581ms)\n  ✔ syncs after the dependency lands during the dependent run (1372.269344ms)\n✔ Watcher sync (4685.76998ms)\nℹ tests 3377\nℹ suites 871\nℹ pass 3376\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 73940.517252\n\n✖ failing tests:\n\ntest at tests/report-reads-once.test.ts:1:1966\n✖ never reads a jsonl file twice and covers every archived stream once (53.692449ms)\n  Error: ENOENT: no such file or directory, lstat 'fixture/report/.osq/index.sqlite-shm'\n      at async lstat (node:internal/fs/promises:1734:18)\n      at async Promise.all (index 0)\n      at async checkPaths (node:internal/fs/cp/cp:77:39)\n      at async copyDir (node:internal/fs/cp/cp:329:35)\n      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)\n      at async copyDir (node:internal/fs/cp/cp:330:19)\n      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)\n      at async copyFixture (tests/report-reads-once.test.ts:34:3)\n      at async TestContext.<anonymous> (tests/report-reads-once.test.ts:67:28)\n      at async Test.run (node:internal/test_runner/test:1409:7) {\n    errno: -2,\n    code: 'ENOENT',\n    syscall: 'lstat',\n    path: 'fixture/report/.osq/index.sqlite-shm'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+diff --git a/openspec/changes/154-traceability-trial/.run/results/2.md b/openspec/changes/154-traceability-trial/.run/results/2.md
+new file mode 100644
+index 0000000..d9af2bd
+--- /dev/null
++++ b/openspec/changes/154-traceability-trial/.run/results/2.md
+@@ -0,0 +1,15 @@
++## Changed
++
++- `decisions/011-traceability-trial.md`: new ADR 011 with ADR 010's layout (`status: accepted`, `applies_to: [traceability]`, the required `rule`, `checks: [tests/trace-own-config.test.ts]`, title `# 011. Traceability trial`, `Date: 2026-10-06`, then Status, Context, Decision, Measurement, Consequences, Rejected). Context names ADR 006 decision 4, the no-opt-in history, why `traceability` alone (36 scenarios, 16 functions, 8 files vs version-control 98/58/20), and that ADR 010's validator does not read traceability results. Decision names the `warn`-mode opt-in, focused tests, the StrykerJS 10 mutation checks through `tsx` with a 300-second hardware budget, the trial-change definition, and the four recorded signals. Measurement names the 8-change / 2026-12-15 deadline, the human true/false labeling, and the Block, Widen, Drop, extra-window, and survivor rules. Consequences name the per-pick costs (5 s, 171 s for `scenario`), the 12 unreadable prose mentions, and `scanSource`'s `range_unknown`; Rejected names opting in every capability, a homegrown mutator, and `require` mode.
++- `decisions/README.md`: added `- [011. Traceability trial](011-traceability-trial.md)` directly after ADR 010's index line.
++- `tests/trace-trial-adr.test.ts`: new test. Reads osq's own decisions with `readDecisions` and `loadConfig` and checks ADR 011 is accepted, applies to `traceability`, carries the required rule, names `tests/trace-own-config.test.ts` as its check, and has the title and date; a second case reads the ADR file and checks it holds `2026-12-15` and `Block`, `Widen`, and `Drop`.
++
++## Deviated
++
++- `tests/trace-trial-adr.test.ts` is outside the two-file `scope`, but the task's acceptance line 6 requires creating it and the executor rules allow new test files, so I added it. Nothing else outside scope changed.
++
++## Missing context
++
++- None.
++
++Touched: decisions/011-traceability-trial.md, decisions/README.md, tests/trace-trial-adr.test.ts
+diff --git a/tests/trace-trial-adr.test.ts b/tests/trace-trial-adr.test.ts
+new file mode 100644
+index 0000000..32f74d1
+--- /dev/null
++++ b/tests/trace-trial-adr.test.ts
+@@ -0,0 +1,40 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { describe, it } from 'node:test';
++import { fileURLToPath } from 'node:url';
++import { loadConfig } from '../src/core/foundation/config.js';
++import { readDecisions } from '../src/core/foundation/decisions.js';
++
++const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
++
++const RULE =
++  "Traceability warns on osq's own traceability capability until its trial decides to block, widen, or drop it.";
++
++describe('ADR 011: traceability trial', () => {
++  it('is accepted, applies to traceability, and names its check', async () => {
++    const config = await loadConfig(REPO_ROOT);
++    const records = await readDecisions(REPO_ROOT, config);
++    const adr = records.adrs.find((entry) => entry.number === '011');
++
++    assert.ok(adr, 'ADR 011 must be read');
++    assert.equal(adr.status, 'accepted');
++    assert.deepEqual(adr.appliesTo, ['traceability']);
++    assert.equal(adr.rule, RULE);
++    assert.deepEqual(adr.checks, ['tests/trace-own-config.test.ts']);
++    assert.equal(adr.title, 'Traceability trial');
++    assert.equal(adr.date, '2026-10-06');
++  });
++
++  it('names the deadline and the Block, Widen, and Drop outcomes', async () => {
++    const file = await fs.readFile(
++      path.join(REPO_ROOT, 'decisions/011-traceability-trial.md'),
++      'utf8',
++    );
++
++    assert.equal(file.includes('2026-12-15'), true);
++    for (const word of ['Block', 'Widen', 'Drop']) {
++      assert.equal(file.includes(word), true, `the ADR must name ${word}`);
++    }
++  });
++});

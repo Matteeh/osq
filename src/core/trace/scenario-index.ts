@@ -92,7 +92,10 @@ function readSource(projectRoot: string, file: string): string {
   }
 }
 
-/** Read each of `graph.files` once and index its tags, scenario calls, and unreadable forms. */
+/** Read each of `graph.files` once and index its tags, scenario calls, and unreadable forms.
+ *
+ * @scenario traceability: Test covers the tagged function
+ */
 export function buildScenarioIndex(projectRoot: string, graph: ImportGraph): ScenarioIndex {
   const files = [...graph.files];
   const functions: ScannedFunction[] = [];

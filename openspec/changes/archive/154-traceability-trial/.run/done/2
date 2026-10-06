@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:63194a9545e78db50f68eac191e73bdfbba1daf9003f1238d71833e7042d3217"
+build_stamp: "cf7ea53"
+project_commit: "d9ca925"
+exit_code: 0
+scope_files: {"decisions/011-traceability-trial.md":"sha256:7b7d08d211eef9b47c74a528e06aaa2a4b9f6431ed69d435a047082e8649d095","decisions/README.md":"sha256:d08e742bea2cd372b0b4a9cdeb8e717ecd4d580c201ad6ae65d3e2a1274118ef"}
+---
+2026-10-06T19:54:12.368Z

@@ -90,7 +90,14 @@ function readWorktreeChangeFolder(openspecRoot: string): string | null {
   return path.join(openspecRoot, 'changes', folder);
 }
 
-/** The worktree's change folder, read at most once per process for `openspecRoot`. */
+/**
+ * The worktree's change folder, read at most once per process for `openspecRoot`.
+ *
+ * @scenario traceability: Change from the worktree branch
+ * @scenario traceability: Worktree change already archived
+ * @scenario traceability: Checkout or other branch
+ * @scenario traceability: Branch read once
+ */
 export function worktreeChangeFolder(openspecRoot: string): string | null {
   const cached = worktreeFolders.get(openspecRoot);
   if (cached !== undefined) return cached;

@@ -161,6 +161,17 @@ function finish(state: ScenarioState, fn: string, outcomes: readonly ScenarioOut
  * Register one `node:test` test titled `Scenario: <name>` that looks the
  * scenario up with `process.cwd()` and `process.env`, then calls `body` with
  * `run`, `then`, and `each` and awaits what it returns.
+ *
+ * @scenario traceability: Every outcome asserted
+ * @scenario traceability: Every row checked
+ * @scenario traceability: Deleted then
+ * @scenario traceability: Number changed in the spec
+ * @scenario traceability: Function called directly
+ * @scenario traceability: Boundary moved in the code
+ * @scenario traceability: Table checked with then
+ * @scenario traceability: AND line added
+ * @scenario traceability: Property test inside then
+ * @scenario traceability: Check before an async function settles
  */
 export function scenario<Args extends unknown[], Result>(
   capability: string,

@@ -20,6 +20,13 @@ export default defineConfig({
     variant: "thinking",
   },
   validator: { harness: "claude", model: "claude-opus-5-5" },
+  traceability: {
+    capabilities: ["traceability"],
+    mode: "warn",
+    focusedTests:
+      "node --import tsx --import ./tests/git-test-env.ts --test --test-reporter=tap {files}",
+    mutation: { command: "npx stryker run", budgetSeconds: 300 },
+  },
   queue: {
     maxPlanningSessions: 100,
     maxPlanningCost: 20,

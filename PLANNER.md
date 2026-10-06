@@ -114,3 +114,13 @@ your complete prompt; read it and follow it exactly.
   A MODIFIED requirement must keep every scenario it already has; `osq lint` and
   archive refuse one that drops any.
 <!-- OSQ:END -->
+<!-- OSQ:TRACEABILITY:START -->
+## Traceability
+
+Traceability covers traceability.
+
+- Under `## Scenarios` in each task, list the scenarios its tests prove as `- <capability>: <scenario name>`, and scope their test files.
+- Give a scenario with more than one case a table of exact inputs and outputs directly under its THEN.
+- Put every test that names a modified scenario in its task's scope with `tests.modify: true`; `osq lint` lists them.
+- Have exported functions tagged with `@scenario` and `@adr`.
+<!-- OSQ:TRACEABILITY:END -->

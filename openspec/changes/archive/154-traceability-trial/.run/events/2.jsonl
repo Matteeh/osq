@@ -1,0 +1,110 @@
+{"type":"verify_ran","timestamp":"2026-10-06T19:42:29.337Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/2-1.log","output":"Could not find 'tests/trace-trial-adr.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/trace-trial-adr.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-06T19:42:30.315Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6}}
+{"type":"instructions_changed","timestamp":"2026-10-06T19:42:30.368Z","data":{"changed":["AGENTS.md"]}}
+{"type":"started","timestamp":"2026-10-06T19:42:30.379Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":1,"projectCommit":"d8d3aef","pid":48639,"timeoutSeconds":1800,"version":"0.2.4","commit":"cf7ea53"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:37.606Z","data":{"tool":"read","summary":"decisions/010-validator-role.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:37.609Z","data":{"tool":"read","summary":"decisions/006-deterministic-core.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:37.611Z","data":{"tool":"read","summary":"decisions/README.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:37.614Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:37.617Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/tasks/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:42:37.661Z","data":{"promptTokens":162442,"candidateTokens":188,"totalTokens":162630,"cachedTokens":0,"reasoningTokens":31,"cost":0.0244977}}
+{"type":"tool","timestamp":"2026-10-06T19:42:40.454Z","data":{"tool":"shell","summary":"{\"command\":\"cat osq.config.ts; echo \\\"---\\\"; ls -la tests/tr"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:40.459Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la openspec/changes/154-traceability-trial/ "}}
+{"type":"tokens","timestamp":"2026-10-06T19:42:40.546Z","data":{"promptTokens":7859,"candidateTokens":145,"totalTokens":8004,"cachedTokens":162560,"reasoningTokens":45,"cost":0.00178053}}
+{"type":"tool","timestamp":"2026-10-06T19:42:43.098Z","data":{"tool":"read","summary":"tests/trace-own-config.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:43.101Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:42:43.144Z","data":{"promptTokens":987,"candidateTokens":88,"totalTokens":1075,"cachedTokens":170496,"reasoningTokens":41,"cost":0.000736938}}
+{"type":"tool","timestamp":"2026-10-06T19:42:47.532Z","data":{"tool":"shell","summary":"{\"command\":\"ls tests/ | grep -i -E 'adr|decision'\"}"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:47.577Z","data":{"tool":"grep","summary":"{\"pattern\":\"readDecisions\",\"include\":\"*.test.ts\",\"path\":\"tes"}}
+{"type":"tokens","timestamp":"2026-10-06T19:42:47.620Z","data":{"promptTokens":1981,"candidateTokens":115,"totalTokens":2096,"cachedTokens":171520,"reasoningTokens":529,"cost":0.00119811}}
+{"type":"tool","timestamp":"2026-10-06T19:42:50.377Z","data":{"tool":"read","summary":"tests/adr-007.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:42:50.381Z","data":{"tool":"read","summary":"tests/decisions-own.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T19:42:50.433Z","data":{"promptTokens":932,"candidateTokens":77,"totalTokens":1009,"cachedTokens":174080,"reasoningTokens":34,"cost":0.00072864}}
+{"type":"tool","timestamp":"2026-10-06T19:43:01.127Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:01.172Z","data":{"promptTokens":1885,"candidateTokens":88,"totalTokens":1973,"cachedTokens":175104,"reasoningTokens":2476,"cost":0.002346462}}
+{"type":"text","timestamp":"2026-10-06T19:43:04.584Z","data":{"text":"Red as expected. Now let me write the test file first."}}
+{"type":"tool","timestamp":"2026-10-06T19:43:04.595Z","data":{"tool":"write","summary":"tests/trace-trial-adr.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:04.636Z","data":{"promptTokens":251,"candidateTokens":509,"totalTokens":760,"cachedTokens":179328,"reasoningTokens":81,"cost":0.000929634}}
+{"type":"text","timestamp":"2026-10-06T19:43:13.670Z","data":{"text":"Now the ADR file."}}
+{"type":"tool","timestamp":"2026-10-06T19:43:13.676Z","data":{"tool":"write","summary":"decisions/011-traceability-trial.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:13.720Z","data":{"promptTokens":226,"candidateTokens":1207,"totalTokens":1433,"cachedTokens":179968,"reasoningTokens":721,"cost":0.001730604}}
+{"type":"tool","timestamp":"2026-10-06T19:43:16.285Z","data":{"tool":"edit","summary":"decisions/README.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:16.323Z","data":{"promptTokens":259,"candidateTokens":117,"totalTokens":376,"cachedTokens":181888,"reasoningTokens":0,"cost":0.0006547139999999999}}
+{"type":"tool","timestamp":"2026-10-06T19:43:19.858Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:19.900Z","data":{"promptTokens":140,"candidateTokens":88,"totalTokens":228,"cachedTokens":182144,"reasoningTokens":19,"cost":0.000631632}}
+{"type":"tool","timestamp":"2026-10-06T19:43:23.022Z","data":{"tool":"shell","summary":"{\"command\":\"cat package.json | sed -n '1,80p'\"}"}}
+{"type":"tokens","timestamp":"2026-10-06T19:43:23.061Z","data":{"promptTokens":253,"candidateTokens":49,"totalTokens":302,"cachedTokens":182272,"reasoningTokens":161,"cost":0.000710766}}
+{"type":"tool","timestamp":"2026-10-06T19:45:06.335Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"timeout\":900000}"}}
+{"type":"tokens","timestamp":"2026-10-06T19:45:06.526Z","data":{"promptTokens":917,"candidateTokens":65,"totalTokens":982,"cachedTokens":182656,"reasoningTokens":36,"cost":0.0007461179999999999}}
+{"type":"tool","timestamp":"2026-10-06T19:45:10.370Z","data":{"tool":"grep","summary":"{\"pattern\":\"decisions/README|index is complete|011-traceabil"}}
+{"type":"tool","timestamp":"2026-10-06T19:45:10.723Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T19:45:10.766Z","data":{"promptTokens":988,"candidateTokens":170,"totalTokens":1158,"cachedTokens":183552,"reasoningTokens":329,"cost":0.000998256}}
+{"type":"text","timestamp":"2026-10-06T19:45:17.678Z","data":{"text":"Both verifies pass. Writing the result file."}}
+{"type":"tool","timestamp":"2026-10-06T19:45:17.690Z","data":{"tool":"write","summary":"openspec/changes/154-traceability-trial/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:45:17.739Z","data":{"promptTokens":488,"candidateTokens":616,"totalTokens":1104,"cachedTokens":184960,"reasoningTokens":682,"cost":0.0014068800000000001}}
+{"type":"text","timestamp":"2026-10-06T19:45:20.704Z","data":{"text":"Done. Summary:\n\n- Created `decisions/011-traceability-trial.md` (ADR 011) following ADR 010's layout with the required frontmatter (`status: accepted`, `applies_to: [traceability]`, the exact rule, `checks: [tests/trace-own-config.test.ts]`), Context, Decision, Measurement, Consequences, and Rejected content.\n- Added the index line to `decisions/README.md` after ADR 010.\n- Added `tests/trace-trial-adr.test.ts`, which reads osq's own decisions via `readDecisions` + `loadConfig` and checks the ADR's status/scope/rule/check plus the `2026-12-15` deadline and the `Block`/`Widen`/`Drop` outcomes.\n\nTask verify passes (2/2) and the proposal verify (`pnpm verify`) passes. Result written to `openspec/changes/154-traceability-trial/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-10-06T19:45:21.563Z","data":{"promptTokens":159,"candidateTokens":228,"totalTokens":387,"cachedTokens":330998,"reasoningTokens":0,"cost":0.01876592200000001}}
+{"type":"exited","timestamp":"2026-10-06T19:45:21.564Z","data":{"exitCode":0,"pid":48639,"timedOut":false,"elapsedSeconds":170.6}}
+{"type":"verify_ran","timestamp":"2026-10-06T19:45:22.213Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":0,"duration":0.4,"log":".run/logs/2-2.log","output":"▶ ADR 011: traceability trial\n  ✔ is accepted, applies to traceability, and names its check (211.203236ms)\n  ✔ names the deadline and the Block, Widen, and Drop outcomes (0.972443ms)\n✔ ADR 011: traceability trial (213.271596ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 366.200281\n"}}
+{"type":"measures","timestamp":"2026-10-06T19:46:51.036Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6,"changedFiles":2,"changedLines":102,"scopeHashes":{"decisions/011-traceability-trial.md":{"before":null,"after":"sha256:6cce13adc6cab4bf8d000de53c48d1259e9ecf4126a55dccff4595ed4b8b90de"},"decisions/README.md":{"before":"sha256:de1ea95897f4ea0b98794ddb98ca6c349cd65233d43844d8a18d8df6c3dfec2d","after":"sha256:d08e742bea2cd372b0b4a9cdeb8e717ecd4d580c201ad6ae65d3e2a1274118ef"}}}}
+{"type":"dead","timestamp":"2026-10-06T19:46:51.040Z","data":{"task":"2","reason":"change_verify_red"}}
+{"type":"retry","data":{"target":"2","reason":"change_verify_red","attempt":2,"automatic":true},"timestamp":"2026-10-06T19:46:52.229Z"}
+{"type":"measures","timestamp":"2026-10-06T19:46:53.498Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6}}
+{"type":"started","timestamp":"2026-10-06T19:46:53.537Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":2,"projectCommit":"d9ca925","pid":81173,"timeoutSeconds":1800,"version":"0.2.4","commit":"cf7ea53"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:01.001Z","data":{"tool":"read","summary":"decisions/010-validator-role.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:01.005Z","data":{"tool":"read","summary":"decisions/README.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:01.009Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/tasks/2.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:01.012Z","data":{"tool":"read","summary":"openspec/changes/154-traceability-trial/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:01.056Z","data":{"promptTokens":162864,"candidateTokens":246,"totalTokens":163110,"cachedTokens":0,"reasoningTokens":69,"cost":0.024618599999999997}}
+{"type":"tool","timestamp":"2026-10-06T19:47:04.049Z","data":{"tool":"read","summary":"src/core/foundation/decisions.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:04.106Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la decisions/ tests/trace-trial-adr.test.ts "}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:04.148Z","data":{"promptTokens":4008,"candidateTokens":162,"totalTokens":4170,"cachedTokens":163072,"reasoningTokens":42,"cost":0.0012128159999999998}}
+{"type":"tool","timestamp":"2026-10-06T19:47:10.373Z","data":{"tool":"read","summary":"tests/report-reads-once.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:10.378Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la fixture/report/.osq/ 2>&1; echo \\\"---\\\"; "}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:10.417Z","data":{"promptTokens":3210,"candidateTokens":201,"totalTokens":3411,"cachedTokens":167168,"reasoningTokens":915,"cost":0.0016526039999999998}}
+{"type":"tool","timestamp":"2026-10-06T19:47:17.574Z","data":{"tool":"read","summary":"decisions/006-deterministic-core.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:17.577Z","data":{"tool":"shell","summary":"{\"command\":\"cat fixture/report/.osq/.gitignore; echo \\\"===\\\""}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:17.617Z","data":{"promptTokens":1993,"candidateTokens":158,"totalTokens":2151,"cachedTokens":171392,"reasoningTokens":1005,"cost":0.001510926}}
+{"type":"tool","timestamp":"2026-10-06T19:47:20.668Z","data":{"tool":"shell","summary":"{\"command\":\"ls tests/ | grep -i -E 'decision|adr|trace' ; ec"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:20.704Z","data":{"tool":"grep","summary":"{\"pattern\":\"readDecisions\\\\(\",\"path\":\"/home/mathias/.osq/wor"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:20.745Z","data":{"promptTokens":2427,"candidateTokens":187,"totalTokens":2614,"cachedTokens":174464,"reasoningTokens":117,"cost":0.001069842}}
+{"type":"tool","timestamp":"2026-10-06T19:47:23.789Z","data":{"tool":"read","summary":"tests/adr-006.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:23.791Z","data":{"tool":"read","summary":"tests/trace-own-config.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:23.830Z","data":{"promptTokens":1404,"candidateTokens":119,"totalTokens":1523,"cachedTokens":177152,"reasoningTokens":63,"cost":0.0008512560000000001}}
+{"type":"tool","timestamp":"2026-10-06T19:47:37.960Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"index.sqlite\\\\|openIndex\\\\|sqlite\\\" t"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:38.305Z","data":{"tool":"grep","summary":"{\"pattern\":\"fixture['\\\"/, ]+report\",\"path\":\"/home/mathias/.o"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:38.356Z","data":{"promptTokens":2006,"candidateTokens":189,"totalTokens":2195,"cachedTokens":178688,"reasoningTokens":3232,"cost":0.002889564}}
+{"type":"tool","timestamp":"2026-10-06T19:47:40.654Z","data":{"tool":"read","summary":"tests/report-index.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:40.701Z","data":{"promptTokens":917,"candidateTokens":63,"totalTokens":980,"cachedTokens":184064,"reasoningTokens":49,"cost":0.000756942}}
+{"type":"tool","timestamp":"2026-10-06T19:47:44.820Z","data":{"tool":"read","summary":"tests/report-coverage.test.ts"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:44.821Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"FIXTURE_REPORT\\\\|fixture.*report\\\\|re"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:44.860Z","data":{"promptTokens":2122,"candidateTokens":198,"totalTokens":2320,"cachedTokens":185088,"reasoningTokens":338,"cost":0.001195164}}
+{"type":"tool","timestamp":"2026-10-06T19:47:51.954Z","data":{"tool":"grep","summary":"{\"pattern\":\"index\",\"path\":\"/home/mathias/.osq/worktrees/osq/"}}
+{"type":"tool","timestamp":"2026-10-06T19:47:51.984Z","data":{"tool":"grep","summary":"{\"pattern\":\"index: true|\\\\.osq|index\\\\.sqlite|openIndex|ensu"}}
+{"type":"tokens","timestamp":"2026-10-06T19:47:52.020Z","data":{"promptTokens":2215,"candidateTokens":197,"totalTokens":2412,"cachedTokens":187648,"reasoningTokens":988,"cost":0.001606194}}
+{"type":"text","timestamp":"2026-10-06T19:48:01.401Z","data":{"text":"Now let me create the ADR, update the README index, and write the test."}}
+{"type":"tool","timestamp":"2026-10-06T19:48:01.410Z","data":{"tool":"write","summary":"decisions/011-traceability-trial.md"}}
+{"type":"tool","timestamp":"2026-10-06T19:48:01.411Z","data":{"tool":"edit","summary":"decisions/README.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:48:01.453Z","data":{"promptTokens":1187,"candidateTokens":1312,"totalTokens":2499,"cachedTokens":190976,"reasoningTokens":591,"cost":0.0018927779999999997}}
+{"type":"tool","timestamp":"2026-10-06T19:48:05.810Z","data":{"tool":"write","summary":"tests/trace-trial-adr.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-06T19:48:05.851Z","data":{"promptTokens":187,"candidateTokens":519,"totalTokens":706,"cachedTokens":193920,"reasoningTokens":242,"cost":0.0010664099999999998}}
+{"type":"tool","timestamp":"2026-10-06T19:48:09.705Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+{"type":"tokens","timestamp":"2026-10-06T19:48:09.751Z","data":{"promptTokens":205,"candidateTokens":124,"totalTokens":329,"cachedTokens":194688,"reasoningTokens":6,"cost":0.0006928139999999999}}
+{"type":"tool","timestamp":"2026-10-06T19:49:51.963Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"timeout\":0,\"workdi"}}
+{"type":"tokens","timestamp":"2026-10-06T19:49:52.060Z","data":{"promptTokens":213,"candidateTokens":100,"totalTokens":313,"cachedTokens":194944,"reasoningTokens":120,"cost":0.0007487819999999999}}
+{"type":"tool","timestamp":"2026-10-06T19:49:55.210Z","data":{"tool":"shell","summary":"{\"command\":\"node -e \\\"const p=require('./package.json'); con"}}
+{"type":"tokens","timestamp":"2026-10-06T19:49:55.250Z","data":{"promptTokens":915,"candidateTokens":97,"totalTokens":1012,"cachedTokens":195328,"reasoningTokens":243,"cost":0.0009272340000000001}}
+{"type":"tool","timestamp":"2026-10-06T19:51:46.165Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify > /tmp/osq-verify.log 2>&1; echo \\\"E"}}
+{"type":"tokens","timestamp":"2026-10-06T19:51:46.332Z","data":{"promptTokens":421,"candidateTokens":187,"totalTokens":608,"cachedTokens":196480,"reasoningTokens":101,"cost":0.0008253900000000001}}
+{"type":"text","timestamp":"2026-10-06T19:51:55.315Z","data":{"text":"`pnpm verify` exits 0 with all 3377 + 130 tests passing and lint clean. Now the result file."}}
+{"type":"tool","timestamp":"2026-10-06T19:51:55.333Z","data":{"tool":"write","summary":"openspec/changes/154-traceability-trial/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:51:55.387Z","data":{"promptTokens":976,"candidateTokens":821,"totalTokens":1797,"cachedTokens":197120,"reasoningTokens":803,"cost":0.00171216}}
+{"type":"tool","timestamp":"2026-10-06T19:51:57.947Z","data":{"tool":"edit","summary":"openspec/changes/154-traceability-trial/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-06T19:51:57.991Z","data":{"promptTokens":203,"candidateTokens":127,"totalTokens":330,"cachedTokens":199552,"reasoningTokens":28,"cost":0.0007221060000000001}}
+{"type":"text","timestamp":"2026-10-06T19:52:01.321Z","data":{"text":"Both verifies pass:\n- Task verify: `tests/trace-trial-adr.test.ts` — 2/2 pass.\n- Proposal verify: `pnpm verify` — exit 0, 3377 + 130 tests pass, lint clean.\n\nResult written to `openspec/changes/154-traceability-trial/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-10-06T19:52:02.695Z","data":{"promptTokens":139,"candidateTokens":90,"totalTokens":229,"cachedTokens":344577,"reasoningTokens":111,"cost":0.018835549000000007}}
+{"type":"exited","timestamp":"2026-10-06T19:52:02.697Z","data":{"exitCode":0,"pid":81173,"timedOut":false,"elapsedSeconds":308.2}}
+{"type":"verify_ran","timestamp":"2026-10-06T19:52:03.597Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":0,"duration":0.49,"log":".run/logs/2-3.log","output":"▶ ADR 011: traceability trial\n  ✔ is accepted, applies to traceability, and names its check (267.272563ms)\n  ✔ holds the deadline and the Block, Widen, and Drop decisions (1.292655ms)\n✔ ADR 011: traceability trial (269.941084ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 454.52522\n"}}
+{"type":"measures","timestamp":"2026-10-06T19:54:12.337Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":48,"repoFiles":2466,"repoLines":282812,"importFanIn":0,"proposalWords":1925,"taskWords":605,"deltaRequirements":3,"deltaScenarios":6,"changedFiles":2,"changedLines":98,"scopeHashes":{"decisions/011-traceability-trial.md":{"before":null,"after":"sha256:7b7d08d211eef9b47c74a528e06aaa2a4b9f6431ed69d435a047082e8649d095"},"decisions/README.md":{"before":"sha256:de1ea95897f4ea0b98794ddb98ca6c349cd65233d43844d8a18d8df6c3dfec2d","after":"sha256:d08e742bea2cd372b0b4a9cdeb8e717ecd4d580c201ad6ae65d3e2a1274118ef"}}}}
+{"type":"done","timestamp":"2026-10-06T19:54:12.373Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-10-06T20:31:27.422Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/trace-trial-adr.test.ts","exitCode":0,"duration":0.37,"log":".run/logs/2-4.log","output":"▶ ADR 011: traceability trial\n  ✔ is accepted, applies to traceability, and names its check (196.538315ms)\n  ✔ holds the deadline and the Block, Widen, and Drop decisions (1.287426ms)\n✔ ADR 011: traceability trial (198.602583ms)\nℹ tests 2\nℹ suites 1\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 345.415892\n"}}

@@ -121,6 +121,9 @@ async function sourceText(
  * `functionHashes` entry, a missing entry counting as different, or when a
  * scenario test file the end event shows with a different before and after hash
  * covers it. Picks order by file, then start line.
+ * @scenario traceability: Two scenarios, one run
+ * @scenario traceability: New test for an unchanged function
+ * @scenario traceability: Unchanged and untested
  */
 export async function pickMutations(options: MutationPickOptions): Promise<MutationPick[]> {
   const scoped = new Set(

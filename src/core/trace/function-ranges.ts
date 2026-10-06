@@ -32,28 +32,24 @@ function declaration(line: string): { name: string; exported: boolean } | null {
   const match = FUNCTION_DECL.exec(line) ?? CONST_DECL.exec(line);
   return match === null ? null : { name: match[2] ?? '', exported: match[1] !== undefined };
 }
-
 function isRangeBoundary(line: string): boolean {
   if (line === '') return false;
   const first = line[0] ?? '';
   if (first === ' ' || first === '\t' || first === '\r') return false;
   return first !== '}' && first !== ')' && first !== ']' && first !== ';';
 }
-
 function lastNonBlank(lines: readonly string[], start: number, end: number): number {
   for (let index = end; index >= start; index -= 1) {
     if ((lines[index] ?? '').trim() !== '') return index;
   }
   return start;
 }
-
 function endLineFor(lines: readonly string[], start: number): number {
   for (let index = start + 1; index < lines.length; index += 1) {
     if (isRangeBoundary(lines[index] ?? '')) return lastNonBlank(lines, start, index - 1) + 1;
   }
   return lastNonBlank(lines, start, lines.length - 1) + 1;
 }
-
 function skipLine(text: string, at: number): number {
   const end = text.indexOf('\n', at);
   return end === -1 ? text.length : end;
@@ -103,7 +99,6 @@ function skipInterpolation(text: string, at: number): number {
 }
 
 const isIdent = (char: string | undefined): boolean => char !== undefined && /[\w$]/.test(char);
-
 /** Balance delimiters and collect `name(` calls in one pass, skipping literals and comments. */
 function scanCode(
   text: string,
@@ -156,7 +151,10 @@ function scanCode(
   return { balanced: paren === 0 && bracket === 0 && brace === 0, called };
 }
 
-/** Every top-level function in `text`, in declaration order. */
+/**
+ * Every top-level function in `text`, in declaration order.
+ * @scenario traceability: Braces inside strings
+ */
 export function findTopLevelFunctions(file: string, text: string): TopLevelFunction[] {
   const lines = text.split('\n');
   const functions: TopLevelFunction[] = [];
@@ -190,6 +188,7 @@ function hashText(text: string): string {
  * non-exported top-level function in the same file it reaches through such
  * functions. Sorted by start line and written `<file>:<start>-<end>`. Unknown
  * when the function or any range is not known.
+ * @scenario traceability: Private helper included
  */
 export function mutationRanges(file: string, text: string, name: string): string[] | null {
   const functions = findTopLevelFunctions(file, text);
@@ -223,6 +222,7 @@ export function hashFunctionRange(file: string, text: string, name: string): str
  * The `functionHashes` baseline: for each exported function with a `@scenario`
  * tag in a scoped JavaScript or TypeScript file, `<file>#<name>` to the hash of
  * its own range, or null when that range is unknown.
+ * @scenario traceability: Untagged scope
  */
 export async function readScopedFunctionHashes(
   projectRoot: string,

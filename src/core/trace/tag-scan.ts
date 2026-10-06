@@ -9,7 +9,6 @@ export interface TaggedScenario {
   readonly capability: string;
   readonly name: string;
 }
-
 /** One exported function the scanner reads, with its tags. */
 export interface ScannedFunction {
   readonly file: string;
@@ -18,7 +17,6 @@ export interface ScannedFunction {
   readonly scenarios: readonly TaggedScenario[];
   readonly adrs: readonly string[];
 }
-
 /** One readable `scenario(...)` call in a scenario test file. */
 export interface ScenarioCall {
   readonly file: string;
@@ -27,7 +25,6 @@ export interface ScenarioCall {
   readonly name: string;
   readonly covers: string;
 }
-
 /** A tag or scenario call the scanner cannot read, with its 1-based line. */
 export interface UnreadableForm {
   readonly file: string;
@@ -36,7 +33,6 @@ export interface UnreadableForm {
   /** The call's literal capability, present only when that much was readable. */
   readonly capability?: string;
 }
-
 /** Everything one source file yields. */
 export interface TagScan {
   readonly scenarioTestFile: boolean;
@@ -44,7 +40,6 @@ export interface TagScan {
   readonly calls: readonly ScenarioCall[];
   readonly unreadable: readonly UnreadableForm[];
 }
-
 const UNATTACHED = 'tag is not attached to an exported function';
 const BAD_TAG = 'tag is not a valid @scenario or @adr';
 const BAD_SCENARIO = '@scenario is not "<capability>: <name>"';
@@ -237,7 +232,12 @@ function scanTestingImport(file: string, text: string, unreadable: UnreadableFor
   return true;
 }
 
-/** Scan one file's text for exported functions with tags, scenario calls, and unreadable forms. */
+/** Scan one file's text for exported functions with tags, scenario calls, and unreadable forms.
+ *
+ * @scenario traceability: Tagged arrow const
+ * @scenario traceability: Tag above an unread form
+ * @scenario traceability: Non-literal name
+ */
 export function scanSource(file: string, text: string): TagScan {
   const calls: ScenarioCall[] = [];
   const unreadable: UnreadableForm[] = [];

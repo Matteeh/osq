@@ -39,6 +39,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@fission-ai/openspec": "1.13.1",
+    "@stryker-mutator/core": "10.0.0",
     "@types/node": "^24.13.6",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"

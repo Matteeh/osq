@@ -214,6 +214,13 @@ function resolveLocation(cwd: string, env: Record<string, string | undefined>): 
  * The outcomes of one scenario, looked up by capability and exact name. Throws
  * with the exact message when the scenario is missing, duplicated, defined in
  * disagreeing places, or its delta cannot be merged.
+ *
+ * @scenario traceability: Scenario only in the change
+ * @scenario traceability: Modified scenario uses the delta
+ * @scenario traceability: Removed scenario
+ * @scenario traceability: Places disagree
+ * @scenario traceability: Active change adds a scenario
+ * @scenario traceability: Duplicate scenario names
  */
 export function lookupScenario(
   capability: string,

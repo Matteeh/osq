@@ -117,3 +117,13 @@ Planners follow `PLANNER.md`. When `osq plan` started you, `plan-prompt.md` in t
 - Run `osq lint <slug>` and fix every finding before you finish.
 - Never run `osq approve`; approval belongs to a human.
 <!-- OSQ:END -->
+<!-- OSQ:TRACEABILITY:START -->
+## Traceability
+
+For traceability:
+
+- Prove each scenario with `import { scenario } from '@matteeh/osq/testing'` and `scenario('<capability>', '<scenario name>', { covers: fn }, ({ run, then, each }) => ...)`, with literal names. Call `fn` only through `run`.
+- Take expected values from the scenario's THEN lines and tables, never from running the code.
+- Check a table with `each`. Check a rule that holds for every input with a property test inside `then`.
+- Tag each exported function you add or change in a doc comment directly above `export function` or `export const <name> = (...) =>`: one `@scenario <capability>: <scenario name>` line per scenario it serves and one `@adr <number>` line per decision it follows.
+<!-- OSQ:TRACEABILITY:END -->

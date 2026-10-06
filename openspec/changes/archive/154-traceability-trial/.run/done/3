@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:28e8917e5b95b86f6afcc034c464117c24bd7559b1236f7826680ffc53d7ed08"
+build_stamp: "cf7ea53"
+project_commit: "8ebd57e"
+exit_code: 0
+scope_files: {"src/core/trace/lookup-root.ts":"sha256:5e8b57a34a3f7b3702a0be9f12809b33cefbdac818ed4bafd4efeef7426e00ba","src/core/trace/scenario-lookup.ts":"sha256:90bcaca1fec64c027a03058a8e7142acd2ed4e1f2f93473616eeca7084f39e9f"}
+---
+2026-10-06T20:00:37.578Z
