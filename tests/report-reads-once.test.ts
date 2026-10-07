@@ -31,7 +31,12 @@ async function copyFixture(): Promise<{ root: string; home: string }> {
   tmpDirs.push(dir);
   const root = path.join(dir, 'report');
   const home = path.join(dir, 'home');
-  await fs.cp(FIXTURE_REPORT_ROOT, root, { recursive: true });
+  // Other report tests build the read index inside fixture/report/.osq, whose -shm and -wal files come and go while this copy runs.
+  const fixtureIndex = path.join(FIXTURE_REPORT_ROOT, '.osq');
+  await fs.cp(FIXTURE_REPORT_ROOT, root, {
+    recursive: true,
+    filter: (source) => source !== fixtureIndex,
+  });
   await fs.mkdir(home, { recursive: true });
   return { root, home };
 }

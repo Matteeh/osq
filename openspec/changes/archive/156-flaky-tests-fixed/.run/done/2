@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:666d3deb88cf3a8c5bb4a2e2d1ce1c517057b15b61652b2f0056edc55590fd18"
+build_stamp: "c730dd1"
+project_commit: "2e0865c"
+exit_code: 0
+scope_files: {"tests/inbox.test.ts":"sha256:2690b16617ddab4c3c7d95924b035d28a3014c77ca15de8dbe72a9f697709d66"}
+---
+2026-10-07T15:41:20.211Z

@@ -560,21 +560,25 @@ describe('bare osq CLI inbox integration', () => {
     const cursorPath = await resolveLastLookPath(project, home);
     await assert.rejects(() => fs.stat(cursorPath));
 
-    const projected = await readInbox(project, { now: new Date(), home });
+    const before = Date.now();
+    const projectedBefore = await readInbox(project, { now: new Date(before), home });
     await assert.rejects(() => fs.stat(cursorPath));
 
     const result = await runBin(project, home, ['--json']);
+    const after = Date.now();
     assert.equal(result.code, 0, result.stderr);
     const cli = JSON.parse(result.stdout) as Inbox;
 
-    assert.deepEqual(projected.needsYou, cli.needsYou);
-    assert.deepEqual(projected.landed, cli.landed);
-    assert.equal(projected.running.length, cli.running.length);
-    for (let index = 0; index < projected.running.length; index++) {
-      assert.equal(projected.running[index].pid, cli.running[index].pid);
-      assert.ok(
-        Math.abs(projected.running[index].elapsedSeconds - cli.running[index].elapsedSeconds) <= 2,
-      );
+    const projectedAfter = await readInbox(project, { now: new Date(after), home });
+
+    assert.deepEqual(projectedBefore.needsYou, cli.needsYou);
+    assert.deepEqual(projectedBefore.landed, cli.landed);
+    assert.equal(projectedBefore.running.length, cli.running.length);
+    for (let index = 0; index < projectedBefore.running.length; index++) {
+      assert.equal(projectedBefore.running[index].pid, cli.running[index].pid);
+      assert.equal(projectedBefore.running[index].startedAt, cli.running[index].startedAt);
+      assert.ok(cli.running[index].elapsedSeconds >= projectedBefore.running[index].elapsedSeconds);
+      assert.ok(cli.running[index].elapsedSeconds <= projectedAfter.running[index].elapsedSeconds);
     }
 
     // Only the CLI invocation advances the cursor.

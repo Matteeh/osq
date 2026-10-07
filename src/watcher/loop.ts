@@ -563,6 +563,19 @@ export async function startWatcher(
   let intervalId: NodeJS.Timeout | null = null;
   let watcher: ReturnType<typeof watch> | null = null;
 
+  // A signal-driven watcher's promise resolves only once the abort has fired
+  // and no cycle is in flight. A watcher without a signal resolves after setup
+  // as before and never awaits this.
+  let resolveStopped: () => void = () => {};
+  const stoppedPromise = new Promise<void>((resolve) => {
+    resolveStopped = resolve;
+  });
+  const settleIfStopped = (): void => {
+    if (stopped && !isRunningCycle) {
+      resolveStopped();
+    }
+  };
+
   let onSigint: () => void = () => {};
 
   const stop = (): void => {
@@ -571,6 +584,7 @@ export async function startWatcher(
     if (intervalId) clearInterval(intervalId);
     watcher?.close().catch(() => {});
     process.removeListener('SIGINT', onSigint);
+    settleIfStopped();
   };
 
   onSigint = () => {
@@ -616,6 +630,7 @@ export async function startWatcher(
       logWatcherError(logger, useSymbols, err);
     } finally {
       isRunningCycle = false;
+      settleIfStopped();
       if (interrupted) stop();
     }
   };
@@ -632,6 +647,9 @@ export async function startWatcher(
   if (interrupted || stopped) return;
 
   const trees = await changeTrees(projectRoot, config);
+  // An abort can land while `changeTrees` is in flight; create neither the
+  // file watcher nor the poll interval once it has.
+  if (stopped || interrupted) return;
   watcher = watch(
     trees.map((tree) => tree.changesDir),
     { ignoreInitial: true, depth: 3 },
@@ -644,4 +662,10 @@ export async function startWatcher(
   intervalId = setInterval(() => {
     cycleHandler().catch(() => {});
   }, options.pollIntervalMs || 1000);
+
+  // A signal-driven watcher runs until its abort fires; only then does the
+  // promise resolve, once the last cycle has finished.
+  if (options.signal) {
+    await stoppedPromise;
+  }
 }

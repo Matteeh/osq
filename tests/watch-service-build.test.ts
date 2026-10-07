@@ -191,7 +191,7 @@ describe('Service worker build checks', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmpDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
   describe('check table rows, with now injected', () => {
@@ -357,7 +357,7 @@ describe('Service worker build checks', () => {
     const controller = new AbortController();
     const check = await createServiceBuildCheck({ packageRoot, settleSeconds: SETTLE_SECONDS });
 
-    void startWatcher(tmpDir, DEFAULT_CONFIG, adapter, {
+    const watcherPromise = startWatcher(tmpDir, DEFAULT_CONFIG, adapter, {
       buildCheck: check,
       signal: controller.signal,
       pollIntervalMs: 5,
@@ -369,7 +369,7 @@ describe('Service worker build checks', () => {
     await fs.utimes(distFile, SETTLED_DIST_TIME, SETTLED_DIST_TIME);
     await waitFor(() => exits.length > 0);
     controller.abort();
-    await delay(50);
+    await watcherPromise;
 
     assert.deepEqual(exits, [EXIT_NEW_BUILD], 'the idle watcher exits with 75');
     assert.deepEqual(adapter.spawnedTasks, []);
@@ -399,7 +399,7 @@ describe('Service worker build checks', () => {
     const adapter = new CountingAdapter();
     const exits: number[] = [];
     const controller = new AbortController();
-    void startWatcher(tmpDir, DEFAULT_CONFIG, adapter, {
+    const watcherPromise = startWatcher(tmpDir, DEFAULT_CONFIG, adapter, {
       buildCheck: check,
       signal: controller.signal,
       pollIntervalMs: 5,
@@ -409,7 +409,7 @@ describe('Service worker build checks', () => {
 
     await waitFor(() => waits.length >= 3);
     controller.abort();
-    await delay(50);
+    await watcherPromise;
 
     assert.deepEqual(adapter.spawnedTasks, [], 'a pending task never spawns while waiting');
     assert.deepEqual(exits, [], 'the watcher does not exit on the stale line');

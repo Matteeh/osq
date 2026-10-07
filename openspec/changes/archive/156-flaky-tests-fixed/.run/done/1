@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:683198aa3d2d3e24f559bd9e14c3fb2a41233173e2513691f152a0ac6882ded0"
+build_stamp: "c730dd1"
+project_commit: "69774f0"
+exit_code: 0
+scope_files: {"tests/report-reads-once.test.ts":"sha256:fd969a5288832408832dd648a7e554e45d112212aade2456a7cf65527e5e5a40"}
+---
+2026-10-07T15:36:18.263Z
