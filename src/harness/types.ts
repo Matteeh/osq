@@ -35,7 +35,8 @@ export type HarnessEventType =
   | 'mutation_ran'
   | 'validator_ran'
   | 'vcs_violation'
-  | 'scope_violation';
+  | 'scope_violation'
+  | 'change_verify_rerun';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
 export interface StartedEventData {
@@ -385,6 +386,18 @@ export interface ScopeViolationEventData {
   readonly files: readonly string[];
 }
 
+/**
+ * Payload of a `change_verify_rerun` event: one rerun of a red change-level
+ * verify whose failing tests were unrelated to the task. `rerun` is the 1-based
+ * rerun number, `tests` the failing test files of the run it repeats, and
+ * `passed` whether the rerun passed.
+ */
+export interface ChangeVerifyRerunEventData {
+  readonly rerun: number;
+  readonly tests: readonly string[];
+  readonly passed: boolean;
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -413,6 +426,7 @@ export interface OsqEventData {
   validator_ran: ValidatorRanEventData;
   vcs_violation: VcsViolationEventData;
   scope_violation: ScopeViolationEventData;
+  change_verify_rerun: ChangeVerifyRerunEventData;
 }
 
 /**

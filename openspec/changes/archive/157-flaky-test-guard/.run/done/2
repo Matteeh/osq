@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9e67878e75ffe3e437c35ae5aa988f07526d76a5e49ab69185e2a03ec704aa0f"
+build_stamp: "07d8c5d"
+project_commit: "0f8dbac"
+exit_code: 0
+scope_files: {"src/core/run/failing-tests.ts":"sha256:d6cb1c1ea9bac3d9ce2953ae7612aa630299d98324692bd2f2bed95c1ff89916","src/harness/types.ts":"sha256:4d1d201f75e02dc6685c519ecad0c7ce7a33e9034415aab17e01784a290d6ada","src/watcher/change-verify-rerun.ts":"sha256:3e70e87d9001ed0b2cbea606a185904caa09595c778e2b0db7f2a44c77a93016","src/watcher/change-verify.ts":"sha256:684a54fe9ddaa1d54f220bd6b6ed5b40dffb0634a3171612cab98b9f994baeb4","src/watcher/runner.ts":"sha256:168ec0c19cf99e463cf174f3a1bef9eb16158164f017713708ac36cb2701c251","tests/change-verify-rerun.test.ts":"sha256:69611d845aa034287172d32a35eaa26baef822c95929846e4390bc1863319166","tests/failing-tests.test.ts":"sha256:2afe49f35ad9124cfd312c730bdfb3ffcd601a49015588b3dd291ed4d5dae027"}
+---
+2026-10-07T18:22:24.716Z

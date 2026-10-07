@@ -67,7 +67,7 @@ export function parseReportPeriod(
  * Projects the report down to the stable {@link MetricsReport} shape, dropping
  * backward-compatibility aliases so the machine-readable output stays fixed.
  */
-function toStableMetrics(report: MetricsReport): Record<string, unknown> {
+export function toStableMetrics(report: MetricsReport): Record<string, unknown> {
   return {
     approvalFlags: {
       changes: report.approvalFlags.changes,
@@ -305,6 +305,14 @@ function toStableMetrics(report: MetricsReport): Record<string, unknown> {
               mutator: survivor.mutator,
               replacement: survivor.replacement,
             })),
+          })),
+        }
+      : {}),
+    ...(report.flakyTests
+      ? {
+          flakyTests: report.flakyTests.map((entry) => ({
+            test: entry.test,
+            count: entry.count,
           })),
         }
       : {}),

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:198af7aac4f0ea49ffc298c79cde730bf0b8a40b14cf5e61ddd8012f8f162ad4"
+build_stamp: "07d8c5d"
+project_commit: "c35ef5d"
+exit_code: 0
+scope_files: {"README.md":"sha256:759e8ffb77b891d792e06eb4c272c5875b9094cb51ef4ffe61e7090e181cdef0","src/core/foundation/config-gates.ts":"sha256:976f2f923d78cac9c56780d8a3a4e792ec441f1d71412f3ebb1877d52022d96f","tests/change-verify-reruns-config.test.ts":"sha256:41b11c5e9a91f926a9c5c79ac43b9119f0c6bf4ae888416300cce2eca0c2b1fd"}
+---
+2026-10-07T18:13:50.869Z

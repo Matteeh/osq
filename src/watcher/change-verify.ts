@@ -1,6 +1,8 @@
 import type { OsqConfig } from '../core/foundation/config.js';
 import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { parseSpecMdFromFolder } from '../core/spec/parser.js';
+import { appendHarnessEvent } from '../harness/types.js';
+import { type ChangeVerifyRerunContext, findUnrelatedFailingTests } from './change-verify-rerun.js';
 import { type VerificationGateResult, runVerificationGateResult } from './verify.js';
 
 /** Failure evidence for a red change gate; the runner writes it through `fail`. */
@@ -52,11 +54,17 @@ export function formatMissingChangeVerifyMarker(): string {
  * passing outcome when the gate is disabled or green, otherwise failure
  * evidence for the runner's single `fail` path. The shared gate entrypoint owns
  * the single `verify_ran` event, attributed to the established `change` target.
+ *
+ * When `rerun` is given, an unrelated failure is rerun up to
+ * `gates.changeVerifyReruns` times; each repeat appends one
+ * `change_verify_rerun` event to the task's own stream. A red end still builds
+ * its marker from the last run.
  */
 export async function runChangeVerifyGate(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
+  rerun?: ChangeVerifyRerunContext,
 ): Promise<ChangeVerifyOutcome> {
   if (config.gates?.changeVerifyAfterTask === false) return { ok: true };
 
@@ -70,13 +78,32 @@ export async function runChangeVerifyGate(
     };
   }
 
-  const result = await runVerificationGateResult(
-    projectRoot,
-    command,
-    config.timeouts.verifyTimeoutSeconds ?? 600,
-    { specFolderPath, taskNumber: 'change' },
-    config,
-  );
+  const timeoutSeconds = config.timeouts.verifyTimeoutSeconds ?? 600;
+  const runOnce = (): Promise<VerificationGateResult> =>
+    runVerificationGateResult(
+      projectRoot,
+      command,
+      timeoutSeconds,
+      { specFolderPath, taskNumber: 'change' },
+      config,
+    );
+
+  let result = await runOnce();
+  const context = rerun;
+  const maxReruns = config.gates?.changeVerifyReruns ?? 1;
+  let rerunNumber = 0;
+  while (context !== undefined && !result.passed && rerunNumber < maxReruns) {
+    const tests = await findUnrelatedFailingTests(result, projectRoot, context, config);
+    if (tests === null) break;
+    rerunNumber += 1;
+    const rerunResult = await runOnce();
+    await appendHarnessEvent(specFolderPath, context.taskNumber, {
+      type: 'change_verify_rerun',
+      timestamp: new Date().toISOString(),
+      data: { rerun: rerunNumber, tests, passed: rerunResult.passed },
+    });
+    result = rerunResult;
+  }
   if (result.passed) return { ok: true };
 
   const output = result.output.trim() || '(no output)';

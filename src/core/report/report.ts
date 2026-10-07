@@ -45,6 +45,7 @@ import {
   observeTaskStream,
   parseTokenEvent,
 } from './report-events.js';
+import { type FlakyTestEntry, collectFlakyTests, formatFlakyTests } from './report-flaky.js';
 import {
   type InboxWaitOptions,
   type InboxWaitReport,
@@ -302,6 +303,12 @@ export interface MetricsReport {
    * measured event names an opted-in capability, so the report is unchanged.
    */
   readonly mutation?: readonly CapabilityMutationScore[];
+  /**
+   * Tests that flaked, one entry per test, ordered by count then path. Absent
+   * when no passing `change_verify_rerun` event names a test, so the report is
+   * unchanged for a project without flakes.
+   */
+  readonly flakyTests?: readonly FlakyTestEntry[];
   /**
    * Latest validator run per archived change, in folder name order. Absent
    * when no archived change has a `validator_ran` event, so the report is
@@ -1416,6 +1423,7 @@ export async function buildMetricsReport(
   const planningCostBySource = await collectCostBySource(allSpecFolders, config.planning?.prices);
   const traceability = await collectTraceabilityGaps(projectRoot, config);
   const mutation = await collectMutationScores(allSpecFolders, config);
+  const flakyTests = await collectFlakyTests(allSpecFolders);
   const validation = await collectValidation(archivedFolders);
   const inboxWait = await collectInboxWait(projectRoot, options);
 
@@ -1564,6 +1572,7 @@ export async function buildMetricsReport(
     queue,
     ...(traceability ? { traceability } : {}),
     ...(mutation ? { mutation } : {}),
+    ...(flakyTests ? { flakyTests } : {}),
     ...(validation ? { validation } : {}),
     ...(inboxWait ? { inboxWait } : {}),
   };
@@ -1901,6 +1910,11 @@ export function formatMetricsReport(
   if (report.mutation) {
     lines.push('');
     lines.push(...formatMutation(report.mutation));
+  }
+
+  if (report.flakyTests) {
+    lines.push('');
+    lines.push(...formatFlakyTests(report.flakyTests));
   }
 
   if (report.validation) {

@@ -10,6 +10,9 @@
  * automatic retries that follow. `commitRetries` bounds the catch-ups the
  * watcher tries after a `commit_failed` halt before a human must run
  * `osq retry <id> change`; zero turns the catch-up after a halt off.
+ * `changeVerifyReruns` bounds the times a failing change-level verify is
+ * rerun at one task boundary when its failing tests are unrelated to the task;
+ * zero turns reruns off.
  */
 export type PreSpawnVerifyMode = 'warn' | 'fail' | 'off';
 
@@ -19,6 +22,8 @@ export interface GatesConfig {
   readonly autoRetries?: number;
   /** Catch-ups after a `commit_failed` halt before a human must retry. */
   readonly commitRetries?: number;
+  /** Reruns of a failing change-level verify when its failing tests are unrelated; 0 disables. */
+  readonly changeVerifyReruns?: number;
   /** Seconds an open provider retry may last before the watcher stops the agent; 0 disables. */
   readonly providerStallSeconds?: number;
   /** Automatic retries a provider outage earns before a human must intervene. */
@@ -34,6 +39,7 @@ export const DEFAULT_GATES_CONFIG: GatesConfig = {
   preSpawnVerify: 'warn',
   autoRetries: 1,
   commitRetries: 2,
+  changeVerifyReruns: 1,
   providerStallSeconds: 300,
   providerRetries: 3,
   providerRetryDelaySeconds: 300,
@@ -85,6 +91,11 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     'commitRetries',
     DEFAULT_GATES_CONFIG.commitRetries,
   );
+  const changeVerifyReruns = nonNegativeInteger(
+    record,
+    'changeVerifyReruns',
+    DEFAULT_GATES_CONFIG.changeVerifyReruns,
+  );
   const providerStallSeconds = nonNegativeInteger(
     record,
     'providerStallSeconds',
@@ -112,6 +123,7 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     preSpawnVerify: preSpawnRaw as PreSpawnVerifyMode,
     autoRetries,
     commitRetries,
+    changeVerifyReruns,
     providerStallSeconds,
     providerRetries,
     providerRetryDelaySeconds,

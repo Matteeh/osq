@@ -181,7 +181,8 @@ export async function runTask(
       return verifyRedFailure(taskData.verify, taskNumber, config, verifyResult, fail);
     }
 
-    const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config);
+    const rerun = { taskNumber, scope: taskData.scope, testSnapshot: testGate.snapshot };
+    const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config, rerun);
     if (!gate.ok) return fail('change_verify_red', gate.marker, gate.error, gate.extra);
 
     await measures.emitEnd();
