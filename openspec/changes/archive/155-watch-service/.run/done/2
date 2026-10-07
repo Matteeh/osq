@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4cf3181f01a1e0c1b191b41b0ef8009cdc3ad994b5c10b90ad307fc0ee0ac90e"
+build_stamp: "f532410"
+project_commit: "f8735e0"
+exit_code: 0
+scope_files: {"src/watcher/loop.ts":"sha256:f825a7ecfbea309caa3e406f0847b740a3a8d18602fc100333d532a2579cbe4e","src/watcher/service-build.ts":"sha256:c84ed2ffe88cc4104d3b2200dcfe8e008cf5b238f85a6f6fc4f35293133aa939","src/watcher/stale-pass.ts":"sha256:ceb75ad1bf1b54c89d19e6283b4083b7a0eee2aa1eda95daf66a350789e9924a","tests/watch-service-build.test.ts":"sha256:a69a8a5fb7340b1f8073e689f94195d431de66575c04f35a3c97c365b883c3f3"}
+---
+2026-10-06T22:23:22.207Z

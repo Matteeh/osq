@@ -422,6 +422,10 @@ describe('bare osq CLI inbox integration', () => {
     assert.ok(!runningSection.includes('task 2'));
     const landedRows = first.stdout.split('\n').filter((line) => line.includes('archived 2026'));
     assert.equal(landedRows.length, 10);
+    assert.equal(
+      first.stdout.trimEnd().split('\n').at(-1),
+      'Watcher: not running — osq watch --background',
+    );
 
     const cursorPath = await resolveLastLookPath(project, home);
     const cursor = JSON.parse(await fs.readFile(cursorPath, 'utf8')) as { lastLook: string };
@@ -432,7 +436,7 @@ describe('bare osq CLI inbox integration', () => {
 
     const second = await runBin(project, home);
     const secondLanded = second.stdout.split('Landed since last look')[1].trim();
-    assert.equal(secondLanded, '(none)');
+    assert.equal(secondLanded.split('\n')[0], '(none)');
 
     await fs.rm(cursorPath, { force: true });
     const reset = await runBin(project, home, ['--json']);
@@ -530,7 +534,7 @@ describe('bare osq CLI inbox integration', () => {
 
     const result = await runBin(project, home);
     assert.equal(result.code, 0, result.stderr);
-    assert.equal(result.stdout.trim(), 'Inbox empty.');
+    assert.equal(result.stdout, 'Inbox empty.\nWatcher: not running — osq watch --background\n');
   });
 
   it('keeps explicit status complete and report --json scoped without advancing the cursor', async () => {

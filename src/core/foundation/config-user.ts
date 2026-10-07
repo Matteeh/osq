@@ -10,6 +10,7 @@ import type { QueueConfig } from './config-queue.js';
 import type { TraceabilityConfig } from './config-traceability.js';
 import type { ValidatorConfig } from './config-validator.js';
 import type { VcsConfig } from './config-vcs.js';
+import type { WatchConfig } from './config-watch.js';
 import type {
   AgyConfig,
   LogConfig,
@@ -46,6 +47,7 @@ export type OsqUserConfig = Partial<
     | 'capabilities'
     | 'confinement'
     | 'validator'
+    | 'watch'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -69,4 +71,5 @@ export type OsqUserConfig = Partial<
     readonly roles?: Partial<Record<ConfinementRole, { readonly env?: readonly string[] }>>;
   };
   readonly validator?: Partial<ValidatorConfig>;
+  readonly watch?: Partial<WatchConfig>;
 };

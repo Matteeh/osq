@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a8421040d9827e2b0aeb06b73a3cc99271f7931475b23100122bfc7da9ef189e"
+build_stamp: "f532410"
+project_commit: "552167a"
+exit_code: 0
+scope_files: {"src/watcher/service.ts":"sha256:44251d4c895237d9668782788b5557068087914afa68d16795ebdd3a92beb511","tests/watch-supervisor.test.ts":"sha256:2223501c613bd09405ecb656afd32a3b2573339eab1355768f1bd6f779f576a9"}
+---
+2026-10-06T22:34:43.489Z

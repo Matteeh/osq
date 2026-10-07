@@ -31,6 +31,7 @@ import {
 import type { OsqUserConfig } from './config-user.js';
 import { type ValidatorConfig, validateValidatorConfig } from './config-validator.js';
 import { DEFAULT_VCS_CONFIG, type VcsConfig, validateVcsConfig } from './config-vcs.js';
+import { DEFAULT_WATCH_CONFIG, type WatchConfig, validateWatchConfig } from './config-watch.js';
 
 export { ConfigLoadError } from './config-file.js';
 export type { AgyConfig, OpencodeConfig } from './config-agents.js';
@@ -41,6 +42,7 @@ export type { CapabilitiesConfig } from './config-capability-groups.js';
 export type { PiConfig } from './config-pi.js';
 export type { QueueConfig } from './config-queue.js';
 export type { ServeConfig } from './config-serve.js';
+export type { WatchConfig } from './config-watch.js';
 export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
 
@@ -97,6 +99,7 @@ export interface OsqConfig {
   readonly capabilities?: CapabilitiesConfig;
   readonly confinement?: ConfinementConfig;
   readonly validator?: ValidatorConfig;
+  readonly watch?: WatchConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -104,6 +107,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
   inbox: DEFAULT_INBOX_CONFIG,
+  watch: DEFAULT_WATCH_CONFIG,
   vcs: DEFAULT_VCS_CONFIG,
   capabilities: DEFAULT_CAPABILITIES_CONFIG,
   confinement: DEFAULT_CONFINEMENT_CONFIG,
@@ -151,7 +155,13 @@ export const DEFAULT_CONFIG: OsqConfig = {
 };
 
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const { planner, queue: rawQueue, validator: rawValidator, ...restConfig } = config;
+  const {
+    planner,
+    queue: rawQueue,
+    validator: rawValidator,
+    watch: rawWatch,
+    ...restConfig
+  } = config;
   let validatedPlanner: PlannerConfig | undefined;
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
@@ -163,12 +173,14 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   const claude = validateClaudeConfig(config.claude);
   const serve = validateServeConfig(config.serve);
   const inbox = validateInboxConfig(config.inbox);
+  const watch = validateWatchConfig(rawWatch);
 
   return {
     ...DEFAULT_CONFIG,
     ...restConfig,
     serve,
     inbox,
+    watch,
     vcs: validateVcsConfig(config.vcs),
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),

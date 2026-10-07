@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { readWatchState } from '../core/run/watch-state.js';
 import { readLastLook, resolveLastLookPath } from '../core/status/inbox-cursor.js';
 import { readInbox } from '../core/status/inbox-projection.js';
 import { type Inbox, formatInboxText } from '../core/status/inbox.js';
+import { formatWatcherLine } from '../core/status/watcher-line.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
@@ -41,8 +43,12 @@ export async function inboxCommand(options: InboxCommandOptions = {}): Promise<I
     const inbox = await readInbox(inputs.cwd, { config, now, home: options.home });
     await writeLastLook(inputs.cwd, now.toISOString(), options.home);
 
-    const output = options.json ? JSON.stringify(inbox, null, 2) : formatInboxText(inbox);
-    inputs.stdout(`${output}\n`);
+    if (options.json) {
+      inputs.stdout(`${JSON.stringify(inbox, null, 2)}\n`);
+    } else {
+      const watch = await readWatchState(inputs.cwd, options.home);
+      inputs.stdout(`${formatInboxText(inbox)}\n${formatWatcherLine(watch)}\n`);
+    }
     return inbox;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

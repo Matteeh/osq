@@ -24,6 +24,7 @@ import { runMutationCheck } from './mutation-check.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
 import { auditScopeRegressions } from './regression.js';
 import { runTask } from './runner.js';
+import { BuildWaitError } from './service-build.js';
 import { runStackedChanges } from './stack-run.js';
 import {
   type StaleCheck,
@@ -66,6 +67,8 @@ export interface StartWatcherOptions {
   allowStale?: boolean;
   dev?: boolean;
   packageRoot?: string;
+  /** A service worker's build check, used in place of the stale checks. */
+  buildCheck?: StaleCheck;
   exit?: (code: number) => void;
 }
 
@@ -515,14 +518,20 @@ export async function startWatcher(
   // A checkout running a stale compiled build is a footgun: refuse before the
   // first cycle unless the caller opted out or is executing from source. The
   // start check also captures the current `dist/` mtime for every later pass.
+  // A service worker supplies its own build check instead, so a new or stale
+  // build is handled by the check rather than by the start-time refusal.
   let staleCheck: StaleCheck | undefined;
-  try {
-    staleCheck = await startStaleCheck(options);
-  } catch (err) {
-    if (handleStaleBuild(err, staleDeps)) {
-      return;
+  if (options.buildCheck) {
+    staleCheck = options.buildCheck;
+  } else {
+    try {
+      staleCheck = await startStaleCheck(options);
+    } catch (err) {
+      if (handleStaleBuild(err, staleDeps)) {
+        return;
+      }
+      throw err;
     }
-    throw err;
   }
 
   // Invoke the selected adapter's optional preflight port directly. There is no
@@ -585,13 +594,24 @@ export async function startWatcher(
     if (interrupted || stopped || isRunningCycle) return;
     isRunningCycle = true;
     try {
+      // A service build check runs at the top of every continuous cycle, so a
+      // new or stale build is seen even while the watcher is idle.
+      if (options.buildCheck) {
+        await assertNotStale(options.buildCheck);
+      }
       await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck);
     } catch (err) {
-      if (err instanceof StaleBuildError) {
-        stop();
+      // A wait ends this cycle without stopping the loop or logging an error;
+      // the next cycle checks again.
+      if (err instanceof BuildWaitError) {
+        return;
       }
       if (handleStaleBuild(err, staleDeps)) {
+        stop();
         return;
+      }
+      if (err instanceof StaleBuildError) {
+        stop();
       }
       logWatcherError(logger, useSymbols, err);
     } finally {

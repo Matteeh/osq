@@ -396,7 +396,7 @@ See ADR 010.
 - **Rebuilt from disk**: State is rebuilt from `openspec/` on every change. Kill it and restart it any time.
 - **Single active agent**: One agent per change: locks are created exclusively, and stale locks (dead pid or timeout) are reaped to `dead/`.
 - **Approved integrity & Manifest**: What runs is what was approved. `.run/approved` holds a hash of the folder minus `.run/` (with `tasks.md` checkbox state normalized), checked before every spawn. Approval generates `.run/manifest.json` recording hashes of `AGENTS.md`, `PLANNER.md`, configuration, and touched capability specs, along with runtime environment metadata.
-- **Stale build detection**: In repository checkouts, the watcher verifies that compiled `dist/` is up-to-date with `src/`. If source files have changed without rebuilding, the watcher refuses to run unless `--allow-stale` or `--dev` is specified.
+- **Stale build detection**: In repository checkouts, the watcher verifies that compiled `dist/` is up-to-date with `src/`. If source files have changed without rebuilding, the watcher refuses to run unless `--allow-stale` or `--dev` is specified. The background service does not refuse: it waits for the build and says so, then restarts on the new build.
 - **Prompt rule injection**: Living capability specs declare explicit code ownership (`### Requirement: Code ownership`). The runner extracts these boundaries and injects capability rules directly into the executor prompt.
 - **Test modification gating**: Before spawning, the runner snapshots every preexisting file under `tests/`. A changed or deleted one kills the task with `reason: undeclared_test_change` unless the task declares `tests.modify: true` and its scope contains that file. New test files are always allowed.
 - **Raw measures events**: Every task start and end emits a `measures` event capturing files/lines under scope, files/lines changed, repository baselines, file import counts, word counts, and requirement/scenario counts.
@@ -854,9 +854,18 @@ osq watch                # run watcher event loop continuously
 osq watch -o, --once     # process all queued approved tasks and exit
 osq watch --dev          # reactive dev mode running directly from src/ via tsx with auto-restart
 osq watch --allow-stale  # allow running from repository checkout when dist/ is older than src/
+osq watch --background   # run the watcher as a background service
+osq watch --stop         # stop the background service
 osq watch --verbose      # enable verbose execution logging
 osq watch -q, --quiet    # suppress info and verbose output
 ```
+
+`osq watch --background` starts the watcher as a detached service and returns.
+The service runs the watcher as a child, restarts it after a crash and on a
+new osq build between tasks, waits instead of exiting when `dist/` is older
+than `src/`, and never builds osq itself. Its records and log live under
+`~/.osq/watch/`, and `osq status` prints the log's path. `osq watch --stop`
+signals the service to stop; it waits for the running task to finish first.
 
 ### Metrics & Reporting
 

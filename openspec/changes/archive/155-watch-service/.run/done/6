@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:40393e5ef0e4b819121741e69b814341a331013e94dc3d636620ce9f77c9cbc6"
+build_stamp: "f532410"
+project_commit: "af34b28"
+exit_code: 0
+scope_files: {"decisions/012-watch-service.md":"sha256:d362e6ada4446f0d51abc9333cb587affc1a5a6b1b50dc536bbbadf76d4388a9","decisions/README.md":"sha256:dcdc0c09ea91b1beda088770610307f720c8cdfe62a1556e82ed7e3d780fe220","tests/watch-service-adr.test.ts":"sha256:c0c7cf4a2ab04ca9c7e42e5f5741cde9b6eab75cbc70194f0a38c8c981ce9b38"}
+---
+2026-10-06T23:06:25.558Z

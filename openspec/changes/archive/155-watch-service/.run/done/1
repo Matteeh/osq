@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:70aa95a2f54518ff88203157e688872a75a938bdcf9ae14f4b0504355634abad"
+build_stamp: "f532410"
+project_commit: "e7229be"
+exit_code: 0
+scope_files: {"src/core/foundation/config-user.ts":"sha256:afbc52fb148db4f97377871bfe469182771fea0c67d010a8c8c3a039ccfbab3c","src/core/foundation/config-watch.ts":"sha256:0dbd2813f8187598af902d10287bc4fa654e4fef54aaba52d2e59a60579ab16a","src/core/foundation/config.ts":"sha256:e1f6df2ee8769c30049a96368bcd7cf138ee30c776c4130d8a0719d6cfabf7fd","src/core/run/watch-state.ts":"sha256:b8a0a5ef5aa035cf08045fc3f0fe8328b6fd060e3577d3e17e9e99eabf8001fe","src/index.ts":"sha256:c7e69267c2cec7a14a60affb27ef1e5158ca18d2736aff083d86e3ba38150cf5","tests/watch-config.test.ts":"sha256:2f4414c18d38609df483b0876ffc4348d088c8876d17d7507e564a66c62895dc","tests/watch-state.test.ts":"sha256:3a295025a4fe9a4f8a9ba34c4d2f0796d03f0ab45d2b711870daebc81927f8f3"}
+---
+2026-10-06T21:21:09.260Z

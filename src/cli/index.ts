@@ -145,6 +145,8 @@ export function createProgram(version?: string): Command {
     .option('-q, --quiet', 'suppress info and verbose logging')
     .option('--allow-stale', 'allow running when dist/ is older than src/')
     .option('--dev', 'run through tsx from src/ and restart the loop when files change')
+    .option('--background', 'run the watcher as a background service')
+    .option('--stop', 'stop the background service')
     .action(
       async (options: {
         once?: boolean;
@@ -152,6 +154,8 @@ export function createProgram(version?: string): Command {
         quiet?: boolean;
         allowStale?: boolean;
         dev?: boolean;
+        background?: boolean;
+        stop?: boolean;
       }) => {
         await watchCommand(options);
       },

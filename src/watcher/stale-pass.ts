@@ -1,4 +1,5 @@
 import { StaleBuildError, findStaleBuild, newestDistMtimeMs } from './build.js';
+import { BuildChangedError, BuildWaitError, EXIT_NEW_BUILD } from './service-build.js';
 
 /** A pass-time stale check: resolves to the stale line, or null when fresh. */
 export type StaleCheck = () => Promise<string | null>;
@@ -48,15 +49,25 @@ export interface StaleExitDeps {
 }
 
 /**
- * Print and exit for a stale build during a run. Returns false when `err` is
- * not a `StaleBuildError`, so the caller can fall through to its normal error
- * path.
+ * Handle a build-check outcome during a run. A `BuildWaitError` is swallowed so
+ * the caller's loop lives on and checks again next cycle. A `BuildChangedError`
+ * stops the loop and exits with `EXIT_NEW_BUILD` without printing. Any other
+ * `StaleBuildError` prints its line and exits 1 as before. Returns false when
+ * `err` is not a `StaleBuildError`, so the caller falls through to its normal
+ * error path.
  */
 export function handleStaleBuild(err: unknown, deps: StaleExitDeps): boolean {
+  if (err instanceof BuildWaitError) {
+    return true;
+  }
   if (!(err instanceof StaleBuildError)) {
     return false;
   }
   deps.clearStatus?.();
+  if (err instanceof BuildChangedError) {
+    deps.exit(EXIT_NEW_BUILD);
+    return true;
+  }
   console.error(err.message);
   deps.exit(1);
   return true;
