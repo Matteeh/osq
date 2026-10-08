@@ -34,6 +34,9 @@ export default defineConfig({
   // records what it finds without stopping the change. Pick a model other
   // than the executor's.
   // validator: { harness: 'claude', model: '<a-different-model>' },
+  // osq formats the files a task changed in its scope before running verify;
+  // {files} becomes those files, each quoted.
+  // gates: { formatCommand: 'npx prettier --write {files}' },
 });
 `;
 

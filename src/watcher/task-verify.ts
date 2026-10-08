@@ -9,6 +9,7 @@ import { readRetryContext } from './attempt.js';
 import { checkBlocked } from './blocked.js';
 import { checkDependencies } from './dependencies.js';
 import { checkFocusedTests } from './focused-verify.js';
+import { runFormatFiles } from './format-files.js';
 import type { RunTaskFailureReason, RunTaskResult } from './outcome.js';
 import { runVerificationGateResult } from './verify.js';
 
@@ -61,6 +62,11 @@ export function formatPreSpawnDeadMarker(
   ].join('\n');
 }
 
+/** The measures view the format step reads: the task's changed scoped files. */
+export interface TaskVerifyMeasures {
+  changedScopeFiles(): Promise<string[]>;
+}
+
 export interface TaskVerifyOptions {
   projectRoot: string;
   specFolderPath: string;
@@ -68,6 +74,8 @@ export interface TaskVerifyOptions {
   taskData: TaskData;
   config: OsqConfig;
   logger?: Logger;
+  /** The task measures, whose `changedScopeFiles` the format step reads. */
+  measures?: TaskVerifyMeasures;
 }
 
 export type PreSpawnVerifyOutcome = { ok: true } | { ok: false; marker: string; error: string };
@@ -162,8 +170,10 @@ export async function checkMissingVerifyPaths(
 /**
  * The checks that run after the agent exits and its result is ensured, before
  * any verify: a stated `## Blocked` need fails the task first, then an added
- * denied package, then a verify naming a missing path is refused, and last a
- * failing focused scenario test ends the attempt. Each keeps its own dead marker.
+ * denied package, then a verify naming a missing path is refused, then the
+ * configured format command runs on the task's changed scoped files, and last a
+ * failing focused scenario test ends the attempt. Each check but the format step
+ * keeps its own dead marker; the format step never ends the attempt.
  */
 export async function checkBlockedFirst(
   options: TaskVerifyOptions,
@@ -176,6 +186,7 @@ export async function checkBlockedFirst(
   if (denied) return denied;
   const missing = await checkMissingVerifyPaths(projectRoot, taskData, fail);
   if (missing) return missing;
+  await runFormatFiles(options);
   return checkFocusedTests(options, fail);
 }
 

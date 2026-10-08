@@ -12,7 +12,8 @@
  * `osq retry <id> change`; zero turns the catch-up after a halt off.
  * `changeVerifyReruns` bounds the times a failing change-level verify is
  * rerun at one task boundary when its failing tests are unrelated to the task;
- * zero turns reruns off.
+ * zero turns reruns off. `formatCommand` is an optional command the watcher
+ * runs on a task's changed scoped files before its verify.
  */
 export type PreSpawnVerifyMode = 'warn' | 'fail' | 'off';
 
@@ -32,6 +33,8 @@ export interface GatesConfig {
   readonly providerRetryDelaySeconds?: number;
   /** The command the watcher runs as a change's baseline, when configured. */
   readonly baselineVerify?: string;
+  /** The command the watcher runs on a task's changed scoped files before verify. */
+  readonly formatCommand?: string;
 }
 
 export const DEFAULT_GATES_CONFIG: GatesConfig = {
@@ -118,6 +121,13 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     }
     baselineVerify = record.baselineVerify.trim();
   }
+  let formatCommand: string | undefined;
+  if (record.formatCommand !== undefined) {
+    if (typeof record.formatCommand !== 'string' || !record.formatCommand.includes('{files}')) {
+      throw new Error('gates.formatCommand must be a command containing {files}');
+    }
+    formatCommand = record.formatCommand.trim();
+  }
   return {
     changeVerifyAfterTask: value,
     preSpawnVerify: preSpawnRaw as PreSpawnVerifyMode,
@@ -128,5 +138,6 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     providerRetries,
     providerRetryDelaySeconds,
     ...(baselineVerify !== undefined ? { baselineVerify } : {}),
+    ...(formatCommand !== undefined ? { formatCommand } : {}),
   };
 }

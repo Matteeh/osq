@@ -1,0 +1,101 @@
+{"type":"verify_ran","timestamp":"2026-10-07T20:51:15.887Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/format-before-verify.test.ts","exitCode":1,"duration":0.04,"log":".run/logs/2-1.log","output":"Could not find 'tests/format-before-verify.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/format-before-verify.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-07T20:51:16.959Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":1373,"repoFiles":2536,"repoLines":290745,"importFanIn":37,"proposalWords":886,"taskWords":439,"deltaRequirements":2,"deltaScenarios":11}}
+{"type":"started","timestamp":"2026-10-07T20:51:17.021Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.2.4","attempt":1,"projectCommit":"5fac2cc","pid":29261,"timeoutSeconds":1800,"version":"0.2.4","commit":"082c33d"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:24.894Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:24.898Z","data":{"tool":"read","summary":"src/watcher/measures.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:24.901Z","data":{"tool":"read","summary":"openspec/changes/158-osq-runs-formatter/tasks/2.md"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:24.956Z","data":{"promptTokens":181254,"candidateTokens":121,"totalTokens":181375,"cachedTokens":0,"reasoningTokens":32,"cost":0.0272799}}
+{"type":"tool","timestamp":"2026-10-07T20:51:27.736Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:27.738Z","data":{"tool":"read","summary":"src/watcher/focused-verify.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:27.741Z","data":{"tool":"read","summary":"src/core/run/focused-tests.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:27.794Z","data":{"promptTokens":6360,"candidateTokens":113,"totalTokens":6473,"cachedTokens":181376,"reasoningTokens":33,"cost":0.001585728}}
+{"type":"tool","timestamp":"2026-10-07T20:51:30.281Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:30.284Z","data":{"tool":"read","summary":"src/core/run/verify-excerpt.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:30.333Z","data":{"promptTokens":5396,"candidateTokens":77,"totalTokens":5473,"cachedTokens":187776,"reasoningTokens":21,"cost":0.0014315279999999998}}
+{"type":"tool","timestamp":"2026-10-07T20:51:33.337Z","data":{"tool":"read","summary":"openspec/changes/158-osq-runs-formatter/.run/results/2.md"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:33.339Z","data":{"tool":"read","summary":"tests/runner-test-gating.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:33.390Z","data":{"promptTokens":8529,"candidateTokens":89,"totalTokens":8618,"cachedTokens":193152,"reasoningTokens":46,"cost":0.001939806}}
+{"type":"tool","timestamp":"2026-10-07T20:51:36.678Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:36.729Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:36.786Z","data":{"promptTokens":5572,"candidateTokens":194,"totalTokens":5766,"cachedTokens":201728,"reasoningTokens":113,"cost":0.001625184}}
+{"type":"tool","timestamp":"2026-10-07T20:51:39.996Z","data":{"tool":"read","summary":"src/core/foundation/config.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:40.043Z","data":{"promptTokens":512,"candidateTokens":43,"totalTokens":555,"cachedTokens":207488,"reasoningTokens":27,"cost":0.000741264}}
+{"type":"tool","timestamp":"2026-10-07T20:51:42.897Z","data":{"tool":"read","summary":"src/core/foundation/config-gates.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:42.901Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:42.949Z","data":{"promptTokens":2833,"candidateTokens":144,"totalTokens":2977,"cachedTokens":207872,"reasoningTokens":11,"cost":0.001141566}}
+{"type":"tool","timestamp":"2026-10-07T20:51:49.955Z","data":{"tool":"read","summary":"src/harness/index.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:51:49.957Z","data":{"tool":"read","summary":"src/core/run/verification.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:51:50.005Z","data":{"promptTokens":2213,"candidateTokens":76,"totalTokens":2289,"cachedTokens":210816,"reasoningTokens":1047,"cost":0.0016381979999999998}}
+{"type":"tool","timestamp":"2026-10-07T20:52:05.810Z","data":{"tool":"read","summary":"src/watcher/regression.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:52:05.812Z","data":{"tool":"read","summary":"src/watcher/outcome.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:05.862Z","data":{"promptTokens":2005,"candidateTokens":78,"totalTokens":2083,"cachedTokens":214144,"reasoningTokens":3541,"cost":0.0031145820000000003}}
+{"type":"tool","timestamp":"2026-10-07T20:52:28.176Z","data":{"tool":"read","summary":"src/watcher/verify.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:52:28.178Z","data":{"tool":"read","summary":"src/core/foundation/logger.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:28.228Z","data":{"promptTokens":5218,"candidateTokens":77,"totalTokens":5295,"cachedTokens":219648,"reasoningTokens":5298,"cost":0.004666644}}
+{"type":"tool","timestamp":"2026-10-07T20:52:34.977Z","data":{"tool":"read","summary":"src/watcher/blocked.ts"}}
+{"type":"tool","timestamp":"2026-10-07T20:52:34.978Z","data":{"tool":"read","summary":"src/core/spec/verify-paths.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:35.032Z","data":{"promptTokens":3847,"candidateTokens":79,"totalTokens":3926,"cachedTokens":230144,"reasoningTokens":804,"cost":0.0017972819999999999}}
+{"type":"tool","timestamp":"2026-10-07T20:52:38.365Z","data":{"tool":"read","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:38.414Z","data":{"promptTokens":2025,"candidateTokens":43,"totalTokens":2068,"cachedTokens":234752,"reasoningTokens":223,"cost":0.001167606}}
+{"type":"text","timestamp":"2026-10-07T20:52:46.014Z","data":{"text":"Now I have enough context. Let me implement. First, `src/harness/types.ts`:"}}
+{"type":"tool","timestamp":"2026-10-07T20:52:46.027Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:46.087Z","data":{"promptTokens":2040,"candidateTokens":149,"totalTokens":2189,"cachedTokens":236928,"reasoningTokens":1161,"cost":0.0018027840000000002}}
+{"type":"tool","timestamp":"2026-10-07T20:52:49.114Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:49.161Z","data":{"promptTokens":172,"candidateTokens":248,"totalTokens":420,"cachedTokens":240128,"reasoningTokens":59,"cost":0.000930384}}
+{"type":"tool","timestamp":"2026-10-07T20:52:52.023Z","data":{"tool":"edit","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:52.078Z","data":{"promptTokens":245,"candidateTokens":144,"totalTokens":389,"cachedTokens":240384,"reasoningTokens":0,"cost":0.000844302}}
+{"type":"text","timestamp":"2026-10-07T20:52:56.441Z","data":{"text":"Now `src/watcher/measures.ts`:"}}
+{"type":"tool","timestamp":"2026-10-07T20:52:56.449Z","data":{"tool":"edit","summary":"src/watcher/measures.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:52:56.497Z","data":{"promptTokens":155,"candidateTokens":665,"totalTokens":820,"cachedTokens":240640,"reasoningTokens":9,"cost":0.00114957}}
+{"type":"text","timestamp":"2026-10-07T20:53:00.577Z","data":{"text":"Now create `src/watcher/format-files.ts`:"}}
+{"type":"tool","timestamp":"2026-10-07T20:53:00.583Z","data":{"tool":"write","summary":"src/watcher/format-files.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:00.635Z","data":{"promptTokens":212,"candidateTokens":720,"totalTokens":932,"cachedTokens":241280,"reasoningTokens":13,"cost":0.00119544}}
+{"type":"text","timestamp":"2026-10-07T20:53:03.816Z","data":{"text":"Now `src/watcher/task-verify.ts`:"}}
+{"type":"tool","timestamp":"2026-10-07T20:53:03.823Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:03.876Z","data":{"promptTokens":202,"candidateTokens":180,"totalTokens":382,"cachedTokens":242048,"reasoningTokens":19,"cost":0.0008758440000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:53:07.172Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:07.218Z","data":{"promptTokens":170,"candidateTokens":226,"totalTokens":396,"cachedTokens":242304,"reasoningTokens":0,"cost":0.0008880120000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:53:11.427Z","data":{"tool":"edit","summary":"src/watcher/task-verify.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:11.479Z","data":{"promptTokens":165,"candidateTokens":532,"totalTokens":697,"cachedTokens":242560,"reasoningTokens":15,"cost":0.0010806300000000002}}
+{"type":"text","timestamp":"2026-10-07T20:53:14.300Z","data":{"text":"Now `src/watcher/runner.ts` (only the existing call line):"}}
+{"type":"tool","timestamp":"2026-10-07T20:53:14.305Z","data":{"tool":"edit","summary":"src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:14.357Z","data":{"promptTokens":225,"candidateTokens":126,"totalTokens":351,"cachedTokens":243072,"reasoningTokens":81,"cost":0.0008871659999999999}}
+{"type":"text","timestamp":"2026-10-07T20:53:42.022Z","data":{"text":"Now create the test file:"}}
+{"type":"tool","timestamp":"2026-10-07T20:53:42.032Z","data":{"tool":"write","summary":"tests/format-before-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:42.081Z","data":{"promptTokens":199,"candidateTokens":3993,"totalTokens":4192,"cachedTokens":243328,"reasoningTokens":4138,"cost":0.005638434}}
+{"type":"tool","timestamp":"2026-10-07T20:53:47.091Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:47.134Z","data":{"promptTokens":163,"candidateTokens":111,"totalTokens":274,"cachedTokens":251520,"reasoningTokens":131,"cost":0.0009242100000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:53:50.453Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:50.499Z","data":{"promptTokens":240,"candidateTokens":116,"totalTokens":356,"cachedTokens":251904,"reasoningTokens":131,"cost":0.000939912}}
+{"type":"tool","timestamp":"2026-10-07T20:53:53.116Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:53:53.170Z","data":{"promptTokens":176,"candidateTokens":86,"totalTokens":262,"cachedTokens":252288,"reasoningTokens":34,"cost":0.000855264}}
+{"type":"tool","timestamp":"2026-10-07T20:54:04.025Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:04.079Z","data":{"promptTokens":346,"candidateTokens":91,"totalTokens":437,"cachedTokens":252544,"reasoningTokens":156,"cost":0.0009577320000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:54:07.615Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:07.665Z","data":{"promptTokens":150,"candidateTokens":88,"totalTokens":238,"cachedTokens":253056,"reasoningTokens":7,"cost":0.000838668}}
+{"type":"tool","timestamp":"2026-10-07T20:54:11.550Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:11.601Z","data":{"promptTokens":716,"candidateTokens":101,"totalTokens":817,"cachedTokens":253184,"reasoningTokens":198,"cost":0.0010463520000000002}}
+{"type":"tool","timestamp":"2026-10-07T20:54:15.059Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:15.103Z","data":{"promptTokens":146,"candidateTokens":88,"totalTokens":234,"cachedTokens":254080,"reasoningTokens":0,"cost":0.0008369400000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:54:17.952Z","data":{"tool":"edit","summary":"tests/format-before-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:18.002Z","data":{"promptTokens":605,"candidateTokens":181,"totalTokens":786,"cachedTokens":254208,"reasoningTokens":26,"cost":0.0009775740000000002}}
+{"type":"tool","timestamp":"2026-10-07T20:54:21.385Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:54:21.428Z","data":{"promptTokens":197,"candidateTokens":88,"totalTokens":285,"cachedTokens":254848,"reasoningTokens":0,"cost":0.000846894}}
+{"type":"tool","timestamp":"2026-10-07T20:56:13.321Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:56:13.416Z","data":{"promptTokens":227,"candidateTokens":89,"totalTokens":316,"cachedTokens":254976,"reasoningTokens":170,"cost":0.000954378}}
+{"type":"tool","timestamp":"2026-10-07T20:57:59.888Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:57:59.947Z","data":{"promptTokens":1294,"candidateTokens":170,"totalTokens":1464,"cachedTokens":255360,"reasoningTokens":112,"cost":0.0011293800000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:58:03.149Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:58:03.197Z","data":{"promptTokens":188,"candidateTokens":124,"totalTokens":312,"cachedTokens":256896,"reasoningTokens":117,"cost":0.0009434879999999999}}
+{"type":"text","timestamp":"2026-10-07T20:58:10.777Z","data":{"text":"All checks pass. Now writing the result file:"}}
+{"type":"tool","timestamp":"2026-10-07T20:58:10.786Z","data":{"tool":"write","summary":"openspec/changes/158-osq-runs-formatter/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-07T20:58:10.837Z","data":{"promptTokens":136,"candidateTokens":693,"totalTokens":829,"cachedTokens":257280,"reasoningTokens":533,"cost":0.0015278400000000001}}
+{"type":"tool","timestamp":"2026-10-07T20:58:15.283Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/158-osq-runs"}}
+{"type":"tokens","timestamp":"2026-10-07T20:58:15.329Z","data":{"promptTokens":245,"candidateTokens":111,"totalTokens":356,"cachedTokens":258432,"reasoningTokens":104,"cost":0.0009410460000000001}}
+{"type":"text","timestamp":"2026-10-07T20:58:19.027Z","data":{"text":"Task complete.\n\nSummary of what I implemented for `158-osq-runs-formatter` task 2:\n\n- **`src/harness/types.ts`**: added the `format_ran` event type and exported `FormatRanEventData`.\n- **`src/watcher/measures.ts`**: `createTaskMeasures` gained `changedScopeFiles()`, diffing the current scope against the pre-spawn snapshot.\n- **`src/watcher/format-files.ts`** (new): runs `gates.formatCommand` once on the changed scoped files through `runVerificationCommand`, records one `format_ran` event, warns on failure, and never ends the attempt.\n- **`src/watcher/task-verify.ts`**: `TaskVerifyOptions.measures` added and the format step inserted into `checkBlockedFirst` after the missing-path check and before the focused run.\n- **`src/watcher/runner.ts`**: only the existing `checkBlockedFirst` call line changed, staying at 199 lines.\n- **`tests/format-before-verify.test.ts`** (new): all six \"Format before verify\" scenarios through `runTask`.\n\nBoth the task verify (7/7) and the proposal verify (`pnpm verify`, 3518 + 130 tests, typecheck, build, lint) pass. Result written to `openspec/changes/158-osq-runs-formatter/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-10-07T20:58:20.002Z","data":{"promptTokens":209,"candidateTokens":327,"totalTokens":536,"cachedTokens":421234,"reasoningTokens":0,"cost":0.021304398000000016}}
+{"type":"exited","timestamp":"2026-10-07T20:58:20.027Z","data":{"exitCode":0,"pid":29261,"timedOut":false,"elapsedSeconds":422.3}}
+{"type":"verify_ran","timestamp":"2026-10-07T20:58:22.408Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/format-before-verify.test.ts","exitCode":0,"duration":1.58,"log":".run/logs/2-2.log","output":"▶ Format before verify\n  ✔ formats changed scoped files and the verify sees the formatted content (238.959521ms)\n  ✔ never passes a deleted scoped file or a file outside the scope (201.047954ms)\n  ✔ records the formatted content in the done marker scope hashes (199.396609ms)\n  ✔ lets a failing format command be logged and the verify still decide (201.091537ms)\n  ✔ runs nothing when no format command is set (166.825108ms)\n  ✔ runs nothing when the agent changed no scoped file (179.998377ms)\n  ✔ runs no format command for a blocked task (116.745772ms)\n✔ Format before verify (1306.678636ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1551.932787\n"}}
+{"type":"measures","timestamp":"2026-10-07T21:00:06.564Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":1373,"repoFiles":2536,"repoLines":290745,"importFanIn":37,"proposalWords":886,"taskWords":439,"deltaRequirements":2,"deltaScenarios":11,"changedFiles":6,"changedLines":497,"scopeHashes":{"src/harness/types.ts":{"before":"sha256:4d1d201f75e02dc6685c519ecad0c7ce7a33e9034415aab17e01784a290d6ada","after":"sha256:05ba8a4b61795d7e69e2897d0c1290f3702438242fd44e1337042db99c9a9a9e"},"src/watcher/format-files.ts":{"before":null,"after":"sha256:2064339567864320af13bf2a59f1998f839c748e7904edcbe547555d73e8099c"},"src/watcher/measures.ts":{"before":"sha256:4ed9a036e581365dd2a2134ee2d8f05b76386126a4b942da2fec2f57cd1db652","after":"sha256:77ae779958443cdf72e9452b0abaaf9fc723d6ef10c4b435a86a5af260217709"},"src/watcher/runner.ts":{"before":"sha256:168ec0c19cf99e463cf174f3a1bef9eb16158164f017713708ac36cb2701c251","after":"sha256:aaba7fb8ed0f5c19626f14bae5184b8eee644e99c9ca553f880476d148cecd34"},"src/watcher/task-verify.ts":{"before":"sha256:b9cba74e65acd6ddd2fdf05e752fd6ec84c4d3306e6b3a2e5f8b44da5ff41525","after":"sha256:4b4ead6900a96a28bcc6543196c52cb5cf2d0ee7d1e4d1ac6ea81d5c20d4183a"},"tests/format-before-verify.test.ts":{"before":null,"after":"sha256:ad0bedbed985592c1c172f462f92270729eb4c7b935af392aaa5f5347ae1500f"}}}}
+{"type":"done","timestamp":"2026-10-07T21:00:06.570Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-10-07T21:00:09.553Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/format-before-verify.test.ts","exitCode":0,"duration":1.52,"log":".run/logs/2-3.log","output":"▶ Format before verify\n  ✔ formats changed scoped files and the verify sees the formatted content (221.579821ms)\n  ✔ never passes a deleted scoped file or a file outside the scope (189.522188ms)\n  ✔ records the formatted content in the done marker scope hashes (179.712066ms)\n  ✔ lets a failing format command be logged and the verify still decide (192.1653ms)\n  ✔ runs nothing when no format command is set (186.33772ms)\n  ✔ runs nothing when the agent changed no scoped file (170.603073ms)\n  ✔ runs no format command for a blocked task (119.566215ms)\n✔ Format before verify (1260.910474ms)\nℹ tests 7\nℹ suites 1\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1494.983686\n"}}

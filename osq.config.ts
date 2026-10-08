@@ -5,6 +5,8 @@ export default defineConfig({
   maxConcurrency: 1,
   gates: {
     baselineVerify: "pnpm verify",
+    formatCommand:
+      "pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched {files}",
   },
   vcs: {
     enabled: true,

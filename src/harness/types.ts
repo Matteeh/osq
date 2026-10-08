@@ -32,6 +32,7 @@ export type HarnessEventType =
   | 'instructions_changed'
   | 'baseline_ran'
   | 'focused_ran'
+  | 'format_ran'
   | 'mutation_ran'
   | 'validator_ran'
   | 'vcs_violation'
@@ -302,6 +303,22 @@ export interface FocusedRanEventData {
   readonly output: string;
 }
 
+/**
+ * Payload of a `format_ran` event: the one format command run the watcher makes
+ * on a task's changed scoped files after the agent exits and before verify.
+ * `files` are the changed scoped paths, `duration` is wall seconds, `output` is
+ * the tail of the run's output (present only when not blank), and the run never
+ * ends the attempt.
+ */
+export interface FormatRanEventData {
+  readonly command: string;
+  readonly files: readonly string[];
+  readonly exitCode: number;
+  readonly duration: number;
+  readonly timedOut: boolean;
+  readonly output?: string;
+}
+
 /** One mutant that survived a pick's mutation run. */
 export interface MutationSurvivor {
   readonly file: string;
@@ -422,6 +439,7 @@ export interface OsqEventData {
   instructions_changed: InstructionsChangedEventData;
   baseline_ran: BaselineRanEventData;
   focused_ran: FocusedRanEventData;
+  format_ran: FormatRanEventData;
   mutation_ran: MutationRanEventData;
   validator_ran: ValidatorRanEventData;
   vcs_violation: VcsViolationEventData;

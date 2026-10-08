@@ -167,7 +167,7 @@ export async function runTask(
 
     const ensured = await ensureTaskResult({ specFolderPath, taskNumber, logger, logOutcome });
     if (!ensured.ok) return finish(ensured.result);
-    const stop = await checkBlockedFirst(verifyCtx, fail);
+    const stop = await checkBlockedFirst({ ...verifyCtx, measures }, fail);
     if (stop) return stop;
 
     const verifyResult = await runVerificationGate(

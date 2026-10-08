@@ -205,13 +205,22 @@ export async function gatherEndMeasures(
   return { ...startMeasures, phase: 'end', changedFiles, changedLines, scopeHashes };
 }
 
-/** Create the start/end measures emitter pair for one task run. */
+/**
+ * The start/end measures emitter pair for one task run, plus the changed-file
+ * view the format step reads. `changedScopeFiles` compares the scope now with
+ * the snapshot `emitStart` took and returns, sorted, the paths that exist now
+ * with a hash differing from before; it is empty before `emitStart`.
+ */
 export function createTaskMeasures(
   projectRoot: string,
   specFolderPath: string,
   taskNumber: string,
   taskData: TaskData,
-): { emitStart(): Promise<void>; emitEnd(): Promise<void> } {
+): {
+  emitStart(): Promise<void>;
+  emitEnd(): Promise<void>;
+  changedScopeFiles(): Promise<string[]>;
+} {
   let start: MeasuresEventData | null = null;
   let before: ScopeState | null = null;
   return {
@@ -224,6 +233,15 @@ export function createTaskMeasures(
       if (!start || !before) return;
       const end = await gatherEndMeasures(start, before, projectRoot, taskData.scope);
       await emitMeasures(specFolderPath, taskNumber, end);
+    },
+    async changedScopeFiles(): Promise<string[]> {
+      const snapshot = before;
+      if (!snapshot) return [];
+      const now = await snapshotScope(projectRoot, taskData.scope);
+      return Object.entries(now.hashes)
+        .filter(([relativePath, hash]) => hash !== null && hash !== snapshot.hashes[relativePath])
+        .map(([relativePath]) => relativePath)
+        .sort();
     },
   };
 }
