@@ -1,0 +1,15 @@
+---
+scope_resolver: 2
+scope_hash: sha256:351ea198f956e9f798309b8c247ea2e00527ea537851f1ae37d63719ad5d77de
+build_stamp: 9baa8e9
+project_commit: b53e382
+exit_code: 0
+scope_files:
+  decisions/013-remote-access.md: sha256:acf5b59d969b06c130a5b1fd189d85b26c5e2ae766c2547c8f6fb4015067338f
+  decisions/README.md: sha256:819900a5966e065000793c2fc4981b8bcb9a4c9f4f3672ea54a77e878fc3739e
+  tests/remote-access-adr.test.ts: sha256:962e299131499eed0135ba5dc270abadcd7a42427338a396bc00855da54f9441
+original_scope_hash: sha256:a33468f368af84bb8e3e27ea91ba718dd84191cd2f803079323c8a4851c21135
+recertified_at: 2026-10-08T16:40:26.505Z
+recertification_count: 1
+---
+2026-10-08T16:37:11.753Z

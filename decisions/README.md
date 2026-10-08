@@ -47,3 +47,5 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [010. Validator role](010-validator-role.md)
 - [011. Traceability trial](011-traceability-trial.md)
 - [012. Watch service](012-watch-service.md)
+- [013. Remote access](013-remote-access.md)
+- [014. Server mode](014-server-mode.md)
