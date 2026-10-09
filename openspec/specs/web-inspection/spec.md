@@ -104,11 +104,13 @@ origin APIs and SHALL make no external request.
 
 ### Requirement: Typed UI data boundary
 The React application SHALL have one data module that owns every report, graph,
-inbox, change, and events access. When typed `window.__OSQ_DATA__` exists, the
+inbox, change, and events access, and one server status client that owns the
+`api/server` access. When typed `window.__OSQ_DATA__` exists, the
 module SHALL prefer its report, graph, inbox, and keyed change documents;
-otherwise it SHALL use only same-origin `/api/*` fetches. UI components SHALL
-receive documents and callbacks and SHALL NOT invoke fetch or construct an
-EventSource.
+otherwise it SHALL use only same-origin `/api/*` fetches, prefixed with
+`/p/<project>` when the page is served under `/p/<project>/`. UI components
+SHALL receive documents and callbacks and SHALL NOT invoke fetch or construct
+an EventSource.
 
 The UI SHALL import `MetricsReport`, `Inbox`, `WebGraph`, and `WebChange` using
 `import type` only. No module below `src/` SHALL import from `packages/ui`, and
@@ -648,7 +650,10 @@ from `src/core/web/web-actions.ts`, and SHALL never import from `src/cli/`.
 Each server SHALL create one token of 32 random bytes from `node:crypto`,
 hex-encoded, when it starts. A request's host is allowed when its `Host`
 header is `127.0.0.1:<port>` or `localhost:<port>`, with `<port>` the bound
-port; an origin is allowed when it is `http://` followed by an allowed host.
+port, or exactly equals an entry of the server config's `serve.allowedHosts`;
+an origin is allowed when it is `http://` or `https://` followed by an
+allowed host. The server SHALL still bind only `127.0.0.1`; no setting binds
+another address.
 
 `GET /api/actions/<id>` SHALL return 403 with
 `{"error":"request refused"}` when the host is not allowed or an `Origin`
@@ -717,6 +722,23 @@ start.
 #### Scenario: Approve with opened notices
 - **WHEN** osq's page posts `{"verb":"approve","opened":["rules_path"]}` to `/api/actions/001` with the token, an allowed host and origin
 - **THEN** `runAction` receives `approve` for change `001` with `opened` `["rules_path"]`, while `{"verb":"approve","opened":"rules_path"}` returns 400 without calling it
+
+#### Scenario: Configured host behind a proxy
+- **WHEN** `serve.allowedHosts` is `['box.tail1234.ts.net']` and a POST to `/api/actions/001` carries `Host: box.tail1234.ts.net`, `Origin: https://box.tail1234.ts.net`, the token, and `application/json`
+- **THEN** `runAction` is called once and the response is 200
+
+#### Scenario: Hosts judged against the list
+- **WHEN** a `GET /api/actions/001` carries each `Host` below, with no `Origin`, on a server bound to port 4180
+- **THEN** the status is the one in the table:
+
+| `serve.allowedHosts` | `Host` | Status |
+|---|---|---|
+| `[]` | `127.0.0.1:4180` | 200 |
+| `[]` | `box.tail1234.ts.net` | 403 |
+| `['box.tail1234.ts.net']` | `box.tail1234.ts.net` | 200 |
+| `['box.tail1234.ts.net']` | `box.tail1234.ts.net:4180` | 403 |
+| `['box.tail1234.ts.net:8443']` | `box.tail1234.ts.net:8443` | 200 |
+| `['box.tail1234.ts.net']` | `evil.example` | 403 |
 
 ### Requirement: Change actions
 The change view SHALL show, when the dashboard is served by `osq serve` and
@@ -921,3 +943,91 @@ this requirement.
 #### Scenario: Notices at phone width
 - **WHEN** the notice block is viewed at a narrow width
 - **THEN** its text wraps and nothing scrolls the page sideways
+
+### Requirement: Project paths on a server
+`startWebServer` SHALL take an optional `site`, a `WebServerSite` from
+`src/core/web/web-site.ts` holding the server's `name` and `project`. Without
+a `site` the server SHALL behave exactly as "Loopback HTTP transport" and
+"Loopback write actions" say, and SHALL answer no `/p/` path and no
+`/api/server`.
+
+With a `site`, every path the server answers SHALL sit under
+`/p/<project>/`: a request for `/p/<project>/<rest>` SHALL be handled exactly
+as a server without a `site` handles `/<rest>`, the actions guard, the token
+and the method rules included, and `/p/<project>/` SHALL serve the
+dashboard's `index.html`. `GET` and `HEAD` of `/` and of `/p/<project>` SHALL
+return 302 with `Location: /p/<project>/`. Any other path SHALL return 404
+with `{"error":"not found"}`. The handle's `url` SHALL be
+`http://127.0.0.1:<port>/p/<project>/`.
+
+`GET /p/<project>/api/server` SHALL return the `WebServerStatus` from
+`readServerStatus(projectRoot, site, home)`: the site's `name` and `project`,
+`path` `/p/<project>/`, and the project's `service` and `watcher` records and
+`log` path as `readWatchState` reads them at the time of the request, with
+`Cache-Control: no-store`.
+
+#### Scenario: Paths with a site
+- **WHEN** a server started with site `{ name: 'box', project: 'osq' }` receives each GET below
+- **THEN** it answers as the table says:
+
+| Path | Status | Body or header |
+|---|---|---|
+| `/` | 302 | `Location: /p/osq/` |
+| `/p/osq` | 302 | `Location: /p/osq/` |
+| `/p/osq/` | 200 | the dashboard's `index.html` |
+| `/p/osq/api/report` | 200 | the report document |
+| `/p/osq/api/server` | 200 | the status document |
+| `/api/report` | 404 | `{"error":"not found"}` |
+| `/p/other/api/report` | 404 | `{"error":"not found"}` |
+
+#### Scenario: Write through the project path
+- **WHEN** a server with a site and a `runAction` receives a valid POST to `/p/osq/api/actions/001` with the token, an allowed host and origin
+- **THEN** `runAction` receives the request for change `001`, and the same POST to `/api/actions/001` returns 404 without calling it
+
+#### Scenario: Status document
+- **WHEN** the project's `service.json` and `watcher.json` name live pids and the watcher record's `waiting` is `osq build is stale`
+- **THEN** `/p/osq/api/server` returns `name` `box`, `project` `osq`, `path` `/p/osq/`, the service's pid, and the watcher's mode, version, commit and `waiting`
+
+#### Scenario: No site, no project paths
+- **WHEN** a server started without a site receives `GET /api/server` and `GET /p/osq/api/report`
+- **THEN** both return 404 and the server's `url` has no `/p/` path
+
+### Requirement: Server header and service panel
+The dashboard SHALL resolve its API base from the page's path: under
+`/p/<project>/` the data module, the actions client and the event source
+SHALL request paths under `/p/<project>/api/`; anywhere else they SHALL
+request `/api/` paths exactly as before. Only under `/p/<project>/` SHALL the
+dashboard request `api/server`, once when it starts and again on every
+refresh and every `changed` event; a failed request SHALL leave the last
+status shown.
+
+With a status, the header SHALL show `<project> on <name>` next to the title,
+and the home view SHALL open with a Service panel before its groups. The
+panel SHALL say:
+
+- `Watcher: running in the background` or `Watcher: running in a terminal`, by the watcher record's `mode`, with its `version`, `commit` and `startedAt`; or `Watcher: not running` when there is no watcher record;
+- `Waiting: <reason>` as a warning when the watcher's `waiting` is not null;
+- `Service log: <log>` when there is a service record.
+
+Without a status, as under `osq serve` and in a static export, the header and
+the home view SHALL render as before. The header and panel SHALL fit a
+360-pixel-wide screen without horizontal scrolling.
+
+#### Scenario: Header on a server
+- **WHEN** the dashboard is opened at `/p/osq/` and `api/server` returns name `box` and project `osq`
+- **THEN** the header shows `osq on box`
+
+#### Scenario: Service panel states
+- **WHEN** the home view renders with each status below
+- **THEN** the Service panel shows the lines in the table:
+
+| Watcher record | Service record | Lines |
+|---|---|---|
+| mode `background`, waiting null | present, log `/h/.osq/watch/x/watch.log` | `Watcher: running in the background`, `Service log: /h/.osq/watch/x/watch.log` |
+| mode `terminal`, waiting null | none | `Watcher: running in a terminal` |
+| mode `background`, waiting `osq build is stale` | present | `Watcher: running in the background`, `Waiting: osq build is stale`, `Service log: ...` |
+| none | none | `Watcher: not running` |
+
+#### Scenario: Loopback dashboard unchanged
+- **WHEN** the dashboard is opened at `/` and has no status
+- **THEN** it requests no `api/server`, its requests use `/api/` paths, and the header and home view render as before

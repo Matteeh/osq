@@ -39,6 +39,8 @@ export interface DashboardDataOptions {
   readonly eventSource?: EventSourceConstructor;
   /** Injectable global scope for Node tests. Defaults to `globalThis`. */
   readonly global?: GlobalScope;
+  /** `/p/<project>` when the page is served there; `''` for loopback. */
+  readonly base?: string;
 }
 
 interface GlobalScope {
@@ -121,6 +123,7 @@ function resolveEventSource(options: DashboardDataOptions): EventSourceConstruct
 export function createDashboardData(options: DashboardDataOptions = {}): DashboardData {
   const inline = resolveInline(options);
   const events = resolveEventSource(options);
+  const base = options.base ?? '';
   const load = options.fetch ?? ((input: string) => globalThis.fetch(input));
   const listeners = new Set<(snapshot: DashboardSnapshot) => void>();
   let snapshot: DashboardSnapshot = EMPTY_SNAPSHOT;
@@ -131,7 +134,7 @@ export function createDashboardData(options: DashboardDataOptions = {}): Dashboa
 
   function openSource(): void {
     if (source !== null || closed || events === null) return;
-    source = new events(EVENTS_PATH);
+    source = new events(`${base}${EVENTS_PATH}`);
     source.addEventListener('changed', (event) => {
       if (closed) return;
       const ids = parseChangedIds(event.data);
@@ -151,23 +154,23 @@ export function createDashboardData(options: DashboardDataOptions = {}): Dashboa
 
   function getReport(): Promise<MetricsReport> {
     if (inline?.report) return Promise.resolve(inline.report);
-    return fetchDocument('/api/report', isReport);
+    return fetchDocument(`${base}/api/report`, isReport);
   }
 
   function getGraph(): Promise<WebGraph> {
     if (inline?.graph) return Promise.resolve(inline.graph);
-    return fetchDocument('/api/graph', isGraph);
+    return fetchDocument(`${base}/api/graph`, isGraph);
   }
 
   function getInbox(): Promise<Inbox> {
     if (inline?.inbox) return Promise.resolve(inline.inbox);
-    return fetchDocument('/api/inbox', isInbox);
+    return fetchDocument(`${base}/api/inbox`, isInbox);
   }
 
   function getChange(folderKey: string): Promise<WebChange> {
     const inlined = inline?.changes?.[folderKey];
     if (inlined) return Promise.resolve(inlined);
-    return fetchDocument(`/api/changes/${encodeURIComponent(folderKey)}`, isChange);
+    return fetchDocument(`${base}/api/changes/${encodeURIComponent(folderKey)}`, isChange);
   }
 
   function loadRoute(next: Route): Promise<Partial<DashboardSnapshot>> {

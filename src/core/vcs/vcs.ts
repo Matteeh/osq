@@ -48,6 +48,13 @@ export interface VcsFastForwardResult {
   readonly changed?: readonly string[];
 }
 
+/** A push's outcome: taken, or refused because the remote has commits the pushed one lacks. */
+export interface VcsPushResult {
+  readonly status: 'done' | 'rejected';
+  /** Git's combined output, stdout first. */
+  readonly output: string;
+}
+
 /** One entry of `git worktree list`, with its branch and HEAD. */
 export interface VcsWorktree {
   /** Absolute path of the worktree. */
@@ -104,4 +111,8 @@ export interface Vcs {
   /** A binary diff of every change against HEAD, or against `base` when given. */
   patch(base?: string): Promise<string>;
   discard(paths: readonly string[]): Promise<void>;
+  /** The commit `<remote>`'s `branch` names after fetching it; fails with git's output. */
+  fetchBranch(remote: string, branch: string): Promise<string>;
+  /** Push `commit` to `<remote>`'s `branch` as a fast-forward only, never forcing. */
+  pushBranch(remote: string, commit: string, branch: string): Promise<VcsPushResult>;
 }

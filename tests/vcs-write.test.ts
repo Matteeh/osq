@@ -19,6 +19,7 @@ const GIT_AUTHOR = 'Osq Author <author@example.invalid>';
 /** Argument literals no git argument list under `src/core/vcs/` may contain. */
 const FORBIDDEN_ARGUMENTS = [
   '--force',
+  '--force-with-lease',
   '--amend',
   '--hard',
   '-D',
@@ -26,7 +27,8 @@ const FORBIDDEN_ARGUMENTS = [
   'rebase',
   'reset',
   'filter-branch',
-  'push',
+  '--mirror',
+  '--delete',
   '--no-verify',
 ];
 
@@ -62,6 +64,8 @@ const PORT_MEMBERS = [
   'isAncestor',
   'patch',
   'discard',
+  'fetchBranch',
+  'pushBranch',
 ];
 
 const tmpDirs: string[] = [];
@@ -355,6 +359,29 @@ describe('Operations osq never runs', () => {
         if (
           (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) &&
           FORBIDDEN_ARGUMENTS.includes(node.text)
+        ) {
+          findings.push(`${relative(file)}: ${node.text}`);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(parsed);
+    }
+    assert.deepEqual(findings, []);
+  });
+
+  it('keeps push out of every vcs file other than git-vcs-remote.ts', async () => {
+    const entries = await fs.readdir(VCS_SRC, { withFileTypes: true });
+    const findings: string[] = [];
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.ts')) continue;
+      if (entry.name === 'git-vcs-remote.ts') continue;
+      const file = path.join(VCS_SRC, entry.name);
+      const source = await fs.readFile(file, 'utf8');
+      const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+      const visit = (node: ts.Node): void => {
+        if (
+          (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) &&
+          node.text === 'push'
         ) {
           findings.push(`${relative(file)}: ${node.text}`);
         }

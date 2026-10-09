@@ -31,6 +31,16 @@ export interface WatcherRecord {
   readonly waiting: string | null;
 }
 
+/** What `osq server start` writes for the server's supervisor. */
+export interface ServerRecord {
+  readonly pid: number;
+  readonly startedAt: string;
+  /** Absolute path of server.log. */
+  readonly log: string;
+  /** `http://127.0.0.1:<port>/p/<project>/`. */
+  readonly url: string;
+}
+
 /** The parsed records and log location for one project. */
 export interface WatchState {
   /** Null unless service.json parses and names a live pid. */
@@ -42,7 +52,7 @@ export interface WatchState {
   readonly logExists: boolean;
 }
 
-export type WatchRecordName = 'service' | 'watcher';
+export type WatchRecordName = 'service' | 'watcher' | 'server';
 
 /** True when `process.kill(pid, 0)` succeeds or fails with `EPERM`. */
 export function isProcessAlive(pid: number): boolean {
@@ -98,6 +108,31 @@ export async function writeWatcherRecord(
   await writeRecord(await watchStateDir(projectRoot, home), 'watcher', record);
 }
 
+/**
+ * Read `server.json`, counting it only while its pid is alive.
+ * @scenario watcher-and-harness: Live and dead server records
+ */
+export async function readServerRecord(
+  projectRoot: string,
+  home = os.homedir(),
+  isAlive: (pid: number) => boolean = isProcessAlive,
+): Promise<ServerRecord | null> {
+  const dir = await watchStateDir(projectRoot, home);
+  return readRecord<ServerRecord>(dir, 'server', isAlive, isServerRecord);
+}
+
+/**
+ * Write `server.json` for the server's supervisor, replacing any older record.
+ * @scenario watcher-and-harness: Live and dead server records
+ */
+export async function writeServerRecord(
+  projectRoot: string,
+  record: ServerRecord,
+  home = os.homedir(),
+): Promise<void> {
+  await writeRecord(await watchStateDir(projectRoot, home), 'server', record);
+}
+
 /** Delete `<name>.json` only when it names `pid`. */
 export async function removeWatchRecord(
   projectRoot: string,
@@ -150,7 +185,7 @@ async function readRecord<T>(
 async function writeRecord(
   dir: string,
   name: WatchRecordName,
-  record: ServiceRecord | WatcherRecord,
+  record: ServiceRecord | WatcherRecord | ServerRecord,
 ): Promise<void> {
   await fsp.mkdir(dir, { recursive: true });
   const file = path.join(dir, `${name}.json`);
@@ -187,6 +222,16 @@ function isServiceRecord(value: unknown): value is ServiceRecord {
     typeof value.pid === 'number' &&
     typeof value.startedAt === 'string' &&
     typeof value.log === 'string'
+  );
+}
+
+function isServerRecord(value: unknown): value is ServerRecord {
+  return (
+    isRecord(value) &&
+    typeof value.pid === 'number' &&
+    typeof value.startedAt === 'string' &&
+    typeof value.log === 'string' &&
+    typeof value.url === 'string'
   );
 }
 

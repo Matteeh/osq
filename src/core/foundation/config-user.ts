@@ -8,6 +8,7 @@ import type { NoticesConfig } from './config-notices.js';
 import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
+import type { ServeConfig, ServeServerConfig } from './config-serve.js';
 import type { TraceabilityConfig } from './config-traceability.js';
 import type { ValidatorConfig } from './config-validator.js';
 import type { VcsConfig } from './config-vcs.js';
@@ -50,6 +51,7 @@ export type OsqUserConfig = Partial<
     | 'validator'
     | 'watch'
     | 'notices'
+    | 'serve'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -75,4 +77,7 @@ export type OsqUserConfig = Partial<
   readonly validator?: Partial<ValidatorConfig>;
   readonly watch?: Partial<WatchConfig>;
   readonly notices?: Partial<NoticesConfig>;
+  readonly serve?: Partial<Omit<ServeConfig, 'server'>> & {
+    readonly server?: Partial<ServeServerConfig>;
+  };
 };

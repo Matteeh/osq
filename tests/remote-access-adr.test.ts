@@ -13,21 +13,21 @@ const RULE =
   'osq serve binds only loopback; writes need an allowed host, a matching origin and the per-server token, one at a time, through the CLI command functions.';
 
 describe('ADR 013: remote access', () => {
-  it('is proposed for web-inspection, names its rule and checks, and leaves ADR 009 accepted', async () => {
+  it('is accepted for web-inspection, names its rule and checks, and supersedes ADR 009', async () => {
     const records = await readDecisions(REPO_ROOT, DEFAULT_CONFIG);
     const adr = records.adrs.find((entry) => entry.number === '013');
 
     assert.ok(adr, 'ADR 013 must be read');
     assert.equal(records.ignored.includes(adr.path), false);
-    assert.equal(adr.status, 'proposed');
+    assert.equal(adr.status, 'accepted');
     assert.deepEqual(adr.appliesTo, ['web-inspection']);
     assert.equal(adr.rule, RULE);
-    assert.deepEqual([...adr.checks], ['tests/web-actions.test.ts']);
+    assert.deepEqual([...adr.checks], ['tests/web-actions.test.ts', 'tests/hosts-guard.test.ts']);
 
     const adr009 = records.adrs.find((entry) => entry.number === '009');
     assert.ok(adr009, 'ADR 009 must be read');
-    assert.equal(adr009.status, 'accepted');
-    assert.equal(adr009.supersededBy, null);
+    assert.equal(adr009.status, 'superseded');
+    assert.equal(adr009.supersededBy, '013');
   });
 
   it('validates with no error and no warning', async () => {

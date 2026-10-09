@@ -85,7 +85,7 @@ function validateStop(options: WatchServiceOptions): void {
 }
 
 /** Spawn the detached supervisor, append its output to `watch.log`, record its pid. */
-async function startBackgroundWatch(
+export async function startBackgroundWatch(
   options: WatchServiceOptions,
   cwd: string,
   stdout: (text: string) => void,
@@ -119,7 +119,7 @@ async function startBackgroundWatch(
 }
 
 /** SIGTERM the live supervisor and wait up to `watch.stopWaitSeconds` for it. */
-async function stopBackgroundWatch(
+export async function stopBackgroundWatch(
   options: WatchServiceOptions,
   cwd: string,
   stdout: (text: string) => void,

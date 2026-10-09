@@ -25,6 +25,9 @@ export const DEFAULT_WORKTREE_ROOT = '~/.osq/worktrees';
 /** Default bound in seconds for each commit osq makes when unset. */
 export const DEFAULT_GIT_COMMIT_SECONDS = 120;
 
+/** Default bound in seconds for a remote fetch or push when unset. */
+export const DEFAULT_GIT_REMOTE_SECONDS = 120;
+
 /** A name, a space, and a non-empty email in angle brackets. */
 const AUTHOR_PATTERN = /^\S.*\s<[^<>]+>$/;
 

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:bb0ca088e8a8c8f61040f6a2332889dfd0759b666bb12dfbb01fae232d9c27fe"
+build_stamp: "263124c7"
+project_commit: "90c92735"
+exit_code: 0
+scope_files: {"src/core/foundation/config-serve.ts":"sha256:8a1fcc342c6aba74d26019464d7afe33827f88b5446254b3c6b8b835b32704f6","src/core/foundation/config-user.ts":"sha256:4723db9fd5f80e8298aa10c1ebd4aa62841ddd35efd14d1aff198a2228f4ccba","src/core/web/web-write.ts":"sha256:55eeb70bfa12b6a4a3e88f544db9de15ec563584b01fc65b741cc535abf7f540","src/index.ts":"sha256:4ff35566842cb0dbbfeb5eb35a1d92d630f95f57e969b0024f951ebcecc106d5","tests/config.test.ts":"sha256:a9d2a6555066ff6f78a892c83341ef0eb78e623807a73749a91c1bab4e0bcfc4","tests/hosts-config.test.ts":"sha256:ada896686c9fe376803166e6cdabdb5765e4df1700065f7aa0a9c20ebd8b85c8","tests/hosts-guard.test.ts":"sha256:06d53271e64a262e405f03291bfab57b0f60089bbc6f9122f866d40257246d99"}
+---
+2026-10-09T21:42:57.829Z

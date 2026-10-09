@@ -22,6 +22,7 @@ import type {
   WebGraph,
   WebReview,
 } from '../../../src/core/web/web-data.js';
+import type { WebServerStatus } from '../../../src/core/web/web-site.js';
 
 export type {
   ApprovalFlag,
@@ -42,6 +43,7 @@ export type {
   WebDeltaRequirement,
   WebGraph,
   WebReview,
+  WebServerStatus,
 };
 
 /**

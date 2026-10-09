@@ -10,15 +10,34 @@ export function createActionToken(): string {
   return randomBytes(32).toString('hex');
 }
 
-/** An allowed host is the loopback host or `localhost` at the bound port. */
-export function isHostAllowed(host: string | undefined, port: number): boolean {
-  return host === `127.0.0.1:${port}` || host === `localhost:${port}`;
+/**
+ * An allowed host is loopback or an exact `allowedHosts` entry.
+ * @scenario web-inspection: Configured host behind a proxy
+ * @scenario web-inspection: Hosts judged against the list
+ * @adr 013
+ */
+export function isHostAllowed(
+  host: string | undefined,
+  port: number,
+  allowedHosts: readonly string[] = [],
+): boolean {
+  if (host === `127.0.0.1:${port}` || host === `localhost:${port}`) return true;
+  return typeof host === 'string' && allowedHosts.includes(host);
 }
 
-/** An allowed origin is `http://` followed by an allowed host. */
-export function isOriginAllowed(origin: string | undefined, port: number): boolean {
+/**
+ * An allowed origin is `http://` or `https://` followed by an allowed host.
+ * @scenario web-inspection: Configured host behind a proxy
+ * @adr 013
+ */
+export function isOriginAllowed(
+  origin: string | undefined,
+  port: number,
+  allowedHosts: readonly string[] = [],
+): boolean {
   if (origin === undefined) return false;
-  return origin === `http://127.0.0.1:${port}` || origin === `http://localhost:${port}`;
+  const prefix = /^https?:\/\//.exec(origin)?.[0];
+  return prefix !== undefined && isHostAllowed(origin.slice(prefix.length), port, allowedHosts);
 }
 
 /** The media type is `application/json`, ignoring parameters such as charset. */
@@ -163,9 +182,10 @@ async function actionGet(
 ): Promise<void> {
   const port = context.options.getPort();
   const origin = req.headers.origin;
+  const allowedHosts = context.options.config.serve?.allowedHosts ?? [];
   if (
-    !isHostAllowed(req.headers.host, port) ||
-    (origin !== undefined && !isOriginAllowed(origin, port))
+    !isHostAllowed(req.headers.host, port, allowedHosts) ||
+    (origin !== undefined && !isOriginAllowed(origin, port, allowedHosts))
   ) {
     return sendJson(res, 403, { error: 'request refused' }, head);
   }
@@ -191,9 +211,10 @@ async function actionPost(
   run: WebActionRunner,
 ): Promise<void> {
   const port = context.options.getPort();
+  const allowedHosts = context.options.config.serve?.allowedHosts ?? [];
   if (
-    !isHostAllowed(req.headers.host, port) ||
-    !isOriginAllowed(req.headers.origin, port) ||
+    !isHostAllowed(req.headers.host, port, allowedHosts) ||
+    !isOriginAllowed(req.headers.origin, port, allowedHosts) ||
     !isJsonMediaType(req.headers['content-type']) ||
     !tokenMatches(req.headers['x-osq-token'], context.token)
   ) {

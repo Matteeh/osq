@@ -1,12 +1,17 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
-import { DEFAULT_BRANCH, DEFAULT_GIT_COMMIT_SECONDS } from '../foundation/config-vcs.js';
+import {
+  DEFAULT_BRANCH,
+  DEFAULT_GIT_COMMIT_SECONDS,
+  DEFAULT_GIT_REMOTE_SECONDS,
+} from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import * as diff from './git-vcs-diff.js';
 import * as land from './git-vcs-land.js';
 import * as merges from './git-vcs-merge.js';
 import { nonEmpty, parseStashes, parseStatus } from './git-vcs-parse.js';
+import * as remote from './git-vcs-remote.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
 import type {
@@ -14,6 +19,7 @@ import type {
   VcsDiffStat,
   VcsHead,
   VcsMergeResult,
+  VcsPushResult,
   VcsStash,
   VcsStatusEntry,
   VcsWorktree,
@@ -94,6 +100,12 @@ export class GitVcs implements Vcs {
   private runCommit(args: string[], env?: NodeJS.ProcessEnv): Promise<GitResult> {
     const seconds = this.config.timeouts.gitCommitSeconds ?? DEFAULT_GIT_COMMIT_SECONDS;
     return runGit(this.binary, args, this.projectRoot, seconds, env);
+  }
+
+  /** Run a remote fetch or push, bounded by `timeouts.gitRemoteSeconds`. */
+  private runRemote(args: string[]): Promise<GitResult> {
+    const seconds = this.config.timeouts.gitRemoteSeconds ?? DEFAULT_GIT_REMOTE_SECONDS;
+    return runGit(this.binary, args, this.projectRoot, seconds, { GIT_TERMINAL_PROMPT: '0' });
   }
 
   async root(): Promise<string | null> {
@@ -225,5 +237,13 @@ export class GitVcs implements Vcs {
 
   discard(paths: readonly string[]): Promise<void> {
     return writes.discard(this.context, paths);
+  }
+
+  fetchBranch(remoteName: string, branch: string): Promise<string> {
+    return remote.fetchBranch((args) => this.runRemote(args), remoteName, branch);
+  }
+
+  pushBranch(remoteName: string, commit: string, branch: string): Promise<VcsPushResult> {
+    return remote.pushBranch((args) => this.runRemote(args), remoteName, commit, branch);
   }
 }

@@ -1,5 +1,6 @@
 ---
-status: accepted
+status: superseded
+superseded_by: "013"
 applies_to: [web-inspection]
 rule: osq serve writes only on loopback, for requests proving Host, Origin and a per-server token, one at a time, through the CLI's command functions.
 checks:
@@ -11,7 +12,7 @@ Date: 2026-10-04
 
 ## Status
 
-Accepted
+Superseded by ADR 013
 
 ## Context
 

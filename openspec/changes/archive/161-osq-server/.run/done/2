@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:78d1543fe0aef5c4cda9dd498ddb0ccf7da4388d3c403ee9c4cfbfdcbabd1424"
+build_stamp: "263124c7"
+project_commit: "b03b83b8"
+exit_code: 0
+scope_files: {"src/core/foundation/config-vcs.ts":"sha256:6db3673426c55e30a2618c625c0bdf6b1e34b49c48cc77567395435560bd65da","src/core/foundation/config.ts":"sha256:fc33184dcaa7a09bde508a8b19c198ae3653160208fb39c43a0d321fcdf29123","src/core/vcs/git-vcs-remote.ts":"sha256:f2f860ee4a0c523ce9f2a2174e0c9f1fa058c048648af98ee3b1adf2bcd8bf30","src/core/vcs/git-vcs.ts":"sha256:ea3caa3396e2954d68c2bb489a2773b7379fb047982c4d4867d08589712a0a8b","src/core/vcs/no-vcs.ts":"sha256:eb58bcb406eebf864944845ef04eb8f7041df5fab2c4529232551896dda6c2a2","src/core/vcs/vcs.ts":"sha256:20a5058175c1fa24bf43b8b1b8c6ad55996e7b06bba57cd59ce19812be2755ab","tests/vcs-remote.test.ts":"sha256:f72b2d4ffde8587ecc53f18151684667b654daedd45b59630eb78b3536371278","tests/vcs-write.test.ts":"sha256:05f44b151409e983aa0bd0df00a858919f8d5d5a8599f9ab2e67052d9b78ba84"}
+---
+2026-10-09T21:49:30.134Z

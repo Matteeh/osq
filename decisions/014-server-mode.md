@@ -2,6 +2,11 @@
 status: accepted
 applies_to: all
 rule: Server mode is an addition; an osq server runs the same command functions on its own clone, and every command keeps working locally exactly as today.
+checks:
+  - tests/serve.test.ts
+  - tests/serve-actions.test.ts
+  - tests/vcs-land-publish.test.ts
+  - tests/server-command.test.ts
 ---
 # 014. Server mode
 
@@ -100,12 +105,9 @@ sign-in waits, and that MCP comes after the server.
 
 - One code path serves local use, the server, the forwarded CLI and MCP. Only
   the transport differs, so local and remote output cannot drift.
-- `checks` is empty until server code exists. The tests that will enforce this
-  ADR: loopback `osq serve` tests passing unchanged, an upload refused outside
-  the change folder, a land that stops when `origin` moved, and a forwarded
-  command printing the same output and exit code as the local one. The
-  `osq-server` and `remote-cli` changes add them and list them in this ADR's
-  `checks`.
+- `osq-server` listed the loopback serve tests, the publishing land and the
+  server commands in this ADR's `checks`; `remote-cli` adds the upload and
+  forwarded-command tests.
 - Until sign-in exists, the server is only as private as the network in front
   of it.
 

@@ -1,9 +1,10 @@
 ---
-status: proposed
+status: accepted
 applies_to: [web-inspection]
 rule: osq serve binds only loopback; writes need an allowed host, a matching origin and the per-server token, one at a time, through the CLI command functions.
 checks:
   - tests/web-actions.test.ts
+  - tests/hosts-guard.test.ts
 ---
 # 013. Remote access
 
@@ -11,9 +12,8 @@ Date: 2026-10-08
 
 ## Status
 
-Proposed. `osq-server` accepts it when it builds the configured hosts, and
-ADR 009 then becomes superseded with `superseded_by: 013`. Until then ADR 009
-governs.
+Accepted. Since change 161 it supersedes ADR 009, which carries
+`superseded_by: 013`.
 
 ## Context
 

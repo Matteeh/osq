@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Command } from 'commander';
+import { landAndPublish } from '../core/vcs/land-publish.js';
 import { landChange } from '../core/vcs/land.js';
 import { findStaleBuild, osqPackageRoot } from '../watcher/build.js';
 import { CommandError } from './command-error.js';
@@ -12,6 +13,8 @@ export const REBUILD_MESSAGE = "osq's own source changed; run the build and rest
 export interface LandCommandOptions extends CommandInputs {
   /** Skip the stale-build refusal. */
   allowStale?: boolean;
+  /** Land through `landAndPublish`, fetching and pushing `origin`. */
+  publish?: boolean;
   /** osq's own package root; defaults to the running package. */
   packageRoot?: string;
 }
@@ -54,7 +57,11 @@ async function changedOwnSource(changed: readonly string[], packageRoot: string)
  * stderr, then says to rebuild when the land changed osq's own source. A
  * refusal or a stop throws a `CommandError` carrying its message or exit code;
  * the command prints no error line of its own. A non-zero `landChange` code
- * throws an empty `CommandError` with that code after its lines print.
+ * throws an empty `CommandError` with that code after its lines print. With
+ * `publish` it lands through `landAndPublish` and pushes to `origin`.
+ *
+ * @scenario version-control: Land publishes to origin
+ * @adr 003
  */
 export async function landCommand(id: string, options: LandCommandOptions = {}): Promise<void> {
   const inputs = resolveInputs(options);
@@ -68,9 +75,11 @@ export async function landCommand(id: string, options: LandCommandOptions = {}):
       throw new CommandError(stale);
     }
     const config = await inputs.config();
-    const { lines, code, changed } = await landChange(inputs.cwd, config, id, (line) =>
-      inputs.stderr(`${line}\n`),
-    );
+    const report = (line: string): void => inputs.stderr(`${line}\n`);
+    const { lines, code, changed } =
+      options.publish === true
+        ? await landAndPublish(inputs.cwd, config, id, report)
+        : await landChange(inputs.cwd, config, id, report);
     for (const line of lines) inputs.stdout(`${line}\n`);
     if (code === 0 && (await changedOwnSource(changed, options.packageRoot ?? osqPackageRoot()))) {
       inputs.stdout(`${REBUILD_MESSAGE}\n`);

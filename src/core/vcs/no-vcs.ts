@@ -5,6 +5,7 @@ import type {
   VcsFastForwardResult,
   VcsHead,
   VcsMergeResult,
+  VcsPushResult,
   VcsStash,
   VcsStatusEntry,
   VcsWorktree,
@@ -142,6 +143,14 @@ export class NoVcs implements Vcs {
   }
 
   async discard(_paths: readonly string[]): Promise<void> {
+    this.reject();
+  }
+
+  async fetchBranch(_remote: string, _branch: string): Promise<string> {
+    this.reject();
+  }
+
+  async pushBranch(_remote: string, _commit: string, _branch: string): Promise<VcsPushResult> {
     this.reject();
   }
 }

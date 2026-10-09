@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ed5bf60fe8aa012bbddd7289432b0020ab95f8351a892ddb71906e114841f21f"
+build_stamp: "263124c7"
+project_commit: "9c4c37fe"
+exit_code: 0
+scope_files: {"decisions/009-loopback-write-actions.md":"sha256:5ade4f4c07f87a722b1e17ddee0fbddb317969d4c126db038eb0001ae7fac043","decisions/013-remote-access.md":"sha256:cb223b6fb0c098abbb7296954c4bd583de652381edc9579fd8f2a1b68765cae6","decisions/014-server-mode.md":"sha256:defe35c4939f8b6f1019077f1a0b5516525743853a85a22c937790690762a160","tests/remote-access-adr.test.ts":"sha256:6c22e963bddfd28f0eeb1cbf1bc6d28d859101cd0a3a880d094745b32e594928","tests/server-adrs.test.ts":"sha256:1e35a76c1f8775477933e7ab4e540cc4c27e4df89695c6b31113e1412d293a46","tests/server-mode-adr.test.ts":"sha256:c26a5d917714fe590ab49a62b3cfd0b63a76f4b60f8840bcdd2a091a3e37e9a3"}
+---
+2026-10-09T22:37:06.782Z

@@ -21,6 +21,7 @@ import { rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
 import { retryCommand } from './retry.js';
 import { parsePortArgument, serveCommand } from './serve.js';
+import { registerServerCommand } from './server.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
 import { registerSpecCommand } from './spec.js';
@@ -226,23 +227,17 @@ export function createProgram(version?: string): Command {
   registerInboxDispatchCommand(program);
   registerLandCommand(program);
   registerMessageCommand(program);
+  registerServerCommand(program);
   registerSpecCommand(program);
   registerSyncCommand(program);
   configureGroupedHelp(program);
+  const normalize = (argv: readonly string[]): string[] =>
+    argv.map((arg) => (arg === '-print' ? '--print' : arg));
   const origParse = program.parse.bind(program);
-  program.parse = (argv?: readonly string[], parseOptions?: Parameters<Command['parse']>[1]) => {
-    const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));
-    return origParse(normalized, parseOptions);
-  };
-
+  program.parse = (argv, parseOptions) => origParse(normalize(argv || process.argv), parseOptions);
   const origParseAsync = program.parseAsync.bind(program);
-  program.parseAsync = async (
-    argv?: readonly string[],
-    parseOptions?: Parameters<Command['parseAsync']>[1],
-  ) => {
-    const normalized = (argv || process.argv).map((arg) => (arg === '-print' ? '--print' : arg));
-    return await origParseAsync(normalized, parseOptions);
-  };
+  program.parseAsync = async (argv, parseOptions) =>
+    await origParseAsync(normalize(argv || process.argv), parseOptions);
 
   return program;
 }

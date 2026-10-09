@@ -10,7 +10,7 @@ export {
   isValidPort,
   validateServeConfig,
 } from './core/foundation/config-serve.js';
-export type { ServeConfig } from './core/foundation/config-serve.js';
+export type { ServeConfig, ServeServerConfig } from './core/foundation/config-serve.js';
 export type { WatchConfig } from './core/foundation/config-watch.js';
 export {
   DEFAULT_INBOX_CONFIG,

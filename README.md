@@ -655,6 +655,8 @@ osq init                 scaffold openspec layout, config, AGENTS.md, PLANNER.md
 osq init --refresh-schema  overwrite the six scaffolded OpenSpec schema files from the installed templates
 osq setup                write harness config for OSQ_HARNESS
 osq watch                run the watcher loop
+osq server start         run the dashboard and the watcher service in the background
+osq server stop          stop the server and the watcher service
 ```
 
 **Inspection**
@@ -933,6 +935,20 @@ execution watcher or writes a project, cursor, or marker file except through an
 action the dashboard asked for. SIGINT and SIGTERM close the HTTP listener and
 its filesystem watcher. Startup failures such as an address already in use
 print one actionable error and exit nonzero.
+
+### Running osq on a server
+
+`osq server start` runs the dashboard and the watcher service in the
+background for the server's own clone, and `osq server stop` stops both. The
+server binds only `127.0.0.1` on `serve.server.port`. Reach it over a private
+network with `tailscale serve --bg <port>` after adding the tailnet name to
+`serve.allowedHosts`, or with `ssh -L <port>:127.0.0.1:<port> <server>`, then
+open `/p/<project>/`. Tailscale Serve or a reverse proxy terminates TLS; osq
+never does. Anyone who reaches the port through the private network can tap,
+because there is no sign-in yet. A land tapped there pushes to `origin` with
+the server user's git or SSH credentials, which no executor or verify
+receives, and stops when `origin` moved. `osq land` in a terminal does not
+push, and `osq serve` is unchanged.
 
 ## Diagnostics & Health
 

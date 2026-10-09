@@ -34,7 +34,15 @@ describe('ADR 014: server mode is an addition', () => {
     assert.equal(adr.status, 'accepted');
     assert.equal(adr.appliesTo, 'all');
     assert.equal(adr.rule, RULE);
-    assert.deepEqual(adr.checks, []);
+    assert.deepEqual(
+      [...adr.checks],
+      [
+        'tests/serve.test.ts',
+        'tests/serve-actions.test.ts',
+        'tests/vcs-land-publish.test.ts',
+        'tests/server-command.test.ts',
+      ],
+    );
 
     const problems = validateDecisions(records, living, DEFAULT_CONFIG);
     assert.deepEqual(problems.errors, []);

@@ -3,16 +3,15 @@ import type { VcsConfig } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { buildSquashMessage } from '../run/squash-message.js';
 import { readDependencyState } from '../spec/stack-dependencies.js';
-import { type LocatedChange, listChanges, matchesFolder } from '../status/change-locations.js';
+import type { LocatedChange } from '../status/change-locations.js';
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
-  assertGit,
   assertNoEarlierChange,
   assertNoSteering,
-  assertVcsEnabled,
   assertWorktreeClean,
 } from './land-checks.js';
+import { landId, requireGit, resolveChange } from './land-resolve.js';
 import { recordLandStop, recordsLandStop } from './land-stop.js';
 import { selectVcs } from './select.js';
 import { syncWithDefaultBranch } from './sync-main.js';
@@ -25,38 +24,6 @@ export interface LandResult {
   readonly lines: string[];
   readonly code: number;
   readonly changed: readonly string[];
-}
-
-/** The numeric id of a change folder, for the messages a land repeats. */
-function landId(change: LocatedChange): string {
-  return change.folderName.split('-')[0] ?? change.folderName;
-}
-
-/** Select the git backend a land needs, refusing the two ways it is off. */
-async function requireGit(projectRoot: string, config: OsqConfig): Promise<Vcs> {
-  assertVcsEnabled(config);
-  const vcs = await selectVcs(projectRoot, config);
-  assertGit(vcs);
-  return vcs;
-}
-
-/** The best matching change: an archived worktree copy wins over any other. */
-async function resolveChange(
-  projectRoot: string,
-  config: OsqConfig,
-  idOrPrefix: string,
-): Promise<LocatedChange | null> {
-  const matches = (await listChanges(projectRoot, config)).filter((change) =>
-    matchesFolder(change.folderName, idOrPrefix),
-  );
-  return (
-    matches.find(
-      (change) => change.location === 'archived' && change.tree.worktreeFolder !== undefined,
-    ) ??
-    matches.find((change) => change.location === 'archived') ??
-    matches[0] ??
-    null
-  );
 }
 
 /** The absolute worktree of `change`, when git lists one. */
@@ -116,10 +83,17 @@ async function cleanupLanded(
   return { lines: [`${folder} has already landed`, ...cleanup.lines], code: 0, changed: [] };
 }
 
+/** Options a land takes beyond the change folder it resolves. */
+export interface LandOptions {
+  /** Runs with the land commit after it is built and before the default branch moves; a throw stops the land. */
+  readonly beforeMove?: (commit: string) => Promise<void>;
+}
+
 /**
  * Build the land commit from the branch tip and move the checkout to it with a
  * fast-forward only. A failed move stops naming the checkout's overlap, a
- * checkout that moved, or git's output.
+ * checkout that moved, or git's output. `beforeMove` runs after the commit is
+ * built and before the branch moves, and a throw leaves the branch where it was.
  */
 async function landCommit(
   projectRoot: string,
@@ -130,11 +104,13 @@ async function landCommit(
   base: string,
   tip: string,
   idOrPrefix: string,
+  options: LandOptions,
 ): Promise<{ commit: string; changed: readonly string[] }> {
   const author = config.vcs?.author;
   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
   const { message } = await buildSquashMessage(projectRoot, config, idOrPrefix);
   const commit = await vcs.commitTree(tip, base, message, author);
+  if (options.beforeMove !== undefined) await options.beforeMove(commit);
 
   let pushed: VcsFastForwardResult;
   try {
@@ -153,18 +129,41 @@ async function landCommit(
   return { commit, changed: pushed.changed ?? [] };
 }
 
+/** Rethrow a sync failure, recording the stops a land commits on the change's branch. */
+async function rethrowSyncStop(
+  config: OsqConfig,
+  change: LocatedChange,
+  error: unknown,
+): Promise<never> {
+  if (error instanceof SyncStop && recordsLandStop(error.reason)) {
+    try {
+      await recordLandStop(config, change, error);
+    } catch (recordError) {
+      const detail = recordError instanceof Error ? recordError.message : String(recordError);
+      throw new Error(`${error.message}\n${detail}`);
+    }
+  }
+  throw error;
+}
+
 /**
  * Land an archived change onto the default branch. Refuses unsafe state before
  * writing anything, syncs the default branch into the change's worktree, builds
  * the land commit from the branch tip, fast-forwards the checkout to it, and
  * cleans up. Every refusal and stop is an `Error` with the message the spec
- * names.
+ * names. `options.beforeMove` runs after the commit is built and before the
+ * default branch moves; a throw stops the land with it and moves nothing.
+ *
+ * @scenario version-control: Land pushes the land commit
+ * @scenario version-control: Origin moved while landing
+ * @adr 003
  */
 export async function landChange(
   projectRoot: string,
   config: OsqConfig,
   idOrPrefix: string,
   progress: (line: string) => void = () => {},
+  options: LandOptions = {},
 ): Promise<LandResult> {
   const vcs = await requireGit(projectRoot, config);
   const change = await resolveChange(projectRoot, config, idOrPrefix);
@@ -199,15 +198,7 @@ export async function landChange(
   try {
     await syncWithDefaultBranch(projectRoot, config, change, progress);
   } catch (error) {
-    if (error instanceof SyncStop && recordsLandStop(error.reason)) {
-      try {
-        await recordLandStop(config, change, error);
-      } catch (recordError) {
-        const detail = recordError instanceof Error ? recordError.message : String(recordError);
-        throw new Error(`${error.message}\n${detail}`);
-      }
-    }
-    throw error;
+    await rethrowSyncStop(config, change, error);
   }
 
   const worktreeVcs = await selectVcs(worktree, config);
@@ -226,6 +217,7 @@ export async function landChange(
     base,
     tip,
     idOrPrefix,
+    options,
   );
   const repoRoot = (await vcs.root()) ?? projectRoot;
   const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);

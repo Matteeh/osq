@@ -29,8 +29,8 @@ export interface ActionClient {
   run(selector: string, token: string, request: WebActionInput): Promise<WebActionResult>;
 }
 
-function actionUrl(selector: string): string {
-  return `/api/actions/${encodeURIComponent(selector)}`;
+function actionUrl(selector: string, base: string): string {
+  return `${base}/api/actions/${encodeURIComponent(selector)}`;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -66,13 +66,15 @@ function failed(status: number, selector: string): Error {
 
 /**
  * Create the change view's actions client over `fetch`. Loads the actions with
- * `GET /api/actions/<id>` (null on 404) and posts one request with the token.
+ * `GET <base>/api/actions/<id>` (null on 404) and posts one request with the
+ * token. The base defaults to the loopback `''`, so a plain `osq serve` page is
+ * unchanged.
  */
-export function createActionClient(fetch: ActionFetch): ActionClient {
+export function createActionClient(fetch: ActionFetch, base = ''): ActionClient {
   const send = fetch;
   return {
     async load(selector) {
-      const response = await send(actionUrl(selector));
+      const response = await send(actionUrl(selector, base));
       if (response.status === 404) return null;
       if (response.status < 200 || response.status >= 300) {
         throw failed(response.status, selector);
@@ -82,7 +84,7 @@ export function createActionClient(fetch: ActionFetch): ActionClient {
       return body;
     },
     async run(selector, token, request) {
-      const response = await send(actionUrl(selector), {
+      const response = await send(actionUrl(selector, base), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Osq-Token': token },
         body: JSON.stringify(request),

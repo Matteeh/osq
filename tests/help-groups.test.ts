@@ -5,7 +5,7 @@ import { createProgram } from '../src/cli/index.js';
 
 const EXPECTED_GROUPS = [
   { title: 'Everyday', commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject'] },
-  { title: 'Setup and running', commands: ['init', 'setup', 'watch'] },
+  { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server'] },
   {
     title: 'Inspection',
     commands: ['status', 'show', 'report', 'digest', 'query', 'spec', 'graph', 'serve', 'doctor'],

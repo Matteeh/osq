@@ -93,24 +93,43 @@ describe('OsqConfig', () => {
       'utf8',
     );
     const config = await loadConfig(tmpDir);
-    assert.deepEqual(config.serve, { port: 0, eventDebounceMs: 5 });
+    assert.deepEqual(config.serve, {
+      port: 0,
+      eventDebounceMs: 5,
+      allowedHosts: [],
+      server: { port: 4174, buildCheckSeconds: 30 },
+    });
   });
 });
 
 describe('serve configuration', () => {
   it('defaults the dashboard port and debounce interval', () => {
-    assert.deepEqual(DEFAULT_CONFIG.serve, { port: 4173, eventDebounceMs: 100 });
-    assert.deepEqual(defineConfig({}).serve, { port: 4173, eventDebounceMs: 100 });
+    assert.deepEqual(DEFAULT_CONFIG.serve, {
+      port: 4173,
+      eventDebounceMs: 100,
+      allowedHosts: [],
+      server: { port: 4174, buildCheckSeconds: 30 },
+    });
+    assert.deepEqual(defineConfig({}).serve, {
+      port: 4173,
+      eventDebounceMs: 100,
+      allowedHosts: [],
+      server: { port: 4174, buildCheckSeconds: 30 },
+    });
   });
 
   it('merges a partial serve block over the defaults', () => {
     assert.deepEqual(defineConfig({ serve: { port: 0 } }).serve, {
       port: 0,
       eventDebounceMs: 100,
+      allowedHosts: [],
+      server: { port: 4174, buildCheckSeconds: 30 },
     });
     assert.deepEqual(defineConfig({ serve: { eventDebounceMs: 250 } }).serve, {
       port: 4173,
       eventDebounceMs: 250,
+      allowedHosts: [],
+      server: { port: 4174, buildCheckSeconds: 30 },
     });
   });
 

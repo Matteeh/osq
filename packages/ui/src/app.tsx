@@ -2,12 +2,14 @@ import type { ReactElement, ReactNode } from 'react';
 import type { ActionClient } from './change/actions-client.js';
 import { ChangeView } from './change/index.js';
 import { ChangesView } from './changes/index.js';
+import type { WebServerStatus } from './contracts.js';
 import type { DashboardSnapshot } from './data.js';
 import { GraphView } from './graph/index.js';
 import { HomeView } from './home/index.js';
 import { ReportView } from './report/index.js';
 import type { Route } from './router.js';
 import { routeToHash } from './router.js';
+import { ServerHeader, ServicePanel } from './server/index.js';
 
 export interface AppProps {
   readonly route: Route;
@@ -17,6 +19,8 @@ export interface AppProps {
   readonly onNavigate: (route: Route) => void;
   readonly onRefresh: () => void;
   readonly actionClient?: ActionClient;
+  /** The server's status; only a `/p/<project>/` page has one. */
+  readonly server?: WebServerStatus | null;
 }
 
 interface NavLinkProps {
@@ -132,11 +136,13 @@ export function App({
   onNavigate,
   onRefresh,
   actionClient,
+  server,
 }: AppProps): ReactElement {
   return (
     <div className="app">
       <header className="app-header">
         <h1>osq dashboard</h1>
+        {server ? <ServerHeader server={server} /> : null}
         <nav className="app-nav" aria-label="Dashboard sections">
           <NavLink route={{ name: 'home' }} current={route} onNavigate={onNavigate}>
             Home
@@ -162,7 +168,12 @@ export function App({
           </p>
         ) : null}
         {loading ? <p className="state state-loading">Loading…</p> : null}
-        {route.name === 'home' ? <HomeRoute documents={documents} onNavigate={onNavigate} /> : null}
+        {route.name === 'home' ? (
+          <>
+            {server ? <ServicePanel server={server} /> : null}
+            <HomeRoute documents={documents} onNavigate={onNavigate} />
+          </>
+        ) : null}
         {route.name === 'changes' ? (
           <ChangesRoute documents={documents} onNavigate={onNavigate} />
         ) : null}

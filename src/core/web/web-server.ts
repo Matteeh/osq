@@ -20,6 +20,12 @@ import {
   createInvalidationHub,
 } from './web-events.js';
 import { decodeChangeSelector, send, sendFailure, sendJson } from './web-http.js';
+import {
+  type WebServerSite,
+  readServerStatus,
+  routeWebSite,
+  sendSiteRedirect,
+} from './web-site.js';
 import { UI_CONTENT_SECURITY_POLICY, resolveStaticFile, resolveUiDir } from './web-static.js';
 import { createActionRoutes } from './web-write.js';
 
@@ -58,6 +64,7 @@ export interface WebServerOptions {
   readonly getInbox?: (projectRoot: string, options: ReadInboxOptions) => Promise<Inbox>;
   readonly getActions?: ActionDocumentFn;
   readonly runAction?: WebActionRunner;
+  readonly site?: WebServerSite;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
 }
@@ -83,6 +90,7 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   const getInbox =
     options.getInbox ?? ((root: string, inbox: ReadInboxOptions) => readInbox(root, inbox));
   const runAction = options.runAction;
+  const site = options.site;
   let boundPort = 0;
   const actions = createActionRoutes({
     projectRoot,
@@ -129,6 +137,9 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
     head: boolean,
   ) {
     try {
+      if (site !== undefined && pathname === '/api/server') {
+        return sendJson(res, 200, await readServerStatus(projectRoot, site, home), head);
+      }
       if (pathname === EVENTS_PATH) return events.handle(res, head);
       if (runAction !== undefined && pathname.startsWith(ACTIONS_PREFIX)) {
         return await actions.handleGet(req, res, pathname, head);
@@ -163,9 +174,18 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
   async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
     const method = req.method ?? 'GET';
     const rawUrl = req.url ?? '/';
-    const pathname = rawUrl.startsWith('/') ? rawUrl.replace(/[?#].*$/, '') : null;
-    if (pathname === null) {
+    const rawPath = rawUrl.startsWith('/') ? rawUrl.replace(/[?#].*$/, '') : null;
+    if (rawPath === null) {
       return sendJson(res, 400, { error: 'malformed request url' }, method === 'HEAD');
+    }
+    let pathname = rawPath;
+    if (site !== undefined) {
+      const route = routeWebSite(rawPath, site);
+      if (route.kind === 'redirect') return sendSiteRedirect(res, site);
+      if (route.kind === 'notFound') {
+        return sendJson(res, 404, { error: 'not found' }, method === 'HEAD');
+      }
+      pathname = route.pathname;
     }
     const isActionPath = pathname.startsWith(ACTIONS_PREFIX);
     if (method === 'POST') {
@@ -214,5 +234,6 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
       server.closeIdleConnections();
     });
   };
-  return { url: `http://${SERVE_HOST}:${address.port}/`, port: address.port, close };
+  const basePath = site === undefined ? '/' : `/p/${site.project}/`;
+  return { url: `http://${SERVE_HOST}:${address.port}${basePath}`, port: address.port, close };
 }

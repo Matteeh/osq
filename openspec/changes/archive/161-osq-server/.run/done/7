@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f567ca39aaa86ca4926a95a2d8427e3ca8a0def8737011f468f96a767901ca23"
+build_stamp: "263124c7"
+project_commit: "9b8584f9"
+exit_code: 0
+scope_files: {"packages/ui/src/app.tsx":"sha256:f61013b3968858987a780cd65d22b164ea1f54b0c6e00e467ab18f58090c97d6","packages/ui/src/change/actions-client.ts":"sha256:bded7b52cf1fde0db3e0ea8ae97c4d6201ef684715a9c56904b32a47cf86ba04","packages/ui/src/contracts.ts":"sha256:bc2ae547ce1ba685b237c535ff2e1b49ecde8b30ac470f1d3691ff1b64351f48","packages/ui/src/data.ts":"sha256:e3d6fa53fc09aab318fc97d01f0bb98759247504fd7486c936feb3c820305777","packages/ui/src/main.tsx":"sha256:184c58106223d880252dbcb25a7dbc3cf5297d7cbdf13d7b267907bcbe1f9814","packages/ui/src/server/ServerHeader.tsx":"sha256:857c0f561ef853122d2be56fc4141c96a3d0841cfe7ce16e264e1f32c7907768","packages/ui/src/server/ServicePanel.tsx":"sha256:518325dfaf559c445cb19adc32c1ee7f0e436036b1f1e66f2fed35c8ac667c73","packages/ui/src/server/index.ts":"sha256:9d218f703878e9f61127200c0967eb72496ad7deaa21d17b080ca4506d596c45","packages/ui/src/server/resolve-base.ts":"sha256:68b439c4be05ec072dfdf721fc0c3723e15cef04f0109274cd4093a81d4c4a2c","packages/ui/src/server/server.css":"sha256:bb49c825af4393cac20f9cf5596682929154f6f986d38a8d1891998ad3bbb150","packages/ui/src/server/status-client.ts":"sha256:cadb6bcbb3a57a2a5ca9fbf4dce3b74881541ffe71ca68e70a3804906c19be5a","tests/ui-server.test.tsx":"sha256:a6d8444a5d3754612d014fed188e7bed324f4e9b9927ce0bb96c1dda1f80a63c"}
+---
+2026-10-09T22:31:06.285Z

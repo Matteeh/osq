@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d14a8f63db4c8dab7524cc032447280f848d007c85e89a51911d136fecc390a3"
+build_stamp: "263124c7"
+project_commit: "fbc33e62"
+exit_code: 0
+scope_files: {"README.md":"sha256:19643c2ec39378250b3d96d3c3f42481b5255cac2c3fe451ff501ddcc0e58b9f","src/cli/help-groups.ts":"sha256:672b04c0bbc5b4133a58869ffaf67b52b8945276de2733cae5900225c51f78bf","src/cli/index.ts":"sha256:84e81aa0338088d4c8bd48e76fd98c39c76be5d6fabd3d70184db015e5a10246","src/cli/server-worker.ts":"sha256:238fab511a8245844ea2bdf1495ab5b67521500fb4f3d3609b6b3b16ce183c70","src/cli/server.ts":"sha256:d2e69260cb80ca766954e7f2c8cc5fa32cd54858da2b3673f7ba3b0d36b2d23d","src/cli/watch-service.ts":"sha256:48e41783c8cadc363bf39c32e8b10402784b794a6bdba2e02e87ebae132b318d","tests/help-groups.test.ts":"sha256:16f8eee69ac3ea47dd88db2e955c6d474a897e5759f48ad261ca72b45c7e2d8f","tests/server-command.test.ts":"sha256:ad51f9a1c664785293c457635aee51c3f3980ee285086fee4bb86f5513d008bb"}
+---
+2026-10-09T22:23:26.673Z

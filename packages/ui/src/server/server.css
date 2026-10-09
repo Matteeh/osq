@@ -1,0 +1,34 @@
+.server-name {
+  color: var(--muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.service-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  max-width: 100%;
+}
+
+.service-panel h2 {
+  margin-top: 0;
+}
+
+.service-line,
+.service-detail,
+.service-warning {
+  margin: 0.25rem 0;
+  overflow-wrap: anywhere;
+}
+
+.service-detail {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.service-warning {
+  color: var(--status-regressed);
+  font-weight: 600;
+}

@@ -74,6 +74,7 @@ export interface OsqTimeouts {
   readonly harnessKillGracePeriodMs?: number;
   readonly gitSeconds?: number;
   readonly gitCommitSeconds?: number;
+  readonly gitRemoteSeconds?: number;
 }
 export interface LogConfig {
   readonly heartbeatSeconds?: number;
