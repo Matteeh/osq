@@ -62,7 +62,14 @@ export function parseActionRequest(rawBody: string, change: string): ActionReque
   }
   const record = value as Record<string, unknown>;
   const verb = record.verb;
-  if (verb === 'approve') return { ok: true, request: { verb, change } };
+  if (verb === 'approve') {
+    const opened = record.opened;
+    if (opened === undefined) return { ok: true, request: { verb, change } };
+    if (!Array.isArray(opened) || !opened.every((id) => typeof id === 'string')) {
+      return { ok: false, error: 'approve opened must be a list of strings' };
+    }
+    return { ok: true, request: { verb, change, opened } };
+  }
   if (verb === 'land') return { ok: true, request: { verb, change } };
   if (verb === 'reject') {
     const reason = record.reason;

@@ -6,6 +6,7 @@ import { governingAdrs, readDecisions } from '../foundation/decisions.js';
 import { resolveExecutorIdentity } from '../foundation/harness-catalog.js';
 import { PACKAGE_ROOT } from '../foundation/package-root.js';
 import { type PlanRecord, planningRecordSource, readPlanRecords } from '../report/planning.js';
+import type { ApprovalNoticeRecord } from '../spec/digest.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { getSpecsDir } from '../status/layout.js';
 
@@ -42,6 +43,11 @@ export interface ManifestData {
    * empty object and a planning-only manifest omits the field.
    */
   decisions?: Record<string, string>;
+  /**
+   * The approval digest's notices record. Only the approval path records it; a
+   * planning-only manifest omits the field.
+   */
+  notices?: ApprovalNoticeRecord;
 }
 
 export async function hashFileContent(filePath: string): Promise<string | null> {
@@ -167,7 +173,11 @@ export async function buildManifest(
   projectRoot: string,
   specFolderPath: string,
   config: OsqConfig,
-  approvalFlags?: { ids: readonly string[]; mode: 'shown' | 'confirmed' },
+  approvalFlags?: {
+    ids: readonly string[];
+    mode: 'shown' | 'confirmed';
+    notices?: ApprovalNoticeRecord;
+  },
 ): Promise<ManifestData> {
   const spec = await parseSpecMdFromFolder(specFolderPath);
   const configPath = await resolveConfigPath(projectRoot);
@@ -216,6 +226,9 @@ export async function buildManifest(
       ids: [...new Set(approvalFlags.ids)].sort(),
       mode: approvalFlags.mode,
     };
+    if (approvalFlags.notices) {
+      manifest.notices = approvalFlags.notices;
+    }
     const records = await readDecisions(projectRoot, config);
     const decisions: Record<string, string> = {};
     for (const adr of governingAdrs(records, writtenCapabilities)) {

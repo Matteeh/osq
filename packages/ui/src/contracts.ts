@@ -1,5 +1,10 @@
 import type { MetricsReport } from '../../../src/core/report/report.js';
 import type { ApprovalFlag } from '../../../src/core/spec/digest.js';
+import type {
+  ApprovalNotice,
+  ApprovalNotices,
+  NoticeSeverity,
+} from '../../../src/core/spec/notices.js';
 import type { Inbox } from '../../../src/core/status/inbox.js';
 import type {
   WebAction,
@@ -20,11 +25,14 @@ import type {
 
 export type {
   ApprovalFlag,
+  ApprovalNotice,
+  ApprovalNotices,
   Inbox,
   LandDisclosure,
   LandGate,
   LandView,
   MetricsReport,
+  NoticeSeverity,
   WebAction,
   WebActionRequest,
   WebActionResult,

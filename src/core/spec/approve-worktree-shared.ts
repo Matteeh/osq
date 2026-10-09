@@ -6,9 +6,11 @@ import { buildManifest, writeManifest } from '../run/manifest.js';
 import {
   type ApprovalDigest,
   type ApprovalFlag,
+  type ApprovalNoticeRecord,
   buildApprovalDigest,
   summarizeApprovalFlags,
 } from './digest.js';
+import { type ApprovalNotices, buildApprovalNotices, recordNotices } from './notices.js';
 
 /** How an optional approver review resolved before any seal is written. */
 export type ApprovalReview = 'proceed' | 'confirmed' | 'declined';
@@ -23,7 +25,9 @@ export class ApprovalDeclinedError extends Error {
 
 /** The optional review port the CLI injects before the seal is written. */
 export interface ApprovalReviewOptions {
-  review?: (digest: ApprovalDigest) => Promise<ApprovalReview>;
+  /** The ids of the notices an approver opened; undefined when none given. */
+  openedNotices?: readonly string[];
+  review?: (digest: ApprovalDigest, notices: ApprovalNotices) => Promise<ApprovalReview>;
 }
 
 /** An approval that passed review, with the manifest mode it recorded. */
@@ -60,15 +64,31 @@ export async function confirmApproval(
   options: ApprovalReviewOptions,
 ): Promise<ConfirmedApproval> {
   const digest = await buildApprovalDigest(projectRoot, folderPath, config);
+  const notices = await buildApprovalNotices(projectRoot, folderPath, config, digest);
+  const given = options.openedNotices;
+  if (given !== undefined) {
+    const opened = new Set<string>(given);
+    const unopened = notices.notices.filter(
+      (notice) => notice.severity === 'red' && !opened.has(notice.id),
+    );
+    if (unopened.length > 0) {
+      const labels = unopened.map((notice) => notice.label).join(', ');
+      throw new Error(`open each red notice before approving: ${labels}`);
+    }
+  }
   let mode: 'shown' | 'confirmed' = 'shown';
   if (options.review) {
-    const review = await options.review(digest);
+    const review = await options.review(digest, notices);
     if (review === 'declined') {
       throw new ApprovalDeclinedError(digest.flags);
     }
     mode = review === 'confirmed' ? 'confirmed' : 'shown';
   }
-  return { digest, mode };
+  const noticeIds = new Set<string>(notices.notices.map((notice) => notice.id));
+  const opened =
+    given === undefined ? null : [...new Set(given.filter((id) => noticeIds.has(id)))].sort();
+  const record: ApprovalNoticeRecord = { items: recordNotices(notices), opened };
+  return { digest: { ...digest, notices: record }, mode };
 }
 
 /**
@@ -91,6 +111,7 @@ export async function writeApprovalSeal(
   const manifest = await buildManifest(projectRoot, targetFolder, config, {
     ids: digest.flags.map((flag) => flag.id),
     mode,
+    notices: digest.notices,
   });
   await writeManifest(runDir, manifest);
 }

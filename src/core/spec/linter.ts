@@ -6,6 +6,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { isGatedTestPath } from '../run/test-gate.js';
 import { compareNumericPrefix } from '../status/state.js';
+import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumptions.js';
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
@@ -1050,6 +1051,16 @@ export async function lintChangeFolder(
     proposalSurfaceIsEmpty(parseFrontmatter(specContent).body)
   ) {
     findings.error({ file: docRepoPath, section: 'Surface' }, PROPOSAL_SURFACE_ERROR);
+  }
+
+  // Check: a proposal's ## Assumptions section, when present, must be filled in.
+  // A section holding nothing but comments or whitespace is an error; a missing
+  // section is exempt, as it is for Surface, so legacy proposals stay silent.
+  if (
+    resolvedDoc.kind === 'proposal' &&
+    assumptionsSectionIsEmpty(parseFrontmatter(specContent).body)
+  ) {
+    findings.error({ file: docRepoPath, section: 'Assumptions' }, PROPOSAL_ASSUMPTIONS_ERROR);
   }
 
   // Check: Decisions section and project rules block, when the project has ADRs.

@@ -1,0 +1,52 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:e2843c95c99af922bbba3fc62ac7061f2d7f9aaa7f95c6eb2d40b4d1d2160591",
+    "PLANNER.md": "sha256:0017afcdaef22a9626fdb06f3f6c042c6ebe79d8fdd7f460e48a4e0c7d9dcdd9",
+    "config": "sha256:75172f563614e349dbcf637e36939dbc367c25e227ed3a099c8b3eb652041cb4",
+    "status-inspection": "sha256:3048edac5671846bc28aeb57ed4ea221a46bf2cedaa7f15da8d84339ac9ecadd",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "traceability": "sha256:c0c43a2a452e358c020598b2bdec00dcdf3c2de49486d7cf7638aac8104f5757",
+    "traceability/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "version-control": "sha256:9efe85d0fd7f26ee2ac83ddca022af7f98bb1f6bc01902e28aab6e133ef55fab",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "cli-foundation": "sha256:f301bbeefb415d85e3431a3ae453bc31db8814a56298dcfa25c2381f2842cb0a",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "metrics-and-reporting": "sha256:1d6d6f26e8739a7adeaaf5b798e84c89df30ce1a7b5911b52447d8230d7cca40",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:f33522766ee2f8e8878243140fcc95aeff272d1505c305f3220647a7a5693e36",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "watcher-and-harness": "sha256:c900ae1f7e8f16fa3226817027fa3789dbe5d4733810859573fa2ac07ee0fa78",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "web-inspection": "sha256:455421e3b4e153bafb6cfaebc87601bf3874f0dec1e4b239f83ee160f1beb5b6",
+    "web-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef"
+  },
+  "osqVersion": "0.2.4",
+  "harness": "opencode",
+  "model": "opencode-go/deepseek-v4-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-10-08T20:26:20.028Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-08T20:53:56.232Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path"
+    ],
+    "mode": "shown"
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "002": "sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "008": "sha256:6092cd51f69465f5761f730d7b7de20357d5a4356215b5dfd62f90ffbc498f3e",
+    "009": "sha256:aea3ecd3d202ccd17552ee96305efb44ca94b6843c48e92c98d3713236618075",
+    "010": "sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807",
+    "012": "sha256:d362e6ada4446f0d51abc9333cb587affc1a5a6b1b50dc536bbbadf76d4388a9",
+    "014": "sha256:078b182aeb5a0ced9aa882e3f818be39b7e76e1814c7ec432bb7c204679da10c"
+  }
+}

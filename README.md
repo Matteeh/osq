@@ -883,7 +883,7 @@ osq digest --no-cost     # leave cost and executor models out
 
 `osq digest` reads only archives and the decisions folder, runs no model, and prints the same bytes for the same archives and arguments. It prints Markdown by default, JSON with `--json`, and writes to `--out <file>` instead of stdout. `--no-cost` omits cost and models.
 
-`osq query "<select>"` answers questions about archived changes as rows: which tasks died and why, which changes touched a requirement, what executors disclosed. It runs one read-only `SELECT` over the tables `changes`, `requirements`, `tasks`, `dead_attempts`, and `disclosures`; `osq query` alone lists them and their columns, and any other statement is refused. Add `LIMIT` to keep the answer short.
+`osq query "<select>"` answers questions about archived changes as rows: which tasks died and why, which changes touched a requirement, what executors disclosed, and which notices each archived or rejected change recorded. It runs one read-only `SELECT` over the tables `changes`, `requirements`, `tasks`, `dead_attempts`, `disclosures`, and `notices`; `osq query` alone lists them and their columns, and any other statement is refused. Add `LIMIT` to keep the answer short.
 
 `osq report` and `osq query` read archived event streams through a SQLite index at `.osq/index.sqlite`, rebuilt per file when a file's size or modification time changes. The files stay the only source of truth: deleting the index, or a corrupt one, changes nothing but the next run's speed (ADR 008).
 

@@ -27,9 +27,22 @@ function retryTarget(request: WebActionRequest): string {
   return request.target;
 }
 
+/** The opened ids of an `approve` request; undefined when its body carried none. */
+function approveOpened(request: WebActionRequest): readonly string[] | undefined {
+  if (request.verb !== 'approve')
+    throw new Error(`expected an approve request, got ${request.verb}`);
+  return request.opened;
+}
+
 /** The default table: one verb to the command function the CLI runs. */
 const DEFAULT_COMMANDS: Readonly<Record<WebActionVerb, WebCommand>> = {
-  approve: (request, inputs) => approveCommand([request.change], inputs),
+  approve: (request, inputs) => {
+    const opened = approveOpened(request);
+    return approveCommand(
+      [request.change],
+      opened === undefined ? inputs : { ...inputs, openedNotices: opened },
+    );
+  },
   land: (request, inputs) => landCommand(request.change, inputs),
   reject: (request, inputs) =>
     rejectCommand(request.change, { ...inputs, reason: rejectReason(request) }),

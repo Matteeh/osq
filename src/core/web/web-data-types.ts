@@ -1,4 +1,5 @@
 import type { ApprovalDigest } from '../spec/digest.js';
+import type { ApprovalNotices } from '../spec/notices.js';
 import type { LandView } from '../status/show-land-types.js';
 
 /**
@@ -189,6 +190,11 @@ export interface WebReview {
   readonly deltas: readonly WebDeltaCapability[];
   readonly digest: ApprovalDigest;
   readonly digestText: string;
+  /**
+   * The approve notices `buildApprovalNotices` derives for the change and its
+   * review digest. Optional so documents built before this field stay valid.
+   */
+  readonly notices?: ApprovalNotices;
 }
 
 /** One unambiguous change with its proposal, brief, and task detail. */

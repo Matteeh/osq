@@ -10,6 +10,7 @@ import { readLivingCapabilityNames, resemblingCapability } from './digest-capabi
 import { type DigestDecision, collectDigestDecisions } from './digest-decisions.js';
 import { type ApprovalFlagTask, buildApprovalFlags } from './digest-flags.js';
 import { parseHumanSteps } from './human-steps.js';
+import type { RecordedNotice } from './notices.js';
 import {
   type VerifyStarts,
   extractSection,
@@ -52,6 +53,10 @@ export interface ApprovalDigestCapability {
   readonly creates: boolean;
 }
 
+export interface ApprovalNoticeRecord {
+  readonly items: readonly RecordedNotice[];
+  readonly opened: readonly string[] | null;
+}
 export interface ApprovalDigest {
   readonly change: string;
   readonly goal: string;
@@ -61,6 +66,8 @@ export interface ApprovalDigest {
   readonly humanSteps: string;
   readonly beforeApproval: string;
   readonly flags: readonly ApprovalFlag[];
+  /** Set only by `confirmApproval`; `buildApprovalDigest` never sets it. */
+  readonly notices?: ApprovalNoticeRecord;
 }
 
 interface ResolvedTask {
@@ -238,6 +245,5 @@ export function formatApprovalFlags(flags: readonly ApprovalFlag[]): string[] {
 /** `<n> flag(s): <label>, <label>`, or an empty string with no flags. */
 export function summarizeApprovalFlags(flags: readonly ApprovalFlag[]): string {
   if (flags.length === 0) return '';
-  const labels = flags.map((flag) => flag.label).join(', ');
-  return `${flags.length} flag${flags.length === 1 ? '' : 's'}: ${labels}`;
+  return `${flags.length} flag${flags.length === 1 ? '' : 's'}: ${flags.map((flag) => flag.label).join(', ')}`;
 }

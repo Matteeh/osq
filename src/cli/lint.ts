@@ -14,6 +14,7 @@ import {
   printRepositoryFindings,
 } from '../core/spec/lint-output.js';
 import { type LintResult, lintChangeFolder } from '../core/spec/linter.js';
+import { recordPlanReady } from '../core/spec/plan-ready-record.js';
 import { getChangesDir, isActiveChangeFolderName } from '../core/status/layout.js';
 import { findSteeringChange } from '../core/status/steering-change.js';
 import { CommandError } from './command-error.js';
@@ -111,6 +112,9 @@ export async function lintCommand(
       ...(importGraph ? { importGraph } : {}),
     });
     entries.push({ folder, result });
+    if (result.valid && specIds.length > 0) {
+      await recordPlanReady(cwd, folder, config);
+    }
     if (logger) {
       printChangeFindings(logger, path.basename(folder), result);
     }

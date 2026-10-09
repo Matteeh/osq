@@ -9,6 +9,7 @@ import {
   parseDelta,
 } from '../spec/delta.js';
 import { formatApprovalDigest } from '../spec/digest.js';
+import { buildApprovalNotices } from '../spec/notices.js';
 import { getSpecsDir } from '../status/layout.js';
 import type { SpecDetails } from '../status/show-types.js';
 import type { WebDeltaCapability, WebDeltaRequirement, WebReview } from './web-data-types.js';
@@ -132,5 +133,6 @@ export async function readWebReview(
     deltas: await readDeltas(details.folderPath, specsDir),
     digest,
     digestText: formatApprovalDigest(digest),
+    notices: await buildApprovalNotices(projectRoot, details.folderPath, config, digest),
   };
 }

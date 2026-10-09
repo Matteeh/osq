@@ -90,6 +90,9 @@ your complete prompt; read it and follow it exactly.
   the reason; a needed departure is a reason for a new ADR. Write `None` when
   no ADR governs the change. Repeat a rule in a task only when that task
   touches the area.
+- `## Assumptions` follows `## Decisions`. Give one line per assumption the
+  plan rests on that the human should check before approving, or write
+  `None`. osq shows them as a notice on the approve view.
 - The delta is the exact text the capability spec will contain after the change,
   never an instruction to update something.
 - Anything a task must not do itself goes under `## Human steps`, which never

@@ -10,6 +10,7 @@ import {
   formatApprovalFlags,
   summarizeApprovalFlags,
 } from '../core/spec/digest.js';
+import { type ApprovalNotices, formatApprovalNotices } from '../core/spec/notices.js';
 import { findChange } from '../core/status/change-locations.js';
 import { formatNextStep, readNextStep } from '../core/status/next-step.js';
 import { resolveCheckoutRoot } from '../core/vcs/checkout-root.js';
@@ -33,6 +34,8 @@ export interface ApproveCommandOptions extends CommandInputs {
   isTerminal?: () => boolean;
   /** Injectable prompt; defaults to a `node:readline/promises` question. */
   ask?: (question: string) => Promise<string | null>;
+  /** The ids of the notices an approver opened, or undefined when none. */
+  openedNotices?: readonly string[];
 }
 
 /** Build the three local observation readers without constructing an adapter. */
@@ -119,7 +122,13 @@ export async function approveCommand(
   for (const specId of specIds) {
     // The digest prints before the seal is written; `--confirm` turns any
     // fired flag into a prompted, default-no gate.
-    const review = async (digest: ApprovalDigest): Promise<ApprovalReview> => {
+    const review = async (
+      digest: ApprovalDigest,
+      notices: ApprovalNotices,
+    ): Promise<ApprovalReview> => {
+      for (const line of formatApprovalNotices(notices)) {
+        inputs.stdout(`${line}\n`);
+      }
       inputs.stdout(`${formatApprovalDigest(digest)}\n`);
       if (!options.confirm || digest.flags.length === 0) {
         for (const line of formatApprovalFlags(digest.flags)) {
@@ -141,6 +150,7 @@ export async function approveCommand(
         planningReaders,
         now: options.now,
         review,
+        openedNotices: options.openedNotices,
         baseOk: options.baseOk,
         ignoreDirty: options.ignoreDirty,
       });

@@ -28,7 +28,7 @@ export interface WebActionsDocument extends WebActions {
 }
 
 export type WebActionRequest =
-  | { readonly verb: 'approve'; readonly change: string }
+  | { readonly verb: 'approve'; readonly change: string; readonly opened?: readonly string[] }
   | { readonly verb: 'land'; readonly change: string }
   | { readonly verb: 'reject'; readonly change: string; readonly reason: string }
   | { readonly verb: 'retry'; readonly change: string; readonly target: string };

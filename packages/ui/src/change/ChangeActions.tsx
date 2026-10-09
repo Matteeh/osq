@@ -10,6 +10,7 @@ export interface ChangeActionsProps {
   readonly onReasonChange: (reason: string) => void;
   readonly onRun: (action: WebAction) => void;
   readonly flags?: readonly ApprovalFlag[];
+  readonly approveBlockedBy?: readonly string[];
 }
 
 function buttonLabel(action: WebAction): string {
@@ -46,6 +47,7 @@ function ActionButton({
   onReasonChange,
   onRun,
   flags,
+  blockedBy,
 }: {
   readonly action: WebAction;
   readonly pending: boolean;
@@ -53,19 +55,26 @@ function ActionButton({
   readonly onReasonChange: (reason: string) => void;
   readonly onRun: (action: WebAction) => void;
   readonly flags: readonly ApprovalFlag[];
+  readonly blockedBy: readonly string[];
 }): ReactElement {
   const reject = action.verb === 'reject';
   const needsReason = reject && reason.trim().length === 0;
+  const blocked = blockedBy.length > 0;
   return (
     <div className="action-item">
       <button
         type="button"
         className="action-button"
-        disabled={pending || needsReason}
+        disabled={pending || needsReason || blocked}
         onClick={() => onRun(action)}
       >
         {buttonLabel(action)}
       </button>
+      {blocked ? (
+        <p className="action-blocked" role="note">
+          Open each red notice to approve: {blockedBy.join(', ')}
+        </p>
+      ) : null}
       <ApprovalFlags flags={flags} />
       {reject ? (
         <label className="action-reason">
@@ -96,6 +105,7 @@ export function ChangeActions({
   onReasonChange,
   onRun,
   flags = [],
+  approveBlockedBy = [],
 }: ChangeActionsProps): ReactElement {
   const hasApprove = document.actions.some((action) => action.verb === 'approve');
   return (
@@ -112,6 +122,7 @@ export function ChangeActions({
             onReasonChange={onReasonChange}
             onRun={onRun}
             flags={action.verb === 'approve' ? flags : []}
+            blockedBy={action.verb === 'approve' ? approveBlockedBy : []}
           />
         ))}
       </div>

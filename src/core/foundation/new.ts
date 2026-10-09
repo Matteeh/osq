@@ -47,6 +47,12 @@ that imports dockerode." Start a line "Departs from ADR <n>:" to record a
 departure and its reason. -->
 None
 
+## Assumptions
+
+<!-- One line per assumption the plan rests on that the human should check
+before approving, such as "Every caller passes an absolute path." -->
+None
+
 ## Contract
 
 ### Requirement: <requirement name>

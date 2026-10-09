@@ -154,7 +154,7 @@ function rows(db: DatabaseSync, sql: string): Record<string, unknown>[] {
 }
 
 describe('HISTORY_TABLES', () => {
-  it('lists the five tables with their columns in order', () => {
+  it('lists the six tables with their columns in order', () => {
     assert.deepEqual(
       HISTORY_TABLES.map((table) => ({ name: table.name, columns: [...table.columns] })),
       [
@@ -181,6 +181,7 @@ describe('HISTORY_TABLES', () => {
         { name: 'tasks', columns: ['change', 'task', 'title', 'attempts', 'done'] },
         { name: 'dead_attempts', columns: ['change', 'task', 'reason'] },
         { name: 'disclosures', columns: ['change', 'task', 'section', 'text'] },
+        { name: 'notices', columns: ['change', 'notice', 'severity', 'opened', 'outcome'] },
       ],
     );
   });

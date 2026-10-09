@@ -2,7 +2,7 @@ import type { WebActionResult, WebActionsDocument } from '../contracts.js';
 
 /** A `WebActionRequest` without `change`; the client supplies the selector. */
 export type WebActionInput =
-  | { readonly verb: 'approve' }
+  | { readonly verb: 'approve'; readonly opened?: readonly string[] }
   | { readonly verb: 'land' }
   | { readonly verb: 'reject'; readonly reason: string }
   | { readonly verb: 'retry'; readonly target: string };

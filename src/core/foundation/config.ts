@@ -8,13 +8,21 @@ import {
 } from './config-capability-groups.js';
 import { type ClaudeConfig, validateClaudeConfig } from './config-claude.js';
 import { type CodexConfig, validateCodexConfig, validatePlannerConfig } from './config-codex.js';
-import { type ConfinementConfig, DEFAULT_CONFINEMENT_CONFIG } from './config-confinement.js';
-import { validateConfinementConfig } from './config-confinement.js';
+import {
+  type ConfinementConfig,
+  DEFAULT_CONFINEMENT_CONFIG,
+  validateConfinementConfig,
+} from './config-confinement.js';
 import { applyHarnessModelEnv } from './config-env.js';
 import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { DEFAULT_INBOX_CONFIG, type InboxConfig, validateInboxConfig } from './config-inbox.js';
 import type { OsqLimits } from './config-limits.js';
+import {
+  DEFAULT_NOTICES_CONFIG,
+  type NoticesConfig,
+  validateNoticesConfig,
+} from './config-notices.js';
 import { type PiConfig, validatePiConfig } from './config-pi.js';
 import {
   DEFAULT_PLANNING_CONFIG,
@@ -100,6 +108,7 @@ export interface OsqConfig {
   readonly confinement?: ConfinementConfig;
   readonly validator?: ValidatorConfig;
   readonly watch?: WatchConfig;
+  readonly notices?: NoticesConfig;
 }
 
 export const DEFAULT_CONFIG: OsqConfig = {
@@ -108,6 +117,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
   serve: DEFAULT_SERVE_CONFIG,
   inbox: DEFAULT_INBOX_CONFIG,
   watch: DEFAULT_WATCH_CONFIG,
+  notices: DEFAULT_NOTICES_CONFIG,
   vcs: DEFAULT_VCS_CONFIG,
   capabilities: DEFAULT_CAPABILITIES_CONFIG,
   confinement: DEFAULT_CONFINEMENT_CONFIG,
@@ -155,13 +165,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
 };
 
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const {
-    planner,
-    queue: rawQueue,
-    validator: rawValidator,
-    watch: rawWatch,
-    ...restConfig
-  } = config;
+  const { planner, queue: rawQueue, validator: rawValidator, ...restConfig } = config;
   let validatedPlanner: PlannerConfig | undefined;
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
@@ -173,7 +177,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   const claude = validateClaudeConfig(config.claude);
   const serve = validateServeConfig(config.serve);
   const inbox = validateInboxConfig(config.inbox);
-  const watch = validateWatchConfig(rawWatch);
+  const watch = validateWatchConfig(config.watch);
 
   return {
     ...DEFAULT_CONFIG,
@@ -181,6 +185,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     serve,
     inbox,
     watch,
+    notices: validateNoticesConfig(config.notices),
     vcs: validateVcsConfig(config.vcs),
     planning: validatePlanningConfig(config.planning),
     gates: validateGatesConfig(config.gates),
@@ -203,14 +208,8 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     claude,
     log: { ...DEFAULT_CONFIG.log, ...(config.log || {}) },
     limits: { ...DEFAULT_CONFIG.limits, ...(config.limits || {}) },
-    paths: {
-      ...DEFAULT_CONFIG.paths,
-      ...(config.paths || {}),
-    },
-    timeouts: {
-      ...DEFAULT_CONFIG.timeouts,
-      ...(config.timeouts || {}),
-    },
+    paths: { ...DEFAULT_CONFIG.paths, ...(config.paths || {}) },
+    timeouts: { ...DEFAULT_CONFIG.timeouts, ...(config.timeouts || {}) },
   };
 }
 

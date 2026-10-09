@@ -1,13 +1,16 @@
 import type { ReactElement } from 'react';
+import { useState } from 'react';
 import type { WebChange } from '../contracts.js';
 import { BriefPanel } from './BriefPanel.js';
 import { ChangeActionsPanel } from './ChangeActionsPanel.js';
 import { ChangeHeader } from './ChangeHeader.js';
 import { DigestPanel } from './DigestPanel.js';
 import { LandPanel } from './LandPanel.js';
+import { NoticePanel } from './NoticePanel.js';
 import { ReviewPanel } from './ReviewPanel.js';
 import { TaskTable } from './TaskTable.js';
 import type { ActionClient } from './actions-client.js';
+import { unopenedRedLabels } from './notice-state.js';
 
 export interface ChangeViewProps {
   readonly change: WebChange;
@@ -17,9 +20,9 @@ export interface ChangeViewProps {
 }
 
 /**
- * The change route: identity and location, the brief or its absent fallback,
- * and per-task summary and evidence. The view owns no subscription, timer, or
- * marker read; it renders exactly the `WebChange` it is given.
+ * The change route: identity and location, the notices an unapproved change
+ * must notice, the brief or its absent fallback, and per-task evidence. The
+ * view owns no subscription, timer, or marker read.
  */
 export function ChangeView({
   change,
@@ -29,6 +32,18 @@ export function ChangeView({
 }: ChangeViewProps): ReactElement {
   const review = change.review ?? null;
   const land = change.land ?? null;
+  const notices = review?.notices ?? null;
+  const [opened, setOpened] = useState<readonly string[]>([]);
+
+  const openNotice = (id: string): void => {
+    setOpened((current) => (current.includes(id) ? current : [...current, id]));
+  };
+
+  const noticeBlock =
+    notices === null ? null : <NoticePanel notices={notices} onOpen={openNotice} />;
+  const openedForActions = notices === null ? undefined : opened;
+  const approveBlockedBy = notices === null ? [] : unopenedRedLabels(notices, opened);
+
   if (review === null) {
     return (
       <section className="view change-view" aria-labelledby="change-view-title">
@@ -44,6 +59,7 @@ export function ChangeView({
             ) : null}
           </p>
         ) : null}
+        {noticeBlock}
         <BriefPanel brief={change.brief} goal={change.goal} />
         {land !== null ? <LandPanel land={land} /> : null}
         {actionClient !== undefined ? (
@@ -71,6 +87,7 @@ export function ChangeView({
           ) : null}
         </p>
       ) : null}
+      {noticeBlock}
       <BriefPanel brief={change.brief} goal={change.goal} />
       {land !== null ? <LandPanel land={land} /> : null}
       <ReviewPanel review={review} />
@@ -85,6 +102,8 @@ export function ChangeView({
           asOf={change.asOf}
           client={actionClient}
           flags={review.digest.flags}
+          opened={openedForActions}
+          approveBlockedBy={approveBlockedBy}
         />
       ) : null}
     </section>

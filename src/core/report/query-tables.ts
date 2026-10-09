@@ -7,6 +7,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { parseTaskMd } from '../spec/parser.js';
 import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record.js';
+import { insertNotices } from './query-notices.js';
 import { observeTaskStream } from './report-events.js';
 import { readChangeDisclosures } from './result-sections.js';
 import { openStreamIndex } from './stream-index.js';
@@ -18,7 +19,7 @@ export interface HistoryTable {
   readonly columns: readonly string[];
 }
 
-/** The five documented tables, in the order the delta names them. */
+/** The six documented tables, in the order the delta names them. */
 export const HISTORY_TABLES: readonly HistoryTable[] = [
   {
     name: 'changes',
@@ -43,6 +44,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   { name: 'tasks', columns: ['change', 'task', 'title', 'attempts', 'done'] },
   { name: 'dead_attempts', columns: ['change', 'task', 'reason'] },
   { name: 'disclosures', columns: ['change', 'task', 'section', 'text'] },
+  { name: 'notices', columns: ['change', 'notice', 'severity', 'opened', 'outcome'] },
 ];
 
 /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
@@ -61,7 +63,7 @@ const TASKS_DIR = 'tasks';
 const EVENTS_DIR = path.join('.run', 'events');
 const DONE_DIR = path.join('.run', 'done');
 
-/** The empty in-memory database holding the five tables and nothing else. */
+/** The empty in-memory database holding the six tables and nothing else. */
 function createTables(DatabaseSync: DatabaseConstructor): DatabaseSync {
   const db = new DatabaseSync(':memory:');
   for (const table of HISTORY_TABLES) {
@@ -162,7 +164,7 @@ async function insertDisclosures(
   }
 }
 
-/** Fills the five tables from the archived changes, in folder and task order. */
+/** Fills the six tables from the archived changes, in folder and task order. */
 async function build(
   projectRoot: string,
   config: OsqConfig,
@@ -183,13 +185,15 @@ async function build(
     insertDeadAttempts(db, change);
     await insertDisclosures(db, folderPath, change.folder);
   }
+  await insertNotices(db, projectRoot, config);
   return db;
 }
 
 /**
- * Builds the five history tables of archived changes in an in-memory database.
- * Event streams are read through the archive's derived index when it opens;
- * the index is closed before this resolves, even when a read throws.
+ * Builds the six history tables of archived and rejected changes in an
+ * in-memory database. Event streams are read through the archive's derived
+ * index when it opens; the index is closed before this resolves, even when a
+ * read throws.
  */
 export async function buildHistoryTables(
   projectRoot: string,

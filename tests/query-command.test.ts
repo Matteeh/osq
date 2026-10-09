@@ -14,6 +14,7 @@ const TABLE_LIST = [
   'tasks(change, task, title, attempts, done)',
   'dead_attempts(change, task, reason)',
   'disclosures(change, task, section, text)',
+  'notices(change, notice, severity, opened, outcome)',
 ].join('\n');
 
 const REFUSALS = [

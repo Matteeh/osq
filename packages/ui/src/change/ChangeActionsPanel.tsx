@@ -3,23 +3,30 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ApprovalFlag, WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
 import { ChangeActions } from './ChangeActions.js';
 import type { ActionClient, WebActionInput } from './actions-client.js';
+import { approveInput } from './notice-state.js';
 
 export interface ChangeActionsPanelProps {
   readonly selector: string;
   readonly asOf: string;
   readonly client: ActionClient;
   readonly flags?: readonly ApprovalFlag[];
+  readonly opened?: readonly string[];
+  readonly approveBlockedBy?: readonly string[];
 }
 
 /** The request body for one tap, without the selector the client adds. */
-function requestFor(action: WebAction, reason: string): WebActionInput {
+function requestFor(
+  action: WebAction,
+  reason: string,
+  opened: readonly string[] | undefined,
+): WebActionInput {
   switch (action.verb) {
     case 'reject':
       return { verb: 'reject', reason };
     case 'retry':
       return { verb: 'retry', target: action.target ?? '' };
     case 'approve':
-      return { verb: 'approve' };
+      return approveInput(opened);
     case 'land':
       return { verb: 'land' };
   }
@@ -45,6 +52,8 @@ export function ChangeActionsPanel({
   asOf,
   client,
   flags = [],
+  opened,
+  approveBlockedBy = [],
 }: ChangeActionsPanelProps): ReactElement | null {
   const [actions, setActions] = useState<WebActionsDocument | null>(null);
   const [pending, setPending] = useState(false);
@@ -73,7 +82,7 @@ export function ChangeActionsPanel({
       setPending(true);
       setResult(null);
       void client
-        .run(selector, actions.token, requestFor(action, reason))
+        .run(selector, actions.token, requestFor(action, reason, opened))
         .then(
           (answer) => setResult(answer),
           (cause) => setResult(failureResult(cause)),
@@ -87,7 +96,7 @@ export function ChangeActionsPanel({
           () => setPending(false),
         );
     },
-    [actions, client, pending, reason, selector],
+    [actions, client, opened, pending, reason, selector],
   );
 
   if (actions === null) return null;
@@ -100,6 +109,7 @@ export function ChangeActionsPanel({
       onReasonChange={setReason}
       onRun={run}
       flags={flags}
+      approveBlockedBy={approveBlockedBy}
     />
   );
 }

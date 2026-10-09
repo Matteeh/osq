@@ -4,6 +4,7 @@ import type { CodexConfig } from './config-codex.js';
 import type { ConfinementRole } from './config-confinement.js';
 import type { GatesConfig } from './config-gates.js';
 import type { InboxConfig } from './config-inbox.js';
+import type { NoticesConfig } from './config-notices.js';
 import type { PiConfig } from './config-pi.js';
 import type { PlanningConfig } from './config-planning.js';
 import type { QueueConfig } from './config-queue.js';
@@ -48,6 +49,7 @@ export type OsqUserConfig = Partial<
     | 'confinement'
     | 'validator'
     | 'watch'
+    | 'notices'
   >
 > & {
   readonly limits?: Partial<OsqLimits>;
@@ -72,4 +74,5 @@ export type OsqUserConfig = Partial<
   };
   readonly validator?: Partial<ValidatorConfig>;
   readonly watch?: Partial<WatchConfig>;
+  readonly notices?: Partial<NoticesConfig>;
 };

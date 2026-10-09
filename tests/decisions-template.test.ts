@@ -19,7 +19,7 @@ const REPO_SCHEMA = path.join(REPO_OPENSPEC, 'schemas', 'osq', 'schema.yaml');
 const REPO_CONFIG = path.join(REPO_OPENSPEC, 'config.yaml');
 
 const CONFIG_RULE =
-  "Follow the proposal template's sections in order: Goal, Verify, Non-goals, Surface, Decisions, Contract, Human steps, Delta.";
+  "Follow the proposal template's sections in order: Goal, Verify, Non-goals, Surface, Decisions, Assumptions, Contract, Human steps, Delta.";
 
 interface ParsedArtifact {
   id: string;

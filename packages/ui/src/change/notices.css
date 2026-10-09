@@ -1,0 +1,47 @@
+.notices {
+  margin-top: 1.25rem;
+}
+
+.notices-none {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.notice {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  overflow-wrap: anywhere;
+}
+
+.notice-red {
+  border-inline-start: 0.35rem solid var(--status-dead);
+}
+
+.notice-amber {
+  border-inline-start: 0.35rem solid var(--status-regressed);
+}
+
+.notice-grey {
+  border-inline-start: 0.35rem solid var(--status-pending);
+}
+
+.notice-summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.notice-severity {
+  font-weight: 600;
+}
+
+.notice-detail {
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notices-folder {
+  margin-top: 0.5rem;
+}
