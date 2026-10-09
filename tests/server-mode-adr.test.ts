@@ -41,6 +41,9 @@ describe('ADR 014: server mode is an addition', () => {
         'tests/serve-actions.test.ts',
         'tests/vcs-land-publish.test.ts',
         'tests/server-command.test.ts',
+        'tests/web-remote-files.test.ts',
+        'tests/remote-forward.test.ts',
+        'tests/remote-cli.test.ts',
       ],
     );
 

@@ -7,6 +7,9 @@ checks:
   - tests/serve-actions.test.ts
   - tests/vcs-land-publish.test.ts
   - tests/server-command.test.ts
+  - tests/web-remote-files.test.ts
+  - tests/remote-forward.test.ts
+  - tests/remote-cli.test.ts
 ---
 # 014. Server mode
 
@@ -106,8 +109,8 @@ sign-in waits, and that MCP comes after the server.
 - One code path serves local use, the server, the forwarded CLI and MCP. Only
   the transport differs, so local and remote output cannot drift.
 - `osq-server` listed the loopback serve tests, the publishing land and the
-  server commands in this ADR's `checks`; `remote-cli` adds the upload and
-  forwarded-command tests.
+  server commands in this ADR's `checks`; `remote-cli` added the upload
+  refusal, the forwarded runner and the forwarded CLI.
 - Until sign-in exists, the server is only as private as the network in front
   of it.
 

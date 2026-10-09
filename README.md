@@ -950,6 +950,16 @@ the server user's git or SSH credentials, which no executor or verify
 receives, and stops when `origin` moved. `osq land` in a terminal does not
 push, and `osq serve` is unchanged.
 
+To use the server from a laptop, export
+`OSQ_SERVER=https://<tailnet name>/p/<project>/` in the shell that runs `osq`.
+Every command then runs on the server and prints the same output and exit code
+it prints locally. `init`, `setup`, `migrate`, `watch`, `serve`, `doctor`,
+`inbox` and `server` stay local, and each says so in one line unless you unset
+`OSQ_SERVER`. A planner sets `OSQ_SERVER` in the shell or editor that starts
+it: `osq plan <id>` downloads the change's working copy under
+`~/.osq/remote/` for the planner to edit, and `osq lint <id>` uploads it and
+lints on the server. Unsetting `OSQ_SERVER` returns the shell to local use.
+
 ## Diagnostics & Health
 
 Run `osq doctor` to verify repository health:

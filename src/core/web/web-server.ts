@@ -20,6 +20,7 @@ import {
   createInvalidationHub,
 } from './web-events.js';
 import { decodeChangeSelector, send, sendFailure, sendJson } from './web-http.js';
+import { type ForwardedCommandRunner, createRemoteRoutes } from './web-remote.js';
 import {
   type WebServerSite,
   readServerStatus,
@@ -64,6 +65,7 @@ export interface WebServerOptions {
   readonly getInbox?: (projectRoot: string, options: ReadInboxOptions) => Promise<Inbox>;
   readonly getActions?: ActionDocumentFn;
   readonly runAction?: WebActionRunner;
+  readonly runCommand?: ForwardedCommandRunner;
   readonly site?: WebServerSite;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
@@ -96,6 +98,11 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
     projectRoot,
     config,
     getActions: options.getActions ?? getWebActions,
+    getPort: () => boundPort,
+  });
+  const remote = createRemoteRoutes(site, options.runCommand, {
+    projectRoot,
+    config,
     getPort: () => boundPort,
   });
 
@@ -186,6 +193,9 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
         return sendJson(res, 404, { error: 'not found' }, method === 'HEAD');
       }
       pathname = route.pathname;
+    }
+    if (remote?.matches(pathname)) {
+      return await remote.handle(req, res, pathname, method);
     }
     const isActionPath = pathname.startsWith(ACTIONS_PREFIX);
     if (method === 'POST') {

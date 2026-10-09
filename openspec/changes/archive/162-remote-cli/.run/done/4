@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:18948578a964e3cc72450818511a60b3d562669fa1536c72ecdadbcb6caac42f"
+build_stamp: "ed621d96"
+project_commit: "82328058"
+exit_code: 0
+scope_files: {"README.md":"sha256:8ca85a4b2e9eb358738f0d6a39cc0ee2f45a6c80c42c3d50a0e097f594e39485","src/cli/remote-client.ts":"sha256:e55340d2c3f9517a5275adc6e5f7596a679c24d4b1ef3c12137a7e95e2dce70a","src/cli/run.ts":"sha256:bf6a8a2701a52b88b1f7b71b2a08241260bd4c4647f6c968cae143293e51c588","tests/remote-cli.test.ts":"sha256:e272ff4f9d700dab71a8ec6133f8ee44d30f126fa5c68ad5ecaea2c084ffca3a"}
+---
+2026-10-09T23:18:55.148Z

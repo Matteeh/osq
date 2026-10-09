@@ -16,6 +16,7 @@ import { CommandError } from './command-error.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
 import { landCommand } from './land.js';
 import { rejectCommand } from './reject.js';
+import { createForwardedRunner } from './remote-commands.js';
 import { retryCommand } from './retry.js';
 import { type WebCommand, createWebActionRunner } from './serve-actions.js';
 
@@ -100,9 +101,8 @@ function delay(ms: number): Promise<void> {
  * @adr 012
  */
 export async function runServerWorker(options: ServerWorkerOptions = {}): Promise<void> {
-  const inputs = resolveInputs(options);
-  const cwd = inputs.cwd;
-  const config = await inputs.config();
+  const { cwd, config: readConfig } = resolveInputs(options);
+  const config = await readConfig();
   const serverConfig = config.serve?.server ?? DEFAULT_SERVE_CONFIG.server;
   const runner = createWebActionRunner({ cwd, config }, createServerCommands());
 
@@ -136,6 +136,7 @@ export async function runServerWorker(options: ServerWorkerOptions = {}): Promis
     site: resolveServerSite(cwd, config),
     home: options.home,
     now: options.now,
+    runCommand: createForwardedRunner(cwd, { home: options.home }),
     runAction: async (request) => {
       running += 1;
       try {

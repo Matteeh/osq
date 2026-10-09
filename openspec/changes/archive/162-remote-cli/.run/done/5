@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a881f732a05075813fd25213db5d85a525bd846e93fe240e889b1fd07dfe01a0"
+build_stamp: "ed621d96"
+project_commit: "99b64495"
+exit_code: 0
+scope_files: {"decisions/014-server-mode.md":"sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b","tests/server-mode-adr.test.ts":"sha256:c2b180be88fea2a7f40c2455da7ab55ee5f082d4ff602bf2332dfc15cee37e70"}
+---
+2026-10-09T23:22:48.925Z
