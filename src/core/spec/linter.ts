@@ -10,6 +10,7 @@ import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumpt
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
+import { collectGeneratedMoveFindings } from './generated-move-lint.js';
 import { isExcludedChangePath } from './hasher.js';
 import { collectImpactFindings } from './impact-lint.js';
 import { type ImportGraph, buildImportGraph } from './import-graph.js';
@@ -1113,6 +1114,21 @@ export async function lintChangeFolder(
       proposalPath: docRepoPath,
       data: parseFrontmatter(specContent).data,
       reads: spec.features.reads,
+    })) {
+      findings.addOwn(finding);
+    }
+  }
+
+  // Check: a generated capability move's ADDED and REMOVED blocks match the
+  // living requirement they move and land somewhere. A proposal without
+  // `generated` gets no finding from it.
+  if (resolvedDoc.kind === 'proposal') {
+    for (const finding of await collectGeneratedMoveFindings({
+      projectRoot,
+      folderPath,
+      openspecRoot: resolveOpenSpecRoot(config),
+      proposalPath: docRepoPath,
+      data: parseFrontmatter(specContent).data,
     })) {
       findings.addOwn(finding);
     }

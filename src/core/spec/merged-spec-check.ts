@@ -83,7 +83,13 @@ async function writeMergedTree(tempDir: string, inputs: readonly MergedSpecInput
 /**
  * Validate the merged capability specs once in a temporary folder and return the
  * resulting findings. Issues the living spec already has, on the same
- * requirement or section, are omitted. Returns `[]` when no merged spec exists.
+ * requirement or section, are omitted. A merged spec with no requirement, a
+ * capability the change empties and archive removes, is left out, and no
+ * validator runs when none is left. Returns `[]` when no merged spec remains.
+ *
+ * @scenario spec-lint-and-approve: Merged living spec validation
+ * @scenario spec-lint-and-approve: No delta merges
+ * @scenario spec-lint-and-approve: Emptied capability not validated
  */
 export async function validateMergedSpecs(
   config: OsqConfig,
@@ -92,12 +98,15 @@ export async function validateMergedSpecs(
   inputs: readonly MergedSpecInput[],
   livingFindings: readonly LintFinding[],
 ): Promise<LintFinding[]> {
-  if (inputs.length === 0) {
+  const kept = inputs.filter(
+    (input) => parseCapabilitySpec(input.mergedContent).requirements.length > 0,
+  );
+  if (kept.length === 0) {
     return [];
   }
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-merged-spec-'));
   try {
-    await writeMergedTree(tempDir, inputs);
+    await writeMergedTree(tempDir, kept);
     const outcome = await execFileCapture(bin, MERGED_SPEC_ARGS, {
       cwd: tempDir,
       env: { ...process.env, OPENSPEC_TELEMETRY: '0' },
@@ -108,7 +117,7 @@ export async function validateMergedSpecs(
       return [];
     }
 
-    const byCapability = new Map(inputs.map((input) => [input.capability, input]));
+    const byCapability = new Map(kept.map((input) => [input.capability, input]));
     const findings: LintFinding[] = [];
     for (const item of items) {
       const input = byCapability.get(item.id);

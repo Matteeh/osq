@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
 import { registerApproveCommand } from './approve.js';
+import { registerCapabilityCommand } from './capability.js';
 import { CommandError } from './command-error.js';
 import { registerDigestCommand } from './digest.js';
 import { registerDoctorCommand } from './doctor.js';
@@ -217,6 +218,7 @@ export function createProgram(version?: string): Command {
       }
     });
   registerApproveCommand(program);
+  registerCapabilityCommand(program);
   registerGraphCommand(program);
   registerInboxDispatchCommand(program);
   registerLandCommand(program);

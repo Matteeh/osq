@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6026fc8643358be2d9d1a72b69d345ad2be7df05bac0089348196addd2bdd75c"
+build_stamp: "a192c471"
+project_commit: "407daf9d"
+exit_code: 0
+scope_files: {"src/core/spec/apply-deltas.ts":"sha256:dfb134f43ce22709392b46170b28e22564828a1f536d6e7733f070650b9f0049","src/core/spec/merged-spec-check.ts":"sha256:1e7bc5e51ab1cf9649bab8826c47d7e790c811555426c043b3ef06efa86c872e","tests/capability-emptied.test.ts":"sha256:db9f00ac8504e701330e618f84b82ae288b7f534e2c5b064699b09e4e9915261","tests/living-specs-delta-equivalence.test.ts":"sha256:9ef28fde2b766e03bf5f531ca551db86aad514811e4460ac6ac8d40b868ddfcb"}
+---
+2026-10-10T17:39:45.470Z

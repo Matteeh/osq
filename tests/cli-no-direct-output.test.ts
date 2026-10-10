@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { approveCommand } from '../src/cli/approve.js';
+import { capabilityRenameCommand, capabilitySplitCommand } from '../src/cli/capability.js';
 import type { CommandInputs } from '../src/cli/command-inputs.js';
 import { digestCommand } from '../src/cli/digest.js';
 import { doctorCommand } from '../src/cli/doctor.js';
@@ -44,6 +45,10 @@ const EXEMPT = new Set([path.join(CLI_DIR, 'command-inputs.ts')]);
 const COMMANDS: Record<string, (inputs: CommandInputs) => unknown> = {
   approveCommand: (inputs) => approveCommand([], inputs),
   browserCommand: () => browserCommand('linux', 'http://localhost'),
+  capabilityRenameCommand: (inputs) =>
+    capabilityRenameCommand('old', 'new', { ...inputs, change: 'id' }),
+  capabilitySplitCommand: (inputs) =>
+    capabilitySplitCommand('old', 'map.yml', { ...inputs, change: 'id' }),
   digestCommand: (inputs) => digestCommand({ ...inputs, ids: [] }),
   doctorCommand: (inputs) => doctorCommand(inputs),
   graphCommand: (inputs) => graphCommand(inputs),

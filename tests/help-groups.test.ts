@@ -10,7 +10,10 @@ const EXPECTED_GROUPS = [
     title: 'Inspection',
     commands: ['status', 'show', 'report', 'digest', 'query', 'spec', 'graph', 'serve', 'doctor'],
   },
-  { title: 'Plumbing', commands: ['new', 'lint', 'queue', 'sync', 'message', 'migrate'] },
+  {
+    title: 'Plumbing',
+    commands: ['new', 'lint', 'queue', 'sync', 'message', 'migrate', 'capability'],
+  },
 ] as const;
 
 const HEADINGS = EXPECTED_GROUPS.map((group) => `${group.title} commands:`);

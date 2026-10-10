@@ -15,7 +15,10 @@ export const COMMAND_GROUPS: readonly CommandGroup[] = [
     title: 'Inspection',
     commands: ['status', 'show', 'report', 'digest', 'query', 'spec', 'graph', 'serve', 'doctor'],
   },
-  { title: 'Plumbing', commands: ['new', 'lint', 'queue', 'sync', 'message', 'migrate'] },
+  {
+    title: 'Plumbing',
+    commands: ['new', 'lint', 'queue', 'sync', 'message', 'migrate', 'capability'],
+  },
 ];
 
 function commandRow(command: Command, helper: Help, termWidth: number): string {

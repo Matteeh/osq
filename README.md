@@ -690,6 +690,8 @@ osq queue                print the read-only brief queue from openspec/queue.md
 osq sync <id>            merge the default branch into a change's branch
 osq message <id>         print an archived change's land commit message
 osq migrate openspec     migrate a legacy osq layout to the canonical openspec/ layout
+osq capability rename <old> <new> --change <id>  generate the deltas that move every requirement of <old> to <new>
+osq capability split <old> --map <file> --change <id>  generate the deltas that move the requirements a map file names out of <old>
 ```
 
 ### Approval

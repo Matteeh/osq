@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7a7d77f007eb17ad28fe70acf05b13766fd85fb69ff9fd7eee7577a34499ff6a"
+build_stamp: "a192c471"
+project_commit: "2c750233"
+exit_code: 0
+scope_files: {"src/core/spec/capability-move-map.ts":"sha256:24875a89c16f626386928074a0fc148a75b84bcb0be8d04f73ea2a4164930889","src/core/spec/capability-move-plan.ts":"sha256:2e85be28a4b8e128639ab71c0750a11c69d9f51ee7504cb264cf2eb627d49d1b","src/core/spec/capability-move-proposal.ts":"sha256:93ae65ed9bf11e2c2a878a09044a1e2b0c11885f8b37950cb4f731e615b30998","src/core/spec/capability-move-text.ts":"sha256:e065537cd9884915b0811116c89fa1dbe225cde9ebd04f64406159523e7df6f6","src/core/spec/capability-move.ts":"sha256:598bfc1d800119801b9dfa3733eebd2583222db9388de2610a5b9264161bf10d","src/core/spec/capability-naming.ts":"sha256:630e3de585c00e355ae6bfbfccc619c53c7079e00c9016d4af3c6ce4f98def0a","tests/capability-move.test.ts":"sha256:696ce57dbc2abf491e41d39edbd70dd61056ac74d1aa44ce598c7f51f18b0c77"}
+---
+2026-10-10T17:58:38.165Z

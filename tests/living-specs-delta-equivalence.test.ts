@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
+import { mergeLivingSpec } from '../src/core/spec/apply-deltas.js';
+import { parseDelta } from '../src/core/spec/delta.js';
 import { readLandedAt } from '../src/core/web/web-data-lifecycle.js';
 import { archiveSpecsRecordPath } from '../src/watcher/archive-specs.js';
 
@@ -17,18 +19,6 @@ const SRC_DIR = path.join(REPO_ROOT, 'src');
 
 /** The first archive that carries OpenSpec delta specifications. */
 const FIRST_ARCHIVED_DELTA = '016';
-
-/**
- * The five living capabilities. Every one of them is introduced by the 016
- * delta specs and augmented (never replaced) by 017 and 020 through 027.
- */
-const CAPABILITIES = [
-  'cli-foundation',
-  'metrics-and-reporting',
-  'spec-lint-and-approve',
-  'status-inspection',
-  'watcher-and-harness',
-] as const;
 
 /**
  * The deterministic re-seed strips every legacy prose-appender reference so the
@@ -153,8 +143,45 @@ function firstLineDifference(label: string, expected: string, actual: string): s
   return null;
 }
 
+/** Every capability folder under `openspec/specs/`, sorted. */
+async function livingCapabilities(): Promise<string[]> {
+  const entries = await fs.readdir(LIVING_SPECS_DIR, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+/** Every capability with a living folder or a delta in a replayed change. */
+async function replayCapabilities(): Promise<string[]> {
+  const names = new Set<string>(await livingCapabilities());
+  const folders = [
+    ...(await archivedChangeFolders()).map((folder) => path.join(ARCHIVE_DIR, folder)),
+    ...(await applyingChangeFolders()).map((folder) => path.join(CHANGES_DIR, folder)),
+  ];
+  for (const folder of folders) {
+    const deltasDir = path.join(folder, 'specs');
+    const entries = await fs.readdir(deltasDir, { withFileTypes: true }).catch((): Dirent[] => []);
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const specPath = path.join(deltasDir, entry.name, 'spec.md');
+      if (
+        await fs
+          .stat(specPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        names.add(entry.name);
+      }
+    }
+  }
+  return [...names].sort();
+}
+
 /** Replays the deterministic merge of every archived delta for one capability. */
-async function replayLivingSpec(capability: string): Promise<string> {
+async function replayLivingSpec(capability: string): Promise<string | null> {
   let base: string | null = null;
   const folders = [
     ...(await archivedChangeFolders()).map((folder) => path.join(ARCHIVE_DIR, folder)),
@@ -166,13 +193,10 @@ async function replayLivingSpec(capability: string): Promise<string> {
     if (content === null) {
       continue;
     }
-    base = mergeDelta(base, capability, parseDelta(content));
+    base = mergeLivingSpec(base, capability, parseDelta(content));
   }
 
-  if (base === null) {
-    throw new Error(`No archived delta specifications found for capability ${capability}`);
-  }
-  return stripLegacyDeltaReferences(base);
+  return base === null ? null : stripLegacyDeltaReferences(base);
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -191,10 +215,22 @@ async function listFiles(dir: string): Promise<string[]> {
 
 describe('Living spec delta equivalence', () => {
   it('re-seeds every living spec as the cumulative deterministic merge of 016..027', async () => {
-    for (const capability of CAPABILITIES) {
+    const capabilities = await replayCapabilities();
+    assert.ok(capabilities.length > 0, 'no capability to replay');
+    for (const capability of capabilities) {
       const expected = await replayLivingSpec(capability);
-      const actual = await fs.readFile(path.join(LIVING_SPECS_DIR, capability, 'spec.md'), 'utf8');
+      const livingPath = path.join(LIVING_SPECS_DIR, capability, 'spec.md');
+      const actual = await fs.readFile(livingPath, 'utf8').catch(() => null);
 
+      if (expected === null) {
+        assert.equal(actual, null, `${capability} replays to no requirement but has a living spec`);
+        continue;
+      }
+
+      assert.ok(
+        actual !== null,
+        `${capability} replay produced a spec but the living folder is absent`,
+      );
       const livingMismatch = firstLineDifference(
         `${capability} living spec is not the deterministic merge`,
         withoutPurposeBlankLine(expected),
@@ -205,10 +241,12 @@ describe('Living spec delta equivalence', () => {
       }
 
       // Replaying twice must be byte-for-byte stable.
+      const replayed = await replayLivingSpec(capability);
+      assert.ok(replayed !== null, `${capability} replay is not stable`);
       const replayMismatch = firstLineDifference(
         `${capability} replay is not byte-for-byte stable`,
         expected,
-        await replayLivingSpec(capability),
+        replayed,
       );
       if (replayMismatch !== null) {
         assert.fail(replayMismatch);
@@ -253,7 +291,7 @@ describe('Living spec delta equivalence', () => {
   });
 
   it('contains zero legacy "Delta from" references and no loose spec markdown files', async () => {
-    for (const capability of CAPABILITIES) {
+    for (const capability of await livingCapabilities()) {
       const content = await fs.readFile(path.join(LIVING_SPECS_DIR, capability, 'spec.md'), 'utf8');
       assert.ok(!content.includes('Delta from'), `${capability} still references "Delta from"`);
     }
