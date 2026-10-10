@@ -10,7 +10,7 @@ export const BARE_OSQ_LINE = 'Run osq with no command first: it shows what needs
 
 export const COMMAND_GROUPS: readonly CommandGroup[] = [
   { title: 'Everyday', commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject'] },
-  { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server'] },
+  { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server', 'mcp'] },
   {
     title: 'Inspection',
     commands: ['status', 'show', 'report', 'digest', 'query', 'spec', 'graph', 'serve', 'doctor'],

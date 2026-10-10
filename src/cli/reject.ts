@@ -1,6 +1,15 @@
+import { InvalidArgumentError } from 'commander';
 import { rejectSpec } from '../core/lifecycle/reject.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
+
+/** Commander-level guard rejecting an empty or whitespace-only rejection reason. */
+export function parseRejectReason(value: string): string {
+  if (!value || !value.trim()) {
+    throw new InvalidArgumentError('a non-empty rejection reason is required');
+  }
+  return value;
+}
 
 export interface RejectCommandOptions extends CommandInputs {
   reason: string;

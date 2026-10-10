@@ -49,3 +49,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [012. Watch service](012-watch-service.md)
 - [013. Remote access](013-remote-access.md)
 - [014. Server mode](014-server-mode.md)
+- [015. MCP transport](015-mcp-transport.md)

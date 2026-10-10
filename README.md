@@ -657,6 +657,7 @@ osq setup                write harness config for OSQ_HARNESS
 osq watch                run the watcher loop
 osq server start         run the dashboard and the watcher service in the background
 osq server stop          stop the server and the watcher service
+osq mcp --cwd <dir>      serve the planning tools to an MCP client over stdio
 ```
 
 **Inspection**
@@ -935,6 +936,31 @@ execution watcher or writes a project, cursor, or marker file except through an
 action the dashboard asked for. SIGINT and SIGTERM close the HTTP listener and
 its filesystem watcher. Startup failures such as an address already in use
 print one actionable error and exit nonzero.
+
+### Planning through MCP
+
+`osq mcp` serves the planning tools to an MCP client over stdio, so a planner
+can plan a change with the client's own model while every file it writes stays
+inside one unapproved change folder. Point the client at the project folder:
+
+```json
+{
+  "mcpServers": {
+    "osq": {
+      "command": "osq",
+      "args": ["mcp", "--cwd", "<project>"]
+    }
+  }
+}
+```
+
+For Claude Code, run `claude mcp add osq -- osq mcp --cwd <project>`. To plan
+against a server, add `OSQ_SERVER=https://<host>/p/<project>/` to the client's
+environment; `plan` downloads the change's working copy, the file tools edit
+it, and `lint` uploads it. The tools are `plan`, `list_files`, `read_file`,
+`write_file`, `edit_file`, `delete_file`, `spec`, `query` and `lint`, and they
+write only inside one unapproved change folder. `approve`, `land`, `reject`
+and `retry` are not tools; approval stays with a human.
 
 ### Running osq on a server
 

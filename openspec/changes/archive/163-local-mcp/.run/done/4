@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2acfd6e29a6448a4ca898d65333e033c94140920035a6822c6ee7fdeb482058a"
+build_stamp: "274cd05e"
+project_commit: "1bf6b408"
+exit_code: 0
+scope_files: {"README.md":"sha256:043305cc47905638756214fc76967287c901f0bf80f777d3cb9ce056ef1880ad","src/cli/help-groups.ts":"sha256:6ad5937980ef4d9cbe6b9579bd3e157caa5253aba8c939d44245cb24e76a1793","src/cli/index.ts":"sha256:b9423df9a415b89261824a616e59376e049f5e4058f9a26d9486eb57abf655fe","src/cli/mcp.ts":"sha256:3b6252694197f5c65e5e145e3d8dab25b5a24577a385a9d00e08e106e5742bd6","src/cli/reject.ts":"sha256:d32c348bbb9c59aec6b4725d38984df1aab04294b230b27268e0cb8f4ee280d6","tests/help-groups.test.ts":"sha256:e5578766c9558fffb067ad58af7dd10b53594d26f8e33fe4ac16cecc230b160f","tests/mcp-cli.test.ts":"sha256:4212dd5c289c6e3ca2633dd20d55f35f06b4640216df4c314982c702f0af9fce"}
+---
+2026-10-10T00:55:29.555Z

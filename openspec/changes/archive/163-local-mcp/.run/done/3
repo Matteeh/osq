@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:fd1279f3925f541691b86dce38faac2f8f9e352ae751660c7f9782b2148731fc"
+build_stamp: "274cd05e"
+project_commit: "04da37c7"
+exit_code: 0
+scope_files: {"src/cli/mcp-tools.ts":"sha256:e98f38096b205fa4aaf7262e336a8165d1e534c1dd4702736ca6225c33825c98","tests/mcp-tools.test.ts":"sha256:0147aa05da007c3c186643b040d6ce1eb81c4f4a91cb756739ac7ee7759e7e9b"}
+---
+2026-10-10T00:50:00.949Z

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4db55025e98a8a216e4df3c69b0f5fa5f128f912874e66d649d22d6ee7eda747"
+build_stamp: "274cd05e"
+project_commit: "e86a48e8"
+exit_code: 0
+scope_files: {"decisions/015-mcp-transport.md":"sha256:ab4cd86f5188fbe454b09290b68fb35e6b885fb51dfb11d8d1ec27a903cb6765","decisions/README.md":"sha256:bc91a445c096e45f6406ec0352ae50cb3c9da8723a387d67764feea341286d74","tests/mcp-adr.test.ts":"sha256:72a575cacdfdb2ccc9e67d9886bdcf65a21181263d992e28fc557a0cf369e0d4"}
+---
+2026-10-10T01:00:21.198Z

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { Command, InvalidArgumentError } from 'commander';
+import { Command } from 'commander';
 import { registerApproveCommand } from './approve.js';
 import { CommandError } from './command-error.js';
 import { registerDigestCommand } from './digest.js';
@@ -11,13 +11,14 @@ import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
 import { registerLandCommand } from './land.js';
 import { lintCommand } from './lint.js';
+import { registerMcpCommand } from './mcp.js';
 import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { planCommand } from './plan.js';
 import { registerQueryCommand } from './query.js';
 import { queueCommand } from './queue.js';
-import { rejectCommand } from './reject.js';
+import { parseRejectReason, rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
 import { retryCommand } from './retry.js';
 import { parsePortArgument, serveCommand } from './serve.js';
@@ -36,13 +37,6 @@ export function resolvePackageVersion(): string {
   return manifest.version ?? '0.0.0';
 }
 
-/** Commander-level guard rejecting an empty or whitespace-only rejection reason. */
-function parseRejectReason(value: string): string {
-  if (!value || !value.trim()) {
-    throw new InvalidArgumentError('a non-empty rejection reason is required');
-  }
-  return value;
-}
 export function createProgram(version?: string): Command {
   const program = new Command();
   // Keep root options (notably `--json`) from shadowing the identically named
@@ -226,6 +220,7 @@ export function createProgram(version?: string): Command {
   registerGraphCommand(program);
   registerInboxDispatchCommand(program);
   registerLandCommand(program);
+  registerMcpCommand(program);
   registerMessageCommand(program);
   registerServerCommand(program);
   registerSpecCommand(program);
