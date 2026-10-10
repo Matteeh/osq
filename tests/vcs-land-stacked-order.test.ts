@@ -18,7 +18,10 @@ import { installFakeValidator } from './helpers.js';
 
 const execFileAsync = promisify(execFile);
 const CHANGES = path.posix.join('openspec', 'changes');
+const ARCHIVE = path.posix.join(CHANGES, 'archive');
 const ORDERS = path.posix.join('openspec', 'specs', 'orders', 'spec.md');
+const BILLING = path.posix.join('openspec', 'specs', 'billing', 'spec.md');
+const BOGUS_HASH = '0'.repeat(40);
 
 const tmpDirs: string[] = [];
 
@@ -39,11 +42,6 @@ function cleanGitEnv(): NodeJS.ProcessEnv {
 async function git(args: string[], cwd: string): Promise<string> {
   const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
   return stdout.trim();
-}
-
-async function statusLines(cwd: string): Promise<string[]> {
-  const output = await git(['status', '--porcelain=v1', '--untracked-files=all'], cwd);
-  return output.split('\n').filter((line) => line.trim().length > 0);
 }
 
 async function writeAt(root: string, relative: string, content: string): Promise<void> {
@@ -176,6 +174,22 @@ The system SHALL invoice order 002.
 - **THEN** invoice 002 is added
 `;
 
+const ADD_003_ORDERS = `# Spec Delta: orders
+
+## Purpose
+
+Adds order 003.
+
+## ADDED Requirements
+
+### Requirement: Order 003
+The system SHALL add order 003.
+
+#### Scenario: 003 runs
+- **WHEN** 003 runs
+- **THEN** order 003 is added
+`;
+
 const ONE_ORDERS: ChangeDef = {
   folder: '001-order-flow',
   title: 'Order Flow',
@@ -201,6 +215,15 @@ const TWO_BILLING: ChangeDef = {
   capability: 'billing',
   tasks: [{ title: 'Only task', scope: 'src/two.txt' }],
   delta: ADD_002_BILLING,
+};
+
+const THREE_ORDERS: ChangeDef = {
+  folder: '003-third',
+  title: 'Third',
+  goal: 'Add the third thing.',
+  capability: 'orders',
+  tasks: [{ title: 'Only task', scope: 'src/three.txt' }],
+  delta: ADD_003_ORDERS,
 };
 
 function proposalMarkdown(change: ChangeDef): string {
@@ -278,12 +301,11 @@ class ActingAdapter implements HarnessAdapter {
 interface Project {
   readonly repo: string;
   readonly config: OsqConfig;
-  readonly worktrees: Record<string, string>;
 }
 
-/** A committed temp repository that holds the living spec and the given changes. */
-async function makeRepo(changes: readonly ChangeDef[]): Promise<Project> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-vcs-land-refusals-'));
+/** A committed temp repository that holds the living specs, ready for changes. */
+async function makeRepo(): Promise<Project> {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-vcs-land-stacked-'));
   tmpDirs.push(root);
   const repo = path.join(root, 'repo');
   const worktreeRoot = path.join(root, 'worktrees');
@@ -295,16 +317,12 @@ async function makeRepo(changes: readonly ChangeDef[]): Promise<Project> {
   await fs.mkdir(path.join(repo, 'src'), { recursive: true });
   await fs.writeFile(path.join(repo, 'src', 'seed.txt'), 'seed\n', 'utf8');
   await writeAt(repo, ORDERS, ORDERS_SPEC);
-  await writeAt(repo, path.posix.join('openspec', 'specs', 'billing', 'spec.md'), BILLING_SPEC);
+  await writeAt(repo, BILLING, BILLING_SPEC);
   await git(['init', '-q', '-b', 'main'], repo);
   await git(['config', 'user.name', 'osq'], repo);
   await git(['config', 'user.email', 'osq@example.invalid'], repo);
   await git(['add', '-A'], repo);
   await git(['commit', '-qm', 'seed'], repo);
-
-  for (const change of changes) {
-    await writeChange(path.join(repo, CHANGES, change.folder), change);
-  }
 
   const vcs: VcsConfig = {
     enabled: true,
@@ -315,7 +333,7 @@ async function makeRepo(changes: readonly ChangeDef[]): Promise<Project> {
     vcs,
     gates: { ...DEFAULT_GATES_CONFIG, preSpawnVerify: 'off' },
   });
-  return { repo, config, worktrees: {} };
+  return { repo, config };
 }
 
 /** Approve `change` into its worktree and run the watcher until it archives. */
@@ -324,94 +342,31 @@ async function approveAndArchive(project: Project, change: ChangeDef): Promise<s
   await writeChange(path.join(project.repo, CHANGES, change.folder), change);
   const result = await approveSpec(project.repo, id, project.config);
   assert.ok(result.worktreePath, `approval created a worktree for ${id}`);
-  project.worktrees[change.folder] = result.worktreePath;
   await runWatcherOnce(project.repo, project.config, new ActingAdapter());
   return result.worktreePath;
 }
 
-interface Snapshot {
-  readonly checkoutHead: string;
-  readonly checkoutStatus: readonly string[];
-  readonly worktreeHead: string;
+/**
+ * Write `folder`'s `.run/stacked-on` into its archived folder in `worktree`,
+ * naming each entry there, and commit it on the worktree's branch.
+ */
+async function writeStackedOn(
+  worktree: string,
+  folder: string,
+  names: readonly string[],
+): Promise<void> {
+  const relative = path.posix.join(ARCHIVE, folder, '.run', 'stacked-on');
+  const body = `${names.map((name) => `${name} ${BOGUS_HASH}`).join('\n')}\n`;
+  await writeAt(worktree, relative, body);
+  await git(['add', '--', relative], worktree);
+  await git(['commit', '-qm', `stacked-on ${folder}`], worktree);
 }
 
-async function snapshot(repo: string, worktree: string): Promise<Snapshot> {
-  return {
-    checkoutHead: await git(['rev-parse', 'HEAD'], repo),
-    checkoutStatus: await statusLines(repo),
-    worktreeHead: await git(['rev-parse', 'HEAD'], worktree),
-  };
-}
-
-describe('osq land refusals', () => {
-  it('Modified tracked file', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    await writeAt(project.repo, 'README.md', 'original\n');
-    await git(['add', '--', 'README.md'], project.repo);
-    await git(['commit', '-qm', 'readme'], project.repo);
+describe('osq land on stacked changes', () => {
+  it('Earlier change shares a capability', async () => {
+    const project = await makeRepo();
     await approveAndArchive(project, ONE_ORDERS);
-    await writeAt(project.repo, 'README.md', 'edited\n');
-
-    const capture = await captureLand(project.repo, project.config, '001');
-
-    assert.equal(capture.exitCode, 0);
-    assert.equal(capture.stderr, '');
-    assert.ok(capture.stdout.startsWith('Landed 001-order-flow as '));
-    assert.equal(await fs.readFile(path.join(project.repo, 'README.md'), 'utf8'), 'edited\n');
-  });
-
-  it('lands a change when the checkout holds only an untracked draft of another change', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    await approveAndArchive(project, ONE_ORDERS);
-    await writeChange(path.join(project.repo, CHANGES, TWO_ORDERS.folder), TWO_ORDERS);
-
-    const capture = await captureLand(project.repo, project.config, '001');
-
-    assert.equal(capture.exitCode, 0);
-    assert.equal(capture.stderr, '');
-    assert.ok(capture.stdout.startsWith('Landed 001-order-flow as '));
-    assert.equal(
-      await fs.stat(path.join(project.repo, CHANGES, TWO_ORDERS.folder)).then(() => true),
-      true,
-    );
-  });
-
-  it('refuses off the default branch and leaves the checkout and worktree alone', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    const worktree = await approveAndArchive(project, ONE_ORDERS);
-    await git(['checkout', '-q', '-b', 'feature'], project.repo);
-    const before = await snapshot(project.repo, worktree);
-
-    const capture = await captureLand(project.repo, project.config, '001');
-
-    assert.equal(capture.exitCode, 1);
-    assert.equal(capture.stdout, '');
-    assert.equal(capture.stderr, 'osq land runs on main; the checkout is on feature\n');
-    assert.deepEqual(await snapshot(project.repo, worktree), before);
-  });
-
-  it('refuses an edited worktree and leaves the checkout and worktree alone', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    const worktree = await approveAndArchive(project, ONE_ORDERS);
-    await writeAt(worktree, 'notes.txt', 'scratch\n');
-    const before = await snapshot(project.repo, worktree);
-
-    const capture = await captureLand(project.repo, project.config, '001');
-
-    assert.equal(capture.exitCode, 1);
-    assert.equal(capture.stdout, '');
-    assert.equal(
-      capture.stderr,
-      `${worktree} has uncommitted changes: notes.txt; commit or discard them first\n`,
-    );
-    assert.deepEqual(await snapshot(project.repo, worktree), before);
-  });
-
-  it('refuses a later change that shares a capability with an earlier unlanded one', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    await approveAndArchive(project, ONE_ORDERS);
-    const secondWorktree = await approveAndArchive(project, TWO_ORDERS);
-    const before = await snapshot(project.repo, secondWorktree);
+    await approveAndArchive(project, TWO_ORDERS);
 
     const capture = await captureLand(project.repo, project.config, '002');
 
@@ -421,50 +376,36 @@ describe('osq land refusals', () => {
       capture.stderr,
       '001-order-flow archived before 002-second and also writes orders; land it first\n',
     );
-    assert.deepEqual(await snapshot(project.repo, secondWorktree), before);
   });
 
-  it('lands a later change that shares no capability with an earlier one', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
+  it('Earlier change stacked on this one', async () => {
+    const project = await makeRepo();
+    const second = await approveAndArchive(project, TWO_ORDERS);
+    await writeStackedOn(second, TWO_ORDERS.folder, [ONE_ORDERS.folder]);
     await approveAndArchive(project, ONE_ORDERS);
-    await approveAndArchive(project, TWO_BILLING);
 
-    const capture = await captureLand(project.repo, project.config, '002');
+    const first = await captureLand(project.repo, project.config, '001');
+    assert.equal(first.exitCode, 0);
+    assert.equal(first.stderr, '');
+    assert.ok(first.stdout.startsWith('Landed 001-order-flow as '));
+
+    const later = await captureLand(project.repo, project.config, '002');
+    assert.equal(later.exitCode, 0);
+    assert.ok(later.stdout.startsWith('Landed 002-second as '));
+  });
+
+  it('Earlier change stacked through another', async () => {
+    const project = await makeRepo();
+    const third = await approveAndArchive(project, THREE_ORDERS);
+    await writeStackedOn(third, THREE_ORDERS.folder, [TWO_ORDERS.folder]);
+    const second = await approveAndArchive(project, TWO_BILLING);
+    await writeStackedOn(second, TWO_BILLING.folder, [ONE_ORDERS.folder]);
+    await approveAndArchive(project, ONE_ORDERS);
+
+    const capture = await captureLand(project.repo, project.config, '001');
 
     assert.equal(capture.exitCode, 0);
     assert.equal(capture.stderr, '');
-    assert.ok(capture.stdout.startsWith('Landed 002-second as '));
-  });
-
-  it('refuses with vcs.enabled off', async () => {
-    const project = await makeRepo([ONE_ORDERS]);
-    const worktree = await approveAndArchive(project, ONE_ORDERS);
-    const before = await snapshot(project.repo, worktree);
-
-    const capture = await captureLand(
-      project.repo,
-      defineConfig({ vcs: { enabled: false } }),
-      '001',
-    );
-
-    assert.equal(capture.exitCode, 1);
-    assert.equal(capture.stdout, '');
-    assert.equal(capture.stderr, 'osq land needs vcs.enabled and git\n');
-    assert.deepEqual(await snapshot(project.repo, worktree), before);
-  });
-
-  it('refuses with vcs.enabled on but no git repository', async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-vcs-land-refusals-nogit-'));
-    tmpDirs.push(root);
-
-    const capture = await captureLand(
-      root,
-      defineConfig({ vcs: { enabled: true, author: 'Osq <osq@example.invalid>' } }),
-      '001',
-    );
-
-    assert.equal(capture.exitCode, 1);
-    assert.equal(capture.stdout, '');
-    assert.equal(capture.stderr, 'osq land needs vcs.enabled and git\n');
+    assert.ok(capture.stdout.startsWith('Landed 001-order-flow as '));
   });
 });

@@ -63,3 +63,54 @@ export async function isAncestor(
   const result = await ctx.run(['merge-base', '--is-ancestor', ancestor, descendant]);
   return result.code === 0;
 }
+
+/**
+ * The merge base git names for `a` and `b`, or null when they share no commit
+ * or either ref is unknown.
+ *
+ * @scenario version-control: Merge base of two branches
+ * @adr 003
+ */
+export async function mergeBase(
+  ctx: GitWriteContext,
+  a: string,
+  b: string,
+): Promise<string | null> {
+  const result = await ctx.run(['merge-base', a, b]);
+  if (result.code !== 0) return null;
+  const base = result.stdout.trim();
+  return base.length > 0 ? base : null;
+}
+
+/** The byte git prints between commits in `trailerValues`'s log format. */
+const RECORD_SEPARATOR = '\u001e';
+
+/** The byte git prints between a commit's trailer values in that format. */
+const UNIT_SEPARATOR = '\u001f';
+
+/**
+ * The trimmed value of every `key` trailer, newest commit first, on the
+ * commits `to` has and `from` lacks. Empty when a ref is unknown or no commit
+ * carries the trailer.
+ *
+ * @scenario version-control: Trailer values in a range
+ * @adr 003
+ */
+export async function trailerValues(
+  ctx: GitWriteContext,
+  from: string,
+  to: string,
+  key: string,
+): Promise<string[]> {
+  const format = `%x1e%(trailers:key=${key},valueonly,separator=%x1f)`;
+  const result = await ctx.run(['log', `--format=${format}`, `${from}..${to}`]);
+  if (result.code !== 0) return [];
+  const values: string[] = [];
+  for (const record of result.stdout.split(RECORD_SEPARATOR)) {
+    for (const value of record.split(UNIT_SEPARATOR)) {
+      const trimmed = value.trim();
+      if (trimmed.length > 0) values.push(trimmed);
+    }
+  }
+  return values;
+}

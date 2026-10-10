@@ -1,6 +1,9 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { parseStackedOn } from '../spec/stack-dependencies.js';
 import type { LocatedChange } from '../status/change-locations.js';
-import { findLandCandidates } from '../status/dispatch-land.js';
+import { type LandCandidate, findLandCandidates } from '../status/dispatch-land.js';
 import { deriveSpecState } from '../status/state.js';
 import { describeTrigger } from '../status/steering.js';
 import { readLandedAt } from '../web/web-data-lifecycle.js';
@@ -48,11 +51,48 @@ export async function assertNoSteering(change: LocatedChange): Promise<void> {
   );
 }
 
+/** The folder names one candidate's archived `.run/stacked-on` names. */
+async function stackedOnNames(candidate: LandCandidate): Promise<string[]> {
+  const target = path.join(candidate.folderPath, '.run', 'stacked-on');
+  const content = await fs.readFile(target, 'utf8').catch(() => null);
+  if (content === null) return [];
+  return parseStackedOn(content).map((entry) => entry.folder);
+}
+
+/** Every candidate stacked on `folder`, directly or through other candidates. */
+async function stackedOn(
+  folder: string,
+  candidates: readonly LandCandidate[],
+): Promise<Set<string>> {
+  const dependents = new Map<string, string[]>();
+  for (const candidate of candidates) {
+    for (const base of await stackedOnNames(candidate)) {
+      dependents.set(base, [...(dependents.get(base) ?? []), candidate.folder]);
+    }
+  }
+  const stacked = new Set<string>();
+  const queue = [folder];
+  for (let current = queue.pop(); current !== undefined; current = queue.pop()) {
+    for (const dependent of dependents.get(current) ?? []) {
+      if (stacked.has(dependent)) continue;
+      stacked.add(dependent);
+      queue.push(dependent);
+    }
+  }
+  return stacked;
+}
+
 /**
  * Refuse when another change archived in an osq worktree, has not landed, and
  * has an earlier `archived` event than `change` while writing a delta for a
  * capability `change` also writes. A change with no `archived` event is never
- * compared.
+ * compared. A change stacked on `change`, directly or through other
+ * candidates, is not compared either.
+ *
+ * @scenario version-control: Earlier change shares a capability
+ * @scenario version-control: Earlier change stacked on this one
+ * @scenario version-control: Earlier change stacked through another
+ * @adr 003
  */
 export async function assertNoEarlierChange(
   projectRoot: string,
@@ -64,8 +104,13 @@ export async function assertNoEarlierChange(
   const capabilities = new Set(await listDeltaCapabilities(change.folderPath));
   if (capabilities.size === 0) return;
 
-  for (const other of await findLandCandidates(projectRoot, config)) {
-    if (other.folder === change.folderName || !other.worktree) continue;
+  const candidates = (await findLandCandidates(projectRoot, config)).filter(
+    (candidate) => candidate.worktree,
+  );
+  const stacked = await stackedOn(change.folderName, candidates);
+
+  for (const other of candidates) {
+    if (other.folder === change.folderName || stacked.has(other.folder)) continue;
     const theirs = await readLandedAt(other.folderPath);
     if (theirs === null || theirs >= mine) continue;
     const shared = (await listDeltaCapabilities(other.folderPath)).filter((capability) =>
@@ -73,7 +118,7 @@ export async function assertNoEarlierChange(
     );
     if (shared.length === 0) continue;
     throw new Error(
-      `${other.folder} archived before ${change.folderName} and also writes ${shared.join(', ')}; land it first, or reject it`,
+      `${other.folder} archived before ${change.folderName} and also writes ${shared.join(', ')}; land it first`,
     );
   }
 }

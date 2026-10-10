@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e711b205faaf565c4e7487103619832aacf03dceeef71d7241c2008df5598af3"
+build_stamp: "7bc6fa0b"
+project_commit: "079b6d8b"
+exit_code: 0
+scope_files: {"src/core/vcs/sync-bridge.ts":"sha256:1e38b13b26aa3b67c6f73cd613c6aea64f4c3cb7ff5c0d6c080f9058bc2bcfd7","src/core/vcs/sync-main.ts":"sha256:a03e6979df4f56cd33596ba7b9adc1922ef3894891ec790bc592a6f30eca7306","tests/vcs-stacked-land.test.ts":"sha256:f66febc5bfb7c8acaba34621e48416a65e51798e5ae8180b93ff53d85abfe2d6"}
+---
+2026-10-10T10:24:23.636Z

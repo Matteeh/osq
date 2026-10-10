@@ -110,6 +110,7 @@ export class NoVcs implements Vcs {
     _parent: string,
     _message: string,
     _author: string,
+    _extraParents?: readonly string[],
   ): Promise<string> {
     this.reject();
   }
@@ -136,6 +137,14 @@ export class NoVcs implements Vcs {
 
   async isAncestor(_ancestor: string, _descendant: string): Promise<boolean> {
     return false;
+  }
+
+  async mergeBase(_a: string, _b: string): Promise<string | null> {
+    return null;
+  }
+
+  async trailerValues(_from: string, _to: string, _key: string): Promise<string[]> {
+    return [];
   }
 
   async patch(_base?: string): Promise<string> {

@@ -5,6 +5,7 @@ import { parseSpecMdFromFolder } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { getSpecsDir } from '../status/layout.js';
 import { selectVcs } from './select.js';
+import { syncBridge } from './sync-bridge.js';
 import { eventsRelative, readEvents, readRequirementsBase, restoreEvents } from './sync-files.js';
 import { createSyncRecertifyState, restoreSyncRecertified } from './sync-recertify.js';
 import { assertRequirementsUnchanged, rebuildLivingSpecs } from './sync-specs.js';
@@ -219,7 +220,10 @@ export async function syncWithDefaultBranch(
   const mergeStart = Date.now();
   let merge: VcsMergeResult;
   try {
-    merge = await vcs.merge(defaultBranch, false);
+    merge = await vcs.merge(
+      await syncBridge(vcs, defaultBranch, head.sha ?? 'HEAD', change.folderName, context.author),
+      false,
+    );
   } catch (error) {
     throw await stopAfter(vcs, error, context);
   }

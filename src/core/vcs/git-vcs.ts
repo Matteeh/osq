@@ -1,6 +1,4 @@
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import fs from 'node:fs/promises';
 import {
   DEFAULT_BRANCH,
   DEFAULT_GIT_COMMIT_SECONDS,
@@ -10,7 +8,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import * as diff from './git-vcs-diff.js';
 import * as land from './git-vcs-land.js';
 import * as merges from './git-vcs-merge.js';
-import { nonEmpty, parseStashes, parseStatus } from './git-vcs-parse.js';
+import * as reads from './git-vcs-read.js';
 import * as remote from './git-vcs-remote.js';
 import * as writes from './git-vcs-write.js';
 import type { GitWriteContext } from './git-vcs-write.js';
@@ -108,40 +106,24 @@ export class GitVcs implements Vcs {
     return runGit(this.binary, args, this.projectRoot, seconds, { GIT_TERMINAL_PROMPT: '0' });
   }
 
-  async root(): Promise<string | null> {
-    const result = await this.run(['rev-parse', '--show-toplevel']);
-    const top = result.stdout.trim();
-    if (result.code !== 0 || top === '') return null;
-    return fs.realpath(top).catch(() => top);
+  root(): Promise<string | null> {
+    return reads.root(this.context);
   }
 
-  async head(): Promise<VcsHead> {
-    const [commit, branch] = await Promise.all([
-      this.run(['rev-parse', '--verify', '--quiet', 'HEAD']),
-      this.run(['symbolic-ref', '--quiet', '--short', 'HEAD']),
-    ]);
-    return {
-      sha: commit.code === 0 ? nonEmpty(commit.stdout) : null,
-      branch: branch.code === 0 ? nonEmpty(branch.stdout) : null,
-    };
+  head(): Promise<VcsHead> {
+    return reads.head(this.context);
   }
 
-  async indexDigest(): Promise<string> {
-    const result = await this.run(['ls-files', '--stage', '-z']);
-    if (result.code !== 0) return '';
-    return createHash('sha256').update(result.stdout).digest('hex');
+  indexDigest(): Promise<string> {
+    return reads.indexDigest(this.context);
   }
 
-  async stashList(): Promise<VcsStash[]> {
-    const result = await this.run(['stash', 'list', '--format=%H%x00%gs']);
-    if (result.code !== 0) return [];
-    return parseStashes(result.stdout);
+  stashList(): Promise<VcsStash[]> {
+    return reads.stashList(this.context);
   }
 
-  async status(): Promise<VcsStatusEntry[]> {
-    const result = await this.run(['status', '--porcelain=v1', '-z', '--untracked-files=all']);
-    if (result.code !== 0) return [];
-    return parseStatus(result.stdout);
+  status(): Promise<VcsStatusEntry[]> {
+    return reads.status(this.context);
   }
 
   configValue(key: string): Promise<string | null> {
@@ -156,15 +138,20 @@ export class GitVcs implements Vcs {
     return writes.defaultBranch(this.context, this.config.vcs?.defaultBranch ?? DEFAULT_BRANCH);
   }
 
-  async show(ref: string, filePath: string): Promise<string | null> {
-    const result = await this.run(['show', `${ref}:${filePath}`]);
-    if (result.code !== 0) return null;
-    return result.stdout;
+  show(ref: string, filePath: string): Promise<string | null> {
+    return reads.show(this.context, ref, filePath);
   }
 
-  async pathExists(ref: string, filePath: string): Promise<boolean> {
-    const result = await this.run(['cat-file', '-e', `${ref}:${filePath}`]);
-    return result.code === 0;
+  pathExists(ref: string, filePath: string): Promise<boolean> {
+    return reads.pathExists(this.context, ref, filePath);
+  }
+
+  mergeBase(a: string, b: string): Promise<string | null> {
+    return merges.mergeBase(this.context, a, b);
+  }
+
+  trailerValues(from: string, to: string, key: string): Promise<string[]> {
+    return merges.trailerValues(this.context, from, to, key);
   }
 
   listBranches(prefix: string): Promise<string[]> {
@@ -199,8 +186,14 @@ export class GitVcs implements Vcs {
     return writes.commit(this.context, paths, message, author);
   }
 
-  commitTree(source: string, parent: string, message: string, author: string): Promise<string> {
-    return land.commitTree(this.context, source, parent, message, author);
+  commitTree(
+    source: string,
+    parent: string,
+    message: string,
+    author: string,
+    extraParents: readonly string[] = [],
+  ): Promise<string> {
+    return land.commitTree(this.context, source, parent, message, author, extraParents);
   }
 
   async fastForward(commit: string) {

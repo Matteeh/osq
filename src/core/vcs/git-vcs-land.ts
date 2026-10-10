@@ -30,10 +30,15 @@ async function signCommits(ctx: GitWriteContext): Promise<boolean> {
 }
 
 /**
- * Commit `source`'s tree with `parent` as its only parent, authored by
- * `author`, leaving the working tree, the index, and every ref untouched.
- * The message goes to git in a file, never as an argument, and `-S` is passed
- * when git is set to sign, because `commit-tree` ignores that setting.
+ * Commit `source`'s tree with `parent` first and then each of `extraParents`,
+ * authored by `author`, leaving the working tree, the index, and every ref
+ * untouched. The message goes to git in a file, never as an argument, and
+ * `-S` is passed when git is set to sign, because `commit-tree` ignores that
+ * setting.
+ *
+ * @scenario version-control: Commit from a branch's tree
+ * @scenario version-control: Commit with extra parents
+ * @adr 003
  */
 export async function commitTree(
   ctx: GitWriteContext,
@@ -41,13 +46,16 @@ export async function commitTree(
   parent: string,
   message: string,
   author: string,
+  extraParents: readonly string[] = [],
 ): Promise<string> {
   const sign = await signCommits(ctx);
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-commit-'));
   const file = path.join(dir, 'message.txt');
   try {
     await fs.writeFile(file, message, 'utf8');
-    const args = ['commit-tree', `${source}^{tree}`, '-p', parent, '-F', file];
+    const args = ['commit-tree', `${source}^{tree}`, '-p', parent];
+    for (const extra of extraParents) args.push('-p', extra);
+    args.push('-F', file);
     if (sign) args.push('-S');
     const { name, email } = parseAuthor(author);
     const env = { GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email };

@@ -308,8 +308,9 @@ not committed before the sync then survive a stop:
    is ` and running verify: <command>`, left out when the proposal has no
    `verify`. For an active change it is ` and re-running verify for tasks
    <n>, ...`, naming the tasks step 5 runs, left out when there are none. With
-   `skipVerify` set the suffix is left out. It SHALL then merge the default
-   branch without committing. A conflict at a
+   `skipVerify` set the suffix is left out. It SHALL then merge, without
+   committing, the commit "Sync takes landed branch tips" names: the default
+   branch itself, or a bridge commit holding its tree. A conflict at a
    path under the living specs directory or under the archive directory is
    resolved in step 3. A conflict at any other path SHALL abort the merge and
    stop with `<folder>: <paths, comma-separated> conflict with <default
@@ -444,8 +445,11 @@ order:
 - When another change that archived in an osq worktree and has not landed has
   an earlier `archived` event than this change, as `readLandedAt` reads it,
   and writes a delta for a capability this change also writes: `<other folder>
-  archived before <folder> and also writes <capabilities>; land it first, or
-  reject it`. A change with no `archived` event SHALL not be compared.
+  archived before <folder> and also writes <capabilities>; land it first`. A
+  change with no `archived` event SHALL not be compared. A change stacked on
+  this change SHALL not be compared either: one whose `.run/stacked-on` names
+  this change, or names a change that is itself stacked on this change, as
+  read from the archived folders of the changes archived in osq worktrees.
 
 Uncommitted changes in the checkout SHALL NOT refuse a land. "Land from the
 verified tree" stops only for those in files the land writes.
@@ -472,11 +476,19 @@ verified tree" stops only for those in files the land writes.
 
 #### Scenario: Earlier change shares a capability
 - **WHEN** `001` and `002` both archived and neither has landed, `001` archived first, both write `orders`, and `osq land 002` runs
-- **THEN** it refuses with `001-<words> archived before 002-<words> and also writes orders; land it first, or reject it`
+- **THEN** it refuses with `001-<words> archived before 002-<words> and also writes orders; land it first`
 
 #### Scenario: Earlier change on other capabilities
 - **WHEN** `001` archived first and writes only `billing`, and `002` writes only `orders`
 - **THEN** `osq land 002` lands `002`
+
+#### Scenario: Earlier change stacked on this one
+- **WHEN** `002`'s archived `.run/stacked-on` names `001`, both write `orders`, neither has landed, `002`'s `archived` event is earlier than `001`'s, as after `001` was steered and archived again, and `osq land 001` runs
+- **THEN** it lands `001`, and `osq land 002` then lands `002`
+
+#### Scenario: Earlier change stacked through another
+- **WHEN** `003`'s archived `.run/stacked-on` names `002`, `002`'s names `001`, `001` and `003` both write `orders`, none has landed, `003`'s `archived` event is earlier than `001`'s, and `osq land 001` runs
+- **THEN** it lands `001`
 
 ### Requirement: Land cleanup
 After a land commit, and for a change the default branch already holds,
@@ -503,9 +515,11 @@ to remove, it SHALL print `<folder> has already landed; nothing to clean up`.
 
 ### Requirement: Vcs land operations
 The `Vcs` port SHALL also offer `commitTree`, `fastForward`, and
-`countCommits`. `commitTree(source, parent, message, author)` SHALL write a
-commit whose tree is the tree of commit `source`, whose only parent is
-`parent`, whose message is `message`, passed to git in a file and never as an
+`countCommits`. `commitTree(source, parent, message, author, extraParents)`
+SHALL write a commit whose tree is the tree of commit `source`, whose first
+parent is `parent`, followed by each commit of the optional `extraParents` in
+order, so that `parent` is its only parent when `extraParents` is absent or
+empty, whose message is `message`, passed to git in a file and never as an
 argument, and whose author is `author`, with git's configured identity as
 committer, and return the new commit. It SHALL change no working tree, no
 index, and no ref, and run no hook. When `git config --type=bool --get
@@ -556,6 +570,10 @@ reason git is off.
 #### Scenario: Fast-forward reports changed paths
 - **WHEN** `fastForward` names a commit whose parent is HEAD and which changes only `b.txt`
 - **THEN** it returns `{ status: 'done', blocked: [], changed: ['b.txt'] }`
+
+#### Scenario: Commit with extra parents
+- **WHEN** branches `side` and `other` were each cut from `main` with one more commit, and `commitTree('main', 'main', message, 'osq <osq@example.invalid>', ['side', 'other'])` runs
+- **THEN** the new commit's tree equals `main`'s tip tree, its parents are `main`'s tip, `side`'s tip and `other`'s tip in that order, and HEAD, `main`, `indexDigest`, and `status` are unchanged
 
 ### Requirement: Land from the verified tree
 After the refusals, `landChange` SHALL run `syncWithDefaultBranch` for the
@@ -866,3 +884,60 @@ SHALL never fetch or push.
 #### Scenario: Terminal land goes out with the next server land
 - **WHEN** change `001` was landed with `landChange`, so `origin`'s `main` is behind, and `landAndPublish` runs for `001`
 - **THEN** it prints `Pushed <commit> to origin/main` and `origin`'s `main` equals the checkout's
+
+### Requirement: Vcs history reads
+The `Vcs` port SHALL also offer `mergeBase` and `trailerValues`, reads bounded
+by `timeouts.gitSeconds` like every read. `mergeBase(a, b)` SHALL return the
+commit `git merge-base <a> <b>` prints, and null, not fail, when the two share
+no commit or either ref does not exist. `trailerValues(from, to, key)` SHALL
+return the value of every `key` trailer, as `git log` parses trailers, on every
+commit that `to` has and `from` lacks, newest commit first, trimmed, leaving
+out commits without that trailer, and an empty list when either ref does not
+exist. Under `NoVcs`, `mergeBase` SHALL return null and `trailerValues` an
+empty list.
+
+#### Scenario: Merge base of two branches
+- **WHEN** `side` was cut from `main` at commit `B` and both have one more commit
+- **THEN** `mergeBase('main', 'side')` is `B`, and `mergeBase('main', 'missing')` is null
+
+#### Scenario: Trailer values in a range
+- **WHEN** `main` gains commit `X` with trailer `Osq-Head: h1`, then commit `Y` with no trailer, then commit `Z` with trailer `Osq-Head: h2`, after commit `B`
+- **THEN** `trailerValues('B', 'main', 'Osq-Head')` is `['h2', 'h1']`, `trailerValues('main', 'main', 'Osq-Head')` is empty, and `trailerValues('missing', 'main', 'Osq-Head')` is empty
+
+#### Scenario: History reads without git
+- **WHEN** `NoVcs` is asked for `mergeBase('main', 'side')` and `trailerValues('main', 'side', 'Osq-Head')`
+- **THEN** it returns null and an empty list
+
+### Requirement: Sync takes landed branch tips
+Step 2 of "Default branch sync" SHALL merge the default branch itself unless a
+land commit on the default branch carries a branch tip that shares history
+with the change's branch. It SHALL read `trailerValues(<worktree HEAD>,
+<default branch>, 'Osq-Head')` and keep each tip, once, whose `mergeBase` with
+the worktree's HEAD exists and is not an ancestor of the default branch. With
+no tip kept, it SHALL merge the default branch. Otherwise it SHALL build a
+bridge commit with `commitTree(<default branch>, <default branch>, message,
+vcs.author, <kept tips>)`, whose message is `osq: <id> bridge <default
+branch>`, a blank line, and `Osq-Change: <folder>`, and merge that commit in
+place of the default branch. Because the bridge holds the default branch's
+tree and descends from the landed tip, git takes that tip, not the old default
+branch, as the merge base, so lines only the landed change and this change
+changed do not conflict. The bridge SHALL be written only as a parent of the sync
+commit on the change's branch: no ref names it, the default branch never holds
+it, and a sync that stops leaves it unreferenced. A tip that is not in the
+repository has no merge base and is not kept.
+
+#### Scenario: Three-change stack lands in order
+- **WHEN** `001` changes line 1 of `src/one.txt`, `002` is stacked on `001` and changes the same line again, `003` is stacked on `002` and changes it once more, all three archived, and `osq land 001`, `osq land 002` and `osq land 003` run in that order
+- **THEN** each land exits zero, `src/one.txt` on the default branch holds `003`'s line, and the default branch gained exactly three commits, each with one parent
+
+#### Scenario: Stacked sync merges a bridge
+- **WHEN** `002` is stacked on `001`, `001` has landed, and the sync of `002` runs
+- **THEN** the sync commit's second parent is a commit whose subject is `osq: 002 bridge main`, whose tree equals the default branch's tip tree, and whose parents are the default branch's tip and `001`'s landed tip, and no ref other than `osq/002-<words>` reaches it
+
+#### Scenario: Unrelated change merges the default branch
+- **WHEN** `002` was cut from the default branch, not stacked, and `001`, cut from the same commit, has landed
+- **THEN** the sync of `002` commits `osq: 002 sync main` whose second parent is the default branch's tip
+
+#### Scenario: Landed tip missing from the repository
+- **WHEN** the default branch's last commit carries `Osq-Head` naming a commit this repository does not have
+- **THEN** the sync merges the default branch itself

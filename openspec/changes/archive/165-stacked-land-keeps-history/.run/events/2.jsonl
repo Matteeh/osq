@@ -1,0 +1,146 @@
+{"type":"verify_ran","timestamp":"2026-10-10T10:14:55.397Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/vcs-stacked-land.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/2-1.log","output":"Could not find 'tests/vcs-stacked-land.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/vcs-stacked-land.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-10T10:14:56.237Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":244,"repoFiles":2684,"repoLines":310794,"importFanIn":4,"proposalWords":1206,"taskWords":335,"deltaRequirements":5,"deltaScenarios":42}}
+{"type":"started","timestamp":"2026-10-10T10:14:56.432Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"079b6d8b","pid":22814,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"7bc6fa0b"}}
+{"type":"tokens","timestamp":"2026-10-10T10:14:57.988Z","data":{"promptTokens":3836,"candidateTokens":255,"totalTokens":7675,"cachedTokens":3584,"reasoningTokens":15,"cost":0.0014783040000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:57.989Z","data":{"tool":"read","summary":"openspec/changes/165-stacked-land-keeps-history/tasks/2.md"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:57.990Z","data":{"tool":"read","summary":"openspec/changes/165-stacked-land-keeps-history/proposal.md"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:57.990Z","data":{"tool":"read","summary":"openspec/changes/165-stacked-land-keeps-history/specs/versio"}}
+{"type":"tokens","timestamp":"2026-10-10T10:14:59.758Z","data":{"promptTokens":9281,"candidateTokens":343,"totalTokens":17176,"cachedTokens":7552,"reasoningTokens":80,"cost":0.003241212,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:59.759Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:59.760Z","data":{"tool":"read","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:14:59.760Z","data":{"tool":"read","summary":"src/core/vcs/vcs.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:01.565Z","data":{"promptTokens":4204,"candidateTokens":296,"totalTokens":21524,"cachedTokens":17024,"reasoningTokens":79,"cost":0.0017185439999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:01.566Z","data":{"tool":"read","summary":"openspec/changes/165-stacked-land-keeps-history/.run/results"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:01.566Z","data":{"tool":"read","summary":"tests/vcs-sync.test.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:01.567Z","data":{"tool":"read","summary":"tests/stack-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:03.112Z","data":{"promptTokens":8924,"candidateTokens":263,"totalTokens":30691,"cachedTokens":21504,"reasoningTokens":52,"cost":0.003121824,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:03.113Z","data":{"tool":"read","summary":"src/core/vcs/land.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:03.113Z","data":{"tool":"read","summary":"src/core/run/squash-message.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:03.114Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-land.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:05.414Z","data":{"promptTokens":5600,"candidateTokens":331,"totalTokens":36395,"cachedTokens":30464,"reasoningTokens":118,"cost":0.002259984,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:05.415Z","data":{"tool":"read","summary":"src/core/vcs/git-vcs-merge.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:05.416Z","data":{"tool":"read","summary":"tests/vcs-history-ops.test.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:05.416Z","data":{"tool":"read","summary":"src/core/vcs/sync-specs.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:15.711Z","data":{"promptTokens":4766,"candidateTokens":2552,"totalTokens":43542,"cachedTokens":36224,"reasoningTokens":2281,"cost":0.004709544,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:15.712Z","data":{"tool":"read","summary":"src/core/vcs/land-checks.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:15.712Z","data":{"tool":"read","summary":"src/core/vcs/sync-verify.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:15.713Z","data":{"tool":"read","summary":"tests/helpers.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:15.713Z","data":{"tool":"read","summary":"tests/git-test-env.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:20.989Z","data":{"promptTokens":3270,"candidateTokens":1140,"totalTokens":47930,"cachedTokens":43520,"reasoningTokens":921,"cost":0.0026101199999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:20.990Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:20.990Z","data":{"tool":"read","summary":"openspec/changes/165-stacked-land-keeps-history/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:20.991Z","data":{"tool":"read","summary":"tests/approve-stacked.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:25.853Z","data":{"promptTokens":6699,"candidateTokens":996,"totalTokens":55439,"cachedTokens":47744,"reasoningTokens":792,"cost":0.0034913640000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:25.854Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:25.854Z","data":{"tool":"read","summary":"tests/vcs-land.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:31.001Z","data":{"promptTokens":6069,"candidateTokens":1002,"totalTokens":62495,"cachedTokens":55424,"reasoningTokens":814,"cost":0.003355644,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:31.001Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:31.002Z","data":{"tool":"read","summary":"src/harness/types.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:32.854Z","data":{"promptTokens":979,"candidateTokens":211,"totalTokens":63654,"cachedTokens":62464,"reasoningTokens":15,"cost":0.0009216839999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:32.854Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:32.855Z","data":{"tool":"read","summary":"src/watcher/stack-run.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:34.530Z","data":{"promptTokens":1136,"candidateTokens":188,"totalTokens":64940,"cachedTokens":63616,"reasoningTokens":29,"cost":0.000948096,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:34.531Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:34.531Z","data":{"tool":"read","summary":"src/core/spec/stack-cut.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:36.610Z","data":{"promptTokens":3377,"candidateTokens":233,"totalTokens":68506,"cachedTokens":64896,"reasoningTokens":31,"cost":0.0016820759999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:36.611Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:36.611Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:46.885Z","data":{"promptTokens":2895,"candidateTokens":2159,"totalTokens":73406,"cachedTokens":68352,"reasoningTokens":2050,"cost":0.003869412,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:46.885Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:15:48.597Z","data":{"promptTokens":1618,"candidateTokens":115,"totalTokens":74949,"cachedTokens":73216,"reasoningTokens":36,"cost":0.001062696,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:15:48.598Z","data":{"tool":"read","summary":"openspec/specs/version-control/spec.md"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:23.694Z","data":{"promptTokens":3471,"candidateTokens":8149,"totalTokens":86372,"cachedTokens":74752,"reasoningTokens":8039,"cost":0.011268611999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:23.695Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:27.049Z","data":{"promptTokens":253,"candidateTokens":626,"totalTokens":87023,"cachedTokens":86144,"reasoningTokens":75,"cost":0.001343964,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:27.050Z","data":{"tool":"write","summary":"src/core/vcs/sync-bridge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:16:27.050Z","data":{"path":"src/core/vcs/sync-bridge.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:30.309Z","data":{"promptTokens":264,"candidateTokens":728,"totalTokens":87776,"cachedTokens":86784,"reasoningTokens":388,"cost":0.001473504,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:30.310Z","data":{"tool":"edit","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:16:30.313Z","data":{"path":"src/core/vcs/sync-main.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:31.848Z","data":{"promptTokens":253,"candidateTokens":105,"totalTokens":87910,"cachedTokens":87552,"reasoningTokens":7,"cost":0.000727212,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:31.848Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:37.905Z","data":{"promptTokens":269,"candidateTokens":1416,"totalTokens":89365,"cachedTokens":87680,"reasoningTokens":1269,"cost":0.00230598,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:37.906Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:39.742Z","data":{"promptTokens":413,"candidateTokens":188,"totalTokens":89817,"cachedTokens":89216,"reasoningTokens":15,"cost":0.000884796,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:39.743Z","data":{"tool":"edit","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:16:39.744Z","data":{"path":"src/core/vcs/sync-main.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:41.167Z","data":{"promptTokens":246,"candidateTokens":119,"totalTokens":89965,"cachedTokens":89600,"reasoningTokens":0,"cost":0.0007542,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:41.168Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:43.351Z","data":{"promptTokens":388,"candidateTokens":187,"totalTokens":90431,"cachedTokens":89856,"reasoningTokens":58,"cost":0.000879936,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:43.351Z","data":{"tool":"edit","summary":"src/core/vcs/sync-bridge.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:16:43.352Z","data":{"path":"src/core/vcs/sync-bridge.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:16:45.016Z","data":{"promptTokens":221,"candidateTokens":195,"totalTokens":90656,"cachedTokens":90240,"reasoningTokens":43,"cost":0.00084174,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:16:45.017Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:00.232Z","data":{"promptTokens":465,"candidateTokens":19647,"totalTokens":110736,"cachedTokens":90624,"reasoningTokens":15644,"cost":0.024259643999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:00.233Z","data":{"tool":"write","summary":"tests/vcs-stacked-land.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:18:00.234Z","data":{"path":"tests/vcs-stacked-land.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:02.437Z","data":{"promptTokens":168,"candidateTokens":297,"totalTokens":111057,"cachedTokens":110592,"reasoningTokens":198,"cost":0.001070352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:02.438Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:04.428Z","data":{"promptTokens":235,"candidateTokens":130,"totalTokens":111213,"cachedTokens":110848,"reasoningTokens":20,"cost":0.000891588,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:04.428Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:13.932Z","data":{"promptTokens":980,"candidateTokens":1019,"totalTokens":112975,"cachedTokens":110976,"reasoningTokens":944,"cost":0.002182656,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:13.933Z","data":{"tool":"read","summary":"src/core/vcs/worktree.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:20.166Z","data":{"promptTokens":486,"candidateTokens":1860,"totalTokens":115242,"cachedTokens":112896,"reasoningTokens":62,"cost":0.003055176,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:20.167Z","data":{"tool":"bash","summary":"cat > /tmp/dbg-stack.ts <<'EOF'\nimport { execFile } from 'no"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:22.372Z","data":{"promptTokens":488,"candidateTokens":213,"totalTokens":115901,"cachedTokens":115200,"reasoningTokens":92,"cost":0.0010932,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:22.373Z","data":{"tool":"bash","summary":"sed -i 's/^const class Adapter/class Adapter/' /tmp/dbg-stac"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:24.846Z","data":{"promptTokens":765,"candidateTokens":161,"totalTokens":116638,"cachedTokens":115712,"reasoningTokens":46,"cost":0.001116972,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:24.847Z","data":{"tool":"bash","summary":"mv /tmp/dbg-stack.ts /tmp/dbg-stack.mts && cd /home/mathias/"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:27.630Z","data":{"promptTokens":353,"candidateTokens":256,"totalTokens":117089,"cachedTokens":116480,"reasoningTokens":48,"cost":0.00111198,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:27.631Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:31.600Z","data":{"promptTokens":432,"candidateTokens":425,"totalTokens":117849,"cachedTokens":116992,"reasoningTokens":268,"cost":0.001341552,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:31.601Z","data":{"tool":"bash","summary":"cd /tmp/osq-dbg-sAUjdE/repo && git ls-tree --name-only osq/0"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:40.598Z","data":{"promptTokens":293,"candidateTokens":1922,"totalTokens":119847,"cachedTokens":117632,"reasoningTokens":1607,"cost":0.0031000919999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:40.599Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:50.236Z","data":{"promptTokens":568,"candidateTokens":1155,"totalTokens":121403,"cachedTokens":119680,"reasoningTokens":777,"cost":0.0022744799999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:50.236Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:18:57.098Z","data":{"promptTokens":170,"candidateTokens":422,"totalTokens":121936,"cachedTokens":121344,"reasoningTokens":318,"cost":0.001285464,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:18:57.099Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:02.015Z","data":{"promptTokens":724,"candidateTokens":873,"totalTokens":123453,"cachedTokens":121856,"reasoningTokens":575,"cost":0.001995936,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:02.016Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:14.712Z","data":{"promptTokens":1334,"candidateTokens":1680,"totalTokens":126406,"cachedTokens":123392,"reasoningTokens":1550,"cost":0.003156552,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:14.713Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:20.698Z","data":{"promptTokens":996,"candidateTokens":734,"totalTokens":127938,"cachedTokens":126208,"reasoningTokens":464,"cost":0.0019368479999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:20.699Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:27.235Z","data":{"promptTokens":578,"candidateTokens":796,"totalTokens":129118,"cachedTokens":127744,"reasoningTokens":487,"cost":0.0018950640000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:27.236Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:31.406Z","data":{"promptTokens":258,"candidateTokens":277,"totalTokens":129431,"cachedTokens":128896,"reasoningTokens":19,"cost":0.001183176,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:31.407Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:37.518Z","data":{"promptTokens":791,"candidateTokens":891,"totalTokens":131090,"cachedTokens":129408,"reasoningTokens":534,"cost":0.002082948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:37.519Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:43.032Z","data":{"promptTokens":422,"candidateTokens":432,"totalTokens":131926,"cachedTokens":131072,"reasoningTokens":243,"cost":0.0014314319999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:43.033Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:19:49.374Z","data":{"promptTokens":363,"candidateTokens":602,"totalTokens":132805,"cachedTokens":131840,"reasoningTokens":373,"cost":0.00162234,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:19:49.375Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:03.445Z","data":{"promptTokens":165,"candidateTokens":2454,"totalTokens":135355,"cachedTokens":132736,"reasoningTokens":1971,"cost":0.003790716,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:03.446Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:19.500Z","data":{"promptTokens":279,"candidateTokens":4642,"totalTokens":140217,"cachedTokens":135296,"reasoningTokens":628,"cost":0.006465876,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:19.501Z","data":{"tool":"write","summary":"tests/vcs-stacked-land.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:20:19.502Z","data":{"path":"tests/vcs-stacked-land.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:21.378Z","data":{"promptTokens":209,"candidateTokens":201,"totalTokens":140442,"cachedTokens":140032,"reasoningTokens":68,"cost":0.001144092,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:21.379Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:32.999Z","data":{"promptTokens":580,"candidateTokens":1551,"totalTokens":142547,"cachedTokens":140416,"reasoningTokens":902,"cost":0.002877696,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:33.000Z","data":{"tool":"edit","summary":"tests/vcs-stacked-land.test.ts"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:20:33.002Z","data":{"path":"tests/vcs-stacked-land.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:35.275Z","data":{"promptTokens":240,"candidateTokens":227,"totalTokens":142803,"cachedTokens":142336,"reasoningTokens":94,"cost":0.0011984159999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:35.276Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:45.271Z","data":{"promptTokens":240,"candidateTokens":914,"totalTokens":143874,"cachedTokens":142720,"reasoningTokens":771,"cost":0.00202512,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:45.272Z","data":{"tool":"read","summary":"tests/vcs-stacked-land.test.ts"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:45.273Z","data":{"tool":"read","summary":"src/core/vcs/sync-bridge.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:20:47.627Z","data":{"promptTokens":2623,"candidateTokens":210,"totalTokens":146705,"cachedTokens":143872,"reasoningTokens":121,"cost":0.001902132,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:20:47.628Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:22:23.590Z","data":{"promptTokens":1115,"candidateTokens":370,"totalTokens":148173,"cachedTokens":146688,"reasoningTokens":282,"cost":0.001658628,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:22:23.591Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/165-stacked-land-keeps-h"}}
+{"type":"tokens","timestamp":"2026-10-10T10:22:27.874Z","data":{"promptTokens":681,"candidateTokens":539,"totalTokens":149316,"cachedTokens":148096,"reasoningTokens":463,"cost":0.001739676,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:22:27.875Z","data":{"tool":"read","summary":"src/core/vcs/sync-main.ts"}}
+{"type":"tokens","timestamp":"2026-10-10T10:22:33.803Z","data":{"promptTokens":343,"candidateTokens":1144,"totalTokens":150735,"cachedTokens":149248,"reasoningTokens":415,"cost":0.0023711879999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-10T10:22:33.804Z","data":{"tool":"write","summary":"openspec/changes/165-stacked-land-keeps-history/.run/results"}}
+{"type":"file_changed","timestamp":"2026-10-10T10:22:33.805Z","data":{"path":"openspec/changes/165-stacked-land-keeps-history/.run/results/2.md"}}
+{"type":"text","timestamp":"2026-10-10T10:22:37.608Z","data":{"text":"I implemented task 2 and verified it end to end.\n\n## Summary\n\n**`src/core/vcs/sync-bridge.ts`** (new)\n- `syncBridge(vcs, defaultBranch, head, folderName, author)` returns the default branch when no landed tip shares history, else a bridge commit built with `commitTree(defaultBranch, defaultBranch, message, author, keptTips)`.\n- Keeps each `Osq-Head` tip once whose `mergeBase(head, tip)` exists and is not an ancestor of the default branch.\n- Message: `osq: <id> bridge <defaultBranch>` + blank line + `Osq-Change: <folder>`.\n- Tagged with the four \"Sync takes landed branch tips\" `@scenario` lines and `@adr 003`.\n\n**`src/core/vcs/sync-main.ts`**\n- Step 2 merges `syncBridge(...)` instead of always the default branch, inside the existing `try`, so bridge-build throws stop through `stopAfter`. Now 247 lines (≤250).\n\n**`tests/vcs-stacked-land.test.ts`** (new)\n- Three-change stack (`001` ← `002` ← `003`) archived via `approveSpec` + `runWatcherOnce`, landed in order with `landChange`.\n- Covers all four bridge scenarios, plus \"Stacked dependent after its dependency landed\" and \"Both add to one capability\".\n\nBoth verifications pass:\n- `node --import tsx --import ./tests/git-test-env.ts --test tests/vcs-stacked-land.test.ts` → 3/3 pass\n- `pnpm verify` → typechecks, build, all tests, lint pass\n\nResult written to `openspec/changes/165-stacked-land-keeps-history/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-10-10T10:22:37.608Z","data":{"promptTokens":243,"candidateTokens":662,"totalTokens":151433,"cachedTokens":150528,"reasoningTokens":277,"cost":0.0017704679999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-10T10:22:37.632Z","data":{"exitCode":0,"pid":22814,"timedOut":false,"elapsedSeconds":461.2}}
+{"type":"format_ran","timestamp":"2026-10-10T10:22:38.114Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/core/vcs/sync-bridge.ts' 'src/core/vcs/sync-main.ts' 'tests/vcs-stacked-land.test.ts'","files":["src/core/vcs/sync-bridge.ts","src/core/vcs/sync-main.ts","tests/vcs-stacked-land.test.ts"],"exitCode":0,"duration":0.25,"timedOut":false,"output":"Checked 3 files in 4ms. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-10T10:22:43.142Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/vcs-stacked-land.test.ts","exitCode":0,"duration":4.6,"log":".run/logs/2-2.log","output":"▶ Stacked land\n  ✔ lands a three-change stack in order and merges a bridge on the stacked branch (2186.233267ms)\n  ✔ merges the default branch for an unrelated change and rebuilds the shared capability (1091.320472ms)\n  ✔ merges the default branch when a landed tip is missing from the repository (1021.203264ms)\n✔ Stacked land (4300.100792ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4567.400664\n"}}
+{"type":"measures","timestamp":"2026-10-10T10:24:23.629Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":244,"repoFiles":2684,"repoLines":310794,"importFanIn":4,"proposalWords":1206,"taskWords":335,"deltaRequirements":5,"deltaScenarios":42,"changedFiles":3,"changedLines":479,"scopeHashes":{"src/core/vcs/sync-bridge.ts":{"before":null,"after":"sha256:1e38b13b26aa3b67c6f73cd613c6aea64f4c3cb7ff5c0d6c080f9058bc2bcfd7"},"src/core/vcs/sync-main.ts":{"before":"sha256:ab70e51f2cea25f46459216da6bd8918e0b91162eb54dc7cdf49e2bfdbcf32ec","after":"sha256:a03e6979df4f56cd33596ba7b9adc1922ef3894891ec790bc592a6f30eca7306"},"tests/vcs-stacked-land.test.ts":{"before":null,"after":"sha256:f66febc5bfb7c8acaba34621e48416a65e51798e5ae8180b93ff53d85abfe2d6"}}}}
+{"type":"done","timestamp":"2026-10-10T10:24:23.637Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-10-10T10:30:49.630Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/vcs-stacked-land.test.ts","exitCode":0,"duration":4.36,"log":".run/logs/2-3.log","output":"▶ Stacked land\n  ✔ lands a three-change stack in order and merges a bridge on the stacked branch (2039.519952ms)\n  ✔ merges the default branch for an unrelated change and rebuilds the shared capability (1047.420163ms)\n  ✔ merges the default branch when a landed tip is missing from the repository (975.091752ms)\n✔ Stacked land (4063.07766ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4337.243312\n"}}

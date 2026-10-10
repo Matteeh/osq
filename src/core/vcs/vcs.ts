@@ -82,6 +82,14 @@ export interface Vcs {
   show(ref: string, path: string): Promise<string | null>;
   /** Whether a file or directory exists at a ref; false when the ref is unknown. */
   pathExists(ref: string, path: string): Promise<boolean>;
+  /** The merge base of `a` and `b`; null when they share no commit or a ref is unknown. */
+  mergeBase(a: string, b: string): Promise<string | null>;
+  /**
+   * The `key` trailer's value, trimmed, on every commit `to` has and `from`
+   * lacks, newest first, leaving out commits without it; empty when a ref is
+   * unknown.
+   */
+  trailerValues(from: string, to: string, key: string): Promise<string[]>;
   /**
    * The files changed and lines added and removed between the merge base of
    * `from` and `to` and `to`, leaving out each path of `exclude`; a binary
@@ -98,7 +106,14 @@ export interface Vcs {
   /** Drop git's records of worktrees whose directory no longer exists. */
   worktreePrune(): Promise<void>;
   commit(paths: readonly string[], message: string, author: string): Promise<string>;
-  commitTree(source: string, parent: string, message: string, author: string): Promise<string>;
+  /** `parent` first, then each of `extraParents` in order; absent or empty means `parent` alone. */
+  commitTree(
+    source: string,
+    parent: string,
+    message: string,
+    author: string,
+    extraParents?: readonly string[],
+  ): Promise<string>;
   fastForward(commit: string): Promise<VcsFastForwardResult>;
   countCommits(from: string, to: string): Promise<number>;
   /** Merge `ref` without committing, or squash it, reporting unmerged paths. */

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d1b78ecb4194715fa146837ba218143dca9ecaa904b297b5ff135a0f290f42aa"
+build_stamp: "7bc6fa0b"
+project_commit: "e03807c9"
+exit_code: 0
+scope_files: {"src/core/vcs/land-checks.ts":"sha256:f9e273aff24246edfab69fb535d11b7ba78e22f510c8ca07d245e41d4f138a1b","tests/vcs-land-refusals.test.ts":"sha256:c7d132df4968b84304615027c3f77bd10c7c54f02f6b19c5114e280da7d7a7bc","tests/vcs-land-stacked-order.test.ts":"sha256:217a4497741e724e674809695821a9233cbac2e32c59fc3d70cd6ce93c18efa2"}
+---
+2026-10-10T10:30:44.294Z
