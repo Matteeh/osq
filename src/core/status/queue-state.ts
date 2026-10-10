@@ -1,5 +1,7 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readBriefData } from '../report/change-reads.js';
+import { readDependencyState } from '../spec/stack-dependencies.js';
+import { selectVcs } from '../vcs/select.js';
 import { listChanges } from './change-locations.js';
 import { type QueueItem, readQueue } from './queue-parser.js';
 import {
@@ -12,6 +14,7 @@ import {
 
 export type QueueItemState =
   | 'landed'
+  | 'archived'
   | 'dead'
   | 'running'
   | 'approved'
@@ -103,6 +106,7 @@ function ambiguous(item: QueueItem, matches: readonly QueueAssociation[], locati
 
 async function selectAssociation(
   projectRoot: string,
+  config: OsqConfig,
   item: QueueItem,
   groups: QueueAssociationGroups | undefined,
 ): Promise<{ state: QueueItemState; selected: QueueAssociation | null }> {
@@ -111,7 +115,15 @@ async function selectAssociation(
   if (archived.length > 1) throw ambiguous(item, archived, 'archived');
   if (active.length > 1) throw ambiguous(item, active, 'active');
   if (archived.length === 1) {
-    return { state: 'landed', selected: archived[0] };
+    let state: QueueItemState = 'landed';
+    if (config.vcs?.enabled === true) {
+      const vcs = await selectVcs(projectRoot, config);
+      if (vcs.kind === 'git') {
+        const dep = await readDependencyState(projectRoot, config, vcs, archived[0].folderName);
+        state = dep.state === 'landed' ? 'landed' : 'archived';
+      }
+    }
+    return { state, selected: archived[0] };
   }
   if (active.length === 1) {
     try {
@@ -127,7 +139,12 @@ async function selectAssociation(
   }
   return { state: 'unplanned', selected: null };
 }
-/** Project the current queue's filesystem-derived state for planning and report views. */
+/**
+ * Project the current queue's filesystem-derived state for planning and report views.
+ *
+ * @scenario status-inspection: Archived queue item not on the default branch
+ * @scenario status-inspection: Archived queue item on the default branch
+ */
 export async function readQueueState(
   projectRoot: string,
   config: OsqConfig,
@@ -139,7 +156,7 @@ export async function readQueueState(
     new Set(items.map((i) => i.slug)),
   );
   const chosen = await Promise.all(
-    items.map((item) => selectAssociation(projectRoot, item, groups.get(item.slug))),
+    items.map((item) => selectAssociation(projectRoot, config, item, groups.get(item.slug))),
   );
   const landed = new Set(items.filter((_, i) => chosen[i].state === 'landed').map((i) => i.slug));
   const rows: QueueRow[] = items.map((item, index) => {

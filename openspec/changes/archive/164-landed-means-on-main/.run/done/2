@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a96182a67a1ea31a17bf80df276ee1b2724b698d140d7a9952869eaea0f2f7ef"
+build_stamp: "d69f8895"
+project_commit: "a30d643a"
+exit_code: 0
+scope_files: {"src/core/status/queue-state.ts":"sha256:395f72a36d49b04c934a9d4bdaf2ea380c28d0ac9d8f911d45f1031d4ed5a084","tests/queue-landed.test.ts":"sha256:1d1f608428aab26d4a0edb7396054b2f9d9c46bff865258704b9d070c9ecfd37"}
+---
+2026-10-10T08:33:01.510Z

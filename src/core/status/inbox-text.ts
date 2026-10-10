@@ -9,6 +9,9 @@ function needsYouLine(item: NeedsYouItem): string {
       ? `${head} — do the steps before approval first — ${item.command}`
       : `${head} — ${item.command}`;
   }
+  if (item.kind === 'change-archived') {
+    return `${head} — archived, not landed — ${item.command}`;
+  }
   if (item.kind === 'change-regressed' && !item.steering) {
     return `${head} — change regressed — ${item.command}`;
   }
@@ -45,7 +48,11 @@ function landedLine(item: LandedItem): string {
   return `  ${item.change.id}: ${item.change.title} — archived ${item.archivedAt}${disclosedSuffix(item)} — ${item.command}`;
 }
 
-/** Concise text rendering of the three inbox groups. */
+/**
+ * Concise text rendering of the three inbox groups.
+ *
+ * @scenario status-inspection: Archived change waiting to land
+ */
 export function formatInboxText(inbox: Inbox): string {
   const { needsYou, running, landed } = inbox;
   if (needsYou.length === 0 && running.length === 0 && landed.length === 0) {

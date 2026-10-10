@@ -12,7 +12,8 @@ export type NeedsYouKind =
   | 'approval'
   | 'task-dead'
   | 'task-regressed'
-  | 'change-regressed';
+  | 'change-regressed'
+  | 'change-archived';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;
@@ -72,8 +73,7 @@ function changeId(folderName: string): string {
 function showCommand(id: string): string {
   return `osq show ${id}`;
 }
-
-/** Project active changes into deterministic attention items. */
+/** @scenario status-inspection: Archived change waiting to land */
 export function projectNeedsYou(overview: StatusOverview): NeedsYouItem[] {
   const items: NeedsYouItem[] = [];
   for (const spec of overview.specs) {
@@ -117,6 +117,10 @@ export function projectNeedsYou(overview: StatusOverview): NeedsYouItem[] {
         ...(stuck ? { stuck } : {}),
       });
     }
+  }
+  for (const { id, title } of overview.notLanded ?? []) {
+    const command = `osq land ${id}`;
+    items.push({ kind: 'change-archived', change: { id, title }, task: null, command });
   }
   return items;
 }

@@ -1,0 +1,62 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:e2843c95c99af922bbba3fc62ac7061f2d7f9aaa7f95c6eb2d40b4d1d2160591",
+    "PLANNER.md": "sha256:c339fc29e8f30f4230a10f47eaa50fae04cf28426f7d86c37cc0e398b9dd87d9",
+    "config": "sha256:55ca3553042122b26a4208bf91bf203cb10d840eb9b5817c910a82e72c3f5198",
+    "spec-lint-and-approve": "sha256:9609c491da9e36fa802bc242dcd708acdaf5f69c7359945fc2594ed0c5edc046",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "version-control": "sha256:943b6bf0ee6f2d8ae48ee8113d57448e8e4cee94d990b7e505d0f1898ee82159",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "metrics-and-reporting": "sha256:f2f35bf8c1829fb60385eee3505a9c3543ae00ff7694c7d0cfd268ba5c7f75fe",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "watcher-and-harness": "sha256:d11ea7cdd1ef7dce8c02023c3d5ed56c5e44784237a5d91342cbf79bd6c0df87",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "cli-foundation": "sha256:851c110792e1b3dc5555b2398a41dfe020cb8a09149284cb644cfeda6c7bba6b",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "status-inspection": "sha256:3048edac5671846bc28aeb57ed4ea221a46bf2cedaa7f15da8d84339ac9ecadd",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "web-inspection": "sha256:eb28024fa3dfcb5780badd7e779a0d9b5e8221eea1b74bc63be499f2b1a007ae",
+    "web-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-10T07:44:04.145Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-10T07:55:17.501Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "010": "sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807",
+    "012": "sha256:d362e6ada4446f0d51abc9333cb587affc1a5a6b1b50dc536bbbadf76d4388a9",
+    "013": "sha256:cb223b6fb0c098abbb7296954c4bd583de652381edc9579fd8f2a1b68765cae6",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "015": "sha256:ab4cd86f5188fbe454b09290b68fb35e6b885fb51dfb11d8d1ec27a903cb6765"
+  }
+}

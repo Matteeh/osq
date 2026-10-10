@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseFrontmatter, parseSpecMdFromFolder, resolveChangeDoc } from '../spec/parser.js';
 import { listChanges } from './change-locations.js';
+import { findLandCandidates } from './dispatch-land.js';
 import {
   type LastSync,
   type LastSyncStop,
@@ -43,6 +44,15 @@ export interface StatusOverview {
   nextSteps?: Record<string, NextStep>;
   /** Worktree path for each change running in a worktree. */
   worktrees?: Record<string, ChangeWorktree>;
+  /** Archived changes the default branch does not hold, in numeric order. */
+  notLanded?: NotLandedChange[];
+}
+
+/** One archived change waiting to land, with the command that lands it. */
+export interface NotLandedChange {
+  readonly id: string;
+  readonly folderName: string;
+  readonly title: string;
 }
 
 /** Reads rejection reason and timestamp from `.run/rejected.md`, tolerating absence. */
@@ -79,6 +89,14 @@ async function readRejectedSummaries(
   return summaries;
 }
 
+/**
+ * Read the active specs, archived count, rejected summaries and the changes
+ * still waiting to land into one overview.
+ *
+ * @scenario status-inspection: Archived changes that have not landed
+ * @scenario status-inspection: Every archived change landed
+ * @scenario status-inspection: Not landed needs steering first
+ */
 export async function getStatusOverview(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
@@ -106,6 +124,7 @@ export async function getStatusOverview(
 
   const archivedCount = (await listChanges(projectRoot, config, ['archived'])).length;
   const rejected = await readRejectedSummaries(projectRoot, config);
+  const notLanded = await readNotLanded(projectRoot, config);
 
   return {
     specs,
@@ -114,7 +133,26 @@ export async function getStatusOverview(
     archivedChangeFolders: archivedCount,
     nextSteps,
     ...(Object.keys(worktrees).length > 0 ? { worktrees } : {}),
+    ...(notLanded.length > 0 ? { notLanded } : {}),
   };
+}
+
+/**
+ * Every change `findLandCandidates` finds whose next step is `archived`, in
+ * numeric order. Without `vcs.enabled` it reads nothing.
+ */
+async function readNotLanded(projectRoot: string, config: OsqConfig): Promise<NotLandedChange[]> {
+  if (config.vcs?.enabled !== true) return [];
+  const candidates = await findLandCandidates(projectRoot, config);
+  const notLanded: NotLandedChange[] = [];
+  for (const candidate of candidates) {
+    const step = await readNextStep(projectRoot, candidate.folderPath, config);
+    if (step.state !== 'archived') continue;
+    const spec = await parseSpecMdFromFolder(candidate.folderPath).catch(() => null);
+    const id = candidate.folder.match(/^(\d+)/)?.[1] ?? candidate.folder;
+    notLanded.push({ id, folderName: candidate.folder, title: spec?.title || candidate.folder });
+  }
+  return notLanded;
 }
 
 export function formatStatusLine(task: TaskState): string {
@@ -132,6 +170,13 @@ export function formatStatusLine(task: TaskState): string {
   return `  ${indicator} ${task.taskNumber}. ${title} [${task.status}]${deadInfo}`;
 }
 
+/**
+ * Render the whole status overview, including changes waiting to land.
+ *
+ * @scenario status-inspection: Archived changes that have not landed
+ * @scenario status-inspection: Every archived change landed
+ * @scenario status-inspection: Not landed needs steering first
+ */
 export function formatStatusOverview(overview: StatusOverview): string {
   const lines: string[] = [];
 
@@ -168,6 +213,13 @@ export function formatStatusOverview(overview: StatusOverview): string {
 
   lines.push('');
   lines.push(`Archived specs: ${overview.archivedCount}`);
+
+  if (overview.notLanded && overview.notLanded.length > 0) {
+    lines.push('Not landed:');
+    for (const change of overview.notLanded) {
+      lines.push(`  ${change.id}: ${change.title} — osq land ${change.id}`);
+    }
+  }
 
   lines.push('');
   lines.push('Rejected specs:');
