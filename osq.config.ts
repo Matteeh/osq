@@ -1,7 +1,7 @@
 import { defineConfig } from './src/index.js';
 
 export default defineConfig({
-  harness: process.env.OSQ_HARNESS || 'pi',
+  harness: process.env.OSQ_HARNESS || 'opencode',
   maxConcurrency: 1,
   gates: {
     baselineVerify: 'pnpm verify',
@@ -18,9 +18,9 @@ export default defineConfig({
   pi: { provider: 'deepseek', model: 'deepseek-flash', thinking: 'high' },
   opencode: {
     bin: 'opencode',
-    model: 'deepseek/deepseek-flash',
+    model: 'opencode-go/deepseek-v4-flash',
     agent: 'osq-coder',
-    variant: 'thinking',
+    variant: 'high',
   },
   validator: { harness: 'claude', model: 'claude-opus-5-5' },
   notices: { rulePaths: ['src/harness/prompt.ts', 'src/core/foundation/init-blocks.ts'] },
