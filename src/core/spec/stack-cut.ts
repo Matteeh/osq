@@ -67,28 +67,47 @@ function changedHalt(dependency: string, id: string, rejected: boolean): StackCu
   return { kind: 'halt', reason: 'dependency_changed', detail: `${reason}; approve ${id} again` };
 }
 
+/** One `.run/stacked-on` line with the dependency state read for it. */
+interface CutEntry {
+  readonly entry: AwaitedDependency;
+  readonly status: DependencyStatus;
+}
+
+/** Whether a line's recorded hash still matches its change's approved hash. */
+function hashChanged(status: DependencyStatus, entry: AwaitedDependency): boolean {
+  return (status.state === 'approved' || status.state === 'archived') && status.hash !== entry.hash;
+}
+
 /**
  * The base to cut from once no dependency waits or halts: the default branch
  * when all are landed, else the first archived dependency whose branch holds
- * every other archived dependency's archive. None holding all halts diverged.
+ * every other archived dependency's archive and every landed overlap's
+ * archive. None holding all waits while an overlap line remains, and otherwise
+ * halts diverged.
  */
 async function resolveArchivedBase(
   projectRoot: string,
   config: OsqConfig,
   vcs: Vcs,
   id: string,
-  states: readonly { entry: AwaitedDependency; status: DependencyStatus }[],
+  states: readonly CutEntry[],
 ): Promise<StackCutDecision> {
   const archived = states.filter((state) => state.status.state === 'archived');
+  const landedOverlaps = states.filter(
+    (state) => state.status.state === 'landed' && state.entry.overlap !== undefined,
+  );
   const { archive } = await checkoutDirs(projectRoot, config);
   for (const candidate of archived) {
     const branch = candidate.status.base ?? worktreeBranch(candidate.entry.folder);
     const others = archived.filter((other) => other.entry.folder !== candidate.entry.folder);
     const held = await Promise.all(
-      others.map((other) => vcs.pathExists(branch, `${archive}/${other.entry.folder}`)),
+      [...others, ...landedOverlaps].map((other) =>
+        vcs.pathExists(branch, `${archive}/${other.entry.folder}`),
+      ),
     );
     if (held.every(Boolean)) return { kind: 'cut', base: branch };
   }
+  if (states.some((state) => state.entry.overlap !== undefined)) return { kind: 'wait' };
   const folders = archived.map((state) => state.entry.folder).join(' and ');
   return {
     kind: 'halt',
@@ -99,30 +118,36 @@ async function resolveArchivedBase(
 
 /**
  * Decide what to do with one stacked change: wait while a dependency is
- * approved, halt when one is unapproved or re-approved, or cut at the default
- * branch or the archived dependency branch that holds every other archive.
+ * approved, halt when a declared dependency is unapproved or re-approved, drop
+ * an overlap line whose conflict is gone, or cut at the default branch or the
+ * archived dependency branch that holds every other archive.
+ *
+ * @scenario watcher-and-harness: Overlapping changes approved at once
+ * @scenario watcher-and-harness: Overlap lines in the cut
+ * @adr 003
  */
 export async function decideStackCut(input: StackCutInput): Promise<StackCutDecision> {
   const { projectRoot, config, change, vcs } = input;
   const id = specIdOf(change.folderName);
   const entries = await readStackedOn(change.folderPath);
-  const states: { entry: AwaitedDependency; status: DependencyStatus }[] = [];
+  const kept: CutEntry[] = [];
   for (const entry of entries) {
     const status = await readDependencyState(projectRoot, config, vcs, entry.folder);
-    if (status.state === 'unapproved') return changedHalt(entry.folder, id, true);
-    if (
-      (status.state === 'approved' || status.state === 'archived') &&
-      status.hash !== entry.hash
-    ) {
-      return changedHalt(entry.folder, id, false);
+    if (entry.overlap !== undefined) {
+      // An overlap is softer: its change being unapproved or carrying another
+      // hash means the conflict it guarded against is gone, so leave it out.
+      if (status.state === 'unapproved' || hashChanged(status, entry)) continue;
+    } else {
+      if (status.state === 'unapproved') return changedHalt(entry.folder, id, true);
+      if (hashChanged(status, entry)) return changedHalt(entry.folder, id, false);
     }
-    states.push({ entry, status });
+    kept.push({ entry, status });
   }
-  if (states.some((state) => state.status.state === 'approved')) return { kind: 'wait' };
-  if (states.every((state) => state.status.state === 'landed')) {
+  if (kept.some((state) => state.status.state === 'approved')) return { kind: 'wait' };
+  if (kept.every((state) => state.status.state === 'landed')) {
     return { kind: 'cut', base: await vcs.defaultBranch() };
   }
-  return resolveArchivedBase(projectRoot, config, vcs, id, states);
+  return resolveArchivedBase(projectRoot, config, vcs, id, kept);
 }
 
 /** Replace the worktree's change folder with the stacked copy and commit it. */

@@ -2179,18 +2179,24 @@ have no command that writes a done marker; only the watcher writes one.
 With `vcs.enabled` and `GitVcs` selected, each watcher cycle SHALL, before it
 lists changes, visit every active change in a stacked tree in numeric order,
 skipping one that has `.run/regressed/change.md`. For each, it SHALL read
-`.run/stacked-on` and the state of each line's dependency through "Stack
-dependency state", and decide:
+`.run/stacked-on` with `parseStackedOn` and the state of each line's
+dependency through "Stack dependency state", and decide:
 
-- a dependency that is `unapproved`, or `approved` or `archived` with a hash
-  other than the recorded one, halts the change with `dependency_changed`;
+- a declared line whose dependency is `unapproved`, or `approved` or
+  `archived` with a hash other than the recorded one, halts the change with
+  `dependency_changed`;
+- an overlap line whose change is `unapproved`, or `approved` or `archived`
+  with a hash other than the recorded one, is left out of the rest of the
+  decision, because the conflict it guarded against is gone;
 - otherwise any `approved` dependency means the change waits, unchanged;
-- otherwise, when every dependency is `landed`, the base is the default
-  branch;
+- otherwise, when every remaining dependency is `landed`, or none remains,
+  the base is the default branch;
 - otherwise the base is the `osq/<dependency>` branch of the first
   `archived` dependency, in line order, whose branch holds
-  `<archive>/<other>` for every other `archived` dependency, and when none
-  does, the change halts with `dependency_diverged`.
+  `<archive>/<other>` for every other `archived` dependency and for every
+  `landed` overlap dependency. When none does, the change waits, unchanged,
+  if any remaining line is an overlap line, and otherwise halts with
+  `dependency_diverged`.
 
 To cut, it SHALL create `osq/<folder>` at the base unless that branch
 exists, add its worktree at the path "Worktree location" gives unless a
@@ -2230,6 +2236,23 @@ the step SHALL do nothing.
 #### Scenario: Flag off
 - **WHEN** `vcs.enabled` is off and a stacked approval directory exists
 - **THEN** a cycle creates no branch and writes nothing in that directory
+
+#### Scenario: Overlapping changes approved at once
+- **WHEN** `001-a` and `002-b`, both writing `orders` and with `depends_on: []`, are approved one after the other in a temporary repository and `runWatcherOnce` runs with an adapter that edits one file per task
+- **THEN** `osq/002-b`'s first commit is `osq: 002 approved` whose parent is `osq/001-a`'s `osq: 001 archived` commit, `osq/002-b` ends with `osq: 002 archived` without a sync of the default branch, and the stacked approval directory is gone
+
+#### Scenario: Overlap lines in the cut
+- **WHEN** `003-c`'s `.run/stacked-on` holds only the overlap lines below, each with the hash recorded at approval, and a cycle runs
+- **THEN** the cycle does what the table says:
+
+| Overlap lines and their changes | Outcome |
+|---|---|
+| `001-a`, rejected on its branch | cut from the default branch, no halt |
+| `001-a`, approved again under another hash | cut from the default branch, no halt |
+| `001-a`, still approved | waits; no branch `osq/003-c` |
+| `001-a` and `002-b`, archived on separate branches | waits; no branch `osq/003-c`, no halt |
+| `001-a` landed after `003-c` was approved, `002-b` archived on a branch without `001-a`'s archive | waits; no branch `osq/003-c` |
+| `001-a` and `002-b`, both landed | cut from the default branch |
 
 ### Requirement: Stacked halt
 To halt a stacked change, the watcher SHALL write `.run/regressed/change.md`

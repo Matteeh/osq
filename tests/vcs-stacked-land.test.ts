@@ -14,7 +14,7 @@ import { mergeDelta, parseDelta } from '../src/core/spec/delta.js';
 import { type LocatedChange, listChanges } from '../src/core/status/change-locations.js';
 import { landChange } from '../src/core/vcs/land.js';
 import { syncWithDefaultBranch } from '../src/core/vcs/sync-main.js';
-import { worktreeBranch } from '../src/core/vcs/worktree.js';
+import { worktreeBranch, worktreePath } from '../src/core/vcs/worktree.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
@@ -264,9 +264,30 @@ class ActingAdapter implements HarnessAdapter {
   }
 }
 
+/**
+ * A later task makes approve stack a change that overlaps another and record a
+ * `<folder> <hash> overlap <capabilities>` line. These tests need the
+ * overlapping changes cut side by side from the default branch, so drop each
+ * overlap line and keep every other line byte for byte.
+ */
+async function dropOverlapLines(stacked: string, folder: string): Promise<void> {
+  const target = path.join(stacked, CHANGES, folder, '.run', 'stacked-on');
+  const content = await fs.readFile(target, 'utf8');
+  const kept = content
+    .split('\n')
+    .filter((line) => line.trim().split(/\s+/)[2] !== 'overlap')
+    .join('\n');
+  await fs.writeFile(target, kept, 'utf8');
+}
+
 async function approveIntoWorktree(project: Project, id: string): Promise<void> {
   const result = await approveSpec(project.repo, id, project.config);
-  assert.ok(result.worktreePath, `approval created a worktree for ${id}`);
+  if (result.stackedPath !== undefined) {
+    await dropOverlapLines(result.stackedPath, result.folderName);
+  }
+  const worktree =
+    result.worktreePath ?? worktreePath(project.vcs, project.repo, result.folderName);
+  assert.ok(worktree, `approval created a worktree for ${id}`);
 }
 
 /** Whether `folder`'s archive folder exists on its branch. */

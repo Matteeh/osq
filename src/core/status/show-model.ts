@@ -15,6 +15,7 @@ import {
 import { resolveSpecFolder } from './show-model-folder.js';
 import { attachTaskScenarios, readTaskDetails } from './show-model-tasks.js';
 import { buildValidation } from './show-model-validation.js';
+import { readRunsAfter } from './show-runs-after.js';
 import type { PlanningSessionDetail, SpecDetails, TaskDetail } from './show-types.js';
 import { type SpecStatus, deriveSpecState } from './state.js';
 
@@ -62,7 +63,10 @@ async function withNextStep(
     next,
     ...(afterLanding ? { afterLanding } : {}),
   };
-  if (location !== 'archived') return base;
+  if (location === 'active') {
+    const runsAfter = await readRunsAfter(projectRoot, config, folderPath);
+    return runsAfter.length > 0 ? { ...base, runsAfter } : base;
+  }
 
   const validation = buildValidation(details.timeline);
   const withValidation: SpecDetails = validation === undefined ? base : { ...base, validation };

@@ -1,6 +1,7 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
 import { readLandView } from '../status/show-land-model.js';
+import { readRunsAfter } from '../status/show-runs-after.js';
 import { getSpecDetailsFromFolder } from '../status/show.js';
 import { deriveSpecState } from '../status/state.js';
 import { numericIdOf, resolveChangeFolder, slugOf } from './web-data-folders.js';
@@ -95,6 +96,9 @@ function webTasks(
  * or folder key and returns its proposal, brief, and task-level evidence.
  * Missing or malformed optional history becomes null or empty without hiding
  * valid sibling evidence.
+ *
+ * @scenario web-inspection: Web document carries the wait
+ * @adr 013
  */
 export async function getWebChange(
   projectRoot: string,
@@ -114,6 +118,8 @@ export async function getWebChange(
   const planner = await readPlannerAttribution(brief, manifest);
   const review = await readWebReview(projectRoot, details, config);
   const land = await readLandView(projectRoot, details, config);
+  const runsAfter =
+    folder.location === 'active' ? await readRunsAfter(projectRoot, config, folder.folderPath) : [];
 
   const taskObservations = new Map<
     string,
@@ -151,6 +157,7 @@ export async function getWebChange(
     goal: details.goal,
     review,
     land,
+    ...(runsAfter.length > 0 ? { runsAfter } : {}),
     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
     dependsOn: [...details.dependsOn],
     reads: [...details.features.reads],

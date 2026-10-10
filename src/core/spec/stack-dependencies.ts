@@ -18,9 +18,7 @@ export type DependencyState = 'landed' | 'approved' | 'archived' | 'unapproved';
 export interface DependencyStatus {
   readonly folder: string;
   readonly state: DependencyState;
-  /** The approved or archived hash; null for `landed` and `unapproved`. */
   readonly hash: string | null;
-  /** The branch an archived dependency's archive lives on; else null. */
   readonly base: string | null;
 }
 
@@ -28,6 +26,8 @@ export interface DependencyStatus {
 export interface AwaitedDependency {
   readonly folder: string;
   readonly hash: string;
+  /** The shared capabilities of an overlap line; absent for a declared entry. */
+  readonly overlap?: readonly string[];
 }
 
 /** The project root tree's changes and archive directories, relative to its root. */
@@ -62,11 +62,7 @@ function status(
   return { folder, state, hash, base };
 }
 
-/**
- * The state of the dependency folder `<dep>`: `landed` when the default branch
- * holds its archive, then what `osq/<dep>` holds, then its stacked approval,
- * then the checkout, then `unapproved`. Never reads a worktree.
- */
+/** The dependency folder's state: `landed`, `approved`, `archived`, or `unapproved`. */
 export async function readDependencyState(
   projectRoot: string,
   config: OsqConfig,
@@ -114,8 +110,12 @@ export async function resolveDependencyFolder(
 }
 
 /**
- * The awaited entries of a change folder's `depends_on`: every entry that reads
- * `approved` or `archived`, as `{ folder, hash }`, in `depends_on` order.
+ * The awaited entries of a change folder: its `depends_on` entries that read
+ * `approved` or `archived`, in order, then each `.run/stacked-on` overlap line
+ * no entry names that still reads approved or archived with the recorded hash.
+ *
+ * @scenario spec-lint-and-approve: Overlap lines count while their change waits to land
+ * @adr 003
  */
 export async function awaitedDependencies(
   projectRoot: string,
@@ -125,31 +125,58 @@ export async function awaitedDependencies(
 ): Promise<AwaitedDependency[]> {
   const proposal = await parseSpecMdFromFolder(folderPath);
   const awaited: AwaitedDependency[] = [];
+  const named = new Set<string>();
   for (const id of proposal?.dependsOn ?? []) {
     const folder = await resolveDependencyFolder(projectRoot, config, id);
     if (folder === null) continue;
     const state = await readDependencyState(projectRoot, config, vcs, folder);
-    if (state.state === 'approved' || state.state === 'archived') {
-      awaited.push({ folder, hash: state.hash ?? '' });
-    }
+    if (state.state !== 'approved' && state.state !== 'archived') continue;
+    awaited.push({ folder, hash: state.hash ?? '' });
+    named.add(folder);
+  }
+  const stackPath = path.join(folderPath, '.run', 'stacked-on');
+  for (const line of parseStackedOn(await fs.readFile(stackPath, 'utf8').catch(() => ''))) {
+    if (line.overlap === undefined || named.has(line.folder)) continue;
+    const state = await readDependencyState(projectRoot, config, vcs, line.folder);
+    if (state.state !== 'approved' && state.state !== 'archived') continue;
+    if ((state.hash ?? '') !== line.hash) continue;
+    named.add(line.folder);
+    awaited.push({ folder: line.folder, hash: line.hash, overlap: line.overlap });
   }
   return awaited;
 }
 
-/** The `.run/stacked-on` body: one `<folder> <hash>` line per entry. */
+/**
+ * The `.run/stacked-on` body: `<folder> <hash>` per declared entry, or
+ * `<folder> <hash> overlap <capability>[,<capability>...]` per overlap entry.
+ *
+ * @scenario spec-lint-and-approve: Stacked-on lines read back
+ * @adr 003
+ */
 export function formatStackedOn(entries: readonly AwaitedDependency[]): string {
-  return entries.map((entry) => `${entry.folder} ${entry.hash}`).join('\n');
+  return entries
+    .map((entry) =>
+      entry.overlap === undefined
+        ? `${entry.folder} ${entry.hash}`
+        : `${entry.folder} ${entry.hash} overlap ${entry.overlap.join(',')}`,
+    )
+    .join('\n');
 }
 
-/** Parse a `.run/stacked-on` body into `{ folder, hash }` entries. */
+/**
+ * @scenario spec-lint-and-approve: Stacked-on lines read back
+ * @adr 003
+ */
 export function parseStackedOn(content: string): AwaitedDependency[] {
   const entries: AwaitedDependency[] = [];
   for (const raw of content.split('\n')) {
-    const line = raw.trim();
-    if (line === '') continue;
-    const space = line.indexOf(' ');
-    if (space === -1) continue;
-    entries.push({ folder: line.slice(0, space), hash: line.slice(space + 1).trim() });
+    const [folder, hash, marker, capabilities] = raw.trim().split(/\s+/);
+    if (folder === undefined || hash === undefined) continue;
+    if (marker === 'overlap' && capabilities !== undefined) {
+      entries.push({ folder, hash, overlap: capabilities.split(',').filter(Boolean) });
+    } else {
+      entries.push({ folder, hash });
+    }
   }
   return entries;
 }
@@ -176,10 +203,8 @@ export interface StackedApproval {
 
 /** Write `.run/approver` as "Approval into a worktree" does, without `.run/base`. */
 async function writeApprover(vcs: Vcs, folder: string): Promise<void> {
-  const [userName, userEmail] = await Promise.all([
-    vcs.configValue('user.name'),
-    vcs.configValue('user.email'),
-  ]);
+  const userName = await vcs.configValue('user.name');
+  const userEmail = await vcs.configValue('user.email');
   await fs.writeFile(
     path.join(folder, '.run', 'approver'),
     `${userName ?? ''} <${userEmail ?? ''}>\n`,
@@ -197,11 +222,7 @@ export async function writeProvenance(
   await writeApprover(vcs, folder);
 }
 
-/**
- * Record a stacked approval: replace any existing one, copy the checkout's
- * folder into it, seal it with the checkout's hash and the awaited lines, and
- * write nothing to the checkout or git.
- */
+/** Record a stacked approval: replace any existing one, copy and seal the checkout's folder. */
 export async function recordStackedApproval(
   input: RecordStackedApprovalInput,
 ): Promise<StackedApproval> {

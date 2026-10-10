@@ -85,6 +85,8 @@ export interface ApproveResult {
   stackedPath?: string;
   /** For a stacked approval, the awaited dependency folder names, in order. */
   waitingFor?: string[];
+  /** For a stacked approval, the overlapped changes and what they also write. */
+  overlaps?: { folder: string; capabilities: string[] }[];
   /** The first task still not done after steering triggers were retired. */
   continuesFrom?: string;
   /** After a restart, the default branch it was cut from and the kept branch. */

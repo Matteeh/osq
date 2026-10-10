@@ -12,6 +12,7 @@ import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { approveSpec } from '../src/core/spec/approve.js';
+import { worktreePath } from '../src/core/vcs/worktree.js';
 import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
 import { runWatcherOnce } from '../src/watcher/loop.js';
 import { installFakeValidator } from './helpers.js';
@@ -336,14 +337,35 @@ async function makeRepo(): Promise<Project> {
   return { repo, config };
 }
 
+/**
+ * A later task makes approve stack a change that overlaps another and record a
+ * `<folder> <hash> overlap <capabilities>` line. These tests need the
+ * overlapping changes cut side by side from the default branch, so drop each
+ * overlap line and keep every other line byte for byte.
+ */
+async function dropOverlapLines(stacked: string, folder: string): Promise<void> {
+  const target = path.join(stacked, CHANGES, folder, '.run', 'stacked-on');
+  const content = await fs.readFile(target, 'utf8');
+  const kept = content
+    .split('\n')
+    .filter((line) => line.trim().split(/\s+/)[2] !== 'overlap')
+    .join('\n');
+  await fs.writeFile(target, kept, 'utf8');
+}
+
 /** Approve `change` into its worktree and run the watcher until it archives. */
 async function approveAndArchive(project: Project, change: ChangeDef): Promise<string> {
   const id = change.folder.split('-')[0] as string;
   await writeChange(path.join(project.repo, CHANGES, change.folder), change);
   const result = await approveSpec(project.repo, id, project.config);
-  assert.ok(result.worktreePath, `approval created a worktree for ${id}`);
+  if (result.stackedPath !== undefined) {
+    await dropOverlapLines(result.stackedPath, change.folder);
+  }
   await runWatcherOnce(project.repo, project.config, new ActingAdapter());
-  return result.worktreePath;
+  const vcs = project.config.vcs;
+  assert.ok(vcs, `vcs is configured for ${id}`);
+  const worktree = result.worktreePath ?? worktreePath(vcs, project.repo, change.folder);
+  return worktree;
 }
 
 /**

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0929f88f0dfd4b24ec63844368cc80f8fc4afc4d94bde2bf1c838e9282cf1abe"
+build_stamp: "0c93474a"
+project_commit: "f85c4371"
+exit_code: 0
+scope_files: {"packages/ui/src/change/ChangeHeader.tsx":"sha256:abcbf5c4c38c1aeeda1ac00849e5c9c6370dd3128874d434ecb962e94dd52791","src/core/web/web-data-change.ts":"sha256:112ff55b63d826f39d373c07254339563ef3d0dd636117acd186c2cca8ebca05","src/core/web/web-data-types.ts":"sha256:ce9a902d628b4254ec5813e05ef17258ec2a04876487e92c3f49e9dc7ecb473c","tests/ui-runs-after.test.tsx":"sha256:5c03b90c2f816e4fe3b6c44b69771c0d1b967371af7fdb1a0bf78021aa2a03c4"}
+---
+2026-10-10T21:19:49.460Z

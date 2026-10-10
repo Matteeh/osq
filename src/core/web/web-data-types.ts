@@ -1,6 +1,7 @@
 import type { ApprovalDigest } from '../spec/digest.js';
 import type { ApprovalNotices } from '../spec/notices.js';
 import type { LandView } from '../status/show-land-types.js';
+import type { SpecDetails } from '../status/show-types.js';
 
 /**
  * Public read-only web documents derived from the current project tree. These
@@ -215,6 +216,11 @@ export interface WebChange {
   /** Derivation timestamp supplied by the caller. */
   readonly asOf: string;
   readonly tasks: readonly WebTask[];
+  /**
+   * The changes an active change runs after. Optional so documents built
+   * before this field stay valid; a missing value reads the same as no wait.
+   */
+  readonly runsAfter?: SpecDetails['runsAfter'];
   /**
    * The approve review for an active change without `.run/approved`, else
    * null. Optional so documents built before this field stay valid; a missing

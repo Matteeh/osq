@@ -10,12 +10,13 @@ import {
   formatStuck,
   formatTaskScenarios,
 } from './show-task-lines.js';
-import type {
-  PlanningSessionDetail,
-  RecertificationDetail,
-  SpecDetails,
-  TaskDetail,
-  VerificationHistory,
+import {
+  type PlanningSessionDetail,
+  type RecertificationDetail,
+  type SpecDetails,
+  type TaskDetail,
+  type VerificationHistory,
+  formatRunsAfter,
 } from './show-types.js';
 import { validationLines } from './show-validation-lines.js';
 
@@ -63,6 +64,7 @@ function headerLines(details: SpecDetails): string[] {
   lines.push(`Approval: ${approval}`);
   const dependsOnStr = details.dependsOn.length > 0 ? details.dependsOn.join(', ') : 'none';
   lines.push(`Depends on: ${dependsOnStr}`);
+  if (details.runsAfter) lines.push(`Runs after: ${formatRunsAfter(details.runsAfter)}`);
   lines.push('Features:');
   const readsStr = details.features.reads.length > 0 ? details.features.reads.join(', ') : 'none';
   const writesStr =

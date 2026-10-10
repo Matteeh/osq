@@ -72,6 +72,11 @@ function printApprovalResult(result: ApproveResult, stdout: Writer, stderr: Writ
   }
   if (result.stackedPath !== undefined) {
     stdout(`  Waiting for: ${(result.waitingFor ?? []).join(', ')}\n`);
+    for (const overlap of result.overlaps ?? []) {
+      stdout(
+        `  Runs after ${overlap.folder}, which also writes ${overlap.capabilities.join(', ')}\n`,
+      );
+    }
     stdout(`  Stacked: ${result.stackedPath}\n`);
   } else if (result.worktreePath !== undefined && result.branch !== undefined) {
     stdout(`  Worktree: ${result.worktreePath}\n`);

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:76ed4a8c7f23c864ebe04732a5453990162b17ad52a6d30614cc331c4030bf64"
+build_stamp: "0c93474a"
+project_commit: "e3067968"
+exit_code: 0
+scope_files: {"tests/vcs-land-refusals.test.ts":"sha256:31832f7027a6fc6a9539ef1a65b25b6795d0c629376527f36d2c1320d7c8c6c8","tests/vcs-land-stacked-order.test.ts":"sha256:b66d570f26f786a35a17674cc5b310d0a6cae414a21e40322601ffa1aadb66e6","tests/vcs-land.test.ts":"sha256:c60d113ef0ce0aaa138108d85d3de9c90a5e111b2c6e26f4fe3ed29c69a1f4a2","tests/vcs-stacked-land.test.ts":"sha256:0175d54d0aec1d7f06cf526a59ab82a9a5e1dc781af5b42507fee659830c67bf"}
+---
+2026-10-10T20:36:38.134Z

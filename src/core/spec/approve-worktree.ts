@@ -26,11 +26,8 @@ import { removeCheckoutDraft } from './checkout-draft.js';
 import type { ApprovalDigest } from './digest.js';
 import { hashChangeFolder } from './hasher.js';
 import { parseTaskMd } from './parser.js';
-import {
-  awaitedDependencies,
-  recordStackedApproval,
-  writeProvenance,
-} from './stack-dependencies.js';
+import { recordStackedApproval, writeProvenance } from './stack-dependencies.js';
+import { awaitedForApproval, overlapEntries } from './stack-overlap.js';
 
 /** Everything the worktree path needs from the checkout's change folder. */
 export interface WorktreeApprovalInput {
@@ -200,7 +197,7 @@ export async function approveIntoWorktree(
     readers: options.planningReaders ?? [],
   });
 
-  const awaited = await awaitedDependencies(projectRoot, config, vcs, folderPath);
+  const awaited = await awaitedForApproval(projectRoot, config, vcs, folderPath, folderName);
   if (awaited.length > 0) {
     const stacked = await recordStackedApproval({
       projectRoot,
@@ -229,6 +226,7 @@ export async function approveIntoWorktree(
       digest,
       stackedPath: stacked.path,
       waitingFor: awaited.map((entry) => entry.folder),
+      ...overlapEntries(awaited),
       ...(keptBranch !== null ? { keptBranch } : {}),
     };
   }

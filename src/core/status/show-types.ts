@@ -120,6 +120,29 @@ export interface VerificationHistory {
   outcomes: VerificationOutcomeRow[];
 }
 
+/** One change an active change runs after, with the overlap's capabilities or null. */
+export interface RunsAfterEntry {
+  folder: string;
+  capabilities: string[] | null;
+}
+
+/**
+ * Render `Runs after` entries as `osq show` prints them: each
+ * `<folder> (depends_on)` or `<folder> (also writes <capabilities>)`, joined
+ * with `, `.
+ *
+ * @scenario status-inspection: Show a change that runs after another
+ */
+export function formatRunsAfter(entries: readonly RunsAfterEntry[]): string {
+  return entries
+    .map((entry) =>
+      entry.capabilities === null
+        ? `${entry.folder} (depends_on)`
+        : `${entry.folder} (also writes ${entry.capabilities.join(', ')})`,
+    )
+    .join(', ');
+}
+
 export interface SpecDetails {
   id: string;
   folderName: string;
@@ -152,6 +175,8 @@ export interface SpecDetails {
   timeline: TimelineEvent[];
   /** What the change needs next; absent for rejected changes. */
   next?: NextStep;
+  /** The changes an active change runs after; absent when the list is empty. */
+  runsAfter?: RunsAfterEntry[];
   /** Present only for an archived change whose events hold verification rows. */
   verification?: VerificationHistory;
   /** The data of an archived change's latest `validator_ran` event; absent without one. */
