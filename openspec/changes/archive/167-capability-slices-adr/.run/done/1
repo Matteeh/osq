@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c42639bd4ee5d735e029d71b3f03dd290a6eb62f368b7306546ca3d57f8febc7"
+build_stamp: "a192c471"
+project_commit: "16b56298"
+exit_code: 0
+scope_files: {"tests/capability-slices.test.ts":"sha256:aaf51683ac000613a793c9bd9b15cf6a13a21ee925d04f9baaa99f0bf340a250"}
+---
+2026-10-10T14:34:03.789Z

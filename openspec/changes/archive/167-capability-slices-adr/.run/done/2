@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:fbdb3e965cac7098824ee247d80ab796f65d3a4fab66fe31a48549a23df7bd7f"
+build_stamp: "a192c471"
+project_commit: "8177dc5e"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:80f9ea7e80917875cd30b3c7df3b86c1c024e310d0c2fb7362fe5994eed134f5","decisions/016-capability-slices.md":"sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc","decisions/README.md":"sha256:657c97f7dd97e24ddeb6d4a0a24a32197f69be42f8d4fd4c0cf0bd419a2d99d3","tests/capability-slices-adr.test.ts":"sha256:9c168f67c6eb5a958a30d3a9268a34ec9529bc2f2ec49467b32cef7944db6236"}
+---
+2026-10-10T14:40:26.284Z

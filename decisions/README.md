@@ -50,3 +50,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [013. Remote access](013-remote-access.md)
 - [014. Server mode](014-server-mode.md)
 - [015. MCP transport](015-mcp-transport.md)
+- [016. Capability slices](016-capability-slices.md)
