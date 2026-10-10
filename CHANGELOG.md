@@ -4,9 +4,32 @@ All notable changes to `osq` are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+- `osq mcp` serves nine planning tools (`plan`, `list_files`, `read_file`, `write_file`, `edit_file`, `delete_file`, `spec`, `query`, `lint`) to an MCP client over stdio. The file tools refuse any path outside one unapproved change folder, and no tool approves, lands, rejects or retries. `--cwd <dir>` names the project for a client that starts osq elsewhere (ADR 015) (163).
+- With `OSQ_SERVER` set to a server's project URL, such as `https://<host>/p/<project>/`, the `osq` CLI forwards each command to that server and prints its output with the same exit code. `osq plan <id>` downloads the change folder to `~/.osq/remote/`, and `osq lint <id>` uploads it and lints on the server. Commands that only make sense on one machine refuse in one line (162).
+- `osq server start` runs the dashboard, its API and the watcher service in the background for the server's own clone, and `osq server stop` stops them. The server binds loopback and accepts writes from `serve.allowedHosts`, such as a Tailscale name. A land tapped on a server pushes the land commit to `origin` as a fast-forward and stops when `origin` moved. New config: `serve.allowedHosts`, `serve.server`, `timeouts.gitRemoteSeconds` (ADR 013) (161).
+- `osq approve` and the dashboard's approve view open with a `Notices:` block: at most `notices.maxShown` notices, red first, or `Nothing unusual`. The dashboard keeps Approve disabled until each red notice is opened. Proposals gain an `## Assumptions` section, `osq lint <id>` records a `plan_ready` hash, and `osq query` gains a `notices` table (160).
+- ADR 014: server mode is an addition. The server runs the same command functions on its own clone, and every command keeps working locally as before (159).
+- When `gates.formatCommand` is set, the watcher runs it on the files a task changed in its scope before the task's verify, so a formatting-only diff no longer kills a task (158).
+- When the change-level verify fails only in tests a task never touched, the watcher reruns it up to `gates.changeVerifyReruns` times (default 1). A passing rerun finishes the task, and `osq report` lists those tests under `Flaky tests:` (157).
+- The watcher stops cleanly when aborted during setup, and three tests that failed at random under full-suite load pass every time (156).
+- `osq watch --background` starts the watcher as a detached service that restarts it after a crash and when a new osq build appears, between passes only; `osq watch --stop` stops it. `osq` and `osq status` print a `Watcher:` line, and `osq status` prints the service log's path. New `watch` config block (ADR 012) (155).
+- `osq show <id>` prints a `Land:` section for an archived change: the gates run at archive, the diff size, the living-spec changes, the executor's disclosures, and whether land will sync again. The dashboard shows the same above its Land button (153).
+- A `commit_failed` halt clears by itself once the watcher commits the work on a later cycle (`gates.commitRetries`, default 2). A default-branch merge that changes a done task's files no longer halts the change while the task's verify passes, and `osq approve` run inside an osq worktree approves from the checkout (152).
+- A verify run's full output goes to `.run/logs/<target>-<n>.log`, which git ignores. `verify_ran`, `regressed` and `recertification` events keep only the last `limits.markerOutputLines` lines, and a marker's `Full output:` line names the log file (151).
+- `osq init` creates `decisions/README.md` and a proposed starter ADR, `000-how-this-project-is-built.md`. `osq doctor` warns until an ADR that applies to all is accepted, and decisions lint starts then (150).
+- An optional `validator` config block runs a second agent on a different model after a change's verify and check pass at archive. It reports scenarios no code meets, no test covers, or whose test would pass without the change. It only observes: `osq show` and `osq report` print its findings, and the archive goes on (ADR 010) (149).
+- The dashboard shows an unapproved change's review: goal, non-goals, surface, decisions, human steps, contract, each delta requirement beside the living text it replaces, and the approval digest with its flags beside Approve (148).
+- `osq serve` accepts Approve, Land, Reject and Retry from the browser on 127.0.0.1, through `POST /api/actions/<id>` with an `X-Osq-Token` header. A tap runs the same command function as the CLI (ADR 009) (146).
 - `osq --help` groups the commands as everyday, setup and running, inspection, and plumbing, and says to run bare `osq` first (145).
 - agy asks before every tool call, so a headless task cannot answer and `osq watch` refuses to start an agy change until `osq.config.ts` sets `agy: { dangerouslySkipPermissions: true }`; `osq doctor` now reports a `harness-containment` line for every harness (137).
 - `osq init` scaffolds pi as the default harness (138).
+- A key in the `osq inbox` card session runs its command in the same process and prints the command's error and `Next:` line when it fails (144).
+- Every command function accepts `cwd`, `config`, `stdout` and `stderr` and prints only through those writers (programmatic API) (142).
+- Commands report failure by throwing `CommandError`. The `exit` option of `landCommand`, `messageCommand`, `syncCommand`, `graphCommand`, `lintCommand`, `doctorCommand` and `migrateCommand` is removed (programmatic API) (141).
+- The stale-build line names the osq package root it checked: `osq build is stale: src/ is newer than dist/ in <package root>. Run 'npm run build' there or pass --allow-stale.` (143).
+- A task whose model provider never answered dies as `provider_unavailable` with the provider's error, is stopped after `gates.providerStallSeconds` instead of the whole task timeout, and is retried on its own budget (`gates.providerRetries`, `gates.providerRetryDelaySeconds`) without counting toward stuck (136).
 
 ## [0.2.4] - 2026-10-02
 

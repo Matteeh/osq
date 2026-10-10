@@ -23,11 +23,14 @@ Run `osq init --refresh-schema` to pick up a new OpenSpec schema. It overwrites 
 
 ## Upgrading
 
-Unreleased:
+To 0.3.0:
 
 - `osq init` now scaffolds pi instead of agy.
 - agy no longer bypasses its permission prompts by default, so a headless agy task cannot answer them and `osq watch` refuses to start.
 - An agy project must set `agy: { dangerouslySkipPermissions: true }` in `osq.config.ts` or switch harness.
+- Proposals gain an `## Assumptions` section. Run `osq init --refresh-schema` to pick up the new proposal template.
+- The managed `AGENTS.md` and `PLANNER.md` blocks changed. Run `osq init` to refresh them; until you do, `osq doctor` reports the drift.
+- Code that calls command functions directly: the `exit` option is gone from `landCommand`, `messageCommand`, `syncCommand`, `graphCommand`, `lintCommand`, `doctorCommand` and `migrateCommand`; catch the thrown `CommandError` instead.
 
 To 0.2.4:
 

@@ -94,10 +94,10 @@ describe('safer harness defaults: README', () => {
   it('lists the change under Upgrading, above To 0.2.2', async () => {
     const readme = await fs.readFile(readmePath, 'utf8');
     const upgrading = section(readme, '## Upgrading', '## What it puts in your repo');
-    const unreleased = upgrading.indexOf('Unreleased:');
+    const unreleased = upgrading.search(/^(Unreleased|To \d+\.\d+\.\d+):$/m);
     const to022 = upgrading.indexOf('To 0.2.2:');
-    assert.ok(unreleased >= 0, 'Unreleased: must be present');
-    assert.ok(unreleased < to022, 'Unreleased: must come before To 0.2.2:');
+    assert.ok(unreleased >= 0, 'a first release block must be present');
+    assert.ok(unreleased < to022, 'the first release block must come before To 0.2.2:');
     assert.match(upgrading, /agy no longer bypasses/i);
     assert.match(upgrading, /agy: \{ dangerouslySkipPermissions: true \}/);
     assert.match(upgrading, /switch harness/i);
