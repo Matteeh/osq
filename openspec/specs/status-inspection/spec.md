@@ -187,7 +187,8 @@ The inbox object SHALL have exactly the top-level array properties `needsYou`,
 
 A needs-you item SHALL contain `kind`, `change: { id, title }`, nullable `task`,
 and `command`. Its kind SHALL be one of `planning`, `approval`, `task-dead`,
-`task-regressed`, `change-regressed`, or `change-archived`; only task kinds
+`task-regressed`, `change-regressed`, `change-archived`, or
+`after-land-failed`; only task kinds
 SHALL carry `task: { number, title }`. A `task-dead` item for a stuck task SHALL also carry
 `stuck: { fingerprint }`; no other item carries `stuck`. The one item of a
 change that needs steering SHALL also carry `steering: { trigger, reason }`; no
@@ -1718,3 +1719,23 @@ call neither function. `osq status` SHALL print, after `Archived specs: <n>`,
 #### Scenario: Not landed needs steering first
 - **WHEN** with `vcs.enabled`, change 007 archived in its worktree, `main` does not hold it, and `osq land 007` recorded a `sync_conflict` stop on its branch
 - **THEN** `osq status` prints no `Not landed:` line for 007
+
+### Requirement: Failed after-land command in status and inbox
+When the project's `after-land.json`, as version-control "Land runs the
+after-land command" writes it, names a change, `readInbox` SHALL add one
+needs-you item `{ kind: 'after-land-failed', change: { id, title }, task:
+null, command: 'osq land <id>' }`, with the title from the change's proposal or
+else its folder name, sorted with the other items by id. `formatInboxText`
+SHALL render it as `  <id>: <title> — after-land command failed — osq land
+<id>`. `osq status` SHALL print `After-land command failed for <id>: <command>
+— osq land <id>` after its watcher line. Without the file, both SHALL print
+what they print today. Both SHALL read the file through the injectable home
+they already take.
+
+#### Scenario: Failed after-land command waiting
+- **WHEN** `after-land.json` names `007-pricing` with command `pnpm build`, and change 007 is titled `Pricing`
+- **THEN** `osq --json` holds one needs-you item `{ kind: "after-land-failed", change: { id: "007", title: "Pricing" }, task: null, command: "osq land 007" }`, its text row is `  007: Pricing — after-land command failed — osq land 007`, and `osq status` prints `After-land command failed for 007: pnpm build — osq land 007`
+
+#### Scenario: No failure recorded
+- **WHEN** no `after-land.json` exists
+- **THEN** the inbox has no `after-land-failed` item and `osq status` prints no `After-land command failed` line

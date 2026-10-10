@@ -40,6 +40,10 @@ export function formatBriefContent(
  * The ordered prompt sections before the repository record: PLANNER.md, the
  * change identity, the capability specs, an optional `## Architecture Decisions`
  * section, and the brief. `plan.ts` appends the repository record.
+ *
+ * @scenario cli-foundation: Header with an after-land command
+ * @scenario cli-foundation: Header without one
+ * @scenario cli-foundation: Labeled spec list
  */
 export async function buildBaseOpeningPrompt(options: {
   projectRoot: string;
@@ -69,6 +73,11 @@ export async function buildBaseOpeningPrompt(options: {
   if (options.dependencyPaths && options.dependencyPaths.length > 0) {
     const paths = options.dependencyPaths.map((dep) => `- ${dep}`).join('\n');
     changeLines.push(`Landed dependencies:\n${paths}`);
+  }
+  if (config.vcs?.afterLand) {
+    changeLines.push(
+      `After land: osq runs ${config.vcs.afterLand} after every land, so it is not a human step.`,
+    );
   }
   const changeHeader = changeLines.join('\n');
 

@@ -54,7 +54,9 @@ not something osq can rely on to keep it up either.
    and the service never run tasks side by side.
 5. **The service never builds osq and never runs git.** It only starts and
    stops the watcher. Building and landing stay with a human and `osq land`, as
-   ADR 003 requires.
+   ADR 003 requires. A build may now follow a land, because `osq land`, a
+   command the human runs, runs the project's `vcs.afterLand`; the service
+   still never builds osq and reloads a settled new build between passes.
 
 ## Consequences
 

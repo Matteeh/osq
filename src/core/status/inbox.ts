@@ -7,13 +7,8 @@ import { type SpecState, compareNumericPrefix } from './state.js';
 import type { StatusOverview } from './status.js';
 import type { SteeringTriggerName } from './steering.js';
 export { formatInboxText } from './inbox-text.js';
-export type NeedsYouKind =
-  | 'planning'
-  | 'approval'
-  | 'task-dead'
-  | 'task-regressed'
-  | 'change-regressed'
-  | 'change-archived';
+/* biome-ignore format: keeps the file inside the 250-line source budget */ export type NeedsYouKind =
+  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;

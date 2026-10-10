@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:183d9cb03672f01d3276e23e8c19be366863a85e1b98efe7cf56dc1d18aa17f6"
+build_stamp: "3ea5d6df"
+project_commit: "c07b3d88"
+exit_code: 0
+scope_files: {"README.md":"sha256:70b0426cbea8226893bbf27cce31f48c5efcb32144e9d348ccd0b76f107286b3","decisions/012-watch-service.md":"sha256:3f07a91207ad5ee8df0cbb5ec3b9eba48a30855a86e74b33b049355e5e65781d","osq.config.ts":"sha256:47330982f23c66901ff50fde39ac79db380f3f4c40bbe9ac1716f86eb2db51de","src/cli/plan-queue.ts":"sha256:f6c0eed76b66135d71733013fed0b1f93c533945c6a575046abe5c2bfe0dbbe3","tests/after-land-docs.test.ts":"sha256:640f81cb221adea37735e24607a375489a8f630390936c2b9b108298446360e5"}
+---
+2026-10-10T13:54:36.866Z

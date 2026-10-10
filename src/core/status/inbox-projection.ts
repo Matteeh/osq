@@ -1,4 +1,7 @@
+import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { parseSpecMdFromFolder } from '../spec/parser.js';
+import { type AfterLandFailure, readAfterLandFailure } from '../vcs/land-after.js';
 import { applySteeringItems } from './blocked-item.js';
 import { changeTrees } from './change-locations.js';
 import { readLastLook } from './inbox-cursor.js';
@@ -27,10 +30,28 @@ function archivedSteeringItem(entry: SteeringChange): NeedsYouItem | null {
   };
 }
 
+/** The one needs-you item a recorded after-land failure contributes. */
+async function afterLandFailedItem(
+  archiveDir: string,
+  failure: AfterLandFailure,
+): Promise<NeedsYouItem> {
+  const spec = await parseSpecMdFromFolder(path.join(archiveDir, failure.change)).catch(() => null);
+  const id = failure.change.match(/^(\d+)/)?.[1] ?? failure.change;
+  return {
+    kind: 'after-land-failed',
+    change: { id, title: spec?.title || failure.change },
+    task: null,
+    command: `osq land ${id}`,
+  };
+}
+
 /**
  * Derives the stable inbox object without mutating any file. Both the CLI and
  * the read-only HTTP transport consume it, so a contemporaneous invocation and
  * request observe the same groups while only the CLI advances the cursor.
+ *
+ * @scenario status-inspection: Failed after-land command waiting
+ * @scenario status-inspection: No failure recorded
  */
 export async function readInbox(
   projectRoot: string,
@@ -46,8 +67,12 @@ export async function readInbox(
   const steered = (await listArchivedSteering(projectRoot, config))
     .map(archivedSteeringItem)
     .filter((item): item is NeedsYouItem => item !== null);
-  const needsYou = [...(await applySteeringItems(overview, inbox.needsYou)), ...steered].sort(
-    (a, b) => compareNumericPrefix(a.change.id, b.change.id),
-  );
+  const failure = await readAfterLandFailure(projectRoot, options.home);
+  const afterLand = failure === null ? [] : [await afterLandFailedItem(tree.archiveDir, failure)];
+  const needsYou = [
+    ...(await applySteeringItems(overview, inbox.needsYou)),
+    ...steered,
+    ...afterLand,
+  ].sort((a, b) => compareNumericPrefix(a.change.id, b.change.id));
   return { ...inbox, needsYou };
 }

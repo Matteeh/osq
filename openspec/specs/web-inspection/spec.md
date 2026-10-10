@@ -391,7 +391,8 @@ writing.
 
 ### Requirement: Inbox kind labels
 The dashboard's needs-you group SHALL label `planning` items `needs planning`,
-as it labels the other kinds, and `change-archived` items `not landed`. It
+as it labels the other kinds, `change-archived` items `not landed`, and
+`after-land-failed` items `after-land failed`. It
 SHALL have no label for a verification kind, because the inbox has none.
 
 #### Scenario: Planning label
@@ -401,6 +402,10 @@ SHALL have no label for a verification kind, because the inbox has none.
 #### Scenario: Not landed label
 - **WHEN** `needsYouKindLabel('change-archived')` is called
 - **THEN** it returns `not landed`
+
+#### Scenario: After-land failed label
+- **WHEN** `needsYouKindLabel('after-land-failed')` is called
+- **THEN** it returns `after-land failed`
 
 ### Requirement: Invalidation across worktrees
 `osq serve` SHALL resolve the change trees through `changeTrees` once at

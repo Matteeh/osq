@@ -1,9 +1,9 @@
 import path from 'node:path';
-import type { VcsConfig } from '../foundation/config-vcs.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { buildSquashMessage } from '../run/squash-message.js';
 import { readDependencyState } from '../spec/stack-dependencies.js';
 import type { LocatedChange } from '../status/change-locations.js';
+import { type AfterLandOutcome, retryAfterLand, runAfterLand } from './land-after.js';
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
@@ -24,6 +24,8 @@ export interface LandResult {
   readonly lines: string[];
   readonly code: number;
   readonly changed: readonly string[];
+  /** Whether the after-land command ran, and whether it passed. */
+  readonly afterLand?: AfterLandOutcome;
 }
 
 /** The absolute worktree of `change`, when git lists one. */
@@ -52,9 +54,8 @@ async function cleanupChange(
 ): Promise<{ lines: string[]; removed: boolean }> {
   const lines: string[] = [];
   if (config.vcs === undefined) return { lines, removed: false };
-
   const repoRoot = (await vcs.root()) ?? projectRoot;
-  const target = worktreePath(config.vcs as VcsConfig, repoRoot, folder);
+  const target = worktreePath(config.vcs, repoRoot, folder);
   const listed = (await vcs.worktreeList()).some(
     (entry) => path.resolve(entry.path) === path.resolve(target),
   );
@@ -74,19 +75,29 @@ async function cleanupLanded(
   projectRoot: string,
   config: OsqConfig,
   vcs: Vcs,
-  folder: string,
+  change: LocatedChange,
+  progress: (line: string) => void,
+  options: LandOptions,
 ): Promise<LandResult> {
-  const cleanup = await cleanupChange(projectRoot, config, vcs, folder);
-  if (!cleanup.removed) {
-    return { lines: [`${folder} has already landed; nothing to clean up`], code: 0, changed: [] };
-  }
-  return { lines: [`${folder} has already landed`, ...cleanup.lines], code: 0, changed: [] };
+  const after = await retryAfterLand(projectRoot, config, change, progress, options.home);
+  const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);
+  const already = cleanup.removed
+    ? [`${change.folderName} has already landed`, ...cleanup.lines]
+    : [`${change.folderName} has already landed; nothing to clean up`];
+  return {
+    lines: [...(after?.lines ?? []), ...already],
+    code: after?.code ?? 0,
+    changed: [],
+    ...(after !== null ? { afterLand: after.outcome } : {}),
+  };
 }
 
 /** Options a land takes beyond the change folder it resolves. */
 export interface LandOptions {
   /** Runs with the land commit after it is built and before the default branch moves; a throw stops the land. */
   readonly beforeMove?: (commit: string) => Promise<void>;
+  /** Injectable home root for the after-land failure record. */
+  readonly home?: string;
 }
 
 /**
@@ -111,7 +122,6 @@ async function landCommit(
   const { message } = await buildSquashMessage(projectRoot, config, idOrPrefix);
   const commit = await vcs.commitTree(tip, base, message, author);
   if (options.beforeMove !== undefined) await options.beforeMove(commit);
-
   let pushed: VcsFastForwardResult;
   try {
     pushed = await vcs.fastForward(commit);
@@ -147,15 +157,19 @@ async function rethrowSyncStop(
 }
 
 /**
- * Land an archived change onto the default branch. Refuses unsafe state before
- * writing anything, syncs the default branch into the change's worktree, builds
- * the land commit from the branch tip, fast-forwards the checkout to it, and
- * cleans up. Every refusal and stop is an `Error` with the message the spec
- * names. `options.beforeMove` runs after the commit is built and before the
- * default branch moves; a throw stops the land with it and moves nothing.
+ * Land an archived change onto the default branch: refuse unsafe state, sync,
+ * build the land commit, fast-forward the checkout to it, run the after-land
+ * command, and clean up. Every refusal and stop is an `Error` with the spec's
+ * message; `options.beforeMove` runs after the commit and before the move.
  *
  * @scenario version-control: Land pushes the land commit
  * @scenario version-control: Origin moved while landing
+ * @scenario version-control: Passing after-land command
+ * @scenario version-control: Failing after-land command
+ * @scenario version-control: Retry after a failure
+ * @scenario version-control: Already landed without a failure
+ * @scenario version-control: Refused land runs nothing
+ * @scenario version-control: No command configured
  * @adr 003
  */
 export async function landChange(
@@ -180,7 +194,6 @@ export async function landChange(
 
   const defaultBranch = await vcs.defaultBranch();
   assertCheckoutBranch(await vcs.head(), defaultBranch);
-
   const worktree = await resolveWorktree(projectRoot, config, vcs, change);
   if (worktree !== null) {
     const worktreeVcs = await selectVcs(worktree, config);
@@ -191,7 +204,7 @@ export async function landChange(
     await assertNoEarlierChange(projectRoot, config, change);
   }
   if (alreadyLanded) {
-    return cleanupLanded(projectRoot, config, vcs, change.folderName);
+    return cleanupLanded(projectRoot, config, vcs, change, progress, options);
   }
   if (worktree === null) throw new Error(OSQ_LAND_NEEDS_GIT);
 
@@ -221,13 +234,16 @@ export async function landChange(
   );
   const repoRoot = (await vcs.root()) ?? projectRoot;
   const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);
+  const after = await runAfterLand(projectRoot, config, change, progress, options.home);
   return {
     lines: [
       `Landed ${change.folderName} as ${commit}`,
       ...cleanup.lines,
       `Kept branch ${worktreeBranch(change.folderName)}`,
+      ...(after?.lines ?? []),
     ],
-    code: 0,
+    code: after?.code ?? 0,
     changed: changed.map((entry) => path.join(repoRoot, entry)),
+    ...(after !== null ? { afterLand: after.outcome } : {}),
   };
 }

@@ -3,8 +3,9 @@
  * is set, so the block defaults off. `author` is the identity every osq commit
  * carries and is required once writes are on. `worktreeRoot` names where linked
  * worktrees live, `defaultBranch` names the branch approval must start from,
- * and `prepare` runs before osq commits; all three keep their trimmed form.
- * The commit timeout lives with the other timeouts.
+ * and `prepare` runs before osq commits; all four keep their trimmed form.
+ * `afterLand` runs in the checkout after a land. The commit timeout lives
+ * with the other timeouts.
  */
 export interface VcsConfig {
   readonly enabled: boolean;
@@ -12,6 +13,7 @@ export interface VcsConfig {
   readonly worktreeRoot?: string;
   readonly defaultBranch?: string;
   readonly prepare?: string;
+  readonly afterLand?: string;
 }
 
 export const DEFAULT_VCS_CONFIG: VcsConfig = { enabled: false };
@@ -35,6 +37,9 @@ const AUTHOR_PATTERN = /^\S.*\s<[^<>]+>$/;
  * Validate an optional `vcs` block over the defaults. Missing fields keep the
  * defaults; a non-boolean `enabled`, a malformed author, an author missing
  * while enabled, and a blank or non-string path or command are rejected.
+ *
+ * @scenario cli-foundation: Command kept trimmed
+ * @scenario cli-foundation: Blank command
  */
 export function validateVcsConfig(vcs: unknown): VcsConfig {
   if (vcs === undefined) return DEFAULT_VCS_CONFIG;
@@ -59,12 +64,14 @@ export function validateVcsConfig(vcs: unknown): VcsConfig {
   const worktreeRoot = trimmedField(record, 'worktreeRoot');
   const defaultBranch = trimmedField(record, 'defaultBranch');
   const prepare = trimmedField(record, 'prepare');
+  const afterLand = trimmedField(record, 'afterLand');
   return {
     enabled,
     ...(author !== undefined ? { author } : {}),
     ...(worktreeRoot !== undefined ? { worktreeRoot } : {}),
     ...(defaultBranch !== undefined ? { defaultBranch } : {}),
     ...(prepare !== undefined ? { prepare } : {}),
+    ...(afterLand !== undefined ? { afterLand } : {}),
   };
 }
 

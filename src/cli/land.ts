@@ -17,6 +17,8 @@ export interface LandCommandOptions extends CommandInputs {
   publish?: boolean;
   /** osq's own package root; defaults to the running package. */
   packageRoot?: string;
+  /** Injectable home root for the after-land failure record. */
+  home?: string;
 }
 
 /** The real path of the nearest directory at or above `target` that exists. */
@@ -61,6 +63,9 @@ async function changedOwnSource(changed: readonly string[], packageRoot: string)
  * `publish` it lands through `landAndPublish` and pushes to `origin`.
  *
  * @scenario version-control: Land publishes to origin
+ * @scenario version-control: Passing after-land command
+ * @scenario version-control: Failing after-land command
+ * @scenario cli-foundation: Land into osq itself with a passing after-land command
  * @adr 003
  */
 export async function landCommand(id: string, options: LandCommandOptions = {}): Promise<void> {
@@ -76,12 +81,15 @@ export async function landCommand(id: string, options: LandCommandOptions = {}):
     }
     const config = await inputs.config();
     const report = (line: string): void => inputs.stderr(`${line}\n`);
-    const { lines, code, changed } =
+    const { lines, code, changed, afterLand } =
       options.publish === true
         ? await landAndPublish(inputs.cwd, config, id, report)
-        : await landChange(inputs.cwd, config, id, report);
+        : await landChange(inputs.cwd, config, id, report, { home: options.home });
     for (const line of lines) inputs.stdout(`${line}\n`);
-    if (code === 0 && (await changedOwnSource(changed, options.packageRoot ?? osqPackageRoot()))) {
+    const ownSource =
+      afterLand?.passed !== true &&
+      (await changedOwnSource(changed, options.packageRoot ?? osqPackageRoot()));
+    if (code === 0 && ownSource) {
       inputs.stdout(`${REBUILD_MESSAGE}\n`);
     }
     if (code !== 0) {

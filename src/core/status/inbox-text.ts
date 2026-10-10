@@ -12,6 +12,9 @@ function needsYouLine(item: NeedsYouItem): string {
   if (item.kind === 'change-archived') {
     return `${head} — archived, not landed — ${item.command}`;
   }
+  if (item.kind === 'after-land-failed') {
+    return `${head} — after-land command failed — ${item.command}`;
+  }
   if (item.kind === 'change-regressed' && !item.steering) {
     return `${head} — change regressed — ${item.command}`;
   }
@@ -52,6 +55,7 @@ function landedLine(item: LandedItem): string {
  * Concise text rendering of the three inbox groups.
  *
  * @scenario status-inspection: Archived change waiting to land
+ * @scenario status-inspection: Failed after-land command waiting
  */
 export function formatInboxText(inbox: Inbox): string {
   const { needsYou, running, landed } = inbox;

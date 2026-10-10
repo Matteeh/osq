@@ -1,0 +1,137 @@
+diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md b/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md
+new file mode 100644
+index 00000000..2505aa9d
+--- /dev/null
++++ b/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md
+@@ -0,0 +1,5 @@
++---
++reason: no_result
++fingerprint: sha256:0beccc0875531c94f835045494b52e9b08a62047a0328121b077151b8d044453
++---
++Agent exited without writing result file at .run/results/2.md and produced no final text.
+diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.2.md b/openspec/changes/166-land-runs-after-command/.run/dead/2.2.md
+new file mode 100644
+index 00000000..18795135
+--- /dev/null
++++ b/openspec/changes/166-land-runs-after-command/.run/dead/2.2.md
+@@ -0,0 +1,6 @@
++---
++reason: no_result
++fingerprint: sha256:0beccc0875531c94f835045494b52e9b08a62047a0328121b077151b8d044453
++stuck: true
++---
++Agent exited without writing result file at .run/results/2.md and produced no final text.
+diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.patch b/openspec/changes/166-land-runs-after-command/.run/dead/2.patch
+deleted file mode 100644
+index a6fe9dc2..00000000
+--- a/openspec/changes/166-land-runs-after-command/.run/dead/2.patch
++++ /dev/null
+@@ -1,84 +0,0 @@
+-diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md b/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md
+-new file mode 100644
+-index 00000000..2505aa9d
+---- /dev/null
+-+++ b/openspec/changes/166-land-runs-after-command/.run/dead/2.1.md
+-@@ -0,0 +1,5 @@
+-+---
+-+reason: no_result
+-+fingerprint: sha256:0beccc0875531c94f835045494b52e9b08a62047a0328121b077151b8d044453
+-+---
+-+Agent exited without writing result file at .run/results/2.md and produced no final text.
+-diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.patch b/openspec/changes/166-land-runs-after-command/.run/dead/2.patch
+-deleted file mode 100644
+-index 5be387f9..00000000
+---- a/openspec/changes/166-land-runs-after-command/.run/dead/2.patch
+-+++ /dev/null
+-@@ -1,44 +0,0 @@
+--diff --git a/openspec/changes/166-land-runs-after-command/.run/dead/2.md b/openspec/changes/166-land-runs-after-command/.run/dead/2.md
+--new file mode 100644
+--index 00000000..2505aa9d
+----- /dev/null
+--+++ b/openspec/changes/166-land-runs-after-command/.run/dead/2.md
+--@@ -0,0 +1,5 @@
+--+---
+--+reason: no_result
+--+fingerprint: sha256:0beccc0875531c94f835045494b52e9b08a62047a0328121b077151b8d044453
+--+---
+--+Agent exited without writing result file at .run/results/2.md and produced no final text.
+--diff --git a/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+--new file mode 100644
+--index 00000000..6ba22cbc
+----- /dev/null
+--+++ b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+--@@ -0,0 +1,19 @@
+--+{"type":"verify_ran","timestamp":"2026-10-10T11:57:23.905Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/inbox-after-land.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/2-1.log","output":"Could not find 'tests/inbox-after-land.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/inbox-after-land.test.ts"],"mismatch":false}}
+--+{"type":"measures","timestamp":"2026-10-10T11:57:24.774Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"}}}
+--+{"type":"started","timestamp":"2026-10-10T11:57:24.974Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"bdcad5da","pid":21343,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"3ea5d6df"}}
+--+{"type":"tokens","timestamp":"2026-10-10T11:57:26.339Z","data":{"promptTokens":2663,"candidateTokens":173,"totalTokens":6420,"cachedTokens":3584,"reasoningTokens":15,"cost":0.0010280040000000001,"provider":"deepseek","model":"deepseek-flash"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:26.339Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/tasks/2.md"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:26.340Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/proposal.md"}}
+--+{"type":"tokens","timestamp":"2026-10-10T11:57:28.403Z","data":{"promptTokens":2674,"candidateTokens":351,"totalTokens":9425,"cachedTokens":6400,"reasoningTokens":23,"cost":0.0012618,"provider":"deepseek","model":"deepseek-flash"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:28.403Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/specs/status-in"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:28.403Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/specs/web-inspe"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:28.404Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/specs/version-c"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:28.404Z","data":{"tool":"read","summary":"openspec/changes/166-land-runs-after-command/specs/cli-found"}}
+--+{"type":"tokens","timestamp":"2026-10-10T11:57:29.885Z","data":{"promptTokens":3650,"candidateTokens":271,"totalTokens":13265,"cachedTokens":9344,"reasoningTokens":29,"cost":0.001476264,"provider":"deepseek","model":"deepseek-flash"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:29.886Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/166-land-runs-after-comm"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:29.886Z","data":{"tool":"read","summary":"src/core/status/inbox.ts"}}
+--+{"type":"tool","timestamp":"2026-10-10T11:57:29.887Z","data":{"tool":"read","summary":"src/core/status/inbox-projection.ts"}}
+--+{"type":"tokens","timestamp":"2026-10-10T11:57:30.760Z","data":{"promptTokens":0,"candidateTokens":0,"totalTokens":0,"cachedTokens":0,"cost":0,"provider":"deepseek","model":"deepseek-flash"}}
+--+{"type":"exited","timestamp":"2026-10-10T11:57:30.772Z","data":{"exitCode":0,"pid":21343,"timedOut":false,"elapsedSeconds":5.8}}
+--+{"type":"dead","timestamp":"2026-10-10T11:57:30.976Z","data":{"task":"2","reason":"no_result"}}
+--+{"type":"measures","timestamp":"2026-10-10T11:57:30.978Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"},"changedFiles":0,"changedLines":0,"scopeHashes":{"packages/ui/src/home/labels.ts":{"before":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583","after":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583"},"src/cli/status.ts":{"before":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff","after":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff"},"src/core/status/inbox-projection.ts":{"before":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","after":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c"},"src/core/status/inbox-text.ts":{"before":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43","after":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43"},"src/core/status/inbox.ts":{"before":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20","after":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20"},"tests/inbox-after-land.test.ts":{"before":null,"after":null}}}}
+--diff --git a/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+--new file mode 100644
+--index 00000000..b7d96289
+----- /dev/null
+--+++ b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+--@@ -0,0 +1,2 @@
+--+{"type":"baseline_ran","timestamp":"2026-10-10T11:46:21.597Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b67697ac1944c44d12629290f3c9b67e4fdbb314","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":104.76}}
+--+{"type":"verify_ran","timestamp":"2026-10-10T11:57:22.524Z","data":{"command":"pnpm verify","exitCode":0,"duration":80.73,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.193826ms)\n✔ dashboard data base (1.207576ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.424129ms)\n  ✔ keeps the default actions URL (0.246339ms)\n✔ actions client base (0.918456ms)\n▶ server header\n  ✔ shows the project and server name next to the title (9.919182ms)\n✔ server header (10.022176ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.761999ms)\n  ✔ shows a terminal watcher and no service record (1.140118ms)\n  ✔ shows a waiting background watcher and a service record (0.766925ms)\n  ✔ shows no watcher and no service record (0.741195ms)\n  ✔ names the watcher version, commit, and start time (1.317619ms)\n  ✔ marks the waiting line as a warning in the existing palette (23.937783ms)\n  ✔ renders the home view as before without a server status (1.760658ms)\n✔ service panel (31.825731ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.456845ms)\n✔ service panel component (0.538548ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.98278ms)\n  ✔ maps every derived task state onto the status vocabulary (0.199477ms)\n  ✔ defines the whole palette for light and dark schemes (16.47449ms)\n  ✔ never centers table cells (1.766728ms)\n✔ status badge (28.167134ms)\nℹ tests 152\nℹ suites 43\nℹ pass 152\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2466.40929\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1066 files in 399ms. No fixes applied."}}
+-diff --git a/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+-index 6ba22cbc..37bd3a79 100644
+---- a/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+-+++ b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+-@@ -17,3 +17,10 @@
+- {"type":"exited","timestamp":"2026-10-10T11:57:30.772Z","data":{"exitCode":0,"pid":21343,"timedOut":false,"elapsedSeconds":5.8}}
+- {"type":"dead","timestamp":"2026-10-10T11:57:30.976Z","data":{"task":"2","reason":"no_result"}}
+- {"type":"measures","timestamp":"2026-10-10T11:57:30.978Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"},"changedFiles":0,"changedLines":0,"scopeHashes":{"packages/ui/src/home/labels.ts":{"before":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583","after":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583"},"src/cli/status.ts":{"before":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff","after":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff"},"src/core/status/inbox-projection.ts":{"before":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","after":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c"},"src/core/status/inbox-text.ts":{"before":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43","after":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43"},"src/core/status/inbox.ts":{"before":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20","after":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20"},"tests/inbox-after-land.test.ts":{"before":null,"after":null}}}}
+-+{"type":"retry","data":{"target":"2","reason":"no_result","attempt":2,"automatic":true},"timestamp":"2026-10-10T11:57:31.607Z"}
+-+{"type":"measures","timestamp":"2026-10-10T11:57:32.741Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"}}}
+-+{"type":"started","timestamp":"2026-10-10T11:57:32.931Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":2,"projectCommit":"5a341424","pid":21619,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"3ea5d6df"}}
+-+{"type":"tokens","timestamp":"2026-10-10T11:57:33.802Z","data":{"promptTokens":0,"candidateTokens":0,"totalTokens":0,"cachedTokens":0,"cost":0,"provider":"deepseek","model":"deepseek-flash"}}
+-+{"type":"exited","timestamp":"2026-10-10T11:57:33.833Z","data":{"exitCode":0,"pid":21619,"timedOut":false,"elapsedSeconds":0.9}}
+-+{"type":"dead","timestamp":"2026-10-10T11:57:34.057Z","data":{"task":"2","reason":"no_result"}}
+-+{"type":"measures","timestamp":"2026-10-10T11:57:34.060Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"},"changedFiles":0,"changedLines":0,"scopeHashes":{"packages/ui/src/home/labels.ts":{"before":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583","after":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583"},"src/cli/status.ts":{"before":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff","after":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff"},"src/core/status/inbox-projection.ts":{"before":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","after":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c"},"src/core/status/inbox-text.ts":{"before":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43","after":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43"},"src/core/status/inbox.ts":{"before":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20","after":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20"},"tests/inbox-after-land.test.ts":{"before":null,"after":null}}}}
+-diff --git a/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+-new file mode 100644
+-index 00000000..b7d96289
+---- /dev/null
+-+++ b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+-@@ -0,0 +1,2 @@
+-+{"type":"baseline_ran","timestamp":"2026-10-10T11:46:21.597Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b67697ac1944c44d12629290f3c9b67e4fdbb314","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":104.76}}
+-+{"type":"verify_ran","timestamp":"2026-10-10T11:57:22.524Z","data":{"command":"pnpm verify","exitCode":0,"duration":80.73,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.193826ms)\n✔ dashboard data base (1.207576ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.424129ms)\n  ✔ keeps the default actions URL (0.246339ms)\n✔ actions client base (0.918456ms)\n▶ server header\n  ✔ shows the project and server name next to the title (9.919182ms)\n✔ server header (10.022176ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.761999ms)\n  ✔ shows a terminal watcher and no service record (1.140118ms)\n  ✔ shows a waiting background watcher and a service record (0.766925ms)\n  ✔ shows no watcher and no service record (0.741195ms)\n  ✔ names the watcher version, commit, and start time (1.317619ms)\n  ✔ marks the waiting line as a warning in the existing palette (23.937783ms)\n  ✔ renders the home view as before without a server status (1.760658ms)\n✔ service panel (31.825731ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.456845ms)\n✔ service panel component (0.538548ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.98278ms)\n  ✔ maps every derived task state onto the status vocabulary (0.199477ms)\n  ✔ defines the whole palette for light and dark schemes (16.47449ms)\n  ✔ never centers table cells (1.766728ms)\n✔ status badge (28.167134ms)\nℹ tests 152\nℹ suites 43\nℹ pass 152\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2466.40929\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1066 files in 399ms. No fixes applied."}}
+diff --git a/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+index 37bd3a79..e42aaba1 100644
+--- a/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
++++ b/openspec/changes/166-land-runs-after-command/.run/events/2.jsonl
+@@ -24,3 +24,11 @@
+ {"type":"exited","timestamp":"2026-10-10T11:57:33.833Z","data":{"exitCode":0,"pid":21619,"timedOut":false,"elapsedSeconds":0.9}}
+ {"type":"dead","timestamp":"2026-10-10T11:57:34.057Z","data":{"task":"2","reason":"no_result"}}
+ {"type":"measures","timestamp":"2026-10-10T11:57:34.060Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"},"changedFiles":0,"changedLines":0,"scopeHashes":{"packages/ui/src/home/labels.ts":{"before":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583","after":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583"},"src/cli/status.ts":{"before":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff","after":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff"},"src/core/status/inbox-projection.ts":{"before":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","after":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c"},"src/core/status/inbox-text.ts":{"before":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43","after":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43"},"src/core/status/inbox.ts":{"before":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20","after":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20"},"tests/inbox-after-land.test.ts":{"before":null,"after":null}}}}
++{"type":"stuck","timestamp":"2026-10-10T11:57:34.603Z","data":{"task":"2","fingerprint":"sha256:0beccc0875531c94f835045494b52e9b08a62047a0328121b077151b8d044453"}}
++{"type":"retry","data":{"target":"2","reason":"no_result","attempt":3},"timestamp":"2026-10-10T12:04:13.072Z"}
++{"type":"measures","timestamp":"2026-10-10T12:04:14.297Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"}}}
++{"type":"started","timestamp":"2026-10-10T12:04:14.498Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":3,"projectCommit":"caa3fdf5","pid":39796,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"3ea5d6df"}}
++{"type":"tokens","timestamp":"2026-10-10T12:04:15.410Z","data":{"promptTokens":0,"candidateTokens":0,"totalTokens":0,"cachedTokens":0,"cost":0,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-10T12:04:15.440Z","data":{"exitCode":0,"pid":39796,"timedOut":false,"elapsedSeconds":0.9}}
++{"type":"dead","timestamp":"2026-10-10T12:04:15.655Z","data":{"task":"2","reason":"no_result"}}
++{"type":"measures","timestamp":"2026-10-10T12:04:15.658Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":431,"repoFiles":2699,"repoLines":313022,"importFanIn":6,"proposalWords":1204,"taskWords":347,"deltaRequirements":8,"deltaScenarios":31,"functionHashes":{"packages/ui/src/home/labels.ts#needsYouKindLabel":"sha256:988d913c0c35c8e186d542b6e1d21db667d2acdfddb2ccec4d73ce58c3bca23c","src/core/status/inbox-text.ts#formatInboxText":"sha256:25d1c4feb8383ba4bdcd3db16e7e3be378f68b1397e0d009adff26f67f6e484f","src/core/status/inbox.ts#projectNeedsYou":"sha256:2f03927c951f3057ca55edc2749ec726b1cf7c040a8c97028751ea938fc62c07"},"changedFiles":0,"changedLines":0,"scopeHashes":{"packages/ui/src/home/labels.ts":{"before":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583","after":"sha256:9d1cc45d0af64a863fbd4b1be6ea0e97789ccabb5d1c809764f1a8627ebb8583"},"src/cli/status.ts":{"before":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff","after":"sha256:9b4144d91a10cca1a54d871629ca43ccdc093fa88134d7b72195dcfdb11623ff"},"src/core/status/inbox-projection.ts":{"before":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c","after":"sha256:e08df05c8f85dd0182213d8c354e2c07832e3036c9a8e00ab1ad5b5e4d3f5f9c"},"src/core/status/inbox-text.ts":{"before":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43","after":"sha256:e40ad0090a3c637970a05df5cba933461edf6c6361c54db0b4c9d07a56efcb43"},"src/core/status/inbox.ts":{"before":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20","after":"sha256:40ce39f75ea7f5492a916de92b1997c77f31aeedc9b0c79d31f28e8a77a39f20"},"tests/inbox-after-land.test.ts":{"before":null,"after":null}}}}
+diff --git a/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+new file mode 100644
+index 00000000..b7d96289
+--- /dev/null
++++ b/openspec/changes/166-land-runs-after-command/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-10T11:46:21.597Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b67697ac1944c44d12629290f3c9b67e4fdbb314","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":104.76}}
++{"type":"verify_ran","timestamp":"2026-10-10T11:57:22.524Z","data":{"command":"pnpm verify","exitCode":0,"duration":80.73,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.193826ms)\n✔ dashboard data base (1.207576ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.424129ms)\n  ✔ keeps the default actions URL (0.246339ms)\n✔ actions client base (0.918456ms)\n▶ server header\n  ✔ shows the project and server name next to the title (9.919182ms)\n✔ server header (10.022176ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.761999ms)\n  ✔ shows a terminal watcher and no service record (1.140118ms)\n  ✔ shows a waiting background watcher and a service record (0.766925ms)\n  ✔ shows no watcher and no service record (0.741195ms)\n  ✔ names the watcher version, commit, and start time (1.317619ms)\n  ✔ marks the waiting line as a warning in the existing palette (23.937783ms)\n  ✔ renders the home view as before without a server status (1.760658ms)\n✔ service panel (31.825731ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.456845ms)\n✔ service panel component (0.538548ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.98278ms)\n  ✔ maps every derived task state onto the status vocabulary (0.199477ms)\n  ✔ defines the whole palette for light and dark schemes (16.47449ms)\n  ✔ never centers table cells (1.766728ms)\n✔ status badge (28.167134ms)\nℹ tests 152\nℹ suites 43\nℹ pass 152\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2466.40929\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1066 files in 399ms. No fixes applied."}}

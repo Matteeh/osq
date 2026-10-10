@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:55100fc30f8aff976c3bfc92fe9da4839f037ea75f26967cf913e85e61ac2cdc"
+build_stamp: "3ea5d6df"
+project_commit: "b67697ac"
+exit_code: 0
+scope_files: {"src/cli/land.ts":"sha256:d0cd511ec45a2fd1c99d215b47874ad601f18ebc7f5f76c7218b8803de20df64","src/core/foundation/config-vcs.ts":"sha256:77b2a0ab1a90e537163de66d83ab0a00085899c72414500699f4a993710ed2a1","src/core/vcs/land-after.ts":"sha256:81b42e908b4185bbd98a14191f66fc188dc967a66bf20356acae71df0bd05059","src/core/vcs/land.ts":"sha256:b9ca6db3c06f6567632679ac84c947e2ffb07a5bee7b67ed237bb7cd434165d4","tests/vcs-land-after.test.ts":"sha256:50dd18c7f948ff491a360986a815367078bb06b01c50fcc10c8f47075b161e6d"}
+---
+2026-10-10T11:57:22.534Z
