@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:93b1db737c0eb5e87237e5a1a5c709b4c7d09aa35ef9582151da9a988448eb3a"
+build_stamp: "e9ac2036"
+project_commit: "1733a186"
+exit_code: 0
+scope_files: {"src/cli/help-groups.ts":"sha256:e79ccfa39e3abb9c906cd77a08151b2bcf7cd5306715a91d2d1c0dba7e9ec324","src/cli/index.ts":"sha256:50ef845b36025c7d54563d98b3027df37092b7b9eee0e743804c855ece5cf8c8","tests/cli-slice-commands.test.ts":"sha256:463bfc274f98c425991333333274e6ec1fbd7f8a8e75ea95665207e663496dc5","tests/help-groups.test.ts":"sha256:bdb9e7a4d5820e790a809dbd696d903e180575dcf86fef9476f1d8b41087a7e8"}
+---
+2026-10-10T19:41:40.918Z

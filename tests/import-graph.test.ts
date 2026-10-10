@@ -71,6 +71,17 @@ function isInside(target: string, dir: string): boolean {
   return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
+/**
+ * The one core-to-outside-core import the slice registry needs:
+ * `src/core/foundation/config.ts` importing `src/cli/slices.ts`, so
+ * `DEFAULT_CONFIG` can compose the registered slices.
+ */
+function isAllowedCoreCliImport(importer: string, resolved: string): boolean {
+  if (importer !== path.join('src', 'core', 'foundation', 'config.ts')) return false;
+  const target = path.relative(path.join(SRC_DIR, 'cli'), resolved).split(path.sep).join('/');
+  return target === 'slices.js' || target === 'slices.ts';
+}
+
 interface Violation {
   importer: string;
   specifier: string;
@@ -90,7 +101,11 @@ async function findViolations(): Promise<Violation[]> {
       if (!record.specifier.startsWith('./') && !record.specifier.startsWith('../')) continue;
       const resolved = path.resolve(path.dirname(file), record.specifier);
       const importer = path.relative(REPO, file);
-      if (tier === 'core' && !isInside(resolved, path.join(SRC_DIR, 'core'))) {
+      if (
+        tier === 'core' &&
+        !isInside(resolved, path.join(SRC_DIR, 'core')) &&
+        !isAllowedCoreCliImport(importer, resolved)
+      ) {
         violations.push({
           importer,
           specifier: record.specifier,

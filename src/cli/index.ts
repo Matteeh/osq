@@ -6,7 +6,7 @@ import { CommandError } from './command-error.js';
 import { registerDigestCommand } from './digest.js';
 import { registerDoctorCommand } from './doctor.js';
 import { registerGraphCommand } from './graph.js';
-import { configureGroupedHelp } from './help-groups.js';
+import { commandGroups, configureGroupedHelp, registerSliceCommands } from './help-groups.js';
 import { registerInboxDispatchCommand } from './inbox-dispatch.js';
 import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
@@ -26,6 +26,8 @@ import { parsePortArgument, serveCommand } from './serve.js';
 import { registerServerCommand } from './server.js';
 import { setupCommand } from './setup.js';
 import { showCommand } from './show.js';
+import type { Slice } from './slice-types.js';
+import { SLICES } from './slices.js';
 import { registerSpecCommand } from './spec.js';
 import { statusCommand } from './status.js';
 import { registerSyncCommand } from './sync.js';
@@ -38,7 +40,13 @@ export function resolvePackageVersion(): string {
   return manifest.version ?? '0.0.0';
 }
 
-export function createProgram(version?: string): Command {
+/**
+ * Build the CLI program with its own commands, then slice commands, then the grouped root help.
+ * @scenario cli-foundation: A slice command joins its help group
+ * @scenario cli-foundation: A slice command that clashes or goes missing
+ * @adr 016
+ */
+export function createProgram(version?: string, slices: readonly Slice[] = SLICES): Command {
   const program = new Command();
   // Keep root options (notably `--json`) from shadowing the identically named
   // option on subcommands such as `report --json`.
@@ -227,7 +235,8 @@ export function createProgram(version?: string): Command {
   registerServerCommand(program);
   registerSpecCommand(program);
   registerSyncCommand(program);
-  configureGroupedHelp(program);
+  registerSliceCommands(program, slices);
+  configureGroupedHelp(program, commandGroups(slices));
   const normalize = (argv: readonly string[]): string[] =>
     argv.map((arg) => (arg === '-print' ? '--print' : arg));
   const origParse = program.parse.bind(program);

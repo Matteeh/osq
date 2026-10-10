@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a0e6380fa6e3a43ef4de0e112ee5b612dabc95db227019f16952fe2d1faf6154"
+build_stamp: "e9ac2036"
+project_commit: "bde800ed"
+exit_code: 0
+scope_files: {"src/cli/mcp-tools.ts":"sha256:a6e96a8fe28e9e84b036daeb7a0188d29489c9c9c61572772f7fb4a1838cce36","tests/mcp-slice-tools.test.ts":"sha256:81577d67a2040ad6e55640e69266a6f2471dd4a75b0c8cac2e3c16d45f1253d4","tests/mcp-tools.test.ts":"sha256:cb87e023582446804db6e5036ae6eafb1a50d13533f102726e97c7f4ee6e8c8b"}
+---
+2026-10-10T19:46:54.064Z

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { BARE_OSQ_LINE, COMMAND_GROUPS } from '../src/cli/help-groups.js';
+import { BARE_OSQ_LINE, COMMAND_GROUPS, commandGroups } from '../src/cli/help-groups.js';
 import { createProgram } from '../src/cli/index.js';
+import { SLICES } from '../src/cli/slices.js';
 
 const EXPECTED_GROUPS = [
   { title: 'Everyday', commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject'] },
@@ -101,10 +102,10 @@ describe('root help command groups', () => {
     assert.ok(!trimmed.includes('Other commands:'), 'Other commands: heading must not print');
   });
 
-  it('COMMAND_GROUPS names exactly the registered commands', () => {
+  it('commandGroups(SLICES) names exactly the registered commands', () => {
     const program = createProgram('0.0.0');
     const registered = program.commands.map((command) => command.name()).sort();
-    const named = COMMAND_GROUPS.flatMap((group) => [...group.commands]);
+    const named = commandGroups(SLICES).flatMap((group) => [...group.commands]);
     assert.deepEqual([...named].sort(), registered);
     assert.equal(new Set(named).size, named.length, 'a command is named in more than one group');
   });

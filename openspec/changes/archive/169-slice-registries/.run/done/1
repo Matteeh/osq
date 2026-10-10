@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a7cca0c2265e3e048d38fcb97bf2d33b5efef27ce9545eb5df1135501334aeaa"
+build_stamp: "e9ac2036"
+project_commit: "a37c3c13"
+exit_code: 0
+scope_files: {"src/cli/slice-types.ts":"sha256:0e26a73c898100dd16ecbd59861b014d6804f455f70977baa0cd438973a0d44a","src/cli/slices.ts":"sha256:7d4222711023f2f619176f9ad7c41172af634a07c321514c75d044d2dffe6672","src/core/foundation/config-base.ts":null,"src/core/foundation/config-slices.ts":"sha256:0ea5be574df4e9121e8114828a03dd36e868324da386d2e0f34fab4bdfacc069","src/core/foundation/config.ts":"sha256:c6797197654b6b9b1a0a1d86e346336c2d6c8fe20ecdd976e260642406e52b6d","tests/cli-slice-registry.test.ts":"sha256:49e3fd4d02ed07a3a17a60648ce7d217e260f2f68d2ca0a8643d22206860c342","tests/config-slice-blocks.test.ts":"sha256:a0a71c301e3428e0a894a0eca2028fa85513611cf44a5708b7834613bb29fc62","tests/import-graph.test.ts":"sha256:6eedf6017179901654d52cf604ea6c2ef42811d20a53bff2b9e7651ebff141e0"}
+---
+2026-10-10T19:31:39.391Z

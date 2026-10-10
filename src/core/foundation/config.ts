@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { SLICES } from '../../cli/slices.js';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
 import { checkTraceabilityCapabilities } from './config-capabilities.js';
 import {
@@ -31,6 +32,7 @@ import {
 } from './config-planning.js';
 import { type QueueConfig, validateQueueConfig } from './config-queue.js';
 import { DEFAULT_SERVE_CONFIG, type ServeConfig, validateServeConfig } from './config-serve.js';
+import { composeDefaultConfig, resolveSliceConfig } from './config-slices.js';
 import {
   DEFAULT_TRACEABILITY_CONFIG,
   type TraceabilityConfig,
@@ -53,17 +55,14 @@ export type { ServeConfig } from './config-serve.js';
 export type { WatchConfig } from './config-watch.js';
 export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
-
 export type { OsqLimits } from './config-limits.js';
 export type { ValidatorConfig } from './config-validator.js';
-
 export interface OsqPaths {
   readonly features: string;
   readonly decisions: string;
   readonly templates: string;
   readonly openspecRoot: string;
 }
-
 export interface OsqTimeouts {
   readonly staleLockSeconds: number;
   readonly taskTimeoutSeconds: number;
@@ -112,7 +111,7 @@ export interface OsqConfig {
   readonly notices?: NoticesConfig;
 }
 
-export const DEFAULT_CONFIG: OsqConfig = {
+const base: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
   serve: DEFAULT_SERVE_CONFIG,
@@ -164,7 +163,7 @@ export const DEFAULT_CONFIG: OsqConfig = {
     harnessKillGracePeriodMs: 5000,
   },
 };
-
+export const DEFAULT_CONFIG: OsqConfig = composeDefaultConfig(base, SLICES);
 export function defineConfig(config: OsqUserConfig): OsqConfig {
   const { planner, queue: rawQueue, validator: rawValidator, ...restConfig } = config;
   let validatedPlanner: PlannerConfig | undefined;
@@ -211,6 +210,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     limits: { ...DEFAULT_CONFIG.limits, ...(config.limits || {}) },
     paths: { ...DEFAULT_CONFIG.paths, ...(config.paths || {}) },
     timeouts: { ...DEFAULT_CONFIG.timeouts, ...(config.timeouts || {}) },
+    ...resolveSliceConfig(config, SLICES),
   };
 }
 

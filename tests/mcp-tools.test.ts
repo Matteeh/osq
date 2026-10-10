@@ -106,7 +106,7 @@ describe('MCP planning tools', () => {
   });
 
   it('lists exactly the nine planning tools in order', () => {
-    const tools = createMcpTools({ kind: 'local', cwd: project });
+    const tools = createMcpTools({ kind: 'local', cwd: project }, []);
     assert.deepEqual(
       tools.map((tool) => tool.name),
       [
