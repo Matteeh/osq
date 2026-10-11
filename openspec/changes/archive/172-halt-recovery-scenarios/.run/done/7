@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f24787738fdc9bb743d510826069575a2f3ef118e3ff908246a853768adca6d9"
+build_stamp: "5a2a815e"
+project_commit: "b5791265"
+exit_code: 0
+scope_files: {"tests/recovery-approve-after-halt.test.ts":"sha256:ae69bcb060cc8fd2a379cd2a6d3b884d8f1db490f4eb2d949b2b88f13e250107"}
+---
+2026-10-11T08:38:09.117Z

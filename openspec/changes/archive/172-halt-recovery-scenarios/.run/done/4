@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b3f6d95b4ba9d15a995cad1cd012c46fbe2a0535f63244be82f9280ff8f739c1"
+build_stamp: "5a2a815e"
+project_commit: "f2c0746d"
+exit_code: 0
+scope_files: {"tests/recovery-sync-conflict.test.ts":"sha256:3f71fb48994adef0cbcec14af1ef40d1c5b50c9c134b411ba9f61781fec95864"}
+---
+2026-10-11T08:17:01.419Z

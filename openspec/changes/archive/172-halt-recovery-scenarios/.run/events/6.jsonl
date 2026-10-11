@@ -1,0 +1,49 @@
+{"type":"verify_ran","timestamp":"2026-10-11T08:24:55.709Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/recovery-land-red-verify.test.ts","exitCode":1,"duration":0.02,"log":".run/logs/6-1.log","output":"Could not find 'tests/recovery-land-red-verify.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/recovery-land-red-verify.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-11T08:24:56.557Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":2809,"repoLines":326541,"importFanIn":0,"proposalWords":641,"taskWords":188,"deltaRequirements":4,"deltaScenarios":9}}
+{"type":"started","timestamp":"2026-10-11T08:24:56.600Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"64864048","pid":3655,"timeoutSeconds":1800,"version":"0.3.0","commit":"5a2a815e"}}
+{"type":"tool","timestamp":"2026-10-11T08:25:03.744Z","data":{"tool":"shell","summary":"{\"command\":\"ls openspec/changes/172-halt-recovery-scenarios/"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:03.784Z","data":{"promptTokens":209564,"candidateTokens":99,"totalTokens":209663,"cachedTokens":0,"reasoningTokens":54,"cost":0.031526399999999996}}
+{"type":"tool","timestamp":"2026-10-11T08:25:06.186Z","data":{"tool":"read","summary":"tests/recovery-support.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:06.222Z","data":{"promptTokens":230,"candidateTokens":41,"totalTokens":271,"cachedTokens":209664,"reasoningTokens":25,"cost":0.000703092}}
+{"type":"tool","timestamp":"2026-10-11T08:25:09.010Z","data":{"tool":"read","summary":"tests/recovery-land-conflict.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:09.049Z","data":{"promptTokens":4581,"candidateTokens":44,"totalTokens":4625,"cachedTokens":209920,"reasoningTokens":54,"cost":0.00137571}}
+{"type":"tool","timestamp":"2026-10-11T08:25:15.444Z","data":{"tool":"read","summary":"openspec/changes/172-halt-recovery-scenarios/tasks/6.md"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:15.479Z","data":{"promptTokens":1151,"candidateTokens":53,"totalTokens":1204,"cachedTokens":214528,"reasoningTokens":1074,"cost":0.001492434}}
+{"type":"tool","timestamp":"2026-10-11T08:25:19.350Z","data":{"tool":"shell","summary":"{\"command\":\"cd openspec/changes/172-halt-recovery-scenarios;"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:19.388Z","data":{"promptTokens":596,"candidateTokens":75,"totalTokens":671,"cachedTokens":216704,"reasoningTokens":82,"cost":0.000833712}}
+{"type":"tool","timestamp":"2026-10-11T08:25:22.211Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:22.251Z","data":{"promptTokens":2613,"candidateTokens":47,"totalTokens":2660,"cachedTokens":217344,"reasoningTokens":39,"cost":0.0010955820000000001}}
+{"type":"tool","timestamp":"2026-10-11T08:25:25.687Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch-merge.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:25.735Z","data":{"promptTokens":1051,"candidateTokens":49,"totalTokens":1100,"cachedTokens":220032,"reasoningTokens":0,"cost":0.000847146}}
+{"type":"tool","timestamp":"2026-10-11T08:25:28.321Z","data":{"tool":"read","summary":"src/core/spec/approve-default-branch-restart.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:28.356Z","data":{"promptTokens":1694,"candidateTokens":49,"totalTokens":1743,"cachedTokens":221056,"reasoningTokens":47,"cost":0.0009748679999999999}}
+{"type":"tool","timestamp":"2026-10-11T08:25:31.233Z","data":{"tool":"grep","summary":"{\"pattern\":\"Merged |Continues from task|Restarted from\",\"inc"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:31.269Z","data":{"promptTokens":1688,"candidateTokens":82,"totalTokens":1770,"cachedTokens":222720,"reasoningTokens":29,"cost":0.00098796}}
+{"type":"tool","timestamp":"2026-10-11T08:25:52.998Z","data":{"tool":"write","summary":"tests/recovery-land-red-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:53.037Z","data":{"promptTokens":253,"candidateTokens":815,"totalTokens":1068,"cachedTokens":224512,"reasoningTokens":4083,"cost":0.0036502859999999995}}
+{"type":"tool","timestamp":"2026-10-11T08:25:57.723Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/172-halt-rec"}}
+{"type":"tokens","timestamp":"2026-10-11T08:25:57.766Z","data":{"promptTokens":184,"candidateTokens":111,"totalTokens":295,"cachedTokens":229504,"reasoningTokens":0,"cost":0.000782712}}
+{"type":"tool","timestamp":"2026-10-11T08:26:00.707Z","data":{"tool":"edit","summary":"tests/recovery-land-red-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:26:00.750Z","data":{"promptTokens":402,"candidateTokens":140,"totalTokens":542,"cachedTokens":229760,"reasoningTokens":15,"cost":0.0008425799999999999}}
+{"type":"tool","timestamp":"2026-10-11T08:26:03.224Z","data":{"tool":"edit","summary":"tests/recovery-land-red-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:26:03.268Z","data":{"promptTokens":198,"candidateTokens":140,"totalTokens":338,"cachedTokens":230144,"reasoningTokens":0,"cost":0.000804132}}
+{"type":"tool","timestamp":"2026-10-11T08:26:07.723Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/172-halt-rec"}}
+{"type":"tokens","timestamp":"2026-10-11T08:26:07.763Z","data":{"promptTokens":235,"candidateTokens":111,"totalTokens":346,"cachedTokens":230272,"reasoningTokens":0,"cost":0.000792666}}
+{"type":"tool","timestamp":"2026-10-11T08:27:45.376Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/172-halt-rec"}}
+{"type":"tokens","timestamp":"2026-10-11T08:27:45.421Z","data":{"promptTokens":202,"candidateTokens":89,"totalTokens":291,"cachedTokens":230528,"reasoningTokens":24,"cost":0.0007896840000000001}}
+{"type":"tool","timestamp":"2026-10-11T08:27:47.802Z","data":{"tool":"edit","summary":"tests/recovery-land-red-verify.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-11T08:27:47.846Z","data":{"promptTokens":399,"candidateTokens":165,"totalTokens":564,"cachedTokens":230784,"reasoningTokens":8,"cost":0.0008560019999999999}}
+{"type":"tool","timestamp":"2026-10-11T08:29:25.234Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/172-halt-rec"}}
+{"type":"tokens","timestamp":"2026-10-11T08:29:25.286Z","data":{"promptTokens":213,"candidateTokens":89,"totalTokens":302,"cachedTokens":231168,"reasoningTokens":0,"cost":0.000778854}}
+{"type":"tool","timestamp":"2026-10-11T08:29:29.782Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/172-halt-rec"}}
+{"type":"tokens","timestamp":"2026-10-11T08:29:29.817Z","data":{"promptTokens":267,"candidateTokens":111,"totalTokens":378,"cachedTokens":231424,"reasoningTokens":21,"cost":0.000813522}}
+{"type":"tool","timestamp":"2026-10-11T08:29:33.545Z","data":{"tool":"write","summary":"openspec/changes/172-halt-recovery-scenarios/.run/results/6.md"}}
+{"type":"tokens","timestamp":"2026-10-11T08:29:33.590Z","data":{"promptTokens":255,"candidateTokens":428,"totalTokens":683,"cachedTokens":231680,"reasoningTokens":35,"cost":0.0010110899999999999}}
+{"type":"text","timestamp":"2026-10-11T08:29:36.159Z","data":{"text":"Done.\n\n- Added `tests/recovery-land-red-verify.test.ts`, proving version-control \"Red verify at land steered\" with the shared `createRecoveryProject` fixture and a `ScriptedAdapter`.\n- Both the task verify and the proposal's `pnpm verify` pass.\n- Wrote `openspec/changes/172-halt-recovery-scenarios/.run/results/6.md`."}}
+{"type":"tokens","timestamp":"2026-10-11T08:29:36.695Z","data":{"promptTokens":244,"candidateTokens":96,"totalTokens":340,"cachedTokens":421706,"reasoningTokens":0,"cost":0.02447877599999998}}
+{"type":"exited","timestamp":"2026-10-11T08:29:36.696Z","data":{"exitCode":0,"pid":3655,"timedOut":false,"elapsedSeconds":279.7}}
+{"type":"format_ran","timestamp":"2026-10-11T08:29:37.176Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'tests/recovery-land-red-verify.test.ts'","files":["tests/recovery-land-red-verify.test.ts"],"exitCode":0,"duration":0.25,"timedOut":false,"output":"Checked 1 file in 1772µs. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-11T08:29:39.056Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/recovery-land-red-verify.test.ts","exitCode":0,"duration":1.49,"log":".run/logs/6-2.log","output":"▶ Red verify at land steered\n  ✔ merges main, runs only the new task, and lands the change (1189.147743ms)\n✔ Red verify at land steered (1190.088854ms)\nℹ tests 1\nℹ suites 1\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1462.748993\n"}}
+{"type":"measures","timestamp":"2026-10-11T08:31:14.552Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":0,"scopeLines":0,"repoFiles":2809,"repoLines":326541,"importFanIn":0,"proposalWords":641,"taskWords":188,"deltaRequirements":4,"deltaScenarios":9,"changedFiles":1,"changedLines":71,"scopeHashes":{"tests/recovery-land-red-verify.test.ts":{"before":null,"after":"sha256:40c82960b7c2347b20bcf8498d07db9757e1191a0138da3598d3c3fc6b1d4c6a"}}}}
+{"type":"done","timestamp":"2026-10-11T08:31:14.556Z","data":{"task":"6"}}
+{"type":"verify_ran","timestamp":"2026-10-11T08:38:17.685Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/recovery-land-red-verify.test.ts","exitCode":0,"duration":1.48,"log":".run/logs/6-3.log","output":"▶ Red verify at land steered\n  ✔ merges main, runs only the new task, and lands the change (1183.526636ms)\n✔ Red verify at land steered (1184.505166ms)\nℹ tests 1\nℹ suites 1\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1451.492855\n"}}

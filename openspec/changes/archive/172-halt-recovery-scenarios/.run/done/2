@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:08b320f0ca049b8e85cea1db0bdba26e8789607a75aef1c26c77dbdfdc4fe153"
+build_stamp: "5a2a815e"
+project_commit: "4ac3c9d4"
+exit_code: 0
+scope_files: {"tests/recovery-stuck-steer.test.ts":"sha256:c9584dc50f7e812f995175bbcc7a62ba4b7852f3c8665207d6ff714edf8c2baf"}
+---
+2026-10-11T07:36:35.523Z

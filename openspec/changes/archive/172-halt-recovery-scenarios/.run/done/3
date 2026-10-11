@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2d1a28bc5eb011619ec28a70d104cbe5d7bd245bb9efc74697388887e0e1af0b"
+build_stamp: "5a2a815e"
+project_commit: "4b6203d6"
+exit_code: 0
+scope_files: {"src/core/lifecycle/retry.ts":"sha256:edbe132e278887fd50c46f3b7b09362a50696afed5695414393bf104c0c98763","tests/recovery-killed-watcher-child.ts":"sha256:fc36d69fcdb6288dd53e7bd302cc15240522b851f9702bffd7b02f3a30c197ef","tests/recovery-killed-watcher.test.ts":"sha256:81c147ef4e9e6a83e491e48f70268552ad4c84cf403eada76e1b6cf7d0ddc7fd"}
+---
+2026-10-11T08:12:20.002Z

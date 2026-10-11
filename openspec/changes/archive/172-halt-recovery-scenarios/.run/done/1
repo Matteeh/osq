@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e437f61c4d58a4852f6894d69c44ee2bda13d6a34c5774ec02f71b94e1bf4825"
+build_stamp: "5a2a815e"
+project_commit: "9ace3493"
+exit_code: 0
+scope_files: {"tests/recovery-dead-retry.test.ts":"sha256:9c153f77dd3e5f0673b73e3da1630b6cf47ba6791892f0e9f03fd153ea1274a1","tests/recovery-support.ts":"sha256:cb13ab64ca47731e2e1210e4bf771b513a489aa071e6de4ddd6ef5cd6b80143a"}
+---
+2026-10-11T07:31:24.917Z

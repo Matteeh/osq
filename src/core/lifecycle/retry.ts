@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { isPidRunning } from '../run/lock.js';
 import {
   type ScopePathAttribution,
   computeTaskScopeHash,
@@ -51,6 +52,20 @@ async function listDir(dir: string): Promise<string[]> {
   return fs.readdir(dir).catch(() => []);
 }
 
+async function refuseRunningTask(runDir: string, specId: string, task: string): Promise<void> {
+  const raw = await fs.readFile(`${runDir}/running/${task}.pid`, 'utf8').catch(() => '');
+  const pid = await Promise.resolve(raw)
+    .then((text) => (JSON.parse(text) as { pid?: unknown }).pid)
+    .catch(() => null);
+  if (typeof pid === 'number' && !isPidRunning(pid)) {
+    throw new Error(
+      `Task ${task} was left running by a stopped watcher (pid ${pid}); run ` +
+        `osq watch to reap it, then osq retry ${specId} ${task} if it stays dead.`,
+    );
+  }
+  throw new Error(`Task ${task} is running; retry is refused.`);
+}
+
 function retainedOrdinal(entries: readonly string[], target: string): number {
   const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp(`^${escaped}\\.(\\d+)\\.md$`);
@@ -70,8 +85,13 @@ function markerReason(content: string, fallback: string): string {
   return reason || fallback;
 }
 
-// Validate approval, running state, and active failure before verification or
-// mutation, then either recertify a scope regression or preserve the failure.
+/**
+ * Validate approval, running state, and active failure before any mutation,
+ * then recertify a scope regression or preserve the failure.
+ * @scenario watcher-and-harness: Lock of a stopped watcher
+ * @scenario watcher-and-harness: Killed watcher's task resumed
+ * @adr 003
+ */
 export async function retrySpec(
   projectRoot: string,
   specIdOrPrefix: string,
@@ -113,7 +133,7 @@ export async function retrySpec(
       throw new Error(`Change ${specId} has a running task; retry is refused.`);
     }
   } else if (await pathExists(path.join(runningDir, `${rawTarget}.pid`))) {
-    throw new Error(`Task ${rawTarget} is running; retry is refused.`);
+    await refuseRunningTask(runDir, specId, rawTarget);
   }
 
   const deadDir = path.join(runDir, 'dead');
