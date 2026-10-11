@@ -2,17 +2,16 @@ import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { DEFAULT_SERVE_CONFIG } from '../foundation/config-serve.js';
 import type { OsqConfig } from '../foundation/config.js';
-import { type MetricsReport, getMetricsReport } from '../report/report.js';
+import type { MetricsReport } from '../report/report.js';
 import { changeTrees } from '../status/change-locations.js';
-import { type ReadInboxOptions, readInbox } from '../status/inbox-projection.js';
+import type { ReadInboxOptions } from '../status/inbox-projection.js';
 import type { Inbox } from '../status/inbox.js';
 import type { SystemGraph } from './system-graph-types.js';
-import { getSystemGraph } from './system-graph.js';
 import { type WebActionRunner, type WebActions, getWebActions } from './web-actions.js';
 import { getWebChange } from './web-data-change.js';
-import { getWebGraph } from './web-data-graph.js';
 import type { WebChange, WebGraph } from './web-data-types.js';
 import { WebDataError } from './web-data-types.js';
+import { type WebDocsBuilder, createWebDocumentLoaders } from './web-documents.js';
 import {
   type ScheduleFn,
   type WatcherFactory,
@@ -63,6 +62,7 @@ export interface WebServerOptions {
   readonly getSystem?: (projectRoot: string, config: OsqConfig) => Promise<SystemGraph>;
   readonly getChange?: ChangeDocumentFn;
   readonly getInbox?: (projectRoot: string, options: ReadInboxOptions) => Promise<Inbox>;
+  readonly getDocs?: WebDocsBuilder;
   readonly getActions?: ActionDocumentFn;
   readonly runAction?: WebActionRunner;
   readonly runCommand?: ForwardedCommandRunner;
@@ -78,19 +78,20 @@ export interface WebServerHandle {
   close(): Promise<void>;
 }
 
-/** Start one loopback-only HTTP server over the current project tree. */
+/**
+ * Start one loopback-only HTTP server over the current project tree.
+ *
+ * @scenario web-inspection: Docs over HTTP
+ * @adr 013
+ */
 export async function startWebServer(options: WebServerOptions): Promise<WebServerHandle> {
   const projectRoot = options.projectRoot;
   const config = options.config;
   const uiDir = options.uiDir ?? resolveUiDir();
   const home = options.home;
   const clock = options.now ?? (() => new Date());
-  const getReport = options.getReport ?? getMetricsReport;
-  const getGraph = options.getGraph ?? getWebGraph;
-  const getSystem = options.getSystem ?? getSystemGraph;
   const getChange = options.getChange ?? getWebChange;
-  const getInbox =
-    options.getInbox ?? ((root: string, inbox: ReadInboxOptions) => readInbox(root, inbox));
+  const documents = createWebDocumentLoaders(options);
   const runAction = options.runAction;
   const site = options.site;
   let boundPort = 0;
@@ -151,12 +152,6 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
       if (runAction !== undefined && pathname.startsWith(ACTIONS_PREFIX)) {
         return await actions.handleGet(req, res, pathname, head);
       }
-      const documents: Record<string, () => Promise<unknown>> = {
-        '/api/report': () => getReport(projectRoot, config),
-        '/api/graph': () => getGraph(projectRoot, config),
-        '/api/system': () => getSystem(projectRoot, config),
-        '/api/inbox': () => getInbox(projectRoot, { config, now: clock(), home }),
-      };
       const document = documents[pathname];
       if (document) return sendJson(res, 200, await document(), head);
       if (pathname.startsWith(CHANGE_PREFIX)) return await handleChange(res, pathname, head);

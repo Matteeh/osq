@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7de3d12343e353907794b16be7f14366fef4eab7770dbeaaf5dc82f757e21cb9"
+build_stamp: "b8939892"
+project_commit: "b138e051"
+exit_code: 0
+scope_files: {"packages/ui/src/contracts.ts":"sha256:038a7dfe592d12718d2c83836173974df0f0587191b89ef89eb1b89857ee5844","packages/ui/src/data.ts":"sha256:e48c47e3af0c40951f68107f6e941be57608a50e93bca07ef9fae2797f9ea484","packages/ui/src/router.ts":"sha256:d40b3efc560eb973541f1d08f64aa884c37f845b541bf232bdbbcc12c5721257","src/core/web/web-documents.ts":"sha256:070037276c36a120dcc829753a2b45a27f11727fd84e8c76eb451fadb01a3019","src/core/web/web-server.ts":"sha256:e3606dd428d52bf305b8d18d4d0d74cab181c3da3f4be6cf6868dfda1b14d58c","tests/ui-docs-data.test.tsx":"sha256:5ff3fdbd936872f4941b39f08e4b2dcf5a2c8d1e1f0c731dfe5b7d3f9814ce7e"}
+---
+2026-10-11T15:59:21.920Z

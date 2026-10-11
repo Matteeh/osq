@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:da7fd5c531764f5a4a4d931ff07af0d25b456b34e646e5a38b22df758ad4f22e"
+build_stamp: "b8939892"
+project_commit: "2dfbc5c2"
+exit_code: 0
+scope_files: {"src/docs/capability-page.ts":"sha256:ca80c12a43dec803f1b6d62312d3db0ba19adf110694a52d7d298a8f058400f1","src/docs/code-map.ts":"sha256:edc21a4ddbafc81240f35f97fcee6c7a90b7cf74ae4bc8ae24fd86dd6e1478f3","src/docs/docs-config.ts":"sha256:329ec93031b1d9ed73c2f4643809eb967105bbae0d3b34675e9a4ac9ebd8c6ed","src/docs/docs-types.ts":"sha256:b091aa96e074f296af341f7a3bea45a6dc3ac4b42b519282bd3d24de77567c62","src/docs/recent-changes.ts":"sha256:53ba4c73b9d1c3e6f16ebac77bfa7e6fb2df1cc7ce0e99a0df622023bb121915","tests/docs-capability-page.test.ts":"sha256:ee89602f4af6fd9b3726266d034ec9b53fbd4a3038e4097bc47bd4a69f5c178b","tests/docs-support.ts":"sha256:6144de2407d5061971646f3bfe47520cdd1a3d8862cec87e270ba6b2deadb131"}
+---
+2026-10-11T15:24:19.986Z

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:74e1acdd4d2b62f1518fed64fbfab561caff1a3bbe2387d5ea1abb33f19f0c6a"
+build_stamp: "b8939892"
+project_commit: "ca514e9b"
+exit_code: 0
+scope_files: {"packages/ui/src/app.tsx":"sha256:4dd41c6e54722f9039ac20de61d4640500c5b07433301985a55948e20d3630fa","packages/ui/src/docs/DocsAdr.tsx":"sha256:ac1ce70cf81d58b99fd3fe62e77dca550df160311178c1efdd51222c5df568b5","packages/ui/src/docs/DocsCapability.tsx":"sha256:01a71023aae1289810f2750255597dc08d1a61cef71d60cca69c8ae16e777111","packages/ui/src/docs/DocsIndex.tsx":"sha256:3b953c13514441b659d250bebcaea255eec8b1dad9c4d4cafd7c81a7d4c27032","packages/ui/src/docs/DocsLink.tsx":"sha256:f2dae4cec831fccfd88cdbad1dd539f660b9be6307e9daad804e39bd07c44fa8","packages/ui/src/docs/DocsView.tsx":"sha256:e9b92a390882635e11add72d2f527ce4d58d544320e25197bda10fac0f327a91","packages/ui/src/docs/docs.css":"sha256:87e5030e020cb648e6e81b9a79d01bd679413591b893ab82522707386f57ce6d","packages/ui/src/docs/index.ts":"sha256:50ef6a43762fd83eef2bcde933d185bf09395bd0c9496efbe16c4e6ab80a63f3","packages/ui/src/main.tsx":"sha256:0b03f3ec4e9419a45b29bbec2005d1436eef02944cd046c27bbce8a1259c5c20","tests/ui-docs.test.tsx":"sha256:2f408ba18b0b55faaebf0e4debeadb71ea7f78445604dc08eface03e6199217d"}
+---
+2026-10-11T16:06:31.027Z

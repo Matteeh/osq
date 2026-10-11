@@ -1,0 +1,62 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:80f9ea7e80917875cd30b3c7df3b86c1c024e310d0c2fb7362fe5994eed134f5",
+    "PLANNER.md": "sha256:c339fc29e8f30f4230a10f47eaa50fae04cf28426f7d86c37cc0e398b9dd87d9",
+    "config": "sha256:50fb71b4cda64a29ddf9eddff38d4d2ad72f7e25530fa1f324db472912b3aeef",
+    "cli-foundation": "sha256:87fa44c3602db010a5255d1fd42bbf85b346aa3b11bbe74a7c34b7bb098a319e",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "metrics-and-reporting": "sha256:5ee41ea4dd61d3dc8e625960e015a2eb2baaa1cd4d48adf54150baaf42517f6c",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:7e5bc69b9456fd32f57076220a4b32092d2e5c45d481c99e8520e258e032e4d2",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "status-inspection": "sha256:4a448a4876ca253646757a5e76491e775eb52edcc5b7c5f237bcdba80b55e05d",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "traceability": "sha256:c0c43a2a452e358c020598b2bdec00dcdf3c2de49486d7cf7638aac8104f5757",
+    "traceability/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "docs": null,
+    "docs/osq.yml": null,
+    "web-inspection": "sha256:7f1c6964aba94bd106b14eb8a597f307267bd6dcdf720253aa455594031ecc46",
+    "web-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "opencode",
+  "model": "opencode-go/deepseek-v4-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-10-11T14:59:16.288Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-11T15:11:06.606Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "new_capability",
+        "severity": "grey",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "013": "sha256:cb223b6fb0c098abbb7296954c4bd583de652381edc9579fd8f2a1b68765cae6",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc"
+  }
+}

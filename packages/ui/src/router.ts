@@ -1,26 +1,45 @@
-/** The five views the dashboard can show. */
+/** The seven views the dashboard can show. */
 export type Route =
   | { readonly name: 'home' }
   | { readonly name: 'changes' }
   | { readonly name: 'report' }
   | { readonly name: 'graph' }
+  | { readonly name: 'docs' }
+  | { readonly name: 'docs-capability'; readonly capability: string }
+  | { readonly name: 'docs-adr'; readonly number: string }
   | { readonly name: 'change'; readonly folderKey: string };
 
 export const HOME_ROUTE: Route = { name: 'home' };
 export const CHANGES_ROUTE: Route = { name: 'changes' };
 export const REPORT_ROUTE: Route = { name: 'report' };
 export const GRAPH_ROUTE: Route = { name: 'graph' };
+export const DOCS_ROUTE: Route = { name: 'docs' };
 
 const CHANGES_PATH = '/changes';
 const CHANGE_PREFIX = '/changes/';
+const DOCS_PATH = '/docs';
+const DOCS_CAPABILITY_PREFIX = '/docs/capabilities/';
+const DOCS_ADR_PREFIX = '/docs/adrs/';
 const HASH_PREFIX = '#';
 
-/** Render a route as its canonical location hash. */
+/**
+ * Render a route as its canonical location hash.
+ *
+ * @scenario web-inspection: Docs routes
+ * @adr 013
+ */
 export function routeToHash(route: Route): string {
   if (route.name === 'home') return `${HASH_PREFIX}/`;
   if (route.name === 'changes') return `${HASH_PREFIX}${CHANGES_PATH}`;
   if (route.name === 'report') return `${HASH_PREFIX}/report`;
   if (route.name === 'graph') return `${HASH_PREFIX}/graph`;
+  if (route.name === 'docs') return `${HASH_PREFIX}${DOCS_PATH}`;
+  if (route.name === 'docs-capability') {
+    return `${HASH_PREFIX}${DOCS_CAPABILITY_PREFIX}${encodeURIComponent(route.capability)}`;
+  }
+  if (route.name === 'docs-adr') {
+    return `${HASH_PREFIX}${DOCS_ADR_PREFIX}${encodeURIComponent(route.number)}`;
+  }
   return `${HASH_PREFIX}${CHANGE_PREFIX}${encodeURIComponent(route.folderKey)}`;
 }
 
@@ -38,7 +57,14 @@ export function decodeFolderKey(encoded: string): string | null {
   return decoded;
 }
 
-/** Parse a location hash into a route, or `null` when it is not usable. */
+/**
+ * Parse a location hash into a route, or `null` when it is not usable. A docs
+ * capability name or ADR number decodes like a change folder key, so an
+ * unusable one falls back to the home route.
+ *
+ * @scenario web-inspection: Docs routes
+ * @adr 013
+ */
 export function parseHash(hash: string): Route | null {
   const raw = hash.startsWith(HASH_PREFIX) ? hash.slice(HASH_PREFIX.length) : hash;
   if (raw === '' || raw === '/') return HOME_ROUTE;
@@ -46,6 +72,15 @@ export function parseHash(hash: string): Route | null {
   if (raw === CHANGES_PATH) return CHANGES_ROUTE;
   if (raw === '/report') return REPORT_ROUTE;
   if (raw === '/graph') return GRAPH_ROUTE;
+  if (raw === DOCS_PATH) return DOCS_ROUTE;
+  if (raw.startsWith(DOCS_CAPABILITY_PREFIX)) {
+    const capability = decodeFolderKey(raw.slice(DOCS_CAPABILITY_PREFIX.length));
+    return capability === null ? null : { name: 'docs-capability', capability };
+  }
+  if (raw.startsWith(DOCS_ADR_PREFIX)) {
+    const number = decodeFolderKey(raw.slice(DOCS_ADR_PREFIX.length));
+    return number === null ? null : { name: 'docs-adr', number };
+  }
   if (!raw.startsWith(CHANGE_PREFIX)) return null;
   const folderKey = decodeFolderKey(raw.slice(CHANGE_PREFIX.length));
   return folderKey === null ? null : { name: 'change', folderKey };

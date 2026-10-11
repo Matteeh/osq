@@ -1,3 +1,4 @@
+import type { DocsSite } from './contracts.js';
 import type { Inbox, MetricsReport, OsqInlineData, WebChange, WebGraph } from './contracts.js';
 import type { Route } from './router.js';
 
@@ -30,6 +31,7 @@ export interface DashboardSnapshot {
   readonly graph: WebGraph | null;
   readonly inbox: Inbox | null;
   readonly change: WebChange | null;
+  readonly docs?: DocsSite | null;
 }
 
 export interface DashboardDataOptions {
@@ -63,6 +65,7 @@ export interface DashboardData {
 
 const EMPTY_SNAPSHOT: DashboardSnapshot = { report: null, graph: null, inbox: null, change: null };
 const EVENTS_PATH = '/api/events';
+const DOCS_ROUTE_NAMES = new Set(['docs', 'docs-capability', 'docs-adr']);
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -85,6 +88,13 @@ const isInbox = (value: unknown): value is Inbox =>
 
 const isChange = (value: unknown): value is WebChange =>
   isObject(value) && typeof value.folderKey === 'string' && Array.isArray(value.tasks);
+
+const isDocs = (value: unknown): value is DocsSite =>
+  isObject(value) &&
+  'version' in value &&
+  Array.isArray(value.groups) &&
+  Array.isArray(value.capabilities) &&
+  Array.isArray(value.adrs);
 
 /** Parse a `changed` payload into sorted unique ids, or `null` when malformed. */
 export function parseChangedIds(data: string): number[] | null {
@@ -116,9 +126,12 @@ function resolveEventSource(options: DashboardDataOptions): EventSourceConstruct
 }
 
 /**
- * Create the one data module that owns every report, graph, inbox, change, and
- * event access. Inlined documents win per document; anything else is fetched
- * same-origin and refreshed through one event source.
+ * Create the one data module that owns every report, graph, inbox, change,
+ * docs, and event access. Inlined documents win per document; anything else is
+ * fetched same-origin and refreshed through one event source.
+ *
+ * @scenario web-inspection: Docs routes
+ * @adr 013
  */
 export function createDashboardData(options: DashboardDataOptions = {}): DashboardData {
   const inline = resolveInline(options);
@@ -173,12 +186,16 @@ export function createDashboardData(options: DashboardDataOptions = {}): Dashboa
     return fetchDocument(`${base}/api/changes/${encodeURIComponent(folderKey)}`, isChange);
   }
 
+  function getDocs(): Promise<DocsSite> {
+    return fetchDocument(`${base}/api/docs`, isDocs);
+  }
   function loadRoute(next: Route): Promise<Partial<DashboardSnapshot>> {
     if (next.name === 'home') return getInbox().then((inbox) => ({ inbox }));
     if (next.name === 'changes') return getGraph().then((graph) => ({ graph }));
     if (next.name === 'report') return loadReport();
     if (next.name === 'graph') return getGraph().then((graph) => ({ graph }));
-    return getChange(next.folderKey).then((change) => ({ change }));
+    if (next.name === 'change') return getChange(next.folderKey).then((change) => ({ change }));
+    return getDocs().then((docs) => ({ docs }));
   }
 
   async function loadReport(): Promise<Partial<DashboardSnapshot>> {
@@ -191,8 +208,10 @@ export function createDashboardData(options: DashboardDataOptions = {}): Dashboa
     const affected =
       openChange !== null &&
       (ids.length === 0 || (openChange.id !== null && ids.includes(openChange.id)));
+    const docsOpen = DOCS_ROUTE_NAMES.has(route?.name ?? '');
     const [report, graph, inbox] = await Promise.all([getReport(), getGraph(), getInbox()]);
-    const partial: Partial<DashboardSnapshot> = { report, graph, inbox };
+    const docsExtra = docsOpen ? { docs: await getDocs() } : {};
+    const partial = { report, graph, inbox, ...docsExtra };
     if (!affected || openChange === null) return partial;
     return { ...partial, change: await getChange(openChange.folderKey) };
   }

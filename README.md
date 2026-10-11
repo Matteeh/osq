@@ -675,6 +675,7 @@ osq query [select]       run one read-only SELECT over the history tables (--jso
 osq label <id> <true|false>  label a validator finding, mutation survivor or link finding true or false
 osq digest [ids...]      deterministic Markdown or JSON digest of archived changes (--since, --until, --json, --out, --no-cost)
 osq spec [capability] [requirement]  list living capabilities, list a capability's requirements, or print one requirement
+osq docs [--out <dir>]   write one Markdown page per capability and per ADR plus an index
 osq graph                print the system graph summary (node, edge, and gap counts)
 osq graph --json         print the system graph as JSON
 osq serve [--port <n>]   local delivery dashboard on 127.0.0.1 that can approve, land, reject and retry (--open to launch it)

@@ -4,6 +4,7 @@ import { ChangeView } from './change/index.js';
 import { ChangesView } from './changes/index.js';
 import type { WebServerStatus } from './contracts.js';
 import type { DashboardSnapshot } from './data.js';
+import { DocsView } from './docs/index.js';
 import { GraphView } from './graph/index.js';
 import { HomeView } from './home/index.js';
 import { ReportView } from './report/index.js';
@@ -30,8 +31,17 @@ interface NavLinkProps {
   readonly children: ReactNode;
 }
 
+function navActive(route: Route, current: Route): boolean {
+  if (route.name === 'docs') {
+    return (
+      current.name === 'docs' || current.name === 'docs-capability' || current.name === 'docs-adr'
+    );
+  }
+  return route.name === current.name;
+}
+
 function NavLink({ route, current, onNavigate, children }: NavLinkProps): ReactElement {
-  const active = route.name === current.name;
+  const active = navActive(route, current);
   return (
     <a
       className={active ? 'nav-link nav-link-active' : 'nav-link'}
@@ -101,6 +111,21 @@ function GraphRoute({
   return <GraphView graph={documents.graph} onNavigate={onNavigate} />;
 }
 
+function DocsRoute({
+  documents,
+  route,
+  onNavigate,
+}: {
+  readonly documents: DashboardSnapshot;
+  readonly route: Route;
+  readonly onNavigate: (route: Route) => void;
+}): ReactElement {
+  if (documents.docs === null || documents.docs === undefined) {
+    return <EmptyState>No docs are available yet.</EmptyState>;
+  }
+  return <DocsView site={documents.docs} route={route} onNavigate={onNavigate} />;
+}
+
 function ChangeRoute({
   documents,
   error,
@@ -138,6 +163,8 @@ export function App({
   actionClient,
   server,
 }: AppProps): ReactElement {
+  const docsOpen =
+    route.name === 'docs' || route.name === 'docs-capability' || route.name === 'docs-adr';
   return (
     <div className="app">
       <header className="app-header">
@@ -155,6 +182,9 @@ export function App({
           </NavLink>
           <NavLink route={{ name: 'graph' }} current={route} onNavigate={onNavigate}>
             Graph
+          </NavLink>
+          <NavLink route={{ name: 'docs' }} current={route} onNavigate={onNavigate}>
+            Docs
           </NavLink>
         </nav>
         <button type="button" className="refresh" onClick={onRefresh}>
@@ -180,6 +210,9 @@ export function App({
         {route.name === 'report' ? <ReportRoute documents={documents} /> : null}
         {route.name === 'graph' ? (
           <GraphRoute documents={documents} onNavigate={onNavigate} />
+        ) : null}
+        {docsOpen ? (
+          <DocsRoute documents={documents} route={route} onNavigate={onNavigate} />
         ) : null}
         {route.name === 'change' ? (
           <ChangeRoute

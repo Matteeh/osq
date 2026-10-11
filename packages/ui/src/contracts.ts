@@ -23,11 +23,13 @@ import type {
   WebReview,
 } from '../../../src/core/web/web-data.js';
 import type { WebServerStatus } from '../../../src/core/web/web-site.js';
+import type { DocsSite } from '../../../src/docs/docs-types.js';
 
 export type {
   ApprovalFlag,
   ApprovalNotice,
   ApprovalNotices,
+  DocsSite,
   Inbox,
   LandDisclosure,
   LandGate,
