@@ -52,7 +52,9 @@ function taskTrigger(snapshot: ChangeFolderSnapshot, taskNumber: string): Steeri
   if (dead === undefined) return null;
   const { data } = parseFrontmatter(dead);
   const reason = typeof data.reason === 'string' ? data.reason : '';
-  if (reason === 'blocked') return { target: taskNumber, trigger: 'blocked', reason };
+  if (reason === 'blocked' || reason === 'entry_missing') {
+    return { target: taskNumber, trigger: 'blocked', reason };
+  }
   if (data.stuck === true) return { target: taskNumber, trigger: 'stuck', reason };
   return null;
 }

@@ -1,0 +1,1046 @@
+diff --git a/openspec/changes/173-prompt-files-exist/.run/dead/3.1.md b/openspec/changes/173-prompt-files-exist/.run/dead/3.1.md
+new file mode 100644
+index 00000000..5e4aa696
+--- /dev/null
++++ b/openspec/changes/173-prompt-files-exist/.run/dead/3.1.md
+@@ -0,0 +1,93 @@
++---
++reason: change_verify_red
++command: "pnpm verify"
++exit_code: 1
++fingerprint: sha256:026b95c31473be61917f1f0c015d1c67368e121b47403ce07abf66a0019ddb6a
++---
++Change-level verification failed after task verification passed.
++✖ failing tests:
++
++test at tests/entry-missing-run.test.ts:1:1344
++✖ ends the task as entry_missing before the executor starts (474.513972ms)
++  AssertionError [ERR_ASSERTION]: approve exited 1
++  stdout:
++  
++  stderr:
++  Error approving 001:
++    Lint failed for spec "001-order-flow":
++    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
++  Next: ready for approval — osq approve 001
++  
++  
++  1 !== 0
++  
++      at assertOk (tests/recovery-support.ts:115:10)
++      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:56:5)
++      at async Test.run (node:internal/test_runner/test:1409:7)
++      at async Promise.all (index 0)
++      at async Suite.run (node:internal/test_runner/test:1905:7)
++      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
++    generatedMessage: false,
++    code: 'ERR_ASSERTION',
++    actual: 1,
++    expected: 0,
++    operator: 'strictEqual',
++    diff: 'simple'
++  }
++
++test at tests/entry-missing-run.test.ts:1:2305
++✖ spawns once the entry is revised and the change is approved again (407.930904ms)
++  AssertionError [ERR_ASSERTION]: approve exited 1
++  stdout:
++  
++  stderr:
++  Error approving 001:
++    Lint failed for spec "001-order-flow":
++    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
++  Next: ready for approval — osq approve 001
++  
++  
++  1 !== 0
++  
++      at assertOk (tests/recovery-support.ts:115:10)
++      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:90:5)
++      at async Test.run (node:internal/test_runner/test:1409:7)
++      at async Promise.all (index 0)
++      at async Suite.run (node:internal/test_runner/test:1905:7)
++      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
++    generatedMessage: false,
++    code: 'ERR_ASSERTION',
++    actual: 1,
++    expected: 0,
++    operator: 'strictEqual',
++    diff: 'simple'
++  }
++
++test at tests/entry-missing-run.test.ts:1:3470
++✖ src/*.rs in the tree the task runs in: entry_missing (392.213309ms)
++  AssertionError [ERR_ASSERTION]: approve exited 1
++  stdout:
++  
++  stderr:
++  Error approving 001:
++    Lint failed for spec "001-order-flow":
++    - Task 1 entry names src/*.rs, which is not in main and no task up to this one creates
++  Next: ready for approval — osq approve 001
++  
++  
++  1 !== 0
++  
++      at assertOk (tests/recovery-support.ts:115:10)
++      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:140:7)
++      at async Test.run (node:internal/test_runner/test:1409:7)
++      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
++    generatedMessage: false,
++    code: 'ERR_ASSERTION',
++    actual: 1,
++    expected: 0,
++    operator: 'strictEqual',
++    diff: 'simple'
++  }
++ ELIFECYCLE  Test failed. See above for more details.
++ ELIFECYCLE  Command failed with exit code 1.
++Full output: .run/logs/change-3.log
+diff --git a/openspec/changes/173-prompt-files-exist/.run/dead/3.md b/openspec/changes/173-prompt-files-exist/.run/dead/3.md
+index 5e4aa696..678d9384 100644
+--- a/openspec/changes/173-prompt-files-exist/.run/dead/3.md
++++ b/openspec/changes/173-prompt-files-exist/.run/dead/3.md
+@@ -1,93 +1,30 @@
+ ---
+-reason: change_verify_red
+-command: "pnpm verify"
+-exit_code: 1
+-fingerprint: sha256:026b95c31473be61917f1f0c015d1c67368e121b47403ce07abf66a0019ddb6a
++reason: blocked
++fingerprint: sha256:682e5092d93455d8b42b37117423aa90c7b0b949ad2412c4193b204810a225cb
+ ---
+-Change-level verification failed after task verification passed.
+-✖ failing tests:
++The plan must be revised before task 3 can pass its change-level verify.
++Task 1's runtime scenarios and task 3's lint error are mutually exclusive as
++the change is written today: to prove the watcher's `entry_missing` path the
++tests must get a change approved with a missing `entry`, but approval lints and
++now rejects it.
+ 
+-test at tests/entry-missing-run.test.ts:1:1344
+-✖ ends the task as entry_missing before the executor starts (474.513972ms)
+-  AssertionError [ERR_ASSERTION]: approve exited 1
+-  stdout:
+-  
+-  stderr:
+-  Error approving 001:
+-    Lint failed for spec "001-order-flow":
+-    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
+-  Next: ready for approval — osq approve 001
+-  
+-  
+-  1 !== 0
+-  
+-      at assertOk (tests/recovery-support.ts:115:10)
+-      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:56:5)
+-      at async Test.run (node:internal/test_runner/test:1409:7)
+-      at async Promise.all (index 0)
+-      at async Suite.run (node:internal/test_runner/test:1905:7)
+-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+-    generatedMessage: false,
+-    code: 'ERR_ASSERTION',
+-    actual: 1,
+-    expected: 0,
+-    operator: 'strictEqual',
+-    diff: 'simple'
+-  }
++What I need:
+ 
+-test at tests/entry-missing-run.test.ts:1:2305
+-✖ spawns once the entry is revised and the change is approved again (407.930904ms)
+-  AssertionError [ERR_ASSERTION]: approve exited 1
+-  stdout:
+-  
+-  stderr:
+-  Error approving 001:
+-    Lint failed for spec "001-order-flow":
+-    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
+-  Next: ready for approval — osq approve 001
+-  
+-  
+-  1 !== 0
+-  
+-      at assertOk (tests/recovery-support.ts:115:10)
+-      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:90:5)
+-      at async Test.run (node:internal/test_runner/test:1409:7)
+-      at async Promise.all (index 0)
+-      at async Suite.run (node:internal/test_runner/test:1905:7)
+-      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+-    generatedMessage: false,
+-    code: 'ERR_ASSERTION',
+-    actual: 1,
+-    expected: 0,
+-    operator: 'strictEqual',
+-    diff: 'simple'
+-  }
++1. `tests/entry-missing-run.test.ts` added to task 3's `scope`, with
++   `tests.modify: true`, so task 3 can rewrite how those tests reach an
++   approved change whose task entry is missing without calling `approve` on a
++   missing entry. For example, approve with a valid `entry: []` (or commit the
++   entry file only to the worktree after approval) and then commit the
++   `tasks/1.md` edit that names the missing file in the worktree with the
++   `git()` helper `tests/recovery-support.ts` exports, so the watcher's runtime
++   check (not lint) kills the task. The `src/*.rs` and `src/gone.ts` rows need
++   the same treatment.
++2. Alternatively, the planner can split the runtime proof of
++   "Entry names a removed file", "Steered task runs", and the negative row of
++   "Entries that count as present" out of `tests/entry-missing-run.test.ts`
++   into a new file task 3 owns, and have task 3 remove the conflicting rows
++   from task 1's file under `tests.modify: true`. Either way the shared file
++   must be in task 3's `scope` and identified in the proposal.
+ 
+-test at tests/entry-missing-run.test.ts:1:3470
+-✖ src/*.rs in the tree the task runs in: entry_missing (392.213309ms)
+-  AssertionError [ERR_ASSERTION]: approve exited 1
+-  stdout:
+-  
+-  stderr:
+-  Error approving 001:
+-    Lint failed for spec "001-order-flow":
+-    - Task 1 entry names src/*.rs, which is not in main and no task up to this one creates
+-  Next: ready for approval — osq approve 001
+-  
+-  
+-  1 !== 0
+-  
+-      at assertOk (tests/recovery-support.ts:115:10)
+-      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:140:7)
+-      at async Test.run (node:internal/test_runner/test:1409:7)
+-      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+-    generatedMessage: false,
+-    code: 'ERR_ASSERTION',
+-    actual: 1,
+-    expected: 0,
+-    operator: 'strictEqual',
+-    diff: 'simple'
+-  }
+- ELIFECYCLE  Test failed. See above for more details.
+- ELIFECYCLE  Command failed with exit code 1.
+-Full output: .run/logs/change-3.log
++I did not change any file, so the plan and the tree are exactly as this task
++received them.
+diff --git a/openspec/changes/173-prompt-files-exist/.run/dead/3.patch b/openspec/changes/173-prompt-files-exist/.run/dead/3.patch
+deleted file mode 100644
+index 7462a6fa..00000000
+--- a/openspec/changes/173-prompt-files-exist/.run/dead/3.patch
++++ /dev/null
+@@ -1,687 +0,0 @@
+-diff --git a/openspec/changes/173-prompt-files-exist/.run/dead/3.md b/openspec/changes/173-prompt-files-exist/.run/dead/3.md
+-new file mode 100644
+-index 00000000..5e4aa696
+---- /dev/null
+-+++ b/openspec/changes/173-prompt-files-exist/.run/dead/3.md
+-@@ -0,0 +1,93 @@
+-+---
+-+reason: change_verify_red
+-+command: "pnpm verify"
+-+exit_code: 1
+-+fingerprint: sha256:026b95c31473be61917f1f0c015d1c67368e121b47403ce07abf66a0019ddb6a
+-+---
+-+Change-level verification failed after task verification passed.
+-+✖ failing tests:
+-+
+-+test at tests/entry-missing-run.test.ts:1:1344
+-+✖ ends the task as entry_missing before the executor starts (474.513972ms)
+-+  AssertionError [ERR_ASSERTION]: approve exited 1
+-+  stdout:
+-+  
+-+  stderr:
+-+  Error approving 001:
+-+    Lint failed for spec "001-order-flow":
+-+    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
+-+  Next: ready for approval — osq approve 001
+-+  
+-+  
+-+  1 !== 0
+-+  
+-+      at assertOk (tests/recovery-support.ts:115:10)
+-+      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:56:5)
+-+      at async Test.run (node:internal/test_runner/test:1409:7)
+-+      at async Promise.all (index 0)
+-+      at async Suite.run (node:internal/test_runner/test:1905:7)
+-+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+-+    generatedMessage: false,
+-+    code: 'ERR_ASSERTION',
+-+    actual: 1,
+-+    expected: 0,
+-+    operator: 'strictEqual',
+-+    diff: 'simple'
+-+  }
+-+
+-+test at tests/entry-missing-run.test.ts:1:2305
+-+✖ spawns once the entry is revised and the change is approved again (407.930904ms)
+-+  AssertionError [ERR_ASSERTION]: approve exited 1
+-+  stdout:
+-+  
+-+  stderr:
+-+  Error approving 001:
+-+    Lint failed for spec "001-order-flow":
+-+    - Task 1 entry names src/gone.ts, which is not in main and no task up to this one creates
+-+  Next: ready for approval — osq approve 001
+-+  
+-+  
+-+  1 !== 0
+-+  
+-+      at assertOk (tests/recovery-support.ts:115:10)
+-+      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:90:5)
+-+      at async Test.run (node:internal/test_runner/test:1409:7)
+-+      at async Promise.all (index 0)
+-+      at async Suite.run (node:internal/test_runner/test:1905:7)
+-+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+-+    generatedMessage: false,
+-+    code: 'ERR_ASSERTION',
+-+    actual: 1,
+-+    expected: 0,
+-+    operator: 'strictEqual',
+-+    diff: 'simple'
+-+  }
+-+
+-+test at tests/entry-missing-run.test.ts:1:3470
+-+✖ src/*.rs in the tree the task runs in: entry_missing (392.213309ms)
+-+  AssertionError [ERR_ASSERTION]: approve exited 1
+-+  stdout:
+-+  
+-+  stderr:
+-+  Error approving 001:
+-+    Lint failed for spec "001-order-flow":
+-+    - Task 1 entry names src/*.rs, which is not in main and no task up to this one creates
+-+  Next: ready for approval — osq approve 001
+-+  
+-+  
+-+  1 !== 0
+-+  
+-+      at assertOk (tests/recovery-support.ts:115:10)
+-+      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:140:7)
+-+      at async Test.run (node:internal/test_runner/test:1409:7)
+-+      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {
+-+    generatedMessage: false,
+-+    code: 'ERR_ASSERTION',
+-+    actual: 1,
+-+    expected: 0,
+-+    operator: 'strictEqual',
+-+    diff: 'simple'
+-+  }
+-+ ELIFECYCLE  Test failed. See above for more details.
+-+ ELIFECYCLE  Command failed with exit code 1.
+-+Full output: .run/logs/change-3.log
+-diff --git a/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl b/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl
+-new file mode 100644
+-index 00000000..ec5722aa
+---- /dev/null
+-+++ b/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl
+-@@ -0,0 +1,105 @@
+-+{"type":"verify_ran","timestamp":"2026-10-11T10:26:37.473Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/entry-lint.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/3-1.log","output":"Could not find 'tests/entry-lint.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/entry-lint.test.ts"],"mismatch":false}}
+-+{"type":"measures","timestamp":"2026-10-11T10:26:38.371Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":1425,"repoFiles":2824,"repoLines":327709,"importFanIn":5,"proposalWords":620,"taskWords":302,"deltaRequirements":4,"deltaScenarios":16}}
+-+{"type":"started","timestamp":"2026-10-11T10:26:38.418Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"87f194ea","pid":39680,"timeoutSeconds":1800,"version":"0.3.0","commit":"e63935cf"}}
+-+{"type":"tool","timestamp":"2026-10-11T10:26:46.694Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la && ls src/core/spec/ && ls tests/entry-li"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:26:46.733Z","data":{"promptTokens":234762,"candidateTokens":96,"totalTokens":234858,"cachedTokens":0,"reasoningTokens":73,"cost":0.0353157}}
+-+{"type":"tool","timestamp":"2026-10-11T10:26:49.379Z","data":{"tool":"shell","summary":"{\"command\":\"cat src/core/run/entry-paths.ts 2>&1; echo \\\"==="}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:26:49.419Z","data":{"promptTokens":1311,"candidateTokens":106,"totalTokens":1417,"cachedTokens":234880,"reasoningTokens":38,"cost":0.00098769}}
+-+{"type":"tool","timestamp":"2026-10-11T10:26:53.239Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"lintChangeFolder\\\\|export function\\\\|e"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:26:53.280Z","data":{"promptTokens":2342,"candidateTokens":121,"totalTokens":2463,"cachedTokens":236288,"reasoningTokens":23,"cost":0.001146564}}
+-+{"type":"tool","timestamp":"2026-10-11T10:26:56.215Z","data":{"tool":"read","summary":"src/core/spec/linter.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:26:56.252Z","data":{"promptTokens":548,"candidateTokens":97,"totalTokens":645,"cachedTokens":238720,"reasoningTokens":0,"cost":0.0008565599999999999}}
+-+{"type":"tool","timestamp":"2026-10-11T10:26:58.923Z","data":{"tool":"read","summary":"src/core/spec/linter.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:26:58.959Z","data":{"promptTokens":3014,"candidateTokens":97,"totalTokens":3111,"cachedTokens":239360,"reasoningTokens":0,"cost":0.00122838}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:02.307Z","data":{"tool":"shell","summary":"{\"command\":\"cat src/core/vcs/select.ts; echo \\\"=====STACK-DE"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:02.346Z","data":{"promptTokens":2271,"candidateTokens":103,"totalTokens":2374,"cachedTokens":242432,"reasoningTokens":125,"cost":0.001204746}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:05.902Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"listChanges\\\\|export function\\\\|export"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:05.938Z","data":{"promptTokens":3064,"candidateTokens":109,"totalTokens":3173,"cachedTokens":244864,"reasoningTokens":95,"cost":0.0013165920000000001}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:08.890Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:08.925Z","data":{"promptTokens":350,"candidateTokens":98,"totalTokens":448,"cachedTokens":248064,"reasoningTokens":0,"cost":0.000855492}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:11.865Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"entry\\\\|scope\\\\|export function parseT"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:11.899Z","data":{"promptTokens":882,"candidateTokens":106,"totalTokens":988,"cachedTokens":248448,"reasoningTokens":21,"cost":0.000953844}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:14.548Z","data":{"tool":"shell","summary":"{\"command\":\"cat tests/git-test-env.ts; echo \\\"=====STACK TES"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:14.585Z","data":{"promptTokens":286,"candidateTokens":110,"totalTokens":396,"cachedTokens":249344,"reasoningTokens":59,"cost":0.000892332}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:17.436Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '120,300p' tests/stack-overlap-cut.test.t"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:17.471Z","data":{"promptTokens":1311,"candidateTokens":90,"totalTokens":1401,"cachedTokens":249728,"reasoningTokens":0,"cost":0.000999834}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:42.062Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"installFakeValidator\\\\|export function"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:42.098Z","data":{"promptTokens":2046,"candidateTokens":115,"totalTokens":2161,"cachedTokens":251008,"reasoningTokens":5390,"cost":0.004362924}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:45.246Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"lintChangeFolder\\\\|lintCommand\\\" tes"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:45.283Z","data":{"promptTokens":376,"candidateTokens":104,"totalTokens":480,"cachedTokens":258432,"reasoningTokens":27,"cost":0.000910296}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:48.027Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,140p' tests/lint-verify-starts.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:48.064Z","data":{"promptTokens":360,"candidateTokens":91,"totalTokens":451,"cachedTokens":258816,"reasoningTokens":0,"cost":0.000885048}}
+-+{"type":"tool","timestamp":"2026-10-11T10:27:52.698Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"export async function scaffoldProject\\"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:27:52.739Z","data":{"promptTokens":1394,"candidateTokens":102,"totalTokens":1496,"cachedTokens":259200,"reasoningTokens":247,"cost":0.0011960999999999999}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:01.456Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,80p' tests/function-budget.test.ts; ec"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:01.491Z","data":{"promptTokens":520,"candidateTokens":120,"totalTokens":640,"cachedTokens":260864,"reasoningTokens":1302,"cost":0.001713792}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:04.723Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"pathExists\\\\|defaultBranch\\\\|listBranc"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:04.760Z","data":{"promptTokens":886,"candidateTokens":96,"totalTokens":982,"cachedTokens":262784,"reasoningTokens":48,"cost":0.001007652}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:13.028Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"interface ResolvedTaskScope\\\" -A 12 sr"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:13.065Z","data":{"promptTokens":209,"candidateTokens":121,"totalTokens":330,"cachedTokens":263680,"reasoningTokens":1672,"cost":0.00189819}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:20.192Z","data":{"tool":"write","summary":"src/core/spec/entry-lint.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:20.227Z","data":{"promptTokens":278,"candidateTokens":1475,"totalTokens":1753,"cachedTokens":265600,"reasoningTokens":223,"cost":0.0018573}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:24.747Z","data":{"tool":"edit","summary":"src/core/spec/linter.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:24.784Z","data":{"promptTokens":209,"candidateTokens":196,"totalTokens":405,"cachedTokens":267392,"reasoningTokens":276,"cost":0.0011167260000000002}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:27.827Z","data":{"tool":"edit","summary":"src/core/spec/linter.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:27.864Z","data":{"promptTokens":192,"candidateTokens":253,"totalTokens":445,"cachedTokens":267904,"reasoningTokens":0,"cost":0.000984312}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:38.802Z","data":{"tool":"edit","summary":"src/core/spec/entry-lint.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:38.838Z","data":{"promptTokens":212,"candidateTokens":272,"totalTokens":484,"cachedTokens":268160,"reasoningTokens":1888,"cost":0.00213228}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:43.264Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,80p' src/core/spec/lint-findings.ts\",\""}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:43.301Z","data":{"promptTokens":221,"candidateTokens":92,"totalTokens":313,"cachedTokens":270336,"reasoningTokens":222,"cost":0.001032558}}
+-+{"type":"tool","timestamp":"2026-10-11T10:28:53.388Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"function repositoryPath\\\" -A 4 src/cor"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:28:53.422Z","data":{"promptTokens":576,"candidateTokens":120,"totalTokens":696,"cachedTokens":270848,"reasoningTokens":1711,"cost":0.001997544}}
+-+{"type":"tool","timestamp":"2026-10-11T10:29:34.457Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '146,240p' src/core/foundation/init.ts\",\""}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:29:34.494Z","data":{"promptTokens":273873,"candidateTokens":2718,"totalTokens":276591,"cachedTokens":0,"reasoningTokens":0,"cost":0.04271175}}
+-+{"type":"text","timestamp":"2026-10-11T10:30:11.950Z","data":{"text":"\n\n"}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:11.957Z","data":{"tool":"write","summary":"tests/entry-lint.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:11.996Z","data":{"promptTokens":857,"candidateTokens":2487,"totalTokens":3344,"cachedTokens":276480,"reasoningTokens":0,"cost":0.00245019}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:15.177Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:15.231Z","data":{"promptTokens":2598,"candidateTokens":130,"totalTokens":2728,"cachedTokens":277248,"reasoningTokens":0,"cost":0.0012994439999999999}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:17.543Z","data":{"tool":"edit","summary":"tests/entry-lint.test.ts"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:17.584Z","data":{"promptTokens":738,"candidateTokens":185,"totalTokens":923,"cachedTokens":279808,"reasoningTokens":0,"cost":0.001061124}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:21.203Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:21.240Z","data":{"promptTokens":175,"candidateTokens":130,"totalTokens":305,"cachedTokens":280576,"reasoningTokens":0,"cost":0.0009459780000000001}}
+-+{"type":"text","timestamp":"2026-10-11T10:30:24.942Z","data":{"text":"\n\n"}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:24.949Z","data":{"tool":"shell","summary":"{\"command\":\"cat package.json | sed -n '1,60p'\",\"workdir\":\"/h"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:24.983Z","data":{"promptTokens":180,"candidateTokens":177,"totalTokens":357,"cachedTokens":280832,"reasoningTokens":0,"cost":0.000975696}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:34.083Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm typecheck:cli 2>&1 | tail -10\",\"timeout\":24"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:34.119Z","data":{"promptTokens":827,"candidateTokens":112,"totalTokens":939,"cachedTokens":281088,"reasoningTokens":0,"cost":0.001034514}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:40.786Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:40.822Z","data":{"promptTokens":239,"candidateTokens":342,"totalTokens":581,"cachedTokens":281856,"reasoningTokens":0,"cost":0.001086618}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:51.039Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:51.079Z","data":{"promptTokens":369,"candidateTokens":156,"totalTokens":525,"cachedTokens":282368,"reasoningTokens":0,"cost":0.0009960540000000001}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:53.953Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"src/core\\\" tests/*.test.ts | xargs g"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:53.991Z","data":{"promptTokens":154,"candidateTokens":198,"totalTokens":352,"cachedTokens":282880,"reasoningTokens":0,"cost":0.00099054}}
+-+{"type":"tool","timestamp":"2026-10-11T10:30:58.139Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:30:58.185Z","data":{"promptTokens":290,"candidateTokens":148,"totalTokens":438,"cachedTokens":283136,"reasoningTokens":0,"cost":0.0009817080000000002}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:06.149Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check src/core/spec/entry-lint.t"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:06.193Z","data":{"promptTokens":295,"candidateTokens":134,"totalTokens":429,"cachedTokens":283392,"reasoningTokens":0,"cost":0.000974826}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:09.586Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check src/core/spec/entry-lint.t"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:09.623Z","data":{"promptTokens":383,"candidateTokens":134,"totalTokens":517,"cachedTokens":283648,"reasoningTokens":0,"cost":0.000988794}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:13.503Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check --fix src/core/spec/entry-"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:13.546Z","data":{"promptTokens":649,"candidateTokens":173,"totalTokens":822,"cachedTokens":284160,"reasoningTokens":0,"cost":0.00105363}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:23.805Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:23.848Z","data":{"promptTokens":92,"candidateTokens":184,"totalTokens":276,"cachedTokens":284928,"reasoningTokens":0,"cost":0.000978984}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:28.202Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la openspec/changes/173-prompt-files-exist/."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:28.244Z","data":{"promptTokens":115,"candidateTokens":324,"totalTokens":439,"cachedTokens":285184,"reasoningTokens":0,"cost":0.001067202}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:30.981Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la openspec/changes/173-prompt-files-exist/."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:31.018Z","data":{"promptTokens":607,"candidateTokens":129,"totalTokens":736,"cachedTokens":285440,"reasoningTokens":0,"cost":0.00102477}}
+-+{"type":"text","timestamp":"2026-10-11T10:31:34.704Z","data":{"text":"Task verify passes. Now running the proposal's full verify (`pnpm verify`) — this is heavy, so I'll run it in the background.\n\n"}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:34.710Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify > /tmp/opencode/verify-173-3.log 2>&"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:34.751Z","data":{"promptTokens":344,"candidateTokens":191,"totalTokens":535,"cachedTokens":285952,"reasoningTokens":0,"cost":0.001024056}}
+-+{"type":"text","timestamp":"2026-10-11T10:31:54.632Z","data":{"text":"While the full verify runs, let me check for other tests that lint changes with `entry` values that could now newly fail."}}
+-+{"type":"tool","timestamp":"2026-10-11T10:31:54.836Z","data":{"tool":"grep","summary":"{\"pattern\":\"entry:\",\"include\":\"*.test.ts\",\"path\":\"/home/math"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:31:54.980Z","data":{"promptTokens":501,"candidateTokens":1294,"totalTokens":1795,"cachedTokens":286208,"reasoningTokens":0,"cost":0.001710174}}
+-+{"type":"tool","timestamp":"2026-10-11T10:32:06.606Z","data":{"tool":"shell","summary":"{\"command\":\"grep -ln \\\"lintChangeFolder\\\\|lintCommand\\\\|appr"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:32:07.020Z","data":{"promptTokens":3331,"candidateTokens":818,"totalTokens":4149,"cachedTokens":288000,"reasoningTokens":0,"cost":0.00185445}}
+-+{"type":"tool","timestamp":"2026-10-11T10:32:44.828Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"entry\\\" tests/lint-output.test.ts test"}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:32:44.960Z","data":{"promptTokens":73,"candidateTokens":773,"totalTokens":846,"cachedTokens":292096,"reasoningTokens":0,"cost":0.001351038}}
+-+{"type":"text","timestamp":"2026-10-11T10:32:47.058Z","data":{"text":"All lint-focused tests use `entry: []`, so no existing expectations break. Waiting on the full `pnpm verify` background run before writing the result file."}}
+-+{"type":"tokens","timestamp":"2026-10-11T10:32:48.122Z","data":{"promptTokens":625,"candidateTokens":101,"totalTokens":726,"cachedTokens":506406,"reasoningTokens":0,"cost":0.027723842000000082}}
+-+{"type":"exited","timestamp":"2026-10-11T10:32:48.140Z","data":{"exitCode":0,"pid":39680,"timedOut":false,"elapsedSeconds":369.1}}
+-+{"type":"result_written","timestamp":"2026-10-11T10:32:48.432Z","data":{"path":"/home/mathias/.osq/worktrees/osq/173-prompt-files-exist/openspec/changes/173-prompt-files-exist/.run/results/3.md","synthesized":true}}
+-+{"type":"format_ran","timestamp":"2026-10-11T10:32:48.802Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/core/spec/entry-lint.ts' 'src/core/spec/linter.ts' 'tests/entry-lint.test.ts'","files":["src/core/spec/entry-lint.ts","src/core/spec/linter.ts","tests/entry-lint.test.ts"],"exitCode":0,"duration":0.37,"timedOut":false,"output":"Checked 3 files in 13ms. No fixes applied.\n"}}
+-+{"type":"verify_ran","timestamp":"2026-10-11T10:32:50.812Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/entry-lint.test.ts","exitCode":0,"duration":1.54,"log":".run/logs/3-2.log","output":"▶ entry lint\n  ✔ reports an entry no tree provides (186.751669ms)\n  ✔ reports each row of entries the change provides (689.822541ms)\n  ✔ counts an approved change's task scope as providing an entry (390.787273ms)\n✔ entry lint (1269.068932ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1506.519971\n"}}
+-+{"type":"measures","timestamp":"2026-10-11T10:34:41.675Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":1425,"repoFiles":2824,"repoLines":327709,"importFanIn":5,"proposalWords":620,"taskWords":302,"deltaRequirements":4,"deltaScenarios":16,"changedFiles":3,"changedLines":426,"scopeHashes":{"src/core/spec/entry-lint.ts":{"before":null,"after":"sha256:910fbda34d31c682239af8a62aa8f164a2dbfcc4f7200886069ea03541928139"},"src/core/spec/linter.ts":{"before":"sha256:a274b940affa6bee31b1c5b49ac0dc0f234ad4bcb41c93d4c93127f7ba440ff5","after":"sha256:fe149f30232576bc005fc296c668a5d21a7ad988c8113d2f9103a692f250abdd"},"tests/entry-lint.test.ts":{"before":null,"after":"sha256:f1e124967f918dec71762e30737f7ef2cd5da9a5d9beb8693d6d083481df2a83"}}}}
+-+{"type":"dead","timestamp":"2026-10-11T10:34:41.678Z","data":{"task":"3","reason":"change_verify_red"}}
+-diff --git a/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl b/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl
+-new file mode 100644
+-index 00000000..76c97509
+---- /dev/null
+-+++ b/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl
+-@@ -0,0 +1,4 @@
+-+{"type":"baseline_ran","timestamp":"2026-10-11T10:10:40.110Z","data":{"outcome":"passed","command":"pnpm verify","commit":"18c2105d6a99145726a73c315a3f9ea59276f55b","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":167.36}}
+-+{"type":"verify_ran","timestamp":"2026-10-11T10:18:11.351Z","data":{"command":"pnpm verify","exitCode":0,"duration":97.96,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.296016ms)\n✔ dashboard data base (1.677405ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.366938ms)\n  ✔ keeps the default actions URL (0.245055ms)\n✔ actions client base (1.771116ms)\n▶ server header\n  ✔ shows the project and server name next to the title (8.622841ms)\n✔ server header (8.736474ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.793617ms)\n  ✔ shows a terminal watcher and no service record (1.092372ms)\n  ✔ shows a waiting background watcher and a service record (1.066482ms)\n  ✔ shows no watcher and no service record (1.065272ms)\n  ✔ names the watcher version, commit, and start time (1.084012ms)\n  ✔ marks the waiting line as a warning in the existing palette (41.248469ms)\n  ✔ renders the home view as before without a server status (2.027428ms)\n✔ service panel (49.80086ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.418669ms)\n✔ service panel component (0.48779ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (9.631711ms)\n  ✔ maps every derived task state onto the status vocabulary (0.166223ms)\n  ✔ defines the whole palette for light and dark schemes (28.363449ms)\n  ✔ never centers table cells (11.668768ms)\n✔ status badge (51.345292ms)\nℹ tests 157\nℹ suites 46\nℹ pass 157\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2751.201435\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1119 files in 496ms. No fixes applied."}}
+-+{"type":"verify_ran","timestamp":"2026-10-11T10:26:35.607Z","data":{"command":"pnpm verify","exitCode":0,"duration":96.29,"log":".run/logs/change-2.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.760874ms)\n✔ dashboard data base (2.124921ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.587526ms)\n  ✔ keeps the default actions URL (0.518715ms)\n✔ actions client base (1.48859ms)\n▶ server header\n  ✔ shows the project and server name next to the title (20.149033ms)\n✔ server header (20.269286ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (5.92829ms)\n  ✔ shows a terminal watcher and no service record (1.213822ms)\n  ✔ shows a waiting background watcher and a service record (1.317315ms)\n  ✔ shows no watcher and no service record (1.128091ms)\n  ✔ names the watcher version, commit, and start time (2.443716ms)\n  ✔ marks the waiting line as a warning in the existing palette (26.53901ms)\n  ✔ renders the home view as before without a server status (1.492091ms)\n✔ service panel (40.507908ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.423462ms)\n✔ service panel component (0.485083ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (13.294727ms)\n  ✔ maps every derived task state onto the status vocabulary (0.151974ms)\n  ✔ defines the whole palette for light and dark schemes (43.471628ms)\n  ✔ never centers table cells (2.975745ms)\n✔ status badge (61.574779ms)\nℹ tests 157\nℹ suites 46\nℹ pass 157\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2713.634751\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1120 files in 480ms. No fixes applied."}}
+-+{"type":"verify_ran","timestamp":"2026-10-11T10:34:41.278Z","data":{"command":"pnpm verify","exitCode":1,"duration":110.45,"log":".run/logs/change-3.log","output":"      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:90:5)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Promise.all (index 0)\n      at async Suite.run (node:internal/test_runner/test:1905:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n\ntest at tests/entry-missing-run.test.ts:1:3470\n✖ src/*.rs in the tree the task runs in: entry_missing (392.213309ms)\n  AssertionError [ERR_ASSERTION]: approve exited 1\n  stdout:\n  \n  stderr:\n  Error approving 001:\n    Lint failed for spec \"001-order-flow\":\n    - Task 1 entry names src/*.rs, which is not in main and no task up to this one creates\n  Next: ready for approval — osq approve 001\n  \n  \n  1 !== 0\n  \n      at assertOk (tests/recovery-support.ts:115:10)\n      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:140:7)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+-diff --git a/openspec/changes/173-prompt-files-exist/.run/results/3.md b/openspec/changes/173-prompt-files-exist/.run/results/3.md
+-new file mode 100644
+-index 00000000..3c869f15
+---- /dev/null
+-+++ b/openspec/changes/173-prompt-files-exist/.run/results/3.md
+-@@ -0,0 +1,7 @@
+-+---
+-+synthesized: true
+-+---
+-+<!-- Synthesized by the osq watcher from the agent's final stream message.
+-+     The agent exited without writing a result file. -->
+-+
+-+All lint-focused tests use `entry: []`, so no existing expectations break. Waiting on the full `pnpm verify` background run before writing the result file.
+-diff --git a/src/core/spec/entry-lint.ts b/src/core/spec/entry-lint.ts
+-new file mode 100644
+-index 00000000..e693536c
+---- /dev/null
+-+++ b/src/core/spec/entry-lint.ts
+-@@ -0,0 +1,145 @@
+-+import fs from 'node:fs/promises';
+-+import path from 'node:path';
+-+import type { OsqConfig } from '../foundation/config.js';
+-+import { entryExists } from '../run/entry-paths.js';
+-+import { resolveScope, scopeCoversPath } from '../run/scope.js';
+-+import { listChanges } from '../status/change-locations.js';
+-+import { selectVcs } from '../vcs/select.js';
+-+import type { Vcs } from '../vcs/vcs.js';
+-+import { parseTaskMd } from './parser.js';
+-+import { readDependencyState } from './stack-dependencies.js';
+-+
+-+/** One task as the entry check sees it: its number, file, scope and entry. */
+-+export interface EntryLintTask {
+-+  readonly number: string;
+-+  readonly file: string;
+-+  readonly scope: readonly string[];
+-+  readonly entry: readonly string[];
+-+}
+-+
+-+/** One lint finding: the task file it goes on and its message. */
+-+export interface EntryLintFinding {
+-+  readonly file: string;
+-+  readonly message: string;
+-+}
+-+
+-+/** Normalize an entry to a trimmed, POSIX, project-relative form. */
+-+function normalizeEntry(entry: string): string {
+-+  return entry
+-+    .trim()
+-+    .replace(/\\/g, '/')
+-+    .replace(/^(?:\.\/)+/, '');
+-+}
+-+
+-+/** A pattern is a glob or a trailing-directory form, as scope reads it. */
+-+function isPatternEntry(entry: string): boolean {
+-+  const normalized = normalizeEntry(entry);
+-+  return /[*?]/.test(normalized) || normalized.endsWith('/');
+-+}
+-+
+-+/** True when the entry lies inside the change folder itself. */
+-+function insideChangeFolder(changeRel: string, entry: string): boolean {
+-+  const normalized = normalizeEntry(entry);
+-+  return normalized === changeRel || normalized.startsWith(`${changeRel}/`);
+-+}
+-+
+-+/** True when a pattern declaration matches at least one existing file. */
+-+async function patternMatches(projectRoot: string, entry: string): Promise<boolean> {
+-+  const matches = await resolveScope(projectRoot, [entry]);
+-+  return matches.some((match) => match.absolutePath !== null);
+-+}
+-+
+-+/** Read one change folder's task scopes, in file order. */
+-+async function readTaskScopes(folderPath: string): Promise<string[][]> {
+-+  const tasksDir = path.join(folderPath, 'tasks');
+-+  let entries: string[];
+-+  try {
+-+    entries = await fs.readdir(tasksDir);
+-+  } catch {
+-+    return [];
+-+  }
+-+  const scopes: string[][] = [];
+-+  for (const file of entries.filter((name) => name.endsWith('.md')).sort()) {
+-+    const content = await fs.readFile(path.join(tasksDir, file), 'utf8');
+-+    scopes.push([...parseTaskMd(content).scope]);
+-+  }
+-+  return scopes;
+-+}
+-+
+-+/** The task scopes of every other change that is approved or archived. */
+-+async function otherChangeScopes(
+-+  projectRoot: string,
+-+  config: OsqConfig,
+-+  vcs: Vcs,
+-+  folderName: string,
+-+): Promise<string[][]> {
+-+  const scopes: string[][] = [];
+-+  for (const change of await listChanges(projectRoot, config)) {
+-+    if (change.folderName === folderName) continue;
+-+    const state = await readDependencyState(projectRoot, config, vcs, change.folderName);
+-+    if (state.state !== 'approved' && state.state !== 'archived') continue;
+-+    scopes.push(...(await readTaskScopes(change.folderPath)));
+-+  }
+-+  return scopes;
+-+}
+-+
+-+/** Whether the tree the task runs in can provide one entry. */
+-+async function entryProvided(
+-+  projectRoot: string,
+-+  entry: string,
+-+  options: { vcsEnabled: boolean; vcs: Vcs; branch: string },
+-+): Promise<boolean> {
+-+  const pattern = isPatternEntry(entry);
+-+  if (!pattern) {
+-+    if (options.vcsEnabled) {
+-+      return options.vcs.pathExists(options.branch, normalizeEntry(entry));
+-+    }
+-+    return entryExists(projectRoot, entry);
+-+  }
+-+  if (await entryExists(projectRoot, entry)) return true;
+-+  return patternMatches(projectRoot, entry);
+-+}
+-+
+-+/**
+-+ * The entry paths of a change's tasks that neither the default branch nor the
+-+ * change can provide, one finding per miss. An entry counts as provided when it
+-+ * lies inside the change folder; when the scope of its task or an earlier task
+-+ * covers it; when it exists in the task's tree; when a pattern matches; or when
+-+ * another approved or archived change's task scope covers it.
+-+ *
+-+ * @scenario spec-lint-and-approve: Entry names a file no tree has
+-+ * @scenario spec-lint-and-approve: Entries the change provides
+-+ * @adr 006
+-+ */
+-+export async function missingEntryFindings(
+-+  projectRoot: string,
+-+  config: OsqConfig,
+-+  folderPath: string,
+-+  tasks: readonly EntryLintTask[],
+-+): Promise<EntryLintFinding[]> {
+-+  const findings: EntryLintFinding[] = [];
+-+  const changeRel = path.relative(projectRoot, folderPath).split(path.sep).join('/');
+-+  const folderName = path.basename(folderPath);
+-+  const vcsEnabled = config.vcs?.enabled === true;
+-+  const vcs = await selectVcs(projectRoot, config);
+-+  const branch = vcsEnabled ? await vcs.defaultBranch() : 'the project';
+-+  const earlier: string[] = [];
+-+  let scopes: string[][] | null = null;
+-+
+-+  for (const task of tasks) {
+-+    for (const entry of task.entry) {
+-+      if (insideChangeFolder(changeRel, entry)) continue;
+-+      if (scopeCoversPath([...task.scope, ...earlier], entry)) continue;
+-+      if (await entryProvided(projectRoot, entry, { vcsEnabled, vcs, branch })) continue;
+-+      scopes ??= await otherChangeScopes(projectRoot, config, vcs, folderName);
+-+      if (scopes.some((scope) => scopeCoversPath(scope, entry))) continue;
+-+      findings.push({
+-+        file: task.file,
+-+        message: `Task ${task.number} entry names ${entry}, which is not in ${branch} and no task up to this one creates`,
+-+      });
+-+    }
+-+    earlier.push(...task.scope);
+-+  }
+-+
+-+  return findings;
+-+}
+-diff --git a/src/core/spec/linter.ts b/src/core/spec/linter.ts
+-index 7f8f1227..2d535550 100644
+---- a/src/core/spec/linter.ts
+-+++ b/src/core/spec/linter.ts
+-@@ -10,6 +10,7 @@ import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumpt
+- import { collectCapabilityRelationFindings } from './capability-relations.js';
+- import { collectDecisionsFindings } from './decisions-lint.js';
+- import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
+-+import { type EntryLintTask, missingEntryFindings } from './entry-lint.js';
+- import { collectGeneratedMoveFindings } from './generated-move-lint.js';
+- import { isExcludedChangePath } from './hasher.js';
+- import { collectImpactFindings } from './impact-lint.js';
+-@@ -1275,6 +1276,18 @@ export async function lintChangeFolder(
+-     }
+-   }
+- 
+-+  // Check: every task's entry names a file the change or the default branch can
+-+  // provide. Other changes' scopes are read only when an entry is otherwise missing.
+-+  const entryTasks: EntryLintTask[] = resolvedTaskScopes.map((scope) => ({
+-+    number: scope.taskNumber,
+-+    file: scope.taskPath,
+-+    scope: scope.task.scope,
+-+    entry: scope.task.entry,
+-+  }));
+-+  for (const finding of await missingEntryFindings(projectRoot, config, folderPath, entryTasks)) {
+-+    findings.error({ file: finding.file }, finding.message);
+-+  }
+-+
+-   // Check: harness scope should cover the event fixtures without failing lint
+-   for (const entry of collectHarnessFixtureWarnings(resolvedTaskScopes)) {
+-     findings.warning({ file: entry.file }, entry.message);
+-diff --git a/tests/entry-lint.test.ts b/tests/entry-lint.test.ts
+-new file mode 100644
+-index 00000000..1ca7b2a2
+---- /dev/null
+-+++ b/tests/entry-lint.test.ts
+-@@ -0,0 +1,266 @@
+-+import assert from 'node:assert/strict';
+-+import { execFile } from 'node:child_process';
+-+import fs from 'node:fs/promises';
+-+import os from 'node:os';
+-+import path from 'node:path';
+-+import { afterEach, describe, it } from 'node:test';
+-+import { promisify } from 'node:util';
+-+import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
+-+import { scaffoldProject } from '../src/core/foundation/init.js';
+-+import { approveSpec } from '../src/core/spec/approve.js';
+-+import { lintChangeFolder } from '../src/core/spec/linter.js';
+-+import { installFakeValidator } from './helpers.js';
+-+
+-+const execFileAsync = promisify(execFile);
+-+
+-+const CHANGES = path.join('openspec', 'changes');
+-+const tmpDirs: string[] = [];
+-+
+-+afterEach(async () => {
+-+  for (const dir of tmpDirs.splice(0)) {
+-+    await fs.rm(dir, { recursive: true, force: true });
+-+  }
+-+});
+-+
+-+/** The test's own git calls ignore redirecting variables, like osq's reads. */
+-+function cleanGitEnv(): NodeJS.ProcessEnv {
+-+  const env = { ...process.env };
+-+  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']) {
+-+    Reflect.deleteProperty(env, key);
+-+  }
+-+  return env;
+-+}
+-+
+-+async function git(args: string[], cwd: string): Promise<string> {
+-+  const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
+-+  return stdout.trim();
+-+}
+-+
+-+/** One task's scope and entry declarations. */
+-+interface TaskDef {
+-+  readonly scope: readonly string[];
+-+  readonly entry: readonly string[];
+-+}
+-+
+-+interface Project {
+-+  readonly repo: string;
+-+  readonly config: OsqConfig;
+-+}
+-+
+-+function proposalMarkdown(): string {
+-+  return [
+-+    '---',
+-+    'title: Entry Feature',
+-+    'depends_on: []',
+-+    'verify: node verify.cjs',
+-+    'features:',
+-+    '  reads: []',
+-+    'creates: [gadgets]',
+-+    '---',
+-+    '## Goal',
+-+    'Run the entry task.',
+-+    '',
+-+    '## Surface',
+-+    'None',
+-+    '',
+-+    '## Human steps',
+-+    'None',
+-+    '',
+-+    '## Assumptions',
+-+    'None',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+function deltaSpec(): string {
+-+  return [
+-+    '# Spec Delta: gadgets',
+-+    '',
+-+    '## Purpose',
+-+    '',
+-+    'The gadgets capability for the entry tests.',
+-+    '',
+-+    '## ADDED Requirements',
+-+    '',
+-+    '### Requirement: gadgets works',
+-+    '',
+-+    'The gadgets capability SHALL work.',
+-+    '',
+-+    '#### Scenario: gadgets runs',
+-+    '- **WHEN** a gadget runs',
+-+    '- **THEN** it works',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+function taskMarkdown(task: TaskDef, number: number): string {
+-+  return [
+-+    '---',
+-+    `title: Entry task ${number}`,
+-+    'verify: node verify.cjs',
+-+    `scope: ${JSON.stringify(task.scope)}`,
+-+    `entry: ${JSON.stringify(task.entry)}`,
+-+    'skills: []',
+-+    '---',
+-+    '## Acceptance',
+-+    '- [ ] does the thing',
+-+    '',
+-+  ].join('\n');
+-+}
+-+
+-+/** Write a lint-clean change whose tasks carry the given scope and entry. */
+-+async function writeChange(
+-+  repo: string,
+-+  folder: string,
+-+  tasks: readonly TaskDef[],
+-+): Promise<string> {
+-+  const folderPath = path.join(repo, CHANGES, folder);
+-+  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
+-+  await fs.mkdir(path.join(folderPath, 'specs', 'gadgets'), { recursive: true });
+-+  await fs.writeFile(path.join(folderPath, 'proposal.md'), proposalMarkdown(), 'utf8');
+-+  await fs.writeFile(
+-+    path.join(folderPath, 'tasks.md'),
+-+    `# Tasks\n\n${tasks.map((_, index) => `- [ ] ${index + 1}. entry task`).join('\n')}\n`,
+-+    'utf8',
+-+  );
+-+  for (const [index, task] of tasks.entries()) {
+-+    await fs.writeFile(
+-+      path.join(folderPath, 'tasks', `${index + 1}.md`),
+-+      taskMarkdown(task, index + 1),
+-+      'utf8',
+-+    );
+-+  }
+-+  await fs.writeFile(path.join(folderPath, 'specs', 'gadgets', 'spec.md'), deltaSpec(), 'utf8');
+-+  return folderPath;
+-+}
+-+
+-+/** A temporary git repository with version control on and a committed baseline. */
+-+async function makeProject(): Promise<Project> {
+-+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-entry-lint-'));
+-+  tmpDirs.push(root);
+-+  const repo = path.join(root, 'repo');
+-+  const worktrees = path.join(root, 'worktrees');
+-+  await fs.mkdir(repo, { recursive: true });
+-+  await installFakeValidator(repo);
+-+  await scaffoldProject(repo);
+-+  await fs.writeFile(
+-+    path.join(repo, '.gitignore'),
+-+    'node_modules/\n.run/running/\nfixture/.osq/\n',
+-+    'utf8',
+-+  );
+-+  await fs.writeFile(path.join(repo, 'verify.cjs'), 'process.exit(0);\n', 'utf8');
+-+  await fs.mkdir(path.join(repo, 'src'), { recursive: true });
+-+  await fs.writeFile(path.join(repo, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
+-+  await git(['init', '-q', '-b', 'main'], repo);
+-+  await git(['config', 'user.name', 'osq'], repo);
+-+  await git(['config', 'user.email', 'osq@example.invalid'], repo);
+-+  await git(['add', '-A'], repo);
+-+  await git(['commit', '-qm', 'seed'], repo);
+-+
+-+  const config = defineConfig({
+-+    vcs: {
+-+      enabled: true,
+-+      author: 'Osq <osq@example.invalid>',
+-+      worktreeRoot: worktrees,
+-+    },
+-+    gates: { preSpawnVerify: 'off' },
+-+  });
+-+  return { repo, config };
+-+}
+-+
+-+/** The entry findings of a linted change, keyed by message. */
+-+async function entryFindings(
+-+  repo: string,
+-+  folderPath: string,
+-+  config: OsqConfig,
+-+): Promise<string[]> {
+-+  const result = await lintChangeFolder(repo, folderPath, config);
+-+  return result.findings
+-+    .filter((finding) => finding.message.includes('entry names'))
+-+    .map((finding) => finding.message);
+-+}
+-+
+-+describe('entry lint', () => {
+-+  it('reports an entry no tree provides', async () => {
+-+    const project = await makeProject();
+-+    const folderPath = await writeChange(project.repo, '001-entry', [
+-+      { scope: [], entry: ['src/gone.ts'] },
+-+    ]);
+-+
+-+    const result = await lintChangeFolder(project.repo, folderPath, project.config);
+-+    const entryError = result.findings.find((finding) =>
+-+      finding.message.includes('Task 1 entry names src/gone.ts'),
+-+    );
+-+    assert.ok(entryError, 'expected an entry error naming src/gone.ts');
+-+    assert.equal(entryError.severity, 'error');
+-+    assert.equal(entryError.file, `${CHANGES}/001-entry/tasks/1.md`);
+-+    assert.ok(entryError.message.includes('not in main'), entryError.message);
+-+    assert.equal(result.valid, false);
+-+  });
+-+
+-+  it('reports each row of entries the change provides', async () => {
+-+    const rows: Array<{ name: string; tasks: readonly TaskDef[]; expectError: boolean }> = [
+-+      {
+-+        name: 'committed on the default branch',
+-+        tasks: [{ scope: [], entry: ['src/a.ts'] }],
+-+        expectError: false,
+-+      },
+-+      {
+-+        name: "task 1's scope names it, and task 2's entry names it",
+-+        tasks: [
+-+          { scope: ['src/new.ts'], entry: [] },
+-+          { scope: [], entry: ['src/new.ts'] },
+-+        ],
+-+        expectError: false,
+-+      },
+-+      {
+-+        name: "the same task's scope names it",
+-+        tasks: [{ scope: ['src/new.ts'], entry: ['src/new.ts'] }],
+-+        expectError: false,
+-+      },
+-+      {
+-+        name: 'ignored file present only in the checkout',
+-+        tasks: [{ scope: [], entry: ['fixture/.osq/.gitignore'] }],
+-+        expectError: true,
+-+      },
+-+      {
+-+        name: "only task 3's scope names it, and task 2's entry names it",
+-+        tasks: [
+-+          { scope: [], entry: [] },
+-+          { scope: [], entry: ['src/later.ts'] },
+-+          { scope: ['src/later.ts'], entry: [] },
+-+        ],
+-+        expectError: true,
+-+      },
+-+    ];
+-+
+-+    for (const row of rows) {
+-+      const project = await makeProject();
+-+      if (row.name === 'ignored file present only in the checkout') {
+-+        await fs.mkdir(path.join(project.repo, 'fixture', '.osq'), { recursive: true });
+-+        await fs.writeFile(path.join(project.repo, 'fixture', '.osq', '.gitignore'), '*\n', 'utf8');
+-+      }
+-+      const folderPath = await writeChange(project.repo, '001-entry', row.tasks);
+-+      const findings = await entryFindings(project.repo, folderPath, project.config);
+-+      const detail = `${row.name}: ${JSON.stringify(row.tasks)}`;
+-+      if (row.expectError) {
+-+        assert.ok(findings.length > 0, `expected an entry error for ${detail}`);
+-+      } else {
+-+        assert.equal(findings.length, 0, `did not expect an entry error for ${detail}`);
+-+      }
+-+    }
+-+  });
+-+
+-+  it("counts an approved change's task scope as providing an entry", async () => {
+-+    const project = await makeProject();
+-+    await writeChange(project.repo, '001-dep', [{ scope: ['src/dep.ts'], entry: [] }]);
+-+    const approval = await approveSpec(project.repo, '001-dep', project.config);
+-+    assert.ok(approval.worktreePath, 'expected a worktree for 001-dep');
+-+
+-+    const folderPath = await writeChange(project.repo, '002-entry', [
+-+      { scope: [], entry: ['src/dep.ts'] },
+-+    ]);
+-+    const findings = await entryFindings(project.repo, folderPath, project.config);
+-+    assert.equal(findings.length, 0, "the approved change's scope provides the entry");
+-+  });
+-+});
+diff --git a/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl b/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl
+index ec5722aa..a9f5b69c 100644
+--- a/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl
++++ b/openspec/changes/173-prompt-files-exist/.run/events/3.jsonl
+@@ -103,3 +103,51 @@
+ {"type":"verify_ran","timestamp":"2026-10-11T10:32:50.812Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/entry-lint.test.ts","exitCode":0,"duration":1.54,"log":".run/logs/3-2.log","output":"▶ entry lint\n  ✔ reports an entry no tree provides (186.751669ms)\n  ✔ reports each row of entries the change provides (689.822541ms)\n  ✔ counts an approved change's task scope as providing an entry (390.787273ms)\n✔ entry lint (1269.068932ms)\nℹ tests 3\nℹ suites 1\nℹ pass 3\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1506.519971\n"}}
+ {"type":"measures","timestamp":"2026-10-11T10:34:41.675Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":1425,"repoFiles":2824,"repoLines":327709,"importFanIn":5,"proposalWords":620,"taskWords":302,"deltaRequirements":4,"deltaScenarios":16,"changedFiles":3,"changedLines":426,"scopeHashes":{"src/core/spec/entry-lint.ts":{"before":null,"after":"sha256:910fbda34d31c682239af8a62aa8f164a2dbfcc4f7200886069ea03541928139"},"src/core/spec/linter.ts":{"before":"sha256:a274b940affa6bee31b1c5b49ac0dc0f234ad4bcb41c93d4c93127f7ba440ff5","after":"sha256:fe149f30232576bc005fc296c668a5d21a7ad988c8113d2f9103a692f250abdd"},"tests/entry-lint.test.ts":{"before":null,"after":"sha256:f1e124967f918dec71762e30737f7ef2cd5da9a5d9beb8693d6d083481df2a83"}}}}
+ {"type":"dead","timestamp":"2026-10-11T10:34:41.678Z","data":{"task":"3","reason":"change_verify_red"}}
++{"type":"retry","data":{"target":"3","reason":"change_verify_red","attempt":2,"automatic":true},"timestamp":"2026-10-11T10:34:42.274Z"}
++{"type":"measures","timestamp":"2026-10-11T10:34:43.638Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":1425,"repoFiles":2824,"repoLines":327709,"importFanIn":5,"proposalWords":620,"taskWords":302,"deltaRequirements":4,"deltaScenarios":16}}
++{"type":"started","timestamp":"2026-10-11T10:34:43.684Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4-flash","osqVersion":"0.3.0","attempt":2,"projectCommit":"43e427ad","pid":80165,"timeoutSeconds":1800,"version":"0.3.0","commit":"e63935cf"}}
++{"type":"tool","timestamp":"2026-10-11T10:34:52.120Z","data":{"tool":"read","summary":"tasks/3.md"}}
++{"type":"tool","timestamp":"2026-10-11T10:34:52.154Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:34:52.200Z","data":{"promptTokens":235395,"candidateTokens":147,"totalTokens":235542,"cachedTokens":0,"reasoningTokens":64,"cost":0.03543585}}
++{"type":"tool","timestamp":"2026-10-11T10:34:54.851Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:34:54.896Z","data":{"promptTokens":321,"candidateTokens":142,"totalTokens":463,"cachedTokens":235520,"reasoningTokens":41,"cost":0.00086451}}
++{"type":"tool","timestamp":"2026-10-11T10:34:57.669Z","data":{"tool":"read","summary":"src/core/run/scope.ts"}}
++{"type":"tool","timestamp":"2026-10-11T10:34:57.671Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
++{"type":"tool","timestamp":"2026-10-11T10:34:57.673Z","data":{"tool":"read","summary":"src/core/status/change-locations.ts"}}
++{"type":"tokens","timestamp":"2026-10-11T10:34:57.715Z","data":{"promptTokens":989,"candidateTokens":176,"totalTokens":1165,"cachedTokens":235904,"reasoningTokens":35,"cost":0.000982662}}
++{"type":"tool","timestamp":"2026-10-11T10:35:00.626Z","data":{"tool":"read","summary":"src/core/spec/linter.ts"}}
++{"type":"tool","timestamp":"2026-10-11T10:35:00.628Z","data":{"tool":"read","summary":"src/core/vcs/select.ts"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:00.672Z","data":{"promptTokens":8322,"candidateTokens":118,"totalTokens":8440,"cachedTokens":237056,"reasoningTokens":32,"cost":0.002049468}}
++{"type":"tool","timestamp":"2026-10-11T10:35:04.538Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:04.578Z","data":{"promptTokens":16028,"candidateTokens":68,"totalTokens":16096,"cachedTokens":245504,"reasoningTokens":236,"cost":0.003323112}}
++{"type":"tool","timestamp":"2026-10-11T10:35:11.685Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:11.725Z","data":{"promptTokens":2103,"candidateTokens":94,"totalTokens":2197,"cachedTokens":261760,"reasoningTokens":1119,"cost":0.0018285299999999999}}
++{"type":"tool","timestamp":"2026-10-11T10:35:16.101Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:16.148Z","data":{"promptTokens":2118,"candidateTokens":73,"totalTokens":2191,"cachedTokens":264960,"reasoningTokens":349,"cost":0.00136578}}
++{"type":"tool","timestamp":"2026-10-11T10:35:18.885Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:18.925Z","data":{"promptTokens":1766,"candidateTokens":73,"totalTokens":1839,"cachedTokens":267392,"reasoningTokens":15,"cost":0.001119876}}
++{"type":"tool","timestamp":"2026-10-11T10:35:25.407Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:25.449Z","data":{"promptTokens":2090,"candidateTokens":214,"totalTokens":2304,"cachedTokens":269184,"reasoningTokens":829,"cost":0.001746852}}
++{"type":"tool","timestamp":"2026-10-11T10:35:29.059Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:29.100Z","data":{"promptTokens":401,"candidateTokens":81,"totalTokens":482,"cachedTokens":272256,"reasoningTokens":204,"cost":0.0010479180000000001}}
++{"type":"tool","timestamp":"2026-10-11T10:35:53.510Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:35:53.554Z","data":{"promptTokens":973,"candidateTokens":151,"totalTokens":1124,"cachedTokens":272896,"reasoningTokens":4866,"cost":0.003974838}}
++{"type":"tool","timestamp":"2026-10-11T10:36:32.580Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:36:32.625Z","data":{"promptTokens":1422,"candidateTokens":80,"totalTokens":1502,"cachedTokens":278784,"reasoningTokens":8062,"cost":0.005934852}}
++{"type":"tool","timestamp":"2026-10-11T10:36:35.276Z","data":{"tool":"read","summary":"osq.config.ts"}}
++{"type":"tokens","timestamp":"2026-10-11T10:36:35.318Z","data":{"promptTokens":245,"candidateTokens":61,"totalTokens":306,"cachedTokens":288128,"reasoningTokens":0,"cost":0.0009377340000000001}}
++{"type":"tool","timestamp":"2026-10-11T10:36:47.625Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:36:47.663Z","data":{"promptTokens":537,"candidateTokens":76,"totalTokens":613,"cachedTokens":288384,"reasoningTokens":2230,"cost":0.0023293019999999997}}
++{"type":"text","timestamp":"2026-10-11T10:36:59.407Z","data":{"text":"I've found the core issue. Let me verify my understanding of the conflict before writing the blocked result."}}
++{"type":"tool","timestamp":"2026-10-11T10:36:59.417Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/173-prompt-f"}}
++{"type":"tokens","timestamp":"2026-10-11T10:36:59.455Z","data":{"promptTokens":149,"candidateTokens":187,"totalTokens":336,"cachedTokens":291200,"reasoningTokens":1776,"cost":0.00207375}}
++{"type":"text","timestamp":"2026-10-11T10:37:05.552Z","data":{"text":"The conflict is confirmed. Let me write the blocked result."}}
++{"type":"tool","timestamp":"2026-10-11T10:37:05.559Z","data":{"tool":"write","summary":"openspec/changes/173-prompt-files-exist/.run/results/3.md"}}
++{"type":"tokens","timestamp":"2026-10-11T10:37:05.597Z","data":{"promptTokens":669,"candidateTokens":893,"totalTokens":1562,"cachedTokens":293248,"reasoningTokens":23,"cost":0.001529694}}
++{"type":"tool","timestamp":"2026-10-11T10:37:08.993Z","data":{"tool":"edit","summary":"openspec/changes/173-prompt-files-exist/.run/results/3.md"}}
++{"type":"tokens","timestamp":"2026-10-11T10:37:09.032Z","data":{"promptTokens":213,"candidateTokens":155,"totalTokens":368,"cachedTokens":294656,"reasoningTokens":123,"cost":0.001082718}}
++{"type":"text","timestamp":"2026-10-11T10:37:13.722Z","data":{"text":"I stopped without implementing because the task, as planned, cannot pass its change-level verification within its `scope`.\n\n**The conflict:** Task 3's required lint error (\"Entry paths exist\") makes `osq lint`/`osq approve` reject a change whose task `entry` names a file no tree provides. But task 1's runtime tests (`tests/entry-missing-run.test.ts`) deliberately approve exactly that kind of change and expect `approve` to succeed, so the watcher can then kill it with `entry_missing`. Those tests are preexisting, not in task 3's `scope`, and the task sets no `tests.modify`, so I may not touch them. Any spec-compliant implementation makes `pnpm verify` red — which is exactly the `change_verify_red` the previous attempt hit (`.run/dead/3.1.md`).\n\nI wrote `openspec/changes/173-prompt-files-exist/.run/results/3.md` with the details under `## Missing context` / `## Blocked`, the concrete failing lines (56, 90, 140), and the replan I need: put `tests/entry-missing-run.test.ts` in task 3's `scope` with `tests.modify: true` (or move the runtime proof into a task-3-owned test file), so task 3 can reach an approved change with a missing entry without routing through lint. I changed no code and ran no verify."}}
++{"type":"tokens","timestamp":"2026-10-11T10:37:14.305Z","data":{"promptTokens":145,"candidateTokens":329,"totalTokens":474,"cachedTokens":509192,"reasoningTokens":0,"cost":0.027871519999999983}}
++{"type":"exited","timestamp":"2026-10-11T10:37:14.306Z","data":{"exitCode":0,"pid":80165,"timedOut":false,"elapsedSeconds":150.2}}
++{"type":"measures","timestamp":"2026-10-11T10:37:14.550Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":1425,"repoFiles":2824,"repoLines":327709,"importFanIn":5,"proposalWords":620,"taskWords":302,"deltaRequirements":4,"deltaScenarios":16,"changedFiles":0,"changedLines":0,"scopeHashes":{"src/core/spec/entry-lint.ts":{"before":null,"after":null},"src/core/spec/linter.ts":{"before":"sha256:a274b940affa6bee31b1c5b49ac0dc0f234ad4bcb41c93d4c93127f7ba440ff5","after":"sha256:a274b940affa6bee31b1c5b49ac0dc0f234ad4bcb41c93d4c93127f7ba440ff5"},"tests/entry-lint.test.ts":{"before":null,"after":null}}}}
++{"type":"dead","timestamp":"2026-10-11T10:37:14.552Z","data":{"task":"3","reason":"blocked"}}
+diff --git a/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl b/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl
+new file mode 100644
+index 00000000..76c97509
+--- /dev/null
++++ b/openspec/changes/173-prompt-files-exist/.run/events/change.jsonl
+@@ -0,0 +1,4 @@
++{"type":"baseline_ran","timestamp":"2026-10-11T10:10:40.110Z","data":{"outcome":"passed","command":"pnpm verify","commit":"18c2105d6a99145726a73c315a3f9ea59276f55b","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":167.36}}
++{"type":"verify_ran","timestamp":"2026-10-11T10:18:11.351Z","data":{"command":"pnpm verify","exitCode":0,"duration":97.96,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.296016ms)\n✔ dashboard data base (1.677405ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.366938ms)\n  ✔ keeps the default actions URL (0.245055ms)\n✔ actions client base (1.771116ms)\n▶ server header\n  ✔ shows the project and server name next to the title (8.622841ms)\n✔ server header (8.736474ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.793617ms)\n  ✔ shows a terminal watcher and no service record (1.092372ms)\n  ✔ shows a waiting background watcher and a service record (1.066482ms)\n  ✔ shows no watcher and no service record (1.065272ms)\n  ✔ names the watcher version, commit, and start time (1.084012ms)\n  ✔ marks the waiting line as a warning in the existing palette (41.248469ms)\n  ✔ renders the home view as before without a server status (2.027428ms)\n✔ service panel (49.80086ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.418669ms)\n✔ service panel component (0.48779ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (9.631711ms)\n  ✔ maps every derived task state onto the status vocabulary (0.166223ms)\n  ✔ defines the whole palette for light and dark schemes (28.363449ms)\n  ✔ never centers table cells (11.668768ms)\n✔ status badge (51.345292ms)\nℹ tests 157\nℹ suites 46\nℹ pass 157\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2751.201435\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1119 files in 496ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-11T10:26:35.607Z","data":{"command":"pnpm verify","exitCode":0,"duration":96.29,"log":".run/logs/change-2.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.760874ms)\n✔ dashboard data base (2.124921ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.587526ms)\n  ✔ keeps the default actions URL (0.518715ms)\n✔ actions client base (1.48859ms)\n▶ server header\n  ✔ shows the project and server name next to the title (20.149033ms)\n✔ server header (20.269286ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (5.92829ms)\n  ✔ shows a terminal watcher and no service record (1.213822ms)\n  ✔ shows a waiting background watcher and a service record (1.317315ms)\n  ✔ shows no watcher and no service record (1.128091ms)\n  ✔ names the watcher version, commit, and start time (2.443716ms)\n  ✔ marks the waiting line as a warning in the existing palette (26.53901ms)\n  ✔ renders the home view as before without a server status (1.492091ms)\n✔ service panel (40.507908ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.423462ms)\n✔ service panel component (0.485083ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (13.294727ms)\n  ✔ maps every derived task state onto the status vocabulary (0.151974ms)\n  ✔ defines the whole palette for light and dark schemes (43.471628ms)\n  ✔ never centers table cells (2.975745ms)\n✔ status badge (61.574779ms)\nℹ tests 157\nℹ suites 46\nℹ pass 157\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2713.634751\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1120 files in 480ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-11T10:34:41.278Z","data":{"command":"pnpm verify","exitCode":1,"duration":110.45,"log":".run/logs/change-3.log","output":"      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:90:5)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Promise.all (index 0)\n      at async Suite.run (node:internal/test_runner/test:1905:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n\ntest at tests/entry-missing-run.test.ts:1:3470\n✖ src/*.rs in the tree the task runs in: entry_missing (392.213309ms)\n  AssertionError [ERR_ASSERTION]: approve exited 1\n  stdout:\n  \n  stderr:\n  Error approving 001:\n    Lint failed for spec \"001-order-flow\":\n    - Task 1 entry names src/*.rs, which is not in main and no task up to this one creates\n  Next: ready for approval — osq approve 001\n  \n  \n  1 !== 0\n  \n      at assertOk (tests/recovery-support.ts:115:10)\n      at TestContext.<anonymous> (tests/entry-missing-run.test.ts:140:7)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Suite.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+diff --git a/openspec/changes/173-prompt-files-exist/.run/results/3.md b/openspec/changes/173-prompt-files-exist/.run/results/3.md
+new file mode 100644
+index 00000000..8d44148f
+--- /dev/null
++++ b/openspec/changes/173-prompt-files-exist/.run/results/3.md
+@@ -0,0 +1,59 @@
++## Missing context
++
++Task 3 cannot be finished within its `scope` as planned.
++
++The change's own "Entry paths exist" requirement makes `lintChangeFolder`
++report an error for a task whose `entry` no tree provides. Task 1's runtime
++tests, in `tests/entry-missing-run.test.ts`, deliberately approve exactly such
++a change and expect `approve` to succeed so the watcher can then kill the task
++with `entry_missing`:
++
++- `tests/entry-missing-run.test.ts:56` — writes task 1 `entry: [src/gone.ts]`,
++  then `assertOk(await project.approve(), 'approve')`.
++- `tests/entry-missing-run.test.ts:90` — same first approve, before the entry is
++  revised.
++- `tests/entry-missing-run.test.ts:140` — the `src/*.rs` row writes
++  `entry: [src/*.rs]` with no matching file and expects approve to succeed.
++
++Once task 3 adds the lint error, all three `approve` calls fail, so the
++proposal-level `verify` (`pnpm verify`, which runs `tests/**/*.test.ts`) is red
++at this task's boundary. The prior attempt died with exactly this
++`change_verify_red` dead marker (`.run/dead/3.1.md`).
++
++`tests/entry-missing-run.test.ts` is not in this task's `scope`, and this task
++sets no `tests.modify`, so I may not change it. There is no spec-compliant way
++to make both the new lint error and those tests pass: the two scenarios are the
++same change and differ only in which entrypoint reaches them, and no
++provided-path rule (change folder, own/earlier scope, default-branch tip,
++pattern match, approved other-change scope) can distinguish them.
++
++## Blocked
++
++The plan must be revised before task 3 can pass its change-level verify.
++Task 1's runtime scenarios and task 3's lint error are mutually exclusive as
++the change is written today: to prove the watcher's `entry_missing` path the
++tests must get a change approved with a missing `entry`, but approval lints and
++now rejects it.
++
++What I need:
++
++1. `tests/entry-missing-run.test.ts` added to task 3's `scope`, with
++   `tests.modify: true`, so task 3 can rewrite how those tests reach an
++   approved change whose task entry is missing without calling `approve` on a
++   missing entry. For example, approve with a valid `entry: []` (or commit the
++   entry file only to the worktree after approval) and then commit the
++   `tasks/1.md` edit that names the missing file in the worktree with the
++   `git()` helper `tests/recovery-support.ts` exports, so the watcher's runtime
++   check (not lint) kills the task. The `src/*.rs` and `src/gone.ts` rows need
++   the same treatment.
++2. Alternatively, the planner can split the runtime proof of
++   "Entry names a removed file", "Steered task runs", and the negative row of
++   "Entries that count as present" out of `tests/entry-missing-run.test.ts`
++   into a new file task 3 owns, and have task 3 remove the conflicting rows
++   from task 1's file under `tests.modify: true`. Either way the shared file
++   must be in task 3's `scope` and identified in the proposal.
++
++I did not change any file, so the plan and the tree are exactly as this task
++received them.
++
++Touched: 

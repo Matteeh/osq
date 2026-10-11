@@ -10,6 +10,7 @@ import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumpt
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
+import { type EntryLintTask, missingEntryFindings } from './entry-lint.js';
 import { collectGeneratedMoveFindings } from './generated-move-lint.js';
 import { isExcludedChangePath } from './hasher.js';
 import { collectImpactFindings } from './impact-lint.js';
@@ -1006,6 +1007,14 @@ function readTestsModifyDeclaration(content: string): TestsModifyDeclaration {
   return { present: false, valid: true };
 }
 
+/**
+ * Lint one change folder against the living specs and the tree it runs in,
+ * returning the findings that decide validity and the repository findings.
+ *
+ * @scenario spec-lint-and-approve: Entry names a file no tree has
+ * @scenario spec-lint-and-approve: Entries the change provides
+ * @adr 006
+ */
 export async function lintChangeFolder(
   projectRoot: string,
   folderPath: string,
@@ -1195,12 +1204,20 @@ export async function lintChangeFolder(
   }
 
   const resolvedTaskScopes: ResolvedTaskScope[] = [];
+  const entryLintTasks: EntryLintTask[] = [];
 
   for (const taskFile of taskEntries) {
     const taskPath = path.join(tasksDir, taskFile);
     const taskRepoPath = repositoryPath(projectRoot, taskPath);
     const taskContent = await fs.readFile(taskPath, 'utf8');
     const task = parseTaskMd(taskContent);
+
+    entryLintTasks.push({
+      number: taskFile.replace(/\.md$/, ''),
+      repositoryPath: taskRepoPath,
+      scope: task.scope,
+      entry: task.entry,
+    });
 
     // Check: acceptance items must each occupy their own line
     scanFusedAcceptance(taskFile, taskRepoPath, taskContent, findings);
@@ -1273,6 +1290,18 @@ export async function lintChangeFolder(
         `Task in ${taskFile} scope specifies ${task.scope.length} patterns, exceeding limit ${config.limits.maxScopeFiles}`,
       );
     }
+  }
+
+  // Check: every entry a task names must be providable by the change or the
+  // tree it runs in; a missing one is an error on that task's file.
+  entryLintTasks.sort((a, b) => compareNumericPrefix(a.number, b.number));
+  for (const finding of await missingEntryFindings(
+    projectRoot,
+    config,
+    folderPath,
+    entryLintTasks,
+  )) {
+    findings.error({ file: finding.file }, finding.message);
   }
 
   // Check: harness scope should cover the event fixtures without failing lint

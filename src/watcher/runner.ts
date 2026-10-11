@@ -3,7 +3,6 @@ import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
 import { hashChangeFolder } from '../core/spec/hasher.js';
-import { parseTaskMd } from '../core/spec/parser.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { settleBaseline } from './baseline.js';
 import { runChangeVerifyGate } from './change-verify.js';
@@ -28,6 +27,7 @@ import {
 } from './outcome.js';
 import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
+import { readApprovedTaskFile } from './task-file.js';
 import { checkBlockedFirst, runPreSpawnVerify, verifyRedFailure } from './task-verify.js';
 import { captureTestGate, findUndeclaredTestChanges, runVerificationGate } from './verify.js';
 
@@ -100,15 +100,9 @@ export async function runTask(
     return fail('spec_conflict', marker, error);
   }
 
-  const taskPath = path.join(specFolderPath, 'tasks', `${taskNumber}.md`);
-  let taskContent = '';
-  try {
-    taskContent = await fs.readFile(taskPath, 'utf8');
-  } catch {
-    const marker = `---\nreason: crashed\n---\nTask file not found: ${taskPath}\n`;
-    return fail('crashed', marker, 'Task file not found');
-  }
-  const taskData = parseTaskMd(taskContent);
+  const taskRead = await readApprovedTaskFile(projectRoot, specFolderPath, taskNumber, fail);
+  if (!taskRead.ok) return taskRead.result;
+  const taskData = taskRead.taskData;
 
   const regression = await guardScopeRegression(projectRoot, specFolderPath, taskNumber, config);
   if (regression) {

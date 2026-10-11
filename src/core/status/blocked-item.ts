@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import { parseResultSections } from '../report/result-sections.js';
+import { parseFrontmatter } from '../spec/parser.js';
 import type { NeedsYouItem } from './inbox.js';
-import { getResultPath } from './layout.js';
+import { getDeadMarkerPath, getResultPath } from './layout.js';
 import type { StatusOverview } from './status.js';
 import type { SteeringTrigger } from './steering.js';
 
@@ -14,6 +15,24 @@ async function readNeed(folderPath: string, taskNumber: string): Promise<string>
     .catch(() => null);
   if (content === null) return NOT_STATED;
   return parseResultSections(content).blocked ?? NOT_STATED;
+}
+
+/**
+ * The need for a task that died with `entry_missing`: the dead marker's
+ * `- <path>` lines as `missing entry files <paths>`, or `(not stated)` when the
+ * marker is unreadable or lists none.
+ */
+async function readMissingEntryNeed(folderPath: string, taskNumber: string): Promise<string> {
+  const content = await fs
+    .readFile(getDeadMarkerPath(folderPath, taskNumber), 'utf8')
+    .catch(() => null);
+  if (content === null) return NOT_STATED;
+  const paths = parseFrontmatter(content)
+    .body.split('\n')
+    .map((line) => line.match(/^-\s+(.+)$/)?.[1]?.trim())
+    .filter((entry): entry is string => entry !== undefined && entry.length > 0);
+  if (paths.length === 0) return NOT_STATED;
+  return `missing entry files ${paths.join(', ')}`;
 }
 
 /** Whether a needs-you item is the halt item a trigger's target names. */
@@ -29,6 +48,9 @@ function isTriggerItem(item: NeedsYouItem, trigger: SteeringTrigger): boolean {
  * Collapse each change that needs steering to its first trigger's halt item,
  * with `osq plan <id>`, the trigger, and, for a blocked task, the stated need.
  * Every other item, and every other change, is returned unchanged.
+ *
+ * @scenario status-inspection: Missing entry file in the inbox
+ * @adr 006
  */
 export async function applySteeringItems(
   overview: StatusOverview,
@@ -57,7 +79,10 @@ export async function applySteeringItems(
       result.push(transformed);
       continue;
     }
-    const need = await readNeed(spec.folderPath, item.task.number);
+    const need =
+      first.reason === 'entry_missing'
+        ? await readMissingEntryNeed(spec.folderPath, item.task.number)
+        : await readNeed(spec.folderPath, item.task.number);
     result.push({ ...transformed, blocked: { need } });
   }
   return result;

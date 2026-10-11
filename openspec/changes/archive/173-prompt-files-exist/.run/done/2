@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:71341a96b06d8c446e6da6bbd0ea3264aaf9c7fea29fc9cc704bdcf0a30ec2aa"
+build_stamp: "e63935cf"
+project_commit: "a5502a93"
+exit_code: 0
+scope_files: {"src/core/status/blocked-item.ts":"sha256:c216776ba36b92101c43fc39cfb5c1f26dd192c31533ffdc74e71c3ea8a57db5","tests/entry-missing-inbox.test.ts":"sha256:a9ea3e6f809328ee698d67f85eeb4698bde08f01c2ba80459b0751f00691ad11"}
+---
+2026-10-11T10:26:35.613Z

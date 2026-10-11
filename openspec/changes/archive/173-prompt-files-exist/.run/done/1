@@ -1,0 +1,18 @@
+---
+scope_resolver: 2
+scope_hash: sha256:86d4956070719d10d14857b2ae08d96d9fb88cbb67122f6f4b78752183e197a1
+build_stamp: e63935cf
+project_commit: 18c2105d
+exit_code: 0
+scope_files:
+  src/core/run/entry-paths.ts: sha256:a10a97f3a9228e93a9cfce98915df15a2f5a0c78153e3ba07d6edee675078956
+  src/core/status/steering.ts: sha256:1cfeaa0469de7c35a346e9a4a377aa27904ab3c1d7b013945e2a44ac5dcc7b41
+  src/watcher/failure-reason.ts: sha256:4279c6bb77d0a1a0ca885490a4e9a4f3bc6a0ab32b797c30ba101189e7dac4b2
+  src/watcher/runner.ts: sha256:e7bfa0905e6050d3848d4d122f092b1716a84c87b7a7ed27c9ab39495175a969
+  src/watcher/task-file.ts: sha256:f023dfbd06f91a8e005056633934c1417a716e64756599ac4915c37689ef4172
+  tests/entry-missing-run.test.ts: sha256:dcc5176c6934f1b81f25614e2e9af70e8eb132f09818f8aa666c8a1beefc984d
+original_scope_hash: sha256:6a8d96a9495e51b67e8cc8a8ca04c6e4f685b0d2c114eeecb5f1caea65e419a7
+recertified_at: 2026-10-11T11:56:37.648Z
+recertification_count: 1
+---
+2026-10-11T10:18:11.359Z
