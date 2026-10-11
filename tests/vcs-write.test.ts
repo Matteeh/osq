@@ -46,6 +46,7 @@ const PORT_MEMBERS = [
   'defaultBranch',
   'show',
   'pathExists',
+  'lineEndings',
   'mergeBase',
   'trailerValues',
   'listBranches',

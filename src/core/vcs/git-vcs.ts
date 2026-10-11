@@ -16,6 +16,7 @@ import type {
   Vcs,
   VcsDiffStat,
   VcsHead,
+  VcsLineEnding,
   VcsMergeResult,
   VcsPushResult,
   VcsStash,
@@ -144,6 +145,10 @@ export class GitVcs implements Vcs {
 
   pathExists(ref: string, filePath: string): Promise<boolean> {
     return reads.pathExists(this.context, ref, filePath);
+  }
+
+  lineEndings(): Promise<VcsLineEnding[]> {
+    return reads.lineEndings(this.context);
   }
 
   mergeBase(a: string, b: string): Promise<string | null> {

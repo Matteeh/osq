@@ -1008,3 +1008,27 @@ stopped land and ending with `osq land <id>` exiting 0.
 #### Scenario: Red verify at land steered
 - **WHEN** the default branch adds `src/two.txt` holding `bad`, which makes an archived one-task change's `verify` exit 1 on the merged tree, `osq land <id>` runs, a planner adds task 2 with scope `src/two.txt` in the worktree's archive folder, a human runs `osq approve <id>`, `osq watch --once` runs, and the human runs `osq land <id>`
 - **THEN** the first land exits 1, `osq approve` prints `Merged main into osq/<folder>` and `Continues from task 2`, task 1 does not spawn again, task 2 spawns, and the last land exits 0 with task 2's `src/two.txt` on the default branch
+
+### Requirement: Vcs line endings read
+The `Vcs` port SHALL also offer `lineEndings()`, a read bounded by
+`timeouts.gitSeconds` like every read, that returns one entry per tracked
+file, in `git ls-files` order, with the file's `path` relative to the project
+root and its `index` line ending: the value `git ls-files --eol` prints after
+`i/`, which is `lf`, `crlf`, `mixed`, `none`, `-text`, or empty. `GitVcs`
+SHALL read it with `git ls-files --eol -z`, and SHALL return an empty list,
+not fail, when git cannot list the files. `NoVcs` SHALL return an empty list.
+
+#### Scenario: Index line endings of a temporary repository
+- **WHEN** a temporary repository with `core.autocrlf` false stages only the files below
+- **THEN** `lineEndings()` returns exactly these entries, in this order:
+
+| File | Content | Index |
+|---|---|---|
+| `bin.dat` | bytes `00 01 0d 0a` | `-text` |
+| `lf.txt` | `ok\n` | `lf` |
+| `mix.txt` | `a\nb\r\n` | `mixed` |
+| `win.txt` | `a\r\nb\r\n` | `crlf` |
+
+#### Scenario: Line endings without git
+- **WHEN** `NoVcs` is asked for `lineEndings()`
+- **THEN** it returns an empty list

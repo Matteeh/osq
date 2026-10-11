@@ -24,6 +24,14 @@ export interface VcsStatusEntry {
   readonly from?: string;
 }
 
+/** One tracked file's index line ending, as `git ls-files --eol` reports it. */
+export interface VcsLineEnding {
+  /** Path relative to the project root. */
+  readonly path: string;
+  /** The value after `i/`: `lf`, `crlf`, `mixed`, `none`, `-text`, or empty. */
+  readonly index: string;
+}
+
 /** What `to` changed since its merge base with `from`. */
 export interface VcsDiffStat {
   /** Files changed; a binary file counts once with no lines. */
@@ -82,6 +90,8 @@ export interface Vcs {
   show(ref: string, path: string): Promise<string | null>;
   /** Whether a file or directory exists at a ref; false when the ref is unknown. */
   pathExists(ref: string, path: string): Promise<boolean>;
+  /** Every tracked file's index line ending, in `git ls-files` order; empty when git cannot list. */
+  lineEndings(): Promise<VcsLineEnding[]>;
   /** The merge base of `a` and `b`; null when they share no commit or a ref is unknown. */
   mergeBase(a: string, b: string): Promise<string | null>;
   /**

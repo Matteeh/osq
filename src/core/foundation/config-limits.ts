@@ -17,4 +17,6 @@ export interface OsqLimits {
   readonly markerOutputLines: number;
   /** The most characters a marker keeps of any one output line. */
   readonly markerLineChars: number;
+  /** The most CRLF or mixed files the `git-line-endings` warning names. */
+  readonly maxListedLineEndings: number;
 }

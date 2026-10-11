@@ -4,6 +4,7 @@ import type {
   VcsDiffStat,
   VcsFastForwardResult,
   VcsHead,
+  VcsLineEnding,
   VcsMergeResult,
   VcsPushResult,
   VcsStash,
@@ -63,6 +64,13 @@ export class NoVcs implements Vcs {
 
   async pathExists(_ref: string, _path: string): Promise<boolean> {
     return false;
+  }
+
+  /**
+   * @scenario version-control: Line endings without git
+   */
+  async lineEndings(): Promise<VcsLineEnding[]> {
+    return [];
   }
 
   async diffStat(

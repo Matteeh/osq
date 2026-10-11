@@ -3,6 +3,7 @@ import path from 'node:path';
 import { probeVersion } from '../foundation/config-doctor.js';
 import type { OsqConfig } from '../foundation/config.js';
 import type { DoctorCheckResult } from '../foundation/doctor.js';
+import { lineEndingWarning } from './doctor-line-endings.js';
 import { DEFAULT_GIT_SECONDS } from './git-vcs.js';
 import { selectVcs } from './select.js';
 import type { Vcs } from './vcs.js';
@@ -83,9 +84,10 @@ async function presentLockfiles(projectRoot: string): Promise<string[]> {
 }
 
 /**
- * The three warnings shown only with `vcs.enabled` and `GitVcs`: a lockfile
- * with no `vcs.prepare`, the active commit hooks, and commit signing. Each
- * passes with a warning and never changes doctor's exit code.
+ * The warnings shown only with `vcs.enabled` and `GitVcs`: a lockfile with no
+ * `vcs.prepare`, the active commit hooks, commit signing, and tracked files
+ * whose index line endings are CRLF or mixed. Each passes with a warning and
+ * never changes doctor's exit code.
  */
 async function vcsWarnings(
   projectRoot: string,
@@ -123,6 +125,8 @@ async function vcsWarnings(
       message: 'commit.gpgsign is true; check signing runs without a prompt',
     });
   }
+  const endings = await lineEndingWarning(vcs, config.limits.maxListedLineEndings);
+  if (endings !== null) warnings.push(endings);
   return warnings;
 }
 

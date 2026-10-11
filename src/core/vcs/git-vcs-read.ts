@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { nonEmpty, parseStashes, parseStatus } from './git-vcs-parse.js';
 import type { GitWriteContext } from './git-vcs-write.js';
-import type { VcsHead, VcsStash, VcsStatusEntry } from './vcs.js';
+import type { VcsHead, VcsLineEnding, VcsStash, VcsStatusEntry } from './vcs.js';
 
 /** The repository top level, or null when git cannot name one. */
 export async function root(ctx: GitWriteContext): Promise<string | null> {
@@ -64,4 +64,35 @@ export async function pathExists(
 ): Promise<boolean> {
   const result = await ctx.run(['cat-file', '-e', `${ref}:${filePath}`]);
   return result.code === 0;
+}
+
+/**
+ * Parse `git ls-files --eol -z` into one entry per tracked file: each
+ * NUL-separated record's path follows its tab, and its index line ending is
+ * the first field's text after `i/`.
+ */
+function parseLineEndings(output: string): VcsLineEnding[] {
+  const entries: VcsLineEnding[] = [];
+  for (const record of output.split('\0')) {
+    if (record === '') continue;
+    const tab = record.indexOf('\t');
+    if (tab < 0) continue;
+    const firstField = record.slice(0, tab);
+    const space = firstField.indexOf(' ');
+    const index = firstField.slice(2, space < 0 ? undefined : space);
+    entries.push({ path: record.slice(tab + 1), index });
+  }
+  return entries;
+}
+
+/**
+ * Every tracked file's index line ending, in `git ls-files` order; empty when
+ * git cannot list the files.
+ *
+ * @scenario version-control: Index line endings of a temporary repository
+ */
+export async function lineEndings(ctx: GitWriteContext): Promise<VcsLineEnding[]> {
+  const result = await ctx.run(['ls-files', '--eol', '-z']);
+  if (result.code !== 0) return [];
+  return parseLineEndings(result.stdout);
 }

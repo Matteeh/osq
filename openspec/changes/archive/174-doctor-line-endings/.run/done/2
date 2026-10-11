@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1faca0593a8e465d90fbeaf9c95c6fa99f91ee93dbb71788081b43d4fa9434ae"
+build_stamp: "f47997db"
+project_commit: "ccb9e0d2"
+exit_code: 0
+scope_files: {"src/core/foundation/config-limits.ts":"sha256:f739d846674d6303c3492eabfe838431616468e3a84f220b6aff6489763ff03b","src/core/foundation/config.ts":"sha256:7dd0e3eff4cf390e02e9fefde11f8117f4a04bafea7666ca95697f7e25705964","src/core/vcs/doctor-git.ts":"sha256:d99d88d42f0938273ff77a480476cbf65e3c06f34a579b41beb19b5e221480b0","src/core/vcs/doctor-line-endings.ts":"sha256:52469386d8d58c5ddfc90fa88c913b1291f598640a339af31df22606e3b15590","tests/vcs-doctor-line-endings.test.ts":"sha256:9c0c960ff9b99ee3e2e61b1f514c5b26213542534b0abde6778095713b9f2ea3"}
+---
+2026-10-11T13:54:31.642Z

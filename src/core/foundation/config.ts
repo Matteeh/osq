@@ -148,6 +148,7 @@ const base: OsqConfig = {
     cardOutputLines: 20,
     markerOutputLines: 40,
     markerLineChars: 400,
+    maxListedLineEndings: 5,
   },
   paths: {
     features: 'openspec/specs',
