@@ -16,7 +16,7 @@ const DEFAULTS: InboxConfig = {
   quietHours: null,
   soundWindowSeconds: 5,
   eventDebounceMs: 200,
-  pollSeconds: 30,
+  pollSeconds: 300,
 };
 
 describe('inbox configuration', () => {
@@ -32,7 +32,7 @@ describe('inbox configuration', () => {
     assert.equal(config.inbox?.sound, 'default');
     assert.equal(config.inbox?.soundWindowSeconds, 5);
     assert.equal(config.inbox?.eventDebounceMs, 200);
-    assert.equal(config.inbox?.pollSeconds, 30);
+    assert.equal(config.inbox?.pollSeconds, 300);
   });
 
   it('keeps null quiet hours when the block omits or nulls them', () => {
@@ -132,6 +132,6 @@ describe('inbox configuration from the config file', () => {
     const config = await loadConfig(tmpDir);
     assert.equal(config.inbox?.sound, 'bell');
     assert.equal(config.inbox?.quietHours, null);
-    assert.equal(config.inbox?.pollSeconds, 30);
+    assert.equal(config.inbox?.pollSeconds, 300);
   });
 });

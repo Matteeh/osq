@@ -43,6 +43,11 @@ export interface InvalidationHubOptions {
    * absent, the single tree of today's canonical layout is used.
    */
   readonly trees?: readonly ChangeTree[];
+  /**
+   * The tree record osq's own git writes append to. When given, the hub watches
+   * it after the tree paths, and a notification on it is a global invalidation.
+   */
+  readonly recordPath?: string;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
 }
@@ -80,10 +85,16 @@ function defaultSchedule(callback: () => void, delayMs: number): TimerHandle {
   return { cancel: () => clearTimeout(timer) };
 }
 
-/** Create the one watcher and debounce accumulator owned by a server. */
+/**
+ * Create the one watcher and debounce accumulator owned by a server.
+ *
+ * @scenario web-inspection: Tree record change
+ */
 export function createInvalidationHub(options: InvalidationHubOptions): InvalidationHub {
   const trees = options.trees ?? [singleChangeTree(options.projectRoot, options.openspecRoot)];
   const watched = treeWatchPaths(options.projectRoot, options.openspecRoot, trees);
+  const recordPath = options.recordPath === undefined ? null : path.resolve(options.recordPath);
+  if (recordPath !== null && !watched.includes(recordPath)) watched.push(recordPath);
   const factory = options.watch ?? defaultWatch;
   const schedule = options.schedule ?? defaultSchedule;
 
@@ -116,7 +127,9 @@ export function createInvalidationHub(options: InvalidationHubOptions): Invalida
   for (const event of WATCHED_EVENTS) {
     watcher.on(event, (target) => {
       if (closed || typeof target !== 'string') return;
-      const id = classifyTreePath(path.resolve(target), trees);
+      const resolved = path.resolve(target);
+      const id =
+        recordPath !== null && resolved === recordPath ? null : classifyTreePath(resolved, trees);
       if (id === null) global = true;
       else ids.add(id);
       if (pending === null) {

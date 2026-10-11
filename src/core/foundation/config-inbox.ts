@@ -26,7 +26,7 @@ export const DEFAULT_INBOX_CONFIG: InboxConfig = {
   quietHours: null,
   soundWindowSeconds: 5,
   eventDebounceMs: 200,
-  pollSeconds: 30,
+  pollSeconds: 300,
 };
 
 const QUIET_HOURS_PATTERN = /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/;
@@ -58,6 +58,10 @@ function clockMinutes(hour: string, minute: string): number | null {
  * Validate an optional `inbox` block over the defaults. A partial block keeps
  * each missing default; an empty sound, a malformed quiet window, and
  * non-finite or out-of-range numbers are rejected with the key named.
+ *
+ * @scenario cli-foundation: Defaults
+ * @scenario cli-foundation: Partial block
+ * @scenario cli-foundation: Invalid poll interval
  */
 export function validateInboxConfig(inbox: unknown): InboxConfig {
   if (inbox === undefined) return DEFAULT_INBOX_CONFIG;

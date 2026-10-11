@@ -746,9 +746,12 @@ before, so piping and scripts are unaffected.
 
 `osq inbox --follow` prints the same text, then
 `Waiting for new items (Ctrl-C to stop).`, and keeps running until you press
-Ctrl-C. It watches the change trees and re-derives the queue every
-`inbox.pollSeconds` as a safety net, printing one `<HH:MM> + <item>` line per
-item that appears and one `<HH:MM> - <item>` line per item that goes away. It
+Ctrl-C. It watches the change trees, and every git write osq makes that can
+change them appends to `osq-trees.jsonl` in the repository's common git
+directory, which `--follow` and the dashboard watch, so a new worktree or a
+landing shows up at once. It re-derives the queue every `inbox.pollSeconds` as
+a safety net, printing one `<HH:MM> + <item>` line per item that appears and
+one `<HH:MM> - <item>` line per item that goes away. It
 plays one sound when a batch adds at least one item, never for a departure and
 never for the items already present at start. The sound is `sounds/inbox.wav`
 from the package by default, played through `afplay` on macOS and the first of
@@ -763,7 +766,8 @@ watcher does makes a sound. The optional `inbox` block tunes it:
 - `inbox.soundWindowSeconds`: `5`, the least seconds between two sounds.
 - `inbox.eventDebounceMs`: `200`, how long change events batch before one
   re-derivation.
-- `inbox.pollSeconds`: `30`, how often the safety-net poll re-derives the queue.
+- `inbox.pollSeconds`: `300`, the backstop that re-derives the queue for
+  landings made outside osq.
 
 The card session and `osq inbox --follow` append to a per-project wait log
 under `~/.osq/inbox/`, keyed by the project's real path: when each item was

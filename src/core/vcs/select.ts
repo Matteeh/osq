@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import type { OsqConfig } from '../foundation/config.js';
-import { DEFAULT_GIT_SECONDS, GitVcs, runGit } from './git-vcs.js';
+import { RecordingGitVcs } from './git-vcs-recording.js';
+import { DEFAULT_GIT_SECONDS, runGit } from './git-vcs.js';
 import { NoVcs } from './no-vcs.js';
 import type { Vcs } from './vcs.js';
 
@@ -38,5 +39,5 @@ export async function selectVcs(
   const [rootReal, topReal] = await Promise.all([realpath(projectRoot), realpath(topPath)]);
   if (rootReal !== topReal) return new NoVcs(VCS_REASONS.notRoot);
 
-  return new GitVcs(projectRoot, config, binary);
+  return new RecordingGitVcs(projectRoot, config, binary);
 }

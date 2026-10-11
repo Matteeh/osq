@@ -1047,7 +1047,10 @@ ordered dispatch items with `readDispatchItems` and `orderDispatchItems`,
 with `firstSeenTimes` of `readWaitLog(projectRoot, options.home)`,
 after each `createInvalidationHub` batch and every `inbox.pollSeconds`
 through `options.every`, one derivation at a time, with a batch or poll
-during one causing one more after it. After each derivation it SHALL call
+during one causing one more after it. When it starts, it SHALL resolve the
+tree record path once with `treeRecordPath(projectRoot, config)` and pass it
+as `recordPath` to every hub it opens, so an osq git write that changes the
+trees fires a batch. After each derivation it SHALL call
 `onItems(items, at, idle)` with the items, the clock time the derivation
 started, and the dispatch's `watcherIdle`, then read the trees again through
 `options.trees`, and when their `treeWatchPaths` differ from the watched
@@ -1078,6 +1081,14 @@ hub and cancels the poll. It SHALL derive once as soon as it starts.
 #### Scenario: Idle and first seen
 - **WHEN** the watcher has no runnable change and the wait log under `options.home` has the higher of two equal approval items first seen earlier
 - **THEN** `onItems` gets `idle` true and the higher change id first
+
+#### Scenario: Tree record watched
+- **WHEN** `watchDispatch` starts with `vcs.enabled` on a temporary repository's checkout
+- **THEN** the fake watcher is given `<checkout>/.git/osq-trees.jsonl` among its paths
+
+#### Scenario: Tree record fires
+- **WHEN** the fake watcher fires on the tree record path and the manual poll timer never fires
+- **THEN** `onItems` is called again and `options.trees` is read again
 
 ### Requirement: Card keys
 `cardKeys(item)` SHALL map each of the item's commands to keys, in the

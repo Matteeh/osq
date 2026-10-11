@@ -1,6 +1,7 @@
 import os from 'node:os';
 import { DEFAULT_INBOX_CONFIG, type InboxConfig } from '../foundation/config-inbox.js';
 import type { OsqConfig } from '../foundation/config.js';
+import { treeRecordPath } from '../vcs/tree-record.js';
 import {
   type InvalidationHub,
   type ScheduleFn,
@@ -59,6 +60,7 @@ interface WatchState {
   unsubscribe: (() => void) | null;
   poll: TimerHandle | null;
   watchedPaths: string[];
+  recordPath: string | null;
   running: boolean;
   queued: boolean;
   closed: boolean;
@@ -121,6 +123,7 @@ function openHub(
     openspecRoot: ctx.config.paths.openspecRoot,
     debounceMs: ctx.inbox.eventDebounceMs,
     trees,
+    ...(state.recordPath !== null ? { recordPath: state.recordPath } : {}),
     ...(ctx.watch ? { watch: ctx.watch } : {}),
     ...(ctx.schedule ? { schedule: ctx.schedule } : {}),
   });
@@ -174,7 +177,9 @@ async function runWatch(state: WatchState, ctx: WatchContext, onItems: OnItems):
 async function startWatch(state: WatchState, ctx: WatchContext, onItems: OnItems): Promise<void> {
   try {
     const trees = await ctx.trees(ctx.projectRoot, ctx.config);
+    const recordPath = await treeRecordPath(ctx.projectRoot, ctx.config);
     if (state.closed) return;
+    state.recordPath = recordPath;
     openHub(
       state,
       ctx,
@@ -207,6 +212,9 @@ async function closeWatch(state: WatchState, started: Promise<void>): Promise<vo
  * Derive the ordered dispatch items on every invalidation batch and every poll,
  * one derivation at a time, handing each to `onItems`. Resolves nothing; call
  * `close()` to stop and release the watcher and the poll timer.
+ *
+ * @scenario status-inspection: Tree record watched
+ * @scenario status-inspection: Tree record fires
  */
 export function watchDispatch(
   projectRoot: string,
@@ -220,6 +228,7 @@ export function watchDispatch(
     unsubscribe: null,
     poll: null,
     watchedPaths: [],
+    recordPath: null,
     running: false,
     queued: false,
     closed: false,

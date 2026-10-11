@@ -3,7 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { DEFAULT_SERVE_CONFIG } from '../foundation/config-serve.js';
 import type { OsqConfig } from '../foundation/config.js';
 import type { MetricsReport } from '../report/report.js';
-import { changeTrees } from '../status/change-locations.js';
+import type { EveryFn, TreesFn } from '../status/dispatch-watch.js';
 import type { ReadInboxOptions } from '../status/inbox-projection.js';
 import type { Inbox } from '../status/inbox.js';
 import type { SystemGraph } from './system-graph-types.js';
@@ -12,12 +12,7 @@ import { getWebChange } from './web-data-change.js';
 import type { WebChange, WebGraph } from './web-data-types.js';
 import { WebDataError } from './web-data-types.js';
 import { type WebDocsBuilder, createWebDocumentLoaders } from './web-documents.js';
-import {
-  type ScheduleFn,
-  type WatcherFactory,
-  createEventStream,
-  createInvalidationHub,
-} from './web-events.js';
+import { type ScheduleFn, type WatcherFactory, createEventStream } from './web-events.js';
 import { decodeChangeSelector, send, sendFailure, sendJson } from './web-http.js';
 import { type ForwardedCommandRunner, createRemoteRoutes } from './web-remote.js';
 import {
@@ -27,6 +22,7 @@ import {
   sendSiteRedirect,
 } from './web-site.js';
 import { UI_CONTENT_SECURITY_POLICY, resolveStaticFile, resolveUiDir } from './web-static.js';
+import { createTreeHub } from './web-tree-hub.js';
 import { createActionRoutes } from './web-write.js';
 
 export { serializeWebJson } from './web-http.js';
@@ -69,6 +65,8 @@ export interface WebServerOptions {
   readonly site?: WebServerSite;
   readonly watch?: WatcherFactory;
   readonly schedule?: ScheduleFn;
+  readonly trees?: TreesFn;
+  readonly every?: EveryFn;
 }
 
 /** An idempotently closable listener with its actual bound loopback URL. */
@@ -82,6 +80,11 @@ export interface WebServerHandle {
  * Start one loopback-only HTTP server over the current project tree.
  *
  * @scenario web-inspection: Docs over HTTP
+ * @scenario web-inspection: Tree record in the server's watch
+ * @scenario web-inspection: Tree record change
+ * @scenario web-inspection: New worktree while serving
+ * @scenario web-inspection: Poll finds a new worktree
+ * @scenario web-inspection: Server closes the poll
  * @adr 013
  */
 export async function startWebServer(options: WebServerOptions): Promise<WebServerHandle> {
@@ -107,14 +110,14 @@ export async function startWebServer(options: WebServerOptions): Promise<WebServ
     getPort: () => boundPort,
   });
 
-  const trees = await changeTrees(projectRoot, config);
-  const hub = createInvalidationHub({
+  const hub = await createTreeHub({
     projectRoot,
-    openspecRoot: config.paths.openspecRoot,
+    config,
     debounceMs: config.serve?.eventDebounceMs ?? DEFAULT_SERVE_CONFIG.eventDebounceMs,
-    trees,
     watch: options.watch,
     schedule: options.schedule,
+    trees: options.trees,
+    every: options.every,
   });
   const events = createEventStream(hub);
 

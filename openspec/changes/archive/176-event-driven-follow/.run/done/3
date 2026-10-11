@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:580e6c3d464b6b8ab09b7205c1edbe48dfd184eab069f6f9de25edeae4eb2933"
+build_stamp: "0fb0b2ce"
+project_commit: "7f983e63"
+exit_code: 0
+scope_files: {"src/core/web/web-server.ts":"sha256:30db82841a59bfd9fc71b29b64e95e7cf88d5f29e5e3811c5a186925b9fabe28","src/core/web/web-tree-hub.ts":"sha256:72e79de5bb1d023366eff6ce4fb53dc751442a58235e5ba4821375efbc90536e","tests/serve-sse-worktrees.test.ts":"sha256:10834b83edc467dc767bfe3708e7a7bdaf293c06a3828a6770c78a146d606c32","tests/serve-tree-hub.test.ts":"sha256:a3808770ad45f7638c804f29c28c88257cbee9c8772a0f8fa3b64dbe48df23c5"}
+---
+2026-10-11T19:22:40.675Z
