@@ -1,8 +1,12 @@
 # osq
 
-Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.
+A spec-driven software factory. You write briefs and tap decisions; osq plans, builds, verifies and lands each change against living specs.
 
-A smart model helps you write small, immutable task specs. A watcher hands each approved spec to a fresh, cheap coding agent that does the work, writes a result, and exits. Failures go to a dead letter queue you deal with next time you sit down. Nothing runs that you didn't approve, and nothing is marked done that the watcher didn't verify itself.
+You write a brief: what you want and why. A smart model plans it into a change folder with a proposal, the exact deltas to the living capability specs, and small tasks, each with its own scope and verify command. You approve the plan. The watcher hands each task to a fresh, cheap coding agent, then runs the task's verify itself; an agent saying it is done counts for nothing. A failed task is retried, or comes back to you with the reason. When the last task passes, an optional validator on its own model reviews the change against its specs, the watcher verifies the final tree again, merges the deltas into the living specs and archives the change. With version control on, each change runs on its own branch and worktree, and `osq land` merges it into your default branch.
+
+All of it runs the same on your laptop or on a server. `osq server start` keeps the watcher and the dashboard running there, and you approve, retry and land with a tap from your phone.
+
+Nothing runs that you didn't approve, and nothing is marked done that the watcher didn't verify itself. The output is verified changes, not volume.
 
 If a fresh agent could not pick up a task from the files in the repo alone, the files are wrong. Everything here follows from that.
 

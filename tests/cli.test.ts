@@ -7,7 +7,10 @@ describe('osq CLI', () => {
     const program = createProgram();
 
     assert.equal(program.name(), 'osq');
-    assert.ok(program.description().includes('Strict spec queue'));
+    assert.equal(
+      program.description(),
+      'Spec-driven software factory: you brief and decide; osq lands verified changes.',
+    );
 
     const commandNames = program.commands.map((cmd) => cmd.name());
     assert.ok(commandNames.includes('init'));

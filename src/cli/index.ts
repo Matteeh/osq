@@ -54,9 +54,7 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
 
   program
     .name('osq')
-    .description(
-      'Strict spec queue. Spec-driven development with two kinds of agent and a human gate.',
-    )
+    .description('Spec-driven software factory: you brief and decide; osq lands verified changes.')
     .version(version ?? resolvePackageVersion())
     .option('--json', 'print the human attention inbox as JSON')
     .action(async (options: { json?: boolean }) => {

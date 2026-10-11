@@ -1,16 +1,10 @@
 {
   "name": "@matteeh/osq",
   "version": "0.3.0",
-  "description": "Strict spec queue. Spec-driven development with two kinds of agent and a human gate between them.",
+  "description": "A spec-driven software factory. You write briefs and tap decisions; osq plans, builds, verifies and lands each change against living specs.",
   "type": "module",
   "sideEffects": false,
-  "keywords": [
-    "spec-driven-development",
-    "coding-agents",
-    "agentic-engineering",
-    "watcher",
-    "cli"
-  ],
+  "keywords": ["spec-driven-development", "coding-agents", "agentic-engineering", "watcher", "cli"],
   "packageManager": "pnpm@9.15.4",
   "bin": {
     "osq": "dist/cli/bin.js"
@@ -69,12 +63,7 @@
       "import": "./dist/testing/index.js"
     }
   },
-  "files": [
-    "dist",
-    "sounds",
-    "templates",
-    "ui"
-  ],
+  "files": ["dist", "sounds", "templates", "ui"],
   "publishConfig": {
     "access": "public"
   },
