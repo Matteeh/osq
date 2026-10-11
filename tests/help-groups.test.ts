@@ -9,7 +9,18 @@ const EXPECTED_GROUPS = [
   { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server', 'mcp'] },
   {
     title: 'Inspection',
-    commands: ['status', 'show', 'report', 'digest', 'query', 'spec', 'graph', 'serve', 'doctor'],
+    commands: [
+      'status',
+      'show',
+      'report',
+      'digest',
+      'query',
+      'label',
+      'spec',
+      'graph',
+      'serve',
+      'doctor',
+    ],
   },
   {
     title: 'Plumbing',

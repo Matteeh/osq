@@ -15,6 +15,12 @@ const TABLE_LIST = [
   'dead_attempts(change, task, reason)',
   'disclosures(change, task, section, text)',
   'notices(change, notice, severity, opened, outcome)',
+  'validator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)',
+  'validator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)',
+  'focused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)',
+  'mutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)',
+  'mutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)',
+  'link_findings(id, change, severity, file, message, label)',
 ].join('\n');
 
 const REFUSALS = [

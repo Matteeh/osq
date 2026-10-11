@@ -1,6 +1,50 @@
+import { validatorRunConfig } from './config-validator.js';
 import type { OsqConfig } from './config.js';
 import type { DoctorCheckResult } from './doctor.js';
-import { resolveExecutorIdentity } from './harness-catalog.js';
+import { findHarness, normalizeHarnessName, resolveExecutorIdentity } from './harness-catalog.js';
+
+/** The executor's `harness` probe, reused for the validator's harness. */
+export type HarnessProbe = (
+  projectRoot: string,
+  config: OsqConfig,
+) => Promise<{ check: DoctorCheckResult; version: string }>;
+
+/**
+ * The validator's harness checks, added when its harness differs from the
+ * executor's: the same probe the executor's `harness` check uses, named
+ * `validator-harness`, then each catalog `diagnose` result named
+ * `validator-<name>` after a passing probe. A validator on the executor's
+ * harness, a disabled validator, or no validator adds none, because the
+ * executor's own `harness` checks already cover that binary.
+ *
+ * @scenario cli-foundation: Validator harness below its floor
+ * @scenario cli-foundation: Validator harness at its floor
+ * @scenario cli-foundation: Validator binary missing
+ * @scenario cli-foundation: Validator on the executor's harness
+ * @adr 010
+ */
+export async function checkValidatorHarness(
+  projectRoot: string,
+  config: OsqConfig,
+  probe: HarnessProbe,
+): Promise<DoctorCheckResult[]> {
+  const validator = config.validator;
+  if (!validator?.enabled || validator.harness === normalizeHarnessName(config.harness)) return [];
+  const runConfig = validatorRunConfig(config, validator);
+  const { check, version } = await probe(projectRoot, runConfig);
+  const checks: DoctorCheckResult[] = [{ ...check, name: 'validator-harness' }];
+  const diagnose = check.ok ? findHarness(validator.harness)?.diagnose : undefined;
+  if (!diagnose) return checks;
+  for (const diagnosis of await diagnose({ config: runConfig, projectRoot, version })) {
+    checks.push({
+      name: `validator-${diagnosis.name}`,
+      ok: diagnosis.ok,
+      message: diagnosis.message,
+      ...(diagnosis.warning ? { warning: true } : {}),
+    });
+  }
+  return checks;
+}
 
 /**
  * The `validator-model` check: a warning when the validator runs on the

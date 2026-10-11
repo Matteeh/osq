@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7ca2ec596a3c2ddbef67d5f2ee4b3692fac8a616fb7f1079ddebb8ed7489aa9d"
+build_stamp: "c1e5fe4d"
+project_commit: "8273f9d3"
+exit_code: 0
+scope_files: {"packages/ui/src/home/labels.ts":"sha256:53c58d3610dcf291598f11f707fe6e677b7f854914ff99bff7af9555a2bb8d44","src/cli/status.ts":"sha256:4790bca665f6250f9cefc18e2e9c90275564591df4b7c0f7f0952f44a5463f1e","src/core/status/inbox-projection.ts":"sha256:c5c20e89bb06a85353feff8e63e81f28774689cf4de7a25a60c1d9705b08bff6","src/core/status/inbox-text.ts":"sha256:bf67407a5830efc79d62ca66b97ed74721e7a084fa910bc291eb7be976bc6068","src/core/status/inbox.ts":"sha256:d6ae9aac7cd678e045c22078028f5dedbd66f8f81ce039ee3ab88fe74f31dc2c","src/core/status/validator-failing.ts":"sha256:1b7ed5d20824138e0c4e495321105fec5e385c862f3355a998269c029a545088","tests/inbox-validator-failing.test.ts":"sha256:51677333b31dd631bf2e349deeccd8ee6bc3a9a813ded07f6a3fb5fb46e0be2c"}
+---
+2026-10-10T22:50:02.744Z

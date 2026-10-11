@@ -14,7 +14,7 @@ import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { checkDecisions } from './doctor-decisions.js';
 import { checkManagedBlocks } from './doctor-managed.js';
 import { checkPlanningPrices } from './doctor-prices.js';
-import { checkValidatorModel } from './doctor-validator.js';
+import { checkValidatorHarness, checkValidatorModel } from './doctor-validator.js';
 import { findHarness } from './harness-catalog.js';
 import type { HarnessContainment } from './harness-containment.js';
 
@@ -241,6 +241,7 @@ export async function runDoctorChecks(
   ];
   const priceCheck = await checkPlanningPrices(projectRoot, config);
   if (priceCheck) checks.push(priceCheck);
+  checks.push(...(await checkValidatorHarness(projectRoot, config, checkHarness)));
   const validatorModelCheck = checkValidatorModel(config);
   if (validatorModelCheck) checks.push(validatorModelCheck);
   return { ok: checks.every((check) => check.ok), checks };

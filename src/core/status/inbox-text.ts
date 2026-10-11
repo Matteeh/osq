@@ -15,6 +15,10 @@ function needsYouLine(item: NeedsYouItem): string {
   if (item.kind === 'after-land-failed') {
     return `${head} — after-land command failed — ${item.command}`;
   }
+  if (item.kind === 'validator-failing') {
+    const failing = item.validatorFailing ?? { outcome: '', runs: 0, error: '' };
+    return `${head} — validator ${failing.outcome} ${failing.runs}× in a row: ${failing.error} — ${item.command}`;
+  }
   if (item.kind === 'change-regressed' && !item.steering) {
     return `${head} — change regressed — ${item.command}`;
   }
@@ -56,6 +60,8 @@ function landedLine(item: LandedItem): string {
  *
  * @scenario status-inspection: Archived change waiting to land
  * @scenario status-inspection: Failed after-land command waiting
+ * @scenario status-inspection: Validator failing
+ * @adr 010
  */
 export function formatInboxText(inbox: Inbox): string {
   const { needsYou, running, landed } = inbox;

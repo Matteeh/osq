@@ -1,0 +1,23 @@
+---
+scope_resolver: 2
+scope_hash: sha256:f1fa9c82be154d2532cfe96d7adf0ccc1d95ac905e4356cb320532f57a335ef3
+build_stamp: c1e5fe4d
+project_commit: d888db60
+exit_code: 0
+scope_files:
+  src/core/report/query-link-findings.ts: sha256:0f89654ccced335f5b29b95bbfed3845efe33fc06905ae2974380d4a36d7ff6a
+  src/core/report/query-notices.ts: sha256:5a826e5e39e45d23b829e3453b44cbec06ccc47284457123b7b880b8b842dc98
+  src/core/report/query-run.ts: sha256:00598dfd52b8a88509315b3e14c9e4cc05e5bd46b80ded920a29584a2bcdaab6
+  src/core/report/query-subjects.ts: sha256:74da7bcd4259ce1fd819e927fe2eeec760fd3bfdbb031d0118b40e84f3e27e4c
+  src/core/report/query-tables.ts: sha256:d612bdf32a2430c8bda050a89f5367f77514a1858b592b87c2b091b6332d61d7
+  src/core/report/query-task-streams.ts: sha256:1289e032ac35c251bc9c8363e38865d5dbb117e2ba91f3ff1130dac93c6fedc2
+  src/core/report/query-validator.ts: sha256:16447231884776c421cc04ca0ce3d27878771dbe830a2b5b0749f6e5d63861d2
+  src/core/report/validator-runs.ts: sha256:677d5af257c690fd465386b89309c800f0d8a52289c8ef1290ecaa15779a670c
+  tests/query-command.test.ts: sha256:160d813aadc288ee996121bc816d296691a12babd0de7b429dfea8f41b62fd88
+  tests/query-tables.test.ts: sha256:a368b7f59bbaadb51c396e6a0e5d7da5bef0ea31a03dad744cf7b33e08a9be3b
+  tests/query-trial-tables.test.ts: sha256:39d0f8f4adbc6ad6c5ae19c69cad6f7a371beef423970d19dd476b357a71cbff
+original_scope_hash: sha256:36a574fce2f66b558560a585281b98c53b76a954ce499d42e285b80a8c3cf0b5
+recertified_at: 2026-10-10T23:01:08.517Z
+recertification_count: 1
+---
+2026-10-10T22:36:12.805Z

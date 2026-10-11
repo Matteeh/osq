@@ -10,6 +10,7 @@ const NEEDS_YOU_LABELS: Record<NeedsYouKind, string> = {
   'change-regressed': 'change regressed',
   'change-archived': 'not landed',
   'after-land-failed': 'after-land failed',
+  'validator-failing': 'validator failing',
 };
 
 /**
@@ -17,6 +18,8 @@ const NEEDS_YOU_LABELS: Record<NeedsYouKind, string> = {
  *
  * @scenario web-inspection: Not landed label
  * @scenario web-inspection: After-land failed label
+ * @scenario web-inspection: Validator failing label
+ * @adr 010
  */
 export function needsYouKindLabel(kind: NeedsYouKind): string {
   return NEEDS_YOU_LABELS[kind];

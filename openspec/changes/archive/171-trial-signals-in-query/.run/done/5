@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:be9d6099969a5aad8d8890f4e7278a2ebdbea22c628105cc90319b1428fec7df"
+build_stamp: "c1e5fe4d"
+project_commit: "036bdf8d"
+exit_code: 0
+scope_files: {"README.md":"sha256:9a65efa876363ef7f7018aef6ca9fcffe8ca74a3ffee8f2c1f2428c3e3f5d370","src/cli/help-groups.ts":"sha256:b66e52ec730c35adee30798e729211d5bff5c3a05bacbf686e88e5265f90b239","src/cli/query.ts":"sha256:aa95bd6725b362e3944199331de9e1eeabcb20db135d734ec8c0465543081683","src/cli/remote-client.ts":"sha256:a6812e06154b3163f0231fdea750f2962101e3dbce3cc06a42098e9140ff2db6","src/core/report/query-tables.ts":"sha256:d612bdf32a2430c8bda050a89f5367f77514a1858b592b87c2b091b6332d61d7","src/core/report/trial-labels.ts":"sha256:9d354d9de3cbec146089c78ff263f45562ce325f42ac593f5e9d45349665dafb","tests/help-groups.test.ts":"sha256:c18d0b63a1163311aa6f6debe9e2ffea5c650e6802195b43e31ac8aafd4f025d","tests/query-labels.test.ts":"sha256:333dafb6f66212fbec9a6f01b9ef571f9deceb7ad75cb423d20ba8cc51c3000e"}
+---
+2026-10-10T23:01:07.695Z

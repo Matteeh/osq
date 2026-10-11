@@ -378,6 +378,8 @@ export interface LintResult {
   readonly warnings: string[];
   readonly findings: LintFinding[];
   readonly repository: LintFinding[];
+  /** The findings the traceability check added to `findings`, in order. */
+  readonly traceability?: LintFinding[];
 }
 
 export interface LintOptions {
@@ -1356,8 +1358,9 @@ export async function lintChangeFolder(
 
   // Check: scenario traceability links and the blast radius of changed
   // scenarios. Reuses the graph already built for impact lint and builds the
-  // scenario index once.
-  for (const finding of await collectTraceabilityFindings({
+  // scenario index once. The findings are kept apart so a clean lint can record
+  // the change's link findings on its plan_ready line.
+  const traceabilityFindings = await collectTraceabilityFindings({
     projectRoot,
     folderPath,
     config,
@@ -1369,7 +1372,8 @@ export async function lintChangeFolder(
       testsModify: scope.task.testsModify,
     })),
     importGraph,
-  })) {
+  });
+  for (const finding of traceabilityFindings) {
     findings.addOwn(finding);
   }
 
@@ -1399,7 +1403,7 @@ export async function lintChangeFolder(
     findings.addOwn(finding);
   }
 
-  return lintResult(findings);
+  return lintResult(findings, traceabilityFindings);
 }
 
 /** Repository path of a task file named by its numeric task number. */
@@ -1408,12 +1412,13 @@ function taskRepoPathFor(projectRoot: string, tasksDir: string, taskNumber: stri
 }
 
 /** Assemble the public lint result from the accumulated findings. */
-function lintResult(findings: LintFindingSet): LintResult {
+function lintResult(findings: LintFindingSet, traceability?: LintFinding[]): LintResult {
   return {
     valid: findings.errors().length === 0,
     errors: findings.errors(),
     warnings: findings.warnings(),
     findings: [...findings.findings],
     repository: [...findings.repository],
+    ...(traceability !== undefined ? { traceability } : {}),
   };
 }

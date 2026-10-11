@@ -37,6 +37,7 @@ const LOCAL_ONLY = new Set([
   'inbox',
   'server',
   'capability',
+  'label',
 ]);
 
 /** The one line a local-only command refuses with. */

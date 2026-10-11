@@ -8,7 +8,7 @@ import type { StatusOverview } from './status.js';
 import type { SteeringTriggerName } from './steering.js';
 export { formatInboxText } from './inbox-text.js';
 /* biome-ignore format: keeps the file inside the 250-line source budget */ export type NeedsYouKind =
-  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed';
+  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed' | 'validator-failing';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;
@@ -29,6 +29,8 @@ export interface NeedsYouItem {
   readonly blocked?: { readonly need: string };
   /** Present only when an approval item's change has steps before approval. */
   readonly beforeApproval?: true;
+  /** Present only for a validator-failing item. */
+  /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly validatorFailing?: { readonly outcome: string; readonly runs: number; readonly error: string };
 }
 export interface RunningItem {
   readonly change: InboxChangeRef;

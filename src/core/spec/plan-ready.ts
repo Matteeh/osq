@@ -2,11 +2,26 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ApprovalNoticeId, NoticeSeverity, RecordedNotice } from './notices.js';
 
+/** One traceability link finding kept on a `plan_ready` record's data. */
+export interface PlanReadyTraceabilityEntry {
+  readonly severity: string;
+  readonly file: string;
+  readonly message: string;
+}
+
+/** The data one `plan_ready` record carries. */
+export interface PlanReadyData {
+  readonly hash: string;
+  readonly notices: readonly RecordedNotice[];
+  /** The change's traceability link findings; absent when there were none. */
+  readonly traceability?: readonly PlanReadyTraceabilityEntry[];
+}
+
 /** One `plan_ready` record in `<change>/.run/plan.jsonl`. */
 export interface PlanReadyRecord {
   readonly type: 'plan_ready';
   readonly timestamp: string;
-  readonly data: { readonly hash: string; readonly notices: readonly RecordedNotice[] };
+  readonly data: PlanReadyData;
 }
 
 const SEVERITIES: readonly NoticeSeverity[] = ['red', 'amber', 'grey'];
@@ -35,6 +50,21 @@ function parseRecordedNotice(value: unknown): RecordedNotice | null {
   };
 }
 
+/** Parse a record's `traceability` list, leaving out entries without all three strings. */
+function parseTraceability(value: unknown): PlanReadyTraceabilityEntry[] {
+  const entries: PlanReadyTraceabilityEntry[] = [];
+  if (!Array.isArray(value)) return entries;
+  for (const entry of value) {
+    const record = asRecord(entry);
+    if (!record) continue;
+    if (typeof record.severity !== 'string') continue;
+    if (typeof record.file !== 'string') continue;
+    if (typeof record.message !== 'string') continue;
+    entries.push({ severity: record.severity, file: record.file, message: record.message });
+  }
+  return entries;
+}
+
 function parsePlanReady(value: unknown): PlanReadyRecord | null {
   const record = asRecord(value);
   const data = asRecord(record?.data);
@@ -49,7 +79,14 @@ function parsePlanReady(value: unknown): PlanReadyRecord | null {
     if (!notice) return null;
     notices.push(notice);
   }
-  return { type: 'plan_ready', timestamp: record.timestamp, data: { hash: data.hash, notices } };
+  const traceability = Array.isArray(data.traceability)
+    ? parseTraceability(data.traceability)
+    : undefined;
+  return {
+    type: 'plan_ready',
+    timestamp: record.timestamp,
+    data: { hash: data.hash, notices, ...(traceability ? { traceability } : {}) },
+  };
 }
 
 /** `<changeFolder>/.run/plan.jsonl`. */
@@ -84,13 +121,19 @@ export async function appendPlanReady(
   folderPath: string,
   hash: string,
   notices: readonly RecordedNotice[],
+  traceability: readonly PlanReadyTraceabilityEntry[] = [],
   now: Date = new Date(),
 ): Promise<void> {
   await fs.mkdir(path.join(folderPath, '.run'), { recursive: true });
+  const data = {
+    hash,
+    notices,
+    ...(traceability.length > 0 ? { traceability } : {}),
+  };
   const line = JSON.stringify({
     type: 'plan_ready',
     timestamp: now.toISOString(),
-    data: { hash, notices },
+    data,
   });
   await fs.appendFile(getPlanReadyPath(folderPath), `${line}\n`, 'utf8');
 }

@@ -9,6 +9,7 @@ import { type Inbox, type NeedsYouItem, collectLandedItems, projectInbox } from 
 import { compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
 import { type SteeringChange, listArchivedSteering } from './steering-change.js';
+import { type ValidatorFailing, readValidatorFailing } from './validator-failing.js';
 
 /** Injectable clock, config, and home root for the read-only projection. */
 export interface ReadInboxOptions {
@@ -45,6 +46,22 @@ async function afterLandFailedItem(
   };
 }
 
+/** The one needs-you item the latest failing validator run contributes. */
+async function validatorFailingItem(
+  archiveDir: string,
+  failing: ValidatorFailing,
+): Promise<NeedsYouItem> {
+  const spec = await parseSpecMdFromFolder(path.join(archiveDir, failing.change)).catch(() => null);
+  const id = failing.change.match(/^(\d+)/)?.[1] ?? failing.change;
+  return {
+    kind: 'validator-failing',
+    change: { id, title: spec?.title || failing.change },
+    task: null,
+    command: `osq show ${id}`,
+    validatorFailing: { outcome: failing.outcome, runs: failing.runs, error: failing.error },
+  };
+}
+
 /**
  * Derives the stable inbox object without mutating any file. Both the CLI and
  * the read-only HTTP transport consume it, so a contemporaneous invocation and
@@ -52,6 +69,9 @@ async function afterLandFailedItem(
  *
  * @scenario status-inspection: Failed after-land command waiting
  * @scenario status-inspection: No failure recorded
+ * @scenario status-inspection: Validator failing
+ * @scenario status-inspection: No validator runs
+ * @adr 010
  */
 export async function readInbox(
   projectRoot: string,
@@ -69,10 +89,14 @@ export async function readInbox(
     .filter((item): item is NeedsYouItem => item !== null);
   const failure = await readAfterLandFailure(projectRoot, options.home);
   const afterLand = failure === null ? [] : [await afterLandFailedItem(tree.archiveDir, failure)];
+  const failing = await readValidatorFailing(projectRoot, config);
+  const validatorFailing =
+    failing === null ? [] : [await validatorFailingItem(tree.archiveDir, failing)];
   const needsYou = [
     ...(await applySteeringItems(overview, inbox.needsYou)),
     ...steered,
     ...afterLand,
+    ...validatorFailing,
   ].sort((a, b) => compareNumericPrefix(a.change.id, b.change.id));
   return { ...inbox, needsYou };
 }

@@ -113,7 +113,7 @@ export async function lintCommand(
     });
     entries.push({ folder, result });
     if (result.valid && specIds.length > 0) {
-      await recordPlanReady(cwd, folder, config);
+      await recordPlanReady(cwd, folder, config, result.traceability);
     }
     if (logger) {
       printChangeFindings(logger, path.basename(folder), result);

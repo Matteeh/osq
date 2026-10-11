@@ -1,5 +1,6 @@
 import { readWatchState } from '../core/run/watch-state.js';
 import { formatStatusOverview, getStatusOverview } from '../core/status/status.js';
+import { readValidatorFailing } from '../core/status/validator-failing.js';
 import { formatWatcherLine } from '../core/status/watcher-line.js';
 import { readAfterLandFailure } from '../core/vcs/land-after.js';
 import { CommandError } from './command-error.js';
@@ -12,6 +13,9 @@ export interface StatusCommandOptions extends CommandInputs {
 
 /**
  * @scenario status-inspection: Failed after-land command waiting
+ * @scenario status-inspection: Validator failing
+ * @scenario status-inspection: No validator runs
+ * @adr 010
  */
 export async function statusCommand(options: StatusCommandOptions = {}): Promise<string> {
   const inputs = resolveInputs(options);
@@ -26,6 +30,13 @@ export async function statusCommand(options: StatusCommandOptions = {}): Promise
     if (failure !== null) {
       const id = failure.change.match(/^(\d+)/)?.[1] ?? failure.change;
       lines.push(`After-land command failed for ${id}: ${failure.command} — osq land ${id}`);
+    }
+    const failing = await readValidatorFailing(inputs.cwd, config);
+    if (failing !== null) {
+      const id = failing.change.match(/^(\d+)/)?.[1] ?? failing.change;
+      lines.push(
+        `Validator ${failing.outcome} ${failing.runs}× in a row, last on ${id}: ${failing.error} — osq show ${id}`,
+      );
     }
     const formatted = lines.join('\n');
     inputs.stdout(`${formatted}\n`);

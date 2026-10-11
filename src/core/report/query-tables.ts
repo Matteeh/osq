@@ -7,19 +7,20 @@ import type { OsqConfig } from '../foundation/config.js';
 import { parseTaskMd } from '../spec/parser.js';
 import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record.js';
+import { LINK_FINDINGS_TABLES, insertLinkFindings } from './query-link-findings.js';
 import { insertNotices } from './query-notices.js';
+import { type HistoryTable, type TrialSubject, folderId } from './query-subjects.js';
+import { TASK_STREAM_TABLES, insertTaskStreamTables } from './query-task-streams.js';
+import { VALIDATOR_TABLES, insertValidatorTables } from './query-validator.js';
 import { observeTaskStream } from './report-events.js';
 import { readChangeDisclosures } from './result-sections.js';
 import { openStreamIndex } from './stream-index.js';
 import { readEventStream, withStreamReads } from './stream-reads.js';
+import { applyTrialLabels } from './trial-labels.js';
 
-/** One history table's name and ordered columns. */
-export interface HistoryTable {
-  readonly name: string;
-  readonly columns: readonly string[];
-}
+export type { HistoryTable } from './query-subjects.js';
 
-/** The six documented tables, in the order the delta names them. */
+/** The documented tables: the history tables, then the trial tables in delta order. */
 export const HISTORY_TABLES: readonly HistoryTable[] = [
   {
     name: 'changes',
@@ -45,6 +46,9 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   { name: 'dead_attempts', columns: ['change', 'task', 'reason'] },
   { name: 'disclosures', columns: ['change', 'task', 'section', 'text'] },
   { name: 'notices', columns: ['change', 'notice', 'severity', 'opened', 'outcome'] },
+  ...VALIDATOR_TABLES,
+  ...TASK_STREAM_TABLES,
+  ...LINK_FINDINGS_TABLES,
 ];
 
 /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
@@ -176,6 +180,11 @@ async function build(
     listChanges(projectRoot, config, ['archived']),
   ]);
   const paths = new Map(located.map((change) => [change.folderName, change.folderPath]));
+  const subjects: TrialSubject[] = located.map((change) => ({
+    folder: change.folderName,
+    folderPath: change.folderPath,
+    id: folderId(change.folderName),
+  }));
   for (const change of records) {
     const folderPath = paths.get(change.folder);
     if (folderPath === undefined) continue;
@@ -186,6 +195,10 @@ async function build(
     await insertDisclosures(db, folderPath, change.folder);
   }
   await insertNotices(db, projectRoot, config);
+  await insertValidatorTables(db, subjects);
+  await insertTaskStreamTables(db, subjects);
+  await insertLinkFindings(db, subjects);
+  await applyTrialLabels(db, projectRoot, config);
   return db;
 }
 
