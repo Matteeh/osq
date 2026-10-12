@@ -14,7 +14,11 @@ import { DEFAULT_CONFIG, type OsqConfig, loadConfig } from './config.js';
 import { checkDecisions } from './doctor-decisions.js';
 import { checkManagedBlocks } from './doctor-managed.js';
 import { checkPlanningPrices } from './doctor-prices.js';
-import { checkValidatorHarness, checkValidatorModel } from './doctor-validator.js';
+import {
+  checkValidatorHarness,
+  checkValidatorModel,
+  checkValidatorRuns,
+} from './doctor-validator.js';
 import { findHarness } from './harness-catalog.js';
 import type { HarnessContainment } from './harness-containment.js';
 
@@ -132,10 +136,7 @@ async function checkValidator(
   }
 }
 
-// PLANNER.md, AGENTS.md, and the Claude command all carry canonical osq
-// managed blocks; doctor compares bytes, not marker presence. The opencode
-// executor agent file is included when either harness selection is opencode and
-// is repaired by `osq setup`, not `osq init`.
+// PLANNER.md, AGENTS.md, and the Claude command all carry canonical osq managed blocks; doctor compares bytes, not marker presence.
 async function checkManaged(projectRoot: string, config: OsqConfig): Promise<DoctorCheckResult> {
   const result = await checkManagedBlocks(projectRoot, config);
   return make('managed-blocks', result.ok, result.message);
@@ -202,7 +203,6 @@ async function checkDoneMarkers(
   );
 }
 
-/** Normalize a catalog containment report into a doctor check. */
 function containmentCheck(result: HarnessContainment | string): DoctorCheckResult {
   if (typeof result === 'string') return make('harness-containment', true, result);
   return {
@@ -240,7 +240,8 @@ export async function runDoctorChecks(
     ...(await checkGit(projectRoot, config)),
   ];
   const priceCheck = await checkPlanningPrices(projectRoot, config);
-  if (priceCheck) checks.push(priceCheck);
+  checks.push(...(priceCheck ? [priceCheck] : []));
+  checks.push(...(await checkValidatorRuns(projectRoot, config)));
   checks.push(...(await checkValidatorHarness(projectRoot, config, checkHarness)));
   const validatorModelCheck = checkValidatorModel(config);
   if (validatorModelCheck) checks.push(validatorModelCheck);

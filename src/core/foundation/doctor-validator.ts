@@ -1,3 +1,4 @@
+import { readValidatorFailing } from '../status/validator-failing.js';
 import { validatorRunConfig } from './config-validator.js';
 import type { OsqConfig } from './config.js';
 import type { DoctorCheckResult } from './doctor.js';
@@ -44,6 +45,35 @@ export async function checkValidatorHarness(
     });
   }
   return checks;
+}
+
+/**
+ * The `validator-runs` check: a failing check naming the newest failing
+ * validator run, its error, and the fix, or none when the validator is missing
+ * or disabled, or no run is failing. It reads recorded runs only: no model call
+ * and no write.
+ *
+ * @scenario cli-foundation: Validator runs fail in doctor
+ * @scenario cli-foundation: Validator runs check order
+ * @scenario cli-foundation: No validator, no runs check
+ * @adr 010
+ */
+export async function checkValidatorRuns(
+  projectRoot: string,
+  config: OsqConfig,
+): Promise<DoctorCheckResult[]> {
+  const validator = config.validator;
+  if (!validator?.enabled) return [];
+  const failing = await readValidatorFailing(projectRoot, config);
+  if (failing === null) return [];
+  const id = failing.change.match(/^(\d+)/)?.[1] ?? failing.change;
+  return [
+    {
+      name: 'validator-runs',
+      ok: false,
+      message: `validator ${failing.outcome} ${failing.runs}× in a row, last on ${id}: ${failing.error} — update the ${validator.harness} harness or change validator.model`,
+    },
+  ];
 }
 
 /**
