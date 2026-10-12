@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c695b5e8866c984337a0ce256fd44e280b09db34ebfd38405333a5db0fab9aeb"
+build_stamp: "679e5589"
+project_commit: "4b979bc4"
+exit_code: 0
+scope_files: {"src/core/spec/capability-impact.ts":"sha256:972bac0c26b3d076a000daf6a51222856935be305bbbc37e4531e8a506a3c0bf","src/core/spec/impact-lint.ts":"sha256:4dafc32a4ac15f50a24be62abb7c41cfd094266fb202c2a0391a0ea61b04810b","src/core/spec/ungoverned-lint.ts":"sha256:245a1800e036f1669924a8c93c14fc79fa213b13b5fa0112c419574afc638985","tests/ungoverned-lint.test.ts":"sha256:764b99d72eac724ef4057c298276469e8c7d3cf1965d3f7d6b1a8d0363d4a389"}
+---
+2026-10-12T11:16:20.800Z

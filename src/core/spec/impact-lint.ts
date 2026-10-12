@@ -14,6 +14,7 @@ import {
   frozenTestFindings,
   verifyWithoutScopeFindings,
 } from './test-impact.js';
+import { collectUngovernedFindings } from './ungoverned-lint.js';
 
 /**
  * Import-graph impact lint: one entrypoint that runs the test-impact and
@@ -71,6 +72,16 @@ export async function collectImpactFindings(input: ImpactLintInput): Promise<Lin
       ownerships,
       declared,
     }),
-    ...writeWithoutDeltaFindings(input.tasks, ownerships, deltaCapabilities),
+    ...writeWithoutDeltaFindings(
+      input.tasks,
+      ownerships,
+      deltaCapabilities,
+      input.config.ungoverned ?? [],
+    ),
+    ...(await collectUngovernedFindings({
+      projectRoot: input.projectRoot,
+      folderPath: input.folderPath,
+      ungoverned: input.config.ungoverned ?? [],
+    })),
   ];
 }

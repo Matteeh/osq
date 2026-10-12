@@ -38,6 +38,7 @@ import {
   type TraceabilityConfig,
   validateTraceabilityConfig,
 } from './config-traceability.js';
+import { DEFAULT_UNGOVERNED, validateUngovernedConfig } from './config-ungoverned.js';
 import type { OsqUserConfig } from './config-user.js';
 import { type ValidatorConfig, validateValidatorConfig } from './config-validator.js';
 import { DEFAULT_VCS_CONFIG, type VcsConfig, validateVcsConfig } from './config-vcs.js';
@@ -87,6 +88,7 @@ export interface PlannerConfig {
 export interface OsqConfig {
   readonly harness: string;
   readonly maxConcurrency: number;
+  readonly ungoverned?: readonly string[];
   readonly limits: OsqLimits;
   readonly paths: OsqPaths;
   readonly timeouts: OsqTimeouts;
@@ -114,6 +116,7 @@ export interface OsqConfig {
 const base: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
+  ungoverned: DEFAULT_UNGOVERNED,
   serve: DEFAULT_SERVE_CONFIG,
   inbox: DEFAULT_INBOX_CONFIG,
   watch: DEFAULT_WATCH_CONFIG,
@@ -124,18 +127,13 @@ const base: OsqConfig = {
   gates: DEFAULT_GATES_CONFIG,
   traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
-  agy: {
-    model: 'gemini-3.8-flash-high',
-    dangerouslySkipPermissions: false,
-  },
+  agy: { model: 'gemini-3.8-flash-high', dangerouslySkipPermissions: false },
   opencode: {
     bin: 'opencode',
     model: 'deepseek/deepseek-flash',
     agent: 'osq-coder',
   },
-  log: {
-    heartbeatSeconds: 60,
-  },
+  log: { heartbeatSeconds: 60 },
   limits: {
     maxScopeFiles: 8,
     maxFeatureWrites: 2,
@@ -193,6 +191,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     traceability: validateTraceabilityConfig(config.traceability),
     capabilities: validateCapabilitiesConfig(config.capabilities),
     confinement: validateConfinementConfig(config.confinement),
+    ungoverned: validateUngovernedConfig(config.ungoverned),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     ...(validator ? { validator } : {}),

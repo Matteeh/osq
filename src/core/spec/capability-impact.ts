@@ -48,6 +48,33 @@ export async function readCapabilityOwnership(
   return ownerships;
 }
 
+/** Read every delta spec's Code ownership globs, in capability name order. */
+export async function readDeltaOwnership(folderPath: string): Promise<CapabilityOwnership[]> {
+  const specsDir = path.join(folderPath, 'specs');
+  let entries: Dirent[];
+  try {
+    entries = await fs.readdir(specsDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const ownerships: CapabilityOwnership[] = [];
+  const directories = entries
+    .filter((entry) => entry.isDirectory())
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+
+  for (const entry of directories) {
+    const content = await fs
+      .readFile(path.join(specsDir, entry.name, 'spec.md'), 'utf8')
+      .catch(() => null);
+    if (content === null) continue;
+    const globs = parseCodeOwnership(content);
+    if (globs.length > 0) ownerships.push({ capability: entry.name, globs });
+  }
+
+  return ownerships;
+}
+
 /** Capabilities whose Code ownership globs cover one path, sorted by name. */
 export function ownerCapabilities(
   ownerships: readonly CapabilityOwnership[],
@@ -68,17 +95,20 @@ export interface CapabilityWriteTask {
 
 /**
  * Warn once per resolved scope path owned by capabilities none of which has a
- * delta in the change. Paths no living spec owns are left alone.
+ * delta in the change. Paths no living spec owns are left alone, and a path
+ * the config's `ungoverned` globs cover is never flagged, whoever owns it.
  */
 export function writeWithoutDeltaFindings(
   tasks: readonly CapabilityWriteTask[],
   ownerships: readonly CapabilityOwnership[],
   deltaCapabilities: ReadonlySet<string>,
+  ungoverned: readonly string[] = [],
 ): LintFinding[] {
   const findings: LintFinding[] = [];
 
   for (const task of tasks) {
     for (const scopePath of task.existingPaths) {
+      if (scopeCoversPath(ungoverned, scopePath)) continue;
       const owners = ownerCapabilities(ownerships, scopePath);
       if (owners.length === 0) continue;
       if (owners.some((owner) => deltaCapabilities.has(owner))) continue;

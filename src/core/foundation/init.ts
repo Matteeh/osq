@@ -38,6 +38,9 @@ export default defineConfig({
   // osq formats the files a task changed in its scope before running verify;
   // {files} becomes those files, each quoted.
   // gates: { formatCommand: 'npx prettier --write {files}' },
+  // osq governs every path except these; a human edits them directly on the
+  // default branch with no change. [] governs everything.
+  // ungoverned: ['README*', 'docs/**', 'LICENSE*', '.gitignore', '.env*'],
 });
 `;
 

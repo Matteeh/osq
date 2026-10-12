@@ -114,4 +114,8 @@ your complete prompt; read it and follow it exactly.
 - Replacing a requirement's behavior is a REMOVED requirement plus an ADDED one.
   A MODIFIED requirement must keep every scenario it already has; `osq lint` and
   archive refuse one that drops any.
+- Never write a requirement, scenario or test that pins an ungoverned file, one
+  that `ungoverned` in `osq.config.ts` lists: by default README, `docs/`, license,
+  `.gitignore` and env files. A human edits those directly on the default branch
+  with no change, and a task may edit one in its scope without a delta.
 <!-- OSQ:END -->

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7d8db7fb1f9e6c709c1515e036ebd91f6008ab3a4fed563e5173aa3a2a9bb84e"
+build_stamp: "679e5589"
+project_commit: "9911136b"
+exit_code: 0
+scope_files: {".opencode/agent/osq-coder.md":"sha256:e4dd282563dc83b351f5b635389bd7d918f5da1d80b1e2e687ffd4fa23bc5420","AGENTS.md":"sha256:b3f3e5e49a71ea2adca1f5e86f66882eb2e050ff8362e96595dba26d910a1c10","PLANNER.md":"sha256:86f57d89287dda3d3d8f05bfd25365bd35900c23f4b73eca527a2c0b89b81f14","README.md":"sha256:d0589ab87eeec16ccab40e6f1e7229889efcc7a07b141056e4b4d77686c927ab","src/core/foundation/init-blocks.ts":"sha256:3b064549ecef1196d6984ff1b19f837755b612132623c949b95394872283f3c5","templates/PLANNER.md":"sha256:abfa23592456cbec5e052bede0b04ed33ce149e4aa6598b1b33e39b773b4bcc5","tests/ungoverned-blocks.test.ts":"sha256:903c7c9aeaafaaccedee9fef518e947c32cfcfb4b06379eb4576f27a079c8cd8"}
+---
+2026-10-12T11:22:33.336Z

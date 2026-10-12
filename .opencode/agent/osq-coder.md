@@ -46,6 +46,7 @@ Then exit. One attempt. Do not ask questions.
 - Executors never edit `tasks.md` or any file under `.run/` except their result file; those belong to the watcher and the human. Planners write `tasks.md` and the task files.
 - Approval gate: only `osq approve`, run by a human, writes `.run/approved`. Verification gate: only the watcher's own `verify` run marks a task done.
 - Archived changes live under `openspec/changes/archive/`. For facts about them, such as why tasks died or which changes touched a requirement, run `osq query "<select>"` and add `LIMIT`; `osq query` alone lists its tables. Don't open event files for history.
+- Paths that `ungoverned` in `osq.config.ts` lists, by default README, `docs/`, license, `.gitignore` and env files, belong to no capability. A human edits them directly on the default branch with no change.
 
 ## Planning a change
 
