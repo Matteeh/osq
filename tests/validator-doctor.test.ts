@@ -120,15 +120,4 @@ describe("osq's own validator", () => {
       timeoutSeconds: 900,
     });
   });
-
-  it('README describes the validator between Mutation checks and the guarantees', async () => {
-    const readme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
-    const mutation = readme.indexOf('### Mutation checks');
-    const validator = readme.indexOf('### Validator');
-    const guarantees = readme.indexOf('## What the watcher guarantees');
-    assert.ok(mutation >= 0 && validator > mutation && validator < guarantees, 'section order');
-    const section = readme.slice(validator, guarantees);
-    assert.match(section, /validator_ran/);
-    assert.match(section, /validator-model/);
-  });
 });

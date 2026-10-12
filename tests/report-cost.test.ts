@@ -19,8 +19,6 @@ const fixtureReportRoot = path.resolve(
   'report',
 );
 
-const readmePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'README.md');
-
 const tmpDirs: string[] = [];
 
 afterEach(async () => {
@@ -183,19 +181,6 @@ describe('report cost metrics', () => {
         formatted,
       );
       assert.ok(!formatted.includes('Cost:'), formatted);
-    });
-  });
-
-  describe('README', () => {
-    it('notes that reported cost reflects the harness price table rather than the invoice', async () => {
-      const readme = await fs.readFile(readmePath, 'utf8');
-
-      assert.ok(
-        readme.includes(
-          "Reported cost reflects the harness's internal price table rather than the invoice.",
-        ),
-        'README.md should document the reported cost disclaimer',
-      );
     });
   });
 });

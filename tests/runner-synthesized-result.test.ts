@@ -430,10 +430,4 @@ describe('Runner synthesized result', () => {
       .catch(() => false);
     assert.equal(resultExists, false);
   });
-
-  it('README documents the synthesized result behavior for the no_result reason', async () => {
-    const readme = await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8');
-    assert.match(readme, /synthesi[sz]ed/i);
-    assert.match(readme, /no_result/);
-  });
 });

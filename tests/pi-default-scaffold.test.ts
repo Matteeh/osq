@@ -8,7 +8,6 @@ import { loadConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const repoEnvExamplePath = path.join(repoRoot, '.env.example');
 const templateEnvExamplePath = path.join(repoRoot, 'templates', '.env.example');
 
 /** Run `body` with `OSQ_HARNESS` unset, restoring the prior value afterwards. */
@@ -69,10 +68,9 @@ describe('pi default scaffold', () => {
     assert.ok(agyNote.startsWith('#'), 'the agy bypass note must be commented out');
   });
 
-  it('mirrors the scaffolded .env.example in the repository and templates byte for byte', async () => {
+  it('mirrors the scaffolded .env.example in templates byte for byte', async () => {
     await scaffoldProject(tmpDir);
     const generated = await fs.readFile(path.join(tmpDir, '.env.example'), 'utf8');
-    assert.equal(await fs.readFile(repoEnvExamplePath, 'utf8'), generated);
     assert.equal(await fs.readFile(templateEnvExamplePath, 'utf8'), generated);
   });
 

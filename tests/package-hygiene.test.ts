@@ -284,7 +284,7 @@ describe('runtime dependency boundary', () => {
 });
 
 describe('node baseline', () => {
-  it('aligns package metadata, CI, and guidance on Node 24 LTS', async () => {
+  it('aligns package metadata, CI, and workspace manifests on Node 24 LTS', async () => {
     const root = JSON.parse(await fs.readFile(path.join(repoRoot, 'package.json'), 'utf8')) as {
       engines?: { node?: string };
       devDependencies?: Record<string, string>;
@@ -310,8 +310,5 @@ describe('node baseline', () => {
       );
       assert.doesNotMatch(text, /node-version:\s*22\b/, `${workflow} must not retain Node 22`);
     }
-
-    const readme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
-    assert.match(readme, /Node(?:\.js)? 24 LTS/, 'README must name the Node 24 LTS baseline');
   });
 });

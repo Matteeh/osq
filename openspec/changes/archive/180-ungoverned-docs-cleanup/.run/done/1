@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6326accf4767423bbe52d08c2b2a2a24def267bc1dd9a7f17e81dee0322f66e9"
+build_stamp: "6dfb5944"
+project_commit: "27566a10"
+exit_code: 0
+scope_files: {"tests/approval-digest-docs.test.ts":null,"tests/auto-retry-docs.test.ts":null,"tests/claude/readme.test.ts":null,"tests/planning-docs.test.ts":null,"tests/readme-command-groups.test.ts":null,"tests/readme-land.test.ts":null}
+---
+2026-10-12T16:53:29.317Z

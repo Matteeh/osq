@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { labelCommand, queryCommand } from '../src/cli/query.js';
@@ -170,20 +169,6 @@ async function queryRows(root: string, select: string): Promise<Record<string, u
   return JSON.parse(out) as Record<string, unknown>[];
 }
 
-/** The lines of the one fenced block after a `**Title**` label. */
-function fencedBlock(readme: string, label: string): string[] {
-  const lines = readme.split('\n');
-  const start = lines.findIndex((line) => line === `**${label}**`);
-  assert.notEqual(start, -1, `README has no ${label} block`);
-  const fenceStart = lines.findIndex((line, position) => position > start && line.trim() === '```');
-  assert.notEqual(fenceStart, -1, `${label} has no fenced block`);
-  const fenceEnd = lines.findIndex(
-    (line, position) => position > fenceStart && line.trim() === '```',
-  );
-  assert.notEqual(fenceEnd, -1, `${label} fenced block is not closed`);
-  return lines.slice(fenceStart + 1, fenceEnd);
-}
-
 /** The command first tokens of the root help's one group section. */
 function groupTokens(help: string, heading: string): string[] {
   const lines = help.split('\n');
@@ -282,23 +267,12 @@ describe('trial labels', () => {
     );
   });
 
-  it('lists label in the Inspection group right after query and in README', async () => {
+  it('lists label in the Inspection group right after query', () => {
     const help = createProgram('0.0.0').helpInformation();
     const tokens = groupTokens(help, 'Inspection commands:');
     const query = tokens.indexOf('query');
     assert.ok(query >= 0, 'query is missing from the Inspection group');
     assert.equal(tokens[query + 1], 'label', 'label must come right after query');
-
-    const readme = await fs.readFile(
-      path.join(path.resolve(fileURLToPath(new URL('..', import.meta.url))), 'README.md'),
-      'utf8',
-    );
-    assert.ok(
-      fencedBlock(readme, 'Inspection').some((line) =>
-        line.startsWith('osq label <id> <true|false>'),
-      ),
-      'README Inspection block has no osq label line',
-    );
   });
 
   it('refuses label before contacting a server', async () => {

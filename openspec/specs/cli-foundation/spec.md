@@ -90,8 +90,8 @@ below staged `ui/dist` SHALL total no more than 1,000,000 bytes, enforced by
 `pnpm verify` after a production UI build.
 
 The repository and published package SHALL use Node 24 as their supported
-major-version floor. Package engines, CI setup, consumer guidance, and the UI
-workspace SHALL agree on that baseline; CI SHALL resolve the maintained Node 24
+major-version floor. Package engines, CI setup, and the UI workspace SHALL
+agree on that baseline; CI SHALL resolve the maintained Node 24
 LTS line rather than a Current release. At planning time the verified current
 LTS patch is 24.21.0.
 
@@ -112,19 +112,19 @@ LTS patch is 24.21.0.
 - **THEN** the ordinary verification gate fails and reports the measured total
 
 #### Scenario: Node toolchain alignment
-- **WHEN** package metadata, CI, documentation, and workspace manifests are inspected
+- **WHEN** package metadata, CI, and workspace manifests are inspected
 - **THEN** each names the Node 24 LTS baseline without retaining a Node 22-only setup
 
 ### Requirement: Code ownership
-<!-- source: src/core/foundation/**, src/cli/**, src/index.ts, osq.config.ts, templates/**, AGENTS.md, PLANNER.md, README.md, .env.example -->
+<!-- source: src/core/foundation/**, src/cli/**, src/index.ts, osq.config.ts, templates/**, AGENTS.md, PLANNER.md -->
 The CLI Foundation capability SHALL own CLI entrypoints, retry and rejection
 commands, configuration and shared harness capability resolution, doctor
 diagnostics, logger, initialization, public configuration exports, managed
-agent and planner instructions, templates, and consumer guidance.
+agent and planner instructions, and templates.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for CLI, configuration, retry, scaffolding, or managed guidance files
-- **THEN** system maps `src/core/foundation/**`, `src/cli/**`, `src/index.ts`, `osq.config.ts`, `templates/**`, `AGENTS.md`, `PLANNER.md`, `README.md`, and `.env.example` to cli-foundation
+- **THEN** system maps `src/core/foundation/**`, `src/cli/**`, `src/index.ts`, `osq.config.ts`, `templates/**`, `AGENTS.md`, and `PLANNER.md` to cli-foundation
 
 ### Requirement: Watch stale build and dev mode CLI options
 The CLI watch command SHALL support options to bypass stale build detection and enable reactive dev execution.
@@ -439,9 +439,9 @@ selected executor's catalog entry without borrowing another harness's model,
 effort, or agent. Default prompt handoff and print mode SHALL not resolve a
 planner or use configuration to attribute a brief or manifest.
 
-Generated configuration and consumer guidance SHALL say that model choice for
-planning belongs to the tool in which the author plans unless osq is explicitly
-asked to launch the session.
+The `osq.config.ts` that `osq init` generates SHALL hold no planner
+configuration, so model choice for planning belongs to the tool in which the
+author plans unless osq is explicitly asked to launch the session.
 
 #### Scenario: Supported planner configuration
 - **WHEN** `--session` uses planner settings supported by the selected catalog entry
@@ -678,25 +678,6 @@ sentinel, network access, a TTY, or the repository's full verification suite.
 #### Scenario: Checked-in fixture verification
 - **WHEN** fixture change artifacts are inspected or executed from their fixture root
 - **THEN** every verify command invokes real deterministic local behavior available within that fixture
-
-### Requirement: Scope resolver upgrade guidance
-Consumer guidance SHALL contain one `Upgrading` note explaining that resolver 2
-changes automated done-marker hashes for active changes. It SHALL state that
-the watcher runs each affected task's verification at detection, writes one
-idempotent scope-regression marker, and requires the human to review it and run
-`osq retry <id> <task>` for recertification.
-
-The guidance SHALL state that archived markers are untouched and SHALL NOT
-suggest editing markers, bypassing verification, automatic acceptance, or bulk
-retry.
-
-#### Scenario: Upgrading with active legacy completions
-- **WHEN** a user upgrades while an active change has automated done markers without `scope_resolver: 2`
-- **THEN** README explains the one-time detection wave and the explicit retry command that recertifies each task
-
-#### Scenario: Archived completion history
-- **WHEN** a user reads the resolver upgrade note
-- **THEN** it states that markers already under the archive are not rewritten or audited by the migration
 
 ### Requirement: Managed tool-native planning entry points
 `osq init` SHALL manage `.claude/commands/osq-plan.md`, taking the change slug
@@ -944,17 +925,6 @@ runs `pi auth check --provider <name> --json` and fails unless the status is
 - **WHEN** `pi.provider` is not set
 - **THEN** doctor runs no auth check
 
-### Requirement: Pi consumer guidance
-The README SHALL describe the Pi harness: that `osq init` scaffolds it as the
-default harness, its settings and their precedence, installation, the tested
-version range, credentials and `pi auth check`, that setup writes no Pi files
-because Pi reads `AGENTS.md`, the flags osq passes, that Pi has no sandbox or
-permission prompts so nothing confines its agent, and that Pi cannot plan.
-
-#### Scenario: Reading the Pi section
-- **WHEN** a consumer reads the README's Pi section
-- **THEN** it finds a config example with placeholder provider and model, and an honest statement that task scope is a protocol, not confinement
-
 ### Requirement: Planning measurement configuration
 Configuration SHALL contain a `planning` block with `idleGapMinutes`, a
 positive finite number defaulting to 10, and optional `prices`, a map from model
@@ -973,22 +943,6 @@ and an invalid value SHALL be rejected with a diagnostic naming its key.
 #### Scenario: Invalid planning value
 - **WHEN** `planning.idleGapMinutes` is zero or negative, or a price is negative, missing, or not a number
 - **THEN** configuration validation fails naming the offending key
-
-### Requirement: Planner verify start guidance
-The managed planner block SHALL state that a task whose verify names a test it
-creates declares `verify_starts: red`, that a new test file may share a verify
-with existing tests, and that `any` is only for a task that can honestly start
-either way. README SHALL name the `verify_path_missing` dead reason among the
-automatic retry reasons and the dead reasons, and the `verify_starts_conflict`
-approval flag.
-
-#### Scenario: Planner block guidance
-- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
-- **THEN** it states the `red` rule for a task that creates the test its verify names, allows a new test next to existing ones in one verify, and limits `any` to honest either-way starts
-
-#### Scenario: README names the new reason and flag
-- **WHEN** README is inspected
-- **THEN** `verify_path_missing` appears in the automatic retry bullet and the dead reasons list, and `verify_starts_conflict` appears with the approval flags
 
 ### Requirement: Claude configuration and resolution
 Configuration SHALL accept harness `claude` and a publicly exported
@@ -1024,18 +978,6 @@ condition.
 #### Scenario: Containment report
 - **WHEN** doctor runs with `claude.sandbox: true`
 - **THEN** the `harness-containment` check says that Bash is sandboxed without network, that file tools are confined to the project, and that `git` is denied
-
-### Requirement: Claude consumer guidance
-The README SHALL describe the Claude Code harness: a config example, its
-settings, the minimum version, login versus `ANTHROPIC_API_KEY` and `--bare`,
-the stripped tool surface and why, the permission baseline and `git` denial,
-`claude.sandbox` with its bubblewrap and socat requirement on Linux, the
-honest limits of containment without the sandbox, and that planning uses the
-tool-native command instead.
-
-#### Scenario: Reading the Claude section
-- **WHEN** a consumer reads the README's Claude Code section
-- **THEN** it finds the flags osq passes and a statement that without `claude.sandbox` Bash is not confined
 
 ### Requirement: Active change folder entries
 `isActiveChangeFolderName` in `src/core/status/layout.ts` SHALL decide which
@@ -1157,8 +1099,7 @@ SHALL name `osq verified`.
 `limits` SHALL carry `importGraphDepth`, default 2, the import levels the
 frozen-test warning follows, and `maxListedImporters`, default 8, the most tests
 or files one import-graph warning lists. Both SHALL merge from `osq.config.ts`
-like the other limits, and the README's lint table SHALL list the four
-import-graph warnings.
+like the other limits.
 
 #### Scenario: Deeper reach
 - **WHEN** `limits.importGraphDepth` is 3 and a test imports a scoped file three levels away
@@ -1434,35 +1375,6 @@ value.
 - **WHEN** `traceability.mutation` is `{ command: 'npx stryker run' }`
 - **THEN** the resolved block holds that command and `budgetSeconds: 300`
 
-### Requirement: Reference mutation setup
-README.md SHALL document the reference StrykerJS setup: `@stryker-mutator/core`
-as a dev dependency of the project, `traceability.mutation.command` set to
-`npx stryker run`, and this `stryker.config.mjs`:
-
-```
-const tests = JSON.parse(process.env.OSQ_MUTATION_TESTS ?? '[]')
-  .map((file) => `'build/${file.replace(/\.(m|c)?ts$/, (_, k) => `.${k ?? ''}js`)}'`)
-  .join(' ');
-export default {
-  testRunner: 'command',
-  commandRunner: { command: `node --test ${tests}` },
-  buildCommand: 'npx tsc',
-  mutate: JSON.parse(process.env.OSQ_MUTATE ?? '[]'),
-  coverageAnalysis: 'off',
-  reporters: ['json'],
-  jsonReporter: { fileName: process.env.OSQ_MUTATION_REPORT },
-  tempDirName: '.stryker-tmp',
-};
-```
-
-It SHALL say that the config assumes `tsc` compiles `tests/` to `build/tests/`
-and must follow the project's own layout. It SHALL say to leave
-`thresholds.break` unset, and to add `.stryker-tmp` to `.gitignore`.
-
-#### Scenario: Setup documented
-- **WHEN** a reader looks up mutation checks in README.md
-- **THEN** it shows the command, the config above, and the placeholders and environment variables osq provides
-
 ### Requirement: Git read timeout
 `timeouts.gitSeconds` in `osq.config.ts` SHALL bound each git read osq makes,
 and SHALL default to 10 seconds when unset.
@@ -1717,11 +1629,6 @@ what they printed before. `formatDispatchItemSummary` SHALL return
 `<kind> <id> <title>[ task <n>: <task title>] (<reason>)`, the text that
 follows the position on each line of `osq inbox`'s list.
 
-README.md SHALL say, in the Human Attention Inbox section, what
-`osq inbox --follow` prints, when it plays a sound, which players it tries,
-and the five `inbox` config keys with their defaults. Its Commands list
-SHALL include `osq inbox --follow`.
-
 #### Scenario: Follow through the command
 - **WHEN** `inboxDispatchCommand({ follow: true })` runs with a fake watcher, a recording sound, and a signal that aborts after one event
 - **THEN** it prints `osq inbox`'s text, the waiting line, one line per new item, and resolves after the abort
@@ -1729,25 +1636,6 @@ SHALL include `osq inbox --follow`.
 #### Scenario: JSON refused
 - **WHEN** `osq inbox --follow --json` runs
 - **THEN** stderr holds `osq inbox: --follow prints text; drop --json` and the exit code is 1
-
-### Requirement: osq runs its own changes under version control
-osq's own `osq.config.ts` SHALL set `vcs.enabled` to true, `vcs.author` to
-`osq <osq@noreply.invalid>`, and `vcs.prepare` to
-`pnpm install --frozen-lockfile`. README.md SHALL end its
-`## Version control` section with `### Working with version control on`, a
-numbered list that says, in order, to approve from the default branch, to
-find the worktree from the `Worktree:` line or under `vcs.worktreeRoot`, not
-to edit the worktree while a task runs, and to land with `osq land <id>`,
-which lands the change completely or changes nothing. The `## Version control`
-section SHALL describe no way to land by hand.
-
-#### Scenario: Own config
-- **WHEN** `loadConfig` reads the repository root
-- **THEN** `vcs.enabled` is true, `vcs.author` is `osq <osq@noreply.invalid>`, and `vcs.prepare` is `pnpm install --frozen-lockfile`
-
-#### Scenario: Walkthrough
-- **WHEN** README.md is read
-- **THEN** `### Working with version control on` follows the other `## Version control` text and holds `osq land <id>`, and the `## Version control` section holds neither `git merge --squash` nor `| git commit -F -`
 
 ### Requirement: Inbox wait log wiring
 `inboxDispatchCommand` SHALL take `home`, defaulting to `os.homedir()`.
@@ -1802,33 +1690,6 @@ unchecked.
 - **WHEN** a project with no living capability spec sets `traceability.capabilities: ['pricing']`
 - **THEN** `loadConfig` returns the config
 
-### Requirement: Capability relation guidance
-`MANAGED_PLANNER_BLOCK` SHALL hold, under `### Parent spec` and right before
-the bullet that starts `- Replacing a requirement's behavior`, this bullet:
-
-```
-- Every change relates to a capability: it writes a delta or names one in
-  `features.reads`, and every read names a living capability or one the
-  change creates. List each new capability in `creates` in the proposal
-  frontmatter. Never invent a capability to avoid touching an existing one.
-```
-
-`PLANNER.md` and `templates/PLANNER.md` SHALL hold the block between their
-`OSQ:START` and `OSQ:END` markers. README.md SHALL show `creates` in the
-`## Change folder` frontmatter example and say, after it, that every change
-writes a delta or names a capability in `features.reads`, that every read
-names a real capability, that a new capability is declared in `creates`,
-that lint enforces this once the project has a living spec, and that
-`traceability.capabilities` must name real capabilities.
-
-#### Scenario: Planner bullet
-- **WHEN** `MANAGED_PLANNER_BLOCK`, `PLANNER.md`, and `templates/PLANNER.md` are read with line wrapping collapsed
-- **THEN** each holds the bullet, before the `Replacing a requirement's behavior` bullet
-
-#### Scenario: README
-- **WHEN** README.md is read
-- **THEN** its `## Change folder` section holds `creates:` and the relation rule
-
 ### Requirement: Capability groups configuration
 `osq.config.ts` MAY set `capabilities.requireGroups` to a boolean. The
 resolved config SHALL always hold `capabilities`, defaulting to
@@ -1847,25 +1708,6 @@ with `capabilities.requireGroups must be a boolean`.
 - **WHEN** it sets `capabilities: { requireGroups: 'yes' }`
 - **THEN** defining the config fails with `capabilities.requireGroups must be a boolean`
 
-### Requirement: Capability sidecar guidance
-osq's own `osq.config.ts` SHALL set `capabilities.requireGroups` to true,
-and every osq capability SHALL have a sidecar with the group the change
-names: cli-foundation `platform`, spec-lint-and-approve and traceability
-`planning`, watcher-and-harness and version-control `execution`, and
-status-inspection, web-inspection, and metrics-and-reporting `inspection`.
-README.md SHALL describe, in its `## Change folder` section, the sidecar
-file and its keys, the `{ name, group }` form of `creates`, replacement
-sidecars in a change, `capabilities.requireGroups` and what it enforces,
-and `osq migrate sidecars`.
-
-#### Scenario: Own sidecars
-- **WHEN** every `openspec/specs/<capability>/osq.yml` in the repository is read with `parseSidecar`
-- **THEN** each parses with the group named here, and `loadConfig` on the repository root gives `capabilities.requireGroups` true
-
-#### Scenario: README
-- **WHEN** README.md is read
-- **THEN** its `## Change folder` section holds `osq.yml`, `requireGroups`, and `osq migrate sidecars`
-
 ### Requirement: Graph command
 `osq graph --json` SHALL print `serializeWebJson` of `getSystemGraph` for the
 current project, followed by a newline, to stdout. `osq graph` without
@@ -1881,8 +1723,7 @@ Gaps: untested <n>, unclaimed <n>, unowned <n>
 order "System graph document" and "System graph links" list the kinds, with
 `owns`, `proves`, `covers`, `serves`, and `follows` after `imports` in that
 order. A failure, such as a config error, SHALL print its message to stderr
-and exit one. The command SHALL write no file. The README's command list SHALL
-name `osq graph`.
+and exit one. The command SHALL write no file.
 
 #### Scenario: JSON output
 - **WHEN** `osq graph --json` runs in a fixture project
@@ -2130,15 +1971,6 @@ prints it to stderr and exits 1.
 #### Scenario: Unknown capability fails
 - **WHEN** `specCommand('missing')` runs in a project whose only living capability is `alpha`
 - **THEN** it rejects with a `CommandError` whose message is `No living capability "missing". Capabilities: alpha` and whose exit code is 1, and stdout receives nothing
-
-### Requirement: Spec command documentation
-README's command list SHALL name `osq spec`, and README's description of what
-an executor reads SHALL say it reads the requirements its task names through
-`osq spec`, not whole capability specs.
-
-#### Scenario: README names the command
-- **WHEN** `README.md` is inspected
-- **THEN** its command list has a line starting `osq spec`, and it no longer says an agent reads "the delta specs and capability docs it names"
 
 ### Requirement: Executor requirement reading
 Executor step 1 in `EXECUTOR_STEPS` SHALL read exactly: `1. Read your task
@@ -2397,39 +2229,6 @@ directory, and read planning usage from that directory.
 - **WHEN** an active change in a worktree halted with `requirement_changed` on `orders: Order totals`, which the default branch rewrote to hold `rounded to cents`
 - **THEN** its `## Steering` section holds `#### orders: Order totals on main` and a fenced block holding `rounded to cents`
 
-### Requirement: Steering guidance
-README.md SHALL describe steering in its `## Gates and permissions` section as
-a `**Steering.**` bullet: the five triggers, naming the default-branch
-triggers as a conflict, a changed requirement, or a red verify or check when
-osq merges the default branch, at the watcher's sync or at `osq land`, which
-records an archived change's stop on its branch, the one inbox item with its
-trigger, reason, and `osq plan <id>`, the prompt written into the change's own
-folder with each trigger's marker as evidence, `--session` starting the planner
-there, the watcher leaving the change alone, and `osq approve <id>` sealing the
-revised plan where the change runs, keeping done tasks, retiring each trigger
-as `osq retry` does, and continuing from the first task that is not done.
-The bullet SHALL also say that approval after a conflict restarts the branch
-from the default branch, keeps the old branch, and runs every task again, and
-that approval after the other default-branch triggers merges the default
-branch without running verify and keeps done tasks. The `## Version control`
-paragraph on syncing SHALL name the reasons `sync_conflict`,
-`requirement_changed`, and `sync_verify_red`, and say each asks for steering
-with `osq plan <id>`. The
-loop diagram SHALL show the steering step. The README's paragraphs on stuck and
-blocked tasks and its inbox section SHALL say that such a change needs steering
-and name `osq plan <id>`, and SHALL keep saying that `osq retry <id> <n>`
-still retries a stuck task and that the stuck field is optional. CHANGELOG.md's
-Unreleased section SHALL say what changed for a stuck, blocked, or regressed
-change, and for a change the default branch stops.
-
-#### Scenario: README steering bullet
-- **WHEN** README.md is read
-- **THEN** its `## Gates and permissions` section holds a `**Steering.**` bullet naming `stuck`, `blocked`, `osq plan <id>`, `osq approve <id>`, and the first task that is not done
-
-#### Scenario: README default-branch steering
-- **WHEN** README.md is read
-- **THEN** its `**Steering.**` bullet names `conflict`, `requirement_changed`, `sync_verify_red`, `osq land`, and a restart from the default branch, and its sync paragraph names `requirement_changed` and `sync_verify_red`
-
 ### Requirement: History lookup in managed blocks
 The managed `PLANNER.md` block SHALL tell planners to look up osq's own
 history with `osq query "<select>"`, that `osq query` alone lists its tables,
@@ -2499,30 +2298,18 @@ be:
 - **WHEN** doctor runs with harness `pi` and `pi.provider` set
 - **THEN** the checks run `config`, `harness`, `harness-version`, `harness-auth`, `harness-containment`, then `managed-blocks`
 
-### Requirement: Codex guidance
-The README and scaffolded environment example SHALL describe Codex selection, independent planning configuration, optional model/effort, precedence, setup and authentication prerequisites, permissions, diagnostics, fresh sessions, watcher verification, and observed-only metrics. Codex selection in the scaffolded environment example SHALL stay commented. Examples SHALL contain no credentials or hard-coded recommended model.
-
-#### Scenario: Scaffold preservation
-- **WHEN** a clean project is scaffolded and later scaffolded again after its environment example is edited
-- **THEN** the original generated example includes commented Codex guidance and the repeat run preserves consumer edits
-
-#### Scenario: Honest support boundaries
-- **WHEN** a consumer reads the Codex guidance
-- **THEN** it distinguishes task scope from sandbox permissions, leaves unreported cost unestimated, and describes optional live validation without claiming an untested minimum CLI version
-
 ### Requirement: Scaffolded harness default
 `osq init` SHALL write `harness: process.env.OSQ_HARNESS || 'pi'` in
-`osq.config.ts`, and the scaffolded `.env.example` SHALL start with
-`OSQ_HARNESS=pi`. The repository's `.env.example` and `templates/.env.example`
-SHALL equal the scaffolded `.env.example` byte for byte.
+`osq.config.ts`, and the environment example it scaffolds SHALL start with
+`OSQ_HARNESS=pi` and equal `templates/.env.example` byte for byte.
 
 #### Scenario: Pi is the scaffolded default
 - **WHEN** `osq init` runs in an empty directory
-- **THEN** `osq.config.ts` contains `harness: process.env.OSQ_HARNESS || 'pi'` and the first line of `.env.example` is `OSQ_HARNESS=pi`
+- **THEN** `osq.config.ts` contains `harness: process.env.OSQ_HARNESS || 'pi'` and the first line of the scaffolded environment example is `OSQ_HARNESS=pi`
 
 #### Scenario: Scaffold copies match
 - **WHEN** `osq init` runs in an empty directory
-- **THEN** its `.env.example` equals the repository's `.env.example` and `templates/.env.example`
+- **THEN** its scaffolded environment example equals `templates/.env.example`
 
 ### Requirement: Command inputs
 `src/cli/command-inputs.ts` SHALL export `Writer`, a function that receives
@@ -2600,14 +2387,6 @@ resolve 1 without calling a command. The launcher SHALL never set
 `process.exitCode`, end the process, or reject. `actions` SHALL default to
 the table above; a test may pass its own table of the same shape.
 
-README.md SHALL say, in the Human Attention Inbox section, that
-`osq inbox` on a terminal opens cards, list the keys `a` approve, `p` plan,
-`r` retry, `x` reject, `s` show, `n` skip, and `q` quit, say that a key runs
-the osq command inside the same `osq inbox` process on the same terminal and
-prints its error and next step when it fails, that the land command is shown
-to copy, and that piping or `--json` prints as before. It SHALL not say that
-a key starts a child process.
-
 #### Scenario: Terminal runs the session
 - **WHEN** `inboxDispatchCommand` runs with `isTerminal` true, scripted keys `q`, and a project with one approval item
 - **THEN** the approval card with its `Keys:` block prints and the command resolves without launching
@@ -2678,17 +2457,6 @@ unchanged.
 #### Scenario: Subcommand help unchanged
 - **WHEN** a user runs `osq land --help`
 - **THEN** the output is commander's default help for `land`, with no group heading and no bare-`osq` line
-
-### Requirement: README command groups
-README's `## Commands` section SHALL list the commands in the root help's
-groups and order, each group a bold label of its title followed by one fenced
-block whose lines start with `osq`. The Everyday block SHALL start with the
-bare `osq` and `osq --json` lines. Every command in a group SHALL have at
-least one line in that group's block.
-
-#### Scenario: README follows the help
-- **WHEN** README's `## Commands` section is read
-- **THEN** it holds the four labels in order, and each command `COMMAND_GROUPS` names has a line `osq <command>` in its own group's block
 
 ### Requirement: Dashboard command and configuration
 The CLI SHALL provide `osq serve [--port <n>] [--open]`. It SHALL bind a Node
@@ -2846,37 +2614,17 @@ out, right after `maxConcurrency: 1,`, as these four lines:
 - **WHEN** `osq init` runs in an empty directory and `loadConfig` reads the result
 - **THEN** `osq.config.ts` holds `  // validator: { harness: 'claude', model: '<a-different-model>' },` and the loaded config has no `validator` key
 
-### Requirement: osq validates its own changes
-osq's own `osq.config.ts` SHALL set
-`validator: { harness: 'claude', model: 'claude-opus-5-5' }`, the model that
-plans osq's changes, so a model other than the `pi` executor's judges them.
-README SHALL describe the validator in a `### Validator` section after
-`### Mutation checks`: the config block, when it runs, what it is given, the
-three problems a finding names, the `validator_ran` outcomes, the `osq show`
-and `osq report` sections, the `validator-model` doctor warning, and that it
-never stops a change (ADR 010).
-
-#### Scenario: Own validator
-- **WHEN** `loadConfig` reads osq's own repository
-- **THEN** its `validator` is `{ enabled: true, harness: 'claude', model: 'claude-opus-5-5', timeoutSeconds: 900 }`
-
-#### Scenario: README section
-- **WHEN** README is read
-- **THEN** it has a `### Validator` heading after `### Mutation checks` and before `## What the watcher guarantees`, and that section names `validator_ran` and `validator-model`
-
 ### Requirement: Decisions scaffold
 `osq init` SHALL write `<paths.decisions>/README.md` from
 `templates/decisions/README.md` when that file is missing. It SHALL write
 `<paths.decisions>/000-how-this-project-is-built.md` from
 `templates/decisions/000-how-this-project-is-built.md` only when the decisions
-folder is missing or holds no markdown file other than `README.md`. An existing
-file SHALL never be overwritten, `--refresh-schema` included, and SHALL be
-reported as existing like the other scaffolded files.
+folder is missing or holds no markdown file other than
+`<paths.decisions>/README.md`. An existing file SHALL never be overwritten,
+`--refresh-schema` included, and SHALL be reported as existing like the other
+scaffolded files.
 
-The README SHALL describe the ADR frontmatter osq reads: `status`,
-`applies_to`, `rule`, `superseded_by`, `checks`, and `denies`, that only
-accepted ADRs take effect, and that the number comes from the file name. The
-starter SHALL have frontmatter `status: proposed` and `applies_to: all` and
+The starter SHALL have frontmatter `status: proposed` and `applies_to: all` and
 no `rule`, the heading `# 000. How this project is built`, and one `## `
 section per question, in this order: `Layering` (which layers exist, what
 each may import, and where logic lives), `State` (where state lives and who
@@ -2896,7 +2644,7 @@ tested. The starter SHALL prescribe no answer.
 - **THEN** the starter keeps its edited bytes and is reported as existing
 
 #### Scenario: Project with ADRs
-- **WHEN** `osq init` runs in a project whose decisions folder holds `001-x.md` and no README
+- **WHEN** `osq init` runs in a project whose decisions folder holds `001-x.md` and no `decisions/README.md`
 - **THEN** it writes `decisions/README.md` and no starter
 
 ### Requirement: Planner architecture-first guidance
@@ -2908,19 +2656,6 @@ rule can be tested.
 #### Scenario: Planner block names the order
 - **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
 - **THEN** it holds `writes its architecture` and `and style ADRs first`
-
-### Requirement: Architecture-first documentation
-README's `## Install` block SHALL show, after `init`, writing the architecture
-and style ADRs, starting from `decisions/000-how-this-project-is-built.md`,
-before the first feature brief. The `decisions/` line in
-`## What it puts in your repo` SHALL be marked as written by `osq init`. The
-`### Architecture decisions` section SHALL say that decisions lint applies
-once the project has an accepted ADR, and that `osq doctor` warns until an
-accepted ADR applies to `all`.
-
-#### Scenario: README order
-- **WHEN** README is read
-- **THEN** `## Install` names `decisions/000-how-this-project-is-built.md` after `init`, and `### Architecture decisions` says lint applies once an ADR is accepted
 
 ### Requirement: Commit catch-up gate key
 Public configuration SHALL contain `gates.commitRetries`, defaulting to 2: the
@@ -3065,36 +2800,6 @@ option`.
 - **WHEN** `osq watch --background --dev` runs
 - **THEN** it fails with `--background cannot be combined with --once, --dev or --allow-stale` and spawns nothing
 
-### Requirement: Change verify rerun count
-Configuration SHALL accept `gates.changeVerifyReruns`, a non-negative integer
-defaulting to 1: the most times the runner reruns a failing change-level
-verify at one task boundary when its failing tests are unrelated to the task,
-as watcher-and-harness "Change verify rerun after unrelated failures"
-describes. `0` SHALL turn reruns off. A partial `gates` block SHALL keep the
-default, and any other value SHALL fail validation with an error naming
-`gates.changeVerifyReruns`.
-
-README's "Gates and permissions" SHALL describe the rerun in its "Change
-verification after every task" bullet: which failures are rerun,
-`gates.changeVerifyReruns` with its default of 1 and `0` turning it off, the
-`change_verify_rerun` event, and the `Flaky tests:` section of `osq report`.
-
-#### Scenario: Default rerun count
-- **WHEN** `defineConfig({})` or `defineConfig({ gates: { preSpawnVerify: 'off' } })` runs
-- **THEN** `gates.changeVerifyReruns` is 1
-
-#### Scenario: Reruns off
-- **WHEN** configuration declares `gates.changeVerifyReruns: 0`
-- **THEN** resolved configuration retains 0 while preserving the other gate defaults
-
-#### Scenario: Invalid rerun count
-- **WHEN** `gates.changeVerifyReruns` is -1, 1.5, `NaN`, or `'one'`
-- **THEN** configuration validation fails with an error naming `gates.changeVerifyReruns`
-
-#### Scenario: README describes the rerun
-- **WHEN** README's "Gates and permissions" section is read
-- **THEN** its "Change verification after every task" bullet names `gates.changeVerifyReruns`, its default of 1, `change_verify_rerun`, and `Flaky tests:`
-
 ### Requirement: Format command configuration
 Configuration SHALL accept `gates.formatCommand`, an optional command that
 contains `{files}`, which the watcher runs on a task's changed scoped files
@@ -3112,8 +2817,7 @@ commented validator example, these three comment lines:
   // gates: { formatCommand: 'npx prettier --write {files}' },
 ```
 
-README's "Gates and permissions" SHALL describe the step in a "Formatting"
-bullet, and osq's own `osq.config.ts` SHALL set `gates.formatCommand` to
+osq's own `osq.config.ts` SHALL set `gates.formatCommand` to
 `pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched {files}`.
 
 #### Scenario: Unset by default
@@ -3231,7 +2935,7 @@ their errors SHALL not change.
 
 ### Requirement: Server commands
 The CLI SHALL provide `osq server start` and `osq server stop`, in the "Setup
-and running" help group, and README's command list SHALL name both.
+and running" help group.
 
 `osq server start` SHALL fail before it starts anything with `osq server is
 already running (pid <pid>). Log: <log>. Stop it with osq server stop` when
@@ -3460,11 +3164,6 @@ An id with no working copy SHALL be linted as the server holds it, and `lint`
 with no ids SHALL upload nothing. Then it SHALL forward `lint` as every other
 command is forwarded.
 
-README's "Running osq on a server" section SHALL say how to set
-`OSQ_SERVER`, which commands stay local, that `osq plan <id>` downloads the
-working copy and `osq lint <id>` uploads it, and that a planner's shell or
-editor must be started with `OSQ_SERVER` set.
-
 #### Scenario: Plan downloads a working copy
 - **WHEN** the server's change `001-demo` holds `brief.md` and `.run/manifest.json`, and `osq plan 001` runs against it with home `<home>`
 - **THEN** `<home>/.osq/remote/<host>/osq/001-demo/` holds the server folder's files, `plan-prompt.md` included and `.run/` left out, and stdout is `<that folder>: ask your planning tool to plan change 001-demo — next: <next>`
@@ -3658,8 +3357,8 @@ SHALL be true exactly when the exit code is not 0.
 
 ### Requirement: MCP command
 The CLI SHALL provide `osq mcp`, registered by `registerMcpCommand` in
-`src/cli/mcp.ts`, in the "Setup and running" help group after `server`, and
-README's command list SHALL name it. It SHALL serve the planning tools to an
+`src/cli/mcp.ts`, in the "Setup and running" help group after `server`. It
+SHALL serve the planning tools to an
 MCP client over stdio: one JSON-RPC message per line in, each answer as one
 line of JSON out, and nothing else on stdout. `--cwd <dir>` SHALL name the
 project folder, resolved to an absolute path, and default to the process
@@ -3674,11 +3373,6 @@ answered at once. When stdin ends, the command SHALL answer every request
 it has read and exit 0. The instructions SHALL tell the client to run
 `plan`, read `plan-prompt.md` and follow it, write only inside the change
 folder, run `lint` until it passes, and leave approval to a human.
-
-README SHALL have a "Planning through MCP" section that shows an MCP client
-configuration running `osq mcp --cwd <project>`, says to add `OSQ_SERVER`
-to its environment to plan against a server, lists the tools, and says that
-approve, land, reject and retry are not tools.
 
 #### Scenario: A planning session over stdio
 - **WHEN** the CLI, spawned from `src/cli/bin.ts`, runs `osq mcp --cwd <project>` for a temporary project with change `001-demo` holding `brief.md`, receives `initialize`, `notifications/initialized`, `tools/list`, then `tools/call` for `plan`, `write_file` of `tasks/1.md`, `read_file` of `tasks/1.md`, `write_file` of `../x.md` and `lint`, all written before any answer, and stdin closes
@@ -3701,15 +3395,6 @@ MCP SDK in its Rejected section with when to revisit it. osq's
 #### Scenario: Transport decision recorded
 - **WHEN** osq's decisions folder is read and validated against its living specs
 - **THEN** ADR 015 is accepted for `cli-foundation` with that rule and those four checks, validation reports no error and no warning, and the index links `015-mcp-transport.md` once
-
-### Requirement: README names changes waiting to land
-README's "Human Attention Inbox" section SHALL say, in its **Needs you**
-bullet, that with `vcs.enabled` an archived change the default branch does not
-hold yet shows as `archived, not landed` with `osq land <id>`.
-
-#### Scenario: README describes changes waiting to land
-- **WHEN** README's "Human Attention Inbox" section is read with whitespace collapsed
-- **THEN** its **Needs you** bullet names `vcs.enabled`, `archived, not landed`, and `osq land <id>`
 
 ### Requirement: After-land command configuration
 The `vcs` block MAY carry `afterLand`, a command osq runs in the checkout after
@@ -3743,17 +3428,6 @@ step.` Without it the header SHALL be unchanged.
 - **WHEN** the same command runs without `vcs.afterLand`
 - **THEN** the prompt holds no `After land:` line
 
-### Requirement: README describes the after-land command
-README's version control configuration SHALL describe `vcs.afterLand`: osq
-runs it in the checkout after every successful land, after the push on a
-server, a failure leaves the land in place and shows in `osq status` and the
-inbox until `osq land <id>` runs it again and it passes, and the watch service
-and `osq server` pick up a new osq build by themselves.
-
-#### Scenario: README names the key
-- **WHEN** README is read with whitespace collapsed
-- **THEN** it holds `vcs.afterLand` and `osq land <id>` in the same paragraph
-
 ### Requirement: Capabilities are vertical slices
 osq's own decisions SHALL include an accepted, system-wide ADR whose rule is
 "A capability is a vertical slice with every layer it needs in one folder
@@ -3784,10 +3458,7 @@ to stdout for each written path, relative to the change folder, then
 `<n> file(s) outside the specs name <old>; proposal.md lists them`, and exit
 zero. On any failure, a map that cannot be read or parsed included, it SHALL
 print `Error: <message>` to stderr and exit one. With `OSQ_SERVER` set,
-`osq capability` SHALL refuse as a local-only command. README's Plumbing
-block SHALL list
-`osq capability rename <old> <new> --change <id>` and
-`osq capability split <old> --map <file> --change <id>`.
+`osq capability` SHALL refuse as a local-only command.
 
 #### Scenario: Rename through the CLI
 - **WHEN** `osq capability rename gadgets widgets --change 002` runs in a project where `gadgets` has a living spec and `002` is unapproved
@@ -4029,46 +3700,25 @@ doctor's exit code. osq SHALL never rewrite the files itself.
 - **THEN** `maxListedLineEndings` is 5
 
 ### Requirement: Product description
-README's third line and the `description` in `package.json` SHALL both be
-exactly `A spec-driven software factory. You write briefs and tap decisions;
-osq plans, builds, verifies and lands each change against living specs.` The
-root command's description in `osq --help` SHALL be exactly `Spec-driven
-software factory: you brief and decide; osq lands verified changes.`, which
-fits in commander's 80-column help width so it prints on one line. None of the
-three SHALL say `Strict spec queue`.
+The `description` in `package.json` SHALL be exactly `A spec-driven software
+factory. You write briefs and tap decisions; osq plans, builds, verifies and
+lands each change against living specs.` The root command's description in
+`osq --help` SHALL be exactly `Spec-driven software factory: you brief and
+decide; osq lands verified changes.`, which fits in commander's 80-column help
+width so it prints on one line. Neither SHALL say `Strict spec queue`.
 
 #### Scenario: Product description text
-- **WHEN** README's third line, `package.json`'s `description` and `createProgram().description()` are read
+- **WHEN** `package.json`'s `description` and `createProgram().description()` are read
 - **THEN** each equals its text below:
 
 | Source | Text |
 |---|---|
-| README line 3 | `A spec-driven software factory. You write briefs and tap decisions; osq plans, builds, verifies and lands each change against living specs.` |
 | `package.json` `description` | `A spec-driven software factory. You write briefs and tap decisions; osq plans, builds, verifies and lands each change against living specs.` |
 | root command description | `Spec-driven software factory: you brief and decide; osq lands verified changes.` |
 
 #### Scenario: Description on one help line
 - **WHEN** `osq --help` is printed at commander's default 80-column width
 - **THEN** the line `Spec-driven software factory: you brief and decide; osq lands verified changes.` appears whole on one line
-
-### Requirement: README intro describes the flow
-README's intro, the text before `## Install`, SHALL walk the current flow:
-brief, plan into a change folder, approve, the watcher's own verify of each
-task, the optional validator, archive, `osq land`, and running on a server
-with taps from a phone. It SHALL keep the fresh agent line and SHALL not
-contain the word `queue`.
-
-#### Scenario: Intro names each step
-- **WHEN** README's intro is read
-- **THEN** it contains each of `brief`, `change folder`, `living capability specs`, `approve`, `verify`, `validator`, `archives`, `` `osq land` ``, `` `osq server start` `` and `phone`
-
-#### Scenario: Intro keeps the fresh agent line
-- **WHEN** README's intro is read
-- **THEN** it holds the line `If a fresh agent could not pick up a task from the files in the repo alone, the files are wrong. Everything here follows from that.`
-
-#### Scenario: Intro is not a queue
-- **WHEN** README's intro is read, ignoring case
-- **THEN** it does not contain `queue`
 
 ### Requirement: Gitattributes line endings block
 `osq init` SHALL keep one managed block in the project root's
@@ -4191,3 +3841,101 @@ without a delta.
 #### Scenario: Fresh init names ungoverned paths
 - **WHEN** `osq init` writes the managed blocks into a new project
 - **THEN** `PLANNER.md` and the executor protocol in `AGENTS.md` each name `ungoverned` and say a human edits those paths directly on the default branch
+
+### Requirement: Planner verify start rule
+The managed planner block SHALL state that a task whose verify names a test it
+creates declares `verify_starts: red`, that a new test file may share a verify
+with existing tests, and that `any` is only for a task that can honestly start
+either way.
+
+#### Scenario: Planner block guidance
+- **WHEN** `MANAGED_PLANNER_BLOCK` is inspected
+- **THEN** it states the `red` rule for a task that creates the test its verify names, allows a new test next to existing ones in one verify, and limits `any` to honest either-way starts
+
+### Requirement: osq's own version control configuration
+osq's own `osq.config.ts` SHALL set `vcs.enabled` to true, `vcs.author` to
+`osq <osq@noreply.invalid>`, and `vcs.prepare` to
+`pnpm install --frozen-lockfile`.
+
+#### Scenario: Own config
+- **WHEN** `loadConfig` reads the repository root
+- **THEN** `vcs.enabled` is true, `vcs.author` is `osq <osq@noreply.invalid>`, and `vcs.prepare` is `pnpm install --frozen-lockfile`
+
+### Requirement: Capability relation planner bullet
+`MANAGED_PLANNER_BLOCK` SHALL hold, under `### Parent spec` and right before
+the bullet that starts `- Replacing a requirement's behavior`, this bullet:
+
+```
+- Every change relates to a capability: it writes a delta or names one in
+  `features.reads`, and every read names a living capability or one the
+  change creates. List each new capability in `creates` in the proposal
+  frontmatter. Never invent a capability to avoid touching an existing one.
+```
+
+`PLANNER.md` and `templates/PLANNER.md` SHALL hold the block between their
+`OSQ:START` and `OSQ:END` markers.
+
+#### Scenario: Planner bullet
+- **WHEN** `MANAGED_PLANNER_BLOCK`, `PLANNER.md`, and `templates/PLANNER.md` are read with line wrapping collapsed
+- **THEN** each holds the bullet, before the `Replacing a requirement's behavior` bullet
+
+### Requirement: osq's own capability sidecars
+osq's own `osq.config.ts` SHALL set `capabilities.requireGroups` to true,
+and every osq capability SHALL have a sidecar with the group the change
+names: cli-foundation `platform`, spec-lint-and-approve and traceability
+`planning`, watcher-and-harness and version-control `execution`, and
+status-inspection, web-inspection, and metrics-and-reporting `inspection`.
+
+#### Scenario: Own sidecars
+- **WHEN** every `openspec/specs/<capability>/osq.yml` in the repository is read with `parseSidecar`
+- **THEN** each parses with the group named here, and `loadConfig` on the repository root gives `capabilities.requireGroups` true
+
+### Requirement: Codex scaffold guidance
+The environment example `osq init` scaffolds SHALL describe, in comments,
+Codex selection, its binary and model settings, and independent planning
+configuration. Codex selection SHALL stay commented, and the example SHALL
+contain no credentials or hard-coded recommended model.
+
+#### Scenario: Scaffold preservation
+- **WHEN** a clean project is scaffolded and later scaffolded again after its environment example is edited
+- **THEN** the original generated example includes commented Codex guidance and the repeat run preserves consumer edits
+
+### Requirement: osq's own validator configuration
+osq's own `osq.config.ts` SHALL set
+`validator: { harness: 'claude', model: 'claude-opus-5-5' }`, the model that
+plans osq's changes, so a model other than the `pi` executor's judges them.
+
+#### Scenario: Own validator
+- **WHEN** `loadConfig` reads osq's own repository
+- **THEN** its `validator` is `{ enabled: true, harness: 'claude', model: 'claude-opus-5-5', timeoutSeconds: 900 }`
+
+### Requirement: Change verify rerun configuration
+Configuration SHALL accept `gates.changeVerifyReruns`, a non-negative integer
+defaulting to 1: the most times the runner reruns a failing change-level
+verify at one task boundary when its failing tests are unrelated to the task,
+as watcher-and-harness "Change verify rerun after unrelated failures"
+describes. `0` SHALL turn reruns off. A partial `gates` block SHALL keep the
+default, and any other value SHALL fail validation with an error naming
+`gates.changeVerifyReruns`.
+
+#### Scenario: Default rerun count
+- **WHEN** `defineConfig({})` or `defineConfig({ gates: { preSpawnVerify: 'off' } })` runs
+- **THEN** `gates.changeVerifyReruns` is 1
+
+#### Scenario: Reruns off
+- **WHEN** configuration declares `gates.changeVerifyReruns: 0`
+- **THEN** resolved configuration retains 0 while preserving the other gate defaults
+
+#### Scenario: Invalid rerun count
+- **WHEN** `gates.changeVerifyReruns` is -1, 1.5, `NaN`, or `'one'`
+- **THEN** configuration validation fails with an error naming `gates.changeVerifyReruns`
+
+### Requirement: Steering changelog entries
+`CHANGELOG.md` SHALL hold an entry ending `(128)` that says what changed for
+a stuck, blocked, or regressed change, and an entry ending `(129)` that says
+what changed for a change the default branch stops. Each entry SHALL sit in a
+section that a release section follows.
+
+#### Scenario: Steering changelog entries
+- **WHEN** `CHANGELOG.md` is read
+- **THEN** its `(128)` entry names `stuck, blocked, or regressed`, `osq plan <id>`, `osq approve` and the first task that is not done, and its `(129)` entry names the default branch, `osq plan <id>`, a conflict and a merge

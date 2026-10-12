@@ -137,24 +137,4 @@ describe('OpenCode Configuration and Adapter Registration', () => {
     assert.ok(upperAdapter instanceof OpencodeAdapter);
     assert.equal(upperAdapter.name, 'opencode');
   });
-
-  it('README documents opencode in harness list with sample configuration block', async () => {
-    const readmePath = path.resolve(import.meta.dirname, '..', 'README.md');
-    const readmeContent = await fs.readFile(readmePath, 'utf8');
-
-    // Check that opencode is documented under Harnesses
-    assert.ok(
-      readmeContent.includes('opencode') || readmeContent.includes('OpenCode'),
-      'README should mention opencode harness',
-    );
-
-    // Check for sample configuration block for opencode
-    assert.ok(
-      readmeContent.includes("harness: 'opencode'") ||
-        readmeContent.includes('harness: "opencode"') ||
-        readmeContent.includes("harness: 'opencode'") ||
-        readmeContent.includes('opencode: {'),
-      'README should include sample configuration block for opencode',
-    );
-  });
 });

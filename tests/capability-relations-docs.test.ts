@@ -49,37 +49,4 @@ describe('capability relation guidance', () => {
       );
     }
   });
-
-  it('states the relation rule and shows creates in the README Change folder section', async () => {
-    const readme = flatten(await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8'));
-    const start = readme.indexOf('## Change folder');
-    assert.notEqual(start, -1, 'README must hold ## Change folder');
-    const end = readme.indexOf('### Architecture decisions', start);
-    assert.ok(end > start, '### Architecture decisions must follow ## Change folder');
-    const section = readme.slice(start, end);
-
-    assert.ok(section.includes('creates:'), 'the frontmatter example must show creates:');
-    assert.ok(
-      section.includes('writes a delta') &&
-        section.includes('names a capability in `features.reads`'),
-      'the section must say a change writes a delta or names a capability in features.reads',
-    );
-    assert.ok(
-      section.includes('every read names a real capability'),
-      'the section must say every read names a real capability',
-    );
-    assert.ok(
-      section.includes('a new capability is declared in `creates`') ||
-        section.includes('A new capability is declared in `creates`'),
-      'the section must say a new capability is declared in creates',
-    );
-    assert.ok(
-      section.includes('enforces this once the project has a living capability spec'),
-      'the section must say lint enforces the rule once the project has a living spec',
-    );
-    assert.ok(
-      section.includes('`traceability.capabilities` must name real capabilities'),
-      'the section must say traceability.capabilities must name real capabilities',
-    );
-  });
 });

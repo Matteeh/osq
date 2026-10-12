@@ -19,12 +19,6 @@ const INIT_COMMENT_LINES = [
   "  // gates: { formatCommand: 'npx prettier --write {files}' },",
 ];
 
-async function readReadme(): Promise<string> {
-  const raw = await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8');
-  // Collapse line wrapping so prose phrases match regardless of where they break.
-  return raw.replace(/\s+/g, ' ');
-}
-
 describe('format command configuration', () => {
   let tmpDir: string;
 
@@ -92,37 +86,5 @@ describe('format command configuration', () => {
   it("loads osq's own format command", async () => {
     const config = await loadConfig(REPO_ROOT);
     assert.equal(config.gates?.formatCommand, OWN_COMMAND);
-  });
-});
-
-describe('format command documentation', () => {
-  it('Gates and permissions gains a Formatting bullet after change verification', async () => {
-    const readme = await readReadme();
-    const start = readme.indexOf('## Gates and permissions');
-    assert.ok(start >= 0, 'README must contain Gates and permissions');
-    const end = readme.indexOf('## Change folder', start);
-    const gates = readme.slice(start, end);
-
-    assert.match(gates, /\*\*Formatting\.\*\*/, 'the bullet must be labeled Formatting');
-    const formatting = gates.indexOf('**Formatting.**');
-    const changeVerify = gates.indexOf('**Change verification after every task.**');
-    assert.ok(
-      changeVerify >= 0 && formatting > changeVerify,
-      'the Formatting bullet must come after change verification',
-    );
-    assert.ok(gates.includes('gates.formatCommand'), 'the bullet must name the key');
-    assert.ok(gates.includes('{files}'), 'the bullet must name the placeholder');
-    assert.match(gates, /scope/, 'the bullet must say the files are the task scope');
-    assert.match(gates, /format_ran/, 'the bullet must name the format_ran event');
-    assert.match(gates, /still decides/i, 'verify must still decide on failure');
-    assert.match(gates, /nothing runs without the key/i, 'nothing runs without the key');
-  });
-
-  it('Role environments lists the format command among what verify covers', async () => {
-    const readme = await readReadme();
-    const start = readme.indexOf('**Role environments.**');
-    assert.ok(start >= 0, 'README must contain the Role environments bullet');
-    const role = readme.slice(start, readme.indexOf('## Change folder', start));
-    assert.match(role, /format command/, 'Role environments must list the format command');
   });
 });

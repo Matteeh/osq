@@ -202,18 +202,6 @@ describe('OpenCode Adapter Setup', () => {
     );
   });
 
-  it('README notes --auto flag approves any action the agent file does not deny', async () => {
-    const readmePath = path.resolve(import.meta.dirname, '..', 'README.md');
-    const readmeContent = await fs.readFile(readmePath, 'utf8');
-
-    assert.ok(readmeContent.includes('--auto'), 'README should mention --auto flag');
-    assert.ok(
-      readmeContent.toLowerCase().includes('approves') &&
-        (readmeContent.includes('not deny') || readmeContent.includes('does not deny')),
-      'README should note that --auto approves actions not denied by the agent file',
-    );
-  });
-
   it('OpencodeAdapter setup respects custom agent name configured in OsqConfig', async () => {
     const customConfig: OsqConfig = {
       ...DEFAULT_CONFIG,

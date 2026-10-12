@@ -3,17 +3,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const repoEnvExamplePath = path.join(repoRoot, '.env.example');
-const readmePath = path.join(repoRoot, 'README.md');
-
 /**
- * Behavioral scaffold coverage plus light README wording checks. The scaffold
- * assertions are the point of this file; the README assertions only confirm the
- * guidance sections the task's acceptance lines require exist.
+ * Behavioral scaffold coverage: the scaffolded `.env.example` keeps the Codex
+ * guidance as comments while pi stays the active default.
  */
 describe('codex consumer guidance: scaffolded .env.example', () => {
   let tmpDir: string;
@@ -80,13 +74,6 @@ describe('codex consumer guidance: scaffolded .env.example', () => {
     );
   });
 
-  it('mirrors the repository .env.example exactly', async () => {
-    await scaffoldProject(tmpDir);
-    const generated = await fs.readFile(path.join(tmpDir, '.env.example'), 'utf8');
-    const repo = await fs.readFile(repoEnvExamplePath, 'utf8');
-    assert.equal(repo, generated);
-  });
-
   it('preserves a consumer-edited example across repeated scaffolding', async () => {
     await scaffoldProject(tmpDir);
     const envExamplePath = path.join(tmpDir, '.env.example');
@@ -96,55 +83,5 @@ describe('codex consumer guidance: scaffolded .env.example', () => {
     const second = await scaffoldProject(tmpDir);
     assert.ok(second.existingFiles.includes('.env.example'));
     assert.equal(await fs.readFile(envExamplePath, 'utf8'), custom);
-  });
-});
-
-describe('codex consumer guidance: README', () => {
-  it('lists codex and documents executor and independent planner examples with precedence', async () => {
-    const readme = await fs.readFile(readmePath, 'utf8');
-
-    assert.match(readme, /`codex`[\s:]/i, 'README must list the codex adapter');
-    assert.match(readme, /harness:\s*'codex'/, 'README must show Codex as the executor');
-    assert.match(readme, /planner:\s*\{/, 'README must show independent planner configuration');
-    assert.match(
-      readme,
-      /planner\.agent[\s\S]{0,160}unsupported/i,
-      'README must state Codex planner.agent is unsupported',
-    );
-    assert.match(
-      readme,
-      /codex\.bin[\s\S]{0,160}CODEX_PATH/,
-      'README must document Codex binary precedence',
-    );
-    assert.match(
-      readme,
-      /codex\.model[\s\S]{0,200}OSQ_MODEL/,
-      'README must document Codex model precedence',
-    );
-    assert.match(readme, /codex\.effort|effort/, 'README must document optional effort');
-  });
-
-  it('covers installation, authentication, setup, diagnostics, permissions, and scope limits', async () => {
-    const readme = await fs.readFile(readmePath, 'utf8');
-
-    assert.match(readme, /authenticat/i);
-    assert.match(readme, /same host environment/i);
-    assert.match(readme, /osq setup[\s\S]{0,300}no Codex-specific files/i);
-    assert.match(readme, /doctor[\s\S]{0,300}--version/i);
-    assert.match(readme, /--ask-for-approval never/);
-    assert.match(readme, /workspace-write/);
-    assert.match(readme, /on-request/);
-    assert.match(readme, /scope[\s\S]{0,60}protocol, not hard confinement/i);
-  });
-
-  it('covers live smoke, fresh sessions, watcher verification, results, and observed costs', async () => {
-    const readme = await fs.readFile(readmePath, 'utf8');
-
-    assert.match(readme, /fresh Codex session/i);
-    assert.match(readme, /synthesi[sz]e/i);
-    assert.match(readme, /observed/i);
-    assert.match(readme, /does not estimate usage or cost/i);
-    assert.match(readme, /live/i);
-    assert.match(readme, /minimum supported Codex release/i);
   });
 });

@@ -136,10 +136,4 @@ describe('graph command', () => {
     assert.equal(stdout, '');
     assert.equal(stderr, '');
   });
-
-  it('names osq graph in the README command list', async () => {
-    const readme = await fs.readFile(path.join(ROOT, 'README.md'), 'utf8');
-    assert.match(readme, /^osq graph\s/m);
-    assert.match(readme, /^osq graph --json\s/m);
-  });
 });

@@ -6,15 +6,6 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const changelogPath = path.join(repoRoot, 'CHANGELOG.md');
-const readmePath = path.join(repoRoot, 'README.md');
-
-const readme = await fs.readFile(readmePath, 'utf8');
-
-function releaseSection(readmeText: string): string {
-  const start = readmeText.indexOf('## Release Procedure');
-  assert.ok(start >= 0, 'README must have a Release Procedure section');
-  return readmeText.slice(start);
-}
 
 describe('changelog and release documentation', () => {
   it('ships a changelog with a 0.1.0 release entry', async () => {
@@ -36,24 +27,5 @@ describe('changelog and release documentation', () => {
       const id = String(n).padStart(3, '0');
       assert.ok(releaseBody.includes(id), `0.1.0 entry must reference spec ${id}`);
     }
-  });
-
-  it('documents the release procedure in the README', () => {
-    const section = releaseSection(readme);
-    assert.match(section, /version/i, 'release procedure must cover the version bump');
-    assert.match(section, /changelog/i, 'release procedure must cover updating the changelog');
-    assert.match(section, /tag/i, 'release procedure must cover tagging');
-    assert.match(section, /push/i, 'release procedure must cover pushing');
-  });
-
-  it('lists the exact release commands', () => {
-    const section = releaseSection(readme);
-    assert.match(section, /git commit/, 'release procedure must document the commit command');
-    assert.match(section, /git tag/, 'release procedure must document the tag command');
-    assert.match(
-      section,
-      /git push --tags/,
-      'release procedure must document the git push --tags command',
-    );
   });
 });

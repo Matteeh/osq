@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:11467db7af2034fcf70290cfdeb1160f3fcf8f3830b5a875da0cdb6d19395e57"
+build_stamp: "6dfb5944"
+project_commit: "4c730b3a"
+exit_code: 0
+scope_files: {"tests/codex-guidance.test.ts":"sha256:d702638471ff340f98939d10e1edb9db0b440fe3e67dc0090ebba2162f95f9fa","tests/harness-defaults-docs.test.ts":"sha256:267b4a262627ea5ddb203756f0ddc4140824e46fabab9a7adb7793cf274a4d36","tests/init-planning-guidance.test.ts":"sha256:9d34cd8ba97b2d626843f441cbd222e26abba427cb6d450f9235f6449fa27c33","tests/opencode-config.test.ts":"sha256:7770b315e698220bcb0324f04626304ac84978698a2bd4fff74622f288963dcd","tests/opencode-setup.test.ts":"sha256:28d483ce353374663c826dc706c5e13815e3fa55c63267b868c3d775a19a2483","tests/package-hygiene.test.ts":"sha256:313339c98e3d605d64d69dc1a401eb4f8cb003c90b0cf971aa52ca20f7ed21ee","tests/pi-default-docs.test.ts":"sha256:23b7d1c92ce49f462feaebc20f12a8323e531dd720780cad8cb3cab8e9147383","tests/pi-default-scaffold.test.ts":"sha256:ad50ea11da2a375920b257a52e121126d20193de125bc8ee395227d169d0c871"}
+---
+2026-10-12T17:02:52.485Z

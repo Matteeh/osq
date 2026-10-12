@@ -4,7 +4,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { needsYouKindLabel } from '../packages/ui/src/home/labels.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
@@ -12,7 +11,6 @@ import { readInbox } from '../src/core/status/inbox-projection.js';
 import { formatInboxText } from '../src/core/status/inbox.js';
 
 const execFileAsync = promisify(execFile);
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHANGES = path.posix.join('openspec', 'changes');
 const ARCHIVE = path.join(CHANGES, 'archive');
 const tmpDirs: string[] = [];
@@ -180,30 +178,5 @@ describe('Archived change waiting to land', () => {
 describe('Not landed label', () => {
   it('labels change-archived as not landed', () => {
     assert.equal(needsYouKindLabel('change-archived'), 'not landed');
-  });
-});
-
-describe('README describes changes waiting to land', () => {
-  function section(readme: string, heading: string, next: string): string {
-    const start = readme.indexOf(heading);
-    assert.ok(start >= 0, `README must contain ${heading}`);
-    const end = readme.indexOf(next, start + heading.length);
-    assert.ok(end >= 0, `README must contain ${next} after ${heading}`);
-    return readme.slice(start, end);
-  }
-
-  it('needs-you bullet names vcs.enabled, archived, not landed, and osq land <id>', async () => {
-    const raw = await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8');
-    const readme = raw.replace(/\s+/g, ' ');
-    const inbox = section(readme, '### Human Attention Inbox', '### Planning');
-    const bullet = inbox.slice(
-      inbox.indexOf('- **Needs you**'),
-      inbox.indexOf('- **Running**') >= 0 ? inbox.indexOf('- **Running**') : undefined,
-    );
-
-    assert.ok(bullet.startsWith('- **Needs you**'), 'the Needs you bullet must be present');
-    assert.ok(bullet.includes('vcs.enabled'), 'the bullet must name vcs.enabled');
-    assert.ok(bullet.includes('archived, not landed'), 'the bullet must say archived, not landed');
-    assert.ok(bullet.includes('osq land <id>'), 'the bullet must name osq land <id>');
   });
 });

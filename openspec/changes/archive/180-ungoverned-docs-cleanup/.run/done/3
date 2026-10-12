@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6ca834ff3ce57c8cc78778d5aff8d86de7cb30dcaad92a7e1e7f7afb61e94cf9"
+build_stamp: "6dfb5944"
+project_commit: "fc51b9ec"
+exit_code: 0
+scope_files: {"tests/change-verify-reruns-config.test.ts":"sha256:21b8a96c2fb6467f7156b78b52d645a5496af4dfd4d7b3fedc52701954b93f22","tests/format-command-config.test.ts":"sha256:08c2c325602de1b0e69291bcad2fc91a4ff840d1d9fe5728a0bac15c188f3ab7","tests/pre-spawn-docs.test.ts":"sha256:3fe52af72da74616ebf4e7223f299c8a666ec2c580b76153e1474ad98a73df55","tests/runner-synthesized-result.test.ts":"sha256:a3bfdb95e224543825151ff23077188b1346d159b875da98e205de5188ddf94f","tests/scope-resolver-upgrade.test.ts":"sha256:9073854e9cefae42eeb18d9daa2ee06ac766b356071a38c2f8fb315f8a48f6b7","tests/steering-default-branch-docs.test.ts":"sha256:1363ff2c5880e24cb29e7af6235ecee2c8ba6345b47216329e37750fc10a2ea2","tests/steering-docs.test.ts":"sha256:61b82cab0263a5d19c848bc2be1ae0eb1f6adf2d85ed6028c6e70e8ce308b4ce","tests/verify-starts-docs.test.ts":"sha256:484852593324af409dbd7e10f275c309ec348182da95bcc67d06001fe0bb0647"}
+---
+2026-10-12T17:10:18.949Z

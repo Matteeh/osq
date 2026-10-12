@@ -36,21 +36,6 @@ The system SHALL calculate prompt, candidate, total, cached, and reasoning token
 - **WHEN** harness reports reasoning tokens
 - **THEN** reasoning tokens are reported separately and excluded from cached token counts
 
-### Requirement: Cost reporting and price table disclaimer
-The system SHALL sum finite harness-reported cost values from task events without estimating missing cost. Cost reporting SHALL identify harness-reported provenance, retain total, formatted-total, and per-change values, and state how many attempts contained at least one cost value out of all recorded attempts. Consumer guidance SHALL retain the price-table disclaimer.
-
-#### Scenario: Cost provenance and attempt coverage
-- **WHEN** `osq report` renders cost history
-- **THEN** output names harness-reported cost and states `n of m attempts reported cost`, counting each cost-bearing attempt once
-
-#### Scenario: No reported cost
-- **WHEN** no recorded attempt contains a finite cost value
-- **THEN** history reports zero harness-reported cost with zero covered attempts and does not estimate a value
-
-#### Scenario: Disclaimer display
-- **WHEN** users consult cost-reporting guidance
-- **THEN** it states that reported cost reflects harness price tables rather than final billing invoices
-
 ### Requirement: Failure categorization by dead reason
 The system SHALL categorize every historical task `dead` event by its event reason without substituting current dead-marker reasons. An absent or empty event reason SHALL be categorized as `unknown`.
 
@@ -841,16 +826,6 @@ inside its existing error handling, so a bad value prints
 `Report error: <message>` and exits 1. The flags SHALL affect only the
 `Inbox waiting` section.
 
-README.md SHALL say, in the Human Attention Inbox section, that the card
-session and `osq inbox --follow` append to a per-project log under
-`~/.osq/inbox/`: when each item was first seen, when its card opened, when
-it went away, and whether the watcher had runnable work at each moment; that
-an item already waiting when an inbox starts, or gone while none ran, is
-marked; that the one-shot and `--json` output write nothing; and that the
-order breaks ties by first-seen time. It SHALL say, in the Metrics &
-Reporting section, what the `Inbox waiting` section shows and that
-`--since` and `--until` choose its period.
-
 #### Scenario: Section printed
 - **WHEN** `reportCommand` runs with the fixture log under a temporary home
 - **THEN** the text holds `Inbox waiting (start to now):`, and with `json` the output holds `inboxWait.kinds.approval.handled`
@@ -1380,7 +1355,18 @@ the project root.
 - **WHEN** `trials/validator.json` is `{"007.v2.1": "yes"}`
 - **THEN** `osq query "SELECT id FROM validator_findings"` exits 1 with the message `openspec/trials/validator.json must be a JSON object of true or false labels`
 
-### Requirement: Label command
+### Requirement: Harness-reported cost
+The system SHALL sum finite harness-reported cost values from task events without estimating missing cost. Cost reporting SHALL identify harness-reported provenance, retain total, formatted-total, and per-change values, and state how many attempts contained at least one cost value out of all recorded attempts.
+
+#### Scenario: Cost provenance and attempt coverage
+- **WHEN** `osq report` renders cost history
+- **THEN** output names harness-reported cost and states `n of m attempts reported cost`, counting each cost-bearing attempt once
+
+#### Scenario: No reported cost
+- **WHEN** no recorded attempt contains a finite cost value
+- **THEN** history reports zero harness-reported cost with zero covered attempts and does not estimate a value
+
+### Requirement: Label recording
 `osq label <id> <value>`, registered in `src/cli/query.ts` beside `osq query`,
 SHALL record one label. A
 `value` other than `true` or `false` SHALL fail with
@@ -1394,9 +1380,8 @@ write the file as JSON with keys sorted, two-space indents and a trailing
 newline. It SHALL print `<id>: <value> in <path>`, the path relative to the
 project root, and exit zero. Each failure SHALL exit 1.
 
-The root help SHALL list `label` in the Inspection group right after `query`,
-and README's Inspection block SHALL list `osq label <id> <true|false>`. With
-`OSQ_SERVER` set, `osq label` SHALL refuse as a local-only command.
+The root help SHALL list `label` in the Inspection group right after `query`.
+With `OSQ_SERVER` set, `osq label` SHALL refuse as a local-only command.
 
 #### Scenario: Labelling items
 - **WHEN** each command below runs in order over the `007-pricing` archive of "Trial rows of one archived change", with no `trials` folder at first
@@ -1411,9 +1396,9 @@ and README's Inspection block SHALL list `osq label <id> <true|false>`. With
 | `osq label 007.v9.9 true` | exit 1, `no validator finding, mutation survivor or link finding has id 007.v9.9` | unchanged |
 | `osq label 007.v2.1 maybe` | exit 1, `label must be true or false` | unchanged |
 
-#### Scenario: Label in the help and README
-- **WHEN** the root help is printed and README's Inspection block is read
-- **THEN** the help's Inspection group lists `label` right after `query`, and the block has a line that starts `osq label <id> <true|false>`
+#### Scenario: Label in the help
+- **WHEN** the root help is printed
+- **THEN** its Inspection group lists `label` right after `query`
 
 #### Scenario: Label stays local
 - **WHEN** `osq label 007.v2.1 true` runs with `OSQ_SERVER` set

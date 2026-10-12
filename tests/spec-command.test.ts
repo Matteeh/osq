@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { CommandError } from '../src/cli/command-error.js';
 import { createProgram } from '../src/cli/index.js';
 import { specCommand } from '../src/cli/spec.js';
@@ -11,7 +10,6 @@ import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { lookupRequirement } from '../src/core/spec/requirement-lookup.js';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OPENSPEC_ROOT = DEFAULT_CONFIG.paths.openspecRoot;
 
 const ALPHA_SPEC = `# alpha Specification
@@ -187,25 +185,5 @@ describe('osq spec', () => {
       );
       assert.deepEqual(written, []);
     });
-  });
-});
-
-describe('osq spec documentation', () => {
-  it('names osq spec in the command list and points executors at named requirements', async () => {
-    const raw = await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8');
-    const readme = raw.replace(/\s+/g, ' ');
-
-    assert.ok(
-      raw.split('\n').some((line) => line.startsWith('osq spec')),
-      'README command list must have a line starting osq spec',
-    );
-    assert.ok(
-      readme.includes('osq spec <capability> <requirement>'),
-      'README must point executors at osq spec <capability> <requirement>',
-    );
-    assert.ok(
-      !readme.includes('the delta specs and capability docs it names'),
-      'README must not send agents through whole capability docs',
-    );
   });
 });

@@ -104,15 +104,4 @@ describe('repository scaffold', () => {
       `.gitattributes should start with the managed block, got:\n${content.slice(0, 120)}`,
     );
   });
-
-  it('names .gitattributes in the README file list', async () => {
-    const readme = await fs.readFile(path.join(REPO_ROOT, 'README.md'), 'utf8');
-
-    assert.ok(
-      readme.includes(
-        '.gitattributes *   a managed block, * text=auto, so git stores text files with LF',
-      ),
-      'README should describe the .gitattributes block',
-    );
-  });
 });

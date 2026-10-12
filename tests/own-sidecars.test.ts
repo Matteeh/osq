@@ -36,18 +36,4 @@ describe('osq own capability sidecars', () => {
     assert.ok(capabilities, 'the resolved config must hold capabilities');
     assert.equal(capabilities.requireGroups, true);
   });
-
-  it('documents sidecars under the Change folder section', async () => {
-    const readme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
-    const start = readme.indexOf('## Change folder');
-    assert.ok(start >= 0, 'README must hold the Change folder heading');
-
-    const end = readme.indexOf('## What the watcher guarantees', start);
-    assert.ok(end > start, 'the Change folder section must end before What the watcher guarantees');
-
-    const section = readme.slice(start, end);
-    for (const text of ['osq.yml', 'requireGroups', 'osq migrate sidecars']) {
-      assert.ok(section.includes(text), `the Change folder section must hold ${text}`);
-    }
-  });
 });

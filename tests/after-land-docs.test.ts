@@ -21,34 +21,11 @@ async function readCollapsed(file: string): Promise<string> {
   return raw.replace(/\s+/g, ' ');
 }
 
-/** The paragraphs of a document, each with its interior whitespace collapsed. */
-async function readParagraphs(file: string): Promise<string[]> {
-  const raw = await fs.readFile(path.join(REPO_ROOT, file), 'utf8');
-  return raw
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
-    .filter((paragraph) => paragraph.length > 0);
-}
-
 describe('after-land documentation', () => {
   it('osq builds itself after a land', async () => {
     const config = await loadConfig(REPO_ROOT);
 
     assert.equal(config.vcs?.afterLand, 'pnpm build');
-  });
-
-  it('README names the key', async () => {
-    const readme = await readCollapsed('README.md');
-    assert.ok(readme.includes('vcs.afterLand'), 'README must name vcs.afterLand');
-    assert.ok(readme.includes('osq land <id>'), 'README must name osq land <id>');
-
-    const paragraphs = await readParagraphs('README.md');
-    assert.ok(
-      paragraphs.some(
-        (paragraph) => paragraph.includes('vcs.afterLand') && paragraph.includes('osq land <id>'),
-      ),
-      'vcs.afterLand and osq land <id> must share one paragraph',
-    );
   });
 
   it('ADR 012 decision 5 names the after-land build', async () => {

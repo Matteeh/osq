@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c374c509f69bc3e41fc14a0cf5e046d3bd3667169ec9057e5801f2b9b88fb8e0"
+build_stamp: "6dfb5944"
+project_commit: "54bdc022"
+exit_code: 0
+scope_files: {"tests/adr-007.test.ts":"sha256:3406ec70e2763856d542303872ac84a3ea7b155df6050d11dda0ef7565cbbade","tests/after-land-docs.test.ts":"sha256:b480129106372fc6c63f1f6eea52f74097b62368870479c7cd3d7f30eb67861d","tests/architecture-first-docs.test.ts":"sha256:c073596ecd728f61acf131ef071e2a3cea80cfa6330a22a94c3602c0e2ddf8bb","tests/capability-relations-docs.test.ts":"sha256:2ea98936e75e870b98830a38dffe396c437d29840d5d800b6454ffa305cc7068","tests/init-gitattributes.test.ts":"sha256:37e4e6834614dd98ae39be35560eed7edcc7f06367ce0b8c14716f678d770a27","tests/own-sidecars.test.ts":"sha256:b904d3f78248364f5b36df4c84fec7bd192a0797958c741be609fb6140d13608","tests/own-vcs-config.test.ts":"sha256:8e4d63e6d4cef843b1e33717a14b80051c2026ead947119738e28ba467a7c3eb","tests/validator-doctor.test.ts":"sha256:9ed265f1a0316d647f5900532aee981346f7fc25a44b94fac1de433b1de40ad3"}
+---
+2026-10-12T17:20:31.423Z

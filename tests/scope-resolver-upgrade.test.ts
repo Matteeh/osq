@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
 import { retrySpec } from '../src/core/lifecycle/retry.js';
@@ -458,25 +457,5 @@ describe('Resolver-versioned completion records', () => {
       (event) => event.type === 'recertification',
     );
     assert.equal(recertification?.data?.outcome, 'requeued');
-  });
-});
-
-describe('Resolver upgrade guidance', () => {
-  it('documents exactly one Upgrading note with the detection and retry contract', async () => {
-    const readmePath = path.resolve(fileURLToPath(new URL('..', import.meta.url)), 'README.md');
-    const readme = await fs.readFile(readmePath, 'utf8');
-
-    const headings = [...readme.matchAll(/^#{1,6}[ \t]+Upgrading\b.*$/gm)];
-    assert.equal(headings.length, 1, 'exactly one Upgrading section');
-
-    const start = headings[0].index ?? 0;
-    const rest = readme.slice(start + headings[0][0].length);
-    const nextHeading = rest.search(/^#{1,6}[ \t]+\S/m);
-    const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
-
-    assert.match(section, /resolver 2/i);
-    assert.match(section, /verif/i);
-    assert.match(section, /osq retry <id> <task>/);
-    assert.match(section, /archive/i);
   });
 });
