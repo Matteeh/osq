@@ -5,6 +5,13 @@ export interface InitCommandOptions extends CommandInputs {
   refreshSchema?: boolean;
 }
 
+/**
+ * Initialize a project and report each created, existing, or updated path.
+ *
+ * @scenario cli-foundation: Gitattributes block written by init
+ * @scenario cli-foundation: Gitattributes block on a second init
+ * @adr 003
+ */
 export async function initCommand(options: InitCommandOptions = {}): Promise<void> {
   const inputs = resolveInputs(options);
   const config = await inputs.config();
@@ -33,6 +40,9 @@ export async function initCommand(options: InitCommandOptions = {}): Promise<voi
   }
   if (result.updatedProjectRules) {
     inputs.stdout('  updated  AGENTS.md (project rules)\n');
+  }
+  if (result.updatedGitattributes) {
+    inputs.stdout('  updated  .gitattributes (line endings)\n');
   }
   inputs.stdout('\nosq initialized successfully.\n');
 }

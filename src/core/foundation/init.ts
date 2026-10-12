@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from './config.js';
+import { writeGitattributesBlock } from './gitattributes-block.js';
 import { CLAUDE_PLAN_COMMAND_PATH } from './init-blocks.js';
 import { updateAgentsMd, updateClaudePlanCommand, updatePlannerMd } from './init-managed.js';
 import { TEMPLATES_ROOT } from './package-root.js';
@@ -62,6 +63,7 @@ export interface InitResult {
   currentFiles: string[];
   updatedAgentsMd: boolean;
   updatedProjectRules: boolean;
+  updatedGitattributes: boolean;
   updatedPlannerMd: boolean;
   updatedClaudePlanCommand: boolean;
   updatedTraceability: boolean;
@@ -143,6 +145,30 @@ async function writeOrRefreshFile(
   result.refreshedFiles.push(file.relPath);
 }
 
+/** Write every managed block for `targetDir` and record which ones changed. */
+async function writeManagedBlocks(
+  targetDir: string,
+  config: OsqConfig,
+  result: InitResult,
+): Promise<void> {
+  const claudeCommandExisted = await pathExists(path.join(targetDir, CLAUDE_PLAN_COMMAND_PATH));
+  result.updatedAgentsMd = await updateAgentsMd(targetDir);
+  result.updatedProjectRules = await writeRulesBlock(targetDir, config);
+  result.updatedGitattributes = await writeGitattributesBlock(targetDir);
+  result.updatedPlannerMd = await updatePlannerMd(targetDir);
+  result.updatedClaudePlanCommand = await updateClaudePlanCommand(targetDir);
+  result.updatedTraceability = await writeTraceabilityBlocks(targetDir, config);
+  if (claudeCommandExisted) result.existingFiles.push(CLAUDE_PLAN_COMMAND_PATH);
+  else result.createdFiles.push(CLAUDE_PLAN_COMMAND_PATH);
+}
+
+/**
+ * Initialize repository structure and agent instructions idempotently.
+ *
+ * @scenario cli-foundation: Gitattributes block written by init
+ * @scenario cli-foundation: Gitattributes block on a second init
+ * @adr 003
+ */
 export async function scaffoldProject(
   targetDir: string,
   options: { refreshSchema?: boolean; config?: OsqConfig } = {},
@@ -155,6 +181,7 @@ export async function scaffoldProject(
     currentFiles: [],
     updatedAgentsMd: false,
     updatedProjectRules: false,
+    updatedGitattributes: false,
     updatedPlannerMd: false,
     updatedClaudePlanCommand: false,
     updatedTraceability: false,
@@ -208,18 +235,7 @@ export async function scaffoldProject(
 
   await writeDecisionsScaffold(targetDir, options.config ?? DEFAULT_CONFIG, result);
 
-  const claudeCommandExisted = await pathExists(path.join(targetDir, CLAUDE_PLAN_COMMAND_PATH));
-  result.updatedAgentsMd = await updateAgentsMd(targetDir);
-  result.updatedProjectRules = await writeRulesBlock(targetDir, options.config ?? DEFAULT_CONFIG);
-  result.updatedPlannerMd = await updatePlannerMd(targetDir);
-  result.updatedClaudePlanCommand = await updateClaudePlanCommand(targetDir);
-  result.updatedTraceability = await writeTraceabilityBlocks(
-    targetDir,
-    options.config ?? DEFAULT_CONFIG,
-  );
-
-  if (claudeCommandExisted) result.existingFiles.push(CLAUDE_PLAN_COMMAND_PATH);
-  else result.createdFiles.push(CLAUDE_PLAN_COMMAND_PATH);
+  await writeManagedBlocks(targetDir, options.config ?? DEFAULT_CONFIG, result);
 
   return result;
 }

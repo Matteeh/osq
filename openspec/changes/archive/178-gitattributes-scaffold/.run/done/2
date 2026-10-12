@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:360204de64b4a076d893bc57a1e83117cb86cb736e1169c00cba55db6308317a"
+build_stamp: "099f66bf"
+project_commit: "1b4d514a"
+exit_code: 0
+scope_files: {"src/core/vcs/doctor-git.ts":"sha256:d050c0e6d72540f44f441d70b836ff454df76b53b24b584c1e2178b870468855","src/core/vcs/doctor-gitattributes.ts":"sha256:9a89d0e5a9d4004a8fef739dd124bdaf58cf802c9ea0ef71c6002b5f72e26074","tests/vcs-doctor-gitattributes.test.ts":"sha256:11c2700d3bd2d9149a616fbc91c990ba550ef59679e9f26a93822bb84e121ec8"}
+---
+2026-10-11T22:43:35.897Z

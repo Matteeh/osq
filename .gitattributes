@@ -1,3 +1,7 @@
+# OSQ:GITATTRIBUTES:START
+* text=auto
+# OSQ:GITATTRIBUTES:END
+
 * text=auto eol=lf
 *.md text eol=lf
 *.ts text eol=lf

@@ -62,6 +62,7 @@ PLANNER.md *       the managed planner protocol
 .claude/commands/  osq-plan.md *, the Claude Code planning command (slug as $ARGUMENTS)
 osq.config.ts *    harness selection; every limit, timeout, and gate has a default you can override here
 .env.example *     OSQ_HARNESS and API keys
+.gitattributes *   a managed block, * text=auto, so git stores text files with LF
 openspec/
   config.yaml *    OpenSpec project configuration
   schemas/osq/ *   workflow schema and templates

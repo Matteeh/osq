@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:adb4484ae4d498a7bd60fd5fcb4d32868b91cbb75e6d2ce2be879192f65226cd"
+build_stamp: "099f66bf"
+project_commit: "8877cddc"
+exit_code: 0
+scope_files: {".gitattributes":"sha256:c18d88e04d03b1137b21aa19cfc2fb125404194d66b1a52e10e8f2929a0ecdd5","README.md":"sha256:3a1ed7344448526363ebcab6e9becf01a7c6eeffdf92c0ab50d6f308014c0aa4","src/cli/init.ts":"sha256:860d6c0c951dd8809cfc750013e99282bb78e8dd71350f05d6516c7c528f2ec7","src/core/foundation/gitattributes-block.ts":"sha256:0295c169e0e3a3ac5cc015228f85a462b220c08b4bfa9538ee1d41b45475df39","src/core/foundation/init.ts":"sha256:fe756b8e40ca1e476e00414f3232c792b82d4bbd5320a5c2b5a9bd54a7ffdd5f","tests/init-gitattributes.test.ts":"sha256:7a3d35d244551bc974c3463f5342057fe5792c5c1ed8e420ddee4cc0e075823e"}
+---
+2026-10-11T22:35:23.971Z
