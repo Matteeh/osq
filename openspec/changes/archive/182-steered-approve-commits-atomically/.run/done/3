@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b935dc0f43f2cf33e371c74929abc66439f3b31a881c3a9c2f98383f2be74868"
+build_stamp: "1d76357d"
+project_commit: "0df49057"
+exit_code: 0
+scope_files: {"src/cli/retry.ts":"sha256:46ae0d326a0b0f30279f7930d2b3e1fb7c2346db2acd8b7e4dcd1636637233f4","src/core/lifecycle/retry-plan-edits.ts":"sha256:c86520e3b215aa2716e1a52c20afb38b64a8e4875a33f716a9c7fc7785a71f03","tests/retry-plan-edits.test.ts":"sha256:1ca40c98d1ddc03917296cd89e89beeca10b48c55be244a38384a363b5918722"}
+---
+2026-10-12T19:53:25.144Z

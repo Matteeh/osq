@@ -36,10 +36,11 @@ export interface GitResult {
   readonly stderr: string;
 }
 
-/** The child environment with redirecting variables removed, then `extra` applied. */
+/** Child env with redirecting variables removed and optional locks off, then `extra`. */
 function childGitEnv(extra?: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const env = { ...process.env };
   for (const key of GIT_ENV_VARS) delete env[key];
+  env.GIT_OPTIONAL_LOCKS = '0';
   if (extra !== undefined) Object.assign(env, extra);
   return env;
 }

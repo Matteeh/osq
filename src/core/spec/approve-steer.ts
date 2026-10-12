@@ -15,6 +15,12 @@ import { selectVcs } from '../vcs/select.js';
 import { worktreeBranch } from '../vcs/worktree.js';
 import { approveDefaultBranchSteering } from './approve-default-branch.js';
 import {
+  approvalCommitLanded,
+  commitFailedError,
+  restoreSealFiles,
+  snapshotSealFiles,
+} from './approve-seal-restore.js';
+import {
   confirmApproval,
   readBriefHash,
   toIso,
@@ -46,6 +52,8 @@ export async function retireSteering(
  * read the checkout, the worktree receives the seal and the `osq: <id>
  * approved` commit, and each steering trigger is then retired as `osq retry`
  * would. Nothing is written to the checkout and no branch or worktree is made.
+ *
+ * @scenario spec-lint-and-approve: Approved commit fails
  */
 export async function approveSteeredChange(
   projectRoot: string,
@@ -73,6 +81,8 @@ export async function approveSteeredChange(
   }
   const { digest, mode } = await confirmApproval(projectRoot, folderPath, config, options);
 
+  // Keep the seal files' bytes so a failed commit can put them back.
+  const seal = await snapshotSealFiles(folderPath);
   const observations = await findPlanningSessions(folderPath, {
     createdAt: await resolveChangeCreationTime(folderPath),
     observedAt: toIso(options.now) ?? new Date().toISOString(),
@@ -91,7 +101,16 @@ export async function approveSteeredChange(
   if (author === undefined) throw new Error('vcs.author is required when vcs.enabled is true');
   const vcs = await selectVcs(tree.root, config);
   const relativeFolder = path.relative(tree.root, folderPath).split(path.sep).join('/');
-  await vcs.commit([relativeFolder], `osq: ${specId} approved`, author);
+  try {
+    await vcs.commit([relativeFolder], `osq: ${specId} approved`, author);
+  } catch (error) {
+    // A failed commit landed nothing; put the seal files back and retire no
+    // trigger. When HEAD already holds the new hash, the commit did land.
+    if (!(await approvalCommitLanded(vcs, relativeFolder, hash))) {
+      await restoreSealFiles(folderPath, seal);
+      throw commitFailedError(tree.root, specId, error);
+    }
+  }
 
   const continuesFrom = await retireSteering(projectRoot, config, change, triggers);
   return {

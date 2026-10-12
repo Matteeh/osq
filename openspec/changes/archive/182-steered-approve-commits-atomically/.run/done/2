@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ad6950ed4e5437f71b2f7d17174b99b944c231376f4c9586f3b6dac9ae4b56e0"
+build_stamp: "1d76357d"
+project_commit: "00793bda"
+exit_code: 0
+scope_files: {"src/core/spec/approve-seal-restore.ts":"sha256:2acd5129d3c74607315e8bde2bc47fa548f962610b2171f46900d15ba303fbbb","src/core/spec/approve-steer.ts":"sha256:99518f8bdebea24eb533cc3443f5f9c3047707532b91b9898b55ae09920fab53","tests/approve-steer-commit-failed.test.ts":"sha256:d98f94229771cbd7142bf4786564ae556536a96f4be633a6543369cbf3416a9b"}
+---
+2026-10-12T19:47:07.489Z

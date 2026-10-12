@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2b60c4ac447f5933de124a525c1286057fe92b76fad6be07897f1dbf1ee4f179"
+build_stamp: "1d76357d"
+project_commit: "0aea18c4"
+exit_code: 0
+scope_files: {"tests/recovery-approve-commit-failed.test.ts":"sha256:765d3395929885445917f38246367bc21cc83eef4b3cb4607fd5905a7684bf74"}
+---
+2026-10-12T20:01:36.328Z

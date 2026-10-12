@@ -1,9 +1,16 @@
+import { assertPlanCommitted } from '../core/lifecycle/retry-plan-edits.js';
 import { retrySpec } from '../core/lifecycle/retry.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
 
 export type RetryCommandOptions = CommandInputs;
 
+/**
+ * Refuse a retry while the change's worktree holds uncommitted plan edits,
+ * then run the preserving retry transition.
+ * @scenario watcher-and-harness: Plan edits not committed
+ * @adr 003
+ */
 export async function retryCommand(
   specId: string,
   target: string,
@@ -13,6 +20,7 @@ export async function retryCommand(
   const config = await inputs.config();
 
   try {
+    await assertPlanCommitted(inputs.cwd, specId, config);
     const result = await retrySpec(inputs.cwd, specId, target, config);
     const label = result.target === 'change' ? 'change' : `task ${result.target}`;
     const lines: string[] = [];

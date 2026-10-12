@@ -29,12 +29,14 @@ be the branch `refs/remotes/origin/HEAD` names without its `origin/` prefix,
 read locally without contacting the remote, else `vcs.defaultBranch`, else
 `main`. `GitVcs` SHALL run the git binary with the project root as its working
 directory, SHALL remove `GIT_DIR`, `GIT_INDEX_FILE` and `GIT_WORK_TREE` from
-the child environment, and SHALL bound every read by `timeouts.gitSeconds`, 10
-when unset. `pathExists` SHALL return false, not fail, for a ref that does not
-exist. `NoVcs` SHALL return a null root, a null commit and branch, an
-empty digest, null config values, a null file from `show`, false from
-`pathExists`, empty lists, and `main` as the default branch, and SHALL carry
-the reason git is off.
+the child environment, SHALL set `GIT_OPTIONAL_LOCKS=0` in it, so that a read
+such as status never writes the index or holds `index.lock` while another
+osq process commits in the same tree, and SHALL bound every read by
+`timeouts.gitSeconds`, 10 when unset. `pathExists` SHALL return false, not
+fail, for a ref that does not exist. `NoVcs` SHALL return a null root, a null
+commit and branch, an empty digest, null config values, a null file from
+`show`, false from `pathExists`, empty lists, and `main` as the default
+branch, and SHALL carry the reason git is off.
 
 #### Scenario: Stash on a branch
 - **WHEN** a file is stashed on branch `main` of a temporary repository
@@ -71,6 +73,10 @@ the reason git is off.
 #### Scenario: Path at a branch
 - **WHEN** branch `osq/001-a` holds `dir/notes.txt` and the checkout does not
 - **THEN** `pathExists('osq/001-a', 'dir')` and `pathExists('osq/001-a', 'dir/notes.txt')` are true, `pathExists('osq/001-a', 'other')` and `pathExists('main', 'dir')` are false, `pathExists('osq/none', 'dir')` is false, and `NoVcs` returns false
+
+#### Scenario: Status leaves the index alone
+- **WHEN** a temporary repository commits `a.txt`, then `a.txt`'s modification time moves one minute ahead with its content unchanged, and `GitVcs` reads status
+- **THEN** status lists nothing and the bytes of the repository's index file are the same as before the read
 
 ### Requirement: Vcs selection
 The system SHALL select `GitVcs` only when the git binary runs and the project

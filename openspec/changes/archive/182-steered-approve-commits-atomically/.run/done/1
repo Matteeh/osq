@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:bc7db39174246b9f292f4d8fe5b513aefd2ba69a9803c1f17d46f34751ad359d"
+build_stamp: "1d76357d"
+project_commit: "52623a6f"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs.ts":"sha256:3b2775268fd9c2f4e557c863333c207628eff42f595541f166acb7214f7d873d","tests/vcs-optional-locks.test.ts":"sha256:9b0f802aec403c2384e81f4859041225591861e655c826614c13191e33281aae"}
+---
+2026-10-12T19:36:03.215Z

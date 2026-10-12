@@ -3487,6 +3487,10 @@ repository with a fake executor, from the failure as a run produces it to
 - **WHEN** a change halts with `worktree_dirty` because an untracked file sits in its worktree, and a human runs `osq approve <id>`, removes the file, runs `osq retry <id> change`, runs `osq watch --once`, and runs `osq land <id>`
 - **THEN** `osq approve` exits 1 with next step `osq retry <id> change` and writes nothing, the retry exits 0, task 1 spawns, and `osq land` exits 0
 
+#### Scenario: Approval commit failed
+- **WHEN** with `gates.autoRetries` of 1 task 1 sticks, a planner edits `tasks/1.md` in the worktree, the worktree's `index.lock` exists while a human runs `osq approve <id>`, the human then runs `osq retry <id> 1`, the lock goes away as when another git process ends, and the human runs `osq approve <id>`, `osq watch --once` and `osq land <id>`
+- **THEN** the first `osq approve` exits 1 with `run osq approve <id> again`, `osq retry` exits 1 naming `tasks/1.md`, the second `osq approve` prints `Continues from task 1`, the executor spawned a third time, and `osq land` exits 0 with the third attempt's `src/one.txt`
+
 ### Requirement: Stopped watcher's lock at retry
 `osq retry <id> <n>` for a task whose `.run/running/<n>.pid` records a `pid`
 that `isPidRunning` reports as not running SHALL refuse, writing nothing,
@@ -3540,3 +3544,32 @@ again or retried.
 #### Scenario: Steered task runs
 - **WHEN** a task died with `entry_missing`, a planner removes the path from its `entry` in the worktree, a human runs `osq approve <id>`, and a watcher cycle runs
 - **THEN** the task spawns and the dead marker is kept as `.run/dead/1.1.md`
+
+### Requirement: Retry refuses uncommitted plan edits
+`assertPlanCommitted(projectRoot, specId, config)` in
+`src/core/lifecycle/retry-plan-edits.ts` SHALL find the change as `retrySpec`
+does and, when the change sits in an osq worktree and `GitVcs` is selected
+there, read the worktree's status. When status lists any path inside the
+change folder other than its `tasks.md` and anything under its `.run/`, it
+SHALL fail with
+`Change <id> has plan edits not committed in its worktree: <paths>. Run osq approve <id> to approve them.`
+where `<paths>` are those paths relative to the change folder, sorted and
+joined with `, `. Otherwise, and for a change not in a worktree or with
+`NoVcs`, it SHALL return without effect. It SHALL write nothing.
+
+`retryCommand` SHALL call it before `retrySpec`, so `osq retry`, the inbox
+retry key, the dashboard and the server refuse such a retry and write
+nothing. The watcher's automatic retries and the trigger retirement in
+"Approval after steering" call `retrySpec` directly and SHALL stay as they
+are.
+
+#### Scenario: Plan edits not committed
+- **WHEN** a change in a worktree has a dead task 1, and the worktree holds the edits in the row, and a human runs `osq retry <id> 1`
+- **THEN** the retry does what the row says:
+
+| worktree edits | `osq retry <id> 1` |
+| --- | --- |
+| `tasks/1.md` and `proposal.md` changed | exits 1 with `Change <id> has plan edits not committed in its worktree: proposal.md, tasks/1.md. Run osq approve <id> to approve them.`, and `.run/dead/1.md` is still in place |
+| new untracked `tasks/2.md` | exits 1 naming `tasks/2.md` |
+| `tasks.md` with task 1's checkbox ticked | exits 0 and `.run/dead/1.md` is now `.run/dead/1.1.md` |
+| none | exits 0 and `.run/dead/1.md` is now `.run/dead/1.1.md` |

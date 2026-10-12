@@ -1628,6 +1628,19 @@ default-branch trigger" says. Otherwise it SHALL:
    `retrySpec` for its target, so each marker is kept under its next attempt
    number exactly as `osq retry` keeps it.
 
+Before step 2 it SHALL keep the bytes of the worktree folder's
+`.run/approved`, `.run/manifest.json` and `.run/plan.jsonl`, or that each is
+absent. When the step 3 commit fails and the worktree's HEAD, read with
+`show('HEAD', '<change folder>/.run/approved')`, does not hold the new hash,
+it SHALL put each of those three files
+back as it was, deleting one that was absent, leave every other file,
+including the plan edits, as it is, retire no trigger, and fail with
+`the approved commit failed in <worktree root>: <git error>. The approval seal is undone and the plan edits are kept; run osq approve <id> again.`
+where `<git error>` is the commit's error message. `osq approve` then exits 1.
+When the commit fails but HEAD already holds the new hash, the commit landed:
+it SHALL keep the seal files and continue with step 4 as after a successful
+commit.
+
 It SHALL write nothing to the checkout and create no branch or worktree. Done
 markers SHALL stay. `osq approve` SHALL print the approval lines, including
 `  Worktree: <path>` and `  Branch: osq/<folder>`, and then
@@ -1655,6 +1668,10 @@ and its triggers then retired the same way, with the same line.
 #### Scenario: Version control off
 - **WHEN** `vcs.enabled` is off and a change whose task 1 is stuck is approved again
 - **THEN** the seal is rewritten in place and `.run/dead/1.md` is now `.run/dead/1.1.md`
+
+#### Scenario: Approved commit fails
+- **WHEN** task 1 of a one-task change in a worktree is stuck, `tasks/1.md` was edited in the worktree, the file that `git rev-parse --git-path index.lock` names in the worktree exists, and a human runs `osq approve <id>`
+- **THEN** `osq approve` exits 1 with an error holding `the approved commit failed in`, `index.lock` and `run osq approve <id> again`; `.run/approved`, `.run/manifest.json` and `.run/plan.jsonl` hold the same bytes as before the approve; the edited `tasks/1.md` is unchanged; `.run/dead/1.md` is still in place; and the worktree's HEAD is the same commit as before
 
 ### Requirement: Lint finds a change in any tree
 `osq lint <id>` SHALL resolve each explicit id through `findSteeringChange`
