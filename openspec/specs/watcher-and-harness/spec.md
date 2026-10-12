@@ -3282,9 +3282,11 @@ passed. A rerun that fails is judged again by the same rule before the next
 rerun.
 
 A passing rerun SHALL let the task reach done exactly as if the first run had
-passed. Otherwise the task SHALL die with `change_verify_red` as before, with
-its dead marker built from the last run. The task's own verify, the baseline,
-and the archive-time verifies are never rerun.
+passed. Otherwise the task SHALL die as "Plan conflict at change verify"
+says: with `blocked` when the last run's failing tests are a plan conflict,
+and with `change_verify_red` as before in every other case, with its dead
+marker built from the last run. The task's own verify, the baseline, and the
+archive-time verifies are never rerun.
 
 #### Scenario: Unrelated failure passes on rerun
 - **WHEN** the change-level verify first fails naming only `tests/other.test.ts`, a preexisting test the agent left unchanged that imports nothing in the task's scope, and passes when run again
@@ -3573,3 +3575,53 @@ are.
 | new untracked `tasks/2.md` | exits 1 naming `tasks/2.md` |
 | `tasks.md` with task 1's checkbox ticked | exits 0 and `.run/dead/1.md` is now `.run/dead/1.1.md` |
 | none | exits 0 and `.run/dead/1.md` is now `.run/dead/1.1.md` |
+
+### Requirement: Plan conflict at change verify
+When a task's change-level verify is still red after any reruns, the runner
+SHALL call `findPlanConflict` in `src/watcher/plan-conflict.ts`. It finds a
+plan conflict only when the last run did not time out, `readFailingTestFiles`
+reads at least one failing test file from its output, and every failing test
+file is outside the task's own resolved scope and owned by another task of
+the same change that has a done marker under `.run/done/`. A done task owns
+a file when the file is in its resolved scope, read from its `tasks/<n>.md`,
+or is listed on the `Touched:` line of its `.run/results/<n>.md`, split on
+commas and trimmed. When several done tasks own a file, the lowest task
+number is named.
+
+On a plan conflict the task SHALL die with reason `blocked`, not
+`change_verify_red`, and one `dead` event SHALL record `blocked`. As "Blocked
+exit" says, it is then not retried automatically. Its dead marker SHALL be:
+
+```
+---
+reason: blocked
+command: "<change verify command>"
+exit_code: <exit code>
+---
+Change-level verification failed only on tests that earlier done tasks own, so this task conflicts with the plan:
+- <test file> (task <owner>)
+Revise the plan with osq plan <id>, then approve it again.
+<verify excerpt>
+```
+
+with one `- ` line per failing test file in sorted order, `<id>` the change's
+numeric prefix, and the excerpt built as for `change_verify_red`. In every
+other case the task SHALL die with `change_verify_red` as before.
+
+#### Scenario: Failing tests owned by an earlier task
+- **WHEN** task 1 of change `007-x` has a done marker, task 2 runs with scope `src/two.ts`, its own verify passes, and the change-level verify keeps failing as the row says
+- **THEN** task 2 dies with the reason the row names:
+
+| failing tests | how they are owned | reason |
+| --- | --- | --- |
+| `tests/a.test.ts` | in task 1's scope | `blocked` |
+| `tests/b.test.ts` | on task 1's `Touched:` line only | `blocked` |
+| `tests/a.test.ts` | in task 1's scope, but task 1 has no done marker | `change_verify_red` |
+| `tests/a.test.ts`, `tests/c.test.ts` | `tests/a.test.ts` in task 1's scope, `tests/c.test.ts` owned by no task | `change_verify_red` |
+| `tests/a.test.ts` | in task 1's scope and in task 2's scope | `change_verify_red` |
+| none named | no failing-tests section in the output | `change_verify_red` |
+| `tests/a.test.ts`, run timed out | in task 1's scope | `change_verify_red` |
+
+#### Scenario: Plan conflict marker
+- **WHEN** task 2 of change `007-x` dies `blocked` because the change-level verify `node change-verify.cjs` exits 1 naming only `tests/a.test.ts`, which is in done task 1's scope
+- **THEN** the dead marker has `reason: blocked`, `command: "node change-verify.cjs"` and `exit_code: 1`, its body holds `- tests/a.test.ts (task 1)` and `osq plan 007`, followed by the verify excerpt, and the task's stream holds one `dead` event with reason `blocked`

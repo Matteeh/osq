@@ -3,6 +3,8 @@ import { excerptVerifyOutput } from '../core/run/verify-excerpt.js';
 import { parseSpecMdFromFolder } from '../core/spec/parser.js';
 import { appendHarnessEvent } from '../harness/types.js';
 import { type ChangeVerifyRerunContext, findUnrelatedFailingTests } from './change-verify-rerun.js';
+import type { RunTaskFailureReason } from './failure-reason.js';
+import { findPlanConflict, formatPlanConflictMarker } from './plan-conflict.js';
 import { type VerificationGateResult, runVerificationGateResult } from './verify.js';
 
 /** Failure evidence for a red change gate; the runner writes it through `fail`. */
@@ -10,6 +12,8 @@ export interface ChangeVerifyFailure {
   marker: string;
   error: string;
   extra?: string;
+  /** The death reason: `blocked` for a plan conflict, `change_verify_red` otherwise. */
+  reason: RunTaskFailureReason;
 }
 
 export type ChangeVerifyOutcome = { ok: true } | ({ ok: false } & ChangeVerifyFailure);
@@ -58,7 +62,18 @@ export function formatMissingChangeVerifyMarker(): string {
  * When `rerun` is given, an unrelated failure is rerun up to
  * `gates.changeVerifyReruns` times; each repeat appends one
  * `change_verify_rerun` event to the task's own stream. A red end still builds
- * its marker from the last run.
+ * its marker from the last run, unless that run is a plan conflict, in which
+ * case the failure carries reason `blocked` and the plan conflict marker.
+ *
+ * @scenario watcher-and-harness: Unrelated failure passes on rerun
+ * @scenario watcher-and-harness: Rerun fails too
+ * @scenario watcher-and-harness: Failures that touch the task
+ * @scenario watcher-and-harness: No rerun leaves today's behavior
+ * @scenario watcher-and-harness: Reruns turned off
+ * @scenario watcher-and-harness: Two reruns
+ * @scenario watcher-and-harness: Failing tests owned by an earlier task
+ * @scenario watcher-and-harness: Plan conflict marker
+ * @adr 006
  */
 export async function runChangeVerifyGate(
   projectRoot: string,
@@ -75,6 +90,7 @@ export async function runChangeVerifyGate(
       ok: false,
       marker: formatMissingChangeVerifyMarker(),
       error: 'Change-level verify command is missing',
+      reason: 'change_verify_red',
     };
   }
 
@@ -106,9 +122,22 @@ export async function runChangeVerifyGate(
   }
   if (result.passed) return { ok: true };
 
+  if (context !== undefined) {
+    const conflict = await findPlanConflict(result, projectRoot, specFolderPath, context);
+    if (conflict !== null) {
+      return {
+        ok: false,
+        reason: 'blocked',
+        marker: formatPlanConflictMarker(command, config, specFolderPath, result, conflict),
+        error: `Plan conflict: ${conflict.map((entry) => `${entry.test} (task ${entry.task})`).join(', ')}`,
+      };
+    }
+  }
+
   const output = result.output.trim() || '(no output)';
   return {
     ok: false,
+    reason: 'change_verify_red',
     marker: formatChangeVerifyMarker(command, config, result),
     error: result.error ?? `Change verify failed: ${output}`,
     ...(result.timedOut ? { extra: 'timed_out: true' } : {}),
