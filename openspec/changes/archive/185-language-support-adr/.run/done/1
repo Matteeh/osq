@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:67a65daba78f0ea5ccd5195ec5afb881f2a1cb513f9c58354a971197879b6f29"
+build_stamp: "28cf692a"
+project_commit: "e8a877b5"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:5e3ee22066045e1a5f0fee998d1641b4cb49dc8fa407a353aa9d4fa326364333","decisions/017-language-support.md":"sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a","decisions/README.md":"sha256:7739986331eb6961c1d61f9bc3259ccb69c119996b21a13f9861203e6c2354f5","tests/language-support-adr.test.ts":"sha256:c79efd1c04e477c1d4f21492d0413d8e70a13d88b6c166449e05baa19e0f622b"}
+---
+2026-10-13T15:56:27.052Z

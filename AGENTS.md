@@ -73,6 +73,7 @@ Tests that submit fixture changes to lint or approval use a local `node verify.c
 - Each role osq spawns gets only the environment it declares; verify never gets the model key, and harness permissions are a guardrail. ADR 007
 - Server mode is an addition; an osq server runs the same command functions on its own clone, and every command keeps working locally exactly as today. ADR 014
 - A capability is a vertical slice with every layer it needs in one folder named after it, under src or src/kernel; only kernel slices are shared. ADR 016
+- A path's language comes from its nearest manifest; language-specific code sits behind the languages kernel adapter, and a gate names the languages it misses. ADR 017
 <!-- OSQ:RULES:END -->
 
 <!-- OSQ:START -->
