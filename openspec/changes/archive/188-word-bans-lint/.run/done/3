@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5cbd290ab828400003d1f72103a56e9166cb4fc86a2d75406f8bdcbd814a6452"
+build_stamp: "0cad6d68"
+project_commit: "fa25a5f2"
+exit_code: 0
+scope_files: {"osq.config.ts":"sha256:8025c396411b4f06436639bc164e769324ef8bb35506f170662e4f644c15893c","tests/no-skipped-in-src.test.ts":"sha256:c9a0e93149f76998152ee10f940d8dac5485a7da0653c0c73b10de4c1b55b581","tests/own-banned-words.test.ts":"sha256:cc00e63440e4ae1e70d0656a7381b7d7de59f74cc79c4e80bfa831365031fa5d"}
+---
+2026-10-13T18:35:29.494Z

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d90568db7bc0002d118418f3cd2a25a916ab1271fc8d44763ab90e9c690d26d5"
+build_stamp: "0cad6d68"
+project_commit: "4c6e3730"
+exit_code: 0
+scope_files: {"src/core/spec/banned-word-lint.ts":"sha256:1c575b16779b10b0a84ef13af69712adf1e9f94dfb55dff35b2b4e9716ffe7d7","src/core/spec/impact-lint.ts":"sha256:af1306421396f6eeaa3bdf9acc7b6d8ddc6a3e4783a0e1da07276150959181e5","tests/banned-word-lint.test.ts":"sha256:eadcfc45c6b3b2817a982da54898a3b9c3b30df5dc5d66f12049da69b0f43704"}
+---
+2026-10-13T18:27:41.985Z

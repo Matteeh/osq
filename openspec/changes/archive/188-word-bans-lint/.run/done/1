@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4829f676b67c3a9a72baa4c581af464eb9c036678367b48c8445f723e2a7fc09"
+build_stamp: "0cad6d68"
+project_commit: "e8de0873"
+exit_code: 0
+scope_files: {"src/core/foundation/config-banned-words.ts":"sha256:5068c1adfaa1e8f0ee4d93e703c3e09e8101560295f27ad1f95431184f97e0ad","src/core/foundation/config.ts":"sha256:02f9aa82d3dd28e6b98600d791608083f6c2fedc0cf4efc4a4bf9ef2a1efa9e6","tests/banned-words-config.test.ts":"sha256:590c5ec7f5681930d3bad8f2e61a7558abaa4444aed6d1fca8290ee4f1a312a2"}
+---
+2026-10-13T18:18:22.537Z

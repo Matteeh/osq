@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { SLICES } from '../../cli/slices.js';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
+import { type BannedWord, validateBannedWordsConfig } from './config-banned-words.js';
 import { checkTraceabilityCapabilities } from './config-capabilities.js';
 import {
   type CapabilitiesConfig,
@@ -89,6 +90,7 @@ export interface OsqConfig {
   readonly harness: string;
   readonly maxConcurrency: number;
   readonly ungoverned?: readonly string[];
+  readonly bannedWords?: readonly BannedWord[];
   readonly limits: OsqLimits;
   readonly paths: OsqPaths;
   readonly timeouts: OsqTimeouts;
@@ -117,6 +119,7 @@ const base: OsqConfig = {
   harness: 'agy',
   maxConcurrency: 1,
   ungoverned: DEFAULT_UNGOVERNED,
+  bannedWords: [],
   serve: DEFAULT_SERVE_CONFIG,
   inbox: DEFAULT_INBOX_CONFIG,
   watch: DEFAULT_WATCH_CONFIG,
@@ -128,11 +131,7 @@ const base: OsqConfig = {
   traceability: DEFAULT_TRACEABILITY_CONFIG,
   planning: DEFAULT_PLANNING_CONFIG,
   agy: { model: 'gemini-3.8-flash-high', dangerouslySkipPermissions: false },
-  opencode: {
-    bin: 'opencode',
-    model: 'deepseek/deepseek-flash',
-    agent: 'osq-coder',
-  },
+  opencode: { bin: 'opencode', model: 'deepseek/deepseek-flash', agent: 'osq-coder' },
   log: { heartbeatSeconds: 60 },
   limits: {
     maxScopeFiles: 8,
@@ -192,6 +191,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     capabilities: validateCapabilitiesConfig(config.capabilities),
     confinement: validateConfinementConfig(config.confinement),
     ungoverned: validateUngovernedConfig(config.ungoverned),
+    bannedWords: validateBannedWordsConfig(config.bannedWords),
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     ...(validator ? { validator } : {}),

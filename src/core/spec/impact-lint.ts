@@ -2,6 +2,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { collectBannedWordFindings } from './banned-word-lint.js';
 import {
   readCapabilityOwnership,
   undeclaredReadFindings,
@@ -82,6 +83,11 @@ export async function collectImpactFindings(input: ImpactLintInput): Promise<Lin
       projectRoot: input.projectRoot,
       folderPath: input.folderPath,
       ungoverned: input.config.ungoverned ?? [],
+    })),
+    ...(await collectBannedWordFindings({
+      projectRoot: input.projectRoot,
+      folderPath: input.folderPath,
+      bannedWords: input.config.bannedWords ?? [],
     })),
   ];
 }

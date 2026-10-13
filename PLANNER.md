@@ -74,6 +74,10 @@ your complete prompt; read it and follow it exactly.
   without signature blocks, numbered implementation steps, or line numbers. Write
   full signatures only for ports.
 - Refer to functions and files by name, never by line number.
+- Words a project bans from its code are listed in `bannedWords` in
+  `osq.config.ts`, each with the paths it covers. Never plan a name, message or
+  comment that puts one there; `osq lint` warns when a task file or delta spec
+  holds one in code.
 
 ### Parent spec
 
