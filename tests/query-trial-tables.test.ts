@@ -25,6 +25,7 @@ const TABLE_LIST = [
   'mutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)',
   'mutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)',
   'link_findings(id, change, severity, file, message, label)',
+  'task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)',
 ].join('\n');
 
 const TRIAL_TABLES = [

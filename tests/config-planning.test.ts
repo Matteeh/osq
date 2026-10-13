@@ -12,6 +12,7 @@ import type { PlanningConfig, PlanningPrice } from '../src/index.js';
 
 const OPUS: PlanningPrice = { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 };
 const DISCLOSURES = { recentChanges: 3, maxCharacters: 4000 };
+const HISTORY = { minimumTasks: 30, recentTasks: 100, maxCharacters: 1500 };
 
 describe('planning configuration', () => {
   let tmpDir: string;
@@ -25,9 +26,21 @@ describe('planning configuration', () => {
   });
 
   it('defaults the idle gap to ten minutes and ships no price table', () => {
-    assert.deepEqual(DEFAULT_PLANNING_CONFIG, { idleGapMinutes: 10, disclosures: DISCLOSURES });
-    assert.deepEqual(DEFAULT_CONFIG.planning, { idleGapMinutes: 10, disclosures: DISCLOSURES });
-    assert.deepEqual(defineConfig({}).planning, { idleGapMinutes: 10, disclosures: DISCLOSURES });
+    assert.deepEqual(DEFAULT_PLANNING_CONFIG, {
+      idleGapMinutes: 10,
+      disclosures: DISCLOSURES,
+      history: HISTORY,
+    });
+    assert.deepEqual(DEFAULT_CONFIG.planning, {
+      idleGapMinutes: 10,
+      disclosures: DISCLOSURES,
+      history: HISTORY,
+    });
+    assert.deepEqual(defineConfig({}).planning, {
+      idleGapMinutes: 10,
+      disclosures: DISCLOSURES,
+      history: HISTORY,
+    });
     assert.equal(validatePlanningConfig(undefined).idleGapMinutes, 10);
   });
 
@@ -36,6 +49,7 @@ describe('planning configuration', () => {
     assert.deepEqual(config.planning, {
       idleGapMinutes: 10,
       disclosures: DISCLOSURES,
+      history: HISTORY,
       prices: { 'claude-opus-5-5': OPUS },
     });
   });
@@ -44,6 +58,7 @@ describe('planning configuration', () => {
     assert.deepEqual(defineConfig({ planning: { idleGapMinutes: 3 } }).planning, {
       idleGapMinutes: 3,
       disclosures: DISCLOSURES,
+      history: HISTORY,
     });
   });
 
@@ -114,6 +129,7 @@ describe('planning configuration', () => {
     assert.deepEqual(config.planning, {
       idleGapMinutes: 4,
       disclosures: DISCLOSURES,
+      history: HISTORY,
       prices: { m: { input: 1, output: 2, cacheRead: 0, cacheWrite: 0 } },
     });
   });

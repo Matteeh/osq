@@ -21,9 +21,21 @@ export interface PlanningDisclosuresConfig {
   readonly maxCharacters: number;
 }
 
+/** Bounds on the counted `## What history says` lines in the plan prompt. */
+export interface PlanningHistoryConfig {
+  /** Tasks that ran before the section appears at all. */
+  readonly minimumTasks: number;
+  /** Most recent of those tasks the counts cover. */
+  readonly recentTasks: number;
+  /** Most characters the section body holds, each newline counted. */
+  readonly maxCharacters: number;
+}
+
 export interface PlanningConfig {
   readonly idleGapMinutes: number;
   readonly disclosures: PlanningDisclosuresConfig;
+  /** Optional so hand-built configs still typecheck; readers fall back to the default. */
+  readonly history?: PlanningHistoryConfig;
   readonly prices?: Readonly<Record<string, PlanningPrice>>;
 }
 
@@ -32,9 +44,16 @@ export const DEFAULT_PLANNING_DISCLOSURES: PlanningDisclosuresConfig = {
   maxCharacters: 4000,
 };
 
+export const DEFAULT_PLANNING_HISTORY: PlanningHistoryConfig = {
+  minimumTasks: 30,
+  recentTasks: 100,
+  maxCharacters: 1500,
+};
+
 export const DEFAULT_PLANNING_CONFIG: PlanningConfig = {
   idleGapMinutes: 10,
   disclosures: DEFAULT_PLANNING_DISCLOSURES,
+  history: DEFAULT_PLANNING_HISTORY,
 };
 
 const PRICE_KINDS = ['input', 'output', 'cacheRead', 'cacheWrite'] as const;
@@ -43,6 +62,9 @@ const PRICE_KINDS = ['input', 'output', 'cacheRead', 'cacheWrite'] as const;
  * Validate an optional `planning` block over the defaults. A partial block
  * keeps the default idle gap; a present `prices` map must hold complete,
  * finite, non-negative price entries. Every rejection names the offending key.
+ *
+ * @scenario metrics-and-reporting: Invalid history configuration
+ * @adr 008
  */
 export function validatePlanningConfig(planning: unknown): PlanningConfig {
   if (planning === undefined) return DEFAULT_PLANNING_CONFIG;
@@ -62,10 +84,42 @@ export function validatePlanningConfig(planning: unknown): PlanningConfig {
     throw new Error('planning.idleGapMinutes must be a positive finite number');
   }
   const disclosures = validatePlanningDisclosures(record.disclosures);
+  const history = validatePlanningHistory(record.history);
   const prices = validatePlanningPrices(record.prices);
   return prices === undefined
-    ? { idleGapMinutes, disclosures }
-    : { idleGapMinutes, disclosures, prices };
+    ? { idleGapMinutes, disclosures, history }
+    : { idleGapMinutes, disclosures, history, prices };
+}
+
+/** A partial `history` block keeps defaults; every value is a positive integer. */
+function validatePlanningHistory(history: unknown): PlanningHistoryConfig {
+  if (history === undefined) return DEFAULT_PLANNING_HISTORY;
+  if (typeof history !== 'object' || history === null || Array.isArray(history)) {
+    throw new Error(
+      'planning.history must be an object with minimumTasks, recentTasks and maxCharacters',
+    );
+  }
+  const record = history as Record<string, unknown>;
+  return {
+    minimumTasks: validateCount(
+      'planning.history',
+      'minimumTasks',
+      record.minimumTasks,
+      DEFAULT_PLANNING_HISTORY.minimumTasks,
+    ),
+    recentTasks: validateCount(
+      'planning.history',
+      'recentTasks',
+      record.recentTasks,
+      DEFAULT_PLANNING_HISTORY.recentTasks,
+    ),
+    maxCharacters: validateCount(
+      'planning.history',
+      'maxCharacters',
+      record.maxCharacters,
+      DEFAULT_PLANNING_HISTORY.maxCharacters,
+    ),
+  };
 }
 
 function validatePlanningDisclosures(disclosures: unknown): PlanningDisclosuresConfig {
@@ -75,12 +129,14 @@ function validatePlanningDisclosures(disclosures: unknown): PlanningDisclosuresC
   }
   const record = disclosures as Record<string, unknown>;
   return {
-    recentChanges: validateDisclosureCount(
+    recentChanges: validateCount(
+      'planning.disclosures',
       'recentChanges',
       record.recentChanges,
       DEFAULT_PLANNING_DISCLOSURES.recentChanges,
     ),
-    maxCharacters: validateDisclosureCount(
+    maxCharacters: validateCount(
+      'planning.disclosures',
       'maxCharacters',
       record.maxCharacters,
       DEFAULT_PLANNING_DISCLOSURES.maxCharacters,
@@ -88,11 +144,11 @@ function validatePlanningDisclosures(disclosures: unknown): PlanningDisclosuresC
   };
 }
 
-/** A partial `disclosures` block keeps defaults; every value is a positive integer. */
-function validateDisclosureCount(key: string, value: unknown, fallback: number): number {
+/** A partial block keeps defaults; every value is a positive integer. */
+function validateCount(prefix: string, key: string, value: unknown, fallback: number): number {
   const resolved = value === undefined ? fallback : value;
   if (typeof resolved !== 'number' || !Number.isInteger(resolved) || resolved <= 0) {
-    throw new Error(`planning.disclosures.${key} must be a positive integer`);
+    throw new Error(`${prefix}.${key} must be a positive integer`);
   }
   return resolved;
 }

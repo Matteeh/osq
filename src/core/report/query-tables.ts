@@ -10,6 +10,7 @@ import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record
 import { LINK_FINDINGS_TABLES, insertLinkFindings } from './query-link-findings.js';
 import { insertNotices } from './query-notices.js';
 import { type HistoryTable, type TrialSubject, folderId } from './query-subjects.js';
+import { TASK_OUTCOME_TABLES, insertTaskOutcomes } from './query-task-outcomes.js';
 import { TASK_STREAM_TABLES, insertTaskStreamTables } from './query-task-streams.js';
 import { VALIDATOR_TABLES, insertValidatorTables } from './query-validator.js';
 import { observeTaskStream } from './report-events.js';
@@ -49,6 +50,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   ...VALIDATOR_TABLES,
   ...TASK_STREAM_TABLES,
   ...LINK_FINDINGS_TABLES,
+  ...TASK_OUTCOME_TABLES,
 ];
 
 /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
@@ -193,6 +195,7 @@ async function build(
     await insertTasks(db, folderPath, change.folder);
     insertDeadAttempts(db, change);
     await insertDisclosures(db, folderPath, change.folder);
+    await insertTaskOutcomes(db, projectRoot, config, change, folderPath);
   }
   await insertNotices(db, projectRoot, config);
   await insertValidatorTables(db, subjects);

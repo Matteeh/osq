@@ -331,9 +331,11 @@ and `osq plan --next [--session | --print]` to prepare an ordinary or
 queue-selected change. Every mode SHALL build the same five ordered prompt
 sections: complete `PLANNER.md`, change identity, capability spec paths,
 complete brief, and `This repository's record` derived from the 20 most recent
-archived changes under the established bounded rules. When the recent archived
-changes hold any executor disclosure, every mode SHALL add a sixth section,
-`## Recent executor disclosures`, after the record.
+archived changes under the established bounded rules. When the archive holds
+enough task history, as metrics-and-reporting "What history says in the plan
+prompt" defines, every mode SHALL add `## What history says` after the record.
+When the recent archived changes hold any executor disclosure, every mode
+SHALL add `## Recent executor disclosures` after those, as the last section.
 
 Without `--session` or `--print`, planning SHALL create `plan-prompt.md` from
 those exact prompt bytes, record `planner: null` in brief frontmatter, avoid

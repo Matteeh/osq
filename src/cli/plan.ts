@@ -2,11 +2,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolvePlannerSelection } from '../core/foundation/config-codex.js';
 import { type OsqConfig, loadConfig } from '../core/foundation/config.js';
+import { HISTORY_HINTS_HEADING, formatPlanHintSections } from '../core/report/history-hints.js';
 import { readPlanningUsage, recordPlanExited, recordPlanStarted } from '../core/report/planning.js';
-import {
-  RECENT_DISCLOSURES_HEADING,
-  formatRecentDisclosures,
-} from '../core/report/recent-disclosures.js';
+import { RECENT_DISCLOSURES_HEADING } from '../core/report/recent-disclosures.js';
 import { formatRepositoryRecordBody, getRepositoryRecord } from '../core/report/report.js';
 import { findSpecFolder } from '../core/spec/approve.js';
 import { parseFrontmatter } from '../core/spec/parser.js';
@@ -50,7 +48,10 @@ export interface OpeningPromptOptions {
  * Compose the opening prompt with the repository record as the fifth ordered
  * section. The record body comes from the shared report derivation over the 20
  * most recent canonical archives, or from a caller-supplied preformatted body.
- * A sixth section quotes recent executor disclosures when any exist.
+ * Two more sections follow when present: the counted history hints, then the recent executor disclosures.
+ * @scenario metrics-and-reporting: Section placement
+ * @scenario metrics-and-reporting: Too little history
+ * @adr 008
  */
 export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise<string> {
   const config = options.config ?? (await loadConfig(options.projectRoot));
@@ -60,10 +61,9 @@ export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise
     formatRepositoryRecordBody(await getRepositoryRecord(options.projectRoot, config));
   let prompt = `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
 
-  const disclosures = await formatRecentDisclosures(options.projectRoot, config);
-  if (disclosures !== null) {
-    prompt += `\n\n${RECENT_DISCLOSURES_HEADING}\n\n${disclosures}`;
-  }
+  const { history, disclosures } = await formatPlanHintSections(options.projectRoot, config);
+  if (history !== null) prompt += `\n\n${HISTORY_HINTS_HEADING}\n\n${history}`;
+  if (disclosures !== null) prompt += `\n\n${RECENT_DISCLOSURES_HEADING}\n\n${disclosures}`;
   return prompt;
 }
 

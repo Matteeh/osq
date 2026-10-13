@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a50ced7fe14ff9fda0bd232c88e1c55f033fa5b7c83a77d1cb11864de12d1ac2"
+build_stamp: "645b21f0"
+project_commit: "624fa331"
+exit_code: 0
+scope_files: {"src/core/report/query-tables.ts":"sha256:6612ccdb6a49d6ee5f2637105baee5243582b78aa492c45a7c739cf89096f3e2","src/core/report/query-task-outcomes.ts":"sha256:58c4c366e52a2d6954a7d112356d856868ef638398fe1a5e63a512104789ab5e","src/core/report/task-outcomes.ts":"sha256:22115c17d7044ade05b7e4e0c4a38c1bd5d6510f647a82e7af68e18e39acdafc","tests/query-command.test.ts":"sha256:7693201143871aec6ee38dcecc0f2503cbb0a225aa942e253ff274b913565494","tests/query-tables.test.ts":"sha256:8403bec08dcaf17db2cf440ae5f1c498c90a31090a662ee7bebd0deea00396b2","tests/query-task-outcomes.test.ts":"sha256:2a3cdb30177fb3c5df32a06c30304b9a51cd1ba77b0dc8ec88627654a1b8131a","tests/query-trial-tables.test.ts":"sha256:921224278d0a36fdeed3c25f3f097822d91d56cbed43df0df659d059af4c66ce"}
+---
+2026-10-13T17:20:21.982Z
