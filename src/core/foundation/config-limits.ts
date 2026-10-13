@@ -1,3 +1,8 @@
+/** Runtime logging configuration resolved from `osq.config.ts`. */
+export interface LogConfig {
+  readonly heartbeatSeconds?: number;
+}
+
 export interface OsqLimits {
   readonly maxScopeFiles: number;
   readonly maxFeatureWrites: number;

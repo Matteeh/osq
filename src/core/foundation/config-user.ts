@@ -1,3 +1,4 @@
+import type { AutoSteerConfig } from './config-auto-steer.js';
 import type { CapabilitiesConfig } from './config-capability-groups.js';
 import type { ClaudeConfig } from './config-claude.js';
 import type { CodexConfig } from './config-codex.js';
@@ -49,6 +50,7 @@ export type OsqUserConfig = Partial<
     | 'capabilities'
     | 'confinement'
     | 'validator'
+    | 'autoSteer'
     | 'watch'
     | 'notices'
     | 'serve'
@@ -75,6 +77,7 @@ export type OsqUserConfig = Partial<
     readonly roles?: Partial<Record<ConfinementRole, { readonly env?: readonly string[] }>>;
   };
   readonly validator?: Partial<ValidatorConfig>;
+  readonly autoSteer?: Partial<AutoSteerConfig>;
   readonly watch?: Partial<WatchConfig>;
   readonly notices?: Partial<NoticesConfig>;
   readonly serve?: Partial<Omit<ServeConfig, 'server'>> & {

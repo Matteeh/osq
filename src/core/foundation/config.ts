@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { SLICES } from '../../cli/slices.js';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
+import { type AutoSteerConfig, validateAutoSteerConfig } from './config-auto-steer.js';
 import { type BannedWord, validateBannedWordsConfig } from './config-banned-words.js';
 import { checkTraceabilityCapabilities } from './config-capabilities.js';
 import {
@@ -19,7 +20,7 @@ import { applyHarnessModelEnv } from './config-env.js';
 import { ConfigLoadError, loadConfigFile } from './config-file.js';
 import { DEFAULT_GATES_CONFIG, type GatesConfig, validateGatesConfig } from './config-gates.js';
 import { DEFAULT_INBOX_CONFIG, type InboxConfig, validateInboxConfig } from './config-inbox.js';
-import type { OsqLimits } from './config-limits.js';
+import type { LogConfig, OsqLimits } from './config-limits.js';
 import {
   DEFAULT_NOTICES_CONFIG,
   type NoticesConfig,
@@ -57,7 +58,7 @@ export type { ServeConfig } from './config-serve.js';
 export type { WatchConfig } from './config-watch.js';
 export type { TraceabilityConfig } from './config-traceability.js';
 export type { OsqUserConfig } from './config-user.js';
-export type { OsqLimits } from './config-limits.js';
+export type { LogConfig, OsqLimits } from './config-limits.js';
 export type { ValidatorConfig } from './config-validator.js';
 export interface OsqPaths {
   readonly features: string;
@@ -76,9 +77,6 @@ export interface OsqTimeouts {
   readonly gitSeconds?: number;
   readonly gitCommitSeconds?: number;
   readonly gitRemoteSeconds?: number;
-}
-export interface LogConfig {
-  readonly heartbeatSeconds?: number;
 }
 export interface PlannerConfig {
   readonly harness: string;
@@ -111,6 +109,7 @@ export interface OsqConfig {
   readonly capabilities?: CapabilitiesConfig;
   readonly confinement?: ConfinementConfig;
   readonly validator?: ValidatorConfig;
+  readonly autoSteer?: AutoSteerConfig;
   readonly watch?: WatchConfig;
   readonly notices?: NoticesConfig;
 }
@@ -163,13 +162,14 @@ const base: OsqConfig = {
 };
 export const DEFAULT_CONFIG: OsqConfig = composeDefaultConfig(base, SLICES);
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const { planner, queue: rawQueue, validator: rawValidator, ...restConfig } = config;
+  const { planner, queue: rawQueue, validator: rawValidator, autoSteer, ...restConfig } = config;
   let validatedPlanner: PlannerConfig | undefined;
   if (planner !== undefined) {
     validatedPlanner = validatePlannerConfig(planner);
   }
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const validator = validateValidatorConfig(rawValidator);
+  const resolvedAutoSteer = validateAutoSteerConfig(autoSteer);
   const codex = validateCodexConfig(config.codex);
   const pi = validatePiConfig(config.pi);
   const claude = validateClaudeConfig(config.claude);
@@ -195,6 +195,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     ...(validatedPlanner ? { planner: validatedPlanner } : {}),
     ...(queue ? { queue } : {}),
     ...(validator ? { validator } : {}),
+    ...(resolvedAutoSteer ? { autoSteer: resolvedAutoSteer } : {}),
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),

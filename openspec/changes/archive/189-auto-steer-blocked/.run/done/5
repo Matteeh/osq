@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3605cd49c1a8976533d1161f07dc061ec76bb360f7b7bff923a864f28353df8e"
+build_stamp: "2f47b573"
+project_commit: "b53e2325"
+exit_code: 0
+scope_files: {"src/cli/plan-steer-prompt.ts":"sha256:abd5ceab187eaa9bf621538e5bed952b0b95dedd5c4cdf5b86f910aa3913b657","src/cli/watch-service.ts":"sha256:909384e0461f46b56ab0f2aac3c4b2b0d7e8b2c5c8c4f1169a9a02dc5062de12","tests/steering-prompt.test.ts":"sha256:8b5aacb4ed08e76e4dde62e22e32bca47b0a289426cec89b2a3492cc253a9201"}
+---
+2026-10-13T20:27:33.304Z

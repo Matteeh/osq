@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:952ef0035a51a743d7ea2dc1ebc32334bb90a0fe73b1f1391be7d13160012257"
+build_stamp: "2f47b573"
+project_commit: "5115e37d"
+exit_code: 0
+scope_files: {"src/core/foundation/config-auto-steer.ts":"sha256:8fdf79e3ab642fd8d9ad0e909aba673250a5d72f3fa971e308be02c04909f694","src/core/foundation/config-limits.ts":"sha256:57b08aa4c48b23ab1c7445a5e3cdb05fc7cbdf2d5e08146b17b28f46f0a02432","src/core/foundation/config-user.ts":"sha256:164e24410b7ff13792241b00e2a96cfc6e1a686bfcae76eaabb243542e13d980","src/core/foundation/config.ts":"sha256:d9bee08c1336f2a676da17cd294fed30a54bf660cb0607459123b9f5ff020c12","tests/auto-steer-config.test.ts":"sha256:cfd4693a09beebfd8c2144f9d9faed96befea16859edc1edf99d772bef986125"}
+---
+2026-10-13T19:41:05.887Z

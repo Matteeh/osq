@@ -1,6 +1,21 @@
 import { formatDuration } from '../report/report.js';
 import type { Inbox, LandedItem, NeedsYouItem, RunningItem } from './inbox.js';
 
+/**
+ * The steering row when the automatic planner revised the plan: `ready` reads
+ * `revised plan ready ...`, and any other outcome appends
+ * ` — automatic planner <outcome>` before the `osq plan` command.
+ */
+function autoSteerRow(row: string, item: NeedsYouItem): string {
+  const { steering, autoSteer } = item;
+  if (steering === undefined || autoSteer === undefined) return row;
+  if (autoSteer.outcome === 'ready') {
+    return `${row} — revised plan ready after ${steering.trigger} (${steering.reason}): changed ${autoSteer.changed.join(', ')} — ${item.command}`;
+  }
+  const need = item.blocked ? `: ${item.blocked.need.replace(/\s+/g, ' ')}` : '';
+  return `${row} — needs steering: ${steering.trigger} (${steering.reason})${need} — automatic planner ${autoSteer.outcome} — ${item.command}`;
+}
+
 function needsYouLine(item: NeedsYouItem): string {
   const head = `  ${item.change.id}: ${item.change.title}`;
   if (item.kind === 'planning') return `${head} — unplanned — ${item.command}`;
@@ -25,6 +40,7 @@ function needsYouLine(item: NeedsYouItem): string {
   const task = item.task;
   const row = task ? `${head} — task ${task.number}: ${task.title}` : head;
   if (item.steering) {
+    if (item.autoSteer) return autoSteerRow(row, item);
     const need = item.blocked ? `: ${item.blocked.need.replace(/\s+/g, ' ')}` : '';
     return `${row} — needs steering: ${item.steering.trigger} (${item.steering.reason})${need} — ${item.command}`;
   }
@@ -61,6 +77,9 @@ function landedLine(item: LandedItem): string {
  * @scenario status-inspection: Archived change waiting to land
  * @scenario status-inspection: Failed after-land command waiting
  * @scenario status-inspection: Validator failing
+ * @scenario status-inspection: Ready plan in the inbox
+ * @scenario status-inspection: Automatic planner left lint red
+ * @adr 018
  * @adr 010
  */
 export function formatInboxText(inbox: Inbox): string {

@@ -18,6 +18,7 @@ import type { HarnessAdapter } from '../harness/types.js';
 import { restoreArchiveSpecs } from './archive-specs.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
+import { type AutoSteerOptions, type SteeringPromptBuilder, runAutoSteer } from './auto-steer.js';
 import { type BuildInfo, StaleBuildError, resolveBuildInfo } from './build.js';
 import { catchUpWorktreeCommits } from './commit-catch-up.js';
 import { runMutationCheck } from './mutation-check.js';
@@ -69,6 +70,8 @@ export interface StartWatcherOptions {
   packageRoot?: string;
   /** A service worker's build check, used in place of the stale checks. */
   buildCheck?: StaleCheck;
+  /** Builds the steering prompt the automatic planner runs on. */
+  steeringPrompt?: SteeringPromptBuilder;
   exit?: (code: number) => void;
 }
 
@@ -191,6 +194,7 @@ export async function runWatcherCycle(
   adapter: HarnessAdapter,
   logger?: Logger,
   staleCheck?: StaleCheck,
+  steer: AutoSteerOptions = {},
 ): Promise<WatcherSummary> {
   const useSymbols = logger?.symbols === true;
   const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
@@ -319,8 +323,10 @@ export async function runWatcherCycle(
       }
 
       // A change that needs steering waits for `osq plan` and `osq approve`:
-      // leave its folder alone so a planner can edit it.
+      // leave its folder alone so a planner can edit it. With autoSteer on the
+      // watcher runs that planner once here, before it leaves the change alone.
       if (specState.steering) {
+        await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
         continue;
       }
 
@@ -474,6 +480,7 @@ export async function runWatcherOnce(
   adapter: HarnessAdapter,
   logger?: Logger,
   staleCheck?: StaleCheck,
+  steer: AutoSteerOptions = {},
 ): Promise<WatcherSummary> {
   let totalTasksRun = 0;
   let totalRetried = 0;
@@ -485,7 +492,7 @@ export async function runWatcherOnce(
   }[] = [];
 
   while (true) {
-    const cycle = await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck);
+    const cycle = await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck, steer);
     totalTasksRun += cycle.tasksRun;
     totalRetried += cycle.retried;
     totalSpecsArchived += cycle.specsArchived;
@@ -514,6 +521,10 @@ export async function startWatcher(
   const logger = options.logger;
   const exit = options.exit ?? process.exit;
   const staleDeps = { clearStatus: () => logger?.clearStatus(), exit };
+  // The CLI's steering prompt builder reaches every cycle through this one
+  // argument, so `startWatcher` never resolves the planner itself.
+  const steer: AutoSteerOptions =
+    options.steeringPrompt !== undefined ? { steeringPrompt: options.steeringPrompt } : {};
 
   // A checkout running a stale compiled build is a footgun: refuse before the
   // first cycle unless the caller opted out or is executing from source. The
@@ -546,7 +557,7 @@ export async function startWatcher(
 
   if (options.once) {
     try {
-      await runWatcherOnce(projectRoot, config, adapter, logger, staleCheck);
+      await runWatcherOnce(projectRoot, config, adapter, logger, staleCheck, steer);
     } catch (err) {
       if (handleStaleBuild(err, staleDeps)) {
         return;
@@ -613,7 +624,7 @@ export async function startWatcher(
       if (options.buildCheck) {
         await assertNotStale(options.buildCheck);
       }
-      await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck);
+      await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck, steer);
     } catch (err) {
       // A wait ends this cycle without stopping the loop or logging an error;
       // the next cycle checks again.

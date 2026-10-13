@@ -25,6 +25,8 @@ export interface NeedsYouItem {
   readonly stuck?: { readonly fingerprint: string };
   /** Present only for the one item of a change that needs steering. */
   readonly steering?: { readonly trigger: SteeringTriggerName; readonly reason: string };
+  /** Present only for the one item of a change the automatic planner revised. */
+  readonly autoSteer?: { readonly outcome: string; readonly changed: readonly string[] };
   /** Present only for a task-dead item whose task died with reason `blocked`. */
   readonly blocked?: { readonly need: string };
   /** Present only when an approval item's change has steps before approval. */

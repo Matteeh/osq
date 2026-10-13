@@ -52,3 +52,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [015. MCP transport](015-mcp-transport.md)
 - [016. Capability slices](016-capability-slices.md)
 - [017. Language support](017-language-support.md)
+- [018. Steering planner](018-steering-planner.md)

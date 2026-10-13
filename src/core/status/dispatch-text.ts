@@ -51,10 +51,24 @@ function landLines(card: LandCard): string[] {
   ];
 }
 
-/** The card header, its reason, and the body for its kind, before `Actions:`. */
+/** `  automatic planner: <outcome>`, with `, changed <paths>` when it changed any. */
+function autoSteerLine(autoSteer: NonNullable<OrderedDispatchItem['autoSteer']>): string {
+  const changed = autoSteer.changed.length > 0 ? `, changed ${autoSteer.changed.join(', ')}` : '';
+  return `  automatic planner: ${autoSteer.outcome}${changed}`;
+}
+
+/**
+ * The card header, its reason, and the body for its kind, before `Actions:`.
+ *
+ * @scenario status-inspection: Ready plan card
+ * @adr 018
+ */
 export function formatDispatchCardBody(item: OrderedDispatchItem, card: DispatchCard): string[] {
   const lines: string[] = [`${item.kind}: ${item.change.folder}`, `  why: ${item.reason}`];
-  if (item.steering) lines.push(`  needs steering: ${describeTrigger(item.steering)}`);
+  if (item.steering) {
+    lines.push(`  needs steering: ${describeTrigger(item.steering)}`);
+    if (item.autoSteer) lines.push(autoSteerLine(item.autoSteer));
+  }
   switch (card.kind) {
     case 'approval':
       lines.push(...approvalLines(card));

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { currentAutoSteer } from '../run/auto-steer-record.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { analyzeVerifyCommand } from '../spec/linter.js';
 import { parseFrontmatter } from '../spec/parser.js';
@@ -53,6 +54,10 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
   }
 
   if (state.steering && state.steering.length > 0) {
+    const record = await currentAutoSteer(state);
+    if (record?.outcome === 'ready') {
+      return { state: 'dead', command: `osq approve ${id}`, detail: 'revised plan ready' };
+    }
     return { state: 'dead', command: `osq plan ${id}`, detail: 'needs steering' };
   }
 
@@ -106,6 +111,9 @@ async function readArchivedNextStep(
  * @scenario status-inspection: Archived change the default branch holds
  * @scenario status-inspection: Archived change without version control
  * @scenario status-inspection: Archived change that needs steering
+ * @scenario status-inspection: Ready plan offers approve
+ * @scenario status-inspection: Record for an earlier trigger
+ * @adr 018
  */
 export async function readNextStep(
   projectRoot: string,

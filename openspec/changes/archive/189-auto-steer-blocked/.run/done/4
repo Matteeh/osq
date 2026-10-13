@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:062660710a2dfe0135d5d28889e460002cabd48bf9eeec6be84ef0adff3b9290"
+build_stamp: "2f47b573"
+project_commit: "2002999c"
+exit_code: 0
+scope_files: {"src/core/status/blocked-item.ts":"sha256:9dc64cae7e53befeb25271a15cb6526e368b24dfa1cda033741b3a855aaea7fb","src/core/status/dispatch-items.ts":"sha256:dd7e80829eab9153479af8d5d5d1839476c0c5b1cc041c5ba20907aa80693a42","src/core/status/dispatch-text.ts":"sha256:59c809dbd01a714e8797ed6fce8da5bc9b517cff8aa57d49fbf16916c17a1f98","src/core/status/inbox-text.ts":"sha256:6f82df829c4bd434be4f4e1010750e65ca2b0f865a1e09c4d23d07a7eaf5ea52","src/core/status/inbox.ts":"sha256:1f03feef0d6bf54facc5439f85ba564834f0828f8cc06d5d0beb8865cfd6a906","src/core/status/next-step.ts":"sha256:3f99d28e42c70814257d6be4958dca61b9e5e5054fa644a82ed5d20a628966e8","tests/auto-steer-inbox.test.ts":"sha256:1a96092881954d174d89e5c82da97fddd6da51777524e263761e21f5ad09ffa0"}
+---
+2026-10-13T20:17:12.770Z

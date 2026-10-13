@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+import { type AutoSteerOutcome, currentAutoSteer } from '../run/auto-steer-record.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { findLandCandidates } from './dispatch-land.js';
 import { type SpecState, type TaskState, compareNumericPrefix } from './state.js';
@@ -31,6 +32,11 @@ export interface DispatchItem {
   readonly commands: string[];
   /** Present only for the one halt item of a change that needs steering. */
   readonly steering?: SteeringTrigger;
+  /** Present only for the one halt item of a change the automatic planner revised. */
+  readonly autoSteer?: {
+    readonly outcome: AutoSteerOutcome;
+    readonly changed: readonly string[];
+  };
 }
 
 /** Every item that needs a human, plus whether the watcher has work. */
@@ -73,27 +79,33 @@ function approvalItem(spec: SpecState, nextState: string | undefined): DispatchI
 }
 
 /** The one halt item a change whose derived state has steering contributes. */
-function steeringHaltItem(spec: SpecState): DispatchItem | null {
+async function steeringHaltItem(spec: SpecState): Promise<DispatchItem | null> {
   const first = spec.steering?.[0] as SteeringTrigger | undefined;
   if (first === undefined) return null;
   const target =
     first.target === 'change'
       ? null
       : (spec.tasks.find((task) => task.taskNumber === first.target) ?? null);
+  const record = await currentAutoSteer(spec);
+  const id = spec.id;
   return {
     kind: 'halt',
     change: changeRef(spec),
     task: target ? taskRef(target) : null,
-    commands: [`osq plan ${spec.id}`, `osq show ${spec.id}`],
+    commands:
+      record?.outcome === 'ready'
+        ? [`osq approve ${id}`, `osq plan ${id}`, `osq show ${id}`]
+        : [`osq plan ${id}`, `osq show ${id}`],
     steering: first,
+    ...(record !== null ? { autoSteer: { outcome: record.outcome, changed: record.changed } } : {}),
   };
 }
 
 /** A change-level halt first, then one halt per dead or regressed task. */
-function haltItems(spec: SpecState): DispatchItem[] {
+async function haltItems(spec: SpecState): Promise<DispatchItem[]> {
   const items: DispatchItem[] = [];
   const id = spec.id;
-  const steeringHalt = steeringHaltItem(spec);
+  const steeringHalt = await steeringHaltItem(spec);
   if (steeringHalt !== null) return [steeringHalt];
   if (spec.changeRegressed) {
     items.push({
@@ -166,6 +178,10 @@ function compareItems(a: DispatchItem, b: DispatchItem): number {
 /**
  * Derive, without writing, the items that need a human and whether the watcher
  * is idle. `watcherIdle` is true when no active change's next step is running.
+ *
+ * @scenario status-inspection: Ready plan offers approve
+ * @scenario status-inspection: Automatic planner left lint red
+ * @adr 018
  */
 export async function readDispatchItems(
   projectRoot: string,
@@ -179,10 +195,10 @@ export async function readDispatchItems(
   for (const spec of overview.specs) {
     const approval = approvalItem(spec, nextSteps[spec.folderName]?.state);
     if (approval !== null) items.push(approval);
-    items.push(...haltItems(spec));
+    items.push(...(await haltItems(spec)));
   }
   for (const entry of archivedSteering) {
-    const halt = steeringHaltItem(entry.state);
+    const halt = await steeringHaltItem(entry.state);
     if (halt !== null) items.push(halt);
   }
   items.push(...(await landItems(projectRoot, config, steeredFolders)));

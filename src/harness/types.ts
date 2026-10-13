@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
+import type { AutoSteerOutcome } from '../core/run/auto-steer-record.js';
 import type { ScopePathAttribution } from '../core/run/scope-hash.js';
 import type { SCOPE_RESOLVER_VERSION } from '../core/run/scope.js';
 import type { VcsMovedField, VcsStateValues } from '../core/vcs/snapshot.js';
@@ -35,6 +36,7 @@ export type HarnessEventType =
   | 'format_ran'
   | 'mutation_ran'
   | 'validator_ran'
+  | 'auto_steer_ran'
   | 'vcs_violation'
   | 'scope_violation'
   | 'change_verify_rerun';
@@ -385,6 +387,26 @@ export interface ValidatorRanEventData {
 }
 
 /**
+ * Payload of the change-level `auto_steer_ran` event: what one automatic
+ * steering run did. `duration` is wall seconds from just before the spawn,
+ * `exitCode` is null when nothing exited, `triggers` holds each trigger's
+ * `describeTrigger` text, and `restored` the sorted project-relative paths the
+ * run put back.
+ */
+export interface AutoSteerRanEventData {
+  readonly outcome: AutoSteerOutcome;
+  readonly harness: string;
+  readonly model: string;
+  readonly duration: number;
+  readonly exitCode: number | null;
+  readonly triggers: readonly string[];
+  readonly changed: readonly string[];
+  readonly restored: readonly string[];
+  /** Failure output or lint errors; present for a failure or a lint-red run. */
+  readonly output?: string;
+}
+
+/**
  * Payload of a `vcs_violation` event: the git state fields that moved during a
  * task, with each field's value before the agent spawned and after it exited.
  * Observe-only in stage 0; it never changes a task's outcome.
@@ -442,6 +464,7 @@ export interface OsqEventData {
   format_ran: FormatRanEventData;
   mutation_ran: MutationRanEventData;
   validator_ran: ValidatorRanEventData;
+  auto_steer_ran: AutoSteerRanEventData;
   vcs_violation: VcsViolationEventData;
   scope_violation: ScopeViolationEventData;
   change_verify_rerun: ChangeVerifyRerunEventData;

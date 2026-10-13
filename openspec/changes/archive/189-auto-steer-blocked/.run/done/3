@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a073d65a56fba0a4cd51e05bc18052fd3eb75f79ce9f5fadf2591014b406f331"
+build_stamp: "2f47b573"
+project_commit: "66a4e123"
+exit_code: 0
+scope_files: {"src/core/run/auto-steer-record.ts":"sha256:38f86b32ec6ecb3a185e2c7ff68e840924e022c7b239a50f2e712e77110caee9","src/harness/types.ts":"sha256:b523d3c73d14d39b187ae45f5d171ae50a049845d99e106b8d5364a5656d5c8d","src/watcher/auto-steer-plan.ts":"sha256:44e7aefc639b152e5f33ed058a84c0447cfcca3e117a24dfaa4cb7e0380c4f06","src/watcher/auto-steer-run.ts":"sha256:32428213576a3cf01bc8502968a209d5acb0cd194fbbca6279e0f84e6df7545f","src/watcher/auto-steer.ts":"sha256:70e22199226b715e1d186667f6f5159e071dc446621c75bdbea11c2b9fc9696b","src/watcher/loop.ts":"sha256:a8a1a94657b6013bb9e2e9ef7e5ee9cac743344f904d2a89364b4fdf1713f114","src/watcher/validator-guard.ts":"sha256:ad67e34b949804a5f96cb1193a56981fa84013dc27d4fb371964c027894228df","tests/auto-steer-run.test.ts":"sha256:1bdcdda54c6d964f76f835c46d57aae47065678a80d54bc364189e5e5df6fc9f"}
+---
+2026-10-13T20:01:03.673Z

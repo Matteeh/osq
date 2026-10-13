@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import { parseResultSections } from '../report/result-sections.js';
+import { currentAutoSteer } from '../run/auto-steer-record.js';
 import { parseFrontmatter } from '../spec/parser.js';
 import type { NeedsYouItem } from './inbox.js';
 import { getDeadMarkerPath, getResultPath } from './layout.js';
@@ -46,10 +47,15 @@ function isTriggerItem(item: NeedsYouItem, trigger: SteeringTrigger): boolean {
 
 /**
  * Collapse each change that needs steering to its first trigger's halt item,
- * with `osq plan <id>`, the trigger, and, for a blocked task, the stated need.
- * Every other item, and every other change, is returned unchanged.
+ * with the automatic planner's outcome, the trigger, and, for a blocked task,
+ * the stated need. Every other item, and every other change, is returned
+ * unchanged.
  *
  * @scenario status-inspection: Missing entry file in the inbox
+ * @scenario status-inspection: Ready plan in the inbox
+ * @scenario status-inspection: Automatic planner left lint red
+ * @scenario status-inspection: Record for an earlier trigger
+ * @adr 018
  * @adr 006
  */
 export async function applySteeringItems(
@@ -70,10 +76,15 @@ export async function applySteeringItems(
     }
     const first = spec.steering?.[0];
     if (first === undefined || !isTriggerItem(item, first)) continue;
+    const record = await currentAutoSteer(spec);
+    const ready = record?.outcome === 'ready';
     const transformed = {
       ...item,
-      command: `osq plan ${spec.id}`,
+      command: ready ? `osq approve ${spec.id}` : `osq plan ${spec.id}`,
       steering: { trigger: first.trigger, reason: first.reason },
+      ...(record !== null
+        ? { autoSteer: { outcome: record.outcome, changed: record.changed } }
+        : {}),
     } satisfies NeedsYouItem;
     if (first.trigger !== 'blocked' || item.task === null) {
       result.push(transformed);

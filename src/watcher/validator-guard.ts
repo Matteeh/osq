@@ -76,17 +76,20 @@ export async function snapshotValidatorTree(
 }
 
 /**
- * Put back every path the validator changed and return their project-relative
- * paths, sorted. A path recorded before the spawn gets its bytes back, or is
- * removed when it was missing then; any other path goes through `vcs.discard`.
+ * Put back every path that changed since the snapshot and return their
+ * project-relative paths, sorted. A path recorded before the spawn gets its
+ * bytes back, or is removed when it was missing then; any other path goes
+ * through `vcs.discard`. `keep` names the paths to leave alone.
+ *
+ * @scenario watcher-and-harness: Blocked task gets a revised plan
+ * @adr 018
  */
-export async function restoreValidatorTree(
+export async function restoreTreeExcept(
   projectRoot: string,
-  specFolderPath: string,
   vcs: Vcs,
   snapshot: ValidatorTreeSnapshot,
+  keep: (relative: string) => boolean,
 ): Promise<string[]> {
-  const { dir, file } = guardedSkips(projectRoot, specFolderPath);
   const after = await treeState(projectRoot, vcs);
   const candidates = [...new Set([...snapshot.paths.keys(), ...after.keys()])].sort();
 
@@ -94,7 +97,7 @@ export async function restoreValidatorTree(
   const rewrite: { readonly path: string; readonly data: Buffer | null }[] = [];
   const discard: string[] = [];
   for (const relative of candidates) {
-    if (relative.startsWith(dir) || relative === file) continue;
+    if (keep(relative)) continue;
     const before: Recorded = snapshot.paths.has(relative)
       ? (snapshot.paths.get(relative) as Buffer | null)
       : UNSET;
@@ -108,4 +111,24 @@ export async function restoreValidatorTree(
   for (const item of rewrite) await writeBytes(path.resolve(projectRoot, item.path), item.data);
   if (discard.length > 0) await vcs.discard(discard);
   return restored;
+}
+
+/**
+ * Put back every path the validator changed and return their project-relative
+ * paths, sorted. A path recorded before the spawn gets its bytes back, or is
+ * removed when it was missing then; any other path goes through `vcs.discard`.
+ */
+export async function restoreValidatorTree(
+  projectRoot: string,
+  specFolderPath: string,
+  vcs: Vcs,
+  snapshot: ValidatorTreeSnapshot,
+): Promise<string[]> {
+  const { dir, file } = guardedSkips(projectRoot, specFolderPath);
+  return restoreTreeExcept(
+    projectRoot,
+    vcs,
+    snapshot,
+    (relative) => relative.startsWith(dir) || relative === file,
+  );
 }

@@ -24,6 +24,7 @@ import { WATCH_ROLE_ENV, runServiceSupervisor } from '../watcher/service.js';
 import type { StaleCheck } from '../watcher/stale-pass.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, commandLogger, type resolveInputs } from './command-inputs.js';
+import { buildSteeringPrompt } from './plan-steer-prompt.js';
 
 /** Options `osq watch` accepts, plus the service flags and the records' home. */
 export interface WatchServiceOptions extends WatchCommandOptions, CommandInputs {
@@ -192,6 +193,7 @@ async function runWatcher(
     dev: options.dev,
     logger,
     buildCheck,
+    steeringPrompt: buildSteeringPrompt,
   });
 }
 

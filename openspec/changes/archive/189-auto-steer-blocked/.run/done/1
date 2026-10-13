@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:83e8282b7552d353e8838d7533d161602c223e26ddddacc5bba3e1f56a5b4542"
+build_stamp: "2f47b573"
+project_commit: "b7a4e165"
+exit_code: 0
+scope_files: {"decisions/018-steering-planner.md":"sha256:8266cae323ea058bd259e11bcc0ce2501b6785042dc6c61d33346a4f2306b5dd","decisions/README.md":"sha256:7fdda9601e59c78cf1166a714ac5043652baa90688ea8134ffeba3c8ee841768","tests/steering-planner-adr.test.ts":"sha256:f9a1439a8f3978162502a21eff0b3f050f0713eddb75b3122ec25168179ceaf5"}
+---
+2026-10-13T19:29:43.504Z
