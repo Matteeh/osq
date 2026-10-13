@@ -15,6 +15,7 @@ export type ApprovalNoticeId =
   | 'assumptions'
   | 'verify_starts_any'
   | 'uncovered_requirement'
+  | 'language_gap'
   | 'tests_modify'
   | 'new_capability'
   | 'plan_revised';
@@ -59,6 +60,7 @@ const NOTICE_ORDER: readonly ApprovalNoticeId[] = [
   'assumptions',
   'verify_starts_any',
   'uncovered_requirement',
+  'language_gap',
   'tests_modify',
   'new_capability',
   'plan_revised',
@@ -74,6 +76,7 @@ const SEVERITY: Record<ApprovalNoticeId, NoticeSeverity> = {
   assumptions: 'amber',
   verify_starts_any: 'amber',
   uncovered_requirement: 'amber',
+  language_gap: 'amber',
   tests_modify: 'grey',
   new_capability: 'grey',
   plan_revised: 'grey',

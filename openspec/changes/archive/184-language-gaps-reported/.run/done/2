@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ffaa655cac70906050bb1d405c0fbd3b90a771bac80a4a32469d13c99d3ebd2d"
+build_stamp: "28cf692a"
+project_commit: "8f37e84c"
+exit_code: 0
+scope_files: {"src/core/foundation/doctor-changes.ts":"sha256:bcb7f9d9c034a39a6c44ed2e2d0f8c8bbddb5dab48c63014c52556a2bb820465","src/core/foundation/doctor-languages.ts":"sha256:dcaf6d088a011ea457831a10ed4d91a323af62d399946e7eed4a8f09ea14ed88","src/core/foundation/doctor.ts":"sha256:5d96986ee9a5f5407a99919f944e5b65fcc46d546579e135b9ff4ea3efc2395b","tests/doctor-languages.test.ts":"sha256:7c687f7f37b0bcc3b8fb0f13d35203b94a7bfe8594a93d0ab130a4cfdc738a8e"}
+---
+2026-10-13T16:18:36.536Z

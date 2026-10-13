@@ -104,6 +104,7 @@ async function findViolations(): Promise<Violation[]> {
       if (
         tier === 'core' &&
         !isInside(resolved, path.join(SRC_DIR, 'core')) &&
+        !isInside(resolved, path.join(SRC_DIR, 'kernel')) &&
         !isAllowedCoreCliImport(importer, resolved)
       ) {
         violations.push({

@@ -5,6 +5,7 @@ import { scopeCoversPath } from '../run/scope.js';
 import { readAssumptions } from './assumptions.js';
 import type { ApprovalDigest } from './digest.js';
 import { hashChangeFolder } from './hasher.js';
+import { languageGapNotice } from './notice-language.js';
 import {
   type ChangeDelta,
   type TaskFacts,
@@ -192,6 +193,7 @@ export async function collectApprovalNotices(input: {
   add(findings, assumptionsNotice(context));
   add(findings, verifyStartsAnyNotice(context));
   add(findings, await uncoveredRequirementNotice(context));
+  add(findings, await languageGapNotice(input.projectRoot, context.config, context.tasks));
   add(findings, testsModifyNotice(context));
   add(findings, newCapabilityNotice(context));
   add(findings, await planRevisedNotice(context));

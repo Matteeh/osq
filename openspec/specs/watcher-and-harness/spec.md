@@ -270,11 +270,11 @@ The watcher runner SHALL partition lifecycle phases into discrete modules under 
 - **THEN** runner coordinates lock acquisition, heartbeat observation, agent process execution, test gating, verification, and outcome recording across dedicated lifecycle modules
 
 ### Requirement: Architectural import graph boundaries
-The codebase SHALL enforce strict directional import boundaries across packages, preventing backward or cross-tier dependency leaks.
+The codebase SHALL enforce strict directional import boundaries across packages, preventing backward or cross-tier dependency leaks. Kernel slices under `src/kernel/` are shared code every layer may import (ADR 016).
 
 #### Scenario: Core layer isolation
 - **WHEN** import dependencies of `src/core/**` are analyzed
-- **THEN** no module in `src/core` imports from any directory outside `src/core`
+- **THEN** no module in `src/core` imports from any directory outside `src/core` and `src/kernel`
 
 #### Scenario: Harness layer boundaries
 - **WHEN** import dependencies of `src/harness/**` are analyzed
