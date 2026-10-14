@@ -1,0 +1,23 @@
+---
+scope_resolver: 2
+scope_hash: sha256:5b3dc6e78d87c0fceabf82a1ad551a3812c1a8b43518c75825a65d08f671a836
+build_stamp: 34fa2c0c
+project_commit: ab98b473
+exit_code: 0
+scope_files:
+  packages/ui/src/change/ChangeView.tsx: sha256:0bf9fa09b92eaad4ce4bbb0ff9c65c6cb72f60a689ed7b7e39b32f45be781586
+  packages/ui/src/change/HandoffBlock.tsx: sha256:f1b090d42630c40432a35d3426ee10de740b42055c9379b1f4663d6068b10b7f
+  packages/ui/src/change/PageBlock.tsx: sha256:3d15841337e4c50127e75cd5c31d7f76d1c99d3e7262b539ecc89616de531f77
+  packages/ui/src/change/PageFolds.tsx: sha256:35b1b9b52f156a8105d338d01696c2043453125a6c9a2cb0ca36a1ae1e049d4a
+  packages/ui/src/change/page.css: sha256:d2da88cd4bb5e61f5893f27b4d3d67107ef439da58610d831bb8dec805aacedf
+  packages/ui/src/main.tsx: sha256:1f4cd7b1eebda44f53ae6b948a4f8895f6ee34d6ef602595db890b01d57a2967
+  tests/ui-change-page.test.tsx: sha256:ca84bc478ae6f92e61360bc393973a68b3dab1c83a4b200f16f089ce4e2d367c
+  tests/ui-change.test.tsx: sha256:f60a8f185b94ed2fbb74d6ce68afef52b5d40886efdf5628dfd6e018a84c3fa2
+  tests/ui-changes.test.tsx: sha256:a7579beb6e12d6a78bf8da50f92682faf960915940ec4973ee53283fc1fc9965
+  tests/ui-land.test.tsx: sha256:7b934a6187a450d854b9836f5a55d7c97caf5371f0b0d7dd533ea299896b05e2
+  tests/ui-runs-after.test.tsx: sha256:5c03b90c2f816e4fe3b6c44b69771c0d1b967371af7fdb1a0bf78021aa2a03c4
+original_scope_hash: sha256:1b73616476b5b2709abf69caba8445f411ea5dad9b0eb2607f1865637929efc1
+recertified_at: 2026-10-14T09:13:24.134Z
+recertification_count: 1
+---
+2026-10-14T08:29:09.413Z

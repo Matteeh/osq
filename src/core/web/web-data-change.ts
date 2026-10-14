@@ -11,6 +11,7 @@ import {
   readPlannerAttribution,
   readRejection,
 } from './web-data-lifecycle.js';
+import { readWebChangeNext } from './web-data-next.js';
 import { observeTaskFile } from './web-data-observations.js';
 import { readWebReview } from './web-data-review.js';
 import type { WebChange, WebRecertification, WebResolvedScope, WebTask } from './web-data-types.js';
@@ -98,6 +99,7 @@ function webTasks(
  * valid sibling evidence.
  *
  * @scenario web-inspection: Web document carries the wait
+ * @scenario web-inspection: Change documents carry the next step
  * @adr 013
  */
 export async function getWebChange(
@@ -118,6 +120,7 @@ export async function getWebChange(
   const planner = await readPlannerAttribution(brief, manifest);
   const review = await readWebReview(projectRoot, details, config);
   const land = await readLandView(projectRoot, details, config);
+  const next = await readWebChangeNext(projectRoot, folder.folderPath, folder.location, config);
   const runsAfter =
     folder.location === 'active' ? await readRunsAfter(projectRoot, config, folder.folderPath) : [];
 
@@ -157,6 +160,9 @@ export async function getWebChange(
     goal: details.goal,
     review,
     land,
+    nextStep: next.nextStep,
+    planHandoff: next.planHandoff,
+    autoSteer: next.autoSteer,
     ...(runsAfter.length > 0 ? { runsAfter } : {}),
     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
     dependsOn: [...details.dependsOn],

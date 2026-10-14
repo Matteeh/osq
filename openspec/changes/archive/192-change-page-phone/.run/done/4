@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7ec53b08d4648b6694a97d31b0c942b5c98b3f11df799d0e7a77ddfad80abfc5"
+build_stamp: "34fa2c0c"
+project_commit: "8b5ef55f"
+exit_code: 0
+scope_files: {"packages/ui/src/change/ActionButtons.tsx":"sha256:a6d95dd1a9dc9a9da87fb85c2bcfe7856a1107b020b26597b0b639ecf50ef339","packages/ui/src/change/ActionMenu.tsx":"sha256:f7443d52fc4b7d3107261d07d18dedcb176c2a590cd9a5174be533236a29abf1","packages/ui/src/change/ActionResult.tsx":"sha256:4adf25fef07f26ea54e14a2312b089c1573d1eb692b3cf5916eef9b575d6842b","packages/ui/src/change/ActionRetry.ts":"sha256:ea0e21cf22bd0a30b57628081ada9dcbd58ee8de907f8289cb4cc38d26661042","packages/ui/src/change/ChangeView.tsx":"sha256:0bf9fa09b92eaad4ce4bbb0ff9c65c6cb72f60a689ed7b7e39b32f45be781586","packages/ui/src/change/TaskTable.tsx":"sha256:9724749b01b71464806902b3fe4982915aa5dabfc3a30e7c0c37912a1e61e497","packages/ui/src/change/actions.css":"sha256:5479f99d8f584cc6ac2f029e5f4aa5c5ce828636696997e5c85a015abd3cb64c","packages/ui/src/change/index.ts":"sha256:22c7f13f60ca47f97ddc426bcfbaa392d275165011eb9b9ea6a26b3a6b1b11e5","packages/ui/src/change/useChangeActions.ts":"sha256:4f87c9126a0a733bdb6586664b6789ecfc49ea4202c1a2a4b826c5ac16f001d2","tests/ui-actions-page.test.tsx":"sha256:cfb9b878dfd111f1d654f1ff15cc6b97ff44802565a66bcb956af2ccfa2a9d6a","tests/ui-actions.test.tsx":"sha256:e97fa5e0e56db5d66df1c09dbc012f5b5963d5e1c2260964dff4f018c2228edd","tests/ui-notices.test.tsx":"sha256:c770afbe40c2a32133ca311a4ad3693e02fe04bd6929033152fd29ed3eb316b2","tests/ui-review.test.tsx":"sha256:7a898b610de959ae19c3bc0b3945e340f540672068690d51e880d9c6ec638622"}
+---
+2026-10-14T08:53:53.535Z

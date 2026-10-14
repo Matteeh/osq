@@ -10,7 +10,14 @@ import {
   type ActionFetchInit,
   createActionClient,
 } from '../packages/ui/src/change/actions-client.js';
-import { ChangeActions, ChangeView } from '../packages/ui/src/change/index.js';
+import {
+  ActionButtons,
+  ActionMenu,
+  ActionResult,
+  ChangeView,
+  TaskTable,
+} from '../packages/ui/src/change/index.js';
+import type { ChangePageMain } from '../packages/ui/src/change/page-model.js';
 import type {
   WebAction,
   WebActionResult,
@@ -19,6 +26,7 @@ import type {
 } from '../packages/ui/src/contracts.js';
 import { createWebActionRunner } from '../src/cli/serve-actions.js';
 import { loadConfig } from '../src/core/foundation/config.js';
+import type { WebTask } from '../src/core/web/web-data-types.js';
 import { startWebServer } from '../src/core/web/web-server.js';
 import { createChange, createProject, restoreEnv } from './planning-observed-helpers.js';
 
@@ -57,24 +65,51 @@ function okResult(overrides: Partial<WebActionResult> = {}): WebActionResult {
 
 interface ActionRenderProps {
   readonly document: WebActionsDocument;
+  readonly main?: ChangePageMain;
   readonly pending?: boolean;
-  readonly result?: WebActionResult | null;
   readonly reason?: string;
-  readonly onReasonChange?: (reason: string) => void;
-  readonly onRun?: (action: WebAction) => void;
 }
 
 function renderActions(props: ActionRenderProps): string {
   return renderToStaticMarkup(
-    createElement(ChangeActions, {
-      pending: false,
-      result: null,
-      reason: '',
-      onReasonChange: () => {},
-      onRun: () => {},
-      ...props,
-    }),
+    createElement(
+      'div',
+      { className: 'page-buttons' },
+      createElement(ActionButtons, {
+        document: props.document,
+        main: props.main ?? 'approve',
+        pending: props.pending ?? false,
+        onRun: () => {},
+      }),
+      createElement(ActionMenu, {
+        document: props.document,
+        pending: props.pending ?? false,
+        reason: props.reason ?? '',
+        onReasonChange: () => {},
+        onRun: () => {},
+      }),
+    ),
   );
+}
+
+function webTask(overrides: Partial<WebTask> & Pick<WebTask, 'taskNumber' | 'title'>): WebTask {
+  return {
+    declaredScope: [],
+    resolvedScope: [],
+    acceptance: [],
+    verify: 'node verify.cjs',
+    state: 'pending',
+    attempts: 0,
+    reason: null,
+    runningStart: null,
+    runningElapsedSeconds: null,
+    duration: null,
+    cost: null,
+    costCoverage: { reported: 0, total: 0 },
+    recertifications: [],
+    result: null,
+    ...overrides,
+  };
 }
 
 function webChange(overrides: Partial<WebChange> = {}): WebChange {
@@ -142,12 +177,28 @@ describe('change actions rendering', () => {
   });
 
   it('labels a retry for its task number or for the whole change', () => {
-    const html = renderActions({
-      document: actionsDoc([
-        { verb: 'retry', command: 'osq retry 001 2', target: '2' },
-        { verb: 'retry', command: 'osq retry 001 change', target: 'change' },
-      ]),
-    });
+    const html = renderToStaticMarkup(
+      createElement(
+        'div',
+        null,
+        createElement(ActionMenu, {
+          document: actionsDoc([
+            { verb: 'retry', command: 'osq retry 001 change', target: 'change' },
+          ]),
+          pending: false,
+          reason: '',
+          onReasonChange: () => {},
+          onRun: () => {},
+        }),
+        createElement(TaskTable, {
+          tasks: [
+            webTask({ taskNumber: '1', title: 'First' }),
+            webTask({ taskNumber: '2', title: 'Second' }),
+          ],
+          retry: { targets: ['2'], pending: false, onRetry: () => {} },
+        }),
+      ),
+    );
     assert.match(html, />Retry task 2<\/button>/);
     assert.match(html, />Retry change<\/button>/);
   });
@@ -159,7 +210,7 @@ describe('change actions rendering', () => {
       stderr: 'warning text',
       error: { message: 'Error approving 001:', next: 'osq retry 001 2' },
     };
-    const html = renderActions({ document: actionsDoc([APPROVE], [PLAN]), result });
+    const html = renderToStaticMarkup(createElement(ActionResult, { result }));
     assert.match(html, /Exit code 1/);
     assert.match(html, /<pre class="action-stdout">approved output<\/pre>/);
     assert.match(html, /<pre class="action-stderr">warning text<\/pre>/);

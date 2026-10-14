@@ -1,7 +1,9 @@
 import type { ApprovalDigest } from '../spec/digest.js';
 import type { ApprovalNotices } from '../spec/notices.js';
+import type { NextStep } from '../status/next-step.js';
 import type { LandView } from '../status/show-land-types.js';
 import type { SpecDetails } from '../status/show-types.js';
+import type { WebAutoSteer, WebPlanHandoff } from './web-data-next.js';
 
 /**
  * Public read-only web documents derived from the current project tree. These
@@ -232,4 +234,10 @@ export interface WebChange {
    * built before this field stay valid; a missing value reads the same as null.
    */
   readonly land?: LandView | null;
+  /** The change's next step, or null; optional for documents built before it. */
+  readonly nextStep?: NextStep | null;
+  /** The plan paste block, or null for a rejected change; optional for old documents. */
+  readonly planHandoff?: WebPlanHandoff | null;
+  /** The current automatic planner record, or null; optional for old documents. */
+  readonly autoSteer?: WebAutoSteer | null;
 }

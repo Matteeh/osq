@@ -1,0 +1,1 @@
+{"type":"plan_ready","timestamp":"2026-10-14T07:45:50.098Z","data":{"hash":"sha256:c6578e2f7ea7dc86a344c809c75e5f67b51bc088d49b9a1cecc8ca272ace4bb3","notices":[{"id":"assumptions","severity":"amber","folded":false},{"id":"tests_modify","severity":"grey","folded":false}]}}

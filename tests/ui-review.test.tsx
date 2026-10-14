@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
+  ActionButtons,
   ApprovalFlags,
-  ChangeActions,
   ChangeView,
   DeltaReview,
 } from '../packages/ui/src/change/index.js';
@@ -282,12 +282,10 @@ describe('approval flags', () => {
   it('places each flag and excerpt inside the Approve button item', () => {
     const flag = approvalFlag({ excerpt: 'the removed name' });
     const html = render(
-      createElement(ChangeActions, {
+      createElement(ActionButtons, {
         document: { folderKey: '001-review-change', token: 'tok', actions: [APPROVE], manual: [] },
+        main: 'approve',
         pending: false,
-        result: null,
-        reason: '',
-        onReasonChange: () => {},
         onRun: () => {},
         flags: [flag],
       }),
@@ -306,20 +304,24 @@ describe('approval flags', () => {
   it('places the flags before the buttons when there is no approve action', () => {
     const flag = approvalFlag();
     const html = render(
-      createElement(ChangeActions, {
-        document: { folderKey: '001-review-change', token: 'tok', actions: [RETRY], manual: [] },
-        pending: false,
-        result: null,
-        reason: '',
-        onReasonChange: () => {},
-        onRun: () => {},
-        flags: [flag],
-      }),
+      createElement(
+        'div',
+        { className: 'page-buttons' },
+        createElement(ActionButtons, {
+          document: { folderKey: '001-review-change', token: 'tok', actions: [RETRY], manual: [] },
+          main: 'approve',
+          pending: false,
+          onRun: () => {},
+          flags: [flag],
+        }),
+        createElement('button', { type: 'button', className: 'page-button' }, 'Plan again'),
+      ),
     );
     const flagsIndex = html.indexOf('<ul class="approval-flags">');
-    const buttonsIndex = html.indexOf('<div class="action-buttons">');
+    const buttonsIndex = html.indexOf('Plan again');
     assert.ok(flagsIndex >= 0);
     assert.ok(flagsIndex < buttonsIndex);
+    assert.equal(html.includes('action-button'), false);
   });
 });
 

@@ -1,0 +1,132 @@
+.page-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.page-summary {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.page-block {
+  margin-top: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.page-block p {
+  margin: 0.35rem 0;
+}
+
+.page-progress {
+  font-variant-numeric: tabular-nums;
+}
+
+.page-note,
+.page-detail,
+.page-reason {
+  color: var(--muted);
+}
+
+.page-touched,
+.page-changed {
+  margin: 0.35rem 0;
+  padding-inline-start: 1.25rem;
+}
+
+.page-fold {
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+}
+
+.page-fold > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.page-fold > summary + * {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.page-menu > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.handoff {
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.handoff-text {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.handoff-no-prompt,
+.handoff-failed {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.page-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: stretch;
+  margin-top: 1.25rem;
+}
+
+.page-button {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  min-height: 44px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.action-button {
+  min-height: 44px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 40rem) {
+  .page-buttons {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin: 1.25rem -1rem 0;
+    padding: 0.5rem 1rem;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .page-button {
+    width: 100%;
+  }
+}

@@ -12,6 +12,7 @@ import './change/actions.css';
 import './change/review.css';
 import './change/notices.css';
 import './change/land.css';
+import './change/page.css';
 import './docs/docs.css';
 import './server/server.css';
 import './styles.css';

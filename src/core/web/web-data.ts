@@ -6,6 +6,7 @@ export { getWebGraph } from './web-data-graph.js';
 export { getWebChange } from './web-data-change.js';
 export { WebDataError } from './web-data-types.js';
 export type { WebDataErrorKind } from './web-data-types.js';
+export type { WebAutoSteer, WebPlanHandoff } from './web-data-next.js';
 export type {
   LandDisclosure,
   LandGate,

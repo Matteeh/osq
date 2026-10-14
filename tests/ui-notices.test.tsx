@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
-  ChangeActions,
+  ActionButtons,
   ChangeView,
   NoticePanel,
   approveInput,
@@ -142,12 +142,10 @@ function render(element: ReturnType<typeof createElement>): string {
 
 function renderActions(approveBlockedBy: readonly string[]): string {
   return render(
-    createElement(ChangeActions, {
+    createElement(ActionButtons, {
       document: { folderKey: '001-notices-change', token: 'tok', actions: [APPROVE], manual: [] },
+      main: 'approve',
       pending: false,
-      result: null,
-      reason: '',
-      onReasonChange: () => {},
       onRun: () => {},
       approveBlockedBy,
     }),

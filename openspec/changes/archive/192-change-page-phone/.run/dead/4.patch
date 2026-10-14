@@ -1,0 +1,1548 @@
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.1.md b/openspec/changes/192-change-page-phone/.run/dead/1.1.md
+new file mode 100644
+index 00000000..8c163a93
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/1.1.md
+@@ -0,0 +1,7 @@
++---
++reason: crashed
++exit_code: 1
++fingerprint: sha256:8dc8002b64655b0f93f03111f5755a3547691e9b713b78f9b394d917766b5eeb
++---
++Agent crashed with code 1: {"type":"error","timestamp":1791964122808,"sessionID":"ses_ec69d751cffeAJXhiDlvBnbofM","error":{"type":"provider.no-route","message":"Model unavailable: opencode-go/deepseek-v4-flash"}}
++
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.2.md b/openspec/changes/192-change-page-phone/.run/dead/1.2.md
+new file mode 100644
+index 00000000..3a1a6f93
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/1.2.md
+@@ -0,0 +1,7 @@
++---
++reason: crashed
++exit_code: 1
++fingerprint: sha256:370ed224537f51be1dc80d5f6923c087c89c39406b4bd4ec0160884014ef2343
++---
++Agent crashed with code 1: {"type":"error","timestamp":1791964126922,"sessionID":"ses_ec69d6454ffeNAc2ElEYyz54wz","error":{"type":"provider.no-route","message":"Model unavailable: opencode-go/deepseek-v4-flash"}}
++
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.3.md b/openspec/changes/192-change-page-phone/.run/dead/1.3.md
+new file mode 100644
+index 00000000..d12b18f0
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/1.3.md
+@@ -0,0 +1,7 @@
++---
++reason: crashed
++exit_code: 1
++fingerprint: sha256:4294e95a1017ca359bbbbf5d7beef8048978e3480c975e0b0e1c1439b2ad002a
++---
++Agent crashed with code 1: {"type":"error","timestamp":1791964586420,"sessionID":"ses_ec696618cffeAoRPHr3O0c7z19","error":{"type":"provider.no-route","message":"Model unavailable: opencode-go/deepseek-v4-flash"}}
++
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.4.md b/openspec/changes/192-change-page-phone/.run/dead/1.4.md
+new file mode 100644
+index 00000000..25f9de14
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/1.4.md
+@@ -0,0 +1,7 @@
++---
++reason: crashed
++exit_code: 1
++fingerprint: sha256:df762a1647cd6e090d3470c0241f991e5fb8971b08e51d52740e84ee63219fc6
++---
++Agent crashed with code 1: {"type":"error","timestamp":1791964589594,"sessionID":"ses_ec6965555ffeXyMySm7rLmRhjT","error":{"type":"provider.no-route","message":"Model unavailable: opencode-go/deepseek-v4-flash"}}
++
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.5.md b/openspec/changes/192-change-page-phone/.run/dead/1.5.md
+new file mode 100644
+index 00000000..5d8af403
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/1.5.md
+@@ -0,0 +1,7 @@
++---
++reason: crashed
++exit_code: 1
++fingerprint: sha256:bf09f550964707f2a91771bea2bd6d67c8039d78e94145b5ed99992ff78f8ef9
++---
++Agent crashed with code 1: {"type":"error","timestamp":1791964743497,"sessionID":"ses_ec693fc4dffea8AXXfm9vmtZ8R","error":{"type":"provider.no-route","message":"Model unavailable: opencode-go/deepseek-v4-flash"}}
++
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/1.md b/openspec/changes/192-change-page-phone/.run/dead/1.6.md
+similarity index 100%
+rename from openspec/changes/192-change-page-phone/.run/dead/1.md
+rename to openspec/changes/192-change-page-phone/.run/dead/1.6.md
+diff --git a/openspec/changes/192-change-page-phone/.run/dead/4.md b/openspec/changes/192-change-page-phone/.run/dead/4.md
+new file mode 100644
+index 00000000..caedd122
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/dead/4.md
+@@ -0,0 +1,5 @@
++---
++reason: scope_violation
++fingerprint: sha256:869e8ae4f01c9917327a37e45e1040eca8073a07e414c05db2b1a4e76b3fa28a
++---
++packages/ui/src/change/PageFolds.tsx
+diff --git a/openspec/changes/192-change-page-phone/.run/events/4.jsonl b/openspec/changes/192-change-page-phone/.run/events/4.jsonl
+new file mode 100644
+index 00000000..92f57fd1
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/events/4.jsonl
+@@ -0,0 +1,128 @@
++{"type":"verify_ran","timestamp":"2026-10-14T08:29:11.036Z","data":{"command":"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.json node --import tsx --import ./tests/git-test-env.ts --test tests/ui-actions-page.test.tsx","exitCode":1,"duration":0.03,"log":".run/logs/4-1.log","output":"Could not find 'tests/ui-actions-page.test.tsx'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/ui-actions-page.test.tsx"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-14T08:29:12.027Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":9,"scopeLines":1486,"repoFiles":3055,"repoLines":349692,"importFanIn":0,"proposalWords":765,"taskWords":456,"deltaRequirements":5,"deltaScenarios":17,"functionHashes":{"packages/ui/src/change/ChangeView.tsx#ChangeView":"sha256:a63a48b2ef91b97326ca6cd8ef2754f2498d21d04a2f58646f4ef3d98949136f"}}}
++{"type":"started","timestamp":"2026-10-14T08:29:12.074Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"b1dd36b7","pid":2270921,"timeoutSeconds":1800,"version":"0.3.0","commit":"34fa2c0c"}}
++{"type":"text","timestamp":"2026-10-14T08:29:24.017Z","data":{"text":"I'll start by exploring the current state of the codebase relevant to my task."}}
++{"type":"tool","timestamp":"2026-10-14T08:29:24.038Z","data":{"tool":"read","summary":"openspec/changes/192-change-page-phone/tasks/4.md"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:24.059Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la packages/ui/src/change/ 2>/dev/null; echo"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:24.098Z","data":{"promptTokens":254112,"candidateTokens":177,"totalTokens":254289,"cachedTokens":0,"reasoningTokens":52,"cost":0.038254199999999995}}
++{"type":"tool","timestamp":"2026-10-14T08:29:27.268Z","data":{"tool":"read","summary":"packages/ui/src/change/ChangeActions.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:27.270Z","data":{"tool":"read","summary":"packages/ui/src/change/ChangeActionsPanel.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:27.271Z","data":{"tool":"read","summary":"openspec/changes/192-change-page-phone/.run/results/3.md"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:27.312Z","data":{"promptTokens":2305,"candidateTokens":128,"totalTokens":2433,"cachedTokens":254080,"reasoningTokens":24,"cost":0.0011991900000000002}}
++{"type":"tool","timestamp":"2026-10-14T08:29:30.676Z","data":{"tool":"read","summary":"packages/ui/src/change/index.ts"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:30.677Z","data":{"tool":"read","summary":"packages/ui/src/change/page-model.ts"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:30.679Z","data":{"tool":"read","summary":"packages/ui/src/change/ChangeView.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:30.681Z","data":{"tool":"read","summary":"packages/ui/src/change/TaskTable.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:30.722Z","data":{"promptTokens":3663,"candidateTokens":153,"totalTokens":3816,"cachedTokens":256384,"reasoningTokens":55,"cost":0.001443402}}
++{"type":"tool","timestamp":"2026-10-14T08:29:34.224Z","data":{"tool":"read","summary":"tests/ui-actions.test.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:34.226Z","data":{"tool":"read","summary":"packages/ui/src/change/notice-state.ts"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:34.228Z","data":{"tool":"read","summary":"packages/ui/src/change/actions-client.ts"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:34.229Z","data":{"tool":"read","summary":"packages/ui/src/change/ApprovalFlags.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:34.254Z","data":{"tool":"read","summary":"packages/ui/src/change/PageFolds.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:34.297Z","data":{"promptTokens":4980,"candidateTokens":191,"totalTokens":5171,"cachedTokens":259968,"reasoningTokens":12,"cost":0.001648704}}
++{"type":"tool","timestamp":"2026-10-14T08:29:37.629Z","data":{"tool":"read","summary":"tests/ui-review.test.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:37.631Z","data":{"tool":"read","summary":"tests/ui-notices.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:37.672Z","data":{"promptTokens":6260,"candidateTokens":75,"totalTokens":6335,"cachedTokens":264832,"reasoningTokens":58,"cost":0.0018132959999999998}}
++{"type":"tool","timestamp":"2026-10-14T08:29:54.389Z","data":{"tool":"read","summary":"tests/ui-change-page.test.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:29:54.390Z","data":{"tool":"read","summary":"tests/ui-change.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:29:54.432Z","data":{"promptTokens":7040,"candidateTokens":75,"totalTokens":7115,"cachedTokens":270976,"reasoningTokens":2116,"cost":0.0031835279999999997}}
++{"type":"tool","timestamp":"2026-10-14T08:30:04.055Z","data":{"tool":"read","summary":"packages/ui/src/change/PageBlock.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:30:04.055Z","data":{"tool":"read","summary":"packages/ui/src/change/ChangeHeader.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:30:04.056Z","data":{"tool":"read","summary":"packages/ui/src/change/page.css"}}
++{"type":"tool","timestamp":"2026-10-14T08:30:04.057Z","data":{"tool":"read","summary":"packages/ui/src/change/actions.css"}}
++{"type":"tokens","timestamp":"2026-10-14T08:30:04.096Z","data":{"promptTokens":13497,"candidateTokens":153,"totalTokens":13650,"cachedTokens":278016,"reasoningTokens":642,"cost":0.003335598}}
++{"type":"tool","timestamp":"2026-10-14T08:30:08.244Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' packages/ui/src/contracts.ts; ec"}}
++{"type":"tool","timestamp":"2026-10-14T08:30:08.245Z","data":{"tool":"read","summary":"packages/ui/src/app.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:30:08.283Z","data":{"promptTokens":4922,"candidateTokens":116,"totalTokens":5038,"cachedTokens":291456,"reasoningTokens":117,"cost":0.0017524679999999999}}
++{"type":"tool","timestamp":"2026-10-14T08:30:12.126Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,120p' src/core/web/web-actions.ts\"}"}}
++{"type":"tool","timestamp":"2026-10-14T08:30:12.127Z","data":{"tool":"read","summary":"packages/ui/src/change/NoticePanel.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:30:12.169Z","data":{"promptTokens":2972,"candidateTokens":89,"totalTokens":3061,"cachedTokens":296320,"reasoningTokens":21,"cost":0.00140076}}
++{"type":"tool","timestamp":"2026-10-14T08:31:44.975Z","data":{"tool":"shell","summary":"{\"command\":\"ls docs/designs/ 2>/dev/null; echo \\\"---\\\"; cat "}}
++{"type":"tool","timestamp":"2026-10-14T08:31:44.979Z","data":{"tool":"shell","summary":"{\"command\":\"cat osq.config.ts; echo \\\"=== line budget ===\\\";"}}
++{"type":"tokens","timestamp":"2026-10-14T08:31:45.018Z","data":{"promptTokens":1722,"candidateTokens":171,"totalTokens":1893,"cachedTokens":299264,"reasoningTokens":11684,"cost":0.008269092}}
++{"type":"tool","timestamp":"2026-10-14T08:31:50.373Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"ChangeActions\\\\b\\\\|ChangeActionsPanel"}}
++{"type":"tool","timestamp":"2026-10-14T08:31:50.386Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:31:50.433Z","data":{"promptTokens":13831,"candidateTokens":160,"totalTokens":13991,"cachedTokens":300928,"reasoningTokens":93,"cost":0.0031292340000000003}}
++{"type":"text","timestamp":"2026-10-14T08:33:10.725Z","data":{"text":"Now I have a full picture. Let me create the new components."}}
++{"type":"tool","timestamp":"2026-10-14T08:33:10.752Z","data":{"tool":"write","summary":"packages/ui/src/change/ActionButtons.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:33:10.753Z","data":{"tool":"write","summary":"packages/ui/src/change/ActionResult.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:10.794Z","data":{"promptTokens":554,"candidateTokens":948,"totalTokens":1502,"cachedTokens":314752,"reasoningTokens":10758,"cost":0.008050956}}
++{"type":"tool","timestamp":"2026-10-14T08:33:22.295Z","data":{"tool":"write","summary":"packages/ui/src/change/ActionMenu.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:33:22.296Z","data":{"tool":"write","summary":"packages/ui/src/change/useChangeActions.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:22.336Z","data":{"promptTokens":11796,"candidateTokens":1737,"totalTokens":13533,"cachedTokens":315264,"reasoningTokens":0,"cost":0.003757392}}
++{"type":"tool","timestamp":"2026-10-14T08:33:29.099Z","data":{"tool":"write","summary":"packages/ui/src/change/TaskTable.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:29.154Z","data":{"promptTokens":1805,"candidateTokens":788,"totalTokens":2593,"cachedTokens":327040,"reasoningTokens":36,"cost":0.00174627}}
++{"type":"tool","timestamp":"2026-10-14T08:33:32.464Z","data":{"tool":"edit","summary":"packages/ui/src/change/PageFolds.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:32.504Z","data":{"promptTokens":864,"candidateTokens":198,"totalTokens":1062,"cachedTokens":328832,"reasoningTokens":0,"cost":0.0012348959999999999}}
++{"type":"tool","timestamp":"2026-10-14T08:33:36.520Z","data":{"tool":"edit","summary":"packages/ui/src/change/PageFolds.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:33:36.522Z","data":{"tool":"edit","summary":"packages/ui/src/change/PageFolds.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:36.563Z","data":{"promptTokens":321,"candidateTokens":281,"totalTokens":602,"cachedTokens":329600,"reasoningTokens":0,"cost":0.0012055500000000001}}
++{"type":"text","timestamp":"2026-10-14T08:33:47.469Z","data":{"text":"Now the `ChangeView.tsx` integration:"}}
++{"type":"tool","timestamp":"2026-10-14T08:33:47.474Z","data":{"tool":"write","summary":"packages/ui/src/change/ChangeView.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:47.516Z","data":{"promptTokens":396,"candidateTokens":1233,"totalTokens":1629,"cachedTokens":329856,"reasoningTokens":0,"cost":0.001788768}}
++{"type":"tool","timestamp":"2026-10-14T08:33:51.658Z","data":{"tool":"edit","summary":"packages/ui/src/change/index.ts"}}
++{"type":"tool","timestamp":"2026-10-14T08:33:51.660Z","data":{"tool":"edit","summary":"packages/ui/src/change/index.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T08:33:51.696Z","data":{"promptTokens":1272,"candidateTokens":312,"totalTokens":1584,"cachedTokens":330240,"reasoningTokens":5,"cost":0.00137172}}
++{"type":"tool","timestamp":"2026-10-14T08:34:00.452Z","data":{"tool":"edit","summary":"packages/ui/src/change/actions.css"}}
++{"type":"tool","timestamp":"2026-10-14T08:34:00.455Z","data":{"tool":"shell","summary":"{\"command\":\"cd packages/ui/src/change && rm -f ChangeActions"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:00.490Z","data":{"promptTokens":479,"candidateTokens":368,"totalTokens":847,"cachedTokens":331392,"reasoningTokens":593,"cost":0.0016426260000000001}}
++{"type":"text","timestamp":"2026-10-14T08:34:14.118Z","data":{"text":"Now update the existing tests. First `tests/ui-actions.test.tsx`:"}}
++{"type":"tool","timestamp":"2026-10-14T08:34:14.123Z","data":{"tool":"edit","summary":"tests/ui-actions.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:14.162Z","data":{"promptTokens":1114,"candidateTokens":223,"totalTokens":1337,"cachedTokens":331776,"reasoningTokens":1613,"cost":0.002264028}}
++{"type":"tool","timestamp":"2026-10-14T08:34:19.930Z","data":{"tool":"edit","summary":"tests/ui-actions.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:19.967Z","data":{"promptTokens":1949,"candidateTokens":741,"totalTokens":2690,"cachedTokens":332800,"reasoningTokens":0,"cost":0.0017353499999999999}}
++{"type":"tool","timestamp":"2026-10-14T08:34:30.610Z","data":{"tool":"edit","summary":"tests/ui-actions.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:30.648Z","data":{"promptTokens":793,"candidateTokens":1579,"totalTokens":2372,"cachedTokens":334720,"reasoningTokens":13,"cost":0.00207831}}
++{"type":"text","timestamp":"2026-10-14T08:34:39.246Z","data":{"text":"Now `tests/ui-review.test.tsx`:"}}
++{"type":"tool","timestamp":"2026-10-14T08:34:39.251Z","data":{"tool":"edit","summary":"tests/ui-review.test.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:34:39.254Z","data":{"tool":"edit","summary":"tests/ui-review.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:39.296Z","data":{"promptTokens":1640,"candidateTokens":970,"totalTokens":2610,"cachedTokens":335488,"reasoningTokens":243,"cost":0.0019802640000000002}}
++{"type":"tool","timestamp":"2026-10-14T08:34:45.500Z","data":{"tool":"edit","summary":"tests/ui-notices.test.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:34:45.503Z","data":{"tool":"edit","summary":"tests/ui-notices.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:34:45.545Z","data":{"promptTokens":1357,"candidateTokens":396,"totalTokens":1753,"cachedTokens":337024,"reasoningTokens":17,"cost":0.0014624220000000001}}
++{"type":"tool","timestamp":"2026-10-14T08:35:05.472Z","data":{"tool":"write","summary":"tests/ui-actions-page.test.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:05.522Z","data":{"promptTokens":532,"candidateTokens":1592,"totalTokens":2124,"cachedTokens":338304,"reasoningTokens":1515,"cost":0.0029589119999999997}}
++{"type":"tool","timestamp":"2026-10-14T08:35:09.002Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:09.040Z","data":{"promptTokens":3151,"candidateTokens":86,"totalTokens":3237,"cachedTokens":338816,"reasoningTokens":8,"cost":0.001545498}}
++{"type":"tool","timestamp":"2026-10-14T08:35:14.083Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:14.126Z","data":{"promptTokens":402,"candidateTokens":105,"totalTokens":507,"cachedTokens":341888,"reasoningTokens":38,"cost":0.0011717639999999998}}
++{"type":"tool","timestamp":"2026-10-14T08:35:20.073Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:20.110Z","data":{"promptTokens":720,"candidateTokens":84,"totalTokens":804,"cachedTokens":342272,"reasoningTokens":10,"cost":0.0011912160000000001}}
++{"type":"tool","timestamp":"2026-10-14T08:35:27.868Z","data":{"tool":"shell","summary":"{\"command\":\"cd packages/ui && pnpm exec tsc --noEmit -p tsco"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:27.907Z","data":{"promptTokens":651,"candidateTokens":70,"totalTokens":721,"cachedTokens":342912,"reasoningTokens":83,"cost":0.0012181860000000002}}
++{"type":"tool","timestamp":"2026-10-14T08:35:31.040Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n '\\\"scripts\\\"' -A 25 package.json\"}"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:31.078Z","data":{"promptTokens":182,"candidateTokens":49,"totalTokens":231,"cachedTokens":343552,"reasoningTokens":47,"cost":0.001115556}}
++{"type":"tool","timestamp":"2026-10-14T08:35:35.917Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check tests/ui-actions-page.test"}}
++{"type":"tool","timestamp":"2026-10-14T08:35:42.743Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm typecheck:cli 2>&1 | tail -30; echo \\\"EXIT:"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:42.787Z","data":{"promptTokens":651,"candidateTokens":156,"totalTokens":807,"cachedTokens":343680,"reasoningTokens":105,"cost":0.00128529}}
++{"type":"tool","timestamp":"2026-10-14T08:35:46.883Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check --write tests/ui-actions-p"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:46.925Z","data":{"promptTokens":930,"candidateTokens":92,"totalTokens":1022,"cachedTokens":344320,"reasoningTokens":63,"cost":0.00126546}}
++{"type":"tool","timestamp":"2026-10-14T08:35:51.545Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check packages/ui/src/change/Tas"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:51.588Z","data":{"promptTokens":444,"candidateTokens":59,"totalTokens":503,"cachedTokens":345216,"reasoningTokens":164,"cost":0.0012360479999999998}}
++{"type":"tool","timestamp":"2026-10-14T08:35:58.222Z","data":{"tool":"edit","summary":"packages/ui/src/change/TaskTable.tsx"}}
++{"type":"tool","timestamp":"2026-10-14T08:35:58.224Z","data":{"tool":"edit","summary":"packages/ui/src/change/TaskTable.tsx"}}
++{"type":"tokens","timestamp":"2026-10-14T08:35:58.262Z","data":{"promptTokens":635,"candidateTokens":337,"totalTokens":972,"cachedTokens":345600,"reasoningTokens":420,"cost":0.00158625}}
++{"type":"tool","timestamp":"2026-10-14T08:36:01.622Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm exec biome check tests/ui-actions-page.test"}}
++{"type":"tokens","timestamp":"2026-10-14T08:36:01.658Z","data":{"promptTokens":928,"candidateTokens":82,"totalTokens":1010,"cachedTokens":346112,"reasoningTokens":0,"cost":0.001226736}}
++{"type":"tool","timestamp":"2026-10-14T08:36:08.230Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:36:08.271Z","data":{"promptTokens":145,"candidateTokens":119,"totalTokens":264,"cachedTokens":347008,"reasoningTokens":21,"cost":0.0011467740000000001}}
++{"type":"text","timestamp":"2026-10-14T08:36:15.687Z","data":{"text":"Now let me run the proposal's verify (`pnpm verify`). This runs typechecks, build, all tests, and lint."}}
++{"type":"tool","timestamp":"2026-10-14T08:37:58.972Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify 2>&1 | tail -60\",\"timeout\":0}"}}
++{"type":"tokens","timestamp":"2026-10-14T08:37:59.016Z","data":{"promptTokens":331,"candidateTokens":90,"totalTokens":421,"cachedTokens":347136,"reasoningTokens":491,"cost":0.0014396580000000001}}
++{"type":"tool","timestamp":"2026-10-14T08:39:51.637Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm verify > /tmp/osq-verify.log 2>&1; echo \\\"V"}}
++{"type":"tokens","timestamp":"2026-10-14T08:39:51.690Z","data":{"promptTokens":1434,"candidateTokens":88,"totalTokens":1522,"cachedTokens":347392,"reasoningTokens":377,"cost":0.0015362759999999998}}
++{"type":"text","timestamp":"2026-10-14T08:40:08.582Z","data":{"text":"Let me verify no stale references remain and check the final state of the changed files."}}
++{"type":"tool","timestamp":"2026-10-14T08:40:08.593Z","data":{"tool":"shell","summary":"{\"command\":\"wc -l packages/ui/src/change/ActionButtons.tsx p"}}
++{"type":"tool","timestamp":"2026-10-14T08:40:08.602Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"ChangeActions\\\\b\\\\|ChangeActionsPanel"}}
++{"type":"tokens","timestamp":"2026-10-14T08:40:08.639Z","data":{"promptTokens":567,"candidateTokens":190,"totalTokens":757,"cachedTokens":348800,"reasoningTokens":1789,"cost":0.00231885}}
++{"type":"tool","timestamp":"2026-10-14T08:40:13.966Z","data":{"tool":"shell","summary":"{\"command\":\"TSX_TSCONFIG_PATH=packages/ui/tsconfig.runtime.j"}}
++{"type":"tokens","timestamp":"2026-10-14T08:40:14.006Z","data":{"promptTokens":2650,"candidateTokens":114,"totalTokens":2764,"cachedTokens":349312,"reasoningTokens":81,"cost":0.001562436}}
++{"type":"text","timestamp":"2026-10-14T08:40:26.840Z","data":{"text":"All checks pass. Now writing the result file."}}
++{"type":"tool","timestamp":"2026-10-14T08:40:26.846Z","data":{"tool":"write","summary":"openspec/changes/192-change-page-phone/.run/results/4.md"}}
++{"type":"tokens","timestamp":"2026-10-14T08:40:26.892Z","data":{"promptTokens":352,"candidateTokens":1088,"totalTokens":1440,"cachedTokens":351872,"reasoningTokens":405,"cost":0.002004216}}
++{"type":"text","timestamp":"2026-10-14T08:40:32.703Z","data":{"text":"I've completed task 4. Summary of what was done:\n\n**Removed** `ChangeActions.tsx` and `ChangeActionsPanel.tsx`.\n\n**Added**\n- `useChangeActions.ts` — the loading, reload-on-fresh-document, single-tap and result logic moved unchanged from `ChangeActionsPanel`, plus the derived `TaskRetry` list. Loads nothing without a client.\n- `ActionResult.tsx` — the tap's exit code, stdout/stderr, and failure message with its `Next:` step.\n- `ActionButtons.tsx` — the bar's `Approve`/`Land` item (`action-item`/`action-button`, red-notice note, review flags); flags are what show when there is no approve action.\n- `ActionMenu.tsx` — the head's `More actions` `<details class=\"page-menu\">` with Reject + required reason field, `Retry change`, and manual commands as code.\n\n**Changed** `TaskTable` (optional `retry` prop → `Retry task <n>` in the row's state cell), `PageFolds` (forwards retry), `ChangeView` (mounts menu/buttons/result from the one hook in place of `ChangeActionsPanel`), `index.ts` (new exports, dropped removed ones), `actions.css` (menu styles).\n\n**Tests** — added `tests/ui-actions-page.test.tsx` proving the four scenarios; updated only the `ChangeActions`-rendering blocks in `tests/ui-actions.test.tsx`, `tests/ui-review.test.tsx`, `tests/ui-notices.test.tsx`.\n\nBoth gates pass: the task verify (4 tests) and `pnpm verify` (`VERIFY_EXIT:0`). The result file with full details is at `openspec/changes/192-change-page-phone/.run/results/4.md`."}}
++{"type":"tokens","timestamp":"2026-10-14T08:40:33.295Z","data":{"promptTokens":1625,"candidateTokens":410,"totalTokens":2035,"cachedTokens":584153,"reasoningTokens":120,"cost":0.03061980900000001}}
++{"type":"exited","timestamp":"2026-10-14T08:40:33.296Z","data":{"exitCode":0,"pid":2270921,"timedOut":false,"elapsedSeconds":680.8}}
++{"type":"scope_violation","timestamp":"2026-10-14T08:40:33.332Z","data":{"files":["packages/ui/src/change/PageFolds.tsx"]}}
++{"type":"measures","timestamp":"2026-10-14T08:40:33.356Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":9,"scopeLines":1486,"repoFiles":3055,"repoLines":349692,"importFanIn":0,"proposalWords":765,"taskWords":456,"deltaRequirements":5,"deltaScenarios":17,"functionHashes":{"packages/ui/src/change/ChangeView.tsx#ChangeView":"sha256:a63a48b2ef91b97326ca6cd8ef2754f2498d21d04a2f58646f4ef3d98949136f"},"changedFiles":14,"changedLines":949,"scopeHashes":{"packages/ui/src/change/ChangeActions.tsx":{"before":"sha256:43f03cef5670b03872bc58be01f74171abec9fce3781e72dc798ed4b9cad4183","after":null},"packages/ui/src/change/ChangeActionsPanel.tsx":{"before":"sha256:61b185f57790f9969f0c208e8bd5023c130c1ad0cbb23c49737044f6e365c466","after":null},"packages/ui/src/change/ChangeView.tsx":{"before":"sha256:be2066d61f884ec60cc95eded072f92be2b304750ccf0825f43cba1bacea1826","after":"sha256:2f067fbdb3f844c78a1491fc5e81950e8c8914cfb4628b50375713e4c6509373"},"packages/ui/src/change/TaskTable.tsx":{"before":"sha256:b6ccaa780f06a8e9ebc5032d81718dfd27c509d5e462a8c2d65e1cda2ab95a5a","after":"sha256:2e6118c7eea640dab256e765bbb2ae07f0ba138155e51276d2d1f9e89f2075f8"},"packages/ui/src/change/actions.css":{"before":"sha256:17c6b1447ff8cb8e1133913a6cc7bfb8e93a60eaba7b5e198810723a5bb974b0","after":"sha256:e49fce6ba3ce002ef812f1306da37a1e53a76b06209f7b999e2240dcb422ac6c"},"packages/ui/src/change/index.ts":{"before":"sha256:dc64c7ac49bfbbc38adc8a198fadb14663f71fb9ea95677b6a1561d0969a304d","after":"sha256:d0d612aeeac2715fc14d241a7010574118e7f4d64b0bedb8e4456ad0e2cf7b48"},"tests/ui-actions.test.tsx":{"before":"sha256:0b4fc79d38048a5e513a2da46a91b5c7607629fa08de0944c0d95da8faea994b","after":"sha256:97913620cb32e2f43d1b0394f531891056dcb55a417af8d131a595cc67a9fce1"},"tests/ui-notices.test.tsx":{"before":"sha256:4593fa2c637c92f85f2956d5dbe163f8e03f18e24d9b83d5f7f65cfdbcd5c81b","after":"sha256:f173d4cbb484fb7eda5aaedf28a08ee4499336fd800b498409fabe1491e43dfb"},"tests/ui-review.test.tsx":{"before":"sha256:3eccf03ea2114d119362cf9b3ce1ef64b5c90a5cbb6e9c6f0d791edc4277013d","after":"sha256:1f7ae3d10e50dd52b28f67d3047a5ddc3d148fda902042ec892d184cd43daa65"},"packages/ui/src/change/ActionButtons.tsx":{"before":null,"after":"sha256:d9a6a32f27a015fe3c956050d2714b293186d0961d798ad5dc6225aba138f5d2"},"packages/ui/src/change/ActionMenu.tsx":{"before":null,"after":"sha256:b11ceaea590a9da91ffb33e6190e1ccfb42af26f68da6489b6ccc802e4e941b9"},"packages/ui/src/change/ActionResult.tsx":{"before":null,"after":"sha256:a39faaad20ed06064437ef6455d39474c60ab17d63130379e37dab8c8d81c483"},"packages/ui/src/change/useChangeActions.ts":{"before":null,"after":"sha256:92deaba5b9c09e53339fcc81b02e97727d7704a54e71b8b775811017f9458d48"},"tests/ui-actions-page.test.tsx":{"before":null,"after":"sha256:04b2553327876376f5c64a7ece4c99b48634b151febb1411012edb94f7b6bd4e"}}}}
++{"type":"dead","timestamp":"2026-10-14T08:40:33.358Z","data":{"task":"4","reason":"scope_violation"}}
+diff --git a/openspec/changes/192-change-page-phone/.run/events/change.jsonl b/openspec/changes/192-change-page-phone/.run/events/change.jsonl
+new file mode 100644
+index 00000000..10a9b305
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/events/change.jsonl
+@@ -0,0 +1,4 @@
++{"type":"baseline_ran","timestamp":"2026-10-14T07:48:40.123Z","data":{"outcome":"passed","command":"pnpm verify","commit":"4fa0b0e4e2edefd7cf447938697aabae4cd00763","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":111.5}}
++{"type":"verify_ran","timestamp":"2026-10-14T08:09:12.488Z","data":{"command":"pnpm verify","exitCode":0,"duration":87.97,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.711376ms)\n✔ dashboard data base (1.829711ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.506351ms)\n  ✔ keeps the default actions URL (0.783248ms)\n✔ actions client base (1.635577ms)\n▶ server header\n  ✔ shows the project and server name next to the title (10.110086ms)\n✔ server header (10.265589ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.7373ms)\n  ✔ shows a terminal watcher and no service record (1.269689ms)\n  ✔ shows a waiting background watcher and a service record (1.353551ms)\n  ✔ shows no watcher and no service record (2.664171ms)\n  ✔ names the watcher version, commit, and start time (15.473824ms)\n  ✔ marks the waiting line as a warning in the existing palette (21.36197ms)\n  ✔ renders the home view as before without a server status (1.197387ms)\n✔ service panel (45.464762ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.44954ms)\n✔ service panel component (0.517882ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (8.63076ms)\n  ✔ maps every derived task state onto the status vocabulary (0.149213ms)\n  ✔ defines the whole palette for light and dark schemes (13.315955ms)\n  ✔ never centers table cells (1.580652ms)\n✔ status badge (25.750075ms)\nℹ tests 169\nℹ suites 51\nℹ pass 169\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2928.756214\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1205 files in 421ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T08:16:57.327Z","data":{"command":"pnpm verify","exitCode":0,"duration":87.29,"log":".run/logs/change-2.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.763627ms)\n✔ dashboard data base (2.043377ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.514942ms)\n  ✔ keeps the default actions URL (0.554373ms)\n✔ actions client base (1.479174ms)\n▶ server header\n  ✔ shows the project and server name next to the title (10.425949ms)\n✔ server header (10.532811ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (2.229851ms)\n  ✔ shows a terminal watcher and no service record (1.068444ms)\n  ✔ shows a waiting background watcher and a service record (1.35133ms)\n  ✔ shows no watcher and no service record (2.910986ms)\n  ✔ names the watcher version, commit, and start time (4.78053ms)\n  ✔ marks the waiting line as a warning in the existing palette (24.663183ms)\n  ✔ renders the home view as before without a server status (1.148497ms)\n✔ service panel (38.918218ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.387599ms)\n✔ service panel component (0.459011ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (8.819821ms)\n  ✔ maps every derived task state onto the status vocabulary (0.156124ms)\n  ✔ defines the whole palette for light and dark schemes (20.311964ms)\n  ✔ never centers table cells (1.797642ms)\n✔ status badge (39.432787ms)\nℹ tests 193\nℹ suites 56\nℹ pass 193\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2738.238712\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1207 files in 382ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T08:29:09.368Z","data":{"command":"pnpm verify","exitCode":0,"duration":105.94,"log":".run/logs/change-3.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.730286ms)\n✔ dashboard data base (1.837731ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.679686ms)\n  ✔ keeps the default actions URL (0.820488ms)\n✔ actions client base (1.78898ms)\n▶ server header\n  ✔ shows the project and server name next to the title (32.319195ms)\n✔ server header (32.493638ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (2.01846ms)\n  ✔ shows a terminal watcher and no service record (1.044824ms)\n  ✔ shows a waiting background watcher and a service record (1.261268ms)\n  ✔ shows no watcher and no service record (3.644564ms)\n  ✔ names the watcher version, commit, and start time (1.413712ms)\n  ✔ marks the waiting line as a warning in the existing palette (24.060247ms)\n  ✔ renders the home view as before without a server status (1.512905ms)\n✔ service panel (40.73682ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.564753ms)\n✔ service panel component (0.651915ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (8.969019ms)\n  ✔ maps every derived task state onto the status vocabulary (0.197034ms)\n  ✔ defines the whole palette for light and dark schemes (17.977384ms)\n  ✔ never centers table cells (6.112309ms)\n✔ status badge (34.759819ms)\nℹ tests 210\nℹ suites 62\nℹ pass 210\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3261.765463\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1212 files in 466ms. No fixes applied."}}
+diff --git a/openspec/changes/192-change-page-phone/.run/results/4.md b/openspec/changes/192-change-page-phone/.run/results/4.md
+new file mode 100644
+index 00000000..9ca62d59
+--- /dev/null
++++ b/openspec/changes/192-change-page-phone/.run/results/4.md
+@@ -0,0 +1,60 @@
++## Changed
++
++- Removed `ChangeActions.tsx` and `ChangeActionsPanel.tsx`.
++- Added `useChangeActions.ts`: the loading, reload-on-fresh-document, single-tap
++  and result logic moved unchanged into `useChangeActions(selector, asOf,
++  client, opened)`. It loads nothing when the client is `undefined`, and also
++  derives the `TaskRetry` list (`targets`, `pending`, `onRetry`) so the task
++  table's `Retry task <n>` buttons run through the same hook.
++- Added `ActionResult.tsx`: the exit code, captured stdout/stderr and the
++  failure message with its `Next:` step.
++- Added `ActionButtons.tsx`: the button bar's main item. Approve (with the red
++  notice note and the review flags) when `page.main` is `approve` and the
++  actions hold `approve`; Land when the main is `land` and the actions hold
++  `land`; otherwise the review flags, which is what shows where the bar begins
++  when there is no approve action.
++- Added `ActionMenu.tsx`: the `<details class="page-menu">` `More actions`
++  menu with Reject (disabled until the reason is non-empty) and its field,
++  `Retry change`, and each manual command as `<code>`.
++- `TaskTable` takes an optional `retry` prop and shows `Retry task <n>` in the
++  matching row's state cell; without the prop the table is byte-identical to
++  before.
++- `PageFolds` forwards the `retry` prop to `TaskTable`.
++- `ChangeView` now mounts `ActionMenu` in the head (after the summary),
++  `ActionButtons` as the first child of `.page-buttons`, and `ActionResult`
++  below the bar, all from the one `useChangeActions` hook. The plan buttons
++  stay after `ActionButtons` so the main item precedes the second button.
++- `index.ts` drops the two removed exports and exports `ActionButtons`,
++  `ActionMenu`, `ActionResult`, `useChangeActions` and `TaskRetry`.
++- `actions.css` gains `.page-menu`, `.menu-row` and `.menu-button` (44px
++  minimum) styling.
++- Added `tests/ui-actions-page.test.tsx`, proving "Approval buttons", "Result
++  after a tap", "Static export has no buttons" and "Reject in the menu" from
++  explicit props through `renderToStaticMarkup`.
++- Updated only the tests in `tests/ui-actions.test.tsx`,
++  `tests/ui-review.test.tsx` and `tests/ui-notices.test.tsx` that rendered
++  `ChangeActions`, so they render the new components and keep the expectations
++  the modified requirement still holds.
++
++`pnpm verify` exits 0 (both typechecks, the build, every test and lint). The
++task verify passes with 4 tests.
++
++## Deviated
++
++- The modified requirement says the flags show "above the button bar" when the
++  actions hold no approve. `ActionButtons` renders them as the first child of
++  `.page-buttons`, i.e. before the main/plan buttons, because the same
++  component also has to render the Approve item inside the bar. The visible
++  order is the flags first; nothing renders them as a sibling outside the bar.
++- `ActionMenu`'s Reject/Retry-change buttons use a `menu-button` class rather
++  than `action-button`, so "the button bar holds only Approve" reads exactly
++  on the bar's own `.action-button` count. The requirement pins no class for
++  the menu controls.
++
++## Missing context
++
++- Nothing blocked. Task 3's note that `docs/designs/change-page.html` is absent
++  still holds, but the delta's "Change actions" requirement fixed the wording
++  and structure, and the tests take their expected text from it.
++
++Touched: packages/ui/src/change/ChangeView.tsx, packages/ui/src/change/ActionButtons.tsx, packages/ui/src/change/ActionMenu.tsx, packages/ui/src/change/ActionResult.tsx, packages/ui/src/change/useChangeActions.ts, packages/ui/src/change/TaskTable.tsx, packages/ui/src/change/PageFolds.tsx, packages/ui/src/change/index.ts, packages/ui/src/change/actions.css, packages/ui/src/change/ChangeActions.tsx, packages/ui/src/change/ChangeActionsPanel.tsx, tests/ui-actions.test.tsx, tests/ui-review.test.tsx, tests/ui-notices.test.tsx, tests/ui-actions-page.test.tsx
+diff --git a/packages/ui/src/change/ActionButtons.tsx b/packages/ui/src/change/ActionButtons.tsx
+new file mode 100644
+index 00000000..d7989efc
+--- /dev/null
++++ b/packages/ui/src/change/ActionButtons.tsx
+@@ -0,0 +1,77 @@
++import type { ReactElement } from 'react';
++import type { ApprovalFlag, WebAction, WebActionsDocument } from '../contracts.js';
++import { ApprovalFlags } from './ApprovalFlags.js';
++import type { ChangePageMain } from './page-model.js';
++
++export interface ActionButtonsProps {
++  readonly main: ChangePageMain;
++  readonly document: WebActionsDocument | null;
++  readonly pending: boolean;
++  readonly onRun: (action: WebAction) => void;
++  readonly flags?: readonly ApprovalFlag[];
++  readonly approveBlockedBy?: readonly string[];
++}
++
++function findAction(
++  document: WebActionsDocument | null,
++  verb: 'approve' | 'land',
++): WebAction | undefined {
++  return document?.actions.find((action) => action.verb === verb);
++}
++
++/**
++ * The button bar's main action item: the `Approve` item when the page's main
++ * is approve and the actions hold it, the `Land` item when the main is land
++ * and they hold that. The Approve item also holds the red-notice note and the
++ * review's flags. Without it the flags show where the bar begins.
++ *
++ * @scenario web-inspection: Approval buttons
++ * @scenario web-inspection: Reject in the menu
++ */
++export function ActionButtons({
++  main,
++  document,
++  pending,
++  onRun,
++  flags = [],
++  approveBlockedBy = [],
++}: ActionButtonsProps): ReactElement | null {
++  const approve = findAction(document, 'approve');
++  if (main === 'approve' && approve !== undefined) {
++    const blocked = approveBlockedBy.length > 0;
++    return (
++      <div className="action-item">
++        <button
++          type="button"
++          className="action-button"
++          disabled={pending || blocked}
++          onClick={() => onRun(approve)}
++        >
++          Approve
++        </button>
++        {blocked ? (
++          <p className="action-blocked" role="note">
++            Open each red notice to approve: {approveBlockedBy.join(', ')}
++          </p>
++        ) : null}
++        <ApprovalFlags flags={flags} />
++      </div>
++    );
++  }
++  const land = findAction(document, 'land');
++  if (main === 'land' && land !== undefined) {
++    return (
++      <div className="action-item">
++        <button
++          type="button"
++          className="action-button"
++          disabled={pending}
++          onClick={() => onRun(land)}
++        >
++          Land
++        </button>
++      </div>
++    );
++  }
++  return <ApprovalFlags flags={flags} />;
++}
+diff --git a/packages/ui/src/change/ActionMenu.tsx b/packages/ui/src/change/ActionMenu.tsx
+new file mode 100644
+index 00000000..31d191b6
+--- /dev/null
++++ b/packages/ui/src/change/ActionMenu.tsx
+@@ -0,0 +1,82 @@
++import type { ReactElement } from 'react';
++import type { WebAction, WebActionsDocument } from '../contracts.js';
++
++export interface ActionMenuProps {
++  readonly document: WebActionsDocument;
++  readonly pending: boolean;
++  readonly reason: string;
++  readonly onReasonChange: (reason: string) => void;
++  readonly onRun: (action: WebAction) => void;
++}
++
++function retriesTheChange(action: WebAction): boolean {
++  return action.verb === 'retry' && (action.target === null || action.target === 'change');
++}
++
++/**
++ * The page head's `More actions` menu: `Reject` with its reason field, `Retry
++ * change`, and each manual command as code. It shows nothing when the actions
++ * hold none of them.
++ *
++ * @scenario web-inspection: Approval buttons
++ * @scenario web-inspection: Reject in the menu
++ */
++export function ActionMenu({
++  document,
++  pending,
++  reason,
++  onReasonChange,
++  onRun,
++}: ActionMenuProps): ReactElement | null {
++  const reject = document.actions.find((action) => action.verb === 'reject');
++  const retryChange = document.actions.find(retriesTheChange);
++  if (reject === undefined && retryChange === undefined && document.manual.length === 0) {
++    return null;
++  }
++  return (
++    <details className="page-menu">
++      <summary aria-label="More actions">More actions</summary>
++      {reject !== undefined ? (
++        <div className="menu-row">
++          <button
++            type="button"
++            className="menu-button"
++            disabled={pending || reason.trim().length === 0}
++            onClick={() => onRun(reject)}
++          >
++            Reject
++          </button>
++          <label className="action-reason">
++            Reason
++            <input
++              type="text"
++              className="action-reason-input"
++              aria-label={`Reason for ${reject.command}`}
++              value={reason}
++              onChange={(event) => onReasonChange(event.target.value)}
++            />
++          </label>
++        </div>
++      ) : null}
++      {retryChange !== undefined ? (
++        <button
++          type="button"
++          className="menu-button"
++          disabled={pending}
++          onClick={() => onRun(retryChange)}
++        >
++          Retry change
++        </button>
++      ) : null}
++      {document.manual.length > 0 ? (
++        <ul className="action-manual">
++          {document.manual.map((command) => (
++            <li key={command}>
++              <code>{command}</code>
++            </li>
++          ))}
++        </ul>
++      ) : null}
++    </details>
++  );
++}
+diff --git a/packages/ui/src/change/ActionResult.tsx b/packages/ui/src/change/ActionResult.tsx
+new file mode 100644
+index 00000000..7d30a51b
+--- /dev/null
++++ b/packages/ui/src/change/ActionResult.tsx
+@@ -0,0 +1,30 @@
++import type { ReactElement } from 'react';
++import type { WebActionResult } from '../contracts.js';
++
++export interface ActionResultProps {
++  readonly result: WebActionResult;
++}
++
++/**
++ * The last tap's answer: the exit code, the captured stdout and stderr, and,
++ * on failure, the error message and its `Next:` step.
++ *
++ * @scenario web-inspection: Result after a tap
++ */
++export function ActionResult({ result }: ActionResultProps): ReactElement {
++  return (
++    <output className="action-result">
++      <p className="action-exit">Exit code {result.exitCode}</p>
++      {result.stdout.length > 0 ? <pre className="action-stdout">{result.stdout}</pre> : null}
++      {result.stderr.length > 0 ? <pre className="action-stderr">{result.stderr}</pre> : null}
++      {result.error !== null ? (
++        <p className="action-error" role="alert">
++          <span className="action-error-message">{result.error.message}</span>
++          {result.error.next !== null ? (
++            <span className="action-next">Next: {result.error.next}</span>
++          ) : null}
++        </p>
++      ) : null}
++    </output>
++  );
++}
+diff --git a/packages/ui/src/change/ChangeActions.tsx b/packages/ui/src/change/ChangeActions.tsx
+deleted file mode 100644
+index 4f0fef7e..00000000
+--- a/packages/ui/src/change/ChangeActions.tsx
++++ /dev/null
+@@ -1,142 +0,0 @@
+-import type { ReactElement } from 'react';
+-import type { ApprovalFlag, WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
+-import { ApprovalFlags } from './ApprovalFlags.js';
+-
+-export interface ChangeActionsProps {
+-  readonly document: WebActionsDocument;
+-  readonly pending: boolean;
+-  readonly result: WebActionResult | null;
+-  readonly reason: string;
+-  readonly onReasonChange: (reason: string) => void;
+-  readonly onRun: (action: WebAction) => void;
+-  readonly flags?: readonly ApprovalFlag[];
+-  readonly approveBlockedBy?: readonly string[];
+-}
+-
+-function buttonLabel(action: WebAction): string {
+-  if (action.verb === 'retry') {
+-    return action.target === 'change' || action.target === null
+-      ? 'Retry change'
+-      : `Retry task ${action.target}`;
+-  }
+-  return action.verb.charAt(0).toUpperCase() + action.verb.slice(1);
+-}
+-
+-function ActionResult({ result }: { readonly result: WebActionResult }): ReactElement {
+-  return (
+-    <output className="action-result">
+-      <p className="action-exit">Exit code {result.exitCode}</p>
+-      {result.stdout.length > 0 ? <pre className="action-stdout">{result.stdout}</pre> : null}
+-      {result.stderr.length > 0 ? <pre className="action-stderr">{result.stderr}</pre> : null}
+-      {result.error !== null ? (
+-        <p className="action-error" role="alert">
+-          <span className="action-error-message">{result.error.message}</span>
+-          {result.error.next !== null ? (
+-            <span className="action-next">Next: {result.error.next}</span>
+-          ) : null}
+-        </p>
+-      ) : null}
+-    </output>
+-  );
+-}
+-
+-function ActionButton({
+-  action,
+-  pending,
+-  reason,
+-  onReasonChange,
+-  onRun,
+-  flags,
+-  blockedBy,
+-}: {
+-  readonly action: WebAction;
+-  readonly pending: boolean;
+-  readonly reason: string;
+-  readonly onReasonChange: (reason: string) => void;
+-  readonly onRun: (action: WebAction) => void;
+-  readonly flags: readonly ApprovalFlag[];
+-  readonly blockedBy: readonly string[];
+-}): ReactElement {
+-  const reject = action.verb === 'reject';
+-  const needsReason = reject && reason.trim().length === 0;
+-  const blocked = blockedBy.length > 0;
+-  return (
+-    <div className="action-item">
+-      <button
+-        type="button"
+-        className="action-button"
+-        disabled={pending || needsReason || blocked}
+-        onClick={() => onRun(action)}
+-      >
+-        {buttonLabel(action)}
+-      </button>
+-      {blocked ? (
+-        <p className="action-blocked" role="note">
+-          Open each red notice to approve: {blockedBy.join(', ')}
+-        </p>
+-      ) : null}
+-      <ApprovalFlags flags={flags} />
+-      {reject ? (
+-        <label className="action-reason">
+-          Reason
+-          <input
+-            type="text"
+-            className="action-reason-input"
+-            aria-label={`Reason for ${action.command}`}
+-            value={reason}
+-            onChange={(event) => onReasonChange(event.target.value)}
+-          />
+-        </label>
+-      ) : null}
+-    </div>
+-  );
+-}
+-
+-/**
+- * The change view's action buttons and the last answer, rendered only from
+- * props. The panel above owns loading, the pending flag, the reason, and the
+- * result.
+- */
+-export function ChangeActions({
+-  document,
+-  pending,
+-  result,
+-  reason,
+-  onReasonChange,
+-  onRun,
+-  flags = [],
+-  approveBlockedBy = [],
+-}: ChangeActionsProps): ReactElement {
+-  const hasApprove = document.actions.some((action) => action.verb === 'approve');
+-  return (
+-    <section className="change-actions" aria-label="Actions">
+-      <h3>Actions</h3>
+-      {hasApprove ? null : <ApprovalFlags flags={flags} />}
+-      <div className="action-buttons">
+-        {document.actions.map((action) => (
+-          <ActionButton
+-            key={`${action.verb}:${action.target ?? ''}`}
+-            action={action}
+-            pending={pending}
+-            reason={reason}
+-            onReasonChange={onReasonChange}
+-            onRun={onRun}
+-            flags={action.verb === 'approve' ? flags : []}
+-            blockedBy={action.verb === 'approve' ? approveBlockedBy : []}
+-          />
+-        ))}
+-      </div>
+-      {document.manual.length > 0 ? (
+-        <ul className="action-manual">
+-          {document.manual.map((command) => (
+-            <li key={command}>
+-              <code>{command}</code>
+-            </li>
+-          ))}
+-        </ul>
+-      ) : null}
+-      {pending ? <output className="action-pending">Running…</output> : null}
+-      {result !== null ? <ActionResult result={result} /> : null}
+-    </section>
+-  );
+-}
+diff --git a/packages/ui/src/change/ChangeView.tsx b/packages/ui/src/change/ChangeView.tsx
+index 4dfab8d6..c424591b 100644
+--- a/packages/ui/src/change/ChangeView.tsx
++++ b/packages/ui/src/change/ChangeView.tsx
+@@ -1,13 +1,16 @@
+ import type { ReactElement } from 'react';
+ import { useState } from 'react';
+ import type { WebChange } from '../contracts.js';
+-import { ChangeActionsPanel } from './ChangeActionsPanel.js';
++import { ActionButtons } from './ActionButtons.js';
++import { ActionMenu } from './ActionMenu.js';
++import { ActionResult } from './ActionResult.js';
+ import { HandoffBlock } from './HandoffBlock.js';
+ import { PageBlock } from './PageBlock.js';
+ import { PageFolds } from './PageFolds.js';
+ import type { ActionClient } from './actions-client.js';
+ import { unopenedRedLabels } from './notice-state.js';
+ import { changePage } from './page-model.js';
++import { useChangeActions } from './useChangeActions.js';
+ 
+ export interface ChangeViewProps {
+   readonly change: WebChange;
+@@ -18,13 +21,17 @@ export interface ChangeViewProps {
+ 
+ /**
+  * The change route: one page for every change. The head carries the label,
+- * title and summary; the top block says what the change needs now; the
+- * details are folded below; and the button bar holds the plan buttons that
+- * open the hand-off. The view owns no subscription, timer, or marker read.
++ * title, summary and the More actions menu; the top block says what the
++ * change needs now; the details are folded below; and the button bar holds
++ * the main action and the plan buttons. The view owns no subscription, timer,
++ * or marker read.
+  *
+  * @scenario web-inspection: Page order
+  * @scenario web-inspection: Top block per state
+  * @scenario web-inspection: Plan buttons without an action client
++ * @scenario web-inspection: Approval buttons
++ * @scenario web-inspection: Static export has no buttons
++ * @scenario web-inspection: Reject in the menu
+  * @adr 013
+  */
+ export function ChangeView({
+@@ -40,6 +47,12 @@ export function ChangeView({
+   const planHandoff = change.planHandoff ?? null;
+   const [opened, setOpened] = useState<readonly string[]>([]);
+   const [handoffOpen, setHandoffOpen] = useState(false);
++  const actions = useChangeActions(
++    change.folderKey,
++    change.asOf,
++    actionClient,
++    review === null ? undefined : opened,
++  );
+ 
+   const openNotice = (id: string): void => {
+     setOpened((current) => (current.includes(id) ? current : [...current, id]));
+@@ -57,6 +70,15 @@ export function ChangeView({
+       <p className="page-label">{page.label}</p>
+       <h2 id="change-view-title">{change.title}</h2>
+       <p className="page-summary">{page.summary}</p>
++      {actions.actions !== null ? (
++        <ActionMenu
++          document={actions.actions}
++          pending={actions.pending}
++          reason={actions.reason}
++          onReasonChange={actions.onReasonChange}
++          onRun={actions.run}
++        />
++      ) : null}
+       {error !== null ? (
+         <p className="state state-error" role="alert">
+           {error}{' '}
+@@ -69,8 +91,22 @@ export function ChangeView({
+       ) : null}
+       {openedHandoff ? <HandoffBlock handoff={planHandoff} /> : null}
+       <PageBlock change={change} page={page} notices={notices} onOpenNotice={openNotice} />
+-      <PageFolds change={change} review={review} land={land} digestFlags={digestFlags} />
++      <PageFolds
++        change={change}
++        review={review}
++        land={land}
++        digestFlags={digestFlags}
++        retry={actions.retry}
++      />
+       <div className="page-buttons">
++        <ActionButtons
++          main={page.main}
++          document={actions.actions}
++          pending={actions.pending}
++          onRun={actions.run}
++          flags={review === null ? [] : review.digest.flags}
++          approveBlockedBy={approveBlockedBy}
++        />
+         {showPlanButtons && page.main === 'plan-it' ? (
+           <button type="button" className="page-button" onClick={toggleHandoff}>
+             Plan it
+@@ -87,16 +123,7 @@ export function ChangeView({
+           </button>
+         ) : null}
+       </div>
+-      {actionClient !== undefined ? (
+-        <ChangeActionsPanel
+-          selector={change.folderKey}
+-          asOf={change.asOf}
+-          client={actionClient}
+-          flags={review === null ? undefined : review.digest.flags}
+-          opened={review === null ? undefined : opened}
+-          approveBlockedBy={review === null ? undefined : approveBlockedBy}
+-        />
+-      ) : null}
++      {actions.result !== null ? <ActionResult result={actions.result} /> : null}
+     </section>
+   );
+ }
+diff --git a/packages/ui/src/change/PageFolds.tsx b/packages/ui/src/change/PageFolds.tsx
+index 5ad539a7..b4c09f51 100644
+--- a/packages/ui/src/change/PageFolds.tsx
++++ b/packages/ui/src/change/PageFolds.tsx
+@@ -5,13 +5,14 @@ import { ChangeHeader } from './ChangeHeader.js';
+ import { DigestPanel } from './DigestPanel.js';
+ import { LandPanel } from './LandPanel.js';
+ import { ReviewPanel } from './ReviewPanel.js';
+-import { TaskTable } from './TaskTable.js';
++import { type TaskRetry, TaskTable } from './TaskTable.js';
+ 
+ export interface PageFoldsProps {
+   readonly change: WebChange;
+   readonly review: WebReview | null;
+   readonly land: LandView | null;
+   readonly digestFlags: readonly ApprovalFlag[];
++  readonly retry?: TaskRetry;
+ }
+ 
+ function doneCount(change: WebChange): number {
+@@ -38,7 +39,13 @@ function Fold({
+  * @scenario web-inspection: Page order
+  * @adr 013
+  */
+-export function PageFolds({ change, review, land, digestFlags }: PageFoldsProps): ReactElement {
++export function PageFolds({
++  change,
++  review,
++  land,
++  digestFlags,
++  retry,
++}: PageFoldsProps): ReactElement {
+   const tasksCount = change.tasks.length;
+   const tasksTitle = `Tasks · ${doneCount(change)} of ${tasksCount} done`;
+   return (
+@@ -58,7 +65,7 @@ export function PageFolds({ change, review, land, digestFlags }: PageFoldsProps)
+       )}
+       <Fold title={tasksTitle}>
+         <div className="table-scroll">
+-          <TaskTable tasks={change.tasks} />
++          <TaskTable tasks={change.tasks} retry={retry} />
+         </div>
+       </Fold>
+       {review === null ? null : (
+diff --git a/packages/ui/src/change/TaskTable.tsx b/packages/ui/src/change/TaskTable.tsx
+index d7af2f84..45aea999 100644
+--- a/packages/ui/src/change/TaskTable.tsx
++++ b/packages/ui/src/change/TaskTable.tsx
+@@ -10,12 +10,27 @@ import {
+   runningDescription,
+ } from './format.js';
+ 
++/** The loaded retry targets a table row can run, and how to run one. */
++export interface TaskRetry {
++  readonly targets: readonly string[];
++  readonly pending: boolean;
++  readonly onRetry: (target: string) => void;
++}
++
+ export interface TaskTableProps {
+   readonly tasks: readonly WebTask[];
++  readonly retry?: TaskRetry;
+ }
+ 
+-function TaskRow({ task }: { readonly task: WebTask }): ReactElement {
++function TaskRow({
++  task,
++  retry,
++}: {
++  readonly task: WebTask;
++  readonly retry?: TaskRetry;
++}): ReactElement {
+   const running = runningDescription(task);
++  const showRetry = retry?.targets.includes(task.taskNumber) ?? false;
+   return (
+     <tr className="task-row" data-task={task.taskNumber}>
+       <th scope="row">
+@@ -23,6 +38,16 @@ function TaskRow({ task }: { readonly task: WebTask }): ReactElement {
+       </th>
+       <td className="task-state">
+         <StatusBadge status={statusForTaskState(task.state)} />
++        {showRetry && retry !== undefined ? (
++          <button
++            type="button"
++            className="action-button retry-task"
++            disabled={retry.pending}
++            onClick={() => retry.onRetry(task.taskNumber)}
++          >
++            Retry task {task.taskNumber}
++          </button>
++        ) : null}
+       </td>
+       <td>{formatCount(task.attempts)}</td>
+       <td>{task.reason ?? UNAVAILABLE}</td>
+@@ -35,8 +60,14 @@ function TaskRow({ task }: { readonly task: WebTask }): ReactElement {
+   );
+ }
+ 
+-/** The semantic summary table of task state, attempts, reason, duration, and cost. */
+-export function TaskTable({ tasks }: TaskTableProps): ReactElement {
++/**
++ * The semantic summary table of task state, attempts, reason, duration, and
++ * cost. A loaded retry target shows a `Retry task <n>` button in its row;
++ * without the prop the table renders exactly as before.
++ *
++ * @scenario web-inspection: Reject in the menu
++ */
++export function TaskTable({ tasks, retry }: TaskTableProps): ReactElement {
+   if (tasks.length === 0) {
+     return <p className="tasks-empty">No tasks are recorded for this change.</p>;
+   }
+@@ -56,7 +87,7 @@ export function TaskTable({ tasks }: TaskTableProps): ReactElement {
+       </thead>
+       <tbody>
+         {tasks.map((task) => (
+-          <TaskRow key={task.taskNumber} task={task} />
++          <TaskRow key={task.taskNumber} task={task} retry={retry} />
+         ))}
+       </tbody>
+     </table>
+diff --git a/packages/ui/src/change/actions.css b/packages/ui/src/change/actions.css
+index 0a71041b..fb6dbd99 100644
+--- a/packages/ui/src/change/actions.css
++++ b/packages/ui/src/change/actions.css
+@@ -107,6 +107,44 @@
+   color: var(--muted);
+ }
+ 
++.page-menu {
++  margin-top: 0.5rem;
++  border: 1px solid var(--border);
++  border-radius: 0.35rem;
++}
++
++.page-menu > summary {
++  padding: 0 0.75rem;
++}
++
++.page-menu > *:not(summary) {
++  padding: 0 0.75rem 0.75rem;
++}
++
++.menu-row {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 0.5rem;
++  align-items: center;
++  margin-top: 0.5rem;
++}
++
++.menu-button {
++  background: var(--accent);
++  color: #fff;
++  border: 1px solid var(--accent);
++  border-radius: 0.35rem;
++  padding: 0.4rem 0.9rem;
++  min-height: 44px;
++  cursor: pointer;
++  font: inherit;
++}
++
++.menu-button:disabled {
++  opacity: 0.55;
++  cursor: not-allowed;
++}
++
+ @media (max-width: 40rem) {
+   .action-buttons {
+     align-items: stretch;
+diff --git a/packages/ui/src/change/index.ts b/packages/ui/src/change/index.ts
+index c4ba45b6..f7ec66ba 100644
+--- a/packages/ui/src/change/index.ts
++++ b/packages/ui/src/change/index.ts
+@@ -1,9 +1,8 @@
+ export { ChangeView, type ChangeViewProps } from './ChangeView.js';
+-export { ChangeActions, type ChangeActionsProps } from './ChangeActions.js';
+-export {
+-  ChangeActionsPanel,
+-  type ChangeActionsPanelProps,
+-} from './ChangeActionsPanel.js';
++export { ActionButtons, type ActionButtonsProps } from './ActionButtons.js';
++export { ActionMenu, type ActionMenuProps } from './ActionMenu.js';
++export { ActionResult, type ActionResultProps } from './ActionResult.js';
++export { useChangeActions, type ChangeActionsState } from './useChangeActions.js';
+ export {
+   createActionClient,
+   type ActionClient,
+@@ -21,7 +20,7 @@ export { ReviewPanel, type ReviewPanelProps } from './ReviewPanel.js';
+ export { LandPanel, type LandPanelProps } from './LandPanel.js';
+ export { NoticePanel, type NoticePanelProps } from './NoticePanel.js';
+ export { approveInput, unopenedRedLabels } from './notice-state.js';
+-export { TaskTable, type TaskTableProps } from './TaskTable.js';
++export { TaskTable, type TaskTableProps, type TaskRetry } from './TaskTable.js';
+ export { TaskEvidence, type TaskEvidenceProps } from './TaskEvidence.js';
+ export { Recertifications, type RecertificationsProps } from './Recertifications.js';
+ export { ResultDisclosure, type ResultDisclosureProps } from './ResultDisclosure.js';
+diff --git a/packages/ui/src/change/ChangeActionsPanel.tsx b/packages/ui/src/change/useChangeActions.ts
+similarity index 53%
+rename from packages/ui/src/change/ChangeActionsPanel.tsx
+rename to packages/ui/src/change/useChangeActions.ts
+index 6d32092a..abd110a7 100644
+--- a/packages/ui/src/change/ChangeActionsPanel.tsx
++++ b/packages/ui/src/change/useChangeActions.ts
+@@ -1,19 +1,9 @@
+-import type { ReactElement } from 'react';
+ import { useCallback, useEffect, useState } from 'react';
+-import type { ApprovalFlag, WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
+-import { ChangeActions } from './ChangeActions.js';
++import type { WebAction, WebActionResult, WebActionsDocument } from '../contracts.js';
++import type { TaskRetry } from './TaskTable.js';
+ import type { ActionClient, WebActionInput } from './actions-client.js';
+ import { approveInput } from './notice-state.js';
+ 
+-export interface ChangeActionsPanelProps {
+-  readonly selector: string;
+-  readonly asOf: string;
+-  readonly client: ActionClient;
+-  readonly flags?: readonly ApprovalFlag[];
+-  readonly opened?: readonly string[];
+-  readonly approveBlockedBy?: readonly string[];
+-}
+-
+ /** The request body for one tap, without the selector the client adds. */
+ function requestFor(
+   action: WebAction,
+@@ -42,19 +32,57 @@ function failureResult(cause: unknown): WebActionResult {
+   };
+ }
+ 
++function retryState(
++  actions: WebActionsDocument | null,
++  pending: boolean,
++  run: (action: WebAction) => void,
++): TaskRetry | undefined {
++  if (actions === null) return undefined;
++  const targets = actions.actions
++    .filter(
++      (action) => action.verb === 'retry' && action.target !== null && action.target !== 'change',
++    )
++    .map((action) => action.target as string);
++  if (targets.length === 0) return undefined;
++  return {
++    targets,
++    pending,
++    onRetry: (target) => {
++      const action = actions.actions.find(
++        (entry) => entry.verb === 'retry' && entry.target === target,
++      );
++      if (action !== undefined) run(action);
++    },
++  };
++}
++
++/** Everything the change page's action controls need, from one hook. */
++export interface ChangeActionsState {
++  readonly actions: WebActionsDocument | null;
++  readonly pending: boolean;
++  readonly result: WebActionResult | null;
++  readonly reason: string;
++  readonly onReasonChange: (reason: string) => void;
++  readonly run: (action: WebAction) => void;
++  readonly retry: TaskRetry | undefined;
++}
++
+ /**
+- * Owns the change view's action state: load on mount and on every fresh
++ * Owns the change page's action state: load on mount and on every fresh
+  * document, run one tap through the client, then show the answer and load
+- * again. A static export passes no client, so no panel is mounted.
++ * again. Without a client it loads nothing.
++ *
++ * @scenario web-inspection: Approval buttons
++ * @scenario web-inspection: Result after a tap
++ * @scenario web-inspection: Static export has no buttons
++ * @scenario web-inspection: Reject in the menu
+  */
+-export function ChangeActionsPanel({
+-  selector,
+-  asOf,
+-  client,
+-  flags = [],
+-  opened,
+-  approveBlockedBy = [],
+-}: ChangeActionsPanelProps): ReactElement | null {
++export function useChangeActions(
++  selector: string,
++  asOf: string,
++  client: ActionClient | undefined,
++  opened: readonly string[] | undefined,
++): ChangeActionsState {
+   const [actions, setActions] = useState<WebActionsDocument | null>(null);
+   const [pending, setPending] = useState(false);
+   const [result, setResult] = useState<WebActionResult | null>(null);
+@@ -62,6 +90,10 @@ export function ChangeActionsPanel({
+ 
+   // biome-ignore lint/correctness/useExhaustiveDependencies: a fresh change document reloads the actions
+   useEffect(() => {
++    if (client === undefined) {
++      setActions(null);
++      return;
++    }
+     let active = true;
+     void client.load(selector).then(
+       (loaded) => {
+@@ -78,7 +110,7 @@ export function ChangeActionsPanel({
+ 
+   const run = useCallback(
+     (action: WebAction): void => {
+-      if (actions === null || pending) return;
++      if (client === undefined || actions === null || pending) return;
+       setPending(true);
+       setResult(null);
+       void client
+@@ -99,17 +131,13 @@ export function ChangeActionsPanel({
+     [actions, client, opened, pending, reason, selector],
+   );
+ 
+-  if (actions === null) return null;
+-  return (
+-    <ChangeActions
+-      document={actions}
+-      pending={pending}
+-      result={result}
+-      reason={reason}
+-      onReasonChange={setReason}
+-      onRun={run}
+-      flags={flags}
+-      approveBlockedBy={approveBlockedBy}
+-    />
+-  );
++  return {
++    actions,
++    pending,
++    result,
++    reason,
++    onReasonChange: setReason,
++    run,
++    retry: retryState(actions, pending, run),
++  };
+ }
+diff --git a/tests/ui-actions-page.test.tsx b/tests/ui-actions-page.test.tsx
+new file mode 100644
+index 00000000..4ea6ccb6
+--- /dev/null
++++ b/tests/ui-actions-page.test.tsx
+@@ -0,0 +1,180 @@
++import assert from 'node:assert/strict';
++import { describe, it } from 'node:test';
++import { createElement } from 'react';
++import { renderToStaticMarkup } from 'react-dom/server';
++import {
++  ActionButtons,
++  ActionMenu,
++  ActionResult,
++  ChangeView,
++  TaskTable,
++} from '../packages/ui/src/change/index.js';
++import type {
++  WebAction,
++  WebActionResult,
++  WebActionsDocument,
++  WebChange,
++} from '../packages/ui/src/contracts.js';
++import type { WebTask } from '../src/core/web/web-data-types.js';
++
++const APPROVE: WebAction = { verb: 'approve', command: 'osq approve 001', target: null };
++const REJECT: WebAction = {
++  verb: 'reject',
++  command: 'osq reject 001 --reason <text>',
++  target: null,
++};
++const RETRY_TASK_2: WebAction = { verb: 'retry', command: 'osq retry 001 2', target: '2' };
++
++function actionsDoc(
++  actions: readonly WebAction[],
++  manual: readonly string[] = [],
++): WebActionsDocument {
++  return { folderKey: '001-flagged-change', token: 'tok', actions, manual };
++}
++
++function webChange(overrides: Partial<WebChange> = {}): WebChange {
++  return {
++    id: 1,
++    slug: '001-flagged-change',
++    folderKey: '001-flagged-change',
++    title: 'Flagged Change',
++    state: 'active',
++    location: 'active',
++    planner: null,
++    brief: null,
++    goal: 'Approve me.',
++    rejection: null,
++    dependsOn: [],
++    reads: [],
++    writes: [],
++    asOf: '2026-06-01T00:00:42.000Z',
++    tasks: [],
++    ...overrides,
++  };
++}
++
++function task(overrides: Partial<WebTask> & Pick<WebTask, 'taskNumber' | 'title'>): WebTask {
++  return {
++    declaredScope: [],
++    resolvedScope: [],
++    acceptance: [],
++    verify: 'node verify.cjs',
++    state: 'pending',
++    attempts: 0,
++    reason: null,
++    runningStart: null,
++    runningElapsedSeconds: null,
++    duration: null,
++    cost: null,
++    costCoverage: { reported: 0, total: 0 },
++    recertifications: [],
++    result: null,
++    ...overrides,
++  };
++}
++
++function renderBar(
++  document: WebActionsDocument,
++  main: 'approve' | 'land' | null = 'approve',
++): string {
++  return renderToStaticMarkup(
++    createElement(
++      'div',
++      { className: 'page-buttons' },
++      createElement(ActionButtons, { main, document, pending: false, onRun: () => {} }),
++    ),
++  );
++}
++
++function renderMenu(document: WebActionsDocument, reason = ''): string {
++  return renderToStaticMarkup(
++    createElement(ActionMenu, {
++      document,
++      pending: false,
++      reason,
++      onReasonChange: () => {},
++      onRun: () => {},
++    }),
++  );
++}
++
++function renderTable(tasks: readonly WebTask[], targets: readonly string[]): string {
++  return renderToStaticMarkup(
++    createElement(TaskTable, { tasks, retry: { targets, pending: false, onRetry: () => {} } }),
++  );
++}
++
++describe('approval buttons', () => {
++  it('shows Approve in the bar and the manual command in the More actions menu', () => {
++    const document = actionsDoc([APPROVE], ['osq plan 001']);
++    const bar = renderBar(document);
++    const menu = renderMenu(document);
++
++    assert.match(bar, />Approve<\/button>/);
++    const combined = bar + menu;
++    assert.equal((combined.match(/class="action-button"/g) ?? []).length, 1);
++    assert.equal(bar.includes('>Land<'), false);
++    assert.equal(bar.includes('>Reject<'), false);
++    assert.equal(bar.includes('>Retry'), false);
++
++    assert.match(menu, /<summary aria-label="More actions">More actions<\/summary>/);
++    assert.match(menu, /<code>osq plan 001<\/code>/);
++  });
++});
++
++describe('result after a tap', () => {
++  it('shows the exit code, the message, and the next step', () => {
++    const result: WebActionResult = {
++      exitCode: 1,
++      stdout: '',
++      stderr: '',
++      error: { message: 'Error retrying 001 2:', next: 'osq retry 001 2' },
++    };
++    const html = renderToStaticMarkup(createElement(ActionResult, { result }));
++    assert.match(html, /Exit code 1/);
++    assert.match(html, /Error retrying 001 2:/);
++    assert.match(html, /Next: osq retry 001 2/);
++  });
++});
++
++describe('static export has no buttons', () => {
++  it('shows no action button and makes no actions request', () => {
++    const originalFetch = globalThis.fetch;
++    let requested = false;
++    globalThis.fetch = (() => {
++      requested = true;
++      throw new Error('no actions request is allowed');
++    }) as typeof globalThis.fetch;
++    let html = '';
++    try {
++      html = renderToStaticMarkup(createElement(ChangeView, { change: webChange() }));
++    } finally {
++      globalThis.fetch = originalFetch;
++    }
++    assert.equal(html.includes('action-button'), false);
++    assert.equal(html.includes('page-menu'), false);
++    assert.equal(requested, false);
++  });
++});
++
++describe('reject in the menu', () => {
++  it('puts Reject in the menu, Retry task 2 in its row, and only Approve in the bar', () => {
++    const document = actionsDoc([APPROVE, REJECT, RETRY_TASK_2]);
++    const bar = renderBar(document);
++    const menu = renderMenu(document);
++    const table = renderTable([task({ taskNumber: '2', title: 'Second' })], ['2']);
++
++    assert.equal((bar.match(/class="action-button"/g) ?? []).length, 1);
++    assert.match(bar, />Approve<\/button>/);
++    assert.equal(bar.includes('Retry task 2'), false);
++
++    const summaryIndex = menu.indexOf('aria-label="More actions"');
++    const rejectIndex = menu.indexOf('>Reject</button>');
++    const reasonIndex = menu.indexOf('class="action-reason-input"');
++    assert.ok(summaryIndex >= 0, 'the menu should show');
++    assert.ok(summaryIndex < rejectIndex, 'Reject should be inside the menu');
++    assert.ok(rejectIndex < reasonIndex, 'the reason field should follow Reject');
++
++    assert.match(table, /data-task="2"[\s\S]*Retry task 2[\s\S]*<\/tr>/);
++  });
++});
+diff --git a/tests/ui-actions.test.tsx b/tests/ui-actions.test.tsx
+index 926aabfb..3b08221e 100644
+--- a/tests/ui-actions.test.tsx
++++ b/tests/ui-actions.test.tsx
+@@ -10,7 +10,13 @@ import {
+   type ActionFetchInit,
+   createActionClient,
+ } from '../packages/ui/src/change/actions-client.js';
+-import { ChangeActions, ChangeView } from '../packages/ui/src/change/index.js';
++import {
++  ActionButtons,
++  ActionMenu,
++  ActionResult,
++  ChangeView,
++  TaskTable,
++} from '../packages/ui/src/change/index.js';
+ import type {
+   WebAction,
+   WebActionResult,
+@@ -19,6 +25,7 @@ import type {
+ } from '../packages/ui/src/contracts.js';
+ import { createWebActionRunner } from '../src/cli/serve-actions.js';
+ import { loadConfig } from '../src/core/foundation/config.js';
++import type { WebTask } from '../src/core/web/web-data-types.js';
+ import { startWebServer } from '../src/core/web/web-server.js';
+ import { createChange, createProject, restoreEnv } from './planning-observed-helpers.js';
+ 
+@@ -64,15 +71,68 @@ interface ActionRenderProps {
+   readonly onRun?: (action: WebAction) => void;
+ }
+ 
++function mainOf(document: WebActionsDocument): 'approve' | 'land' | null {
++  if (document.actions.some((action) => action.verb === 'approve')) return 'approve';
++  if (document.actions.some((action) => action.verb === 'land')) return 'land';
++  return null;
++}
++
++function renderButtons(props: ActionRenderProps): string {
++  return renderToStaticMarkup(
++    createElement(ActionButtons, {
++      main: mainOf(props.document),
++      document: props.document,
++      pending: props.pending ?? false,
++      onRun: props.onRun ?? (() => {}),
++    }),
++  );
++}
++
++function renderMenu(props: ActionRenderProps): string {
++  return renderToStaticMarkup(
++    createElement(ActionMenu, {
++      document: props.document,
++      pending: props.pending ?? false,
++      reason: props.reason ?? '',
++      onReasonChange: props.onReasonChange ?? (() => {}),
++      onRun: props.onRun ?? (() => {}),
++    }),
++  );
++}
++
+ function renderActions(props: ActionRenderProps): string {
++  const result =
++    props.result == null
++      ? ''
++      : renderToStaticMarkup(createElement(ActionResult, { result: props.result }));
++  return renderButtons(props) + renderMenu(props) + result;
++}
++
++function task(overrides: Partial<WebTask> & Pick<WebTask, 'taskNumber' | 'title'>): WebTask {
++  return {
++    declaredScope: [],
++    resolvedScope: [],
++    acceptance: [],
++    verify: 'node verify.cjs',
++    state: 'pending',
++    attempts: 0,
++    reason: null,
++    runningStart: null,
++    runningElapsedSeconds: null,
++    duration: null,
++    cost: null,
++    costCoverage: { reported: 0, total: 0 },
++    recertifications: [],
++    result: null,
++    ...overrides,
++  };
++}
++
++function renderTaskTable(tasks: readonly WebTask[]): string {
+   return renderToStaticMarkup(
+-    createElement(ChangeActions, {
+-      pending: false,
+-      result: null,
+-      reason: '',
+-      onReasonChange: () => {},
+-      onRun: () => {},
+-      ...props,
++    createElement(TaskTable, {
++      tasks,
++      retry: { targets: ['2'], pending: false, onRetry: () => {} },
+     }),
+   );
+ }
+@@ -133,23 +193,24 @@ describe('change actions rendering', () => {
+       command: 'osq reject 001 --reason <text>',
+       target: null,
+     };
+-    const empty = renderActions({ document: actionsDoc([reject]), reason: '' });
++    const empty = renderMenu({ document: actionsDoc([reject]), reason: '' });
+     assert.match(empty, /<button[^>]*disabled[^>]*>Reject<\/button>/);
+ 
+-    const filled = renderActions({ document: actionsDoc([reject]), reason: 'because' });
++    const filled = renderMenu({ document: actionsDoc([reject]), reason: 'because' });
+     assert.equal(/<button[^>]*disabled[^>]*>Reject<\/button>/.test(filled), false);
+     assert.match(filled, /<input[^>]*value="because"/);
+   });
+ 
+   it('labels a retry for its task number or for the whole change', () => {
+-    const html = renderActions({
+-      document: actionsDoc([
+-        { verb: 'retry', command: 'osq retry 001 2', target: '2' },
+-        { verb: 'retry', command: 'osq retry 001 change', target: 'change' },
+-      ]),
+-    });
+-    assert.match(html, />Retry task 2<\/button>/);
+-    assert.match(html, />Retry change<\/button>/);
++    const document = actionsDoc([
++      { verb: 'retry', command: 'osq retry 001 2', target: '2' },
++      { verb: 'retry', command: 'osq retry 001 change', target: 'change' },
++    ]);
++    assert.match(renderMenu({ document }), />Retry change<\/button>/);
++    assert.match(
++      renderTaskTable([task({ taskNumber: '2', title: 'Second' })]),
++      />Retry task 2<\/button>/,
++    );
+   });
+ 
+   it('shows the exit code, captured output, error, and next step after a tap', () => {
+@@ -159,7 +220,7 @@ describe('change actions rendering', () => {
+       stderr: 'warning text',
+       error: { message: 'Error approving 001:', next: 'osq retry 001 2' },
+     };
+-    const html = renderActions({ document: actionsDoc([APPROVE], [PLAN]), result });
++    const html = renderToStaticMarkup(createElement(ActionResult, { result }));
+     assert.match(html, /Exit code 1/);
+     assert.match(html, /<pre class="action-stdout">approved output<\/pre>/);
+     assert.match(html, /<pre class="action-stderr">warning text<\/pre>/);
+@@ -167,10 +228,17 @@ describe('change actions rendering', () => {
+     assert.match(html, /Next: osq retry 001 2/);
+   });
+ 
+-  it('renders the pending state and disables every button while a tap runs', () => {
+-    const html = renderActions({ document: actionsDoc([APPROVE], [PLAN]), pending: true });
+-    assert.match(html, /Running/);
+-    assert.match(html, /<button[^>]*disabled[^>]*>Approve<\/button>/);
++  it('disables every action button while a tap runs', () => {
++    const pending = renderButtons({ document: actionsDoc([APPROVE], [PLAN]), pending: true });
++    assert.match(pending, /<button[^>]*disabled[^>]*>Approve<\/button>/);
++
++    const reject: WebAction = {
++      verb: 'reject',
++      command: 'osq reject 001 --reason <text>',
++      target: null,
++    };
++    const menu = renderMenu({ document: actionsDoc([reject]), pending: true, reason: 'because' });
++    assert.match(menu, /<button[^>]*disabled[^>]*>Reject<\/button>/);
+   });
+ });
+ 
+diff --git a/tests/ui-notices.test.tsx b/tests/ui-notices.test.tsx
+index d210cf16..c998b3e5 100644
+--- a/tests/ui-notices.test.tsx
++++ b/tests/ui-notices.test.tsx
+@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
+ import { createElement } from 'react';
+ import { renderToStaticMarkup } from 'react-dom/server';
+ import {
+-  ChangeActions,
++  ActionButtons,
+   ChangeView,
+   NoticePanel,
+   approveInput,
+@@ -142,12 +142,10 @@ function render(element: ReturnType<typeof createElement>): string {
+ 
+ function renderActions(approveBlockedBy: readonly string[]): string {
+   return render(
+-    createElement(ChangeActions, {
++    createElement(ActionButtons, {
++      main: 'approve',
+       document: { folderKey: '001-notices-change', token: 'tok', actions: [APPROVE], manual: [] },
+       pending: false,
+-      result: null,
+-      reason: '',
+-      onReasonChange: () => {},
+       onRun: () => {},
+       approveBlockedBy,
+     }),
+diff --git a/tests/ui-review.test.tsx b/tests/ui-review.test.tsx
+index 7e7a96ba..6bb7a086 100644
+--- a/tests/ui-review.test.tsx
++++ b/tests/ui-review.test.tsx
+@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
+ import { createElement } from 'react';
+ import { renderToStaticMarkup } from 'react-dom/server';
+ import {
++  ActionButtons,
+   ApprovalFlags,
+-  ChangeActions,
+   ChangeView,
+   DeltaReview,
+ } from '../packages/ui/src/change/index.js';
+@@ -282,12 +282,10 @@ describe('approval flags', () => {
+   it('places each flag and excerpt inside the Approve button item', () => {
+     const flag = approvalFlag({ excerpt: 'the removed name' });
+     const html = render(
+-      createElement(ChangeActions, {
++      createElement(ActionButtons, {
++        main: 'approve',
+         document: { folderKey: '001-review-change', token: 'tok', actions: [APPROVE], manual: [] },
+         pending: false,
+-        result: null,
+-        reason: '',
+-        onReasonChange: () => {},
+         onRun: () => {},
+         flags: [flag],
+       }),
+@@ -306,18 +304,26 @@ describe('approval flags', () => {
+   it('places the flags before the buttons when there is no approve action', () => {
+     const flag = approvalFlag();
+     const html = render(
+-      createElement(ChangeActions, {
+-        document: { folderKey: '001-review-change', token: 'tok', actions: [RETRY], manual: [] },
+-        pending: false,
+-        result: null,
+-        reason: '',
+-        onReasonChange: () => {},
+-        onRun: () => {},
+-        flags: [flag],
+-      }),
++      createElement(
++        'div',
++        { className: 'page-buttons' },
++        createElement(ActionButtons, {
++          key: 'flags',
++          main: null,
++          document: { folderKey: '001-review-change', token: 'tok', actions: [RETRY], manual: [] },
++          pending: false,
++          onRun: () => {},
++          flags: [flag],
++        }),
++        createElement(
++          'button',
++          { key: 'plan', type: 'button', className: 'page-button' },
++          'Plan again',
++        ),
++      ),
+     );
+     const flagsIndex = html.indexOf('<ul class="approval-flags">');
+-    const buttonsIndex = html.indexOf('<div class="action-buttons">');
++    const buttonsIndex = html.indexOf('>Plan again</button>');
+     assert.ok(flagsIndex >= 0);
+     assert.ok(flagsIndex < buttonsIndex);
+   });

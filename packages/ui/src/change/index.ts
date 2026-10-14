@@ -1,9 +1,12 @@
 export { ChangeView, type ChangeViewProps } from './ChangeView.js';
-export { ChangeActions, type ChangeActionsProps } from './ChangeActions.js';
+export { ActionButtons, type ActionButtonsProps } from './ActionButtons.js';
+export { ActionMenu, type ActionMenuProps } from './ActionMenu.js';
+export { ActionResult, type ActionResultProps } from './ActionResult.js';
 export {
-  ChangeActionsPanel,
-  type ChangeActionsPanelProps,
-} from './ChangeActionsPanel.js';
+  useChangeActions,
+  type ChangeActionsState,
+} from './useChangeActions.js';
+export { TaskRetryContext, useTaskRetry, type TaskRetry } from './ActionRetry.js';
 export {
   createActionClient,
   type ActionClient,
