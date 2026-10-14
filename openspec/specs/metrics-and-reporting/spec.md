@@ -1467,7 +1467,7 @@ decided and what happened:
 
 #### Scenario: Task outcomes listed
 - **WHEN** `osq query` runs without a statement
-- **THEN** it prints `task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)` as the last line, after `link_findings`, and exits zero
+- **THEN** it prints `task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)` directly after `link_findings`, and exits zero
 
 ### Requirement: What history says in the plan prompt
 When `task_outcomes` holds at least `planning.history.minimumTasks` rows with
@@ -1534,3 +1534,36 @@ finding, notice or event from these numbers.
 #### Scenario: Invalid history configuration
 - **WHEN** `planning.history.minimumTasks`, `recentTasks` or `maxCharacters` is zero, negative, or not an integer
 - **THEN** configuration loading fails naming the key
+
+### Requirement: Pause query table
+`osq query` SHALL also build `pauses(change, task, paused_at, until, source)`
+on every call, of archived changes in folder order, from the change files,
+reading event streams through the index, and store it nowhere. It SHALL hold
+one row per `paused` event in each task stream of a change, in numeric order.
+A task stream is a file whose name is digits and `.jsonl`.
+
+- `change` is the folder name.
+- `task` is the event's `data.task`.
+- `paused_at` is the event's `timestamp`.
+- `until` and `source` are the event's `data.until` and `data.source`.
+
+An event without object `data` SHALL add no row, and a field of the wrong type
+SHALL read as null. `osq query` without a statement SHALL list the table after
+`task_outcomes`, with its columns.
+
+#### Scenario: Pauses of one archived change
+- **WHEN** the archive holds `007-pricing`, whose `2.jsonl` holds a `started` event, then a `paused` event at `2026-10-14T12:00:00.000Z` with task `2`, until `2026-10-14T15:00:00.000Z` and source `harness`, then a `paused` event at `2026-10-14T15:01:00.000Z` with task `2`, until `2026-10-14T15:31:00.000Z` and source `wait`
+- **THEN** `pauses` holds exactly these rows:
+
+| change | task | paused_at | until | source |
+| --- | --- | --- | --- | --- |
+| `007-pricing` | `2` | `2026-10-14T12:00:00.000Z` | `2026-10-14T15:00:00.000Z` | `harness` |
+| `007-pricing` | `2` | `2026-10-14T15:01:00.000Z` | `2026-10-14T15:31:00.000Z` | `wait` |
+
+#### Scenario: No pauses
+- **WHEN** no archived change holds a `paused` event
+- **THEN** `osq query "select count(*) as n from pauses"` prints `n` and `0`
+
+#### Scenario: Pauses listed
+- **WHEN** `osq query` runs without a statement
+- **THEN** it prints `pauses(change, task, paused_at, until, source)` as the last line, after `task_outcomes`, and exits zero

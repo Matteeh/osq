@@ -287,7 +287,7 @@ describe('verifyKind', () => {
 });
 
 describe('task outcomes listed', () => {
-  it('prints task_outcomes last, after link_findings, and exits zero', async () => {
+  it('prints task_outcomes directly after link_findings and exits zero', async () => {
     const root = await makeRoot();
     await writeWidgets(root);
 
@@ -295,8 +295,8 @@ describe('task outcomes listed', () => {
 
     assert.equal(error, '');
     const lines = text.trimEnd().split('\n');
-    assert.equal(lines.at(-1), TASK_OUTCOMES);
     const linkIndex = lines.indexOf('link_findings(id, change, severity, file, message, label)');
-    assert.ok(linkIndex >= 0 && linkIndex < lines.length - 1);
+    assert.ok(linkIndex >= 0);
+    assert.equal(lines[linkIndex + 1], TASK_OUTCOMES);
   });
 });

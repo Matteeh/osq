@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f521fc45ef17d75827d823ac7dc8a3da1bfdf182866436b3083551af63886a71"
+build_stamp: "aeb1887c"
+project_commit: "53e561d6"
+exit_code: 0
+scope_files: {"src/harness/claude/claude-stream.ts":"sha256:d5861caa022643320f97c60d3438f21e3597f7ae6d07b238dc972d5f73e3ce24","src/harness/codex/codex-stream.ts":"sha256:b04f3290917af58717a8a37a69eff2766abed62d857f0a8f70c042d655196f5c","src/harness/opencode/opencode.ts":"sha256:453e941c136fec925c03e103879994dd5c69f15e9283dd94d633a69abfe4e3cb","src/harness/types.ts":"sha256:55c22533ef82f65b0884ec8a6f06ce7e79d641712f410f04191764fed91a5174","tests/usage-limit-events.test.ts":"sha256:141ddcd272eca2a4c8ca5c12d8b97fac86d38f17ff33258a54c88832781c39be"}
+---
+2026-10-14T10:15:48.646Z

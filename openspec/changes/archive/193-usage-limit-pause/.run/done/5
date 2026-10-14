@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:790d6cab7974a32047817d4ef426f3f7dbdfd3751f0b17bc3501fc7a31edbddb"
+build_stamp: "aeb1887c"
+project_commit: "0d2751a2"
+exit_code: 0
+scope_files: {"packages/ui/src/home/RunningGroup.tsx":"sha256:9d0936133169825ef149253a1c183e1979f40a3bde015d948d109412c7f684e6","src/core/status/inbox-paused.ts":"sha256:ad4bb90769b19d1e5f9ec845dc12d80d201d804974d053d6a60a92d1d37a0f2f","src/core/status/inbox-projection.ts":"sha256:774f58d114417f137cf060a09ec839c7f811070eb22508e222024459941f0c27","src/core/status/inbox-text.ts":"sha256:05785db30f72659d02c5bfc8d5de7ecd7652ff02c1516df562a84f6a3106078f","src/core/status/inbox.ts":"sha256:f808ae049a39848d39e5378134cb7e40cf5070d80227a4a3f6b1588f26eccb9b","tests/ui-home-paused.test.tsx":"sha256:889a64ddaabc5f8cdf23718adcafe4aea46173ce9ab2cec96e8efe1216679fbd","tests/usage-pause-inbox.test.ts":"sha256:2a7a28619bd2425ad620e766bdd14707aecfd94cf2c8064f2b1e4eca0abc0fcd"}
+---
+2026-10-14T11:36:48.130Z

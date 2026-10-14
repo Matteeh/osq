@@ -1,0 +1,521 @@
+diff --git a/openspec/changes/193-usage-limit-pause/.run/dead/3.md b/openspec/changes/193-usage-limit-pause/.run/dead/3.1.md
+similarity index 100%
+rename from openspec/changes/193-usage-limit-pause/.run/dead/3.md
+rename to openspec/changes/193-usage-limit-pause/.run/dead/3.1.md
+diff --git a/openspec/changes/193-usage-limit-pause/.run/dead/6.md b/openspec/changes/193-usage-limit-pause/.run/dead/6.md
+new file mode 100644
+index 00000000..3a5ada35
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/dead/6.md
+@@ -0,0 +1,10 @@
++---
++reason: blocked
++fingerprint: sha256:f7490a2e6b4dca53d398e041e63ad7857ac1a092d1d8b55816ece17a2b44c352
++---
++Add `tests/query-task-outcomes.test.ts` to task 6's `scope` so its obsolete
++`prints task_outcomes last` assertion can be reworded to the delta's wording
++(`task_outcomes` directly after `link_findings`, which the new
++`tests/query-pauses.test.ts` already proves), or drop that case from it. Until
++then the change-level `pnpm verify` fails on that preexisting test and this task
++cannot be finished within its scope.
+diff --git a/openspec/changes/193-usage-limit-pause/.run/events/6.jsonl b/openspec/changes/193-usage-limit-pause/.run/events/6.jsonl
+new file mode 100644
+index 00000000..8d442a72
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/events/6.jsonl
+@@ -0,0 +1,101 @@
++{"type":"verify_ran","timestamp":"2026-10-14T11:36:49.593Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/query-pauses.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/6-1.log","output":"Could not find 'tests/query-pauses.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/query-pauses.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-14T11:36:50.514Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":1367,"repoFiles":3083,"repoLines":353284,"importFanIn":3,"proposalWords":1069,"taskWords":262,"deltaRequirements":11,"deltaScenarios":37}}
++{"type":"started","timestamp":"2026-10-14T11:36:50.563Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"05765d80","pid":920261,"timeoutSeconds":1800,"version":"0.3.0","commit":"aeb1887c"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:06.342Z","data":{"tool":"read","summary":"src/core/report/query-task-streams.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:06.343Z","data":{"tool":"read","summary":"src/core/report/stream-reads.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:06.345Z","data":{"tool":"read","summary":"src/core/report/query-tables.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:06.346Z","data":{"tool":"read","summary":"src/core/report/query-subjects.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:37:06.382Z","data":{"promptTokens":279789,"candidateTokens":151,"totalTokens":279940,"cachedTokens":0,"reasoningTokens":81,"cost":0.042107549999999994}}
++{"type":"tool","timestamp":"2026-10-14T11:37:29.907Z","data":{"tool":"read","summary":"tests/query-trial-tables.test.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:29.908Z","data":{"tool":"read","summary":"tests/query-tables.test.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:29.909Z","data":{"tool":"read","summary":"tests/query-command.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:37:29.949Z","data":{"promptTokens":7587,"candidateTokens":111,"totalTokens":7698,"cachedTokens":279680,"reasoningTokens":82,"cost":0.00209289}}
++{"type":"tool","timestamp":"2026-10-14T11:37:41.847Z","data":{"tool":"read","summary":"src/core/report/query-task-outcomes.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:37:41.864Z","data":{"tool":"shell","summary":"{\"command\":\"ls tests/query-pauses.test.ts 2>&1; ls openspec/"}}
++{"type":"tokens","timestamp":"2026-10-14T11:37:41.900Z","data":{"promptTokens":11067,"candidateTokens":132,"totalTokens":11199,"cachedTokens":287232,"reasoningTokens":53,"cost":0.002632746}}
++{"type":"tool","timestamp":"2026-10-14T11:38:00.718Z","data":{"tool":"read","summary":"src/core/report/query-link-findings.ts"}}
++{"type":"tool","timestamp":"2026-10-14T11:38:00.719Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"asData\\\" src/core/report/report-events"}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:00.753Z","data":{"promptTokens":1037,"candidateTokens":111,"totalTokens":1148,"cachedTokens":298240,"reasoningTokens":1077,"cost":0.0017630699999999998}}
++{"type":"tool","timestamp":"2026-10-14T11:38:11.255Z","data":{"tool":"read","summary":"openspec/changes/193-usage-limit-pause/.run/results/5.md"}}
++{"type":"tool","timestamp":"2026-10-14T11:38:11.279Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:11.316Z","data":{"promptTokens":301503,"candidateTokens":113,"totalTokens":301616,"cachedTokens":0,"reasoningTokens":42,"cost":0.045318449999999996}}
++{"type":"tool","timestamp":"2026-10-14T11:38:21.349Z","data":{"tool":"read","summary":"openspec/changes/193-usage-limit-pause/.run/results/4.md"}}
++{"type":"tool","timestamp":"2026-10-14T11:38:21.351Z","data":{"tool":"shell","summary":"{\"command\":\"ls tests/ | grep -iE \\\"query|outcome|pause\\\" ; e"}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:21.387Z","data":{"promptTokens":1177,"candidateTokens":116,"totalTokens":1293,"cachedTokens":301440,"reasoningTokens":801,"cost":0.0016310699999999999}}
++{"type":"tool","timestamp":"2026-10-14T11:38:27.579Z","data":{"tool":"read","summary":"tests/query-task-outcomes.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:27.614Z","data":{"promptTokens":1853,"candidateTokens":44,"totalTokens":1897,"cachedTokens":302592,"reasoningTokens":39,"cost":0.001235526}}
++{"type":"tool","timestamp":"2026-10-14T11:38:41.962Z","data":{"tool":"shell","summary":"{\"command\":\"cat openspec/changes/193-usage-limit-pause/tasks"}}
++{"type":"tool","timestamp":"2026-10-14T11:38:41.963Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"task_outcomes\\\\|pauses\\\" openspec/chan"}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:41.997Z","data":{"promptTokens":3112,"candidateTokens":136,"totalTokens":3248,"cachedTokens":304384,"reasoningTokens":1369,"cost":0.0022829520000000004}}
++{"type":"tool","timestamp":"2026-10-14T11:38:52.497Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"task_outcomes\\\" tests/ | grep -v \\\"qu"}}
++{"type":"tool","timestamp":"2026-10-14T11:38:52.499Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"at(-1)\\\\|last line\\\\|TASK_OUTCOMES\\\" "}}
++{"type":"tokens","timestamp":"2026-10-14T11:38:52.537Z","data":{"promptTokens":2228,"candidateTokens":118,"totalTokens":2346,"cachedTokens":307456,"reasoningTokens":770,"cost":0.001789368}}
++{"type":"tool","timestamp":"2026-10-14T11:39:02.267Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"query-task-outcomes\\\" openspec/chang"}}
++{"type":"tokens","timestamp":"2026-10-14T11:39:02.304Z","data":{"promptTokens":2608,"candidateTokens":89,"totalTokens":2697,"cachedTokens":309632,"reasoningTokens":815,"cost":0.0018624960000000002}}
++{"type":"tool","timestamp":"2026-10-14T11:39:09.368Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,60p' openspec/changes/archive/186-task"}}
++{"type":"tokens","timestamp":"2026-10-14T11:39:09.402Z","data":{"promptTokens":1099,"candidateTokens":104,"totalTokens":1203,"cachedTokens":312192,"reasoningTokens":0,"cost":0.001163826}}
++{"type":"tool","timestamp":"2026-10-14T11:39:21.776Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-14T11:39:21.811Z","data":{"promptTokens":1438,"candidateTokens":69,"totalTokens":1507,"cachedTokens":313216,"reasoningTokens":1108,"cost":0.0018615479999999998}}
++{"type":"tool","timestamp":"2026-10-14T11:39:34.431Z","data":{"tool":"read","summary":"src/cli/query.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:39:34.466Z","data":{"promptTokens":1474,"candidateTokens":42,"totalTokens":1516,"cachedTokens":314624,"reasoningTokens":972,"cost":0.001773372}}
++{"type":"tool","timestamp":"2026-10-14T11:39:39.401Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,140p' src/core/report/query-run.ts\"}"}}
++{"type":"tokens","timestamp":"2026-10-14T11:39:39.435Z","data":{"promptTokens":2289,"candidateTokens":53,"totalTokens":2342,"cachedTokens":316032,"reasoningTokens":30,"cost":0.0013412460000000001}}
++{"type":"tool","timestamp":"2026-10-14T11:40:01.583Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"## Blocked\\\" openspec/changes/archiv"}}
++{"type":"tool","timestamp":"2026-10-14T11:40:01.585Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rl \\\"not in scope\\\\|outside.*scope.*test\\\\"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:01.622Z","data":{"promptTokens":1597,"candidateTokens":137,"totalTokens":1734,"cachedTokens":318208,"reasoningTokens":2426,"cost":0.0027319740000000003}}
++{"type":"tool","timestamp":"2026-10-14T11:40:21.669Z","data":{"tool":"shell","summary":"{\"command\":\"node -e \\\"const p=require('./package.json'); con"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:21.705Z","data":{"promptTokens":323273,"candidateTokens":61,"totalTokens":323334,"cachedTokens":0,"reasoningTokens":1585,"cost":0.049478549999999996}}
++{"type":"tool","timestamp":"2026-10-14T11:40:28.204Z","data":{"tool":"read","summary":"openspec/changes/archive/173-prompt-files-exist/.run/results/2.md"}}
++{"type":"tool","timestamp":"2026-10-14T11:40:28.231Z","data":{"tool":"shell","summary":"{\"command\":\"for f in openspec/changes/archive/*/.run/results"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:28.268Z","data":{"promptTokens":373,"candidateTokens":140,"totalTokens":513,"cachedTokens":324864,"reasoningTokens":363,"cost":0.001332342}}
++{"type":"tool","timestamp":"2026-10-14T11:40:40.348Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,80p' openspec/changes/193-usage-limit-"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:40.385Z","data":{"promptTokens":837,"candidateTokens":68,"totalTokens":905,"cachedTokens":325632,"reasoningTokens":1385,"cost":0.0019742460000000002}}
++{"type":"tool","timestamp":"2026-10-14T11:40:53.017Z","data":{"tool":"read","summary":"openspec/changes/193-usage-limit-pause/tasks/6.md"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:53.053Z","data":{"promptTokens":1732,"candidateTokens":53,"totalTokens":1785,"cachedTokens":327808,"reasoningTokens":1474,"cost":0.002159424}}
++{"type":"tool","timestamp":"2026-10-14T11:40:59.264Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"query-task-outcomes\\\\|query-pauses\\\\|"}}
++{"type":"tokens","timestamp":"2026-10-14T11:40:59.302Z","data":{"promptTokens":768,"candidateTokens":71,"totalTokens":839,"cachedTokens":331008,"reasoningTokens":350,"cost":0.001360824}}
++{"type":"text","timestamp":"2026-10-14T11:41:38.272Z","data":{"text":"Now I understand the landscape. Let me implement the in-scope work."}}
++{"type":"tool","timestamp":"2026-10-14T11:41:38.278Z","data":{"tool":"write","summary":"src/core/report/query-pauses.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:38.323Z","data":{"promptTokens":637,"candidateTokens":761,"totalTokens":1398,"cachedTokens":332160,"reasoningTokens":6963,"cost":0.00572643}}
++{"type":"tool","timestamp":"2026-10-14T11:41:41.904Z","data":{"tool":"edit","summary":"src/core/report/query-tables.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:41.938Z","data":{"promptTokens":194,"candidateTokens":162,"totalTokens":356,"cachedTokens":340352,"reasoningTokens":7,"cost":0.001151556}}
++{"type":"tool","timestamp":"2026-10-14T11:41:45.816Z","data":{"tool":"edit","summary":"src/core/report/query-tables.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:45.855Z","data":{"promptTokens":260,"candidateTokens":129,"totalTokens":389,"cachedTokens":340480,"reasoningTokens":0,"cost":0.0011378400000000002}}
++{"type":"tool","timestamp":"2026-10-14T11:41:49.938Z","data":{"tool":"edit","summary":"src/core/report/query-tables.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:49.976Z","data":{"promptTokens":159,"candidateTokens":132,"totalTokens":291,"cachedTokens":340736,"reasoningTokens":0,"cost":0.001125258}}
++{"type":"tool","timestamp":"2026-10-14T11:41:54.897Z","data":{"tool":"edit","summary":"tests/query-command.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:54.934Z","data":{"promptTokens":189,"candidateTokens":208,"totalTokens":397,"cachedTokens":340864,"reasoningTokens":134,"cost":0.001256142}}
++{"type":"tool","timestamp":"2026-10-14T11:41:59.144Z","data":{"tool":"edit","summary":"tests/query-trial-tables.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:41:59.184Z","data":{"promptTokens":170,"candidateTokens":210,"totalTokens":380,"cachedTokens":341248,"reasoningTokens":0,"cost":0.0011752440000000002}}
++{"type":"tool","timestamp":"2026-10-14T11:42:03.276Z","data":{"tool":"edit","summary":"tests/query-tables.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:03.312Z","data":{"promptTokens":278,"candidateTokens":158,"totalTokens":436,"cachedTokens":341376,"reasoningTokens":21,"cost":0.001173228}}
++{"type":"tool","timestamp":"2026-10-14T11:42:11.106Z","data":{"tool":"write","summary":"tests/query-pauses.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:11.143Z","data":{"promptTokens":224,"candidateTokens":1562,"totalTokens":1786,"cachedTokens":341632,"reasoningTokens":28,"cost":0.002012496}}
++{"type":"tool","timestamp":"2026-10-14T11:42:16.416Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:16.449Z","data":{"promptTokens":173,"candidateTokens":68,"totalTokens":241,"cachedTokens":343296,"reasoningTokens":6,"cost":0.001100238}}
++{"type":"tool","timestamp":"2026-10-14T11:42:21.758Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:21.791Z","data":{"promptTokens":334,"candidateTokens":84,"totalTokens":418,"cachedTokens":343424,"reasoningTokens":11,"cost":0.0011373719999999998}}
++{"type":"tool","timestamp":"2026-10-14T11:42:26.534Z","data":{"tool":"shell","summary":"{\"command\":\"node --import tsx --import ./tests/git-test-env."}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:26.568Z","data":{"promptTokens":377,"candidateTokens":69,"totalTokens":446,"cachedTokens":343808,"reasoningTokens":22,"cost":0.0011425740000000002}}
++{"type":"tool","timestamp":"2026-10-14T11:42:43.849Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rln \\\"HISTORY_TABLES\\\\|formatTableList\\\\|p"}}
++{"type":"tool","timestamp":"2026-10-14T11:42:49.659Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm typecheck:cli 2>&1 | tail -15\"}"}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:49.705Z","data":{"promptTokens":469,"candidateTokens":106,"totalTokens":575,"cachedTokens":344192,"reasoningTokens":2274,"cost":0.0025309259999999997}}
++{"type":"tool","timestamp":"2026-10-14T11:42:54.767Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm lint 2>&1 | tail -25\"}"}}
++{"type":"tokens","timestamp":"2026-10-14T11:42:54.801Z","data":{"promptTokens":163,"candidateTokens":47,"totalTokens":210,"cachedTokens":347008,"reasoningTokens":48,"cost":0.0011224740000000003}}
++{"type":"tool","timestamp":"2026-10-14T11:44:10.959Z","data":{"tool":"shell","summary":"{\"command\":\"pnpm test 2>&1 | grep -E \\\"^ℹ (tests|pass|fail)|"}}
++{"type":"tokens","timestamp":"2026-10-14T11:44:10.999Z","data":{"promptTokens":201,"candidateTokens":82,"totalTokens":283,"cachedTokens":347136,"reasoningTokens":286,"cost":0.0012923580000000002}}
++{"type":"text","timestamp":"2026-10-14T11:44:31.802Z","data":{"text":"All in-scope work is complete and passing; the full test suite has exactly one failure, in an out-of-scope preexisting test. Let me confirm the full `pnpm verify`-relevant picture and then write the result."}}
++{"type":"tool","timestamp":"2026-10-14T11:44:31.820Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '285,302p' tests/query-task-outcomes.test"}}
++{"type":"tokens","timestamp":"2026-10-14T11:44:31.855Z","data":{"promptTokens":155,"candidateTokens":126,"totalTokens":281,"cachedTokens":347648,"reasoningTokens":3086,"cost":0.002993394}}
++{"type":"text","timestamp":"2026-10-14T11:44:54.961Z","data":{"text":"The full suite passes except exactly one preexisting test outside this task's scope. Writing the result file."}}
++{"type":"tool","timestamp":"2026-10-14T11:44:54.975Z","data":{"tool":"write","summary":"openspec/changes/193-usage-limit-pause/.run/results/6.md"}}
++{"type":"tokens","timestamp":"2026-10-14T11:44:55.009Z","data":{"promptTokens":447,"candidateTokens":915,"totalTokens":1362,"cachedTokens":350976,"reasoningTokens":2874,"cost":0.0033933780000000007}}
++{"type":"tool","timestamp":"2026-10-14T11:45:00.761Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '10,20p;48,56p;198,208p' src/core/report/"}}
++{"type":"tokens","timestamp":"2026-10-14T11:45:00.797Z","data":{"promptTokens":175,"candidateTokens":93,"totalTokens":268,"cachedTokens":355072,"reasoningTokens":335,"cost":0.001348266}}
++{"type":"tool","timestamp":"2026-10-14T11:45:05.638Z","data":{"tool":"read","summary":"openspec/changes/193-usage-limit-pause/.run/results/6.md"}}
++{"type":"tokens","timestamp":"2026-10-14T11:45:05.671Z","data":{"promptTokens":565,"candidateTokens":55,"totalTokens":620,"cachedTokens":355584,"reasoningTokens":141,"cost":0.0012691019999999998}}
++{"type":"text","timestamp":"2026-10-14T11:45:12.527Z","data":{"text":"I completed the in-scope work for task 6 and wrote the result file.\n\n**What I built (all inside the task's `scope`):**\n\n- **`src/core/report/query-pauses.ts`** (new) — `PAUSE_TABLES` = `pauses(change, task, paused_at, until, source)`, plus `insertPauses(db, subjects)`. It walks each archived change's digit-named task streams in numeric order, reads them through `readEventStream`, and inserts one row per `paused` event (`change` = folder, `task`/`until`/`source` from the event's object `data`, `paused_at` = the event `timestamp`). No object `data` → no row; wrong-typed fields read as null. Tagged with the three pause scenarios and `@adr 008`.\n- **`src/core/report/query-tables.ts`** — `...PAUSE_TABLES` after `...TASK_OUTCOME_TABLES`, and `insertPauses` called in `build` after `insertLinkFindings`.\n- **`tests/query-command.test.ts`, `tests/query-trial-tables.test.ts`, `tests/query-tables.test.ts`** — only their pinned table lists gained the `pauses` line/entry after `task_outcomes`.\n- **`tests/query-pauses.test.ts`** (new) — proves \"Pauses of one archived change\", \"No pauses\", \"Pauses listed\" and the reworded \"Task outcomes listed\" through the real `osq query` command.\n\n**Verification:** the task verify passes, and the full suite is 4038/4039.\n\n**Why I report Blocked:** the one failure is `tests/query-task-outcomes.test.ts` (from archived change 186), which asserts the *old* wording — that `task_outcomes` is the last printed line. This change's own delta rewrites that scenario to \"directly after `link_findings`\" and puts `pauses` last, making the assertion obsolete. That file is outside this task's `scope`, so the rules forbid changing it; the task can't make `pnpm verify` pass within scope. The result file records this under `## Outside scope` and `## Blocked`, asking for the file to be added to task 6's scope (its `prints task_outcomes last` case reworded/dropped).\n\nResult written to `openspec/changes/193-usage-limit-pause/.run/results/6.md`."}}
++{"type":"tokens","timestamp":"2026-10-14T11:45:13.007Z","data":{"promptTokens":1100,"candidateTokens":574,"totalTokens":1674,"cachedTokens":612923,"reasoningTokens":17,"cost":0.03367319699999999}}
++{"type":"exited","timestamp":"2026-10-14T11:45:13.007Z","data":{"exitCode":0,"pid":920261,"timedOut":false,"elapsedSeconds":502.1}}
++{"type":"measures","timestamp":"2026-10-14T11:45:13.214Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":1367,"repoFiles":3083,"repoLines":353284,"importFanIn":3,"proposalWords":1069,"taskWords":262,"deltaRequirements":11,"deltaScenarios":37,"changedFiles":6,"changedLines":255,"scopeHashes":{"src/core/report/query-pauses.ts":{"before":null,"after":"sha256:ed08855fc607774997e7948fe327f09280dca6816b36762aef80b6589e5f78ab"},"src/core/report/query-tables.ts":{"before":"sha256:6612ccdb6a49d6ee5f2637105baee5243582b78aa492c45a7c739cf89096f3e2","after":"sha256:1a449ca7d6e8b09d2bfa0c531d3990cde4181b3d9a7d521a0420554f6ff08a53"},"tests/query-command.test.ts":{"before":"sha256:7693201143871aec6ee38dcecc0f2503cbb0a225aa942e253ff274b913565494","after":"sha256:f58e3d94aa4669c84ac34e2d2c20839ae65249c153ed64998cb9369906f2a176"},"tests/query-pauses.test.ts":{"before":null,"after":"sha256:7f7d1b741a03c303b2c606ee17c6c8df8056f6d294f995e7c3b7e6dcff3b2a49"},"tests/query-tables.test.ts":{"before":"sha256:8403bec08dcaf17db2cf440ae5f1c498c90a31090a662ee7bebd0deea00396b2","after":"sha256:b217cb88831ec0334d54f8adeb992ee27a8057ceca0b71cdcfd9379709c51884"},"tests/query-trial-tables.test.ts":{"before":"sha256:921224278d0a36fdeed3c25f3f097822d91d56cbed43df0df659d059af4c66ce","after":"sha256:5ecc3d33eb5ce1400f2cd0597bac146ad65c6cf69b0a5630c7a5623be173013d"}}}}
++{"type":"dead","timestamp":"2026-10-14T11:45:13.215Z","data":{"task":"6","reason":"blocked"}}
+diff --git a/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl b/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl
+new file mode 100644
+index 00000000..1f71ee09
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl
+@@ -0,0 +1,6 @@
++{"type":"baseline_ran","timestamp":"2026-10-14T10:02:52.441Z","data":{"outcome":"passed","command":"pnpm verify","commit":"53e561d66e841d61a171909539d41e7fda87cf0b","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":114.39}}
++{"type":"verify_ran","timestamp":"2026-10-14T10:15:48.639Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.64,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.379118ms)\n✔ dashboard data base (1.411362ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.507012ms)\n  ✔ keeps the default actions URL (0.270026ms)\n✔ actions client base (1.074975ms)\n▶ server header\n  ✔ shows the project and server name next to the title (30.071462ms)\n✔ server header (30.189885ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.182787ms)\n  ✔ shows a terminal watcher and no service record (1.140746ms)\n  ✔ shows a waiting background watcher and a service record (1.071455ms)\n  ✔ shows no watcher and no service record (1.055374ms)\n  ✔ names the watcher version, commit, and start time (0.993662ms)\n  ✔ marks the waiting line as a warning in the existing palette (15.495022ms)\n  ✔ renders the home view as before without a server status (2.986348ms)\n✔ service panel (24.306162ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.571143ms)\n✔ service panel component (0.693786ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.554576ms)\n  ✔ maps every derived task state onto the status vocabulary (0.129563ms)\n  ✔ defines the whole palette for light and dark schemes (10.888637ms)\n  ✔ never centers table cells (4.247356ms)\n✔ status badge (24.175989ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2774.291069\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1217 files in 390ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T10:28:32.587Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.26,"log":".run/logs/change-2.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.294477ms)\n✔ dashboard data base (1.447073ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.389569ms)\n  ✔ keeps the default actions URL (1.336449ms)\n✔ actions client base (2.032455ms)\n▶ server header\n  ✔ shows the project and server name next to the title (15.757197ms)\n✔ server header (15.875409ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.629087ms)\n  ✔ shows a terminal watcher and no service record (1.104695ms)\n  ✔ shows a waiting background watcher and a service record (1.250569ms)\n  ✔ shows no watcher and no service record (1.038699ms)\n  ✔ names the watcher version, commit, and start time (1.423603ms)\n  ✔ marks the waiting line as a warning in the existing palette (26.15283ms)\n  ✔ renders the home view as before without a server status (1.33308ms)\n✔ service panel (34.299728ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.491241ms)\n✔ service panel component (0.564193ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (8.639036ms)\n  ✔ maps every derived task state onto the status vocabulary (0.203014ms)\n  ✔ defines the whole palette for light and dark schemes (7.130422ms)\n  ✔ never centers table cells (2.980253ms)\n✔ status badge (20.824399ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2710.260889\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1219 files in 402ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T11:14:39.578Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.01,"log":".run/logs/change-3.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.691045ms)\n✔ dashboard data base (1.7461ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (1.614687ms)\n  ✔ keeps the default actions URL (0.197135ms)\n✔ actions client base (2.230231ms)\n▶ server header\n  ✔ shows the project and server name next to the title (19.040068ms)\n✔ server header (19.13757ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.495554ms)\n  ✔ shows a terminal watcher and no service record (1.396342ms)\n  ✔ shows a waiting background watcher and a service record (1.031794ms)\n  ✔ shows no watcher and no service record (0.92156ms)\n  ✔ names the watcher version, commit, and start time (1.139801ms)\n  ✔ marks the waiting line as a warning in the existing palette (33.227865ms)\n  ✔ renders the home view as before without a server status (1.568805ms)\n✔ service panel (41.140869ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.504642ms)\n✔ service panel component (0.571444ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (14.618392ms)\n  ✔ maps every derived task state onto the status vocabulary (0.383869ms)\n  ✔ defines the whole palette for light and dark schemes (12.718169ms)\n  ✔ never centers table cells (3.551571ms)\n✔ status badge (32.921534ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2816.616501\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1221 files in 408ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T11:21:23.908Z","data":{"command":"pnpm verify","exitCode":0,"duration":91.96,"log":".run/logs/change-4.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.738217ms)\n✔ dashboard data base (1.858243ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.446921ms)\n  ✔ keeps the default actions URL (0.485631ms)\n✔ actions client base (1.133946ms)\n▶ server header\n  ✔ shows the project and server name next to the title (11.84472ms)\n✔ server header (13.809714ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (7.95163ms)\n  ✔ shows a terminal watcher and no service record (1.462313ms)\n  ✔ shows a waiting background watcher and a service record (1.380791ms)\n  ✔ shows no watcher and no service record (0.978862ms)\n  ✔ names the watcher version, commit, and start time (1.122986ms)\n  ✔ marks the waiting line as a warning in the existing palette (22.176964ms)\n  ✔ renders the home view as before without a server status (1.588066ms)\n✔ service panel (37.018941ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.517692ms)\n✔ service panel component (0.590573ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (9.542737ms)\n  ✔ maps every derived task state onto the status vocabulary (0.148103ms)\n  ✔ defines the whole palette for light and dark schemes (12.212583ms)\n  ✔ never centers table cells (4.530153ms)\n✔ status badge (27.956631ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2960.717773\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1222 files in 416ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T11:36:48.123Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.6,"log":".run/logs/change-5.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.289597ms)\n✔ dashboard data base (1.482124ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.400589ms)\n  ✔ keeps the default actions URL (0.593633ms)\n✔ actions client base (1.261848ms)\n▶ server header\n  ✔ shows the project and server name next to the title (9.127058ms)\n✔ server header (9.443395ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.463363ms)\n  ✔ shows a terminal watcher and no service record (3.598561ms)\n  ✔ shows a waiting background watcher and a service record (1.562301ms)\n  ✔ shows no watcher and no service record (1.122095ms)\n  ✔ names the watcher version, commit, and start time (1.271064ms)\n  ✔ marks the waiting line as a warning in the existing palette (24.264251ms)\n  ✔ renders the home view as before without a server status (1.635987ms)\n✔ service panel (35.281141ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.490591ms)\n✔ service panel component (0.557813ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.743476ms)\n  ✔ maps every derived task state onto the status vocabulary (0.181024ms)\n  ✔ defines the whole palette for light and dark schemes (10.965824ms)\n  ✔ never centers table cells (2.19879ms)\n✔ status badge (22.329543ms)\nℹ tests 215\nℹ suites 64\nℹ pass 215\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2803.960726\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1225 files in 427ms. No fixes applied."}}
+diff --git a/openspec/changes/193-usage-limit-pause/.run/results/6.md b/openspec/changes/193-usage-limit-pause/.run/results/6.md
+new file mode 100644
+index 00000000..483faf22
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/results/6.md
+@@ -0,0 +1,53 @@
++## Changed
++
++- New `src/core/report/query-pauses.ts`. Exports `PAUSE_TABLES`, holding
++  `pauses(change, task, paused_at, until, source)`, and `insertPauses(db,
++  subjects)`. It lists each archived subject's digit-named `.jsonl` task
++  streams in numeric order, reads each with `readEventStream` through the
++  shared scope/index, and inserts one row per `paused` event: `change` the
++  folder name, `task`/`until`/`source` from the event's object `data`, and
++  `paused_at` the event's `timestamp`. An event without object `data` adds no
++  row, and a field of the wrong type reads as null. The insert carries the
++  three pause `@scenario` lines and `@adr 008`.
++- `src/core/report/query-tables.ts`: imports `PAUSE_TABLES`/`insertPauses`,
++  lists `...PAUSE_TABLES` in `HISTORY_TABLES` after `...TASK_OUTCOME_TABLES`,
++  and calls `insertPauses(db, subjects)` in `build` after `insertLinkFindings`.
++- `tests/query-command.test.ts`, `tests/query-trial-tables.test.ts`,
++  `tests/query-tables.test.ts`: only their pinned table lists gained the
++  `pauses(change, task, paused_at, until, source)` line / table entry after
++  `task_outcomes`; no other assertion changed.
++- New `tests/query-pauses.test.ts` proves "Pauses of one archived change",
++  "No pauses", "Pauses listed" and the reworded "Task outcomes listed" through
++  the real `osq query` command over a hand-written archive.
++
++Every acceptance line is implemented and the task verify
++(`node --import tsx --import ./tests/git-test-env.ts --test tests/query-pauses.test.ts`)
++passes. The full suite is 4038/4039; the single failure is the out-of-scope
++test below, so `pnpm verify` cannot pass.
++
++## Outside scope
++
++`tests/query-task-outcomes.test.ts` (written by archived change 186) still
++asserts, in its `task outcomes listed` case, that `task_outcomes(...)` is the
++last line `osq query` prints with no statement. This change's delta rewrites
++the "Task outcomes listed" scenario to say `task_outcomes(...)` comes directly
++after `link_findings` and adds `pauses` as the last line, so that assertion is
++obsolete and fails. The file is not in this task's `scope`, so I left it alone
++(`tests.modify` being true does not authorize a file outside `scope`). It is
++the only failing test in the suite.
++
++## Blocked
++
++Add `tests/query-task-outcomes.test.ts` to task 6's `scope` so its obsolete
++`prints task_outcomes last` assertion can be reworded to the delta's wording
++(`task_outcomes` directly after `link_findings`, which the new
++`tests/query-pauses.test.ts` already proves), or drop that case from it. Until
++then the change-level `pnpm verify` fails on that preexisting test and this task
++cannot be finished within its scope.
++
++## Next
++
++Reword the `task outcomes listed` case in `tests/query-task-outcomes.test.ts`;
++nothing else in the acceptance is outstanding.
++
++Touched: src/core/report/query-pauses.ts, src/core/report/query-tables.ts, tests/query-pauses.test.ts, tests/query-command.test.ts, tests/query-trial-tables.test.ts, tests/query-tables.test.ts
+diff --git a/src/core/report/query-pauses.ts b/src/core/report/query-pauses.ts
+new file mode 100644
+index 00000000..0672e687
+--- /dev/null
++++ b/src/core/report/query-pauses.ts
+@@ -0,0 +1,74 @@
++/**
++ * Fills the `pauses` query table from the numbered task streams of every
++ * archived change.
++ */
++
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import type { DatabaseSync, StatementSync } from 'node:sqlite';
++import type { HistoryTable, TrialSubject } from './query-subjects.js';
++import { asData } from './report-events.js';
++import { readEventStream } from './stream-reads.js';
++
++export const PAUSE_TABLES: readonly HistoryTable[] = [
++  { name: 'pauses', columns: ['change', 'task', 'paused_at', 'until', 'source'] },
++];
++
++/** The value as a string, or null when it is of another type. */
++function asString(value: unknown): string | null {
++  return typeof value === 'string' ? value : null;
++}
++
++/** Task stream files, whose names are digits and `.jsonl`, in numeric order. */
++async function listTaskStreams(folderPath: string): Promise<string[]> {
++  const dir = path.join(folderPath, '.run', 'events');
++  const entries = await fs.readdir(dir).catch(() => [] as string[]);
++  return entries
++    .filter((entry) => /^\d+\.jsonl$/.test(entry))
++    .sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
++}
++
++/** One row per `paused` event in one numbered task stream, in event order. */
++async function insertTaskStream(
++  stmt: StatementSync,
++  subject: TrialSubject,
++  task: string,
++): Promise<void> {
++  const stream = path.join(subject.folderPath, '.run', 'events', `${task}.jsonl`);
++  const events = (await readEventStream(stream)) ?? [];
++  for (const event of events) {
++    if (event.type !== 'paused') continue;
++    const data = asData(event);
++    if (data === null) continue;
++    stmt.run(
++      subject.folder,
++      asString(data.task),
++      asString(event.timestamp),
++      asString(data.until),
++      asString(data.source),
++    );
++  }
++}
++
++/**
++ * Fills `pauses` with one row per `paused` event in each numbered task stream
++ * of every archived change, in folder and numeric task order. An event without
++ * object `data` adds no row, and a field of the wrong type reads as null. The
++ * table is stored nowhere.
++ *
++ * @scenario metrics-and-reporting: Pauses of one archived change
++ * @scenario metrics-and-reporting: No pauses
++ * @scenario metrics-and-reporting: Pauses listed
++ * @adr 008
++ */
++export async function insertPauses(
++  db: DatabaseSync,
++  subjects: readonly TrialSubject[],
++): Promise<void> {
++  const stmt = db.prepare('INSERT INTO pauses VALUES (?, ?, ?, ?, ?)');
++  for (const subject of subjects) {
++    for (const entry of await listTaskStreams(subject.folderPath)) {
++      await insertTaskStream(stmt, subject, entry.replace(/\.jsonl$/, ''));
++    }
++  }
++}
+diff --git a/src/core/report/query-tables.ts b/src/core/report/query-tables.ts
+index d4f69045..123176b3 100644
+--- a/src/core/report/query-tables.ts
++++ b/src/core/report/query-tables.ts
+@@ -9,6 +9,7 @@ import { changeTrees, listChanges } from '../status/change-locations.js';
+ import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record.js';
+ import { LINK_FINDINGS_TABLES, insertLinkFindings } from './query-link-findings.js';
+ import { insertNotices } from './query-notices.js';
++import { PAUSE_TABLES, insertPauses } from './query-pauses.js';
+ import { type HistoryTable, type TrialSubject, folderId } from './query-subjects.js';
+ import { TASK_OUTCOME_TABLES, insertTaskOutcomes } from './query-task-outcomes.js';
+ import { TASK_STREAM_TABLES, insertTaskStreamTables } from './query-task-streams.js';
+@@ -51,6 +52,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
+   ...TASK_STREAM_TABLES,
+   ...LINK_FINDINGS_TABLES,
+   ...TASK_OUTCOME_TABLES,
++  ...PAUSE_TABLES,
+ ];
+ 
+ /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
+@@ -201,6 +203,7 @@ async function build(
+   await insertValidatorTables(db, subjects);
+   await insertTaskStreamTables(db, subjects);
+   await insertLinkFindings(db, subjects);
++  await insertPauses(db, subjects);
+   await applyTrialLabels(db, projectRoot, config);
+   return db;
+ }
+diff --git a/tests/query-command.test.ts b/tests/query-command.test.ts
+index 4291459a..17313716 100644
+--- a/tests/query-command.test.ts
++++ b/tests/query-command.test.ts
+@@ -22,6 +22,7 @@ const TABLE_LIST = [
+   'mutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)',
+   'link_findings(id, change, severity, file, message, label)',
+   'task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)',
++  'pauses(change, task, paused_at, until, source)',
+ ].join('\n');
+ 
+ const REFUSALS = [
+diff --git a/tests/query-pauses.test.ts b/tests/query-pauses.test.ts
+new file mode 100644
+index 00000000..c256ee46
+--- /dev/null
++++ b/tests/query-pauses.test.ts
+@@ -0,0 +1,170 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, describe, it } from 'node:test';
++import { queryCommand } from '../src/cli/query.js';
++import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
++
++const ARCHIVE_DIR = path.join('openspec', 'changes', 'archive');
++const PRICING = '007-pricing';
++const PLAIN = '008-plain';
++
++const PAUSES = 'pauses(change, task, paused_at, until, source)';
++const TASK_OUTCOMES =
++  'task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)';
++const LINK_FINDINGS = 'link_findings(id, change, severity, file, message, label)';
++
++const roots: string[] = [];
++
++afterEach(async () => {
++  await Promise.all(roots.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
++});
++
++/** A fresh temporary project root, removed after the test. */
++async function makeRoot(): Promise<string> {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-query-pauses-'));
++  roots.push(root);
++  return root;
++}
++
++/** Writes one file under the root, creating parent folders. */
++async function write(root: string, rel: string, content: string): Promise<void> {
++  const target = path.join(root, rel);
++  await fs.mkdir(path.dirname(target), { recursive: true });
++  await fs.writeFile(target, content, 'utf8');
++}
++
++/** One jsonl event line, with an optional timestamp. */
++function event(type: string, data: Record<string, unknown>, timestamp?: string): string {
++  return JSON.stringify(timestamp === undefined ? { type, data } : { type, data, timestamp });
++}
++
++/** A proposal so the folder reads as an archived change. */
++async function writeProposal(root: string, base: string, title: string): Promise<void> {
++  await write(
++    root,
++    path.join(base, 'proposal.md'),
++    `---\ntitle: ${title}\n---\n## Goal\n\n${title}.\n`,
++  );
++}
++
++/**
++ * Change `007-pricing`, whose `2.jsonl` holds a `started` event and then the two
++ * `paused` events of "Pauses of one archived change".
++ */
++async function writePricing(root: string): Promise<void> {
++  const base = path.join(ARCHIVE_DIR, PRICING);
++  await writeProposal(root, base, 'Pricing');
++  await write(
++    root,
++    path.join(base, '.run', 'events', '2.jsonl'),
++    [
++      event('started', {}, '2026-10-14T11:00:00.000Z'),
++      event(
++        'paused',
++        { task: '2', until: '2026-10-14T15:00:00.000Z', source: 'harness' },
++        '2026-10-14T12:00:00.000Z',
++      ),
++      event(
++        'paused',
++        { task: '2', until: '2026-10-14T15:31:00.000Z', source: 'wait' },
++        '2026-10-14T15:01:00.000Z',
++      ),
++    ]
++      .join('\n')
++      .concat('\n'),
++  );
++}
++
++/** Change `008-plain`, which holds no `paused` event. */
++async function writePlain(root: string): Promise<void> {
++  await writeProposal(root, path.join(ARCHIVE_DIR, PLAIN), 'Plain');
++}
++
++/** The stdout text a command wrote through captured writers. */
++async function capture(
++  root: string,
++  options: { select?: string } = {},
++): Promise<{ text: string; error: string }> {
++  let text = '';
++  let error = '';
++  await queryCommand({
++    cwd: root,
++    config: DEFAULT_CONFIG,
++    stdout: (chunk) => {
++      text += chunk;
++    },
++    stderr: (chunk) => {
++      error += chunk;
++    },
++    ...options,
++  });
++  return { text, error };
++}
++
++describe('pauses of one archived change', () => {
++  it('holds one row per paused event, in numeric task and event order', async () => {
++    const root = await makeRoot();
++    await writePricing(root);
++
++    const { text, error } = await capture(root, {
++      select: 'select change, task, paused_at, until, source from pauses',
++    });
++
++    assert.equal(error, '');
++    assert.equal(
++      text,
++      [
++        'change\ttask\tpaused_at\tuntil\tsource',
++        `${PRICING}\t2\t2026-10-14T12:00:00.000Z\t2026-10-14T15:00:00.000Z\tharness`,
++        `${PRICING}\t2\t2026-10-14T15:01:00.000Z\t2026-10-14T15:31:00.000Z\twait`,
++      ]
++        .join('\n')
++        .concat('\n'),
++    );
++  });
++});
++
++describe('no pauses', () => {
++  it('counts zero when no archived change holds a paused event', async () => {
++    const root = await makeRoot();
++    await writePlain(root);
++
++    const { text, error } = await capture(root, {
++      select: 'select count(*) as n from pauses',
++    });
++
++    assert.equal(error, '');
++    assert.equal(text, 'n\n0\n');
++  });
++});
++
++describe('pauses listed', () => {
++  it('prints the pauses line last, after task_outcomes, and exits zero', async () => {
++    const root = await makeRoot();
++    await writePricing(root);
++
++    const { text, error } = await capture(root);
++
++    assert.equal(error, '');
++    const lines = text.trimEnd().split('\n');
++    assert.equal(lines.at(-1), PAUSES);
++    assert.equal(lines.at(-2), TASK_OUTCOMES);
++  });
++});
++
++describe('task outcomes listed', () => {
++  it('prints task_outcomes directly after link_findings, and exits zero', async () => {
++    const root = await makeRoot();
++    await writePricing(root);
++
++    const { text, error } = await capture(root);
++
++    assert.equal(error, '');
++    const lines = text.trimEnd().split('\n');
++    const linkIndex = lines.indexOf(LINK_FINDINGS);
++    assert.ok(linkIndex >= 0);
++    assert.equal(lines[linkIndex + 1], TASK_OUTCOMES);
++  });
++});
+diff --git a/tests/query-tables.test.ts b/tests/query-tables.test.ts
+index 68f02ada..79afaf5c 100644
+--- a/tests/query-tables.test.ts
++++ b/tests/query-tables.test.ts
+@@ -283,6 +283,10 @@ describe('HISTORY_TABLES', () => {
+             'files_touched',
+           ],
+         },
++        {
++          name: 'pauses',
++          columns: ['change', 'task', 'paused_at', 'until', 'source'],
++        },
+       ],
+     );
+   });
+diff --git a/tests/query-trial-tables.test.ts b/tests/query-trial-tables.test.ts
+index 5f0b2086..f06c7e2d 100644
+--- a/tests/query-trial-tables.test.ts
++++ b/tests/query-trial-tables.test.ts
+@@ -26,6 +26,7 @@ const TABLE_LIST = [
+   'mutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)',
+   'link_findings(id, change, severity, file, message, label)',
+   'task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)',
++  'pauses(change, task, paused_at, until, source)',
+ ].join('\n');
+ 
+ const TRIAL_TABLES = [

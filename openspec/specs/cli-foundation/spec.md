@@ -4206,3 +4206,18 @@ otherwise. `--print` and `--session` SHALL print what they print today.
 #### Scenario: Steered change in its worktree
 - **WHEN** `osq plan 001` runs for a change that needs steering and whose folder is in its worktree, in a checkout that holds `.claude/commands/osq-plan.md`
 - **THEN** stdout's handoff line and paste block name the worktree folder, and no line holds `/osq-plan`
+
+### Requirement: Usage limit wait key
+Public configuration SHALL contain `gates.usageLimitWaitSeconds`, defaulting to
+1800: how many seconds osq waits after a usage limit whose reset time the
+harness did not give. It SHALL be a non-negative integer. A partial gates block
+SHALL keep its default, and any other value SHALL be rejected with an error
+naming the key.
+
+#### Scenario: Usage limit wait default
+- **WHEN** configuration declares no `gates` block, or one without `usageLimitWaitSeconds`
+- **THEN** `gates.usageLimitWaitSeconds` is 1800
+
+#### Scenario: Invalid usage limit wait
+- **WHEN** `gates.usageLimitWaitSeconds` is negative, fractional, or not a number
+- **THEN** loading the configuration fails with `gates.usageLimitWaitSeconds must be a non-negative integer`

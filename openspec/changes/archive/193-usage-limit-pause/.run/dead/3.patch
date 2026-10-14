@@ -1,0 +1,958 @@
+diff --git a/openspec/changes/193-usage-limit-pause/.run/dead/3.md b/openspec/changes/193-usage-limit-pause/.run/dead/3.md
+new file mode 100644
+index 00000000..5265884d
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/dead/3.md
+@@ -0,0 +1,6 @@
++---
++reason: timeout
++exit_code: 130
++fingerprint: sha256:ff6a4fcf5a51845f7d5ea90a66ee0811b42b7eb98df5243fca9e6bb115619524
++---
++Agent timed out with code 130: Task execution timed out
+diff --git a/openspec/changes/193-usage-limit-pause/.run/events/3.jsonl b/openspec/changes/193-usage-limit-pause/.run/events/3.jsonl
+new file mode 100644
+index 00000000..221d2f67
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/events/3.jsonl
+@@ -0,0 +1,141 @@
++{"type":"verify_ran","timestamp":"2026-10-14T10:28:34.068Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/usage-pause-watcher.test.ts","exitCode":1,"duration":0.02,"log":".run/logs/3-1.log","output":"Could not find 'tests/usage-pause-watcher.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/usage-pause-watcher.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-14T10:28:34.974Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":3,"scopeLines":1078,"repoFiles":3077,"repoLines":352096,"importFanIn":12,"proposalWords":1069,"taskWords":625,"deltaRequirements":11,"deltaScenarios":37}}
++{"type":"started","timestamp":"2026-10-14T10:28:35.020Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"6f7409ea","pid":4036018,"timeoutSeconds":1800,"version":"0.3.0","commit":"aeb1887c"}}
++{"type":"tool","timestamp":"2026-10-14T10:28:42.935Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:42.956Z","data":{"promptTokens":280445,"candidateTokens":98,"totalTokens":280543,"cachedTokens":0,"reasoningTokens":44,"cost":0.04215195}}
++{"type":"tool","timestamp":"2026-10-14T10:28:45.907Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:45.943Z","data":{"promptTokens":1378,"candidateTokens":131,"totalTokens":1509,"cachedTokens":280576,"reasoningTokens":20,"cost":0.001139028}}
++{"type":"tool","timestamp":"2026-10-14T10:28:49.444Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:49.479Z","data":{"promptTokens":416,"candidateTokens":107,"totalTokens":523,"cachedTokens":281984,"reasoningTokens":0,"cost":0.000972552}}
++{"type":"tool","timestamp":"2026-10-14T10:28:52.855Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:52.889Z","data":{"promptTokens":1709,"candidateTokens":69,"totalTokens":1778,"cachedTokens":282496,"reasoningTokens":104,"cost":0.001207638}}
++{"type":"tool","timestamp":"2026-10-14T10:28:55.775Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:55.808Z","data":{"promptTokens":1637,"candidateTokens":68,"totalTokens":1705,"cachedTokens":284288,"reasoningTokens":0,"cost":0.001139214}}
++{"type":"tool","timestamp":"2026-10-14T10:28:58.597Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:28:58.630Z","data":{"promptTokens":1848,"candidateTokens":67,"totalTokens":1915,"cachedTokens":285952,"reasoningTokens":0,"cost":0.001175256}}
++{"type":"tool","timestamp":"2026-10-14T10:29:23.770Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:29:23.809Z","data":{"promptTokens":289741,"candidateTokens":69,"totalTokens":289810,"cachedTokens":0,"reasoningTokens":21,"cost":0.04351515}}
++{"type":"tool","timestamp":"2026-10-14T10:30:00.206Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:30:00.243Z","data":{"promptTokens":1933,"candidateTokens":68,"totalTokens":2001,"cachedTokens":289792,"reasoningTokens":0,"cost":0.001200126}}
++{"type":"tool","timestamp":"2026-10-14T10:30:25.491Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:30:25.528Z","data":{"promptTokens":6192,"candidateTokens":95,"totalTokens":6287,"cachedTokens":291712,"reasoningTokens":21,"cost":0.001873536}}
++{"type":"tool","timestamp":"2026-10-14T10:30:47.400Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:30:47.438Z","data":{"promptTokens":1805,"candidateTokens":77,"totalTokens":1882,"cachedTokens":297984,"reasoningTokens":34,"cost":0.001231302}}
++{"type":"tool","timestamp":"2026-10-14T10:31:33.492Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:31:33.535Z","data":{"promptTokens":982,"candidateTokens":77,"totalTokens":1059,"cachedTokens":299776,"reasoningTokens":0,"cost":0.001092828}}
++{"type":"tool","timestamp":"2026-10-14T10:32:00.618Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:32:00.656Z","data":{"promptTokens":1256,"candidateTokens":68,"totalTokens":1324,"cachedTokens":300800,"reasoningTokens":19,"cost":0.001143}}
++{"type":"tool","timestamp":"2026-10-14T10:32:24.313Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:32:24.345Z","data":{"promptTokens":728,"candidateTokens":95,"totalTokens":823,"cachedTokens":302080,"reasoningTokens":0,"cost":0.00107244}}
++{"type":"tool","timestamp":"2026-10-14T10:32:51.906Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:32:51.939Z","data":{"promptTokens":2795,"candidateTokens":75,"totalTokens":2870,"cachedTokens":302848,"reasoningTokens":27,"cost":0.001388994}}
++{"type":"tool","timestamp":"2026-10-14T10:33:10.703Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:33:10.735Z","data":{"promptTokens":2397,"candidateTokens":75,"totalTokens":2472,"cachedTokens":305664,"reasoningTokens":45,"cost":0.001348542}}
++{"type":"tool","timestamp":"2026-10-14T10:33:27.608Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:33:27.644Z","data":{"promptTokens":1535,"candidateTokens":75,"totalTokens":1610,"cachedTokens":308096,"reasoningTokens":0,"cost":0.001199538}}
++{"type":"tool","timestamp":"2026-10-14T10:33:41.537Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:33:41.575Z","data":{"promptTokens":2002,"candidateTokens":95,"totalTokens":2097,"cachedTokens":309632,"reasoningTokens":77,"cost":0.0013323960000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:34:04.639Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:34:04.675Z","data":{"promptTokens":248,"candidateTokens":91,"totalTokens":339,"cachedTokens":311680,"reasoningTokens":0,"cost":0.00102684}}
++{"type":"tool","timestamp":"2026-10-14T10:34:25.668Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:34:25.701Z","data":{"promptTokens":510,"candidateTokens":84,"totalTokens":594,"cachedTokens":311936,"reasoningTokens":10,"cost":0.001068708}}
++{"type":"tool","timestamp":"2026-10-14T10:34:43.805Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:34:43.842Z","data":{"promptTokens":139,"candidateTokens":104,"totalTokens":243,"cachedTokens":312448,"reasoningTokens":0,"cost":0.001020594}}
++{"type":"tool","timestamp":"2026-10-14T10:35:46.218Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:35:46.252Z","data":{"promptTokens":1347,"candidateTokens":131,"totalTokens":1478,"cachedTokens":312576,"reasoningTokens":4009,"cost":0.0036237780000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:36:08.951Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:36:08.992Z","data":{"promptTokens":184,"candidateTokens":114,"totalTokens":298,"cachedTokens":317952,"reasoningTokens":69,"cost":0.001091256}}
++{"type":"tool","timestamp":"2026-10-14T10:37:11.014Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:37:11.047Z","data":{"promptTokens":798,"candidateTokens":97,"totalTokens":895,"cachedTokens":318208,"reasoningTokens":3245,"cost":0.0030795239999999993}}
++{"type":"tool","timestamp":"2026-10-14T10:37:33.120Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:37:33.157Z","data":{"promptTokens":458,"candidateTokens":131,"totalTokens":589,"cachedTokens":322304,"reasoningTokens":24,"cost":0.001128612}}
++{"type":"tool","timestamp":"2026-10-14T10:37:53.711Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:37:53.749Z","data":{"promptTokens":1054,"candidateTokens":88,"totalTokens":1142,"cachedTokens":322816,"reasoningTokens":13,"cost":0.0011871479999999998}}
++{"type":"tool","timestamp":"2026-10-14T10:38:33.003Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:38:33.041Z","data":{"promptTokens":50,"candidateTokens":105,"totalTokens":155,"cachedTokens":323968,"reasoningTokens":909,"cost":0.0015878040000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:39:02.546Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:39:02.582Z","data":{"promptTokens":202,"candidateTokens":80,"totalTokens":282,"cachedTokens":324992,"reasoningTokens":27,"cost":0.0010694760000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:39:35.675Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:39:35.708Z","data":{"promptTokens":283,"candidateTokens":95,"totalTokens":378,"cachedTokens":325248,"reasoningTokens":1123,"cost":0.0017489940000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:39:56.878Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:39:56.915Z","data":{"promptTokens":113,"candidateTokens":81,"totalTokens":194,"cachedTokens":326656,"reasoningTokens":0,"cost":0.001045518}}
++{"type":"tool","timestamp":"2026-10-14T10:40:37.821Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:40:37.857Z","data":{"promptTokens":731,"candidateTokens":116,"totalTokens":847,"cachedTokens":326784,"reasoningTokens":1870,"cost":0.0022816019999999998}}
++{"type":"text","timestamp":"2026-10-14T10:42:07.125Z","data":{"text":"Now I have enough understanding. Let me write the test file first (red)."}}
++{"type":"tool","timestamp":"2026-10-14T10:42:07.132Z","data":{"tool":"write","summary":"tests/usage-pause-watcher.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:42:07.169Z","data":{"promptTokens":678,"candidateTokens":4316,"totalTokens":4994,"cachedTokens":329472,"reasoningTokens":3508,"cost":0.005784516}}
++{"type":"tool","timestamp":"2026-10-14T10:42:33.457Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:42:33.497Z","data":{"promptTokens":79,"candidateTokens":95,"totalTokens":174,"cachedTokens":337920,"reasoningTokens":152,"cost":0.00117381}}
++{"type":"tool","timestamp":"2026-10-14T10:43:02.122Z","data":{"tool":"edit","summary":"tests/usage-pause-watcher.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:43:02.161Z","data":{"promptTokens":898,"candidateTokens":161,"totalTokens":1059,"cachedTokens":338176,"reasoningTokens":85,"cost":0.0012968279999999999}}
++{"type":"tool","timestamp":"2026-10-14T10:43:27.474Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:43:27.508Z","data":{"promptTokens":145,"candidateTokens":95,"totalTokens":240,"cachedTokens":339200,"reasoningTokens":0,"cost":0.0010963499999999998}}
++{"type":"tool","timestamp":"2026-10-14T10:43:56.836Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:43:56.870Z","data":{"promptTokens":701,"candidateTokens":109,"totalTokens":810,"cachedTokens":339328,"reasoningTokens":0,"cost":0.0011885340000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:44:41.459Z","data":{"tool":"write","summary":"src/watcher/usage-pause.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:44:41.497Z","data":{"promptTokens":232,"candidateTokens":1727,"totalTokens":1959,"cachedTokens":340096,"reasoningTokens":103,"cost":0.0021530879999999996}}
++{"type":"tool","timestamp":"2026-10-14T10:45:08.813Z","data":{"tool":"edit","summary":"src/watcher/outcome.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:45:08.852Z","data":{"promptTokens":38,"candidateTokens":173,"totalTokens":211,"cachedTokens":342144,"reasoningTokens":7,"cost":0.001140132}}
++{"type":"text","timestamp":"2026-10-14T10:45:43.073Z","data":{"text":"Now modify spawn.ts:"}}
++{"type":"tool","timestamp":"2026-10-14T10:45:43.076Z","data":{"tool":"edit","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:45:43.113Z","data":{"promptTokens":113,"candidateTokens":139,"totalTokens":252,"cachedTokens":342272,"reasoningTokens":0,"cost":0.001127166}}
++{"type":"tool","timestamp":"2026-10-14T10:46:12.633Z","data":{"tool":"edit","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:46:12.666Z","data":{"promptTokens":164,"candidateTokens":201,"totalTokens":365,"cachedTokens":342400,"reasoningTokens":19,"cost":0.0011838}}
++{"type":"tool","timestamp":"2026-10-14T10:46:38.426Z","data":{"tool":"edit","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:46:38.462Z","data":{"promptTokens":150,"candidateTokens":167,"totalTokens":317,"cachedTokens":342656,"reasoningTokens":0,"cost":0.001150668}}
++{"type":"tool","timestamp":"2026-10-14T10:47:03.130Z","data":{"tool":"read","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:47:03.164Z","data":{"promptTokens":83,"candidateTokens":97,"totalTokens":180,"cachedTokens":342912,"reasoningTokens":23,"cost":0.0011131860000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:47:31.375Z","data":{"tool":"edit","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:47:31.416Z","data":{"promptTokens":479,"candidateTokens":290,"totalTokens":769,"cachedTokens":343040,"reasoningTokens":40,"cost":0.0012989700000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:47:51.061Z","data":{"tool":"read","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:47:51.098Z","data":{"promptTokens":63,"candidateTokens":97,"totalTokens":160,"cachedTokens":343808,"reasoningTokens":0,"cost":0.001099074}}
++{"type":"tool","timestamp":"2026-10-14T10:48:09.225Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:48:09.263Z","data":{"promptTokens":459,"candidateTokens":145,"totalTokens":604,"cachedTokens":343936,"reasoningTokens":13,"cost":0.0011954580000000002}}
++{"type":"tool","timestamp":"2026-10-14T10:48:36.165Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:48:36.199Z","data":{"promptTokens":127,"candidateTokens":164,"totalTokens":291,"cachedTokens":344448,"reasoningTokens":0,"cost":0.0011507940000000001}}
++{"type":"tool","timestamp":"2026-10-14T10:48:59.426Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:48:59.463Z","data":{"promptTokens":57,"candidateTokens":212,"totalTokens":269,"cachedTokens":344704,"reasoningTokens":0,"cost":0.001169862}}
++{"type":"tool","timestamp":"2026-10-14T10:49:26.188Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:49:26.223Z","data":{"promptTokens":35,"candidateTokens":236,"totalTokens":271,"cachedTokens":344960,"reasoningTokens":26,"cost":0.0011973300000000001}}
++{"type":"text","timestamp":"2026-10-14T10:49:47.592Z","data":{"text":"Now the result handling:"}}
++{"type":"tool","timestamp":"2026-10-14T10:49:47.597Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:49:47.635Z","data":{"promptTokens":63,"candidateTokens":364,"totalTokens":427,"cachedTokens":345216,"reasoningTokens":0,"cost":0.0012634979999999998}}
++{"type":"tool","timestamp":"2026-10-14T10:50:09.589Z","data":{"tool":"read","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:50:09.622Z","data":{"promptTokens":65,"candidateTokens":97,"totalTokens":162,"cachedTokens":345600,"reasoningTokens":60,"cost":0.00114075}}
++{"type":"tool","timestamp":"2026-10-14T10:50:31.730Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:50:31.767Z","data":{"promptTokens":552,"candidateTokens":85,"totalTokens":637,"cachedTokens":345728,"reasoningTokens":0,"cost":0.001170984}}
++{"type":"text","timestamp":"2026-10-14T10:50:47.802Z","data":{"text":"Now run the verify:"}}
++{"type":"tool","timestamp":"2026-10-14T10:50:48.829Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:50:48.862Z","data":{"promptTokens":375,"candidateTokens":113,"totalTokens":488,"cachedTokens":346240,"reasoningTokens":0,"cost":0.00116277}}
++{"type":"tool","timestamp":"2026-10-14T10:51:20.515Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:51:20.548Z","data":{"promptTokens":168,"candidateTokens":147,"totalTokens":315,"cachedTokens":346624,"reasoningTokens":37,"cost":0.0011754719999999999}}
++{"type":"tool","timestamp":"2026-10-14T10:51:45.420Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:51:45.458Z","data":{"promptTokens":324,"candidateTokens":71,"totalTokens":395,"cachedTokens":346880,"reasoningTokens":56,"cost":0.00116544}}
++{"type":"tool","timestamp":"2026-10-14T10:52:17.411Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:52:17.449Z","data":{"promptTokens":515,"candidateTokens":74,"totalTokens":589,"cachedTokens":347264,"reasoningTokens":0,"cost":0.001163442}}
++{"type":"tool","timestamp":"2026-10-14T10:52:48.645Z","data":{"tool":"edit","summary":"tests/usage-pause-watcher.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:52:48.684Z","data":{"promptTokens":224,"candidateTokens":169,"totalTokens":393,"cachedTokens":347776,"reasoningTokens":98,"cost":0.0012371279999999999}}
++{"type":"tool","timestamp":"2026-10-14T10:53:14.901Z","data":{"tool":"edit","summary":"tests/usage-pause-watcher.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:53:14.939Z","data":{"promptTokens":132,"candidateTokens":143,"totalTokens":275,"cachedTokens":348160,"reasoningTokens":0,"cost":0.00115008}}
++{"type":"tool","timestamp":"2026-10-14T10:53:40.771Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:53:40.812Z","data":{"promptTokens":44,"candidateTokens":74,"totalTokens":118,"cachedTokens":348416,"reasoningTokens":0,"cost":0.001096248}}
++{"type":"tool","timestamp":"2026-10-14T10:54:00.860Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:54:00.894Z","data":{"promptTokens":186,"candidateTokens":111,"totalTokens":297,"cachedTokens":348416,"reasoningTokens":12,"cost":0.001146948}}
++{"type":"tool","timestamp":"2026-10-14T10:54:28.126Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:54:28.159Z","data":{"promptTokens":117,"candidateTokens":113,"totalTokens":230,"cachedTokens":348672,"reasoningTokens":24,"cost":0.001145766}}
++{"type":"tool","timestamp":"2026-10-14T10:54:52.441Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:54:52.476Z","data":{"promptTokens":526,"candidateTokens":115,"totalTokens":641,"cachedTokens":348800,"reasoningTokens":0,"cost":0.0011943000000000001}}
++{"type":"tool","timestamp":"2026-10-14T10:55:15.724Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:55:15.757Z","data":{"promptTokens":26,"candidateTokens":121,"totalTokens":147,"cachedTokens":349440,"reasoningTokens":0,"cost":0.00112482}}
++{"type":"tool","timestamp":"2026-10-14T10:55:44.815Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:55:44.849Z","data":{"promptTokens":48,"candidateTokens":126,"totalTokens":174,"cachedTokens":349568,"reasoningTokens":10,"cost":0.001137504}}
++{"type":"tool","timestamp":"2026-10-14T10:56:21.842Z","data":{"tool":"edit","summary":"src/watcher/spawn.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:56:21.880Z","data":{"promptTokens":177,"candidateTokens":338,"totalTokens":515,"cachedTokens":349696,"reasoningTokens":504,"cost":0.001580838}}
++{"type":"tool","timestamp":"2026-10-14T10:56:50.983Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-14T10:56:51.020Z","data":{"promptTokens":145,"candidateTokens":186,"totalTokens":331,"cachedTokens":350592,"reasoningTokens":74,"cost":0.001229526}}
++{"type":"tool","timestamp":"2026-10-14T10:57:29.188Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/193-usage-li"}}
++{"type":"tokens","timestamp":"2026-10-14T10:57:29.224Z","data":{"promptTokens":43,"candidateTokens":128,"totalTokens":171,"cachedTokens":350976,"reasoningTokens":66,"cost":0.001175778}}
++{"type":"tokens","timestamp":"2026-10-14T10:58:35.560Z","data":{"promptTokens":193,"candidateTokens":106,"totalTokens":299,"cachedTokens":608425,"reasoningTokens":261,"cost":0.03346583700000008}}
++{"type":"exited","timestamp":"2026-10-14T10:58:35.560Z","data":{"exitCode":130,"pid":4036018,"timedOut":true,"elapsedSeconds":1800.2}}
++{"type":"dead","timestamp":"2026-10-14T10:58:35.563Z","data":{"task":"3","reason":"timeout"}}
++{"type":"measures","timestamp":"2026-10-14T10:58:35.592Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":1078,"repoFiles":3077,"repoLines":352096,"importFanIn":12,"proposalWords":1069,"taskWords":625,"deltaRequirements":11,"deltaScenarios":37,"changedFiles":5,"changedLines":694,"scopeHashes":{"src/watcher/loop.ts":{"before":"sha256:a8a1a94657b6013bb9e2e9ef7e5ee9cac743344f904d2a89364b4fdf1713f114","after":"sha256:28b78275b0ddb3c1ea14faeea41e68811be5d5863ce4a21a244155dc57fbd132"},"src/watcher/outcome.ts":{"before":"sha256:d9d781452f92d1e7dc8da42e9bd282205a55f16aed69ed5e8696d2b22b6d26f1","after":"sha256:68dedcf7aeec4c69311238a1871815e7d579f4f7d20d030ec88a1d22521c00e3"},"src/watcher/spawn.ts":{"before":"sha256:d9760a68cabad6fe8b3ec4885900abb428df3b59bcc87e7679e8f1a62194b86d","after":"sha256:c86282ae7e169d2de56892b2390bfdfe464990e016fdaf9531e81051091e02c1"},"src/watcher/usage-pause.ts":{"before":null,"after":"sha256:a46f842f143c049a4046f650515ab7ae8f7212ee9d6d8e7ddefd20a79d4f9289"},"tests/usage-pause-watcher.test.ts":{"before":null,"after":"sha256:fde9862e817154dc14a4077a541423233e3c793dff2064f5e0587b52de7eec9b"}}}}
+diff --git a/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl b/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl
+new file mode 100644
+index 00000000..23e39f10
+--- /dev/null
++++ b/openspec/changes/193-usage-limit-pause/.run/events/change.jsonl
+@@ -0,0 +1,3 @@
++{"type":"baseline_ran","timestamp":"2026-10-14T10:02:52.441Z","data":{"outcome":"passed","command":"pnpm verify","commit":"53e561d66e841d61a171909539d41e7fda87cf0b","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":114.39}}
++{"type":"verify_ran","timestamp":"2026-10-14T10:15:48.639Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.64,"log":".run/logs/change-1.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.379118ms)\n✔ dashboard data base (1.411362ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.507012ms)\n  ✔ keeps the default actions URL (0.270026ms)\n✔ actions client base (1.074975ms)\n▶ server header\n  ✔ shows the project and server name next to the title (30.071462ms)\n✔ server header (30.189885ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.182787ms)\n  ✔ shows a terminal watcher and no service record (1.140746ms)\n  ✔ shows a waiting background watcher and a service record (1.071455ms)\n  ✔ shows no watcher and no service record (1.055374ms)\n  ✔ names the watcher version, commit, and start time (0.993662ms)\n  ✔ marks the waiting line as a warning in the existing palette (15.495022ms)\n  ✔ renders the home view as before without a server status (2.986348ms)\n✔ service panel (24.306162ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.571143ms)\n✔ service panel component (0.693786ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (7.554576ms)\n  ✔ maps every derived task state onto the status vocabulary (0.129563ms)\n  ✔ defines the whole palette for light and dark schemes (10.888637ms)\n  ✔ never centers table cells (4.247356ms)\n✔ status badge (24.175989ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2774.291069\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1217 files in 390ms. No fixes applied."}}
++{"type":"verify_ran","timestamp":"2026-10-14T10:28:32.587Z","data":{"command":"pnpm verify","exitCode":0,"duration":86.26,"log":".run/logs/change-2.log","output":"  ✔ keeps the loopback /api paths and never asks for api/server (0.294477ms)\n✔ dashboard data base (1.447073ms)\n▶ actions client base\n  ✔ prefixes the actions URL with the base (0.389569ms)\n  ✔ keeps the default actions URL (1.336449ms)\n✔ actions client base (2.032455ms)\n▶ server header\n  ✔ shows the project and server name next to the title (15.757197ms)\n✔ server header (15.875409ms)\n▶ service panel\n  ✔ shows a background watcher and a service record (1.629087ms)\n  ✔ shows a terminal watcher and no service record (1.104695ms)\n  ✔ shows a waiting background watcher and a service record (1.250569ms)\n  ✔ shows no watcher and no service record (1.038699ms)\n  ✔ names the watcher version, commit, and start time (1.423603ms)\n  ✔ marks the waiting line as a warning in the existing palette (26.15283ms)\n  ✔ renders the home view as before without a server status (1.33308ms)\n✔ service panel (34.299728ms)\n▶ service panel component\n  ✔ renders the panel directly for a server status (0.491241ms)\n✔ service panel component (0.564193ms)\n▶ status badge\n  ✔ renders an aria-hidden dot in the status color followed by the status word (8.639036ms)\n  ✔ maps every derived task state onto the status vocabulary (0.203014ms)\n  ✔ defines the whole palette for light and dark schemes (7.130422ms)\n  ✔ never centers table cells (2.980253ms)\n✔ status badge (20.824399ms)\nℹ tests 214\nℹ suites 63\nℹ pass 214\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2710.260889\n\n> @matteeh/osq@0.3.0 lint .\n> biome check src tests packages/ui/src\n\nChecked 1219 files in 402ms. No fixes applied."}}
+diff --git a/src/watcher/loop.ts b/src/watcher/loop.ts
+index 5f5240b5..ee68403c 100644
+--- a/src/watcher/loop.ts
++++ b/src/watcher/loop.ts
+@@ -34,6 +34,7 @@ import {
+   startStaleCheck,
+ } from './stale-pass.js';
+ import { checkSync } from './sync-run.js';
++import { discardWorktreeEdits, findActivePause, removePassedPauses } from './usage-pause.js';
+ import {
+   commitPendingVerifiedTasks,
+   commitWorktreeArchive,
+@@ -188,6 +189,13 @@ function formatScopeRegressionLine(stale: StaleTaskAudit, symbols: boolean): str
+   return `${resolveSymbol('?', '[regressed]', symbols)} task ${stale.taskNumber} regressed (reason: scope_regression, attribution: ${detail || 'none'})`;
+ }
+ 
++/**
++ * One watcher pass: reap locks, retry, pause-check, run each active change's
++ * next task, and archive. A usage limit pauses every change until its reset.
++ *
++ * @scenario watcher-and-harness: Another change waits
++ * @scenario watcher-and-harness: Task runs after the reset
++ */
+ export async function runWatcherCycle(
+   projectRoot: string,
+   config: OsqConfig,
+@@ -207,6 +215,9 @@ export async function runWatcherCycle(
+ 
+   const activeChanges = await listChanges(projectRoot, config, ['active']);
+ 
++  // A passed pause is cleared once per cycle; an active one blocks spawning.
++  await removePassedPauses(activeChanges, Date.now());
++
+   let tasksRun = 0;
+   let retried = 0;
+   let specsArchived = 0;
+@@ -326,7 +337,10 @@ export async function runWatcherCycle(
+       // leave its folder alone so a planner can edit it. With autoSteer on the
+       // watcher runs that planner once here, before it leaves the change alone.
+       if (specState.steering) {
+-        await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
++        // A pause holds every change: start no planner while one is active.
++        if ((await findActivePause(activeChanges, Date.now())) === null) {
++          await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
++        }
+         continue;
+       }
+ 
+@@ -361,6 +375,10 @@ export async function runWatcherCycle(
+ 
+       if (specState.status === 'pending' && specState.nextTask) {
+         await assertNotStale(staleCheck);
++        // While any active change holds a pause, start no task anywhere.
++        if ((await findActivePause(activeChanges, Date.now())) !== null) {
++          continue;
++        }
+         if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
+           const syncHalt = await checkSync(projectRoot, change, config, logger);
+           if (syncHalt) {
+@@ -425,6 +443,12 @@ export async function runWatcherCycle(
+             }
+           }
+           await archiveCompletedSpec(change, specState.id);
++        } else if (taskResult.paused) {
++          // A paused task stays pending and is committed or halted by nothing:
++          // only its worktree edits outside the change folder are discarded.
++          if (worktree) {
++            await discardWorktreeEdits(change, config);
++          }
+         } else {
+           if (
+             worktree &&
+diff --git a/src/watcher/outcome.ts b/src/watcher/outcome.ts
+index fcc857fe..8b696fcb 100644
+--- a/src/watcher/outcome.ts
++++ b/src/watcher/outcome.ts
+@@ -16,6 +16,8 @@ export interface RunTaskResult {
+   success: boolean;
+   reason?: RunTaskFailureReason;
+   error?: string;
++  /** The usage-limit pause this attempt ended with; the task stays pending. */
++  paused?: { readonly until: string };
+ }
+ /** Tick `taskNumber`'s checkbox, supporting flat and grouped (`## <n>.`) numbering. Pure. */
+ export function tickTaskCheckboxContent(content: string, taskNumber: string): string {
+diff --git a/src/watcher/spawn.ts b/src/watcher/spawn.ts
+index 95c71cb8..7bf144e0 100644
+--- a/src/watcher/spawn.ts
++++ b/src/watcher/spawn.ts
+@@ -18,6 +18,7 @@ import {
+ } from './outcome.js';
+ import { describeAgentFailure } from './provider-outage.js';
+ import { spawnOrCrash } from './spawn-guard.js';
++import { pauseTaskAfterRun } from './usage-pause.js';
+ import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
+ 
+ export interface SpawnTaskAgentOptions {
+@@ -39,7 +40,12 @@ export type SpawnTaskAgentOutcome =
+  * Spawn the coding agent for a task and own the process lifecycle events. The
+  * `started` event is emitted the moment the child process exists via `onSpawn`.
+  * A crash or timeout is persisted as a dead marker and dead event before the
+- * failure result is returned.
++ * failure result is returned. A usage limit pauses the attempt instead, leaving
++ * the task pending.
++ *
++ * @scenario watcher-and-harness: Limit with a reset time
++ * @scenario watcher-and-harness: Limit without a reset time
++ * @scenario watcher-and-harness: Limit from an earlier attempt
+  */
+ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<SpawnTaskAgentOutcome> {
+   const { projectRoot, specFolderPath, taskNumber, taskData } = opts;
+@@ -130,6 +136,13 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
+     'verbose',
+   );
+ 
++  // A usage limit pauses the attempt instead of judging it, whatever the exit
++  // code: no dead marker, no dead event, and the task stays pending.
++  const pause = await pauseTaskAfterRun(specFolderPath, taskNumber, config, logger);
++  if (pause) {
++    return { ok: false, result: { success: false, paused: { until: pause.until } } };
++  }
++
+   if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
+     const { reason: failureReason, marker } = await describeAgentFailure(
+       specFolderPath,
+diff --git a/src/watcher/usage-pause.ts b/src/watcher/usage-pause.ts
+new file mode 100644
+index 00000000..2ad5dec0
+--- /dev/null
++++ b/src/watcher/usage-pause.ts
+@@ -0,0 +1,180 @@
++/**
++ * The watcher side of the usage-limit pause: records `.run/paused.md` and the
++ * `paused` event, finds and clears the pauses active changes hold, and throws
++ * away a paused worktree task's edits outside the change folder.
++ */
++
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { DEFAULT_GATES_CONFIG } from '../core/foundation/config-gates.js';
++import type { OsqConfig } from '../core/foundation/config.js';
++import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
++import {
++  type UsagePause,
++  findUsageLimit,
++  formatPauseUntil,
++  pauseUntil,
++  readActivePause,
++  readUsagePause,
++  usagePausePath,
++  writeUsagePause,
++} from '../core/run/usage-pause.js';
++import type { LocatedChange } from '../core/status/change-locations.js';
++import { selectVcs } from '../core/vcs/select.js';
++import { asRecord } from '../harness/stream.js';
++import { appendHarnessEvent } from '../harness/types.js';
++
++/** The leading number of a folder's name, else the whole name. */
++function changeId(folderPath: string): string {
++  const base = path.basename(folderPath);
++  return /^(\d+)/.exec(base)?.[1] ?? base;
++}
++
++/** A change folder and the pause it holds, for the loop's cycle-wide checks. */
++type PausedChange = Pick<LocatedChange, 'folderPath'>;
++
++/**
++ * Write `.run/paused.md`, append the `paused` event to the task's stream, and
++ * log one line. The prefix is the pause symbol, as every watcher line's is.
++ *
++ * @scenario watcher-and-harness: Limit with a reset time
++ * @scenario watcher-and-harness: Limit without a reset time
++ */
++export async function recordUsagePause(
++  folderPath: string,
++  stream: string,
++  pause: UsagePause,
++  logger?: Logger,
++): Promise<void> {
++  await writeUsagePause(folderPath, pause);
++  await appendHarnessEvent(folderPath, stream, {
++    type: 'paused',
++    timestamp: new Date().toISOString(),
++    data: {
++      task: pause.task,
++      until: pause.until,
++      source: pause.source,
++      ...(pause.error !== undefined ? { error: pause.error } : {}),
++    },
++  });
++  const prefix = resolveSymbol('⏸', '[paused]', logger?.symbols === true);
++  logger?.info(
++    `${prefix} task ${pause.task} of ${changeId(folderPath)} paused until ${formatPauseUntil(pause.until)} (usage limit)`,
++  );
++}
++
++/** Read a task's events, skipping malformed lines. */
++async function readEvents(specFolderPath: string, taskNumber: string): Promise<unknown[]> {
++  const raw = await fs
++    .readFile(path.join(specFolderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
++    .catch(() => '');
++  const events: unknown[] = [];
++  for (const line of raw.split('\n')) {
++    if (!line.trim()) continue;
++    try {
++      events.push(JSON.parse(line));
++    } catch {
++      // A malformed line never hides a later valid event.
++    }
++  }
++  return events;
++}
++
++/** The events after the last `started`, as `findOpenProviderRetry` reads them. */
++function afterLastStarted(events: readonly unknown[]): unknown[] {
++  let start = -1;
++  for (let index = 0; index < events.length; index += 1) {
++    if (asRecord(events[index])?.type === 'started') start = index;
++  }
++  return events.slice(start + 1);
++}
++
++/**
++ * Pause the attempt that just ran when its events hold a `usage_limit`: write
++ * the marker, append the event, and return the pause, or undefined without one.
++ * Called by the spawn right after the `exited` event, whatever the exit code.
++ *
++ * @scenario watcher-and-harness: Limit with a reset time
++ * @scenario watcher-and-harness: Limit without a reset time
++ * @scenario watcher-and-harness: Limit from an earlier attempt
++ */
++export async function pauseTaskAfterRun(
++  specFolderPath: string,
++  taskNumber: string,
++  config: OsqConfig,
++  logger?: Logger,
++): Promise<UsagePause | undefined> {
++  const limit = findUsageLimit(afterLastStarted(await readEvents(specFolderPath, taskNumber)));
++  if (limit === undefined) return undefined;
++  const waitSeconds =
++    config.gates?.usageLimitWaitSeconds ?? DEFAULT_GATES_CONFIG.usageLimitWaitSeconds ?? 1800;
++  const { until, source } = pauseUntil(limit, Date.now(), waitSeconds);
++  const pause: UsagePause = {
++    task: taskNumber,
++    until,
++    source,
++    ...(limit.error !== undefined ? { error: limit.error } : {}),
++  };
++  await recordUsagePause(specFolderPath, taskNumber, pause, logger);
++  return pause;
++}
++
++/**
++ * Remove the `.run/paused.md` of every change whose `until` has passed.
++ *
++ * @scenario watcher-and-harness: Task runs after the reset
++ */
++export async function removePassedPauses(
++  changes: readonly PausedChange[],
++  now: number,
++): Promise<void> {
++  for (const change of changes) {
++    const pause = await readUsagePause(change.folderPath);
++    if (pause !== null && Date.parse(pause.until) <= now) {
++      await fs.rm(usagePausePath(change.folderPath), { force: true });
++    }
++  }
++}
++
++/**
++ * The first active pause any change holds whose `until` is later than `now`,
++ * or null. The loop checks this before it starts a task or the planner.
++ *
++ * @scenario watcher-and-harness: Another change waits
++ */
++export async function findActivePause(
++  changes: readonly PausedChange[],
++  now: number,
++): Promise<UsagePause | null> {
++  for (const change of changes) {
++    const pause = await readActivePause(change.folderPath, now);
++    if (pause !== null) return pause;
++  }
++  return null;
++}
++
++/**
++ * Discard what a paused worktree task changed outside its change folder, the
++ * way `commitDeadTask` does, but write no patch and make no commit.
++ *
++ * @scenario watcher-and-harness: Limit with a reset time
++ */
++export async function discardWorktreeEdits(
++  change: LocatedChange,
++  config: OsqConfig,
++): Promise<void> {
++  const vcs = await selectVcs(change.tree.root, config);
++  if (vcs.kind !== 'git') return;
++  const root = await vcs.root();
++  if (root === null) return;
++  const changeRel = path.relative(root, change.folderPath).split(path.sep).join('/');
++  const outside = new Set<string>();
++  for (const entry of await vcs.status()) {
++    for (const candidate of [entry.path, entry.from]) {
++      if (candidate === undefined) continue;
++      if (candidate === changeRel || candidate.startsWith(`${changeRel}/`)) continue;
++      outside.add(candidate);
++    }
++  }
++  await vcs.discard([...outside].sort());
++}
+diff --git a/tests/usage-pause-watcher.test.ts b/tests/usage-pause-watcher.test.ts
+new file mode 100644
+index 00000000..53ba0b74
+--- /dev/null
++++ b/tests/usage-pause-watcher.test.ts
+@@ -0,0 +1,473 @@
++import assert from 'node:assert/strict';
++import { execFile } from 'node:child_process';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, describe, it } from 'node:test';
++import { promisify } from 'node:util';
++import { DEFAULT_GATES_CONFIG } from '../src/core/foundation/config-gates.js';
++import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
++import { DEFAULT_CONFIG, type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
++import { scaffoldProject } from '../src/core/foundation/init.js';
++import { createNewSpec } from '../src/core/foundation/new.js';
++import {
++  formatPauseUntil,
++  readUsagePause,
++  usagePausePath,
++  writeUsagePause,
++} from '../src/core/run/usage-pause.js';
++import { approveSpec } from '../src/core/spec/approve.js';
++import { parseTaskMd } from '../src/core/spec/parser.js';
++import { MockAdapter } from '../src/harness/mock.js';
++import {
++  type HarnessAdapter,
++  type SpawnResult,
++  type SpawnTaskOptions,
++  appendHarnessEvent,
++} from '../src/harness/types.js';
++import { runWatcherCycle } from '../src/watcher/loop.js';
++import { spawnTaskAgent } from '../src/watcher/spawn.js';
++import { installFakeValidator } from './helpers.js';
++
++const execFileAsync = promisify(execFile);
++
++const tmpDirs: string[] = [];
++
++afterEach(async () => {
++  for (const dir of tmpDirs.splice(0)) {
++    await fs.rm(dir, { recursive: true, force: true });
++  }
++});
++
++async function exists(target: string): Promise<boolean> {
++  return fs
++    .stat(target)
++    .then(() => true)
++    .catch(() => false);
++}
++
++async function readEvents(specFolder: string, target = '1'): Promise<Record<string, unknown>[]> {
++  const raw = await fs
++    .readFile(path.join(specFolder, '.run', 'events', `${target}.jsonl`), 'utf8')
++    .catch(() => '');
++  return raw
++    .split('\n')
++    .filter((line) => line.trim().length > 0)
++    .map((line) => JSON.parse(line) as Record<string, unknown>);
++}
++
++const TASK_DATA = parseTaskMd(
++  [
++    '---',
++    'title: Usage pause',
++    'verify: node --version',
++    'scope: []',
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] pauses',
++    '',
++  ].join('\n'),
++);
++
++interface Limit {
++  readonly resetsAt?: string;
++  readonly error?: string;
++}
++
++/** Adapter that appends one `usage_limit` event after `started`, then exits. */
++class PauseAdapter implements HarnessAdapter {
++  readonly name = 'pause-stub';
++  readonly calls: string[] = [];
++
++  constructor(
++    private readonly limit: Limit | null,
++    private readonly result: SpawnResult = { exitCode: 0 },
++  ) {}
++
++  async setup(): Promise<void> {}
++
++  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
++    this.calls.push(options.taskNumber);
++    await options.onSpawn?.(1234);
++    if (this.limit) {
++      await appendHarnessEvent(options.specFolderPath, options.taskNumber, {
++        type: 'usage_limit',
++        timestamp: new Date().toISOString(),
++        data: {
++          ...(this.limit.resetsAt ? { resetsAt: this.limit.resetsAt } : {}),
++          ...(this.limit.error ? { error: this.limit.error } : {}),
++        },
++      });
++    }
++    return { ...this.result, pid: 1234 };
++  }
++}
++
++async function runSpawn(
++  specFolder: string,
++  adapter: HarnessAdapter,
++  config: OsqConfig = DEFAULT_CONFIG,
++): Promise<Awaited<ReturnType<typeof spawnTaskAgent>>> {
++  return spawnTaskAgent({
++    projectRoot: path.dirname(specFolder),
++    specFolderPath: specFolder,
++    taskNumber: '1',
++    taskData: TASK_DATA,
++    config,
++    adapter,
++    logOutcome: () => {},
++  });
++}
++
++describe('usage pause through spawnTaskAgent', () => {
++  let root: string;
++  let specFolder: string;
++
++  afterEach(async () => {
++    if (root) await fs.rm(root, { recursive: true, force: true });
++  });
++
++  async function setup(): Promise<void> {
++    root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-usage-pause-spawn-'));
++    specFolder = path.join(root, 'change');
++    await fs.mkdir(path.join(specFolder, '.run'), { recursive: true });
++  }
++
++  it('Limit with a reset time: pauses with source harness and writes no dead marker', async () => {
++    await setup();
++    const resetsAt = new Date(Date.now() + 3600_000).toISOString();
++
++    const outcome = await runSpawn(specFolder, new PauseAdapter({ resetsAt }, { exitCode: 1 }));
++
++    assert.equal(outcome.ok, false);
++    if (outcome.ok) return;
++    assert.deepEqual(outcome.result.paused, { until: resetsAt });
++    assert.equal(outcome.result.reason, undefined);
++
++    const pause = await readUsagePause(specFolder);
++    assert.equal(pause?.task, '1');
++    assert.equal(pause?.until, resetsAt);
++    assert.equal(pause?.source, 'harness');
++
++    const paused = (await readEvents(specFolder)).filter((event) => event.type === 'paused');
++    assert.equal(paused.length, 1);
++    assert.deepEqual(paused[0]?.data, { task: '1', until: resetsAt, source: 'harness' });
++
++    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
++    const events = await readEvents(specFolder);
++    assert.equal(events.filter((event) => event.type === 'dead').length, 0);
++    assert.equal(events.filter((event) => event.type === 'retry').length, 0);
++  });
++
++  it('Limit without a reset time: waits the configured seconds and does not die no_result', async () => {
++    await setup();
++    const before = Date.now();
++    const config: OsqConfig = {
++      ...DEFAULT_CONFIG,
++      gates: { ...DEFAULT_GATES_CONFIG, usageLimitWaitSeconds: 600 },
++    };
++
++    const outcome = await runSpawn(specFolder, new PauseAdapter({}), config);
++    const after = Date.now();
++
++    assert.equal(outcome.ok, false);
++    if (outcome.ok) return;
++    const until = outcome.result.paused?.until;
++    assert.ok(until, 'the result carries the pause until');
++    const parsed = Date.parse(until as string);
++    assert.ok(parsed >= before + 600_000 && parsed <= after + 600_000);
++
++    const pause = await readUsagePause(specFolder);
++    assert.equal(pause?.source, 'wait');
++    assert.equal(pause?.until, until);
++
++    assert.equal(await exists(path.join(specFolder, '.run', 'dead', '1.md')), false);
++    const events = await readEvents(specFolder);
++    assert.equal(
++      events.filter(
++        (event) => (event.data as Record<string, unknown> | undefined)?.reason === 'no_result',
++      ).length,
++      0,
++    );
++  });
++
++  it('Limit from an earlier attempt: a limit before the last started does not pause', async () => {
++    await setup();
++    await appendHarnessEvent(specFolder, '1', {
++      type: 'usage_limit',
++      timestamp: new Date(Date.now() - 60_000).toISOString(),
++      data: { resetsAt: new Date(Date.now() + 3600_000).toISOString() },
++    });
++
++    const outcome = await runSpawn(specFolder, new PauseAdapter(null, { exitCode: 1 }));
++
++    assert.equal(outcome.ok, false);
++    if (outcome.ok) return;
++    assert.equal(outcome.result.reason, 'crashed');
++    assert.equal(await exists(usagePausePath(specFolder)), false);
++    const events = await readEvents(specFolder);
++    assert.equal(events.filter((event) => event.type === 'paused').length, 0);
++  });
++});
++
++/* ---------------------------------------------------------------- cycles -- */
++
++const VERIFY = 'node verify.cjs';
++
++function taskMarkdown(title: string): string {
++  return [
++    '---',
++    `title: ${title}`,
++    `verify: ${VERIFY}`,
++    'scope: []',
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] does the thing',
++    '',
++  ].join('\n');
++}
++
++function proposalMarkdown(title: string): string {
++  return [
++    '---',
++    `title: ${title}`,
++    'depends_on: []',
++    `verify: ${VERIFY}`,
++    'features:',
++    '  reads: []',
++    '---',
++    '## Goal',
++    'Run the tasks.',
++    '',
++    '## Surface',
++    'None.',
++    '',
++    '## Human steps',
++    'None',
++    '',
++  ].join('\n');
++}
++
++/** One scaffolded project with its verify script, ready for approved changes. */
++async function setupProject(): Promise<{ root: string; config: OsqConfig }> {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-usage-pause-cycle-'));
++  tmpDirs.push(root);
++  await installFakeValidator(root);
++  await scaffoldProject(root);
++  await fs.writeFile(path.join(root, 'verify.cjs'), 'process.exit(0);\n', 'utf8');
++  const config = defineConfig({
++    gates: { ...DEFAULT_GATES_CONFIG, preSpawnVerify: 'off' },
++  });
++  return { root, config };
++}
++
++async function addChange(root: string, title: string, tasks: number): Promise<string> {
++  const spec = await createNewSpec(root, title);
++  const folder = spec.folderPath;
++  await fs.writeFile(path.join(folder, 'proposal.md'), proposalMarkdown(title), 'utf8');
++  for (let index = 1; index <= tasks; index += 1) {
++    await fs.writeFile(
++      path.join(folder, 'tasks', `${index}.md`),
++      taskMarkdown(`${title} task ${index}`),
++      'utf8',
++    );
++  }
++  await approveSpec(root, path.basename(folder).match(/^(\d+)/)?.[1] ?? folder, DEFAULT_CONFIG);
++  return folder;
++}
++
++/** Every file under `dir`, relative and sorted, for an unchanged-folder check. */
++async function listFiles(dir: string): Promise<string[]> {
++  const found: string[] = [];
++  async function walk(current: string, prefix: string): Promise<void> {
++    const entries = await fs.readdir(current, { withFileTypes: true }).catch(() => []);
++    for (const entry of entries) {
++      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
++      if (entry.isDirectory()) {
++        await walk(path.join(current, entry.name), relative);
++      } else {
++        found.push(relative);
++      }
++    }
++  }
++  await walk(dir, '');
++  return found.sort();
++}
++
++class CountingAdapter implements HarnessAdapter {
++  readonly name = 'counting';
++  readonly calls: string[] = [];
++  private readonly delegate = new MockAdapter();
++
++  async setup(): Promise<void> {}
++
++  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
++    this.calls.push(options.taskNumber);
++    return this.delegate.spawn(options);
++  }
++}
++
++describe('usage pause wait across changes', () => {
++  it('Another change waits: an active pause stops every change from spawning', async () => {
++    const { root, config } = await setupProject();
++    const first = await addChange(root, 'Paused One', 2);
++    const second = await addChange(root, 'Waiting Two', 2);
++
++    await writeUsagePause(first, {
++      task: '1',
++      until: new Date(Date.now() + 3600_000).toISOString(),
++      source: 'harness',
++    });
++    const secondBefore = await listFiles(second);
++    const adapter = new CountingAdapter();
++
++    const summary = await runWatcherCycle(root, config, adapter);
++
++    assert.equal(summary.tasksRun, 0);
++    assert.deepEqual(adapter.calls, []);
++    assert.deepEqual(await listFiles(second), secondBefore);
++    assert.equal(await exists(path.join(second, '.run', 'done', '1')), false);
++    assert.equal(await exists(path.join(second, '.run', 'events', '1.jsonl')), false);
++  });
++
++  it('Task runs after the reset: a passed pause is removed and the task runs as attempt 1', async () => {
++    const { root, config } = await setupProject();
++    const folder = await addChange(root, 'Reset One', 2);
++    await writeUsagePause(folder, {
++      task: '1',
++      until: '2000-01-01T00:00:00.000Z',
++      source: 'wait',
++    });
++    const adapter = new CountingAdapter();
++
++    const summary = await runWatcherCycle(root, config, adapter);
++
++    assert.equal(summary.tasksRun, 1);
++    assert.deepEqual(adapter.calls, ['1']);
++    assert.equal(await exists(usagePausePath(folder)), false);
++
++    const started = (await readEvents(folder)).filter((event) => event.type === 'started');
++    assert.equal(started.length, 1);
++    assert.equal((started[0]?.data as Record<string, unknown> | undefined)?.attempt, 1);
++  });
++});
++
++/* -------------------------------------------------------------- worktree -- */
++
++const CHANGE_ID = '001-order-flow';
++const CHANGE_REL = path.posix.join('openspec', 'changes', CHANGE_ID);
++const OUT_SCOPE = 'src/out.txt';
++
++function cleanGitEnv(): NodeJS.ProcessEnv {
++  const env = { ...process.env };
++  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']) {
++    Reflect.deleteProperty(env, key);
++  }
++  return env;
++}
++
++async function git(args: string[], cwd: string): Promise<string> {
++  const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
++  return stdout.trim();
++}
++
++interface WorktreeProject {
++  readonly repo: string;
++  readonly worktree: string;
++  readonly worktreeFolder: string;
++  readonly config: OsqConfig;
++}
++
++async function setupWorktree(): Promise<WorktreeProject> {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-usage-pause-worktree-'));
++  tmpDirs.push(root);
++  const repo = path.join(root, 'repo');
++  const worktrees = path.join(root, 'worktrees');
++  await fs.mkdir(repo, { recursive: true });
++  await installFakeValidator(repo);
++  await scaffoldProject(repo);
++  await fs.writeFile(path.join(repo, '.gitignore'), 'node_modules/\n.run/running/\n', 'utf8');
++  await fs.writeFile(path.join(repo, 'verify.cjs'), 'process.exit(0);\n', 'utf8');
++  await fs.mkdir(path.join(repo, 'src'), { recursive: true });
++  await fs.writeFile(path.join(repo, OUT_SCOPE), 'out\n', 'utf8');
++  await git(['init', '-q', '-b', 'main'], repo);
++  await git(['config', 'user.name', 'osq'], repo);
++  await git(['config', 'user.email', 'osq@example.invalid'], repo);
++  await git(['add', '-A'], repo);
++  await git(['commit', '-qm', 'seed'], repo);
++
++  const checkoutFolder = path.join(repo, CHANGE_REL);
++  await fs.mkdir(path.join(checkoutFolder, 'tasks'), { recursive: true });
++  await fs.writeFile(
++    path.join(checkoutFolder, 'proposal.md'),
++    proposalMarkdown('Order Flow'),
++    'utf8',
++  );
++  await fs.writeFile(
++    path.join(checkoutFolder, 'tasks', '1.md'),
++    taskMarkdown('First task'),
++    'utf8',
++  );
++
++  const vcs: VcsConfig = {
++    enabled: true,
++    author: 'Osq <osq@example.invalid>',
++    worktreeRoot: worktrees,
++  };
++  const config = defineConfig({
++    vcs,
++    gates: { ...DEFAULT_GATES_CONFIG, preSpawnVerify: 'off' },
++  });
++  const result = await approveSpec(repo, '001', config);
++  const worktree = result.worktreePath;
++  assert.ok(worktree, 'approval created a worktree');
++  return {
++    repo,
++    worktree,
++    worktreeFolder: path.join(worktree, CHANGE_REL),
++    config,
++  };
++}
++
++/** Adapter that pauses after editing a file outside the change folder. */
++class PausedEditAdapter implements HarnessAdapter {
++  readonly name = 'paused-edit';
++
++  async setup(): Promise<void> {}
++
++  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
++    await options.onSpawn?.(4321);
++    await appendHarnessEvent(options.specFolderPath, options.taskNumber, {
++      type: 'usage_limit',
++      timestamp: new Date().toISOString(),
++      data: { resetsAt: new Date(Date.now() + 3600_000).toISOString() },
++    });
++    await fs.writeFile(path.join(options.projectRoot, OUT_SCOPE), 'agent edit\n', 'utf8');
++    return { exitCode: 0, pid: 4321 };
++  }
++}
++
++describe('usage pause in a worktree', () => {
++  it('discards edits outside the change folder and makes no commit', async () => {
++    const project = await setupWorktree();
++    const head = await git(['rev-parse', 'HEAD'], project.worktree);
++
++    await runWatcherCycle(project.repo, project.config, new PausedEditAdapter());
++
++    const pause = await readUsagePause(project.worktreeFolder);
++    assert.equal(pause?.source, 'harness');
++    assert.equal(await fs.readFile(path.join(project.worktree, OUT_SCOPE), 'utf8'), 'out\n');
++    assert.equal(await git(['rev-parse', 'HEAD'], project.worktree), head);
++    assert.equal(await exists(path.join(project.worktreeFolder, '.run', 'done', '1')), false);
++  });
++});
++
++describe('formatPauseUntil', () => {
++  it('renders UTC as YYYY-MM-DD HH:MM UTC', () => {
++    assert.equal(formatPauseUntil('2099-01-01T09:30:00.000Z'), '2099-01-01 09:30 UTC');
++  });
++});

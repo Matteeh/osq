@@ -1,4 +1,6 @@
 import { formatDuration } from '../report/report.js';
+import { formatPauseUntil } from '../run/usage-pause.js';
+import type { PausedItem } from './inbox-paused.js';
 import type { Inbox, LandedItem, NeedsYouItem, RunningItem } from './inbox.js';
 
 /**
@@ -47,9 +49,13 @@ function needsYouLine(item: NeedsYouItem): string {
   return `${row} — ${item.command}`;
 }
 
-function runningLine(item: RunningItem): string {
+function runningLine(item: RunningItem | PausedItem): string {
+  const head = `  ${item.change.id}: ${item.change.title} — task ${item.task.number}: ${item.task.title}`;
+  if ('pausedUntil' in item) {
+    return `${head} — paused until ${formatPauseUntil(item.pausedUntil)} — ${item.command}`;
+  }
   const duration = formatDuration(item.elapsedSeconds * 1000);
-  return `  ${item.change.id}: ${item.change.title} — task ${item.task.number}: ${item.task.title} — ${duration} — ${item.command}`;
+  return `${head} — ${duration} — ${item.command}`;
 }
 
 /**
@@ -79,6 +85,7 @@ function landedLine(item: LandedItem): string {
  * @scenario status-inspection: Validator failing
  * @scenario status-inspection: Ready plan in the inbox
  * @scenario status-inspection: Automatic planner left lint red
+ * @scenario status-inspection: Paused task
  * @adr 018
  * @adr 010
  */

@@ -12,7 +12,20 @@ export interface RunningGroupProps {
   readonly onNavigate: (route: Route) => void;
 }
 
-/** The home view's running group: task identity and server-derived elapsed time. */
+/** Format a pause time from its ISO string, as `YYYY-MM-DD HH:MM UTC`. */
+function formatPausedUntil(iso: string): string {
+  const date = new Date(iso);
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  const day = `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+  return `${day} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
+}
+
+/**
+ * The home view's running group: task identity and server-derived elapsed time,
+ * or the pause time for a paused item.
+ *
+ * @scenario web-inspection: Paused task on home
+ */
 export function RunningGroup({ items, onNavigate }: RunningGroupProps): ReactElement {
   return (
     <section className="home-group home-running" aria-labelledby="home-running-title">
@@ -23,6 +36,10 @@ export function RunningGroup({ items, onNavigate }: RunningGroupProps): ReactEle
         <ul className="home-list">
           {items.map((item, index) => {
             const route: Route = { name: 'change', folderKey: item.change.id };
+            const timing =
+              'pausedUntil' in item
+                ? `paused until ${formatPausedUntil(item.pausedUntil)}`
+                : `${formatSeconds(item.elapsedSeconds)} elapsed`;
             return (
               <li key={`${item.change.id}-${item.task.number}-${index}`}>
                 <span className="home-kind">
@@ -39,8 +56,7 @@ export function RunningGroup({ items, onNavigate }: RunningGroupProps): ReactEle
                 </a>
                 <span className="home-task">
                   {' '}
-                  — task {item.task.number}: {item.task.title} —{' '}
-                  {formatSeconds(item.elapsedSeconds)} elapsed
+                  — task {item.task.number}: {item.task.title} — {timing}
                 </span>
               </li>
             );

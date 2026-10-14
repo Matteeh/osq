@@ -196,9 +196,11 @@ other item carries `steering`. An approval item whose
 change has steps before approval SHALL also carry `beforeApproval: true`; no
 other item carries `beforeApproval`. A `validator-failing` item SHALL also
 carry `validatorFailing: { outcome, runs, error }`; no other item carries
-`validatorFailing`. A running item SHALL contain `change`,
-`task`, numeric `pid`, ISO `startedAt`, integer non-negative `elapsedSeconds`,
-and `command`. A landed item SHALL contain `change`, ISO `archivedAt`, and
+`validatorFailing`. A running item SHALL contain `change`, `task`, and
+`command`. A live running item SHALL also contain numeric `pid`, ISO
+`startedAt`, and integer non-negative `elapsedSeconds`. A paused running item
+SHALL instead contain ISO `pausedUntil`, as "Paused task in the inbox" says.
+No running item SHALL carry both. A landed item SHALL contain `change`, ISO `archivedAt`, and
 `command`. A landed item whose tasks disclosed anything SHALL also carry
 `disclosures: { deviated, missingContext, outsideScope }`, the number of tasks
 with each real section; no other landed item carries `disclosures`. Empty
@@ -232,6 +234,10 @@ or metadata.
 #### Scenario: Steering field
 - **WHEN** a change needs steering because task 1 is blocked, and another change has a `verify_red` dead task that is not stuck
 - **THEN** only the first change's item carries `steering`, and the second change's item has the keys `kind`, `change`, `task`, and `command`
+
+#### Scenario: Paused running item keys
+- **WHEN** one change has a task running under a live lock and another change has a paused task
+- **THEN** the live item has the keys `change`, `task`, `pid`, `startedAt`, `elapsedSeconds` and `command`, and the paused item has the keys `change`, `task`, `pausedUntil` and `command`
 
 ### Requirement: Per-project last-look cursor
 Every bare inbox invocation SHALL read and then advance
@@ -450,7 +456,9 @@ dependency; `osq land <id>` for `archived`; and null for `landed`.
 `detail` SHALL be `do the steps before approval first` for a
 `ready-for-approval` change with steps before approval, `waiting for <ids>` for
 `blocked`, `needs steering` for a `dead` change whose derived state has
-`steering`, `not landed` for `archived`, and null otherwise. `formatNextStep`
+`steering`, `not landed` for `archived`, `paused until <time>` for a `running`
+change whose `readActivePause` returns a pause, with `<time>` from
+`formatPauseUntil`, and null otherwise. `formatNextStep`
 SHALL render the state with spaces for hyphens, then ` (<detail>)` when set,
 then ` — <command>` when set.
 
@@ -465,6 +473,14 @@ then ` — <command>` when set.
 #### Scenario: Not landed format
 - **WHEN** change 007 is archived and the default branch does not hold it
 - **THEN** `formatNextStep` renders `archived (not landed) — osq land 007`, and `osq show 007` prints `Next: archived (not landed) — osq land 007`
+
+#### Scenario: Paused format
+- **WHEN** approved change 007 has a pending task and its `.run/paused.md` holds task `1` until `2099-01-01T09:30:00.000Z`
+- **THEN** `formatNextStep` renders `running (paused until 2099-01-01 09:30 UTC) — osq show 007`, `osq show 007` prints `Next: running (paused until 2099-01-01 09:30 UTC) — osq show 007`, and `osq status` prints `  next: running (paused until 2099-01-01 09:30 UTC) — osq show 007` under the change
+
+#### Scenario: Passed pause format
+- **WHEN** the same change's `.run/paused.md` holds until `2000-01-01T00:00:00.000Z`
+- **THEN** `formatNextStep` renders `running — osq show 007`
 
 ### Requirement: Explicit status with next steps
 `osq status` SHALL keep its task table, archive count, and rejected group, and
@@ -1887,3 +1903,22 @@ In `osq inbox`, the card of a halt item with `autoSteer` SHALL print
 #### Scenario: Record for an earlier trigger
 - **WHEN** change 001's `.run/auto-steer.md` holds a `ready` record whose key does not match its current triggers
 - **THEN** its needs-you item has command `osq plan 001` and no `autoSteer`, and its next step is `dead` with command `osq plan 001` and detail `needs steering`
+
+### Requirement: Paused task in the inbox
+`readInbox` SHALL add one running item for each approved active change whose
+`readActivePause` returns a pause naming one of its task numbers. The item is
+`{ change: { id, title }, task: { number, title }, pausedUntil, command }`,
+where `pausedUntil` is the pause's `until` and `command` is `osq show <id>`.
+These items SHALL be sorted with the live running items by numeric change and
+task order. `formatInboxText` SHALL render one as
+`  <id>: <title> — task <n>: <task title> — paused until <time> — osq show <id>`,
+with `<time>` from `formatPauseUntil`. A pause whose `until` has passed SHALL add
+no item.
+
+#### Scenario: Paused task
+- **WHEN** approved change `007` titled `Pricing` has pending task 2 titled `Prices`, and its `.run/paused.md` holds task `2` until `2099-01-01T09:30:00.000Z`
+- **THEN** `osq --json` holds the running item `{ change: { id: "007", title: "Pricing" }, task: { number: "2", title: "Prices" }, pausedUntil: "2099-01-01T09:30:00.000Z", command: "osq show 007" }`, and the text row under `Running` is `  007: Pricing — task 2: Prices — paused until 2099-01-01 09:30 UTC — osq show 007`
+
+#### Scenario: No item for a passed pause
+- **WHEN** the change's `.run/paused.md` holds task `2` until `2000-01-01T00:00:00.000Z`
+- **THEN** the inbox has no running item for the change

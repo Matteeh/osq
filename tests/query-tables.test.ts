@@ -283,6 +283,10 @@ describe('HISTORY_TABLES', () => {
             'files_touched',
           ],
         },
+        {
+          name: 'pauses',
+          columns: ['change', 'task', 'paused_at', 'until', 'source'],
+        },
       ],
     );
   });

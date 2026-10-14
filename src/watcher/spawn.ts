@@ -18,6 +18,7 @@ import {
 } from './outcome.js';
 import { describeAgentFailure } from './provider-outage.js';
 import { spawnOrCrash } from './spawn-guard.js';
+import { pauseTaskOnUsageLimit } from './usage-pause.js';
 import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
 
 export interface SpawnTaskAgentOptions {
@@ -36,10 +37,13 @@ export type SpawnTaskAgentOutcome =
   | { ok: false; result: RunTaskResult };
 
 /**
- * Spawn the coding agent for a task and own the process lifecycle events. The
- * `started` event is emitted the moment the child process exists via `onSpawn`.
- * A crash or timeout is persisted as a dead marker and dead event before the
- * failure result is returned.
+ * Spawn the coding agent for a task and own the process lifecycle events. A
+ * crash or timeout is persisted as a dead marker and dead event before the
+ * failure result is returned; a usage limit pauses instead.
+ *
+ * @scenario watcher-and-harness: Limit with a reset time
+ * @scenario watcher-and-harness: Limit without a reset time
+ * @scenario watcher-and-harness: Limit from an earlier attempt
  */
 export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<SpawnTaskAgentOutcome> {
   const { projectRoot, specFolderPath, taskNumber, taskData } = opts;
@@ -47,13 +51,10 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
   const runDir = path.join(specFolderPath, '.run');
   const timeoutSeconds = config.timeouts.taskTimeoutSeconds;
   const useSymbols = logger?.symbols === true;
-  // Reconstruct retry context from append-only state before any spawn so a
-  // watcher restart still carries the attempt and prior failure reason.
   const retryContext = await readRetryContext(specFolderPath, taskNumber);
   if (retryContext.attempt === 1) {
     await checkInstructionsDrift({ ...opts, attempt: 1 });
   }
-
   let startedRecorded = false;
   let startedPromise: Promise<void> | null = null;
   const recordStarted = (pid: number | undefined, details?: SpawnDetails): Promise<void> => {
@@ -130,6 +131,8 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
     'verbose',
   );
 
+  const paused = await pauseTaskOnUsageLimit(specFolderPath, taskNumber, config, logger);
+  if (paused !== null) return { ok: false, result: paused };
   if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
     const { reason: failureReason, marker } = await describeAgentFailure(
       specFolderPath,
@@ -157,9 +160,8 @@ export interface EnsureTaskResultOptions {
 export type EnsureTaskResultOutcome = { ok: true } | { ok: false; result: RunTaskResult };
 
 /**
- * Ensure a result file exists after the agent exits, synthesizing one from the
- * agent's final stream message when possible. Returns a `no_result` failure
- * result when neither the file nor any final text is present.
+ * Ensure a result file exists, synthesizing one from the agent's final message,
+ * or a `no_result` failure when neither is present.
  */
 export async function ensureTaskResult(
   opts: EnsureTaskResultOptions,

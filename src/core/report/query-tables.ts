@@ -9,6 +9,7 @@ import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record.js';
 import { LINK_FINDINGS_TABLES, insertLinkFindings } from './query-link-findings.js';
 import { insertNotices } from './query-notices.js';
+import { PAUSE_TABLES, insertPauses } from './query-pauses.js';
 import { type HistoryTable, type TrialSubject, folderId } from './query-subjects.js';
 import { TASK_OUTCOME_TABLES, insertTaskOutcomes } from './query-task-outcomes.js';
 import { TASK_STREAM_TABLES, insertTaskStreamTables } from './query-task-streams.js';
@@ -51,6 +52,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   ...TASK_STREAM_TABLES,
   ...LINK_FINDINGS_TABLES,
   ...TASK_OUTCOME_TABLES,
+  ...PAUSE_TABLES,
 ];
 
 /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
@@ -201,6 +203,7 @@ async function build(
   await insertValidatorTables(db, subjects);
   await insertTaskStreamTables(db, subjects);
   await insertLinkFindings(db, subjects);
+  await insertPauses(db, subjects);
   await applyTrialLabels(db, projectRoot, config);
   return db;
 }

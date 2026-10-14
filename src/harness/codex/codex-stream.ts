@@ -12,6 +12,7 @@ import {
   type TextEventData,
   type TokensEventData,
   type ToolEventData,
+  type UsageLimitEventData,
   appendHarnessEvent,
 } from '../types.js';
 
@@ -126,9 +127,26 @@ function extractTerminalFailure(event: Record<string, unknown>): string | undefi
   return firstNonEmptyString(error?.message, error?.detail, event.message) ?? 'Codex turn failed';
 }
 
+/** Append one `usage_limit` event when a terminal failure names the usage limit. */
+async function emitCodexUsageLimit(
+  ctx: CodexStreamContext,
+  failure: string,
+  event: Record<string, unknown>,
+): Promise<void> {
+  if (!failure.includes('hit your usage limit')) return;
+  await appendHarnessEvent(ctx.specFolderPath, ctx.taskNumber, {
+    type: 'usage_limit',
+    timestamp: resolveEventTimestamp(event),
+    data: { error: failure } satisfies UsageLimitEventData,
+  });
+}
+
 /**
  * Ordered Codex JSONL translation. Only `item.completed` produces observations,
  * so `item.started`/`item.updated` can never duplicate completed items.
+ *
+ * @scenario watcher-and-harness: Usage limit records
+ * @scenario watcher-and-harness: Codex limit still fails the turn
  */
 export async function processCodexStdoutLine(
   line: string,
@@ -151,9 +169,9 @@ export async function processCodexStdoutLine(
   const failure = extractTerminalFailure(event);
   if (failure !== undefined) {
     state.terminalFailure = failure;
+    await emitCodexUsageLimit(ctx, failure, event);
     return;
   }
-
   const type = firstNonEmptyString(event.type);
   const timestamp = resolveEventTimestamp(event);
 

@@ -33,6 +33,7 @@ import {
   type SpawnTaskOptions,
   type TextEventData,
   type ToolEventData,
+  type UsageLimitEventData,
   appendHarnessEvent,
 } from '../types.js';
 import {
@@ -384,6 +385,35 @@ async function emitObservedToolEvent(
   logger?.verbose(`[tool] ${toolEvent.tool}: ${summary}`);
 }
 
+/**
+ * Append one `usage_limit` event when OpenCode reports a provider quota error.
+ * Returns true once it wrote one; any other `error` event returns false and
+ * keeps the adapter's unknown-event verbose path.
+ */
+async function emitOpencodeUsageLimit(
+  specFolderPath: string,
+  taskNumber: string,
+  eventObj: Record<string, unknown>,
+): Promise<boolean> {
+  if (eventObj.type !== 'error') return false;
+  const error = asRecord(eventObj.error);
+  if (firstNonEmptyString(error?.type) !== 'provider.quota') return false;
+  const data: UsageLimitEventData = {};
+  const message = firstNonEmptyString(error?.message);
+  if (message !== undefined) data.error = message;
+  await appendHarnessEvent(specFolderPath, taskNumber, {
+    type: 'usage_limit',
+    timestamp: resolveEventTimestamp(eventObj),
+    data,
+  });
+  return true;
+}
+
+/**
+ * Translate one completed OpenCode JSONL line into osq harness events.
+ *
+ * @scenario watcher-and-harness: Usage limit records
+ */
 export async function processOpencodeStdoutLine(
   line: string,
   specFolderPath: string,
@@ -413,6 +443,10 @@ export async function processOpencodeStdoutLine(
 
   if (tracker) {
     trackOpencodeSessionID(tracker, eventObj);
+  }
+
+  if (await emitOpencodeUsageLimit(specFolderPath, taskNumber, eventObj)) {
+    return;
   }
 
   const toolEvent = extractOpencodeToolEvent(eventObj);

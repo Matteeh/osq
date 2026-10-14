@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4e206ae9599b5647e3f7373736c72aff370b93c592048d6a1f8c9728686aabf4"
+build_stamp: "aeb1887c"
+project_commit: "93673d85"
+exit_code: 0
+scope_files: {"src/core/status/next-step.ts":"sha256:90cb9a04a1c5dd8509bef4ba3c3188926c63efb05fb3047352a821529689b0cb","tests/usage-pause-next-step.test.ts":"sha256:c6b7cb3b127d11b5e25ab4f7f4fe7a62749305e2ea1f653a79490d12b5bd92d8"}
+---
+2026-10-14T11:21:23.912Z

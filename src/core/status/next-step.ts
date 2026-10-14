@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { currentAutoSteer } from '../run/auto-steer-record.js';
+import { formatPauseUntil, readActivePause } from '../run/usage-pause.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { analyzeVerifyCommand } from '../spec/linter.js';
 import { parseFrontmatter } from '../spec/parser.js';
@@ -78,7 +79,12 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
     };
   }
 
-  return { state: 'running', command: `osq show ${id}`, detail: null };
+  const pause = await readActivePause(folderPath, Date.now());
+  return {
+    state: 'running',
+    command: `osq show ${id}`,
+    detail: pause ? `paused until ${formatPauseUntil(pause.until)}` : null,
+  };
 }
 
 async function readArchivedNextStep(
@@ -113,6 +119,8 @@ async function readArchivedNextStep(
  * @scenario status-inspection: Archived change that needs steering
  * @scenario status-inspection: Ready plan offers approve
  * @scenario status-inspection: Record for an earlier trigger
+ * @scenario status-inspection: Paused format
+ * @scenario status-inspection: Passed pause format
  * @adr 018
  */
 export async function readNextStep(

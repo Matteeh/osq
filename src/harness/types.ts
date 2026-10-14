@@ -39,6 +39,8 @@ export type HarnessEventType =
   | 'auto_steer_ran'
   | 'vcs_violation'
   | 'scope_violation'
+  | 'usage_limit'
+  | 'paused'
   | 'change_verify_rerun';
 
 /** Payload of the lifecycle `started` event emitted by the runner. */
@@ -437,6 +439,28 @@ export interface ChangeVerifyRerunEventData {
   readonly passed: boolean;
 }
 
+/**
+ * Payload of a `usage_limit` event: the account hit its model provider's usage
+ * limit. `resetsAt` is an ISO time, present only when the harness reported the
+ * reset time; `error` is the harness's message, present only when it gave one.
+ */
+export interface UsageLimitEventData {
+  resetsAt?: string;
+  error?: string;
+}
+
+/**
+ * Payload of a `paused` event: the watcher paused a task until a usage limit
+ * resets. `source` is `harness` when the harness gave the reset time and `wait`
+ * otherwise; `error` is the limit's message when it carried one.
+ */
+export interface PausedEventData {
+  readonly task: string;
+  readonly until: string;
+  readonly source: 'harness' | 'wait';
+  readonly error?: string;
+}
+
 /** Event type to payload mapping for every lifecycle and observed event. */
 export interface OsqEventData {
   started: StartedEventPayload;
@@ -467,6 +491,8 @@ export interface OsqEventData {
   auto_steer_ran: AutoSteerRanEventData;
   vcs_violation: VcsViolationEventData;
   scope_violation: ScopeViolationEventData;
+  usage_limit: UsageLimitEventData;
+  paused: PausedEventData;
   change_verify_rerun: ChangeVerifyRerunEventData;
 }
 

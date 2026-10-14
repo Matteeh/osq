@@ -7,7 +7,9 @@
  * dead task before a human must intervene; zero disables them. The
  * `provider*` keys govern provider outage deaths: how long an open provider
  * retry may last before the agent is stopped, and the wait and budget of the
- * automatic retries that follow. `commitRetries` bounds the catch-ups the
+ * automatic retries that follow. `usageLimitWaitSeconds` is how many seconds
+ * osq waits after a usage limit whose reset time the harness did not give.
+ * `commitRetries` bounds the catch-ups the
  * watcher tries after a `commit_failed` halt before a human must run
  * `osq retry <id> change`; zero turns the catch-up after a halt off.
  * `changeVerifyReruns` bounds the times a failing change-level verify is
@@ -31,6 +33,8 @@ export interface GatesConfig {
   readonly providerRetries?: number;
   /** Seconds to wait after a provider outage death before retrying it. */
   readonly providerRetryDelaySeconds?: number;
+  /** Seconds osq waits after a usage limit whose reset time the harness did not give. */
+  readonly usageLimitWaitSeconds?: number;
   /** The command the watcher runs as a change's baseline, when configured. */
   readonly baselineVerify?: string;
   /** The command the watcher runs on a task's changed scoped files before verify. */
@@ -46,6 +50,7 @@ export const DEFAULT_GATES_CONFIG: GatesConfig = {
   providerStallSeconds: 300,
   providerRetries: 3,
   providerRetryDelaySeconds: 300,
+  usageLimitWaitSeconds: 1800,
 };
 
 /** Read a non-negative integer gate over its default, naming the key otherwise. */
@@ -67,6 +72,9 @@ const PRE_SPAWN_VERIFY_MODES: readonly PreSpawnVerifyMode[] = ['warn', 'fail', '
  * Validate an optional `gates` block over the defaults. A partial block keeps
  * each missing gate's default; a present value outside the gate's type is
  * rejected.
+ *
+ * @scenario cli-foundation: Usage limit wait default
+ * @scenario cli-foundation: Invalid usage limit wait
  */
 export function validateGatesConfig(gates: unknown): GatesConfig {
   if (gates === undefined) return DEFAULT_GATES_CONFIG;
@@ -114,6 +122,11 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     'providerRetryDelaySeconds',
     DEFAULT_GATES_CONFIG.providerRetryDelaySeconds,
   );
+  const usageLimitWaitSeconds = nonNegativeInteger(
+    record,
+    'usageLimitWaitSeconds',
+    DEFAULT_GATES_CONFIG.usageLimitWaitSeconds,
+  );
   let baselineVerify: string | undefined;
   if (record.baselineVerify !== undefined) {
     if (typeof record.baselineVerify !== 'string' || record.baselineVerify.trim().length === 0) {
@@ -137,6 +150,7 @@ export function validateGatesConfig(gates: unknown): GatesConfig {
     providerStallSeconds,
     providerRetries,
     providerRetryDelaySeconds,
+    usageLimitWaitSeconds,
     ...(baselineVerify !== undefined ? { baselineVerify } : {}),
     ...(formatCommand !== undefined ? { formatCommand } : {}),
   };

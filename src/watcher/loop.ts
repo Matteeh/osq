@@ -35,6 +35,11 @@ import {
 } from './stale-pass.js';
 import { checkSync } from './sync-run.js';
 import {
+  discardPausedWorktreeChanges,
+  findActivePause,
+  removePassedPauses,
+} from './usage-pause.js';
+import {
   commitPendingVerifiedTasks,
   commitWorktreeArchive,
   commitWorktreeDeadTask,
@@ -207,6 +212,9 @@ export async function runWatcherCycle(
 
   const activeChanges = await listChanges(projectRoot, config, ['active']);
 
+  // A pause whose reset has passed ends before anything runs this cycle.
+  await removePassedPauses(activeChanges, Date.now());
+
   let tasksRun = 0;
   let retried = 0;
   let specsArchived = 0;
@@ -326,7 +334,9 @@ export async function runWatcherCycle(
       // leave its folder alone so a planner can edit it. With autoSteer on the
       // watcher runs that planner once here, before it leaves the change alone.
       if (specState.steering) {
-        await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
+        if ((await findActivePause(activeChanges, Date.now())) === null) {
+          await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
+        }
         continue;
       }
 
@@ -361,6 +371,10 @@ export async function runWatcherCycle(
 
       if (specState.status === 'pending' && specState.nextTask) {
         await assertNotStale(staleCheck);
+        // While any active change holds a pause, no change starts a task.
+        if ((await findActivePause(activeChanges, Date.now())) !== null) {
+          continue;
+        }
         if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
           const syncHalt = await checkSync(projectRoot, change, config, logger);
           if (syncHalt) {
@@ -425,6 +439,12 @@ export async function runWatcherCycle(
             }
           }
           await archiveCompletedSpec(change, specState.id);
+        } else if (taskResult.paused) {
+          // A pause writes no dead record and halts nothing: discard the
+          // agent's edits outside the change folder and wait for the reset.
+          if (worktree) {
+            await discardPausedWorktreeChanges(change, config);
+          }
         } else {
           if (
             worktree &&

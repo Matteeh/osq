@@ -10,6 +10,7 @@ import {
   type FileChangedEventData,
   type TextEventData,
   type TokensEventData,
+  type UsageLimitEventData,
   appendHarnessEvent,
 } from '../types.js';
 import { claudeToolSummary, toProjectRelative } from './claude-tools.js';
@@ -156,7 +157,11 @@ async function handleResult(
   }
 }
 
-/** Translate one completed Claude Code JSONL line into osq harness events. */
+/**
+ * Translate one completed Claude Code JSONL line into osq harness events.
+ *
+ * @scenario watcher-and-harness: Usage limit records
+ */
 export async function processClaudeStdoutLine(
   line: string,
   ctx: ClaudeStreamContext,
@@ -177,6 +182,24 @@ export async function processClaudeStdoutLine(
 
   const type = firstNonEmptyString(event.type);
   const timestamp = resolveEventTimestamp(event);
+
+  if (type === 'rate_limit_event') {
+    const info = asRecord(event.rate_limit_info);
+    if (firstNonEmptyString(info?.status) === 'rejected') {
+      const data: UsageLimitEventData = {};
+      const resetsAt = numberField(info?.resetsAt);
+      if (resetsAt !== undefined) {
+        const date = new Date(resetsAt * 1000);
+        if (!Number.isNaN(date.getTime())) data.resetsAt = date.toISOString();
+      }
+      await appendHarnessEvent(ctx.specFolderPath, ctx.taskNumber, {
+        type: 'usage_limit',
+        timestamp,
+        data,
+      });
+      return;
+    }
+  }
 
   if (type === 'assistant') {
     await handleAssistant(event, ctx, state, timestamp);

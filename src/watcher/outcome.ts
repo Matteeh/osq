@@ -16,6 +16,8 @@ export interface RunTaskResult {
   success: boolean;
   reason?: RunTaskFailureReason;
   error?: string;
+  /** Set when a usage limit paused the task instead of judging its attempt. */
+  paused?: { readonly until: string };
 }
 /** Tick `taskNumber`'s checkbox, supporting flat and grouped (`## <n>.`) numbering. Pure. */
 export function tickTaskCheckboxContent(content: string, taskNumber: string): string {

@@ -5,7 +5,14 @@ import { type AfterLandFailure, readAfterLandFailure } from '../vcs/land-after.j
 import { applySteeringItems } from './blocked-item.js';
 import { changeTrees } from './change-locations.js';
 import { readLastLook } from './inbox-cursor.js';
-import { type Inbox, type NeedsYouItem, collectLandedItems, projectInbox } from './inbox.js';
+import { type PausedItem, projectPaused } from './inbox-paused.js';
+import {
+  type Inbox,
+  type NeedsYouItem,
+  type RunningItem,
+  collectLandedItems,
+  projectInbox,
+} from './inbox.js';
 import { compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
 import { type SteeringChange, listArchivedSteering } from './steering-change.js';
@@ -16,6 +23,17 @@ export interface ReadInboxOptions {
   readonly config?: OsqConfig;
   readonly now?: Date;
   readonly home?: string;
+}
+
+function runningKey(item: RunningItem | PausedItem): string {
+  return `${item.change.id}\u0000${item.task.number}`;
+}
+
+function compareRunning(a: RunningItem | PausedItem, b: RunningItem | PausedItem): number {
+  return (
+    compareNumericPrefix(a.change.id, b.change.id) ||
+    compareNumericPrefix(a.task.number, b.task.number)
+  );
 }
 
 /** The one needs-you item an archived change that needs steering contributes. */
@@ -71,6 +89,9 @@ async function validatorFailingItem(
  * @scenario status-inspection: No failure recorded
  * @scenario status-inspection: Validator failing
  * @scenario status-inspection: No validator runs
+ * @scenario status-inspection: Paused task
+ * @scenario status-inspection: No item for a passed pause
+ * @scenario status-inspection: Paused running item keys
  * @adr 010
  */
 export async function readInbox(
@@ -84,6 +105,11 @@ export async function readInbox(
   const [tree] = await changeTrees(projectRoot, config);
   const landed = await collectLandedItems(tree.archiveDir, lastLookMs);
   const inbox = projectInbox(overview, landed, now.getTime());
+  const paused = await projectPaused(overview, now.getTime());
+  const live = new Set(inbox.running.map(runningKey));
+  const running = [...inbox.running, ...paused.filter((item) => !live.has(runningKey(item)))].sort(
+    compareRunning,
+  );
   const steered = (await listArchivedSteering(projectRoot, config))
     .map(archivedSteeringItem)
     .filter((item): item is NeedsYouItem => item !== null);
@@ -98,5 +124,5 @@ export async function readInbox(
     ...afterLand,
     ...validatorFailing,
   ].sort((a, b) => compareNumericPrefix(a.change.id, b.change.id));
-  return { ...inbox, needsYou };
+  return { ...inbox, needsYou, running };
 }

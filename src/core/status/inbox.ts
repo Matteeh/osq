@@ -3,6 +3,7 @@ import path from 'node:path';
 import { type DisclosureCounts, countChangeDisclosures } from '../report/result-sections.js';
 import { isPidRunning } from '../run/lock.js';
 import { parseSpecMd, resolveChangeDoc } from '../spec/parser.js';
+import type { PausedItem } from './inbox-paused.js';
 import { type SpecState, compareNumericPrefix } from './state.js';
 import type { StatusOverview } from './status.js';
 import type { SteeringTriggerName } from './steering.js';
@@ -51,7 +52,7 @@ export interface LandedItem {
 }
 export interface Inbox {
   readonly needsYou: NeedsYouItem[];
-  readonly running: RunningItem[];
+  readonly running: (RunningItem | PausedItem)[];
   readonly landed: LandedItem[];
 }
 /** Fallback number of archives surfaced when the per-project cursor is unusable. */
