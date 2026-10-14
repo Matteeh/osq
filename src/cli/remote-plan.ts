@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { formatPlanHandoff } from '../core/foundation/plan-handoff.js';
 import { matchesFolder } from '../core/status/change-locations.js';
 import type { ForwardedCommand, ForwardedEnd } from '../core/web/web-remote.js';
 import { CommandError } from './command-error.js';
@@ -72,37 +73,40 @@ async function replaceWorkCopy(folderPath: string, files: Record<string, string>
   }
 }
 
-/** Rewrite a server handoff line to name the working copy, downloading its folder. */
-async function rewriteHandoff(
-  line: string,
-  server: RemoteServer,
-  workRoot: string,
-): Promise<string> {
-  const handoff = parseHandoff(line);
-  if (handoff === null) return line;
-  const folderPath = path.join(workRoot, handoff.folder);
-  await replaceWorkCopy(folderPath, await downloadFolder(server, handoff.folder));
-  return `${folderPath}${HANDOFF_MARKER}${handoff.folder}${HANDOFF_NEXT}${handoff.next}`;
-}
-
-/** Print each collected line, rewriting a handoff line as it downloads its folder. */
+/**
+ * Print the server's collected stdout: every line before the handoff line
+ * unchanged, then, in place of that line and everything after it, the plan
+ * handoff for the working copy, with the server's next step and no Claude Code
+ * command, because the managed command can reach only the server's folder.
+ */
 async function emitHandoff(
   text: string,
   server: RemoteServer,
   workRoot: string,
   stdout: Writer,
 ): Promise<void> {
-  const rewritten: string[] = [];
-  for (const line of text.split('\n')) {
-    rewritten.push(await rewriteHandoff(line, server, workRoot));
+  const lines = text.split('\n');
+  const index = lines.findIndex((line) => parseHandoff(line) !== null);
+  if (index < 0) {
+    stdout(text);
+    return;
   }
-  stdout(rewritten.join('\n'));
+  const handoff = parseHandoff(lines[index] ?? '');
+  if (handoff === null) {
+    stdout(text);
+    return;
+  }
+  const folderPath = path.join(workRoot, handoff.folder);
+  await replaceWorkCopy(folderPath, await downloadFolder(server, handoff.folder));
+  if (index > 0) stdout(`${lines.slice(0, index).join('\n')}\n`);
+  stdout(formatPlanHandoff({ folderPath, nextStep: handoff.next, slashCommandId: null }));
 }
 
 /**
  * Run a forwarded plan, collecting its stdout. On success, download the change
- * folder to its working copy and rewrite the handoff line's path; with `--print`
- * pass the server's output through unchanged.
+ * folder to its working copy and print its handoff in place of the server's
+ * handoff line and paste block; with `--print` pass the server's output through
+ * unchanged.
  * @scenario cli-foundation: Plan downloads a working copy
  * @adr 014
  */

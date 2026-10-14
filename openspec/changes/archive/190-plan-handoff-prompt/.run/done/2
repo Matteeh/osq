@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e7afe7735235367f7676130698e239f4522c3f915f24b29b31aea416efe31abc"
+build_stamp: "218b668d"
+project_commit: "c792ca16"
+exit_code: 0
+scope_files: {"src/cli/remote-plan.ts":"sha256:009f5706fe950092b2d76e56b9053a3820c2fa4a6a38dcc768844816f100e145","tests/remote-plan-handoff.test.ts":"sha256:5dfa39a5df218b03c2d50f95a48fec5d70b5482c4f4407feb86a9cd75e20b5e1"}
+---
+2026-10-13T22:19:28.696Z

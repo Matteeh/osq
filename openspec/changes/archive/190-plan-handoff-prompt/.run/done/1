@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9dfe09c1ccc2d0fa4e5d1acc6d467b515b6a11e97bbe10a5a4416249acbe99b5"
+build_stamp: "218b668d"
+project_commit: "354b4038"
+exit_code: 0
+scope_files: {"src/cli/plan-prompt-handoff.ts":"sha256:de262da19dc39a4bc561e626667fc4278970b7d50f1e8ddbfa5fb600486ba530","src/cli/plan.ts":"sha256:5e6c07f43b7659ca8659f78f97d7a24ff06d5827491129a7eaf1c2f9848f4967","src/core/foundation/plan-handoff.ts":"sha256:0c8ab4b5a6e6099209dbc71c5c68e280d2b21c5aeb1577fe68cebc265bbc93c8","tests/mcp-tools.test.ts":"sha256:7b5ac032eb708c04974851e60c2094719931944faa50594014410a8a6caf08dd","tests/plan-approve-next-step.test.ts":"sha256:28c1e0a777edc19d451364eafc360779e23724e66f127eed457c61447119193d","tests/plan-handoff.test.ts":"sha256:58681b842091cdda0207efacc102b9be07b4787073fed979f8591808242a0a0b","tests/plan-paste-block.test.ts":"sha256:dd427c0d90f8fec6796902cecc66b0c239d514838d40e4a056fb5c465192c7a5","tests/queue-plan.test.ts":"sha256:aa5d55b06d8a713d959fc4d2e32bc3c09eda63d5bd1577e846e633b7d64ae1e0"}
+---
+2026-10-13T22:04:22.225Z

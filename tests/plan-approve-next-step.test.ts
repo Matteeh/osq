@@ -93,12 +93,11 @@ describe('osq plan and approve next step', () => {
     const id = path.basename(folder).match(/^(\d+)/)?.[1];
     assert.ok(id, 'change folder carries a numeric id');
 
-    const lines = stdout.trim().split('\n');
-    assert.equal(lines.length, 1, 'handoff stays exactly one line');
-    assert.ok(lines[0].includes(folder), 'handoff names the folder path');
+    const firstLine = stdout.split('\n')[0] ?? '';
+    assert.ok(firstLine.includes(folder), 'handoff names the folder path');
     assert.ok(
-      lines[0].endsWith(` \u2014 next: unplanned \u2014 osq plan ${id}`),
-      `handoff should end with the next step, got: ${lines[0]}`,
+      firstLine.endsWith(` \u2014 next: unplanned \u2014 osq plan ${id}`),
+      `handoff should end with the next step, got: ${firstLine}`,
     );
   });
 

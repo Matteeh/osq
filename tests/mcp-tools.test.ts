@@ -14,6 +14,7 @@ import { remoteWorkRoot } from '../src/cli/remote-plan.js';
 import type { RemoteServer } from '../src/cli/remote-transport.js';
 import { specCommand } from '../src/cli/spec.js';
 import { type OsqConfig, defineConfig, loadConfig } from '../src/core/foundation/config.js';
+import { formatPlanHandoff } from '../src/core/foundation/plan-handoff.js';
 import { formatNextStep, readNextStep } from '../src/core/status/next-step.js';
 import type { WebServerHandle } from '../src/core/web/web-server.js';
 import { startWebServer } from '../src/core/web/web-server.js';
@@ -161,7 +162,7 @@ describe('MCP planning tools', () => {
 
     const next = formatNextStep(await readNextStep(project, folder, config));
     assert.deepEqual(result, {
-      text: `${folder}: ask your planning tool to plan change ${FOLDER} \u2014 next: ${next}\n`,
+      text: formatPlanHandoff({ folderPath: folder, nextStep: next, slashCommandId: null }),
       isError: false,
     });
     assert.ok(await fs.stat(path.join(folder, 'plan-prompt.md')));

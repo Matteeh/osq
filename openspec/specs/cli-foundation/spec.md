@@ -339,8 +339,9 @@ SHALL add `## Recent executor disclosures` after those, as the last section.
 
 Without `--session` or `--print`, planning SHALL create `plan-prompt.md` from
 those exact prompt bytes, record `planner: null` in brief frontmatter, avoid
-constructing or spawning a harness adapter, and print one line containing the
-folder path and `ask your planning tool to plan change <slug>`. Queue item
+constructing or spawning a harness adapter, and print the handoff that "Plan
+handoff with the paste block" defines, which starts with one line containing the folder path
+and `ask your planning tool to plan change <slug>`. Queue item
 selection, dependency projection, hashes, replanning, and halt rules SHALL stay
 unchanged.
 
@@ -363,7 +364,7 @@ process, or recording telemetry.
 
 #### Scenario: Ordinary prompt handoff
 - **WHEN** a user executes `osq plan <name> --brief <file>` in the default mode
-- **THEN** the change contains a null-attributed brief and complete prompt file, stdout gives the one-line handoff, and no harness or planning record is created
+- **THEN** the change contains a null-attributed brief and complete prompt file, stdout gives the handoff with its paste block, and no harness or planning record is created
 
 #### Scenario: Queue prompt handoff
 - **WHEN** a user executes `osq plan --next` with an eligible item
@@ -1063,12 +1064,12 @@ the check list SHALL be unchanged.
 - **THEN** doctor prints no `planning-prices` line
 
 ### Requirement: Plan handoff next step
-The one line the `osq plan` prompt handoff prints SHALL end with
-` — next: <next step>` for the change it hands off.
+The handoff line, the first line the `osq plan` prompt handoff prints, SHALL
+end with ` — next: <next step>` for the change it hands off.
 
 #### Scenario: Fresh handoff
 - **WHEN** `osq plan <name>` hands off a new change 021
-- **THEN** its one line ends with ` — next: unplanned — osq plan 021`
+- **THEN** its handoff line ends with ` — next: unplanned — osq plan 021`
 
 ### Requirement: Approve refusal next step
 When `osq approve <id>` fails for a change whose folder exists, the
@@ -3154,9 +3155,10 @@ output unchanged. Without it, the client SHALL collect the stdout; when the
 command ends with exit code 0 and one line reads `<path>: ask your planning
 tool to plan change <folder> — next: <next>`, it SHALL download the folder
 from `api/files/<folder>`, replace the working copy with exactly the
-downloaded files, and print that line as `<working copy>: ask your planning
-tool to plan change <folder> — next: <next>`. Every other line SHALL be
-printed unchanged.
+downloaded files, print every line before that one unchanged, and in place
+of that line and everything after it print `formatPlanHandoff` for the
+working copy with `<next>` and no Claude Code command, as "Plan paste block"
+defines. Without such a line, every line SHALL be printed unchanged.
 
 A forwarded `lint` SHALL first upload, for each id it names, the working
 copy whose folder name `matchesFolder` matches, with every file in it except
@@ -3168,7 +3170,16 @@ command is forwarded.
 
 #### Scenario: Plan downloads a working copy
 - **WHEN** the server's change `001-demo` holds `brief.md` and `.run/manifest.json`, and `osq plan 001` runs against it with home `<home>`
-- **THEN** `<home>/.osq/remote/<host>/osq/001-demo/` holds the server folder's files, `plan-prompt.md` included and `.run/` left out, and stdout is `<that folder>: ask your planning tool to plan change 001-demo — next: <next>`
+- **THEN** `<home>/.osq/remote/<host>/osq/001-demo/` holds the server folder's files, `plan-prompt.md` included and `.run/` left out, and stdout is exactly these lines, each followed by a newline:
+
+| Line |
+|---|
+| `<that folder>: ask your planning tool to plan change 001-demo — next: <next>` |
+| (empty) |
+| `Paste this into a new agent session to plan it:` |
+| (empty) |
+| `You are the planner for osq change 001-demo.` |
+| `Read <that folder>/plan-prompt.md and follow it exactly; it is your complete prompt.` |
 
 #### Scenario: Lint uploads the working copy
 - **WHEN** after that plan the working copy's `proposal.md` changes, `tasks/1.md` is deleted and `tasks/2.md` is added, and `osq lint 001` runs
@@ -3336,7 +3347,7 @@ SHALL be true exactly when the exit code is not 0.
 
 #### Scenario: Plan prepares the prompt
 - **WHEN** the `plan` tool runs locally for change `001`, which holds `brief.md`
-- **THEN** its text is `<folder>: ask your planning tool to plan change 001-demo — next: <next>` and a newline, and the folder holds `plan-prompt.md`
+- **THEN** its text is what `planCommand('001')` prints there with string writers: `<folder>: ask your planning tool to plan change 001-demo — next: <next>` and a newline, then the rest of the handoff "Plan paste block" defines for `<folder>`, and the folder holds `plan-prompt.md`
 
 #### Scenario: Planning against a server
 - **WHEN** the tools target a server built with `startWebServer`, a site and `createForwardedRunner` over a fixture project whose change `001-demo` holds `brief.md`, and `plan`, `write_file` of `tasks/2.md`, and `lint` run for `001` with home `<home>`
@@ -4135,3 +4146,63 @@ returns null. It SHALL write nothing. `osq watch`, in every role and with
 #### Scenario: osq watch starts the planner
 - **WHEN** `osq.config.ts` sets `harness: "mock"` and `autoSteer: { enabled: true }`, approved change 001 runs in its worktree with task 2 dead with `reason: blocked`, and `osq watch --once` runs twice
 - **THEN** 001's `.run/auto-steer.md` records outcome `unchanged`, and its `.run/events/change.jsonl` holds exactly one `auto_steer_ran` event
+
+### Requirement: Plan paste block
+`src/core/foundation/plan-handoff.ts` SHALL export
+`formatPlanPasteBlock(folderPath)` and
+`formatPlanHandoff({ folderPath, nextStep, slashCommandId })`. Neither reads a
+file, so the CLI, a server and the dashboard can give the same text.
+
+`formatPlanPasteBlock` SHALL return the text a human pastes into a new agent
+session to plan the change in `folderPath`: the line `You are the planner for
+osq change <folder>.` and the line `Read <prompt path> and follow it exactly;
+it is your complete prompt.`, each followed by a newline, where `<folder>` is
+the folder's name and `<prompt path>` is `plan-prompt.md` joined to
+`folderPath` with `path.join`.
+
+`formatPlanHandoff` SHALL return these lines, each followed by a newline: the
+handoff line `<folderPath>: ask your planning tool to plan change <folder> —
+next: <nextStep>`, an empty line, `Paste this into a new agent session to plan
+it:`, an empty line, and the two lines of the paste block. Only when
+`slashCommandId` is not null SHALL it add an empty line and `In Claude Code,
+/osq-plan <slashCommandId> does the same.`
+
+#### Scenario: Paste block text
+- **WHEN** `formatPlanPasteBlock('/p/openspec/changes/190-demo')` runs
+- **THEN** it returns `You are the planner for osq change 190-demo.`, a newline, `Read /p/openspec/changes/190-demo/plan-prompt.md and follow it exactly; it is your complete prompt.` and a newline
+
+### Requirement: Plan handoff with the paste block
+The default handoff of `osq plan <name>` and `osq plan --next`, a change that
+needs steering included, SHALL print `formatPlanHandoff` for the folder it
+wrote `plan-prompt.md` into, with that change's next step. Its
+`slashCommandId` SHALL be the change's id when `.claude/commands/osq-plan.md`
+exists in the working directory and the folder sits directly in that
+directory's changes folder, where the command looks for it, and null
+otherwise. `--print` and `--session` SHALL print what they print today.
+
+#### Scenario: Handoff with the Claude Code command
+- **WHEN** `osq plan 001` runs in the default mode in a project that holds `.claude/commands/osq-plan.md` and whose change `001-demo` in its changes folder holds `brief.md`
+- **THEN** stdout is exactly these lines, each followed by a newline, where `<folder>` is the change folder's path and `<next>` its next step:
+
+| Line |
+|---|
+| `<folder>: ask your planning tool to plan change 001-demo — next: <next>` |
+| (empty) |
+| `Paste this into a new agent session to plan it:` |
+| (empty) |
+| `You are the planner for osq change 001-demo.` |
+| `Read <folder>/plan-prompt.md and follow it exactly; it is your complete prompt.` |
+| (empty) |
+| `In Claude Code, /osq-plan 001 does the same.` |
+
+#### Scenario: Handoff without the Claude Code command
+- **WHEN** the same command runs in a project without `.claude/commands/osq-plan.md`
+- **THEN** stdout is exactly the first six of those lines, each followed by a newline
+
+#### Scenario: Queue handoff gives the same block
+- **WHEN** `osq plan --next` creates a change from an eligible queue item in a project that holds `.claude/commands/osq-plan.md`
+- **THEN** stdout ends with the handoff line, the paste block for the new folder, an empty line and `In Claude Code, /osq-plan <id> does the same.` with the new change's id, laid out as "Handoff with the Claude Code command" shows
+
+#### Scenario: Steered change in its worktree
+- **WHEN** `osq plan 001` runs for a change that needs steering and whose folder is in its worktree, in a checkout that holds `.claude/commands/osq-plan.md`
+- **THEN** stdout's handoff line and paste block name the worktree folder, and no line holds `/osq-plan`

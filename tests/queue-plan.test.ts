@@ -554,7 +554,10 @@ describe('plan command modes', () => {
     assert.ok(!prompt.includes('queue.md'), 'prompt must not embed the queue file');
 
     await assert.rejects(fs.stat(path.join(folder, '.run', 'plan.jsonl')));
-    assert.equal(stdout.trim().split('\n').length, 1, 'exactly one handoff line');
+    assert.ok(
+      stdout.split('\n')[0]?.includes('ask your planning tool to plan change 021-beta'),
+      'the first line is the handoff line',
+    );
     assert.ok(stdout.includes('ask your planning tool to plan change 021-beta'));
 
     const projection = await projectQueue(tmpDir, DEFAULT_CONFIG);

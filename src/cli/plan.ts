@@ -15,6 +15,7 @@ import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
+import { writePromptHandoff } from './plan-prompt-handoff.js';
 import {
   buildBaseOpeningPrompt,
   createChange,
@@ -65,22 +66,6 @@ export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise
   if (history !== null) prompt += `\n\n${HISTORY_HINTS_HEADING}\n\n${history}`;
   if (disclosures !== null) prompt += `\n\n${RECENT_DISCLOSURES_HEADING}\n\n${disclosures}`;
   return prompt;
-}
-
-/**
- * Default handoff: persist the transient prompt beside the change and name the
- * exact change an available planning tool should pick up, with its next step.
- */
-export async function writePromptHandoff(
-  folderPath: string,
-  openingPrompt: string,
-  nextStep: string,
-  stdout: Writer,
-): Promise<void> {
-  await fs.writeFile(path.join(folderPath, 'plan-prompt.md'), openingPrompt, 'utf8');
-  stdout(
-    `${folderPath}: ask your planning tool to plan change ${path.basename(folderPath)} \u2014 next: ${nextStep}\n`,
-  );
 }
 
 export interface PlanCommandOptions extends CommandInputs {
@@ -199,7 +184,15 @@ export async function planCommand(
 
   if (!plannerSelection) {
     const nextStep = await readNextStep(planningCwd, folderPath, config);
-    await writePromptHandoff(folderPath, prompt, formatNextStep(nextStep), inputs.stdout);
+    await writePromptHandoff({
+      folderPath,
+      openingPrompt: prompt,
+      nextStep: formatNextStep(nextStep),
+      specId,
+      cwd,
+      changesDir,
+      stdout: inputs.stdout,
+    });
     return;
   }
 

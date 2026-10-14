@@ -120,7 +120,12 @@ describe('osq plan prompt handoff', () => {
     assert.equal(prompt.split(RECORD_HEADING).length - 1, 1, 'exactly one record heading');
 
     await assert.rejects(fs.stat(path.join(folder, '.run', 'plan.jsonl')), 'no planning log');
-    assert.equal(stdout.trim().split('\n').length, 1, 'exactly one handoff line');
+    assert.ok(
+      stdout
+        .split('\n')[0]
+        ?.includes(`${folder}: ask your planning tool to plan change 001-handoff-default`),
+      'the first line is the handoff line',
+    );
     assert.ok(stdout.includes(folder), 'handoff names the folder path');
     assert.ok(stdout.includes('ask your planning tool to plan change 001-handoff-default'));
   });
@@ -201,7 +206,10 @@ describe('osq plan prompt handoff', () => {
     assert.notEqual(promptAfter, promptBefore, 'prompt refreshed from current repository context');
     assert.ok(promptAfter.includes('- openspec/specs/new-capability/spec.md'));
     assert.deepEqual(await activeFolderNames(tmpDir), [folderName], 'no second folder created');
-    assert.equal(stdout.trim().split('\n').length, 1);
+    assert.ok(
+      stdout.split('\n')[0]?.includes(`ask your planning tool to plan change ${folderName}`),
+      'the first line is the handoff line',
+    );
     assert.ok(stdout.includes(`ask your planning tool to plan change ${folderName}`));
   });
 
