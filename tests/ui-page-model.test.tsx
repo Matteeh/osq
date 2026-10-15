@@ -5,6 +5,8 @@ import {
   haltFacts,
   landLine,
   landedLine,
+  planRunLine,
+  planningLine,
   progressLine,
 } from '../packages/ui/src/change/page-model.js';
 import type { LandGate, LandView, WebChange } from '../packages/ui/src/contracts.js';
@@ -150,6 +152,16 @@ describe('Page per state', () => {
     });
   });
 
+  it('planning shows Planner running and no button', () => {
+    assert.deepEqual(changePage(withNext(nextStep('planning'))), {
+      state: 'planning',
+      label: 'Planning',
+      summary: 'Planner running',
+      main: null,
+      second: null,
+    });
+  });
+
   it('dead without an automatic planner offers Plan it', () => {
     assert.deepEqual(changePage(withNext(nextStep('dead'))), {
       state: 'dead',
@@ -246,6 +258,71 @@ describe('Progress line', () => {
 
   it('no running task falls back to the done count', () => {
     assert.equal(progressLine(pageBase()), '1 of 3 tasks done');
+  });
+});
+
+function planRun(
+  run: Partial<NonNullable<WebChange['planRun']>>,
+): NonNullable<WebChange['planRun']> {
+  return { outcome: 'running', startedAt: null, detail: null, ...run };
+}
+
+describe('Planning line', () => {
+  const startedAt = '2026-10-14T09:30:00.000Z';
+  function planning(now: string): string {
+    return planningLine(
+      { ...pageBase(), planRun: planRun({ outcome: 'running', startedAt }) },
+      Date.parse(now),
+    );
+  }
+
+  it('seconds under a minute read as seconds', () => {
+    assert.equal(planning('2026-10-14T09:30:42.000Z'), 'Planning on server · 42s');
+  });
+
+  it('60 seconds or more read as whole minutes', () => {
+    assert.equal(planning('2026-10-14T09:42:30.000Z'), 'Planning on server · 12 min');
+  });
+
+  it('a start after now clamps to zero seconds', () => {
+    assert.equal(planning('2026-10-14T09:29:00.000Z'), 'Planning on server · 0s');
+  });
+
+  it('a missing planRun reads unavailable', () => {
+    assert.equal(
+      planningLine(pageBase(), Date.parse(startedAt)),
+      'Planning on server · unavailable',
+    );
+  });
+});
+
+describe('Planner run line', () => {
+  function line(run: WebChange['planRun']): string | null {
+    return planRunLine({ ...pageBase(), planRun: run });
+  }
+
+  it('null and the live outcomes read nothing', () => {
+    assert.equal(line(undefined), null);
+    assert.equal(line(null), null);
+    assert.equal(line(planRun({ outcome: 'running' })), null);
+    assert.equal(line(planRun({ outcome: 'ready' })), null);
+  });
+
+  it('a finished run states its outcome', () => {
+    assert.equal(line(planRun({ outcome: 'unchanged' })), 'The last planner run changed nothing.');
+    assert.equal(
+      line(planRun({ outcome: 'lint_red' })),
+      'The last planner run left the plan failing osq lint.',
+    );
+    assert.equal(line(planRun({ outcome: 'timed_out' })), 'The last planner run timed out.');
+  });
+
+  it('a failed run names the first detail line, or none', () => {
+    assert.equal(
+      line(planRun({ outcome: 'failed', detail: 'exit 1\nmore' })),
+      'The last planner run failed: exit 1',
+    );
+    assert.equal(line(planRun({ outcome: 'failed' })), 'The last planner run failed.');
   });
 });
 

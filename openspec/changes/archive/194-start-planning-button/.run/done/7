@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7dd7e7cfdaf9228b2387e7ef005d456e25be57ac2f5e803e1a2cbfc140bb5a45"
+build_stamp: "048ca0c4"
+project_commit: "dadda59f"
+exit_code: 0
+scope_files: {"packages/ui/src/change/ChangeView.tsx":"sha256:5caa968dd50594ce1a4f089ec3d061cb6c8873790eb101c4da450147a0ed9535","packages/ui/src/change/HandoffBlock.tsx":"sha256:badc801c714fabec18108e75e90100d9d9589e87da702b62896b776356c2f3de","packages/ui/src/change/PageBlock.tsx":"sha256:96ebf01b7557fe88b2a543c0c2888d162ffe51ada8aa6b0bb10e75530867f512","packages/ui/src/change/page.css":"sha256:1bf126e1e1e21f553b47b9ba07417f54a2e34f3efcd56cd400d9d1f21fa9189a","tests/ui-start-planning.test.tsx":"sha256:7d637e3ec690eb2b20e6dbeefcb1d8a9cc69b1465ec3bff6d7410d0feccb16bc"}
+---
+2026-10-14T22:59:45.194Z

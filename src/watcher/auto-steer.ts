@@ -15,10 +15,12 @@ import {
 import type { Logger } from '../core/foundation/logger.js';
 import {
   type AutoSteerOutcome,
+  type AutoSteerRecord,
   readAutoSteerRecord,
   steeringKey,
   writeAutoSteerRecord,
 } from '../core/run/auto-steer-record.js';
+import { isProcessAlive } from '../core/run/watch-state.js';
 import type { LocatedChange } from '../core/status/change-locations.js';
 import type { SpecState } from '../core/status/state.js';
 import { describeTrigger, isDefaultBranchTrigger } from '../core/status/steering.js';
@@ -41,6 +43,11 @@ export interface AutoSteerOptions {
 
 const INTERRUPTED = 'interrupted: the watcher stopped during the run';
 
+/** Whether another process is running this trigger's planner right now. */
+function plannerStillRunning(record: AutoSteerRecord): boolean {
+  return record.outcome === 'running' && record.pid !== undefined && isProcessAlive(record.pid);
+}
+
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -58,6 +65,7 @@ function message(error: unknown): string {
  * @scenario watcher-and-harness: Planner outcomes
  * @scenario watcher-and-harness: Prompt cannot be built
  * @scenario watcher-and-harness: Interrupted run
+ * @scenario watcher-and-harness: Planner running elsewhere
  * @adr 018
  */
 export async function runAutoSteer(
@@ -83,7 +91,7 @@ export async function runAutoSteer(
 
   const existing = await readAutoSteerRecord(folderPath);
   if (existing !== null && existing.key === key) {
-    if (existing.outcome !== 'running') return null;
+    if (existing.outcome !== 'running' || plannerStillRunning(existing)) return null;
     await writeAutoSteerRecord(folderPath, {
       key,
       outcome: 'failed',

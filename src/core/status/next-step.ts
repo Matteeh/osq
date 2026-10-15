@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { currentAutoSteer } from '../run/auto-steer-record.js';
+import { readLivePlanner } from '../run/plan-run-record.js';
 import { formatPauseUntil, readActivePause } from '../run/usage-pause.js';
 import { parseHumanSteps } from '../spec/human-steps.js';
 import { analyzeVerifyCommand } from '../spec/linter.js';
@@ -15,6 +16,7 @@ import { deriveSpecState, readChangeFolder } from './state.js';
 export type NextStepState =
   | 'unplanned'
   | 'ready-for-approval'
+  | 'planning'
   | 'dead'
   | 'blocked'
   | 'running'
@@ -38,6 +40,15 @@ async function readActiveNextStep(projectRoot: string, folderPath: string): Prom
   const snapshot = await readChangeFolder(projectRoot, folderPath);
   const state = deriveSpecState(snapshot);
   const id = state.id;
+
+  const planner = await readLivePlanner(state);
+  if (planner !== null) {
+    return {
+      state: 'planning',
+      command: `osq show ${id}`,
+      detail: `since ${formatPauseUntil(planner.since)}`,
+    };
+  }
 
   if (!state.approvedHash) {
     const verify = snapshot.spec.verify.trim();
@@ -119,9 +130,13 @@ async function readArchivedNextStep(
  * @scenario status-inspection: Archived change that needs steering
  * @scenario status-inspection: Ready plan offers approve
  * @scenario status-inspection: Record for an earlier trigger
+ * @scenario status-inspection: Planning format
+ * @scenario status-inspection: Steering while planning
+ * @scenario status-inspection: Planner that stopped
  * @scenario status-inspection: Paused format
  * @scenario status-inspection: Passed pause format
  * @adr 018
+ * @adr 019
  */
 export async function readNextStep(
   projectRoot: string,
@@ -141,6 +156,7 @@ export async function readNextStep(
  * @scenario status-inspection: Steering format
  * @scenario status-inspection: Failed verification
  * @scenario status-inspection: Not landed format
+ * @scenario status-inspection: Planning format
  */
 export function formatNextStep(step: NextStep): string {
   let text = step.state.replace(/-/g, ' ');

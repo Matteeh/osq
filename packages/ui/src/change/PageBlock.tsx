@@ -1,15 +1,21 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { ApprovalNotices, WebChange } from '../contracts.js';
-import { HandoffBlock } from './HandoffBlock.js';
+import { HandoffBlock, type HandoffStart } from './HandoffBlock.js';
 import { NoticePanel } from './NoticePanel.js';
 import type { ChangePage } from './page-model.js';
-import { haltFacts, landLine, landedLine, progressLine } from './page-model.js';
+import { haltFacts, landLine, landedLine, planningLine, progressLine } from './page-model.js';
 
 export interface PageBlockProps {
   readonly change: WebChange;
   readonly page: ChangePage;
   readonly notices: ApprovalNotices | null;
   readonly onOpenNotice: (id: string) => void;
+  /** The Start planning affordance when the change's actions hold a plan. */
+  readonly start?: HandoffStart | null;
+  /** `planRunLine(change)`: the last planner run's outcome, or null. */
+  readonly outcome?: string | null;
+  /** The change view's render time, for the planning line. */
+  readonly now?: number;
 }
 
 /** The next step's detail with its first letter in capitals. */
@@ -40,12 +46,29 @@ function runningTask(change: WebChange): ReactElement | null {
 
 const NOTHING = 'Nothing for you to do. The inbox shows it when it needs you.';
 
-function blockContent({ change, page, notices, onOpenNotice }: PageBlockProps): ReactNode {
+function blockContent({
+  change,
+  page,
+  notices,
+  onOpenNotice,
+  start = null,
+  outcome = null,
+  now = Date.now(),
+}: PageBlockProps): ReactNode {
   switch (page.state) {
     case 'unplanned': {
       const handoff = change.planHandoff ?? null;
-      return handoff === null ? null : <HandoffBlock handoff={handoff} />;
+      return handoff === null ? null : (
+        <HandoffBlock handoff={handoff} start={start} outcome={outcome} />
+      );
     }
+    case 'planning':
+      return (
+        <>
+          <p className="page-planning">{planningLine(change, now)}</p>
+          <p className="page-note">The plan comes back here when it lints clean.</p>
+        </>
+      );
     case 'ready-for-approval':
     case 'unknown':
       return notices === null ? null : <NoticePanel notices={notices} onOpen={onOpenNotice} />;
@@ -136,7 +159,9 @@ function blockContent({ change, page, notices, onOpenNotice }: PageBlockProps): 
  *
  * @scenario web-inspection: Top block per state
  * @scenario web-inspection: Page order
+ * @scenario web-inspection: Planning top block
  * @adr 013
+ * @adr 019
  */
 export function PageBlock(props: PageBlockProps): ReactElement | null {
   const content = blockContent(props);

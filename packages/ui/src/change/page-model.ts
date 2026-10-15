@@ -55,6 +55,7 @@ function pageState(change: WebChange): ChangePageState {
  * The head and buttons for a change document's state.
  *
  * @scenario web-inspection: Page per state
+ * @scenario web-inspection: Planning page
  * @adr 013
  */
 export function changePage(change: WebChange): ChangePage {
@@ -82,6 +83,8 @@ export function changePage(change: WebChange): ChangePage {
       };
     case 'running':
       return { state, label: 'Running', summary: done, main: null, second: null };
+    case 'planning':
+      return { state, label: 'Planning', summary: 'Planner running', main: null, second: null };
     case 'blocked':
       return { state, label: 'Blocked', summary: done, main: null, second: null };
     case 'dead':
@@ -136,6 +139,34 @@ export function progressLine(change: WebChange): string {
     return `Task ${running.taskNumber} of ${n} running · ${elapsedText(running.runningElapsedSeconds)}`;
   }
   return `${doneCount(change)} of ${n} ${noun(n)} done`;
+}
+
+/**
+ * @scenario web-inspection: Planning line
+ * @adr 013
+ */
+export function planningLine(change: WebChange, now: number): string {
+  const started = change.planRun?.startedAt;
+  const parsed = started === null || started === undefined ? Number.NaN : Date.parse(started);
+  if (Number.isNaN(parsed)) return 'Planning on server · unavailable';
+  return `Planning on server · ${elapsedText(Math.max(0, Math.floor((now - parsed) / 1000)))}`;
+}
+
+/**
+ * @scenario web-inspection: Planner run line
+ * @adr 013
+ */
+export function planRunLine(change: WebChange): string | null {
+  const run = change.planRun;
+  if (!run) return null;
+  if (run.outcome === 'unchanged') return 'The last planner run changed nothing.';
+  if (run.outcome === 'lint_red') return 'The last planner run left the plan failing osq lint.';
+  if (run.outcome === 'timed_out') return 'The last planner run timed out.';
+  if (run.outcome === 'failed') {
+    const line = run.detail?.split('\n')[0];
+    return line ? `The last planner run failed: ${line}` : 'The last planner run failed.';
+  }
+  return null;
 }
 
 function touchedPaths(task: WebTask): string[] {

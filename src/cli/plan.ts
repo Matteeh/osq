@@ -25,6 +25,7 @@ import {
   validatePlanModeOptions,
   writeBriefAndManifest,
 } from './plan-queue.js';
+import { planRunCommand } from './plan-run.js';
 import { readSteeringPlan } from './plan-steer.js';
 
 export { formatBriefContent } from './plan-queue.js';
@@ -75,12 +76,19 @@ export interface PlanCommandOptions extends CommandInputs {
   next?: boolean;
   replan?: boolean;
   adapter?: HarnessAdapter;
+  run?: boolean;
+  notes?: string;
+  planRunRole?: 'worker';
+  spawnPlanWorker?: (id: string, notes: string | undefined) => Promise<number>;
 }
 
 export async function planCommand(
   nameOrId: string | undefined,
   options: PlanCommandOptions = {},
 ): Promise<void> {
+  if (options.run === true || options.notes !== undefined) {
+    return planRunCommand(nameOrId, options);
+  }
   const name = (nameOrId ?? '').trim();
   validatePlanModeOptions(name, options);
 
@@ -89,8 +97,6 @@ export async function planCommand(
   const config = await inputs.config();
   const changesDir = getChangesDir(config.paths.openspecRoot, cwd);
 
-  // The planner is resolved only for an explicit owned session; the default
-  // prompt handoff and print modes never need planner configuration.
   const isSession = options.session === true;
   const plannerSelection = isSession ? resolvePlannerSelection(config) : null;
   const briefModel = plannerSelection?.briefModel ?? null;

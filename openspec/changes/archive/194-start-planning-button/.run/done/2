@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:60cd2b5892ff544d6b3e05d46c8704180d50a1cd7ec186b090d706230c18d6d5"
+build_stamp: "048ca0c4"
+project_commit: "16508a9a"
+exit_code: 0
+scope_files: {"src/core/run/auto-steer-record.ts":"sha256:983e6d2e187f083296084ce588a6d720510ee34e1dcb56e74f43d0e21b3f3d3d","src/core/run/plan-run-record.ts":"sha256:6359a410106a403a33856e1f99e9963d8a8939baa8f490376262ef30ded80c86","src/watcher/auto-steer-run.ts":"sha256:30e89487a2761217ad945814c77b7c7fb0ba8b2fa31007364af0a5e2b076f383","src/watcher/auto-steer.ts":"sha256:290de1bcaf9721b32a2463b73259477ebdbeda2bcd618f91ef38a8272c064cb9","src/watcher/planner-spawn.ts":"sha256:03161be76622ac4f0135b27909d5d25094674e4ab5d47248c1326c50c021cc03","tests/auto-steer-live.test.ts":"sha256:8bca65aaa5218446afa859e23f7a67e9469232627fe81e0b7f6e46b0e1632ab5","tests/plan-run-record.test.ts":"sha256:efba233d4e80db5e6199a293fe8b613f735067d07b5860e057aa765f10153d26"}
+---
+2026-10-14T21:54:02.575Z

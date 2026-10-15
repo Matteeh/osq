@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { formatPlanPasteBlock } from '../foundation/plan-handoff.js';
 import { type AutoSteerOutcome, currentAutoSteer } from '../run/auto-steer-record.js';
+import { currentPlanRun } from '../run/plan-run-record.js';
 import { type NextStep, readNextStep } from '../status/next-step.js';
 import { deriveSpecState } from '../status/state.js';
 import type { WebLocation } from './web-data-types.js';
@@ -19,11 +20,21 @@ export interface WebAutoSteer {
   readonly changed: readonly string[];
 }
 
-/** The three fields the change page reads to choose its next move. */
+/** The planner run a change carries: its outcome, start time and detail. */
+export interface WebPlanRun {
+  readonly outcome: AutoSteerOutcome;
+  /** The record's `at` while the outcome is `running`; else null. */
+  readonly startedAt: string | null;
+  /** The record's body, or null. */
+  readonly detail: string | null;
+}
+
+/** The four fields the change page reads to choose its next move. */
 export interface WebChangeNext {
   readonly nextStep: NextStep | null;
   readonly planHandoff: WebPlanHandoff | null;
   readonly autoSteer: WebAutoSteer | null;
+  readonly planRun: WebPlanRun | null;
 }
 
 async function hasPromptFile(folderPath: string): Promise<boolean> {
@@ -32,13 +43,17 @@ async function hasPromptFile(folderPath: string): Promise<boolean> {
 }
 
 /**
- * The next step, plan paste block, and automatic planner record of one change.
- * Reuses `readNextStep`, `formatPlanPasteBlock`, `deriveSpecState` and
- * `currentAutoSteer`; a rejected change gets all null, and a thrown next step
- * reads as null.
+ * The next step, plan paste block, automatic planner record and planner run of
+ * one change. Reuses `readNextStep`, `formatPlanPasteBlock`, `deriveSpecState`,
+ * `currentAutoSteer` and `currentPlanRun`; a rejected change gets all null, and
+ * a thrown state or next step reads as null.
  *
  * @scenario web-inspection: Change documents carry the next step
+ * @scenario web-inspection: Running planner in the document
+ * @scenario web-inspection: Finished planner in the document
+ * @scenario web-inspection: No planner run
  * @adr 013
+ * @adr 019
  */
 export async function readWebChangeNext(
   projectRoot: string,
@@ -47,7 +62,7 @@ export async function readWebChangeNext(
   config: OsqConfig,
 ): Promise<WebChangeNext> {
   if (location === 'rejected') {
-    return { nextStep: null, planHandoff: null, autoSteer: null };
+    return { nextStep: null, planHandoff: null, autoSteer: null, planRun: null };
   }
   const nextStep = await readNextStep(projectRoot, folderPath, config).catch(() => null);
   const planHandoff: WebPlanHandoff = {
@@ -55,6 +70,7 @@ export async function readWebChangeNext(
     promptReady: await hasPromptFile(folderPath),
   };
   let autoSteer: WebAutoSteer | null = null;
+  let planRun: WebPlanRun | null = null;
   if (location === 'active') {
     const state = await deriveSpecState(projectRoot, folderPath).catch(() => null);
     if (state !== null) {
@@ -62,7 +78,15 @@ export async function readWebChangeNext(
       if (record !== null) {
         autoSteer = { outcome: record.outcome, changed: [...record.changed] };
       }
+      const run = await currentPlanRun(state);
+      if (run !== null) {
+        planRun = {
+          outcome: run.outcome,
+          startedAt: run.outcome === 'running' ? run.at : null,
+          detail: run.detail,
+        };
+      }
     }
   }
-  return { nextStep, planHandoff, autoSteer };
+  return { nextStep, planHandoff, autoSteer, planRun };
 }

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:95792a15ee82784bee09b8c626248de37def7590edd6b918daa921984805dffa"
+build_stamp: "048ca0c4"
+project_commit: "33b0f54e"
+exit_code: 0
+scope_files: {"decisions/019-tapped-planner.md":"sha256:10cd27115c6de698434e6c092bba4cbc9fecfb7977a820fa292faf2b4c104711","decisions/README.md":"sha256:19ac1ef601abab7149750a7c972c1fbc061f00637fbce21a69b872b0f21df2fd","tests/tapped-planner-adr.test.ts":"sha256:000920ac2387a4f9dd3698282a403697e5197d9ac6ec4ea35a009bb7ba8a63c8"}
+---
+2026-10-14T21:43:32.500Z

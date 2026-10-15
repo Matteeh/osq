@@ -9,6 +9,8 @@ import {
 } from '../report/planning-observed.js';
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
+import { readLivePlanner } from '../run/plan-run-record.js';
+import { formatPauseUntil } from '../run/usage-pause.js';
 import { findChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
 import { findSteeringChange } from '../status/steering-change.js';
@@ -161,6 +163,9 @@ async function approveInPlace(projectRoot: string, input: InPlaceApproval): Prom
  * git selected, the seal and commit go to a linked worktree or a stacked
  * approval and the checkout's draft is then removed; a stacked change is
  * restored to the checkout first. Otherwise approval writes in place.
+ * @scenario spec-lint-and-approve: Approve while planning
+ * @scenario spec-lint-and-approve: Approve after the planner stopped
+ * @adr 019
  */
 export async function approveSpec(
   projectRoot: string,
@@ -185,6 +190,13 @@ export async function approveSpec(
   // needs sealing goes to its own path, and an in-place change retires its
   // triggers after the new seal lands.
   const state = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+
+  const planner = await readLivePlanner(state);
+  if (planner !== null) {
+    throw new Error(
+      `a planner is running for ${folderName} since ${formatPauseUntil(planner.since)}; approve after it finishes`,
+    );
+  }
 
   try {
     if (change.tree.worktreeFolder !== undefined && state.steering) {

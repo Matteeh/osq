@@ -30,6 +30,8 @@ export interface AutoSteerRecord {
   readonly changed: readonly string[];
   /** ISO time the record was written. */
   readonly at: string;
+  /** The process running the planner, while the outcome is `running`. */
+  readonly pid?: number;
   /** Body text: failure output or one `- <error>` line per lint error. */
   readonly detail?: string;
 }
@@ -95,12 +97,14 @@ function parseRecord(content: string): AutoSteerRecord | null {
     return null;
   }
   if (typeof at !== 'string') return null;
+  const pid = typeof data.pid === 'number' ? data.pid : undefined;
   const detail = body.trim().length > 0 ? body.replace(/\n$/, '') : undefined;
   return {
     key,
     outcome: outcome as AutoSteerOutcome,
     changed: [...changed],
     at,
+    ...(pid !== undefined ? { pid } : {}),
     ...(detail !== undefined ? { detail } : {}),
   };
 }
@@ -109,6 +113,8 @@ function parseRecord(content: string): AutoSteerRecord | null {
  * Read `.run/auto-steer.md`; null for a missing or malformed file.
  *
  * @scenario watcher-and-harness: Stale record
+ * @scenario watcher-and-harness: Running record names its process
+ * @scenario watcher-and-harness: Planner running elsewhere
  * @adr 018
  */
 export async function readAutoSteerRecord(folderPath: string): Promise<AutoSteerRecord | null> {
@@ -120,6 +126,7 @@ export async function readAutoSteerRecord(folderPath: string): Promise<AutoSteer
  * Write `.run/auto-steer.md`, creating `.run/` when needed.
  *
  * @scenario watcher-and-harness: Interrupted run
+ * @scenario watcher-and-harness: Running record names its process
  * @adr 018
  */
 export async function writeAutoSteerRecord(
@@ -131,6 +138,7 @@ export async function writeAutoSteerRecord(
     outcome: record.outcome,
     changed: [...record.changed],
     at: record.at,
+    ...(record.pid !== undefined ? { pid: record.pid } : {}),
   }).trimEnd();
   const detail = record.detail ?? '';
   const body = detail.length > 0 && !detail.endsWith('\n') ? `${detail}\n` : detail;

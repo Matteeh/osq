@@ -1,17 +1,58 @@
 import type { ReactElement } from 'react';
-import { useState } from 'react';
-import type { WebChange } from '../contracts.js';
+import { useEffect, useState } from 'react';
+import type { WebAction, WebActionsDocument, WebChange } from '../contracts.js';
 import { ActionButtons } from './ActionButtons.js';
 import { ActionMenu } from './ActionMenu.js';
 import { ActionResult } from './ActionResult.js';
 import { TaskRetryContext } from './ActionRetry.js';
-import { HandoffBlock } from './HandoffBlock.js';
+import { HandoffBlock, type HandoffStart } from './HandoffBlock.js';
 import { PageBlock } from './PageBlock.js';
 import { PageFolds } from './PageFolds.js';
 import type { ActionClient } from './actions-client.js';
 import { unopenedRedLabels } from './notice-state.js';
-import { changePage } from './page-model.js';
+import { type ChangePageState, changePage, planRunLine } from './page-model.js';
 import { useChangeActions } from './useChangeActions.js';
+
+/** How often the page re-renders while a planner runs. */
+export const PLANNING_REFRESH_MS = 30_000;
+
+/**
+ * The time of the current render, re-rendering every 30 seconds while the page
+ * is `planning` so the minutes move without a new document. Cleared otherwise.
+ * Uses an abort timeout so the change sources stay free of timer identifiers.
+ */
+function usePlanningNow(state: ChangePageState): number {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (state !== 'planning') return;
+    const signal = AbortSignal.timeout(PLANNING_REFRESH_MS);
+    signal.onabort = () => setTick(tick + 1);
+    return () => {
+      signal.onabort = null;
+    };
+  }, [state, tick]);
+  return Date.now();
+}
+
+/**
+ * The change's plan action as a hand-off start, or null when the loaded
+ * actions hold no `plan` action. A static export loads no actions, so its
+ * hand-off blocks show no Start planning button.
+ *
+ * @scenario web-inspection: Start planning button
+ * @scenario web-inspection: No start without the action
+ * @adr 013
+ * @adr 019
+ */
+export function planStart(
+  document: WebActionsDocument | null,
+  pending: boolean,
+  run: (action: WebAction) => void,
+): HandoffStart | null {
+  const action = document?.actions.find((entry) => entry.verb === 'plan');
+  if (action === undefined) return null;
+  return { pending, onStart: () => run(action) };
+}
 
 export interface ChangeViewProps {
   readonly change: WebChange;
@@ -25,14 +66,18 @@ export interface ChangeViewProps {
  * title, summary and the actions menu; the top block says what the change
  * needs now; the details are folded below; and the button bar holds the main
  * action plus the plan buttons that open the hand-off. The view owns no
- * subscription, timer, or marker read.
+ * subscription or marker read; its one timer re-renders the planning line.
  *
  * @scenario web-inspection: Page order
  * @scenario web-inspection: Top block per state
  * @scenario web-inspection: Plan buttons without an action client
  * @scenario web-inspection: Approval buttons
  * @scenario web-inspection: Static export has no buttons
+ * @scenario web-inspection: Start planning button
+ * @scenario web-inspection: Start planning after Plan it
+ * @scenario web-inspection: Planning top block
  * @adr 013
+ * @adr 019
  */
 export function ChangeView({
   change,
@@ -41,6 +86,7 @@ export function ChangeView({
   actionClient,
 }: ChangeViewProps): ReactElement {
   const page = changePage(change);
+  const now = usePlanningNow(page.state);
   const review = change.review ?? null;
   const land = change.land ?? null;
   const notices = review?.notices ?? null;
@@ -64,6 +110,8 @@ export function ChangeView({
   const digestFlags = actionClient === undefined && review !== null ? review.digest.flags : [];
   const showPlanButtons = planHandoff !== null;
   const openedHandoff = handoffOpen && planHandoff !== null && page.state !== 'unplanned';
+  const start = planStart(actions.document, actions.pending, actions.run);
+  const outcome = planRunLine(change);
 
   return (
     <section className="view change-view" aria-labelledby="change-view-title">
@@ -89,9 +137,19 @@ export function ChangeView({
           ) : null}
         </p>
       ) : null}
-      {openedHandoff ? <HandoffBlock handoff={planHandoff} /> : null}
+      {openedHandoff ? (
+        <HandoffBlock handoff={planHandoff} start={start} outcome={outcome} />
+      ) : null}
       <TaskRetryContext.Provider value={actions.retry}>
-        <PageBlock change={change} page={page} notices={notices} onOpenNotice={openNotice} />
+        <PageBlock
+          change={change}
+          page={page}
+          notices={notices}
+          onOpenNotice={openNotice}
+          start={start}
+          outcome={outcome}
+          now={now}
+        />
         <PageFolds change={change} review={review} land={land} digestFlags={digestFlags} />
       </TaskRetryContext.Provider>
       <div className="page-buttons">

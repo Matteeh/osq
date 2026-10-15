@@ -5,7 +5,8 @@ export type WebActionInput =
   | { readonly verb: 'approve'; readonly opened?: readonly string[] }
   | { readonly verb: 'land' }
   | { readonly verb: 'reject'; readonly reason: string }
-  | { readonly verb: 'retry'; readonly target: string };
+  | { readonly verb: 'retry'; readonly target: string }
+  | { readonly verb: 'plan'; readonly notes?: string };
 
 /** The minimal response contract the actions client needs from `fetch`. */
 export interface ActionFetchResponse {

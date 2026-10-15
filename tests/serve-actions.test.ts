@@ -59,6 +59,7 @@ function recordingCommands(calls: RecordedCall[]): Readonly<Record<WebActionVerb
     land: async (request, inputs) => record(request, inputs),
     reject: async (request, inputs) => record(request, inputs),
     retry: async (request, inputs) => record(request, inputs),
+    plan: async (request, inputs) => record(request, inputs),
   };
 }
 
@@ -190,6 +191,7 @@ describe('createWebActionRunner', () => {
       },
       reject: async () => {},
       retry: async () => {},
+      plan: async () => {},
     };
     const runner = createWebActionRunner({ cwd: root, config }, commands);
     const results: WebActionResult[] = [];

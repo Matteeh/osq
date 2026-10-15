@@ -9,6 +9,7 @@ import { approveCommand } from './approve.js';
 import { CommandError } from './command-error.js';
 import type { ActionInputs } from './inbox-actions.js';
 import { landCommand } from './land.js';
+import { planCommand } from './plan.js';
 import { rejectCommand } from './reject.js';
 import { retryCommand } from './retry.js';
 
@@ -34,20 +35,45 @@ function approveOpened(request: WebActionRequest): readonly string[] | undefined
   return request.opened;
 }
 
-/** The default table: one verb to the command function the CLI runs. */
-const DEFAULT_COMMANDS: Readonly<Record<WebActionVerb, WebCommand>> = {
-  approve: (request, inputs) => {
-    const opened = approveOpened(request);
-    return approveCommand(
-      [request.change],
-      opened === undefined ? inputs : { ...inputs, openedNotices: opened },
-    );
-  },
-  land: (request, inputs) => landCommand(request.change, inputs),
-  reject: (request, inputs) =>
-    rejectCommand(request.change, { ...inputs, reason: rejectReason(request) }),
-  retry: (request, inputs) => retryCommand(request.change, retryTarget(request), inputs),
-};
+/** The plan command of a `plan` request; only that verb carries notes. */
+function planNotes(request: WebActionRequest): string | undefined {
+  if (request.verb !== 'plan') throw new Error(`expected a plan request, got ${request.verb}`);
+  return request.notes;
+}
+
+/**
+ * The default table: one verb to the command function the CLI runs. The plan
+ * command is injectable so a test can swap `planCommand`.
+ *
+ * @scenario web-inspection: Server runs the plan command
+ * @adr 013
+ * @adr 019
+ */
+export function defaultWebCommands(
+  plan: typeof planCommand = planCommand,
+): Readonly<Record<WebActionVerb, WebCommand>> {
+  return {
+    approve: (request, inputs) => {
+      const opened = approveOpened(request);
+      return approveCommand(
+        [request.change],
+        opened === undefined ? inputs : { ...inputs, openedNotices: opened },
+      );
+    },
+    land: (request, inputs) => landCommand(request.change, inputs),
+    reject: (request, inputs) =>
+      rejectCommand(request.change, { ...inputs, reason: rejectReason(request) }),
+    retry: (request, inputs) => retryCommand(request.change, retryTarget(request), inputs),
+    plan: (request, inputs) => {
+      const notes = planNotes(request);
+      return plan(request.change, {
+        ...inputs,
+        run: true,
+        ...(notes !== undefined ? { notes } : {}),
+      });
+    },
+  };
+}
 
 /** Turn a thrown `CommandError` or any other value into the runner's result. */
 function failureResult(error: unknown, stdout: string, stderr: string): WebActionResult {
@@ -63,10 +89,16 @@ function failureResult(error: unknown, stdout: string, stderr: string): WebActio
   return { exitCode: 1, stdout, stderr, error: { message: `Error: ${message}`, next: null } };
 }
 
-/** Build the runner `osq serve` passes to `startWebServer`. */
+/**
+ * Build the runner `osq serve` passes to `startWebServer`.
+ *
+ * @scenario web-inspection: Server runs the plan command
+ * @adr 013
+ * @adr 019
+ */
 export function createWebActionRunner(
   inputs: { readonly cwd: string; readonly config: OsqConfig },
-  commands: Readonly<Record<WebActionVerb, WebCommand>> = DEFAULT_COMMANDS,
+  commands: Readonly<Record<WebActionVerb, WebCommand>> = defaultWebCommands(),
 ): WebActionRunner {
   return async (request) => {
     const out: string[] = [];

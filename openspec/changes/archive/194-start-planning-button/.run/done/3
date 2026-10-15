@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d010fee4cf1e66c2e00291059d6885304299565d9cb14d009a2d72c3727f0fd4"
+build_stamp: "048ca0c4"
+project_commit: "8b6129bf"
+exit_code: 0
+scope_files: {"packages/ui/src/change/page-model.ts":"sha256:40480fc2a4e4eb65de68d931b062891e23449fe0ef4394b0d05eecab75738f53","src/core/status/next-step.ts":"sha256:fc7ffe978e0e526a93e46e1b9b9f897df91dbb63dc378e886141871daaef4290","src/core/status/plan-run-eligible.ts":"sha256:de51816049a5c899a2f7e680a463e6064edec3851fe0b390fc5014cb90914d55","src/core/web/web-data-change.ts":"sha256:3304927c8bf5edf0531ebe8cbf5ff81645c1bff962ccbc83bb50a8cf62556d06","src/core/web/web-data-next.ts":"sha256:c3176e2dee456ca36a9e5f773e53c5460c50c04901546a400667010a293f66d3","src/core/web/web-data-types.ts":"sha256:04d43e2a79b7740c9d947d237b337672c7249925d8b7320842a44abc3bb00ecd","tests/plan-run-status.test.ts":"sha256:1d7e895ad9e430cd714f3295b663ced6eb45a52b5784d4bb2c88b9c680fb0c99","tests/ui-page-model.test.tsx":"sha256:615af0170860ee44d829d3fb47cbe4debf9ef7691f3acedcd787179f0f8874d2"}
+---
+2026-10-14T22:06:01.801Z

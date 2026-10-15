@@ -15,6 +15,7 @@ import { approveCommand } from './approve.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, resolveInputs } from './command-inputs.js';
 import { landCommand } from './land.js';
+import { planCommand } from './plan.js';
 import { rejectCommand } from './reject.js';
 import { createForwardedRunner } from './remote-commands.js';
 import { retryCommand } from './retry.js';
@@ -56,12 +57,16 @@ export function resolveServerSite(
 
 /**
  * The server worker's action table: `land` publishes to `origin`; every other
- * verb runs the same command function `osq serve`'s default table calls.
+ * verb runs the same command function `osq serve`'s default table calls. The
+ * `land` and `plan` commands are injectable so a test can swap them.
  * @scenario cli-foundation: Server land publishes
+ * @scenario web-inspection: Server runs the plan command
  * @adr 014
+ * @adr 019
  */
 export function createServerCommands(
   land: typeof landCommand = landCommand,
+  plan: typeof planCommand = planCommand,
 ): Readonly<Record<WebActionVerb, WebCommand>> {
   return {
     approve: (request, inputs) => {
@@ -83,6 +88,17 @@ export function createServerCommands(
         throw new Error(`expected a retry request, got ${request.verb}`);
       }
       return retryCommand(request.change, request.target, inputs);
+    },
+    plan: (request, inputs) => {
+      if (request.verb !== 'plan') {
+        throw new Error(`expected a plan request, got ${request.verb}`);
+      }
+      const notes = request.notes;
+      return plan(request.change, {
+        ...inputs,
+        run: true,
+        ...(notes !== undefined ? { notes } : {}),
+      });
     },
   };
 }

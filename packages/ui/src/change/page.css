@@ -88,6 +88,21 @@
   overflow-wrap: anywhere;
 }
 
+.handoff-start {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.handoff-start-note,
+.handoff-outcome {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.page-planning {
+  font-variant-numeric: tabular-nums;
+}
+
 .page-buttons {
   display: flex;
   flex-wrap: wrap;

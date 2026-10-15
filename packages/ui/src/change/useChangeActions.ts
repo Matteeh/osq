@@ -33,6 +33,8 @@ function requestFor(
       return approveInput(opened);
     case 'land':
       return { verb: 'land' };
+    case 'plan':
+      return { verb: 'plan' };
   }
 }
 
@@ -68,6 +70,7 @@ function taskTargets(document: WebActionsDocument | null): string[] {
  * @scenario web-inspection: Static export has no buttons
  * @scenario web-inspection: Reject in the menu
  * @adr 013
+ * @adr 019
  */
 export function useChangeActions(
   selector: string,

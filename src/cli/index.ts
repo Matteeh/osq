@@ -16,7 +16,7 @@ import { registerMcpCommand } from './mcp.js';
 import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
-import { planCommand } from './plan.js';
+import { type PlanCommandOptions, planCommand } from './plan.js';
 import { registerQueryCommand } from './query.js';
 import { queueCommand } from './queue.js';
 import { parseRejectReason, rejectCommand } from './reject.js';
@@ -87,26 +87,17 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
     .option('--session', 'launch the configured interactive planner session instead of handing off')
     .option('--next', 'plan the next eligible brief-queue item')
     .option('--replan', 'allow replanning a rejected first eligible queue item')
-    .action(
-      async (
-        name: string | undefined,
-        options: {
-          brief?: string;
-          print?: boolean;
-          session?: boolean;
-          next?: boolean;
-          replan?: boolean;
-        },
-      ) => {
-        try {
-          await planCommand(name, options);
-        } catch (error) {
-          if (error instanceof CommandError) throw error;
-          const message = error instanceof Error ? error.message : String(error);
-          throw new CommandError(`Error: ${message}`);
-        }
-      },
-    );
+    .option('--run', 'start a detached planner for the change and return')
+    .option('--notes <text>', 'notes from the human, added to the planner prompt')
+    .action(async (name: string | undefined, options: PlanCommandOptions) => {
+      try {
+        await planCommand(name, options);
+      } catch (error) {
+        if (error instanceof CommandError) throw error;
+        const message = error instanceof Error ? error.message : String(error);
+        throw new CommandError(`Error: ${message}`);
+      }
+    });
 
   program
     .command('lint [ids...]')

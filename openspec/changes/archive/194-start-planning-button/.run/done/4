@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8b7ca081cfc63aa008a02fc7b36b4f82407be57f6109ede17d4cf2f6c23cd4a2"
+build_stamp: "048ca0c4"
+project_commit: "1737d6e6"
+exit_code: 0
+scope_files: {"src/cli/index.ts":"sha256:4c23df51d48528bf1df5cdd6de060e738b44b41db2016e7693cec74632f6c8a3","src/cli/plan-run-worker.ts":"sha256:dd160b795e70f8cbafd64680a80bec33bf86f1c68e727fc49a12f80e01b10fe7","src/cli/plan-run.ts":"sha256:364e6cd21051ef605832026b215cedeb8ab61d1d50b831b8ed8f40f315671c00","src/cli/plan-scratch.ts":"sha256:be77ba0645b3d4fffe8b0d350f360a789d37f1c9e237bf5647700be730ad3857","src/cli/plan.ts":"sha256:50b0abb8926da16f3b6ce4593d3448de558393514c537da7aaa0050b291bd3dd","tests/plan-run-command.test.ts":"sha256:8641fa385b830177087f2433a3795164e789905ef050609c4a716169ce261871","tests/plan-run-worker.test.ts":"sha256:ef6addfded835b2eeeacab38815098f924ac5aca0a76d00ca6fe8a3bf86924cd"}
+---
+2026-10-14T22:24:39.728Z

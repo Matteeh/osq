@@ -100,7 +100,11 @@ function webTasks(
  *
  * @scenario web-inspection: Web document carries the wait
  * @scenario web-inspection: Change documents carry the next step
+ * @scenario web-inspection: Running planner in the document
+ * @scenario web-inspection: Finished planner in the document
+ * @scenario web-inspection: No planner run
  * @adr 013
+ * @adr 019
  */
 export async function getWebChange(
   projectRoot: string,
@@ -163,6 +167,7 @@ export async function getWebChange(
     nextStep: next.nextStep,
     planHandoff: next.planHandoff,
     autoSteer: next.autoSteer,
+    planRun: next.planRun,
     ...(runsAfter.length > 0 ? { runsAfter } : {}),
     rejection: folder.location === 'rejected' ? await readRejection(folder.folderPath) : null,
     dependsOn: [...details.dependsOn],

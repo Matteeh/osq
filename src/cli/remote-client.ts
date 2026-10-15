@@ -67,10 +67,14 @@ function requestFrom(name: string, values: readonly unknown[]): ForwardedCommand
  * Replace every action on `program` so each command reaches `server` instead of
  * running locally: forwarded commands send their parsed request and print the
  * streamed output, while local-only commands refuse before any request.
- * `plan` and `lint` download and upload a working copy first.
+ * `plan` without `--run` and `lint` download and upload a working copy first;
+ * `plan --run` goes as a whole command, like `approve`, so the planner starts
+ * on the server's clone.
  * @scenario cli-foundation: Same command from a laptop
  * @scenario cli-foundation: Local-only commands name the alternative
+ * @scenario cli-foundation: Forwarded start
  * @adr 014
+ * @adr 019
  */
 export function forwardProgram(program: Command, server: RemoteServer): void {
   const forwarded = (name: string) => {
@@ -82,8 +86,10 @@ export function forwardProgram(program: Command, server: RemoteServer): void {
       if (name === 'plan') {
         if (request.options.session === true) throw localOnly('plan --session');
         if (request.options.brief !== undefined) throw localOnly('plan --brief');
-        await planOnServer(server, request, { stdout: processStdout, stderr: processStderr });
-        return;
+        if (request.options.run !== true) {
+          await planOnServer(server, request, { stdout: processStdout, stderr: processStderr });
+          return;
+        }
       }
       if (name === 'lint') {
         await lintOnServer(server, request, { stdout: processStdout, stderr: processStderr });
