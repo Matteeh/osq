@@ -10,6 +10,7 @@ import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumpt
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
+import { duplicateScenarioFindings } from './duplicate-scenario-lint.js';
 import { type EntryLintTask, missingEntryFindings } from './entry-lint.js';
 import { collectGeneratedMoveFindings } from './generated-move-lint.js';
 import { isExcludedChangePath } from './hasher.js';
@@ -858,6 +859,7 @@ export async function verifyDeltaTargets(
 
     try {
       const merged = mergeDelta(baseContent, capability, delta);
+      findings.push(...duplicateScenarioFindings(capability, deltaFile, baseContent, merged));
       mergedSpecs.push({ capability, mergedContent: merged, deltaFile });
     } catch (error) {
       if (error instanceof DeltaMergeError) {

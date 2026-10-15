@@ -67,7 +67,7 @@ function requirementBlock(name: string, sourceComment: string | null): string {
   return `### Requirement: ${name}${comment}
 The system SHALL behave declaratively.
 
-#### Scenario: Works
+#### Scenario: ${name} works
 - **WHEN** invoked
 - **THEN** works
 `;

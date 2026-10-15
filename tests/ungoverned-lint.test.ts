@@ -211,7 +211,7 @@ describe('ungoverned lint', () => {
 ### Requirement: Added cap behavior
 The system SHALL add behavior for cap.
 
-#### Scenario: Works
+#### Scenario: Added works
 - **WHEN** invoked
 - **THEN** works
 `,
@@ -248,7 +248,7 @@ The system SHALL add behavior for cap.
 ### Requirement: Added cap behavior
 The system SHALL add behavior for cap.
 
-#### Scenario: Works
+#### Scenario: Added works
 - **WHEN** invoked
 - **THEN** works
 `,
@@ -350,7 +350,7 @@ The system SHALL add behavior for cap.
 ### Requirement: Added cap behavior
 The system SHALL add behavior for cap.
 
-#### Scenario: Works
+#### Scenario: Added works
 - **WHEN** invoked
 - **THEN** works
 `,

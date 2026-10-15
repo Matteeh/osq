@@ -84,7 +84,7 @@ function delta(capability: string): string {
 ### Requirement: Added ${capability} behavior
 The system SHALL add behavior for ${capability}.
 
-#### Scenario: Works
+#### Scenario: Added works
 - **WHEN** invoked
 - **THEN** works
 `;

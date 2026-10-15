@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d6a2984c21b60e115966c0982b61e75c1e42d6fd21bb5cee035276dd7b28b309"
+build_stamp: "c9d50805"
+project_commit: "176721b4"
+exit_code: 0
+scope_files: {"src/core/spec/duplicate-scenario-lint.ts":"sha256:de9b1b856dc093853a3bb234290f68d8212b1143aed5ed96e5a2761bfad2ff3e","src/core/spec/linter.ts":"sha256:20980c9781f4e8e1fcdb0925f6955a17c7d10a1192419b4f81aedc04cea574b2","tests/duplicate-scenario-lint.test.ts":"sha256:dee3b1865b390b19fb1852cae5a69ac6c3ca5259074eb74b401f659d2513a420","tests/impact-lint.test.ts":"sha256:0d236ea50b73f10edee603bbcbd3d1b3179cac3bfbce05b56061998303d13ac7","tests/instructions-drift.test.ts":"sha256:4eef4435083c3d8dcb5670753c6d7ee246d072ce2e5aeda9e740b6e6de0e071d","tests/source-comment-lint.test.ts":"sha256:c21259134a0ff5f031405a1e68b922a1f3538a357178e6695570392788973d33","tests/ungoverned-lint.test.ts":"sha256:dbdbdc295ddd1a9dba18988fbe942f7107c4af5fde9f0410e4c7149b7f35b989"}
+---
+2026-10-15T15:14:19.712Z

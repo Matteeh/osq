@@ -95,7 +95,7 @@ const DELTA_MD = `# Spec Delta: Ingress
 
 The system SHALL route ingress.
 
-#### Scenario: Route
+#### Scenario: Ingress route
 - **WHEN** a request arrives
 - **THEN** it is routed
 `;
