@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:eb3763c8f9743f65204ee0aed77f52fc9b9b1f3c76f23c971284bf7beb4bf05f"
+build_stamp: "398617db"
+project_commit: "1b2c794b"
+exit_code: 0
+scope_files: {"decisions/021-autopilot.md":"sha256:8b137bf59cf7427ef6653b30990c2a03d8c3c4937e8c3298ec674b4b6cc6ee23","decisions/README.md":"sha256:0b5b8a0726c6587c38608e906ce65326db40051501f1fa244580450ae081c99d","tests/autopilot-adr.test.ts":"sha256:045981a0c38c0388104b2dfdd424d9d219c7baf825376e0c66add9c80418dc2e"}
+---
+2026-10-15T22:01:17.656Z
