@@ -287,6 +287,19 @@ describe('HISTORY_TABLES', () => {
           name: 'pauses',
           columns: ['change', 'task', 'paused_at', 'until', 'source'],
         },
+        {
+          name: 'recertifications',
+          columns: [
+            'change',
+            'task',
+            'recertified_at',
+            'outcome',
+            'automatic',
+            'path',
+            'credited_to',
+            'source',
+          ],
+        },
       ],
     );
   });

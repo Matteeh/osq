@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:778a4d71e8c3616203c674b0cbb4d132550247419c1bae4c62c3197a47ffb505"
+build_stamp: "07858ebc"
+project_commit: "d34f0051"
+exit_code: 0
+scope_files: {"src/core/status/steering.ts":"sha256:b10fb6e1b9ae7a21093b16f76ccaaab07b24753c1769df634c7814d2b3604a90","tests/scope-regression-retry.test.ts":"sha256:eea82010617855901f28f02f926f4555e5dff900189b4cd9e72a024d85dea56a"}
+---
+2026-10-15T12:34:19.884Z

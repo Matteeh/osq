@@ -452,6 +452,10 @@ dependency; `osq land <id>` for `archived`; and null for `landed`.
 - **WHEN** approved change 007 has a stuck task 2
 - **THEN** its next step is `dead` with command `osq plan 007` and detail `needs steering`
 
+#### Scenario: Passing scope regression next step
+- **WHEN** approved change 007's task 3 has an active `.run/regressed/3.md` with `reason: scope_regression` and `verification_passed: true`
+- **THEN** its next step is `dead` with command `osq retry 007 3` and a null detail, `osq --json` holds one needs-you item for it, a `task-regressed` item for task 3 with command `osq retry 007 3` and no `steering`, and `readDispatchItems` gives one `halt` item for it, for task 3, with commands `osq retry 007 3` then `osq show 007` and no `steering`
+
 ### Requirement: Next step detail and format
 `detail` SHALL be `do the steps before approval first` for a
 `ready-for-approval` change with steps before approval, `waiting for <ids>` for
@@ -1401,8 +1405,13 @@ requirement:
 - `blocked`: a task whose active `.run/dead/<n>.md` has `reason: blocked` or
   `reason: entry_missing`.
 - `regression`: a task with an active `.run/regressed/<n>.md`, whatever its
-  reason, or an active `.run/regressed/change.md` whose reason is
-  `verify_red`, `verify_path_missing`, or `sync_verify_red`.
+  reason, except a `scope_regression` marker with `verification_passed: true`,
+  or an active `.run/regressed/change.md` whose reason is `verify_red`,
+  `verify_path_missing`, or `sync_verify_red`.
+
+A task's `scope_regression` marker whose recorded verify passed is no trigger:
+the task's own verify still holds, so `osq retry <id> <n>` recertifies it in
+place and no planner is needed.
 - `conflict`: an active `.run/regressed/change.md` whose reason is
   `sync_conflict`.
 - `requirement_changed`: an active `.run/regressed/change.md` whose reason is
@@ -1457,6 +1466,14 @@ the change target.
 #### Scenario: Archived change
 - **WHEN** an archived folder in an osq worktree has `.run/approved` and `.run/regressed/change.md` with `reason: sync_conflict`
 - **THEN** its derived state carries the `conflict` trigger as `steering`
+
+#### Scenario: Passing scope regression
+- **WHEN** an approved change's task 3 has an active `.run/regressed/3.md` with `reason: scope_regression` and `verification_passed: true`, and task 4 has none
+- **THEN** `deriveSteering` returns no trigger and the derived state has no `steering` key
+
+#### Scenario: Failing scope regression
+- **WHEN** an approved change's task 3 has an active `.run/regressed/3.md` with `reason: scope_regression` and `verification_passed: false`
+- **THEN** `deriveSteering` returns `{ target: "3", trigger: "regression", reason: "scope_regression" }`
 
 ### Requirement: Steering inbox items
 A change whose derived state has `steering` SHALL have exactly one needs-you

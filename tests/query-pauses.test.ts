@@ -140,7 +140,7 @@ describe('pause query table', () => {
     assert.deepEqual(text.trimEnd().split('\n'), ['n', '0']);
   });
 
-  it('lists pauses last, after task_outcomes, and exits zero', async () => {
+  it('lists pauses directly after task_outcomes, no longer last, and exits zero', async () => {
     const root = await makeRoot();
     await writePricing(root);
 
@@ -148,8 +148,8 @@ describe('pause query table', () => {
 
     assert.equal(error, '');
     const lines = text.trimEnd().split('\n');
-    assert.equal(lines.at(-1), PAUSES);
     assert.equal(lines[lines.indexOf(TASK_OUTCOMES) + 1], PAUSES);
+    assert.notEqual(lines.at(-1), PAUSES);
   });
 
   it('prints task_outcomes directly after link_findings', async () => {

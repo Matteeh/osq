@@ -45,7 +45,12 @@ function compareTaskNumbers(a: string, b: string): number {
 function taskTrigger(snapshot: ChangeFolderSnapshot, taskNumber: string): SteeringTrigger | null {
   const regressed = snapshot.regressedMarkers?.get(taskNumber);
   if (regressed !== undefined) {
-    return { target: taskNumber, trigger: 'regression', reason: markerReason(regressed) };
+    const { data } = parseFrontmatter(regressed);
+    const reason = typeof data.reason === 'string' ? data.reason : '';
+    // A scope regression whose recorded verify passed recertifies in place:
+    // the task's own verify still holds, so it is no trigger.
+    if (reason === 'scope_regression' && data.verification_passed === true) return null;
+    return { target: taskNumber, trigger: 'regression', reason };
   }
   if (snapshot.doneMarkers.has(taskNumber)) return null;
   const dead = snapshot.deadMarkers.get(taskNumber);
@@ -77,6 +82,9 @@ function changeTrigger(marker: string | undefined): SteeringTrigger | null {
  * The active steering triggers of an approved change, derived from markers the
  * snapshot already read: the change-level trigger first, then tasks in
  * numeric order. An unapproved change yields none.
+ *
+ * @scenario status-inspection: Passing scope regression
+ * @scenario status-inspection: Failing scope regression
  */
 export function deriveSteering(snapshot: ChangeFolderSnapshot): SteeringTrigger[] {
   if (!snapshot.approvedHash) return [];

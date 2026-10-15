@@ -875,8 +875,15 @@ verification passed or failed.
 A differing path SHALL be attributed to a later done task only when exactly one
 later task's normalized file-change events name a resolver-produced path and
 the current file hash agrees with that task's resolver-produced completion hash
-when available. Multiple qualifying tasks SHALL be `ambiguous`; absence of a
-trustworthy candidate SHALL be `unknown`.
+when available. When no later task's file-change events name the path, the
+audit SHALL credit it from measured hashes instead: the candidates are the
+later done tasks whose `measures` end segments for the path, read through
+`readEndSegments`, hold at least one segment whose `before` differs from its
+`after`, and the same completion-hash check applies. A path credited this way
+SHALL carry `source: "measures"` in its attribution entry; a path credited from
+file-change events, `ambiguous`, or `unknown` SHALL carry no `source` key.
+Multiple qualifying tasks SHALL be `ambiguous`; absence of a trustworthy
+candidate SHALL be `unknown`.
 
 An active regression marker SHALL make later audits idempotent. Any newly
 regressed task SHALL return `blocked_by_regression` without locking, running,
@@ -906,6 +913,18 @@ one stale-task line followed by one numerically ordered change summary.
 #### Scenario: Automatically recertified task
 - **WHEN** the only stale task qualifies for automatic scope recertification
 - **THEN** the audit reports no regressed task and the upcoming task runs
+
+#### Scenario: Credit from measured hashes
+- **WHEN** task 1's `src/a.ts` differs, task 2 is done, its `measures` end event takes `src/a.ts` from `h1` to `h2`, and no stream holds a `file_changed` event
+- **THEN** the attribution entry is `{ path: "src/a.ts (modified)", attribution: "2", source: "measures" }`
+
+#### Scenario: Typed event wins
+- **WHEN** task 1's `src/a.ts` differs, task 3's stream holds a `file_changed` event for `src/a.ts`, task 3's done marker records no hash for it, and task 2's `measures` end event takes `src/a.ts` from `h1` to `h2`
+- **THEN** the attribution entry is `{ path: "src/a.ts (modified)", attribution: "3" }` with no `source` key
+
+#### Scenario: Two later tasks measured the path
+- **WHEN** no stream holds a `file_changed` event and the `measures` end events of both task 2 and task 3 change `src/a.ts`
+- **THEN** the attribution entry is `{ path: "src/a.ts (modified)", attribution: "ambiguous" }`
 
 ### Requirement: Archive scope recertification audit
 Before the existing archive-time task and change verification sequence, the
@@ -1526,6 +1545,13 @@ of these hold:
    file was absent.
 3. The done task's verify passes at detection.
 
+Within one task's stream, an end event whose `before` for the path equals the
+`before` of that task's previous end event for the path SHALL replace that
+previous end event before the chain is checked, because the earlier attempt's
+changes were discarded, as a dead task's are in a worktree. `readEndSegments`
+in `src/core/run/scope-segments.ts` SHALL return one task's end segments for one
+path with that rule applied, and the audit SHALL read segments only through it.
+
 An automatic recertification SHALL refresh the done marker through the same
 function `osq retry` uses for a passing recertification. It SHALL append one
 `recertification` event with `outcome: passed` and `automatic: true`, carrying
@@ -1554,6 +1580,18 @@ halt the change exactly as before.
 #### Scenario: Resolver upgrade only
 - **WHEN** a done marker lacks the current resolver version but no file differs
 - **THEN** it is recorded as a scope regression exactly as before
+
+#### Scenario: Discarded attempt of the later task
+- **WHEN** a change runs in an osq worktree with tasks 1, 2 and 3, task 2's scope covers task 1's `src/one.txt`, the harness reports no `file_changed` event, task 2's first attempt writes `src/one.txt` and a file outside its scope and dies with `scope_violation`, its automatic retry writes `src/one.txt` again and is done, and task 1's verify passes
+- **THEN** task 1 is recertified automatically with one `recertification` event carrying `automatic: true` and attribution `[{ path: "src/one.txt (modified)", attribution: "2", source: "measures" }]`, no `.run/regressed/1.md` exists, and task 3 runs
+
+#### Scenario: Segments of a discarded attempt
+- **WHEN** task 2's stream holds two `measures` end events for `src/a.ts`, the first from `h1` to `h2` and the second from `h1` to `h3`
+- **THEN** `readEndSegments` returns one segment, from `h1` to `h3`
+
+#### Scenario: Segments of a kept attempt
+- **WHEN** task 2's stream holds two `measures` end events for `src/a.ts`, the first from `h1` to `h2` and the second from `h2` to `h3`
+- **THEN** `readEndSegments` returns both segments in stream order
 
 ### Requirement: Governing decisions in the manifest
 The approval manifest SHALL carry `decisions`, an object from the number of

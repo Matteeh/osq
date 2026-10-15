@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../core/foundation/config.js';
+import { readScopeCredit } from '../core/run/scope-credit.js';
 import {
   SCOPE_RESOLVER_VERSION,
   type StaleTaskAudit,
@@ -10,8 +11,6 @@ import {
   findDifferingPaths,
   listCanonicalDoneNumbers,
   parseActiveStaleTask,
-  readDoneMarker,
-  readFileChangedPaths,
 } from '../core/run/scope-hash.js';
 import { tailVerifyOutput } from '../core/run/verify-excerpt.js';
 import { parseTaskMd } from '../core/spec/parser.js';
@@ -56,6 +55,11 @@ export interface ScopeAuditResult {
  * later in-scope task alone carried is recertified automatically instead.
  * Already-active regressions are reported without re-verification or duplicate
  * writes.
+ *
+ * @scenario watcher-and-harness: Later edit attribution
+ * @scenario watcher-and-harness: Credit from measured hashes
+ * @scenario watcher-and-harness: Typed event wins
+ * @scenario watcher-and-harness: Two later tasks measured the path
  */
 export async function auditScopeRegressions(options: ScopeAuditOptions): Promise<ScopeAuditResult> {
   const { projectRoot, specFolderPath, eligibleTaskNumbers, config } = options;
@@ -63,20 +67,8 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
   const timeoutSeconds = options.verifyTimeoutSeconds;
   const record = options.record ?? true;
   const runDir = path.join(specFolderPath, '.run');
-  const doneInfo = new Map<string, Awaited<ReturnType<typeof readDoneMarker>>>();
-  const changesByPath = new Map<string, Set<string>>();
-  const completionHashes = new Map<string, Record<string, string | null>>();
-  for (const number of await listCanonicalDoneNumbers(runDir)) {
-    const info = await readDoneMarker(runDir, number);
-    if (!info) continue;
-    doneInfo.set(number, info);
-    completionHashes.set(number, info.scopeFiles);
-    for (const filePath of await readFileChangedPaths(specFolderPath, number)) {
-      const tasks = changesByPath.get(filePath) ?? new Set<string>();
-      tasks.add(number);
-      changesByPath.set(filePath, tasks);
-    }
-  }
+  const { doneInfo, completionHashes, changesByPath, measuredPathsByTask } =
+    await readScopeCredit(specFolderPath);
 
   const stale: StaleTaskAudit[] = [];
   const recertified: string[] = [];
@@ -109,6 +101,7 @@ export async function auditScopeRegressions(options: ScopeAuditOptions): Promise
         current.fileHashes,
         changesByPath,
         completionHashes,
+        measuredPathsByTask,
       ),
       recordedHash: recorded.scopeHash,
       currentHash: current.hash,

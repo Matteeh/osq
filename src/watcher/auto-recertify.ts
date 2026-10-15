@@ -6,6 +6,7 @@ import type {
   ScopeHashResult,
   ScopePathAttribution,
 } from '../core/run/scope-hash.js';
+import { type MeasureSegment, readEndSegments } from '../core/run/scope-segments.js';
 import { scopeCoversPath } from '../core/run/scope.js';
 import { parseTaskMd } from '../core/spec/parser.js';
 import { compareNumericPrefix } from '../core/status/state.js';
@@ -31,15 +32,6 @@ export interface AutomaticRecertificationInput {
   readonly attribution: ScopePathAttribution[];
 }
 
-interface MeasureSegment {
-  before: string | null;
-  after: string | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 /** Later-numbered task numbers of one change, numerically ordered. */
 async function listLaterTaskNumbers(specFolderPath: string, taskNumber: string): Promise<string[]> {
   const entries = await fs.readdir(path.join(specFolderPath, 'tasks')).catch((): string[] => []);
@@ -49,36 +41,6 @@ async function listLaterTaskNumbers(specFolderPath: string, taskNumber: string):
     .filter((number): number is string => number !== undefined)
     .filter((number) => Number.parseInt(number, 10) > current)
     .sort(compareNumericPrefix);
-}
-
-/** The per-file before/after segments a task's `measures` end events recorded. */
-async function readEndSegments(
-  specFolderPath: string,
-  taskNumber: string,
-  filePath: string,
-): Promise<MeasureSegment[]> {
-  const raw = await fs
-    .readFile(path.join(specFolderPath, '.run', 'events', `${taskNumber}.jsonl`), 'utf8')
-    .catch(() => '');
-  const segments: MeasureSegment[] = [];
-  for (const line of raw.split('\n')) {
-    if (!line.trim()) continue;
-    let event: unknown;
-    try {
-      event = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    if (!isRecord(event) || event.type !== 'measures' || !isRecord(event.data)) continue;
-    if (event.data.phase !== 'end' || !isRecord(event.data.scopeHashes)) continue;
-    const entry = event.data.scopeHashes[filePath];
-    if (!isRecord(entry)) continue;
-    segments.push({
-      before: typeof entry.before === 'string' ? entry.before : null,
-      after: typeof entry.after === 'string' ? entry.after : null,
-    });
-  }
-  return segments;
 }
 
 /** True when one path's hash travels from the done record to the tree without a gap. */
@@ -107,6 +69,12 @@ async function pathCarriedWithoutGap(
  * file in scope is the only thing that changed it and the recorded hashes carry
  * the file without a gap. Refreshes the done marker and appends the automatic
  * `recertification` event; returns false when any differing path disqualifies.
+ *
+ * @scenario watcher-and-harness: Discarded attempt of the later task
+ * @scenario watcher-and-harness: A later task extends the file
+ * @scenario watcher-and-harness: Verify fails at detection
+ * @scenario watcher-and-harness: Human edit breaks the chain
+ * @scenario watcher-and-harness: File outside every later scope
  */
 export async function autoRecertify(input: AutomaticRecertificationInput): Promise<boolean> {
   const { specFolderPath, taskNumber, differing } = input;
