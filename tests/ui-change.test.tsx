@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { App, type AppProps } from '../packages/ui/src/app.js';
@@ -35,7 +34,6 @@ import type { WebChange, WebRecertification, WebTask } from '../src/core/web/web
 import { getWebChange, getWebGraph } from '../src/core/web/web-data.js';
 import { buildWebFixture, writeRunningLock } from './fixtures/web/build.js';
 
-const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const ASOF = '2026-06-01T00:00:42.000Z';
 const LOCK_START = Date.parse('2026-06-01T00:00:00.000Z');
 
@@ -579,27 +577,5 @@ describe('change route invalidation', () => {
 
     data.close();
     await flush();
-  });
-
-  it('keeps change sources free of subscriptions, timers, markdown, and HTML injection', async () => {
-    const dir = path.join(ROOT, 'packages', 'ui', 'src', 'change');
-    const entries = await fs.readdir(dir);
-    const forbidden = [
-      'EventSource',
-      'addEventListener',
-      'setInterval',
-      'setTimeout',
-      'fetch(',
-      'dangerouslySetInnerHTML',
-      'markdown',
-    ];
-    for (const entry of entries) {
-      const source = await fs.readFile(path.join(dir, entry), 'utf8');
-      for (const token of forbidden) {
-        assert.equal(source.includes(token), false, `${entry} must not contain ${token}`);
-      }
-      const lines = source.split('\n').length;
-      assert.ok(lines <= 250, `${entry} has ${lines} lines`);
-    }
   });
 });

@@ -1,0 +1,61 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:5e3ee22066045e1a5f0fee998d1641b4cb49dc8fa407a353aa9d4fa326364333",
+    "PLANNER.md": "sha256:61a4f4fa9ca0a352bb81b10189a38e01c1f93b669378080c56e53d6cf03740d0",
+    "config": "sha256:b32b8dff3e804c58b3d1c5a2c8e8985cf306604d90743129650339d7715b70cd",
+    "cli-foundation": "sha256:d7772e3632ebd7247b3531862c6add34a615cc3a7b9c1132e2ff6660273687fa",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b",
+    "metrics-and-reporting": "sha256:c187046dafcc3f07ca1e87cc9e13a8f01a5fea483c8736acb1b84cf697658554",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "web-inspection": "sha256:51220ce20f3dfed68d51fec3e78e98687a4c084156dcf35ecd8bea6baaab3d01",
+    "web-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "opencode",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-10-15T06:31:24.193Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-15T06:39:50.296Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "rules_path",
+        "severity": "red",
+        "folded": false
+      },
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "tests_modify",
+        "severity": "grey",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "013": "sha256:cb223b6fb0c098abbb7296954c4bd583de652381edc9579fd8f2a1b68765cae6",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a",
+    "019": "sha256:10cd27115c6de698434e6c092bba4cbc9fecfb7977a820fa292faf2b4c104711"
+  }
+}

@@ -54,3 +54,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [017. Language support](017-language-support.md)
 - [018. Steering planner](018-steering-planner.md)
 - [019. Tapped planner](019-tapped-planner.md)
+- [020. Dashboard writing](020-dashboard-writing.md)
