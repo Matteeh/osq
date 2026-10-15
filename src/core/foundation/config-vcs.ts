@@ -4,8 +4,9 @@
  * carries and is required once writes are on. `worktreeRoot` names where linked
  * worktrees live, `defaultBranch` names the branch approval must start from,
  * and `prepare` runs before osq commits; all four keep their trimmed form.
- * `afterLand` runs in the checkout after a land. The commit timeout lives
- * with the other timeouts.
+ * `afterLand` runs in the checkout after a land. `manualEdits` is `keep` or
+ * `block`, and unset means `keep`. The commit timeout lives with the other
+ * timeouts.
  */
 export interface VcsConfig {
   readonly enabled: boolean;
@@ -14,6 +15,7 @@ export interface VcsConfig {
   readonly defaultBranch?: string;
   readonly prepare?: string;
   readonly afterLand?: string;
+  readonly manualEdits?: 'keep' | 'block';
 }
 
 export const DEFAULT_VCS_CONFIG: VcsConfig = { enabled: false };
@@ -40,6 +42,7 @@ const AUTHOR_PATTERN = /^\S.*\s<[^<>]+>$/;
  *
  * @scenario cli-foundation: Command kept trimmed
  * @scenario cli-foundation: Blank command
+ * @scenario cli-foundation: Manual edits modes
  */
 export function validateVcsConfig(vcs: unknown): VcsConfig {
   if (vcs === undefined) return DEFAULT_VCS_CONFIG;
@@ -65,6 +68,7 @@ export function validateVcsConfig(vcs: unknown): VcsConfig {
   const defaultBranch = trimmedField(record, 'defaultBranch');
   const prepare = trimmedField(record, 'prepare');
   const afterLand = trimmedField(record, 'afterLand');
+  const manualEdits = manualEditsField(record);
   return {
     enabled,
     ...(author !== undefined ? { author } : {}),
@@ -72,7 +76,16 @@ export function validateVcsConfig(vcs: unknown): VcsConfig {
     ...(defaultBranch !== undefined ? { defaultBranch } : {}),
     ...(prepare !== undefined ? { prepare } : {}),
     ...(afterLand !== undefined ? { afterLand } : {}),
+    ...(manualEdits !== undefined ? { manualEdits } : {}),
   };
+}
+
+/** `manualEdits` as `keep` or `block`, or undefined when the field is unset. */
+function manualEditsField(record: Record<string, unknown>): 'keep' | 'block' | undefined {
+  const value = record.manualEdits;
+  if (value === undefined) return undefined;
+  if (value === 'keep' || value === 'block') return value;
+  throw new Error('vcs.manualEdits must be "keep" or "block"');
 }
 
 /** A present field's trimmed value, rejecting blanks and non-strings. */

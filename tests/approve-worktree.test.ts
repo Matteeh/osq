@@ -250,7 +250,7 @@ describe('osq approve into a worktree', () => {
 
     await assert.rejects(
       approveSpec(p.repo, '001', p.config),
-      /uncommitted changes in task scope: src\/dirty\.ts; commit them or pass --ignore-dirty/,
+      /uncommitted changes in task scope: src\/dirty\.ts; keep them with osq manual "<why>", commit them, or pass --ignore-dirty/,
     );
     assert.equal(await exists(worktreePath(p.vcs, p.repo, p.folder001)), false);
 

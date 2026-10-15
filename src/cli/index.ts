@@ -12,6 +12,7 @@ import { inboxCommand } from './inbox.js';
 import { initCommand } from './init.js';
 import { registerLandCommand } from './land.js';
 import { lintCommand } from './lint.js';
+import { registerManualCommand } from './manual.js';
 import { registerMcpCommand } from './mcp.js';
 import { registerMessageCommand } from './message.js';
 import { migrateCommand } from './migrate.js';
@@ -219,6 +220,7 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
   registerGraphCommand(program);
   registerInboxDispatchCommand(program);
   registerLandCommand(program);
+  registerManualCommand(program);
   registerMcpCommand(program);
   registerMessageCommand(program);
   registerServerCommand(program);

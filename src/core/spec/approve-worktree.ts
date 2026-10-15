@@ -11,6 +11,7 @@ import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import { scopeCoversPath } from '../run/scope.js';
 import { runVerificationCommand } from '../run/verification.js';
+import { MANUAL_KEEP_ADVICE } from '../vcs/manual-edits.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs, VcsHead } from '../vcs/vcs.js';
 import { stackedPath, worktreeBranch, worktreePath } from '../vcs/worktree.js';
@@ -69,6 +70,7 @@ async function readTaskScopes(folderPath: string): Promise<string[]> {
 async function refuseDirtyScope(
   folderPath: string,
   vcs: Vcs,
+  config: OsqConfig,
   ignoreDirty: boolean | undefined,
 ): Promise<void> {
   if (ignoreDirty) return;
@@ -81,7 +83,7 @@ async function refuseDirtyScope(
   }
   if (dirty.size === 0) return;
   throw new Error(
-    `uncommitted changes in task scope: ${[...dirty].sort().join(', ')}; commit them or pass --ignore-dirty`,
+    `uncommitted changes in task scope: ${[...dirty].sort().join(', ')}; ${config.vcs?.manualEdits === 'block' ? 'commit them or pass --ignore-dirty' : `${MANUAL_KEEP_ADVICE}, commit them, or pass --ignore-dirty`}`,
   );
 }
 
@@ -171,6 +173,8 @@ async function approveIntoNewWorktree(
  * the checkout: lint and digest read it, the branch and worktree receive the
  * sealed copy, and the worktree's first commit holds it. When any `depends_on`
  * entry is approved or archived, record a stacked approval instead.
+ *
+ * @scenario spec-lint-and-approve: Dirty scope under each mode
  */
 export async function approveIntoWorktree(
   projectRoot: string,
@@ -184,7 +188,7 @@ export async function approveIntoWorktree(
 
   const branch = worktreeBranch(folderName);
   const head = await resolveBase(vcs, options.baseOk);
-  await refuseDirtyScope(folderPath, vcs, options.ignoreDirty);
+  await refuseDirtyScope(folderPath, vcs, config, options.ignoreDirty);
   const keptBranch = await claimBranch(vcs, projectRoot, folderPath, folderName);
 
   const hash = await hashChangeFolder(folderPath);

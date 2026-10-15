@@ -13,6 +13,7 @@ import {
 } from './land-checks.js';
 import { landId, requireGit, resolveChange } from './land-resolve.js';
 import { recordLandStop, recordsLandStop } from './land-stop.js';
+import { MANUAL_KEEP_ADVICE } from './manual-edits.js';
 import { selectVcs } from './select.js';
 import { syncWithDefaultBranch } from './sync-main.js';
 import { SyncStop } from './sync-stop.js';
@@ -101,10 +102,9 @@ export interface LandOptions {
 }
 
 /**
- * Build the land commit from the branch tip and move the checkout to it with a
- * fast-forward only. A failed move stops naming the checkout's overlap, a
- * checkout that moved, or git's output. `beforeMove` runs after the commit is
- * built and before the branch moves, and a throw leaves the branch where it was.
+ * Build the land commit and move the checkout to it with a fast-forward only. A
+ * failed move stops naming the checkout's overlap, a checkout that moved, or
+ * git's output. `beforeMove` runs after the commit and before the branch moves.
  */
 async function landCommit(
   projectRoot: string,
@@ -133,7 +133,7 @@ async function landCommit(
   }
   if (pushed.status === 'blocked') {
     throw new Error(
-      `The checkout has uncommitted changes in files this land writes: ${pushed.blocked.join(', ')}; commit or stash them, then run osq land ${landId(change)} again`,
+      `The checkout has uncommitted changes in files this land writes: ${pushed.blocked.join(', ')}; ${config.vcs?.manualEdits === 'block' ? 'commit or stash them' : `${MANUAL_KEEP_ADVICE}, or commit or stash them`}, then run osq land ${landId(change)} again`,
     );
   }
   return { commit, changed: pushed.changed ?? [] };
@@ -159,8 +159,7 @@ async function rethrowSyncStop(
 /**
  * Land an archived change onto the default branch: refuse unsafe state, sync,
  * build the land commit, fast-forward the checkout to it, run the after-land
- * command, and clean up. Every refusal and stop is an `Error` with the spec's
- * message; `options.beforeMove` runs after the commit and before the move.
+ * command, and clean up. Every refusal and stop is an `Error` with the spec's message.
  *
  * @scenario version-control: Land pushes the land commit
  * @scenario version-control: Origin moved while landing
@@ -170,6 +169,7 @@ async function rethrowSyncStop(
  * @scenario version-control: Already landed without a failure
  * @scenario version-control: Refused land runs nothing
  * @scenario version-control: No command configured
+ * @scenario version-control: Uncommitted file under each mode
  * @adr 003
  */
 export async function landChange(

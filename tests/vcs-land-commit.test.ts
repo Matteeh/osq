@@ -330,7 +330,7 @@ describe('Land from the verified tree', () => {
     assert.equal(capture.stdout, '');
     assert.equal(
       capture.stderr,
-      'The checkout has uncommitted changes in files this land writes: src/one.txt; commit or stash them, then run osq land 001 again\n',
+      'The checkout has uncommitted changes in files this land writes: src/one.txt; keep them with osq manual "<why>", or commit or stash them, then run osq land 001 again\n',
     );
     assert.equal(await git(['rev-parse', 'HEAD'], project.repo), before);
     assert.equal(await fs.readFile(path.join(project.repo, 'src', 'one.txt'), 'utf8'), 'edited\n');

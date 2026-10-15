@@ -5,7 +5,10 @@ import { createProgram } from '../src/cli/index.js';
 import { SLICES } from '../src/cli/slices.js';
 
 const EXPECTED_GROUPS = [
-  { title: 'Everyday', commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject'] },
+  {
+    title: 'Everyday',
+    commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject', 'manual'],
+  },
   { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server', 'mcp'] },
   {
     title: 'Inspection',
@@ -88,6 +91,7 @@ describe('root help command groups', () => {
       'land',
       'retry',
       'reject',
+      'manual',
     ]);
   });
 

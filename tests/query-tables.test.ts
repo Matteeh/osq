@@ -300,6 +300,10 @@ describe('HISTORY_TABLES', () => {
             'source',
           ],
         },
+        {
+          name: 'manual_edits',
+          columns: ['kept_at', 'record', 'comment', 'paths', 'capabilities'],
+        },
       ],
     );
   });

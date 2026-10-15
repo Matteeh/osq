@@ -14,6 +14,7 @@ import { inboxCommand } from '../src/cli/inbox.js';
 import { initCommand } from '../src/cli/init.js';
 import { landCommand } from '../src/cli/land.js';
 import { lintCommand } from '../src/cli/lint.js';
+import { manualCommand } from '../src/cli/manual.js';
 import { messageCommand } from '../src/cli/message.js';
 import { migrateCommand } from '../src/cli/migrate.js';
 import { newCommand } from '../src/cli/new.js';
@@ -57,6 +58,7 @@ const COMMANDS: Record<string, (inputs: CommandInputs) => unknown> = {
   initCommand: (inputs) => initCommand(inputs),
   landCommand: (inputs) => landCommand('id', inputs),
   lintCommand: (inputs) => lintCommand([], inputs),
+  manualCommand: (inputs) => manualCommand('comment', [], inputs),
   messageCommand: (inputs) => messageCommand('id', inputs),
   migrateCommand: (inputs) => migrateCommand('openspec', inputs),
   newCommand: (inputs) => newCommand('name', inputs),

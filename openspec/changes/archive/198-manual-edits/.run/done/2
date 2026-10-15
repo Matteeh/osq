@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0a5f665ed280d7ae5c3a6026fd40f800d3146c084207c2e57ae5095cc8af61d8"
+build_stamp: "218e43f9"
+project_commit: "5d3659ea"
+exit_code: 0
+scope_files: {"src/cli/help-groups.ts":"sha256:e5c22c54504b864efa0b25803f9f965fe7960acb861c9faabaf18fe6935dcfb7","src/cli/index.ts":"sha256:de729d8da04aaf18b6628edfcc811d793be31ef391e95ed307e70130c74dc27d","src/cli/manual.ts":"sha256:35597ac84d98cf244e39940985bfb78c62010f6f4baafbdadbd01d412122a5c3","src/core/vcs/manual-edits.ts":"sha256:c712b508c40208e274f7a5e780a885ed39041e383a5474de551e0a690cf1f95f","src/core/vcs/manual-records.ts":"sha256:f8db04732b152b2d1062d4abfda729ef87eb59185f508d89c3ffe454e1b41a3e","tests/cli-no-direct-output.test.ts":"sha256:28c07bf1d836981e772a444a4a70194d4c10acda0a6e7c7f22c5ef9928062031","tests/help-groups.test.ts":"sha256:ca4117b4a3258d6842f634b79f120edb1c44817ed0201fabc8b9e65b1a28c1c6","tests/vcs-manual-edits.test.ts":"sha256:917a72c946f6d63e2f6f4d5db3ded840b05b5280735522181a3c3627e265575e"}
+---
+2026-10-15T21:08:38.658Z

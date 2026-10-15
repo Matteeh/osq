@@ -15,6 +15,7 @@ const TASK_OUTCOMES =
 const PAUSES = 'pauses(change, task, paused_at, until, source)';
 const RECERTIFICATIONS =
   'recertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)';
+const MANUAL_EDITS = 'manual_edits(kept_at, record, comment, paths, capabilities)';
 
 const roots: string[] = [];
 
@@ -171,7 +172,7 @@ describe('recertification query table', () => {
     assert.deepEqual(text.trimEnd().split('\n'), ['n', '0']);
   });
 
-  it('lists recertifications last, directly after pauses, and exits zero', async () => {
+  it('lists recertifications directly after pauses, before manual_edits, and exits zero', async () => {
     const root = await makeRoot();
     await writePricing(root);
 
@@ -179,8 +180,8 @@ describe('recertification query table', () => {
 
     assert.equal(error, '');
     const lines = text.trimEnd().split('\n');
-    assert.equal(lines.at(-1), RECERTIFICATIONS);
     assert.equal(lines[lines.indexOf(PAUSES) + 1], RECERTIFICATIONS);
+    assert.equal(lines[lines.indexOf(RECERTIFICATIONS) + 1], MANUAL_EDITS);
   });
 
   it('lists pauses directly after task_outcomes, no longer last', async () => {

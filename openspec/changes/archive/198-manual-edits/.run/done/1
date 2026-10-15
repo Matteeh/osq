@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:11ba433ea60dbef06c14eb0dcb2867a1787e7e71b5cdc71daf66b30b6cacc91e"
+build_stamp: "218e43f9"
+project_commit: "8834f11f"
+exit_code: 0
+scope_files: {"src/core/foundation/config-vcs.ts":"sha256:caeb0765c8daef015182470f23adbb9dae77dc6c06d59b64fb7aa17cfcf6eece","tests/manual-edits-config.test.ts":"sha256:b78b438dc28fb20a24a47375ad9e676f70b8caf9940a2c0d42c5bf642db8b60d"}
+---
+2026-10-15T20:58:52.336Z

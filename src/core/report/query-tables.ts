@@ -8,6 +8,7 @@ import { parseTaskMd } from '../spec/parser.js';
 import { changeTrees, listChanges } from '../status/change-locations.js';
 import { type ArchivedChangeRecord, listArchivedChanges } from './archive-record.js';
 import { LINK_FINDINGS_TABLES, insertLinkFindings } from './query-link-findings.js';
+import { MANUAL_EDIT_TABLES, insertManualEdits } from './query-manual-edits.js';
 import { insertNotices } from './query-notices.js';
 import { PAUSE_TABLES, insertPauses } from './query-pauses.js';
 import { RECERTIFICATION_TABLES, insertRecertifications } from './query-recertifications.js';
@@ -55,6 +56,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   ...TASK_OUTCOME_TABLES,
   ...PAUSE_TABLES,
   ...RECERTIFICATION_TABLES,
+  ...MANUAL_EDIT_TABLES,
 ];
 
 /** Requirement kinds besides `renamed`, each mapping straight to its own rows. */
@@ -207,6 +209,7 @@ async function build(
   await insertLinkFindings(db, subjects);
   await insertPauses(db, subjects);
   await insertRecertifications(db, subjects);
+  await insertManualEdits(db, projectRoot, config);
   await applyTrialLabels(db, projectRoot, config);
   return db;
 }

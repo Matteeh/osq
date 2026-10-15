@@ -1154,6 +1154,8 @@ before the digest, writing nothing, when:
   where a detached HEAD reads `a detached HEAD`;
 - uncommitted changes in the checkout, by path or rename source, are covered
   by any task's `scope` and `--ignore-dirty` is not passed, with
+  `uncommitted changes in task scope: <paths>; keep them with osq manual "<why>", commit them, or pass --ignore-dirty`,
+  or, when `vcs.manualEdits` is `block`, with
   `uncommitted changes in task scope: <paths>; commit them or pass --ignore-dirty`,
   paths sorted and comma-separated;
 - branch `osq/<folder>` already exists and "Rejected branch kept at approval"
@@ -1183,6 +1185,15 @@ says what approve does instead, and none of these refusals applies to it.
 #### Scenario: Running change that needs no steering
 - **WHEN** a change runs in a worktree with a pending task and no trigger, and a human runs `osq approve <id>`
 - **THEN** approve fails with `branch osq/<folder> already exists` and the worktree's HEAD is unchanged
+
+#### Scenario: Dirty scope under each mode
+- **WHEN** a task's `scope` is `src/**`, `src/dirty.ts` has uncommitted edits, and approve runs with `vcs.manualEdits` as the row says
+- **THEN** it fails with the row's message
+
+| vcs.manualEdits | message |
+| --- | --- |
+| unset | `uncommitted changes in task scope: src/dirty.ts; keep them with osq manual "<why>", commit them, or pass --ignore-dirty` |
+| `block` | `uncommitted changes in task scope: src/dirty.ts; commit them or pass --ignore-dirty` |
 
 ### Requirement: Stack dependency state
 With `vcs.enabled` and `GitVcs` selected, the state of a dependency folder

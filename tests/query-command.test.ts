@@ -24,6 +24,7 @@ const TABLE_LIST = [
   'task_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)',
   'pauses(change, task, paused_at, until, source)',
   'recertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)',
+  'manual_edits(kept_at, record, comment, paths, capabilities)',
 ].join('\n');
 
 const REFUSALS = [

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ea34b0d62023f259e8a0e799a9d5fc68aac72e647ee7996b4de8dea2c22bfca0"
+build_stamp: "218e43f9"
+project_commit: "c600adf5"
+exit_code: 0
+scope_files: {"src/cli/plan.ts":"sha256:60add17696777b7f30fa028a6d42bf3e2519e50d9083da71cedeb95c83588669","src/core/report/manual-edits-section.ts":"sha256:84b102613c7cc20504b8f81d4c99f0d8ac4b716589e2f6638ccd1f3bd38ca358","tests/plan-manual-edits.test.ts":"sha256:397d1057cb7d1d793956c31e95297e561f2f57f48c2413d94866070d668401c0"}
+---
+2026-10-15T21:33:18.203Z

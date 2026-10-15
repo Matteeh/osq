@@ -16,7 +16,10 @@ interface MutableCommandGroup {
 export const BARE_OSQ_LINE = 'Run osq with no command first: it shows what needs you.';
 
 export const COMMAND_GROUPS: readonly CommandGroup[] = [
-  { title: 'Everyday', commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject'] },
+  {
+    title: 'Everyday',
+    commands: ['inbox', 'plan', 'approve', 'land', 'retry', 'reject', 'manual'],
+  },
   { title: 'Setup and running', commands: ['init', 'setup', 'watch', 'server', 'mcp'] },
   {
     title: 'Inspection',

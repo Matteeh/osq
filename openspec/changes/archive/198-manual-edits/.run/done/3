@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d3823e01608dddfc9a6596462d695e536a6848797908ff6942103ecd56c808d8"
+build_stamp: "218e43f9"
+project_commit: "4a133ab9"
+exit_code: 0
+scope_files: {"src/core/spec/approve-worktree.ts":"sha256:d2175887c8fb66f57bf48d376edfa0cd65837d79cc64aabf5190f9834cafeb02","src/core/vcs/land.ts":"sha256:1839fec9db05ad30494717ac3333a21854a01045bdb9f75cbdb3582068910453","tests/approve-worktree.test.ts":"sha256:d44992d990e2e4398bcd9234bab92d11f6f41ee4eed557dbaf792782f4cbf20f","tests/manual-edits-refusals.test.ts":"sha256:e7e8d7d04b495bc8d7a4da67dd9c67fe2edbc964dcc7bb3db5b48169ff0bd80e","tests/vcs-land-commit.test.ts":"sha256:a8d44fe40cf351071010e02a35c92b002db2bd0c9e8e2de3025fc31dfc101437"}
+---
+2026-10-15T21:18:09.272Z
