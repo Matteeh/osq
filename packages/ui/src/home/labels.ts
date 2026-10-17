@@ -11,6 +11,7 @@ const NEEDS_YOU_LABELS: Record<NeedsYouKind, string> = {
   'change-archived': 'not landed',
   'after-land-failed': 'after-land failed',
   'validator-failing': 'validator failing',
+  'autopilot-stopped': 'autopilot stopped',
 };
 
 /**
@@ -19,6 +20,8 @@ const NEEDS_YOU_LABELS: Record<NeedsYouKind, string> = {
  * @scenario web-inspection: Not landed label
  * @scenario web-inspection: After-land failed label
  * @scenario web-inspection: Validator failing label
+ * @scenario web-inspection: Autopilot stopped label
+ * @adr 021
  * @adr 010
  */
 export function needsYouKindLabel(kind: NeedsYouKind): string {

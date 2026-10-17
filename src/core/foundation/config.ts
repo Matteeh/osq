@@ -2,6 +2,7 @@ import path from 'node:path';
 import { SLICES } from '../../cli/slices.js';
 import type { AgyConfig, OpencodeConfig } from './config-agents.js';
 import { type AutoSteerConfig, validateAutoSteerConfig } from './config-auto-steer.js';
+import { type AutopilotConfig, validateAutopilotConfig } from './config-autopilot.js';
 import { type BannedWord, validateBannedWordsConfig } from './config-banned-words.js';
 import { checkTraceabilityCapabilities } from './config-capabilities.js';
 import {
@@ -110,6 +111,7 @@ export interface OsqConfig {
   readonly confinement?: ConfinementConfig;
   readonly validator?: ValidatorConfig;
   readonly autoSteer?: AutoSteerConfig;
+  readonly autopilot?: AutopilotConfig;
   readonly watch?: WatchConfig;
   readonly notices?: NoticesConfig;
 }
@@ -162,11 +164,9 @@ const base: OsqConfig = {
 };
 export const DEFAULT_CONFIG: OsqConfig = composeDefaultConfig(base, SLICES);
 export function defineConfig(config: OsqUserConfig): OsqConfig {
-  const { planner, queue: rawQueue, validator: rawValidator, autoSteer, ...restConfig } = config;
-  let validatedPlanner: PlannerConfig | undefined;
-  if (planner !== undefined) {
-    validatedPlanner = validatePlannerConfig(planner);
-  }
+  const { autopilot, ...user } = config;
+  const { planner, queue: rawQueue, validator: rawValidator, autoSteer, ...restConfig } = user;
+  const validatedPlanner = planner === undefined ? undefined : validatePlannerConfig(planner);
   const queue = rawQueue === undefined ? undefined : validateQueueConfig(rawQueue);
   const validator = validateValidatorConfig(rawValidator);
   const resolvedAutoSteer = validateAutoSteerConfig(autoSteer);
@@ -176,7 +176,6 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
   const serve = validateServeConfig(config.serve);
   const inbox = validateInboxConfig(config.inbox);
   const watch = validateWatchConfig(config.watch);
-
   return {
     ...DEFAULT_CONFIG,
     ...restConfig,
@@ -196,6 +195,7 @@ export function defineConfig(config: OsqUserConfig): OsqConfig {
     ...(queue ? { queue } : {}),
     ...(validator ? { validator } : {}),
     ...(resolvedAutoSteer ? { autoSteer: resolvedAutoSteer } : {}),
+    ...(autopilot === undefined ? {} : { autopilot: validateAutopilotConfig(autopilot) }),
     agy: {
       ...DEFAULT_CONFIG.agy,
       ...(config.agy || {}),

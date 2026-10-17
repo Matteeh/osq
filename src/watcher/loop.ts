@@ -19,6 +19,7 @@ import { restoreArchiveSpecs } from './archive-specs.js';
 import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
 import { type AutoSteerOptions, type SteeringPromptBuilder, runAutoSteer } from './auto-steer.js';
+import { type AutopilotCommands, runAutopilotPass } from './autopilot.js';
 import { type BuildInfo, StaleBuildError, resolveBuildInfo } from './build.js';
 import { catchUpWorktreeCommits } from './commit-catch-up.js';
 import { runMutationCheck } from './mutation-check.js';
@@ -77,6 +78,8 @@ export interface StartWatcherOptions {
   buildCheck?: StaleCheck;
   /** Builds the steering prompt the automatic planner runs on. */
   steeringPrompt?: SteeringPromptBuilder;
+  /** Autopilot's command functions; the pass runs only when it is given. */
+  autopilot?: AutopilotCommands;
   exit?: (code: number) => void;
 }
 
@@ -494,6 +497,17 @@ export async function runWatcherCycle(
   return { tasksRun, retried, specsArchived, blockedByRegression };
 }
 
+/** Run autopilot's one step after a cycle, when it is on and commands exist. */
+async function runAutopilotAfter(
+  projectRoot: string,
+  config: OsqConfig,
+  autopilot: AutopilotCommands | undefined,
+  logger?: Logger,
+): Promise<boolean> {
+  if (autopilot === undefined || config.autopilot?.enabled !== true) return false;
+  return runAutopilotPass(projectRoot, config, autopilot, { logger });
+}
+
 export async function runWatcherOnce(
   projectRoot: string,
   config: OsqConfig,
@@ -501,6 +515,7 @@ export async function runWatcherOnce(
   logger?: Logger,
   staleCheck?: StaleCheck,
   steer: AutoSteerOptions = {},
+  autopilot?: AutopilotCommands,
 ): Promise<WatcherSummary> {
   let totalTasksRun = 0;
   let totalRetried = 0;
@@ -518,8 +533,12 @@ export async function runWatcherOnce(
     totalSpecsArchived += cycle.specsArchived;
     blockedByRegression.push(...cycle.blockedByRegression);
 
+    // With autopilot on, one step runs after each cycle; a step is progress on
+    // its own, so `--once` keeps cycling while autopilot is still moving.
+    const took = await runAutopilotAfter(projectRoot, config, autopilot, logger);
+
     // A retry is progress on its own: loop again so the retried task runs.
-    if (cycle.tasksRun === 0 && cycle.retried === 0) {
+    if (!took && cycle.tasksRun === 0 && cycle.retried === 0) {
       break;
     }
   }
@@ -577,7 +596,15 @@ export async function startWatcher(
 
   if (options.once) {
     try {
-      await runWatcherOnce(projectRoot, config, adapter, logger, staleCheck, steer);
+      await runWatcherOnce(
+        projectRoot,
+        config,
+        adapter,
+        logger,
+        staleCheck,
+        steer,
+        options.autopilot,
+      );
     } catch (err) {
       if (handleStaleBuild(err, staleDeps)) {
         return;
@@ -645,6 +672,7 @@ export async function startWatcher(
         await assertNotStale(options.buildCheck);
       }
       await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck, steer);
+      await runAutopilotAfter(projectRoot, config, options.autopilot, logger);
     } catch (err) {
       // A wait ends this cycle without stopping the loop or logging an error;
       // the next cycle checks again.

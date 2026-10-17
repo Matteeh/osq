@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ce9d5fdf6805c61fec04b1ed5d453ef94f82a57304713b78ea417ce7efe95162"
+build_stamp: "fda9d6ab"
+project_commit: "be863ac7"
+exit_code: 0
+scope_files: {"src/cli/autopilot-commands.ts":"sha256:18ad7a98898447dfd94dee4ff27f27c8f096d4979c4d966868d22f550b732803","src/cli/watch-service.ts":"sha256:e085a6ac2fa8afd92c166cadac4e701803ac95642ec0aa28b02148669248162c","src/watcher/autopilot.ts":"sha256:6128465d014b7d2da2e5a0472e5311291083110e053ec749831997cb4046f446","src/watcher/loop.ts":"sha256:c29fa8525cd5786036d295481e773f8345ee07c2e1ee6ccde57714f2875abcd5","tests/autopilot-run-support.ts":"sha256:9bdf60d1b29e12845a5ce1a9d1282286a91516ad749def61515e2fe9bfe271cb","tests/autopilot-run.test.ts":"sha256:51a29741a409b62bb4e9c4121b22d5fa86f2a570ca5736a3f2d2d8b087b9972a"}
+---
+2026-10-17T10:31:52.279Z

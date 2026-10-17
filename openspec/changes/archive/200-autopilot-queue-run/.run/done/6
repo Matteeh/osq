@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:15b4dc810a2ec243338ef8123e8d6a959f326963f5ae2fec289e13ab566b0281"
+build_stamp: "fda9d6ab"
+project_commit: "c9cb2207"
+exit_code: 0
+scope_files: {"packages/ui/src/home/NeedsYouGroup.tsx":"sha256:0d32f9e8638e4b7315b20865e21396c05b7c679038267d20d331ef9bce191189","packages/ui/src/home/needs-you-model.ts":"sha256:12a1a3975c8b3b42404958a2c3a1138234151338640b19e24d4036341e13ceea","tests/ui-autopilot-stop.test.tsx":"sha256:d0d47148b186f285cfb61ffed4d26a21b2635206da10fb8d826f5a73a7693e8d"}
+---
+2026-10-17T10:48:10.586Z

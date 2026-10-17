@@ -73,6 +73,7 @@ function requestFrom(name: string, values: readonly unknown[]): ForwardedCommand
  * @scenario cli-foundation: Same command from a laptop
  * @scenario cli-foundation: Local-only commands name the alternative
  * @scenario cli-foundation: Forwarded start
+ * @scenario cli-foundation: Queue approve against a server
  * @adr 014
  * @adr 019
  */
@@ -114,6 +115,15 @@ export function forwardProgram(program: Command, server: RemoteServer): void {
     if (LOCAL_ONLY.has(name)) {
       if (command.commands.length === 0) command.action(refused(name));
       else for (const child of command.commands) child.action(refused(name));
+      return;
+    }
+    if (name === 'queue') {
+      // `osq queue` is forwarded, but `osq queue approve` writes the local queue
+      // approval record, so it refuses like the other local-only commands.
+      command.action(forwarded(name));
+      for (const child of command.commands) {
+        if (child.name() === 'approve') child.action(refused('queue approve'));
+      }
       return;
     }
     if (FORWARDED.has(name)) command.action(forwarded(name));

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4c7dca2d93b8518fd60564ced9380c04beadf69d895d49e1b8c9d10fb73b6055"
+build_stamp: "fda9d6ab"
+project_commit: "c98871c2"
+exit_code: 0
+scope_files: {"src/cli/index.ts":"sha256:09a58b50aedbc93936df985e30a974678bf727d8c244043b68c22706a0cafd31","src/cli/queue.ts":"sha256:6f1bead5debbd2078ddb7277d21189f7a6fd845ba3defabfaf456479992c2f24","src/cli/remote-client.ts":"sha256:bcc6f14c64a922bc3193c9302ef07105b7bca732e3d4d964bc441b93d20fb2fe","src/core/status/autopilot-stop.ts":"sha256:4188b2dd91b64bb3024e5ce386e3fcd35455110343612334076339d0d3442d45","src/core/status/queue-approval.ts":"sha256:7f84948fa1ac5f0b676876af50d1393785a4c506625410cce470f44837175c3e","tests/queue-approval.test.ts":"sha256:3aab14cd11c978bde3adb601cfbee9b843992def900e56489d59805b24953dac"}
+---
+2026-10-17T09:50:41.196Z

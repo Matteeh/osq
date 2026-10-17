@@ -9,7 +9,7 @@ import type { StatusOverview } from './status.js';
 import type { SteeringTriggerName } from './steering.js';
 export { formatInboxText } from './inbox-text.js';
 /* biome-ignore format: keeps the file inside the 250-line source budget */ export type NeedsYouKind =
-  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed' | 'validator-failing';
+  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed' | 'validator-failing' | 'autopilot-stopped';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;
@@ -34,6 +34,8 @@ export interface NeedsYouItem {
   readonly beforeApproval?: true;
   /** Present only for a validator-failing item. */
   /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly validatorFailing?: { readonly outcome: string; readonly runs: number; readonly error: string };
+  /** Present only for an autopilot-stopped item. */
+  /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly autopilotStopped?: { readonly reason: string; readonly item: string; readonly change: string | null; readonly detail: string | null };
 }
 export interface RunningItem {
   readonly change: InboxChangeRef;
@@ -70,9 +72,6 @@ function changeId(folderName: string): string {
   return folderName.match(/^(\d+)/)?.[1] ?? folderName;
 }
 
-function showCommand(id: string): string {
-  return `osq show ${id}`;
-}
 /** @scenario status-inspection: Archived change waiting to land */
 export function projectNeedsYou(overview: StatusOverview): NeedsYouItem[] {
   const items: NeedsYouItem[] = [];
@@ -142,7 +141,7 @@ export function projectRunning(overview: StatusOverview, nowMs: number): Running
         pid: lock.pid,
         startedAt: new Date(lock.startedAt).toISOString(),
         elapsedSeconds: Math.max(0, elapsed),
-        command: showCommand(spec.id),
+        command: `osq show ${spec.id}`,
       });
     }
   }
@@ -226,7 +225,7 @@ export async function collectLandedItems(
     items.push({
       change: { id, title: await readArchivedTitle(folderPath, entry) },
       archivedAt,
-      command: showCommand(id),
+      command: `osq show ${id}`,
       ...(hasDisclosures ? { disclosures } : {}),
     });
   }

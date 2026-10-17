@@ -1,0 +1,211 @@
+{"type":"verify_ran","timestamp":"2026-10-17T10:08:03.783Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/autopilot-run.test.ts","exitCode":1,"duration":0.03,"log":".run/logs/4-1.log","output":"Could not find 'tests/autopilot-run.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/autopilot-run.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-17T10:08:04.981Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":943,"repoFiles":3199,"repoLines":367359,"importFanIn":2,"proposalWords":1105,"taskWords":685,"deltaRequirements":14,"deltaScenarios":26}}
+{"type":"started","timestamp":"2026-10-17T10:08:05.046Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"be863ac7","pid":2226703,"timeoutSeconds":1800,"version":"0.3.0","commit":"fda9d6ab"}}
+{"type":"tool","timestamp":"2026-10-17T10:08:13.827Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:08:13.871Z","data":{"promptTokens":296437,"candidateTokens":82,"totalTokens":296519,"cachedTokens":0,"reasoningTokens":58,"cost":0.04454954999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:08:29.607Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:08:29.654Z","data":{"promptTokens":952,"candidateTokens":101,"totalTokens":1053,"cachedTokens":296320,"reasoningTokens":85,"cost":0.0011433600000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:08:33.863Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:08:33.908Z","data":{"promptTokens":284,"candidateTokens":70,"totalTokens":354,"cachedTokens":297216,"reasoningTokens":35,"cost":0.000997248}}
+{"type":"tool","timestamp":"2026-10-17T10:09:04.211Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:04.258Z","data":{"promptTokens":298859,"candidateTokens":112,"totalTokens":298971,"cachedTokens":0,"reasoningTokens":0,"cost":0.04489604999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:09:06.456Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:06.503Z","data":{"promptTokens":4093,"candidateTokens":71,"totalTokens":4164,"cachedTokens":298752,"reasoningTokens":22,"cost":0.0015660059999999998}}
+{"type":"tool","timestamp":"2026-10-17T10:09:08.652Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:08.697Z","data":{"promptTokens":1447,"candidateTokens":68,"totalTokens":1515,"cachedTokens":302720,"reasoningTokens":0,"cost":0.00116601}}
+{"type":"tool","timestamp":"2026-10-17T10:09:11.103Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:11.145Z","data":{"promptTokens":6403,"candidateTokens":85,"totalTokens":6488,"cachedTokens":304128,"reasoningTokens":13,"cost":0.001931634}}
+{"type":"tool","timestamp":"2026-10-17T10:09:14.216Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:14.260Z","data":{"promptTokens":3508,"candidateTokens":89,"totalTokens":3597,"cachedTokens":310528,"reasoningTokens":106,"cost":0.001574784}}
+{"type":"tool","timestamp":"2026-10-17T10:09:17.093Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:17.137Z","data":{"promptTokens":2904,"candidateTokens":119,"totalTokens":3023,"cachedTokens":313984,"reasoningTokens":0,"cost":0.001448952}}
+{"type":"tool","timestamp":"2026-10-17T10:09:21.426Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:21.471Z","data":{"promptTokens":2713,"candidateTokens":90,"totalTokens":2803,"cachedTokens":316800,"reasoningTokens":29,"cost":0.00142875}}
+{"type":"tool","timestamp":"2026-10-17T10:09:24.241Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:24.282Z","data":{"promptTokens":1823,"candidateTokens":73,"totalTokens":1896,"cachedTokens":319488,"reasoningTokens":0,"cost":0.0012757139999999998}}
+{"type":"tool","timestamp":"2026-10-17T10:09:27.252Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:27.296Z","data":{"promptTokens":2131,"candidateTokens":68,"totalTokens":2199,"cachedTokens":321280,"reasoningTokens":21,"cost":0.0013368899999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:09:30.340Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:30.381Z","data":{"promptTokens":3140,"candidateTokens":107,"totalTokens":3247,"cachedTokens":323328,"reasoningTokens":65,"cost":0.001544184}}
+{"type":"tool","timestamp":"2026-10-17T10:09:34.610Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:34.654Z","data":{"promptTokens":2004,"candidateTokens":103,"totalTokens":2107,"cachedTokens":326400,"reasoningTokens":87,"cost":0.0013938}}
+{"type":"tool","timestamp":"2026-10-17T10:09:37.663Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:37.709Z","data":{"promptTokens":2547,"candidateTokens":76,"totalTokens":2623,"cachedTokens":328320,"reasoningTokens":48,"cost":0.0014414100000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:09:42.751Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:42.798Z","data":{"promptTokens":1438,"candidateTokens":123,"totalTokens":1561,"cachedTokens":330752,"reasoningTokens":305,"cost":0.0014647559999999998}}
+{"type":"tool","timestamp":"2026-10-17T10:09:45.846Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:45.894Z","data":{"promptTokens":1239,"candidateTokens":113,"totalTokens":1352,"cachedTokens":332160,"reasoningTokens":0,"cost":0.0012501300000000001}}
+{"type":"tool","timestamp":"2026-10-17T10:09:49.115Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:49.160Z","data":{"promptTokens":1262,"candidateTokens":146,"totalTokens":1408,"cachedTokens":333312,"reasoningTokens":82,"cost":0.001326036}}
+{"type":"tool","timestamp":"2026-10-17T10:09:52.554Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:09:52.595Z","data":{"promptTokens":987,"candidateTokens":74,"totalTokens":1061,"cachedTokens":334464,"reasoningTokens":83,"cost":0.0012456420000000001}}
+{"type":"tool","timestamp":"2026-10-17T10:10:26.801Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:10:26.851Z","data":{"promptTokens":1254,"candidateTokens":105,"totalTokens":1359,"cachedTokens":335360,"reasoningTokens":4671,"cost":0.00405978}}
+{"type":"tool","timestamp":"2026-10-17T10:10:32.111Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:10:32.154Z","data":{"promptTokens":4931,"candidateTokens":75,"totalTokens":5006,"cachedTokens":336512,"reasoningTokens":107,"cost":0.001858386}}
+{"type":"tool","timestamp":"2026-10-17T10:10:37.015Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:10:37.059Z","data":{"promptTokens":993,"candidateTokens":75,"totalTokens":1068,"cachedTokens":341376,"reasoningTokens":192,"cost":0.0013332779999999998}}
+{"type":"tool","timestamp":"2026-10-17T10:10:56.420Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:10:56.463Z","data":{"promptTokens":1654,"candidateTokens":110,"totalTokens":1764,"cachedTokens":342272,"reasoningTokens":2209,"cost":0.0026663159999999997}}
+{"type":"tool","timestamp":"2026-10-17T10:10:59.389Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:10:59.432Z","data":{"promptTokens":3585,"candidateTokens":99,"totalTokens":3684,"cachedTokens":343808,"reasoningTokens":48,"cost":0.001657374}}
+{"type":"tool","timestamp":"2026-10-17T10:11:03.043Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:03.090Z","data":{"promptTokens":985,"candidateTokens":74,"totalTokens":1059,"cachedTokens":347392,"reasoningTokens":26,"cost":0.001249926}}
+{"type":"tool","timestamp":"2026-10-17T10:11:12.368Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:12.416Z","data":{"promptTokens":1466,"candidateTokens":94,"totalTokens":1560,"cachedTokens":348288,"reasoningTokens":935,"cost":0.001882164}}
+{"type":"tool","timestamp":"2026-10-17T10:11:17.415Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:17.460Z","data":{"promptTokens":1685,"candidateTokens":96,"totalTokens":1781,"cachedTokens":349696,"reasoningTokens":278,"cost":0.0015262379999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:11:19.706Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:19.748Z","data":{"promptTokens":1202,"candidateTokens":75,"totalTokens":1277,"cachedTokens":351360,"reasoningTokens":0,"cost":0.0012793799999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:11:23.927Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:23.967Z","data":{"promptTokens":417,"candidateTokens":90,"totalTokens":507,"cachedTokens":352512,"reasoningTokens":31,"cost":0.001192686}}
+{"type":"tool","timestamp":"2026-10-17T10:11:26.995Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:27.037Z","data":{"promptTokens":271,"candidateTokens":75,"totalTokens":346,"cachedTokens":352896,"reasoningTokens":82,"cost":0.001193538}}
+{"type":"tool","timestamp":"2026-10-17T10:11:43.774Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:43.816Z","data":{"promptTokens":718,"candidateTokens":81,"totalTokens":799,"cachedTokens":353152,"reasoningTokens":1492,"cost":0.002110956}}
+{"type":"tool","timestamp":"2026-10-17T10:11:51.770Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:51.813Z","data":{"promptTokens":1881,"candidateTokens":86,"totalTokens":1967,"cachedTokens":353792,"reasoningTokens":579,"cost":0.0017425259999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:11:54.852Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:54.895Z","data":{"promptTokens":1441,"candidateTokens":114,"totalTokens":1555,"cachedTokens":355584,"reasoningTokens":14,"cost":0.001359702}}
+{"type":"tool","timestamp":"2026-10-17T10:11:58.209Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:11:58.255Z","data":{"promptTokens":232,"candidateTokens":76,"totalTokens":308,"cachedTokens":356992,"reasoningTokens":0,"cost":0.0011513760000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:12:12.232Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:12:12.276Z","data":{"promptTokens":836,"candidateTokens":76,"totalTokens":912,"cachedTokens":357120,"reasoningTokens":1792,"cost":0.00231756}}
+{"type":"tool","timestamp":"2026-10-17T10:12:28.522Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:12:28.569Z","data":{"promptTokens":2107,"candidateTokens":77,"totalTokens":2184,"cachedTokens":357888,"reasoningTokens":0,"cost":0.001435914}}
+{"type":"tool","timestamp":"2026-10-17T10:12:50.147Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:12:50.189Z","data":{"promptTokens":720,"candidateTokens":75,"totalTokens":795,"cachedTokens":359936,"reasoningTokens":2191,"cost":0.0025474079999999997}}
+{"type":"tool","timestamp":"2026-10-17T10:13:11.030Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:13:11.074Z","data":{"promptTokens":3212,"candidateTokens":95,"totalTokens":3307,"cachedTokens":360576,"reasoningTokens":2868,"cost":0.003341328}}
+{"type":"tool","timestamp":"2026-10-17T10:13:24.135Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:13:24.177Z","data":{"promptTokens":3555,"candidateTokens":74,"totalTokens":3629,"cachedTokens":363776,"reasoningTokens":0,"cost":0.001668978}}
+{"type":"tool","timestamp":"2026-10-17T10:13:29.927Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:13:29.990Z","data":{"promptTokens":882,"candidateTokens":69,"totalTokens":951,"cachedTokens":367232,"reasoningTokens":257,"cost":0.001429596}}
+{"type":"tool","timestamp":"2026-10-17T10:13:35.196Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:13:35.238Z","data":{"promptTokens":2608,"candidateTokens":71,"totalTokens":2679,"cachedTokens":368000,"reasoningTokens":120,"cost":0.0016098}}
+{"type":"tool","timestamp":"2026-10-17T10:14:25.919Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:14:25.960Z","data":{"promptTokens":1304,"candidateTokens":75,"totalTokens":1379,"cachedTokens":370560,"reasoningTokens":6166,"cost":0.00505188}}
+{"type":"tool","timestamp":"2026-10-17T10:14:45.360Z","data":{"tool":"write","summary":"src/watcher/autopilot.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:14:45.405Z","data":{"promptTokens":7100,"candidateTokens":2125,"totalTokens":9225,"cachedTokens":371840,"reasoningTokens":924,"cost":0.004009919999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:15:11.826Z","data":{"tool":"write","summary":"src/cli/autopilot-commands.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:11.870Z","data":{"promptTokens":382013,"candidateTokens":707,"totalTokens":382720,"cachedTokens":0,"reasoningTokens":13,"cost":0.05773395}}
+{"type":"tool","timestamp":"2026-10-17T10:15:20.038Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:20.082Z","data":{"promptTokens":806,"candidateTokens":204,"totalTokens":1010,"cachedTokens":381952,"reasoningTokens":67,"cost":0.001429356}}
+{"type":"tool","timestamp":"2026-10-17T10:15:25.872Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:25.915Z","data":{"promptTokens":331,"candidateTokens":190,"totalTokens":521,"cachedTokens":382720,"reasoningTokens":0,"cost":0.0013118100000000003}}
+{"type":"tool","timestamp":"2026-10-17T10:15:32.200Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:32.245Z","data":{"promptTokens":287,"candidateTokens":659,"totalTokens":946,"cachedTokens":382976,"reasoningTokens":0,"cost":0.0015873780000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:15:37.568Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:37.610Z","data":{"promptTokens":712,"candidateTokens":221,"totalTokens":933,"cachedTokens":383232,"reasoningTokens":40,"cost":0.001413096}}
+{"type":"tool","timestamp":"2026-10-17T10:15:43.510Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:43.555Z","data":{"promptTokens":355,"candidateTokens":189,"totalTokens":544,"cachedTokens":383872,"reasoningTokens":79,"cost":0.001365666}}
+{"type":"tool","timestamp":"2026-10-17T10:15:48.252Z","data":{"tool":"edit","summary":"src/watcher/loop.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:48.297Z","data":{"promptTokens":389,"candidateTokens":173,"totalTokens":562,"cachedTokens":384128,"reasoningTokens":0,"cost":0.001314534}}
+{"type":"tool","timestamp":"2026-10-17T10:15:52.626Z","data":{"tool":"edit","summary":"src/cli/watch-service.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:52.673Z","data":{"promptTokens":200,"candidateTokens":179,"totalTokens":379,"cachedTokens":384512,"reasoningTokens":25,"cost":0.0013059360000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:15:57.203Z","data":{"tool":"edit","summary":"src/cli/watch-service.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:15:57.246Z","data":{"promptTokens":297,"candidateTokens":196,"totalTokens":493,"cachedTokens":384640,"reasoningTokens":70,"cost":0.00135807}}
+{"type":"tool","timestamp":"2026-10-17T10:16:04.517Z","data":{"tool":"edit","summary":"src/cli/watch-service.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:16:04.574Z","data":{"promptTokens":328,"candidateTokens":229,"totalTokens":557,"cachedTokens":384896,"reasoningTokens":0,"cost":0.001341288}}
+{"type":"tool","timestamp":"2026-10-17T10:16:16.229Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:16:16.273Z","data":{"promptTokens":322,"candidateTokens":81,"totalTokens":403,"cachedTokens":385152,"reasoningTokens":16,"cost":0.001261956}}
+{"type":"tool","timestamp":"2026-10-17T10:16:22.094Z","data":{"tool":"edit","summary":"src/watcher/autopilot.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:16:22.141Z","data":{"promptTokens":2827,"candidateTokens":457,"totalTokens":3284,"cachedTokens":385408,"reasoningTokens":47,"cost":0.001882674}}
+{"type":"tool","timestamp":"2026-10-17T10:16:33.523Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:16:33.568Z","data":{"promptTokens":539,"candidateTokens":98,"totalTokens":637,"cachedTokens":388224,"reasoningTokens":0,"cost":0.0013043220000000001}}
+{"type":"tool","timestamp":"2026-10-17T10:16:57.525Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:16:57.574Z","data":{"promptTokens":138,"candidateTokens":99,"totalTokens":237,"cachedTokens":388736,"reasoningTokens":4285,"cost":0.003817308}}
+{"type":"tool","timestamp":"2026-10-17T10:17:28.403Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:17:28.443Z","data":{"promptTokens":5425,"candidateTokens":68,"totalTokens":5493,"cachedTokens":388864,"reasoningTokens":2307,"cost":0.003405342}}
+{"type":"tool","timestamp":"2026-10-17T10:17:54.358Z","data":{"tool":"write","summary":"tests/autopilot-run-support.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:17:54.402Z","data":{"promptTokens":2830,"candidateTokens":2259,"totalTokens":5089,"cachedTokens":394240,"reasoningTokens":697,"cost":0.0033808199999999997}}
+{"type":"tool","timestamp":"2026-10-17T10:18:31.433Z","data":{"tool":"write","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:18:31.477Z","data":{"promptTokens":2993,"candidateTokens":3267,"totalTokens":6260,"cachedTokens":397056,"reasoningTokens":2204,"cost":0.0049227179999999995}}
+{"type":"tool","timestamp":"2026-10-17T10:18:55.070Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:18:55.111Z","data":{"promptTokens":5543,"candidateTokens":96,"totalTokens":5639,"cachedTokens":400000,"reasoningTokens":163,"cost":0.0021868499999999997}}
+{"type":"tool","timestamp":"2026-10-17T10:19:00.196Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:19:00.239Z","data":{"promptTokens":1057,"candidateTokens":259,"totalTokens":1316,"cachedTokens":405504,"reasoningTokens":328,"cost":0.001727262}}
+{"type":"tool","timestamp":"2026-10-17T10:19:18.654Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:19:18.696Z","data":{"promptTokens":869,"candidateTokens":183,"totalTokens":1052,"cachedTokens":406528,"reasoningTokens":101,"cost":0.0015203340000000001}}
+{"type":"tool","timestamp":"2026-10-17T10:19:29.894Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:19:29.935Z","data":{"promptTokens":408,"candidateTokens":155,"totalTokens":563,"cachedTokens":407296,"reasoningTokens":0,"cost":0.001376088}}
+{"type":"tool","timestamp":"2026-10-17T10:19:34.977Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:19:35.017Z","data":{"promptTokens":240,"candidateTokens":75,"totalTokens":315,"cachedTokens":407680,"reasoningTokens":110,"cost":0.0013700399999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:19:41.661Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:19:41.707Z","data":{"promptTokens":375,"candidateTokens":168,"totalTokens":543,"cachedTokens":407808,"reasoningTokens":0,"cost":0.001380474}}
+{"type":"tool","timestamp":"2026-10-17T10:20:03.903Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:20:03.943Z","data":{"promptTokens":310,"candidateTokens":96,"totalTokens":406,"cachedTokens":408064,"reasoningTokens":0,"cost":0.001328292}}
+{"type":"tool","timestamp":"2026-10-17T10:20:18.684Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:20:18.725Z","data":{"promptTokens":111755,"candidateTokens":456,"totalTokens":112211,"cachedTokens":297472,"reasoningTokens":936,"cost":0.018490866}}
+{"type":"tool","timestamp":"2026-10-17T10:20:29.993Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:20:30.032Z","data":{"promptTokens":1964,"candidateTokens":588,"totalTokens":2552,"cachedTokens":409216,"reasoningTokens":108,"cost":0.0019398479999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:20:34.611Z","data":{"tool":"read","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:20:34.649Z","data":{"promptTokens":926,"candidateTokens":98,"totalTokens":1024,"cachedTokens":411136,"reasoningTokens":133,"cost":0.001510908}}
+{"type":"tool","timestamp":"2026-10-17T10:20:57.710Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:20:57.752Z","data":{"promptTokens":1037,"candidateTokens":95,"totalTokens":1132,"cachedTokens":412032,"reasoningTokens":119,"cost":0.0015200460000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:21:10.747Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:21:10.787Z","data":{"promptTokens":792,"candidateTokens":111,"totalTokens":903,"cachedTokens":413056,"reasoningTokens":351,"cost":0.0016351680000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:21:17.144Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:21:17.185Z","data":{"promptTokens":867,"candidateTokens":130,"totalTokens":997,"cachedTokens":413824,"reasoningTokens":421,"cost":0.001702122}}
+{"type":"tool","timestamp":"2026-10-17T10:21:25.628Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:21:25.678Z","data":{"promptTokens":674,"candidateTokens":113,"totalTokens":787,"cachedTokens":414592,"reasoningTokens":0,"cost":0.0014126759999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:21:33.795Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:21:33.836Z","data":{"promptTokens":289,"candidateTokens":210,"totalTokens":499,"cachedTokens":415232,"reasoningTokens":541,"cost":0.0017396459999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:21:42.643Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:21:42.686Z","data":{"promptTokens":808,"candidateTokens":175,"totalTokens":983,"cachedTokens":415488,"reasoningTokens":0,"cost":0.001472664}}
+{"type":"tool","timestamp":"2026-10-17T10:22:07.881Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:07.921Z","data":{"promptTokens":239,"candidateTokens":95,"totalTokens":334,"cachedTokens":416256,"reasoningTokens":0,"cost":0.001341618}}
+{"type":"tool","timestamp":"2026-10-17T10:22:13.632Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:13.672Z","data":{"promptTokens":433,"candidateTokens":77,"totalTokens":510,"cachedTokens":416384,"reasoningTokens":370,"cost":0.001582302}}
+{"type":"tool","timestamp":"2026-10-17T10:22:17.335Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:17.373Z","data":{"promptTokens":983,"candidateTokens":119,"totalTokens":1102,"cachedTokens":416768,"reasoningTokens":0,"cost":0.001469154}}
+{"type":"tool","timestamp":"2026-10-17T10:22:21.044Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:21.084Z","data":{"promptTokens":781,"candidateTokens":141,"totalTokens":922,"cachedTokens":417664,"reasoningTokens":0,"cost":0.001454742}}
+{"type":"tool","timestamp":"2026-10-17T10:22:31.018Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:31.060Z","data":{"promptTokens":654,"candidateTokens":121,"totalTokens":775,"cachedTokens":418432,"reasoningTokens":36,"cost":0.001447596}}
+{"type":"tool","timestamp":"2026-10-17T10:22:35.786Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:35.827Z","data":{"promptTokens":540,"candidateTokens":234,"totalTokens":774,"cachedTokens":419072,"reasoningTokens":58,"cost":0.001513416}}
+{"type":"tool","timestamp":"2026-10-17T10:22:40.508Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:22:40.550Z","data":{"promptTokens":344,"candidateTokens":119,"totalTokens":463,"cachedTokens":419584,"reasoningTokens":0,"cost":0.001381752}}
+{"type":"tool","timestamp":"2026-10-17T10:23:08.090Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:23:08.134Z","data":{"promptTokens":232,"candidateTokens":85,"totalTokens":317,"cachedTokens":419840,"reasoningTokens":55,"cost":0.00137832}}
+{"type":"tool","timestamp":"2026-10-17T10:23:32.107Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:23:32.148Z","data":{"promptTokens":258,"candidateTokens":95,"totalTokens":353,"cachedTokens":419968,"reasoningTokens":0,"cost":0.001355604}}
+{"type":"tool","timestamp":"2026-10-17T10:23:37.937Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:23:37.982Z","data":{"promptTokens":324,"candidateTokens":116,"totalTokens":440,"cachedTokens":420224,"reasoningTokens":77,"cost":0.001425072}}
+{"type":"tool","timestamp":"2026-10-17T10:23:43.790Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:23:43.830Z","data":{"promptTokens":658,"candidateTokens":100,"totalTokens":758,"cachedTokens":420480,"reasoningTokens":454,"cost":0.00169254}}
+{"type":"tool","timestamp":"2026-10-17T10:25:53.198Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:25:53.260Z","data":{"promptTokens":1297,"candidateTokens":111,"totalTokens":1408,"cachedTokens":421120,"reasoningTokens":914,"cost":0.00207291}}
+{"type":"tool","timestamp":"2026-10-17T10:25:59.491Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:25:59.540Z","data":{"promptTokens":1535,"candidateTokens":114,"totalTokens":1649,"cachedTokens":422400,"reasoningTokens":43,"cost":0.00159165}}
+{"type":"tool","timestamp":"2026-10-17T10:26:09.259Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:26:09.300Z","data":{"promptTokens":1402,"candidateTokens":98,"totalTokens":1500,"cachedTokens":423808,"reasoningTokens":1228,"cost":0.0022773240000000003}}
+{"type":"tool","timestamp":"2026-10-17T10:26:13.124Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:26:13.165Z","data":{"promptTokens":1631,"candidateTokens":72,"totalTokens":1703,"cachedTokens":425088,"reasoningTokens":0,"cost":0.001563114}}
+{"type":"tool","timestamp":"2026-10-17T10:26:22.736Z","data":{"tool":"read","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:26:22.779Z","data":{"promptTokens":421,"candidateTokens":98,"totalTokens":519,"cachedTokens":426624,"reasoningTokens":1023,"cost":0.002015622}}
+{"type":"tool","timestamp":"2026-10-17T10:26:28.516Z","data":{"tool":"edit","summary":"tests/autopilot-run.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:26:28.559Z","data":{"promptTokens":1574,"candidateTokens":736,"totalTokens":2310,"cachedTokens":427008,"reasoningTokens":0,"cost":0.0019587240000000002}}
+{"type":"tool","timestamp":"2026-10-17T10:26:52.303Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:26:52.346Z","data":{"promptTokens":798,"candidateTokens":95,"totalTokens":893,"cachedTokens":428544,"reasoningTokens":29,"cost":0.0014797319999999999}}
+{"type":"tool","timestamp":"2026-10-17T10:27:10.498Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:27:10.542Z","data":{"promptTokens":381,"candidateTokens":106,"totalTokens":487,"cachedTokens":429312,"reasoningTokens":950,"cost":0.001978686}}
+{"type":"tool","timestamp":"2026-10-17T10:29:16.530Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:16.589Z","data":{"promptTokens":1206,"candidateTokens":128,"totalTokens":1334,"cachedTokens":429568,"reasoningTokens":1142,"cost":0.002231604}}
+{"type":"tool","timestamp":"2026-10-17T10:29:31.031Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:31.076Z","data":{"promptTokens":1413,"candidateTokens":94,"totalTokens":1507,"cachedTokens":430720,"reasoningTokens":327,"cost":0.00175671}}
+{"type":"tool","timestamp":"2026-10-17T10:29:35.384Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/200-autopilo"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:35.427Z","data":{"promptTokens":471,"candidateTokens":79,"totalTokens":550,"cachedTokens":432128,"reasoningTokens":10,"cost":0.001420434}}
+{"type":"tool","timestamp":"2026-10-17T10:29:47.188Z","data":{"tool":"write","summary":"openspec/changes/200-autopilot-queue-run/.run/results/4.md"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:47.231Z","data":{"promptTokens":1262,"candidateTokens":1352,"totalTokens":2614,"cachedTokens":432512,"reasoningTokens":315,"cost":0.002487036}}
+{"type":"tool","timestamp":"2026-10-17T10:29:51.542Z","data":{"tool":"read","summary":"src/watcher/autopilot.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:51.584Z","data":{"promptTokens":1812,"candidateTokens":98,"totalTokens":1910,"cachedTokens":433664,"reasoningTokens":61,"cost":0.001668192}}
+{"type":"text","timestamp":"2026-10-17T10:29:59.329Z","data":{"text":"I've completed task 4. Summary of the work:\n\n**Implementation (3 source files + 1 wiring change):**\n- `src/watcher/autopilot.ts` — the `AutopilotCommands` port and `runAutopilotPass`, which reads task 3's view, takes one step, writes/updates the change marker, applies the stop-hold rule, writes the one stop record with the mapped reason/command/detail, and logs `autopilot: ` lines.\n- `src/cli/autopilot-commands.ts` — builds the port from `planCommand`, `approveCommand`, `landCommand` with no-op writers and test seams.\n- `src/watcher/loop.ts` — `runWatcherOnce`/`startWatcher` run the pass after every cycle when the port is given and autopilot is enabled; `--once` keeps cycling while a step was taken; `runWatcherCycle` untouched.\n- `src/cli/watch-service.ts` — `runWatcher` hands `createAutopilotCommands` to `startWatcher`.\n\n**Tests (2 new files):**\n- `tests/autopilot-run-support.ts` — temporary git project with the three-item queue, planner adapters, and a recording port, reusing recovery-support helpers.\n- `tests/autopilot-run.test.ts` — 9 tests, one per scenario.\n\n**Verification:** task verify passes 9/9, and `pnpm verify` exits 0 (typechecks, build, full test suite, lint). Result written to `.run/results/4.md`.\n\nTouched: src/watcher/autopilot.ts, src/watcher/loop.ts, src/cli/autopilot-commands.ts, src/cli/watch-service.ts, tests/autopilot-run.test.ts, tests/autopilot-run-support.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T10:29:59.872Z","data":{"promptTokens":1205,"candidateTokens":422,"totalTokens":1627,"cachedTokens":708139,"reasoningTokens":293,"cost":0.07009046799999996}}
+{"type":"exited","timestamp":"2026-10-17T10:29:59.874Z","data":{"exitCode":0,"pid":2226703,"timedOut":false,"elapsedSeconds":1314.5}}
+{"type":"format_ran","timestamp":"2026-10-17T10:30:00.330Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/cli/autopilot-commands.ts' 'src/cli/watch-service.ts' 'src/watcher/autopilot.ts' 'src/watcher/loop.ts' 'tests/autopilot-run-support.ts' 'tests/autopilot-run.test.ts'","files":["src/cli/autopilot-commands.ts","src/cli/watch-service.ts","src/watcher/autopilot.ts","src/watcher/loop.ts","tests/autopilot-run-support.ts","tests/autopilot-run.test.ts"],"exitCode":0,"duration":0.2,"timedOut":false,"output":"Checked 6 files in 6ms. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-17T10:30:16.310Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/autopilot-run.test.ts","exitCode":0,"duration":15.59,"log":".run/logs/4-2.log","output":"▶ autopilot\n  ✔ Approved queue lands in order (3089.749371ms)\n  ✔ cli-foundation: Autopilot runs the command functions (2997.352246ms)\n  ✔ Autopilot off (54.223055ms)\n  ✔ Restart mid-queue (3163.399504ms)\n  ✔ Edited item stops the queue (3130.994026ms)\n  ✔ Planner not ready stops the queue (490.11715ms)\n  ✔ A stopped land is not retried (935.666532ms)\n  ✔ A failed land with an exit code (864.765495ms)\n  ✔ A human's step clears the stop (528.686497ms)\n✔ autopilot (15256.319477ms)\nℹ tests 9\nℹ suites 1\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 15568.047067\n"}}
+{"type":"measures","timestamp":"2026-10-17T10:31:52.273Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":943,"repoFiles":3199,"repoLines":367359,"importFanIn":2,"proposalWords":1105,"taskWords":685,"deltaRequirements":14,"deltaScenarios":26,"changedFiles":6,"changedLines":846,"scopeHashes":{"src/cli/autopilot-commands.ts":{"before":null,"after":"sha256:18ad7a98898447dfd94dee4ff27f27c8f096d4979c4d966868d22f550b732803"},"src/cli/watch-service.ts":{"before":"sha256:909384e0461f46b56ab0f2aac3c4b2b0d7e8b2c5c8c4f1169a9a02dc5062de12","after":"sha256:e085a6ac2fa8afd92c166cadac4e701803ac95642ec0aa28b02148669248162c"},"src/watcher/autopilot.ts":{"before":null,"after":"sha256:6128465d014b7d2da2e5a0472e5311291083110e053ec749831997cb4046f446"},"src/watcher/loop.ts":{"before":"sha256:c6a1a8ff0a61e9a13d5031754825f2916c1c0452a553f7a32d450534c5037414","after":"sha256:c29fa8525cd5786036d295481e773f8345ee07c2e1ee6ccde57714f2875abcd5"},"tests/autopilot-run-support.ts":{"before":null,"after":"sha256:9bdf60d1b29e12845a5ce1a9d1282286a91516ad749def61515e2fe9bfe271cb"},"tests/autopilot-run.test.ts":{"before":null,"after":"sha256:51a29741a409b62bb4e9c4121b22d5fa86f2a570ca5736a3f2d2d8b087b9972a"}}}}
+{"type":"done","timestamp":"2026-10-17T10:31:52.280Z","data":{"task":"4"}}
+{"type":"verify_ran","timestamp":"2026-10-17T10:48:28.080Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/autopilot-run.test.ts","exitCode":0,"duration":15.83,"log":".run/logs/4-3.log","output":"▶ autopilot\n  ✔ Approved queue lands in order (3145.529655ms)\n  ✔ cli-foundation: Autopilot runs the command functions (3040.665558ms)\n  ✔ Autopilot off (54.587427ms)\n  ✔ Restart mid-queue (3151.094692ms)\n  ✔ Edited item stops the queue (3166.53089ms)\n  ✔ Planner not ready stops the queue (568.33598ms)\n  ✔ A stopped land is not retried (975.497935ms)\n  ✔ A failed land with an exit code (880.971899ms)\n  ✔ A human's step clears the stop (523.083519ms)\n✔ autopilot (15507.723608ms)\nℹ tests 9\nℹ suites 1\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 15806.071451\n"}}

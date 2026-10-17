@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:20bab3cdf831ff0f6a81409865cfbde6cb3350d9d51680d942689e296a3d01fc"
+build_stamp: "fda9d6ab"
+project_commit: "394289a0"
+exit_code: 0
+scope_files: {"src/core/status/autopilot-marker.ts":"sha256:412283567ce5fab8268ced924b04c334a1896213516f4cab98503f07f69b7b4a","src/core/status/autopilot-step.ts":"sha256:2eeb112cda46593a8c85d4f0fe96caa8d01f6eee1c8b5e06797ceb02fbf29186","src/core/status/autopilot-view.ts":"sha256:9e466f4ee7e3e364741e4791e423b3946c089e8bd2d9695580b6b046245be48d","tests/autopilot-step.test.ts":"sha256:8eced4b6fb85a7b4b8e95e7108d72a48e2612fb80b12c982294606d2ca6d9683"}
+---
+2026-10-17T10:08:02.100Z

@@ -36,6 +36,12 @@ function needsYouLine(item: NeedsYouItem): string {
     const failing = item.validatorFailing ?? { outcome: '', runs: 0, error: '' };
     return `${head} — validator ${failing.outcome} ${failing.runs}× in a row: ${failing.error} — ${item.command}`;
   }
+  if (item.kind === 'autopilot-stopped') {
+    const stopped = item.autopilotStopped;
+    if (stopped === undefined) return `${head} — ${item.command}`;
+    const detail = stopped.detail ? `: ${stopped.detail.replace(/\s+/g, ' ')}` : '';
+    return `${head} — autopilot stopped: ${stopped.reason}${detail} — ${item.command}`;
+  }
   if (item.kind === 'change-regressed' && !item.steering) {
     return `${head} — change regressed — ${item.command}`;
   }
@@ -86,6 +92,9 @@ function landedLine(item: LandedItem): string {
  * @scenario status-inspection: Ready plan in the inbox
  * @scenario status-inspection: Automatic planner left lint red
  * @scenario status-inspection: Paused task
+ * @scenario status-inspection: Stop with a change in the inbox
+ * @scenario status-inspection: Stop before a change in the inbox
+ * @adr 021
  * @adr 018
  * @adr 010
  */

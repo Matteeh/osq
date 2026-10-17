@@ -4,16 +4,13 @@ import type { Route } from '../router.js';
 import { routeToHash } from '../router.js';
 import { type Status, StatusBadge } from '../status.js';
 import { needsYouKindLabel } from './labels.js';
+import { needsYouReason, needsYouRoute } from './needs-you-model.js';
 
 type NeedsYouItem = Inbox['needsYou'][number];
 
 export interface NeedsYouGroupProps {
   readonly items: readonly NeedsYouItem[];
   readonly onNavigate: (route: Route) => void;
-}
-
-function changeRoute(item: NeedsYouItem): Route {
-  return { name: 'change', folderKey: item.change.id };
 }
 
 /** The task status a needs-you kind names, or null for change-level kinds. */
@@ -29,7 +26,15 @@ function kindLead(kind: NeedsYouItem['kind']): string | null {
   return null;
 }
 
-/** The home view's attention group: one actionable row per needs-you item. */
+/**
+ * The home view's attention group: one actionable row per needs-you item. The
+ * route and the autopilot reason come from the pure model, so the row only
+ * links the title when the model gives it a route.
+ *
+ * @scenario web-inspection: Stop rows on the home view
+ * @adr 020
+ * @adr 021
+ */
 export function NeedsYouGroup({ items, onNavigate }: NeedsYouGroupProps): ReactElement {
   return (
     <section className="home-group home-needs-you" aria-labelledby="home-needs-you-title">
@@ -39,7 +44,8 @@ export function NeedsYouGroup({ items, onNavigate }: NeedsYouGroupProps): ReactE
       ) : (
         <ul className="home-list">
           {items.map((item, index) => {
-            const route = changeRoute(item);
+            const route = needsYouRoute(item);
+            const reason = needsYouReason(item);
             const status = taskStatusForKind(item.kind);
             const lead = kindLead(item.kind);
             return (
@@ -53,15 +59,22 @@ export function NeedsYouGroup({ items, onNavigate }: NeedsYouGroupProps): ReactE
                     </>
                   )}
                 </span>{' '}
-                <a
-                  href={routeToHash(route)}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(route);
-                  }}
-                >
-                  {item.change.id}: {item.change.title}
-                </a>
+                {route === null ? (
+                  <span className="home-change">
+                    {item.change.id}: {item.change.title}
+                  </span>
+                ) : (
+                  <a
+                    href={routeToHash(route)}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onNavigate(route);
+                    }}
+                  >
+                    {item.change.id}: {item.change.title}
+                  </a>
+                )}
+                {reason === null ? null : <span className="home-reason">{reason}</span>}
                 {item.task === null ? null : (
                   <span className="home-task">
                     {' '}

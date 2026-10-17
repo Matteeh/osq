@@ -19,7 +19,7 @@ import { migrateCommand } from './migrate.js';
 import { newCommand } from './new.js';
 import { type PlanCommandOptions, planCommand } from './plan.js';
 import { registerQueryCommand } from './query.js';
-import { queueCommand } from './queue.js';
+import { registerQueueCommand } from './queue.js';
 import { parseRejectReason, rejectCommand } from './reject.js';
 import { reportCommand } from './report.js';
 import { retryCommand } from './retry.js';
@@ -109,12 +109,7 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
       await lintCommand(ids, options);
     });
 
-  program
-    .command('queue')
-    .description('print the read-only brief queue projection')
-    .action(async () => {
-      await queueCommand();
-    });
+  registerQueueCommand(program);
 
   program
     .command('retry <id> <target>')

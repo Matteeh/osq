@@ -1,4 +1,5 @@
 import { readWatchState } from '../core/run/watch-state.js';
+import { readAutopilotStop } from '../core/status/autopilot-stop.js';
 import { formatStatusOverview, getStatusOverview } from '../core/status/status.js';
 import { readValidatorFailing } from '../core/status/validator-failing.js';
 import { formatWatcherLine } from '../core/status/watcher-line.js';
@@ -15,6 +16,8 @@ export interface StatusCommandOptions extends CommandInputs {
  * @scenario status-inspection: Failed after-land command waiting
  * @scenario status-inspection: Validator failing
  * @scenario status-inspection: No validator runs
+ * @scenario status-inspection: Stop in status
+ * @adr 021
  * @adr 010
  */
 export async function statusCommand(options: StatusCommandOptions = {}): Promise<string> {
@@ -37,6 +40,11 @@ export async function statusCommand(options: StatusCommandOptions = {}): Promise
       lines.push(
         `Validator ${failing.outcome} ${failing.runs}× in a row, last on ${id}: ${failing.error} — osq show ${id}`,
       );
+    }
+    const stop = await readAutopilotStop(inputs.cwd, config);
+    if (stop !== null) {
+      const change = stop.change !== undefined ? ` (change ${stop.change})` : '';
+      lines.push(`Autopilot stopped at ${stop.item}${change}: ${stop.reason} — ${stop.command}`);
     }
     const formatted = lines.join('\n');
     inputs.stdout(`${formatted}\n`);

@@ -2,8 +2,9 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { type AfterLandFailure, readAfterLandFailure } from '../vcs/land-after.js';
+import { type AutopilotStop, readAutopilotStop } from './autopilot-stop.js';
 import { applySteeringItems } from './blocked-item.js';
-import { changeTrees } from './change-locations.js';
+import { changeTrees, listChanges, matchesFolder } from './change-locations.js';
 import { readLastLook } from './inbox-cursor.js';
 import { type PausedItem, projectPaused } from './inbox-paused.js';
 import {
@@ -13,6 +14,7 @@ import {
   collectLandedItems,
   projectInbox,
 } from './inbox.js';
+import { readQueue } from './queue-parser.js';
 import { compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
 import { type SteeringChange, listArchivedSteering } from './steering-change.js';
@@ -80,6 +82,46 @@ async function validatorFailingItem(
   };
 }
 
+/** The change title for a stopped item, or the id when it cannot be read. */
+async function stopChangeTitle(
+  projectRoot: string,
+  config: OsqConfig,
+  stop: AutopilotStop,
+): Promise<string> {
+  if (stop.change !== undefined) {
+    const changes = await listChanges(projectRoot, config);
+    const change = changes.find((entry) => matchesFolder(entry.folderName, stop.change ?? ''));
+    const spec =
+      change === undefined
+        ? null
+        : await parseSpecMdFromFolder(change.folderPath).catch(() => null);
+    return spec?.title || stop.change;
+  }
+  const items = await readQueue(projectRoot, config).catch(() => []);
+  return items.find((item) => item.slug === stop.item)?.title || stop.item;
+}
+
+/** The one needs-you item a recorded autopilot stop contributes. */
+async function autopilotStoppedItem(
+  projectRoot: string,
+  config: OsqConfig,
+  stop: AutopilotStop,
+): Promise<NeedsYouItem> {
+  const id = stop.change ?? stop.item;
+  return {
+    kind: 'autopilot-stopped',
+    change: { id, title: await stopChangeTitle(projectRoot, config, stop) },
+    task: null,
+    command: stop.command,
+    autopilotStopped: {
+      reason: stop.reason,
+      item: stop.item,
+      change: stop.change ?? null,
+      detail: stop.detail ?? null,
+    },
+  };
+}
+
 /**
  * Derives the stable inbox object without mutating any file. Both the CLI and
  * the read-only HTTP transport consume it, so a contemporaneous invocation and
@@ -92,6 +134,10 @@ async function validatorFailingItem(
  * @scenario status-inspection: Paused task
  * @scenario status-inspection: No item for a passed pause
  * @scenario status-inspection: Paused running item keys
+ * @scenario status-inspection: Stop with a change in the inbox
+ * @scenario status-inspection: Stop before a change in the inbox
+ * @scenario status-inspection: No stop in the inbox
+ * @adr 021
  * @adr 010
  */
 export async function readInbox(
@@ -118,11 +164,15 @@ export async function readInbox(
   const failing = await readValidatorFailing(projectRoot, config);
   const validatorFailing =
     failing === null ? [] : [await validatorFailingItem(tree.archiveDir, failing)];
+  const stop = await readAutopilotStop(projectRoot, config);
+  const autopilotStopped =
+    stop === null ? [] : [await autopilotStoppedItem(projectRoot, config, stop)];
   const needsYou = [
     ...(await applySteeringItems(overview, inbox.needsYou)),
     ...steered,
     ...afterLand,
     ...validatorFailing,
+    ...autopilotStopped,
   ].sort((a, b) => compareNumericPrefix(a.change.id, b.change.id));
   return { ...inbox, needsYou, running };
 }

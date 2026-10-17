@@ -22,6 +22,7 @@ import { startWatcher } from '../watcher/loop.js';
 import { createServiceBuildCheck } from '../watcher/service-build.js';
 import { WATCH_ROLE_ENV, runServiceSupervisor } from '../watcher/service.js';
 import type { StaleCheck } from '../watcher/stale-pass.js';
+import { createAutopilotCommands } from './autopilot-commands.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, commandLogger, type resolveInputs } from './command-inputs.js';
 import { buildSteeringPrompt } from './plan-steer-prompt.js';
@@ -194,6 +195,7 @@ async function runWatcher(
     logger,
     buildCheck,
     steeringPrompt: buildSteeringPrompt,
+    autopilot: createAutopilotCommands(inputs.cwd, config),
   });
 }
 
