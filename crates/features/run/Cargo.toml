@@ -1,0 +1,14 @@
+[package]
+name = "osq-feature-run"
+description = "The run feature: hands one task at a time to an executor and verifies it."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+osq-core.workspace = true

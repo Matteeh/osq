@@ -20,3 +20,6 @@ Thumbs.db
 *.tsbuildinfo
 coverage/
 .nyc_output/
+
+# Rust build output
+/target/
