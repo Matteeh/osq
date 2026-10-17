@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:131a5e83f429e596af1481832a8a597f298bfc105d1f1379e6cebcd62bd01751"
+build_stamp: "ba2d85ab"
+project_commit: "b31dd3d5"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:aaa1db983119fcff1305d3565cb2c1dd23c66dbc75136ae97da48cf19215c687","tests/rust-agent-guide.test.ts":"sha256:5c098aa6e999793880d995e50cd1e68162fae0816b947cb3a48c0e61e8e6a424"}
+---
+2026-10-17T21:49:14.539Z
