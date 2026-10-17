@@ -1,0 +1,68 @@
+# The Rust rewrite of osq, next to the TypeScript code (ADR 022).
+# Layers: apps -> features -> kernel -> core. A crate depends only on layers
+# below it, and a feature never depends on another feature.
+[workspace]
+resolver = "3"
+members = [
+    "crates/core",
+    "crates/kernel/vcs",
+    "crates/kernel/storage",
+    "crates/kernel/specs",
+    "crates/kernel/linter",
+    "crates/kernel/runners",
+    "crates/kernel/harnesses",
+    "crates/kernel/agents",
+    "crates/kernel/loop",
+    "crates/features/plan",
+    "crates/features/approve",
+    "crates/features/run",
+    "crates/features/archive",
+    "crates/features/land",
+    "crates/features/inbox",
+    "crates/features/report",
+    "crates/features/metaloop",
+    "crates/apps/cli",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+publish = false
+
+# Shared dependency versions (ADR 023). A crate names one with
+# `<name>.workspace = true` and never pins its own version.
+[workspace.dependencies]
+osq-core = { path = "crates/core" }
+osq-kernel-vcs = { path = "crates/kernel/vcs" }
+osq-kernel-storage = { path = "crates/kernel/storage" }
+osq-kernel-specs = { path = "crates/kernel/specs" }
+osq-kernel-linter = { path = "crates/kernel/linter" }
+osq-kernel-runners = { path = "crates/kernel/runners" }
+osq-kernel-harnesses = { path = "crates/kernel/harnesses" }
+osq-kernel-agents = { path = "crates/kernel/agents" }
+osq-kernel-loop = { path = "crates/kernel/loop" }
+osq-feature-plan = { path = "crates/features/plan" }
+osq-feature-approve = { path = "crates/features/approve" }
+osq-feature-run = { path = "crates/features/run" }
+osq-feature-archive = { path = "crates/features/archive" }
+osq-feature-land = { path = "crates/features/land" }
+osq-feature-inbox = { path = "crates/features/inbox" }
+osq-feature-report = { path = "crates/features/report" }
+osq-feature-metaloop = { path = "crates/features/metaloop" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+proptest = "1"
+insta = "1"
+
+# The rulebook (ADR 023). Every crate inherits it with `[lints] workspace = true`
+# and may not loosen an entry.
+[workspace.lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+missing_docs_in_private_items = "deny"
+too_many_lines = "deny"

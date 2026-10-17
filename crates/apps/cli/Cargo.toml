@@ -1,0 +1,26 @@
+[package]
+name = "osq-cli"
+description = "The osq command line: parses arguments, dispatches to features and prints."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+osq-core.workspace = true
+osq-feature-plan.workspace = true
+osq-feature-approve.workspace = true
+osq-feature-run.workspace = true
+osq-feature-archive.workspace = true
+osq-feature-land.workspace = true
+osq-feature-inbox.workspace = true
+osq-feature-report.workspace = true
+osq-feature-metaloop.workspace = true
+
+[[bin]]
+name = "osq-rs"
+path = "src/main.rs"

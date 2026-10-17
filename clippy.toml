@@ -1,0 +1,3 @@
+# Size limits for the workspace lints (ADR 023). 80 lines matches the
+# TypeScript function budget.
+too-many-lines-threshold = 80
