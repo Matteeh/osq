@@ -126,10 +126,7 @@ describe('language gap notice', () => {
     assert.ok(gap, JSON.stringify(notices.notices));
     assert.equal(gap.severity, 'amber');
     assert.equal(gap.label, 'gates miss a language');
-    assert.equal(
-      gap.detail,
-      'Rust in task 2, task 3: no test-modification gate, denied-dependency gate',
-    );
+    assert.equal(gap.detail, 'Rust in task 2, task 3: no denied-dependency gate');
   });
 
   it('fires no language_gap for TypeScript only', async () => {

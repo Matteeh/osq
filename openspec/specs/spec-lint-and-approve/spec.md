@@ -114,9 +114,10 @@ The system SHALL parse `### Requirement: Code ownership` blocks by header name a
 The linter SHALL validate that tasks altering existing tests explicitly declare
 `tests.modify: true`. It SHALL identify existing test files through the shared
 deterministic scope resolver without maintaining another glob matcher or tree
-walker. A test file is one that `isGatedTestPath` accepts, as
+walker. A test file is one that `gatedTestPathFilter` accepts for the
+project's language map, which lint reads once with `readLanguageMap`, as
 watcher-and-harness's "Test gate paths" says. The frozen test reach warning and
-the approval digest's existing tests SHALL use the same function.
+the approval digest's existing tests SHALL use `isGatedTestPath`.
 
 #### Scenario: Valid test modification declaration
 - **WHEN** task frontmatter declares `tests.modify: true` as a boolean
@@ -137,6 +138,15 @@ the approval digest's existing tests SHALL use the same function.
 #### Scenario: Named test outside tests
 - **WHEN** a task's scope resolves to an existing `src/quote.test.ts` and `tests.modify` is false
 - **THEN** linter raises no `tests.modify` finding for it
+
+#### Scenario: Existing crate test lacks declaration
+- **WHEN** a temporary git project tracks `Cargo.toml`, `crates/core/Cargo.toml`, `crates/core/src/lib.rs` and `crates/core/tests/api.rs`, and a task's scope names the file in the row with `tests.modify` false
+- **THEN** lint gives the row's `tests.modify` error, or none
+
+| scope | error |
+| --- | --- |
+| `crates/core/tests/api.rs` | `Task in 1.md scope touches existing test files (crates/core/tests/api.rs) without tests.modify: true` |
+| `crates/core/src/lib.rs` | (none) |
 
 ### Requirement: Architecture Decision Record 004: Pinned OpenSpec Validator
 The project SHALL record and accept ADR 004 documenting the pinned `@fission-ai/openspec` dependency, exact version pin, validator execution semantics, and drift diagnostics.
@@ -2445,7 +2455,7 @@ view show it as they show every notice.
 
 #### Scenario: Rust file in scope
 - **WHEN** a fixture change's task 2 scopes `crates/core/src/lib.rs` and task 3 scopes `crates/core/Cargo.toml`, both existing
-- **THEN** its notices include `language_gap`, amber, label `gates miss a language`, detail `Rust in task 2, task 3: no test-modification gate, denied-dependency gate`
+- **THEN** its notices include `language_gap`, amber, label `gates miss a language`, detail `Rust in task 2, task 3: no denied-dependency gate`
 
 #### Scenario: TypeScript only
 - **WHEN** every task of a fixture change scopes only `.ts` files and `package.json`

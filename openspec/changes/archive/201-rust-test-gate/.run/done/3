@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f3c802f44585b502e08d602c8d05224d8d2cf321b878614a29cb9ea7999248a7"
+build_stamp: "caa4e02b"
+project_commit: "dbb68bc7"
+exit_code: 0
+scope_files: {"src/core/spec/linter.ts":"sha256:32e3b9e6b55b3e2f12698ff250af334868709bfe79a5c77cdcfd331b765fa934","tests/lint-rust-tests.test.ts":"sha256:659f2c626ebdfb5d2563b35cc2556e34fed4dc87787f6380a4a96d167550e54e"}
+---
+2026-10-17T12:08:29.478Z

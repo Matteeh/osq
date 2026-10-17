@@ -1,0 +1,17 @@
+---
+scope_resolver: 2
+scope_hash: sha256:e0238565c0b0b5b25ed3437319f7c5fa548136dca6e74e6652235f2601944e5f
+build_stamp: caa4e02b
+project_commit: "86560351"
+exit_code: 0
+scope_files:
+  src/kernel/languages/adapter.ts: sha256:4877c91dc565007e08836e961fe8c3f9e2e345561fe4eb9b2579377660cc47e3
+  src/kernel/languages/language-map.ts: sha256:87a62db968b07da07bc1a11aa31df854c4ab80f3fb5e4643be3c538ca04815c6
+  src/kernel/languages/presets.ts: sha256:cc4e4e6caaf61acb2a6f9004bc3a2d3a4b22f44a7fd7053f7439f64e1bc5dd56
+  src/kernel/languages/rust-test-modules.ts: sha256:0b2e7e0945254f131fa2a62844927a5a7af738fa59a97092fe15ac2a7e421928
+  tests/languages-rust.test.ts: sha256:3c52b6aa5c60d706ac0d48fc15a0a531969a81eb7a0e45f983af60dc36e15d4d
+original_scope_hash: sha256:353200bb75e61b717025d0b1908e813ae6673644825a280a9e41059d72517884
+recertified_at: 2026-10-17T12:15:08.875Z
+recertification_count: 1
+---
+2026-10-17T11:47:56.401Z

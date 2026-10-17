@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3ca40419e8149ddcd7c91d7796743c4bdf448a900d9197582284bb9715218202"
+build_stamp: "caa4e02b"
+project_commit: "259bcd70"
+exit_code: 0
+scope_files: {"src/kernel/languages/presets.ts":"sha256:cc4e4e6caaf61acb2a6f9004bc3a2d3a4b22f44a7fd7053f7439f64e1bc5dd56","tests/doctor-languages.test.ts":"sha256:ed3a01feac5bfc31cc6323d0964f0e0b2aa8a14a04dcc53acff4c01b9c479626","tests/languages-map.test.ts":"sha256:a0d5f4fc501661e47d0f1a9d7d5f81a6457a9e8792be2bcb4f96b72e688e8495","tests/notices-language.test.ts":"sha256:8fa2a95c74b50c93f791d2d8f1d08b9e5116554757ccd0a932e3f5f8f25e6de7"}
+---
+2026-10-17T12:15:08.110Z

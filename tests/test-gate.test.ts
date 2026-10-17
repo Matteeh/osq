@@ -62,7 +62,7 @@ process.exit(0);
 
 /** The six sources that must consume the gate's one definition. */
 const GATE_SOURCES = [
-  'src/watcher/verify.ts',
+  'src/core/run/test-snapshot.ts',
   'src/watcher/git-guard.ts',
   'src/core/run/task-commit.ts',
   'src/core/spec/linter.ts',
@@ -71,7 +71,7 @@ const GATE_SOURCES = [
 ];
 
 const GATE_IMPORT =
-  /import\s*\{[^}]*\b(?:isGatedTestPath|TEST_GATE_DIR)\b[^}]*\}\s*from\s*['"](?:\.\.\/core\/run\/test-gate\.js|\.\.\/run\/test-gate\.js|\.\/test-gate\.js)['"]/;
+  /import\s*\{[^}]*\b(?:isGatedTestPath|TEST_GATE_DIR|gatedTestPathFilter)\b[^}]*\}\s*from\s*['"](?:\.\.\/core\/run\/test-gate\.js|\.\.\/run\/test-gate\.js|\.\/test-gate\.js)['"]/;
 
 describe('gated and ungated paths', () => {
   it('gates tests and paths under it, and nothing else', () => {

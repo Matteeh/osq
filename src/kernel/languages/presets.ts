@@ -4,12 +4,13 @@
  * data; nothing here reads a file (ADR 017).
  */
 
-/** One language osq knows: its manifests, lock files and extensions. */
+/** One language osq knows: its manifests, lock files, extensions and test folders. */
 export interface LanguagePreset {
   readonly name: string;
   readonly manifests: readonly string[];
   readonly lockFiles: readonly string[];
   readonly extensions: readonly string[];
+  readonly testFolders: readonly string[];
 }
 
 /** Every language osq knows, in the order the coverage list and maps use. */
@@ -19,24 +20,28 @@ export const LANGUAGE_PRESETS: readonly LanguagePreset[] = [
     manifests: ['package.json'],
     lockFiles: ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'],
     extensions: ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'],
+    testFolders: [],
   },
   {
     name: 'Rust',
     manifests: ['Cargo.toml'],
     lockFiles: ['Cargo.lock'],
     extensions: ['.rs'],
+    testFolders: ['tests', 'benches'],
   },
   {
     name: 'Python',
     manifests: ['pyproject.toml'],
     lockFiles: ['poetry.lock', 'uv.lock'],
     extensions: ['.py'],
+    testFolders: [],
   },
   {
     name: 'Go',
     manifests: ['go.mod'],
     lockFiles: ['go.sum'],
     extensions: ['.go'],
+    testFolders: [],
   },
 ];
 
@@ -49,7 +54,7 @@ export interface CoverageEntry {
 
 /** The one list of which languages each gate and extra covers, in list order. */
 export const LANGUAGE_COVERAGE: readonly CoverageEntry[] = [
-  { name: 'test-modification gate', kind: 'gate', covers: ['TypeScript/JavaScript'] },
+  { name: 'test-modification gate', kind: 'gate', covers: ['TypeScript/JavaScript', 'Rust'] },
   { name: 'denied-dependency gate', kind: 'gate', covers: ['TypeScript/JavaScript'] },
   { name: 'verify-command lint', kind: 'extra', covers: ['TypeScript/JavaScript'] },
   { name: 'test output reading', kind: 'extra', covers: ['TypeScript/JavaScript'] },

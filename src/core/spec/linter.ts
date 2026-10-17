@@ -1,10 +1,11 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { readLanguageMap } from '../../kernel/languages/language-map.js';
 import { knownChangeFolders } from '../foundation/change-number.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
-import { isGatedTestPath } from '../run/test-gate.js';
+import { gatedTestPathFilter } from '../run/test-gate.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumptions.js';
 import { collectCapabilityRelationFindings } from './capability-relations.js';
@@ -1205,6 +1206,11 @@ export async function lintChangeFolder(
     findings.error({ file: tasksRepoPath }, 'No task files found under tasks/');
   }
 
+  // Read the project's language map once for the frozen-test gate. The paths
+  // it governs are the root `tests/` folder and every package's test folders,
+  // such as a Rust crate's `crates/<name>/tests/` (ADR 017).
+  const gated = gatedTestPathFilter(await readLanguageMap(projectRoot, config));
+
   const resolvedTaskScopes: ResolvedTaskScope[] = [];
   const entryLintTasks: EntryLintTask[] = [];
 
@@ -1254,7 +1260,7 @@ export async function lintChangeFolder(
 
     // Check: touching an existing test file requires tests.modify: true
     if (!task.testsModify && existingPaths.length > 0) {
-      const touched = existingPaths.filter(isGatedTestPath).sort();
+      const touched = existingPaths.filter(gated).sort();
       if (touched.length > 0) {
         findings.error(
           { file: taskRepoPath },

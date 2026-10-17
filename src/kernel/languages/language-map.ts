@@ -8,6 +8,10 @@ import { LANGUAGE_PRESETS } from './presets.js';
 export interface LanguageMap {
   /** Every language with at least one package, in preset order. */
   readonly languages: readonly string[];
+  /** Every test folder of its packages, sorted. */
+  readonly testFolders: readonly string[];
+  /** Every path it was built from, each once, in the order first given. */
+  readonly paths: readonly string[];
   /** The nearest package's language that claims `filePath`, or null. */
   languageOf(filePath: string): string | null;
 }
@@ -43,12 +47,20 @@ function extensionOf(filePath: string): string {
  *
  * @scenario languages: Paths and their languages
  * @scenario languages: No manifest
+ * @scenario languages: Test folders of a Cargo workspace
+ * @scenario languages: TypeScript has no test folders
  * @adr 017
  */
 export function languageMap(paths: readonly string[]): LanguageMap {
+  const normalizedPaths: string[] = [];
+  const seenPaths = new Set<string>();
   const packages = new Map<string, Set<string>>();
   for (const raw of paths) {
     const filePath = toPosix(raw);
+    if (!seenPaths.has(filePath)) {
+      seenPaths.add(filePath);
+      normalizedPaths.push(filePath);
+    }
     const base = baseNameOf(filePath);
     const folder = folderOf(filePath);
     for (const preset of LANGUAGE_PRESETS) {
@@ -62,6 +74,16 @@ export function languageMap(paths: readonly string[]): LanguageMap {
   const languages = LANGUAGE_PRESETS.filter((preset) =>
     [...packages.values()].some((set) => set.has(preset.name)),
   ).map((preset) => preset.name);
+
+  const testFolders = new Set<string>();
+  for (const [folder, packageLanguages] of packages) {
+    for (const preset of LANGUAGE_PRESETS) {
+      if (!packageLanguages.has(preset.name)) continue;
+      for (const testFolder of preset.testFolders) {
+        testFolders.add(folder === '' ? testFolder : `${folder}/${testFolder}`);
+      }
+    }
+  }
 
   const languageOf = (rawPath: string): string | null => {
     const filePath = toPosix(rawPath);
@@ -86,7 +108,12 @@ export function languageMap(paths: readonly string[]): LanguageMap {
     }
   };
 
-  return { languages, languageOf };
+  return {
+    languages,
+    testFolders: [...testFolders].sort(),
+    paths: normalizedPaths,
+    languageOf,
+  };
 }
 
 /** Every preset manifest that exists at the project root, in preset order. */

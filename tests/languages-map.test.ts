@@ -72,7 +72,7 @@ async function makePlainDir(files: Record<string, string>): Promise<string> {
 describe('uncoveredBy', () => {
   it('returns the gates and extras a language lacks', () => {
     assert.deepEqual(uncoveredBy('Rust'), {
-      gates: ['test-modification gate', 'denied-dependency gate'],
+      gates: ['denied-dependency gate'],
       extras: [
         'verify-command lint',
         'test output reading',

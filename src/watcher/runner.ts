@@ -138,7 +138,7 @@ export async function runTask(
   }
 
   try {
-    const testGate = await captureTestGate(projectRoot, taskData.scope, taskData.testsModify);
+    const testGate = await captureTestGate(projectRoot, taskData, config);
     const verifyCtx = { projectRoot, specFolderPath, taskNumber, taskData, config, logger };
     const baseline = await settleBaseline(verifyCtx);
     if (!baseline.ok) return fail('baseline_red', baseline.marker, baseline.error, baseline.extra);

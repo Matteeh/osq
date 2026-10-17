@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:3abecfdbb92c336884cffbea932efb2956ba04de3ea6614f4d4a27e10fa2b35a"
+build_stamp: "caa4e02b"
+project_commit: "c35d6be8"
+exit_code: 0
+scope_files: {"src/core/run/test-gate.ts":"sha256:c43e7cec68044e085a32ee25d49dd66eb939abf513920d3d020f127a1dc93979","src/core/run/test-snapshot.ts":"sha256:769b9f390787354d72a5798047ccd8054a23bda71722d1cb43023d8b3c26e67b","src/watcher/runner.ts":"sha256:8b8b0fb1e58d6bf74ff060a7e0c30bdf55df1e1a826307eae576d76ba6942e0e","src/watcher/verify.ts":"sha256:7d2f59a7f97dc262de496df26271d4d2698d653ecd3bc334e715dffb70be2d87","tests/runner-rust-test-gate.test.ts":"sha256:f82765cbfedf62e6345b0f8635dd0d1bdf3a215206a84c71d00fda8dbf0cd5b6","tests/rust-workspace.ts":"sha256:bb25f03cb83604fffdc8c473778148130a13eb75a6f97561cd6b65fd2bc40ee8","tests/test-gate.test.ts":"sha256:9461e12ea5c1e405bf4f4621ea3a54e8a6f8fca395d0de3fd87f2deb7286fc1a"}
+---
+2026-10-17T12:00:34.765Z
