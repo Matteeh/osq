@@ -61,7 +61,7 @@ function runDoctor(root: string): Promise<DoctorReport> {
 
 const RUST_MESSAGE =
   'TypeScript/JavaScript, Rust. Rust lacks gates: denied-dependency gate; ' +
-  'extras: verify-command lint, test output reading, ' +
+  'extras: test output reading, ' +
   'import graph, traceability, function ranges, repository measures';
 
 describe('languages doctor check', () => {

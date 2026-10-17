@@ -197,7 +197,7 @@ describe('lint findings', () => {
     assert.equal(finding.section, null);
     assert.ok(
       result.errors.includes(
-        'Task in 1.md verify chains commands ("pnpm a && pnpm b"); move the chain into a package script and name that script, for example pnpm run <script>',
+        'Task in 1.md verify chains commands ("pnpm a && pnpm b"); move the chain into a script file in the repository and name that file, for example scripts/verify.sh',
       ),
       result.errors.join('\n'),
     );

@@ -4015,7 +4015,7 @@ check.
 
 #### Scenario: Rust beside TypeScript
 - **WHEN** `osq doctor` runs on a temporary git project that tracks `package.json` and `crates/core/Cargo.toml`
-- **THEN** it prints `[warn] languages: TypeScript/JavaScript, Rust. Rust lacks gates: denied-dependency gate; extras: verify-command lint, test output reading, import graph, traceability, function ranges, repository measures` and its exit code is what it is without the check
+- **THEN** it prints `[warn] languages: TypeScript/JavaScript, Rust. Rust lacks gates: denied-dependency gate; extras: test output reading, import graph, traceability, function ranges, repository measures` and its exit code is what it is without the check
 
 #### Scenario: Pure TypeScript project
 - **WHEN** `osq doctor` runs on a temporary project whose only manifest is `package.json`, or on one with no manifest

@@ -2,6 +2,7 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readLanguageMap } from '../../kernel/languages/language-map.js';
+import { type VerifyRunner, verifyRunners } from '../../kernel/languages/presets.js';
 import { knownChangeFolders } from '../foundation/change-number.js';
 import type { OsqConfig } from '../foundation/config.js';
 import { resolveScope } from '../run/scope.js';
@@ -238,14 +239,33 @@ function extractPackageScript(tokens: string[]): string | null {
 }
 
 /**
+ * True when a command starts with a recognized verify runner: its first word is
+ * a runner's binary and its second word is one of that runner's subcommands.
+ */
+function isRecognizedVerifyRunner(tokens: string[], runners: readonly VerifyRunner[]): boolean {
+  const [binary, subcommand] = tokens;
+  if (binary === undefined || subcommand === undefined) {
+    return false;
+  }
+  return runners.some(
+    (runner) => runner.binary === binary && runner.subcommands.includes(subcommand),
+  );
+}
+
+/**
  * Analyze one verify command read-only: detect the template sentinel, resolve a
- * recognized package script against the root manifest, or fall back to an
- * unresolved-target warning when no existing path or script is named.
+ * recognized package script against the root manifest, recognize a verify
+ * runner of the project's languages, or fall back to an unresolved-target
+ * warning when no existing path, script, or runner is named.
+ *
+ * @scenario spec-lint-and-approve: Cargo verify
+ * @adr 017
  */
 export async function analyzeVerifyCommand(
   projectRoot: string,
   command: string,
   packageScripts: ReadonlySet<string>,
+  runners: readonly VerifyRunner[] = [],
 ): Promise<VerifyCommandAnalysis> {
   const tokens = tokenizeVerifyCommand(command);
 
@@ -261,6 +281,10 @@ export async function analyzeVerifyCommand(
       missingScript: packageScripts.has(packageScript) ? null : packageScript,
       unresolved: false,
     };
+  }
+
+  if (isRecognizedVerifyRunner(tokens, runners)) {
+    return { placeholder: false, packageScript: null, missingScript: null, unresolved: false };
   }
 
   return {
@@ -302,8 +326,11 @@ function unresolvedVerifyWarning(label: string, command: string): string {
   return `${label} verify names neither an existing repository path nor a package script: "${command}"`;
 }
 
-function chainedVerifyError(label: string, command: string): string {
-  return `Task in ${label} verify chains commands ("${command}"); move the chain into a package script and name that script, for example pnpm run <script>`;
+function chainedVerifyError(label: string, command: string, hasPackageJson: boolean): string {
+  const advice = hasPackageJson
+    ? 'move the chain into a package script and name that script, for example pnpm run <script>'
+    : 'move the chain into a script file in the repository and name that file, for example scripts/verify.sh';
+  return `Task in ${label} verify chains commands ("${command}"); ${advice}`;
 }
 
 /** Resolve an absolute path to its repository-relative POSIX form. */
@@ -1027,6 +1054,17 @@ export async function lintChangeFolder(
   const findings = new LintFindingSet();
   const packageScripts = await readRootPackageScripts(projectRoot);
 
+  // Read the project's language map once, before the verify checks. It governs
+  // the frozen-test gate and names the verify runners a task verify may start
+  // with (ADR 017).
+  const languageMap = await readLanguageMap(projectRoot, config);
+  const gated = gatedTestPathFilter(languageMap);
+  const runners = verifyRunners(languageMap.languages);
+  // The chain advice names a package script only when the root holds one. A
+  // missing or malformed manifest is handled here as a separate file access,
+  // apart from `readRootPackageScripts`, which returns no scripts for either.
+  const hasPackageJson = await pathExists(path.join(projectRoot, 'package.json'));
+
   // Check: no authored change-folder file contains prohibited control characters
   for (const relPath of await collectArtifactFiles(folderPath, folderPath)) {
     const content = await fs.readFile(path.join(folderPath, relPath), 'utf8');
@@ -1095,7 +1133,7 @@ export async function lintChangeFolder(
   // Check: the change-level verify participates in the same trust analysis
   if (spec.verify) {
     const docLabel = path.basename(resolvedDoc.path);
-    const analysis = await analyzeVerifyCommand(projectRoot, spec.verify, packageScripts);
+    const analysis = await analyzeVerifyCommand(projectRoot, spec.verify, packageScripts, runners);
     if (analysis.placeholder) {
       findings.error({ file: docRepoPath }, placeholderVerifyError(docLabel));
     } else if (!chainsVerifyCommand(spec.verify)) {
@@ -1206,11 +1244,6 @@ export async function lintChangeFolder(
     findings.error({ file: tasksRepoPath }, 'No task files found under tasks/');
   }
 
-  // Read the project's language map once for the frozen-test gate. The paths
-  // it governs are the root `tests/` folder and every package's test folders,
-  // such as a Rust crate's `crates/<name>/tests/` (ADR 017).
-  const gated = gatedTestPathFilter(await readLanguageMap(projectRoot, config));
-
   const resolvedTaskScopes: ResolvedTaskScope[] = [];
   const entryLintTasks: EntryLintTask[] = [];
 
@@ -1246,7 +1279,7 @@ export async function lintChangeFolder(
       .map((entry) => entry.relativePath);
     const taskLabel = `Task in ${taskFile}`;
     const analysis = task.verify
-      ? await analyzeVerifyCommand(projectRoot, task.verify, packageScripts)
+      ? await analyzeVerifyCommand(projectRoot, task.verify, packageScripts, runners)
       : null;
     resolvedTaskScopes.push({
       taskFile,
@@ -1275,7 +1308,10 @@ export async function lintChangeFolder(
     } else if (analysis.placeholder) {
       findings.error({ file: taskRepoPath }, placeholderVerifyError(taskLabel));
     } else if (chainsVerifyCommand(task.verify)) {
-      findings.error({ file: taskRepoPath }, chainedVerifyError(taskFile, task.verify));
+      findings.error(
+        { file: taskRepoPath },
+        chainedVerifyError(taskFile, task.verify, hasPackageJson),
+      );
     } else if (analysis.missingScript !== null) {
       findings.error(
         { file: taskRepoPath },

@@ -280,8 +280,9 @@ command without executing or shell-expanding them. The template sentinel
 `node -e "process.exit(0)"` and normalized equivalents SHALL be errors. A
 recognized package-script invocation naming no script in the project-root
 `package.json` SHALL be an error. Any other command that names neither an
-existing repository-relative path, a recognized package script, nor a missing
-path the scope of its task or an earlier task covers SHALL emit a warning.
+existing repository-relative path, a recognized package script, a recognized
+verify runner, nor a missing path the scope of its task or an earlier task
+covers SHALL emit a warning.
 
 Sentinel normalization SHALL cover surrounding and repeated ASCII whitespace,
 single or double quotes around `process.exit(0)`, `-e` and `--eval`, and an
@@ -289,6 +290,12 @@ optional semicolon inside the JavaScript expression. Package-script recognition
 SHALL cover ordinary pnpm, npm, yarn, and bun direct or `run` forms. A missing
 or malformed package manifest SHALL be handled deterministically without
 executing the command.
+
+A command is a recognized verify runner when its first word is the binary of
+one of the `verifyRunners` of the `languages` of `readLanguageMap` for the
+project and its second word is one of that runner's subcommands. `lintChangeFolder`
+SHALL read that language map once and use it for this check and for the
+frozen-test gate.
 
 #### Scenario: Placeholder verify is rejected
 - **WHEN** a proposal or task verify is the template sentinel or a normalized equivalent
@@ -309,6 +316,22 @@ executing the command.
 #### Scenario: Verify names only its new test
 - **WHEN** a task verify names only a test file that does not exist yet and the task's scope covers it
 - **THEN** trust validation emits no unresolved-target warning
+
+#### Scenario: Cargo verify
+- **WHEN** a temporary project whose root holds the row's manifest lints a change whose task 1 verify is the row's command and whose scope is `src/lib.rs`
+- **THEN** lint gives the row's unresolved-target warning, or none
+
+| manifest | verify | warning |
+| --- | --- | --- |
+| `Cargo.toml` | `cargo test -p core --test parse` | none |
+| `Cargo.toml` | `cargo nextest run` | none |
+| `Cargo.toml` | `cargo build --release` | none |
+| `Cargo.toml` | `cargo check` | none |
+| `Cargo.toml` | `cargo clippy --all-targets` | none |
+| `Cargo.toml` | `cargo fmt --check` | none |
+| `Cargo.toml` | `cargo run --bin osq` | none |
+| `Cargo.toml` | `cargo doc` | `Task in 1.md verify names neither an existing repository path nor a package script: "cargo doc"` |
+| `package.json` | `cargo test` | `Task in 1.md verify names neither an existing repository path nor a package script: "cargo test"` |
 
 ### Requirement: Resolved task scope overlap warning
 The linter SHALL compare the existing files produced by the shared scope
@@ -682,13 +705,21 @@ every osq and validator check SHALL be the change's own.
 - **THEN** it is a repository finding and the linted change stays valid
 
 ### Requirement: Chained verify refusal
-Lint SHALL refuse a task verify that chains commands with `&&`, `;`, or `|` with
-the error `Task in <n>.md verify chains commands ("<verify>"); move the chain
-into a package script and name that script, for example pnpm run <script>`.
+Lint SHALL refuse a task verify that chains commands with `&&`, `;`, or `|`.
+When the project root holds a `package.json`, the error SHALL be
+`Task in <n>.md verify chains commands ("<verify>"); move the chain into a
+package script and name that script, for example pnpm run <script>`. When it
+holds none, the error SHALL be `Task in <n>.md verify chains commands
+("<verify>"); move the chain into a script file in the repository and name
+that file, for example scripts/verify.sh`.
 
 #### Scenario: Chained verify
-- **WHEN** task 1's verify is `pnpm a && pnpm b`
+- **WHEN** in a project whose root holds a `package.json`, task 1's verify is `pnpm a && pnpm b`
 - **THEN** lint fails with the chained verify error and its package-script advice
+
+#### Scenario: Chained verify without package.json
+- **WHEN** in a project whose root holds a `Cargo.toml` and no `package.json`, task 1's verify is `cargo build && cargo test`
+- **THEN** lint fails with `Task in 1.md verify chains commands ("cargo build && cargo test"); move the chain into a script file in the repository and name that file, for example scripts/verify.sh`
 
 ### Requirement: Unsupported OpenSpec advice
 An OpenSpec finding whose message suggests `skip_specs: true` SHALL end with

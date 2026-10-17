@@ -74,7 +74,6 @@ describe('uncoveredBy', () => {
     assert.deepEqual(uncoveredBy('Rust'), {
       gates: ['denied-dependency gate'],
       extras: [
-        'verify-command lint',
         'test output reading',
         'import graph',
         'traceability',

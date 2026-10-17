@@ -4,13 +4,23 @@
  * data; nothing here reads a file (ADR 017).
  */
 
-/** One language osq knows: its manifests, lock files, extensions and test folders. */
+/** A binary a task verify may start with, and the subcommands it accepts. */
+export interface VerifyRunner {
+  readonly binary: string;
+  readonly subcommands: readonly string[];
+}
+
+/**
+ * One language osq knows: its manifests, lock files, extensions, test folders
+ * and verify runners.
+ */
 export interface LanguagePreset {
   readonly name: string;
   readonly manifests: readonly string[];
   readonly lockFiles: readonly string[];
   readonly extensions: readonly string[];
   readonly testFolders: readonly string[];
+  readonly verifyRunners: readonly VerifyRunner[];
 }
 
 /** Every language osq knows, in the order the coverage list and maps use. */
@@ -21,6 +31,7 @@ export const LANGUAGE_PRESETS: readonly LanguagePreset[] = [
     lockFiles: ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'],
     extensions: ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'],
     testFolders: [],
+    verifyRunners: [],
   },
   {
     name: 'Rust',
@@ -28,6 +39,12 @@ export const LANGUAGE_PRESETS: readonly LanguagePreset[] = [
     lockFiles: ['Cargo.lock'],
     extensions: ['.rs'],
     testFolders: ['tests', 'benches'],
+    verifyRunners: [
+      {
+        binary: 'cargo',
+        subcommands: ['test', 'nextest', 'build', 'check', 'clippy', 'fmt', 'run'],
+      },
+    ],
   },
   {
     name: 'Python',
@@ -35,6 +52,7 @@ export const LANGUAGE_PRESETS: readonly LanguagePreset[] = [
     lockFiles: ['poetry.lock', 'uv.lock'],
     extensions: ['.py'],
     testFolders: [],
+    verifyRunners: [],
   },
   {
     name: 'Go',
@@ -42,6 +60,7 @@ export const LANGUAGE_PRESETS: readonly LanguagePreset[] = [
     lockFiles: ['go.sum'],
     extensions: ['.go'],
     testFolders: [],
+    verifyRunners: [],
   },
 ];
 
@@ -56,7 +75,7 @@ export interface CoverageEntry {
 export const LANGUAGE_COVERAGE: readonly CoverageEntry[] = [
   { name: 'test-modification gate', kind: 'gate', covers: ['TypeScript/JavaScript', 'Rust'] },
   { name: 'denied-dependency gate', kind: 'gate', covers: ['TypeScript/JavaScript'] },
-  { name: 'verify-command lint', kind: 'extra', covers: ['TypeScript/JavaScript'] },
+  { name: 'verify-command lint', kind: 'extra', covers: ['TypeScript/JavaScript', 'Rust'] },
   { name: 'test output reading', kind: 'extra', covers: ['TypeScript/JavaScript'] },
   { name: 'import graph', kind: 'extra', covers: ['TypeScript/JavaScript'] },
   { name: 'traceability', kind: 'extra', covers: ['TypeScript/JavaScript'] },
@@ -86,4 +105,18 @@ export function uncoveredBy(language: string): UncoveredBy {
     else extras.push(entry.name);
   }
   return { gates, extras };
+}
+
+/**
+ * The verify runners of the presets whose names are in `languages`, in preset
+ * order.
+ *
+ * @scenario languages: Verify runners of the languages
+ * @adr 017
+ */
+export function verifyRunners(languages: readonly string[]): readonly VerifyRunner[] {
+  const wanted = new Set(languages);
+  return LANGUAGE_PRESETS.filter((preset) => wanted.has(preset.name)).flatMap(
+    (preset) => preset.verifyRunners,
+  );
 }
