@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:d40d7f93b475562e14fc088e2d7af2beaa3ff4b51505dd9acd6d13dd26ef0693
+build_stamp: cb0b39c0
+project_commit: 71d6e387
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:824ad24a26d2746ef01b711251a25b3ff4e5d1ae19c0d4d0938a116c6d87b7b7
+  crates/core/Cargo.toml: sha256:b71791301558a03aa9a036f24e2b6f5a8dd18ccc4893df16f16b30f2cbfe8805
+  crates/core/src/event.rs: sha256:a98939f2898da080192ff715c03d2f93484fb8316044e0dcbeb61c7d696f7c8d
+  crates/core/src/event/payload.rs: sha256:ab2c0f9475bce6bf11b480b4b83d4fd5c4bec7c931c8bc146947093cf6f09059
+  crates/core/src/lib.rs: sha256:efbcd2ffeb640bfa4595865aa83bbbf7c92a290be5dd243428b4338639e5b5c3
+  crates/core/tests/event_corpus.rs: sha256:ef32e3ef85ed31b83e60be3907ccdf32ef17d47b5faf6bd89902d081da00b08e
+  crates/core/tests/events.rs: sha256:77d96a70bd291cfe77e4a05deb1100f6cc34178d63e14611aeb29f1c4f329944
+  crates/core/tests/no_io.rs: sha256:2df1f3f9da49a66c491d85af9af672a7feab5050473b15636c3ae0a056d05b3e
+original_scope_hash: sha256:ea89d5473da7d165b27601a492a6a7ed78f4511097b32d1454ae9ec4d790d639
+recertified_at: 2026-10-17T20:57:25.068Z
+recertification_count: 2
+---
+2026-10-17T19:53:48.002Z

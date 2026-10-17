@@ -1,0 +1,22 @@
+---
+scope_resolver: 2
+scope_hash: sha256:d790abdd475852eab7f6d6c0aecedc1cd7f935f1f16a74e9fdc2dc8c695cd827
+build_stamp: cb0b39c0
+project_commit: 260ab117
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:824ad24a26d2746ef01b711251a25b3ff4e5d1ae19c0d4d0938a116c6d87b7b7
+  crates/core/Cargo.toml: sha256:b71791301558a03aa9a036f24e2b6f5a8dd18ccc4893df16f16b30f2cbfe8805
+  crates/core/src/fold.rs: sha256:6d90bc0ba24dded218dfe5a00a7dec66df838bceab291c648c8567671673259d
+  crates/core/src/fold/change.rs: sha256:71c8574bcf76ad5540de6470f675e4f3140d93f775d4586c13da8bf5c12b8e19
+  crates/core/src/fold/status.rs: sha256:2cb404b1e465679d2f5cf59657184aeff18b572989505229051d7585fb601d98
+  crates/core/src/fold/stream.rs: sha256:5bef8787b17bcf2f19973721d919139545a80797a02dd5e016ecbf88fa7b61de
+  crates/core/src/fold/task.rs: sha256:46bb9543469d7a2b1bdc6f18e97560c551c3a2c54ccd28a38842efab35d0b93f
+  crates/core/src/lib.rs: sha256:efbcd2ffeb640bfa4595865aa83bbbf7c92a290be5dd243428b4338639e5b5c3
+  crates/core/tests/fold.rs: sha256:3d746a89e3d431d8db390477ed935ff6ab902f58ed5014a495f9dd55af81e436
+  crates/core/tests/fold_props.rs: sha256:8a5305009203f5cb75287caba59d0f9fc88cec0591170180a7ef1c2a475a67a1
+original_scope_hash: sha256:1894f70523354d87e5763c94c05da58e712794c242f9aacfd151b8e45f325f75
+recertified_at: 2026-10-17T20:03:40.023Z
+recertification_count: 1
+---
+2026-10-17T19:58:30.360Z
