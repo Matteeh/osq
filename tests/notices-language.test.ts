@@ -113,7 +113,7 @@ describe('language gap notice', () => {
     return buildApprovalNotices(projectRoot, folder, config, digest);
   }
 
-  it('fires language_gap for a Rust file in scope', async () => {
+  it('fires no language_gap for a Rust file in scope', async () => {
     const notices = await noticesFor({
       tasks: [
         { number: '2', scope: ['crates/core/src/lib.rs'] },
@@ -122,11 +122,29 @@ describe('language gap notice', () => {
       files: ['crates/core/src/lib.rs', 'crates/core/Cargo.toml'],
     });
 
+    assert.equal(
+      notices.notices.some((notice) => notice.id === 'language_gap'),
+      false,
+    );
+  });
+
+  it('fires language_gap for a Python file in scope', async () => {
+    const notices = await noticesFor({
+      tasks: [
+        { number: '2', scope: ['tools/app.py'] },
+        { number: '3', scope: ['tools/pyproject.toml'] },
+      ],
+      files: ['tools/app.py', 'tools/pyproject.toml'],
+    });
+
     const gap = notices.notices.find((notice) => notice.id === 'language_gap');
     assert.ok(gap, JSON.stringify(notices.notices));
     assert.equal(gap.severity, 'amber');
     assert.equal(gap.label, 'gates miss a language');
-    assert.equal(gap.detail, 'Rust in task 2, task 3: no denied-dependency gate');
+    assert.equal(
+      gap.detail,
+      'Python in task 2, task 3: no test-modification gate, denied-dependency gate',
+    );
   });
 
   it('fires no language_gap for TypeScript only', async () => {

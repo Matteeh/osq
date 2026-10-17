@@ -1,0 +1,114 @@
+{"type":"verify_ran","timestamp":"2026-10-17T18:06:27.423Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/denied-dependency-cargo.test.ts","exitCode":1,"duration":0.07,"log":".run/logs/2-1.log","output":"Could not find 'tests/denied-dependency-cargo.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/denied-dependency-cargo.test.ts"],"mismatch":false}}
+{"type":"measures","timestamp":"2026-10-17T18:06:30.956Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":169,"repoFiles":3246,"repoLines":372152,"importFanIn":2,"proposalWords":694,"taskWords":307,"deltaRequirements":7,"deltaScenarios":21}}
+{"type":"started","timestamp":"2026-10-17T18:06:31.097Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"806d4e9a","pid":3251642,"timeoutSeconds":1800,"version":"0.3.0","commit":"a00e6f94"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:42.189Z","data":{"tool":"read","summary":"src/watcher/dependencies.ts"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:42.225Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:06:42.279Z","data":{"promptTokens":229598,"candidateTokens":151,"totalTokens":229749,"cachedTokens":0,"reasoningTokens":72,"cost":0.0345735}}
+{"type":"tool","timestamp":"2026-10-17T18:06:45.526Z","data":{"tool":"read","summary":"src/kernel/languages/adapter.ts"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:45.534Z","data":{"tool":"read","summary":"src/kernel/languages/presets.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:06:45.786Z","data":{"promptTokens":2374,"candidateTokens":79,"totalTokens":2453,"cachedTokens":229504,"reasoningTokens":34,"cost":0.0011124120000000001}}
+{"type":"tool","timestamp":"2026-10-17T18:06:51.512Z","data":{"tool":"read","summary":"tests/denied-dependency.test.ts"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:51.515Z","data":{"tool":"read","summary":"src/kernel/languages/cargo-manifest.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:06:51.561Z","data":{"promptTokens":2042,"candidateTokens":80,"totalTokens":2122,"cachedTokens":231808,"reasoningTokens":385,"cost":0.001280724}}
+{"type":"tool","timestamp":"2026-10-17T18:06:55.251Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:55.266Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:06:55.306Z","data":{"promptTokens":7560,"candidateTokens":160,"totalTokens":7720,"cachedTokens":233728,"reasoningTokens":32,"cost":0.001950384}}
+{"type":"tool","timestamp":"2026-10-17T18:06:58.289Z","data":{"tool":"read","summary":"src/watcher/task-verify.ts"}}
+{"type":"tool","timestamp":"2026-10-17T18:06:58.293Z","data":{"tool":"read","summary":"src/watcher/measures.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:06:58.340Z","data":{"promptTokens":528,"candidateTokens":142,"totalTokens":670,"cachedTokens":241280,"reasoningTokens":31,"cost":0.00090684}}
+{"type":"tool","timestamp":"2026-10-17T18:07:12.524Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tool","timestamp":"2026-10-17T18:07:12.537Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:12.579Z","data":{"promptTokens":1675,"candidateTokens":176,"totalTokens":1851,"cachedTokens":241792,"reasoningTokens":2266,"cost":0.002441826}}
+{"type":"tool","timestamp":"2026-10-17T18:07:16.786Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:16.824Z","data":{"promptTokens":2614,"candidateTokens":103,"totalTokens":2717,"cachedTokens":243456,"reasoningTokens":16,"cost":0.0011938679999999998}}
+{"type":"tool","timestamp":"2026-10-17T18:07:19.158Z","data":{"tool":"read","summary":"tests/golden-events.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:19.197Z","data":{"promptTokens":314,"candidateTokens":76,"totalTokens":390,"cachedTokens":246016,"reasoningTokens":0,"cost":0.0008307480000000001}}
+{"type":"tool","timestamp":"2026-10-17T18:07:22.698Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tool","timestamp":"2026-10-17T18:07:22.725Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:22.765Z","data":{"promptTokens":1680,"candidateTokens":160,"totalTokens":1840,"cachedTokens":246272,"reasoningTokens":86,"cost":0.0011384160000000002}}
+{"type":"tool","timestamp":"2026-10-17T18:07:47.604Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:47.651Z","data":{"promptTokens":1267,"candidateTokens":105,"totalTokens":1372,"cachedTokens":247936,"reasoningTokens":4814,"cost":0.0038852580000000004}}
+{"type":"tool","timestamp":"2026-10-17T18:07:52.094Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:52.136Z","data":{"promptTokens":6397,"candidateTokens":115,"totalTokens":6512,"cachedTokens":249088,"reasoningTokens":29,"cost":0.001793214}}
+{"type":"tool","timestamp":"2026-10-17T18:07:54.463Z","data":{"tool":"read","summary":"src/watcher/runner.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:07:54.509Z","data":{"promptTokens":744,"candidateTokens":75,"totalTokens":819,"cachedTokens":255360,"reasoningTokens":0,"cost":0.00092268}}
+{"type":"tool","timestamp":"2026-10-17T18:08:23.526Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:23.565Z","data":{"promptTokens":799,"candidateTokens":110,"totalTokens":909,"cachedTokens":256000,"reasoningTokens":5979,"cost":0.00454125}}
+{"type":"tool","timestamp":"2026-10-17T18:08:28.273Z","data":{"tool":"read","summary":"biome.json"}}
+{"type":"tool","timestamp":"2026-10-17T18:08:28.275Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:28.317Z","data":{"promptTokens":6484,"candidateTokens":101,"totalTokens":6585,"cachedTokens":256768,"reasoningTokens":391,"cost":0.002038104}}
+{"type":"text","timestamp":"2026-10-17T18:08:36.773Z","data":{"text":"Now I'll implement the changes in `src/watcher/dependencies.ts`:"}}
+{"type":"tool","timestamp":"2026-10-17T18:08:36.779Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:36.821Z","data":{"promptTokens":1714,"candidateTokens":318,"totalTokens":2032,"cachedTokens":263168,"reasoningTokens":1231,"cost":0.001976004}}
+{"type":"tool","timestamp":"2026-10-17T18:08:39.947Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:39.997Z","data":{"promptTokens":1622,"candidateTokens":214,"totalTokens":1836,"cachedTokens":264832,"reasoningTokens":0,"cost":0.001166196}}
+{"type":"tool","timestamp":"2026-10-17T18:08:45.879Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:45.921Z","data":{"promptTokens":323,"candidateTokens":981,"totalTokens":1304,"cachedTokens":266368,"reasoningTokens":14,"cost":0.001444554}}
+{"type":"text","timestamp":"2026-10-17T18:08:55.302Z","data":{"text":"Now the marker formatter and `checkDependencies`:"}}
+{"type":"tool","timestamp":"2026-10-17T18:08:55.309Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:55.349Z","data":{"promptTokens":1085,"candidateTokens":1612,"totalTokens":2697,"cachedTokens":266624,"reasoningTokens":0,"cost":0.0019298219999999999}}
+{"type":"tool","timestamp":"2026-10-17T18:08:58.389Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:08:58.434Z","data":{"promptTokens":1696,"candidateTokens":70,"totalTokens":1766,"cachedTokens":267648,"reasoningTokens":82,"cost":0.0011485439999999998}}
+{"type":"tool","timestamp":"2026-10-17T18:09:01.429Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:09:01.474Z","data":{"promptTokens":205,"candidateTokens":75,"totalTokens":280,"cachedTokens":269312,"reasoningTokens":40,"cost":0.000907686}}
+{"type":"tool","timestamp":"2026-10-17T18:09:04.281Z","data":{"tool":"read","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:09:04.320Z","data":{"promptTokens":769,"candidateTokens":43,"totalTokens":812,"cachedTokens":269440,"reasoningTokens":35,"cost":0.0009704700000000001}}
+{"type":"tool","timestamp":"2026-10-17T18:09:36.686Z","data":{"tool":"write","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:09:36.734Z","data":{"promptTokens":3243,"candidateTokens":2575,"totalTokens":5818,"cachedTokens":270208,"reasoningTokens":6139,"cost":0.006525473999999999}}
+{"type":"tool","timestamp":"2026-10-17T18:10:35.553Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:10:35.594Z","data":{"promptTokens":8781,"candidateTokens":91,"totalTokens":8872,"cachedTokens":273408,"reasoningTokens":0,"cost":0.0021919739999999997}}
+{"type":"tool","timestamp":"2026-10-17T18:10:40.966Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:10:41.007Z","data":{"promptTokens":491,"candidateTokens":79,"totalTokens":570,"cachedTokens":282112,"reasoningTokens":148,"cost":0.001056186}}
+{"type":"tool","timestamp":"2026-10-17T18:11:00.166Z","data":{"tool":"write","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:00.210Z","data":{"promptTokens":997,"candidateTokens":2487,"totalTokens":3484,"cachedTokens":282496,"reasoningTokens":1828,"cost":0.0035860380000000006}}
+{"type":"tool","timestamp":"2026-10-17T18:11:05.446Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:05.485Z","data":{"promptTokens":4440,"candidateTokens":91,"totalTokens":4531,"cachedTokens":283392,"reasoningTokens":0,"cost":0.001570776}}
+{"type":"tool","timestamp":"2026-10-17T18:11:26.865Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:26.919Z","data":{"promptTokens":213,"candidateTokens":99,"totalTokens":312,"cachedTokens":287744,"reasoningTokens":543,"cost":0.001280382}}
+{"type":"tool","timestamp":"2026-10-17T18:11:44.077Z","data":{"tool":"write","summary":"tests/denied-dependency-cargo.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:44.133Z","data":{"promptTokens":967,"candidateTokens":2802,"totalTokens":3769,"cachedTokens":287872,"reasoningTokens":654,"cost":0.003082266}}
+{"type":"tool","timestamp":"2026-10-17T18:11:48.551Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:48.597Z","data":{"promptTokens":3553,"candidateTokens":94,"totalTokens":3647,"cachedTokens":288768,"reasoningTokens":46,"cost":0.0014832539999999998}}
+{"type":"tool","timestamp":"2026-10-17T18:11:52.552Z","data":{"tool":"edit","summary":"tests/denied-dependency-cargo.test.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:52.601Z","data":{"promptTokens":1877,"candidateTokens":116,"totalTokens":1993,"cachedTokens":292224,"reasoningTokens":207,"cost":0.001352022}}
+{"type":"tool","timestamp":"2026-10-17T18:11:57.153Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:11:57.193Z","data":{"promptTokens":434,"candidateTokens":94,"totalTokens":528,"cachedTokens":294016,"reasoningTokens":0,"cost":0.001003548}}
+{"type":"tool","timestamp":"2026-10-17T18:12:01.969Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:12:02.008Z","data":{"promptTokens":321,"candidateTokens":100,"totalTokens":421,"cachedTokens":294400,"reasoningTokens":31,"cost":0.0010099500000000001}}
+{"type":"tool","timestamp":"2026-10-17T18:12:05.435Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:12:05.475Z","data":{"promptTokens":597,"candidateTokens":89,"totalTokens":686,"cachedTokens":294656,"reasoningTokens":40,"cost":0.001050918}}
+{"type":"tool","timestamp":"2026-10-17T18:12:09.554Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:12:09.595Z","data":{"promptTokens":638,"candidateTokens":107,"totalTokens":745,"cachedTokens":295168,"reasoningTokens":50,"cost":0.001075404}}
+{"type":"tool","timestamp":"2026-10-17T18:12:20.302Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:12:20.342Z","data":{"promptTokens":323,"candidateTokens":73,"totalTokens":396,"cachedTokens":295680,"reasoningTokens":100,"cost":0.00103929}}
+{"type":"tool","timestamp":"2026-10-17T18:13:43.067Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:13:43.121Z","data":{"promptTokens":309,"candidateTokens":98,"totalTokens":407,"cachedTokens":295936,"reasoningTokens":81,"cost":0.001041558}}
+{"type":"tool","timestamp":"2026-10-17T18:15:43.363Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:15:43.408Z","data":{"promptTokens":436,"candidateTokens":89,"totalTokens":525,"cachedTokens":296192,"reasoningTokens":357,"cost":0.001221576}}
+{"type":"tool","timestamp":"2026-10-17T18:15:50.121Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:15:50.160Z","data":{"promptTokens":1270,"candidateTokens":170,"totalTokens":1440,"cachedTokens":296576,"reasoningTokens":631,"cost":0.001560828}}
+{"type":"tool","timestamp":"2026-10-17T18:15:56.280Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:15:56.318Z","data":{"promptTokens":942,"candidateTokens":137,"totalTokens":1079,"cachedTokens":297728,"reasoningTokens":0,"cost":0.001116684}}
+{"type":"tool","timestamp":"2026-10-17T18:16:00.205Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:16:00.244Z","data":{"promptTokens":270,"candidateTokens":91,"totalTokens":361,"cachedTokens":298624,"reasoningTokens":47,"cost":0.001019172}}
+{"type":"tool","timestamp":"2026-10-17T18:16:09.880Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:16:09.920Z","data":{"promptTokens":299129,"candidateTokens":171,"totalTokens":299300,"cachedTokens":0,"reasoningTokens":427,"cost":0.04522815}}
+{"type":"tool","timestamp":"2026-10-17T18:16:11.794Z","data":{"tool":"edit","summary":"src/watcher/dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-17T18:16:11.837Z","data":{"promptTokens":101,"candidateTokens":152,"totalTokens":253,"cachedTokens":299648,"reasoningTokens":0,"cost":0.0010052940000000001}}
+{"type":"tool","timestamp":"2026-10-17T18:16:16.792Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:16:16.833Z","data":{"promptTokens":147,"candidateTokens":125,"totalTokens":272,"cachedTokens":299776,"reasoningTokens":133,"cost":0.001076178}}
+{"type":"tool","timestamp":"2026-10-17T18:16:22.279Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:16:22.317Z","data":{"promptTokens":94,"candidateTokens":103,"totalTokens":197,"cachedTokens":300160,"reasoningTokens":14,"cost":0.00098478}}
+{"type":"tool","timestamp":"2026-10-17T18:18:16.745Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/203-rust-dep"}}
+{"type":"tokens","timestamp":"2026-10-17T18:18:16.794Z","data":{"promptTokens":390,"candidateTokens":116,"totalTokens":506,"cachedTokens":300288,"reasoningTokens":116,"cost":0.001098564}}
+{"type":"text","timestamp":"2026-10-17T18:18:26.137Z","data":{"text":"Both verifies pass. Now I'll write the result file.\n\n"}}
+{"type":"tool","timestamp":"2026-10-17T18:18:26.144Z","data":{"tool":"write","summary":"openspec/changes/203-rust-dependency-gate/.run/results/2.md"}}
+{"type":"tokens","timestamp":"2026-10-17T18:18:26.184Z","data":{"promptTokens":407,"candidateTokens":744,"totalTokens":1151,"cachedTokens":300800,"reasoningTokens":377,"cost":0.00163605}}
+{"type":"text","timestamp":"2026-10-17T18:18:31.198Z","data":{"text":"Done. Summary of the work:\n\n**Task 2** — made the watcher's dependency baseline/comparison read scoped Rust manifests through the language adapter.\n\n- `src/watcher/dependencies.ts`: added `manifestReader`, which uses osq's own `package.json` reader for `package.json` and otherwise delegates to the matching preset's `languageAdapter(...).manifestDependencies`, found via `LANGUAGE_PRESETS`. `readScopedDependencies` now maps every scoped manifest with a reader to its names (missing/unreadable → `[]`). `checkDependencies` reads baseline files the same way, records `dependencies_added`, enforces denied names first, then — only while some accepted ADR denies a name — fails with the unreadable manifests and error `Cannot read dependency tables: <file>, ...`. Added `formatUnreadableDependencyMarker` and `@scenario`/`@adr 017` tags.\n- New `tests/denied-dependency-cargo.test.ts` proves the six scenarios through `runTask` with a scoped `crates/core/Cargo.toml` and an accepted ADR denying `openssl`.\n\nTask verify (`tests/denied-dependency-cargo.test.ts`) passes 6/6; `tests/denied-dependency.test.ts` and the golden-event tests pass unchanged; the proposal's `pnpm verify` exits 0. Result written to `openspec/changes/203-rust-dependency-gate/.run/results/2.md`."}}
+{"type":"tokens","timestamp":"2026-10-17T18:18:31.801Z","data":{"promptTokens":797,"candidateTokens":336,"totalTokens":1133,"cachedTokens":509959,"reasoningTokens":278,"cost":0.027440279000000012}}
+{"type":"exited","timestamp":"2026-10-17T18:18:31.802Z","data":{"exitCode":0,"pid":3251642,"timedOut":false,"elapsedSeconds":720.4}}
+{"type":"format_ran","timestamp":"2026-10-17T18:18:32.284Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/watcher/dependencies.ts' 'tests/denied-dependency-cargo.test.ts'","files":["src/watcher/dependencies.ts","tests/denied-dependency-cargo.test.ts"],"exitCode":0,"duration":0.22,"timedOut":false,"output":"Checked 2 files in 3ms. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-17T18:18:34.034Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/denied-dependency-cargo.test.ts","exitCode":0,"duration":1.27,"log":".run/logs/2-2.log","output":"▶ Cargo dependency baseline and addition in runTask\n  ✔ Scoped Cargo manifest (246.053484ms)\n  ✔ Allowed crate addition (166.391696ms)\n  ✔ Crate denied (138.260682ms)\n  ✔ Renamed crate denied (136.350308ms)\n  ✔ Unreadable Cargo manifest (130.25403ms)\n  ✔ Unreadable manifest without denials (171.675335ms)\n✔ Cargo dependency baseline and addition in runTask (990.14066ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1238.552048\n"}}
+{"type":"measures","timestamp":"2026-10-17T18:20:25.558Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":169,"repoFiles":3246,"repoLines":372152,"importFanIn":2,"proposalWords":694,"taskWords":307,"deltaRequirements":7,"deltaScenarios":21,"changedFiles":2,"changedLines":417,"scopeHashes":{"src/watcher/dependencies.ts":{"before":"sha256:6d97f60f3ff01642438dbe2e586060fed707f1fdbaa77b7a781838600f02aad3","after":"sha256:2c17f513db2f7db0c6718f528892ca54f1bd8df8e40d25eb53f1099362a9dabb"},"tests/denied-dependency-cargo.test.ts":{"before":null,"after":"sha256:efdf0a26600bb99094a5c2815de7a1c4e3a0a06399a1ac103e695c85ce0f1b76"}}}}
+{"type":"done","timestamp":"2026-10-17T18:20:25.564Z","data":{"task":"2"}}
+{"type":"verify_ran","timestamp":"2026-10-17T18:29:28.359Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/denied-dependency-cargo.test.ts","exitCode":0,"duration":1.07,"log":".run/logs/2-3.log","output":"▶ Cargo dependency baseline and addition in runTask\n  ✔ Scoped Cargo manifest (189.623149ms)\n  ✔ Allowed crate addition (148.732759ms)\n  ✔ Crate denied (121.678045ms)\n  ✔ Renamed crate denied (120.036934ms)\n  ✔ Unreadable Cargo manifest (117.731135ms)\n  ✔ Unreadable manifest without denials (142.837639ms)\n✔ Cargo dependency baseline and addition in runTask (841.735995ms)\nℹ tests 6\nℹ suites 1\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1049.346472\n"}}

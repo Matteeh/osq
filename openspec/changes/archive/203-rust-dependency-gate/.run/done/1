@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e3c1c9da94e0892bc5800de1ff42dd4decad4f369b8c5242b1a18dbd9e3a0181"
+build_stamp: "a00e6f94"
+project_commit: "a2274b81"
+exit_code: 0
+scope_files: {"src/kernel/languages/adapter.ts":"sha256:ad538a4db276d3c740bd7568f266eb8da280ee6c8272c6032ca5cb3d32434e11","src/kernel/languages/cargo-manifest.ts":"sha256:a643e096a3ae44140ac46652484110450138c364d0863a1bd517b5ca31bdfbfb","tests/languages-cargo-manifest.test.ts":"sha256:377b5aaebd6942c6079e97c61b071196275b3f3bcd603d245cbc068fc3a85e14"}
+---
+2026-10-17T18:06:18.988Z

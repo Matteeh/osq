@@ -2486,7 +2486,11 @@ view show it as they show every notice.
 
 #### Scenario: Rust file in scope
 - **WHEN** a fixture change's task 2 scopes `crates/core/src/lib.rs` and task 3 scopes `crates/core/Cargo.toml`, both existing
-- **THEN** its notices include `language_gap`, amber, label `gates miss a language`, detail `Rust in task 2, task 3: no denied-dependency gate`
+- **THEN** its notices hold no `language_gap`, because every gate covers Rust
+
+#### Scenario: Python file in scope
+- **WHEN** a fixture change's task 2 scopes `tools/app.py` and task 3 scopes `tools/pyproject.toml`, both existing
+- **THEN** its notices include `language_gap`, amber, label `gates miss a language`, detail `Python in task 2, task 3: no test-modification gate, denied-dependency gate`
 
 #### Scenario: TypeScript only
 - **WHEN** every task of a fixture change scopes only `.ts` files and `package.json`

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:ec1963f24f6a71be31736b637bcb7873ed4dca288426caba3b5ee33a4d129125"
+build_stamp: "a00e6f94"
+project_commit: "806d4e9a"
+exit_code: 0
+scope_files: {"src/watcher/dependencies.ts":"sha256:2c17f513db2f7db0c6718f528892ca54f1bd8df8e40d25eb53f1099362a9dabb","tests/denied-dependency-cargo.test.ts":"sha256:efdf0a26600bb99094a5c2815de7a1c4e3a0a06399a1ac103e695c85ce0f1b76"}
+---
+2026-10-17T18:20:25.564Z

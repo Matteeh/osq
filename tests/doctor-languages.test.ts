@@ -60,12 +60,16 @@ function runDoctor(root: string): Promise<DoctorReport> {
 }
 
 const RUST_MESSAGE =
-  'TypeScript/JavaScript, Rust. Rust lacks gates: denied-dependency gate; ' +
-  'extras: test output reading, ' +
+  'TypeScript/JavaScript, Rust. Rust lacks extras: test output reading, ' +
+  'import graph, traceability, function ranges, repository measures';
+
+const PYTHON_MESSAGE =
+  'TypeScript/JavaScript, Python. Python lacks gates: test-modification gate, ' +
+  'denied-dependency gate; extras: verify-command lint, test output reading, ' +
   'import graph, traceability, function ranges, repository measures';
 
 describe('languages doctor check', () => {
-  it('warns on Rust beside TypeScript with the gates and extras Rust lacks', async () => {
+  it('passes on Rust beside TypeScript with the extras Rust lacks', async () => {
     const root = await gitProject({
       'package.json': '{"name":"demo"}\n',
       'crates/core/Cargo.toml': '[package]\nname = "core"\n',
@@ -76,7 +80,6 @@ describe('languages doctor check', () => {
     assert.deepEqual(languages, {
       name: 'languages',
       ok: true,
-      warning: true,
       message: RUST_MESSAGE,
     });
     // The check never changes doctor's exit code: `ok` is what it is without it.
@@ -84,6 +87,22 @@ describe('languages doctor check', () => {
       .filter((check) => check.name !== 'languages')
       .every((check) => check.ok);
     assert.equal(report.ok, withoutLanguages);
+  });
+
+  it('warns on Python beside TypeScript with the gates and extras Python lacks', async () => {
+    const root = await gitProject({
+      'package.json': '{"name":"demo"}\n',
+      'tools/pyproject.toml': '[project]\nname = "tools"\n',
+    });
+    const report = await runDoctor(root);
+
+    const languages = report.checks.find((check) => check.name === 'languages');
+    assert.deepEqual(languages, {
+      name: 'languages',
+      ok: true,
+      warning: true,
+      message: PYTHON_MESSAGE,
+    });
   });
 
   it('adds no languages check when the only manifest is package.json', async () => {

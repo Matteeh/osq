@@ -74,7 +74,7 @@ export interface CoverageEntry {
 /** The one list of which languages each gate and extra covers, in list order. */
 export const LANGUAGE_COVERAGE: readonly CoverageEntry[] = [
   { name: 'test-modification gate', kind: 'gate', covers: ['TypeScript/JavaScript', 'Rust'] },
-  { name: 'denied-dependency gate', kind: 'gate', covers: ['TypeScript/JavaScript'] },
+  { name: 'denied-dependency gate', kind: 'gate', covers: ['TypeScript/JavaScript', 'Rust'] },
   { name: 'verify-command lint', kind: 'extra', covers: ['TypeScript/JavaScript', 'Rust'] },
   { name: 'test output reading', kind: 'extra', covers: ['TypeScript/JavaScript'] },
   { name: 'import graph', kind: 'extra', covers: ['TypeScript/JavaScript'] },
