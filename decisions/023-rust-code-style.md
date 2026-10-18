@@ -1,6 +1,6 @@
 ---
 status: accepted
-applies_to: [rust-core]
+applies_to: [group:rust]
 rule: "Code reads like a book: small named functions in layers, pure leaves, thin orchestrators holding the IO, and a doc comment on every function, enforced by lints."
 checks:
   - tests/rust-adrs.test.ts
@@ -15,7 +15,7 @@ Accepted by Mathias on 2026-10-17, numbered 002 on the Notion Rust Rebuild
 page. Drafted from Mathias's code style preferences of 2026-10-17 and the
 adjustments discussed in the project thread.
 
-Scope: this ADR governs the Rust capabilities that `applies_to` lists, not the
+Scope: this ADR governs every capability in group `rust`, the Rust crates, not the
 TypeScript code under `src/`, which keeps its own ADRs until it is deleted.
 The rule above is shortened to fit `limits.maxRuleLength`. Section 4 holds the
 full wording: the lints are the workspace lints.

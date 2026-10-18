@@ -114,9 +114,8 @@ function servedCapabilities(
 
 /** True when an accepted ADR applies to `all` or to a served capability. */
 function adrApplies(adr: Adr, served: readonly string[]): boolean {
-  if (adr.appliesTo === 'all') return true;
-  if (!Array.isArray(adr.appliesTo)) return false;
-  return adr.appliesTo.some((capability) => served.includes(capability));
+  if (adr.governs === 'all') return true;
+  return adr.governs.some((capability) => served.includes(capability));
 }
 
 /** The ADR findings for one function's `@adr` tags. */

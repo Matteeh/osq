@@ -68,7 +68,12 @@ describe('rust-core: Rust ADRs are accepted', () => {
       );
       assert.equal(adr.status, 'accepted');
       assert.equal(adr.path, `${DEFAULT_CONFIG.paths.decisions}/${row.file}`);
-      assert.deepEqual(adr.appliesTo, ['rust-core']);
+      assert.deepEqual(adr.appliesTo, ['group:rust']);
+      assert.equal(adr.governs === 'all', false, 'a group ADR must not govern all');
+      assert.ok(
+        adr.governs !== 'all' && adr.governs.includes('rust-core'),
+        `ADR ${row.number} must govern rust-core`,
+      );
       assert.deepEqual([...adr.checks], [...row.checks]);
 
       const problems = validateDecisions(records, living, DEFAULT_CONFIG);

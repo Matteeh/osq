@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontmatter } from '../spec/parser.js';
 import type { OsqConfig } from './config.js';
+import { readCapabilityGroups, resolveGoverns } from './decisions-groups.js';
 
 /** One architecture decision record read from the decisions folder. */
 export interface Adr {
@@ -14,6 +15,7 @@ export interface Adr {
   readonly hash: string; // `sha256:<hex>` of the UTF-8 file content
   readonly status: string; // raw frontmatter value; validation rejects others
   readonly appliesTo: 'all' | readonly string[] | null; // null when missing or invalid
+  readonly governs: 'all' | readonly string[]; // appliesTo with group:<name> resolved
   readonly rule: string; // trimmed; '' when missing
   readonly supersededBy: string | null;
   readonly checks: readonly string[]; // repository-relative paths, forward slashes
@@ -25,6 +27,7 @@ export interface Adr {
 export interface DecisionRecords {
   readonly adrs: readonly Adr[]; // number order
   readonly ignored: readonly string[]; // repository-relative paths, sorted
+  readonly groups?: ReadonlyMap<string, string>; // capability to sidecar group
 }
 
 function toPosix(value: string): string {
@@ -130,11 +133,17 @@ function compareAdr(a: Adr, b: Adr): number {
 }
 
 /** Builds an ADR from file content, or null when it carries no `status` key. */
-function toAdr(content: string, relativePath: string, number: string): Adr | null {
+function toAdr(
+  content: string,
+  relativePath: string,
+  number: string,
+  groups: ReadonlyMap<string, string>,
+): Adr | null {
   const { data, body } = parseFrontmatter(content);
   if (!Object.prototype.hasOwnProperty.call(data, 'status')) return null;
   const checks = readListField(data, 'checks', normalizeCheckPath);
   const denies = readListField(data, 'denies', (value) => value);
+  const appliesTo = readAppliesTo(data.applies_to);
   return {
     number,
     title: readTitle(body),
@@ -142,7 +151,8 @@ function toAdr(content: string, relativePath: string, number: string): Adr | nul
     path: relativePath,
     hash: hashContent(content),
     status: readStatus(data.status),
-    appliesTo: readAppliesTo(data.applies_to),
+    appliesTo,
+    governs: resolveGoverns(appliesTo, groups),
     rule: readRule(data.rule),
     supersededBy: readSupersededBy(data.superseded_by),
     checks: checks.values,
@@ -171,25 +181,27 @@ export async function readDecisions(
 
   const adrs: Adr[] = [];
   const ignored: string[] = [];
+  const groups = await readCapabilityGroups(projectRoot, config);
   for (const entry of entries) {
     if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name === 'README.md') continue;
     const filePath = path.join(decisionsDir, entry.name);
     const relativePath = toPosix(path.relative(projectRoot, filePath));
     const content = await fs.readFile(filePath, 'utf8').catch(() => null);
     const number = adrNumber(entry.name);
-    const adr = content === null || number === null ? null : toAdr(content, relativePath, number);
+    const adr =
+      content === null || number === null ? null : toAdr(content, relativePath, number, groups);
     if (adr) adrs.push(adr);
     else ignored.push(relativePath);
   }
 
   adrs.sort(compareAdr);
   ignored.sort();
-  return { adrs, ignored };
+  return { adrs, ignored, groups };
 }
 
 /** Accepted ADRs applying to `all`, in number order. */
 export function systemWideAdrs(records: DecisionRecords): Adr[] {
-  return records.adrs.filter((adr) => adr.status === 'accepted' && adr.appliesTo === 'all');
+  return records.adrs.filter((adr) => adr.status === 'accepted' && adr.governs === 'all');
 }
 
 /** Accepted ADRs applying to `all` or to any of `capabilities`, in number order. */
@@ -198,7 +210,7 @@ export function governingAdrs(records: DecisionRecords, capabilities: readonly s
   return records.adrs.filter(
     (adr) =>
       adr.status === 'accepted' &&
-      (adr.appliesTo === 'all' || adr.appliesTo?.some((name) => wanted.has(name))),
+      (adr.governs === 'all' || adr.governs.some((name) => wanted.has(name))),
   );
 }
 

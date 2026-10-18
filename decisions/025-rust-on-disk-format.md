@@ -1,6 +1,6 @@
 ---
 status: accepted
-applies_to: [rust-core]
+applies_to: [group:rust]
 rule: Rust osq reads and writes today's openspec/ folders, .run markers and event JSONL as they are; osq.config.ts becomes hand-written osq.toml; ~/.osq is rebuilt.
 checks:
   - tests/rust-adrs.test.ts
@@ -16,7 +16,7 @@ Accepted by Mathias on 2026-10-17, with the config step simplified, numbered
 004 on the Notion Rust Rebuild page. Drafted after checking the osq repo at
 `048ca0c`.
 
-Scope: this ADR governs the Rust capabilities that `applies_to` lists, not the
+Scope: this ADR governs every capability in group `rust`, the Rust crates, not the
 TypeScript code under `src/`, which keeps its own ADRs until it is deleted.
 The rule above is shortened to fit `limits.maxRuleLength`. The full wording:
 Rust osq reads and writes today's `openspec/` folder, change folders, `.run`

@@ -1,6 +1,6 @@
 ---
 status: accepted
-applies_to: [rust-core]
+applies_to: [group:rust]
 rule: OpenSpec parsing, validation and delta merge run in Rust in the specs kernel; the Node openspec CLI runs only as a dev and CI parity check, never at runtime.
 checks:
   - tests/rust-adrs.test.ts
@@ -15,7 +15,7 @@ Accepted by Mathias on 2026-10-17, numbered 005 on the Notion Rust Rebuild
 page. Drafted from the review on the Spec gaps page and the Gaps in the Rust
 architecture thread.
 
-Scope: this ADR governs the Rust capabilities that `applies_to` lists, not the
+Scope: this ADR governs every capability in group `rust`, the Rust crates, not the
 TypeScript code under `src/`. For the Rust version it replaces ADR 004, pinned
 OpenSpec validator, and ADR 005, OpenSpec validator peer range. Those two stay
 accepted for the TypeScript code, which still calls the Node CLI, and are

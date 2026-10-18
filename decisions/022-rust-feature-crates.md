@@ -1,6 +1,6 @@
 ---
 status: accepted
-applies_to: [rust-core]
+applies_to: [group:rust]
 rule: A feature is one crate on the kernel; features never call each other, they append typed events to files and read only through the storage read model.
 checks:
   - tests/rust-adrs.test.ts
@@ -17,7 +17,7 @@ of the Rust version of osq, numbered 001 on the Notion Rust Rebuild page. It
 carries ADR 016, capability slices, over to Rust, together with ADR 008's rule
 that SQLite is only a derived index.
 
-Scope: this ADR governs the Rust capabilities that `applies_to` lists, not the
+Scope: this ADR governs every capability in group `rust`, the Rust crates, not the
 TypeScript code under `src/`, which keeps its own ADRs until it is deleted.
 
 ## Context

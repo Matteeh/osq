@@ -69,9 +69,9 @@ Tests that submit fixture changes to lint or approval use a local `node verify.c
 ## Rust crates
 
 The Rust rewrite of osq lives in `crates/`, next to the TypeScript code, and
-ADRs 022 to 026 govern it. Before working in a crate, read the ADRs whose
-`applies_to` names the crate's capability; `osq spec <capability> "Code
-ownership"` prints the paths a capability owns.
+ADRs 022 to 026 govern it. Before working in a crate, read the ADRs that
+govern the crate's capability; ADRs 022 to 026 apply to its group, `rust`.
+`osq spec <capability> "Code ownership"` prints the paths a capability owns.
 
 - Rust code never reads, imports or calls anything under `src/`.
 - A crate depends only on layers below it: `apps`, then `features`, then `kernel`, then `core`. A feature never depends on another feature, and `core` does no IO.

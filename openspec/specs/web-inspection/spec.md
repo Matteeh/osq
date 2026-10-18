@@ -543,8 +543,10 @@ The graph SHALL hold these edges, each from its reader and no other source:
   requirement to each of its scenarios. A group node SHALL exist only for a
   group some sidecar names.
 - `applies_to`: from an accepted ADR to each capability with a living spec
-  that its `appliesTo` list names. An ADR whose `appliesTo` is `all` SHALL
-  have no `applies_to` edge; its node's `appliesTo` says `all`.
+  that its `governs` list holds, so a `group:<name>` entry gives an edge to
+  each member of the group. An ADR whose `appliesTo` is `all` SHALL have no
+  `applies_to` edge; its node's `appliesTo` says `all`, and a group ADR's node
+  keeps its `appliesTo` as written.
 - `reads` and `writes`: from a change to a capability, exactly the `reads` and
   `writes` edges of the `WebGraph` document for the same tree. Every change
   node of that document SHALL be a node here.
@@ -571,6 +573,10 @@ The graph SHALL hold these edges, each from its reader and no other source:
 #### Scenario: No import, no edge
 - **WHEN** no file `pricing` owns imports a file `billing` owns
 - **THEN** the graph holds no `imports` edge from `capability:pricing` to `capability:billing`
+
+#### Scenario: Group ADR edges
+- **WHEN** living `pricing` and `invoices` have sidecar group `sales` and an accepted ADR 005 applies to `[group:sales]`
+- **THEN** the graph holds `applies_to:adr:005->capability:invoices` and `applies_to:adr:005->capability:pricing`, and `adr:005` has `appliesTo: ["group:sales"]`
 
 ### Requirement: System graph traceability
 A capability SHALL have `traceability: true` when `traceability.capabilities`

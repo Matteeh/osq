@@ -1,6 +1,6 @@
 ---
 status: accepted
-applies_to: [rust-core]
+applies_to: [group:rust]
 rule: ADRs, capabilities, requirements, code and tests form one link graph in core; every link is tagged in the files, and a missing or broken link blocks the change.
 checks:
   - tests/rust-adrs.test.ts
@@ -16,7 +16,7 @@ page. Drafted from Mathias's requirement of 2026-10-17 to enforce ADRs and
 capabilities and link them to each other and to specs, and from the review on
 the Spec gaps page.
 
-Scope: this ADR governs the Rust capabilities that `applies_to` lists, not the
+Scope: this ADR governs every capability in group `rust`, the Rust crates, not the
 TypeScript code under `src/`, which keeps its own ADRs until it is deleted.
 
 ## Context

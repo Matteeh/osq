@@ -942,8 +942,9 @@ In a project whose decisions folder holds at least one accepted ADR,
 `osq lint` and `osq approve` SHALL reject a `proposal.md` whose
 `## Decisions` section is missing or holds nothing but HTML comments and
 whitespace, and SHALL reject one whose section doesn't name, as `ADR <n>`,
-each accepted ADR whose `applies_to` lists a capability the change writes
-through a delta. The error SHALL name the ADR and the capability. A line
+each accepted ADR whose `governs` lists a capability the change writes
+through a delta, including one a `group:<name>` entry names through the
+change's own sidecar. The error SHALL name the ADR and the capability. A line
 beginning `Departs from ADR <n>:` names that ADR. Lint SHALL warn when the
 section names an ADR number that doesn't exist or isn't accepted. A system-wide
 ADR need not be named, and `None` SHALL pass when no capability-scoped ADR
@@ -974,6 +975,10 @@ no decisions finding.
 #### Scenario: Unknown ADR named
 - **WHEN** a project has an accepted ADR, and the section names `ADR 042` and no ADR 042 exists
 - **THEN** lint warns and the change stays valid
+
+#### Scenario: Group ADR governs a created capability
+- **WHEN** accepted ADR 009 applies to `[group:edge]`, a change creates `ingress` with `specs/ingress/osq.yml` naming group `edge` and a delta for `ingress`, and its Decisions section says `None`
+- **THEN** lint fails with `proposal.md ## Decisions does not name ADR 009, which applies to ingress`
 
 ### Requirement: Project rules lint
 In a project with an ADR carrying osq frontmatter, lint SHALL fail every
