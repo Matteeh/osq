@@ -56,3 +56,8 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [019. Tapped planner](019-tapped-planner.md)
 - [020. Dashboard writing](020-dashboard-writing.md)
 - [021. Autopilot](021-autopilot.md)
+- [022. Rust feature crates, events and the read model](022-rust-feature-crates.md)
+- [023. Rust code style, layered named functions and required docs](023-rust-code-style.md)
+- [024. Rust link enforcement](024-rust-link-enforcement.md)
+- [025. Rust on-disk format](025-rust-on-disk-format.md)
+- [026. OpenSpec in Rust](026-openspec-in-rust.md)

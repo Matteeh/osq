@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:200f45060a2eda38b0f45f733fc89cdf6f41cdbdacbfa8f9f76b0337425ea747"
+build_stamp: "ba2d85ab"
+project_commit: "31b8b4fd"
+exit_code: 0
+scope_files: {"src/core/foundation/decisions-groups.ts":"sha256:ba2f7f997cf0829150db7cd48c4551e88906a75a4e0234d07089f0b2c9dd51e3","src/core/foundation/decisions-validate.ts":"sha256:021d8e2269bf7b3af8e7be704b4c217f5dc8ef89c789107042288ba346dd4130","src/core/foundation/decisions.ts":"sha256:8289b2a82831cac3ae72a741b1dd73234fc045ff5bc97eacf438665c1f3c1e18","tests/decisions-groups.test.ts":"sha256:75f992bc9efcdbedd77e2ff55c7f6cf1dabb6178529b2ec398ab5b58c1ae1365"}
+---
+2026-10-17T22:26:40.843Z

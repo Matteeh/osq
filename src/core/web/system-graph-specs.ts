@@ -130,8 +130,8 @@ function adrNodes(
       rule: adr.rule,
       path: adr.path,
     });
-    if (adr.status !== 'accepted' || !Array.isArray(adr.appliesTo)) continue;
-    for (const capability of adr.appliesTo) {
+    if (adr.status !== 'accepted' || adr.governs === 'all') continue;
+    for (const capability of adr.governs) {
       const capabilityId = capabilityIds.get(capability);
       if (capabilityId !== undefined) edges.push(makeEdge('applies_to', adrId, capabilityId));
     }

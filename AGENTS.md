@@ -34,6 +34,7 @@ packages/ui/      read-only browser dashboard; `scripts/stage-ui.mjs` copies its
 templates/        files `init` copies. owned by the consumer after copy.
 openspec/         living capability specs, in-flight changes, and the archive.
 decisions/        architecture decision records.
+crates/           the Rust rewrite, a Cargo workspace; see Rust crates below.
 fixture/          tiny fake repo used by tests. Each fixture root has a local `verify.cjs`.
 tests/
 ```
@@ -64,6 +65,24 @@ That runs the CLI and UI typechecks, the build, every test, and lint.
 Tests run against `fixture/`. A test that needs a real model is an integration test, marked and skipped by default.
 
 Tests that submit fixture changes to lint or approval use a local `node verify.cjs` verifier backed by files in their own execution root, never the planning sentinel, the network, a TTY, or this repository's full verification suite.
+
+## Rust crates
+
+The Rust rewrite of osq lives in `crates/`, next to the TypeScript code, and
+ADRs 022 to 026 govern it. Before working in a crate, read the ADRs that
+govern the crate's capability; ADRs 022 to 026 apply to its group, `rust`.
+`osq spec <capability> "Code ownership"` prints the paths a capability owns.
+
+- Rust code never reads, imports or calls anything under `src/`.
+- A crate depends only on layers below it: `apps`, then `features`, then `kernel`, then `core`. A feature never depends on another feature, and `core` does no IO.
+- One crate is one capability; stay in the crate your task scopes.
+- Every item has a doc comment: full docs on public items, one line on private ones.
+- A public function's doc ends with `Implements: <capability>/<requirement>` and a test's doc names `Covers: <capability>/<scenario>`, both in kebab-case, until a `#[covers]` attribute exists.
+- Tests go in the crate's `tests/` folder, never in a `#[cfg(test)]` module.
+- Never loosen `[workspace.lints]` or add `#[allow(...)]` for a workspace lint.
+- Before exiting, run `cargo fmt --all`, then `sh scripts/verify-rust.sh`: the format check, `cargo clippy` with `-D warnings` and pedantic lints, and every test.
+- The watcher's verify also runs cargo-mutants on every Rust line your change touched since its base, from the diff osq passes in `OSQ_DIFF`, and fails on a missed mutant. A miss means no test checks that line: add one that does. To check a file by hand, run `cargo mutants -p <package> -f <file> -o "$(mktemp -d)"`.
+- A test that reads data outside its crate, such as the archive, is a corpus test: put it in `tests/<name>_corpus.rs` with `#[ignore = "corpus test: <reason>"]` on each test, and give each requirement it proves a fast test on the crate's own fixtures too. `sh scripts/verify-rust.sh` runs corpus tests; cargo-mutants does not.
 
 <!-- OSQ:RULES:START -->
 ## Project rules

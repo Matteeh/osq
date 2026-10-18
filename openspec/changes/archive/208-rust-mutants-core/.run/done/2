@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:362212ca65a11e8cdaaf84a5b58b8f58ec70ef3361e7fcba6135acd18edc2095"
+build_stamp: "b42fea1c"
+project_commit: "62417e81"
+exit_code: 0
+scope_files: {".github/workflows/rust.yml":"sha256:e77065af5e90317083d0dd03504356b0a76463fe93a9b5050c4319403464060e","decisions/024-rust-link-enforcement.md":"sha256:1ae8f9e5923ce74648bf20969e615413b5e60e7e49c4c41e22de0fb7fc3e81e4","tests/rust-ci.test.ts":"sha256:b07911fd1fff25eaee3d65e066bb9d700b6d431312a891eba29093e7047485b6"}
+---
+2026-10-18T07:06:42.966Z

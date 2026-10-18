@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f14393e9b2c6255025d2daa0a0d3f9b20c3ec477dba08120d1ef9ad99be72962"
+build_stamp: "6009aab9"
+project_commit: "10eeb94a"
+exit_code: 0
+scope_files: {"crates/kernel/storage/src/lib.rs":"sha256:3b8f2d2ab27e9d92b384f99f65a8e9af739d0794863f2ead440ac5097d4bdd27","crates/kernel/storage/src/model/error.rs":"sha256:e9410e9c6ebfe30998bfa964e504a72ab621e94ba103104e36b35fb50778afd1","crates/kernel/storage/src/model/event_rows.rs":"sha256:63c28e87c28ecca685db8d58becf3adbf6ae082c3783f0d1dc88f123cd38e4f8","crates/kernel/storage/src/model/insert_events.rs":"sha256:0b2afeb44e9e7416012b804ee1b85108b5c82d4e9fcb026b4655ffcfdc61fa25","crates/kernel/storage/src/model/labels.rs":"sha256:70aeb4d8df704348a49134321290c3591bf8c9b7f71ed5ae867745ae60165631","crates/kernel/storage/src/model/mod.rs":"sha256:f2ea37a90b1c963bd2e6bb2384c89d7690c969b5d9f46a7e41a1bbfeec9197d6","crates/kernel/storage/src/model/notice_rows.rs":"sha256:2c54248b8a5e4af95ed7a59fb8d1c91ed9e183ed6f1c8f0ead3a1a175b1f0709","crates/kernel/storage/src/model/rows.rs":"sha256:15f9b469c0acb663b88af6da89e7963d0cb64b47e9dce18ef14c900f632527f3","crates/kernel/storage/src/model/stream_rows.rs":"sha256:1f2d5cbf38c1c727924f7e21adc2e05d7ae1f31be69773321a336244c93f0c3b","crates/kernel/storage/src/model/validator_rows.rs":"sha256:ddcf1b3568bec54e8626b79b3b63f2ca18811d24cc4afccc29ed73d4a06ae7cf","crates/kernel/storage/tests/read_model_history.rs":"sha256:6c6fcd8fc4b146c11737509e5a26f6bc20008a039e0fb216da3f7b59e5498c81"}
+---
+2026-10-18T11:12:35.401Z

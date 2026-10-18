@@ -1,0 +1,1 @@
+{"type":"plan_ready","timestamp":"2026-09-30T13:00:00.000Z","data":{"hash":"sha256:f","notices":[{"id":"ignored-last","severity":"red","folded":false}],"traceability":[{"severity":"warning","file":"src/z.rs","message":"rejected changes add no link rows"}]}}

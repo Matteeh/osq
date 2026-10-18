@@ -93,9 +93,10 @@ It SHALL read the specs with the existing spec parser, the ADRs with
 `readDecisions` reads, in number order, each with `number`, `title`,
 `status`, `date`, `path`, `rule`, `appliesTo` and `supersededBy` as
 `readDecisions` reads them; `capabilities`, every living capability name in
-order when `appliesTo` is `all`, the names it lists when it lists some, and
-empty otherwise; and `body`, the file's text after its frontmatter with its
-first `# ` heading line removed, trimmed.
+order when `appliesTo` is `all`, the capabilities its `governs` holds when it
+lists some, group members included, and empty otherwise; and `body`, the
+file's text after its frontmatter with its first `# ` heading line removed,
+trimmed.
 
 #### Scenario: ADR pages of the docs fixture
 - **WHEN** the ADR pages are built for the docs fixture
@@ -109,6 +110,10 @@ first `# ` heading line removed, trimmed.
 | `002` | `capabilities` | `invoices`, `pricing` |
 | `003` | `status` | `superseded` |
 | `003` | `supersededBy` | `004` |
+
+#### Scenario: ADR page of a group ADR
+- **WHEN** living `pricing` and `invoices` have sidecar group `sales` and an accepted ADR applies to `[group:sales]`
+- **THEN** its page has `appliesTo` `["group:sales"]` and `capabilities` `invoices`, `pricing`
 
 ### Requirement: Docs site model
 `buildDocsSite(projectRoot, config)` SHALL return `{ version: 1, groups,

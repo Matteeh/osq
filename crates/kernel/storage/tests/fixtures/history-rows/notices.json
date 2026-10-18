@@ -1,0 +1,58 @@
+[
+  {
+    "change": "001-run",
+    "notice": "draft-only",
+    "severity": "amber",
+    "opened": null,
+    "outcome": "planned_again"
+  },
+  {
+    "change": "001-run",
+    "notice": "scope-wide",
+    "severity": "red",
+    "opened": 1,
+    "outcome": "halted"
+  },
+  {
+    "change": "001-run",
+    "notice": "no-tests",
+    "severity": "grey",
+    "opened": 0,
+    "outcome": "halted"
+  },
+  {
+    "change": "002-quiet",
+    "notice": "no-tests",
+    "severity": "amber",
+    "opened": null,
+    "outcome": "approved"
+  },
+  {
+    "change": "003-dropped",
+    "notice": "first-draft",
+    "severity": "amber",
+    "opened": null,
+    "outcome": "planned_again"
+  },
+  {
+    "change": "003-dropped",
+    "notice": "last-draft",
+    "severity": "red",
+    "opened": null,
+    "outcome": "rejected"
+  },
+  {
+    "change": "003-dropped",
+    "notice": "also-last",
+    "severity": "grey",
+    "opened": null,
+    "outcome": "rejected"
+  },
+  {
+    "change": "004-noted",
+    "notice": "scope-wide",
+    "severity": "grey",
+    "opened": 0,
+    "outcome": "rejected"
+  }
+]

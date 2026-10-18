@@ -942,8 +942,9 @@ In a project whose decisions folder holds at least one accepted ADR,
 `osq lint` and `osq approve` SHALL reject a `proposal.md` whose
 `## Decisions` section is missing or holds nothing but HTML comments and
 whitespace, and SHALL reject one whose section doesn't name, as `ADR <n>`,
-each accepted ADR whose `applies_to` lists a capability the change writes
-through a delta. The error SHALL name the ADR and the capability. A line
+each accepted ADR whose `governs` lists a capability the change writes
+through a delta, including one a `group:<name>` entry names through the
+change's own sidecar. The error SHALL name the ADR and the capability. A line
 beginning `Departs from ADR <n>:` names that ADR. Lint SHALL warn when the
 section names an ADR number that doesn't exist or isn't accepted. A system-wide
 ADR need not be named, and `None` SHALL pass when no capability-scoped ADR
@@ -974,6 +975,10 @@ no decisions finding.
 #### Scenario: Unknown ADR named
 - **WHEN** a project has an accepted ADR, and the section names `ADR 042` and no ADR 042 exists
 - **THEN** lint warns and the change stays valid
+
+#### Scenario: Group ADR governs a created capability
+- **WHEN** accepted ADR 009 applies to `[group:edge]`, a change creates `ingress` with `specs/ingress/osq.yml` naming group `edge` and a delta for `ingress`, and its Decisions section says `None`
+- **THEN** lint fails with `proposal.md ## Decisions does not name ADR 009, which applies to ingress`
 
 ### Requirement: Project rules lint
 In a project with an ADR carrying osq frontmatter, lint SHALL fail every
@@ -2594,3 +2599,28 @@ keeps a scenario under its own name SHALL NOT be reported.
 #### Scenario: Modified requirement keeps its scenario names
 - **WHEN** the living `web` spec's requirement `Approve review view` has the scenario `Phone width` and a delta MODIFIES `Approve review view`, keeping `Phone width` and changing its THEN line
 - **THEN** `osq lint` reports no repeated scenario name error
+
+### Requirement: Brace group refusal
+Lint SHALL refuse a task whose `scope` or `entry` lists an entry holding a
+brace group: a `{`, then text with at least one `,` and no other brace, then
+a `}`. osq's scope matcher does not expand brace groups, so such an entry is
+an exact path that never matches the files it means. For a `scope` entry, the
+error SHALL be `Task in <n>.md scope entry "<entry>" holds a brace group,
+which osq scope globs do not expand; they support only *, **, ? and a
+trailing /. Use a folder glob such as dir/** or one entry per file`. For an
+`entry` entry, it SHALL be the same text with `entry "<entry>"` in place of
+`scope entry "<entry>"`. Brackets and a brace without a comma stay allowed,
+since paths such as `app/[id]/page.tsx` are real.
+
+#### Scenario: Brace group cases
+- **WHEN** task 1's frontmatter lists each entry below in the given field
+- **THEN** lint gives the given result:
+
+| Field | Entry | Result |
+|---|---|---|
+| `scope` | `tests/golden/{a,b}.json` | error `Task in 1.md scope entry "tests/golden/{a,b}.json" holds a brace group, which osq scope globs do not expand; they support only *, **, ? and a trailing /. Use a folder glob such as dir/** or one entry per file` |
+| `scope` | `src/{core,cli}/**` | error `Task in 1.md scope entry "src/{core,cli}/**" holds a brace group, which osq scope globs do not expand; they support only *, **, ? and a trailing /. Use a folder glob such as dir/** or one entry per file` |
+| `entry` | `src/{a,b}.ts` | error `Task in 1.md entry "src/{a,b}.ts" holds a brace group, which osq scope globs do not expand; they support only *, **, ? and a trailing /. Use a folder glob such as dir/** or one entry per file` |
+| `scope` | `app/[id]/page.tsx` | no brace group error |
+| `scope` | `src/{single}.ts` | no brace group error |
+| `scope` | `tests/golden/events/**` | no brace group error |

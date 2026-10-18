@@ -1,0 +1,10 @@
+[
+  {
+    "id": "207.l1",
+    "change": "207-adr-groups",
+    "severity": "warning",
+    "file": "src/core/spec/traceability-links.ts",
+    "message": "src/core/spec/traceability-links.ts:122: tag is not a valid @scenario or @adr",
+    "label": null
+  }
+]

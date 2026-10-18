@@ -1,0 +1,1 @@
+A capability folder without spec.md owns nothing.

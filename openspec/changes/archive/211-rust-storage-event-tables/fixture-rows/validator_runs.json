@@ -1,0 +1,1 @@
+[{"change":"001-run","run":1,"outcome":"failed","harness":"claude","model":"opus","duration":2.5,"exit_code":1,"scenarios":3,"findings":1,"reason":"one problem","output":"out"},{"change":"001-run","run":2,"outcome":"passed","harness":"codex","model":"gpt","duration":4,"exit_code":null,"scenarios":0,"findings":0,"reason":null,"output":null}]

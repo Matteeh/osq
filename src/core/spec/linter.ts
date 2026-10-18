@@ -9,6 +9,7 @@ import { resolveScope } from '../run/scope.js';
 import { gatedTestPathFilter } from '../run/test-gate.js';
 import { compareNumericPrefix } from '../status/state.js';
 import { PROPOSAL_ASSUMPTIONS_ERROR, assumptionsSectionIsEmpty } from './assumptions.js';
+import { braceGroupErrors } from './brace-scope-lint.js';
 import { collectCapabilityRelationFindings } from './capability-relations.js';
 import { collectDecisionsFindings } from './decisions-lint.js';
 import { DeltaMergeError, type DeltaRequirement, mergeDelta, parseDelta } from './delta.js';
@@ -1333,6 +1334,12 @@ export async function lintChangeFolder(
         { file: taskRepoPath },
         `Task in ${taskFile} scope specifies ${task.scope.length} patterns, exceeding limit ${config.limits.maxScopeFiles}`,
       );
+    }
+
+    // Check: no scope or entry entry uses a brace group, which osq's scope
+    // matcher does not expand.
+    for (const message of braceGroupErrors(taskFile, task.scope, task.entry)) {
+      findings.error({ file: taskRepoPath }, message);
     }
   }
 

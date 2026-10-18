@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1f16868c786d31b7cdcfda5df065dc9810d7f8a8cdc03c5ae72e9237f95bd53a"
+build_stamp: "ba2d85ab"
+project_commit: "c7bceb0e"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:d46748fd3b1dd47932405c7a7460b84b9285fea46224e2ca981bb1082638c54a","decisions/022-rust-feature-crates.md":"sha256:1538605262ef642ef7835a2691ff9c4d45475477cad45a5e4a3ed5db7816d7ef","decisions/023-rust-code-style.md":"sha256:48fcc891224ce6fbe0f003e4621faf7ec58e321046b53e0eda5100828cc4d39c","decisions/024-rust-link-enforcement.md":"sha256:76349c09a37403fb983f4076bad250c0c8572a1bc6e532883b664071b0128ef4","decisions/025-rust-on-disk-format.md":"sha256:6fa66cf8ee594b20ce3774112565de4dd1ab275c414d1d035f847c49afab22ea","decisions/026-openspec-in-rust.md":"sha256:00e6aefc0d0725a397b8ab31ae62e7b1f27c70a4680fbe2f338da4130b7df45b","tests/rust-adrs.test.ts":"sha256:439b9db83e7240a0c028b8705edb5cb33cc0dc8a69a1bdb188248010ab34ef64"}
+---
+2026-10-17T22:38:53.081Z

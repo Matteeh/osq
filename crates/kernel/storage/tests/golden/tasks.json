@@ -1,0 +1,4657 @@
+[
+  {
+    "change": "014-ci-pnpm-version-alignment",
+    "task": "1",
+    "title": "When workflows configure pnpm, setup action derives version from packageManager",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "015-status-row-fixes",
+    "task": "1",
+    "title": "When the logger draws the status row, it fits the terminal",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "015-status-row-fixes",
+    "task": "2",
+    "title": "When a task finishes, exactly one outcome line is logged",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "015-status-row-fixes",
+    "task": "3",
+    "title": "When the status row shows token counts, they are abbreviated",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "015-status-row-fixes",
+    "task": "4",
+    "title": "When the status row shows the last tool summary, paths are repo-relative",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "1",
+    "title": "When configuration is loaded, OpenSpec paths with runtime options are typed with defaults",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "2",
+    "title": "When change folders are parsed, proposal.md with OpenSpec task lists are supported alongside rewritten templates",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "3",
+    "title": "When spec deltas are processed, deterministic requirement merging applies ADDED, MODIFIED, REMOVED, RENAMED blocks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "4",
+    "title": "When change folders are linted, openspec validate --strict executes while surfacing prefixed findings",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "5",
+    "title": "When task verification passes, checkbox projection is write-only covering the archive path",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "6",
+    "title": "When specs are archived, folders move to OpenSpec archive paths compatible with validate --archived",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "7",
+    "title": "When osq init runs, openspec/config.yaml with the osq schema bundle is scaffolded",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "8",
+    "title": "When osq migrate openspec runs, legacy change folders plus features migrate to OpenSpec layout",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "016-openspec-artifacts",
+    "task": "9",
+    "title": "When layout cut-over is performed, runtime switches to openspec paths prompting human restart",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "1",
+    "title": "When capability specs are parsed, code ownership headers map globs while task frontmatter parses tests.modify",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "2",
+    "title": "When change folders are linted, tests.modify schema with scope ownership boundaries are validated",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "3",
+    "title": "When executor prompts are constructed, capability rules from written delta specs are injected",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "4",
+    "title": "When task execution touches tests without declaration, undeclared_test_change halts verification marking task dead",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "5",
+    "title": "When undeclared_test_change occurs, status inspection with reporting format failure reasons plus metrics",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "017-ownership-and-test-gating",
+    "task": "6",
+    "title": "When capability deltas are applied, all five living capability specs declare code ownership blocks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "018-cutover-test-alignment",
+    "task": "1",
+    "title": "When createNewSpec runs, change folders are created in openspec changes with proposal templates",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "018-cutover-test-alignment",
+    "task": "2",
+    "title": "When test fixtures execute, test suites align with openspec layout paths",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "018-cutover-test-alignment",
+    "task": "3",
+    "title": "When biome check runs, migrate module formatting conforms to repo style",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "019-pack-smoke-test-fix",
+    "task": "1",
+    "title": "When the smoke test installs the packed tarball, dependencies resolve normally",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "019-pack-smoke-test-fix",
+    "task": "2",
+    "title": "When any test spawns the package manager, it is npm",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "019-pack-smoke-test-fix",
+    "task": "3",
+    "title": "When smoke-test setup fails, the runner reports a failed test, not cancelled ones",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "020-watcher-stale-build-detection",
+    "task": "1",
+    "title": "When tasks start or the watcher idles, the osq version with commit or dist hash is recorded",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "020-watcher-stale-build-detection",
+    "task": "2",
+    "title": "When starting from a checkout with stale dist, the watcher exits non-zero unless allow-stale is passed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "020-watcher-stale-build-detection",
+    "task": "3",
+    "title": "When dev mode is enabled, the watcher runs through tsx from src, restarting on source changes after finishing the running task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "021-split-runner-lifecycle-and-import-boundaries",
+    "task": "1",
+    "title": "When import boundaries are checked, internal packages conform to directional layer constraints",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "021-split-runner-lifecycle-and-import-boundaries",
+    "task": "2",
+    "title": "When heartbeat monitoring or task locks are exercised, runner delegates to dedicated modules",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "021-split-runner-lifecycle-and-import-boundaries",
+    "task": "3",
+    "title": "When task completion outcomes are recorded, runner delegates to a dedicated outcome module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "021-split-runner-lifecycle-and-import-boundaries",
+    "task": "4",
+    "title": "When task results are synthesized or verified, runner delegates to a dedicated verify module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "021-split-runner-lifecycle-and-import-boundaries",
+    "task": "5",
+    "title": "When tasks execute, runner coordinates lifecycle modules with all files under 200 lines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "022-make-engine-safe-to-grow",
+    "task": "1",
+    "title": "When project scaffolding executes, PLANNER.md receives a managed instructions block",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "022-make-engine-safe-to-grow",
+    "task": "2",
+    "title": "When events are recorded, payloads conform to a typed union with write-relativized tool summaries",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "022-make-engine-safe-to-grow",
+    "task": "3",
+    "title": "When mock tasks execute end-to-end, emitted events match checked-in golden fixtures",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "022-make-engine-safe-to-grow",
+    "task": "4",
+    "title": "When doctor is invoked, diagnostics validate repository health across five discrete checks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "023-engine-layout-markers-and-pure-state",
+    "task": "1",
+    "title": "When runner outcomes occur, invariant assertions verify every failure reason",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "023-engine-layout-markers-and-pure-state",
+    "task": "2",
+    "title": "When tasks terminate, dedicated outcome helpers write markers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "023-engine-layout-markers-and-pure-state",
+    "task": "3",
+    "title": "When paths resolve, layout module derives locations from OpenSpec root",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "023-engine-layout-markers-and-pure-state",
+    "task": "4",
+    "title": "When change state derives, pure evaluation inspects folder snapshots",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "023-engine-layout-markers-and-pure-state",
+    "task": "5",
+    "title": "When source files are inspected, line budget enforces size constraints",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "024-migrate-callers-to-layout-and-disk-state",
+    "task": "1",
+    "title": "When spec inspection executes, callers use layout resolvers with dual signatures",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "024-migrate-callers-to-layout-and-disk-state",
+    "task": "2",
+    "title": "When change workflow runs, commands use layout resolvers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "024-migrate-callers-to-layout-and-disk-state",
+    "task": "3",
+    "title": "When lifecycle archiving runs, watcher derives locations canonically",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "024-migrate-callers-to-layout-and-disk-state",
+    "task": "4",
+    "title": "When test suites execute, assertions verify layout path derivation",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "025-format-gate-and-pinned-validator",
+    "task": "1",
+    "title": "When ADR 004 is accepted, decision records pinned validator drift semantics",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "025-format-gate-and-pinned-validator",
+    "task": "2",
+    "title": "When doctor checks repository health, validator pin is verified against expected version",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "025-format-gate-and-pinned-validator",
+    "task": "3",
+    "title": "When OpenSpec schema is scaffolded, artifact instructions restrict execution authority to osq",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "025-format-gate-and-pinned-validator",
+    "task": "4",
+    "title": "When osq setup executes, managed blocks coexist in AGENTS.md without touching OpenSpec markers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "025-format-gate-and-pinned-validator",
+    "task": "5",
+    "title": "When migration paths resolve, layout module serves as sole directory authority",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "026-raw-measures-and-run-manifest",
+    "task": "1",
+    "title": "When a change is approved, manifest.json is written alongside the approved marker",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "026-raw-measures-and-run-manifest",
+    "task": "2",
+    "title": "When a task starts, a measures event is emitted with scope plus repo baselines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "026-raw-measures-and-run-manifest",
+    "task": "3",
+    "title": "When a task completes, a measures event is emitted with changed-file diffs plus content counts",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "026-raw-measures-and-run-manifest",
+    "task": "4",
+    "title": "When the golden events test runs, the measures events match the checked-in fixture",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "027-archive-verification-and-tree-hashes",
+    "task": "1",
+    "title": "When task verification executes, verify_ran events record exitCode with duration via unified emission path matching golden fixtures",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "027-archive-verification-and-tree-hashes",
+    "task": "2",
+    "title": "When a task completes, the done marker records scope hash frontmatter with earlier done scopes compared before spawning the next task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "027-archive-verification-and-tree-hashes",
+    "task": "3",
+    "title": "When scope comparison or verification fails, the engine writes regressed markers, emits regressed events, reporting regressed status",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "027-archive-verification-and-tree-hashes",
+    "task": "4",
+    "title": "When a change is ready to archive, the archiver re-runs task with change verifications while linter enforces change verify command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "028-016-completion",
+    "task": "1",
+    "title": "When validator is missing or drifted, osq lint with approve fail citing ADR 004 plus install command with no skipped output across src",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "028-016-completion",
+    "task": "2",
+    "title": "When living specs are re-seeded, deterministic delta merge recreates openspec/specs with prose appender deleted proving delta equivalence",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "028-016-completion",
+    "task": "3",
+    "title": "When proposal schema drops features.writes, linter rejects the field while delta specs act as sole writes declaration",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "028-016-completion",
+    "task": "4",
+    "title": "When project scaffolds, osq init creates openspec layout only with legacy specs template deleted",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "028-016-completion",
+    "task": "5",
+    "title": "When documentation with managed instructions block are updated for OpenSpec layout, tests enforce absence of retired paths",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "029-artifact-integrity-and-failure-retention",
+    "task": "1",
+    "title": "When change folder files or task acceptance lines are mangled, linter rejects prohibited control characters and fused lines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "029-artifact-integrity-and-failure-retention",
+    "task": "2",
+    "title": "When change with prior failure is re-approved, dead markers are retained and renamed with attempt numbers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "029-artifact-integrity-and-failure-retention",
+    "task": "3",
+    "title": "When human marks task done, osq done records manual frontmatter and event with doctor detection and separate report counting",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "029-artifact-integrity-and-failure-retention",
+    "task": "4",
+    "title": "When task title includes and, linter omits warning and permits the title",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "030-planner-rules-and-documentation",
+    "task": "1",
+    "title": "When planner protocol is updated, PLANNER.md, initialization templates, and byte-equality tests reflect slicing, detail, file tool, and change-level verify rules",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "030-planner-rules-and-documentation",
+    "task": "2",
+    "title": "When change deltas are linted, linter rejects instruction-shaped delta requirements containing update or document",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "031-planner-in-osq",
+    "task": "1",
+    "title": "When a planner block is configured, defineConfig validates it and manifest reads the planner model from it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "031-planner-in-osq",
+    "task": "2",
+    "title": "When an adapter is asked for an interactive session, it spawns the harness with inherited stdio and returns the exit code",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "031-planner-in-osq",
+    "task": "3",
+    "title": "When osq setup runs for opencode, .opencode/agent/osq-planner.md exists with stated tool limits and repeated runs are byte-identical",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "031-planner-in-osq",
+    "task": "4",
+    "title": "When osq plan runs, change folder and brief.md exist before session opens with ordered prompt sections and -print writes only to stdout",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "032-codex-harness-adapter",
+    "task": "1",
+    "title": "When Codex is selected, osq supports setup, verified execution, and interactive planning",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "032-codex-harness-adapter",
+    "task": "2",
+    "title": "When a consumer configures Codex, documentation and generated examples explain the supported workflow",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "033-harness-capability-catalog",
+    "task": "1",
+    "title": "When a harness is declared, the capability catalog validates its shared settings and requires an adapter factory",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "033-harness-capability-catalog",
+    "task": "2",
+    "title": "When osq selects a harness, diagnostics, preflight, planning, and attribution use shared resolution without harness-name branches",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "034-report-state-and-history",
+    "task": "1",
+    "title": "When report runs, marker state, event history, and event-file coverage are presented separately",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "035-planning-telemetry-and-cycle-time",
+    "task": "1",
+    "title": "When an interactive plan exits, lifecycle and observed usage are recorded",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "035-planning-telemetry-and-cycle-time",
+    "task": "2",
+    "title": "When a change is approved, its planning session count is sealed in the manifest",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "035-planning-telemetry-and-cycle-time",
+    "task": "3",
+    "title": "When a change is shown, its planning sessions and wall times are listed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "035-planning-telemetry-and-cycle-time",
+    "task": "4",
+    "title": "When a completed change is archived, its archive time is recorded",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "035-planning-telemetry-and-cycle-time",
+    "task": "5",
+    "title": "When the report runs, planning spend and cycle time are surfaced",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "036-dead-letter-retry-and-rejection",
+    "task": "1",
+    "title": "When a dead or regressed target is retried, its diagnostics are retained and the next attempt receives prior context",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "036-dead-letter-retry-and-rejection",
+    "task": "2",
+    "title": "When an eligible change is rejected, its complete record moves to rejected history",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "036-dead-letter-retry-and-rejection",
+    "task": "3",
+    "title": "When rejected changes are inspected or referenced, status and reports expose them without satisfying dependencies",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "037-human-attention-inbox",
+    "task": "1",
+    "title": "When bare osq runs, the human attention inbox is returned",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "038-portable-inbox-lock-fixture",
+    "task": "1",
+    "title": "When a clean checkout runs inbox integration tests, runtime lock setup succeeds",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "039-brief-queue",
+    "task": "1",
+    "title": "When openspec/queue.md is inspected, ordered filesystem-derived item states are shown",
+    "attempts": 4,
+    "done": 1
+  },
+  {
+    "change": "039-brief-queue",
+    "task": "2",
+    "title": "When the next queue item is eligible, exactly one change enters the existing planning flow",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "039-brief-queue",
+    "task": "3",
+    "title": "When queue planning is unsafe or over budget, planning stops before mutation",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "039-brief-queue",
+    "task": "4",
+    "title": "When queue sources exceed the budget, responsibilities are split behind stable entrypoints",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "039-brief-queue",
+    "task": "5",
+    "title": "When delivery metrics include a brief queue, progress and unsuccessful outcomes are shown",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "040-repository-record-in-planning",
+    "task": "1",
+    "title": "When execution history is reported, task size predicts outcome",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "040-repository-record-in-planning",
+    "task": "2",
+    "title": "When a planning prompt is built, the recent repository record follows the brief",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "1",
+    "title": "When completed scope hashes differ before dispatch, every stale task is verified before execution halts",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "2",
+    "title": "When completed scope hashes differ before archival, stale tasks block the existing archive verifier",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "3",
+    "title": "When a regressed task is retried, verification recertifies it or requeues agent work",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "4",
+    "title": "When a verify command cannot identify local behavior, lint reports an error or warning",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "5",
+    "title": "When planner guidance is scaffolded, verification remains reusable on the final tree",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "6",
+    "title": "When delivery history includes scope regressions, detection and recertification outcomes are counted",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "7",
+    "title": "When a recertified change is shown, the task attribution is listed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "8",
+    "title": "When verify-command trust lint is active, every approved test fixture uses a real local verifier",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "1",
+    "title": "When scope entries are resolved, exact paths and glob matches produce one deterministic file set",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "2",
+    "title": "When completed tasks use resolver 2, hashing and audits migrate legacy markers through recertification",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "3",
+    "title": "When a change is linted, resolved scope preserves test compliance and warns about overlap",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "4",
+    "title": "When scope size is measured and reported, resolver-2 file counts form a visibly separate series",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "1",
+    "title": "When a change enters planning, its complete prompt is handed to the author's tool",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "2",
+    "title": "When osq initializes or diagnoses a repository, current Claude and Codex planning instructions are enforced",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "3",
+    "title": "When approval finds local sessions that edited the change, observed planning records and attribution are sealed",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "4",
+    "title": "When a prompt file accompanies a change, lint, integrity checks, and archival treat it as transient",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "5",
+    "title": "When planning history is shown or reported, owned and observed sessions contribute to one record",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "6",
+    "title": "When the final planning tree is verified, cross-workflow expectations and golden events match it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "1",
+    "title": "When dashboard data is requested, filesystem evidence becomes stable documents",
+    "attempts": 4,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "2",
+    "title": "When `osq serve` starts, the project is available through loopback read-only HTTP",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "3",
+    "title": "When project files change, browser clients receive one debounced invalidation",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "title": "When the dashboard loads, one typed data layer supplies every view",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "5",
+    "title": "When delivery history is opened, five charts answer bounded operational questions",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "6",
+    "title": "When repository history is explored, capability lanes reveal change relationships",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "7",
+    "title": "When a change is selected, task evidence is shown with recorded provenance",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "8",
+    "title": "When the CLI package is verified, the dashboard ships within its asset budget",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "045-deterministic-harness-process-timeout-test",
+    "task": "1",
+    "title": "When a child ignores SIGTERM, timeout coverage deterministically observes SIGKILL",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "046-immediate-task-breakage-attribution",
+    "task": "1",
+    "title": "When task verification passes, change verification gates completion",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "046-immediate-task-breakage-attribution",
+    "task": "2",
+    "title": "When an agent edits preexisting tests, scope and tests.modify jointly authorize each file",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "046-immediate-task-breakage-attribution",
+    "task": "3",
+    "title": "When archive behavior is isolated, tests select the intended verification boundary",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "title": "When core code needs the package root, it imports it from one module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "2",
+    "title": "When core modules and harness adapters move into capability folders, every import, the public entry point, and the architecture tests stay green",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "3",
+    "title": "When a source function exceeds the function budget, the suite fails and the grandfathered list is explicit",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "048-managed-instructions-split",
+    "task": "1",
+    "title": "When osq installs its managed instructions, the AGENTS block carries only the executor protocol and the PLANNER block the planner protocol",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "048-managed-instructions-split",
+    "task": "2",
+    "title": "When osq new seeds a proposal, the template follows the planner's parent-spec rules",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "049-opencode-planner-lint-permission",
+    "task": "1",
+    "title": "When osq setup generates the opencode planner agent, the planner may run osq lint and no other shell command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "050-one-executor-prompt",
+    "task": "1",
+    "title": "When osq installs the executor protocol, the managed AGENTS block is assembled from exported step and exit constants that name the result headings",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "050-one-executor-prompt",
+    "task": "2",
+    "title": "When the watcher spawns agy, codex, or opencode, one shared builder writes the prompt and a golden test pins it per harness",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "050-one-executor-prompt",
+    "task": "3",
+    "title": "When the harness is opencode, doctor checks the executor agent file's managed block and names osq setup as the fix",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "051-openspec-compliance-checks",
+    "task": "1",
+    "title": "When osq merges a delta, it writes what openspec archive writes and refuses what it refuses, and a differential test proves it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "051-openspec-compliance-checks",
+    "task": "2",
+    "title": "When the installed OpenSpec differs from the pin but sits inside the peer range, doctor and lint warn instead of failing",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "051-openspec-compliance-checks",
+    "task": "3",
+    "title": "When an OpenSpec-aware agent or osq new starts a proposal, both use osq's sections, and this repository validates under that schema",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "051-openspec-compliance-checks",
+    "task": "4",
+    "title": "When a week passes, CI runs the differential test against the latest OpenSpec and names its version on failure",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "052-init-refresh-schema",
+    "task": "1",
+    "title": "When a consumer runs osq init --refresh-schema, osq replaces the scaffolded OpenSpec schema files with the installed templates and lists what it changed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "053-proposal-surface-section",
+    "task": "1",
+    "title": "When osq new, an OpenSpec-aware agent, or the planner starts a proposal, every entry point asks for a Surface section",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "053-proposal-surface-section",
+    "task": "2",
+    "title": "When the runner, scope, and queue tests write proposals by hand, those proposals carry a Surface section",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "053-proposal-surface-section",
+    "task": "3",
+    "title": "When a proposal has no Surface section or only comments in it, osq lint and osq approve reject it with one fix-it error",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "054-dashboard-honest-numbers",
+    "task": "1",
+    "title": "When osq report counts current tasks and formats costs, archived tasks without markers are unmarked and unreported costs read not reported",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "054-dashboard-honest-numbers",
+    "task": "2",
+    "title": "When the web documents sum a cost that no attempt or session reported, the cost is null",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "054-dashboard-honest-numbers",
+    "task": "3",
+    "title": "When the dashboard shows a cost, a brief, or the task totals, one formatter says not reported and the brief heading reads Brief",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "055-dashboard-home-and-changes",
+    "task": "1",
+    "title": "When the graph document describes a change, its node carries the number of done tasks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "055-dashboard-home-and-changes",
+    "task": "2",
+    "title": "When the dashboard opens, it shows a home of what needs you, and a changes list links every change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "056-dashboard-visual-hierarchy",
+    "task": "1",
+    "title": "When the dashboard shows a status, a table, or a heading, one palette, one badge, and one type scale set the hierarchy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "056-dashboard-visual-hierarchy",
+    "task": "2",
+    "title": "When the report charts many changes, the cost chart becomes horizontal bars and no axis label overlaps",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "056-dashboard-visual-hierarchy",
+    "task": "3",
+    "title": "When the graph renders, every change gets a mark in change-number order, lane names show in full, and enabled edges are visible",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "057-serve-export",
+    "task": "1",
+    "title": "When the dashboard is exported, every view's documents are inlined with scrubbed paths beside the built UI",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "057-serve-export",
+    "task": "2",
+    "title": "When a user runs osq serve --export <dir>, osq writes the snapshot, reminds them what was scrubbed, and exits without serving",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "058-no-build-during-tests",
+    "task": "1",
+    "title": "When the suite runs, the smoke and bin tests use the existing build instead of rebuilding, and package hygiene forbids any test from rebuilding",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "059-replay-in-landing-order",
+    "task": "1",
+    "title": "When the replay test rebuilds living specs, it merges archived deltas in the order the changes landed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "060-pi-executor-harness",
+    "task": "1",
+    "title": "When the harness is pi, the watcher runs each task through Pi and records what it did",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "060-pi-executor-harness",
+    "task": "2",
+    "title": "When the harness is pi, doctor reports Pi's version and credentials, and the README explains Pi",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "061-pre-spawn-red-check",
+    "task": "1",
+    "title": "When a task declares verify_starts or config sets gates.preSpawnVerify, osq parses both, and tests that count verify runs ignore pre-spawn runs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "061-pre-spawn-red-check",
+    "task": "2",
+    "title": "When a task starts its first attempt, the watcher runs verify before spawn and warns or kills on a mismatch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "061-pre-spawn-red-check",
+    "task": "3",
+    "title": "When task streams hold pre-spawn verify runs, osq report counts runs and mismatches apart from verification runs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "061-pre-spawn-red-check",
+    "task": "4",
+    "title": "When a task has a pre-spawn verify run, osq show prints its outcome and any mismatch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "061-pre-spawn-red-check",
+    "task": "5",
+    "title": "When a planner or user reads the docs, verify_starts and gates.preSpawnVerify are explained",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "1",
+    "title": "When the planning observation tests are split by topic, every assertion still passes unchanged",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "2",
+    "title": "When osq.config.ts sets a planning block, the idle gap and price table are validated and resolved",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "3",
+    "title": "When a change is approved, each matched planning session is cut to the turns that change owns and the slice is recorded",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "4",
+    "title": "When a Claude Code transcript is read, each assistant message becomes one turn with its own token usage",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "5",
+    "title": "When a Codex rollout is read, each token_count becomes one turn with that response's usage and edits",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "6",
+    "title": "When the OpenCode database is read, each assistant message becomes one turn with its tokens, cost, and edits",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "7",
+    "title": "When osq report runs, it shows planning economics per change and compares planning with execution",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "8",
+    "title": "When a change's planning sessions reported tokens but no cost, the dashboard shows its planning cost as not reported",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "062-planning-measurement",
+    "task": "9",
+    "title": "When a user reads the README, planning slices, the planning config block, and the planning report are explained",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "063-planning-cleanup",
+    "task": "1",
+    "title": "When a planning reader returns a session, the session carries turns and no legacy usage, edits, or bounds",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "063-planning-cleanup",
+    "task": "2",
+    "title": "When the dashboard observes planning, observePlanning keeps only cost-bearing bookkeeping and leaves the function-budget grandfather list",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "063-planning-cleanup",
+    "task": "3",
+    "title": "When golden event streams are compared, measures repository counts are masked so fixtures ignore the scaffolded project's size",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "064-approval-digest",
+    "task": "1",
+    "title": "When a change folder is digested, osq summarizes its goal, tasks, and deltas and raises the approval flags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "064-approval-digest",
+    "task": "2",
+    "title": "When osq approve or osq show runs, the digest and flags print, --confirm asks or refuses, and the manifest records the flags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "064-approval-digest",
+    "task": "3",
+    "title": "When osq report runs, it shows per approval flag how many changes fired it and how many later had trouble",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "064-approval-digest",
+    "task": "4",
+    "title": "When a user reads the README, the approval digest, its flags, --confirm, and the flag report are explained",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "1",
+    "title": "When retrySpec is asked for an automatic retry, the shared transition records automatic true on the retry event",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "2",
+    "title": "When the watcher writes a dead marker, the marker records a fingerprint that ignores volatile details",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "3",
+    "title": "When a dead task is retried manually or automatically, the next prompt carries the retained marker's body",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "4",
+    "title": "When an eligible task dies, the watcher retries it once automatically, or marks it stuck when the same failure repeats",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "5",
+    "title": "When a dead task is stuck, the inbox and osq --json mark it stuck with its fingerprint",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "6",
+    "title": "When osq show lists a task with retries, it counts automatic ones and marks a stuck task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "7",
+    "title": "When osq report runs, it shows automatic and manual retry outcomes and what automatic attempts cost",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "065-automatic-retry",
+    "task": "8",
+    "title": "When a user reads the README, automatic retries, fingerprints, stuck tasks, and the retry report are explained",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "066-planning-attribution-after-archive",
+    "task": "1",
+    "title": "When another change's folder has moved to archive or rejected history, its approval boundary still splits the session",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "066-planning-attribution-after-archive",
+    "task": "2",
+    "title": "When no planning session reported a token kind, the planning comparison says not reported",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "1",
+    "title": "When a verify names paths, one shared module finds them and lint warns about starts that contradict the task or paths no task can create",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "2",
+    "title": "When the agent exits and a path its task verify names is missing, the task dies with verify_path_missing and is retried automatically",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "3",
+    "title": "When archive verification finds a path its command names missing, the change regresses without running that command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "4",
+    "title": "When a task declares green or any while its verify names a test it creates, the approval digest raises verify_starts_conflict",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "5",
+    "title": "When osq report runs, it counts pre-spawn runs with missing paths and by declared start, and reports verify_starts_conflict outcomes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "6",
+    "title": "When osq show prints a pre-spawn result that recorded missing paths, the line names them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "067-verify-must-find-its-files",
+    "task": "7",
+    "title": "When a planner reads PLANNER.md or README, they learn the verify_starts rules, the verify_path_missing reason, and the verify_starts_conflict flag",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "068-regressed-missing-paths",
+    "task": "1",
+    "title": "When archive verification finds a named path missing, the regressed event lists it under missingPaths",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "069-fixes-from-outside-run",
+    "task": "1",
+    "title": "When osq runs inside another project, records name osq's build and the project's commit separately",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "069-fixes-from-outside-run",
+    "task": "2",
+    "title": "When a delta creates a capability on purpose, approval marks it new and raises no unknown_capability flag",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "069-fixes-from-outside-run",
+    "task": "3",
+    "title": "When the same node:test failure repeats, its dead markers share a fingerprint",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "070-claude-code-executor",
+    "task": "1",
+    "title": "When Claude Code's stream-json output is replayed, osq records its tools, text, file changes, and tokens",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "070-claude-code-executor",
+    "task": "2",
+    "title": "When the harness is claude, the watcher runs each task as a stripped-down headless Claude Code process",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "070-claude-code-executor",
+    "task": "3",
+    "title": "When a user reads the README, it explains the Claude Code harness and what it strips and confines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "071-skip-rejected-folder",
+    "task": "1",
+    "title": "When the changes directory holds archive and rejected, the watcher cycle skips both",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "071-skip-rejected-folder",
+    "task": "2",
+    "title": "When osq lint runs without ids beside a rejected change, it lints only active changes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "072-record-bugs",
+    "task": "1",
+    "title": "When osq plan creates a change and osq approve approves it, the manifest keeps the creation time and only approval writes approvedAt",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "072-record-bugs",
+    "task": "2",
+    "title": "When a change has no .run/approved, automatic retry, the dashboard, and planning turn attribution ignore its manifest approvedAt",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "072-record-bugs",
+    "task": "3",
+    "title": "When the report reads archived changes, it measures brief to approval from creation, sizes tasks by their end scope, and prints counts in the repository record",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "073-ts-paas-wording",
+    "task": "1",
+    "title": "When planners and executors read the managed blocks, they get the ts-paas rules, and the plan prompt labels its spec list",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "073-ts-paas-wording",
+    "task": "2",
+    "title": "When osq new seeds a proposal, its Human steps read None and the schema says they never include osq approve",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "073-ts-paas-wording",
+    "task": "3",
+    "title": "When a task's pre-spawn verify runs, the watch log and osq show state its start in words",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "1",
+    "title": "When a proposal or queue item names the changes it fixes, osq records and checks them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "2",
+    "title": "When an executor writes its result file, each disclosure heading names its reader and one parser reads the sections",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "3",
+    "title": "When a landed change's tasks disclosed anything, the inbox marks it and osq show names the disclosures per task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "4",
+    "title": "When a planner starts, the plan prompt quotes recent executor disclosures as labelled claims within a configured budget",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "5",
+    "title": "When a model with recorded planning tokens has no price, osq doctor and osq approve name the missing key",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "074-rework-disclosures-and-estimates",
+    "task": "6",
+    "title": "When osq report runs, it shows rework, trouble by kind, disclosure counts, and labelled planning cost estimates",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "075-lint-findings-you-can-act-on",
+    "task": "1",
+    "title": "When lint finds a problem, the finding names its severity, file, and requirement, repository findings stay apart, and merged living specs are validated",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "075-lint-findings-you-can-act-on",
+    "task": "2",
+    "title": "When osq lint prints findings, each line shows severity, file, and requirement, repository findings print once in their own group, and --json carries the same fields",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "1",
+    "title": "When a change folder's state is read, one next-step function names its state and command, and osq status prints it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "2",
+    "title": "When a change archives with after-landing steps or a check, the archived event records it, and osq check and osq verified append their events",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "3",
+    "title": "When a dependency is verification pending or failed, depends_on, the queue and osq plan --next treat it as not landed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "4",
+    "title": "When a proposal has steps before approval, the approval digest lists them first",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "5",
+    "title": "When the inbox lists changes, it shows unplanned templates as needing planning, flags steps before approval, and lists pending and failed verification",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "6",
+    "title": "When osq plan hands off a change or osq approve refuses one, it prints the change's next step",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "7",
+    "title": "When osq show runs, it prints the change's next step and its verification history",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "8",
+    "title": "When osq report runs, it counts after-landing checks by outcome and the pending ones",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "076-human-steps-on-the-record",
+    "task": "9",
+    "title": "When a planner writes Human steps, the planner block and the osq schema describe Before approval, After landing, and the check key",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "077-import-graph-lint",
+    "task": "1",
+    "title": "When the import graph is built, it records every relative JavaScript and TypeScript import, and the measures fan-in reads it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "077-import-graph-lint",
+    "task": "2",
+    "title": "When a change is linted, it warns about frozen tests its tasks reach, undeclared capability reads and writes, and verifies that test nothing in scope",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "078-blocked-exit-and-auto-recertification",
+    "task": "1",
+    "title": "When an executor can't finish within its scope, the protocol tells it to write",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "078-blocked-exit-and-auto-recertification",
+    "task": "2",
+    "title": "When an executor's result file states a real",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "078-blocked-exit-and-auto-recertification",
+    "task": "3",
+    "title": "When a task died blocked, the inbox shows its stated need and the reject-and-replan way forward",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "078-blocked-exit-and-auto-recertification",
+    "task": "4",
+    "title": "When a later task that had the file in scope is the only thing that changed it, the watcher recertifies the earlier task itself",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "078-blocked-exit-and-auto-recertification",
+    "task": "5",
+    "title": "When osq report runs, it counts automatic recertifications apart from human ones and blocked deaths by reason",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "1",
+    "title": "When osq reads the decisions folder, it parses and validates every ADR that has osq frontmatter",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "2",
+    "title": "When osq init runs, AGENTS.md gets the project rules block, and osq doctor checks the ADRs and the block",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "3",
+    "title": "When a plan prompt is built, it lists every accepted ADR in an Architecture Decisions section",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "4",
+    "title": "When osq new, an OpenSpec-aware agent, or the planner starts a proposal, every entry point asks for a Decisions section",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "5",
+    "title": "When a change is linted in a project with ADRs, lint checks its Decisions section and the project rules block",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "6",
+    "title": "When a change is digested for approval, it lists the governing ADRs and flags each departure",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "079-architecture-decisions",
+    "task": "7",
+    "title": "When AGENTS.md or a governing ADR changed after approval, the watcher warns before the task's first attempt and osq show marks it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "080-architecture-decision-checks",
+    "task": "1",
+    "title": "When an ADR names checks or denied packages, osq reads them and doctor fails on a missing check file",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "080-architecture-decision-checks",
+    "task": "2",
+    "title": "When a task may modify an accepted ADR's check file, the approval digest flags it and osq report counts the flag",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "080-architecture-decision-checks",
+    "task": "3",
+    "title": "When an agent adds a package to a scoped package.json, the watcher records it and kills the task if an accepted ADR denies it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "080-architecture-decision-checks",
+    "task": "4",
+    "title": "When tasks added dependencies, osq show lists them per task and osq report per change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "1",
+    "title": "When a scenario has AND lines or a table under a THEN, osq parses them as outcomes and lint accepts the table",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "2",
+    "title": "When osq.config.ts sets traceability, osq resolves and validates it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "3",
+    "title": "When the watcher runs a verify, the command sees its change folder in OSQ_CHANGE",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "4",
+    "title": "When a test or lint asks for a scenario, osq returns its outcomes from the effective spec",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "5",
+    "title": "When a test proves a scenario with the helper, it fails on any outcome left unasserted or wrong",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "6",
+    "title": "When lint, report, or show scans the source, osq indexes tags, scenario calls, and unreadable forms",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "7",
+    "title": "When a change touches scenarios, lint checks the traceability links and lists the tests a changed scenario touches",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "8",
+    "title": "When a capability is opted in, osq report lists its traceability gaps and osq show lists each task's scenarios",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "081-traceability-scenarios",
+    "task": "9",
+    "title": "When a capability is opted in, osq init writes the traceability instruction blocks and doctor checks them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "082-traceability-fast-feedback",
+    "task": "1",
+    "title": "When osq.config.ts sets traceability.focusedTests, osq validates the command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "082-traceability-fast-feedback",
+    "task": "2",
+    "title": "When a task's scoped tests name opted-in scenarios, osq collects and runs their test files and classifies the result",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "082-traceability-fast-feedback",
+    "task": "3",
+    "title": "When a focused run fails a collected scenario, the watcher ends the attempt without running the full verify",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "082-traceability-fast-feedback",
+    "task": "4",
+    "title": "When a task had focused runs, osq show lists each with its outcome and duration",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "083-traceability-mutation",
+    "task": "1",
+    "title": "When osq.config.ts sets traceability.mutation, osq validates the command and budget",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "083-traceability-mutation",
+    "task": "2",
+    "title": "When a task starts, osq records the hash of each tagged function in scope and can find any function's mutation ranges",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "083-traceability-mutation",
+    "task": "3",
+    "title": "When a task passes, osq picks the covered functions it changed or newly tested and can run one mutation command and read its report",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "083-traceability-mutation",
+    "task": "4",
+    "title": "When a task passes with mutation on, the watcher runs its picks under the budget and records each without ever failing the task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "083-traceability-mutation",
+    "task": "5",
+    "title": "When tasks recorded mutation results, osq show lists them per task and osq report scores each capability",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "084-git-stage-0",
+    "task": "1",
+    "title": "When osq reads git state, one Vcs port answers through GitVcs or NoVcs",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "084-git-stage-0",
+    "task": "2",
+    "title": "When osq doctor runs, it reports git and warns about git environment variables",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "084-git-stage-0",
+    "task": "3",
+    "title": "When a task's agent exits, the watcher records git moves and edits outside scope without changing the outcome",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "084-git-stage-0",
+    "task": "4",
+    "title": "When verify output or an archive path is recorded, it is relative to the project root",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "084-git-stage-0",
+    "task": "5",
+    "title": "When an executor prompt is built, its closing line forbids running git",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "085-own-adr-checks-by-validity",
+    "task": "1",
+    "title": "When an ADR is added to osq's decisions, the own-records test checks validity instead of a pinned list",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "086-baseline-verify",
+    "task": "1",
+    "title": "When the baseline gate is configured, osq validates the command and can key the tree it would verify",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "086-baseline-verify",
+    "task": "2",
+    "title": "When a change's first task is about to start, the watcher settles the baseline and halts on a red tree",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "087-change-locations",
+    "task": "1",
+    "title": "When osq needs a change folder, one change locations module lists the trees and folders",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "087-change-locations",
+    "task": "2",
+    "title": "When a lifecycle command names a change, it finds it through the change locations module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "087-change-locations",
+    "task": "3",
+    "title": "When status, the inbox, or the queue reads changes, it lists them through the change locations module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "087-change-locations",
+    "task": "4",
+    "title": "When report, doctor, or the web server reads changes, it lists them through the change locations module",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "087-change-locations",
+    "task": "5",
+    "title": "When the watcher reads changes, it lists them through the change locations module, and no reader lists them on its own",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "088-vcs-config-and-writes",
+    "task": "1",
+    "title": "When osq.config.ts sets a vcs block, osq validates it and exposes it on the loaded config",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "088-vcs-config-and-writes",
+    "task": "2",
+    "title": "When osq needs a git write, the Vcs port offers exactly stage 1's writes and nothing on the never list",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "088-vcs-config-and-writes",
+    "task": "3",
+    "title": "When doctor runs with vcs enabled, it warns about a missing prepare command, commit hooks, and signing",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "089-approve-into-worktree",
+    "task": "1",
+    "title": "When osq plans a worktree, the port names the default branch and the config places the worktree",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "089-approve-into-worktree",
+    "task": "2",
+    "title": "When vcs is enabled, the resolver reports a running change from its osq worktree and the watcher leaves it alone",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "089-approve-into-worktree",
+    "task": "3",
+    "title": "When osq serve starts with osq worktrees, edits in a worktree change folder invalidate that change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "089-approve-into-worktree",
+    "task": "4",
+    "title": "When vcs is enabled, osq approve commits the change onto its own branch and worktree and writes nothing to the checkout",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "089-approve-into-worktree",
+    "task": "5",
+    "title": "When a change runs in a worktree, osq status prints its path and warns about an edited checkout copy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "090-config-errors-fail-loudly",
+    "task": "1",
+    "title": "When a config file fails to import or validate, loadConfig throws naming the file, and the osq import resolves to the running osq",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "090-config-errors-fail-loudly",
+    "task": "2",
+    "title": "When a command's config fails to load, osq prints the error and exits 1",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "091-dead-path-building-blocks",
+    "task": "1",
+    "title": "When discard gets no paths it does nothing, it puts back staged files, and commit records only its own paths",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "091-dead-path-building-blocks",
+    "task": "2",
+    "title": "When osq commits for a task, one function builds the message with its Osq trailers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "091-dead-path-building-blocks",
+    "task": "3",
+    "title": "When a task dies in an osq worktree, osq writes the patch, discards outside the change folder, and commits the dead record",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "092-opencode-v2-adapter",
+    "task": "1",
+    "title": "When doctor runs with the opencode harness, it reports whether the installed opencode is inside the tested range",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "092-opencode-v2-adapter",
+    "task": "2",
+    "title": "When the opencode harness runs a task or a planning session, it uses opencode v2's flags and records the final step's usage",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "093-run-in-worktree",
+    "task": "1",
+    "title": "When an agent in an osq worktree runs git or edits outside its scope, the task dies, and a new test file is never a violation",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "093-run-in-worktree",
+    "task": "2",
+    "title": "When a change runs in its worktree, each verified task and the archive are commits, a dead task leaves a clean branch and a patch, and dirt or a failed commit halts it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "093-run-in-worktree",
+    "task": "3",
+    "title": "When osq watch starts and an approved change's worktree is missing, it recreates the worktree on the change's branch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "093-run-in-worktree",
+    "task": "4",
+    "title": "When a human runs reject, retry, or done on a change in a worktree, osq writes there and never in the checkout, and status warns while a task runs there",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "094-stacking",
+    "task": "1",
+    "title": "When osq asks whether a path exists at a ref, the Vcs port answers, and a stacked approval has a fixed location",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "094-stacking",
+    "task": "2",
+    "title": "When a stacked approval exists, the change locations module lists it as its own tree",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "094-stacking",
+    "task": "3",
+    "title": "When a human approves a change whose dependency is approved and has not landed, osq records a stacked approval instead of refusing",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "094-stacking",
+    "task": "4",
+    "title": "When a stacked change's dependency archives or lands, the watcher cuts its branch from that commit and runs it, and halts it when the dependency changes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "094-stacking",
+    "task": "5",
+    "title": "When a human rejects a change under version control, osq commits the rejection, removes a clean worktree, keeps the branch, and withdraws a stacked approval",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "095-osq-message-and-leftovers",
+    "task": "1",
+    "title": "When tests run by hand in an osq worktree without OSQ_CHANGE, scenario lookup finds the change from the worktree's branch files",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "095-osq-message-and-leftovers",
+    "task": "2",
+    "title": "When a human asks for osq message on an archived change, osq prints the squash message with its trailers and the branch to squash",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "095-osq-message-and-leftovers",
+    "task": "3",
+    "title": "When a change has landed by hand, osq status flags the checkout's unedited leftover copy and prints the command that removes it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "096-worktree-holds-change",
+    "task": "1",
+    "title": "When a worktree on osq/<folder> does not hold that change, the change locations module ignores it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "096-worktree-holds-change",
+    "task": "2",
+    "title": "When a stacked cut fails, the worktree it added stays, and the cut after a retry reuses it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "097-inbox-dispatch-order",
+    "task": "1",
+    "title": "When osq reads what needs a human, it derives approval, halt, land, and verify items from state",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "097-inbox-dispatch-order",
+    "task": "2",
+    "title": "When osq orders the dispatch items, an idle watcher's work comes first, then what holds up the most changes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "097-inbox-dispatch-order",
+    "task": "3",
+    "title": "When osq reads a dispatch item's card, it gathers the evidence its kind needs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "097-inbox-dispatch-order",
+    "task": "4",
+    "title": "When a human runs osq inbox, it prints the ordered items and the first item's card",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "098-inbox-follow-sound",
+    "task": "1",
+    "title": "When osq loads its config, an inbox block sets the sound, quiet hours, sound window, debounce, and poll interval",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "098-inbox-follow-sound",
+    "task": "2",
+    "title": "When osq is packed, it ships a small original chime that a repository script generates",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "098-inbox-follow-sound",
+    "task": "3",
+    "title": "When new inbox items need a sound, osq plays it through the first player found, outside quiet hours, once per window",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "098-inbox-follow-sound",
+    "task": "4",
+    "title": "When a reviewer runs osq inbox --follow, each new item prints as it appears and makes a sound",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "099-inbox-cards",
+    "task": "1",
+    "title": "When the inbox needs to wait for items, one watch primitive derives them on events and polls, and follow is built on it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "099-inbox-cards",
+    "task": "2",
+    "title": "When a card is shown, each osq command gets a key and the rest are listed to run by hand",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "099-inbox-cards",
+    "task": "3",
+    "title": "When a reviewer presses a card key, the command runs and the next card or the same card opens",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "099-inbox-cards",
+    "task": "4",
+    "title": "When osq inbox runs on a terminal, it opens the card session with raw keys and a child launcher",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "100-enable-vcs-for-osq",
+    "task": "1",
+    "title": "When osq reads its own config, version control is on with osq's author and the install command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "1",
+    "title": "When osq writes or reads an inbox wait log, records fold into episodes and first-seen times",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "2",
+    "title": "When items tie on weight, the one first seen earlier comes first, and the watch reports idle",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "3",
+    "title": "When the card session or follow loop derives, prints a card, or ends, it records through the recorder",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "4",
+    "title": "When osq inbox runs a card session or follows, it records under the home, and printing writes nothing",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "5",
+    "title": "When a wait log exists, osq computes and formats waiting times, idle time, and sessions for a period",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "101-inbox-wait-log",
+    "task": "6",
+    "title": "When osq report runs, it shows the inbox waiting section for --since and --until",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "102-capability-relations",
+    "task": "1",
+    "title": "When a change relates to no capability, reads an unknown one, or creates one silently, lint rejects it with the nearest name",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "102-capability-relations",
+    "task": "2",
+    "title": "When a proposal lists a capability in creates, the digest counts it as created, and one reader owns Code ownership",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "102-capability-relations",
+    "task": "3",
+    "title": "When traceability.capabilities names no real capability, loading the config fails with the nearest name",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "102-capability-relations",
+    "task": "4",
+    "title": "When a planner or a person reads the guidance, it states the relation rule and creates",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "103-result-none-sections",
+    "task": "1",
+    "title": "When a result section says only None as a bullet, in bold, or with an explanation, it counts as empty",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "104-archived-once",
+    "task": "1",
+    "title": "When a landed change's worktree is kept, osq lists its archive once and osq message still reads the branch's copy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "1",
+    "title": "When a project opts in to capability groups, the config holds requireGroups",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "2",
+    "title": "When a change carries or touches a sidecar, or creates with a group, lint reads and checks it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "3",
+    "title": "When a change archives, its created and replacement sidecars are written, and approval records their hashes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "4",
+    "title": "When a project adopts groups, osq migrate sidecars scaffolds the missing sidecars",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "5",
+    "title": "When a project has living specs, the report counts capabilities with and without a sidecar",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "6",
+    "title": "When capabilities have groups, the graph draws their lanes under group headers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "105-capability-sidecar",
+    "task": "7",
+    "title": "When osq plans its own changes, every capability has a group and requireGroups is on",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "1",
+    "title": "When lint, the report, and the graph ask whether a path is a test, one function answers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "2",
+    "title": "When osq builds the system graph, it holds groups, capabilities, requirements, scenarios, ADRs, changes, imports, and unowned files",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "3",
+    "title": "When a capability is opted into traceability, the graph holds its tests, functions, links, survivors, and gaps",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "4",
+    "title": "When a person runs osq graph or requests /api/system, they get the system graph",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "107-osq-land",
+    "task": "1",
+    "title": "When osq merges, the Vcs port can merge, squash, abort, stage, and test ancestry",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "107-osq-land",
+    "task": "2",
+    "title": "When a branch takes in the default branch, living specs are rebuilt from deltas and anything unsafe stops the merge",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "107-osq-land",
+    "task": "3",
+    "title": "When a human runs osq land, osq refuses what is unsafe, lands the change, and cleans up",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "107-osq-land",
+    "task": "4",
+    "title": "When a change is ready to land, the inbox, osq message, README, and ADR 003 point at osq land",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "108-adr-006-deterministic-core",
+    "task": "1",
+    "title": "When osq reads its decisions, ADR 006 is accepted and indexed, and its rule is in AGENTS.md",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "109-deterministic-land",
+    "task": "1",
+    "title": "When a change archives, its change verify runs with the deltas applied, and a red or interrupted run puts the living specs back",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "109-deterministic-land",
+    "task": "2",
+    "title": "When osq builds a land commit, the Vcs port can commit a tree, fast-forward to it, and count commits",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "109-deterministic-land",
+    "task": "3",
+    "title": "When a human runs osq land, osq commits the branch tip's tree, fast-forwards the checkout, and records the sync",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "109-deterministic-land",
+    "task": "4",
+    "title": "When a change is ready to land, osq message, README, and ADR 003 describe osq land as the only way it lands",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "110-osq-sync",
+    "task": "1",
+    "title": "When a change's branch takes in the default branch, the sync works for an active change and takes a landed dependency's archive from the default branch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "110-osq-sync",
+    "task": "2",
+    "title": "When the watcher is about to start a change's first task or archive it, it takes in the default branch and halts on a stop",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "110-osq-sync",
+    "task": "3",
+    "title": "When a human runs osq sync, osq takes the default branch into the change's branch or says why not",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "110-osq-sync",
+    "task": "4",
+    "title": "When a change in a worktree has synced or a sync stopped, osq status shows it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "111-commands-throw",
+    "task": "1",
+    "title": "When status, show, or report fails, it throws a CommandError that runCli prints without ending the process",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "111-commands-throw",
+    "task": "2",
+    "title": "When new, done, reject, retry, queue, or the inbox fails, it throws a CommandError with the message it used to print",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "111-commands-throw",
+    "task": "3",
+    "title": "When check or verified fails, it throws a CommandError, and a failed check leaves stderr empty",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "111-commands-throw",
+    "task": "4",
+    "title": "When approve fails, it throws a CommandError carrying the next step, and no command under src/cli calls process.exit",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "112-test-path-meanings",
+    "task": "1",
+    "title": "When any code asks whether the frozen-test gate governs a path, it calls isGatedTestPath",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "112-test-path-meanings",
+    "task": "2",
+    "title": "When osq show looks for test paths in a task's scope, it calls traceability's isTestPath",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "113-traceability-opt-in-once",
+    "task": "1",
+    "title": "When any code asks whether a capability is opted into traceability, it calls config-traceability's functions",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "114-replay-sees-archiving-change",
+    "task": "1",
+    "title": "When archive has applied a change's deltas, the living-spec replay merges them too",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "115-retire-source-comments",
+    "task": "1",
+    "title": "When a delta requirement other than Code ownership carries a source comment, osq lint warns",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "116-executor-prompt-fits",
+    "task": "1",
+    "title": "When a delta requirement keeps its living statement, the executor prompt leaves out its rule",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "116-executor-prompt-fits",
+    "task": "2",
+    "title": "When an adapter's spawn throws, the task dies as crashed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "117-approve-after-halt",
+    "task": "1",
+    "title": "When a branch is renamed through the Vcs port, it keeps its commits and a taken name refuses",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "117-approve-after-halt",
+    "task": "2",
+    "title": "When osq approve finds a rejected change's kept branch, it renames it aside and approves",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "117-approve-after-halt",
+    "task": "3",
+    "title": "When a worktree change's approval commit is missing, the watcher skips it until the commit exists",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "117-approve-after-halt",
+    "task": "4",
+    "title": "When a change halts at change level, status and the inbox name osq retry <id> change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "118-stale-build-every-pass",
+    "task": "1",
+    "title": "When osq's source gets newer than its build during a watcher run, the watcher finishes the running task, starts nothing new, and exits 1 with the stale line",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "118-stale-build-every-pass",
+    "task": "2",
+    "title": "When osq land runs on a stale build it refuses, and when it lands a change to osq's own source it says to rebuild and restart the watcher",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "119-lint-own-findings",
+    "task": "1",
+    "title": "When osq lint finds repository findings, it prints one count line, and --repository lists them in full",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "120-regressed-report-short",
+    "task": "1",
+    "title": "When archive-time verification fails, the regressed marker holds the failing tests and names the event with the full output",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "120-regressed-report-short",
+    "task": "2",
+    "title": "When a task dies on a failing verify, focused run, pre-spawn check, change verify, or baseline, its dead marker holds the output excerpt",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "120-regressed-report-short",
+    "task": "3",
+    "title": "When a scope audit finds a done task's verify red, the scope regression marker holds the output excerpt",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "120-regressed-report-short",
+    "task": "4",
+    "title": "When a living spec differs from its replay, the equivalence test shows the first differing lines, not two whole specs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "121-planner-reads-requirements",
+    "task": "1",
+    "title": "When osq spec runs, it lists living capabilities, lists one capability's requirement names, or prints one requirement",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "121-planner-reads-requirements",
+    "task": "2",
+    "title": "When an executor or planner reads its managed block, it asks for the requirements it needs through osq spec",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "121-planner-reads-requirements",
+    "task": "3",
+    "title": "When osq plan writes a prompt or opencode sets up a planner, the planner is told to use osq spec and allowed to run it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "122-confinement-env",
+    "task": "1",
+    "title": "When a project declares role environment names in config, osq validates them and builds each role's environment from the allowlist",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "122-confinement-env",
+    "task": "2",
+    "title": "When osq runs prepare, a recorded check, a retry recertification, a sync verify, a focused run, or a mutation check, the command gets only its role's environment",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "122-confinement-env",
+    "task": "3",
+    "title": "When the watcher runs a baseline, task, change, archive, regression, or mutation verify, the command gets only the verify role's environment",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "122-confinement-env",
+    "task": "4",
+    "title": "When osq spawns an agent, it gets only the agent role's environment, and Claude and a new opencode agent file deny git, network tools, and sudo",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "122-confinement-env",
+    "task": "5",
+    "title": "When osq reads its decisions, ADR 007 is accepted and indexed, its rule is in AGENTS.md, and the README explains role environments",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "123-approve-owns-draft",
+    "task": "1",
+    "title": "When a change runs in a worktree, is stacked, or was rejected on its branch, new changes skip its number and lint still finds it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "123-approve-owns-draft",
+    "task": "2",
+    "title": "When a checkout folder shares a running or landed change's name, status and land ignore it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "123-approve-owns-draft",
+    "task": "3",
+    "title": "When a change is approved with version control on, its checkout copy is removed, and a stacked change is approved and rejected from its stacked copy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "123-approve-owns-draft",
+    "task": "4",
+    "title": "When a human wants a task done without its verify, osq has no command for it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "123-approve-owns-draft",
+    "task": "5",
+    "title": "When osq reads its decisions and docs, ADR 003 says approval removes the checkout's copy, and nothing mentions osq done",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "124-ci-temp-repo-cleanup",
+    "task": "1",
+    "title": "When a test commits in its temp repository, git starts no background maintenance that could still be writing at cleanup",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "1",
+    "title": "When a human wants to run or record a verification by hand, osq has no command for it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "2",
+    "title": "When a change with a check archives or lands, osq runs the check after its verify, and a failed check stops the change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "3",
+    "title": "When the inbox lists what needs a human, it has no verification items or keys, and the land card shows the check and after-landing notes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "4",
+    "title": "When a change archives, it is landed and its dependents run, and osq show prints its after-landing notes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "5",
+    "title": "When osq report runs, it prints no after-landing verification counts, and no verification state is left in osq",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "125-checks-osq-runs",
+    "task": "6",
+    "title": "When a planner or user reads osq's guidance, it says after-landing steps are notes and a check is a gate osq runs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "126-scope-deletions",
+    "task": "1",
+    "title": "When a task deletes a file its scope names, the task passes and its commit records the deletion",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "127-inert-module-cleanup",
+    "task": "1",
+    "title": "When a module has been removed, its file is gone too, with no export {} stand-in left",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "128-steering-triggers",
+    "task": "1",
+    "title": "When a change hits a steering trigger, osq derives it from the markers and the watcher leaves the change alone",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "128-steering-triggers",
+    "task": "2",
+    "title": "When a change needs steering, the inbox, the dispatcher, and its next step show it once with osq plan <id>",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "128-steering-triggers",
+    "task": "3",
+    "title": "When a human plans a change that needs steering, osq writes the prompt with the evidence into the change's own folder, and lint finds it there",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "128-steering-triggers",
+    "task": "4",
+    "title": "When a human approves the revised plan of a change that needs steering, osq seals it where the change runs and the run continues from the first task that is not done",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "128-steering-triggers",
+    "task": "5",
+    "title": "When a user reads osq's guidance, it says when osq asks for steering and how to answer with osq plan and osq approve",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "1",
+    "title": "When the default branch stops a change at sync, the stop carries its own reason and the change needs steering",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "2",
+    "title": "When a land stops on a steering trigger, osq commits the stop on the change's branch and refuses to land it until it is steered",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "3",
+    "title": "When an archived change needs steering, osq finds it, and the inbox, the dispatcher, and its next step show osq plan <id> instead of osq land <id>",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "4",
+    "title": "When a human plans or lints a change the default branch stopped, osq writes the prompt where it is, with the default branch's requirement text and what approval will do",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "5",
+    "title": "When a human approves the revised plan of a change the default branch stopped, osq restarts or merges its branch and the run continues",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "129-default-branch-steering",
+    "task": "6",
+    "title": "When a user reads osq's guidance, it says how a change the default branch stops is steered, and what approval does to its branch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "130-docs-digest",
+    "task": "1",
+    "title": "When osq reads an ADR, it records the date under its heading",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "130-docs-digest",
+    "task": "2",
+    "title": "When osq reads an archived change, it returns one record of what the archive holds, with missing fields as null",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "130-docs-digest",
+    "task": "3",
+    "title": "When a human selects archived changes by id or date range, osq builds the digest document with period totals",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "130-docs-digest",
+    "task": "4",
+    "title": "When a human runs osq digest, osq prints the digest as Markdown or JSON, to stdout or a file, with or without cost",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "131-done-marker-path-in-spec",
+    "task": "1",
+    "title": "When the stale-build spec names the done marker, it names .run/done/1, the file the watcher writes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "132-report-reads-once",
+    "task": "1",
+    "title": "When code reads a file inside a stream-read scope, the file is read and parsed once",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "132-report-reads-once",
+    "task": "2",
+    "title": "When osq report runs, every event stream and planning log is read once, and the report is unchanged",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "133-sqlite-read-index",
+    "task": "1",
+    "title": "When osq stores an archived event stream in the index, it gets it back only while the file is unchanged",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "133-sqlite-read-index",
+    "task": "2",
+    "title": "When osq report runs, archived event streams come from the index, and the report never changes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "134-agents-query-osq",
+    "task": "1",
+    "title": "When osq builds the history tables, each archived change becomes rows, read through the index",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "134-agents-query-osq",
+    "task": "2",
+    "title": "When someone runs osq query, it runs one SELECT on the history tables and refuses anything else",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "134-agents-query-osq",
+    "task": "3",
+    "title": "When osq init writes the managed blocks, planners and executors are told to use osq query for history",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "135-report-small-reads-once",
+    "task": "1",
+    "title": "When code reads a change file inside a report read scope, the file is read and parsed once, and read errors still reject",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "135-report-small-reads-once",
+    "task": "2",
+    "title": "When osq report runs, every task file, brief, manifest and proposal is read once, and the report is unchanged",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "136-provider-outage-deaths",
+    "task": "1",
+    "title": "When a task's model provider stops answering, the task dies as provider_unavailable, early, and quoting the provider's error",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "136-provider-outage-deaths",
+    "task": "2",
+    "title": "When a task died of provider_unavailable, the watcher waits, retries it on its own budget, and never marks it stuck",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "137-safer-harness-defaults",
+    "task": "1",
+    "title": "When a project never sets agy.dangerouslySkipPermissions, agy keeps its permission prompts and the watcher refuses to start agy tasks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "137-safer-harness-defaults",
+    "task": "2",
+    "title": "When osq doctor runs, it reports one harness-containment line for the selected harness and warns when a setting bypasses it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "137-safer-harness-defaults",
+    "task": "3",
+    "title": "When osq init scaffolds a project, it selects codex, and the README and changelog say what changed for agy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "138-pi-default-harness",
+    "task": "1",
+    "title": "When osq init scaffolds a project, it selects pi and keeps the Codex guidance comments",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "138-pi-default-harness",
+    "task": "2",
+    "title": "When a consumer reads the README or CHANGELOG, they say a new project starts on pi",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "139-removed-requirement-pins",
+    "task": "1",
+    "title": "When a delta removes or renames a pinned requirement, the pin check skips it and still fails for one lost by accident",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "140-line-budget-full-paths",
+    "task": "1",
+    "title": "When a source file is over 250 lines, only its exact path on the allow list exempts it, and a stale entry fails",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "1",
+    "title": "When osq lint finds an error, lintCommand throws a CommandError instead of setting the exit code",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "2",
+    "title": "When osq doctor has a failing check, doctorCommand throws a CommandError instead of setting the exit code",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "3",
+    "title": "When osq land or osq message refuses or stops, the command throws a CommandError with the line it printed",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "4",
+    "title": "When osq sync, osq graph, or osq migrate fails, the command throws a CommandError instead of setting the exit code",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "5",
+    "title": "When osq plan or osq serve fails, the command throws a CommandError and the CLI prints the same text as before",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "6",
+    "title": "When any file in src/cli other than run.ts sets process.exitCode or declares an exit option, a test fails",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "1",
+    "title": "When a command needs its inputs, command-inputs.ts resolves them and tests capture every process write",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "2",
+    "title": "When osq status, queue, show, or the bare osq command runs, it takes the command inputs and writes exact text",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "3",
+    "title": "When osq report, query, or digest runs, it takes the command inputs and writes exact text",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "4",
+    "title": "When osq doctor or osq serve runs, it takes the command inputs and writes exact text",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "5",
+    "title": "When osq land, message, sync, graph, or spec runs, it takes the command inputs from command-inputs.ts",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "6",
+    "title": "When osq new, init, or setup runs, it takes the command inputs and prints through stdout",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "7",
+    "title": "When osq reject or retry runs, it takes the command inputs and prints through stdout",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "8",
+    "title": "When osq approve runs, it takes the command inputs and prints its digest, prompt lines, and warnings through them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "9",
+    "title": "When osq inbox runs, its text, JSON, card session, follow loop, wait log, and sound print through the command inputs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "10",
+    "title": "When osq plan runs, it takes the command inputs and prints the prompt, handoff, created change, and notice through them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "11",
+    "title": "When osq lint, migrate, or watch runs, it takes the command inputs and logs through commandLogger",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "142-command-inputs",
+    "task": "12",
+    "title": "When any file in src/cli other than command-inputs.ts prints directly, or a command lacks the command inputs, a test fails",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "143-stale-build-names-root",
+    "task": "1",
+    "title": "When the osq build is stale, the stale line names the package root it checked",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "144-inbox-in-process",
+    "task": "1",
+    "title": "When a card key runs, the inbox calls its command in-process and prints its error and next step on failure",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "145-help-everyday-first",
+    "task": "1",
+    "title": "When a user runs osq --help, the commands print in four groups, everyday first",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "145-help-everyday-first",
+    "task": "2",
+    "title": "When README lists the commands, it uses the same groups as osq --help",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "146-web-write-actions",
+    "task": "1",
+    "title": "When a request to the actions endpoint proves it came from osq's own page, the server runs one action at a time and refuses everything else",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "146-web-write-actions",
+    "task": "2",
+    "title": "When osq serve gets an action, it runs the same command function the CLI runs and answers with its output, error and next step",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "146-web-write-actions",
+    "task": "3",
+    "title": "When the change view opens on a served dashboard, it shows the buttons that apply and the result after a tap",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "147-change-detail-model",
+    "task": "1",
+    "title": "When osq show renders a change, the text comes from renderer modules that read no files",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "147-change-detail-model",
+    "task": "2",
+    "title": "When osq show builds a change's detail, model modules carry the proposal sections and the digest, and show.ts is only the facade",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "148-approve-view",
+    "task": "1",
+    "title": "When the web change document is built for an unapproved change, it carries the proposal, each delta beside its living text, and the digest",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "148-approve-view",
+    "task": "2",
+    "title": "When the change view opens on an unapproved change, it shows the review in order and the flags beside the Approve button",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "1",
+    "title": "When osq.config.ts sets a validator block, defineConfig resolves it with its own required model, and ADR 010 records the role",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "2",
+    "title": "When the validator is on, osq doctor compares its model with the executor's, init shows the block as a comment, and osq turns it on for itself",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "3",
+    "title": "When patch is given a base commit, it diffs the tree against that commit",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "4",
+    "title": "When osq prepares a validator run, it lists the scenarios to judge, the diff and the tests, builds the prompt, and reads the findings strictly",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "5",
+    "title": "When a change archives with a validator on, osq runs it once, puts back anything it edits, and records its findings without stopping the change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "6",
+    "title": "When an archived change has a validator_ran event, osq show prints the validation",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "7",
+    "title": "When archived changes have validator_ran events, osq report counts changes validated and findings per change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "150-architecture-adrs-first",
+    "task": "1",
+    "title": "When osq init runs in a new project, it writes the decisions README and a proposed starter ADR, doctor warns until a system-wide ADR is accepted, and decisions lint waits for one",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "150-architecture-adrs-first",
+    "task": "2",
+    "title": "When a planner or a new user reads osq's guidance, it says to write the architecture and style ADRs before the first feature change",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "151-verify-log-out-of-events",
+    "task": "1",
+    "title": "When the watcher records a verify run, its full output goes to an ignored log file, the event keeps the tail, and markers point at the log",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "151-verify-log-out-of-events",
+    "task": "2",
+    "title": "When a sync records a verify, or osq records a halt or a human recertification, the event keeps only the tail and a sync's full output goes to a log",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "152-halt-self-recovery",
+    "task": "1",
+    "title": "When osq fails to commit a task's record, the watcher commits it on a later cycle and clears the commit_failed halt by itself",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "152-halt-self-recovery",
+    "task": "2",
+    "title": "When a sync merges the default branch into an active change and a done task's verify passes, the sync recertifies the files only the merge changed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "152-halt-self-recovery",
+    "task": "3",
+    "title": "When osq approve runs inside an osq worktree, it approves from the checkout and says so",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "152-halt-self-recovery",
+    "task": "4",
+    "title": "When an approval flags a shared file, it says the watcher re-runs the owner's verify, and the README describes the commit catch-up and the sync's recertification",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "153-land-view",
+    "task": "1",
+    "title": "When osq counts a branch's work, the Vcs port gives files changed and lines added and removed since the merge base",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "153-land-view",
+    "task": "2",
+    "title": "When an archived change is inspected, one land view model holds its archive gates, diff, spec changes, disclosures, landed state and halt, and osq show and the web document carry it",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "153-land-view",
+    "task": "3",
+    "title": "When the change view opens on an archived change, it shows what landing will do above the Land button",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "1",
+    "title": "When osq's own config loads, traceability is opted in for the traceability capability in warn mode, with focused tests and StrykerJS mutation checks that need no build",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "2",
+    "title": "When osq's decisions are read, ADR 011 records what the traceability trial measures and what decides block, widen, or drop, and when",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "3",
+    "title": "When the effective scenario lookup scenarios run, they go through the scenario helper, and lookupScenario and worktreeChangeFolder carry their tags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "4",
+    "title": "When the scanner, index, test path, ownership, and entry point scenarios run, they go through the scenario helper, and scanSource, buildScenarioIndex, and isTestPath carry their tags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "5",
+    "title": "When the function range, baseline, and pick scenarios run, they go through the scenario helper, and the range functions and pickMutations carry their tags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "154-traceability-trial",
+    "task": "6",
+    "title": "When the scenario helper's own scenarios run, they go through the helper, and scenario carries their tags",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "1",
+    "title": "When osq reads its config and watch records, the watch block has validated defaults and each project has one state folder under ~/.osq/watch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "2",
+    "title": "When a service worker finds a new osq build, it exits between passes, and when the build is stale or still being written, it waits instead of exiting",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "3",
+    "title": "When the watch service's worker exits, the supervisor restarts it at once on a new build, after a backoff on a crash, and not at all after a stop",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "4",
+    "title": "When a user runs osq watch --background or --stop, the service starts detached or stops after its running task, and no two watchers run for one project",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "5",
+    "title": "When a user runs osq or osq status, the last line says whether a watcher runs, where, on which build, and status prints the service log's path",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "155-watch-service",
+    "task": "6",
+    "title": "When osq's decisions are read, ADR 012 records that the watcher runs in the background under osq's own supervisor and why not a system unit",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "156-flaky-tests-fixed",
+    "task": "1",
+    "title": "When the reads-once report test copies the report fixture, it skips the fixture's .osq index another test may be writing",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "156-flaky-tests-fixed",
+    "task": "2",
+    "title": "When the inbox test compares the core helper with the CLI, the running task's elapsed time is bounded by clocks taken around the spawn",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "156-flaky-tests-fixed",
+    "task": "3",
+    "title": "When a watcher's abort signal fires, it starts nothing more and its promise resolves once no cycle runs, and the watch-service-build tests await it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "157-flaky-test-guard",
+    "task": "1",
+    "title": "When osq reads gates.changeVerifyReruns, it defaults to 1, keeps 0, rejects any other value, and README describes the rerun",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "157-flaky-test-guard",
+    "task": "2",
+    "title": "When a change verify fails only in tests unrelated to the task, the runner reruns it and records a change_verify_rerun event",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "157-flaky-test-guard",
+    "task": "3",
+    "title": "When osq report reads passing change_verify_rerun events, it lists each flaky test with how often it flaked",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "158-osq-runs-formatter",
+    "task": "1",
+    "title": "When osq reads gates.formatCommand, it keeps a command with {files}, rejects any other value, osq init shows it, and osq sets its own",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "158-osq-runs-formatter",
+    "task": "2",
+    "title": "When an agent exits having changed scoped files, the watcher runs the format command on them before verify and records a format_ran event",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "159-server-mode-adr",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 013 is proposed and records that osq serve stays on loopback and accepts writes from configured hosts",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "159-server-mode-adr",
+    "task": "2",
+    "title": "When osq's decisions are read, ADR 014 is accepted and records that server mode is an addition to local use, and its rule is in AGENTS.md",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "1",
+    "title": "When osq seeds or describes a proposal, it carries a fixed Assumptions section after Decisions",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "2",
+    "title": "When a proposal is linted, an empty Assumptions section is an error and its lines can be read",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "3",
+    "title": "When a change folder is read for approval, osq derives its notices, sorts them by severity and folds the rest by config",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "4",
+    "title": "When osq lint passes on a named unapproved change, osq records the plan as ready with its hash and notices",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "5",
+    "title": "When a change is approved, osq prints its notices, refuses unopened red notices when told which were opened, and records them in the manifest",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "6",
+    "title": "When the web document is built for an unapproved change, its review carries the notices, and an approve request carries the opened notices to the command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "7",
+    "title": "When the change view opens on an unapproved change, it leads with the notice block and keeps Approve disabled until each red notice is opened",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "160-approve-highlights",
+    "task": "8",
+    "title": "When osq query runs, a notices table lists each recorded notice of an archived or rejected change with what followed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "1",
+    "title": "When osq reads the serve config, allowed hosts and the server block are validated, and the write guard accepts the listed hosts and their https origins",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "2",
+    "title": "When osq fetches or pushes a branch, the Vcs port fetches without moving local branches and pushes only a fast-forward, never forcing",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "3",
+    "title": "When a land runs with publish, it fetches origin, catches up or stops, pushes the land commit before the branch moves, and stops when origin moved",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "4",
+    "title": "When the supervisor runs a server, it spawns the server worker, logs to server.log, restarts it like the watch service, and removes server.json on stop",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "5",
+    "title": "When startWebServer is given a site, every path lives under /p/<project>/, / redirects there, and api/server reports the server and its watcher service",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "6",
+    "title": "When a user runs osq server start or stop, the dashboard server and the watch service start in the background or stop, and a land tapped there publishes to origin",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "7",
+    "title": "When the dashboard is served under /p/<project>/, it requests its documents there, names the project and server in the header, and shows a Service panel on home",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "161-osq-server",
+    "task": "8",
+    "title": "When osq's decisions are read, ADR 013 is accepted, ADR 009 is superseded by it, and ADR 014 lists the tests that enforce it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "162-remote-cli",
+    "task": "1",
+    "title": "When an osq server has a command runner, it streams forwarded commands as NDJSON and moves change folder files behind the write guard",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "162-remote-cli",
+    "task": "2",
+    "title": "When a command reaches the server, it runs the same command function and streams the same output, and the client reads OSQ_SERVER and talks to the server",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "162-remote-cli",
+    "task": "3",
+    "title": "When a planner plans against a server, osq plan downloads the change folder to a working copy and osq lint uploads it before linting",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "162-remote-cli",
+    "task": "4",
+    "title": "When OSQ_SERVER is set, the osq CLI forwards each command to the server and refuses the local-only ones in one line, and when it is unset nothing changes",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "162-remote-cli",
+    "task": "5",
+    "title": "When osq's decisions are read, ADR 014 lists the forwarded-command and upload tests that enforce it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "163-local-mcp",
+    "task": "1",
+    "title": "When an MCP client sends a JSON-RPC message, osq answers it in either protocol era with the planning tools and no SDK",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "163-local-mcp",
+    "task": "2",
+    "title": "When a planner's MCP file tool names a path, it reads or writes only inside one unapproved change folder or its working copy",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "163-local-mcp",
+    "task": "3",
+    "title": "When a planner calls an MCP command tool, it runs the CLI's command function locally or on the server and returns the CLI's text",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "163-local-mcp",
+    "task": "4",
+    "title": "When an MCP client starts osq mcp, it serves the planning tools over stdio until stdin ends, and help and README name it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "163-local-mcp",
+    "task": "5",
+    "title": "When osq's decisions are read, ADR 015 records why osq mcp speaks MCP itself and lists the tests that enforce it",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "164-landed-means-on-main",
+    "task": "1",
+    "title": "When an archived change is not on the default branch, its next step is archived with osq land, and osq status lists it under Not landed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "164-landed-means-on-main",
+    "task": "2",
+    "title": "When an archived queue item is not on the default branch, the queue shows it archived and its dependents wait",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "164-landed-means-on-main",
+    "task": "3",
+    "title": "When an archived change waits to land, bare osq lists it under Needs you with osq land and the dashboard labels it not landed",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "165-stacked-land-keeps-history",
+    "task": "1",
+    "title": "When osq asks git for a merge base, a trailer's values, or a commit with extra parents, the Vcs port answers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "165-stacked-land-keeps-history",
+    "task": "2",
+    "title": "When a landed change shares history with a change's branch, the sync merges a bridge commit and the stack lands without conflicts",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "165-stacked-land-keeps-history",
+    "task": "3",
+    "title": "When a change stacked on the one being landed archived first, osq land lands it, and the earlier-change refusal suggests only land",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "166-land-runs-after-command",
+    "task": "1",
+    "title": "When a land moves the default branch and vcs.afterLand is set, osq runs it in the checkout, records a failure, and runs it again on the next land of that change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "166-land-runs-after-command",
+    "task": "2",
+    "title": "When a recorded after-land command failed, bare osq, osq status and the dashboard show it with osq land <id>",
+    "attempts": 4,
+    "done": 1
+  },
+  {
+    "change": "166-land-runs-after-command",
+    "task": "3",
+    "title": "When osq plans or lands itself, its config runs pnpm build after every land, ADR 012 and README say so, and the plan prompt names the command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "167-capability-slices-adr",
+    "task": "1",
+    "title": "When the checks test runs, every source file is classified against its capability slice, and findings warn unless their capability has moved",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "167-capability-slices-adr",
+    "task": "2",
+    "title": "When osq's decisions are read, ADR 016 is accepted and records that a capability is a vertical slice, and its rule is in AGENTS.md",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "168-capability-rename-generator",
+    "task": "1",
+    "title": "When a delta leaves its capability with no requirement, archive and the land sync remove its folder, lint does not validate it, and the replay test covers every capability",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "168-capability-rename-generator",
+    "task": "2",
+    "title": "When a proposal carries generated, lint fails any moved requirement whose text differs from the living one or that lands nowhere",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "168-capability-rename-generator",
+    "task": "3",
+    "title": "When generateCapabilityMove runs a rename or a split, it writes the byte-for-byte deltas, sidecars, Code ownership and proposal section into the unapproved change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "168-capability-rename-generator",
+    "task": "4",
+    "title": "When a planner runs osq capability rename or split, the CLI writes the move into the change, lists it under Plumbing, and a generated rename replays to the archived specs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "169-slice-registries",
+    "task": "1",
+    "title": "When a slice folder holds slice.ts, SLICES lists it, its static imports stay off config, and its config blocks join DEFAULT_CONFIG and defineConfig",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "169-slice-registries",
+    "task": "2",
+    "title": "When a slice names a command, createProgram registers it and the root help lists it in its declared group",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "169-slice-registries",
+    "task": "3",
+    "title": "When a slice names MCP tools, createMcpTools gives them after the nine planning tools and refuses a repeated name",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "170-approve-waits-for-overlap",
+    "task": "1",
+    "title": "When a land or sync test needs two changes cut side by side that share a capability, its approve helper drops overlap lines from the stacked copy",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "170-approve-waits-for-overlap",
+    "task": "2",
+    "title": "When an approved change overlaps an unlanded one on a capability, approve stacks it with an overlap line and prints which change it runs after",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "170-approve-waits-for-overlap",
+    "task": "3",
+    "title": "When a stacked change's overlapped change is rejected, approved again or archived apart from another, the cut drops the line or waits instead of halting",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "170-approve-waits-for-overlap",
+    "task": "4",
+    "title": "When osq show runs for an active change that waits for another, it prints which change it runs after and why",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "170-approve-waits-for-overlap",
+    "task": "5",
+    "title": "When the dashboard shows a change that waits for another, its header has a Runs after row naming that change and why",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "1",
+    "title": "When the validator runs on another harness, osq doctor checks that harness's binary and version as it checks the executor's",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "2",
+    "title": "When a clean osq lint records a plan ready, the record keeps the change's traceability link findings",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "3",
+    "title": "When osq query runs, six trial tables hold one row per validator run and finding, focused run, mutation pick, survivor and link finding of each archived change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "4",
+    "title": "When the validator's latest runs failed, osq status, the inbox and the dashboard say so with the error until a run succeeds",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "5",
+    "title": "When a human runs osq label with an item's id, the label lands in the trial's committed file and the query tables show it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "1",
+    "title": "When a task dies and a human retries it, the watcher runs it again, archives the change, and osq land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "2",
+    "title": "When a task is stuck and its plan is revised and approved again, the watcher runs it, archives the change, and osq land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "3",
+    "title": "When a watcher is killed mid-task, osq retry names the stopped watcher, and the next watch reaps the lock, retries the task, and the change lands",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "4",
+    "title": "When a sync conflict halts an active change and its revised plan is approved, osq restarts it from main, runs it, and osq land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "5",
+    "title": "When osq land stops on a conflict and the revised plan is approved, osq restarts the change, runs it, and the next land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "6",
+    "title": "When osq land stops on a red verify and a task is added and approved, osq merges main, runs only the new task, and the next land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "172-halt-recovery-scenarios",
+    "task": "7",
+    "title": "When a change halts, approval of a revised plan or osq retry for a halt that needs no steering resumes the run, and osq land lands it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "173-prompt-files-exist",
+    "task": "1",
+    "title": "When a task's entry names a missing file, the watcher ends it as entry_missing before the executor starts, and the change waits for steering",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "173-prompt-files-exist",
+    "task": "2",
+    "title": "When a task died with entry_missing, its inbox item names the missing files and osq plan <id>",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "173-prompt-files-exist",
+    "task": "3",
+    "title": "When osq lint runs on a change whose task entry names a file neither the default branch nor the change provides, it reports an error",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "174-doctor-line-endings",
+    "task": "1",
+    "title": "When osq asks the Vcs port for line endings, it gets every tracked file's index line ending",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "174-doctor-line-endings",
+    "task": "2",
+    "title": "When doctor runs with vcs.enabled in a repository with CRLF or mixed files, it prints a git-line-endings warning naming them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "175-capability-pages",
+    "task": "1",
+    "title": "When docs are built, each capability gets a page model with its requirements, decisions, ownership, code map and recent changes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "175-capability-pages",
+    "task": "2",
+    "title": "When docs are built, each ADR gets a page model and the site lists capabilities by group",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "175-capability-pages",
+    "task": "3",
+    "title": "When a user runs osq docs, it writes one Markdown page per capability and per ADR plus an index under --out",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "175-capability-pages",
+    "task": "4",
+    "title": "When the dashboard opens a docs route, it loads the docs site from /api/docs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "175-capability-pages",
+    "task": "5",
+    "title": "When the dashboard shows the Docs section, it lists capabilities by group and ADRs, and shows each capability and ADR page",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "176-event-driven-follow",
+    "task": "1",
+    "title": "When osq's own git write adds, removes or prunes a worktree, commits, or lands a fast-forward, it appends one line to the tree record",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "176-event-driven-follow",
+    "task": "2",
+    "title": "When the tree record changes, osq inbox --follow derives and re-reads the trees at once, and its backstop poll defaults to 300 seconds",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "176-event-driven-follow",
+    "task": "3",
+    "title": "When the trees change while osq serve runs, the dashboard watches the new trees and tells connected clients to refetch",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "177-readme-software-factory",
+    "task": "1",
+    "title": "When a reader opens the README, package.json or osq --help, osq is called a spec-driven software factory and the intro walks the flow from brief to land",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "178-gitattributes-scaffold",
+    "task": "1",
+    "title": "When osq init runs, it keeps the line endings block at the top of .gitattributes and says when it changed the file",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "178-gitattributes-scaffold",
+    "task": "2",
+    "title": "When doctor runs with vcs.enabled and .gitattributes lacks the current line endings block, it prints a gitattributes warning naming osq init",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "179-ungoverned-paths",
+    "task": "1",
+    "title": "When osq.config.ts sets or omits ungoverned, the resolved config holds the project's list or the default, and osq init shows the key commented",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "179-ungoverned-paths",
+    "task": "2",
+    "title": "When osq lint runs, ungoverned paths need no delta, and a delta that owns or names one gets a warning",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "179-ungoverned-paths",
+    "task": "3",
+    "title": "When osq init writes the managed blocks, planners and executors are told that ungoverned files are edited directly on the default branch and never pinned",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "180-ungoverned-docs-cleanup",
+    "task": "1",
+    "title": "When the test suite runs, no test file exists only to read README prose",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "180-ungoverned-docs-cleanup",
+    "task": "2",
+    "title": "When the harness and scaffold tests run, they check the scaffolded files and never the README or the repository's .env.example",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "180-ungoverned-docs-cleanup",
+    "task": "3",
+    "title": "When the gate and steering tests run, they check the planner block, config and CHANGELOG and never the README",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "180-ungoverned-docs-cleanup",
+    "task": "4",
+    "title": "When the tests of osq's own config, ADRs and scaffold run, they never read the README",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "180-ungoverned-docs-cleanup",
+    "task": "5",
+    "title": "When the command, report and product description tests run, they check the help, package.json and program output and never the README",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "181-doctor-sees-validator-failing",
+    "task": "1",
+    "title": "When the newest archived validator runs failed, osq doctor shows a failing validator-runs check with the count, the error and the fix",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "182-steered-approve-commits-atomically",
+    "task": "1",
+    "title": "When osq runs git, it sets GIT_OPTIONAL_LOCKS=0, so its status reads never write the index or hold index.lock",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "182-steered-approve-commits-atomically",
+    "task": "2",
+    "title": "When a steered approve's commit fails, its seal files go back to their bytes before the approve and it fails saying to run osq approve again",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "182-steered-approve-commits-atomically",
+    "task": "3",
+    "title": "When a change's plan files differ from its worktree's last commit, osq retry refuses and names them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "182-steered-approve-commits-atomically",
+    "task": "4",
+    "title": "When a steered approve's commit fails on a held index lock, the human approves again once the lock is gone and the change lands",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "183-change-verify-names-plan-conflict",
+    "task": "1",
+    "title": "When a change verify fails only on tests an earlier done task owns, the task dies blocked with a marker naming each test, its owner and osq plan <id>",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "184-language-gaps-reported",
+    "task": "1",
+    "title": "When a slice asks for a path's language, the languages kernel slice answers from the nearest manifest and says which gates cover it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "184-language-gaps-reported",
+    "task": "2",
+    "title": "When a project has a language other than TypeScript, osq doctor warns with a languages check naming the gates and extras that don't cover it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "184-language-gaps-reported",
+    "task": "3",
+    "title": "When a change's scope touches files of a language a gate does not cover, approval shows an amber language_gap notice naming those gates",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "185-language-support-adr",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 017 is accepted and records how osq supports a project's languages, and its rule is in AGENTS.md",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "186-task-outcomes-and-plan-hints",
+    "task": "1",
+    "title": "When osq query runs, task_outcomes holds one row per archived task with the shape its plan gave it and what happened",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "186-task-outcomes-and-plan-hints",
+    "task": "2",
+    "title": "When the archive holds enough tasks that ran, the plan prompt says what history says in counted lines between the record and the disclosures",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "188-word-bans-lint",
+    "task": "1",
+    "title": "When osq.config.ts sets or omits bannedWords, the resolved config holds the project's bans or none",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "188-word-bans-lint",
+    "task": "2",
+    "title": "When osq lint runs on a change whose task scope reaches a banned word's paths, it warns about each code span, fenced line or scenario quote holding the word",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "188-word-bans-lint",
+    "task": "3",
+    "title": "When osq's own config bans skipped in src, the ban test reads that ban from config",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "188-word-bans-lint",
+    "task": "4",
+    "title": "When osq init writes the planner block, planners are told banned words are listed in bannedWords and that lint warns about them",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "189-auto-steer-blocked",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 018 is accepted and records how the watcher runs a steering planner",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "189-auto-steer-blocked",
+    "task": "2",
+    "title": "When osq.config.ts sets autoSteer, defineConfig resolves it and plannerRunConfig gives the planner's harness, model and agent",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "189-auto-steer-blocked",
+    "task": "3",
+    "title": "When a run trigger fires with autoSteer on, the watcher runs the planner once on the steering prompt, puts back what it wrote outside the plan, lints, and records the outcome",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "189-auto-steer-blocked",
+    "task": "4",
+    "title": "When the automatic planner leaves a ready plan, the inbox, dispatch and next step offer osq approve with the changed files, and other outcomes are named beside osq plan",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "189-auto-steer-blocked",
+    "task": "5",
+    "title": "When osq watch runs with autoSteer on, the planner gets the prompt osq plan <id> --print prints",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "190-plan-handoff-prompt",
+    "task": "1",
+    "title": "When osq plan hands off a change locally, it prints the handoff line, the paste block, and the Claude Code command when that command can find the folder",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "190-plan-handoff-prompt",
+    "task": "2",
+    "title": "When a remote CLI plans against a server, it prints the same handoff for its working copy without the Claude Code command",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "192-change-page-phone",
+    "task": "1",
+    "title": "When the server builds a change document, it carries the change's next step, its plan paste block, and the automatic planner's record",
+    "attempts": 7,
+    "done": 1
+  },
+  {
+    "change": "192-change-page-phone",
+    "task": "2",
+    "title": "When the browser reads a change document, the page model gives its state, label, summary, buttons, and top block lines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "192-change-page-phone",
+    "task": "3",
+    "title": "When the change view renders, it shows the label, title, summary, one top block, the folded details, and the plan buttons that open the hand-off",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "192-change-page-phone",
+    "task": "4",
+    "title": "When the change page loads its actions, Approve or Land is the main button, Reject and Retry change sit in the More actions menu, and Retry task sits in its row",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "1",
+    "title": "When Claude Code, OpenCode or Codex reports the account's usage limit, the adapter writes a usage_limit event",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "2",
+    "title": "When osq reads a usage limit, usage-pause.ts gives the pause time and reads and writes .run/paused.md, and gates.usageLimitWaitSeconds sets the wait",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "3",
+    "title": "When an agent's run holds a usage_limit event, the watcher pauses every change until the reset and then reruns the same task with the same attempt",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "4",
+    "title": "When a running change holds an active pause, its next step reads running (paused until <time>) in osq show and osq status",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "5",
+    "title": "When a task is paused, the inbox lists it under Running as paused until <time> in JSON, text and the dashboard home",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "193-usage-limit-pause",
+    "task": "6",
+    "title": "When osq query runs, a pauses table lists every paused event of the archived changes after task_outcomes",
+    "attempts": 2,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 019 is accepted and records how a planner a human starts runs",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "2",
+    "title": "When a planner runs, its record names the process, and osq tells a live planner from one whose process is gone",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "3",
+    "title": "When a planner runs for a change, its next step is planning, its document carries the run, and the page model says so",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "4",
+    "title": "When osq plan <id> --run runs, a detached osq process plans the change in its own tree and records the outcome",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "5",
+    "title": "When the dashboard posts a plan action, the server runs osq plan <id> --run through the same command function",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "6",
+    "title": "When a planner runs for a change, osq approve waits for it, and a server-aimed osq plan --run starts it on the server",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "194-start-planning-button",
+    "task": "7",
+    "title": "When the Change page shows the hand-off, it offers Start planning, and while the planner runs it shows how long",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "195-dashboard-writing-adr",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 020 is accepted, and its checks test holds every dashboard screen to it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "196-shared-file-recertify",
+    "task": "1",
+    "title": "When a later task's dead attempt was discarded or its harness reports no file changes, the owner of a shared file still recertifies automatically and the path is credited from measured hashes",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "196-shared-file-recertify",
+    "task": "2",
+    "title": "When a task's scope regression recorded a passing verify, it is no steering trigger and its next step, inbox item and dispatch item offer osq retry",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "196-shared-file-recertify",
+    "task": "3",
+    "title": "When osq query runs, a recertifications table lists every attribution entry of the archived changes' recertification events after pauses",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "197-lint-duplicate-scenario-names",
+    "task": "1",
+    "title": "When a change's delta gives a capability a scenario name it already holds, osq lint and osq approve refuse it",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "198-manual-edits",
+    "task": "1",
+    "title": "When osq.config.ts sets vcs.manualEdits, the loaded config holds keep or block, and any other value fails loading",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "198-manual-edits",
+    "task": "2",
+    "title": "When a human runs osq manual with a comment, osq commits the checkout's uncommitted edits together with a record of what they touched",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "198-manual-edits",
+    "task": "3",
+    "title": "When approve or land stops on uncommitted edits, the message offers osq manual unless vcs.manualEdits is block",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "198-manual-edits",
+    "task": "4",
+    "title": "When osq query runs, a manual_edits table lists every manual edit record, listed last after recertifications",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "198-manual-edits",
+    "task": "5",
+    "title": "When a change is planned, the plan prompt ends with the manual edits whose capabilities no change has written since",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "199-autopilot-adr",
+    "task": "1",
+    "title": "When osq's decisions are read, ADR 021 is accepted, and its checks test holds autopilot off by default",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "1",
+    "title": "When osq.config.ts holds an autopilot block, the loaded config holds enabled, and any other key or value fails loading",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "2",
+    "title": "When a human runs osq queue approve, osq records every item's hash and clears an autopilot stop, and osq queue shows what the approval covers",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "3",
+    "title": "When the watcher asks what autopilot does next, osq reads the queue, its approval and the item's change and names one step",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "4",
+    "title": "When autopilot is on, the watcher plans, approves, runs and lands each approved queue item in order through the command functions, and stops with one record when a step needs a human",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "5",
+    "title": "When autopilot has stopped, osq inbox and osq status show the reason and the one command that resumes the queue",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "200-autopilot-queue-run",
+    "task": "6",
+    "title": "When the home view lists an autopilot stop, it shows the reason and links the title only when the stop names a change",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "201-rust-test-gate",
+    "task": "1",
+    "title": "When a language map reads a Cargo workspace, it lists each crate's test folders, and the Rust adapter finds each test module's lines",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "201-rust-test-gate",
+    "task": "2",
+    "title": "When an executor edits a preexisting Rust test in a crate's tests folder or inside a test module without tests.modify, the runner kills the task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "201-rust-test-gate",
+    "task": "3",
+    "title": "When a task's scope holds an existing crate test without tests.modify, lint rejects the task",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "201-rust-test-gate",
+    "task": "4",
+    "title": "When osq reports the gates a Rust project lacks, the test-modification gate is no longer one",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "202-rust-verify-lint",
+    "task": "1",
+    "title": "When osq reads the Rust preset, it names cargo and its subcommands as verify runners, and verify-command lint covers Rust",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "202-rust-verify-lint",
+    "task": "2",
+    "title": "When a Rust project's task verify runs cargo, lint accepts it, and a chained verify without package.json is told to use a script file",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "203-rust-dependency-gate",
+    "task": "1",
+    "title": "When the Rust adapter reads a Cargo.toml, it returns the crates every dependency table declares, or the line where it could not read",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "203-rust-dependency-gate",
+    "task": "2",
+    "title": "When a task adds a crate to a scoped Cargo.toml, the watcher records it and kills the task when an accepted ADR denies it or the manifest cannot be read",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "203-rust-dependency-gate",
+    "task": "3",
+    "title": "When osq reports the gates a Rust project lacks, the denied-dependency gate is no longer one",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "204-rust-core",
+    "task": "1",
+    "title": "When osq-core reads an event line, it yields the typed Event or a read error, and writes it back with the same JSON value",
+    "attempts": 3,
+    "done": 1
+  },
+  {
+    "change": "204-rust-core",
+    "task": "2",
+    "title": "When a change's event streams are folded, task and change state follow the transition tables and the status order",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "204-rust-core",
+    "task": "3",
+    "title": "When a change is approved or archived, only a matching seal or a done change passes, and the compiler refuses any other path",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "205-rust-adrs",
+    "task": "1",
+    "title": "When osq's decisions are read, ADRs 022 to 026 are accepted for rust-core with their checks, and nothing warns",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "206-rust-agent-guide",
+    "task": "1",
+    "title": "When an executor reads AGENTS.md, it finds crates/ in the Layout and a Rust crates section with the rules for working there",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "207-adr-groups",
+    "task": "1",
+    "title": "When an ADR's applies_to names group:<name>, readDecisions resolves governs to the group's members and validation warns on a group with no living member",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "207-adr-groups",
+    "task": "2",
+    "title": "When an ADR applies to a group, decisions lint, traceability, the system graph and the ADR docs page treat each member as named",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "207-adr-groups",
+    "task": "3",
+    "title": "When osq's decisions are read, ADRs 022 to 026 apply to group:rust and still govern rust-core with no warning",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "208-rust-mutants-core",
+    "task": "1",
+    "title": "When scripts/mutants-rust.sh runs over the workspace, every mutant cargo-mutants makes in rust-core is caught by a test",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "208-rust-mutants-core",
+    "task": "2",
+    "title": "When Rust CI runs, it checks each push's and pull request's diff with cargo-mutants and the whole workspace weekly, and ADR 024 says the check blocks",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "209-rust-mutants-verify",
+    "task": "1",
+    "title": "When osq runs a verify for a change with a base commit, the command gets OSQ_DIFF naming a file with the change's diff",
+    "attempts": 1,
+    "done": 1
+  },
+  {
+    "change": "209-rust-mutants-verify",
+    "task": "2",
+    "title": "When scripts/verify-rust.sh runs with OSQ_DIFF set, it runs cargo-mutants on that diff after the tests, and AGENTS.md tells executors so",
+    "attempts": 1,
+    "done": 1
+  }
+]

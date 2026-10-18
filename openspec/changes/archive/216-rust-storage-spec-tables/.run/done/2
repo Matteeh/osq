@@ -1,0 +1,62 @@
+---
+scope_resolver: 2
+scope_hash: sha256:7608212f79d5c932180e0b4ddffd8cf0cbdd88e1d7937ec3dbf114ea804066c8
+build_stamp: 9c448315
+project_commit: cb8512ac
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:248d855d3b32f8368cf43af1de4fec5830e82347f1382b41083b68b63f65f1c4
+  crates/kernel/storage/Cargo.toml: sha256:4ef3ed7ad8e071d6a0f125dd40815d6a1989cf79f4eb2447b9620d9eb4af1fff
+  crates/kernel/storage/src/lib.rs: sha256:bbdfac3d5f60cfddd2e052c36f0f011212a655689aa7c18c065af40962df51ea
+  crates/kernel/storage/src/read/error.rs: sha256:b8a99bca83b18d97ec75f4f503f10ac42cb913693618777f4caa143e1449f0fe
+  crates/kernel/storage/src/read/listing.rs: sha256:aaac8dc86f94f9b06b02811ef8fab20c343a2a1f0d64a6bf5ba6017c4bfdb367
+  crates/kernel/storage/src/read/manual.rs: sha256:3eea08133fc4e3fa68118185c011d85be145f169cfaa9b1830f189e0995a6982
+  crates/kernel/storage/src/read/mod.rs: sha256:92d3dba856a0635b2a95b15a081bf265a0f9238b740c785303ca0153da8324c7
+  crates/kernel/storage/src/read/results.rs: sha256:b5cc9c79e7d99361f7bbb0b3d4d8b99d9c9aad892292cb1a29d1ff72355ad526
+  crates/kernel/storage/src/read/sections.rs: sha256:573aadbe1b2e4ddacf1df86c11409cdb257b8cfa9f69619408b59bda9af7d382
+  crates/kernel/storage/src/read/snapshot.rs: sha256:701882c5f51e467f0b393a394cb8eb60aea571eef54e7a6fa231254fe1a760f7
+  crates/kernel/storage/src/read/snapshot/events.rs: sha256:cf6006e60d137e665089a59ee1bdc4c72eda9b3a17e6b1653fd06921015d9c5f
+  crates/kernel/storage/src/read/snapshot/folder.rs: sha256:8f1b5a21e14a5ec5a1bff9cafda500963eadd7ec599e9437521c288de30fb19f
+  crates/kernel/storage/src/read/snapshot/outcomes.rs: sha256:4d8d89dd21fa9a8d7a66a8878c45ac72bd3fbdec693283b3b119106cd989fc1b
+  crates/kernel/storage/src/read/snapshot/records.rs: sha256:9be387cdda0af0641b895708db33c6a4b088af825c9b9af8bc997ebbc3a47154
+  crates/kernel/storage/src/read/snapshot/specs.rs: sha256:a5d492b89aba920d4cd7d61a8c0ebe46cb4a11657c32e70fbc9d3b371c2fe931
+  crates/kernel/storage/src/read/snapshot/table_events.rs: sha256:55db1b6ed02efc79cc829f393a5a636681ca1874e4e87269140caf7357d731a4
+  crates/kernel/storage/src/read/text.rs: sha256:0f1c44cd242353dc771ae5344c855605d654eb933b6313c516047b505c1bccd9
+  crates/kernel/storage/tests/fixtures/spec-tables-rows/requirements.json: sha256:ae7176e67402c9f66c557a2d651c66a4073454a7537fe10691a921940b90874f
+  crates/kernel/storage/tests/fixtures/spec-tables-rows/task_outcomes.json: sha256:e6d1c37b7b241edd08ef157ed2769403e9d3ce44074be3adc8ffc35f794a4ecb
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/approved: sha256:7f8518f7db5e9a55049f49c4ea6d6e8f509695231e60cbd607bcb36c88a75a14
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/done/1: sha256:d117fa006ba9208500b2930ce69cbde436c647afa917cb7396a9bc9111a46dd2
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/done/2: sha256:d117fa006ba9208500b2930ce69cbde436c647afa917cb7396a9bc9111a46dd2
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/done/3: sha256:d117fa006ba9208500b2930ce69cbde436c647afa917cb7396a9bc9111a46dd2
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/done/4: sha256:d117fa006ba9208500b2930ce69cbde436c647afa917cb7396a9bc9111a46dd2
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/events/1.jsonl: sha256:73da99caf5d9174633385158cdfb396518599b19f3c4d82a1f89eeaaf3799528
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/events/10.jsonl: sha256:b8e0afecfe19442a7388f92dc51c23eced366ab88e752e98d2a533a882d1e8b0
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/events/2.jsonl: sha256:791966b7d225a68e1f3c21eb6bcd16a127d5b717ce1bfa0a9e230f6e8c6b7ec9
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/events/3.jsonl: sha256:aec5e284bf772053e87e43796c6dbb1d2c0b2d48e768bcca6fd68b752b2d36f3
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/.run/events/4.jsonl: sha256:f33d0e96424e0226f8569017d8459c59a4075344f51fb06edc61e16183434d49
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/proposal.md: sha256:3dc7c530f36b791800bd4f47a4807cf6d7deac4430332a4fa139fe0e78a4df7e
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/specs/alpha/spec.md: sha256:7246af1e7fe1fcdf678858416c5858a9920163c5001424d13fc70abd6d68375c
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/specs/beta/spec.md: sha256:ce35e73962d64fb67b2caedd7a97f99f984b91bd04a1fb5d801e1eca1074c26b
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/specs/empty/notes.txt: sha256:8575833c64b3a0fca229d62c17d07b9191080fe0090796078146c53733ba0219
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/tasks/1.md: sha256:d19c60ef2fb10b64ad58165ed092ccbc9a1015904f17e0c0ed6f4aa9ad2ebe84
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/tasks/10.md: sha256:8b84ed8486e3a234e6b0e8998cdb08a687a42b54dded4e67b40216a88ee711de
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/tasks/2.md: sha256:d88fa80336141392637e5d1ea6470440d687f5d112742d225947a865301079ab
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/tasks/3.md: sha256:2f668f3bb64e9f2bb0da3b6de3659da32432f945f6dd1397febfd1f5e4f3d028
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/001-planned/tasks/4.md: sha256:a543a5dd446bbd4d16b3f49e67cb7cda69110b8055e84ab2aed7e899ae80fbda
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/002-bare/proposal.md: sha256:b2eb2ac5542c534bfe3d4673474d39ccbbda1e52ae52a7f10a6a5e4ba4bb68ad
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/archive/002-bare/tasks/1.md: sha256:3683a67701060da277dd41718ac67dbc3e1d08ea418bac520d15d4cd510af3fa
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/rejected/003-dropped/proposal.md: sha256:da0c8a8c1ffcf82f3cae8b42a3c5371d2cc6e4508a7879ad11352e56d87e165c
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/rejected/003-dropped/specs/alpha/spec.md: sha256:e5da81988cc7105ce46b75f95ba75c975501dee2e4a2cb03c1a032d4df8d327a
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/changes/rejected/003-dropped/tasks/1.md: sha256:c9660263f429549b9fbc46d35343764ac5caa5d0ae77698305f95a72d56e8b85
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/specs/alpha/spec.md: sha256:bfebb9e67fcc3f33f6caf98334e90df90f3aac40a200f7ca387816969382754b
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/specs/beta/spec.md: sha256:985522feaedf9a25f8c7fe4f72005298be91c01b1cef7c6589797e9138baa10d
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/specs/gamma/spec.md: sha256:41a298d972ac2b827ccca2544c681a7c522f16626958ce5cbee92aadb27c990a
+  crates/kernel/storage/tests/fixtures/spec-tables/openspec/specs/omega/spec.md: sha256:6f9d864836f4e9a2adcd3864c66b727974fe764b4503a1d33fbd2adb8dbc24ec
+  crates/kernel/storage/tests/reading_specs.rs: sha256:ffc49eb168a6a39371dd2adb8c60a81841d90837214ca05e32573ca357d30294
+  crates/kernel/storage/tests/reading_specs_edges.rs: sha256:dc7b106f5ada46f607273c5e31ef3e1b8e442f9f690ba369c68f1b17a6626790
+  crates/kernel/storage/tests/reading_specs_outcomes.rs: sha256:155a4aaf130298b4e27400a404e10d71dd170b10b3551240b0265ff7345eb579
+original_scope_hash: sha256:3cd33cd9c3e7d11861894a9bdcb0b0dffb46c15a621f762f7bf96afeb3df803d
+recertified_at: 2026-10-18T18:23:45.294Z
+recertification_count: 1
+---
+2026-10-18T17:54:26.284Z

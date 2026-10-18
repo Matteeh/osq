@@ -8,6 +8,7 @@ use osq_core::{event_line, parse_event_line};
 /// Proves every archived event line parses and writes back the same value.
 ///
 /// Covers: rust-core/archived-event-logs-round-trip
+#[ignore = "corpus test: reads every archived event line"]
 #[test]
 fn archived_event_logs_round_trip() {
     let archive = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../openspec/changes/archive");

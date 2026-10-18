@@ -27,11 +27,10 @@ async function livingCapabilityNames(projectRoot: string, config: OsqConfig): Pr
   return (await listCapabilityFolders(projectRoot, config)).map((folder) => folder.id);
 }
 
-/** The capabilities an ADR applies to: every living name, its list, or none. */
-function capabilitiesFor(appliesTo: Adr['appliesTo'], living: readonly string[]): string[] {
-  if (appliesTo === 'all') return [...living];
-  if (appliesTo === null) return [];
-  return [...appliesTo];
+/** The capabilities an ADR applies to: every living name, its governs, or none. */
+function capabilitiesFor(governs: Adr['governs'], living: readonly string[]): string[] {
+  if (governs === 'all') return [...living];
+  return [...governs];
 }
 
 /**
@@ -59,7 +58,7 @@ export async function buildAdrPages(projectRoot: string, config: OsqConfig): Pro
       rule: adr.rule,
       appliesTo: adr.appliesTo,
       supersededBy: adr.supersededBy,
-      capabilities: capabilitiesFor(adr.appliesTo, living),
+      capabilities: capabilitiesFor(adr.governs, living),
       body: content === null ? '' : adrBody(content),
     });
   }

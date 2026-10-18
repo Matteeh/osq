@@ -1,0 +1,442 @@
+[
+  {
+    "change": "041-scope-regression-recertification",
+    "task": "1",
+    "recertified_at": "2026-09-21T21:46:36.560Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/harness/types.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "1",
+    "recertified_at": "2026-09-22T06:35:30.864Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/linter.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "042-deterministic-scope-resolution",
+    "task": "2",
+    "recertified_at": "2026-09-22T06:45:32.400Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/harness/types.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "043-tool-native-planning",
+    "task": "3",
+    "recertified_at": "2026-09-22T13:32:45.846Z",
+    "outcome": "requeued",
+    "automatic": 0,
+    "path": "src/core/show.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "2",
+    "recertified_at": "2026-09-22T17:30:43.858Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/web-server.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "recertified_at": "2026-09-22T17:58:47.186Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "recertified_at": "2026-09-22T18:10:42.270Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "recertified_at": "2026-09-22T20:00:41.363Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "recertified_at": "2026-09-22T20:12:04.826Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "package.json (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "4",
+    "recertified_at": "2026-09-22T20:12:04.826Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "pnpm-lock.yaml (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "5",
+    "recertified_at": "2026-09-22T18:11:07.355Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "5",
+    "recertified_at": "2026-09-22T20:01:05.878Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "044-read-only-dashboard",
+    "task": "6",
+    "recertified_at": "2026-09-22T20:01:29.575Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/app.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "046-immediate-task-breakage-attribution",
+    "task": "1",
+    "recertified_at": "2026-09-22T21:07:08.097Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/watcher/runner.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "046-immediate-task-breakage-attribution",
+    "task": "1",
+    "recertified_at": "2026-09-22T21:07:08.097Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "tests/runner-test-gating.test.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/init.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/manifest.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/new.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/package-root.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/planning.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/web-static.ts (deleted)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:06:03.392Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "tests/package-root.test.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "047-capability-folders",
+    "task": "2",
+    "recertified_at": "2026-09-22T22:09:50.998Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "tests/function-budget.test.ts (added)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "048-managed-instructions-split",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:38:21.562Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "tests/fixtures/events/dead.jsonl (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "048-managed-instructions-split",
+    "task": "1",
+    "recertified_at": "2026-09-22T22:38:21.562Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "tests/fixtures/events/verified.jsonl (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "2",
+    "recertified_at": "2026-09-27T22:33:09.363Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/core/web/system-graph-types.ts (modified)",
+    "credited_to": "3",
+    "source": "file_changed"
+  },
+  {
+    "change": "106-capability-graph",
+    "task": "2",
+    "recertified_at": "2026-09-27T22:33:09.363Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/core/web/system-graph.ts (modified)",
+    "credited_to": "3",
+    "source": "file_changed"
+  },
+  {
+    "change": "141-commands-report-failure",
+    "task": "1",
+    "recertified_at": "2026-10-02T21:40:49.882Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "tests/steering-plan-default-branch.test.ts (modified)",
+    "credited_to": "3",
+    "source": "file_changed"
+  },
+  {
+    "change": "147-change-detail-model",
+    "task": "1",
+    "recertified_at": "2026-10-04T12:24:49.339Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/core/status/show-types.ts (modified)",
+    "credited_to": "2",
+    "source": "file_changed"
+  },
+  {
+    "change": "147-change-detail-model",
+    "task": "1",
+    "recertified_at": "2026-10-04T12:24:49.339Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/core/status/show.ts (modified)",
+    "credited_to": "2",
+    "source": "file_changed"
+  },
+  {
+    "change": "147-change-detail-model",
+    "task": "1",
+    "recertified_at": "2026-10-04T12:24:49.339Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "tests/function-budget.test.ts (modified)",
+    "credited_to": "2",
+    "source": "file_changed"
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "1",
+    "recertified_at": "2026-10-05T13:47:12.028Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "decisions/010-validator-role.md (modified)",
+    "credited_to": "4",
+    "source": "file_changed"
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "2",
+    "recertified_at": "2026-10-05T13:47:13.112Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "README.md (modified)",
+    "credited_to": "4",
+    "source": "file_changed"
+  },
+  {
+    "change": "149-validator-observe",
+    "task": "3",
+    "recertified_at": "2026-10-05T16:43:45.124Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "src/core/vcs/git-vcs.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "159-server-mode-adr",
+    "task": "1",
+    "recertified_at": "2026-10-08T16:40:26.508Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "decisions/README.md (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "171-trial-signals-in-query",
+    "task": "3",
+    "recertified_at": "2026-10-10T23:01:08.520Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/core/report/query-tables.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "173-prompt-files-exist",
+    "task": "1",
+    "recertified_at": "2026-10-11T11:56:37.652Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "tests/entry-missing-run.test.ts (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "192-change-page-phone",
+    "task": "3",
+    "recertified_at": "2026-10-14T09:13:24.138Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "packages/ui/src/change/ChangeView.tsx (modified)",
+    "credited_to": "unknown",
+    "source": null
+  },
+  {
+    "change": "201-rust-test-gate",
+    "task": "1",
+    "recertified_at": "2026-10-17T12:15:08.880Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "src/kernel/languages/presets.ts (modified)",
+    "credited_to": "4",
+    "source": "measures"
+  },
+  {
+    "change": "204-rust-core",
+    "task": "1",
+    "recertified_at": "2026-10-17T19:58:41.033Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "Cargo.lock (modified)",
+    "credited_to": "2",
+    "source": "measures"
+  },
+  {
+    "change": "204-rust-core",
+    "task": "1",
+    "recertified_at": "2026-10-17T19:58:41.033Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "crates/core/Cargo.toml (modified)",
+    "credited_to": "2",
+    "source": "measures"
+  },
+  {
+    "change": "204-rust-core",
+    "task": "1",
+    "recertified_at": "2026-10-17T19:58:41.033Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "crates/core/src/lib.rs (modified)",
+    "credited_to": "2",
+    "source": "measures"
+  },
+  {
+    "change": "204-rust-core",
+    "task": "1",
+    "recertified_at": "2026-10-17T20:57:25.071Z",
+    "outcome": "passed",
+    "automatic": 0,
+    "path": "crates/core/src/lib.rs (modified)",
+    "credited_to": "ambiguous",
+    "source": null
+  },
+  {
+    "change": "204-rust-core",
+    "task": "2",
+    "recertified_at": "2026-10-17T20:03:40.025Z",
+    "outcome": "passed",
+    "automatic": 1,
+    "path": "crates/core/src/lib.rs (modified)",
+    "credited_to": "3",
+    "source": "measures"
+  }
+]

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:be92eb6601139f90167ea722a6b9b0bc7520435b8116cc0bd16891b0364d28e6"
+build_stamp: "8a77cf42"
+project_commit: "023f5635"
+exit_code: 0
+scope_files: {"crates/kernel/storage/tests/archive_corpus.rs":"sha256:1cf6c7a17bb10be1733b9af03b220663fe80c3f96531db942c3cce07665f4498"}
+---
+2026-10-18T13:01:00.851Z

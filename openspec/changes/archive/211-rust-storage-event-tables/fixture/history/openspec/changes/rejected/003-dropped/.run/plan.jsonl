@@ -1,0 +1,2 @@
+{"type":"plan_ready","timestamp":"2026-09-30T11:00:00.000Z","data":{"hash":"sha256:d","notices":[{"id":"first-draft","severity":"amber","folded":true}]}}
+{"type":"plan_ready","timestamp":"2026-09-30T12:00:00.000Z","data":{"hash":"sha256:e","notices":[{"id":"last-draft","severity":"red","folded":false},{"id":"also-last","severity":"grey","folded":true}]}}

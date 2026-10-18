@@ -1,0 +1,30 @@
+[
+  {
+    "change": "001-run",
+    "task": "1",
+    "pick": 1,
+    "file": "src/a.rs",
+    "function": "f",
+    "outcome": "survived",
+    "reason": "two survived",
+    "killed": 2,
+    "survived": 2,
+    "invalid": 1,
+    "duration": 3.25,
+    "scenarios": "rust-storage: One"
+  },
+  {
+    "change": "001-run",
+    "task": "2",
+    "pick": 1,
+    "file": "src/b.rs",
+    "function": "g",
+    "outcome": "measured",
+    "reason": null,
+    "killed": 1,
+    "survived": 0,
+    "invalid": 0,
+    "duration": 3,
+    "scenarios": ""
+  }
+]

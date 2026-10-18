@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9589919dcc4545bc4898b91ba7d235e7910ac1bf52bad24ebcf3a8d6b063565e"
+build_stamp: "9c448315"
+project_commit: "45497510"
+exit_code: 0
+scope_files: {"crates/kernel/specs/src/lib.rs":"sha256:d86750ffdff98a397620b2a0fd69e9a2963c4e8dce6d72bf3ba9ee5e8abbb90f","crates/kernel/specs/src/owners/glob.rs":"sha256:a6f3fcac20ead677a4d822a903ecad3874e9fc01536b1b8d5224b8c26ca1ed7a","crates/kernel/specs/src/owners/mod.rs":"sha256:4a1503f96fdd7889ec1466ada6d4dd291bc1a1e2b11d27634466becde136f1a6","crates/kernel/specs/src/owners/ownership.rs":"sha256:3311bc8efa94a661481f21f14c9f18ce087eec9671834863627e0ebaf1998059","crates/kernel/specs/tests/fixtures/owners/specs/README.md":"sha256:0b0fac48a4f94db1d4f61e7285bf0bca8070922834406746d5788b3a427fbe54","crates/kernel/specs/tests/fixtures/owners/specs/alpha/spec.md":"sha256:bfebb9e67fcc3f33f6caf98334e90df90f3aac40a200f7ca387816969382754b","crates/kernel/specs/tests/fixtures/owners/specs/beta/spec.md":"sha256:985522feaedf9a25f8c7fe4f72005298be91c01b1cef7c6589797e9138baa10d","crates/kernel/specs/tests/fixtures/owners/specs/gamma/spec.md":"sha256:41a298d972ac2b827ccca2544c681a7c522f16626958ce5cbee92aadb27c990a","crates/kernel/specs/tests/fixtures/owners/specs/omega/spec.md":"sha256:6f9d864836f4e9a2adcd3864c66b727974fe764b4503a1d33fbd2adb8dbc24ec","crates/kernel/specs/tests/fixtures/owners/specs/zeta/notes.txt":"sha256:eb92dd669e83f03d2835e9c08f36e9976faed886079e2e1236c7ed4983c2fd57","crates/kernel/specs/tests/owners.rs":"sha256:a9aa565536d29b6fcb4a1b540e4fd2cd5b66cbbc62404b260db1cd3a66ece250"}
+---
+2026-10-18T17:39:13.957Z

@@ -1,0 +1,6 @@
+{"type":"started","timestamp":"2026-10-01T10:06:00.000Z","data":{"timeoutSeconds":1800}}
+{"type":"focused_ran","timestamp":"2026-10-01T10:07:00.000Z","data":{"command":"c","files":[],"scenarios":[],"outcome":"failed","exitCode":1,"duration":2,"timedOut":true,"output":"x"}}
+{"type":"mutation_ran","timestamp":"2026-10-01T10:08:00.000Z","data":{"file":"src/b.rs","function":"g","ranges":[],"scenarios":[],"tests":[],"outcome":"measured","killed":1,"survived":0,"invalid":0,"survivors":null,"duration":3,"exitCode":null}}
+{"type":"recertification","timestamp":"2026-10-01T10:09:00.000Z","data":{"task":"2","outcome":"requeued","differingPaths":[],"attribution":null,"command":"c","exitCode":1,"output":"","timedOut":false,"recordedHash":"sha256:r","currentHash":"sha256:t"}}
+{"type":"recertification","timestamp":"2026-10-01T10:10:00.000Z","data":{"task":"2","outcome":"requeued","differingPaths":[],"attribution":[{"path":"src/d.rs (deleted)","attribution":"1"}],"command":"c","exitCode":1,"output":"","timedOut":false,"recordedHash":"sha256:r","currentHash":"sha256:t","automatic":false}}
+{"type":"validator_ran","timestamp":"2026-10-01T10:11:00.000Z","data":{"outcome":"passed","harness":"claude","model":"m","duration":1,"exitCode":0,"scenarios":1,"findings":[],"restored":[]}}

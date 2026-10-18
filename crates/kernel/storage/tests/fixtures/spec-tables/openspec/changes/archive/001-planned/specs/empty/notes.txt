@@ -1,0 +1,1 @@
+A delta folder without spec.md adds no requirements rows.

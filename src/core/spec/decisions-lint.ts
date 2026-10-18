@@ -101,11 +101,11 @@ function unnamedAdrFindings(
   const mentioned = mentionedAdrNumbers(section);
   const findings: LintFinding[] = [];
   for (const adr of adrs) {
-    const applies = adr.appliesTo;
-    if (adr.status !== 'accepted' || applies === null || applies === 'all') {
+    const governs = adr.governs;
+    if (adr.status !== 'accepted' || governs === 'all') {
       continue;
     }
-    const capability = written.find((name) => applies.includes(name));
+    const capability = written.find((name) => governs.includes(name));
     if (capability === undefined) {
       continue;
     }

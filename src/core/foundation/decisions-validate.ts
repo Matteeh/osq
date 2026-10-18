@@ -1,4 +1,5 @@
 import type { OsqConfig } from './config.js';
+import { appliesToGroup } from './decisions-groups.js';
 import type { Adr, DecisionRecords } from './decisions.js';
 
 /** Validation errors and warnings for a project's ADRs. */
@@ -47,19 +48,40 @@ function validateSuperseded(adr: Adr, numbers: readonly string[], errors: string
   }
 }
 
-function warnUnknownCapabilities(adr: Adr, living: ReadonlySet<string>, warnings: string[]): void {
+function warnUnknownCapabilities(
+  adr: Adr,
+  living: ReadonlySet<string>,
+  livingGroups: ReadonlySet<string>,
+  warnings: string[],
+): void {
   if (adr.appliesTo === null || adr.appliesTo === 'all') return;
-  for (const name of adr.appliesTo) {
-    if (!living.has(name)) {
-      warnings.push(`${adr.path}: applies_to capability "${name}" has no living spec`);
+  for (const entry of adr.appliesTo) {
+    const group = appliesToGroup(entry);
+    if (group === null) {
+      if (!living.has(entry)) {
+        warnings.push(`${adr.path}: applies_to capability "${entry}" has no living spec`);
+      }
+    } else if (!livingGroups.has(group)) {
+      warnings.push(`${adr.path}: applies_to group "${group}" has no living capability`);
     }
   }
+}
+
+/** The groups a living capability's sidecar names. */
+function livingSidecarGroups(records: DecisionRecords, living: ReadonlySet<string>): Set<string> {
+  const groups = new Set<string>();
+  if (!records.groups) return groups;
+  for (const [capability, group] of records.groups) {
+    if (living.has(capability)) groups.add(group);
+  }
+  return groups;
 }
 
 /**
  * Validates the parsed ADRs: status vocabulary, malformed `checks` and `denies`
  * fields, an accepted ADR's applies_to and rule, a superseded ADR's replacement,
- * plus warnings for ignored files and for capability names without a living spec.
+ * plus warnings for ignored files, for capability names without a living spec,
+ * and for group entries no living capability's sidecar names.
  */
 export function validateDecisions(
   records: DecisionRecords,
@@ -69,6 +91,7 @@ export function validateDecisions(
   const errors: string[] = [];
   const warnings: string[] = [];
   const living = new Set(livingCapabilities);
+  const livingGroups = livingSidecarGroups(records, living);
   const numbers = records.adrs.map((adr) => adr.number);
 
   for (const adr of records.adrs) {
@@ -79,7 +102,7 @@ export function validateDecisions(
     }
     if (adr.status === 'accepted') validateAccepted(adr, config, errors);
     if (adr.status === 'superseded') validateSuperseded(adr, numbers, errors);
-    warnUnknownCapabilities(adr, living, warnings);
+    warnUnknownCapabilities(adr, living, livingGroups, warnings);
   }
 
   for (const ignoredPath of records.ignored) {

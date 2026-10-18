@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5e1f2fda8cc47bace0936612a02e510628e07dbad3d3cce35c52b3bb961b7c5e"
+build_stamp: "5acad091"
+project_commit: "a7b8922c"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:6f9aa97b3aa3a93a3b17fbb83ba2606333dbedc9c45f4c6da71ebda7e53da464","scripts/verify-rust.sh":"sha256:d47d73d7baef4e20e6ca77bd8c3248a85771a1d8a2962c2a51ab60119ce8d8d5","tests/rust-agent-guide.test.ts":"sha256:4fe71d755042e55ecc07edbf61eb570c99c9c19557239ae6140a2a36a676e0df","tests/rust-verify-script.test.ts":"sha256:d9753938de5c1cd1eae0fb34a3786fed014096293f3f717e4117af9402d8beaa"}
+---
+2026-10-18T07:51:01.525Z

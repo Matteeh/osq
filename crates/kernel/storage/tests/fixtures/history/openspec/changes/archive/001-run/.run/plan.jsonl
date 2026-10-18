@@ -1,0 +1,5 @@
+{"type":"plan_ready","timestamp":"2026-09-30T09:00:00.000Z","data":{"hash":"sha256:a","notices":[{"id":"draft-only","severity":"amber","folded":false}]}}
+
+{not json
+{"type":"plan_ready","timestamp":"2026-09-30T09:30:00.000Z","data":{"hash":"sha256:b","notices":[{"id":"bad","severity":"purple","folded":false}]}}
+{"type":"plan_ready","timestamp":"2026-09-30T10:00:00.000Z","data":{"hash":"sha256:c","notices":[{"id":"scope-wide","severity":"red","folded":true}],"traceability":[{"severity":"warning","file":"src/a.rs","message":"src/a.rs:3: tag is not valid"},{"severity":"error","file":"src/b.rs"}]}}
