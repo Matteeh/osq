@@ -1,0 +1,7 @@
+# cargo-mutants settings (ADR 024).
+#
+# `exclude_re` is allowed only for a mutant shown to be equivalent to the
+# original code, and each pattern needs a comment saying why it is equivalent.
+# It is empty: every mutant cargo-mutants makes in the workspace is caught by a
+# test.
+exclude_re = []

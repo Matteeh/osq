@@ -101,6 +101,13 @@ ADR page in the UI can list them.
 - **Coverage check.** At archive, run the change's covering tests under
   `cargo llvm-cov` and check that each one executes the function that names
   its scenario.
+- **Mutation check.** `cargo llvm-cov` proves a test runs the code, and
+  `cargo mutants` proves the test checks it. `scripts/mutants-rust.sh` runs
+  cargo-mutants the same way locally and in Rust CI, which checks the diff of
+  each push and pull request and the whole workspace weekly. rust-core has
+  zero missed mutants, so the CI check blocks. Next it becomes part of osq's
+  verify for Rust changes, so agents fix misses inside the task. Each crate
+  follows the same path as it is built.
 - **ADR checks before land.** The land feature refuses unless every accepted
   ADR's `checks` ran and passed on the land tree.
 - **Departure gate.** Approve refuses a `Departs from ADR <n>` line unless the

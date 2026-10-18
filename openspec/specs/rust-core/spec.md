@@ -10,9 +10,11 @@ workspace.
 ## Requirements
 
 ### Requirement: Code ownership
-<!-- source: crates/core/**, tests/rust-adrs.test.ts -->
+<!-- source: crates/core/**, tests/rust-adrs.test.ts, tests/rust-ci.test.ts, scripts/verify-rust.sh, scripts/mutants-rust.sh, .cargo/mutants.toml, .github/workflows/rust.yml -->
 The rust-core capability SHALL own the `osq-core` crate: its manifest, its
-source and its tests, and the checks test of the Rust rebuild decisions.
+source and its tests, and the checks test of the Rust rebuild decisions. It
+SHALL also own the Rust workspace's verify and mutation scripts, the
+cargo-mutants settings, the Rust CI workflow and its test.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for the `Event` enum, the folds or the change typestate
@@ -21,6 +23,10 @@ source and its tests, and the checks test of the Rust rebuild decisions.
 #### Scenario: Rust decisions test ownership
 - **WHEN** file ownership is resolved for `tests/rust-adrs.test.ts`
 - **THEN** system maps it to rust-core
+
+#### Scenario: Rust tooling ownership
+- **WHEN** file ownership is resolved for `scripts/verify-rust.sh`, `scripts/mutants-rust.sh`, `.cargo/mutants.toml`, `.github/workflows/rust.yml` and `tests/rust-ci.test.ts`
+- **THEN** system maps each to rust-core
 
 ### Requirement: Core does no IO
 The `osq-core` crate SHALL depend only on `serde` and `serde_json` at runtime,
@@ -154,7 +160,7 @@ exactly `type`, `timestamp` and `data` or `type` or `timestamp` is not a
 string, `UnknownType` naming the type when `type` is not in the table of
 "Event types", and `InvalidData` naming the type when `data` lacks a required
 field, holds a field the type does not list, or holds a value of the wrong
-JSON kind.
+JSON kind. Each `EventError` SHALL display as the message of its kind.
 
 #### Scenario: Lines that are refused
 - **WHEN** each line below is parsed
@@ -171,12 +177,24 @@ JSON kind.
 | `{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","extra":true}}` | `InvalidData` naming `done` |
 | `{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":1}}` | `InvalidData` naming `done` |
 
+#### Scenario: Read error messages
+- **WHEN** each error below is displayed
+- **THEN** its text is the message of its row:
+
+| Error | Message |
+|---|---|
+| `NotJson` | `line is not one JSON object` |
+| `InvalidEnvelope` | `line is not a type/timestamp/data envelope` |
+| `UnknownType` naming `launched` | ``unknown event type `launched` `` |
+| `InvalidData` naming `done` | ``invalid data for event type `done` `` |
+
 ### Requirement: Event streams
 `Stream::from_file_name` SHALL name the stream an events file holds:
 `<n>.jsonl` with a task id `<n>` is that task's stream, `change.jsonl` the
 change stream and `validator.jsonl` the validator stream; any other name has
 no stream. A `TaskId` SHALL order by its leading number first and then by its
-text, as the TypeScript `compareNumericPrefix` does.
+text, as the TypeScript `compareNumericPrefix` does, and SHALL display as its
+text.
 
 #### Scenario: File names and task order
 - **WHEN** each file name below is read as a stream
@@ -194,6 +212,14 @@ text, as the TypeScript `compareNumericPrefix` does.
 #### Scenario: Task ids sort by number
 - **WHEN** the task ids `10`, `2` and `1` are sorted
 - **THEN** the order is `1`, `2`, `10`
+
+#### Scenario: Task ids with one number sort by text
+- **WHEN** the task ids `2b`, `10`, `2a` and `1` are sorted
+- **THEN** the order is `1`, `2a`, `2b`, `10`
+
+#### Scenario: Task id text
+- **WHEN** the task id `12` is displayed
+- **THEN** its text is `12`
 
 ### Requirement: Task fold
 `apply_task(state, &event)` SHALL be a pure function that returns the next
@@ -236,6 +262,15 @@ below leaves the state unchanged.
 | `Running`, attempt 1 | `paused` `{"task":"1","until":"2026-10-17T12:00:00.000Z","source":"harness"}` | `Pending`, attempt 1, paused until `2026-10-17T12:00:00.000Z` |
 | `Pending`, attempt 1, paused until `2026-10-17T12:00:00.000Z` | `started` `{"attempt":2}` | `Running`, attempt 2, no pause |
 
+#### Scenario: Done clears an earlier reason
+- **WHEN** each event below is applied to a `Regressed` task with attempt 1 and reason `scope_changed`
+- **THEN** the state after it is as given:
+
+| Event data | State after |
+|---|---|
+| `done` `{"task":"1"}` | `Done`, attempt 1, no reason |
+| `done_manual` `{"task":"1","reason":"by hand"}` | `Done`, attempt 1, no reason |
+
 ### Requirement: Change fold
 `apply_change(record, &event)` SHALL be a pure function that returns the next
 `ChangeRecord` of a change stream: whether the change is regressed, the
@@ -269,6 +304,15 @@ event type not in the table below leaves the change record unchanged.
 #### Scenario: Retry clears a change regression
 - **WHEN** `retry` `{"target":"change","reason":"human","attempt":1}` is applied to a regressed change record
 - **THEN** the record is not regressed
+
+#### Scenario: Task regressions and retries leave the change record
+- **WHEN** each event below is applied to the record before it
+- **THEN** the record after it is as given:
+
+| Record before | Event data | Record after |
+|---|---|---|
+| new | `regressed` `{"task":"1","reason":"scope_changed"}` | not regressed |
+| regressed | `retry` `{"target":"1","reason":"human","attempt":2}` | regressed |
 
 #### Scenario: Events reach their stream's state
 - **WHEN** a change state with tasks `1` and `2` applies `started` `{"attempt":1}` from the task `2` stream, then `regressed` `{"task":"change"}` from the change stream, then `validator_ran` from the validator stream
@@ -323,7 +367,9 @@ whose condition holds:
 `Seal::parse` SHALL read the text of a `.run/approved` marker, with
 surrounding whitespace trimmed, as a `Seal` when it is `sha256:` followed by
 exactly 64 lowercase hexadecimal digits, and SHALL refuse anything else with a
-`SealError`. A `Seal` SHALL give back its text without the whitespace.
+`SealError`. A `Seal` SHALL give back its text without the whitespace, and
+SHALL display as that text. A `SealError` SHALL display as
+``not a seal: expected `sha256:` and 64 lowercase hex digits``.
 
 #### Scenario: Seal texts
 - **WHEN** each text below is parsed as a seal
@@ -337,6 +383,10 @@ exactly 64 lowercase hexadecimal digits, and SHALL refuse anything else with a
 | `sha256:` followed by 63 `a` | `SealError` |
 | `md5:` followed by 64 `a` | `SealError` |
 | empty | `SealError` |
+
+#### Scenario: Seal and seal error text
+- **WHEN** the seal parsed from `sha256:` followed by 64 `a` and a newline is displayed, and the `SealError` of the text `md5:` followed by 64 `a` is displayed
+- **THEN** the seal's text is `sha256:` followed by 64 `a`, and the error's text is ``not a seal: expected `sha256:` and 64 lowercase hex digits``
 
 ### Requirement: Change typestate
 A change SHALL be a `Change<S>` whose state type `S` is `Draft`, `Approved` or
@@ -356,6 +406,8 @@ not compile.
 - `archive(&state)` SHALL return the archived change when
   `change_status(true, &state)` is `Done`, and `ArchiveError::NotDone` with
   that status otherwise.
+- `id` and `tasks` SHALL give back the id and the task ids the draft was
+  built with, in every state.
 
 #### Scenario: Approve checks the seal
 - **WHEN** a draft change is approved with each pair of seals below
@@ -393,6 +445,10 @@ not compile.
 - **WHEN** code outside the crate builds a `Change<Approved>` or a `Change<Archived>` without `approve` or `archive`, or calls `next_task` or `archive` on a `Change<Draft>`
 - **THEN** it does not compile
 
+#### Scenario: A change keeps its id and tasks
+- **WHEN** `Change::draft("204-rust-core", [1, 2])` is read as a draft, then approved with equal seals and read, then archived with both tasks `Done` and read
+- **THEN** each time `id` is `204-rust-core` and `tasks` is `1`, `2`
+
 ### Requirement: Rust rebuild decisions
 osq's decisions SHALL include the five Rust rebuild ADRs 022 to 026, each
 accepted, applying to the capability group `rust` through
@@ -422,3 +478,38 @@ change, since none applies to all.
 #### Scenario: Rust ADR check files exist
 - **WHEN** every check file named by ADRs 022 to 026 is looked up from the repository root
 - **THEN** each one exists
+
+### Requirement: Mutation script
+`scripts/mutants-rust.sh` SHALL run cargo-mutants over the Rust workspace,
+or over only the lines of the diff file its one argument names, keep the
+output in a temporary folder outside the source tree, exit 0 when the diff
+touches no Rust line, and exit non-zero when a mutant is missed or times out
+or the unmutated tests fail. `.cargo/mutants.toml` SHALL hold an
+`exclude_re` entry only for a mutant shown to be equivalent, with a comment
+saying why.
+
+#### Scenario: rust-core has no missed mutants
+- **WHEN** `sh scripts/mutants-rust.sh` runs with no argument on the repository
+- **THEN** it exits 0, and the repository holds no `mutants.out` folder afterwards
+
+#### Scenario: Mutation settings exclude nothing
+- **WHEN** `.cargo/mutants.toml` is read
+- **THEN** it holds no `exclude_re` entry with a pattern in it
+
+### Requirement: Rust CI mutation check
+Rust CI SHALL install cargo-mutants 27.1.0 and run `scripts/mutants-rust.sh`
+on the diff of each push and pull request to main, and with no argument on a
+weekly schedule, so a missed mutant fails the job.
+
+#### Scenario: Rust CI runs the mutation check
+- **WHEN** `.github/workflows/rust.yml` is read
+- **THEN** it holds each fact below:
+
+| Part | Fact |
+|---|---|
+| `on` | `push` and `pull_request` on branch `main`, and one `schedule` entry with a `cron` |
+| `jobs.cargo` | runs `sh scripts/verify-rust.sh` |
+| `jobs.mutants` | checks out with `fetch-depth: 0` |
+| `jobs.mutants` | runs `cargo install cargo-mutants --version 27.1.0 --locked` |
+| `jobs.mutants` | outside the schedule, writes the diff from the push's or pull request's base to `HEAD` to a file and runs `sh scripts/mutants-rust.sh` with that file |
+| `jobs.mutants` | on the schedule, runs `sh scripts/mutants-rust.sh` with no argument |
