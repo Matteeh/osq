@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b58a23ba6d5a592f4cb76c52f1217b2cdc257bf86a28e7ce29be63f5d105be29"
+build_stamp: "6009aab9"
+project_commit: "2a8357d8"
+exit_code: 0
+scope_files: {"src/core/spec/brace-scope-lint.ts":"sha256:2b7989bcc719886cb32fc8d596531dd7d01a1324832b8f621df728b1cf817750","src/core/spec/linter.ts":"sha256:e6702e2173ef84f8eac656f1959d0342b5fe1fb66088e9059a677be90beae5f2","tests/lint-brace-scope.test.ts":"sha256:28dcf766896ee0ad03a6b3f9dac37463206801962f52f38ed5045bc7161e084b"}
+---
+2026-10-18T12:51:36.366Z
