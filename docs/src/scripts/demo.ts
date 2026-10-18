@@ -13,7 +13,12 @@ type TaskState = 'queued' | 'running' | 'verifying' | 'failed' | 'done';
 const PACE = 1.75;
 const BRIEF = 'Let customers cancel an order before it ships. Release the reserved stock and refund the payment.';
 const PASSED = 'tests passed in osq’s own run';
-const RETRIED = 'failed its tests once, retried with the reason';
+const RETRIED = 'failed once, retried with the reason';
+/** What each agent attempt cost, as the harness reports it. Task 2 takes two attempts. */
+const ATTEMPT_COST = [[0.31], [0.29, 0.29], [0.27], [0.48]];
+const money = (n: number) => `$${n.toFixed(2)}`;
+const taskCost = (i: number) => ATTEMPT_COST[i].reduce((a, b) => a + b, 0);
+const doneNote = (i: number) => `${i === 1 ? RETRIED : PASSED} · ${money(taskCost(i))}`;
 
 class Stopped extends Error {}
 
@@ -29,6 +34,7 @@ export function startDemo(card: HTMLElement) {
   const approveBtn = el<HTMLButtonElement>('[data-approve]');
   const landBtn = el<HTMLButtonElement>('[data-land]');
   const runCount = el('[data-run-count]');
+  const runCost = el('[data-run-cost]');
 
   let token = 0;
   let onScreen = true;
@@ -93,9 +99,10 @@ export function startDemo(card: HTMLElement) {
     if (stage === 'run') {
       all('[data-task]', pane('run')).forEach((row, i) => {
         const waiting = i === 3 ? 'waits for task 3' : 'waiting';
-        setTask(row, done ? 'done' : 'queued', done ? (i === 1 ? RETRIED : PASSED) : waiting);
+        setTask(row, done ? 'done' : 'queued', done ? doneNote(i) : waiting);
       });
       setCount(done ? 5 : 0, done ? 5 : 0);
+      runCost.textContent = money(done ? ATTEMPT_COST.flat().reduce((a, b) => a + b, 0) : 0);
     }
     if (stage === 'land') {
       landBtn.disabled = done;
@@ -167,24 +174,27 @@ export function startDemo(card: HTMLElement) {
       setState('running', 'blue');
       let said = 0;
       let checked = 0;
-      const attempt = async (row: HTMLElement, note: string) => {
+      let spent = 0;
+      const attempt = async (row: HTMLElement, note: string, cost: number) => {
         setTask(row, 'running', note);
         pulse();
         await sleep(1000, run);
         setCount(++said, checked);
+        spent += cost;
+        runCost.textContent = money(spent);
         setTask(row, 'verifying', 'agent says done, osq runs the tests');
         await sleep(850, run);
         setCount(said, ++checked);
       };
       const rows = all('[data-task]', pane('run'));
       for (const [i, row] of rows.entries()) {
-        await attempt(row, 'a fresh agent is working on it');
+        await attempt(row, 'a fresh agent is working on it', ATTEMPT_COST[i][0]);
         if (i === 1) {
           setTask(row, 'failed', 'tests failed, retrying with the failure');
           await sleep(1300, run);
-          await attempt(row, 'second try, with what went wrong');
+          await attempt(row, 'second try, with what went wrong', ATTEMPT_COST[i][1]);
         }
-        setTask(row, 'done', i === 1 ? RETRIED : PASSED);
+        setTask(row, 'done', doneNote(i));
         pulse();
       }
       await sleep(1300, run);

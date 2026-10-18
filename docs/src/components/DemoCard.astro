@@ -62,13 +62,14 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
       {tasks.map((name, i) => (
         <div class="row" data-task><div><div class="t">{i + 1}. {name}</div><div class="k">{i === 3 ? 'waits for task 3' : 'waiting'}</div></div><span class="pill">queued</span></div>
       ))}
-      <div class="foot"><span data-run-count>Agent said "done" 0 times. osq checked 0 times.</span><span class="file">.run/</span></div>
+      <div class="foot"><span data-run-count>Agent said "done" 0 times. osq checked 0 times.</span><span class="file" data-run-cost>$0.00</span></div>
     </div>
 
     <div class="pane" id="pane-land" data-pane="land" role="tabpanel" aria-labelledby="tab-land" hidden>
       <div class="cmd">$ <b>osq land 042</b></div>
       <div class="row reveal"><div><div class="t">Final check</div><div class="k">every task's test re-run on the finished code</div></div><span class="ok">passed</span></div>
       <div class="row reveal"><div><div class="t">Specs updated</div><div class="k file">openspec/specs/orders/spec.md</div></div><span class="ok">+2</span></div>
+      <div class="row reveal"><div><div class="t">Cost of the change</div><div class="k">planning $0.38 · tasks $1.64 · from osq report</div></div><span class="ok">$2.02</span></div>
       <div class="row reveal"><div><div class="t">Change archived</div><div class="k file">openspec/changes/archive/042-…</div></div><span class="ok">ok</span></div>
       <div class="foot"><span data-land-note>Ready to merge into main.</span><button type="button" class="act" data-land>Land</button></div>
     </div>
