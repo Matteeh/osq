@@ -27,7 +27,7 @@ const FIRST_GOLDEN: u32 = 14;
 /// The highest change number the golden rows cover.
 const LAST_GOLDEN: u32 = 209;
 
-/// The archived changes whose watcher wrote no `done` event.
+/// The replay's exceptions, 003 to 013: 003 has no `.run/events/` folder, and the watcher of 004 to 013 wrote no `done` event.
 const EXCEPTIONS: [u32; 11] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
 /// The `changes` table's columns, in table order.
