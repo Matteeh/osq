@@ -1,0 +1,46 @@
+---
+import FeatureGrid from './FeatureGrid.astro';
+import { available, roadmap } from '../data/features';
+import { harnesses } from '../data/site';
+---
+
+<section id="features">
+  <div class="wrap">
+    <div class="head">
+      <div class="title">
+        <span class="eyebrow">Features</span>
+        <h2>Works today</h2>
+      </div>
+      <div class="legend"><span class="pill green">Available</span> in version 0.3 on npm</div>
+    </div>
+    <FeatureGrid features={available} status="available" />
+
+    <div class="agents">
+      <h3>Bring your own agent</h3>
+      <p class="lede">osq drives the coding agent you already use. Swap it per project in one line of config.</p>
+      <div class="list">
+        {harnesses.map((name) => <span class="pill">{name}</span>)}
+      </div>
+    </div>
+
+    <div class="head soon" id="roadmap">
+      <div class="title">
+        <span class="eyebrow">Roadmap</span>
+        <h2>Coming in the rebuild</h2>
+      </div>
+      <div class="legend"><span class="pill blue">In progress</span> osq is being rebuilt as a fast single binary</div>
+    </div>
+    <FeatureGrid features={roadmap} status="roadmap" />
+  </div>
+</section>
+
+<style>
+  .head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+  .title { display: grid; gap: 12px; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); align-items: center; }
+  .soon { margin-top: 48px; }
+  .agents { margin-top: 40px; display: grid; gap: 4px; }
+  .agents .lede { font-size: 15px; }
+  .list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .list .pill { font-size: 13px; padding: 6px 12px; font-weight: 500; }
+</style>

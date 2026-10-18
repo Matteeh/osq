@@ -1,0 +1,45 @@
+---
+import { links } from '../data/site';
+---
+
+<section id="start">
+  <div class="wrap start">
+    <div class="intro">
+      <span class="eyebrow">Get started</span>
+      <h2>Running in a few minutes</h2>
+      <p class="lede">osq needs Node.js 24 or newer and one supported coding agent. It adds a few folders to your repo and nothing else.</p>
+      <div class="oss">
+        <h3>Open source</h3>
+        <p>osq is MIT licensed and developed in the open. Everything it knows about your project lives in plain files in your own repository, so you can read it, diff it, or walk away with it.</p>
+        <p><a href={links.github}>github.com/Matteeh/osq</a></p>
+      </div>
+    </div>
+    <pre><span class="c"># set up osq in your repo</span>
+npx @matteeh/osq init
+pnpm add -D @matteeh/osq
+
+<span class="c"># plan a change from a brief</span>
+pnpm osq plan order-cancellation --brief brief.md
+
+<span class="c"># review the plan, then approve it</span>
+pnpm osq approve 042
+
+<span class="c"># start the watcher and let it build</span>
+pnpm osq watch
+
+<span class="c"># see what needs you, then land it</span>
+pnpm osq
+pnpm osq land 042</pre>
+  </div>
+</section>
+
+<style>
+  .start { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+  .intro { display: grid; gap: 16px; }
+  .lede { font-size: 16px; }
+  .oss { display: grid; gap: 12px; margin-top: 8px; }
+  .oss p { color: var(--muted); font-size: 15px; }
+  pre { margin: 0; background: var(--code-bg); color: var(--code-fg); font-family: var(--mono); font-size: 13.5px; line-height: 1.7; padding: 20px; border-radius: 8px; overflow-x: auto; }
+  .c { color: var(--code-dim); }
+  @media (max-width: 760px) { .start { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+</style>

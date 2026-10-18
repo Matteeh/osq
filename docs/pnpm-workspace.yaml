@@ -1,0 +1,3 @@
+# The site is its own pnpm workspace so it stays out of the osq package's lockfile.
+packages:
+  - '.'

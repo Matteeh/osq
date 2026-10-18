@@ -1,0 +1,29 @@
+---
+import { links } from '../data/site';
+---
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="/">osq<span>_</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#features">Features</a></li>
+        <li class="hide-sm"><a href="/#roadmap">Roadmap</a></li>
+        <li><a href={links.github}>GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  header { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; flex-wrap: wrap; }
+  .logo { font-family: var(--mono); font-weight: 500; font-size: 18px; color: var(--fg); letter-spacing: -0.02em; }
+  .logo:hover { text-decoration: none; }
+  .logo span { color: var(--accent); }
+  ul { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; font-size: 14px; flex-wrap: wrap; }
+  a:not(.logo) { color: var(--muted); }
+  @media (max-width: 760px) { ul { gap: 14px; } }
+  @media (max-width: 520px) { .hide-sm { display: none; } }
+</style>
