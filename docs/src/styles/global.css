@@ -18,7 +18,7 @@ h2 { font-size: clamp(26px, 3.4vw, 34px); font-weight: 600; letter-spacing: -0.0
 h3 { font-size: 17px; font-weight: 600; }
 p { margin: 0; }
 .lede { color: var(--muted); max-width: 62ch; font-size: 17px; }
-.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.eyebrow { font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .mono { font-family: var(--mono); }
 .file { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
 
@@ -30,7 +30,7 @@ p { margin: 0; }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 6px; background: var(--accent); color: var(--surface); font-weight: 600; font-size: 14px; border: 0; }
+.btn { font-family: var(--display); display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 6px; background: var(--accent); color: var(--surface); font-weight: 600; font-size: 14px; border: 0; }
 .btn:hover { background: var(--accent-hover); color: var(--surface); text-decoration: none; }
 .btn.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line); }
 .btn.secondary:hover { color: var(--accent-hover); }

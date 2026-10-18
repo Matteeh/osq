@@ -91,7 +91,7 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
   .demo.zap { box-shadow: 0 0 0 1px var(--accent-soft), 0 0 14px -6px var(--streak); }
   .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 16px 20px 0; font-size: 12px; color: var(--muted); }
   .tabs { display: flex; gap: 4px; padding: 12px 16px 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-  .tabs button { font: 500 12.5px var(--sans); color: var(--muted); background: transparent; border: 0; border-radius: 5px; padding: 0 10px; min-height: 32px; cursor: pointer; white-space: nowrap; }
+  .tabs button { font: 500 12.5px var(--display); color: var(--muted); background: transparent; border: 0; border-radius: 5px; padding: 0 10px; min-height: 32px; cursor: pointer; white-space: nowrap; }
   .tabs button:hover { color: var(--fg); background: var(--pill); }
   .tabs button[aria-selected='true'] { color: var(--accent-soft-fg); background: var(--accent-soft); font-weight: 600; }
   .body { position: relative; height: 392px; overflow: hidden; }
@@ -109,7 +109,7 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
   .reveal.on { opacity: 1; transform: none; }
   .ok { color: var(--green-fg); font-weight: 600; font-size: 12px; }
   .foot { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
-  .act { min-height: 36px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--accent); color: var(--surface); font: 600 13px var(--sans); cursor: pointer; transition: transform 0.12s ease, filter 0.2s ease; }
+  .act { min-height: 36px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--accent); color: var(--surface); font: 600 13px var(--display); cursor: pointer; transition: transform 0.12s ease, filter 0.2s ease; }
   .act.pressed { transform: scale(0.95); filter: brightness(0.9); }
   .act[disabled] { background: var(--pill); color: var(--muted); cursor: default; }
   .cursor { position: absolute; left: 0; top: 0; width: 18px; height: 22px; pointer-events: none; z-index: 5; opacity: 0; transition: transform 0.7s cubic-bezier(0.4, 0.1, 0.2, 1), opacity 0.3s ease; }
