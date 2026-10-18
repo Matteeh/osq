@@ -72,8 +72,8 @@ const retry = (() => {
   return { d: `M${ax.toFixed(1)} ${ay.toFixed(1)} C${(ax - 10).toFixed(1)} ${(ay - 70).toFixed(1)} ${(bx + 40).toFixed(1)} ${(by - 60).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`, label: [(ax + bx) / 2 + 10, Math.min(ay, by) - 52] };
 })();
 const humans = [
-  { v: [12, 9, 0] as V, hat: false },
-  { v: [62, 11, 0] as V, hat: true },
+  { v: [12, 9, 0] as V },
+  { v: [62, 11, 0] as V },
 ];
 const badges = [
   { v: [10, 0, 24] as V, you: true },
@@ -103,7 +103,6 @@ const badges = [
           <!-- behind the belt: you at the desk, the planner, the back arm, the back posts -->
           <g class="human" transform={at([21.5, -13.5, 0])}>
             <circle cx="0" cy="-58" r="7" />
-            <path class="hat" d="M-8 -59 A8 8 0 0 1 8 -59 Z M-11 -59 H11" />
             <path d="M0 -49 V-26 M0 -42 L9 -34 L16 -38 M0 -42 L-6 -32 L2 -36" />
           </g>
           <polygon class="laptop" points={laptop} />
@@ -200,7 +199,6 @@ const badges = [
           {humans.map((h) => (
             <g class="human" transform={at(h.v)}>
               <circle cx="0" cy="-62" r="7" />
-              {h.hat && <path class="hat" d="M-8 -63 A8 8 0 0 1 8 -63 Z M-11 -63 H11" />}
               <path d="M0 -53 V-24 M0 -46 L-16 -56 M0 -46 L10 -32 M0 -24 L-7 0 M0 -24 L7 0" />
             </g>
           ))}
@@ -286,8 +284,6 @@ const badges = [
   .label { fill: var(--green-fg); font: 600 13px var(--mono); }
   .human { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
   .human circle { fill: var(--accent); stroke: none; }
-  /* engineers wear a hard hat */
-  .human .hat { fill: var(--surface); stroke: var(--fg); stroke-width: 2; }
   .badge rect { fill: var(--surface); stroke: var(--line); }
   .badge text { fill: var(--muted); font: 600 11px var(--mono); }
   .badge.you rect { fill: var(--accent-soft); stroke: var(--accent); }
