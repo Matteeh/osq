@@ -1,10 +1,83 @@
 ---
 const steps = [
   { who: 'You', title: 'Write a brief', body: 'A few lines on what you want and why.' },
-  { who: 'A strong model', title: 'Plan it', body: 'Small tasks, each with the files it may touch and the test that proves it.' },
+  { who: 'You and a strong model', title: 'Plan it', body: 'Small tasks, each with the files it may touch and the test that proves it.' },
   { who: 'You', title: 'Approve', body: 'A one-screen summary flags anything risky. Nothing runs before you say yes.' },
   { who: 'Coding agents', title: 'Build', body: 'One fresh agent per task. A failed task retries with the reason, or comes back to you.' },
   { who: 'osq', title: 'Verify and land', body: 'Re-tests the whole change, updates the specs, and merges it into your main branch.' },
+];
+
+// A small isometric camera: x runs along the line, y toward the viewer, z up. Units are world units.
+type V = [number, number, number];
+const S = 7;
+const p = ([x, y, z]: V): [number, number] => [115 + (x - y) * 0.92 * S, 160 + (x + y) * 0.3 * S - z * S];
+const pts = (...vs: V[]) => vs.map((v) => p(v).map((n) => n.toFixed(1)).join(',')).join(' ');
+const path = (...vs: V[]) => 'M' + vs.map((v) => p(v).map((n) => n.toFixed(1)).join(' ')).join(' L');
+/** The three faces of a box the camera sees: top, front (+y) and side (+x). */
+const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number) => ({
+  top: pts([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]),
+  front: pts([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]),
+  side: pts([x1, y0, z1], [x1, y1, z1], [x1, y1, z0], [x1, y0, z0]),
+});
+const at = (v: V) => {
+  const [x, y] = p(v);
+  return `translate(${x.toFixed(1)} ${y.toFixed(1)})`;
+};
+
+const BELT = 5.2;
+const belt = box(0, 132, -3, 3, 4, BELT);
+const grid = [
+  ...Array.from({ length: 16 }, (_, i) => path([-4 + i * 10, -12, 0], [-4 + i * 10, 12, 0])),
+  ...Array.from({ length: 5 }, (_, i) => path([-4, -12 + i * 6, 0], [146, -12 + i * 6, 0])),
+];
+const legs = [6, 32, 58, 84, 110, 128].flatMap((x) => [path([x, -2.5, 0], [x, -2.5, 4]), path([x, 2.5, 0], [x, 2.5, 4])]);
+// One task box rides the whole line. It starts under the hopper and stops at each station.
+const mover = box(8.7, 11.3, -1.3, 1.3, BELT, BELT + 2.6);
+const shift = (x: number, dz = 0) => `${((x - 10) * 0.92 * S).toFixed(1)}px ${((x - 10) * 0.3 * S - dz * S).toFixed(1)}px`;
+const stops = { plan: shift(41), gate: shift(53), build: shift(83), check: shift(106), end: shift(132), main: shift(139, 2.8) };
+const moverVars = Object.entries(stops).map(([k, v]) => `--${k}: ${v}`).join('; ');
+
+// 1. intake hopper over the belt
+const hopper = {
+  front: pts([6, 4, 19], [14, 4, 19], [11.5, 1.5, 12], [8.5, 1.5, 12]),
+  side: pts([14, -4, 19], [14, 4, 19], [11.5, 1.5, 12], [11.5, -1.5, 12]),
+  rim: pts([6, -4, 19], [14, -4, 19], [14, 4, 19], [6, 4, 19]),
+  chute: box(8.5, 11.5, -1.5, 1.5, 7.5, 12),
+};
+// 2. planner: you at a desk next to the machine that turns the brief into tasks
+const desk = box(17, 26, -11, -6, 0, 5.5);
+const laptop = pts([19, -9.5, 5.5], [24, -9.5, 5.5], [24, -9.5, 9.5], [19, -9.5, 9.5]);
+const planner = box(36, 46, -12, -5, 0, 16);
+const screen = pts([37.5, -5, 14], [44.5, -5, 14], [44.5, -5, 7.5], [37.5, -5, 7.5]);
+const tree = [path([41, -5, 13], [41, -5, 11.5]), path([38.8, -5, 10], [38.8, -5, 11.5], [43.2, -5, 11.5], [43.2, -5, 10])];
+const leaves = [38.8, 41, 43.2].map((x) => box(x - 0.6, x + 0.6, -5, -5, 8.4, 9.8).front);
+// 3. the gate across the belt
+const gate = { back: path([58, -5, 0], [58, -5, 15]), front: path([58, 5, 0], [58, 5, 15]), beam: path([58, -5.5, 15], [58, 5.5, 15]) };
+const barrier = { d: path([58, -5, 9.5], [58, 5, 9.5]), pivot: p([58, -5, 9.5]) };
+// 4. two robot arms, one from behind the belt and one from the front
+const armBack = { base: box(75, 79, -11, -7, 0, 3), d: path([77, -9, 3], [77, -9, 13], [80, -4, 17], [82, -0.5, 12]), joints: [[77, -9, 13], [80, -4, 17]] as V[], hand: [82, -0.5, 12] as V };
+const armFront = { base: box(86, 90, 7, 11, 0, 3), d: path([88, 9, 3], [88, 9, 12], [86, 4, 16], [83, 0.5, 11.5]), joints: [[88, 9, 12], [86, 4, 16]] as V[], hand: [83, 0.5, 11.5] as V };
+// 5. the scanner arch and the crate that is main
+const scanner = { back: box(105, 107, -6, -4, 0, 13), front: box(105, 107, 4, 6, 0, 13), top: box(105, 107, -6, 6, 13, 15) };
+const scanPlane = pts([106, -3.6, 12.6], [106, 3.6, 12.6], [106, 3.6, BELT + 0.2], [106, -3.6, BELT + 0.2]);
+const crate = box(134, 146, -6, 6, 0, 8);
+const landed = [137, 141.5].map((x) => box(x - 1.3, x + 1.3, -4.7, -2.1, 8, 10.6));
+const crateLabel = p([140, 6, 3.2]);
+const retry = (() => {
+  const [ax, ay] = p([106, 0, 17]);
+  const [bx, by] = p([84, 0, 21]);
+  return { d: `M${ax.toFixed(1)} ${ay.toFixed(1)} C${(ax - 10).toFixed(1)} ${(ay - 70).toFixed(1)} ${(bx + 40).toFixed(1)} ${(by - 60).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`, label: [(ax + bx) / 2 + 10, Math.min(ay, by) - 52] };
+})();
+const humans = [
+  { v: [12, 9, 0] as V, reach: -1 },
+  { v: [62, 11, 0] as V, reach: -1 },
+];
+const badges = [
+  { v: [10, 0, 24] as V, you: true },
+  { v: [31, -8.5, 22] as V, you: true },
+  { v: [58, 0, 21] as V, you: true },
+  { v: [83, 0, 24] as V, you: false },
+  { v: [106, 0, 20] as V, you: false },
 ];
 ---
 
@@ -12,25 +85,245 @@ const steps = [
   <div class="wrap">
     <span class="eyebrow">How it works</span>
     <h2>You steer. osq does the rest.</h2>
-    <ol>
-      {steps.map((step) => (
-        <li>
-          <span class="who">{step.who}</span>
-          <h3>{step.title}</h3>
-          <p>{step.body}</p>
-        </li>
-      ))}
-    </ol>
+
+    <figure class="factory">
+      <div class="scroller">
+        <svg viewBox="0 0 1150 500" role="img" aria-labelledby="factory-title">
+          <title id="factory-title">An isometric factory line. You drop a brief into the intake, a model splits it into small tasks, you open the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
+
+          <!-- floor -->
+          <polygon class="slab-top" points={box(-4, 146, -12, 12, -1.5, 0).top} />
+          <polygon class="slab-front" points={box(-4, 146, -12, 12, -1.5, 0).front} />
+          <polygon class="slab-side" points={box(-4, 146, -12, 12, -1.5, 0).side} />
+          {grid.map((d) => <path class="grid" d={d} />)}
+
+          <!-- behind the belt: you at the desk, the planner, the back arm, the back posts -->
+          <g class="human" transform={at([21.5, -13.5, 0])}>
+            <circle cx="0" cy="-58" r="7" />
+            <path d="M0 -49 V-26 M0 -42 L9 -34 L16 -38 M0 -42 L-6 -32 L2 -36" />
+          </g>
+          <polygon class="laptop" points={laptop} />
+          <polygon class="m-top" points={desk.top} />
+          <polygon class="m-front" points={desk.front} />
+          <polygon class="m-side" points={desk.side} />
+          <polygon class="m-top" points={planner.top} />
+          <polygon class="m-front" points={planner.front} />
+          <polygon class="m-side" points={planner.side} />
+          <polygon class="screen" points={screen} />
+          {tree.map((d) => <path class="tree" d={d} />)}
+          {leaves.map((pt) => <polygon class="leaf" points={pt} />)}
+          <circle class="blink" r="3.5" transform={at([39, -5, 3])} />
+
+          <polygon class="m-top" points={armBack.base.top} />
+          <polygon class="m-front" points={armBack.base.front} />
+          <polygon class="m-side" points={armBack.base.side} />
+          <g class="arm a1">
+            <path class="limb" d={armBack.d} />
+            {armBack.joints.map((v) => <circle class="joint" r="4" transform={at(v)} />)}
+            <path class="grip" transform={at(armBack.hand)} d="M-6 0 H6 M-6 0 V7 M6 0 V7" />
+          </g>
+
+          <path class="post" d={gate.back} />
+          <polygon class="m-top" points={scanner.back.top} />
+          <polygon class="m-front" points={scanner.back.front} />
+          <polygon class="m-side" points={scanner.back.side} />
+          {legs.map((d) => <path class="leg" d={d} />)}
+
+          <!-- the belt -->
+          <polygon class="belt-top" points={belt.top} />
+          <polygon class="belt-front" points={belt.front} />
+          <polygon class="belt-side" points={belt.side} />
+          <!-- main -->
+          <polygon class="c-top" points={crate.top} />
+          <polygon class="c-front" points={crate.front} />
+          <polygon class="c-side" points={crate.side} />
+          {landed.map((b) => (
+            <g class="task done">
+              <polygon class="f-top" points={b.top} />
+              <polygon class="f-front" points={b.front} />
+              <polygon class="f-side" points={b.side} />
+            </g>
+          ))}
+          <text class="label" x={crateLabel[0].toFixed(1)} y={crateLabel[1].toFixed(1)} text-anchor="middle">main</text>
+
+          <g class="mover" style={moverVars}>
+            <polygon class="f-top" points={mover.top} />
+            <polygon class="f-front" points={mover.front} />
+            <polygon class="f-side" points={mover.side} />
+          </g>
+
+          <!-- intake hopper and the brief dropping into it -->
+          <polygon class="m-front" points={hopper.chute.front} />
+          <polygon class="m-side" points={hopper.chute.side} />
+          <polygon class="m-top" points={hopper.rim} />
+          <polygon class="m-front" points={hopper.front} />
+          <polygon class="m-side" points={hopper.side} />
+          <g transform={at([10, 0, 25])}>
+            <g class="drop">
+              <rect class="paper" x="-9" y="-12" width="18" height="22" rx="2" />
+              <path class="ink" d="M-5 -6 H5 M-5 -1 H5 M-5 4 H2" />
+            </g>
+          </g>
+
+          <!-- the gate: nothing passes until you open it -->
+          <path class="barrier" d={barrier.d} style={`transform-origin: ${barrier.pivot[0].toFixed(1)}px ${barrier.pivot[1].toFixed(1)}px`} />
+          <path class="post" d={gate.front} />
+          <path class="post" d={gate.beam} />
+          <circle class="lamp" r="5" transform={at([58, 0, 17.5])} />
+
+          <!-- the front arm -->
+          <polygon class="m-top" points={armFront.base.top} />
+          <polygon class="m-front" points={armFront.base.front} />
+          <polygon class="m-side" points={armFront.base.side} />
+          <g class="arm a2">
+            <path class="limb" d={armFront.d} />
+            {armFront.joints.map((v) => <circle class="joint" r="4" transform={at(v)} />)}
+            <path class="grip" transform={at(armFront.hand)} d="M-6 0 H6 M-6 0 V7 M6 0 V7" />
+          </g>
+
+          <!-- the scanner: front post, top, and the plane that checks each task -->
+          <polygon class="scan" points={scanPlane} />
+          <polygon class="m-top" points={scanner.top.top} />
+          <polygon class="m-front" points={scanner.top.front} />
+          <polygon class="m-side" points={scanner.top.side} />
+          <polygon class="m-top" points={scanner.front.top} />
+          <polygon class="m-front" points={scanner.front.front} />
+          <polygon class="m-side" points={scanner.front.side} />
+          <path class="retry" d={retry.d} />
+          <text class="note" x={retry.label[0].toFixed(1)} y={retry.label[1].toFixed(1)} text-anchor="middle">failed? retry with the reason</text>
+
+          <!-- you -->
+          {humans.map((h) => (
+            <g class="human" transform={at(h.v)}>
+              <circle cx="0" cy="-62" r="7" />
+              <path d="M0 -53 V-24 M0 -46 L-16 -56 M0 -46 L10 -32 M0 -24 L-7 0 M0 -24 L7 0" />
+            </g>
+          ))}
+
+          <!-- step numbers, matching the list below -->
+          {badges.map((b, i) => (
+            <g class:list={['badge', { you: b.you }]} transform={at(b.v)}>
+              <rect x="-15" y="-11" width="30" height="22" rx="11" />
+              <text y="4" text-anchor="middle">{String(i + 1).padStart(2, '0')}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <ol>
+        {steps.map((step, i) => (
+          <li>
+            <span class="num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="who" class:list={{ you: step.who.startsWith('You') }}>{step.who}</span>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+          </li>
+        ))}
+      </ol>
+    </figure>
   </div>
 </section>
 
 <style>
   h2 { margin-top: 12px; }
-  ol { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: step; }
-  li { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; counter-increment: step; }
-  li::before { content: counter(step); font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+  .factory { margin: 32px 0 0; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  /* on phones the line keeps a readable size and scrolls sideways inside its own strip */
+  .scroller { overflow-x: auto; overscroll-behavior-x: contain; }
+  @media (max-width: 640px) { svg { min-width: 720px; } }
+
+  /* a blueprint: pale surfaces, thin edges, rust where you step in and where work flows */
+  polygon { stroke-linejoin: round; }
+  .slab-top { fill: var(--surface); stroke: var(--line); }
+  .slab-front, .slab-side { fill: var(--line); }
+  .grid { stroke: var(--line); stroke-width: 1; }
+  .m-top { fill: var(--surface); stroke: color-mix(in srgb, var(--muted) 55%, transparent); stroke-width: 1; }
+  .m-front { fill: color-mix(in srgb, var(--pill) 70%, var(--surface)); stroke: color-mix(in srgb, var(--muted) 55%, transparent); stroke-width: 1; }
+  .m-side { fill: var(--pill); stroke: color-mix(in srgb, var(--muted) 55%, transparent); stroke-width: 1; }
+  .screen { fill: var(--code-bg); }
+  .tree { fill: none; stroke: var(--code-dim); stroke-width: 1.5; }
+  .leaf { fill: var(--code-fg); }
+  .blink { fill: var(--blue-fg); animation: blink 16s linear infinite; }
+  .leaf { animation: leaf 16s linear infinite; }
+  .leg, .post { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linecap: round; opacity: 0.6; }
+  .belt-top { fill: var(--pill); stroke: color-mix(in srgb, var(--muted) 40%, transparent); }
+  .belt-front, .belt-side { fill: color-mix(in srgb, var(--fg) 14%, var(--pill)); }
+
+  .task polygon { stroke-width: 1; }
+  .done polygon { fill: var(--green); stroke: var(--green-fg); }
+  .done .f-side, .done .f-front { fill: color-mix(in srgb, var(--green-fg) 30%, var(--green)); }
+  .laptop { fill: var(--muted); opacity: 0.7; }
+
+  /*
+   * One 16s loop drives everything below, so the box and the stations stay in step:
+   * 0-9% the brief drops in, 9-28% planning, 28-44% waiting at the gate, 44-66% building,
+   * 66-80% checking, 80-96% landing in main, then it fades and starts over.
+   */
+  .mover { --fill: var(--surface); --edge: var(--muted); animation: ride 16s ease-in-out infinite, look 16s linear infinite; }
+  .mover polygon { fill: var(--fill); stroke: var(--edge); stroke-width: 1.2; }
+  .mover .f-front, .mover .f-side { fill: color-mix(in srgb, var(--edge) 22%, var(--fill)); }
+  .paper { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+  .ink { stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round; }
+  .drop { animation: drop 16s ease-in infinite; }
+  .barrier { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; animation: gate 16s ease-in-out infinite; }
+  .lamp { animation: lamp 16s linear infinite; }
+  .limb { fill: none; stroke: var(--muted); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+  .joint { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  .grip { fill: none; stroke: var(--fg); stroke-width: 2.5; stroke-linecap: round; }
+  .arm { animation: work 16s ease-in-out infinite; }
+  .a2 { animation-name: work2; }
+  .scan { fill: var(--green-fg); opacity: 0.12; stroke: var(--green-fg); stroke-width: 1.5; animation: scan 16s linear infinite; }
+  .retry { fill: none; stroke: var(--red-fg); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: 0.8; animation: flow 1.2s linear infinite; }
+  .note { fill: var(--muted); font: 13px var(--sans); }
+  .c-top { fill: var(--surface); stroke: var(--green-fg); }
+  .c-front, .c-side { fill: var(--green); stroke: var(--green-fg); }
+  .label { fill: var(--green-fg); font: 600 13px var(--mono); }
+  .human { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .human circle { fill: var(--accent); stroke: none; }
+  .badge rect { fill: var(--surface); stroke: var(--line); }
+  .badge text { fill: var(--muted); font: 600 11px var(--mono); }
+  .badge.you rect { fill: var(--accent-soft); stroke: var(--accent); }
+  .badge.you text { fill: var(--accent-soft-fg); }
+
+  @keyframes flow { to { stroke-dashoffset: -9; } }
+  @keyframes drop { 0% { transform: translateY(0); opacity: 0; } 2% { opacity: 1; } 7% { transform: translateY(40px); opacity: 1; } 8%, 100% { transform: translateY(48px); opacity: 0; } }
+  @keyframes ride {
+    0%, 8% { translate: 0 0; opacity: 0; }
+    9% { translate: 0 0; opacity: 1; }
+    14%, 28% { translate: var(--plan); }
+    33%, 44% { translate: var(--gate); }
+    51%, 66% { translate: var(--build); }
+    71%, 80% { translate: var(--check); }
+    85% { translate: var(--end); }
+    89%, 96% { translate: var(--main); opacity: 1; }
+    99%, 100% { translate: var(--main); opacity: 0; }
+  }
+  @keyframes look {
+    0%, 26.9% { --fill: var(--surface); --edge: var(--muted); }
+    27%, 43.9% { --fill: var(--surface); --edge: var(--accent); }
+    44%, 63.9% { --fill: var(--accent-soft); --edge: var(--accent); }
+    64%, 76.9% { --fill: var(--blue); --edge: var(--blue-fg); }
+    77%, 100% { --fill: var(--green); --edge: var(--green-fg); }
+  }
+  @keyframes blink { 0%, 14% { opacity: 0.25; } 15%, 17% { opacity: 1; } 18%, 20% { opacity: 0.25; } 21%, 23% { opacity: 1; } 24%, 26% { opacity: 0.25; } 27%, 100% { opacity: 1; } }
+  @keyframes leaf { 0%, 19% { opacity: 0; } 22%, 96% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes gate { 0%, 41% { transform: rotate(0); } 44%, 51% { transform: rotate(-70deg); } 55%, 100% { transform: rotate(0); } }
+  @keyframes lamp { 0%, 41.9% { fill: var(--red-fg); } 42%, 52.9% { fill: var(--green-fg); } 53%, 100% { fill: var(--red-fg); } }
+  @keyframes work { 0%, 51% { transform: translateY(0); } 54% { transform: translateY(8px); } 57% { transform: translateY(0); } 60% { transform: translateY(8px); } 63% { transform: translateY(0); } 100% { transform: translateY(0); } }
+  @keyframes work2 { 0%, 52.5% { transform: translateY(0); } 55.5% { transform: translateY(8px); } 58.5% { transform: translateY(0); } 61.5% { transform: translateY(8px); } 64.5%, 100% { transform: translateY(0); } }
+  @keyframes scan { 0%, 71% { opacity: 0.08; } 73%, 78% { opacity: 0.35; } 80%, 100% { opacity: 0.08; } }
+
+  ol { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+  li { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .num { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
   .who { font-size: 12px; color: var(--muted); }
+  .who.you { color: var(--accent); font-weight: 600; }
+  h3 { font-size: 16px; }
   p { font-size: 14px; color: var(--muted); }
-  @media (max-width: 960px) { ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 900px) { ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 520px) { ol { grid-template-columns: minmax(0, 1fr); } }
+  @media (prefers-reduced-motion: reduce) {
+    svg * { animation-play-state: paused !important; animation-delay: -12s !important; }
+    .drop { opacity: 0; }
+  }
 </style>
