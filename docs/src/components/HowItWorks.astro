@@ -53,7 +53,8 @@ const tree = [path([41, -5, 13], [41, -5, 11.5]), path([38.8, -5, 10], [38.8, -5
 const leaves = [38.8, 41, 43.2].map((x) => box(x - 0.6, x + 0.6, -5, -5, 8.4, 9.8).front);
 // 3. the gate across the belt
 const gate = { back: path([58, -5, 0], [58, -5, 15]), front: path([58, 5, 0], [58, 5, 15]), beam: path([58, -5.5, 15], [58, 5.5, 15]) };
-const barrier = { d: path([58, -5, 9.5], [58, 5, 9.5]), pivot: p([58, -5, 9.5]) };
+// the bar sits low across the belt and lifts straight up to the top beam to let the box through
+const barrier = path([58, -5, 6.6], [58, 5, 6.6]);
 // 4. two robot arms, one from behind the belt and one from the front
 const armBack = { base: box(75, 79, -11, -7, 0, 3), d: path([77, -9, 3], [77, -9, 13], [80, -4, 17], [82, -0.5, 12]), joints: [[77, -9, 13], [80, -4, 17]] as V[], hand: [82, -0.5, 12] as V };
 const armFront = { base: box(86, 90, 7, 11, 0, 3), d: path([88, 9, 3], [88, 9, 12], [86, 4, 16], [83, 0.5, 11.5]), joints: [[88, 9, 12], [86, 4, 16]] as V[], hand: [83, 0.5, 11.5] as V };
@@ -166,7 +167,7 @@ const badges = [
           </g>
 
           <!-- the gate: nothing passes until you open it -->
-          <path class="barrier" d={barrier.d} style={`transform-origin: ${barrier.pivot[0].toFixed(1)}px ${barrier.pivot[1].toFixed(1)}px`} />
+          <path class="barrier" d={barrier} />
           <path class="post" d={gate.front} />
           <path class="post" d={gate.beam} />
           <circle class="lamp" r="5" transform={at([58, 0, 17.5])} />
@@ -307,7 +308,7 @@ const badges = [
   }
   @keyframes blink { 0%, 14% { opacity: 0.25; } 15%, 17% { opacity: 1; } 18%, 20% { opacity: 0.25; } 21%, 23% { opacity: 1; } 24%, 26% { opacity: 0.25; } 27%, 100% { opacity: 1; } }
   @keyframes leaf { 0%, 19% { opacity: 0; } 22%, 96% { opacity: 1; } 100% { opacity: 0; } }
-  @keyframes gate { 0%, 41% { transform: rotate(0); } 44%, 51% { transform: rotate(-70deg); } 55%, 100% { transform: rotate(0); } }
+  @keyframes gate { 0%, 41% { transform: translateY(0); } 44%, 51% { transform: translateY(-52px); } 55%, 100% { transform: translateY(0); } }
   @keyframes lamp { 0%, 41.9% { fill: var(--red-fg); } 42%, 52.9% { fill: var(--green-fg); } 53%, 100% { fill: var(--red-fg); } }
   @keyframes work { 0%, 51% { transform: translateY(0); } 54% { transform: translateY(8px); } 57% { transform: translateY(0); } 60% { transform: translateY(8px); } 63% { transform: translateY(0); } 100% { transform: translateY(0); } }
   @keyframes work2 { 0%, 52.5% { transform: translateY(0); } 55.5% { transform: translateY(8px); } 58.5% { transform: translateY(0); } 61.5% { transform: translateY(8px); } 64.5%, 100% { transform: translateY(0); } }
