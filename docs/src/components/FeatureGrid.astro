@@ -1,0 +1,35 @@
+---
+import type { Feature } from '../data/features';
+
+interface Props {
+  features: Feature[];
+  status: 'available' | 'roadmap';
+}
+
+const { features, status } = Astro.props;
+const pill = status === 'available' ? { label: 'Available', tone: 'green' } : { label: 'In progress', tone: 'blue' };
+---
+
+<div class:list={['grid', status]}>
+  {features.map((feature) => (
+    <article>
+      <div class="top">
+        <h3>{feature.title}</h3>
+        <span class:list={['pill', pill.tone]}>{pill.label}</span>
+      </div>
+      <p>{feature.body}</p>
+      {feature.ref && <span class="file">{feature.ref}</span>}
+    </article>
+  ))}
+</div>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 32px; }
+  article { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .roadmap article { background: transparent; border-style: dashed; }
+  .top { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+  p { font-size: 15px; color: var(--muted); }
+  .file { margin-top: auto; padding-top: 4px; }
+  @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+</style>
