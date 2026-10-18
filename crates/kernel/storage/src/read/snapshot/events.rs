@@ -11,6 +11,7 @@ use crate::read::StorageError;
 use crate::read::text::timestamp_ms;
 
 use super::folder::read_events_file;
+use super::table_events::{TableEvent, table_event};
 use super::{DeadAttempt, EventFacts};
 
 /// Reads every events file of a change, folding it and gathering the facts.
@@ -105,6 +106,8 @@ struct Facts {
     dead: Vec<DeadAttempt>,
     /// The last `archived` event's timestamp in `change.jsonl`.
     archived_at: Option<String>,
+    /// The kept events the nine event tables are built from, in fold order.
+    table_events: Vec<TableEvent>,
 }
 
 impl Facts {
@@ -117,11 +120,15 @@ impl Facts {
             cost_reported: false,
             dead: Vec::new(),
             archived_at: None,
+            table_events: Vec::new(),
         }
     }
 
     /// Records one parsed event of a stream, with its raw line for exact numbers.
     fn observe(&mut self, stream: &Stream, envelope: &Envelope, line: &str) {
+        if let Some(event) = table_event(stream, envelope) {
+            self.table_events.push(event);
+        }
         match &envelope.event {
             Event::Started(_) => self.record_started(stream),
             Event::Dead(data) => self.record_dead(stream, &data.task, &data.reason),
@@ -184,6 +191,7 @@ impl Facts {
             cost: self.cost_reported.then_some(self.cost),
             dead_attempts: self.dead,
             archived_at: self.archived_at,
+            table_events: self.table_events,
         }
     }
 }

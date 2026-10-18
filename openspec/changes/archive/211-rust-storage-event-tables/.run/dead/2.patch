@@ -1,0 +1,1942 @@
+diff --git a/crates/kernel/storage/src/lib.rs b/crates/kernel/storage/src/lib.rs
+index c71336e8..828e083b 100644
+--- a/crates/kernel/storage/src/lib.rs
++++ b/crates/kernel/storage/src/lib.rs
+@@ -5,7 +5,7 @@
+ pub mod model;
+ pub mod read;
+ 
+-pub use model::{build_read_model, write_read_model};
++pub use model::{TrialLabels, build_read_model, read_trial_labels, write_read_model};
+ pub use read::{
+     ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location, ManifestNotices,
+     Notice, PlanRecord, StorageError, TableEvent, TaskFile, frontmatter_string, goal_section,
+diff --git a/crates/kernel/storage/src/model/error.rs b/crates/kernel/storage/src/model/error.rs
+index d898fde6..895cfe18 100644
+--- a/crates/kernel/storage/src/model/error.rs
++++ b/crates/kernel/storage/src/model/error.rs
+@@ -13,6 +13,8 @@ pub enum ReadModelError {
+     Sqlite(rusqlite::Error),
+     /// Removing a stale database file failed.
+     Io(std::io::Error),
++    /// A trial label file named by the string is not a JSON object of booleans.
++    Labels(String),
+ }
+ 
+ impl fmt::Display for ReadModelError {
+@@ -22,6 +24,10 @@ impl fmt::Display for ReadModelError {
+             Self::Storage(source) => write!(formatter, "{source}"),
+             Self::Sqlite(source) => write!(formatter, "sqlite: {source}"),
+             Self::Io(source) => write!(formatter, "io: {source}"),
++            Self::Labels(kind) => write!(
++                formatter,
++                "openspec/trials/{kind}.json must be a JSON object of true or false labels"
++            ),
+         }
+     }
+ }
+@@ -33,6 +39,7 @@ impl std::error::Error for ReadModelError {
+             Self::Storage(source) => Some(source),
+             Self::Sqlite(source) => Some(source),
+             Self::Io(source) => Some(source),
++            Self::Labels(_) => None,
+         }
+     }
+ }
+diff --git a/crates/kernel/storage/src/model/event_rows.rs b/crates/kernel/storage/src/model/event_rows.rs
+new file mode 100644
+index 00000000..1325130e
+--- /dev/null
++++ b/crates/kernel/storage/src/model/event_rows.rs
+@@ -0,0 +1,108 @@
++//! Mapping a change snapshot to the `pauses` and `recertifications` rows.
++
++use osq_core::{Event, Stream};
++use serde_json::Value;
++
++use crate::read::ChangeSnapshot;
++
++use super::rows::{entry_string, table_events};
++
++/// One row of the `pauses` table.
++pub(super) struct PauseRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The paused task.
++    pub(super) task: String,
++    /// The event's timestamp.
++    pub(super) paused_at: String,
++    /// The time the pause lasts until.
++    pub(super) until: String,
++    /// Where the reset time came from.
++    pub(super) source: String,
++}
++
++/// One row of the `recertifications` table.
++pub(super) struct RecertificationRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The recertified task.
++    pub(super) task: String,
++    /// The event's timestamp.
++    pub(super) recertified_at: String,
++    /// The event's outcome.
++    pub(super) outcome: String,
++    /// 1 when the watcher recertified on its own, else 0.
++    pub(super) automatic: i64,
++    /// The entry's path, or null.
++    pub(super) path: Option<String>,
++    /// The entry's attribution, or null.
++    pub(super) credited_to: Option<String>,
++    /// `measures`, `file_changed`, or null.
++    pub(super) source: Option<String>,
++}
++
++/// Every `pauses` row of one snapshot, in fold order.
++pub(super) fn pause_rows(snapshot: &ChangeSnapshot) -> Vec<PauseRow> {
++    let mut rows = Vec::new();
++    for table_event in table_events(snapshot) {
++        let (Stream::Task(_), Event::Paused(data)) = (&table_event.stream, &table_event.event)
++        else {
++            continue;
++        };
++        rows.push(PauseRow {
++            change: snapshot.folder.clone(),
++            task: data.task.clone(),
++            paused_at: table_event.timestamp.clone(),
++            until: data.until.clone(),
++            source: data.source.clone(),
++        });
++    }
++    rows
++}
++
++/// Every `recertifications` row of one snapshot, one per attribution entry.
++pub(super) fn recertification_rows(snapshot: &ChangeSnapshot) -> Vec<RecertificationRow> {
++    let mut rows = Vec::new();
++    for table_event in table_events(snapshot) {
++        let (Stream::Task(_), Event::Recertification(data)) =
++            (&table_event.stream, &table_event.event)
++        else {
++            continue;
++        };
++        let Value::Array(entries) = &data.attribution else {
++            continue;
++        };
++        for entry in entries {
++            if !entry.is_object() {
++                continue;
++            }
++            rows.push(RecertificationRow {
++                change: snapshot.folder.clone(),
++                task: data.task.clone(),
++                recertified_at: table_event.timestamp.clone(),
++                outcome: data.outcome.clone(),
++                automatic: i64::from(data.automatic == Some(true)),
++                path: entry_string(entry, "path"),
++                credited_to: entry_string(entry, "attribution"),
++                source: entry_source(entry),
++            });
++        }
++    }
++    rows
++}
++
++/// An entry's source: `measures`, `file_changed` for a task number, else null.
++fn entry_source(entry: &Value) -> Option<String> {
++    if entry.get("source").and_then(Value::as_str) == Some("measures") {
++        return Some(String::from("measures"));
++    }
++    let attributed = entry.get("attribution").and_then(Value::as_str);
++    attributed
++        .filter(|text| is_task_number(text))
++        .map(|_| String::from("file_changed"))
++}
++
++/// Whether a string is one or more digits, as TypeScript's `/^\d+$/` reads.
++fn is_task_number(text: &str) -> bool {
++    !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit())
++}
+diff --git a/crates/kernel/storage/src/model/insert.rs b/crates/kernel/storage/src/model/insert.rs
+new file mode 100644
+index 00000000..76d8857a
+--- /dev/null
++++ b/crates/kernel/storage/src/model/insert.rs
+@@ -0,0 +1,112 @@
++//! Writing the read model's change, task, dead attempt and notice rows.
++
++use rusqlite::{Transaction, params};
++
++use crate::read::ChangeSnapshot;
++
++use super::insert_events::{
++    insert_focused, insert_pause, insert_pick, insert_recertification, insert_survivor,
++};
++use super::insert_trial::{insert_link_finding, insert_validator_finding, insert_validator_run};
++use super::notice_rows::NoticeRow;
++use super::rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
++
++/// Inserts one archived snapshot's rows into every table but `notices`.
++pub(super) fn insert_archived(
++    transaction: &Transaction<'_>,
++    snapshot: &ChangeSnapshot,
++) -> Result<(), rusqlite::Error> {
++    insert_change(transaction, &change_row(snapshot))?;
++    for row in task_rows(snapshot) {
++        insert_task(transaction, &row)?;
++    }
++    for row in dead_rows(snapshot) {
++        insert_dead(transaction, &row)?;
++    }
++    for row in super::event_rows::pause_rows(snapshot) {
++        insert_pause(transaction, &row)?;
++    }
++    for row in super::event_rows::recertification_rows(snapshot) {
++        insert_recertification(transaction, &row)?;
++    }
++    for row in super::stream_rows::focused_rows(snapshot) {
++        insert_focused(transaction, &row)?;
++    }
++    for row in super::stream_rows::pick_rows(snapshot) {
++        insert_pick(transaction, &row)?;
++    }
++    for row in super::stream_rows::survivor_rows(snapshot) {
++        insert_survivor(transaction, &row)?;
++    }
++    for row in super::trial_rows::validator_run_rows(snapshot) {
++        insert_validator_run(transaction, &row)?;
++    }
++    for row in super::trial_rows::validator_finding_rows(snapshot) {
++        insert_validator_finding(transaction, &row)?;
++    }
++    for row in super::trial_rows::link_finding_rows(snapshot) {
++        insert_link_finding(transaction, &row)?;
++    }
++    Ok(())
++}
++
++/// Inserts one `notices` row of an archived or rejected snapshot.
++pub(super) fn insert_notice(
++    transaction: &Transaction<'_>,
++    row: &NoticeRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO notices VALUES (?, ?, ?, ?, ?)",
++            params![
++                row.change,
++                row.notice,
++                row.severity,
++                row.opened,
++                row.outcome
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `changes` row.
++fn insert_change(transaction: &Transaction<'_>, row: &ChangeRow) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO changes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.id,
++                row.folder,
++                row.title,
++                row.archived_on,
++                row.goal,
++                row.tasks,
++                row.attempts,
++                row.halts,
++                row.elapsed_seconds,
++                row.cost,
++                row.planner,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `tasks` row.
++fn insert_task(transaction: &Transaction<'_>, row: &TaskRow) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO tasks VALUES (?, ?, ?, ?, ?)",
++            params![row.change, row.task, row.title, row.attempts, row.done],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `dead_attempts` row.
++fn insert_dead(transaction: &Transaction<'_>, row: &DeadRow) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO dead_attempts VALUES (?, ?, ?)",
++            params![row.change, row.task, row.reason],
++        )
++        .map(|_| ())
++}
+diff --git a/crates/kernel/storage/src/model/insert_events.rs b/crates/kernel/storage/src/model/insert_events.rs
+new file mode 100644
+index 00000000..6c4d90f4
+--- /dev/null
++++ b/crates/kernel/storage/src/model/insert_events.rs
+@@ -0,0 +1,116 @@
++//! Writing the `pauses`, `recertifications`, `focused_runs`, `mutation_picks`
++//! and `mutation_survivors` rows.
++
++use rusqlite::{Transaction, params};
++
++use super::event_rows::{PauseRow, RecertificationRow};
++use super::stream_rows::{FocusedRunRow, MutationPickRow, MutationSurvivorRow};
++
++/// Inserts one `pauses` row.
++pub(super) fn insert_pause(
++    transaction: &Transaction<'_>,
++    row: &PauseRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO pauses VALUES (?, ?, ?, ?, ?)",
++            params![row.change, row.task, row.paused_at, row.until, row.source],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `recertifications` row.
++pub(super) fn insert_recertification(
++    transaction: &Transaction<'_>,
++    row: &RecertificationRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO recertifications VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.change,
++                row.task,
++                row.recertified_at,
++                row.outcome,
++                row.automatic,
++                row.path,
++                row.credited_to,
++                row.source,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `focused_runs` row.
++pub(super) fn insert_focused(
++    transaction: &Transaction<'_>,
++    row: &FocusedRunRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO focused_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.change,
++                row.task,
++                row.run,
++                row.outcome,
++                row.exit_code,
++                row.duration,
++                row.timed_out,
++                row.scenarios,
++                row.files,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `mutation_picks` row.
++pub(super) fn insert_pick(
++    transaction: &Transaction<'_>,
++    row: &MutationPickRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO mutation_picks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.change,
++                row.task,
++                row.pick,
++                row.file,
++                row.function,
++                row.outcome,
++                row.reason,
++                row.killed,
++                row.survived,
++                row.invalid,
++                row.duration,
++                row.scenarios,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `mutation_survivors` row, with a null `label`.
++pub(super) fn insert_survivor(
++    transaction: &Transaction<'_>,
++    row: &MutationSurvivorRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO mutation_survivors VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.id,
++                row.change,
++                row.task,
++                row.pick,
++                row.file,
++                row.function,
++                row.line,
++                row.column,
++                row.mutator,
++                row.replacement,
++                rusqlite::types::Null,
++            ],
++        )
++        .map(|_| ())
++}
+diff --git a/crates/kernel/storage/src/model/insert_trial.rs b/crates/kernel/storage/src/model/insert_trial.rs
+new file mode 100644
+index 00000000..971bf000
+--- /dev/null
++++ b/crates/kernel/storage/src/model/insert_trial.rs
+@@ -0,0 +1,74 @@
++//! Writing the `validator_runs`, `validator_findings` and `link_findings` rows.
++
++use rusqlite::{Transaction, params};
++
++use super::trial_rows::{LinkFindingRow, ValidatorFindingRow, ValidatorRunRow};
++
++/// Inserts one `validator_runs` row.
++pub(super) fn insert_validator_run(
++    transaction: &Transaction<'_>,
++    row: &ValidatorRunRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO validator_runs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.change,
++                row.run,
++                row.outcome,
++                row.harness,
++                row.model,
++                row.duration,
++                row.exit_code,
++                row.scenarios,
++                row.findings,
++                row.reason,
++                row.output,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `validator_findings` row, with a null `label`.
++pub(super) fn insert_validator_finding(
++    transaction: &Transaction<'_>,
++    row: &ValidatorFindingRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO validator_findings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++            params![
++                row.id,
++                row.change,
++                row.run,
++                row.finding,
++                row.capability,
++                row.requirement,
++                row.scenario,
++                row.problem,
++                row.detail,
++                rusqlite::types::Null,
++            ],
++        )
++        .map(|_| ())
++}
++
++/// Inserts one `link_findings` row, with a null `label`.
++pub(super) fn insert_link_finding(
++    transaction: &Transaction<'_>,
++    row: &LinkFindingRow,
++) -> Result<(), rusqlite::Error> {
++    transaction
++        .execute(
++            "INSERT INTO link_findings VALUES (?, ?, ?, ?, ?, ?)",
++            params![
++                row.id,
++                row.change,
++                row.severity,
++                row.file,
++                row.message,
++                rusqlite::types::Null,
++            ],
++        )
++        .map(|_| ())
++}
+diff --git a/crates/kernel/storage/src/model/labels.rs b/crates/kernel/storage/src/model/labels.rs
+new file mode 100644
+index 00000000..8a5f20ee
+--- /dev/null
++++ b/crates/kernel/storage/src/model/labels.rs
+@@ -0,0 +1,93 @@
++//! Reading the committed trial label files and filling the label columns.
++
++use std::collections::BTreeMap;
++use std::fs;
++use std::path::Path;
++
++use rusqlite::{Connection, params};
++use serde_json::Value;
++
++use super::ReadModelError;
++
++/// The labels of the two trial label files, by id.
++#[derive(Clone, Debug, Default, PartialEq, Eq)]
++pub struct TrialLabels {
++    /// The `openspec/trials/validator.json` labels.
++    pub validator: BTreeMap<String, bool>,
++    /// The `openspec/trials/traceability.json` labels.
++    pub traceability: BTreeMap<String, bool>,
++}
++
++/// Reads `openspec/trials/validator.json` and `openspec/trials/traceability.json`.
++///
++/// A missing or unreadable file holds no labels. A file that is not a JSON
++/// object whose values are all true or false fails with [`ReadModelError::Labels`].
++///
++/// Implements: rust-storage/trial-labels
++///
++/// # Errors
++///
++/// Returns [`ReadModelError::Labels`] naming the file when its text is not a
++/// JSON object of booleans.
++#[must_use = "the labels fill the read model's label columns"]
++pub fn read_trial_labels(project_root: &Path) -> Result<TrialLabels, ReadModelError> {
++    Ok(TrialLabels {
++        validator: read_labels(project_root, "validator")?,
++        traceability: read_labels(project_root, "traceability")?,
++    })
++}
++
++/// One label file's labels, or an error naming its kind.
++fn read_labels(project_root: &Path, kind: &str) -> Result<BTreeMap<String, bool>, ReadModelError> {
++    let path = project_root
++        .join("openspec")
++        .join("trials")
++        .join(format!("{kind}.json"));
++    let Ok(text) = fs::read_to_string(path) else {
++        return Ok(BTreeMap::new());
++    };
++    let malformed = || ReadModelError::Labels(kind.to_owned());
++    let value: Value = serde_json::from_str(&text).map_err(|_| malformed())?;
++    let Value::Object(entries) = value else {
++        return Err(malformed());
++    };
++    let mut labels = BTreeMap::new();
++    for (id, entry) in entries {
++        let Value::Bool(flag) = entry else {
++            return Err(malformed());
++        };
++        labels.insert(id, flag);
++    }
++    Ok(labels)
++}
++
++/// Sets the `label` columns of the three trial tables after the rows are in.
++pub(super) fn apply_labels(db_path: &Path, labels: &TrialLabels) -> Result<(), ReadModelError> {
++    let connection = Connection::open(db_path)?;
++    let mut validator = statement(&connection, "validator_findings")?;
++    let mut survivors = statement(&connection, "mutation_survivors")?;
++    let mut links = statement(&connection, "link_findings")?;
++    apply(&mut validator, &labels.validator)?;
++    apply(&mut survivors, &labels.traceability)?;
++    apply(&mut links, &labels.traceability)?;
++    Ok(())
++}
++
++/// One table's `label` update, prepared.
++fn statement<'a>(
++    connection: &'a Connection,
++    table: &str,
++) -> Result<rusqlite::Statement<'a>, rusqlite::Error> {
++    connection.prepare(&format!("UPDATE {table} SET label = ? WHERE id = ?"))
++}
++
++/// Runs one prepared update for each labelled id.
++fn apply(
++    statement: &mut rusqlite::Statement<'_>,
++    labels: &BTreeMap<String, bool>,
++) -> Result<(), rusqlite::Error> {
++    for (id, value) in labels {
++        statement.execute(params![i64::from(*value), id])?;
++    }
++    Ok(())
++}
+diff --git a/crates/kernel/storage/src/model/mod.rs b/crates/kernel/storage/src/model/mod.rs
+index 5917a17b..c7e30271 100644
+--- a/crates/kernel/storage/src/model/mod.rs
++++ b/crates/kernel/storage/src/model/mod.rs
+@@ -1,37 +1,59 @@
+ //! Building the SQLite read model from change snapshots.
+ //!
+ //! The database is a cache: [`write_read_model`] replaces any file already at
+-//! its path, and every row derives from the files it reads (ADR 025). Only
+-//! archived snapshots get rows; the caller may pass every snapshot
+-//! [`read_archive`](crate::read::read_archive) returns.
++//! its path, and every row derives from the files it reads (ADR 025). The
++//! archived snapshots fill every table but `notices`; the archived and
++//! rejected snapshots fill `notices`.
+ //!
+ //! Implements: rust-storage/read-model-tables
+ //! Implements: rust-storage/read-model-rebuild
++//! Implements: rust-storage/event-table-columns
++//! Implements: rust-storage/trial-labels
+ 
+ mod error;
++mod event_rows;
++mod insert;
++mod insert_events;
++mod insert_trial;
++mod labels;
++mod notice_rows;
+ mod rows;
++mod stream_rows;
++mod trial_rows;
+ 
+ use std::fs;
+ use std::io;
+ use std::path::Path;
+ 
+-use rusqlite::{Connection, Transaction, params};
++use rusqlite::Connection;
+ 
+-use crate::read::{ChangeSnapshot, Location, read_archive};
+-use rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
++use crate::read::{ChangeSnapshot, Location, read_history};
++use insert::{insert_archived, insert_notice};
++use notice_rows::all_notice_rows;
+ 
+ pub use error::ReadModelError;
++pub use labels::{TrialLabels, read_trial_labels};
+ 
+-/// The three tables' untyped columns, exactly as TypeScript's `osq query` names them.
++/// Every table's untyped columns, exactly as TypeScript's `osq query` names them.
+ const CREATE_TABLES: &str = "\
+ CREATE TABLE changes (id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner);\
+ CREATE TABLE tasks (change, task, title, attempts, done);\
+-CREATE TABLE dead_attempts (change, task, reason);";
++CREATE TABLE dead_attempts (change, task, reason);\
++CREATE TABLE pauses (change, task, paused_at, until, source);\
++CREATE TABLE recertifications (change, task, recertified_at, outcome, automatic, path, credited_to, source);\
++CREATE TABLE notices (change, notice, severity, opened, outcome);\
++CREATE TABLE focused_runs (change, task, run, outcome, exit_code, duration, timed_out, scenarios, files);\
++CREATE TABLE mutation_picks (change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios);\
++CREATE TABLE mutation_survivors (id, change, task, pick, file, function, line, column, mutator, replacement, label);\
++CREATE TABLE validator_runs (change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output);\
++CREATE TABLE validator_findings (id, change, run, finding, capability, requirement, scenario, problem, detail, label);\
++CREATE TABLE link_findings (id, change, severity, file, message, label);";
+ 
+-/// Writes the read model database for the given archived snapshots.
++/// Writes the read model database for the given snapshots.
+ ///
+ /// Any file already at `db_path` is removed first, so a stale database never
+-/// leaks rows. Rows go in the given snapshot order.
++/// leaks rows. Every archived snapshot's rows go in the given order, and every
++/// archived or rejected snapshot's notices follow, by folder name.
+ ///
+ /// # Errors
+ ///
+@@ -40,54 +62,45 @@ CREATE TABLE dead_attempts (change, task, reason);";
+ ///
+ /// Implements: rust-storage/read-model-tables
+ /// Implements: rust-storage/read-model-rebuild
++/// Implements: rust-storage/event-table-columns
+ pub fn write_read_model(
+     db_path: &Path,
+     snapshots: &[ChangeSnapshot],
+ ) -> Result<(), ReadModelError> {
+     remove_existing(db_path)?;
+     let mut connection = Connection::open(db_path)?;
+-    create_tables(&connection)?;
++    connection.execute_batch(CREATE_TABLES)?;
+     let transaction = connection.transaction()?;
+     for snapshot in snapshots {
+         if snapshot.location == Location::Archived {
+-            insert_snapshot(&transaction, snapshot)?;
++            insert_archived(&transaction, snapshot)?;
+         }
+     }
++    for row in all_notice_rows(snapshots) {
++        insert_notice(&transaction, &row)?;
++    }
+     transaction.commit()?;
+     Ok(())
+ }
+ 
+-/// Reads a project's archived changes and writes them as the read model.
++/// Reads a project's trial labels and history and writes them as the read model.
++///
++/// The labels are read before the database is written, so a malformed label
++/// file leaves any database at `db_path` untouched.
+ ///
+ /// # Errors
+ ///
+-/// Returns [`ReadModelError::Storage`] when an archived change cannot be read,
+-/// and the errors [`write_read_model`] raises.
++/// Returns [`ReadModelError::Storage`] when a change cannot be read,
++/// [`ReadModelError::Labels`] when a label file is malformed, and the errors
++/// [`write_read_model`] raises.
+ ///
+ /// Implements: rust-storage/read-model-tables
++/// Implements: rust-storage/trial-labels
+ pub fn build_read_model(project_root: &Path, db_path: &Path) -> Result<(), ReadModelError> {
+-    let snapshots = read_archive(project_root)?;
+-    write_read_model(db_path, &snapshots)
+-}
+-
+-/// Inserts one archived snapshot's rows into every table.
+-fn insert_snapshot(
+-    transaction: &Transaction<'_>,
+-    snapshot: &ChangeSnapshot,
+-) -> Result<(), rusqlite::Error> {
+-    insert_change(transaction, &change_row(snapshot))?;
+-    for row in task_rows(snapshot) {
+-        insert_task(transaction, &row)?;
+-    }
+-    for row in dead_rows(snapshot) {
+-        insert_dead(transaction, &row)?;
+-    }
+-    Ok(())
+-}
+-
+-/// Creates the three tables in an empty database.
+-fn create_tables(connection: &Connection) -> Result<(), rusqlite::Error> {
+-    connection.execute_batch(CREATE_TABLES)
++    let labels = read_trial_labels(project_root)?;
++    let snapshots = read_history(project_root)?;
++    write_read_model(db_path, &snapshots)?;
++    labels::apply_labels(db_path, &labels)
+ }
+ 
+ /// Removes a file at `db_path`, ignoring one that is not there.
+@@ -97,45 +110,3 @@ fn remove_existing(db_path: &Path) -> Result<(), io::Error> {
+     }
+     Ok(())
+ }
+-
+-/// Inserts one `changes` row.
+-fn insert_change(transaction: &Transaction<'_>, row: &ChangeRow) -> Result<(), rusqlite::Error> {
+-    transaction
+-        .execute(
+-            "INSERT INTO changes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+-            params![
+-                row.id,
+-                row.folder,
+-                row.title,
+-                row.archived_on,
+-                row.goal,
+-                row.tasks,
+-                row.attempts,
+-                row.halts,
+-                row.elapsed_seconds,
+-                row.cost,
+-                row.planner,
+-            ],
+-        )
+-        .map(|_| ())
+-}
+-
+-/// Inserts one `tasks` row.
+-fn insert_task(transaction: &Transaction<'_>, row: &TaskRow) -> Result<(), rusqlite::Error> {
+-    transaction
+-        .execute(
+-            "INSERT INTO tasks VALUES (?, ?, ?, ?, ?)",
+-            params![row.change, row.task, row.title, row.attempts, row.done],
+-        )
+-        .map(|_| ())
+-}
+-
+-/// Inserts one `dead_attempts` row.
+-fn insert_dead(transaction: &Transaction<'_>, row: &DeadRow) -> Result<(), rusqlite::Error> {
+-    transaction
+-        .execute(
+-            "INSERT INTO dead_attempts VALUES (?, ?, ?)",
+-            params![row.change, row.task, row.reason],
+-        )
+-        .map(|_| ())
+-}
+diff --git a/crates/kernel/storage/src/model/notice_rows.rs b/crates/kernel/storage/src/model/notice_rows.rs
+new file mode 100644
+index 00000000..6b6af8ed
+--- /dev/null
++++ b/crates/kernel/storage/src/model/notice_rows.rs
+@@ -0,0 +1,85 @@
++//! Mapping a change snapshot to the `notices` rows of its plans and manifest.
++
++use crate::read::{ChangeSnapshot, Location, ManifestNotices, PlanRecord};
++
++/// One row of the `notices` table.
++pub(super) struct NoticeRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The notice id.
++    pub(super) notice: String,
++    /// The severity, as written.
++    pub(super) severity: String,
++    /// 1 when opened, 0 when not, null without an opened list.
++    pub(super) opened: Option<i64>,
++    /// What the change did about the notice.
++    pub(super) outcome: String,
++}
++
++/// The notices rows of every archived and rejected snapshot, by folder name.
++pub(super) fn all_notice_rows(snapshots: &[ChangeSnapshot]) -> Vec<NoticeRow> {
++    let mut subjects: Vec<&ChangeSnapshot> = snapshots
++        .iter()
++        .filter(|snapshot| matches!(snapshot.location, Location::Archived | Location::Rejected))
++        .collect();
++    subjects.sort_by(|left, right| left.folder.cmp(&right.folder));
++    subjects.into_iter().flat_map(notice_rows).collect()
++}
++
++/// Every notice row one change contributes, in order.
++pub(super) fn notice_rows(snapshot: &ChangeSnapshot) -> Vec<NoticeRow> {
++    let mut rows = Vec::new();
++    if let Some((last, rest)) = snapshot.plan_records.split_last() {
++        for record in rest {
++            push_plan(&mut rows, snapshot, record, "planned_again");
++        }
++        if let Some(record) = &snapshot.manifest_notices {
++            push_manifest(&mut rows, snapshot, record);
++        } else if snapshot.location == Location::Rejected {
++            push_plan(&mut rows, snapshot, last, "rejected");
++        }
++    } else if let Some(record) = &snapshot.manifest_notices {
++        push_manifest(&mut rows, snapshot, record);
++    }
++    rows
++}
++
++/// Appends the notices of one plan record, with no opened list.
++fn push_plan(
++    rows: &mut Vec<NoticeRow>,
++    snapshot: &ChangeSnapshot,
++    record: &PlanRecord,
++    outcome: &str,
++) {
++    for notice in &record.notices {
++        rows.push(NoticeRow {
++            change: snapshot.folder.clone(),
++            notice: notice.id.clone(),
++            severity: notice.severity.clone(),
++            opened: None,
++            outcome: outcome.to_owned(),
++        });
++    }
++}
++
++/// Appends the manifest's notice items, with the change's outcome.
++fn push_manifest(rows: &mut Vec<NoticeRow>, snapshot: &ChangeSnapshot, record: &ManifestNotices) {
++    let outcome = match snapshot.location {
++        Location::Rejected => "rejected",
++        _ if snapshot.facts.as_ref().is_some_and(|facts| facts.halts > 0) => "halted",
++        _ => "approved",
++    };
++    for item in &record.items {
++        let opened = record
++            .opened
++            .as_ref()
++            .map(|ids| i64::from(ids.iter().any(|id| id == &item.id)));
++        rows.push(NoticeRow {
++            change: snapshot.folder.clone(),
++            notice: item.id.clone(),
++            severity: item.severity.clone(),
++            opened,
++            outcome: outcome.to_owned(),
++        });
++    }
++}
+diff --git a/crates/kernel/storage/src/model/rows.rs b/crates/kernel/storage/src/model/rows.rs
+index 4ccc0f9a..d75a3a48 100644
+--- a/crates/kernel/storage/src/model/rows.rs
++++ b/crates/kernel/storage/src/model/rows.rs
+@@ -1,6 +1,9 @@
+ //! Mapping one change snapshot to the read model's rows, without touching disk.
+ 
++use serde_json::{Number, Value};
++
+ use crate::read::ChangeSnapshot;
++use crate::read::TableEvent;
+ use crate::read::timestamp_ms;
+ 
+ /// One row of the `changes` table.
+@@ -122,11 +125,29 @@ fn elapsed_seconds(snapshot: &ChangeSnapshot) -> Option<i64> {
+ }
+ 
+ /// Converts an unsigned count to the column's integer, saturating.
+-fn count_i64(value: u64) -> i64 {
++pub(super) fn count_i64(value: u64) -> i64 {
+     i64::try_from(value).unwrap_or(i64::MAX)
+ }
+ 
+ /// Converts a slice length to the column's integer, saturating.
+-fn len_i64(value: usize) -> i64 {
++pub(super) fn len_i64(value: usize) -> i64 {
+     count_i64(u64::try_from(value).unwrap_or(u64::MAX))
+ }
++
++/// The kept table events of one snapshot, or an empty slice without `facts`.
++pub(super) fn table_events(snapshot: &ChangeSnapshot) -> &[TableEvent] {
++    snapshot
++        .facts
++        .as_ref()
++        .map_or(&[], |facts| facts.table_events.as_slice())
++}
++
++/// A JSON number as the column's real, zero when it cannot be one.
++pub(super) fn number(value: &Number) -> f64 {
++    value.as_f64().unwrap_or(0.0)
++}
++
++/// One object's string field, or null when it is absent or not a string.
++pub(super) fn entry_string(value: &Value, key: &str) -> Option<String> {
++    value.get(key)?.as_str().map(str::to_owned)
++}
+diff --git a/crates/kernel/storage/src/model/stream_rows.rs b/crates/kernel/storage/src/model/stream_rows.rs
+new file mode 100644
+index 00000000..8bad5bba
+--- /dev/null
++++ b/crates/kernel/storage/src/model/stream_rows.rs
+@@ -0,0 +1,176 @@
++//! Mapping a change snapshot to the focused and mutation stream rows.
++
++use std::collections::BTreeMap;
++
++use osq_core::{Event, Stream, TaskId};
++use serde_json::Value;
++
++use crate::read::ChangeSnapshot;
++
++use super::rows::{count_i64, entry_string, number, table_events};
++
++/// One row of the `focused_runs` table.
++pub(super) struct FocusedRunRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The stream's task id.
++    pub(super) task: String,
++    /// The event's 1-based position among the task's focused runs.
++    pub(super) run: i64,
++    /// The run's outcome.
++    pub(super) outcome: String,
++    /// The command's exit code.
++    pub(super) exit_code: i64,
++    /// The wall seconds the run took.
++    pub(super) duration: f64,
++    /// 1 when the run timed out, else 0.
++    pub(super) timed_out: i64,
++    /// The scenarios ran, joined by a newline.
++    pub(super) scenarios: String,
++    /// The files ran, joined by a newline.
++    pub(super) files: String,
++}
++
++/// One row of the `mutation_picks` table.
++pub(super) struct MutationPickRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The stream's task id.
++    pub(super) task: String,
++    /// The event's 1-based position among the task's mutation picks.
++    pub(super) pick: i64,
++    /// The file under test.
++    pub(super) file: String,
++    /// The function under test.
++    pub(super) function: String,
++    /// The run's outcome.
++    pub(super) outcome: String,
++    /// Why the pick was not measured, or null.
++    pub(super) reason: Option<String>,
++    /// Mutants killed.
++    pub(super) killed: i64,
++    /// Mutants survived.
++    pub(super) survived: i64,
++    /// Mutants invalid.
++    pub(super) invalid: i64,
++    /// The wall seconds the run took.
++    pub(super) duration: f64,
++    /// The scenarios the pick covers, joined by a newline.
++    pub(super) scenarios: String,
++}
++
++/// One row of the `mutation_survivors` table.
++pub(super) struct MutationSurvivorRow {
++    /// The positional id `<id>.<n>.m<pick>.<k>`.
++    pub(super) id: String,
++    /// The change folder.
++    pub(super) change: String,
++    /// The stream's task id.
++    pub(super) task: String,
++    /// The pick the survivor belongs to.
++    pub(super) pick: i64,
++    /// The entry's file, or null.
++    pub(super) file: Option<String>,
++    /// The pick's function.
++    pub(super) function: String,
++    /// The entry's line, or null.
++    pub(super) line: Option<f64>,
++    /// The entry's column, or null.
++    pub(super) column: Option<f64>,
++    /// The entry's mutator, or null.
++    pub(super) mutator: Option<String>,
++    /// The entry's replacement, or null.
++    pub(super) replacement: Option<String>,
++}
++
++/// Every `focused_runs` row of one snapshot, in fold order.
++pub(super) fn focused_rows(snapshot: &ChangeSnapshot) -> Vec<FocusedRunRow> {
++    let mut counts: BTreeMap<TaskId, i64> = BTreeMap::new();
++    let mut rows = Vec::new();
++    for table_event in table_events(snapshot) {
++        let (Stream::Task(task), Event::FocusedRan(data)) =
++            (&table_event.stream, &table_event.event)
++        else {
++            continue;
++        };
++        rows.push(FocusedRunRow {
++            change: snapshot.folder.clone(),
++            task: task.as_str().to_owned(),
++            run: next(&mut counts, task),
++            outcome: data.outcome.clone(),
++            exit_code: data.exit_code,
++            duration: number(&data.duration),
++            timed_out: i64::from(data.timed_out),
++            scenarios: data.scenarios.join("\n"),
++            files: data.files.join("\n"),
++        });
++    }
++    rows
++}
++
++/// Every `mutation_picks` row of one snapshot, in fold order.
++pub(super) fn pick_rows(snapshot: &ChangeSnapshot) -> Vec<MutationPickRow> {
++    let mut counts: BTreeMap<TaskId, i64> = BTreeMap::new();
++    let mut rows = Vec::new();
++    for table_event in table_events(snapshot) {
++        let (Stream::Task(task), Event::MutationRan(data)) =
++            (&table_event.stream, &table_event.event)
++        else {
++            continue;
++        };
++        rows.push(MutationPickRow {
++            change: snapshot.folder.clone(),
++            task: task.as_str().to_owned(),
++            pick: next(&mut counts, task),
++            file: data.file.clone(),
++            function: data.function.clone(),
++            outcome: data.outcome.clone(),
++            reason: data.reason.clone(),
++            killed: count_i64(data.killed),
++            survived: count_i64(data.survived),
++            invalid: count_i64(data.invalid),
++            duration: number(&data.duration),
++            scenarios: data.scenarios.join("\n"),
++        });
++    }
++    rows
++}
++
++/// Every `mutation_survivors` row of one snapshot, one per survivor entry.
++pub(super) fn survivor_rows(snapshot: &ChangeSnapshot) -> Vec<MutationSurvivorRow> {
++    let mut counts: BTreeMap<TaskId, i64> = BTreeMap::new();
++    let mut rows = Vec::new();
++    for table_event in table_events(snapshot) {
++        let (Stream::Task(task), Event::MutationRan(data)) =
++            (&table_event.stream, &table_event.event)
++        else {
++            continue;
++        };
++        let pick = next(&mut counts, task);
++        let Value::Array(entries) = &data.survivors else {
++            continue;
++        };
++        for (index, entry) in entries.iter().enumerate() {
++            rows.push(MutationSurvivorRow {
++                id: format!("{}.{}.m{}.{}", snapshot.id, task, pick, index + 1),
++                change: snapshot.folder.clone(),
++                task: task.as_str().to_owned(),
++                pick,
++                file: entry_string(entry, "file"),
++                function: data.function.clone(),
++                line: entry.get("line").and_then(Value::as_f64),
++                column: entry.get("column").and_then(Value::as_f64),
++                mutator: entry_string(entry, "mutator"),
++                replacement: entry_string(entry, "replacement"),
++            });
++        }
++    }
++    rows
++}
++
++/// The 1-based position of the next event of one task's stream.
++fn next(counts: &mut BTreeMap<TaskId, i64>, task: &TaskId) -> i64 {
++    let count = counts.entry(task.clone()).or_insert(0);
++    *count += 1;
++    *count
++}
+diff --git a/crates/kernel/storage/src/model/trial_rows.rs b/crates/kernel/storage/src/model/trial_rows.rs
+new file mode 100644
+index 00000000..e02d8f7e
+--- /dev/null
++++ b/crates/kernel/storage/src/model/trial_rows.rs
+@@ -0,0 +1,173 @@
++//! Mapping a change snapshot to the validator and link finding rows.
++
++use osq_core::Event;
++use serde_json::{Map, Value};
++
++use crate::read::ChangeSnapshot;
++
++use super::rows::{count_i64, len_i64, number, table_events};
++
++/// The string fields a validator finding must carry.
++const FINDING_FIELDS: [&str; 5] = ["capability", "requirement", "scenario", "problem", "detail"];
++
++/// One row of the `validator_runs` table.
++pub(super) struct ValidatorRunRow {
++    /// The change folder.
++    pub(super) change: String,
++    /// The event's 1-based position among the change's validator runs.
++    pub(super) run: i64,
++    /// The validator outcome.
++    pub(super) outcome: String,
++    /// The validator harness.
++    pub(super) harness: String,
++    /// The validator model.
++    pub(super) model: String,
++    /// The wall seconds the run took.
++    pub(super) duration: f64,
++    /// The run's exit code, or null.
++    pub(super) exit_code: Option<i64>,
++    /// How many scenarios were judged.
++    pub(super) scenarios: i64,
++    /// The number of valid findings.
++    pub(super) findings: i64,
++    /// Why the validator did not run, or null.
++    pub(super) reason: Option<String>,
++    /// The run's output, or null.
++    pub(super) output: Option<String>,
++}
++
++/// One row of the `validator_findings` table.
++pub(super) struct ValidatorFindingRow {
++    /// The positional id `<id>.v<run>.<k>`.
++    pub(super) id: String,
++    /// The change folder.
++    pub(super) change: String,
++    /// The validator run the finding belongs to.
++    pub(super) run: i64,
++    /// The finding's 1-based position among the valid findings.
++    pub(super) finding: i64,
++    /// The finding's capability.
++    pub(super) capability: String,
++    /// The finding's requirement.
++    pub(super) requirement: String,
++    /// The finding's scenario.
++    pub(super) scenario: String,
++    /// The finding's problem.
++    pub(super) problem: String,
++    /// The finding's detail.
++    pub(super) detail: String,
++}
++
++/// One row of the `link_findings` table.
++pub(super) struct LinkFindingRow {
++    /// The positional id `<id>.l<k>`.
++    pub(super) id: String,
++    /// The change folder.
++    pub(super) change: String,
++    /// The finding's severity.
++    pub(super) severity: String,
++    /// The file the finding names.
++    pub(super) file: String,
++    /// The finding's message.
++    pub(super) message: String,
++}
++
++/// Every `validator_runs` row of one snapshot, in fold order.
++pub(super) fn validator_run_rows(snapshot: &ChangeSnapshot) -> Vec<ValidatorRunRow> {
++    let mut rows = Vec::new();
++    let mut run = 0;
++    for table_event in table_events(snapshot) {
++        let Event::ValidatorRan(data) = &table_event.event else {
++            continue;
++        };
++        run += 1;
++        rows.push(ValidatorRunRow {
++            change: snapshot.folder.clone(),
++            run,
++            outcome: data.outcome.clone(),
++            harness: data.harness.clone(),
++            model: data.model.clone(),
++            duration: number(&data.duration),
++            exit_code: data.exit_code.0,
++            scenarios: count_i64(data.scenarios),
++            findings: len_i64(valid_findings(&data.findings).len()),
++            reason: data.reason.clone(),
++            output: data.output.clone(),
++        });
++    }
++    rows
++}
++
++/// Every `validator_findings` row of one snapshot, one per valid finding.
++pub(super) fn validator_finding_rows(snapshot: &ChangeSnapshot) -> Vec<ValidatorFindingRow> {
++    let mut rows = Vec::new();
++    let mut run = 0;
++    for table_event in table_events(snapshot) {
++        let Event::ValidatorRan(data) = &table_event.event else {
++            continue;
++        };
++        run += 1;
++        for (index, finding) in valid_findings(&data.findings).iter().enumerate() {
++            let position = index + 1;
++            rows.push(ValidatorFindingRow {
++                id: format!("{}.v{}.{}", snapshot.id, run, position),
++                change: snapshot.folder.clone(),
++                run,
++                finding: len_i64(position),
++                capability: field(finding, "capability"),
++                requirement: field(finding, "requirement"),
++                scenario: field(finding, "scenario"),
++                problem: field(finding, "problem"),
++                detail: field(finding, "detail"),
++            });
++        }
++    }
++    rows
++}
++
++/// Every `link_findings` row of one snapshot, from its last plan record.
++pub(super) fn link_finding_rows(snapshot: &ChangeSnapshot) -> Vec<LinkFindingRow> {
++    let Some(record) = snapshot.plan_records.last() else {
++        return Vec::new();
++    };
++    let Some(entries) = &record.traceability else {
++        return Vec::new();
++    };
++    entries
++        .iter()
++        .enumerate()
++        .map(|(index, entry)| LinkFindingRow {
++            id: format!("{}.l{}", snapshot.id, index + 1),
++            change: snapshot.folder.clone(),
++            severity: entry.severity.clone(),
++            file: entry.file.clone(),
++            message: entry.message.clone(),
++        })
++        .collect()
++}
++
++/// The valid findings of a `findings` value: objects with all five strings.
++fn valid_findings(findings: &Value) -> Vec<&Map<String, Value>> {
++    let Value::Array(entries) = findings else {
++        return Vec::new();
++    };
++    entries.iter().filter_map(valid_finding).collect()
++}
++
++/// One finding entry when it is an object with all five string fields.
++fn valid_finding(entry: &Value) -> Option<&Map<String, Value>> {
++    let object = entry.as_object()?;
++    let complete = FINDING_FIELDS
++        .iter()
++        .all(|field| object.get(*field).is_some_and(Value::is_string));
++    complete.then_some(object)
++}
++
++/// One finding's string field, empty text when it is not a string.
++fn field(finding: &Map<String, Value>, key: &str) -> String {
++    finding
++        .get(key)
++        .and_then(Value::as_str)
++        .unwrap_or("")
++        .to_owned()
++}
+diff --git a/crates/kernel/storage/tests/read_model_history.rs b/crates/kernel/storage/tests/read_model_history.rs
+new file mode 100644
+index 00000000..42bd968b
+--- /dev/null
++++ b/crates/kernel/storage/tests/read_model_history.rs
+@@ -0,0 +1,204 @@
++//! Proves the nine event table rows, trial labels and malformed label handling.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_storage::model::ReadModelError;
++use osq_kernel_storage::{TrialLabels, build_read_model, read_trial_labels};
++use rusqlite::Connection;
++use rusqlite::types::Value;
++use serde_json::Value as Json;
++
++/// The nine tables' names, columns and fixture files, in table order.
++#[rustfmt::skip]
++const TABLES: [(&str, &[&str], &str); 9] = [
++    ("pauses", &["change", "task", "paused_at", "until", "source"], "pauses.json"),
++    ("recertifications", &["change", "task", "recertified_at", "outcome", "automatic", "path", "credited_to", "source"], "recertifications.json"),
++    ("notices", &["change", "notice", "severity", "opened", "outcome"], "notices.json"),
++    ("focused_runs", &["change", "task", "run", "outcome", "exit_code", "duration", "timed_out", "scenarios", "files"], "focused_runs.json"),
++    ("mutation_picks", &["change", "task", "pick", "file", "function", "outcome", "reason", "killed", "survived", "invalid", "duration", "scenarios"], "mutation_picks.json"),
++    ("mutation_survivors", &["id", "change", "task", "pick", "file", "function", "line", "column", "mutator", "replacement", "label"], "mutation_survivors.json"),
++    ("validator_runs", &["change", "run", "outcome", "harness", "model", "duration", "exit_code", "scenarios", "findings", "reason", "output"], "validator_runs.json"),
++    ("validator_findings", &["id", "change", "run", "finding", "capability", "requirement", "scenario", "problem", "detail", "label"], "validator_findings.json"),
++    ("link_findings", &["id", "change", "severity", "file", "message", "label"], "link_findings.json"),
++];
++
++/// The directory holding every fixture project and its expected rows.
++fn fixtures() -> PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
++}
++
++/// A database path for one test, under the target's temp directory.
++fn db_path(name: &str) -> PathBuf {
++    Path::new(env!("CARGO_TARGET_TMPDIR")).join(name)
++}
++
++/// A fresh temporary project root, with anything at that name removed.
++fn temp_root(name: &str) -> PathBuf {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
++    let _ = fs::remove_dir_all(&root);
++    root
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    fs::create_dir_all(path.parent().unwrap()).unwrap();
++    fs::write(path, text).unwrap();
++}
++
++/// Reads one table's rows as typed values, in insertion order.
++#[rustfmt::skip]
++fn table_rows(db: &Connection, table: &str, columns: &[&str]) -> Vec<Vec<Value>> {
++    let select = format!("SELECT {} FROM {table} ORDER BY rowid", columns.join(", "));
++    let mut statement = db.prepare(&select).unwrap();
++    let mapped = statement.query_map([], |row| (0..columns.len()).map(|index| row.get::<_, Value>(index)).collect::<rusqlite::Result<Vec<Value>>>()).unwrap();
++    mapped.map(Result::unwrap).collect()
++}
++
++/// The expected rows of one fixture file, in order.
++fn fixture(table: &str) -> Vec<Json> {
++    let path = fixtures()
++        .join("history-rows")
++        .join(format!("{table}.json"));
++    let text = fs::read_to_string(&path).unwrap();
++    let Json::Array(rows) = serde_json::from_str(&text).unwrap() else {
++        panic!("{} is not a JSON array", path.display());
++    };
++    rows
++}
++
++/// Whether a read column equals a fixture column: text and null as written,
++/// numbers equal by value as `f64`.
++fn equal(value: &Value, want: &Json) -> bool {
++    match (value, want) {
++        (Value::Null, Json::Null) => true,
++        (Value::Text(left), Json::String(right)) => left == right,
++        (Value::Integer(_) | Value::Real(_), Json::Number(_)) => number(value) == want.as_f64(),
++        _ => false,
++    }
++}
++
++/// A column's numeric value as `f64`, or `None` for text and null.
++fn number(value: &Value) -> Option<f64> {
++    match value {
++        Value::Integer(number) => Json::from(*number).as_f64(),
++        Value::Real(number) => Some(*number),
++        _ => None,
++    }
++}
++
++/// Records every column of a row that disagrees with its fixture row.
++fn compare(
++    table: &str,
++    columns: &[&str],
++    expected: &[Json],
++    actual: &[Vec<Value>],
++    failures: &mut Vec<String>,
++) {
++    if expected.len() != actual.len() {
++        failures.push(format!(
++            "{table}: fixture holds {} rows, the read model {}",
++            expected.len(),
++            actual.len()
++        ));
++    }
++    for (index, row) in actual.iter().enumerate() {
++        let Some(want) = expected.get(index).and_then(Json::as_object) else {
++            continue;
++        };
++        for (position, value) in row.iter().enumerate() {
++            let Some(name) = columns.get(position) else {
++                continue;
++            };
++            let Some(expected) = want.get(*name) else {
++                continue;
++            };
++            if !equal(value, expected) {
++                failures.push(format!(
++                    "{table} row {index} column {name}: read {value:?}, fixture {expected:?}"
++                ));
++            }
++        }
++    }
++}
++
++/// Proves the nine event tables equal the history fixture's TypeScript rows,
++/// and that its trial labels fill the label columns by id.
++///
++/// Covers: rust-storage/history-fixture-rows
++/// Covers: rust-storage/labels-in-the-history-fixture
++#[test]
++fn history_fixture() {
++    let path = db_path("history_fixture.sqlite");
++    build_read_model(&fixtures().join("history"), &path).unwrap();
++    let db = Connection::open(&path).unwrap();
++    let mut failures = Vec::new();
++    for (table, columns, file) in TABLES {
++        compare(
++            table,
++            columns,
++            &fixture(file.trim_end_matches(".json")),
++            &table_rows(&db, table, columns),
++            &mut failures,
++        );
++    }
++    assert!(failures.is_empty(), "{}", failures.join("\n"));
++    assert_eq!(label(&db, "validator_findings", "001.v1.1"), Some(1));
++    assert_eq!(label(&db, "mutation_survivors", "001.1.m1.1"), Some(0));
++    assert_eq!(label(&db, "mutation_survivors", "001.1.m1.2"), None);
++    assert_eq!(label(&db, "link_findings", "001.l1"), Some(1));
++}
++
++/// The `label` column of one trial table row.
++fn label(db: &Connection, table: &str, id: &str) -> Option<i64> {
++    db.query_row(
++        &format!("SELECT label FROM {table} WHERE id = ?1"),
++        [id],
++        |row| row.get(0),
++    )
++    .unwrap()
++}
++
++/// Proves the label reader's missing, valid and malformed files, and that a
++/// malformed file fails the build before any database is written.
++///
++/// Covers: rust-storage/trial-labels
++/// Covers: rust-storage/malformed-label-file
++#[test]
++fn trial_labels() {
++    let root = temp_root("trial_labels");
++    assert_eq!(read_trial_labels(&root).unwrap(), TrialLabels::default());
++    write(
++        &root.join("openspec/trials/validator.json"),
++        "{\"a\":true,\"b\":false}",
++    );
++    write(
++        &root.join("openspec/trials/traceability.json"),
++        "{\"c\":true}",
++    );
++    let labels = read_trial_labels(&root).unwrap();
++    assert_eq!(labels.validator.get("a"), Some(&true));
++    assert_eq!(labels.validator.get("b"), Some(&false));
++    assert_eq!(labels.traceability.get("c"), Some(&true));
++    for malformed in ["[true]", "{not json", "7"] {
++        write(&root.join("openspec/trials/traceability.json"), malformed);
++        let error = read_trial_labels(&root).unwrap_err().to_string();
++        assert_eq!(
++            error,
++            "openspec/trials/traceability.json must be a JSON object of true or false labels"
++        );
++    }
++
++    let path = db_path("malformed_label_file.sqlite");
++    fs::remove_file(&path).ok();
++    let error = build_read_model(&fixtures().join("bad-labels"), &path).unwrap_err();
++    assert_eq!(
++        error.to_string(),
++        "openspec/trials/validator.json must be a JSON object of true or false labels"
++    );
++    assert!(matches!(error, ReadModelError::Labels(_)));
++    assert!(
++        !path.exists(),
++        "a malformed label file must write no database"
++    );
++}
+diff --git a/crates/kernel/storage/tests/read_model_history_edges.rs b/crates/kernel/storage/tests/read_model_history_edges.rs
+new file mode 100644
+index 00000000..b00c6f0f
+--- /dev/null
++++ b/crates/kernel/storage/tests/read_model_history_edges.rs
+@@ -0,0 +1,135 @@
++//! Proves the notice, link and finding rules the history fixture does not hold.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_storage::build_read_model;
++use rusqlite::Connection;
++use rusqlite::types::Value;
++
++/// The columns of each table this test reads, in table order.
++const NOTICES: [&str; 5] = ["change", "notice", "severity", "opened", "outcome"];
++/// The `focused_runs` columns, in table order.
++const FOCUSED: [&str; 9] = [
++    "change",
++    "task",
++    "run",
++    "outcome",
++    "exit_code",
++    "duration",
++    "timed_out",
++    "scenarios",
++    "files",
++];
++/// The `validator_runs` columns, in table order.
++const RUNS: [&str; 11] = [
++    "change",
++    "run",
++    "outcome",
++    "harness",
++    "model",
++    "duration",
++    "exit_code",
++    "scenarios",
++    "findings",
++    "reason",
++    "output",
++];
++/// The `validator_findings` columns, in table order.
++const FINDING_ROWS: [&str; 10] = [
++    "id",
++    "change",
++    "run",
++    "finding",
++    "capability",
++    "requirement",
++    "scenario",
++    "problem",
++    "detail",
++    "label",
++];
++/// The `link_findings` columns, in table order.
++const LINKS: [&str; 6] = ["id", "change", "severity", "file", "message", "label"];
++
++/// A fresh temporary project root, with anything at that name removed.
++fn temp_root(name: &str) -> PathBuf {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
++    let _ = fs::remove_dir_all(&root);
++    root
++}
++
++/// A database path for one test, under the target's temp directory.
++fn db_path(name: &str) -> PathBuf {
++    Path::new(env!("CARGO_TARGET_TMPDIR")).join(name)
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    fs::create_dir_all(path.parent().unwrap()).unwrap();
++    fs::write(path, text).unwrap();
++}
++
++/// A text column value.
++fn text(value: &str) -> Value {
++    Value::Text(value.to_owned())
++}
++
++/// A null column value.
++fn null() -> Value {
++    Value::Null
++}
++
++/// Reads one table's rows as typed values, in insertion order.
++#[rustfmt::skip]
++fn table_rows(db: &Connection, table: &str, columns: &[&str]) -> Vec<Vec<Value>> {
++    let select = format!("SELECT {} FROM {table} ORDER BY rowid", columns.join(", "));
++    let mut statement = db.prepare(&select).unwrap();
++    let mapped = statement.query_map([], |row| (0..columns.len()).map(|index| row.get::<_, Value>(index)).collect::<rusqlite::Result<Vec<Value>>>()).unwrap();
++    mapped.map(Result::unwrap).collect()
++}
++
++/// Proves the notice, link, focused and finding rules beyond the fixture.
++///
++/// Covers: rust-storage/columns-of-the-event-tables
++#[test]
++#[rustfmt::skip]
++fn model_edges() {
++    let root = temp_root("model_edges");
++    write(&root.join("openspec/changes/rejected/001-rej/proposal.md"), "---\ntitle: R\n---\n");
++    write(&root.join("openspec/changes/rejected/001-rej/.run/plan.jsonl"), "{\"type\":\"plan_ready\",\"timestamp\":\"2026-09-30T11:00:00.000Z\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"only\",\"severity\":\"grey\",\"folded\":true}]}}\n");
++    write(&root.join("openspec/changes/archive/002-arch/proposal.md"), "---\ntitle: A\n---\n");
++    write(&root.join("openspec/changes/archive/002-arch/.run/plan.jsonl"), "{\"type\":\"plan_ready\",\"timestamp\":\"2026-09-30T09:00:00.000Z\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"first\",\"severity\":\"amber\",\"folded\":false}]}}\n{\"type\":\"plan_ready\",\"timestamp\":\"2026-09-30T09:30:00.000Z\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"last\",\"severity\":\"red\",\"folded\":false}],\"traceability\":[]}}\n");
++    write(&root.join("openspec/changes/archive/002-arch/.run/manifest.json"), "{\"notices\":{\"items\":[{\"id\":\"plain\",\"severity\":\"grey\"}]}}\n");
++    write(&root.join("openspec/changes/archive/003-empty/proposal.md"), "---\ntitle: E\n---\n");
++    write(&root.join("openspec/changes/archive/002-arch/.run/events/change.jsonl"), FINDINGS);
++    write(&root.join("openspec/changes/archive/002-arch/.run/events/1.jsonl"), FOCUSED_RUNS);
++    let path = db_path("model_edges.sqlite");
++    build_read_model(&root, &path).unwrap();
++    let db = Connection::open(&path).unwrap();
++    let notices = table_rows(&db, "notices", &NOTICES);
++    assert_eq!(notices, vec![
++        vec![text("001-rej"), text("only"), text("grey"), null(), text("rejected")],
++        vec![text("002-arch"), text("first"), text("amber"), null(), text("planned_again")],
++        vec![text("002-arch"), text("plain"), text("grey"), null(), text("approved")],
++    ]);
++    assert_eq!(table_rows(&db, "link_findings", &LINKS), Vec::<Vec<Value>>::new());
++    let focused = table_rows(&db, "focused_runs", &FOCUSED);
++    assert_eq!(focused.len(), 2);
++    assert_eq!(focused[0][2], Value::Integer(1));
++    assert_eq!(focused[1][2], Value::Integer(2));
++    let runs = table_rows(&db, "validator_runs", &RUNS);
++    assert_eq!(runs.len(), 1);
++    assert_eq!(runs[0][8], Value::Integer(1));
++    let findings = table_rows(&db, "validator_findings", &FINDING_ROWS);
++    assert_eq!(findings.len(), 1);
++    assert_eq!(findings[0][0], text("002.v1.1"));
++    assert_eq!(findings[0][8], text("good"));
++}
++
++/// Two focused runs of one change's task, so a run number above 1 exists.
++#[rustfmt::skip]
++const FOCUSED_RUNS: &str = "{\"type\":\"focused_ran\",\"timestamp\":\"2026-10-01T10:03:00.000Z\",\"data\":{\"command\":\"c\",\"files\":[],\"scenarios\":[],\"outcome\":\"passed\",\"exitCode\":0,\"duration\":1,\"timedOut\":false,\"output\":\"\"}}\n{\"type\":\"focused_ran\",\"timestamp\":\"2026-10-01T10:04:00.000Z\",\"data\":{\"command\":\"c\",\"files\":[],\"scenarios\":[],\"outcome\":\"passed\",\"exitCode\":0,\"duration\":2,\"timedOut\":false,\"output\":\"\"}}\n";
++
++/// One validator run whose findings are all invalid but the first.
++#[rustfmt::skip]
++const FINDINGS: &str = "{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:14:00.000Z\",\"data\":{\"outcome\":\"validated\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":5,\"exitCode\":0,\"scenarios\":2,\"findings\":[{\"capability\":\"c\",\"requirement\":\"r\",\"scenario\":\"s\",\"problem\":\"p\",\"detail\":\"good\"},{\"capability\":\"c\",\"requirement\":\"r\",\"scenario\":\"s\",\"problem\":7,\"detail\":\"bad\"},{\"capability\":\"c\",\"requirement\":\"r\",\"scenario\":\"s\",\"problem\":\"p\"},{\"capability\":\"c\",\"requirement\":\"r\",\"scenario\":null,\"problem\":\"p\",\"detail\":\"d\"},{\"capability\":\"c\",\"requirement\":1,\"scenario\":\"s\",\"problem\":\"p\",\"detail\":\"d\"},2,null],\"restored\":[]}}\n";
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/dead/1.md b/openspec/changes/211-rust-storage-event-tables/.run/dead/1.1.md
+similarity index 100%
+rename from openspec/changes/211-rust-storage-event-tables/.run/dead/1.md
+rename to openspec/changes/211-rust-storage-event-tables/.run/dead/1.1.md
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/dead/2.md b/openspec/changes/211-rust-storage-event-tables/.run/dead/2.md
+new file mode 100644
+index 00000000..25a16e67
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/dead/2.md
+@@ -0,0 +1,5 @@
++---
++reason: scope_violation
++fingerprint: sha256:68e304171d60d2664a02cdb447f1a8280fe33848efdac6d4cd8f30ecb7c53464
++---
++crates/kernel/storage/tests/read_model_history_edges.rs
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/events/2.jsonl b/openspec/changes/211-rust-storage-event-tables/.run/events/2.jsonl
+new file mode 100644
+index 00000000..0033dc81
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/events/2.jsonl
+@@ -0,0 +1,237 @@
++{"type":"verify_ran","timestamp":"2026-10-18T10:40:33.738Z","data":{"command":"cargo test -p osq-kernel-storage --test read_model_history","exitCode":101,"duration":0.07,"log":".run/logs/2-1.log","output":"error: no test target named `read_model_history` in `osq-kernel-storage` package\nhelp: available test targets:\n    archive_corpus\n    golden_cases\n    read_model\n    reading_events\n    reading_history\n    reading_listing\n    reading_snapshot\n    reading_text\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-18T10:40:41.694Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":349,"repoFiles":4778,"repoLines":403398,"importFanIn":0,"proposalWords":790,"taskWords":674,"deltaRequirements":8,"deltaScenarios":14}}
++{"type":"started","timestamp":"2026-10-18T10:40:41.753Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"6845c362","pid":3650465,"timeoutSeconds":1800,"version":"0.3.0","commit":"6009aab9"}}
++{"type":"tool","timestamp":"2026-10-18T10:40:45.769Z","data":{"tool":"shell","summary":"{\"command\":\"ls -la /home/mathias/.osq/worktrees/osq/211-rust"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:45.807Z","data":{"promptTokens":34504,"candidateTokens":94,"totalTokens":34598,"cachedTokens":0,"reasoningTokens":28,"cost":0.0052488}}
++{"type":"tool","timestamp":"2026-10-18T10:40:47.755Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:47.793Z","data":{"promptTokens":1344,"candidateTokens":129,"totalTokens":1473,"cachedTokens":34432,"reasoningTokens":26,"cost":0.000397896}}
++{"type":"tool","timestamp":"2026-10-18T10:40:50.666Z","data":{"tool":"read","summary":"openspec/changes/211-rust-storage-event-tables/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:50.704Z","data":{"promptTokens":631,"candidateTokens":79,"totalTokens":710,"cachedTokens":35712,"reasoningTokens":24,"cost":0.000263586}}
++{"type":"tool","timestamp":"2026-10-18T10:40:52.625Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:52.662Z","data":{"promptTokens":1599,"candidateTokens":120,"totalTokens":1719,"cachedTokens":36224,"reasoningTokens":9,"cost":0.000425922}}
++{"type":"tool","timestamp":"2026-10-18T10:40:54.443Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:54.480Z","data":{"promptTokens":584,"candidateTokens":68,"totalTokens":652,"cachedTokens":37760,"reasoningTokens":0,"cost":0.00024167999999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:40:56.965Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:57.000Z","data":{"promptTokens":1663,"candidateTokens":69,"totalTokens":1732,"cachedTokens":38272,"reasoningTokens":0,"cost":0.00040566599999999995}}
++{"type":"tool","timestamp":"2026-10-18T10:40:58.998Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/error.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:40:59.034Z","data":{"promptTokens":1697,"candidateTokens":69,"totalTokens":1766,"cachedTokens":39808,"reasoningTokens":0,"cost":0.00041537400000000004}}
++{"type":"tool","timestamp":"2026-10-18T10:41:00.619Z","data":{"tool":"read","summary":"crates/kernel/storage/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:00.656Z","data":{"promptTokens":703,"candidateTokens":67,"totalTokens":770,"cachedTokens":41472,"reasoningTokens":0,"cost":0.000270066}}
++{"type":"tool","timestamp":"2026-10-18T10:41:02.624Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:02.661Z","data":{"promptTokens":351,"candidateTokens":69,"totalTokens":420,"cachedTokens":42112,"reasoningTokens":60,"cost":0.00025638599999999994}}
++{"type":"tool","timestamp":"2026-10-18T10:41:05.612Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:05.647Z","data":{"promptTokens":624,"candidateTokens":71,"totalTokens":695,"cachedTokens":42368,"reasoningTokens":0,"cost":0.00026330399999999996}}
++{"type":"tool","timestamp":"2026-10-18T10:41:07.236Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/table_events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:07.273Z","data":{"promptTokens":2484,"candidateTokens":75,"totalTokens":2559,"cachedTokens":42880,"reasoningTokens":0,"cost":0.00054624}}
++{"type":"tool","timestamp":"2026-10-18T10:41:09.251Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/records.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:09.289Z","data":{"promptTokens":577,"candidateTokens":73,"totalTokens":650,"cachedTokens":45312,"reasoningTokens":0,"cost":0.000266286}}
++{"type":"tool","timestamp":"2026-10-18T10:41:11.625Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:11.661Z","data":{"promptTokens":1609,"candidateTokens":73,"totalTokens":1682,"cachedTokens":45824,"reasoningTokens":75,"cost":0.00046762199999999995}}
++{"type":"tool","timestamp":"2026-10-18T10:41:13.464Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:13.506Z","data":{"promptTokens":2771,"candidateTokens":86,"totalTokens":2857,"cachedTokens":47360,"reasoningTokens":26,"cost":0.00062493}}
++{"type":"tool","timestamp":"2026-10-18T10:41:16.196Z","data":{"tool":"read","summary":"src/core/report/query-tables.ts"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:16.233Z","data":{"promptTokens":326,"candidateTokens":67,"totalTokens":393,"cachedTokens":50048,"reasoningTokens":0,"cost":0.000239244}}
++{"type":"tool","timestamp":"2026-10-18T10:41:18.482Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:18.517Z","data":{"promptTokens":3062,"candidateTokens":121,"totalTokens":3183,"cachedTokens":50304,"reasoningTokens":106,"cost":0.000746412}}
++{"type":"tool","timestamp":"2026-10-18T10:41:20.571Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:20.606Z","data":{"promptTokens":9881,"candidateTokens":113,"totalTokens":9994,"cachedTokens":53248,"reasoningTokens":39,"cost":0.001733094}}
++{"type":"tool","timestamp":"2026-10-18T10:41:23.938Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:23.981Z","data":{"promptTokens":5573,"candidateTokens":121,"totalTokens":5694,"cachedTokens":63104,"reasoningTokens":22,"cost":0.001111062}}
++{"type":"tool","timestamp":"2026-10-18T10:41:26.236Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:26.274Z","data":{"promptTokens":2587,"candidateTokens":187,"totalTokens":2774,"cachedTokens":68608,"reasoningTokens":0,"cost":0.0007060740000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:41:39.616Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:39.652Z","data":{"promptTokens":2343,"candidateTokens":95,"totalTokens":2438,"cachedTokens":71168,"reasoningTokens":1902,"cost":0.001763154}}
++{"type":"tool","timestamp":"2026-10-18T10:41:41.609Z","data":{"tool":"read","summary":"crates/core/src/event/payload.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:41.645Z","data":{"promptTokens":2192,"candidateTokens":67,"totalTokens":2259,"cachedTokens":73472,"reasoningTokens":0,"cost":0.0005894159999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:41:44.117Z","data":{"tool":"read","summary":"crates/core/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:44.152Z","data":{"promptTokens":8572,"candidateTokens":64,"totalTokens":8636,"cachedTokens":75648,"reasoningTokens":16,"cost":0.001560744}}
++{"type":"tool","timestamp":"2026-10-18T10:41:46.065Z","data":{"tool":"read","summary":"crates/core/src/event.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:46.102Z","data":{"promptTokens":430,"candidateTokens":65,"totalTokens":495,"cachedTokens":84096,"reasoningTokens":0,"cost":0.000355788}}
++{"type":"tool","timestamp":"2026-10-18T10:41:48.190Z","data":{"tool":"read","summary":"crates/core/src/fold/stream.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:48.229Z","data":{"promptTokens":4590,"candidateTokens":67,"totalTokens":4657,"cachedTokens":84480,"reasoningTokens":14,"cost":0.00099054}}
++{"type":"tool","timestamp":"2026-10-18T10:41:50.519Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/read_model.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:50.556Z","data":{"promptTokens":1294,"candidateTokens":70,"totalTokens":1364,"cachedTokens":88960,"reasoningTokens":43,"cost":0.00052878}}
++{"type":"tool","timestamp":"2026-10-18T10:41:53.441Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/archive_corpus.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:53.479Z","data":{"promptTokens":2473,"candidateTokens":72,"totalTokens":2545,"cachedTokens":90240,"reasoningTokens":111,"cost":0.0007514700000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:41:55.752Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:41:55.788Z","data":{"promptTokens":3121,"candidateTokens":114,"totalTokens":3235,"cachedTokens":92672,"reasoningTokens":122,"cost":0.0008877660000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:42:31.090Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/reading_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:42:31.125Z","data":{"promptTokens":1334,"candidateTokens":70,"totalTokens":1404,"cachedTokens":95744,"reasoningTokens":6060,"cost":0.004165332000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:42:34.705Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:42:34.742Z","data":{"promptTokens":9384,"candidateTokens":101,"totalTokens":9485,"cachedTokens":97024,"reasoningTokens":34,"cost":0.001779672}}
++{"type":"tool","timestamp":"2026-10-18T10:42:37.092Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:42:37.138Z","data":{"promptTokens":254,"candidateTokens":141,"totalTokens":395,"cachedTokens":106368,"reasoningTokens":31,"cost":0.000460404}}
++{"type":"tool","timestamp":"2026-10-18T10:43:00.896Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:00.938Z","data":{"promptTokens":927,"candidateTokens":99,"totalTokens":1026,"cachedTokens":106496,"reasoningTokens":3874,"cost":0.002842338}}
++{"type":"tool","timestamp":"2026-10-18T10:43:04.028Z","data":{"tool":"read","summary":"openspec/changes/211-rust-storage-event-tables/tasks/3.md"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:04.065Z","data":{"promptTokens":4453,"candidateTokens":77,"totalTokens":4530,"cachedTokens":107392,"reasoningTokens":55,"cost":0.001069326}}
++{"type":"tool","timestamp":"2026-10-18T10:43:07.679Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:07.718Z","data":{"promptTokens":1381,"candidateTokens":102,"totalTokens":1483,"cachedTokens":111744,"reasoningTokens":177,"cost":0.0007097820000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:43:18.537Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:18.575Z","data":{"promptTokens":563,"candidateTokens":76,"totalTokens":639,"cachedTokens":113024,"reasoningTokens":1074,"cost":0.001113522}}
++{"type":"tool","timestamp":"2026-10-18T10:43:22.308Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:22.342Z","data":{"promptTokens":1946,"candidateTokens":97,"totalTokens":2043,"cachedTokens":113536,"reasoningTokens":67,"cost":0.000730908}}
++{"type":"tool","timestamp":"2026-10-18T10:43:25.041Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:25.085Z","data":{"promptTokens":258,"candidateTokens":79,"totalTokens":337,"cachedTokens":115456,"reasoningTokens":0,"cost":0.000432468}}
++{"type":"tool","timestamp":"2026-10-18T10:43:27.532Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:27.571Z","data":{"promptTokens":95,"candidateTokens":94,"totalTokens":189,"cachedTokens":115712,"reasoningTokens":24,"cost":0.00043218600000000004}}
++{"type":"tool","timestamp":"2026-10-18T10:43:51.215Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/listing.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:43:51.250Z","data":{"promptTokens":2370,"candidateTokens":70,"totalTokens":2440,"cachedTokens":115712,"reasoningTokens":2648,"cost":0.0023334360000000004}}
++{"type":"tool","timestamp":"2026-10-18T10:44:31.648Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:44:31.685Z","data":{"promptTokens":3978,"candidateTokens":98,"totalTokens":4076,"cachedTokens":118016,"reasoningTokens":7943,"cost":0.005775347999999999}}
++{"type":"text","timestamp":"2026-10-18T10:45:06.308Z","data":{"text":"Now I have a clear picture. Let me start implementing. First, extend `rows.rs` with shared helpers."}}
++{"type":"tool","timestamp":"2026-10-18T10:45:06.314Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:06.356Z","data":{"promptTokens":8072,"candidateTokens":204,"totalTokens":8276,"cachedTokens":121984,"reasoningTokens":5610,"cost":0.005065152}}
++{"type":"tool","timestamp":"2026-10-18T10:45:10.174Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:10.210Z","data":{"promptTokens":5849,"candidateTokens":464,"totalTokens":6313,"cachedTokens":130048,"reasoningTokens":0,"cost":0.001545894}}
++{"type":"tool","timestamp":"2026-10-18T10:45:16.462Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/event_rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:16.501Z","data":{"promptTokens":580,"candidateTokens":992,"totalTokens":1572,"cachedTokens":135808,"reasoningTokens":7,"cost":0.001093824}}
++{"type":"tool","timestamp":"2026-10-18T10:45:26.264Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/stream_rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:26.301Z","data":{"promptTokens":1095,"candidateTokens":1684,"totalTokens":2779,"cachedTokens":136320,"reasoningTokens":6,"cost":0.0015872100000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:45:34.980Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/trial_rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:35.021Z","data":{"promptTokens":1789,"candidateTokens":1568,"totalTokens":3357,"cachedTokens":137344,"reasoningTokens":7,"cost":0.0016253819999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:45:40.109Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/notice_rows.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:40.145Z","data":{"promptTokens":1728,"candidateTokens":852,"totalTokens":2580,"cachedTokens":139008,"reasoningTokens":6,"cost":0.001191024}}
++{"type":"tool","timestamp":"2026-10-18T10:45:52.407Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/insert.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:52.442Z","data":{"promptTokens":950,"candidateTokens":2043,"totalTokens":2993,"cachedTokens":140672,"reasoningTokens":72,"cost":0.001833516}}
++{"type":"tool","timestamp":"2026-10-18T10:45:59.145Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/labels.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:45:59.184Z","data":{"promptTokens":2196,"candidateTokens":951,"totalTokens":3147,"cachedTokens":141568,"reasoningTokens":108,"cost":0.001389504}}
++{"type":"tool","timestamp":"2026-10-18T10:46:03.164Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/error.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:03.200Z","data":{"promptTokens":1106,"candidateTokens":159,"totalTokens":1265,"cachedTokens":143744,"reasoningTokens":9,"cost":0.0006979320000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:46:06.068Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/error.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:06.104Z","data":{"promptTokens":277,"candidateTokens":186,"totalTokens":463,"cachedTokens":144768,"reasoningTokens":0,"cost":0.000587454}}
++{"type":"tool","timestamp":"2026-10-18T10:46:09.249Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/error.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:09.285Z","data":{"promptTokens":234,"candidateTokens":180,"totalTokens":414,"cachedTokens":145024,"reasoningTokens":0,"cost":0.0005781720000000001}}
++{"type":"text","timestamp":"2026-10-18T10:46:16.191Z","data":{"text":"Now rewrite `model/mod.rs`:"}}
++{"type":"tool","timestamp":"2026-10-18T10:46:16.197Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:16.233Z","data":{"promptTokens":313,"candidateTokens":1217,"totalTokens":1530,"cachedTokens":145152,"reasoningTokens":0,"cost":0.001212606}}
++{"type":"tool","timestamp":"2026-10-18T10:46:19.833Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:19.872Z","data":{"promptTokens":1301,"candidateTokens":132,"totalTokens":1433,"cachedTokens":145408,"reasoningTokens":207,"cost":0.000834774}}
++{"type":"tool","timestamp":"2026-10-18T10:46:22.166Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:22.201Z","data":{"promptTokens":385,"candidateTokens":96,"totalTokens":481,"cachedTokens":146688,"reasoningTokens":8,"cost":0.0005602140000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:46:25.059Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/labels.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:25.104Z","data":{"promptTokens":385,"candidateTokens":237,"totalTokens":622,"cachedTokens":147072,"reasoningTokens":0,"cost":0.000641166}}
++{"type":"tool","timestamp":"2026-10-18T10:46:27.837Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:27.873Z","data":{"promptTokens":265,"candidateTokens":96,"totalTokens":361,"cachedTokens":147456,"reasoningTokens":0,"cost":0.000539718}}
++{"type":"tool","timestamp":"2026-10-18T10:46:30.650Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:30.684Z","data":{"promptTokens":185,"candidateTokens":106,"totalTokens":291,"cachedTokens":147712,"reasoningTokens":13,"cost":0.000542286}}
++{"type":"tool","timestamp":"2026-10-18T10:46:59.169Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:46:59.206Z","data":{"promptTokens":255,"candidateTokens":90,"totalTokens":345,"cachedTokens":147840,"reasoningTokens":4708,"cost":0.00336057}}
++{"type":"tool","timestamp":"2026-10-18T10:47:01.779Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:01.818Z","data":{"promptTokens":4949,"candidateTokens":111,"totalTokens":5060,"cachedTokens":147968,"reasoningTokens":106,"cost":0.0013164539999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:47:07.508Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:07.542Z","data":{"promptTokens":1268,"candidateTokens":125,"totalTokens":1393,"cachedTokens":152832,"reasoningTokens":561,"cost":0.001060296}}
++{"type":"tool","timestamp":"2026-10-18T10:47:11.976Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:12.018Z","data":{"promptTokens":1602,"candidateTokens":126,"totalTokens":1728,"cachedTokens":153984,"reasoningTokens":310,"cost":0.000963852}}
++{"type":"tool","timestamp":"2026-10-18T10:47:16.812Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:16.847Z","data":{"promptTokens":1423,"candidateTokens":137,"totalTokens":1560,"cachedTokens":155520,"reasoningTokens":198,"cost":0.00088101}}
++{"type":"tool","timestamp":"2026-10-18T10:47:24.173Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:24.209Z","data":{"promptTokens":1180,"candidateTokens":111,"totalTokens":1291,"cachedTokens":156928,"reasoningTokens":665,"cost":0.001113384}}
++{"type":"text","timestamp":"2026-10-18T10:47:58.436Z","data":{"text":"Now the test file:"}}
++{"type":"tool","timestamp":"2026-10-18T10:47:58.441Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:47:58.478Z","data":{"promptTokens":1264,"candidateTokens":3429,"totalTokens":4693,"cachedTokens":158080,"reasoningTokens":2969,"cost":0.00450264}}
++{"type":"tool","timestamp":"2026-10-18T10:48:01.904Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:01.942Z","data":{"promptTokens":6539,"candidateTokens":101,"totalTokens":6640,"cachedTokens":159232,"reasoningTokens":119,"cost":0.0015905459999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:48:06.062Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:06.098Z","data":{"promptTokens":703,"candidateTokens":206,"totalTokens":909,"cachedTokens":165760,"reasoningTokens":0,"cost":0.0007263300000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:48:09.245Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:09.305Z","data":{"promptTokens":298,"candidateTokens":101,"totalTokens":399,"cachedTokens":166400,"reasoningTokens":62,"cost":0.0006417}}
++{"type":"tool","timestamp":"2026-10-18T10:48:12.410Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:12.447Z","data":{"promptTokens":397,"candidateTokens":140,"totalTokens":537,"cachedTokens":166656,"reasoningTokens":18,"cost":0.000654318}}
++{"type":"tool","timestamp":"2026-10-18T10:48:21.941Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:21.979Z","data":{"promptTokens":828,"candidateTokens":246,"totalTokens":1074,"cachedTokens":167040,"reasoningTokens":1129,"cost":0.0014503200000000002}}
++{"type":"tool","timestamp":"2026-10-18T10:48:24.364Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:24.403Z","data":{"promptTokens":1464,"candidateTokens":159,"totalTokens":1623,"cachedTokens":167808,"reasoningTokens":0,"cost":0.000818424}}
++{"type":"tool","timestamp":"2026-10-18T10:48:31.050Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/insert.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:31.089Z","data":{"promptTokens":244,"candidateTokens":998,"totalTokens":1242,"cachedTokens":169216,"reasoningTokens":141,"cost":0.0012276480000000002}}
++{"type":"tool","timestamp":"2026-10-18T10:48:36.159Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/insert_events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:36.195Z","data":{"promptTokens":1283,"candidateTokens":853,"totalTokens":2136,"cachedTokens":169344,"reasoningTokens":0,"cost":0.0012122819999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:48:41.518Z","data":{"tool":"write","summary":"crates/kernel/storage/src/model/insert_trial.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:41.555Z","data":{"promptTokens":885,"candidateTokens":569,"totalTokens":1454,"cachedTokens":170624,"reasoningTokens":0,"cost":0.000986022}}
++{"type":"tool","timestamp":"2026-10-18T10:48:44.773Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/model/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:44.813Z","data":{"promptTokens":715,"candidateTokens":164,"totalTokens":879,"cachedTokens":171392,"reasoningTokens":167,"cost":0.0008200260000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:48:48.486Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:48.523Z","data":{"promptTokens":432,"candidateTokens":140,"totalTokens":572,"cachedTokens":172032,"reasoningTokens":0,"cost":0.000664896}}
++{"type":"tool","timestamp":"2026-10-18T10:48:54.361Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:48:54.399Z","data":{"promptTokens":449,"candidateTokens":71,"totalTokens":520,"cachedTokens":172416,"reasoningTokens":597,"cost":0.000985398}}
++{"type":"tool","timestamp":"2026-10-18T10:49:05.413Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:05.460Z","data":{"promptTokens":4726,"candidateTokens":954,"totalTokens":5680,"cachedTokens":172800,"reasoningTokens":1095,"cost":0.0024567}}
++{"type":"tool","timestamp":"2026-10-18T10:49:10.293Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:10.329Z","data":{"promptTokens":2196,"candidateTokens":153,"totalTokens":2349,"cachedTokens":177408,"reasoningTokens":0,"cost":0.000953424}}
++{"type":"tool","timestamp":"2026-10-18T10:49:19.597Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:19.633Z","data":{"promptTokens":438,"candidateTokens":916,"totalTokens":1354,"cachedTokens":179584,"reasoningTokens":793,"cost":0.0016298519999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:49:24.852Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:24.888Z","data":{"promptTokens":1792,"candidateTokens":100,"totalTokens":1892,"cachedTokens":179968,"reasoningTokens":0,"cost":0.000868704}}
++{"type":"tool","timestamp":"2026-10-18T10:49:34.267Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:34.308Z","data":{"promptTokens":127,"candidateTokens":212,"totalTokens":339,"cachedTokens":181760,"reasoningTokens":545,"cost":0.00101853}}
++{"type":"tool","timestamp":"2026-10-18T10:49:36.657Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:36.696Z","data":{"promptTokens":913,"candidateTokens":135,"totalTokens":1048,"cachedTokens":181760,"reasoningTokens":0,"cost":0.00076323}}
++{"type":"tool","timestamp":"2026-10-18T10:49:39.454Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:39.488Z","data":{"promptTokens":181,"candidateTokens":123,"totalTokens":304,"cachedTokens":182656,"reasoningTokens":0,"cost":0.0006489179999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:49:47.238Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:47.277Z","data":{"promptTokens":999,"candidateTokens":151,"totalTokens":1150,"cachedTokens":182784,"reasoningTokens":993,"cost":0.001384602}}
++{"type":"tool","timestamp":"2026-10-18T10:49:51.417Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:51.453Z","data":{"promptTokens":1276,"candidateTokens":612,"totalTokens":1888,"cachedTokens":183680,"reasoningTokens":0,"cost":0.0011096399999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:49:55.253Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:55.289Z","data":{"promptTokens":765,"candidateTokens":153,"totalTokens":918,"cachedTokens":184832,"reasoningTokens":0,"cost":0.000761046}}
++{"type":"tool","timestamp":"2026-10-18T10:49:59.124Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:49:59.162Z","data":{"promptTokens":531,"candidateTokens":96,"totalTokens":627,"cachedTokens":185472,"reasoningTokens":28,"cost":0.000710466}}
++{"type":"tool","timestamp":"2026-10-18T10:50:05.003Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:50:05.039Z","data":{"promptTokens":538,"candidateTokens":114,"totalTokens":652,"cachedTokens":185984,"reasoningTokens":0,"cost":0.000707052}}
++{"type":"tool","timestamp":"2026-10-18T10:50:25.063Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:50:25.099Z","data":{"promptTokens":581,"candidateTokens":94,"totalTokens":675,"cachedTokens":186496,"reasoningTokens":470,"cost":0.000985038}}
++{"type":"tool","timestamp":"2026-10-18T10:50:31.192Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:50:31.228Z","data":{"promptTokens":995,"candidateTokens":224,"totalTokens":1219,"cachedTokens":187008,"reasoningTokens":550,"cost":0.001174674}}
++{"type":"tool","timestamp":"2026-10-18T10:51:56.848Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:51:56.893Z","data":{"promptTokens":887,"candidateTokens":267,"totalTokens":1154,"cachedTokens":187904,"reasoningTokens":154,"cost":0.0009493619999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:52:12.909Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:12.946Z","data":{"promptTokens":688,"candidateTokens":103,"totalTokens":791,"cachedTokens":188672,"reasoningTokens":2531,"cost":0.002249616}}
++{"type":"tool","timestamp":"2026-10-18T10:52:20.150Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:20.193Z","data":{"promptTokens":3948,"candidateTokens":1326,"totalTokens":5274,"cachedTokens":189312,"reasoningTokens":148,"cost":0.002044536}}
++{"type":"tool","timestamp":"2026-10-18T10:52:32.139Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/read_model_history_edges.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:32.181Z","data":{"promptTokens":1611,"candidateTokens":2148,"totalTokens":3759,"cachedTokens":193152,"reasoningTokens":50,"cost":0.002139906}}
++{"type":"tool","timestamp":"2026-10-18T10:52:35.046Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:35.086Z","data":{"promptTokens":2304,"candidateTokens":130,"totalTokens":2434,"cachedTokens":194688,"reasoningTokens":0,"cost":0.001007664}}
++{"type":"tool","timestamp":"2026-10-18T10:52:38.837Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:38.872Z","data":{"promptTokens":445,"candidateTokens":199,"totalTokens":644,"cachedTokens":196992,"reasoningTokens":177,"cost":0.000883326}}
++{"type":"tool","timestamp":"2026-10-18T10:52:42.004Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:42.041Z","data":{"promptTokens":466,"candidateTokens":169,"totalTokens":635,"cachedTokens":197376,"reasoningTokens":0,"cost":0.000763428}}
++{"type":"tool","timestamp":"2026-10-18T10:52:45.337Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history_edges.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:45.374Z","data":{"promptTokens":513,"candidateTokens":168,"totalTokens":681,"cachedTokens":197760,"reasoningTokens":32,"cost":0.0007902300000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:52:50.010Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:50.047Z","data":{"promptTokens":232,"candidateTokens":142,"totalTokens":374,"cachedTokens":198272,"reasoningTokens":0,"cost":0.0007148160000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:52:53.414Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:53.450Z","data":{"promptTokens":666,"candidateTokens":155,"totalTokens":821,"cachedTokens":198400,"reasoningTokens":61,"cost":0.0008247}}
++{"type":"tool","timestamp":"2026-10-18T10:52:56.300Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:56.334Z","data":{"promptTokens":271,"candidateTokens":82,"totalTokens":353,"cachedTokens":199040,"reasoningTokens":84,"cost":0.00073737}}
++{"type":"tool","timestamp":"2026-10-18T10:52:59.207Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:52:59.243Z","data":{"promptTokens":537,"candidateTokens":207,"totalTokens":744,"cachedTokens":199296,"reasoningTokens":0,"cost":0.000802638}}
++{"type":"tool","timestamp":"2026-10-18T10:53:03.012Z","data":{"tool":"edit","summary":"crates/kernel/storage/tests/read_model_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:53:03.049Z","data":{"promptTokens":261,"candidateTokens":251,"totalTokens":512,"cachedTokens":199808,"reasoningTokens":39,"cost":0.0008125739999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:53:06.142Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:53:06.178Z","data":{"promptTokens":324,"candidateTokens":141,"totalTokens":465,"cachedTokens":200064,"reasoningTokens":0,"cost":0.000733392}}
++{"type":"tool","timestamp":"2026-10-18T10:53:39.968Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:53:40.021Z","data":{"promptTokens":488,"candidateTokens":155,"totalTokens":643,"cachedTokens":200320,"reasoningTokens":109,"cost":0.0008325600000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:55:05.099Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:55:05.148Z","data":{"promptTokens":432,"candidateTokens":290,"totalTokens":722,"cachedTokens":200704,"reasoningTokens":80,"cost":0.0008889120000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:55:23.278Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:55:23.319Z","data":{"promptTokens":482,"candidateTokens":126,"totalTokens":608,"cachedTokens":201088,"reasoningTokens":111,"cost":0.000817764}}
++{"type":"tool","timestamp":"2026-10-18T10:55:40.065Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:55:40.110Z","data":{"promptTokens":366,"candidateTokens":135,"totalTokens":501,"cachedTokens":201472,"reasoningTokens":44,"cost":0.000766716}}
++{"type":"tool","timestamp":"2026-10-18T10:55:47.147Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:55:47.188Z","data":{"promptTokens":356,"candidateTokens":135,"totalTokens":491,"cachedTokens":201728,"reasoningTokens":593,"cost":0.001095384}}
++{"type":"tool","timestamp":"2026-10-18T10:56:00.043Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:56:00.082Z","data":{"promptTokens":1204,"candidateTokens":68,"totalTokens":1272,"cachedTokens":201984,"reasoningTokens":1561,"cost":0.001763952}}
++{"type":"tool","timestamp":"2026-10-18T10:56:05.932Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:56:05.971Z","data":{"promptTokens":3104,"candidateTokens":114,"totalTokens":3218,"cachedTokens":203136,"reasoningTokens":491,"cost":0.0014380079999999997}}
++{"type":"text","timestamp":"2026-10-18T10:56:22.809Z","data":{"text":"All checks pass. Let me write the result file."}}
++{"type":"tool","timestamp":"2026-10-18T10:56:22.816Z","data":{"tool":"write","summary":"openspec/changes/211-rust-storage-event-tables/.run/results/2.md"}}
++{"type":"tokens","timestamp":"2026-10-18T10:56:22.856Z","data":{"promptTokens":736,"candidateTokens":948,"totalTokens":1684,"cachedTokens":206208,"reasoningTokens":1999,"cost":0.002497224}}
++{"type":"tool","timestamp":"2026-10-18T10:56:29.651Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:56:29.688Z","data":{"promptTokens":3079,"candidateTokens":132,"totalTokens":3211,"cachedTokens":206848,"reasoningTokens":779,"cost":0.0016289940000000001}}
++{"type":"text","timestamp":"2026-10-18T10:56:34.655Z","data":{"text":"The task is complete. Summary of what was done:\n\n**Implementation** (`crates/kernel/storage/src/model/**`):\n- Extended `CREATE_TABLES` to the twelve tables with TypeScript's exact untyped column names/order.\n- Added pure row-mapping modules: `event_rows.rs` (pauses, recertifications), `stream_rows.rs` (focused_runs, mutation_picks, mutation_survivors), `trial_rows.rs` (validator_runs, validator_findings, link_findings), `notice_rows.rs` (plan/manifest notices with folder sort).\n- Added `labels.rs` with `TrialLabels`, `read_trial_labels`, and the per-label `UPDATE` pass.\n- Added `insert*.rs` with the SQLite inserts, moved the first three tables' inserts into it.\n- `build_read_model` now reads labels → `read_history` → writes → fills labels, so a malformed label file fails before any database is touched; `write_read_model` writes the nine event tables for archived snapshots and `notices` for archived + rejected.\n- Added `ReadModelError::Labels` with the required message; re-exported `TrialLabels`/`read_trial_labels` from `lib.rs`.\n\n**Tests**: `tests/read_model_history.rs` compares all nine tables against `tests/fixtures/history-rows/*.json` (text/null as written, numbers as `f64`, naming table/row/column/values on failure) and proves the label and malformed-label scenarios. A second new file, `read_model_history_edges.rs`, pins the mapper edge cases.\n\n**Verification**: task verify passes; `sh scripts/verify-rust.sh` exits 0; `cargo-mutants` over every changed Rust file reports 0 missed (123 mutants, 19 unviable). All pre-existing 210 tests, `read_model.rs` included, pass unchanged."}}
++{"type":"tokens","timestamp":"2026-10-18T10:56:35.270Z","data":{"promptTokens":1094,"candidateTokens":430,"totalTokens":1524,"cachedTokens":232113,"reasoningTokens":169,"cost":0.0039257350000000135}}
++{"type":"exited","timestamp":"2026-10-18T10:56:35.271Z","data":{"exitCode":0,"pid":3650465,"timedOut":false,"elapsedSeconds":953.1}}
++{"type":"scope_violation","timestamp":"2026-10-18T10:56:35.303Z","data":{"files":["crates/kernel/storage/tests/read_model_history_edges.rs"]}}
++{"type":"measures","timestamp":"2026-10-18T10:56:35.310Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":349,"repoFiles":4778,"repoLines":403398,"importFanIn":0,"proposalWords":790,"taskWords":674,"deltaRequirements":8,"deltaScenarios":14,"changedFiles":13,"changedLines":1207,"scopeHashes":{"crates/kernel/storage/src/lib.rs":{"before":"sha256:a0847fe5af0102f980a0052a181c1e5993eb068dcb58839ee1ad3d71f0417bbe","after":"sha256:3b8f2d2ab27e9d92b384f99f65a8e9af739d0794863f2ead440ac5097d4bdd27"},"crates/kernel/storage/src/model/error.rs":{"before":"sha256:2aff17f858502df5b8996bbf670c498bc5198cd135028b1c28e069c77b67dd15","after":"sha256:262f241f7430290d885d3f82b9f57629238df6795579123247a156e54571fd87"},"crates/kernel/storage/src/model/mod.rs":{"before":"sha256:13e894ada4dbedf658057887f30f8372e60a492aabf1a3bb22ba6743369149dc","after":"sha256:57a99e35f833981a5cc19d3cc72abce6b424a478b67132404a62daf0ef88209c"},"crates/kernel/storage/src/model/rows.rs":{"before":"sha256:acf0005e251651404a488527bfd757b04ad1441af250f781e4cdca40633af691","after":"sha256:b008bd6f77457582977e04b270f30ba8cfec141d84b15b3448f71efad57637b7"},"crates/kernel/storage/tests/read_model_history.rs":{"before":null,"after":"sha256:92c5d3eb0bd82d777aa10bee851323bba048dc7c580e12a1e298d8fe5249380d"},"crates/kernel/storage/src/model/event_rows.rs":{"before":null,"after":"sha256:d8c06751970efcefbc224718b83626ea61318d7cab247e49daeb92d1c51755c1"},"crates/kernel/storage/src/model/insert.rs":{"before":null,"after":"sha256:1c3202f87bc166e781913e64bf2aa3403071dde211f8e8fdcd6cc087034007eb"},"crates/kernel/storage/src/model/insert_events.rs":{"before":null,"after":"sha256:280772d453ccc60fd75bad30f13a03a79a999588d670f13f107a92272332f160"},"crates/kernel/storage/src/model/insert_trial.rs":{"before":null,"after":"sha256:d093d250c122b41128e3a726238554eb6c11d46e652a3e5d4050c6acf7e9a070"},"crates/kernel/storage/src/model/labels.rs":{"before":null,"after":"sha256:aef01f757fe7534426c16a00bf03ce20f75ee34160b508914c1ae522b346b308"},"crates/kernel/storage/src/model/notice_rows.rs":{"before":null,"after":"sha256:6b242bb6de067552df3afba35b628a7d6beba413cd772bc1959b19a5400c2b0b"},"crates/kernel/storage/src/model/stream_rows.rs":{"before":null,"after":"sha256:5bbf38a97b5dd500a2f912a0272176cae2ea8199e31c1f5ed3112abffc988ecc"},"crates/kernel/storage/src/model/trial_rows.rs":{"before":null,"after":"sha256:c95ae7303773d75d07f819044c43f33422e1e3fefa05e049f4d02c3e18e651cd"}}}}
++{"type":"dead","timestamp":"2026-10-18T10:56:35.312Z","data":{"task":"2","reason":"scope_violation"}}
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl b/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl
+new file mode 100644
+index 00000000..699006ae
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-18T10:18:56.704Z","data":{"outcome":"passed","command":"pnpm verify","commit":"90855efd65e88978c060d05f691c90793b3211c5","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":151.62}}
++{"type":"verify_ran","timestamp":"2026-10-18T10:40:30.962Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":33.36,"log":".run/logs/change-1.log","output":"   Doc-tests osq_kernel_linter\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 29 mutants to test\nok       Unmutated baseline in 6s build + 0s test\n INFO Auto-set test timeout to 20s\n29 mutants tested in 21s: 17 caught, 12 unviable"}}
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/results/2.md b/openspec/changes/211-rust-storage-event-tables/.run/results/2.md
+new file mode 100644
+index 00000000..d344c44b
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/results/2.md
+@@ -0,0 +1,50 @@
++## Changed
++
++- `src/model/mod.rs`: `CREATE_TABLES` now creates all twelve tables with
++  TypeScript's column names and order. `write_read_model` inserts the nine
++  event tables' rows of every archived snapshot in the given order and the
++  `notices` rows of every archived and rejected snapshot by folder name.
++  `build_read_model` reads the trial labels first, then `read_history`, writes
++  them, and fills the label columns.
++- `src/model/event_rows.rs` (new): `pauses` and `recertifications` row
++  mapping, including the `attribution` entry and `source` rules.
++- `src/model/stream_rows.rs` (new): `focused_runs`, `mutation_picks` and
++  `mutation_survivors` row mapping with per-task position counters.
++- `src/model/trial_rows.rs` (new): `validator_runs`, `validator_findings` and
++  `link_findings` row mapping, with the five-string valid-finding rule.
++- `src/model/notice_rows.rs` (new): the plan-record and manifest `notices`
++  rows and the archived/rejected folder sort.
++- `src/model/labels.rs` (new): `TrialLabels`, `read_trial_labels` and
++  `apply_labels`, one `UPDATE ... SET label = ? WHERE id = ?` per label.
++- `src/model/insert.rs`, `insert_events.rs`, `insert_trial.rs` (new): the
++  SQLite inserts for all twelve tables.
++- `src/model/rows.rs`: `table_events`, `number` and `entry_string` helpers,
++  and `count_i64`/`len_i64` made `pub(super)`.
++- `src/model/error.rs`: the `ReadModelError::Labels` variant and its message.
++- `src/lib.rs`: re-exports `TrialLabels` and `read_trial_labels`.
++- `tests/read_model_history.rs` (new) and
++  `tests/read_model_history_edges.rs` (new): the nine-table comparison against
++  `tests/fixtures/history-rows/<table>.json`, the label assertions, the
++  malformed label file, and the edge cases the mutation check needs.
++
++## Deviated
++
++- The two label scenarios (`trial-labels` and `malformed-label-file`) share one
++  test function so the file fits the 250-line budget; it carries both `Covers:`
++  lines.
++- `tests/read_model_history_edges.rs` is a new test file holding the
++  mutation-supporting cases (notice sorting, the halts-0 manifest outcome, the
++  second focused run, invalid findings). The task's verify target only runs
++  `read_model_history.rs`, but the proposal verify and cargo-mutants run every
++  test target of the crate, which is what the mutation step needs. Keeping them
++  in `read_model_history.rs` would have pushed it over 250 lines.
++
++## Missing context
++
++- None.
++
++## Next
++
++None.
++
++Touched: crates/kernel/storage/src/lib.rs, crates/kernel/storage/src/model/error.rs, crates/kernel/storage/src/model/mod.rs, crates/kernel/storage/src/model/rows.rs, crates/kernel/storage/src/model/event_rows.rs, crates/kernel/storage/src/model/stream_rows.rs, crates/kernel/storage/src/model/trial_rows.rs, crates/kernel/storage/src/model/notice_rows.rs, crates/kernel/storage/src/model/labels.rs, crates/kernel/storage/src/model/insert.rs, crates/kernel/storage/src/model/insert_events.rs, crates/kernel/storage/src/model/insert_trial.rs, crates/kernel/storage/tests/read_model_history.rs, crates/kernel/storage/tests/read_model_history_edges.rs

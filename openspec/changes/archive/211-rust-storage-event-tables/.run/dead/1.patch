@@ -1,0 +1,1279 @@
+diff --git a/crates/kernel/storage/src/lib.rs b/crates/kernel/storage/src/lib.rs
+index 5089dd92..c71336e8 100644
+--- a/crates/kernel/storage/src/lib.rs
++++ b/crates/kernel/storage/src/lib.rs
+@@ -7,7 +7,7 @@ pub mod read;
+ 
+ pub use model::{build_read_model, write_read_model};
+ pub use read::{
+-    ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, Location, StorageError, TaskFile,
+-    frontmatter_string, goal_section, list_changes, markdown_body, read_archive, read_change,
+-    timestamp_ms,
++    ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location, ManifestNotices,
++    Notice, PlanRecord, StorageError, TableEvent, TaskFile, frontmatter_string, goal_section,
++    list_changes, markdown_body, read_archive, read_change, read_history, timestamp_ms,
+ };
+diff --git a/crates/kernel/storage/src/read/mod.rs b/crates/kernel/storage/src/read/mod.rs
+index 440c824c..640676a8 100644
+--- a/crates/kernel/storage/src/read/mod.rs
++++ b/crates/kernel/storage/src/read/mod.rs
+@@ -9,6 +9,10 @@
+ //! Implements: rust-storage/event-file-errors
+ //! Implements: rust-storage/archived-location-wins
+ //! Implements: rust-storage/archive-replay
++//! Implements: rust-storage/table-events
++//! Implements: rust-storage/plan-records
++//! Implements: rust-storage/manifest-notices
++//! Implements: rust-storage/history-reading
+ 
+ mod error;
+ mod listing;
+@@ -17,5 +21,8 @@ mod text;
+ 
+ pub use error::StorageError;
+ pub use listing::{ChangeEntry, Location, list_changes};
+-pub use snapshot::{ChangeSnapshot, DeadAttempt, EventFacts, TaskFile, read_archive, read_change};
++pub use snapshot::{
++    ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice, PlanRecord,
++    TableEvent, TaskFile, read_archive, read_change, read_history,
++};
+ pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
+diff --git a/crates/kernel/storage/src/read/snapshot.rs b/crates/kernel/storage/src/read/snapshot.rs
+index cb50bb9a..9eedcf70 100644
+--- a/crates/kernel/storage/src/read/snapshot.rs
++++ b/crates/kernel/storage/src/read/snapshot.rs
+@@ -1,7 +1,9 @@
+-//! Reading one change folder into a snapshot and an archive into many.
++//! Reading one change folder into a snapshot and a project's history.
+ 
+ mod events;
+ mod folder;
++mod records;
++mod table_events;
+ 
+ use std::collections::BTreeMap;
+ use std::path::Path;
+@@ -12,6 +14,9 @@ use super::{ChangeEntry, Location, StorageError};
+ use events::read_events;
+ use folder::{approved_at, read_manifest, read_planner, read_proposal, read_task_files};
+ 
++pub use records::{LinkEntry, ManifestNotices, Notice, PlanRecord};
++pub use table_events::TableEvent;
++
+ /// One `tasks/<n>.md` file with what its markers and stream say.
+ #[derive(Clone, Debug, PartialEq, Eq)]
+ pub struct TaskFile {
+@@ -47,6 +52,8 @@ pub struct EventFacts {
+     pub dead_attempts: Vec<DeadAttempt>,
+     /// The last readable `archived` event's timestamp in `change.jsonl`.
+     pub archived_at: Option<String>,
++    /// The events the event tables are built from, in fold order.
++    pub table_events: Vec<TableEvent>,
+ }
+ 
+ /// One change folder read into its typed fields and folded event state.
+@@ -78,6 +85,10 @@ pub struct ChangeSnapshot {
+     pub status: ChangeStatus,
+     /// The event-derived facts, or `None` without `.run/events/`.
+     pub facts: Option<EventFacts>,
++    /// The `.run/plan.jsonl` records, in file order.
++    pub plan_records: Vec<PlanRecord>,
++    /// The manifest's `notices` record, or `None` without one.
++    pub manifest_notices: Option<ManifestNotices>,
+ }
+ 
+ /// Reads one change folder into its snapshot.
+@@ -109,6 +120,8 @@ pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError>
+         status: status_of(entry.location, approved, &state),
+         state,
+         facts,
++        plan_records: records::read_plan_records(&entry.path),
++        manifest_notices: records::manifest_notices(manifest.as_ref()),
+     })
+ }
+ 
+@@ -129,6 +142,26 @@ pub fn read_archive(project_root: &Path) -> Result<Vec<ChangeSnapshot>, StorageE
+     Ok(snapshots)
+ }
+ 
++/// Reads every archived change and then every rejected one, in listing order.
++///
++/// Implements: rust-storage/history-reading
++///
++/// # Errors
++///
++/// Returns the first [`StorageError`] a change raises.
++pub fn read_history(project_root: &Path) -> Result<Vec<ChangeSnapshot>, StorageError> {
++    let entries = super::list_changes(project_root);
++    let mut snapshots = Vec::new();
++    for location in [Location::Archived, Location::Rejected] {
++        for entry in &entries {
++            if entry.location == location {
++                snapshots.push(read_change(entry)?);
++            }
++        }
++    }
++    Ok(snapshots)
++}
++
+ /// Fills each task's started count from the gathered facts.
+ fn with_started(mut tasks: Vec<TaskFile>, facts: Option<&EventFacts>) -> Vec<TaskFile> {
+     for task in &mut tasks {
+diff --git a/crates/kernel/storage/src/read/snapshot/events.rs b/crates/kernel/storage/src/read/snapshot/events.rs
+index 34a1d127..fa273a72 100644
+--- a/crates/kernel/storage/src/read/snapshot/events.rs
++++ b/crates/kernel/storage/src/read/snapshot/events.rs
+@@ -11,6 +11,7 @@ use crate::read::StorageError;
+ use crate::read::text::timestamp_ms;
+ 
+ use super::folder::read_events_file;
++use super::table_events::{TableEvent, keep};
+ use super::{DeadAttempt, EventFacts};
+ 
+ /// Reads every events file of a change, folding it and gathering the facts.
+@@ -105,6 +106,8 @@ struct Facts {
+     dead: Vec<DeadAttempt>,
+     /// The last `archived` event's timestamp in `change.jsonl`.
+     archived_at: Option<String>,
++    /// The events the event tables are built from, in fold order.
++    table_events: Vec<TableEvent>,
+ }
+ 
+ impl Facts {
+@@ -117,11 +120,13 @@ impl Facts {
+             cost_reported: false,
+             dead: Vec::new(),
+             archived_at: None,
++            table_events: Vec::new(),
+         }
+     }
+ 
+     /// Records one parsed event of a stream, with its raw line for exact numbers.
+     fn observe(&mut self, stream: &Stream, envelope: &Envelope, line: &str) {
++        self.keep_table_event(stream, envelope);
+         match &envelope.event {
+             Event::Started(_) => self.record_started(stream),
+             Event::Dead(data) => self.record_dead(stream, &data.task, &data.reason),
+@@ -132,6 +137,17 @@ impl Facts {
+         }
+     }
+ 
++    /// Keeps one event when its stream and type belong to the event tables.
++    fn keep_table_event(&mut self, stream: &Stream, envelope: &Envelope) {
++        if keep(stream, &envelope.event) {
++            self.table_events.push(TableEvent {
++                stream: stream.clone(),
++                timestamp: envelope.timestamp.clone(),
++                event: envelope.event.clone(),
++            });
++        }
++    }
++
+     /// Counts one `started` event of a task stream.
+     fn record_started(&mut self, stream: &Stream) {
+         if let Stream::Task(id) = stream {
+@@ -184,6 +200,7 @@ impl Facts {
+             cost: self.cost_reported.then_some(self.cost),
+             dead_attempts: self.dead,
+             archived_at: self.archived_at,
++            table_events: self.table_events,
+         }
+     }
+ }
+diff --git a/crates/kernel/storage/src/read/snapshot/records.rs b/crates/kernel/storage/src/read/snapshot/records.rs
+new file mode 100644
+index 00000000..2a7f0f9c
+--- /dev/null
++++ b/crates/kernel/storage/src/read/snapshot/records.rs
+@@ -0,0 +1,157 @@
++//! Reading `.run/plan.jsonl` records and the manifest's `notices` record.
++//!
++//! Both are read as TypeScript reads them (ADR 025): a line or an entry that
++//! does not fit the shape is left out, never refused, and a missing or
++//! unreadable file reads as nothing.
++//!
++//! Implements: rust-storage/plan-records
++//! Implements: rust-storage/manifest-notices
++
++use std::fs;
++use std::path::Path;
++
++use serde_json::Value;
++
++/// The severities a recorded notice may carry.
++const SEVERITIES: [&str; 3] = ["red", "amber", "grey"];
++
++/// One notice: its id and severity.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct Notice {
++    /// The notice's id.
++    pub id: String,
++    /// The notice's severity, `red`, `amber` or `grey`.
++    pub severity: String,
++}
++
++/// One link finding of a plan record.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct LinkEntry {
++    /// The finding's severity.
++    pub severity: String,
++    /// The file the finding names.
++    pub file: String,
++    /// The finding's message.
++    pub message: String,
++}
++
++/// One `plan_ready` record storage keeps from `.run/plan.jsonl`.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct PlanRecord {
++    /// The record's notices, in order.
++    pub notices: Vec<Notice>,
++    /// The record's link findings, present only when the record had them.
++    pub traceability: Option<Vec<LinkEntry>>,
++}
++
++/// The manifest's `notices` record.
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct ManifestNotices {
++    /// The kept notice items, in order.
++    pub items: Vec<Notice>,
++    /// The ids the approver opened, absent without an `opened` array.
++    pub opened: Option<Vec<String>>,
++}
++
++/// Reads a change's `.run/plan.jsonl` records, in file order.
++///
++/// Implements: rust-storage/plan-records
++pub(super) fn read_plan_records(folder: &Path) -> Vec<PlanRecord> {
++    let path = folder.join(".run").join("plan.jsonl");
++    let Some(text) = fs::read_to_string(path).ok() else {
++        return Vec::new();
++    };
++    text.lines().filter_map(parse_line).collect()
++}
++
++/// Reads one line as a record, leaving out a blank or malformed one.
++fn parse_line(line: &str) -> Option<PlanRecord> {
++    if line.trim().is_empty() {
++        return None;
++    }
++    parse_record(&serde_json::from_str(line).ok()?)
++}
++
++/// Reads one JSON value as a `plan_ready` record, or `None`.
++fn parse_record(value: &Value) -> Option<PlanRecord> {
++    let object = value.as_object()?;
++    if object.get("type")?.as_str()? != "plan_ready" {
++        return None;
++    }
++    if object.get("timestamp")?.as_str()?.is_empty() {
++        return None;
++    }
++    let data = object.get("data")?.as_object()?;
++    data.get("hash")?.as_str()?;
++    let notices: Vec<Notice> = data
++        .get("notices")?
++        .as_array()?
++        .iter()
++        .map(parse_notice)
++        .collect::<Option<Vec<Notice>>>()?;
++    let traceability = data
++        .get("traceability")
++        .and_then(Value::as_array)
++        .map(|entries| entries.iter().filter_map(parse_link).collect());
++    Some(PlanRecord {
++        notices,
++        traceability,
++    })
++}
++
++/// Reads one notice, or `None` for an entry that is not a recorded notice.
++fn parse_notice(value: &Value) -> Option<Notice> {
++    let object = value.as_object()?;
++    let id = object.get("id")?.as_str()?;
++    let severity = object.get("severity")?.as_str()?;
++    if !SEVERITIES.contains(&severity) || !object.get("folded")?.is_boolean() {
++        return None;
++    }
++    Some(Notice {
++        id: id.to_owned(),
++        severity: severity.to_owned(),
++    })
++}
++
++/// Reads one manifest notice item, or `None` without a string id and severity.
++fn parse_manifest_item(value: &Value) -> Option<Notice> {
++    let object = value.as_object()?;
++    Some(Notice {
++        id: object.get("id")?.as_str()?.to_owned(),
++        severity: object.get("severity")?.as_str()?.to_owned(),
++    })
++}
++
++/// Reads one link finding, or `None` without all three strings.
++fn parse_link(value: &Value) -> Option<LinkEntry> {
++    let object = value.as_object()?;
++    Some(LinkEntry {
++        severity: object.get("severity")?.as_str()?.to_owned(),
++        file: object.get("file")?.as_str()?.to_owned(),
++        message: object.get("message")?.as_str()?.to_owned(),
++    })
++}
++
++/// Reads the manifest's `notices` record, or `None` when it has none.
++///
++/// Implements: rust-storage/manifest-notices
++pub(super) fn manifest_notices(manifest: Option<&Value>) -> Option<ManifestNotices> {
++    let record = manifest?.as_object()?.get("notices")?.as_object()?;
++    let items = record
++        .get("items")?
++        .as_array()?
++        .iter()
++        .filter_map(parse_manifest_item)
++        .collect();
++    let opened = record
++        .get("opened")
++        .and_then(Value::as_array)
++        .map(|entries| {
++            entries
++                .iter()
++                .filter_map(Value::as_str)
++                .map(ToOwned::to_owned)
++                .collect()
++        });
++    Some(ManifestNotices { items, opened })
++}
+diff --git a/crates/kernel/storage/src/read/snapshot/table_events.rs b/crates/kernel/storage/src/read/snapshot/table_events.rs
+new file mode 100644
+index 00000000..0198ef7c
+--- /dev/null
++++ b/crates/kernel/storage/src/read/snapshot/table_events.rs
+@@ -0,0 +1,35 @@
++//! The events the read model's event tables are built from.
++//!
++//! An event is kept only for the stream the table draws it from: a task
++//! stream's pauses, recertifications, focused and mutation runs, and the
++//! change stream's validator runs (rust-storage "Table events").
++//!
++//! Implements: rust-storage/table-events
++
++use osq_core::{Event, Stream};
++
++/// One kept event, with the stream it came from and its timestamp.
++#[derive(Clone, Debug, PartialEq)]
++pub struct TableEvent {
++    /// The stream whose file holds the event.
++    pub stream: Stream,
++    /// The event's timestamp, as written.
++    pub timestamp: String,
++    /// The typed event.
++    pub event: Event,
++}
++
++/// Whether one event of one stream belongs in the event tables.
++pub(super) fn keep(stream: &Stream, event: &Event) -> bool {
++    match stream {
++        Stream::Task(_) => matches!(
++            event,
++            Event::Paused(_)
++                | Event::Recertification(_)
++                | Event::FocusedRan(_)
++                | Event::MutationRan(_)
++        ),
++        Stream::Change => matches!(event, Event::ValidatorRan(_)),
++        Stream::Validator => false,
++    }
++}
+diff --git a/crates/kernel/storage/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md b/crates/kernel/storage/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md
+new file mode 100644
+index 00000000..30df4cc6
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md
+@@ -0,0 +1,3 @@
++---
++title: One
++---
+diff --git a/crates/kernel/storage/tests/fixtures/bad-labels/openspec/trials/validator.json b/crates/kernel/storage/tests/fixtures/bad-labels/openspec/trials/validator.json
+new file mode 100644
+index 00000000..d171e148
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/bad-labels/openspec/trials/validator.json
+@@ -0,0 +1,3 @@
++{
++  "001.v1.1": 1
++}
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/focused_runs.json b/crates/kernel/storage/tests/fixtures/history-rows/focused_runs.json
+new file mode 100644
+index 00000000..6825bbd5
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/focused_runs.json
+@@ -0,0 +1 @@
++[{"change":"001-run","task":"1","run":1,"outcome":"passed","exit_code":0,"duration":1.5,"timed_out":0,"scenarios":"rust-storage: One\nrust-storage: Two","files":"src/a.rs\nsrc/b.rs"},{"change":"001-run","task":"2","run":1,"outcome":"failed","exit_code":1,"duration":2,"timed_out":1,"scenarios":"","files":""}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/link_findings.json b/crates/kernel/storage/tests/fixtures/history-rows/link_findings.json
+new file mode 100644
+index 00000000..9a5d0b24
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/link_findings.json
+@@ -0,0 +1 @@
++[{"id":"001.l1","change":"001-run","severity":"warning","file":"src/a.rs","message":"src/a.rs:3: tag is not valid","label":1}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/mutation_picks.json b/crates/kernel/storage/tests/fixtures/history-rows/mutation_picks.json
+new file mode 100644
+index 00000000..542e422d
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/mutation_picks.json
+@@ -0,0 +1 @@
++[{"change":"001-run","task":"1","pick":1,"file":"src/a.rs","function":"f","outcome":"survived","reason":"two survived","killed":2,"survived":2,"invalid":1,"duration":3.25,"scenarios":"rust-storage: One"},{"change":"001-run","task":"2","pick":1,"file":"src/b.rs","function":"g","outcome":"measured","reason":null,"killed":1,"survived":0,"invalid":0,"duration":3,"scenarios":""}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/mutation_survivors.json b/crates/kernel/storage/tests/fixtures/history-rows/mutation_survivors.json
+new file mode 100644
+index 00000000..8072acf2
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/mutation_survivors.json
+@@ -0,0 +1 @@
++[{"id":"001.1.m1.1","change":"001-run","task":"1","pick":1,"file":"src/a.rs","function":"f","line":4,"column":7,"mutator":"replace","replacement":"true","label":0},{"id":"001.1.m1.2","change":"001-run","task":"1","pick":1,"file":null,"function":"f","line":null,"column":null,"mutator":null,"replacement":null,"label":null}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/notices.json b/crates/kernel/storage/tests/fixtures/history-rows/notices.json
+new file mode 100644
+index 00000000..2f7a956d
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/notices.json
+@@ -0,0 +1 @@
++[{"change":"001-run","notice":"draft-only","severity":"amber","opened":null,"outcome":"planned_again"},{"change":"001-run","notice":"scope-wide","severity":"red","opened":1,"outcome":"halted"},{"change":"001-run","notice":"no-tests","severity":"grey","opened":0,"outcome":"halted"},{"change":"002-quiet","notice":"no-tests","severity":"amber","opened":null,"outcome":"approved"},{"change":"003-dropped","notice":"first-draft","severity":"amber","opened":null,"outcome":"planned_again"},{"change":"003-dropped","notice":"last-draft","severity":"red","opened":null,"outcome":"rejected"},{"change":"003-dropped","notice":"also-last","severity":"grey","opened":null,"outcome":"rejected"},{"change":"004-noted","notice":"scope-wide","severity":"grey","opened":0,"outcome":"rejected"}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/pauses.json b/crates/kernel/storage/tests/fixtures/history-rows/pauses.json
+new file mode 100644
+index 00000000..c3d43153
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/pauses.json
+@@ -0,0 +1 @@
++[{"change":"001-run","task":"1","paused_at":"2026-10-01T10:02:00.000Z","until":"2026-10-01T12:00:00.000Z","source":"harness"},{"change":"001-run","task":"10","paused_at":"2026-10-01T10:12:00.000Z","until":"2026-10-01T13:00:00.000Z","source":"usage_limit"}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/recertifications.json b/crates/kernel/storage/tests/fixtures/history-rows/recertifications.json
+new file mode 100644
+index 00000000..d670c592
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/recertifications.json
+@@ -0,0 +1 @@
++[{"change":"001-run","task":"1","recertified_at":"2026-10-01T10:05:00.000Z","outcome":"passed","automatic":1,"path":"src/a.rs (modified)","credited_to":"2","source":"file_changed"},{"change":"001-run","task":"1","recertified_at":"2026-10-01T10:05:00.000Z","outcome":"passed","automatic":1,"path":"src/b.rs (modified)","credited_to":"unknown","source":"measures"},{"change":"001-run","task":"1","recertified_at":"2026-10-01T10:05:00.000Z","outcome":"passed","automatic":1,"path":"src/c.rs (modified)","credited_to":"unknown","source":null},{"change":"001-run","task":"2","recertified_at":"2026-10-01T10:10:00.000Z","outcome":"requeued","automatic":0,"path":"src/d.rs (deleted)","credited_to":"1","source":"file_changed"}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/validator_findings.json b/crates/kernel/storage/tests/fixtures/history-rows/validator_findings.json
+new file mode 100644
+index 00000000..beee5873
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/validator_findings.json
+@@ -0,0 +1 @@
++[{"id":"001.v1.1","change":"001-run","run":1,"finding":1,"capability":"rust-storage","requirement":"Pauses","scenario":"One pause","problem":"no test","detail":"the test is missing","label":1}]
+diff --git a/crates/kernel/storage/tests/fixtures/history-rows/validator_runs.json b/crates/kernel/storage/tests/fixtures/history-rows/validator_runs.json
+new file mode 100644
+index 00000000..2b0a80ae
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history-rows/validator_runs.json
+@@ -0,0 +1 @@
++[{"change":"001-run","run":1,"outcome":"failed","harness":"claude","model":"opus","duration":2.5,"exit_code":1,"scenarios":3,"findings":1,"reason":"one problem","output":"out"},{"change":"001-run","run":2,"outcome":"passed","harness":"codex","model":"gpt","duration":4,"exit_code":null,"scenarios":0,"findings":0,"reason":null,"output":null}]
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl
+new file mode 100644
+index 00000000..335861db
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl
+@@ -0,0 +1,5 @@
++{"type":"started","timestamp":"2026-10-01T10:01:00.000Z","data":{"timeoutSeconds":1800}}
++{"type":"paused","timestamp":"2026-10-01T10:02:00.000Z","data":{"task":"1","until":"2026-10-01T12:00:00.000Z","source":"harness"}}
++{"type":"focused_ran","timestamp":"2026-10-01T10:03:00.000Z","data":{"command":"c","files":["src/a.rs","src/b.rs"],"scenarios":["rust-storage: One","rust-storage: Two"],"outcome":"passed","exitCode":0,"duration":1.5,"timedOut":false,"output":""}}
++{"type":"mutation_ran","timestamp":"2026-10-01T10:04:00.000Z","data":{"file":"src/a.rs","function":"f","ranges":["3-9"],"scenarios":["rust-storage: One"],"tests":[],"outcome":"survived","killed":2,"survived":2,"invalid":1,"survivors":[{"file":"src/a.rs","line":4,"column":7,"mutator":"replace","replacement":"true"},"junk"],"duration":3.25,"exitCode":1,"reason":"two survived"}}
++{"type":"recertification","timestamp":"2026-10-01T10:05:00.000Z","data":{"task":"1","outcome":"passed","differingPaths":["src/a.rs (modified)"],"attribution":[{"path":"src/a.rs (modified)","attribution":"2"},{"path":"src/b.rs (modified)","attribution":"unknown","source":"measures"},"junk",{"path":"src/c.rs (modified)","attribution":"unknown"}],"command":"c","exitCode":0,"output":"","timedOut":false,"recordedHash":"sha256:r","currentHash":"sha256:s","automatic":true}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl
+new file mode 100644
+index 00000000..93b81ee9
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl
+@@ -0,0 +1 @@
++{"type":"paused","timestamp":"2026-10-01T10:12:00.000Z","data":{"task":"10","until":"2026-10-01T13:00:00.000Z","source":"usage_limit","error":"limit"}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl
+new file mode 100644
+index 00000000..7cd53cca
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl
+@@ -0,0 +1,6 @@
++{"type":"started","timestamp":"2026-10-01T10:06:00.000Z","data":{"timeoutSeconds":1800}}
++{"type":"focused_ran","timestamp":"2026-10-01T10:07:00.000Z","data":{"command":"c","files":[],"scenarios":[],"outcome":"failed","exitCode":1,"duration":2,"timedOut":true,"output":"x"}}
++{"type":"mutation_ran","timestamp":"2026-10-01T10:08:00.000Z","data":{"file":"src/b.rs","function":"g","ranges":[],"scenarios":[],"tests":[],"outcome":"measured","killed":1,"survived":0,"invalid":0,"survivors":null,"duration":3,"exitCode":null}}
++{"type":"recertification","timestamp":"2026-10-01T10:09:00.000Z","data":{"task":"2","outcome":"requeued","differingPaths":[],"attribution":null,"command":"c","exitCode":1,"output":"","timedOut":false,"recordedHash":"sha256:r","currentHash":"sha256:t"}}
++{"type":"recertification","timestamp":"2026-10-01T10:10:00.000Z","data":{"task":"2","outcome":"requeued","differingPaths":[],"attribution":[{"path":"src/d.rs (deleted)","attribution":"1"}],"command":"c","exitCode":1,"output":"","timedOut":false,"recordedHash":"sha256:r","currentHash":"sha256:t","automatic":false}}
++{"type":"validator_ran","timestamp":"2026-10-01T10:11:00.000Z","data":{"outcome":"passed","harness":"claude","model":"m","duration":1,"exitCode":0,"scenarios":1,"findings":[],"restored":[]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl
+new file mode 100644
+index 00000000..37723ec7
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl
+@@ -0,0 +1,4 @@
++{"type":"retry","timestamp":"2026-10-01T10:13:00.000Z","data":{"target":"change","reason":"human","attempt":1}}
++{"type":"validator_ran","timestamp":"2026-10-01T10:14:00.000Z","data":{"outcome":"failed","harness":"claude","model":"opus","duration":2.5,"exitCode":1,"scenarios":3,"findings":[{"capability":"rust-storage","requirement":"Pauses","scenario":"One pause","problem":"no test","detail":"the test is missing"},{"capability":"rust-storage"}],"restored":[],"reason":"one problem","output":"out"}}
++{"type":"validator_ran","timestamp":"2026-10-01T10:15:00.000Z","data":{"outcome":"passed","harness":"codex","model":"gpt","duration":4,"exitCode":null,"scenarios":0,"findings":[],"restored":["a.md"]}}
++{"type":"archived","timestamp":"2026-10-01T10:30:00.000Z","data":{"archivePath":"openspec/changes/archive/001-run"}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json
+new file mode 100644
+index 00000000..85788473
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json
+@@ -0,0 +1 @@
++{"approvedAt":"2026-10-01T10:00:00.000Z","notices":{"items":[{"id":"scope-wide","severity":"red"},{"id":"no-tests","severity":"grey"},{"id":7,"severity":"red"},"junk"],"opened":["scope-wide",3]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl
+new file mode 100644
+index 00000000..690987c9
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl
+@@ -0,0 +1,5 @@
++{"type":"plan_ready","timestamp":"2026-09-30T09:00:00.000Z","data":{"hash":"sha256:a","notices":[{"id":"draft-only","severity":"amber","folded":false}]}}
++
++{not json
++{"type":"plan_ready","timestamp":"2026-09-30T09:30:00.000Z","data":{"hash":"sha256:b","notices":[{"id":"bad","severity":"purple","folded":false}]}}
++{"type":"plan_ready","timestamp":"2026-09-30T10:00:00.000Z","data":{"hash":"sha256:c","notices":[{"id":"scope-wide","severity":"red","folded":true}],"traceability":[{"severity":"warning","file":"src/a.rs","message":"src/a.rs:3: tag is not valid"},{"severity":"error","file":"src/b.rs"}]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md
+new file mode 100644
+index 00000000..29eecf3e
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md
+@@ -0,0 +1,6 @@
++---
++title: Run
++---
++## Goal
++
++Run every trial.
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md
+new file mode 100644
+index 00000000..b8890e20
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md
+@@ -0,0 +1,3 @@
++---
++title: When one, run
++---
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md
+new file mode 100644
+index 00000000..263ae349
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md
+@@ -0,0 +1,3 @@
++---
++title: When two, run
++---
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json
+new file mode 100644
+index 00000000..6867bf9e
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json
+@@ -0,0 +1 @@
++{"notices":{"items":[{"id":"no-tests","severity":"amber"}]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md
+new file mode 100644
+index 00000000..3899e811
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md
+@@ -0,0 +1,3 @@
++---
++title: Quiet
++---
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl
+new file mode 100644
+index 00000000..bea4d3ef
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl
+@@ -0,0 +1,2 @@
++{"type":"plan_ready","timestamp":"2026-09-30T11:00:00.000Z","data":{"hash":"sha256:d","notices":[{"id":"first-draft","severity":"amber","folded":true}]}}
++{"type":"plan_ready","timestamp":"2026-09-30T12:00:00.000Z","data":{"hash":"sha256:e","notices":[{"id":"last-draft","severity":"red","folded":false},{"id":"also-last","severity":"grey","folded":true}]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md
+new file mode 100644
+index 00000000..93f8daa5
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md
+@@ -0,0 +1,3 @@
++---
++title: Dropped
++---
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json
+new file mode 100644
+index 00000000..57e0d013
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json
+@@ -0,0 +1 @@
++{"notices":{"items":[{"id":"scope-wide","severity":"grey"}],"opened":[]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl
+new file mode 100644
+index 00000000..63b4009b
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl
+@@ -0,0 +1 @@
++{"type":"plan_ready","timestamp":"2026-09-30T13:00:00.000Z","data":{"hash":"sha256:f","notices":[{"id":"ignored-last","severity":"red","folded":false}],"traceability":[{"severity":"warning","file":"src/z.rs","message":"rejected changes add no link rows"}]}}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md
+new file mode 100644
+index 00000000..de0e14b9
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md
+@@ -0,0 +1,3 @@
++---
++title: Noted
++---
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/trials/traceability.json b/crates/kernel/storage/tests/fixtures/history/openspec/trials/traceability.json
+new file mode 100644
+index 00000000..fcdd1870
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/trials/traceability.json
+@@ -0,0 +1,4 @@
++{
++  "001.1.m1.1": false,
++  "001.l1": true
++}
+diff --git a/crates/kernel/storage/tests/fixtures/history/openspec/trials/validator.json b/crates/kernel/storage/tests/fixtures/history/openspec/trials/validator.json
+new file mode 100644
+index 00000000..d24b86f6
+--- /dev/null
++++ b/crates/kernel/storage/tests/fixtures/history/openspec/trials/validator.json
+@@ -0,0 +1,4 @@
++{
++  "001.v1.1": true,
++  "999.v1.1": false
++}
+diff --git a/crates/kernel/storage/tests/reading_history.rs b/crates/kernel/storage/tests/reading_history.rs
+new file mode 100644
+index 00000000..9baab739
+--- /dev/null
++++ b/crates/kernel/storage/tests/reading_history.rs
+@@ -0,0 +1,206 @@
++//! Proves reading the history fixture's table events, plan records and
++//! manifest notices, and the archived-then-rejected history order.
++//!
++//! The fixture project and its expected rows were printed by TypeScript's
++//! `osq query --json`; task 2 compares the rows. This binary pins the reading
++//! they are built from. `reading_history_edges.rs` adds the shapes the
++//! fixture does not hold, for the mutation check.
++
++use std::path::{Path, PathBuf};
++
++use osq_core::{Event, Stream, TaskId};
++use osq_kernel_storage::{
++    ChangeEntry, EventFacts, LinkEntry, Location, ManifestNotices, Notice, PlanRecord, TableEvent,
++    read_change, read_history,
++};
++
++/// The history fixture project root.
++fn history() -> PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/history")
++}
++
++/// A change entry of a project root.
++fn entry(root: &Path, folder: &str, location: Location) -> ChangeEntry {
++    let changes = root.join("openspec").join("changes");
++    let path = match location {
++        Location::Archived => changes.join("archive").join(folder),
++        Location::Rejected => changes.join("rejected").join(folder),
++        Location::Active => changes.join(folder),
++    };
++    ChangeEntry {
++        folder: folder.to_owned(),
++        location,
++        path,
++    }
++}
++
++/// A task stream.
++fn task(id: &str) -> Stream {
++    Stream::Task(TaskId::new(id))
++}
++
++/// The event type name of a kept event.
++fn label(event: &Event) -> &'static str {
++    match event {
++        Event::Paused(_) => "paused",
++        Event::FocusedRan(_) => "focused_ran",
++        Event::MutationRan(_) => "mutation_ran",
++        Event::Recertification(_) => "recertification",
++        Event::ValidatorRan(_) => "validator_ran",
++        _ => "other",
++    }
++}
++
++/// The stream, type name and timestamp of every kept event.
++fn kept(facts: &EventFacts) -> Vec<(Stream, &'static str, &str)> {
++    facts
++        .table_events
++        .iter()
++        .map(|event| {
++            (
++                event.stream.clone(),
++                label(&event.event),
++                event.timestamp.as_str(),
++            )
++        })
++        .collect()
++}
++
++/// One notice.
++fn notice(id: &str, severity: &str) -> Notice {
++    Notice {
++        id: id.to_owned(),
++        severity: severity.to_owned(),
++    }
++}
++
++/// Proves the fixture's kept events, by stream, type and timestamp.
++///
++/// Covers: rust-storage/kept-events-of-the-history-fixture
++#[test]
++fn kept_events_of_the_history_fixture() {
++    let snapshot = read_change(&entry(&history(), "001-run", Location::Archived)).unwrap();
++    let facts = snapshot.facts.as_ref().unwrap();
++    assert_eq!(
++        kept(facts),
++        [
++            (task("1"), "paused", "2026-10-01T10:02:00.000Z"),
++            (task("1"), "focused_ran", "2026-10-01T10:03:00.000Z"),
++            (task("1"), "mutation_ran", "2026-10-01T10:04:00.000Z"),
++            (task("1"), "recertification", "2026-10-01T10:05:00.000Z"),
++            (task("2"), "focused_ran", "2026-10-01T10:07:00.000Z"),
++            (task("2"), "mutation_ran", "2026-10-01T10:08:00.000Z"),
++            (task("2"), "recertification", "2026-10-01T10:09:00.000Z"),
++            (task("2"), "recertification", "2026-10-01T10:10:00.000Z"),
++            (task("10"), "paused", "2026-10-01T10:12:00.000Z"),
++            (Stream::Change, "validator_ran", "2026-10-01T10:14:00.000Z"),
++            (Stream::Change, "validator_ran", "2026-10-01T10:15:00.000Z"),
++        ]
++    );
++}
++
++/// Proves a kept event carries the typed event, stream and timestamp.
++///
++/// Covers: rust-storage/kept-events-of-the-history-fixture
++#[test]
++fn kept_event_carries_its_parts() {
++    let snapshot = read_change(&entry(&history(), "001-run", Location::Archived)).unwrap();
++    let first = &snapshot.facts.as_ref().unwrap().table_events[0];
++    assert!(matches!(first.event, Event::Paused(_)));
++    assert_eq!(
++        TableEvent {
++            stream: task("1"),
++            timestamp: String::from("2026-10-01T10:02:00.000Z"),
++            event: first.event.clone(),
++        },
++        *first
++    );
++}
++
++/// Proves the fixture's two plan records and their kept notices and links.
++///
++/// Covers: rust-storage/plan-records-of-the-history-fixture
++#[test]
++fn plan_records_of_the_history_fixture() {
++    let snapshot = read_change(&entry(&history(), "001-run", Location::Archived)).unwrap();
++    assert_eq!(
++        snapshot.plan_records,
++        [
++            PlanRecord {
++                notices: vec![notice("draft-only", "amber")],
++                traceability: None,
++            },
++            PlanRecord {
++                notices: vec![notice("scope-wide", "red")],
++                traceability: Some(vec![LinkEntry {
++                    severity: String::from("warning"),
++                    file: String::from("src/a.rs"),
++                    message: String::from("src/a.rs:3: tag is not valid"),
++                }]),
++            },
++        ]
++    );
++}
++
++/// Proves a change without a `plan.jsonl` holds no plan records.
++///
++/// Covers: rust-storage/no-plan-file
++#[test]
++fn no_plan_file() {
++    let snapshot = read_change(&entry(&history(), "002-quiet", Location::Archived)).unwrap();
++    assert!(snapshot.plan_records.is_empty(), "expected no plan records");
++}
++
++/// Proves the fixture's manifest notices for each of its four changes.
++///
++/// Covers: rust-storage/manifest-notices-of-the-history-fixture
++#[test]
++fn manifest_notices_of_the_history_fixture() {
++    let run = read_change(&entry(&history(), "001-run", Location::Archived)).unwrap();
++    assert_eq!(
++        run.manifest_notices,
++        Some(ManifestNotices {
++            items: vec![notice("scope-wide", "red"), notice("no-tests", "grey")],
++            opened: Some(vec![String::from("scope-wide")]),
++        })
++    );
++    let quiet = read_change(&entry(&history(), "002-quiet", Location::Archived)).unwrap();
++    assert_eq!(
++        quiet.manifest_notices,
++        Some(ManifestNotices {
++            items: vec![notice("no-tests", "amber")],
++            opened: None,
++        })
++    );
++    let dropped = read_change(&entry(&history(), "003-dropped", Location::Rejected)).unwrap();
++    assert_eq!(dropped.manifest_notices, None);
++    let noted = read_change(&entry(&history(), "004-noted", Location::Rejected)).unwrap();
++    assert_eq!(
++        noted.manifest_notices,
++        Some(ManifestNotices {
++            items: vec![notice("scope-wide", "grey")],
++            opened: Some(Vec::new()),
++        })
++    );
++}
++
++/// Proves `read_history` returns the archived changes then the rejected ones.
++///
++/// Covers: rust-storage/history-of-the-history-fixture
++#[test]
++fn history_of_the_history_fixture() {
++    let snapshots = read_history(&history()).unwrap();
++    let observed: Vec<(&str, Location)> = snapshots
++        .iter()
++        .map(|snapshot| (snapshot.folder.as_str(), snapshot.location))
++        .collect();
++    assert_eq!(
++        observed,
++        [
++            ("001-run", Location::Archived),
++            ("002-quiet", Location::Archived),
++            ("003-dropped", Location::Rejected),
++            ("004-noted", Location::Rejected),
++        ]
++    );
++}
+diff --git a/crates/kernel/storage/tests/reading_history_edges.rs b/crates/kernel/storage/tests/reading_history_edges.rs
+new file mode 100644
+index 00000000..96c09587
+--- /dev/null
++++ b/crates/kernel/storage/tests/reading_history_edges.rs
+@@ -0,0 +1,237 @@
++//! Proves the reading shapes the history fixture does not hold: which stream
++//! and type pairs are kept, which `plan.jsonl` lines and manifest entries are
++//! left out, and an unreadable plan file.
++//!
++//! These are the fast counterparts `cargo-mutants` runs for the selection and
++//! parsing leaves; `reading_history.rs` proves the history fixture itself.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_core::{Event, Stream, TaskId};
++use osq_kernel_storage::{
++    ChangeEntry, ChangeSnapshot, EventFacts, LinkEntry, Location, ManifestNotices, Notice,
++    PlanRecord, read_change,
++};
++
++/// A change entry of a project root.
++fn entry(root: &Path, folder: &str, location: Location) -> ChangeEntry {
++    let changes = root.join("openspec").join("changes");
++    let path = match location {
++        Location::Archived => changes.join("archive").join(folder),
++        Location::Rejected => changes.join("rejected").join(folder),
++        Location::Active => changes.join(folder),
++    };
++    ChangeEntry {
++        folder: folder.to_owned(),
++        location,
++        path,
++    }
++}
++
++/// A fresh temporary project root, with anything at that name removed.
++fn temp_root(name: &str) -> PathBuf {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
++    let _ = fs::remove_dir_all(&root);
++    root
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    fs::create_dir_all(path.parent().unwrap()).unwrap();
++    fs::write(path, text).unwrap();
++}
++
++/// Reads one change built under a fresh root from the given relative files.
++fn snapshot_of(name: &str, files: &[(&str, &str)]) -> ChangeSnapshot {
++    let root = temp_root(name);
++    let dir = root.join("openspec/changes/archive/001-x");
++    write(&dir.join("proposal.md"), "---\ntitle: \"X\"\n---\n");
++    for (relative, text) in files {
++        write(&dir.join(relative), text);
++    }
++    read_change(&entry(&root, "001-x", Location::Archived)).unwrap()
++}
++
++/// The manifest notices of a change whose `.run/manifest.json` holds `text`.
++fn notices_from(name: &str, manifest: &str) -> Option<ManifestNotices> {
++    snapshot_of(name, &[(".run/manifest.json", manifest)]).manifest_notices
++}
++
++/// A task stream.
++fn task(id: &str) -> Stream {
++    Stream::Task(TaskId::new(id))
++}
++
++/// The event type name of a kept event.
++fn label(event: &Event) -> &'static str {
++    match event {
++        Event::Paused(_) => "paused",
++        Event::FocusedRan(_) => "focused_ran",
++        Event::MutationRan(_) => "mutation_ran",
++        Event::Recertification(_) => "recertification",
++        Event::ValidatorRan(_) => "validator_ran",
++        _ => "other",
++    }
++}
++
++/// The stream, type name and timestamp of every kept event.
++fn kept(facts: &EventFacts) -> Vec<(Stream, &'static str, &str)> {
++    facts
++        .table_events
++        .iter()
++        .map(|event| {
++            (
++                event.stream.clone(),
++                label(&event.event),
++                event.timestamp.as_str(),
++            )
++        })
++        .collect()
++}
++
++/// One notice.
++fn notice(id: &str, severity: &str) -> Notice {
++    Notice {
++        id: id.to_owned(),
++        severity: severity.to_owned(),
++    }
++}
++
++/// A task stream holding kept and not-kept types.
++const TASK_STREAM: &str = "{\"type\":\"started\",\"timestamp\":\"2026-10-01T10:00:00.000Z\",\"data\":{}}\n\
++{\"type\":\"paused\",\"timestamp\":\"2026-10-01T10:01:00.000Z\",\"data\":{\"task\":\"1\",\"until\":\"u\",\"source\":\"harness\"}}\n\
++{\"type\":\"focused_ran\",\"timestamp\":\"2026-10-01T10:02:00.000Z\",\"data\":{\"command\":\"c\",\"files\":[],\"scenarios\":[],\"outcome\":\"passed\",\"exitCode\":0,\"duration\":1,\"timedOut\":false,\"output\":\"\"}}\n\
++{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:03:00.000Z\",\"data\":{\"outcome\":\"passed\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":1,\"exitCode\":0,\"scenarios\":0,\"findings\":[],\"restored\":[]}}\n";
++
++/// A change stream holding a kept and a not-kept type.
++const CHANGE_STREAM: &str = "{\"type\":\"paused\",\"timestamp\":\"2026-10-01T10:04:00.000Z\",\"data\":{\"task\":\"1\",\"until\":\"u\",\"source\":\"harness\"}}\n\
++{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:05:00.000Z\",\"data\":{\"outcome\":\"passed\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":1,\"exitCode\":0,\"scenarios\":0,\"findings\":[],\"restored\":[]}}\n";
++
++/// A validator stream whose events no table keeps.
++const VALIDATOR_STREAM: &str = "{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:06:00.000Z\",\"data\":{\"outcome\":\"passed\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":1,\"exitCode\":0,\"scenarios\":0,\"findings\":[],\"restored\":[]}}\n";
++
++/// Proves an event is kept only for a stream and type pair of the tables.
++///
++/// Covers: rust-storage/kept-events-of-the-history-fixture
++#[test]
++fn kept_events_follow_stream_and_type() {
++    let snapshot = snapshot_of(
++        "kept_stream_and_type",
++        &[
++            (".run/events/1.jsonl", TASK_STREAM),
++            (".run/events/change.jsonl", CHANGE_STREAM),
++            (".run/events/validator.jsonl", VALIDATOR_STREAM),
++        ],
++    );
++    let facts = snapshot.facts.as_ref().unwrap();
++    assert_eq!(
++        kept(facts),
++        [
++            (task("1"), "paused", "2026-10-01T10:01:00.000Z"),
++            (task("1"), "focused_ran", "2026-10-01T10:02:00.000Z"),
++            (Stream::Change, "validator_ran", "2026-10-01T10:05:00.000Z"),
++        ]
++    );
++}
++
++/// `plan.jsonl` lines that exercise every rule of "Plan records".
++const PLAN_LINES: &str = "not json\n\
++[1,2]\n\
++{\"type\":\"other\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"\",\"data\":{\"hash\":\"h\",\"notices\":[]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":\"x\"}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":7,\"notices\":[]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\"}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[\"x\"]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":7,\"severity\":\"red\",\"folded\":true}]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"a\",\"severity\":\"purple\",\"folded\":true}]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"a\",\"severity\":\"red\",\"folded\":\"yes\"}]}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[{\"id\":\"a\",\"severity\":\"amber\",\"folded\":false}],\"traceability\":\"x\"}}\n\
++{\"type\":\"plan_ready\",\"timestamp\":\"t\",\"data\":{\"hash\":\"h\",\"notices\":[],\"traceability\":[1,{\"severity\":\"w\"},{\"severity\":\"w\",\"file\":\"f\",\"message\":\"m\"}]}}\n\
++\n";
++
++/// Proves a line that is not a record is left out without an error.
++///
++/// Covers: rust-storage/plan-records-of-the-history-fixture
++#[test]
++fn plan_records_skip_lines_that_are_not_records() {
++    let snapshot = snapshot_of("plan_lines", &[(".run/plan.jsonl", PLAN_LINES)]);
++    assert_eq!(
++        snapshot.plan_records,
++        [
++            PlanRecord {
++                notices: vec![notice("a", "amber")],
++                traceability: None,
++            },
++            PlanRecord {
++                notices: Vec::new(),
++                traceability: Some(vec![LinkEntry {
++                    severity: String::from("w"),
++                    file: String::from("f"),
++                    message: String::from("m"),
++                }]),
++            },
++        ]
++    );
++}
++
++/// Proves an unreadable or missing `plan.jsonl` reads as no records.
++///
++/// Covers: rust-storage/no-plan-file
++#[test]
++fn plan_records_read_nothing_without_a_readable_file() {
++    let missing = snapshot_of("plan_missing", &[]);
++    assert!(missing.plan_records.is_empty(), "expected no plan records");
++
++    let root = temp_root("plan_unreadable");
++    let dir = root.join("openspec/changes/archive/001-x");
++    write(&dir.join("proposal.md"), "---\ntitle: \"X\"\n---\n");
++    fs::create_dir_all(dir.join(".run/plan.jsonl")).unwrap();
++    let unreadable = read_change(&entry(&root, "001-x", Location::Archived)).unwrap();
++    assert!(
++        unreadable.plan_records.is_empty(),
++        "expected no plan records"
++    );
++}
++
++/// Proves only well-shaped manifest notice entries and opened ids are kept.
++///
++/// Covers: rust-storage/manifest-notices-of-the-history-fixture
++#[test]
++fn manifest_notices_keep_only_well_shaped_entries() {
++    assert_eq!(notices_from("manifest_none", "{}"), None);
++    assert_eq!(notices_from("manifest_text", "{\"notices\":\"x\"}"), None);
++    assert_eq!(
++        notices_from("manifest_items_text", "{\"notices\":{\"items\":\"x\"}}"),
++        None
++    );
++    assert_eq!(
++        notices_from("manifest_empty", "{\"notices\":{\"items\":[]}}"),
++        Some(ManifestNotices {
++            items: Vec::new(),
++            opened: None,
++        })
++    );
++    assert_eq!(
++        notices_from(
++            "manifest_filtered",
++            "{\"notices\":{\"items\":[{\"id\":\"a\",\"severity\":\"red\"},7,\"junk\",\
++             {\"id\":3,\"severity\":\"x\"},{\"id\":\"b\"}],\"opened\":[\"a\",5]}}"
++        ),
++        Some(ManifestNotices {
++            items: vec![notice("a", "red")],
++            opened: Some(vec![String::from("a")]),
++        })
++    );
++    assert_eq!(
++        notices_from(
++            "manifest_opened_text",
++            "{\"notices\":{\"items\":[],\"opened\":\"x\"}}"
++        ),
++        Some(ManifestNotices {
++            items: Vec::new(),
++            opened: None,
++        })
++    );
++}
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/dead/1.md b/openspec/changes/211-rust-storage-event-tables/.run/dead/1.md
+new file mode 100644
+index 00000000..09354092
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/dead/1.md
+@@ -0,0 +1,5 @@
++---
++reason: scope_violation
++fingerprint: sha256:4235c36db4815493a3e1dcab378f4868d3f29e50405eaeb06b510d921c27f866
++---
++crates/kernel/storage/tests/reading_history_edges.rs
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/events/1.jsonl b/openspec/changes/211-rust-storage-event-tables/.run/events/1.jsonl
+new file mode 100644
+index 00000000..3a6cf3ee
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/events/1.jsonl
+@@ -0,0 +1,138 @@
++{"type":"verify_ran","timestamp":"2026-10-18T10:18:56.824Z","data":{"command":"cargo test -p osq-kernel-storage --test reading_history","exitCode":101,"duration":0.12,"log":".run/logs/1-1.log","output":"error: no test target named `reading_history` in `osq-kernel-storage` package\nhelp: available test targets:\n    archive_corpus\n    golden_cases\n    read_model\n    reading_events\n    reading_listing\n    reading_snapshot\n    reading_text\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-18T10:18:57.826Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":8,"scopeLines":923,"repoFiles":3455,"repoLines":394279,"importFanIn":0,"proposalWords":790,"taskWords":540,"deltaRequirements":8,"deltaScenarios":14}}
++{"type":"started","timestamp":"2026-10-18T10:18:57.888Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"90855efd","pid":3450542,"timeoutSeconds":1800,"version":"0.3.0","commit":"6009aab9"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:02.067Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:02.070Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:02.107Z","data":{"promptTokens":34454,"candidateTokens":199,"totalTokens":34653,"cachedTokens":0,"reasoningTokens":14,"cost":0.005295899999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:19:05.254Z","data":{"tool":"read","summary":"crates/kernel/storage/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:05.256Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:05.258Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:05.261Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/folder.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:05.292Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:05.344Z","data":{"promptTokens":1616,"candidateTokens":326,"totalTokens":1942,"cachedTokens":34432,"reasoningTokens":84,"cost":0.0005916960000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:19:08.030Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/mod.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:08.032Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/mod.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:08.034Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/error.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:08.037Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/rows.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:08.041Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:08.080Z","data":{"promptTokens":6520,"candidateTokens":336,"totalTokens":6856,"cachedTokens":35968,"reasoningTokens":32,"cost":0.001306704}}
++{"type":"tool","timestamp":"2026-10-18T10:19:10.310Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:10.314Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:10.353Z","data":{"promptTokens":5276,"candidateTokens":206,"totalTokens":5482,"cachedTokens":42368,"reasoningTokens":19,"cost":0.0010535039999999998}}
++{"type":"tool","timestamp":"2026-10-18T10:19:14.073Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/reading_snapshot.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:14.075Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/reading_events.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:14.078Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:14.115Z","data":{"promptTokens":3737,"candidateTokens":223,"totalTokens":3960,"cachedTokens":47616,"reasoningTokens":341,"cost":0.001041798}}
++{"type":"tool","timestamp":"2026-10-18T10:19:16.474Z","data":{"tool":"read","summary":"crates/core/src/event.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:16.476Z","data":{"tool":"read","summary":"crates/core/src/event/payload.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:16.514Z","data":{"promptTokens":6522,"candidateTokens":122,"totalTokens":6644,"cachedTokens":51328,"reasoningTokens":51,"cost":0.001236084}}
++{"type":"tool","timestamp":"2026-10-18T10:19:23.323Z","data":{"tool":"read","summary":"crates/core/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:23.325Z","data":{"tool":"read","summary":"crates/core/src/fold/stream.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:23.327Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/read_model.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:23.329Z","data":{"tool":"read","summary":"crates/kernel/storage/src/model/error.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:23.367Z","data":{"promptTokens":13259,"candidateTokens":240,"totalTokens":13499,"cachedTokens":57728,"reasoningTokens":775,"cost":0.002771034}}
++{"type":"tool","timestamp":"2026-10-18T10:19:35.071Z","data":{"tool":"read","summary":"openspec/changes/211-rust-storage-event-tables/tasks.md"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:35.104Z","data":{"tool":"grep","summary":"{\"pattern\":\"readPlanReady\",\"path\":\"/home/mathias/.osq/worktr"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:35.141Z","data":{"promptTokens":5354,"candidateTokens":143,"totalTokens":5497,"cachedTokens":70912,"reasoningTokens":1813,"cost":0.002189436}}
++{"type":"tool","timestamp":"2026-10-18T10:19:37.505Z","data":{"tool":"read","summary":"src/core/spec/plan-ready.ts"}}
++{"type":"tool","timestamp":"2026-10-18T10:19:37.506Z","data":{"tool":"read","summary":"src/core/report/query-notices.ts"}}
++{"type":"tokens","timestamp":"2026-10-18T10:19:37.545Z","data":{"promptTokens":2636,"candidateTokens":123,"totalTokens":2759,"cachedTokens":76160,"reasoningTokens":0,"cost":0.0006976800000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:20:03.800Z","data":{"tool":"read","summary":"scripts/verify-rust.sh"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:03.801Z","data":{"tool":"read","summary":"tests/line-budget.test.ts"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:03.803Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/archive_corpus.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:03.839Z","data":{"promptTokens":3567,"candidateTokens":183,"totalTokens":3750,"cachedTokens":78720,"reasoningTokens":4036,"cost":0.0033026099999999997}}
++{"type":"tool","timestamp":"2026-10-18T10:20:07.319Z","data":{"tool":"read","summary":"Cargo.toml"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:07.321Z","data":{"tool":"grep","summary":"{\"pattern\":\"crates|\\\\.rs|rust\",\"path\":\"/home/mathias/.osq/wo"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:07.322Z","data":{"tool":"read","summary":"crates/kernel/storage/Cargo.toml"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:07.343Z","data":{"tool":"grep","summary":"{\"pattern\":\"250|line budget|line_budget\",\"path\":\"/home/mathi"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:07.380Z","data":{"promptTokens":8591,"candidateTokens":275,"totalTokens":8866,"cachedTokens":82176,"reasoningTokens":106,"cost":0.0017637779999999997}}
++{"type":"tool","timestamp":"2026-10-18T10:20:10.188Z","data":{"tool":"read","summary":"clippy.toml"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:10.189Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/listing.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:10.224Z","data":{"promptTokens":2775,"candidateTokens":124,"totalTokens":2899,"cachedTokens":90752,"reasoningTokens":157,"cost":0.000857106}}
++{"type":"text","timestamp":"2026-10-18T10:20:42.651Z","data":{"text":"Now let me look at the `golden_cases.rs` test and check how the `210` tests are organized, then copy the fixtures."}}
++{"type":"tool","timestamp":"2026-10-18T10:20:42.659Z","data":{"tool":"read","summary":"crates/kernel/storage/tests/golden_cases.rs"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:42.676Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:42.717Z","data":{"promptTokens":1648,"candidateTokens":455,"totalTokens":2103,"cachedTokens":93440,"reasoningTokens":5827,"cost":0.0042967199999999995}}
++{"type":"text","timestamp":"2026-10-18T10:20:46.799Z","data":{"text":"Now let me write the source. First the table events selection module:"}}
++{"type":"tool","timestamp":"2026-10-18T10:20:46.806Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/snapshot/table_events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:46.850Z","data":{"promptTokens":7636,"candidateTokens":382,"totalTokens":8018,"cachedTokens":94976,"reasoningTokens":19,"cost":0.001670928}}
++{"type":"tool","timestamp":"2026-10-18T10:20:53.434Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/snapshot/records.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:20:53.470Z","data":{"promptTokens":518,"candidateTokens":1346,"totalTokens":1864,"cachedTokens":102528,"reasoningTokens":5,"cost":0.001195884}}
++{"type":"tool","timestamp":"2026-10-18T10:21:04.835Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/snapshot.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:04.875Z","data":{"promptTokens":1388,"candidateTokens":1841,"totalTokens":3229,"cachedTokens":103040,"reasoningTokens":391,"cost":0.00185652}}
++{"type":"tool","timestamp":"2026-10-18T10:21:09.113Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:09.153Z","data":{"promptTokens":2370,"candidateTokens":157,"totalTokens":2527,"cachedTokens":104320,"reasoningTokens":302,"cost":0.0009438599999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:21:14.370Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:14.409Z","data":{"promptTokens":556,"candidateTokens":432,"totalTokens":988,"cachedTokens":106624,"reasoningTokens":0,"cost":0.000662472}}
++{"type":"tool","timestamp":"2026-10-18T10:21:17.339Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:17.375Z","data":{"promptTokens":507,"candidateTokens":165,"totalTokens":672,"cachedTokens":107136,"reasoningTokens":43,"cost":0.000522258}}
++{"type":"tool","timestamp":"2026-10-18T10:21:20.351Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:20.389Z","data":{"promptTokens":362,"candidateTokens":105,"totalTokens":467,"cachedTokens":107520,"reasoningTokens":208,"cost":0.0005646599999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:21:24.879Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:24.917Z","data":{"promptTokens":1018,"candidateTokens":320,"totalTokens":1338,"cachedTokens":107776,"reasoningTokens":23,"cost":0.000681828}}
++{"type":"tool","timestamp":"2026-10-18T10:21:27.157Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/events.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:27.197Z","data":{"promptTokens":496,"candidateTokens":159,"totalTokens":655,"cachedTokens":108672,"reasoningTokens":0,"cost":0.000495816}}
++{"type":"tool","timestamp":"2026-10-18T10:21:31.468Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:31.507Z","data":{"promptTokens":302,"candidateTokens":490,"totalTokens":792,"cachedTokens":109056,"reasoningTokens":131,"cost":0.000745068}}
++{"type":"tool","timestamp":"2026-10-18T10:21:34.909Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:34.950Z","data":{"promptTokens":694,"candidateTokens":231,"totalTokens":925,"cachedTokens":109312,"reasoningTokens":0,"cost":0.000570636}}
++{"type":"tool","timestamp":"2026-10-18T10:21:43.160Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:21:43.197Z","data":{"promptTokens":310,"candidateTokens":78,"totalTokens":388,"cachedTokens":109952,"reasoningTokens":83,"cost":0.000472956}}
++{"type":"text","timestamp":"2026-10-18T10:22:21.540Z","data":{"text":"Now the test file:"}}
++{"type":"tool","timestamp":"2026-10-18T10:22:21.550Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:21.587Z","data":{"promptTokens":710,"candidateTokens":4318,"totalTokens":5028,"cachedTokens":110208,"reasoningTokens":3027,"cost":0.004844124}}
++{"type":"tool","timestamp":"2026-10-18T10:22:24.400Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:24.436Z","data":{"promptTokens":7443,"candidateTokens":82,"totalTokens":7525,"cachedTokens":110848,"reasoningTokens":0,"cost":0.001498194}}
++{"type":"tool","timestamp":"2026-10-18T10:22:28.753Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/records.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:28.793Z","data":{"promptTokens":663,"candidateTokens":452,"totalTokens":1115,"cachedTokens":118272,"reasoningTokens":126,"cost":0.000801066}}
++{"type":"tool","timestamp":"2026-10-18T10:22:31.033Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/snapshot/records.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:31.069Z","data":{"promptTokens":632,"candidateTokens":178,"totalTokens":810,"cachedTokens":118912,"reasoningTokens":0,"cost":0.000558336}}
++{"type":"tool","timestamp":"2026-10-18T10:22:33.651Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:33.688Z","data":{"promptTokens":329,"candidateTokens":82,"totalTokens":411,"cachedTokens":119424,"reasoningTokens":0,"cost":0.000456822}}
++{"type":"tool","timestamp":"2026-10-18T10:22:36.802Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:36.839Z","data":{"promptTokens":433,"candidateTokens":78,"totalTokens":511,"cachedTokens":119680,"reasoningTokens":113,"cost":0.00053859}}
++{"type":"tool","timestamp":"2026-10-18T10:22:40.928Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:40.968Z","data":{"promptTokens":521,"candidateTokens":88,"totalTokens":609,"cachedTokens":120064,"reasoningTokens":0,"cost":0.000491142}}
++{"type":"tool","timestamp":"2026-10-18T10:22:52.042Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:52.078Z","data":{"promptTokens":627,"candidateTokens":97,"totalTokens":724,"cachedTokens":120576,"reasoningTokens":1367,"cost":0.0013341779999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:22:55.087Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:55.126Z","data":{"promptTokens":1662,"candidateTokens":242,"totalTokens":1904,"cachedTokens":121088,"reasoningTokens":32,"cost":0.0007769639999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:22:58.843Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tool","timestamp":"2026-10-18T10:22:58.974Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:22:59.012Z","data":{"promptTokens":414,"candidateTokens":223,"totalTokens":637,"cachedTokens":122624,"reasoningTokens":198,"cost":0.000682572}}
++{"type":"tool","timestamp":"2026-10-18T10:23:02.536Z","data":{"tool":"grep","summary":"{\"pattern\":\"crates/|\\\\.rs\",\"path\":\"/home/mathias/.osq/worktr"}}
++{"type":"tool","timestamp":"2026-10-18T10:23:02.538Z","data":{"tool":"grep","summary":"{\"pattern\":\"250|lines\\\\(\\\\)\\\\.count|line_count|budget\",\"incl"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:02.573Z","data":{"promptTokens":594,"candidateTokens":195,"totalTokens":789,"cachedTokens":123008,"reasoningTokens":137,"cost":0.0006573239999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:23:18.724Z","data":{"tool":"grep","summary":"{\"pattern\":\"Covers|Implements\",\"path\":\"/home/mathias/.osq/wo"}}
++{"type":"tool","timestamp":"2026-10-18T10:23:18.727Z","data":{"tool":"grep","summary":"{\"pattern\":\"Covers:|Implements:\",\"path\":\"/home/mathias/.osq/"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:18.762Z","data":{"promptTokens":2706,"candidateTokens":168,"totalTokens":2874,"cachedTokens":123520,"reasoningTokens":2683,"cost":0.00248706}}
++{"type":"tool","timestamp":"2026-10-18T10:23:28.480Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_history.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:28.524Z","data":{"promptTokens":2966,"candidateTokens":1977,"totalTokens":4943,"cachedTokens":126208,"reasoningTokens":119,"cost":0.0020811239999999997}}
++{"type":"tool","timestamp":"2026-10-18T10:23:43.850Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_history_edges.rs"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:43.893Z","data":{"promptTokens":2147,"candidateTokens":2955,"totalTokens":5102,"cachedTokens":129152,"reasoningTokens":0,"cost":0.002482506}}
++{"type":"tool","timestamp":"2026-10-18T10:23:46.928Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:46.967Z","data":{"promptTokens":3084,"candidateTokens":146,"totalTokens":3230,"cachedTokens":131200,"reasoningTokens":0,"cost":0.0009438}}
++{"type":"tool","timestamp":"2026-10-18T10:23:50.301Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:50.338Z","data":{"promptTokens":212,"candidateTokens":89,"totalTokens":301,"cachedTokens":134272,"reasoningTokens":14,"cost":0.0004964160000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:23:54.241Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:23:54.276Z","data":{"promptTokens":646,"candidateTokens":104,"totalTokens":750,"cachedTokens":134400,"reasoningTokens":302,"cost":0.0007437}}
++{"type":"tool","timestamp":"2026-10-18T10:24:00.131Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:24:00.175Z","data":{"promptTokens":602,"candidateTokens":88,"totalTokens":690,"cachedTokens":135040,"reasoningTokens":446,"cost":0.00081582}}
++{"type":"tool","timestamp":"2026-10-18T10:25:15.212Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:25:15.257Z","data":{"promptTokens":747,"candidateTokens":170,"totalTokens":917,"cachedTokens":135552,"reasoningTokens":215,"cost":0.000749706}}
++{"type":"tool","timestamp":"2026-10-18T10:25:18.648Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:25:18.686Z","data":{"promptTokens":574,"candidateTokens":158,"totalTokens":732,"cachedTokens":136192,"reasoningTokens":202,"cost":0.000710676}}
++{"type":"tool","timestamp":"2026-10-18T10:25:40.981Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:25:41.019Z","data":{"promptTokens":455,"candidateTokens":105,"totalTokens":560,"cachedTokens":136704,"reasoningTokens":42,"cost":0.0005665620000000001}}
++{"type":"tool","timestamp":"2026-10-18T10:25:53.569Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:25:53.609Z","data":{"promptTokens":584,"candidateTokens":260,"totalTokens":844,"cachedTokens":137088,"reasoningTokens":1560,"cost":0.001590864}}
++{"type":"tool","timestamp":"2026-10-18T10:26:04.443Z","data":{"tool":"write","summary":"openspec/changes/211-rust-storage-event-tables/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-18T10:26:04.482Z","data":{"promptTokens":1947,"candidateTokens":1536,"totalTokens":3483,"cachedTokens":137600,"reasoningTokens":357,"cost":0.0018406499999999999}}
++{"type":"tool","timestamp":"2026-10-18T10:26:08.444Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/211-rust-sto"}}
++{"type":"tokens","timestamp":"2026-10-18T10:26:08.481Z","data":{"promptTokens":1956,"candidateTokens":121,"totalTokens":2077,"cachedTokens":139520,"reasoningTokens":307,"cost":0.00096876}}
++{"type":"text","timestamp":"2026-10-18T10:26:14.364Z","data":{"text":"Done. Summary of the work:\n\n**Fixtures** — copied `fixture/history/`, `fixture/bad-labels/` and `fixture-rows/` byte-for-byte (verified with `diff -r`) into `crates/kernel/storage/tests/fixtures/{history,bad-labels,history-rows}/`, hidden `.run/` dirs and the blank/malformed `plan.jsonl` lines included.\n\n**Reading code**\n- New `read/snapshot/table_events.rs`: `TableEvent` plus the stream/type selection leaf (task → paused/recertification/focused_ran/mutation_ran; change → validator_ran; validator → nothing).\n- `EventFacts` gained `table_events`; `Facts::observe` keeps them in fold order.\n- New `read/snapshot/records.rs`: `Notice`, `LinkEntry`, `PlanRecord`, `ManifestNotices`, and `serde_json` parsing for `.run/plan.jsonl` (all-or-nothing notice shape, lenient traceability) and the manifest's `notices` record.\n- `ChangeSnapshot` gained `plan_records` and `manifest_notices`; `read_change` reuses the manifest value it already reads.\n- Added `read_history` (archived in listing order, then rejected).\n- Re-exported all new items from `read/mod.rs` and `lib.rs`.\n\n**Tests** — `tests/reading_history.rs` proves the five scenarios; `tests/reading_history_edges.rs` proves the shapes the fixture lacks for the mutation check.\n\n**Verification**\n- `cargo test -p osq-kernel-storage --test reading_history` — 6 passed.\n- `sh scripts/verify-rust.sh` — fmt, clippy `-D warnings`, full workspace tests including corpus — exit 0.\n- `cargo mutants` over every changed Rust file — 101 mutants, 83 caught, 18 unviable, 0 missed.\n\nResult written to `openspec/changes/211-rust-storage-event-tables/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-18T10:26:14.829Z","data":{"promptTokens":543,"candidateTokens":496,"totalTokens":1039,"cachedTokens":163536,"reasoningTokens":208,"cost":0.00368621999999999}}
++{"type":"exited","timestamp":"2026-10-18T10:26:14.830Z","data":{"exitCode":0,"pid":3450542,"timedOut":false,"elapsedSeconds":436.6}}
++{"type":"scope_violation","timestamp":"2026-10-18T10:26:14.863Z","data":{"files":["crates/kernel/storage/tests/reading_history_edges.rs"]}}
++{"type":"measures","timestamp":"2026-10-18T10:26:14.879Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":8,"scopeLines":923,"repoFiles":3455,"repoLines":394279,"importFanIn":0,"proposalWords":790,"taskWords":540,"deltaRequirements":8,"deltaScenarios":14,"changedFiles":36,"changedLines":558,"scopeHashes":{"crates/kernel/storage/src/lib.rs":{"before":"sha256:ce303752a1d119ac6c8f9a7ab88fbf9fb2fabef8d86d7fd4bf6055003903b70d","after":"sha256:a0847fe5af0102f980a0052a181c1e5993eb068dcb58839ee1ad3d71f0417bbe"},"crates/kernel/storage/src/read/error.rs":{"before":"sha256:d1c1196280f6bd52f3a3ed53597a743258bad68b60b0645149b286e1f9eebb75","after":"sha256:d1c1196280f6bd52f3a3ed53597a743258bad68b60b0645149b286e1f9eebb75"},"crates/kernel/storage/src/read/listing.rs":{"before":"sha256:aaac8dc86f94f9b06b02811ef8fab20c343a2a1f0d64a6bf5ba6017c4bfdb367","after":"sha256:aaac8dc86f94f9b06b02811ef8fab20c343a2a1f0d64a6bf5ba6017c4bfdb367"},"crates/kernel/storage/src/read/mod.rs":{"before":"sha256:8aeace8c6c51e9987213054a34b1b4ee478638b7f91c66be8c5d30a8211145e5","after":"sha256:23ce1c16737a62d337eb49cbaf8dee58679d8e01c559e9179460b2ed9df8eff9"},"crates/kernel/storage/src/read/snapshot.rs":{"before":"sha256:f023e60aa4dbf06e11cf1e4b2f51aec4572007c9caee344f5b0c681e531a07a8","after":"sha256:f20f635038e815e580e51456bc305b822ae160939ba634add91e3d2be1ab08aa"},"crates/kernel/storage/src/read/snapshot/events.rs":{"before":"sha256:136040c19bfa0116d2709c5e4a419f9e527663caaa5873731def210661ee6eb2","after":"sha256:e847a520dc08da74da157735bd8829732362f49418697f3b94d5ca4fce840e1d"},"crates/kernel/storage/src/read/snapshot/folder.rs":{"before":"sha256:73fcd55b496381935ca2bdd051ce9503a58ac2037b9ac3558a400b1d396c5995","after":"sha256:73fcd55b496381935ca2bdd051ce9503a58ac2037b9ac3558a400b1d396c5995"},"crates/kernel/storage/src/read/text.rs":{"before":"sha256:167fe2ead2a4473809a6dac107268539ce73b981837c18ca5387ce34a6d8c927","after":"sha256:167fe2ead2a4473809a6dac107268539ce73b981837c18ca5387ce34a6d8c927"},"crates/kernel/storage/tests/reading_history.rs":{"before":null,"after":"sha256:d8e3f335190357c506ed99920a4ff49fc04e9e8509ebba2219172539314b61a1"},"crates/kernel/storage/src/read/snapshot/records.rs":{"before":null,"after":"sha256:e967ad8baf59a402f335cdc913aeeeef7149eccd5b6bf5806e2d0c27a83cbd16"},"crates/kernel/storage/src/read/snapshot/table_events.rs":{"before":null,"after":"sha256:9b07bba9531888a764d4e8305c1e28d3b209f8e411491878879915d5ff382701"},"crates/kernel/storage/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md":{"before":null,"after":"sha256:bac5f4708d24f722e2feef7dfe416610f8341a1108dbb3236cc808dd6d3222c9"},"crates/kernel/storage/tests/fixtures/bad-labels/openspec/trials/validator.json":{"before":null,"after":"sha256:5eca3939dcadefd117fb101b262df57b1c2238908c929e2778429bbe58cb308c"},"crates/kernel/storage/tests/fixtures/history-rows/focused_runs.json":{"before":null,"after":"sha256:65bd4d1b8642db109e9338daf46cae34f68e616e1f6c473bf17553d25d446f6c"},"crates/kernel/storage/tests/fixtures/history-rows/link_findings.json":{"before":null,"after":"sha256:5f76f6dae26eca2f553df0632a80088669053494101647b5d0308f36e3030a8c"},"crates/kernel/storage/tests/fixtures/history-rows/mutation_picks.json":{"before":null,"after":"sha256:414a635c8c3e63d8ab5d5ce12d93f69f504858fcae5a2f9db79e2da1e8d9db18"},"crates/kernel/storage/tests/fixtures/history-rows/mutation_survivors.json":{"before":null,"after":"sha256:44887fd897f4aa7d2e6b7bc457641df76e8c0965684b2a7a55a0d3269396b524"},"crates/kernel/storage/tests/fixtures/history-rows/notices.json":{"before":null,"after":"sha256:5429581aa02837d05a387fd35f4f0ddf2ace6ca87a689d893a42a71a90c06ac7"},"crates/kernel/storage/tests/fixtures/history-rows/pauses.json":{"before":null,"after":"sha256:272cc7625fe4937cc0db3f5d43a4d45f85c5e528edc86c96f17d8ebfa65e8685"},"crates/kernel/storage/tests/fixtures/history-rows/recertifications.json":{"before":null,"after":"sha256:e4847d1a018f8cbeb567638c75a9f8250176bb559289c18e3e9435d402fed691"},"crates/kernel/storage/tests/fixtures/history-rows/validator_findings.json":{"before":null,"after":"sha256:f61fdbae57e939d6e63bb4272136e6eb28dd498161d985d423b905414fc8a4ca"},"crates/kernel/storage/tests/fixtures/history-rows/validator_runs.json":{"before":null,"after":"sha256:e73f98d38ff5503f75d25ffcdcac295161b93b3aad33ae8db248b5faebd65234"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl":{"before":null,"after":"sha256:0136f52c2e8aa3476c52a6ba8c1ddeabb5c8956128a0f5298724f9a3e1a19bc6"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl":{"before":null,"after":"sha256:6a415d539dbde1d8a0617e467ebc11165afc1ea3d44de91917a19eaefe80324d"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl":{"before":null,"after":"sha256:170ba73e476c84f396aefa826d899a5ba451c7df892cd7c1bef2548e8d3475b0"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl":{"before":null,"after":"sha256:617478e30963683237b9a21f3a95aeeb956e3bb17b82116aeddbed94db9d3272"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json":{"before":null,"after":"sha256:47a28e529a4e822af39e75ae332aa447c44f25c656c38a9863238aff991f3701"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl":{"before":null,"after":"sha256:b329117fbead76b117963bb9b203d515fcc5cc7921ee10139b1561cb71191ff7"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md":{"before":null,"after":"sha256:43f2f2e215c9c8ec5fb94af5af8441b70a13a36e06ce68fa51e0b4977eb5a52d"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md":{"before":null,"after":"sha256:2be89ce279c0d7eb1d330492314851fc610afeeae7df3c88689ad89065d0a360"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md":{"before":null,"after":"sha256:1a9ac3f1a89add07ede495e755f48111e36a1a280588aaf7e544f3bb87ba7b90"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json":{"before":null,"after":"sha256:1539387a1a5bcfcacb175299c246c250cb561c932578fd34b02cb3b14e8c3334"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md":{"before":null,"after":"sha256:3111cda8cd54b8882d43ec9ef7addde3f4af3494ee6643498168dbaf0c7346ea"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl":{"before":null,"after":"sha256:239806b53a0b0f2092908e9dedc58f223ea835d15dbaff2f18fb0029399d03b1"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md":{"before":null,"after":"sha256:2d1b65bc6c00c8e80482cc4a4dafa05b10c7335aca05988ab3093d4e155768f6"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json":{"before":null,"after":"sha256:23448122b9c6702a7da9c154ac227912f08763f09a2123fcf312cbf8f58e7642"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl":{"before":null,"after":"sha256:c99f8472d5639a618c9198a4b19b1134f5c1135ae009ea8473ccd0307145de3d"},"crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md":{"before":null,"after":"sha256:000ffcf89c4306fa8e5492275ee19762012fb8ad5a65a91ca74e941655587799"},"crates/kernel/storage/tests/fixtures/history/openspec/trials/traceability.json":{"before":null,"after":"sha256:2408bb2049e29aae768e0111ab8fcad7b21854728baec13d9e5afedd3e0e8313"},"crates/kernel/storage/tests/fixtures/history/openspec/trials/validator.json":{"before":null,"after":"sha256:69ea4ab30355642e63fe49c56adc2f4027d51d70ab06187a421eab91e15b35b5"}}}}
++{"type":"dead","timestamp":"2026-10-18T10:26:14.880Z","data":{"task":"1","reason":"scope_violation"}}
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl b/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl
+new file mode 100644
+index 00000000..10c1c345
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-18T10:18:56.704Z","data":{"outcome":"passed","command":"pnpm verify","commit":"90855efd65e88978c060d05f691c90793b3211c5","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":151.62}}
+diff --git a/openspec/changes/211-rust-storage-event-tables/.run/results/1.md b/openspec/changes/211-rust-storage-event-tables/.run/results/1.md
+new file mode 100644
+index 00000000..6863a7a1
+--- /dev/null
++++ b/openspec/changes/211-rust-storage-event-tables/.run/results/1.md
+@@ -0,0 +1,25 @@
++## Changed
++
++- Copied `fixture/history/`, `fixture/bad-labels/` and `fixture-rows/` byte-for-byte into `crates/kernel/storage/tests/fixtures/{history,bad-labels,history-rows}/`, hidden `.run/` folders and the blank and malformed `plan.jsonl` lines included.
++- Added `crates/kernel/storage/src/read/snapshot/table_events.rs`: `TableEvent` and the stream/type selection leaf.
++- `EventFacts` now holds `table_events: Vec<TableEvent>`; `Facts::observe` in `read/snapshot/events.rs` keeps each event the tables are built from, in fold order, and nothing else.
++- Added `crates/kernel/storage/src/read/snapshot/records.rs`: `Notice`, `LinkEntry`, `PlanRecord`, `ManifestNotices` and the `serde_json` parsing for `.run/plan.jsonl` and the manifest's `notices` record.
++- `ChangeSnapshot` now holds `plan_records` and `manifest_notices`; `read_change` reuses the manifest value it already reads.
++- Added `read_history`, which reads every archived change then every rejected change in listing order.
++- Re-exported `TableEvent`, `PlanRecord`, `Notice`, `LinkEntry`, `ManifestNotices` and `read_history` from `read/mod.rs` and `lib.rs`.
++- Added `crates/kernel/storage/tests/reading_history.rs` for the five scenarios and `crates/kernel/storage/tests/reading_history_edges.rs` for the stream/type, plan-line and manifest-entry shapes the fixture does not hold.
++
++## Deviated
++
++- The task's Details place the mutation-check cases in `tests/reading_history.rs` but also require every `.rs` file under 250 lines. With the extra cases the file came to 374 lines, so I split them into the new `tests/reading_history_edges.rs` (allowed as a new test file). `reading_history.rs` keeps the five scenarios and is 206 lines; both files are under 250 lines and both test targets run under `sh scripts/verify-rust.sh`.
++- Added a dedicated `parse_manifest_item` in `records.rs`: manifest notice items carry no `folded` field, so they cannot share the plan-notice shape.
++
++## Missing context
++
++- The Details do not say whether the 250-line budget applies to Rust test files; I assumed it does and split accordingly.
++
++## Next
++
++None.
++
++Touched: crates/kernel/storage/src/lib.rs, crates/kernel/storage/src/read/mod.rs, crates/kernel/storage/src/read/snapshot.rs, crates/kernel/storage/src/read/snapshot/events.rs, crates/kernel/storage/src/read/snapshot/records.rs, crates/kernel/storage/src/read/snapshot/table_events.rs, crates/kernel/storage/tests/reading_history.rs, crates/kernel/storage/tests/reading_history_edges.rs, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json, crates/kernel/storage/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md, crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md, crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json, crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl, crates/kernel/storage/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md, crates/kernel/storage/tests/fixtures/history/openspec/trials/traceability.json, crates/kernel/storage/tests/fixtures/history/openspec/trials/validator.json, crates/kernel/storage/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md, crates/kernel/storage/tests/fixtures/bad-labels/openspec/trials/validator.json, crates/kernel/storage/tests/fixtures/history-rows/focused_runs.json, crates/kernel/storage/tests/fixtures/history-rows/link_findings.json, crates/kernel/storage/tests/fixtures/history-rows/mutation_picks.json, crates/kernel/storage/tests/fixtures/history-rows/mutation_survivors.json, crates/kernel/storage/tests/fixtures/history-rows/notices.json, crates/kernel/storage/tests/fixtures/history-rows/pauses.json, crates/kernel/storage/tests/fixtures/history-rows/recertifications.json, crates/kernel/storage/tests/fixtures/history-rows/validator_findings.json, crates/kernel/storage/tests/fixtures/history-rows/validator_runs.json

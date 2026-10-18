@@ -13,6 +13,8 @@ pub enum ReadModelError {
     Sqlite(rusqlite::Error),
     /// Removing a stale database file failed.
     Io(std::io::Error),
+    /// A trial labels file is not a JSON object of true or false labels.
+    Labels(String),
 }
 
 impl fmt::Display for ReadModelError {
@@ -22,6 +24,7 @@ impl fmt::Display for ReadModelError {
             Self::Storage(source) => write!(formatter, "{source}"),
             Self::Sqlite(source) => write!(formatter, "sqlite: {source}"),
             Self::Io(source) => write!(formatter, "io: {source}"),
+            Self::Labels(message) => write!(formatter, "{message}"),
         }
     }
 }
@@ -33,6 +36,7 @@ impl std::error::Error for ReadModelError {
             Self::Storage(source) => Some(source),
             Self::Sqlite(source) => Some(source),
             Self::Io(source) => Some(source),
+            Self::Labels(_) => None,
         }
     }
 }

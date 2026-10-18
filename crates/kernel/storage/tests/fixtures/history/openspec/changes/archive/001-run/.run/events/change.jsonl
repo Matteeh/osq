@@ -1,0 +1,4 @@
+{"type":"retry","timestamp":"2026-10-01T10:13:00.000Z","data":{"target":"change","reason":"human","attempt":1}}
+{"type":"validator_ran","timestamp":"2026-10-01T10:14:00.000Z","data":{"outcome":"failed","harness":"claude","model":"opus","duration":2.5,"exitCode":1,"scenarios":3,"findings":[{"capability":"rust-storage","requirement":"Pauses","scenario":"One pause","problem":"no test","detail":"the test is missing"},{"capability":"rust-storage"}],"restored":[],"reason":"one problem","output":"out"}}
+{"type":"validator_ran","timestamp":"2026-10-01T10:15:00.000Z","data":{"outcome":"passed","harness":"codex","model":"gpt","duration":4,"exitCode":null,"scenarios":0,"findings":[],"restored":["a.md"]}}
+{"type":"archived","timestamp":"2026-10-01T10:30:00.000Z","data":{"archivePath":"openspec/changes/archive/001-run"}}

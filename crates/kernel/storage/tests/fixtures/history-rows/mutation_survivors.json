@@ -1,0 +1,28 @@
+[
+  {
+    "id": "001.1.m1.1",
+    "change": "001-run",
+    "task": "1",
+    "pick": 1,
+    "file": "src/a.rs",
+    "function": "f",
+    "line": 4,
+    "column": 7,
+    "mutator": "replace",
+    "replacement": "true",
+    "label": 0
+  },
+  {
+    "id": "001.1.m1.2",
+    "change": "001-run",
+    "task": "1",
+    "pick": 1,
+    "file": null,
+    "function": "f",
+    "line": null,
+    "column": null,
+    "mutator": null,
+    "replacement": null,
+    "label": null
+  }
+]

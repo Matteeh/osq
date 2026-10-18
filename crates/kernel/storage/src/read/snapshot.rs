@@ -2,8 +2,11 @@
 
 mod events;
 mod folder;
+mod records;
+mod table_events;
 
 use std::collections::BTreeMap;
+use std::fs;
 use std::path::Path;
 
 use osq_core::{ChangeState, ChangeStatus, TaskId, change_status};
@@ -11,6 +14,9 @@ use osq_core::{ChangeState, ChangeStatus, TaskId, change_status};
 use super::{ChangeEntry, Location, StorageError};
 use events::read_events;
 use folder::{approved_at, read_manifest, read_planner, read_proposal, read_task_files};
+pub use records::{LinkEntry, ManifestNotices, Notice, PlanRecord};
+use records::{manifest_notices, plan_records};
+pub use table_events::TableEvent;
 
 /// One `tasks/<n>.md` file with what its markers and stream say.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -47,6 +53,8 @@ pub struct EventFacts {
     pub dead_attempts: Vec<DeadAttempt>,
     /// The last readable `archived` event's timestamp in `change.jsonl`.
     pub archived_at: Option<String>,
+    /// The events the nine event tables are built from, in fold order.
+    pub table_events: Vec<TableEvent>,
 }
 
 /// One change folder read into its typed fields and folded event state.
@@ -78,6 +86,10 @@ pub struct ChangeSnapshot {
     pub status: ChangeStatus,
     /// The event-derived facts, or `None` without `.run/events/`.
     pub facts: Option<EventFacts>,
+    /// The `.run/plan.jsonl` records, in file order.
+    pub plan_records: Vec<PlanRecord>,
+    /// The manifest's notices record, or `None` when it holds none.
+    pub manifest_notices: Option<ManifestNotices>,
 }
 
 /// Reads one change folder into its snapshot.
@@ -109,7 +121,15 @@ pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> 
         status: status_of(entry.location, approved, &state),
         state,
         facts,
+        plan_records: read_plan_records(&entry.path),
+        manifest_notices: manifest_notices(manifest.as_ref()),
     })
+}
+
+/// Reads `.run/plan.jsonl`, treating a missing or unreadable file as no records.
+fn read_plan_records(folder: &Path) -> Vec<PlanRecord> {
+    fs::read_to_string(folder.join(".run").join("plan.jsonl"))
+        .map_or_else(|_| Vec::new(), |text| plan_records(&text))
 }
 
 /// Reads every archived change of a project, in listing order.
@@ -123,6 +143,23 @@ pub fn read_archive(project_root: &Path) -> Result<Vec<ChangeSnapshot>, StorageE
     let mut snapshots = Vec::new();
     for entry in super::list_changes(project_root) {
         if entry.location == Location::Archived {
+            snapshots.push(read_change(&entry)?);
+        }
+    }
+    Ok(snapshots)
+}
+
+/// Reads every archived change, then every rejected change, in listing order.
+///
+/// Implements: rust-storage/history-reading
+///
+/// # Errors
+///
+/// Returns the first [`StorageError`] a change raises.
+pub fn read_history(project_root: &Path) -> Result<Vec<ChangeSnapshot>, StorageError> {
+    let mut snapshots = Vec::new();
+    for entry in super::list_changes(project_root) {
+        if matches!(entry.location, Location::Archived | Location::Rejected) {
             snapshots.push(read_change(&entry)?);
         }
     }

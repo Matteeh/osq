@@ -1,0 +1,24 @@
+[
+  {
+    "change": "001-run",
+    "task": "1",
+    "run": 1,
+    "outcome": "passed",
+    "exit_code": 0,
+    "duration": 1.5,
+    "timed_out": 0,
+    "scenarios": "rust-storage: One\nrust-storage: Two",
+    "files": "src/a.rs\nsrc/b.rs"
+  },
+  {
+    "change": "001-run",
+    "task": "2",
+    "run": 1,
+    "outcome": "failed",
+    "exit_code": 1,
+    "duration": 2,
+    "timed_out": 1,
+    "scenarios": "",
+    "files": ""
+  }
+]

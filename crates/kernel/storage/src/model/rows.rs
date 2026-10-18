@@ -1,6 +1,7 @@
 //! Mapping one change snapshot to the read model's rows, without touching disk.
 
 use crate::read::ChangeSnapshot;
+use crate::read::TableEvent;
 use crate::read::timestamp_ms;
 
 /// One row of the `changes` table.
@@ -122,11 +123,39 @@ fn elapsed_seconds(snapshot: &ChangeSnapshot) -> Option<i64> {
 }
 
 /// Converts an unsigned count to the column's integer, saturating.
-fn count_i64(value: u64) -> i64 {
+pub(super) fn count_i64(value: u64) -> i64 {
     i64::try_from(value).unwrap_or(i64::MAX)
 }
 
 /// Converts a slice length to the column's integer, saturating.
-fn len_i64(value: usize) -> i64 {
+pub(super) fn len_i64(value: usize) -> i64 {
     count_i64(u64::try_from(value).unwrap_or(u64::MAX))
+}
+
+/// The kept table events of a snapshot, or an empty slice without events.
+pub(super) fn table_events(snapshot: &ChangeSnapshot) -> &[TableEvent] {
+    snapshot
+        .facts
+        .as_ref()
+        .map_or(&[], |facts| facts.table_events.as_slice())
+}
+
+/// A JSON value as a string, or `None` when it is of another kind.
+pub(super) fn string_of(value: Option<&serde_json::Value>) -> Option<String> {
+    value.and_then(serde_json::Value::as_str).map(str::to_owned)
+}
+
+/// Whether a text is a task number: one or more ASCII digits.
+pub(super) fn is_task_number(value: &str) -> bool {
+    !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// A JSON number as `f64`, or `0.0` when it is out of range.
+pub(super) fn number_f64(number: &serde_json::Number) -> f64 {
+    number.as_f64().unwrap_or_default()
+}
+
+/// The integer a boolean column holds: 1 when true, else 0.
+pub(super) fn flag(value: bool) -> i64 {
+    i64::from(value)
 }

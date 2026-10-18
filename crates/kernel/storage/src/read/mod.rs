@@ -9,6 +9,10 @@
 //! Implements: rust-storage/event-file-errors
 //! Implements: rust-storage/archived-location-wins
 //! Implements: rust-storage/archive-replay
+//! Implements: rust-storage/table-events
+//! Implements: rust-storage/plan-records
+//! Implements: rust-storage/manifest-notices
+//! Implements: rust-storage/history-reading
 
 mod error;
 mod listing;
@@ -17,5 +21,8 @@ mod text;
 
 pub use error::StorageError;
 pub use listing::{ChangeEntry, Location, list_changes};
-pub use snapshot::{ChangeSnapshot, DeadAttempt, EventFacts, TaskFile, read_archive, read_change};
+pub use snapshot::{
+    ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice, PlanRecord,
+    TableEvent, TaskFile, read_archive, read_change, read_history,
+};
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
