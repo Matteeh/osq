@@ -67,7 +67,7 @@ fn living_for(specs_dir: &Path, folder: &Path) -> Result<Option<LivingSpec>, Spe
 }
 
 /// The folders directly under `specs_dir`, in byte order of their names.
-fn folders(specs_dir: &Path) -> Vec<PathBuf> {
+pub(crate) fn folders(specs_dir: &Path) -> Vec<PathBuf> {
     let Ok(entries) = std::fs::read_dir(specs_dir) else {
         return Vec::new();
     };
@@ -81,7 +81,7 @@ fn folders(specs_dir: &Path) -> Vec<PathBuf> {
 }
 
 /// Reads one file as UTF-8 text, naming its path when it cannot.
-fn read_text(path: &Path) -> Result<String, SpecsError> {
+pub(crate) fn read_text(path: &Path) -> Result<String, SpecsError> {
     std::fs::read_to_string(path).map_err(|error| SpecsError::Read {
         path: path.to_path_buf(),
         message: error.to_string(),

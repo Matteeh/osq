@@ -7,6 +7,7 @@ pub(crate) mod delta_scan;
 pub mod delta_targets;
 pub mod finding;
 pub mod living;
+pub mod merged;
 pub(crate) mod outline;
 pub(crate) mod requirement;
 
@@ -15,6 +16,7 @@ pub use delta::validate_delta;
 pub use delta_targets::check_delta_targets;
 pub use finding::{FindingCode, SpecFinding};
 pub use living::{validate_living_spec, validate_living_specs};
+pub use merged::validate_merged_change;
 
 /// Sorts findings by line, keeping the table's order for findings on one line.
 ///

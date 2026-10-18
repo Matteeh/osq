@@ -1,0 +1,1 @@
+cap MODIFIED failed for header "### Requirement: Two words" - current spec contains scenario(s) not present in the modified block: "S1", "S2". Refresh the change spec before archiving to avoid dropping scenarios.
