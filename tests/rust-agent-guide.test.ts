@@ -42,6 +42,8 @@ const TERMS: readonly string[] = [
   'OSQ_DIFF',
   'missed mutant',
   'cargo mutants -p <package> -f <file>',
+  'tests/<name>_corpus.rs',
+  '#[ignore = "corpus test: <reason>"]',
 ];
 
 describe('cli-foundation: Rust guide names how to work in crates', () => {

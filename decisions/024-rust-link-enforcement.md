@@ -107,7 +107,10 @@ ADR page in the UI can list them.
   each push and pull request and the whole workspace weekly. rust-core has
   zero missed mutants, so the CI check blocks. Next it becomes part of osq's
   verify for Rust changes, so agents fix misses inside the task. Each crate
-  follows the same path as it is built.
+  follows the same path as it is built. Corpus tests in `tests/*_corpus.rs`
+  are ignored under cargo-mutants and run by `scripts/verify-rust.sh`, so the
+  mutation check reruns only fast tests and every requirement keeps a fast
+  test to kill mutants with.
 - **ADR checks before land.** The land feature refuses unless every accepted
   ADR's `checks` ran and passed on the land tree.
 - **Departure gate.** Approve refuses a `Departs from ADR <n>` line unless the

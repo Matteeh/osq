@@ -4504,11 +4504,11 @@ every mode.
 
 ### Requirement: Rust guide for agents
 AGENTS.md SHALL hold a hand-written `## Rust crates` section, outside every
-managed block and before the project rules block, that tells an executor how
-to work in `crates/`, and its Layout block SHALL list `crates/`. The section
-SHALL name the governing ADRs, the layer order, the doc and tag rules, where
-tests go, the verify script to run, and that verify fails on a missed mutant
-in the lines the change touched, with the command to check a file by hand.
+managed block and before the project rules block, and its Layout block SHALL
+list `crates/`. The section SHALL name the governing ADRs, the layer order,
+the doc and tag rules, where tests go, the verify script, that verify fails
+on a missed mutant in the changed lines and how to check a file by hand, and
+how to write a corpus test.
 
 #### Scenario: Rust guide names how to work in crates
 - **WHEN** AGENTS.md's `## Rust crates` section is read
@@ -4528,6 +4528,8 @@ in the lines the change touched, with the command to check a file by hand.
 | `OSQ_DIFF` |
 | `missed mutant` |
 | `cargo mutants -p <package> -f <file>` |
+| `tests/<name>_corpus.rs` |
+| `#[ignore = "corpus test: <reason>"]` |
 
 #### Scenario: Rust guide sits outside the managed blocks
 - **WHEN** AGENTS.md is read

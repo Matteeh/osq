@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2c1b380674d4425e48dcfe33d989640e1ccde2969bad24fca4017cf91a2369f0"
+build_stamp: "6009aab9"
+project_commit: "ce60f5db"
+exit_code: 0
+scope_files: {"AGENTS.md":"sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4","crates/core/tests/corpus_marking.rs":"sha256:ce8233dcb55d7c266b4acfda6f37d2789f5ef5baed928772f15a3d84e504faa3","crates/core/tests/event_corpus.rs":"sha256:04af4620414cde8019c4fb871bff216b970c294231c1d89920d497fef2831ad9","decisions/024-rust-link-enforcement.md":"sha256:c8db858c4f8a3461d44677c310a130608b4f84564cf1b3d5078d745b14c944a2","scripts/verify-rust.sh":"sha256:9c74f238be67c1b79870d79568d6898d7db983980474d65d944c088698df4e7a","tests/rust-agent-guide.test.ts":"sha256:406ab4f6c42ee5d26e58c94ea255de6adfa065fd02a6e300b38e006a9bd1bf56","tests/rust-verify-script.test.ts":"sha256:9b4b3ab79abb8b20bd11c65608e638178c7c947a06c2011b7da059e7721d27d2"}
+---
+2026-10-18T09:41:41.303Z

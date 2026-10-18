@@ -82,6 +82,7 @@ govern the crate's capability; ADRs 022 to 026 apply to its group, `rust`.
 - Never loosen `[workspace.lints]` or add `#[allow(...)]` for a workspace lint.
 - Before exiting, run `cargo fmt --all`, then `sh scripts/verify-rust.sh`: the format check, `cargo clippy` with `-D warnings` and pedantic lints, and every test.
 - The watcher's verify also runs cargo-mutants on every Rust line your change touched since its base, from the diff osq passes in `OSQ_DIFF`, and fails on a missed mutant. A miss means no test checks that line: add one that does. To check a file by hand, run `cargo mutants -p <package> -f <file> -o "$(mktemp -d)"`.
+- A test that reads data outside its crate, such as the archive, is a corpus test: put it in `tests/<name>_corpus.rs` with `#[ignore = "corpus test: <reason>"]` on each test, and give each requirement it proves a fast test on the crate's own fixtures too. `sh scripts/verify-rust.sh` runs corpus tests; cargo-mutants does not.
 
 <!-- OSQ:RULES:START -->
 ## Project rules

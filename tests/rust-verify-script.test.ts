@@ -19,7 +19,7 @@ exit 0
 
 const FORMAT_COMMAND = 'fmt --all --check';
 const CLIPPY_COMMAND = 'clippy --workspace --all-targets -- -D warnings';
-const TEST_COMMAND = 'test --workspace';
+const TEST_COMMAND = 'test --workspace -- --include-ignored';
 const SKIP_LINE = 'mutation check not run: OSQ_DIFF is not set';
 
 interface RunResult {

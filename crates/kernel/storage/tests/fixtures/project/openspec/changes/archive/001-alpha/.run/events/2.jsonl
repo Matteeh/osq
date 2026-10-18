@@ -1,0 +1,7 @@
+{"type":"started","timestamp":"2026-10-01T10:00:01.000Z","data":{"attempt":1}}
+{"type":"dead","timestamp":"2026-10-01T10:00:02.000Z","data":{"task":"2","reason":" verify_failed "}}
+
+{"type":"retry","timestamp":"2026-10-01T10:00:03.000Z","data":{"target":"2","reason":"verify_failed","attempt":2,"automatic":true}}
+{"type":"started","timestamp":"2026-10-01T10:00:04.000Z","data":{"attempt":2}}
+{"type":"tokens","timestamp":"2026-10-01T10:00:05.000Z","data":{"promptTokens":10,"candidateTokens":5,"cost":0.25}}
+{"type":"done","timestamp":"2026-10-01T10:00:06.000Z","data":{"task":"2"}}
