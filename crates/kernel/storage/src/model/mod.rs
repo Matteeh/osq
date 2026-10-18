@@ -10,6 +10,7 @@
 //! Implements: rust-storage/read-model-rebuild
 //! Implements: rust-storage/event-table-columns
 //! Implements: rust-storage/file-table-columns
+//! Implements: rust-storage/spec-table-columns
 //! Implements: rust-storage/trial-labels
 
 mod error;
@@ -17,10 +18,13 @@ mod event_rows;
 mod file_rows;
 mod insert_events;
 mod insert_files;
+mod insert_specs;
 mod labels;
 mod notice_rows;
+mod requirement_rows;
 mod rows;
 mod stream_rows;
+mod task_outcome_rows;
 mod validator_rows;
 
 use std::fs;
@@ -33,10 +37,13 @@ use crate::read::{ChangeSnapshot, Location, read_history, read_manual_edits};
 use file_rows::disclosure_rows;
 use insert_events::{insert_events, insert_notices};
 use insert_files::{insert_disclosures, insert_manual_edits};
+use insert_specs::insert_requirements;
 use labels::apply_labels;
+use requirement_rows::requirement_rows;
 use rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
 
 pub use error::ReadModelError;
+pub use insert_specs::write_task_outcomes;
 pub use labels::{TrialLabels, read_trial_labels};
 
 /// Every table's untyped columns, exactly as TypeScript's `osq query` names them.
@@ -44,6 +51,7 @@ const CREATE_TABLES: &str = "\
 CREATE TABLE changes (id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner);\
 CREATE TABLE tasks (change, task, title, attempts, done);\
 CREATE TABLE dead_attempts (change, task, reason);\
+CREATE TABLE requirements (change, capability, kind, requirement, renamed_from);\
 CREATE TABLE pauses (change, task, paused_at, until, source);\
 CREATE TABLE recertifications (change, task, recertified_at, outcome, automatic, path, credited_to, source);\
 CREATE TABLE notices (change, notice, severity, opened, outcome);\
@@ -54,7 +62,8 @@ CREATE TABLE validator_runs (change, run, outcome, harness, model, duration, exi
 CREATE TABLE validator_findings (id, change, run, finding, capability, requirement, scenario, problem, detail, label);\
 CREATE TABLE link_findings (id, change, severity, file, message, label);\
 CREATE TABLE disclosures (change, task, section, text);\
-CREATE TABLE manual_edits (kept_at, record, comment, paths, capabilities);";
+CREATE TABLE manual_edits (kept_at, record, comment, paths, capabilities);\
+CREATE TABLE task_outcomes (change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched);";
 
 /// Writes the read model database for the given snapshots.
 ///
@@ -70,6 +79,7 @@ CREATE TABLE manual_edits (kept_at, record, comment, paths, capabilities);";
 /// Implements: rust-storage/read-model-tables
 /// Implements: rust-storage/read-model-rebuild
 /// Implements: rust-storage/file-table-columns
+/// Implements: rust-storage/spec-table-columns
 pub fn write_read_model(
     db_path: &Path,
     snapshots: &[ChangeSnapshot],
@@ -102,12 +112,16 @@ pub fn write_read_model(
 /// Implements: rust-storage/read-model-tables
 /// Implements: rust-storage/file-table-columns
 /// Implements: rust-storage/trial-labels
+/// Implements: rust-storage/spec-table-columns
 pub fn build_read_model(project_root: &Path, db_path: &Path) -> Result<(), ReadModelError> {
     let labels = read_trial_labels(project_root)?;
     let snapshots = read_history(project_root)?;
     write_read_model(db_path, &snapshots)?;
     apply_labels(db_path, &labels)?;
-    insert_manual_edits(db_path, &read_manual_edits(project_root))
+    insert_manual_edits(db_path, &read_manual_edits(project_root))?;
+    let ownerships =
+        osq_kernel_specs::read_capability_ownership(&project_root.join("openspec").join("specs"));
+    write_task_outcomes(db_path, &snapshots, &ownerships)
 }
 
 /// Inserts one archived snapshot's rows into every table.
@@ -122,6 +136,7 @@ fn insert_snapshot(
     for row in dead_rows(snapshot) {
         insert_dead(transaction, &row)?;
     }
+    insert_requirements(transaction, &requirement_rows(snapshot))?;
     insert_events(transaction, snapshot)?;
     insert_disclosures(transaction, &disclosure_rows(snapshot))
 }

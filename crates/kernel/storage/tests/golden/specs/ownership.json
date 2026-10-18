@@ -1,0 +1,94 @@
+[
+  {
+    "capability": "cli-foundation",
+    "globs": [
+      "src/core/foundation/**",
+      "src/cli/**",
+      "src/index.ts",
+      "osq.config.ts",
+      "templates/**",
+      "AGENTS.md",
+      "PLANNER.md"
+    ]
+  },
+  {
+    "capability": "docs",
+    "globs": ["src/docs/**", "tests/docs-*.test.ts", "tests/docs-support.ts"]
+  },
+  {
+    "capability": "languages",
+    "globs": ["src/kernel/languages/**", "tests/languages-*.test.ts"]
+  },
+  {
+    "capability": "metrics-and-reporting",
+    "globs": [
+      "src/core/report/**",
+      "src/cli/report.ts",
+      "src/cli/digest.ts",
+      "src/cli/query.ts",
+      "tests/report*.test.ts",
+      "tests/change-digest*.test.ts",
+      "tests/query*.test.ts",
+      "fixture/report/**"
+    ]
+  },
+  {
+    "capability": "rust-core",
+    "globs": [
+      "crates/core/**",
+      "tests/rust-adrs.test.ts",
+      "tests/rust-ci.test.ts",
+      "tests/rust-verify-script.test.ts",
+      "scripts/verify-rust.sh",
+      "scripts/mutants-rust.sh",
+      ".cargo/mutants.toml",
+      ".github/workflows/rust.yml"
+    ]
+  },
+  {
+    "capability": "rust-specs",
+    "globs": ["crates/kernel/specs/**"]
+  },
+  {
+    "capability": "rust-storage",
+    "globs": ["crates/kernel/storage/**"]
+  },
+  {
+    "capability": "spec-lint-and-approve",
+    "globs": ["src/core/spec/**", "src/cli/lint.ts", "src/cli/migrate.ts"]
+  },
+  {
+    "capability": "status-inspection",
+    "globs": ["src/core/status/**", "tests/queue*.test.ts"]
+  },
+  {
+    "capability": "traceability",
+    "globs": ["src/testing/**", "src/core/trace/**", "tests/trace*.test.ts", "fixture/trace/**"]
+  },
+  {
+    "capability": "version-control",
+    "globs": ["src/core/vcs/**", "tests/vcs*.test.ts"]
+  },
+  {
+    "capability": "watcher-and-harness",
+    "globs": [
+      "src/watcher/**",
+      "src/harness/**",
+      "src/core/run/**",
+      "src/core/lifecycle/**",
+      "tests/retry*.test.ts",
+      "tests/reject.test.ts"
+    ]
+  },
+  {
+    "capability": "web-inspection",
+    "globs": [
+      "src/core/web/**",
+      "packages/ui/**",
+      "tests/serve*.test.ts",
+      "tests/web*.test.ts",
+      "tests/ui*.test.ts",
+      "tests/fixtures/web/**"
+    ]
+  }
+]

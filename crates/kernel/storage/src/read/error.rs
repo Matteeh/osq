@@ -6,6 +6,7 @@ use std::fmt;
 use std::path::PathBuf;
 
 use osq_core::EventError;
+use osq_kernel_specs::SpecsError;
 
 /// Why storage could not read a file it needed.
 #[derive(Debug)]
@@ -26,6 +27,8 @@ pub enum StorageError {
         /// Why rust-core refused the line.
         source: EventError,
     },
+    /// The specs kernel refused a delta spec, a task file or the proposal.
+    Specs(SpecsError),
 }
 
 impl fmt::Display for StorageError {
@@ -38,6 +41,7 @@ impl fmt::Display for StorageError {
             Self::EventLine { path, line, source } => {
                 write!(formatter, "{}:{line}: {source}", path.display())
             }
+            Self::Specs(source) => write!(formatter, "{source}"),
         }
     }
 }
@@ -48,6 +52,7 @@ impl std::error::Error for StorageError {
         match self {
             Self::Read { source, .. } => Some(source),
             Self::EventLine { source, .. } => Some(source),
+            Self::Specs(source) => Some(source),
         }
     }
 }

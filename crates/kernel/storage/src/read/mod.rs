@@ -16,6 +16,9 @@
 //! Implements: rust-storage/result-sections
 //! Implements: rust-storage/result-disclosures
 //! Implements: rust-storage/manual-edit-records
+//! Implements: rust-storage/delta-capabilities
+//! Implements: rust-storage/task-plans
+//! Implements: rust-storage/task-stream-outcomes
 
 mod error;
 mod listing;
@@ -31,7 +34,7 @@ pub use manual::{ManualEdit, read_manual_edits};
 pub use results::TaskDisclosure;
 pub use sections::{ResultSections, parse_result_sections};
 pub use snapshot::{
-    ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice, PlanRecord,
-    TableEvent, TaskFile, read_archive, read_change, read_history,
+    CapabilityDelta, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice,
+    PlanRecord, TableEvent, TaskFile, TaskOutcomeFacts, read_archive, read_change, read_history,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};

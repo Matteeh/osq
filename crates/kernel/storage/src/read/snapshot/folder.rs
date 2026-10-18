@@ -10,6 +10,7 @@ use crate::read::StorageError;
 use crate::read::text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 
 use super::TaskFile;
+use super::outcomes::TaskOutcomeFacts;
 
 /// The parts of a proposal storage reads: its title and its Goal.
 pub(super) struct Proposal {
@@ -68,29 +69,42 @@ pub(super) fn read_planner(folder: &Path, manifest: Option<&Value>) -> Option<St
         .and_then(trimmed)
 }
 
-/// Reads every `tasks/<n>.md` file, in task id order, without started counts.
-pub(super) fn read_task_files(folder: &Path) -> Vec<TaskFile> {
+/// Reads every `tasks/<n>.md` file, in task id order, with its specs kernel plan.
+///
+/// # Errors
+///
+/// Returns [`StorageError::Specs`] when the specs kernel refuses a task file.
+pub(super) fn read_task_files(folder: &Path) -> Result<Vec<TaskFile>, StorageError> {
     let Ok(entries) = fs::read_dir(folder.join("tasks")) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    let mut tasks: Vec<TaskFile> = entries
-        .flatten()
-        .filter_map(|entry| task_file(folder, &entry.path()))
-        .collect();
+    let mut tasks: Vec<TaskFile> = Vec::new();
+    for entry in entries.flatten() {
+        if let Some(task) = task_file(folder, &entry.path())? {
+            tasks.push(task);
+        }
+    }
     tasks.sort_by(|left, right| left.id.cmp(&right.id));
-    tasks
+    Ok(tasks)
 }
 
 /// Builds one task file from its path, or `None` for a name that is not `<n>.md`.
-fn task_file(folder: &Path, path: &Path) -> Option<TaskFile> {
-    let name = path.file_name()?.to_str()?;
-    let id = name.strip_suffix(".md")?;
-    Some(TaskFile {
+fn task_file(folder: &Path, path: &Path) -> Result<Option<TaskFile>, StorageError> {
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return Ok(None);
+    };
+    let Some(id) = name.strip_suffix(".md") else {
+        return Ok(None);
+    };
+    let plan = osq_kernel_specs::read_task_file(path).map_err(StorageError::Specs)?;
+    Ok(Some(TaskFile {
         title: task_title(path),
         done: is_done(folder, id),
         id: TaskId::new(id),
         started: 0,
-    })
+        plan,
+        outcome: TaskOutcomeFacts::default(),
+    }))
 }
 
 /// A task file's frontmatter title, trimmed, or empty text.

@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-10-01T08:00:00.000Z","data":{"phase":"start","scopeResolver":1,"scopeFiles":2,"scopeLines":1,"repoFiles":1,"repoLines":1,"importFanIn":0,"proposalWords":1,"taskWords":1,"deltaRequirements":0,"deltaScenarios":0}}
+{"type":"started","timestamp":"2026-10-01T08:00:01.000Z","data":{"attempt":1}}
+{"type":"measures","timestamp":"2026-10-01T08:01:00.000Z","data":{"phase":"end","scopeResolver":1,"scopeFiles":2,"scopeLines":1,"repoFiles":1,"repoLines":1,"importFanIn":0,"proposalWords":1,"taskWords":1,"deltaRequirements":0,"deltaScenarios":0,"changedFiles":2,"scopeHashes":{"notes/z.md":{"before":"sha256:00","after":"sha256:00"},"notes/y.md":{"before":"sha256:00","after":"sha256:00"}}}}
+{"type":"done","timestamp":"2026-10-01T08:01:01.000Z","data":{"task":"4"}}

@@ -2,7 +2,9 @@
 
 mod events;
 mod folder;
+mod outcomes;
 mod records;
+mod specs;
 mod table_events;
 
 use std::collections::BTreeMap;
@@ -15,11 +17,14 @@ use super::results::read_disclosures;
 use super::{ChangeEntry, Location, StorageError, TaskDisclosure};
 use events::read_events;
 use folder::{approved_at, read_manifest, read_planner, read_proposal, read_task_files};
+pub use outcomes::TaskOutcomeFacts;
 pub use records::{LinkEntry, ManifestNotices, Notice, PlanRecord};
 use records::{manifest_notices, plan_records};
+pub use specs::CapabilityDelta;
+use specs::{read_deltas, read_verify};
 pub use table_events::TableEvent;
 
-/// One `tasks/<n>.md` file with what its markers and stream say.
+/// One `tasks/<n>.md` file with what its plan, markers and stream say.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TaskFile {
     /// The task id, from the file's name.
@@ -30,6 +35,10 @@ pub struct TaskFile {
     pub done: bool,
     /// The `started` events in the task's stream, 0 without one.
     pub started: u64,
+    /// The specs kernel's parse of the task file.
+    pub plan: osq_kernel_specs::TaskFile,
+    /// What the task's own stream says, the default without one.
+    pub outcome: TaskOutcomeFacts,
 }
 
 /// One `dead` event: the task that died and why.
@@ -56,6 +65,8 @@ pub struct EventFacts {
     pub archived_at: Option<String>,
     /// The events the nine event tables are built from, in fold order.
     pub table_events: Vec<TableEvent>,
+    /// Each task stream's outcome facts, keyed by its task id.
+    pub outcomes: BTreeMap<TaskId, TaskOutcomeFacts>,
 }
 
 /// One change folder read into its typed fields and folded event state.
@@ -93,21 +104,32 @@ pub struct ChangeSnapshot {
     pub manifest_notices: Option<ManifestNotices>,
     /// The result files' real disclosures, in numeric task order.
     pub disclosures: Vec<TaskDisclosure>,
+    /// The delta specs of the change, in capability folder order by bytes.
+    pub deltas: Vec<CapabilityDelta>,
+    /// The proposal's verify, or empty text when the change has no proposal.
+    pub verify: String,
 }
 
 /// Reads one change folder into its snapshot.
 ///
 /// Implements: rust-storage/change-snapshot
+/// Implements: rust-storage/delta-capabilities
+/// Implements: rust-storage/task-plans
+/// Implements: rust-storage/task-stream-outcomes
 ///
 /// # Errors
 ///
 /// Returns [`StorageError::Read`] when an event file that exists cannot be
-/// read, and [`StorageError::EventLine`] when one of its lines is refused.
+/// read, [`StorageError::EventLine`] when one of its lines is refused, and
+/// [`StorageError::Specs`] when a delta spec, a task file or the proposal is
+/// refused by the specs kernel.
 pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> {
     let proposal = read_proposal(&entry.path);
     let manifest = read_manifest(&entry.path);
     let approved = is_approved(&entry.path);
-    let tasks = read_task_files(&entry.path);
+    let verify = read_verify(&entry.path)?;
+    let deltas = read_deltas(&entry.path)?;
+    let tasks = read_task_files(&entry.path)?;
     let task_ids: Vec<TaskId> = tasks.iter().map(|task| task.id.clone()).collect();
     let (state, facts) = read_events(&entry.path, task_ids)?;
     Ok(ChangeSnapshot {
@@ -120,13 +142,15 @@ pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> 
         approved,
         approved_at: approved_at(approved, manifest.as_ref()),
         archive_time: facts.as_ref().and_then(|facts| facts.archived_at.clone()),
-        tasks: with_started(tasks, facts.as_ref()),
+        tasks: decorate(tasks, facts.as_ref()),
         status: status_of(entry.location, approved, &state),
         state,
         facts,
         plan_records: read_plan_records(&entry.path),
         manifest_notices: manifest_notices(manifest.as_ref()),
         disclosures: read_disclosures(&entry.path),
+        deltas,
+        verify,
     })
 }
 
@@ -170,13 +194,15 @@ pub fn read_history(project_root: &Path) -> Result<Vec<ChangeSnapshot>, StorageE
     Ok(snapshots)
 }
 
-/// Fills each task's started count from the gathered facts.
-fn with_started(mut tasks: Vec<TaskFile>, facts: Option<&EventFacts>) -> Vec<TaskFile> {
+/// Fills each task's started count and stream outcome from the gathered facts.
+fn decorate(mut tasks: Vec<TaskFile>, facts: Option<&EventFacts>) -> Vec<TaskFile> {
     for task in &mut tasks {
-        task.started = facts
-            .and_then(|facts| facts.started.get(&task.id))
-            .copied()
-            .unwrap_or(0);
+        if let Some(facts) = facts {
+            task.started = facts.started.get(&task.id).copied().unwrap_or(0);
+            if let Some(outcome) = facts.outcomes.get(&task.id) {
+                task.outcome = outcome.clone();
+            }
+        }
     }
     tasks
 }

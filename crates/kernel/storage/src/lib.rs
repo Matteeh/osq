@@ -5,10 +5,13 @@
 pub mod model;
 pub mod read;
 
-pub use model::{TrialLabels, build_read_model, read_trial_labels, write_read_model};
+pub use model::{
+    TrialLabels, build_read_model, read_trial_labels, write_read_model, write_task_outcomes,
+};
 pub use read::{
-    ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location, ManifestNotices,
-    ManualEdit, Notice, PlanRecord, ResultSections, StorageError, TableEvent, TaskDisclosure,
-    TaskFile, frontmatter_string, goal_section, list_changes, markdown_body, parse_result_sections,
-    read_archive, read_change, read_history, read_manual_edits, timestamp_ms,
+    CapabilityDelta, ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location,
+    ManifestNotices, ManualEdit, Notice, PlanRecord, ResultSections, StorageError, TableEvent,
+    TaskDisclosure, TaskFile, TaskOutcomeFacts, frontmatter_string, goal_section, list_changes,
+    markdown_body, parse_result_sections, read_archive, read_change, read_history,
+    read_manual_edits, timestamp_ms,
 };

@@ -352,6 +352,7 @@ name = "osq-kernel-storage"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-specs",
  "rusqlite",
  "serde_json",
  "yaml-rust2",

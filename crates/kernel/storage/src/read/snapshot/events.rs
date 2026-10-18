@@ -11,6 +11,7 @@ use crate::read::StorageError;
 use crate::read::text::timestamp_ms;
 
 use super::folder::read_events_file;
+use super::outcomes::{OutcomeAccumulator, TaskOutcomeFacts};
 use super::table_events::{TableEvent, table_event};
 use super::{DeadAttempt, EventFacts};
 
@@ -108,6 +109,8 @@ struct Facts {
     archived_at: Option<String>,
     /// The kept events the nine event tables are built from, in fold order.
     table_events: Vec<TableEvent>,
+    /// One outcome accumulator per task stream, keyed by its task id.
+    outcomes: BTreeMap<TaskId, OutcomeAccumulator>,
 }
 
 impl Facts {
@@ -121,6 +124,7 @@ impl Facts {
             dead: Vec::new(),
             archived_at: None,
             table_events: Vec::new(),
+            outcomes: BTreeMap::new(),
         }
     }
 
@@ -128,6 +132,12 @@ impl Facts {
     fn observe(&mut self, stream: &Stream, envelope: &Envelope, line: &str) {
         if let Some(event) = table_event(stream, envelope) {
             self.table_events.push(event);
+        }
+        if let Stream::Task(id) = stream {
+            self.outcomes
+                .entry(id.clone())
+                .or_insert_with(OutcomeAccumulator::new)
+                .observe(&envelope.event);
         }
         match &envelope.event {
             Event::Started(_) => self.record_started(stream),
@@ -185,6 +195,11 @@ impl Facts {
 
     /// Turns the accumulator into the facts task 2 reads.
     fn build(self) -> EventFacts {
+        let outcomes: BTreeMap<TaskId, TaskOutcomeFacts> = self
+            .outcomes
+            .into_iter()
+            .map(|(id, accumulator)| (id, accumulator.build()))
+            .collect();
         EventFacts {
             started: self.started,
             halts: self.halts,
@@ -192,6 +207,7 @@ impl Facts {
             dead_attempts: self.dead,
             archived_at: self.archived_at,
             table_events: self.table_events,
+            outcomes,
         }
     }
 }

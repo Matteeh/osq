@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-specs.workspace = true
 serde_json.workspace = true
 rusqlite.workspace = true
 yaml-rust2.workspace = true

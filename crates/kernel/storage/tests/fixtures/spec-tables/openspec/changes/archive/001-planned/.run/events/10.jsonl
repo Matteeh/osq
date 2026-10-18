@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-10-01T12:00:01.000Z","data":{"attempt":1}}
+{"type":"started","timestamp":"2026-10-01T12:01:01.000Z","data":{"attempt":2}}
+{"type":"measures","timestamp":"2026-10-01T12:05:00.000Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":3,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":2,"deltaScenarios":2,"changedFiles":3,"scopeHashes":{"src/beta/y.ts":{"before":"sha256:00","after":"sha256:00"},"src/alpha/x.ts":{"before":"sha256:00","after":"sha256:00"},"notes/z.md":{"before":"sha256:00","after":"sha256:00"}}}}
