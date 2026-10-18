@@ -127,6 +127,14 @@ async function writeOrRemove(target: string, content: string | null): Promise<vo
   await fs.writeFile(target, content, 'utf8');
 }
 
+/** Whether `target` exists. */
+async function fileExists(target: string): Promise<boolean> {
+  return fs.access(target).then(
+    () => true,
+    () => false,
+  );
+}
+
 /** Every capability folder directly under the merged worktree's living specs. */
 async function listLivingCapabilities(worktreeRoot: string, config: OsqConfig): Promise<string[]> {
   const specsDir = getSpecsDir(config.paths.openspecRoot);
@@ -181,10 +189,11 @@ export async function rebuildLivingSpecs(
   ].sort();
   for (const capability of capabilities) {
     const relative = livingSpecPath(config, capability);
-    await writeOrRemove(
-      path.join(worktreeRoot, specsDir, capability, 'spec.md'),
-      await vcs.show(defaultBranch, relative),
-    );
+    const target = path.join(worktreeRoot, specsDir, capability, 'spec.md');
+    const content = await vcs.show(defaultBranch, relative);
+    // A capability only a delta adds has no living spec yet; git refuses to stage it.
+    if (content === null && !(await fileExists(target))) continue;
+    await writeOrRemove(target, content);
     staged.add(relative);
   }
   await vcs.stage([...staged]);

@@ -257,6 +257,28 @@ describe('syncWithDefaultBranch on an active change', () => {
     assert.ok(!events.some((event) => event.type === 'verify_ran'));
   });
 
+  it('merges a change whose delta adds a capability the default branch lacks', async () => {
+    const { parent, root, base } = await initRepo();
+    const config = configFor(parent);
+    const worktree = await addActive002(root, parent, base, {
+      tasks: [{ n: '1' }],
+      branchFiles: {
+        [`openspec/changes/${FOLDER}/specs/invoices/spec.md`]: ADD_002.replace(
+          'Spec Delta: orders',
+          'Spec Delta: invoices',
+        ),
+      },
+    });
+    await landOnMain(root, 'src/other.txt', 'other\n');
+    const change = await findActive(root, config);
+
+    const result = await syncWithDefaultBranch(root, config, change);
+
+    assert.deepEqual(result, { merged: true });
+    assert.equal(await git(['log', '-1', '--format=%s'], worktree), 'osq: 002 sync main');
+    await assert.rejects(fs.access(path.join(worktree, 'openspec/specs/invoices/spec.md')));
+  });
+
   it('re-runs the verify of each done non-manual task', async () => {
     const { parent, root, base } = await initRepo();
     const config = configFor(parent);
