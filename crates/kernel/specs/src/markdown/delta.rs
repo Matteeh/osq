@@ -8,13 +8,13 @@ use super::text::{
 use super::types::{Delta, Rename, RenameSide, Requirement, UnpairedRename};
 
 /// One top-level `##` section: its trimmed title and its body lines.
-struct Section<'a> {
+pub(crate) struct Section<'a> {
     /// The trimmed section title.
-    title: String,
+    pub(crate) title: String,
     /// The lines after the heading line.
-    lines: Vec<&'a str>,
+    pub(crate) lines: Vec<&'a str>,
     /// The fence mask of `lines`.
-    mask: Vec<bool>,
+    pub(crate) mask: Vec<bool>,
 }
 
 /// True when a line carries a bullet marker, returning the rest.
@@ -38,7 +38,7 @@ fn rename_name(rest: &str) -> Option<String> {
 }
 
 /// The side and name of a valid `FROM:` or `TO:` line.
-fn rename_side(line: &str) -> Option<(RenameSide, String)> {
+pub(crate) fn rename_side(line: &str) -> Option<(RenameSide, String)> {
     let rest = line.trim_start_matches(is_js_whitespace);
     let rest = strip_bullet(rest).unwrap_or(rest);
     let rest = rest.trim_start_matches(is_js_whitespace);
@@ -50,7 +50,7 @@ fn rename_side(line: &str) -> Option<(RenameSide, String)> {
 }
 
 /// True for a line that starts a rename but not in the valid header form.
-fn is_invalid_rename(line: &str) -> bool {
+pub(crate) fn is_invalid_rename(line: &str) -> bool {
     let rest = line.trim_start_matches(is_js_whitespace);
     let rest = strip_bullet(rest).unwrap_or(rest);
     let rest = rest.trim_start_matches(is_js_whitespace);
@@ -58,7 +58,7 @@ fn is_invalid_rename(line: &str) -> bool {
 }
 
 /// A requirement name from a REMOVED bullet carrying a requirement header.
-fn removed_bullet_name(line: &str) -> Option<String> {
+pub(crate) fn removed_bullet_name(line: &str) -> Option<String> {
     let rest = line.trim_start_matches(is_js_whitespace);
     let rest = strip_bullet(rest)?;
     let rest = rest.trim_start_matches(is_js_whitespace);
@@ -94,7 +94,7 @@ fn delta_title(lines: &[&str], mask: &[bool]) -> String {
 }
 
 /// Splits the top-level `##` sections, each to the next one.
-fn split_sections<'a>(lines: &[&'a str], mask: &[bool]) -> Vec<Section<'a>> {
+pub(crate) fn split_sections<'a>(lines: &[&'a str], mask: &[bool]) -> Vec<Section<'a>> {
     let indices: Vec<usize> = lines
         .iter()
         .enumerate()

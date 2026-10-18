@@ -6,6 +6,7 @@ pub mod document;
 pub mod markdown;
 pub mod owners;
 pub mod read;
+pub mod validate;
 
 pub use document::{
     ChecklistItem, Frontmatter, Proposal, Sidecar, SidecarError, SyntaxError, TaskFile,
@@ -23,4 +24,8 @@ pub use owners::{
 pub use read::{
     SpecsError, read_delta, read_living_spec, read_proposal, read_sidecar, read_task_file,
     read_task_list,
+};
+pub use validate::{
+    FindingCode, SpecFinding, check_delta_targets, validate_change, validate_delta,
+    validate_living_spec, validate_living_specs,
 };
