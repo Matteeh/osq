@@ -39,6 +39,9 @@ const TERMS: readonly string[] = [
   '[workspace.lints]',
   'cargo fmt --all',
   'sh scripts/verify-rust.sh',
+  'OSQ_DIFF',
+  'missed mutant',
+  'cargo mutants -p <package> -f <file>',
 ];
 
 describe('cli-foundation: Rust guide names how to work in crates', () => {
