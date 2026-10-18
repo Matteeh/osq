@@ -62,13 +62,14 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
       {tasks.map((name, i) => (
         <div class="row" data-task><div><div class="t">{i + 1}. {name}</div><div class="k">{i === 3 ? 'waits for task 3' : 'waiting'}</div></div><span class="pill">queued</span></div>
       ))}
-      <div class="foot"><span data-run-count>Agent said "done" 0 times. osq checked 0 times.</span><span class="file">.run/</span></div>
+      <div class="foot"><span data-run-count>Agent said "done" 0 times. osq checked 0 times.</span><span class="file" data-run-cost>$0.00</span></div>
     </div>
 
     <div class="pane" id="pane-land" data-pane="land" role="tabpanel" aria-labelledby="tab-land" hidden>
       <div class="cmd">$ <b>osq land 042</b></div>
       <div class="row reveal"><div><div class="t">Final check</div><div class="k">every task's test re-run on the finished code</div></div><span class="ok">passed</span></div>
       <div class="row reveal"><div><div class="t">Specs updated</div><div class="k file">openspec/specs/orders/spec.md</div></div><span class="ok">+2</span></div>
+      <div class="row reveal"><div><div class="t">Cost of the change</div><div class="k">planning $0.38 · tasks $1.64 · from osq report</div></div><span class="ok">$2.02</span></div>
       <div class="row reveal"><div><div class="t">Change archived</div><div class="k file">openspec/changes/archive/042-…</div></div><span class="ok">ok</span></div>
       <div class="foot"><span data-land-note>Ready to merge into main.</span><button type="button" class="act" data-land>Land</button></div>
     </div>
@@ -88,18 +89,18 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
 <style>
   .demo { position: relative; transition: box-shadow 0.4s ease; }
   .demo.zap { box-shadow: 0 0 0 1px var(--accent-soft), 0 0 14px -6px var(--streak); }
-  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 16px 0; font-size: 12px; color: var(--muted); }
-  .tabs { display: flex; gap: 4px; padding: 10px 12px 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-  .tabs button { font: 500 12.5px var(--sans); color: var(--muted); background: transparent; border: 0; border-radius: 5px; padding: 0 10px; min-height: 32px; cursor: pointer; white-space: nowrap; }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 16px 20px 0; font-size: 12px; color: var(--muted); }
+  .tabs { display: flex; gap: 4px; padding: 12px 16px 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs button { font: 500 12.5px var(--display); color: var(--muted); background: transparent; border: 0; border-radius: 5px; padding: 0 10px; min-height: 32px; cursor: pointer; white-space: nowrap; }
   .tabs button:hover { color: var(--fg); background: var(--pill); }
   .tabs button[aria-selected='true'] { color: var(--accent-soft-fg); background: var(--accent-soft); font-weight: 600; }
-  .body { position: relative; height: 336px; overflow: hidden; }
+  .body { position: relative; height: 392px; overflow: hidden; }
   .pane { position: absolute; inset: 0; display: flex; flex-direction: column; }
-  .cmd { font-family: var(--mono); font-size: 12px; color: var(--muted); padding: 12px 16px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmd { font-family: var(--mono); font-size: 12px; color: var(--muted); padding: 16px 20px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cmd b { color: var(--fg); font-weight: 500; }
-  .brief { margin: 0 16px 8px; padding: 10px 12px; border-radius: 6px; background: var(--bg); font-size: 13px; min-height: 58px; }
+  .brief { margin: 0 20px 12px; padding: 12px 14px; border-radius: 6px; background: var(--bg); font-size: 13px; min-height: 58px; }
   .caret { display: inline-block; width: 7px; height: 14px; background: var(--accent); vertical-align: -2px; margin-left: 1px; }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 16px; min-height: 44px; border-top: 1px solid var(--line); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; min-height: 52px; border-top: 1px solid var(--line); }
   .row > div { min-width: 0; }
   .t { font-size: 14px; }
   .t.file { font-size: 12.5px; color: var(--fg); }
@@ -107,8 +108,8 @@ const tasks = ['Cancel endpoint', 'Release reserved stock', 'Refund on cancel', 
   .reveal { opacity: 0; transform: translateY(4px); transition: opacity 0.35s ease, transform 0.35s ease; }
   .reveal.on { opacity: 1; transform: none; }
   .ok { color: var(--green-fg); font-weight: 600; font-size: 12px; }
-  .foot { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
-  .act { min-height: 36px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--accent); color: var(--surface); font: 600 13px var(--sans); cursor: pointer; transition: transform 0.12s ease, filter 0.2s ease; }
+  .foot { margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+  .act { min-height: 36px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--accent); color: var(--surface); font: 600 13px var(--display); cursor: pointer; transition: transform 0.12s ease, filter 0.2s ease; }
   .act.pressed { transform: scale(0.95); filter: brightness(0.9); }
   .act[disabled] { background: var(--pill); color: var(--muted); cursor: default; }
   .cursor { position: absolute; left: 0; top: 0; width: 18px; height: 22px; pointer-events: none; z-index: 5; opacity: 0; transition: transform 0.7s cubic-bezier(0.4, 0.1, 0.2, 1), opacity 0.3s ease; }
