@@ -1,0 +1,51 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4",
+    "PLANNER.md": "sha256:61a4f4fa9ca0a352bb81b10189a38e01c1f93b669378080c56e53d6cf03740d0",
+    "config": "sha256:b32b8dff3e804c58b3d1c5a2c8e8985cf306604d90743129650339d7715b70cd",
+    "rust-core": "sha256:c1644ee7ef7e685f70608c616cf4fa629a6f3984b8c385a759fe928e1e693245",
+    "rust-core/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-specs": null,
+    "rust-specs/osq.yml": null
+  },
+  "osqVersion": "0.3.0",
+  "harness": "opencode",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "planner": "claude-opus-5-5",
+  "effort": null,
+  "createdAt": "2026-10-18T13:30:52.589Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-18T13:47:14.532Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path",
+      "shared_file",
+      "verify_without_test"
+    ],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "new_capability",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a"
+  }
+}

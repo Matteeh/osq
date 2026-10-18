@@ -1,0 +1,6165 @@
+[
+  {
+    "path": "openspec/changes/archive/001-bootstrap/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0ddef0b187115d65",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:74538cf238263dc9",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:610148e3a4d782a4",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "When the CLI is executed, commands are routed through commander",
+        "checked": true,
+        "section": null,
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/002-spec-lint-and-approve/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e9f90eedcc30f62b",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5c90d5b2e117dd36",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:17a14e4d9b6c0879",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:270eb3dd703442ce",
+        "checked": true,
+        "section": null,
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/003-watcher-and-harness/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:bf0b5cae077280df",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:77835388c5ffceed",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:11d39e1857ed2f6c",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:3423bc47f87dcdc9",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:1ad2f85fe1011708",
+        "checked": true,
+        "section": null,
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/004-smoke-test/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "When smoke test runs, smoke.txt is created with expected content",
+        "checked": true,
+        "section": null,
+        "line": 3
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/005-status-command/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:723e881f38d40e45",
+        "checked": true,
+        "section": null,
+        "line": 3
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/006-show-command/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a7f41f706f9f6ff7",
+        "checked": true,
+        "section": null,
+        "line": 3
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/007-report-command/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:bccd17a01243365b",
+        "checked": true,
+        "section": null,
+        "line": 3
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/008-opencode-harness-adapter/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:cf7f464c4d6bb29f",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:dc98839a6204e184",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d40a69d83f7d77bb",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e61380f7385628b8",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:eb81298d150e2a32",
+        "checked": true,
+        "section": null,
+        "line": 7
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:e175604f0e3f1db7",
+        "checked": true,
+        "section": null,
+        "line": 8
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/009-watcher-observability/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:18b23ac5e2450976",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:895a1d5bd9090cf0",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:bcc5516144c9123a",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:1e622697c2803e25",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:b6b4108555936da1",
+        "checked": true,
+        "section": null,
+        "line": 7
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:b3dd82ee99be7c3d",
+        "checked": true,
+        "section": null,
+        "line": 8
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:fdf74f5666d2826b",
+        "checked": true,
+        "section": null,
+        "line": 9
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:0f700799e992499b",
+        "checked": true,
+        "section": null,
+        "line": 10
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/010-report-fixes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:50bf8dbef6a7849b",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:cc29e077e1636b46",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:36ab9ce82df0a739",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:ead8300cd7ed343d",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:5237cfb3a507baf6",
+        "checked": true,
+        "section": null,
+        "line": 7
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:c8952d17f478d99a",
+        "checked": true,
+        "section": null,
+        "line": 8
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:245ba064899d0eb0",
+        "checked": true,
+        "section": null,
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/011-observability-fixes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:09095fb83a27fce7",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:3b3c4c0e53e44160",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:4dcbee5684fc6a6f",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:802f0d73852c0394",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:5db46824f34369bf",
+        "checked": true,
+        "section": null,
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/012-watch-terminal-ux/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c14c5af497609756",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:692f345795d2afae",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5f883f09955c5152",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:c5ad867707e87851",
+        "checked": true,
+        "section": null,
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/013-npm-package/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:909f3102a7fec25f",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c690d8a7ecb4463c",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:34878b66ddc90a24",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:41fb631ca59189d3",
+        "checked": true,
+        "section": null,
+        "line": 6
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:05f919ad07ac9575",
+        "checked": true,
+        "section": null,
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/014-ci-pnpm-version-alignment/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:6ddb7cf1c94a6cee",
+        "checked": true,
+        "section": null,
+        "line": 3
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/015-status-row-fixes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "When the logger draws the status row, it fits the terminal",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 2,
+        "title": "When a task finishes, exactly one outcome line is logged",
+        "checked": true,
+        "section": null,
+        "line": 4
+      },
+      {
+        "number": 3,
+        "title": "When the status row shows token counts, they are abbreviated",
+        "checked": true,
+        "section": null,
+        "line": 5
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:315cace82dc36ac0",
+        "checked": true,
+        "section": null,
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/016-openspec-artifacts/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:591450ed110e42c5",
+        "checked": true,
+        "section": "1. Configuration and Dependencies",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:82d07dd64649dd16",
+        "checked": true,
+        "section": "2. Parsing and Templates",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:36da54f85f39510c",
+        "checked": true,
+        "section": "3. Delta Spec Merging",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:27db937797515e1e",
+        "checked": true,
+        "section": "4. OpenSpec Validator Integration",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:ae456c9a2351c99b",
+        "checked": true,
+        "section": "5. Checkbox Projection",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:15841c7a2d729f3f",
+        "checked": true,
+        "section": "6. Archival Path & Validation",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:78a1c146db6d8b41",
+        "checked": true,
+        "section": "7. Project Scaffolding",
+        "line": 29
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:743f8b3c61c5f3ca",
+        "checked": true,
+        "section": "8. Migration Command",
+        "line": 33
+      },
+      {
+        "number": 9,
+        "title": "fnv1a64:26ad3eba3d74e10a",
+        "checked": true,
+        "section": "9. Layout Cut-over",
+        "line": 37
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/017-ownership-and-test-gating/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:19d4a664ae7ade6a",
+        "checked": true,
+        "section": "1. Capability Code Ownership Parsing & Schema Extension",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:15a23f2ec42de657",
+        "checked": true,
+        "section": "2. Specification Linter Validation for Ownership and Test Gating",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:e2425bb690949f3f",
+        "checked": true,
+        "section": "3. Prompt Rule Injection for Harness Adapters",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e485ba5948667566",
+        "checked": true,
+        "section": "4. Test Modification Gating & undeclared_test_change Dead Reason",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:a40f6d9f153252ba",
+        "checked": true,
+        "section": "5. Status, Show, and Report Telemetry Categorization",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:542afe0642a25447",
+        "checked": true,
+        "section": "6. Baseline Living Capabilities Alignment",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/018-cutover-test-alignment/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fdabd59310738c9f",
+        "checked": true,
+        "section": "1. Spec Scaffolding",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:6a2df00a2eb8b023",
+        "checked": true,
+        "section": "2. Test Fixture Alignment",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8f96adb4353cd096",
+        "checked": true,
+        "section": "3. Linter Formatting Conformance",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/019-pack-smoke-test-fix/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:38530899f47726c1",
+        "checked": true,
+        "section": "1. Smoke Test Dependency Resolution",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "When any test spawns the package manager, it is npm",
+        "checked": true,
+        "section": "2. Test Suite Package Manager Independence",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8b1bc390c79c43b0",
+        "checked": true,
+        "section": "3. Smoke Test Failure Reporting",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/020-watcher-stale-build-detection/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:36c0673ed4a48680",
+        "checked": true,
+        "section": "1. Build Identity Recording",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5f24e6679cd20282",
+        "checked": true,
+        "section": "2. Stale Build Detection & Preflight",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:ed5c3d67be3c2f83",
+        "checked": true,
+        "section": "3. Reactive Dev Mode",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/021-split-runner-lifecycle-and-import-boundaries/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:b2dcafeef284604f",
+        "checked": true,
+        "section": "1. Import Graph Freeze",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:55670d2963a0a646",
+        "checked": true,
+        "section": "2. Heartbeat and Lock Modularization",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5aa0c58f66d8c41a",
+        "checked": true,
+        "section": "3. Outcome Logging and Checkbox Projection",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:14a3711f4f73f48d",
+        "checked": true,
+        "section": "4. Result Synthesis and Verification Gate",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:f9e2922bc89cb5b7",
+        "checked": true,
+        "section": "5. Agent Process Spawning and Orchestrator Streamlining",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/022-make-engine-safe-to-grow/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:192b21ebe45f64d1",
+        "checked": true,
+        "section": "1. Planner Instruction Scaffolding",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:41ab709858ff025b",
+        "checked": true,
+        "section": "2. Typed Event Hygiene and Write-Time Relativization",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:2bb1a78a53ab1c41",
+        "checked": true,
+        "section": "3. Golden Event Stream Fixture Verification",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:f7f335b0bded8c13",
+        "checked": true,
+        "section": "4. Repository Health Diagnostics",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/023-engine-layout-markers-and-pure-state/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:585a6fb011b8e317",
+        "checked": true,
+        "section": "1. Marker and Event Parity Invariant",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "When tasks terminate, dedicated outcome helpers write markers",
+        "checked": true,
+        "section": "2. Centralized Marker Writing",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d2896b2c75e6151e",
+        "checked": true,
+        "section": "3. Canonical Path Layout",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e54174e50656238c",
+        "checked": true,
+        "section": "4. Pure Spec State Derivation",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:cefbf23ea2b7d8dd",
+        "checked": true,
+        "section": "5. Line Budget Enforcement",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/024-migrate-callers-to-layout-and-disk-state/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5a50d107d33d9cc3",
+        "checked": true,
+        "section": "1. State Derivation Overload and Inspection Modules",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "When change workflow runs, commands use layout resolvers",
+        "checked": true,
+        "section": "2. CLI and Workflow Modules",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:dd3d521ae626b813",
+        "checked": true,
+        "section": "3. Archiver and Diagnostics Modules",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:26fda493408b381b",
+        "checked": true,
+        "section": "4. Test Suite Alignment",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/025-format-gate-and-pinned-validator/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a4623ec1260958cd",
+        "checked": true,
+        "section": "1. ADR 004 Pinned Validator Record",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:049b817120f764a1",
+        "checked": true,
+        "section": "2. Doctor Pinned Validator Diagnostics",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:c6c7d20b566bf062",
+        "checked": true,
+        "section": "3. Schema Execution Authority Instructions",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9cb1d2794d7a7224",
+        "checked": true,
+        "section": "4. Setup Block Coexistence",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:c8cecd9d32d1075c",
+        "checked": true,
+        "section": "5. Migration Canonical Layout Authority",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/026-raw-measures-and-run-manifest/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3e39b500ca897d89",
+        "checked": true,
+        "section": null,
+        "line": 1
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e71c2c8cf1890cf0",
+        "checked": true,
+        "section": null,
+        "line": 2
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:535d0d4d27de56c7",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:8aff504e888adc21",
+        "checked": true,
+        "section": null,
+        "line": 4
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/027-archive-verification-and-tree-hashes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:092d37e3f1367363",
+        "checked": true,
+        "section": null,
+        "line": 1
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:990ce1a6a309211b",
+        "checked": true,
+        "section": null,
+        "line": 2
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:9874b77a1eeca95e",
+        "checked": true,
+        "section": null,
+        "line": 3
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:bc3df58729b544c0",
+        "checked": true,
+        "section": null,
+        "line": 4
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/028-016-completion/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:353c44f453d00057",
+        "checked": true,
+        "section": "1. Pinned Validator Enforcement with Fail-Not-Skip",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d016f503bc3da7f6",
+        "checked": true,
+        "section": "2. Living Spec Re-seed with Prose Appender Deletion",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:9dd36fda55253baa",
+        "checked": true,
+        "section": "3. Removal of features.writes with Archive Normalization",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:a8a57d2a6ee46d3c",
+        "checked": true,
+        "section": "4. Scaffolding Cleanup with Legacy Template Removal",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:bad7f5d6f731f569",
+        "checked": true,
+        "section": "5. Documentation with Managed Block Alignment",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/029-artifact-integrity-and-failure-retention/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c62984d831ed58e6",
+        "checked": true,
+        "section": "1. Mangled File and Fused Line Linting",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ef4cb3d486c3429f",
+        "checked": true,
+        "section": "2. Dead Marker Retention across Re-Approval",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:39fc99d7413944c2",
+        "checked": true,
+        "section": "3. Manual Task Completion and Auditability",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b268bc02f4d2db34",
+        "checked": true,
+        "section": "4. Task Title Warning Cleanup",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/030-planner-rules-and-documentation/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:da34db44e80ceb08",
+        "checked": true,
+        "section": "1. Planner Rules Documentation and Template Synchronization",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:bf885c1f62b565cf",
+        "checked": true,
+        "section": "2. Instruction-Shaped Delta Linting",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/031-planner-in-osq/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8815e1d5d4e4a152",
+        "checked": true,
+        "section": "1. Planner Configuration and Manifest Model Recording",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c296379d3479ed12",
+        "checked": true,
+        "section": "2. Interactive Harness Adapter Spawning",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:35ca4e04273efaec",
+        "checked": true,
+        "section": "3. Opencode Planner Agent Setup",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:f7e9a88640b687b5",
+        "checked": true,
+        "section": "4. Interactive Planning CLI Command and Brief Writer",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/032-codex-harness-adapter/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:49f3e9ac2841c9e1",
+        "checked": true,
+        "section": "1. Codex CLI integration",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:55e1ba0919c8183c",
+        "checked": true,
+        "section": "2. Consumer guidance",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/033-harness-capability-catalog/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:12205bdb3c15dee8",
+        "checked": true,
+        "section": "1. Harness catalog and exhaustive registration",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:6aabb82e208e4f7e",
+        "checked": true,
+        "section": "2. Generic harness consumers",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/034-report-state-and-history/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:2e9d86002184567c",
+        "checked": true,
+        "section": "1. State, history, and coverage reporting",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/035-planning-telemetry-and-cycle-time/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8c88fd3f8bdf2f34",
+        "checked": true,
+        "section": "1. Planning lifecycle and observed usage",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:cfe4fc30740b7e48",
+        "checked": true,
+        "section": "2. Approval attribution",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:61d728505e71c419",
+        "checked": true,
+        "section": "3. Planning inspection",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:8aac0397b0a6cba6",
+        "checked": true,
+        "section": "4. Archive lifecycle",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "When the report runs, planning spend and cycle time are surfaced",
+        "checked": true,
+        "section": "5. Planning and cycle reporting",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/036-dead-letter-retry-and-rejection/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:1ccdaceeb5c5127e",
+        "checked": true,
+        "section": "1. Retry transition and attempt context",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:fcb013f3930073a2",
+        "checked": true,
+        "section": "2. Rejection transition",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:db5c1aa2a944c0d9",
+        "checked": true,
+        "section": "3. Rejected state projections",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/037-human-attention-inbox/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "When bare osq runs, the human attention inbox is returned",
+        "checked": true,
+        "section": "1. Human attention inbox",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/038-portable-inbox-lock-fixture/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4c41b79552d34abd",
+        "checked": true,
+        "section": "1. Portable inbox lock fixture",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/039-brief-queue/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f50ecc94c0cab704",
+        "checked": true,
+        "section": "1. Queue parsing and state inspection",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:45a1f2c064c178ec",
+        "checked": true,
+        "section": "2. Next-item planning flow",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:a599541fe943cdcf",
+        "checked": true,
+        "section": "3. Planning safety and spend gates",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:ad501e992bae4498",
+        "checked": true,
+        "section": "4. Source decomposition",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:37ec7e0ddf18b0b1",
+        "checked": true,
+        "section": "5. Queue delivery report",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/040-repository-record-in-planning/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "When execution history is reported, task size predicts outcome",
+        "checked": true,
+        "section": "1. Size and outcome reporting",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:eb0cc0df9ba3c883",
+        "checked": true,
+        "section": "2. Planning feedback",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/041-scope-regression-recertification/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:28bc87c26416e179",
+        "checked": true,
+        "section": "1. Pre-dispatch scope audit",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:b00615c8fff2860b",
+        "checked": true,
+        "section": "2. Archive scope audit",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:06cdaab8841a0551",
+        "checked": true,
+        "section": "3. Human recertification",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:d5d2b0b235e07c9e",
+        "checked": true,
+        "section": "4. Verify-command lint",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:f641e1ed543c0c6f",
+        "checked": true,
+        "section": "5. Planner guidance",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:3b33e18ca033bf82",
+        "checked": true,
+        "section": "6. Regression history",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:9d661fb69e8eb2e9",
+        "checked": true,
+        "section": "7. Recertification inspection",
+        "line": 29
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:123d2e64d642b816",
+        "checked": true,
+        "section": "8. Verify-fixture migration",
+        "line": 33
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/042-deterministic-scope-resolution/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3e458cb10280a2fc",
+        "checked": true,
+        "section": "1. Deterministic scope resolver",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:656b2806cc522b53",
+        "checked": true,
+        "section": "2. Resolver-versioned completion",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:714966b8ff37524a",
+        "checked": true,
+        "section": "3. Resolved-scope lint",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:f853c967044eb6da",
+        "checked": true,
+        "section": "4. Resolver-versioned size evidence",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/043-tool-native-planning/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4e4c69ee9dd81caa",
+        "checked": true,
+        "section": "1. Planning prompt handoff",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:6c3bd638f870aba5",
+        "checked": true,
+        "section": "2. Managed planning entry points",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:2003b4202b184414",
+        "checked": true,
+        "section": "3. Approval-time planning observation",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:bfad996b4245417b",
+        "checked": true,
+        "section": "4. Transient prompt lifecycle",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:5634b27c0336b889",
+        "checked": true,
+        "section": "5. Planning inspection and coverage",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:d49a0f035192632d",
+        "checked": true,
+        "section": "6. Final compatibility reconciliation",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/044-read-only-dashboard/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3f3cfb1801b41262",
+        "checked": true,
+        "section": "1. Read models",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d98fdf1e23c46258",
+        "checked": true,
+        "section": "2. HTTP transport",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:44eadc285a763265",
+        "checked": true,
+        "section": "3. Live invalidation",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:132d63ed77de629f",
+        "checked": true,
+        "section": "4. UI foundation",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:69347c91496c5f4f",
+        "checked": true,
+        "section": "5. Delivery report",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:fced100cdad05b57",
+        "checked": true,
+        "section": "6. Archive graph",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:0afa0ee445199717",
+        "checked": true,
+        "section": "7. Change evidence",
+        "line": 29
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:e8ea40a5a259cfd2",
+        "checked": true,
+        "section": "8. Distribution gate",
+        "line": 33
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/045-deterministic-harness-process-timeout-test/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:cdc2cf388871b045",
+        "checked": true,
+        "section": "1. Deterministic kill-grace coverage",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/046-immediate-task-breakage-attribution/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0f4b93a3997972ad",
+        "checked": true,
+        "section": "1. Incremental change verification",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d1ef26a3ab26cccc",
+        "checked": true,
+        "section": "2. Scope-aware test freeze",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:769fd1c599d251f0",
+        "checked": true,
+        "section": "3. Archive test alignment",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/047-capability-folders/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ab85c3a758f23973",
+        "checked": true,
+        "section": "1. Package root",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c265646c53d237bc",
+        "checked": true,
+        "section": "2. Capability folders",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:c25221b29e6e1f11",
+        "checked": true,
+        "section": "3. Function budget",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/048-managed-instructions-split/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d9b2e636593695df",
+        "checked": true,
+        "section": "1. Managed instructions",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:180b95c0dc677a10",
+        "checked": true,
+        "section": "2. Proposal seed",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/049-opencode-planner-lint-permission/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:807cd063c9c4f96e",
+        "checked": true,
+        "section": "1. Planner lint permission",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/050-one-executor-prompt/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ae7b6c85591c42a7",
+        "checked": true,
+        "section": "1. Managed executor protocol",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d0148c4d0f99ed74",
+        "checked": true,
+        "section": "2. Shared executor prompt",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:0b33229b6b1e33ad",
+        "checked": true,
+        "section": "3. Agent file diagnostics",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/051-openspec-compliance-checks/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3805a502e674f4a7",
+        "checked": true,
+        "section": "1. Merge parity",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:bee79a488d427356",
+        "checked": true,
+        "section": "2. Validator version policy",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:607136d95020dd7e",
+        "checked": true,
+        "section": "3. One proposal format",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:995f26d2ac9d9cd1",
+        "checked": true,
+        "section": "4. Scheduled upstream check",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/052-init-refresh-schema/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:09e70de70985918e",
+        "checked": true,
+        "section": "1. Schema refresh",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/053-proposal-surface-section/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d09c97af811a0f79",
+        "checked": true,
+        "section": "1. Proposal entry points",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:743217258adbe769",
+        "checked": true,
+        "section": "2. Inline test proposals",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:2874f1bd5ea2bcc2",
+        "checked": true,
+        "section": "3. Surface lint",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/054-dashboard-honest-numbers/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:626b8372857818ff",
+        "checked": true,
+        "section": "1. Report counts and cost labels",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:436e18a3acfa99bb",
+        "checked": true,
+        "section": "2. Web document costs",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:1279c63cf2324b70",
+        "checked": true,
+        "section": "3. Dashboard labels",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/055-dashboard-home-and-changes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0e7201e2fef20168",
+        "checked": true,
+        "section": "1. Task progress in the graph document",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:4415399de1a1aee6",
+        "checked": true,
+        "section": "2. Home and changes views",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/056-dashboard-visual-hierarchy/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0861ec0abe9b4bb5",
+        "checked": true,
+        "section": "1. Palette and hierarchy",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5cbf719bfec8c9ca",
+        "checked": true,
+        "section": "2. Report charts",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5129a81c25af7ff9",
+        "checked": true,
+        "section": "3. Graph",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/057-serve-export/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:2cf2983b90bfb2c7",
+        "checked": true,
+        "section": "1. Export core",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d62abec42ec2f89b",
+        "checked": true,
+        "section": "2. Serve flag",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/058-no-build-during-tests/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:1bc57f29fe831b14",
+        "checked": true,
+        "section": "1. No rebuild during tests",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/059-replay-in-landing-order/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8912501c708b2c3b",
+        "checked": true,
+        "section": "1. Landing-order replay",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/060-pi-executor-harness/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ef9c56f73450b629",
+        "checked": true,
+        "section": "1. Pi adapter",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c9b95375cd4f6fa2",
+        "checked": true,
+        "section": "2. Pi diagnostics and guidance",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/061-pre-spawn-red-check/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e3e57e534c07a9e4",
+        "checked": true,
+        "section": "1. Configuration and parsing",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:38f37bafd2655abd",
+        "checked": true,
+        "section": "2. Pre-spawn check",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:6f5ec6664c04b4dd",
+        "checked": true,
+        "section": "3. Visibility",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:1b18b01a70498d44",
+        "checked": true,
+        "section": "3. Visibility",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:54f5271258973da6",
+        "checked": true,
+        "section": "4. Documentation",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/062-planning-measurement/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:de4a243be79fbecb",
+        "checked": true,
+        "section": "1. Preparation",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:64c48b29685b8391",
+        "checked": true,
+        "section": "1. Preparation",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:ffee9421cc43ffb9",
+        "checked": true,
+        "section": "2. Slicing",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e4cac4c0ae1e59c4",
+        "checked": true,
+        "section": "3. Readers",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:89cd60b99bcd435e",
+        "checked": true,
+        "section": "3. Readers",
+        "line": 15
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:c61d34a2fb3568a2",
+        "checked": true,
+        "section": "3. Readers",
+        "line": 16
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:24809474b662997b",
+        "checked": true,
+        "section": "4. Reporting",
+        "line": 20
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:62afdcb86dc6999b",
+        "checked": true,
+        "section": "4. Reporting",
+        "line": 21
+      },
+      {
+        "number": 9,
+        "title": "fnv1a64:d0d1144111d7f49b",
+        "checked": true,
+        "section": "5. Documentation",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/063-planning-cleanup/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:7dbdece352b32cd7",
+        "checked": true,
+        "section": "1. Planning reader port",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:09f9a7e1fa2d86d9",
+        "checked": true,
+        "section": "2. Budget leftovers",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d02438db402ea732",
+        "checked": true,
+        "section": "3. Golden fixtures",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/064-approval-digest/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4bcc882ab37bfd78",
+        "checked": true,
+        "section": "1. Digest",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:956d0fa3f9692d1f",
+        "checked": true,
+        "section": "2. Commands",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:a05397cb31743a5c",
+        "checked": true,
+        "section": "3. Reporting",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:46f016d9342fed40",
+        "checked": true,
+        "section": "4. Documentation",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/065-automatic-retry/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:28c7effc3ccce77b",
+        "checked": true,
+        "section": "1. Shared transition",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:13359337d20e3817",
+        "checked": true,
+        "section": "2. Failure evidence",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8070251c5a1c65fd",
+        "checked": true,
+        "section": "2. Failure evidence",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9f8215425a6c35da",
+        "checked": true,
+        "section": "3. Watcher",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:6d9d152a7e5de096",
+        "checked": true,
+        "section": "4. Inspection",
+        "line": 18
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:8e9e877d1b012934",
+        "checked": true,
+        "section": "4. Inspection",
+        "line": 19
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:3171dc225c6c0a35",
+        "checked": true,
+        "section": "4. Inspection",
+        "line": 20
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:00d1ee932c192acf",
+        "checked": true,
+        "section": "5. Documentation",
+        "line": 24
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/066-planning-attribution-after-archive/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ca3c676d1558ac58",
+        "checked": true,
+        "section": "1. Attribution",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:f51590ea98a45045",
+        "checked": true,
+        "section": "2. Report",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/067-verify-must-find-its-files/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:2661f4a66ab8b852",
+        "checked": true,
+        "section": "1. Named paths and lint",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0c5ac5ca95b8650f",
+        "checked": true,
+        "section": "2. Watcher",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:4eddad6cb757bd34",
+        "checked": true,
+        "section": "2. Watcher",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:8d7da208a144391e",
+        "checked": true,
+        "section": "3. Approval",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:aba06852a403ba6f",
+        "checked": true,
+        "section": "4. Inspection",
+        "line": 18
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:7d827147dcf1759a",
+        "checked": true,
+        "section": "4. Inspection",
+        "line": 19
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:88211d69903d94d7",
+        "checked": true,
+        "section": "5. Documentation",
+        "line": 23
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/068-regressed-missing-paths/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9090b80d59216526",
+        "checked": true,
+        "section": "1. Event field",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/069-fixes-from-outside-run/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d3fa6ac49923cb1a",
+        "checked": true,
+        "section": "1. Build identity",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:067afc4a3a683789",
+        "checked": true,
+        "section": "2. Capability flag",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:4eebc583305621af",
+        "checked": true,
+        "section": "3. Fingerprints",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/070-claude-code-executor/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f2b3668e0a22ec2f",
+        "checked": true,
+        "section": "1. Stream translation",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d0be567355850aeb",
+        "checked": true,
+        "section": "2. Claude adapter",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:69eb79d8edd4da6f",
+        "checked": true,
+        "section": "3. Guidance",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/071-skip-rejected-folder/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a1c6fc00724139d1",
+        "checked": true,
+        "section": "1. Watcher",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2167e462dc2b52e4",
+        "checked": true,
+        "section": "2. Lint",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/072-record-bugs/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e13daee7d8c0af88",
+        "checked": true,
+        "section": "1. Manifest",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:cb66c2892bbe10e7",
+        "checked": true,
+        "section": "2. Approval gate",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:bdc0140266dd5531",
+        "checked": true,
+        "section": "3. Report",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/073-ts-paas-wording/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0cccc813507bb67b",
+        "checked": true,
+        "section": "1. Managed blocks",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1d5e97d97c92c084",
+        "checked": true,
+        "section": "2. Proposal seed",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:345bf4b39b8b4dcb",
+        "checked": true,
+        "section": "3. Pre-spawn words",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/074-rework-disclosures-and-estimates/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:7b3aabae18541e36",
+        "checked": true,
+        "section": "1. Rework declaration",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ee34a7c164d9ccfb",
+        "checked": true,
+        "section": "2. Result sections",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:7edb2bf06036d9ce",
+        "checked": true,
+        "section": "3. Inbox and show",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:0964dc49214e7acd",
+        "checked": true,
+        "section": "4. Plan prompt",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:03396db2db8bdedc",
+        "checked": true,
+        "section": "5. Price gaps",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:98f6d3b2aa596d05",
+        "checked": true,
+        "section": "6. Report",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/075-lint-findings-you-can-act-on/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:68c2c262221a1322",
+        "checked": true,
+        "section": "1. Findings",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:24a0df2627fe84ef",
+        "checked": true,
+        "section": "2. Output",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/076-human-steps-on-the-record/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:7954ed2e653a850f",
+        "checked": true,
+        "section": "1. Next step",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:bdffb3b48937935d",
+        "checked": true,
+        "section": "2. Recording",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:f1d9c23d46e23f54",
+        "checked": true,
+        "section": "3. Dependents",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:f1ec82bcca9c382c",
+        "checked": true,
+        "section": "4. Digest",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:c46ce18ec7e84f20",
+        "checked": true,
+        "section": "5. Inbox",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:edbd048a21bd405c",
+        "checked": true,
+        "section": "6. Plan and approve",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:7376c44cd100928c",
+        "checked": true,
+        "section": "7. Show",
+        "line": 29
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:dc0e2f15cbaa7335",
+        "checked": true,
+        "section": "8. Report",
+        "line": 33
+      },
+      {
+        "number": 9,
+        "title": "fnv1a64:92f1373eb6195311",
+        "checked": true,
+        "section": "9. Planner guidance",
+        "line": 37
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/077-import-graph-lint/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:eccba22d1526c457",
+        "checked": true,
+        "section": "1. Import graph",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:65a15c5a5ed35335",
+        "checked": true,
+        "section": "2. Impact lint",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/078-blocked-exit-and-auto-recertification/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5495aad55d9e6d2b",
+        "checked": true,
+        "section": "1. Protocol wording",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:9cd53e08c414d09c",
+        "checked": true,
+        "section": "2. Blocked exit",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:57335a045b2c82af",
+        "checked": true,
+        "section": "3. Inbox",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:104986e264328b6f",
+        "checked": true,
+        "section": "4. Automatic recertification",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:cc04e09f3e56dc41",
+        "checked": true,
+        "section": "5. Report",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/079-architecture-decisions/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:057c7466423a6f10",
+        "checked": true,
+        "section": "1. Decision records",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:dfd530a717d80542",
+        "checked": true,
+        "section": "2. Project rules block",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:b3083947cccf3cbd",
+        "checked": true,
+        "section": "3. Plan prompt",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:5bf8c78793d603f1",
+        "checked": true,
+        "section": "4. Proposal entry points",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:0d104887e66ea956",
+        "checked": true,
+        "section": "5. Decisions lint",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:adbe690a6e0388a8",
+        "checked": true,
+        "section": "6. Approval digest",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:d0048d20f3fa4efb",
+        "checked": true,
+        "section": "7. Instructions drift",
+        "line": 29
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/080-architecture-decision-checks/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:cdf06d5cdad9dc0e",
+        "checked": true,
+        "section": "1. Checks and denied packages",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d78003565d4e39fa",
+        "checked": true,
+        "section": "2. Check modification flag",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5fc86fd53f602fe9",
+        "checked": true,
+        "section": "3. Dependency gate",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:645ddc23373c6e78",
+        "checked": true,
+        "section": "4. Show and report",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/081-traceability-scenarios/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c2c42cfa623d4b42",
+        "checked": true,
+        "section": "1. Scenario outcomes",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:f12db211268c3b8a",
+        "checked": true,
+        "section": "2. Traceability config",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:182c9220b3830477",
+        "checked": true,
+        "section": "3. OSQ_CHANGE",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b6f75fb82e689030",
+        "checked": true,
+        "section": "4. Effective scenario lookup",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:351b671984a3de01",
+        "checked": true,
+        "section": "5. Test helper",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:5f32ad2f6074d786",
+        "checked": true,
+        "section": "6. Scanner and index",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:30d5be297613bb6d",
+        "checked": true,
+        "section": "7. Traceability lint",
+        "line": 29
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:7ebcc734063d2896",
+        "checked": true,
+        "section": "8. Report and show",
+        "line": 33
+      },
+      {
+        "number": 9,
+        "title": "fnv1a64:588ebcef9c00b119",
+        "checked": true,
+        "section": "9. Instruction blocks",
+        "line": 37
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/082-traceability-fast-feedback/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4d7e27612bda8db5",
+        "checked": true,
+        "section": "1. Focused test config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5e2e1f5c33c9ef6f",
+        "checked": true,
+        "section": "2. Collect and run",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5ac2ff8e258de990",
+        "checked": true,
+        "section": "3. Watcher gate",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:2b463ffa2b2ce2f4",
+        "checked": true,
+        "section": "4. Show and docs",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/083-traceability-mutation/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f6542b05bfec2540",
+        "checked": true,
+        "section": "1. Mutation config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:7c7ee38c74be89c4",
+        "checked": true,
+        "section": "2. Function ranges and baseline",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:571ee986ad84ca66",
+        "checked": true,
+        "section": "3. Pick and run",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:343a70080aad24e1",
+        "checked": true,
+        "section": "4. Watcher check",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:c2c836310f08e04f",
+        "checked": true,
+        "section": "5. Show, report, and docs",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/084-git-stage-0/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d2ca586d3387bf9d",
+        "checked": true,
+        "section": "1. Vcs port",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:3e55a3579baaa328",
+        "checked": true,
+        "section": "2. Doctor",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:f2604b1b4f9a63d5",
+        "checked": true,
+        "section": "3. Violation recording",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b6ae60cb2fc948a0",
+        "checked": true,
+        "section": "4. Relative paths",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:7ba9eb6d3aa5d3a2",
+        "checked": true,
+        "section": "5. Executor prompt",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/085-own-adr-checks-by-validity/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e1a6011fc3756813",
+        "checked": true,
+        "section": "1. Own ADR test",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/086-baseline-verify/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8aefc057d9468a48",
+        "checked": true,
+        "section": "1. Config and key",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:52478fe22c7812b4",
+        "checked": true,
+        "section": "2. Watcher gate",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/087-change-locations/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4b055ef537dc9445",
+        "checked": true,
+        "section": "1. Resolver",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:de3d12660abc9c1c",
+        "checked": true,
+        "section": "2. Lifecycle commands",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:9e258978f99fb2d3",
+        "checked": true,
+        "section": "3. Status readers",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:18e53f7def009dc7",
+        "checked": true,
+        "section": "4. Report, doctor, and web",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:0bcc7824873037e1",
+        "checked": true,
+        "section": "5. Watcher and structural check",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/088-vcs-config-and-writes/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8d9e2aa4e1ff79b5",
+        "checked": true,
+        "section": "1. Config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e038f68fc9962397",
+        "checked": true,
+        "section": "2. Git writes",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d19eabd5fb129b60",
+        "checked": true,
+        "section": "3. Doctor warnings",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/089-approve-into-worktree/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c51ebbff01ab10c4",
+        "checked": true,
+        "section": "1. Port and config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:69a9f9c9fe73bbc6",
+        "checked": true,
+        "section": "2. Resolver",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:c9839787ed343711",
+        "checked": true,
+        "section": "3. Dashboard",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:a5078a1ee0c98ea5",
+        "checked": true,
+        "section": "4. Approve",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:c5486261c654b719",
+        "checked": true,
+        "section": "5. Status",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/090-config-errors-fail-loudly/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3753487282e77167",
+        "checked": true,
+        "section": "1. Loading",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:da4cdaeb2463765a",
+        "checked": true,
+        "section": "2. Command line",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/091-dead-path-building-blocks/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:643f676bc9541bc3",
+        "checked": true,
+        "section": "1. Port fixes",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2ea1d00df458d9f9",
+        "checked": true,
+        "section": "2. Commit message",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:991d66c8ce165e5e",
+        "checked": true,
+        "section": "3. Dead record",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/092-opencode-v2-adapter/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5f0ed0881a63ae6a",
+        "checked": true,
+        "section": "1. Doctor",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5620dee56448fdbe",
+        "checked": true,
+        "section": "2. Adapter",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/093-run-in-worktree/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a7082422f5afa5ab",
+        "checked": true,
+        "section": "1. Guard",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:9c19f2ae47ce9fb3",
+        "checked": true,
+        "section": "2. Run",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5f2f5ba82c62f6cf",
+        "checked": true,
+        "section": "3. Recreation",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:87ad477521086213",
+        "checked": true,
+        "section": "4. Lifecycle and status",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/094-stacking/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5c3e21d584743495",
+        "checked": true,
+        "section": "1. Port",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:f16972916e885253",
+        "checked": true,
+        "section": "2. Resolver",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:9ae6242b3613efb4",
+        "checked": true,
+        "section": "3. Approval",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:73cf44c1ab60133b",
+        "checked": true,
+        "section": "4. Cut",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:ce2278219e2bd8c6",
+        "checked": true,
+        "section": "5. Reject",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/095-osq-message-and-leftovers/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:06d2f5b26a52bc25",
+        "checked": true,
+        "section": "1. Traceability",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:660ec7e3917d47f0",
+        "checked": true,
+        "section": "2. Squash message",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:15fd214fa182e3b3",
+        "checked": true,
+        "section": "3. Leftover drafts",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/096-worktree-holds-change/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a1785f8a4f795063",
+        "checked": true,
+        "section": "1. Resolver",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5ef2be8b4fd56afa",
+        "checked": true,
+        "section": "2. Cut",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/097-inbox-dispatch-order/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:983fc32b639916e7",
+        "checked": true,
+        "section": "1. Items",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:53e7c75964f9145a",
+        "checked": true,
+        "section": "2. Order",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:7b7992812c9ddbd9",
+        "checked": true,
+        "section": "3. Cards",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:1cd94b252bd4d3fa",
+        "checked": true,
+        "section": "4. Command",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/098-inbox-follow-sound/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8906decd68eb554e",
+        "checked": true,
+        "section": "1. Config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:16a652adbc271c3e",
+        "checked": true,
+        "section": "2. Sound file",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:f6fb91a4ce0ee981",
+        "checked": true,
+        "section": "3. Player",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b46f4cdcba036450",
+        "checked": true,
+        "section": "4. Follow",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/099-inbox-cards/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:29a8f11f86c568f5",
+        "checked": true,
+        "section": "1. Watch",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d3ec6f91ec8bc8c8",
+        "checked": true,
+        "section": "2. Keys",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:aa3d47dcfde5c430",
+        "checked": true,
+        "section": "3. Session",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b9ea25ddcccbccff",
+        "checked": true,
+        "section": "4. Terminal",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/100-enable-vcs-for-osq/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:6172d2ef7755972b",
+        "checked": true,
+        "section": "1. Config",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/101-inbox-wait-log/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d96aac225b9498e6",
+        "checked": true,
+        "section": "1. Log",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:9f84920c8cef0403",
+        "checked": true,
+        "section": "2. Order",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:137482103a7c2b85",
+        "checked": true,
+        "section": "3. Recording",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b4f6ca90e413c560",
+        "checked": true,
+        "section": "4. Command",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:f2dcfdacb0eaaef4",
+        "checked": true,
+        "section": "5. Report section",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:23e63dda914696f0",
+        "checked": true,
+        "section": "6. Report output",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/102-capability-relations/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:66497e46628074a0",
+        "checked": true,
+        "section": "1. Lint",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:241207fb6e395bad",
+        "checked": true,
+        "section": "2. Digest and ownership",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:59106e796e7e1ea1",
+        "checked": true,
+        "section": "3. Config",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:2fbb0d6ad14abd1d",
+        "checked": true,
+        "section": "4. Docs",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/103-result-none-sections/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e2dcd829a6f6a418",
+        "checked": true,
+        "section": "1. Parser",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/104-archived-once/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:efb8decbb634f3b4",
+        "checked": true,
+        "section": "1. Archived once",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/105-capability-sidecar/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5ce870cb341e6d17",
+        "checked": true,
+        "section": "1. Config",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1a494e919fcb80e8",
+        "checked": true,
+        "section": "2. Sidecar and lint",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:3b63792948a40469",
+        "checked": true,
+        "section": "3. Archive",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:67d54de6891a3192",
+        "checked": true,
+        "section": "4. Migrate",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:073830e22f2f4dbe",
+        "checked": true,
+        "section": "5. Report",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:0aaa0b5240b27cb5",
+        "checked": true,
+        "section": "6. Graph",
+        "line": 25
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:cc35544bea62182f",
+        "checked": true,
+        "section": "7. osq itself",
+        "line": 29
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/106-capability-graph/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3531ee268531567f",
+        "checked": true,
+        "section": "1. Shared rules",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ab2aea04e13827c4",
+        "checked": true,
+        "section": "2. Graph",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:14d1a3b6fb2708ba",
+        "checked": true,
+        "section": "3. Traceability",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:1429e5297c9cc1e8",
+        "checked": true,
+        "section": "4. Command and route",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/107-osq-land/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:1e3cb383087186d8",
+        "checked": true,
+        "section": "1. Port",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:73e906d006bfc13d",
+        "checked": true,
+        "section": "2. Sync",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:b22d2c5c0c4849b6",
+        "checked": true,
+        "section": "3. Land",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:a4656a6637d19f88",
+        "checked": true,
+        "section": "4. Pointers",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/108-adr-006-deterministic-core/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:48ce16ffb6511f63",
+        "checked": true,
+        "section": "1. ADR 006",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/109-deterministic-land/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:337abc764bc1b705",
+        "checked": true,
+        "section": "1. Archive",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:18347d8dd728b72e",
+        "checked": true,
+        "section": "2. Port",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:ca6f778438a1c433",
+        "checked": true,
+        "section": "3. Land",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:3b2b8171502a5d92",
+        "checked": true,
+        "section": "4. Hand path",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/110-osq-sync/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ab2fbd5281d6f2f8",
+        "checked": true,
+        "section": "1. Sync",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0a229d29b08024db",
+        "checked": true,
+        "section": "2. Watcher",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:077b1b2de4422b13",
+        "checked": true,
+        "section": "3. Command",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:2d7751724d2a3f8d",
+        "checked": true,
+        "section": "4. Status",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/111-commands-throw/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fe9c9bd3a3f8c3a1",
+        "checked": true,
+        "section": "1. Foundation",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:750633c51538a9dc",
+        "checked": true,
+        "section": "2. Change commands",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:88f65d8d86989e9f",
+        "checked": true,
+        "section": "3. Verification commands",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:bb59a5b7e43e6838",
+        "checked": true,
+        "section": "4. Approve",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/112-test-path-meanings/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:cb9817c19dd839b8",
+        "checked": true,
+        "section": "1. Frozen-test gate",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0fb3aca2949c4c6f",
+        "checked": true,
+        "section": "2. Traceability",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/113-traceability-opt-in-once/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:921f92e6ad6ca0d6",
+        "checked": true,
+        "section": "1. Opt-in check",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/114-replay-sees-archiving-change/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:04b710560f51761c",
+        "checked": true,
+        "section": "1. Replay",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/115-retire-source-comments/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:71c858b4ee726ddb",
+        "checked": true,
+        "section": "1. Lint",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/116-executor-prompt-fits/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fbf94974c5584f21",
+        "checked": true,
+        "section": "1. Rules",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "When an adapter's spawn throws, the task dies as crashed",
+        "checked": true,
+        "section": "2. Spawn",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/117-approve-after-halt/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a2203ccc2b5c738f",
+        "checked": true,
+        "section": "1. Version control",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:007f10a9aa3526be",
+        "checked": true,
+        "section": "2. Approval",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:1dc17a52840ec72d",
+        "checked": true,
+        "section": "3. Watcher",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:1001bc76148cb2ce",
+        "checked": true,
+        "section": "4. Status",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/118-stale-build-every-pass/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:2fcda00aef8696f1",
+        "checked": true,
+        "section": "1. Watcher",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:8cc83f7bcfe7315e",
+        "checked": true,
+        "section": "2. Land",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/119-lint-own-findings/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:d9c090c7ffef3d41",
+        "checked": true,
+        "section": "1. Lint output",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/120-regressed-report-short/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:7456818245724df3",
+        "checked": true,
+        "section": "1. Excerpt and archive marker",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e6c452d2a0639840",
+        "checked": true,
+        "section": "2. Dead markers",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5724dcbb757ccac0",
+        "checked": true,
+        "section": "3. Scope regression marker",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:0b9c9e68f9d2aee5",
+        "checked": true,
+        "section": "4. Equivalence test",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/121-planner-reads-requirements/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9c0993c94e65a85a",
+        "checked": true,
+        "section": "1. Spec command",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d2a7e256433ac8a9",
+        "checked": true,
+        "section": "2. Managed blocks",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:55952d83a3611e21",
+        "checked": true,
+        "section": "3. Plan prompt and opencode planner",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/122-confinement-env/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:2f5e3886ad176960",
+        "checked": true,
+        "section": "1. Configuration and allowlist",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5f5590610f0d97ef",
+        "checked": true,
+        "section": "2. Verify and prepare",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:bb90f34b9f55f8cd",
+        "checked": true,
+        "section": "2. Verify and prepare",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:f282515d590fa7f5",
+        "checked": true,
+        "section": "3. Agent",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:384f1c5e91796327",
+        "checked": true,
+        "section": "4. Decision",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/123-approve-owns-draft/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:51a8ac9bc3578511",
+        "checked": true,
+        "section": "1. Changes outside the checkout",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:413332590b7f84e7",
+        "checked": true,
+        "section": "1. Changes outside the checkout",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:c4a4f7508a59d809",
+        "checked": true,
+        "section": "2. Approval owns the draft",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:309d1a5d9e854b02",
+        "checked": true,
+        "section": "3. osq done goes",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:54c6598b42d18708",
+        "checked": true,
+        "section": "4. Decision and docs",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/124-ci-temp-repo-cleanup/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:1d91d11a64f1bacc",
+        "checked": true,
+        "section": "1. Test git environment",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/125-checks-osq-runs/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f72c00fb130a4e31",
+        "checked": true,
+        "section": "1. Remove the commands",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:4831304729babbd1",
+        "checked": true,
+        "section": "2. Run the check",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:1f22086e6a7c0dd2",
+        "checked": true,
+        "section": "3. Remove the waiting state",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:0ab58d9d9e7b0ca8",
+        "checked": true,
+        "section": "3. Remove the waiting state",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:41f028a6f06ebc24",
+        "checked": true,
+        "section": "3. Remove the waiting state",
+        "line": 15
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:3014e85b7f4cc146",
+        "checked": true,
+        "section": "4. Guidance",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/126-scope-deletions/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0f6ae23a2c979d08",
+        "checked": true,
+        "section": "1. Scoped deletions",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/127-inert-module-cleanup/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a659401df2e748a3",
+        "checked": true,
+        "section": "1. Delete the stand-ins",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/128-steering-triggers/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:db475e85b6cd6544",
+        "checked": true,
+        "section": "1. Triggers",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:327ef9f225af7a41",
+        "checked": true,
+        "section": "2. One item, one action",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:260261f43423df2f",
+        "checked": true,
+        "section": "2. One item, one action",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:719cc58f261f17c7",
+        "checked": true,
+        "section": "3. Continue the run",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:7c8964aabad6612c",
+        "checked": true,
+        "section": "4. Guidance",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/129-default-branch-steering/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:90ab347f352bc929",
+        "checked": true,
+        "section": "1. Default-branch triggers",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:9fcb3b795154f377",
+        "checked": true,
+        "section": "1. Default-branch triggers",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:2d2fea60e4438140",
+        "checked": true,
+        "section": "1. Default-branch triggers",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:031dfe9ced7fdbe3",
+        "checked": true,
+        "section": "2. Steering them",
+        "line": 11
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:3e94ee65403454c0",
+        "checked": true,
+        "section": "2. Steering them",
+        "line": 12
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:0c541f19d88579a4",
+        "checked": true,
+        "section": "2. Steering them",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/130-docs-digest/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "When osq reads an ADR, it records the date under its heading",
+        "checked": true,
+        "section": "1. Reading the record",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2273e3910a54949d",
+        "checked": true,
+        "section": "1. Reading the record",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:fb007a920c0aa8e7",
+        "checked": true,
+        "section": "2. The digest",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:40976b3dc87ede8c",
+        "checked": true,
+        "section": "2. The digest",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/131-done-marker-path-in-spec/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e3aa1ec118050cbf",
+        "checked": true,
+        "section": "1. Done marker path",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/132-report-reads-once/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a319ea58abb33de2",
+        "checked": true,
+        "section": "1. Read scope",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0ab3d3f244cc1b01",
+        "checked": true,
+        "section": "1. Read scope",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/133-sqlite-read-index/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:db802ace9438b558",
+        "checked": true,
+        "section": "1. Read index",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:d287334ca401a01f",
+        "checked": true,
+        "section": "1. Read index",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/134-agents-query-osq/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:6cad166dd0ce8e79",
+        "checked": true,
+        "section": "1. History query",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:3ef12af125b45717",
+        "checked": true,
+        "section": "1. History query",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:74dba3d627434909",
+        "checked": true,
+        "section": "1. History query",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/135-report-small-reads-once/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9e17c74f1f416c14",
+        "checked": true,
+        "section": "1. Shared change-file reads",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1eef9b1d60c8e7a2",
+        "checked": true,
+        "section": "1. Shared change-file reads",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/136-provider-outage-deaths/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:70552826c6021822",
+        "checked": true,
+        "section": "1. Provider outages",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c3d1e15897fdf86c",
+        "checked": true,
+        "section": "1. Provider outages",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/137-safer-harness-defaults/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:3eb22360b100af09",
+        "checked": true,
+        "section": "1. Safer harness defaults",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e3f4ce38261a47ef",
+        "checked": true,
+        "section": "1. Safer harness defaults",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:b77c94febda31bfe",
+        "checked": true,
+        "section": "1. Safer harness defaults",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/138-pi-default-harness/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:246470b5e20d0cbd",
+        "checked": true,
+        "section": "1. Pi as the scaffolded default",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ba688ec786494305",
+        "checked": true,
+        "section": "1. Pi as the scaffolded default",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/139-removed-requirement-pins/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:1f5453836ac8a361",
+        "checked": true,
+        "section": "1. Requirement pins",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/140-line-budget-full-paths/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:31f0ad6bc5ac68e9",
+        "checked": true,
+        "section": "1. Line budget by path",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/141-commands-report-failure/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:39401ebd7bcb654c",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:3085fca50f49ad7c",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:daa9bff71973efbe",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9a9e9d83aee9ebee",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:0745fee8f9561849",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 9
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:9dae5e93a5f5191d",
+        "checked": true,
+        "section": "1. Commands throw CommandError",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/142-command-inputs/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:253c138a6745308d",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a6a80181b02437af",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:f9ee2fb596bca56c",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:4a062bee6506dd9f",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:5246bd0b8d437b0f",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 9
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:595562f1dada6567",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 10
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:c1fd669808465d71",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 11
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:7287326c37f878dc",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 12
+      },
+      {
+        "number": 9,
+        "title": "fnv1a64:34a9967f356f23c4",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 13
+      },
+      {
+        "number": 10,
+        "title": "fnv1a64:d8555c67d1e38955",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 14
+      },
+      {
+        "number": 11,
+        "title": "fnv1a64:71aa0254dd046516",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 15
+      },
+      {
+        "number": 12,
+        "title": "fnv1a64:871d90a9828c7fd4",
+        "checked": true,
+        "section": "1. Commands take their inputs as arguments",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/143-stale-build-names-root/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:752aa5625c7a8be3",
+        "checked": true,
+        "section": "1. Stale line names the root",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/144-inbox-in-process/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:abfd9af9b88dc4f9",
+        "checked": true,
+        "section": "1. Card actions run in-process",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/145-help-everyday-first/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c2ae0960848730c5",
+        "checked": true,
+        "section": "1. Grouped root help",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a7fa852e6fa064b5",
+        "checked": true,
+        "section": "2. README command groups",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/146-web-write-actions/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:01eddfa6f582caa4",
+        "checked": true,
+        "section": "1. Loopback write actions",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:3214cb07ab27495c",
+        "checked": true,
+        "section": "1. Loopback write actions",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:568152695c4685ac",
+        "checked": true,
+        "section": "1. Loopback write actions",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/147-change-detail-model/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ff516cc1377bf119",
+        "checked": true,
+        "section": "1. Change detail model",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5f4fd2a514690d34",
+        "checked": true,
+        "section": "1. Change detail model",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/148-approve-view/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:bc799af8006471d3",
+        "checked": true,
+        "section": "1. Approve view",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2e6baaacf58bd4c4",
+        "checked": true,
+        "section": "1. Approve view",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/149-validator-observe/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:bc6ec69280008371",
+        "checked": true,
+        "section": "1. Configuration and the role",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:f5d425bd730e19c2",
+        "checked": true,
+        "section": "1. Configuration and the role",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:5a51ca7be122a8cc",
+        "checked": true,
+        "section": "2. Running the validator",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:0197cfc97ee9d748",
+        "checked": true,
+        "section": "2. Running the validator",
+        "line": 11
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:eade0d9817d13bf3",
+        "checked": true,
+        "section": "2. Running the validator",
+        "line": 12
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:3e3ff4626b983041",
+        "checked": true,
+        "section": "3. Reading the findings",
+        "line": 16
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:8b0e43942dfde97b",
+        "checked": true,
+        "section": "3. Reading the findings",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/150-architecture-adrs-first/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:00cdd6e7ffb98f0e",
+        "checked": true,
+        "section": "1. Decisions scaffold",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:6c20f9f2c43e90b4",
+        "checked": true,
+        "section": "2. Guidance",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/151-verify-log-out-of-events/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ac925077f6ac3d4b",
+        "checked": true,
+        "section": "1. Verify logs and event tails",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2a8aa0b781666278",
+        "checked": true,
+        "section": "1. Verify logs and event tails",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/152-halt-self-recovery/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ffab35367771ead8",
+        "checked": true,
+        "section": "1. Recovery without hand git",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:735b268b3673ebae",
+        "checked": true,
+        "section": "1. Recovery without hand git",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:978d6a0d871474c3",
+        "checked": true,
+        "section": "1. Recovery without hand git",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:5fe6c261cbf836e0",
+        "checked": true,
+        "section": "1. Recovery without hand git",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/153-land-view/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:80f22b635252c718",
+        "checked": true,
+        "section": "1. Land view",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:eaacfae6f5e2d1e6",
+        "checked": true,
+        "section": "1. Land view",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:cde948e0316908b0",
+        "checked": true,
+        "section": "1. Land view",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/154-traceability-trial/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:428643ef4abb56f2",
+        "checked": true,
+        "section": "1. Opt in and record the trial",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:dadfc07ba1ccea32",
+        "checked": true,
+        "section": "1. Opt in and record the trial",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:7e20cbbc193baafa",
+        "checked": true,
+        "section": "2. Link traceability's scenarios",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:bcfec86548d5db62",
+        "checked": true,
+        "section": "2. Link traceability's scenarios",
+        "line": 11
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:364c9849ab532164",
+        "checked": true,
+        "section": "2. Link traceability's scenarios",
+        "line": 12
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:a7ead08e0232649d",
+        "checked": true,
+        "section": "2. Link traceability's scenarios",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/155-watch-service/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0ca06b529d5d5cec",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:037745b4f150bf2c",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8ddf137ef1124970",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:414f9de194f7d859",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:a086e5e654c4e9cc",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 9
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:3a9dc57608df11e4",
+        "checked": true,
+        "section": "1. Watch service",
+        "line": 10
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/156-flaky-tests-fixed/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:098c3f7e96c1b799",
+        "checked": true,
+        "section": "1. Flaky tests",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:b57ccaf11e6424f4",
+        "checked": true,
+        "section": "1. Flaky tests",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:7882c8b304cc2440",
+        "checked": true,
+        "section": "1. Flaky tests",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/157-flaky-test-guard/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:35a0f783851576cb",
+        "checked": true,
+        "section": "1. Flaky test guard",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:859bcc68818449e9",
+        "checked": true,
+        "section": "1. Flaky test guard",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:2fb2a396f6b35ca8",
+        "checked": true,
+        "section": "1. Flaky test guard",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/158-osq-runs-formatter/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:063d8be99d401be9",
+        "checked": true,
+        "section": "1. osq runs the formatter",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1ee33f3f20d66710",
+        "checked": true,
+        "section": "1. osq runs the formatter",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/159-server-mode-adr/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:07b7588c174e1a69",
+        "checked": true,
+        "section": "1. Decisions",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:fc6b736ad69e385f",
+        "checked": true,
+        "section": "1. Decisions",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/160-approve-highlights/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:b7117d23cf549a6d",
+        "checked": true,
+        "section": "1. Assumptions section",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:466ef53593d66251",
+        "checked": true,
+        "section": "1. Assumptions section",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:08851239a06f77dc",
+        "checked": true,
+        "section": "2. Notices",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9df693590e20e6b7",
+        "checked": true,
+        "section": "2. Notices",
+        "line": 11
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:380cf3fee4cd5e3a",
+        "checked": true,
+        "section": "2. Notices",
+        "line": 12
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:7c25a0a1d25c31bb",
+        "checked": true,
+        "section": "3. Dashboard",
+        "line": 16
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:fdf51d0b561b6e4d",
+        "checked": true,
+        "section": "3. Dashboard",
+        "line": 17
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:67a4ba0a99b14fbb",
+        "checked": true,
+        "section": "4. History",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/161-osq-server/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:442a04be3d5debdb",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:c17f1e9c4ccf650d",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:0d376397d2eced93",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e7354291a9eba383",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:856d26a67372debc",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 9
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:bc1f5b400a9ff282",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 10
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:de9fdc178ceaf10e",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 11
+      },
+      {
+        "number": 8,
+        "title": "fnv1a64:8d1730a2c3cf1591",
+        "checked": true,
+        "section": "1. osq server",
+        "line": 12
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/162-remote-cli/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8036de1d5fb14027",
+        "checked": true,
+        "section": "1. Remote CLI",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0e93ee3f944a5515",
+        "checked": true,
+        "section": "1. Remote CLI",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:ab22e6ff4f6eeaff",
+        "checked": true,
+        "section": "1. Remote CLI",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:6c2ab5985a6baa4d",
+        "checked": true,
+        "section": "1. Remote CLI",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:075e1464b1ebc3d8",
+        "checked": true,
+        "section": "1. Remote CLI",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/163-local-mcp/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:aaec00b689f5bb62",
+        "checked": true,
+        "section": "1. Local MCP",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:cae62a11ca5c4c64",
+        "checked": true,
+        "section": "1. Local MCP",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:fcd93dc660a66d7a",
+        "checked": true,
+        "section": "1. Local MCP",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:16bc01cad2cda853",
+        "checked": true,
+        "section": "1. Local MCP",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:7e64c0309cee22ed",
+        "checked": true,
+        "section": "1. Local MCP",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/164-landed-means-on-main/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c26320c938eebcc4",
+        "checked": true,
+        "section": "1. Landed means on main",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:61a26c4ca3200995",
+        "checked": true,
+        "section": "1. Landed means on main",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:37f4da5734a93712",
+        "checked": true,
+        "section": "1. Landed means on main",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/165-stacked-land-keeps-history/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5398d08c10cc4bf8",
+        "checked": true,
+        "section": "1. Stacked land keeps history",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:56bb697f625e9774",
+        "checked": true,
+        "section": "1. Stacked land keeps history",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:e44bb1b80a470ee8",
+        "checked": true,
+        "section": "1. Stacked land keeps history",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/166-land-runs-after-command/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:7d729e2b522a7e26",
+        "checked": true,
+        "section": "1. Land runs the after-land command",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a79f8edeb5033ccf",
+        "checked": true,
+        "section": "1. Land runs the after-land command",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:97c8f40376f4dca4",
+        "checked": true,
+        "section": "1. Land runs the after-land command",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/167-capability-slices-adr/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:bcc2693cf7ee12e3",
+        "checked": true,
+        "section": "1. Capability slices",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:43345bae2f75f4c3",
+        "checked": true,
+        "section": "1. Capability slices",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/168-capability-rename-generator/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:894e150284d3da62",
+        "checked": true,
+        "section": "1. Capability moves osq generates",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:831f8a1a6037c8b0",
+        "checked": true,
+        "section": "1. Capability moves osq generates",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:a2407e1a7e82574f",
+        "checked": true,
+        "section": "1. Capability moves osq generates",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:27b099d6f66dba4b",
+        "checked": true,
+        "section": "1. Capability moves osq generates",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/169-slice-registries/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9295addefa5912ed",
+        "checked": true,
+        "section": "1. Slice registry",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1951c8e944d1411c",
+        "checked": true,
+        "section": "1. Slice registry",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:e97f52f38526cc5d",
+        "checked": true,
+        "section": "1. Slice registry",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/170-approve-waits-for-overlap/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:b0e6b69d8bedd113",
+        "checked": true,
+        "section": "1. Approve waits for overlap",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e85faaccb6d206b7",
+        "checked": true,
+        "section": "1. Approve waits for overlap",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:a97d3bdd9af1e52b",
+        "checked": true,
+        "section": "1. Approve waits for overlap",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:6f5c58b826cea8cc",
+        "checked": true,
+        "section": "1. Approve waits for overlap",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:656a432181a001c0",
+        "checked": true,
+        "section": "1. Approve waits for overlap",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/171-trial-signals-in-query/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8f8cc2b012f2b1a8",
+        "checked": true,
+        "section": "1. Trial signals in query",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:cb89ac1f449403b2",
+        "checked": true,
+        "section": "1. Trial signals in query",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:32c5eca0d73769e4",
+        "checked": true,
+        "section": "1. Trial signals in query",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9ff3c5ddd632be27",
+        "checked": true,
+        "section": "1. Trial signals in query",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:ddd76dcf7c139ca7",
+        "checked": true,
+        "section": "1. Trial signals in query",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/172-halt-recovery-scenarios/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9a5b6637ef51e528",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:89995ede6cdb21d7",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:ead5b17c9c5b1f6d",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:9f5de42045467659",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:486d44f68494142e",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 9
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:6672173c17821a27",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 10
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:bba59b551f5ab3bd",
+        "checked": true,
+        "section": "1. Recovery scenarios",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/173-prompt-files-exist/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:9614ed26a79d8513",
+        "checked": true,
+        "section": "1. Entry files exist",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ec94f95188906d43",
+        "checked": true,
+        "section": "1. Entry files exist",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:69ae2ac0fc9426b7",
+        "checked": true,
+        "section": "1. Entry files exist",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/174-doctor-line-endings/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fb644bba4d3135d3",
+        "checked": true,
+        "section": "1. Line endings warning",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:247d3298c83f5ccd",
+        "checked": true,
+        "section": "1. Line endings warning",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/175-capability-pages/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:c82c2c5b902b19e3",
+        "checked": true,
+        "section": "1. Page models",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e77aa97984cace0e",
+        "checked": true,
+        "section": "1. Page models",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:decb36396f4c3c71",
+        "checked": true,
+        "section": "2. Markdown",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:248fe712937f10be",
+        "checked": true,
+        "section": "3. Dashboard",
+        "line": 14
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:7423e0ddb8611323",
+        "checked": true,
+        "section": "3. Dashboard",
+        "line": 15
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/176-event-driven-follow/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:5b0bfaa3fdb1c87b",
+        "checked": true,
+        "section": "1. Tree record",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:fe89e9ce82fb4d4c",
+        "checked": true,
+        "section": "1. Tree record",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:96bac8f9600d8adc",
+        "checked": true,
+        "section": "1. Tree record",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/177-readme-software-factory/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:68265375524f6653",
+        "checked": true,
+        "section": "1. Software factory wording",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/178-gitattributes-scaffold/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:97f29c5c7a763b3d",
+        "checked": true,
+        "section": "1. Init",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:22bf33833b882cee",
+        "checked": true,
+        "section": "2. Doctor",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/179-ungoverned-paths/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:ac77a7a5d87a04b0",
+        "checked": true,
+        "section": "1. Ungoverned paths",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:7d53925fb50b5554",
+        "checked": true,
+        "section": "1. Ungoverned paths",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:cb494cc8a238c563",
+        "checked": true,
+        "section": "1. Ungoverned paths",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/180-ungoverned-docs-cleanup/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:4d67962b423e9d41",
+        "checked": true,
+        "section": "1. Tests stop reading README and the repository's .env.example",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:81c470335a6be8e9",
+        "checked": true,
+        "section": "1. Tests stop reading README and the repository's .env.example",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:22409dcab9b422c4",
+        "checked": true,
+        "section": "1. Tests stop reading README and the repository's .env.example",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:d5fb825192335a64",
+        "checked": true,
+        "section": "1. Tests stop reading README and the repository's .env.example",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:78f5e54594a4e09f",
+        "checked": true,
+        "section": "1. Tests stop reading README and the repository's .env.example",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/181-doctor-sees-validator-failing/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:04881558c6c6f1fd",
+        "checked": true,
+        "section": "1. Doctor reads validator runs",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/182-steered-approve-commits-atomically/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:83834446925ebb47",
+        "checked": true,
+        "section": "1. Git reads take no index lock",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:0d8b7404e7c83a93",
+        "checked": true,
+        "section": "2. Steered approve rolls back its seal",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8039894a89039883",
+        "checked": true,
+        "section": "3. Retry refuses uncommitted plan edits",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:7d2ba273e6822bc9",
+        "checked": true,
+        "section": "4. Recovery from a failed approval commit",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/183-change-verify-names-plan-conflict/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:eee31514e4aa066d",
+        "checked": true,
+        "section": "1. Plan conflict at change verify",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/184-language-gaps-reported/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:b092dfe0eb73980f",
+        "checked": true,
+        "section": "1. Languages kernel slice",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e5f8346215cae5ad",
+        "checked": true,
+        "section": "2. Languages in osq doctor",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:67baf9464f1e63c8",
+        "checked": true,
+        "section": "3. Language gap at approval",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/185-language-support-adr/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:aae27c348e810d3f",
+        "checked": true,
+        "section": "1. ADR 017",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/186-task-outcomes-and-plan-hints/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:71144f561a7e5edc",
+        "checked": true,
+        "section": "1. Task outcomes and plan hints",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:f73a9738c2212064",
+        "checked": true,
+        "section": "1. Task outcomes and plan hints",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/188-word-bans-lint/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:85dc825ae8151b14",
+        "checked": true,
+        "section": "1. Banned words",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:79afba01d0e8d4d5",
+        "checked": true,
+        "section": "1. Banned words",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:527236a4fa7916d6",
+        "checked": true,
+        "section": "1. Banned words",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:be58d0f3e51b9e91",
+        "checked": true,
+        "section": "1. Banned words",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/189-auto-steer-blocked/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:6dee3a6b19961218",
+        "checked": true,
+        "section": "1. Decision",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:349bcb1164aa61d7",
+        "checked": true,
+        "section": "2. Configuration",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:b274e8c4f1fde359",
+        "checked": true,
+        "section": "3. Watcher",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:b4fba5d2d2e47ada",
+        "checked": true,
+        "section": "4. Inbox",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:09c0977c05092703",
+        "checked": true,
+        "section": "5. Wiring",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/190-plan-handoff-prompt/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f3c6fc0ead5e1048",
+        "checked": true,
+        "section": "1. Paste block",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:ec03da5ea32fbf3d",
+        "checked": true,
+        "section": "1. Paste block",
+        "line": 6
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/192-change-page-phone/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:78e09195e4a47c0f",
+        "checked": true,
+        "section": "1. Change document",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:5d181c6509f46176",
+        "checked": true,
+        "section": "2. Change page",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:3317cf1d257d8ee6",
+        "checked": true,
+        "section": "2. Change page",
+        "line": 10
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:5bbccb4f59e11cef",
+        "checked": true,
+        "section": "2. Change page",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/193-usage-limit-pause/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fac377d9b39fd10a",
+        "checked": true,
+        "section": "1. Adapters",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a1e05074efea8295",
+        "checked": true,
+        "section": "2. Pause marker",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d860940198528026",
+        "checked": true,
+        "section": "3. Watcher",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:e25824767e0ea1b6",
+        "checked": true,
+        "section": "4. Next step",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:c759e6058ed86653",
+        "checked": true,
+        "section": "5. Inbox",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:eaa0d41ee82cb174",
+        "checked": true,
+        "section": "6. Query",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/194-start-planning-button/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:acdb3b8f3c8493d4",
+        "checked": true,
+        "section": "1. Decision",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:4e8bc14996ae391c",
+        "checked": true,
+        "section": "2. Records",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:dde1d3631a0f2f2a",
+        "checked": true,
+        "section": "3. Status",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:ca0a0cc62a646456",
+        "checked": true,
+        "section": "4. Command",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:002b83cf3f6b1c2a",
+        "checked": true,
+        "section": "5. Server",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:7904c35be4f24286",
+        "checked": true,
+        "section": "5. Server",
+        "line": 22
+      },
+      {
+        "number": 7,
+        "title": "fnv1a64:64838d5551643b7e",
+        "checked": true,
+        "section": "6. Page",
+        "line": 26
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/195-dashboard-writing-adr/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:da1d6c0d69c1210c",
+        "checked": true,
+        "section": "1. Decision",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/196-shared-file-recertify/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:8a53b8745f24ed1e",
+        "checked": true,
+        "section": "1. Recertification",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a1cd25b70afbcc2c",
+        "checked": true,
+        "section": "2. Next step",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:043733da0c117fdf",
+        "checked": true,
+        "section": "3. Query",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/197-lint-duplicate-scenario-names/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f1c7f44c65928516",
+        "checked": true,
+        "section": "1. Repeated scenario names",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/198-manual-edits/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fbd14cc38768b10d",
+        "checked": true,
+        "section": "1. Manual edits",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:a5f98c7b25ebab7b",
+        "checked": true,
+        "section": "1. Manual edits",
+        "line": 6
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:8bdd3f1a9e2d4766",
+        "checked": true,
+        "section": "1. Manual edits",
+        "line": 7
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:c44baf3c9d5f50ad",
+        "checked": true,
+        "section": "1. Manual edits",
+        "line": 8
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:cdaeb601588556ae",
+        "checked": true,
+        "section": "1. Manual edits",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/199-autopilot-adr/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:043f75c0f5226532",
+        "checked": true,
+        "section": "1. Decision",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/200-autopilot-queue-run/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:03552480ddfde814",
+        "checked": true,
+        "section": "1. Configuration",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:e89100aad626a713",
+        "checked": true,
+        "section": "2. Queue approval",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:d7a94441d55cb40a",
+        "checked": true,
+        "section": "3. Next step",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:7ad559eb7a8196bb",
+        "checked": true,
+        "section": "4. Watcher",
+        "line": 17
+      },
+      {
+        "number": 5,
+        "title": "fnv1a64:86d8b56a2457f5b8",
+        "checked": true,
+        "section": "5. Inbox and status",
+        "line": 21
+      },
+      {
+        "number": 6,
+        "title": "fnv1a64:14b945912f895730",
+        "checked": true,
+        "section": "6. Dashboard",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/201-rust-test-gate/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:89cf965d9724b729",
+        "checked": true,
+        "section": "1. Rust facts in the languages slice",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:91eeaf22258d469e",
+        "checked": true,
+        "section": "2. Runner gate for Rust",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:86a47ee28d36799a",
+        "checked": true,
+        "section": "3. Lint for crate tests",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:d2df9a92e1828a91",
+        "checked": true,
+        "section": "4. Coverage list",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/202-rust-verify-lint/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:fdf8dcf38ca2f4c0",
+        "checked": true,
+        "section": "1. Rust verify runners as data",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:05cee18bdf86a1d8",
+        "checked": true,
+        "section": "2. Lint for cargo verifies",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/203-rust-dependency-gate/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:f7c02088d57e0525",
+        "checked": true,
+        "section": "1. Cargo manifest reader",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:bb154cec09d217b4",
+        "checked": true,
+        "section": "2. Gate for Cargo manifests",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:854e165eefea6add",
+        "checked": true,
+        "section": "3. Coverage list",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/204-rust-core/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0f99a16a5dcdd6cf",
+        "checked": true,
+        "section": "1. Typed events",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:264e31e248b094a6",
+        "checked": true,
+        "section": "2. Folds",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:1f452b222466b41b",
+        "checked": true,
+        "section": "3. Typestate gates",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/205-rust-adrs/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:147eb8c0688c24ac",
+        "checked": true,
+        "section": "1. Rust ADRs",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/206-rust-agent-guide/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e935bd2dc696683a",
+        "checked": true,
+        "section": "1. Rust guide",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/207-adr-groups/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:13b1074bc6db656d",
+        "checked": true,
+        "section": "1. Groups in applies_to",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:6953d66666931544",
+        "checked": true,
+        "section": "2. Readers of governs",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:a7cc8fd27a5f8afd",
+        "checked": true,
+        "section": "3. Rust ADRs on the group",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/208-rust-mutants-core/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:0f5ac433af0d4475",
+        "checked": true,
+        "section": "1. No missed mutants",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:2e16a5fecdf89c59",
+        "checked": true,
+        "section": "2. Rust CI and ADR 024",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/209-rust-mutants-verify/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:e1584d91284e2138",
+        "checked": true,
+        "section": "1. The diff in verify's environment",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:594b9cc81ba27e99",
+        "checked": true,
+        "section": "2. Rust verify runs the mutants",
+        "line": 9
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/210-rust-storage-base/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:36a6607564727201",
+        "checked": true,
+        "section": "1. Reading change folders",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:8209e1a56e9e244e",
+        "checked": true,
+        "section": "2. Read model",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:580a16d3a7d4badd",
+        "checked": true,
+        "section": "3. Corpus tests",
+        "line": 13
+      },
+      {
+        "number": 4,
+        "title": "fnv1a64:3613b45b324987cd",
+        "checked": true,
+        "section": "4. Archive corpus",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/211-rust-storage-event-tables/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:76eda699361a507e",
+        "checked": true,
+        "section": "1. Reading the table events",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:9529e953b4820fe8",
+        "checked": true,
+        "section": "2. Event tables",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:fea096efad6cf4e0",
+        "checked": true,
+        "section": "3. Archive corpus",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/212-rust-storage-file-tables/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:049c3d8043fc9c8a",
+        "checked": true,
+        "section": "1. Reading result files and manual records",
+        "line": 5
+      },
+      {
+        "number": 2,
+        "title": "fnv1a64:1d4d55b51916596f",
+        "checked": true,
+        "section": "2. File tables",
+        "line": 9
+      },
+      {
+        "number": 3,
+        "title": "fnv1a64:32a1a0e83312a25a",
+        "checked": true,
+        "section": "3. Archive corpus",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/213-lint-brace-scope/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:a87361d7dbd10121",
+        "checked": true,
+        "section": "1. Brace group refusal",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "path": "openspec/changes/archive/214-rust-storage-replay-exceptions/tasks.md",
+    "items": [
+      {
+        "number": 1,
+        "title": "fnv1a64:df4f8c981658803d",
+        "checked": true,
+        "section": "1. Replay exceptions",
+        "line": 5
+      }
+    ]
+  }
+]

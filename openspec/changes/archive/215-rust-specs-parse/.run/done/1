@@ -1,0 +1,27 @@
+---
+scope_resolver: 2
+scope_hash: sha256:327b974d9cfc6f708ffbe81136d796a280b7a5c05ed6891170a4a48c3083d521
+build_stamp: 8a77cf42
+project_commit: 5fa98160
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:34a3be7c94984196a708db1641f571f7469ee58902bf5a0e1ffbdc2b32c8f2a1
+  crates/kernel/specs/Cargo.toml: sha256:3c8b27bdb7d73e0cd2f791031267b2d5733ca9e82bc6ed35704dd096122a6335
+  crates/kernel/specs/src/lib.rs: sha256:5df84ee16d7e64947bc878ce1c926858b8847ba88de46c4198e4ab779373203b
+  crates/kernel/specs/src/markdown/delta.rs: sha256:e512ca539feb60f1aaa1792ac32513126002802d167942add45963df5b7002a3
+  crates/kernel/specs/src/markdown/living.rs: sha256:d8a40f6b3e2b04be098e4e1f73419b91ba31f58cdbaf2628dfe012ee120a41be
+  crates/kernel/specs/src/markdown/mod.rs: sha256:518656f5b7f658bb245abc5b1abf596703e616161159679f7c4bfe075d233dd1
+  crates/kernel/specs/src/markdown/ownership.rs: sha256:743bf932c65f83cc59613a0aed0aaac67746160f4386f728bce5fc8e4e83296a
+  crates/kernel/specs/src/markdown/requirement.rs: sha256:b30b21ccf2976623226223613fdc0813936eeeb31d1766e4c25daefeb7234d72
+  crates/kernel/specs/src/markdown/scenario.rs: sha256:258c95649059cf8d0eb3f6a7c3096578e1142b67fe0b7c7919160509d01b9897
+  crates/kernel/specs/src/markdown/section.rs: sha256:478cbd0e4ea223d0916fae0fe50777ae26cb5a781e3ad94de37dbd4a4bd181ac
+  crates/kernel/specs/src/markdown/table.rs: sha256:dbe055315b2bcdd84d96d1c4b153319dcca8ddd3febacba348f9d0d34b040db3
+  crates/kernel/specs/src/markdown/text.rs: sha256:90d5a43e7c7b86c38db0720f283eceee1b1b1ba2ceb5e5a1d3e66f242b79da74
+  crates/kernel/specs/src/markdown/types.rs: sha256:f344520e274bb42d0bd9e38c317c009ae4b232136bf7caef948e68b6763b9c11
+  crates/kernel/specs/tests/parsing_markdown.rs: sha256:773fa78a167a1e49fe54c441d41bc641cfdc28b37e837eca2b764a02ca328ad4
+  crates/kernel/specs/tests/parsing_markdown_docs.rs: sha256:09536be959fca44445b0415049f8a93c423efbd1f743d8d2e75ff08e619f05a7
+original_scope_hash: sha256:14fc9a6488553fef1458275dba93b7d08bb88e0dfdf1c1bc16ba1199845c1f07
+recertified_at: 2026-10-18T14:40:57.719Z
+recertification_count: 1
+---
+2026-10-18T14:02:34.017Z
