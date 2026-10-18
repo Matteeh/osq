@@ -1,4 +1,6 @@
 ---
+import Ledger from './Ledger.astro';
+
 const steps = [
   { who: 'You', title: 'Write a brief', body: 'A few lines on what you want and why.' },
   { who: 'You and a strong model', title: 'Plan it', body: 'Small tasks, each with the files it may touch and the test that proves it.' },
@@ -23,6 +25,23 @@ const at = (v: V) => {
   const [x, y] = p(v);
   return `translate(${x.toFixed(1)} ${y.toFixed(1)})`;
 };
+
+// the back wall, with the osq chip that runs the line and traces out to the stations
+const WALL = -12;
+const w = (x: number, z: number): V => [x, WALL, z];
+const wall = pts(w(-4, 24), w(146, 24), w(146, 0), w(-4, 0));
+const chip = pts(w(60, 23), w(68, 23), w(68, 16), w(60, 16));
+const chipPins = [17.5, 19.5, 21.5].flatMap((z) => [path(w(58.6, z), w(60, z)), path(w(68, z), w(69.4, z))])
+  .concat([61.5, 64, 66.5].flatMap((x) => [path(w(x, 23), w(x, 24.2)), path(w(x, 16), w(x, 14.8))]));
+const [cx, cy] = p(w(64, 19.5));
+const chipText = `matrix(${(0.92 * S).toFixed(2)} ${(0.3 * S).toFixed(2)} 0 ${S} ${cx.toFixed(1)} ${cy.toFixed(1)})`;
+const traces = [
+  [w(60, 21), w(13, 21), w(10, 18)],
+  [w(60, 18), w(41, 18)],
+  [w(68, 18), w(83, 18)],
+  [w(68, 20), w(106, 20)],
+  [w(68, 22), w(137, 22), w(140, 19)],
+].map((vs) => ({ d: path(...vs), via: vs[vs.length - 1] }));
 
 const BELT = 5.2;
 const belt = box(0, 132, -3, 3, 4, BELT);
@@ -89,14 +108,27 @@ const badges = [
 
     <figure class="factory">
       <div class="scroller">
-        <svg viewBox="0 0 1150 500" role="img" aria-labelledby="factory-title">
-          <title id="factory-title">An isometric factory line. You drop a brief into the intake, a model splits it into small tasks, you open the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
+        <svg viewBox="0 -50 1150 550" role="img" aria-labelledby="factory-title">
+          <title id="factory-title">An isometric factory line run by an osq chip on the back wall. You drop a brief into the intake, a model splits it into small tasks, you open the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
 
           <!-- floor -->
           <polygon class="slab-top" points={box(-4, 146, -12, 12, -1.5, 0).top} />
           <polygon class="slab-front" points={box(-4, 146, -12, 12, -1.5, 0).front} />
           <polygon class="slab-side" points={box(-4, 146, -12, 12, -1.5, 0).side} />
           {grid.map((d) => <path class="grid" d={d} />)}
+
+          <!-- back wall and the chip that runs the line -->
+          <polygon class="wall" points={wall} />
+          {traces.map((t, i) => (
+            <g>
+              <path class="trace" d={t.d} />
+              <path class="signal" d={t.d} pathLength="100" style={`animation-delay: ${(-i * 0.7).toFixed(1)}s`} />
+              <circle class="via" r="3" transform={at(t.via)} />
+            </g>
+          ))}
+          {chipPins.map((d) => <path class="pin" d={d} />)}
+          <polygon class="chip" points={chip} />
+          <text class="chip-label" transform={chipText} y="0.9" text-anchor="middle">osq</text>
 
           <!-- behind the belt: you at the desk, the planner, the back arm, the back posts -->
           <g class="human" transform={at([21.5, -13.5, 0])}>
@@ -221,6 +253,7 @@ const badges = [
           </li>
         ))}
       </ol>
+      <Ledger />
     </figure>
   </div>
 </section>
@@ -235,6 +268,13 @@ const badges = [
 
   /* a blueprint: pale surfaces, thin edges, rust where you step in and where work flows */
   polygon { stroke-linejoin: round; }
+  .wall { fill: color-mix(in srgb, var(--surface) 60%, transparent); stroke: var(--line); }
+  .trace { fill: none; stroke: color-mix(in srgb, var(--accent) 35%, transparent); stroke-width: 1.5; stroke-linejoin: round; }
+  .signal { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 5 95; animation: signal 3.5s linear infinite; }
+  .via { fill: var(--surface); stroke: color-mix(in srgb, var(--accent) 60%, transparent); stroke-width: 1.5; }
+  .pin { stroke: var(--accent); stroke-width: 1.5; opacity: 0.7; }
+  .chip { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .chip-label { fill: var(--accent-soft-fg); font: 500 2.6px var(--mono); }
   .slab-top { fill: var(--surface); stroke: var(--line); }
   .slab-front, .slab-side { fill: var(--line); }
   .grid { stroke: var(--line); stroke-width: 1; }
@@ -286,6 +326,7 @@ const badges = [
   .badge.you rect { fill: var(--accent-soft); stroke: var(--accent); }
   .badge.you text { fill: var(--accent-soft-fg); }
 
+  @keyframes signal { from { stroke-dashoffset: 5; } to { stroke-dashoffset: -95; } }
   @keyframes flow { to { stroke-dashoffset: -9; } }
   @keyframes drop { 0% { transform: translateY(0); opacity: 0; } 2% { opacity: 1; } 7% { transform: translateY(40px); opacity: 1; } 8%, 100% { transform: translateY(48px); opacity: 0; } }
   @keyframes ride {
