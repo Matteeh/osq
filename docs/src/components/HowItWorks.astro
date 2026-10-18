@@ -2,9 +2,9 @@
 import Ledger from './Ledger.astro';
 
 const steps = [
-  { who: 'You', title: 'Write a brief', body: 'A few lines on what you want and why.' },
-  { who: 'You and a strong model', title: 'Plan it', body: 'Small tasks, each with the files it may touch and the test that proves it.' },
-  { who: 'You', title: 'Approve', body: 'A one-screen summary flags anything risky. Nothing runs before you say yes.' },
+  { who: 'Anyone', you: true, title: 'Write a brief', body: 'A business goal in plain words, or a ticket copied from your Jira or Notion backlog.' },
+  { who: 'An engineer and a strong model', you: true, title: 'Spec it', body: 'Turns the brief into a spec AI can build: small tasks, each with the files it may touch and the test that proves it.' },
+  { who: 'An engineer', you: true, title: 'Approve', body: 'A one-screen summary flags anything risky. Nothing runs before an engineer says yes.' },
   { who: 'Coding agents', title: 'Build', body: 'One fresh agent per task. A failed task retries with the reason, or comes back to you.' },
   { who: 'osq', title: 'Verify and land', body: 'Re-tests the whole change, updates the specs, and merges it into your main branch.' },
 ];
@@ -46,7 +46,7 @@ const hopper = {
   rim: pts([6, -4, 19], [14, -4, 19], [14, 4, 19], [6, 4, 19]),
   chute: box(8.5, 11.5, -1.5, 1.5, 7.5, 12),
 };
-// 2. planner: you at a desk next to the machine that turns the brief into tasks
+// 2. planner: an engineer at a desk next to the machine that turns the brief into tasks
 const desk = box(17, 26, -11, -6, 0, 5.5);
 const laptop = pts([19, -9.5, 5.5], [24, -9.5, 5.5], [24, -9.5, 9.5], [19, -9.5, 9.5]);
 const planner = box(36, 46, -12, -5, 0, 16);
@@ -72,8 +72,8 @@ const retry = (() => {
   return { d: `M${ax.toFixed(1)} ${ay.toFixed(1)} C${(ax - 10).toFixed(1)} ${(ay - 70).toFixed(1)} ${(bx + 40).toFixed(1)} ${(by - 60).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`, label: [(ax + bx) / 2 + 10, Math.min(ay, by) - 52] };
 })();
 const humans = [
-  { v: [12, 9, 0] as V, reach: -1 },
-  { v: [62, 11, 0] as V, reach: -1 },
+  { v: [12, 9, 0] as V, hat: false },
+  { v: [62, 11, 0] as V, hat: true },
 ];
 const badges = [
   { v: [10, 0, 24] as V, you: true },
@@ -92,7 +92,7 @@ const badges = [
     <figure class="factory">
       <div class="scroller">
         <svg viewBox="0 0 1150 500" role="img" aria-labelledby="factory-title">
-          <title id="factory-title">An isometric factory line. You drop a brief into the intake, a model splits it into small tasks, you open the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
+          <title id="factory-title">An isometric factory line. Anyone drops a brief into the intake, an engineer and a model turn it into a spec of small tasks, an engineer opens the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
 
           <!-- floor -->
           <polygon class="slab-top" points={box(-4, 146, -12, 12, -1.5, 0).top} />
@@ -103,6 +103,7 @@ const badges = [
           <!-- behind the belt: you at the desk, the planner, the back arm, the back posts -->
           <g class="human" transform={at([21.5, -13.5, 0])}>
             <circle cx="0" cy="-58" r="7" />
+            <path class="hat" d="M-8 -59 A8 8 0 0 1 8 -59 Z M-11 -59 H11" />
             <path d="M0 -49 V-26 M0 -42 L9 -34 L16 -38 M0 -42 L-6 -32 L2 -36" />
           </g>
           <polygon class="laptop" points={laptop} />
@@ -199,6 +200,7 @@ const badges = [
           {humans.map((h) => (
             <g class="human" transform={at(h.v)}>
               <circle cx="0" cy="-62" r="7" />
+              {h.hat && <path class="hat" d="M-8 -63 A8 8 0 0 1 8 -63 Z M-11 -63 H11" />}
               <path d="M0 -53 V-24 M0 -46 L-16 -56 M0 -46 L10 -32 M0 -24 L-7 0 M0 -24 L7 0" />
             </g>
           ))}
@@ -217,7 +219,7 @@ const badges = [
         {steps.map((step, i) => (
           <li>
             <span class="num">{String(i + 1).padStart(2, '0')}</span>
-            <span class="who" class:list={{ you: step.who.startsWith('You') }}>{step.who}</span>
+            <span class="who" class:list={{ you: step.you }}>{step.who}</span>
             <h3>{step.title}</h3>
             <p>{step.body}</p>
           </li>
@@ -284,6 +286,8 @@ const badges = [
   .label { fill: var(--green-fg); font: 600 13px var(--mono); }
   .human { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
   .human circle { fill: var(--accent); stroke: none; }
+  /* engineers wear a hard hat */
+  .human .hat { fill: var(--surface); stroke: var(--fg); stroke-width: 2; }
   .badge rect { fill: var(--surface); stroke: var(--line); }
   .badge text { fill: var(--muted); font: 600 11px var(--mono); }
   .badge.you rect { fill: var(--accent-soft); stroke: var(--accent); }
