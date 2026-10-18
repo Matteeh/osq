@@ -32,6 +32,15 @@ pub fn frontmatter_string(text: &str, key: &str) -> Option<String> {
         .map(ToOwned::to_owned)
 }
 
+/// The parsed frontmatter document, or `None` without valid frontmatter.
+///
+/// Implements: rust-storage/text-fields
+#[must_use]
+pub(crate) fn frontmatter_yaml(text: &str) -> Option<Yaml> {
+    let (yaml, _) = valid_frontmatter(text)?;
+    YamlLoader::load_from_str(yaml).ok()?.into_iter().next()
+}
+
 /// The text after the frontmatter, or the whole text without one.
 ///
 /// Implements: rust-storage/text-fields

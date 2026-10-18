@@ -9,11 +9,14 @@
 //! Implements: rust-storage/read-model-tables
 //! Implements: rust-storage/read-model-rebuild
 //! Implements: rust-storage/event-table-columns
+//! Implements: rust-storage/file-table-columns
 //! Implements: rust-storage/trial-labels
 
 mod error;
 mod event_rows;
+mod file_rows;
 mod insert_events;
+mod insert_files;
 mod labels;
 mod notice_rows;
 mod rows;
@@ -26,8 +29,10 @@ use std::path::Path;
 
 use rusqlite::{Connection, Transaction, params};
 
-use crate::read::{ChangeSnapshot, Location, read_history};
+use crate::read::{ChangeSnapshot, Location, read_history, read_manual_edits};
+use file_rows::disclosure_rows;
 use insert_events::{insert_events, insert_notices};
+use insert_files::{insert_disclosures, insert_manual_edits};
 use labels::apply_labels;
 use rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
 
@@ -47,7 +52,9 @@ CREATE TABLE mutation_picks (change, task, pick, file, function, outcome, reason
 CREATE TABLE mutation_survivors (id, change, task, pick, file, function, line, column, mutator, replacement, label);\
 CREATE TABLE validator_runs (change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output);\
 CREATE TABLE validator_findings (id, change, run, finding, capability, requirement, scenario, problem, detail, label);\
-CREATE TABLE link_findings (id, change, severity, file, message, label);";
+CREATE TABLE link_findings (id, change, severity, file, message, label);\
+CREATE TABLE disclosures (change, task, section, text);\
+CREATE TABLE manual_edits (kept_at, record, comment, paths, capabilities);";
 
 /// Writes the read model database for the given snapshots.
 ///
@@ -62,6 +69,7 @@ CREATE TABLE link_findings (id, change, severity, file, message, label);";
 ///
 /// Implements: rust-storage/read-model-tables
 /// Implements: rust-storage/read-model-rebuild
+/// Implements: rust-storage/file-table-columns
 pub fn write_read_model(
     db_path: &Path,
     snapshots: &[ChangeSnapshot],
@@ -92,12 +100,14 @@ pub fn write_read_model(
 /// [`write_read_model`] raises.
 ///
 /// Implements: rust-storage/read-model-tables
+/// Implements: rust-storage/file-table-columns
 /// Implements: rust-storage/trial-labels
 pub fn build_read_model(project_root: &Path, db_path: &Path) -> Result<(), ReadModelError> {
     let labels = read_trial_labels(project_root)?;
     let snapshots = read_history(project_root)?;
     write_read_model(db_path, &snapshots)?;
-    apply_labels(db_path, &labels)
+    apply_labels(db_path, &labels)?;
+    insert_manual_edits(db_path, &read_manual_edits(project_root))
 }
 
 /// Inserts one archived snapshot's rows into every table.
@@ -112,7 +122,8 @@ fn insert_snapshot(
     for row in dead_rows(snapshot) {
         insert_dead(transaction, &row)?;
     }
-    insert_events(transaction, snapshot)
+    insert_events(transaction, snapshot)?;
+    insert_disclosures(transaction, &disclosure_rows(snapshot))
 }
 
 /// Creates every table in an empty database.

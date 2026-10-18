@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e00bc0e8c18dc5f6d50a23b0014b8a393d10f554dc10a3453a61c3f77cbce5a7"
+build_stamp: "6009aab9"
+project_commit: "26da4677"
+exit_code: 0
+scope_files: {"crates/kernel/storage/src/lib.rs":"sha256:33bacc13af362955f220914348375a507f248c78d4dccbec41ec230bd7479957","crates/kernel/storage/src/model/error.rs":"sha256:e9410e9c6ebfe30998bfa964e504a72ab621e94ba103104e36b35fb50778afd1","crates/kernel/storage/src/model/event_rows.rs":"sha256:63c28e87c28ecca685db8d58becf3adbf6ae082c3783f0d1dc88f123cd38e4f8","crates/kernel/storage/src/model/file_rows.rs":"sha256:860f61674599ff1d4b6492804b34e084ce1c51e140ec31b54300e1087e4c99f3","crates/kernel/storage/src/model/insert_events.rs":"sha256:0b2afeb44e9e7416012b804ee1b85108b5c82d4e9fcb026b4655ffcfdc61fa25","crates/kernel/storage/src/model/insert_files.rs":"sha256:87ac0dc57585637a42a2fd173b698c1cf5521ae7cf1e2dd093c638d66c72fe20","crates/kernel/storage/src/model/labels.rs":"sha256:70aeb4d8df704348a49134321290c3591bf8c9b7f71ed5ae867745ae60165631","crates/kernel/storage/src/model/mod.rs":"sha256:04551aefa48a76719e742b2e4401336264988367a6522858daa4f07a53fb99f2","crates/kernel/storage/src/model/notice_rows.rs":"sha256:2c54248b8a5e4af95ed7a59fb8d1c91ed9e183ed6f1c8f0ead3a1a175b1f0709","crates/kernel/storage/src/model/rows.rs":"sha256:15f9b469c0acb663b88af6da89e7963d0cb64b47e9dce18ef14c900f632527f3","crates/kernel/storage/src/model/stream_rows.rs":"sha256:1f2d5cbf38c1c727924f7e21adc2e05d7ae1f31be69773321a336244c93f0c3b","crates/kernel/storage/src/model/validator_rows.rs":"sha256:ddcf1b3568bec54e8626b79b3b63f2ca18811d24cc4afccc29ed73d4a06ae7cf","crates/kernel/storage/tests/read_model_files.rs":"sha256:1fb60f36987d428b37d21f16e122082cde8dbb76ba6b74c1f1d1ef55ff49e41f"}
+---
+2026-10-18T11:54:25.848Z

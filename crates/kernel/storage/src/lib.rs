@@ -8,6 +8,7 @@ pub mod read;
 pub use model::{TrialLabels, build_read_model, read_trial_labels, write_read_model};
 pub use read::{
     ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location, ManifestNotices,
-    Notice, PlanRecord, StorageError, TableEvent, TaskFile, frontmatter_string, goal_section,
-    list_changes, markdown_body, read_archive, read_change, read_history, timestamp_ms,
+    ManualEdit, Notice, PlanRecord, ResultSections, StorageError, TableEvent, TaskDisclosure,
+    TaskFile, frontmatter_string, goal_section, list_changes, markdown_body, parse_result_sections,
+    read_archive, read_change, read_history, read_manual_edits, timestamp_ms,
 };

@@ -11,7 +11,8 @@ use std::path::Path;
 
 use osq_core::{ChangeState, ChangeStatus, TaskId, change_status};
 
-use super::{ChangeEntry, Location, StorageError};
+use super::results::read_disclosures;
+use super::{ChangeEntry, Location, StorageError, TaskDisclosure};
 use events::read_events;
 use folder::{approved_at, read_manifest, read_planner, read_proposal, read_task_files};
 pub use records::{LinkEntry, ManifestNotices, Notice, PlanRecord};
@@ -90,6 +91,8 @@ pub struct ChangeSnapshot {
     pub plan_records: Vec<PlanRecord>,
     /// The manifest's notices record, or `None` when it holds none.
     pub manifest_notices: Option<ManifestNotices>,
+    /// The result files' real disclosures, in numeric task order.
+    pub disclosures: Vec<TaskDisclosure>,
 }
 
 /// Reads one change folder into its snapshot.
@@ -123,6 +126,7 @@ pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> 
         facts,
         plan_records: read_plan_records(&entry.path),
         manifest_notices: manifest_notices(manifest.as_ref()),
+        disclosures: read_disclosures(&entry.path),
     })
 }
 

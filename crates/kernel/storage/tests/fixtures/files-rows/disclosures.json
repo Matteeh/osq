@@ -1,0 +1,32 @@
+[
+  {
+    "change": "001-told",
+    "task": "1",
+    "section": "deviated",
+    "text": "- Kept the old name.\n  It reads better.\n\n- Split one file."
+  },
+  {
+    "change": "001-told",
+    "task": "1",
+    "section": "outside_scope",
+    "text": "The listing skips hidden folders."
+  },
+  {
+    "change": "001-told",
+    "task": "2",
+    "section": "deviated",
+    "text": "Used a map.\n\nAnd a second deviation."
+  },
+  {
+    "change": "001-told",
+    "task": "10",
+    "section": "missing_context",
+    "text": "Nonexistent file named in the task."
+  },
+  {
+    "change": "001-told",
+    "task": "10",
+    "section": "outside_scope",
+    "text": "None\nThe second line keeps this section."
+  }
+]

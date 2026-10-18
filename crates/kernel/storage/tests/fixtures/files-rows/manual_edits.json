@@ -1,0 +1,23 @@
+[
+  {
+    "kept_at": "2026-10-01T08:00:00.000Z",
+    "record": "2026-10-01T08-00-00-000Z.md",
+    "comment": "Kept a config edit.",
+    "paths": "",
+    "capabilities": ""
+  },
+  {
+    "kept_at": "2026-10-01T12:00:00.000Z",
+    "record": "mixed.md",
+    "comment": "Mixed lists.",
+    "paths": "src/m.rs",
+    "capabilities": ""
+  },
+  {
+    "kept_at": "2026-10-02T09:00:00.000Z",
+    "record": "2026-10-02T09-00-00-000Z.md",
+    "comment": "Fixed a typo by hand.\n\nSecond paragraph of the comment.",
+    "paths": "src/z.rs, src/a.rs",
+    "capabilities": "rust-storage, rust-core"
+  }
+]
