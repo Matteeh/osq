@@ -1,0 +1,95 @@
+/*
+ * osq theme colors. Rust orange on warm neutrals: the accent nods to the Rust rebuild.
+ * Every color is a token, defined once for light and redefined for dark.
+ * A visitor's OS setting picks the theme; data-theme on <html> overrides it either way.
+ *
+ * Status colors carry meaning and are kept apart from the accent:
+ *   green = done or available, blue = running or in progress, red = failed or needs a look.
+ */
+:root {
+  --bg: #f6f4f2;
+  --surface: #ffffff;
+  --line: #e8e2dc;
+  --fg: #1b1714;
+  --muted: #5c544e;
+
+  --accent: #b7410e;        /* rust */
+  --accent-hover: #8f3209;
+  --accent-soft: #fbe9df;
+  --accent-soft-fg: #8f3209;
+
+  --pill: #ece7e2;
+  --pill-fg: #433b35;
+  --blue: #e3ecf7;
+  --blue-fg: #1f4f82;
+  --green: #e2f2e8;
+  --green-fg: #1c6b3c;
+  --red: #f9e3e6;
+  --red-fg: #9d1f3a;
+
+  --code-bg: #1b1714;
+  --code-fg: #f1ebe6;
+  --code-dim: #968b82;
+
+  /* the circuit board behind the hero */
+  --streak: #b7410e;
+  --streak-alpha: 0.2;
+
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #141210;
+    --surface: #1d1a17;
+    --line: #322c27;
+    --fg: #f1ebe6;
+    --muted: #b0a69d;
+    --accent: #f08a5d;
+    --accent-hover: #f6a885;
+    --accent-soft: #3d2216;
+    --accent-soft-fg: #f6a885;
+    --pill: #2e2925;
+    --pill-fg: #d3cac2;
+    --blue: #1d2e42;
+    --blue-fg: #9cc2ea;
+    --green: #183326;
+    --green-fg: #8fd3a8;
+    --red: #3d1b22;
+    --red-fg: #f2a0b0;
+    --code-bg: #0d0b0a;
+    --code-fg: #f1ebe6;
+    --code-dim: #8a8078;
+    --streak: #f08a5d;
+    --streak-alpha: 0.32;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #141210;
+  --surface: #1d1a17;
+  --line: #322c27;
+  --fg: #f1ebe6;
+  --muted: #b0a69d;
+  --accent: #f08a5d;
+  --accent-hover: #f6a885;
+  --accent-soft: #3d2216;
+  --accent-soft-fg: #f6a885;
+  --pill: #2e2925;
+  --pill-fg: #d3cac2;
+  --blue: #1d2e42;
+  --blue-fg: #9cc2ea;
+  --green: #183326;
+  --green-fg: #8fd3a8;
+  --red: #3d1b22;
+  --red-fg: #f2a0b0;
+  --code-bg: #0d0b0a;
+  --code-fg: #f1ebe6;
+  --code-dim: #8a8078;
+  --streak: #f08a5d;
+  --streak-alpha: 0.32;
+  color-scheme: dark;
+}

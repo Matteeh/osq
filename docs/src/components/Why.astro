@@ -1,0 +1,29 @@
+<section id="why">
+  <div class="wrap why">
+    <div class="intro">
+      <span class="eyebrow">Why osq</span>
+      <h2>Coding agents are fast. Trusting them is the slow part.</h2>
+      <p class="lede">An agent will tell you the feature works. Sometimes it does. osq is built on one rule: nothing an agent says counts. Its work is accepted only when osq runs the checks itself and they pass.</p>
+    </div>
+    <div class="contrast">
+      <div class="card">
+        <span class="pill red">Without osq</span>
+        <p>You prompt, the agent edits files across the repo, says "all tests pass", and you review a large diff to find out if that's true.</p>
+      </div>
+      <div class="card">
+        <span class="pill green">With osq</span>
+        <p>You approve a plan of small tasks. Each agent may only touch the files its task names, and osq runs the tests before it ticks the box. You come back to verified changes and a short list of decisions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .why { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+  .intro { display: grid; gap: 16px; }
+  .contrast { display: grid; gap: 12px; }
+  .card { padding: 16px 18px; display: grid; gap: 6px; }
+  .pill { justify-self: start; }
+  .card p { color: var(--muted); font-size: 15px; }
+  @media (max-width: 760px) { .why { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+</style>

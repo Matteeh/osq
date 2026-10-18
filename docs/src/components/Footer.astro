@@ -1,0 +1,17 @@
+---
+import { links } from '../data/site';
+---
+
+<footer>
+  <div class="wrap">
+    <span><span class="logo">osq<span>_</span></span> · verified changes, not volume</span>
+    <span>MIT License · <a href={links.github}>GitHub</a></span>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--line); background: var(--surface); }
+  .wrap { padding-block: 28px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .logo { font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--fg); }
+  .logo span { color: var(--accent); }
+</style>
