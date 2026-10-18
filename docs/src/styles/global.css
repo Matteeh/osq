@@ -13,7 +13,7 @@ section { padding-block: 72px; }
 section + section { border-top: 1px solid var(--line); }
 @media (max-width: 760px) { section { padding-block: 52px; } }
 
-h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
 h2 { font-size: clamp(26px, 3.4vw, 34px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
 h3 { font-size: 17px; font-weight: 600; }
 p { margin: 0; }

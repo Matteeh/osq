@@ -36,7 +36,7 @@
   --streak-alpha: 0.2;
 
   --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --display: 'Host Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
