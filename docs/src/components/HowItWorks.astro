@@ -42,8 +42,8 @@ const moverVars = Object.entries(stops).map(([k, v]) => `--${k}: ${v}`).join('; 
 // 1. a planning meeting at its own table: a presenter at the board across from two people seated,
 // and a pipe from the table to the start of the belt that carries the brief down as a task box
 const TABLE = 3.6;
-const table = box(1, 15, 6.5, 9.5, TABLE, TABLE + 0.5);
-const tableLegs = [[1.6, 7.1], [14.4, 7.1], [1.6, 8.9], [14.4, 8.9]].map(([x, y]) => path([x, y, 0], [x, y, TABLE]));
+// a solid table, like the desk at step 02, so the presenter behind it reads as behind it
+const table = box(1, 15, 6.5, 9.5, 0, TABLE + 0.5);
 const board = pts([1.5, 5, 12.5], [6, 5, 12.5], [6, 5, 5.5], [1.5, 5, 5.5]);
 const boardLegs = [path([2, 5, 0], [2, 5, 5.5]), path([5.5, 5, 0], [5.5, 5, 5.5])];
 const chart = [2.5, 3.5, 4.5, 5.5].map((x, i) => path([x - 0.2, 5, 6.5], [x - 0.2, 5, 7.6 + i * 1.1]));
@@ -180,7 +180,6 @@ const badges = [
           <polygon class="m-top" points={nozzle.top} />
           <polygon class="m-front" points={nozzle.front} />
           <polygon class="m-side" points={nozzle.side} />
-          {tableLegs.map((d) => <path class="leg" d={d} />)}
           <polygon class="m-top" points={table.top} />
           <polygon class="m-front" points={table.front} />
           <polygon class="m-side" points={table.side} />
