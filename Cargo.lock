@@ -321,6 +321,8 @@ name = "osq-kernel-linter"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "proc-macro2",
+ "syn 2.0.119",
 ]
 
 [[package]]

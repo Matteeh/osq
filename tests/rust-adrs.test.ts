@@ -44,7 +44,15 @@ const ROWS: readonly RustAdrRow[] = [
   {
     number: '026',
     file: '026-openspec-in-rust.md',
-    checks: ['tests/rust-adrs.test.ts'],
+    checks: [
+      'tests/rust-adrs.test.ts',
+      'crates/kernel/specs/tests/golden_corpus.rs',
+      'crates/kernel/specs/tests/validate_corpus.rs',
+      'crates/kernel/specs/tests/replay_corpus.rs',
+      'crates/kernel/specs/tests/openspec_validate_parity_corpus.rs',
+      'crates/kernel/specs/tests/openspec_archive_parity_corpus.rs',
+      'crates/kernel/linter/tests/node_spawn_corpus.rs',
+    ],
   },
 ];
 

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:14f28b75ed0e6f51888ea7d29961f2b2d5984180497aeef92b267059f0cbaa4e"
+build_stamp: "026f4c2c"
+project_commit: "8153eba4"
+exit_code: 0
+scope_files: {".github/workflows/rust.yml":"sha256:dd9e1e46f90d310fbabd89f88ff80764f504a234b304ca519749a248e4feef28","decisions/026-openspec-in-rust.md":"sha256:8ccbfb725b7514b5fcad04b509ef2674da919a4e452da214b400932aeed6d7d0","tests/rust-adrs.test.ts":"sha256:9a86a5f591e42e423265c73fd76aa71d5c341b349864e569dd3bd7a3e88c99a5","tests/rust-ci.test.ts":"sha256:8f3cd8b2fe21bd37c56f40e7a0ab9bd62be1b2031403b5a6707bd5dd7c8519e5"}
+---
+2026-10-19T15:48:36.993Z

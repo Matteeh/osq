@@ -15,6 +15,14 @@ const MUTANTS_RUN = 'sh scripts/mutants-rust.sh';
 const CHECKOUT = 'actions/checkout@';
 const TOOLCHAIN = 'dtolnay/rust-toolchain@';
 const CACHE = 'Swatinem/rust-cache@';
+const PARITY_CLIPPY =
+  'cargo clippy -p osq-kernel-specs --features parity --all-targets -- -D warnings';
+const PARITY_TEST =
+  'cargo test -p osq-kernel-specs --features parity --test openspec_validate_parity_corpus --test openspec_archive_parity_corpus -- --include-ignored';
+const INSTALL_LATEST =
+  'npm install --prefix "$RUNNER_TEMP/openspec-latest" @fission-ai/openspec@latest';
+const SETUP_NODE = 'actions/setup-node@';
+const PNPM_SETUP = 'pnpm/action-setup@';
 
 /** One step of a GitHub Actions job, the fields this test reads. */
 interface WorkflowStep {
@@ -155,6 +163,72 @@ describe('rust-core: Rust CI runs the mutation check', () => {
   it('mutates the whole workspace on the schedule', () => {
     const step = scheduleStep('mutants', true);
     assert.equal((step.run ?? '').trim(), MUTANTS_RUN, 'the schedule run takes no argument');
+  });
+});
+
+describe('rust-core: Rust CI runs the parity tests', () => {
+  it('uses the checkout, pnpm, Node 24, toolchain and cache actions', () => {
+    for (const prefix of [CHECKOUT, PNPM_SETUP, SETUP_NODE, TOOLCHAIN, CACHE]) {
+      assert.ok(stepUsing('parity', prefix), `the parity job must use ${prefix}`);
+    }
+    assert.equal(
+      String(stepUsing('parity', SETUP_NODE).with?.['node-version']),
+      '24',
+      'the parity job must set up Node 24',
+    );
+  });
+
+  it('runs pnpm install --frozen-lockfile', () => {
+    const step = stepRunning('parity', 'pnpm install --frozen-lockfile');
+    assert.equal((step.run ?? '').trim(), 'pnpm install --frozen-lockfile');
+  });
+
+  it('checks the specs kernel with clippy and the parity feature', () => {
+    const step = stepRunning('parity', PARITY_CLIPPY);
+    assert.equal((step.run ?? '').trim(), PARITY_CLIPPY);
+  });
+
+  it('runs the parity tests without OSQ_OPENSPEC_BIN outside the schedule', () => {
+    const step = scheduleStep('parity', false);
+    assert.equal((step.run ?? '').trim(), PARITY_TEST);
+    assert.equal(
+      Object.hasOwn(step.env ?? {}, 'OSQ_OPENSPEC_BIN'),
+      false,
+      'the pinned run must not set OSQ_OPENSPEC_BIN',
+    );
+  });
+
+  it('installs the latest OpenSpec and runs the parity tests against it on the schedule', () => {
+    const install = scheduleStep('parity', true);
+    assert.equal((install.run ?? '').trim(), INSTALL_LATEST);
+
+    const scheduled = stepsOf('parity').filter(
+      (entry) =>
+        (entry.if ?? '').replace(/\s+/g, '') === "github.event_name=='schedule'" &&
+        (entry.run ?? '').includes('cargo test -p osq-kernel-specs'),
+    );
+    assert.equal(scheduled.length, 1, 'the schedule must run one cargo test step');
+    const step = scheduled[0];
+    assert.ok(step);
+    assert.equal((step.run ?? '').trim(), PARITY_TEST);
+
+    const env = step.env ?? {};
+    assert.match(
+      String(env['OSQ_OPENSPEC_BIN'] ?? ''),
+      /openspec-latest\/node_modules\/\.bin\/openspec/,
+      'the latest binary must come through the step env',
+    );
+    assert.equal(String(env['OPENSPEC_TELEMETRY']), '0');
+  });
+
+  it('never runs pnpm add or pnpm update', () => {
+    for (const step of stepsOf('parity')) {
+      assert.doesNotMatch(
+        step.run ?? '',
+        /\bpnpm\s+(?:add|update)\b/,
+        'the parity job must not change the lockfile',
+      );
+    }
   });
 });
 

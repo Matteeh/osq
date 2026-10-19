@@ -50,3 +50,40 @@ jobs:
       - name: Mutate the whole workspace
         if: github.event_name == 'schedule'
         run: sh scripts/mutants-rust.sh
+
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check the parity tests
+        run: cargo clippy -p osq-kernel-specs --features parity --all-targets -- -D warnings
+
+      - name: Run the parity tests against the pinned OpenSpec
+        if: github.event_name != 'schedule'
+        run: cargo test -p osq-kernel-specs --features parity --test openspec_validate_parity_corpus --test openspec_archive_parity_corpus -- --include-ignored
+
+      - name: Install latest OpenSpec outside the lockfile
+        if: github.event_name == 'schedule'
+        run: npm install --prefix "$RUNNER_TEMP/openspec-latest" @fission-ai/openspec@latest
+
+      - name: Run the parity tests against the latest OpenSpec
+        if: github.event_name == 'schedule'
+        env:
+          OSQ_OPENSPEC_BIN: ${{ runner.temp }}/openspec-latest/node_modules/.bin/openspec
+          OPENSPEC_TELEMETRY: '0'
+        run: cargo test -p osq-kernel-specs --features parity --test openspec_validate_parity_corpus --test openspec_archive_parity_corpus -- --include-ignored

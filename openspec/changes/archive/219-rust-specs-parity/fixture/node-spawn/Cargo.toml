@@ -1,0 +1,8 @@
+# A fixture workspace for the no-runtime-Node gate. Nothing builds it.
+[workspace]
+resolver = "3"
+members = [
+    "crates/clean",
+    # The crate below spawns Node at runtime.
+    "crates/spawner",
+]

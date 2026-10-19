@@ -4,6 +4,12 @@ applies_to: [group:rust]
 rule: OpenSpec parsing, validation and delta merge run in Rust in the specs kernel; the Node openspec CLI runs only as a dev and CI parity check, never at runtime.
 checks:
   - tests/rust-adrs.test.ts
+  - crates/kernel/specs/tests/golden_corpus.rs
+  - crates/kernel/specs/tests/validate_corpus.rs
+  - crates/kernel/specs/tests/replay_corpus.rs
+  - crates/kernel/specs/tests/openspec_validate_parity_corpus.rs
+  - crates/kernel/specs/tests/openspec_archive_parity_corpus.rs
+  - crates/kernel/linter/tests/node_spawn_corpus.rs
 ---
 # 026. OpenSpec in Rust
 

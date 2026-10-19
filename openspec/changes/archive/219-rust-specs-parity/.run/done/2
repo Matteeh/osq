@@ -1,0 +1,26 @@
+---
+scope_resolver: 2
+scope_hash: sha256:a8adeeb073c443275d9d3a9a984dd3c317e759c7d133f4736d56e8a37dc19052
+build_stamp: 026f4c2c
+project_commit: 1ce8f69e
+exit_code: 0
+scope_files:
+  crates/kernel/specs/Cargo.toml: sha256:2144469e1c25d7003a5c1d1080183ee51feda348b47604573448e124dab65f28
+  crates/kernel/specs/tests/openspec_parity_support/cli.rs: sha256:d10c6c1620f6642afc639208d01232d60ceb2b9fb58a79dbaf14c8f9aad6f4ba
+  crates/kernel/specs/tests/openspec_parity_support/items/archive.rs: sha256:abb4e17f17ee70fb0f3634049ec40715e06df183fab0c5e029dcfa04eeb3048d
+  crates/kernel/specs/tests/openspec_parity_support/items/delta.rs: sha256:1026f4f37b6e9eeb9e68448a7965a5d9824a398e533929fb9470c00b7e1ef5f8
+  crates/kernel/specs/tests/openspec_parity_support/items/living.rs: sha256:28ae2be69466b6cc665bb917857753e054ab3467537d5647e2331bb4cf21a34d
+  crates/kernel/specs/tests/openspec_parity_support/items/mod.rs: sha256:922859a9faa19d4daa6435c9fc8dc6032641b58dbdb175315494bb1d719a763b
+  crates/kernel/specs/tests/openspec_parity_support/items/openspec.rs: sha256:880f3ac2f8eed92b85172c0fd43093a6e6b1f4fcb762c23cb4c7cef61a23982d
+  crates/kernel/specs/tests/openspec_parity_support/items/targets.rs: sha256:45d95642c446d69cdf23dde958acb88f8df652099ee54858259bb0aeb31ffa35
+  crates/kernel/specs/tests/openspec_parity_support/mod.rs: sha256:8eaa387a3a00c01ac5dece555d63cbc163a6fd8036c96bfb307cdccd6fdd9930
+  crates/kernel/specs/tests/openspec_parity_support/project.rs: sha256:abe2795a9e48db739db3f0a7cba66dbb3ba78c477e6f823dd45cb07296966b87
+  crates/kernel/specs/tests/openspec_parity_support/replay.rs: sha256:2cfce640766778267fea3cb2289746105fad8e792125166a305cd8451f5b3123
+  crates/kernel/specs/tests/openspec_parity_support/report.rs: sha256:b86a33b28a9d9acba43ea63564e67797d90b482d2c60b2332ba566548c034022
+  crates/kernel/specs/tests/openspec_parity_support/trees.rs: sha256:a16112757ca2f7cbee1d1dada8cbb73eb1cd0a4299911ff39052d6039fc1065c
+  crates/kernel/specs/tests/openspec_validate_parity_corpus.rs: sha256:e1c7c0ac399e81f1a0f8331ec3dae5951aa03ebab1c6ee8caf6500df315b97bc
+original_scope_hash: sha256:aef50e802d23b8c8cd70c0946e9208395d45b411c305bfd2aa62fa58e9e79744
+recertified_at: 2026-10-19T15:45:40.944Z
+recertification_count: 1
+---
+2026-10-19T07:22:31.625Z

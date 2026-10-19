@@ -15,3 +15,16 @@ osq-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 yaml-rust2.workspace = true
+
+# The OpenSpec parity tests run the Node CLI, so they build only with `parity`
+# (rust-core "Corpus tests"). `scripts/verify-rust.sh` does not build them.
+[features]
+parity = []
+
+[[test]]
+name = "openspec_validate_parity_corpus"
+required-features = ["parity"]
+
+[[test]]
+name = "openspec_archive_parity_corpus"
+required-features = ["parity"]
