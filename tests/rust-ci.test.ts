@@ -214,11 +214,11 @@ describe('rust-core: Rust CI runs the parity tests', () => {
 
     const env = step.env ?? {};
     assert.match(
-      String(env['OSQ_OPENSPEC_BIN'] ?? ''),
+      String(env.OSQ_OPENSPEC_BIN ?? ''),
       /openspec-latest\/node_modules\/\.bin\/openspec/,
       'the latest binary must come through the step env',
     );
-    assert.equal(String(env['OPENSPEC_TELEMETRY']), '0');
+    assert.equal(String(env.OPENSPEC_TELEMETRY), '0');
   });
 
   it('never runs pnpm add or pnpm update', () => {
