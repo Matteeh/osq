@@ -233,12 +233,12 @@ const badges = [
 
           <!-- the scanner: front post, top, and the plane that checks each task -->
           <polygon class="scan" points={scanPlane} />
+          <!-- the front post goes first so the top bar sits on it; its own top face is hidden under the bar -->
+          <polygon class="m-front" points={scanner.front.front} />
+          <polygon class="m-side" points={scanner.front.side} />
           <polygon class="m-top" points={scanner.top.top} />
           <polygon class="m-front" points={scanner.top.front} />
           <polygon class="m-side" points={scanner.top.side} />
-          <polygon class="m-top" points={scanner.front.top} />
-          <polygon class="m-front" points={scanner.front.front} />
-          <polygon class="m-side" points={scanner.front.side} />
           <path class="retry" d={retry.d} />
           <text class="note" x={retry.label[0].toFixed(1)} y={retry.label[1].toFixed(1)} text-anchor="middle">failed? retry with the reason</text>
 
