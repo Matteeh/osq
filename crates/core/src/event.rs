@@ -17,12 +17,12 @@ use serde_json::{Map, Value};
 
 pub use payload::{
     ArchivedData, AutoSteerRanData, BaselineRanData, ChangeVerifyRerunData, DeadData,
-    DependenciesAddedData, DoneData, DoneManualData, ExitedData, FileChangedData, FocusedRanData,
-    FormatRanData, HarnessRetryData, InstructionsChangedData, MeasuresData, MutationRanData,
-    Nullable, PausedData, RecertificationData, RegressedData, RejectedData, ResultWrittenData,
-    RetryData, ScopeViolationData, StartedData, StuckData, SyncStoppedData, SyncedData, TextData,
-    TokensData, ToolData, UsageLimitData, ValidatorRanData, VcsViolationData,
-    VerificationRecordedData, VerifyRanData,
+    DependenciesAddedData, DoneData, DoneManualData, ExitContinuedData, ExitedData,
+    FileChangedData, FocusedRanData, FormatRanData, HarnessRetryData, InstructionsChangedData,
+    MeasuresData, MutationRanData, Nullable, PausedData, RecertificationData, RegressedData,
+    RejectedData, ResultWrittenData, RetryData, ScopeViolationData, StartedData, StuckData,
+    SyncStoppedData, SyncedData, TextData, TokensData, ToolData, UsageLimitData, ValidatorRanData,
+    VcsViolationData, VerificationRecordedData, VerifyRanData,
 };
 
 /// One typed event, with the data of its type.
@@ -44,6 +44,8 @@ pub enum Event {
     ResultWritten(ResultWrittenData),
     /// An `exited` event.
     Exited(ExitedData),
+    /// An `exit_continued` event.
+    ExitContinued(ExitContinuedData),
     /// A `measures` event.
     Measures(MeasuresData),
     /// A `dependencies_added` event.
@@ -112,6 +114,7 @@ impl Event {
             Self::VerifyRan(_) => "verify_ran",
             Self::ResultWritten(_) => "result_written",
             Self::Exited(_) => "exited",
+            Self::ExitContinued(_) => "exit_continued",
             Self::Measures(_) => "measures",
             Self::DependenciesAdded(_) => "dependencies_added",
             Self::Done(_) => "done",
@@ -153,6 +156,7 @@ impl Event {
             Self::VerifyRan(data) => payload_value(data),
             Self::ResultWritten(data) => payload_value(data),
             Self::Exited(data) => payload_value(data),
+            Self::ExitContinued(data) => payload_value(data),
             Self::Measures(data) => payload_value(data),
             Self::DependenciesAdded(data) => payload_value(data),
             Self::Done(data) => payload_value(data),
@@ -293,6 +297,7 @@ fn event_from_data(kind: &str, data: Value) -> Result<Event, EventError> {
         "verify_ran" => Event::VerifyRan(parse_data(kind, data)?),
         "result_written" => Event::ResultWritten(parse_data(kind, data)?),
         "exited" => Event::Exited(parse_data(kind, data)?),
+        "exit_continued" => Event::ExitContinued(parse_data(kind, data)?),
         "measures" => Event::Measures(parse_data(kind, data)?),
         "dependencies_added" => Event::DependenciesAdded(parse_data(kind, data)?),
         "done" => Event::Done(parse_data(kind, data)?),

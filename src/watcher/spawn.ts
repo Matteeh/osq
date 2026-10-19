@@ -1,10 +1,9 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { resolveExecutorIdentity } from '../core/foundation/harness-catalog.js';
 import type { Logger } from '../core/foundation/logger.js';
 import type { TaskData } from '../core/spec/parser.js';
-import { type HarnessAdapter, type SpawnDetails, appendHarnessEvent } from '../harness/types.js';
+import type { HarnessAdapter, SpawnDetails } from '../harness/types.js';
 import { formatTaskStartedLine, readRetryContext } from './attempt.js';
 import { resolveProjectCommit } from './build-project.js';
 import { resolveBuildInfo } from './build.js';
@@ -18,8 +17,14 @@ import {
 } from './outcome.js';
 import { describeAgentFailure } from './provider-outage.js';
 import { spawnOrCrash } from './spawn-guard.js';
+import { resultWrittenSince } from './task-result.js';
 import { pauseTaskOnUsageLimit } from './usage-pause.js';
-import { extractFinalTextFromStream, synthesizeResultFile } from './verify.js';
+
+export {
+  type EnsureTaskResultOptions,
+  type EnsureTaskResultOutcome,
+  ensureTaskResult,
+} from './task-result.js';
 
 export interface SpawnTaskAgentOptions {
   projectRoot: string;
@@ -44,6 +49,7 @@ export type SpawnTaskAgentOutcome =
  * @scenario watcher-and-harness: Limit with a reset time
  * @scenario watcher-and-harness: Limit without a reset time
  * @scenario watcher-and-harness: Limit from an earlier attempt
+ * @scenario watcher-and-harness: Agent exit and result file
  */
 export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<SpawnTaskAgentOutcome> {
   const { projectRoot, specFolderPath, taskNumber, taskData } = opts;
@@ -133,6 +139,24 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
 
   const paused = await pauseTaskOnUsageLimit(specFolderPath, taskNumber, config, logger);
   if (paused !== null) return { ok: false, result: paused };
+  if (spawnResult.exitCode !== 0 && !spawnResult.timedOut) {
+    const wroteResult = await resultWrittenSince(specFolderPath, taskNumber, spawnStartMs);
+    if (wroteResult) {
+      await recordLifecycleEvent(
+        specFolderPath,
+        taskNumber,
+        {
+          type: 'exit_continued',
+          timestamp: new Date().toISOString(),
+          data: { exitCode: spawnResult.exitCode },
+        },
+        `task ${taskNumber} exited (code: ${spawnResult.exitCode}) after writing its result; judging the task by its checks`,
+        logger,
+        'verbose',
+      );
+      return { ok: true, elapsedMs };
+    }
+  }
   if (spawnResult.exitCode !== 0 || spawnResult.timedOut) {
     const { reason: failureReason, marker } = await describeAgentFailure(
       specFolderPath,
@@ -148,52 +172,4 @@ export async function spawnTaskAgent(opts: SpawnTaskAgentOptions): Promise<Spawn
   }
 
   return { ok: true, elapsedMs };
-}
-
-export interface EnsureTaskResultOptions {
-  specFolderPath: string;
-  taskNumber: string;
-  logger?: Logger;
-  logOutcome: (success: boolean, reason?: RunTaskFailureReason, extra?: string) => void;
-}
-
-export type EnsureTaskResultOutcome = { ok: true } | { ok: false; result: RunTaskResult };
-
-/**
- * Ensure a result file exists, synthesizing one from the agent's final message,
- * or a `no_result` failure when neither is present.
- */
-export async function ensureTaskResult(
-  opts: EnsureTaskResultOptions,
-): Promise<EnsureTaskResultOutcome> {
-  const { specFolderPath, taskNumber, logger, logOutcome } = opts;
-  const runDir = path.join(specFolderPath, '.run');
-  const resultPath = path.join(runDir, 'results', `${taskNumber}.md`);
-  const exists = await fs
-    .stat(resultPath)
-    .then(() => true)
-    .catch(() => false);
-  if (exists) return { ok: true };
-
-  const finalText = await extractFinalTextFromStream(specFolderPath, taskNumber);
-  if (!finalText) {
-    await writeDeadMarker(
-      runDir,
-      taskNumber,
-      `---\nreason: no_result\n---\nAgent exited without writing result file at .run/results/${taskNumber}.md and produced no final text.\n`,
-    );
-    await recordDeadEvent(specFolderPath, taskNumber, 'no_result');
-    logOutcome(false, 'no_result');
-    const error = `Agent exited without writing .run/results/${taskNumber}.md`;
-    return { ok: false, result: { success: false, reason: 'no_result', error } };
-  }
-
-  await synthesizeResultFile(path.join(runDir, 'results'), taskNumber, finalText);
-  await appendHarnessEvent(specFolderPath, taskNumber, {
-    type: 'result_written',
-    timestamp: new Date().toISOString(),
-    data: { path: resultPath, synthesized: true },
-  });
-  logger?.verbose(`task ${taskNumber} result synthesized from agent message`);
-  return { ok: true };
 }

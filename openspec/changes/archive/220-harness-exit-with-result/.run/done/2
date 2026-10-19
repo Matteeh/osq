@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:961af7fcaa4cdd393bb3080213d61aacc1ebe4c7ba94796c794e838ab8dbd7d7"
+build_stamp: "ec08c377"
+project_commit: "7be41f37"
+exit_code: 0
+scope_files: {"src/harness/types.ts":"sha256:9cc4d8f9bc6e3c1efdcfe9c4c05792bd824df7ee1d4c26f6546c1ba22052341f","src/watcher/spawn.ts":"sha256:f49065a3d90764a3c75da1ef7633dddcdb2e2b15440f163c8e344c5a1fc27dd7","src/watcher/task-result.ts":"sha256:cc312af7f6620857a4b2a88fa2242c20cc57642b6ebbfd9bea030d859f6fa698","tests/dead-fingerprint.test.ts":"sha256:f6676fecabc443b665a89a087530f77642325392547b3448887277a0c35b8c3f","tests/exit-with-result.test.ts":"sha256:cc3399f1c11a442a047f993d4919a63803271a4e8cce11987f5b877a3c1cf86d","tests/runner-done-dead-events.test.ts":"sha256:f56821d857f0e5334af0966e676ae308ecf60abc8d734315765e2e8cfde16dd1","tests/runner-outcome-logging.test.ts":"sha256:79e343c88aa952bfdd90546260e5bfb39635d31cfff43507ace097bc9da74d1b","tests/watcher-loop-logging.test.ts":"sha256:2fb50b5803867320123565096d425e5ee932bcc2bf6bddd42137f47bb3557193"}
+---
+2026-10-19T19:28:29.285Z

@@ -59,6 +59,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `verify_ran` | `command` | `exitCode`, `duration`, `log`, `verifyCommand`, `output`, `phase`, `expected`, `mismatch`, `missingPaths`, `task` |
 | `result_written` | `path` | `synthesized` |
 | `exited` | `exitCode` | `pid`, `signal`, `timedOut`, `elapsedSeconds` |
+| `exit_continued` | `exitCode` | |
 | `measures` | `phase`, `scopeFiles`, `scopeLines`, `repoFiles`, `repoLines`, `importFanIn`, `proposalWords`, `taskWords`, `deltaRequirements`, `deltaScenarios` | `scopeResolver`, `changedFiles`, `changedLines`, `scopeHashes`, `dependencies`, `functionHashes` |
 | `dependencies_added` | `added` | |
 | `done` | `task` | |
@@ -101,6 +102,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `verify_ran` | `{"command":"cargo test"}` | `VerifyRan` |
 | `result_written` | `{"path":".run/results/1.md"}` | `ResultWritten` |
 | `exited` | `{"exitCode":0}` | `Exited` |
+| `exit_continued` | `{"exitCode":1}` | `ExitContinued` |
 | `measures` | `{"phase":"start","scopeFiles":1,"scopeLines":2,"repoFiles":3,"repoLines":4,"importFanIn":0,"proposalWords":5,"taskWords":6,"deltaRequirements":1,"deltaScenarios":2}` | `Measures` |
 | `dependencies_added` | `{"added":[{"file":"Cargo.toml","name":"serde"}]}` | `DependenciesAdded` |
 | `done` | `{"task":"1"}` | `Done` |

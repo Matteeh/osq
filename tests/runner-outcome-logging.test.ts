@@ -255,7 +255,7 @@ describe('Runner outcome logging', () => {
   });
 
   it('logs a crashed dead line with the exit code when the agent crashes', async () => {
-    adapter.setBehavior({ exitCode: 7, error: 'boom' });
+    adapter.setBehavior({ exitCode: 7, error: 'boom', writeResult: false });
     const logger = createLogger('normal');
 
     let reason = '';
