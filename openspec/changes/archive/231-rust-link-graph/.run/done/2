@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:3c924a0ae90fbea5086631eb72a0273cd9a57d8b7769f070c32e0c2075796a19
+build_stamp: f0b66360
+project_commit: f32c59eb
+exit_code: 0
+scope_files:
+  crates/kernel/linter/src/lib.rs: sha256:4bfb90263d360a6d074cd536a34bcb2ec64876244918a247abb2d0f203181387
+  crates/kernel/linter/src/tags.rs: sha256:c2dd83983c3ce221f0ab535bc1d6f9ed321bdc212c4ef372a10efd969e112b07
+  crates/kernel/linter/src/tags/collect.rs: sha256:9365552b7296ff7d3d36d1cd24669b3e133ba3902879c3cc6e2affa61208145e
+  crates/kernel/linter/src/tags/doc_tags.rs: sha256:9c67832189a313a15b187171e3d25d4af34e5b41eb2549879625b4d0d29572c2
+  crates/kernel/linter/src/tags/item_macros.rs: sha256:a82205574ce135ea110a8ac5ce1a2278706318a72cc750803c80e2c3539539c9
+  crates/kernel/linter/tests/code_tags.rs: sha256:282a42a3e59e5f9ac429219a02285c82f5b8e95ac5a8a0cabf9225d442336cb4
+  crates/kernel/linter/tests/code_tags_edges.rs: sha256:089038f3ce16037de37064979ae08c4723528d78ca3eb97f9c97859aece0135b
+  crates/kernel/linter/tests/fixtures/code-tags/lib.rs: sha256:6b289545eb6cb8e688a72cee02759d06d43f348e096d0c3f5ef7faeb10ba0623
+original_scope_hash: sha256:110ed9abe1fe18b2c9a80e21ca9d1a284b3af470ee618c15b95e478dd204105d
+recertified_at: 2026-10-20T13:27:12.481Z
+recertification_count: 1
+---
+2026-10-20T13:15:07.535Z

@@ -12,5 +12,6 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-specs.workspace = true
 proc-macro2.workspace = true
 syn.workspace = true

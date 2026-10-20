@@ -5,6 +5,7 @@
 pub mod change;
 pub mod event;
 pub mod fold;
+pub mod graph;
 pub mod seal;
 
 pub use change::{ApproveError, Approved, ArchiveError, Archived, Change, Draft};
@@ -13,4 +14,5 @@ pub use fold::{
     ChangeRecord, ChangeState, ChangeStatus, Stream, TaskId, TaskState, TaskStatus, apply,
     apply_change, apply_task, change_status,
 };
+pub use graph::{Edge, EdgeKind, Finding, Graph, Location, Node, NodeId, Rule, run_rules, tag_id};
 pub use seal::{ComputedSeal, Seal, SealError, compute_seal};

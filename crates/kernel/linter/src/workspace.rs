@@ -52,7 +52,7 @@ fn member_spawns(root: &Path, member: &str) -> Result<Vec<NodeSpawn>, ScanError>
 }
 
 /// Reads one file as UTF-8 text, naming its path when it cannot.
-fn read_text(path: &Path) -> Result<String, ScanError> {
+pub(crate) fn read_text(path: &Path) -> Result<String, ScanError> {
     fs::read_to_string(path).map_err(|error| ScanError::Read {
         path: path.to_path_buf(),
         message: error.to_string(),
@@ -60,7 +60,7 @@ fn read_text(path: &Path) -> Result<String, ScanError> {
 }
 
 /// Collects every `.rs` file under a directory, at any depth.
-fn collect_rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
+pub(crate) fn collect_rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
@@ -75,7 +75,7 @@ fn collect_rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 /// Writes a path relative to `root` with `/` separators.
-fn relative_slash_path(root: &Path, path: &Path) -> String {
+pub(crate) fn relative_slash_path(root: &Path, path: &Path) -> String {
     let relative = path.strip_prefix(root).unwrap_or(path);
     let mut parts = Vec::new();
     for component in relative.components() {
@@ -85,7 +85,7 @@ fn relative_slash_path(root: &Path, path: &Path) -> String {
 }
 
 /// Reads the double-quoted members of the `[workspace]` table.
-fn parse_members(manifest: &str) -> Result<Vec<String>, String> {
+pub(crate) fn parse_members(manifest: &str) -> Result<Vec<String>, String> {
     let lines: Vec<&str> = manifest.lines().collect();
     let start = lines
         .iter()
