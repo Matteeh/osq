@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b4298db73714a6bdfbd558948df6a92e7e30d3f6fa46f8b704765ed46f373421"
+build_stamp: "dba4a2a7"
+project_commit: "5d3d0368"
+exit_code: 0
+scope_files: {"decisions/027-rust-scheduling.md":"sha256:7a75086b143ffa68f4b02a18463884945813d809de0b6046aa4c5fafb1074fa8","decisions/README.md":"sha256:bd4f773f530c5b5701f0385a05fc2513ae53239973ed07371fe65496254ad985","tests/rust-adrs.test.ts":"sha256:bdfd793b26453af91db12915d65280802e377a356385a304ef077441cf38b46c"}
+---
+2026-10-20T19:18:02.923Z

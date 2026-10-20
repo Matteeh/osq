@@ -58,6 +58,11 @@ const ROWS: readonly RustAdrRow[] = [
       'crates/kernel/linter/tests/node_spawn_corpus.rs',
     ],
   },
+  {
+    number: '027',
+    file: '027-rust-scheduling.md',
+    checks: ['tests/rust-adrs.test.ts'],
+  },
 ];
 
 /** The number of times the decisions index links `file`. */
@@ -115,7 +120,7 @@ describe('rust-core: Rules block without the Rust ADRs', () => {
 });
 
 describe('rust-core: Rust ADR check files exist', () => {
-  it('has every check file named by ADRs 022 to 026', async () => {
+  it('has every check file named by ADRs 022 to 027', async () => {
     const records = await readDecisions(repoRoot, DEFAULT_CONFIG);
     for (const row of ROWS) {
       const adr = records.adrs.find((entry) => entry.number === row.number);
