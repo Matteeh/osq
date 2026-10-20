@@ -1,4 +1,4 @@
-//! Proves core depends only on `serde` and `serde_json` and names no IO module.
+//! Proves core depends only on `serde`, `serde_json` and `sha2` and names no IO module.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ fn core_source_names_no_io_module() {
     }
 }
 
-/// Asserts the manifest's `[dependencies]` table names exactly the two crates.
+/// Asserts the manifest's `[dependencies]` table names exactly the three crates.
 fn assert_dependencies(root: &Path) {
     let manifest = fs::read_to_string(root.join("Cargo.toml"))
         .unwrap_or_else(|error| panic!("{}: {error}", root.display()));
@@ -52,13 +52,14 @@ fn assert_dependencies(root: &Path) {
         if !in_dependencies {
             continue;
         }
-        let Some((name, _)) = trimmed.split_once('=') else {
+        let Some((key, _)) = trimmed.split_once('=') else {
             continue;
         };
+        let name = key.split_once('.').map_or(key, |(name, _)| name);
         names.push(name.trim().to_owned());
     }
     names.sort();
-    assert_eq!(names, ["serde", "serde_json"]);
+    assert_eq!(names, ["serde", "serde_json", "sha2"]);
 }
 
 /// Collects every `.rs` file under a directory.

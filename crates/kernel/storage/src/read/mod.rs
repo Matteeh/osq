@@ -19,11 +19,13 @@
 //! Implements: rust-storage/delta-capabilities
 //! Implements: rust-storage/task-plans
 //! Implements: rust-storage/task-stream-outcomes
+//! Implements: rust-storage/change-folder-seal
 
 mod error;
 mod listing;
 mod manual;
 mod results;
+mod seal;
 mod sections;
 mod snapshot;
 mod text;
@@ -32,6 +34,7 @@ pub use error::StorageError;
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
 pub use results::TaskDisclosure;
+pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};
 pub use snapshot::{
     CapabilityDelta, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice,

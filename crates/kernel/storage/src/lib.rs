@@ -11,7 +11,7 @@ pub use model::{
 pub use read::{
     CapabilityDelta, ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, Location,
     ManifestNotices, ManualEdit, Notice, PlanRecord, ResultSections, StorageError, TableEvent,
-    TaskDisclosure, TaskFile, TaskOutcomeFacts, frontmatter_string, goal_section, list_changes,
-    markdown_body, parse_result_sections, read_archive, read_change, read_history,
-    read_manual_edits, timestamp_ms,
+    TaskDisclosure, TaskFile, TaskOutcomeFacts, change_folder_seal, frontmatter_string,
+    goal_section, list_changes, markdown_body, parse_result_sections, read_archive, read_change,
+    read_history, read_manual_edits, timestamp_ms,
 };
