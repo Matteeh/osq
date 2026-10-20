@@ -66,6 +66,8 @@ pub enum FindingCode {
 
 impl FindingCode {
     /// The code as its kebab-case string.
+    ///
+    /// Implements: rust-specs/validation-findings
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -91,6 +93,8 @@ impl FindingCode {
     }
 
     /// The one fix the code prescribes, as the fix table gives it.
+    ///
+    /// Implements: rust-specs/validation-findings
     #[must_use]
     pub fn fix(&self) -> &'static str {
         match self {

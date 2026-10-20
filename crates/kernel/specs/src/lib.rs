@@ -2,12 +2,12 @@
 //!
 //! A kernel crate depends only on core and other kernel crates (ADR 022).
 
-pub mod document;
-pub mod markdown;
-pub mod merge;
-pub mod owners;
-pub mod read;
-pub mod validate;
+mod document;
+mod markdown;
+mod merge;
+mod owners;
+mod read;
+mod validate;
 
 pub use document::{
     ChecklistItem, Frontmatter, Proposal, Sidecar, SidecarError, SyntaxError, TaskFile,

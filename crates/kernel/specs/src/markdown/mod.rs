@@ -1,14 +1,14 @@
 //! Markdown parsers for the `OpenSpec` documents the specs kernel reads.
 
-pub mod delta;
-pub mod living;
-pub mod ownership;
-pub mod requirement;
-pub mod scenario;
-pub mod section;
-pub mod table;
-pub mod text;
-pub mod types;
+pub(crate) mod delta;
+pub(crate) mod living;
+pub(crate) mod ownership;
+pub(crate) mod requirement;
+pub(crate) mod scenario;
+pub(crate) mod section;
+pub(crate) mod table;
+pub(crate) mod text;
+pub(crate) mod types;
 
 pub use delta::parse_delta;
 pub use living::parse_living_spec;

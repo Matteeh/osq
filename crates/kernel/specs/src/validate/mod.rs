@@ -1,13 +1,13 @@
 //! Validation of living specs and delta specs (ADR 026).
 
-pub mod change;
-pub mod delta;
+pub(crate) mod change;
+pub(crate) mod delta;
 pub(crate) mod delta_entries;
 pub(crate) mod delta_scan;
-pub mod delta_targets;
-pub mod finding;
-pub mod living;
-pub mod merged;
+pub(crate) mod delta_targets;
+pub(crate) mod finding;
+pub(crate) mod living;
+pub(crate) mod merged;
 pub(crate) mod outline;
 pub(crate) mod requirement;
 
