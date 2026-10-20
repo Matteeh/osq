@@ -1,0 +1,74 @@
+---
+/*
+ * Under the five steps: every step feeds one record, and that record is what reporting reads.
+ * Only "Reports and queries" ships today; the self-improving loop is on the roadmap and says so.
+ */
+// column centres of the five-step grid above, in a 1000 wide box
+const columns = [91, 296, 500, 704, 909];
+const feeds = columns.map((x) => {
+  const mid = 500 + (x - 500) * 0.06;
+  return x === 500 ? 'M500 0 V120' : `M${x} 0 V36 L${mid} 96 V120`;
+});
+---
+
+<div class="ledger">
+  <svg class="feeds" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+    {feeds.map((d, i) => (
+      <g>
+        <path class="feed" d={d} vector-effect="non-scaling-stroke" />
+        <path class="pulse" d={d} pathLength="100" vector-effect="non-scaling-stroke" style={`animation-delay: ${(-i * 0.6).toFixed(1)}s`} />
+      </g>
+    ))}
+  </svg>
+
+  <div class="db" aria-hidden="true">
+    <svg viewBox="0 0 64 72">
+      <path class="side" d="M4 12 V58 C4 64.6 16.5 70 32 70 C47.5 70 60 64.6 60 58 V12" />
+      <path class="band" d="M4 27 C4 33.6 16.5 39 32 39 C47.5 39 60 33.6 60 27 M4 42.5 C4 49.1 16.5 54.5 32 54.5 C47.5 54.5 60 49.1 60 42.5" />
+      <ellipse class="cap" cx="32" cy="12" rx="28" ry="10" />
+    </svg>
+  </div>
+
+  <div class="copy">
+    <span class="eyebrow">Every step leaves a record</span>
+    <h3>A factory that keeps its own books.</h3>
+    <p>Each spawn, test run, retry, cost and decision is written to an append-only file in your repo. osq turns those files into reports and a database you can query, so you can see what a change cost or why a task failed last month.</p>
+    <div class="cards">
+      <div class="card item">
+        <span class="pill green">Available</span>
+        <h4>Reports and queries</h4>
+        <p>Cost, retries and failure reasons per change and per task, straight from your repo's history.</p>
+        <code>osq report · osq query</code>
+      </div>
+      <div class="card item">
+        <span class="pill">Roadmap</span>
+        <h4>A process that improves itself</h4>
+        <p>osq studies its own history and proposes better plans and checks, always as a change you approve.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ledger { margin-top: 8px; display: flex; flex-direction: column; align-items: center; }
+  .feeds { display: block; width: 100%; height: 96px; }
+  .feed { fill: none; stroke: color-mix(in srgb, var(--accent) 35%, transparent); stroke-width: 1.5; }
+  .pulse { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 8 92; animation: down 3s linear infinite; }
+  .db { width: 64px; margin-top: -2px; }
+  .db svg { display: block; width: 100%; height: auto; }
+  .side, .cap { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  .band { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0.6; }
+  .copy { margin-top: 28px; max-width: 760px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  h3 { font-size: clamp(22px, 2.6vw, 28px); font-weight: 600; letter-spacing: -0.01em; }
+  .copy > p { color: var(--muted); text-wrap: pretty; }
+  .cards { margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; text-align: left; }
+  .item { padding: 18px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  h4 { margin: 0; font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .item p { font-size: 14px; color: var(--muted); }
+  code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  @keyframes down { from { stroke-dashoffset: 8; } to { stroke-dashoffset: -92; } }
+  /* the feeds line up with five columns; once the steps wrap there is nothing to line up with */
+  @media (max-width: 900px) { .feeds { display: none; } .ledger { margin-top: 40px; } }
+  @media (max-width: 560px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: 0; } }
+</style>
