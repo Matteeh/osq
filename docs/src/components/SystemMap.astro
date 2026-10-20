@@ -1,0 +1,198 @@
+---
+/*
+ * Capabilities, specs and decision records as one graph, with traceability linking code and tests into it.
+ * Every node and edge kind drawn here is one `osq graph` prints; the example names come from the traceability spec.
+ */
+type Kind = 'adr' | 'capability' | 'requirement' | 'scenario' | 'function' | 'test' | 'file';
+interface Node { kind: Kind; name: string; gap?: string }
+interface Edge { from: string; to: string; label: string }
+
+const H = 48;
+
+const nodes: Record<string, Node> = {
+  adr: { kind: 'adr', name: '001 Use cents' },
+  cap: { kind: 'capability', name: 'pricing' },
+  req: { kind: 'requirement', name: 'Discounts' },
+  scn: { kind: 'scenario', name: 'Bulk tiers' },
+  gap: { kind: 'scenario', name: 'Member price', gap: 'untested' },
+  fn: { kind: 'function', name: 'quote()' },
+  test: { kind: 'test', name: 'quote.test.ts' },
+  file: { kind: 'file', name: 'scripts/seed.ts', gap: 'unowned' },
+};
+
+const edges: Edge[] = [
+  { from: 'adr', to: 'cap', label: 'applies to' },
+  { from: 'cap', to: 'req', label: 'contains' },
+  { from: 'req', to: 'scn', label: 'contains' },
+  { from: 'req', to: 'gap', label: 'contains' },
+  { from: 'cap', to: 'fn', label: 'owns' },
+  { from: 'fn', to: 'scn', label: 'serves' },
+  { from: 'fn', to: 'adr', label: 'follows' },
+  { from: 'test', to: 'fn', label: 'covers' },
+  { from: 'test', to: 'scn', label: 'proves' },
+];
+
+type Layout = { w: number; width: number; height: number; at: Record<string, [number, number]>; bends?: Record<string, [number, number][]> };
+
+// three columns on wide screens, two on phones, so the labels stay readable at either size
+const wide: Layout = {
+  w: 150,
+  width: 630,
+  height: 330,
+  at: { adr: [0, 0], cap: [230, 0], req: [460, 0], fn: [230, 141], scn: [460, 141], test: [230, 282], gap: [460, 282], file: [0, 282] },
+  bends: { 'req>gap': [[628, 24], [628, 306]] },
+};
+const narrow: Layout = {
+  w: 135,
+  width: 352,
+  height: 470,
+  at: { adr: [0, 0], cap: [205, 0], fn: [0, 141], req: [205, 141], test: [0, 282], scn: [205, 282], file: [0, 422], gap: [205, 422] },
+  bends: { 'req>gap': [[350, 165], [350, 446]] },
+};
+
+/** Where the line from a box's centre toward `[tx, ty]` leaves the box. */
+function exit(W: number, [x, y]: [number, number], [tx, ty]: [number, number]): [number, number] {
+  const cx = x + W / 2;
+  const cy = y + H / 2;
+  const dx = tx - cx;
+  const dy = ty - cy;
+  const t = Math.min(dx ? W / 2 / Math.abs(dx) : Infinity, dy ? H / 2 / Math.abs(dy) : Infinity);
+  return [cx + dx * t, cy + dy * t];
+}
+
+const centre = (W: number, [x, y]: [number, number]): [number, number] => [x + W / 2, y + H / 2];
+const fmt = (pts: [number, number][]) => 'M' + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L');
+
+function draw(layout: Layout) {
+  const W = layout.w;
+  return edges.map((edge) => {
+    const a = layout.at[edge.from];
+    const b = layout.at[edge.to];
+    const bend = layout.bends?.[`${edge.from}>${edge.to}`];
+    const pts: [number, number][] = bend
+      ? [[a[0] + W, bend[0][1]], ...bend, [b[0] + W, bend[bend.length - 1][1]]]
+      : [exit(W, a, centre(W, b)), exit(W, b, centre(W, a))];
+    // a bent edge runs along the frame and goes unlabelled; its twin edge already names the link
+    const mid: [number, number] = [(pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2];
+    return { d: fmt(pts), mid, label: bend ? '' : edge.label, gap: Boolean(nodes[edge.to].gap) };
+  });
+}
+
+const layouts = [
+  { name: 'wide', layout: wide },
+  { name: 'narrow', layout: narrow },
+].map(({ name, layout }) => ({ name, layout, lines: draw(layout) }));
+
+const kindLabel: Record<Kind, string> = {
+  adr: 'Decision',
+  capability: 'Capability',
+  requirement: 'Requirement',
+  scenario: 'Scenario',
+  function: 'Function',
+  test: 'Test',
+  file: 'File',
+};
+const codeKinds: Kind[] = ['function', 'test', 'file'];
+
+const parts = [
+  { kind: 'Capabilities', body: 'Each one names a part of what your software does and the files that belong to it.' },
+  { kind: 'Specs', body: 'Requirements and the scenarios that prove them, in plain words. They change only when an approved change lands.' },
+  { kind: 'Decisions', body: 'Architecture decision records name the capabilities they govern. Accepted ones become rules every agent reads.' },
+  {
+    kind: 'Traceability',
+    opt: true,
+    body: 'Tag a function with the scenario it serves and the decision it follows, and name each test after its scenario. osq links code and tests into the graph and points out the gaps: a scenario no test proves, a function no scenario claims, a file no capability owns.',
+  },
+];
+---
+
+<section id="map">
+  <div class="wrap map">
+    <div class="copy">
+      <span class="eyebrow">A map of your software</span>
+      <h2>Know what you built, and why.</h2>
+      <p class="lede">Capabilities, specs and decision records are plain files in your repo that link into one graph: what the software does, how each part behaves, and why it was built that way. People use it to find their way around. Agents get the same context before they plan or build.</p>
+      <ol class="parts">
+        {parts.map((part) => (
+          <li>
+            <h3>{part.kind}{part.opt && <span class="pill">Opt in</span>}</h3>
+            <p>{part.body}</p>
+          </li>
+        ))}
+      </ol>
+      <code class="ref">osq graph · osq spec · osq report</code>
+    </div>
+
+    <figure class="card graph" aria-label="Example graph: decision 001 applies to the pricing capability, which contains a requirement with two scenarios. The function quote() serves one scenario and follows decision 001, and a test covers quote() and proves that scenario. The other scenario has no test, and one file has no owner, so both are marked as gaps.">
+      {layouts.map(({ name, layout, lines }) => (
+        <svg class={name} viewBox={`-4 -4 ${layout.width + 8} ${layout.height + 8}`} aria-hidden="true">
+          {lines.map((line) => (
+            <g class:list={['edge', { 'to-gap': line.gap }]}>
+              <path class="line" d={line.d} />
+            </g>
+          ))}
+          {lines.filter((line) => line.label).map((line) => (
+            <text class="label" x={line.mid[0]} y={line.mid[1] + 3.5} text-anchor="middle">{line.label}</text>
+          ))}
+          {Object.entries(nodes).map(([id, node]) => {
+            const [x, y] = layout.at[id];
+            const W = layout.w;
+            return (
+              <g class:list={['node', node.kind, { code: codeKinds.includes(node.kind), gap: node.gap }]}>
+                <rect x={x} y={y} width={W} height={H} rx="6" />
+                <text class="kind" x={x + 12} y={y + 19}>{kindLabel[node.kind]}</text>
+                {node.gap && <text class="flag" x={x + W - 12} y={y + 19} text-anchor="end">{node.gap}</text>}
+                <text class="name" x={x + 12} y={y + 37}>{node.name}</text>
+              </g>
+            );
+          })}
+        </svg>
+      ))}
+      <figcaption>
+        <span><i class="key spec"></i>Specs and decisions</span>
+        <span><i class="key code"></i>Code and tests, with traceability</span>
+        <span><i class="key gap"></i>A gap osq points out</span>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .map { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
+  .copy { display: grid; gap: 16px; }
+  .parts { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; }
+  .parts li { padding-left: 14px; border-left: 2px solid var(--line); display: grid; gap: 2px; }
+  .parts h3 { margin: 0; font-family: var(--display); font-size: 16px; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+  .parts p { color: var(--muted); font-size: 15px; }
+  .ref { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .graph { margin: 0; padding: 24px; display: grid; gap: 18px; }
+  .graph svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .graph svg.narrow { display: none; }
+
+  .line { fill: none; stroke: color-mix(in srgb, var(--muted) 45%, transparent); stroke-width: 1.25; }
+  .to-gap .line { stroke-dasharray: 4 4; }
+  .label { font-family: var(--mono); font-size: 10px; fill: var(--muted); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+
+  .node rect { fill: var(--accent-soft); stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 1; }
+  .node.code rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .node.gap rect { fill: var(--surface); stroke: var(--red-fg); stroke-dasharray: 5 4; stroke-width: 1.5; }
+  .kind { font-family: var(--display); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--accent-soft-fg); }
+  .code .kind { fill: var(--muted); }
+  .flag { font-family: var(--display); font-size: 10px; font-weight: 600; fill: var(--red-fg); }
+  .name { font-family: var(--mono); font-size: 12px; fill: var(--fg); }
+
+  figcaption { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+  figcaption span { display: inline-flex; align-items: center; gap: 8px; }
+  .key { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+  .key.spec { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+  .key.code { background: var(--surface); border: 1.5px solid var(--line); }
+  .key.gap { border: 1.5px dashed var(--red-fg); }
+
+  @media (max-width: 960px) { .map { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
+  @media (max-width: 560px) {
+    .graph { padding: 16px; }
+    .graph svg.wide { display: none; }
+    .graph svg.narrow { display: block; }
+  }
+</style>
