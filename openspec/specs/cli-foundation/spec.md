@@ -4534,3 +4534,12 @@ how to write a corpus test.
 #### Scenario: Rust guide sits outside the managed blocks
 - **WHEN** AGENTS.md is read
 - **THEN** the `## Rust crates` heading comes before `<!-- OSQ:RULES:START -->`, the Layout code block holds a line starting `crates/`, `checkProjectRules` reports nothing, and `CLAUDE.md` is still a symlink to AGENTS.md
+
+### Requirement: osq's own change concurrency
+osq's own `osq.config.ts` SHALL set `maxConcurrency` to 3, so the watcher runs
+up to three independent approved changes of osq itself at once, as
+watcher-and-harness "Parallel change lanes" describes.
+
+#### Scenario: Own change concurrency
+- **WHEN** `loadConfig` reads osq's own repository
+- **THEN** its `maxConcurrency` is 3

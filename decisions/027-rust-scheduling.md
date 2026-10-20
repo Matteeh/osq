@@ -17,8 +17,10 @@ scheduling" on the Notion Rust Rebuild page and his answers there of
 roadmap requires.
 
 Scope: this ADR governs every capability in group `rust`, the Rust crates, not
-the TypeScript code under `src/`. TypeScript osq keeps running one change at a
-time: its watcher and ADR 021's autopilot do not change.
+the TypeScript code under `src/`. Until the Rust loop replaces it, TypeScript
+osq runs independent approved changes in parallel, up to `maxConcurrency`,
+with overlap decided by capability at approve as change 170 decides it
+(change 234). ADR 021's autopilot still runs one item at a time.
 
 ## Context
 

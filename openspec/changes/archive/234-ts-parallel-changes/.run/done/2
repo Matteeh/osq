@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:781a6d5c76562a54b7179f0d59cc81ee8086aac3619ee6045b74477a79cf529b"
+build_stamp: "aec7a891"
+project_commit: "636de82d"
+exit_code: 0
+scope_files: {"decisions/027-rust-scheduling.md":"sha256:a90de7e1bcad5c7c0c375939ec4bc70f067a855aa9aad53491780ef779d407f5","osq.config.ts":"sha256:c42ea9bcfc34ede3e90b78e4e38ce0307545b101a4ce0cca8e4c98d2955a3ecf","tests/own-max-concurrency.test.ts":"sha256:3c745198c8c1b127eada71418dc9f5cfd316f01736b4e94c81b46a99d0a4d052"}
+---
+2026-10-20T20:19:59.819Z

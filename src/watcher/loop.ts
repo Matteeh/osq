@@ -5,27 +5,25 @@ import type { OsqConfig } from '../core/foundation/config.js';
 import { findHarness } from '../core/foundation/harness-catalog.js';
 import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { reapStaleLocks } from '../core/run/lock.js';
-import type { StaleTaskAudit } from '../core/run/scope-hash.js';
-import { parseSpecMdFromFolder, resolveChangeDoc } from '../core/spec/parser.js';
 import {
   type LocatedChange,
   changeTrees,
   changesDirLabel,
   listChanges,
 } from '../core/status/change-locations.js';
-import { compareNumericPrefix, deriveSpecState, readChangeFolder } from '../core/status/state.js';
+import { deriveSpecState, readChangeFolder } from '../core/status/state.js';
+import type { SpecState } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { archiveCompletedSpec } from './archive-change.js';
 import { restoreArchiveSpecs } from './archive-specs.js';
-import { checkAndArchiveSpec } from './archiver.js';
 import { runAutomaticRetries } from './auto-retry.js';
 import { type AutoSteerOptions, type SteeringPromptBuilder, runAutoSteer } from './auto-steer.js';
 import { type AutopilotCommands, runAutopilotPass } from './autopilot.js';
 import { type BuildInfo, StaleBuildError, resolveBuildInfo } from './build.js';
+import { type ChangeLaneContext, logWatcherError, runChangeLane } from './change-lane.js';
 import { catchUpWorktreeCommits } from './commit-catch-up.js';
-import { runMutationCheck } from './mutation-check.js';
+import { ChangeLanes } from './lanes.js';
 import { formatReapedMarker, recordDeadEvent, writeDeadMarker } from './outcome.js';
-import { auditScopeRegressions } from './regression.js';
-import { runTask } from './runner.js';
 import { BuildWaitError } from './service-build.js';
 import { runStackedChanges } from './stack-run.js';
 import {
@@ -35,20 +33,11 @@ import {
   startStaleCheck,
 } from './stale-pass.js';
 import { checkSync } from './sync-run.js';
-import {
-  discardPausedWorktreeChanges,
-  findActivePause,
-  removePassedPauses,
-} from './usage-pause.js';
-import {
-  commitPendingVerifiedTasks,
-  commitWorktreeArchive,
-  commitWorktreeDeadTask,
-  commitWorktreeVerifiedTask,
-  newArchiveName,
-  readArchiveNames,
-} from './worktree-commit.js';
+import { findActivePause, removePassedPauses } from './usage-pause.js';
+import { commitPendingVerifiedTasks, commitWorktreeDeadTask } from './worktree-commit.js';
 import { approvalCommitted, checkWorktree, haltWorktreeChange } from './worktree-run.js';
+
+export { extractHumanSteps } from './archive-change.js';
 
 const SHOW_CURSOR = '\x1b[?25h';
 const EXIT_SIGINT = 130;
@@ -120,40 +109,6 @@ export function formatIdleStatus(
   return `${prefix}watching ${specsDir} · ${approvedWaiting} approved waiting · ${last}`;
 }
 
-const HUMAN_STEPS_HEADING = /^##[ \t]+Human steps[ \t]*\r?$/im;
-
-/**
- * Extract the `## Human steps` section from a change document. osq never
- * performs these steps itself; they are printed once the change completes so
- * the human knows which manual actions remain (for the layout cut-over: stop
- * the watcher, run the migration, restart). Returns an empty string when the
- * document has no such section or the section is blank.
- */
-export function extractHumanSteps(content: string): string {
-  const match = HUMAN_STEPS_HEADING.exec(content);
-  if (!match || match.index === undefined) {
-    return '';
-  }
-  const remainder = content.slice(match.index + match[0].length);
-  const nextHeading = remainder.search(/^##[ \t]+\S/m);
-  const section = nextHeading === -1 ? remainder : remainder.slice(0, nextHeading);
-  return section.trim();
-}
-
-/**
- * Read the `## Human steps` section from a change folder, preferring the
- * OpenSpec `proposal.md` and falling back to a legacy `spec.md`. Never moves
- * anything: the cut-over is always performed by the human.
- */
-async function readHumanSteps(specFolderPath: string): Promise<string> {
-  const resolved = await resolveChangeDoc(specFolderPath);
-  if (!resolved) {
-    return '';
-  }
-  const content = await fs.readFile(resolved.path, 'utf8').catch(() => '');
-  return extractHumanSteps(content);
-}
-
 /**
  * Most recently archived spec folder, derived from the archive directory's
  * modification times so the idle status survives a watcher restart.
@@ -180,22 +135,271 @@ export async function findLatestArchivedSpec(
   return latest;
 }
 
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+/** What one cycle shares with the helpers that prepare and start its lanes. */
+interface CycleContext {
+  readonly projectRoot: string;
+  readonly config: OsqConfig;
+  readonly adapter: HarnessAdapter;
+  readonly logger?: Logger;
+  readonly staleCheck?: StaleCheck;
+  readonly activeChanges: readonly LocatedChange[];
+  readonly steer: AutoSteerOptions;
+  readonly lanes: ChangeLanes;
 }
 
-function logWatcherError(logger: Logger | undefined, useSymbols: boolean, err: unknown): void {
-  logger?.error(`${resolveSymbol('✗', '[error]', useSymbols)} watcher error: ${errorMessage(err)}`);
+/** What one change contributed to the cycle's summary. */
+interface ChangeAdvance {
+  readonly retried: number;
+  readonly approvedWaiting: number;
+  readonly specsArchived: number;
 }
 
-/** Permanent stale-task log line: task number plus compact per-path attribution. */
-function formatScopeRegressionLine(stale: StaleTaskAudit, symbols: boolean): string {
-  const detail = stale.attribution
-    .map((entry) => `${entry.path} -> ${entry.attribution}`)
-    .join(', ');
-  return `${resolveSymbol('?', '[regressed]', symbols)} task ${stale.taskNumber} regressed (reason: scope_regression, attribution: ${detail || 'none'})`;
+const ZERO_ADVANCE: ChangeAdvance = { retried: 0, approvedWaiting: 0, specsArchived: 0 };
+
+/** Reap expired locks and catch up worktree commits; false means leave the change alone. */
+async function reapChange(
+  change: LocatedChange,
+  specId: string,
+  config: OsqConfig,
+  logger?: Logger,
+): Promise<boolean> {
+  const worktree = change.tree.worktreeFolder !== undefined;
+  const runDir = path.join(change.folderPath, '.run');
+  const reapedLocks = await reapStaleLocks(change.folderPath, config.timeouts.staleLockSeconds);
+  for (const reaped of reapedLocks) {
+    await writeDeadMarker(
+      runDir,
+      reaped.taskNumber,
+      formatReapedMarker(reaped.reason, reaped.pid, reaped.startedAt),
+      change.tree.root,
+    );
+    await recordDeadEvent(change.folderPath, reaped.taskNumber, reaped.reason);
+    if (worktree) {
+      const halt = await commitWorktreeDeadTask(change, config, reaped.taskNumber, reaped.reason);
+      if (halt) {
+        await haltWorktreeChange(change, specId, halt, logger, config.limits);
+        return false;
+      }
+    }
+  }
+  if (worktree && !(await catchUpWorktreeCommits(change, specId, config, logger))) {
+    return false;
+  }
+  return true;
 }
 
+/** Retry, steer, or clean the change's worktree; null means leave it alone this cycle. */
+async function reconcileChange(
+  change: LocatedChange,
+  context: CycleContext,
+): Promise<{ specState: SpecState; retried: number } | null> {
+  const { config, logger } = context;
+  let specState = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+
+  // The automatic-retry decision runs from disk for every approved change
+  // after reaping and before the next task is picked. Renaming the active
+  // dead marker is the commit point, so a restart loses no retry.
+  let retried = 0;
+  if (specState.approvedHash) {
+    retried = await runAutomaticRetries(change.tree.root, change.folderPath, config, logger);
+    // Re-derive so a task the automatic-retry step just marked stuck is seen
+    // as steering in this same cycle.
+    specState = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+  }
+
+  // A change that needs steering waits for `osq plan` and `osq approve`: leave
+  // its folder alone so a planner can edit it. With autoSteer on the watcher
+  // runs that planner once here, before it leaves the change alone.
+  if (specState.steering) {
+    if ((await findActivePause(context.activeChanges, Date.now())) === null) {
+      await runAutoSteer(context.projectRoot, change, specState, config, {
+        ...context.steer,
+        logger,
+      });
+    }
+    return null;
+  }
+
+  const worktree = change.tree.worktreeFolder !== undefined;
+  // A worktree change commits its pending done tasks before any check, so a
+  // commit a hook rejected is retried by `osq retry <id> change`, then the
+  // clean check runs against the resulting tree.
+  if (worktree && specState.status !== 'regressed') {
+    // A stopped archive may have left the living specs modified and the record
+    // in the worktree; put them back before the dirty check.
+    await restoreArchiveSpecs(change.tree.root, change.folderPath);
+    const pendingHalt = await commitPendingVerifiedTasks(change, config);
+    if (pendingHalt) {
+      await haltWorktreeChange(change, specState.id, pendingHalt, logger, config.limits);
+      return null;
+    }
+    const worktreeHalt = await checkWorktree(change, config);
+    if (worktreeHalt) {
+      await haltWorktreeChange(change, specState.id, worktreeHalt, logger, config.limits);
+      return null;
+    }
+    specState = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+  }
+
+  return { specState, retried };
+}
+
+/** Whether the change still counts as approved and waiting in the idle status. */
+function isApprovedWaiting(specState: SpecState): boolean {
+  return (
+    specState.approvedHash !== null &&
+    (specState.status === 'pending' ||
+      specState.status === 'running' ||
+      specState.status === 'blocked')
+  );
+}
+
+/** Wait for a free lane, then recheck and start the change's next task there. */
+async function startNextTask(
+  change: LocatedChange,
+  initialState: SpecState,
+  context: CycleContext,
+): Promise<void> {
+  const { config, logger, lanes } = context;
+  let specState = initialState;
+  await lanes.waitForSlot();
+  if (lanes.isClosed()) return;
+  await assertNotStale(context.staleCheck);
+  // While any active change holds a pause, no change starts a task.
+  if ((await findActivePause(context.activeChanges, Date.now())) !== null) {
+    return;
+  }
+  const worktree = change.tree.worktreeFolder !== undefined;
+  if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
+    const syncHalt = await checkSync(context.projectRoot, change, config, logger);
+    if (syncHalt) {
+      await haltWorktreeChange(change, specState.id, syncHalt, logger, config.limits);
+      return;
+    }
+    specState = deriveSpecState(await readChangeFolder(change.tree.root, change.folderPath));
+  }
+  if (!specState.nextTask) return;
+  const taskNumber = specState.nextTask.taskNumber;
+  const tag = (symbol: string, word: string): string =>
+    resolveSymbol(symbol, word, logger?.symbols === true);
+  logger?.info(`${tag('▶ spec', '[spec]')} ${specState.id} picked up (${change.folderName})`);
+
+  const lane: ChangeLaneContext = {
+    projectRoot: context.projectRoot,
+    config,
+    adapter: context.adapter,
+    logger,
+    staleCheck: context.staleCheck,
+    change,
+    specState,
+    taskNumber,
+    lanes,
+  };
+  lanes.start(change.folderPath, () => runChangeLane(lane));
+}
+
+/** Prepare one change and either start its lane or archive it when it is done. */
+async function advanceChange(change: LocatedChange, context: CycleContext): Promise<ChangeAdvance> {
+  const specId = change.folderName.match(/^(\d+)/)?.[1] ?? change.folderName;
+  const worktree = change.tree.worktreeFolder !== undefined;
+  // A worktree approval is not real until its commit lands: skip until
+  // `.run/approved` exists at HEAD so no later step sees a half-written seal.
+  if (worktree && !(await approvalCommitted(change, context.config))) {
+    return ZERO_ADVANCE;
+  }
+  if (!(await reapChange(change, specId, context.config, context.logger))) {
+    return ZERO_ADVANCE;
+  }
+  const reconciled = await reconcileChange(change, context);
+  if (reconciled === null) {
+    return ZERO_ADVANCE;
+  }
+  const { specState, retried } = reconciled;
+  const approvedWaiting = isApprovedWaiting(specState) ? 1 : 0;
+
+  if (specState.status === 'pending' && specState.nextTask) {
+    await startNextTask(change, specState, context);
+    return { retried, approvedWaiting, specsArchived: 0 };
+  }
+  if (specState.status === 'done') {
+    const archived = await archiveCompletedSpec(change, specState.id, {
+      projectRoot: context.projectRoot,
+      config: context.config,
+      logger: context.logger,
+      staleCheck: context.staleCheck,
+    });
+    return { retried, approvedWaiting, specsArchived: archived ? 1 : 0 };
+  }
+  return { retried, approvedWaiting, specsArchived: 0 };
+}
+
+/** Add every finished lane's outcome to the running summary. */
+function collectLaneOutcomes(lanes: ChangeLanes, summary: WatcherSummary): void {
+  for (const outcome of lanes.takeOutcomes()) {
+    summary.tasksRun += outcome.tasksRun;
+    summary.specsArchived += outcome.specsArchived;
+    summary.blockedByRegression.push(...outcome.blockedByRegression);
+  }
+}
+
+/** Print the idle status row when this cycle ran no task and no lane runs. */
+async function emitIdleStatus(
+  projectRoot: string,
+  config: OsqConfig,
+  logger: Logger | undefined,
+  approvedWaiting: number,
+  summary: WatcherSummary,
+  lanes: ChangeLanes,
+  buildInfo: BuildInfo,
+): Promise<void> {
+  if (summary.tasksRun !== 0 || lanes.count() !== 0) return;
+  const lastArchived = await findLatestArchivedSpec(projectRoot, config).catch(() => undefined);
+  logger?.status(
+    formatIdleStatus(changesDirLabel(config), approvedWaiting, lastArchived, undefined, buildInfo),
+  );
+}
+
+/** Visit every active change in order, leaving a lane's own change alone. */
+async function runActiveChanges(context: CycleContext, summary: WatcherSummary): Promise<number> {
+  const { activeChanges, lanes, logger } = context;
+  let approvedWaiting = 0;
+  for (const change of activeChanges) {
+    try {
+      // A change in a stacked tree starts no task; it waits for "Stacked cut"
+      // to give it a worktree.
+      if (change.tree.stackedFolder !== undefined) continue;
+      // Every cycle leaves a change alone while its lane runs.
+      if (lanes.isRunning(change.folderPath)) {
+        const specState = await deriveSpecState(change.tree.root, change.folderPath).catch(
+          () => null,
+        );
+        if (specState !== null && isApprovedWaiting(specState)) approvedWaiting++;
+        continue;
+      }
+      const advance = await advanceChange(change, context);
+      summary.retried += advance.retried;
+      summary.specsArchived += advance.specsArchived;
+      approvedWaiting += advance.approvedWaiting;
+    } catch (err) {
+      if (err instanceof StaleBuildError) throw err;
+      logWatcherError(logger, logger?.symbols === true, err);
+    }
+  }
+  return approvedWaiting;
+}
+
+/**
+ * Run one watcher cycle: start a lane for each change that can take a task and
+ * leave a running lane's change alone. Without `lanes` the cycle owns them and
+ * waits for every one before returning.
+ *
+ * @scenario watcher-and-harness: Two independent changes at once
+ * @scenario watcher-and-harness: The cap holds
+ * @scenario watcher-and-harness: One lane runs as before
+ * @scenario watcher-and-harness: A pause stops new starts
+ * @scenario watcher-and-harness: Lanes outlive a cycle
+ * @adr 012
+ */
 export async function runWatcherCycle(
   projectRoot: string,
   config: OsqConfig,
@@ -203,13 +407,16 @@ export async function runWatcherCycle(
   logger?: Logger,
   staleCheck?: StaleCheck,
   steer: AutoSteerOptions = {},
+  lanes?: ChangeLanes,
 ): Promise<WatcherSummary> {
-  const useSymbols = logger?.symbols === true;
-  const tag = (symbol: string, word: string): string => resolveSymbol(symbol, word, useSymbols);
-
   // Resolved once per cycle (and cached in `build.ts`) so both the idle status
   // row and every change carry osq's own identity.
   const buildInfo = await resolveBuildInfo();
+
+  const ownsLanes = lanes === undefined;
+  const activeLanes = lanes ?? new ChangeLanes(config.maxConcurrency);
+  const kept = activeLanes.takeError();
+  if (kept !== undefined) throw kept.value;
 
   await runStackedChanges(projectRoot, config, logger);
 
@@ -218,283 +425,42 @@ export async function runWatcherCycle(
   // A pause whose reset has passed ends before anything runs this cycle.
   await removePassedPauses(activeChanges, Date.now());
 
-  let tasksRun = 0;
-  let retried = 0;
-  let specsArchived = 0;
-  let approvedWaiting = 0;
-  const blockedByRegression: {
-    id: string;
-    outcome: 'blocked_by_regression';
-    tasks: readonly string[];
-  }[] = [];
-
-  const archiveCompletedSpec = async (change: LocatedChange, specId: string): Promise<void> => {
-    await assertNotStale(staleCheck);
-    const folder = change.folderName;
-    const folderPath = change.folderPath;
-    const root = change.tree.root;
-    const worktree = change.tree.worktreeFolder !== undefined;
-    // Read the manual steps while the folder still exists: the archive move
-    // relocates it, and this task never performs those steps itself.
-    const humanSteps = await readHumanSteps(folderPath);
-    if (worktree) {
-      const halt = await checkWorktree(change, config);
-      if (halt) {
-        await haltWorktreeChange(change, specId, halt, logger, config.limits);
-        return;
-      }
-      const archiveState = deriveSpecState(await readChangeFolder(root, folderPath));
-      if (archiveState.status === 'done') {
-        const syncHalt = await checkSync(projectRoot, change, config, logger);
-        if (syncHalt) {
-          await haltWorktreeChange(change, specId, syncHalt, logger, config.limits);
-          return;
-        }
-      }
-    }
-    const proposalTitle = worktree
-      ? ((await parseSpecMdFromFolder(folderPath).catch(() => null))?.title ?? '')
-      : '';
-    const before = worktree ? await readArchiveNames(change.tree.archiveDir) : null;
-    const archived = await checkAndArchiveSpec(root, folderPath, config);
-    if (!archived) {
-      return;
-    }
-    specsArchived++;
-    logger?.info(`${tag('✓ spec', '[archived]')} ${specId} archived (${folder})`);
-    if (worktree && before !== null) {
-      const archiveName = await newArchiveName(change.tree.archiveDir, before);
-      if (archiveName !== null) {
-        await commitWorktreeArchive(change, config, archiveName, proposalTitle, logger);
-      }
-    }
-    if (humanSteps) {
-      logger?.info(`Human steps after completion:\n${humanSteps}`);
-    }
+  const summary: WatcherSummary = {
+    tasksRun: 0,
+    retried: 0,
+    specsArchived: 0,
+    blockedByRegression: [],
   };
+  const context: CycleContext = {
+    projectRoot,
+    config,
+    adapter,
+    logger,
+    staleCheck,
+    activeChanges,
+    steer,
+    lanes: activeLanes,
+  };
+  const approvedWaiting = await runActiveChanges(context, summary);
 
-  for (const change of activeChanges) {
-    const folder = change.folderName;
-    const folderPath = change.folderPath;
-    const treeRoot = change.tree.root;
-    const worktree = change.tree.worktreeFolder !== undefined;
-    const specId = folder.match(/^(\d+)/)?.[1] ?? folder;
-    try {
-      // A worktree approval is not real until its commit lands: skip until
-      // `.run/approved` exists at HEAD so no later step sees a half-written seal.
-      if (worktree && !(await approvalCommitted(change, config))) {
-        continue;
-      }
-      // The reaper only detects and unlinks expired locks; the watcher owns the
-      // dead marker and event so every artifact is written through outcome.ts.
-      const runDir = path.join(folderPath, '.run');
-      const reapedLocks = await reapStaleLocks(folderPath, config.timeouts.staleLockSeconds);
-      let reaperHalted = false;
-      for (const reaped of reapedLocks) {
-        await writeDeadMarker(
-          runDir,
-          reaped.taskNumber,
-          formatReapedMarker(reaped.reason, reaped.pid, reaped.startedAt),
-          treeRoot,
-        );
-        await recordDeadEvent(folderPath, reaped.taskNumber, reaped.reason);
-        if (worktree) {
-          const halt = await commitWorktreeDeadTask(
-            change,
-            config,
-            reaped.taskNumber,
-            reaped.reason,
-          );
-          if (halt) {
-            await haltWorktreeChange(change, specId, halt, logger, config.limits);
-            reaperHalted = true;
-            break;
-          }
-        }
-      }
-      if (reaperHalted) continue;
-
-      if (worktree && !(await catchUpWorktreeCommits(change, specId, config, logger))) {
-        continue;
-      }
-
-      let specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
-
-      // The automatic-retry decision runs from disk for every approved change
-      // after reaping and before the next task is picked. Renaming the active
-      // dead marker is the commit point, so a restart loses no retry.
-      if (specState.approvedHash) {
-        const count = await runAutomaticRetries(treeRoot, folderPath, config, logger);
-        if (count > 0) {
-          retried += count;
-        }
-        // Re-derive so a task the automatic-retry step just marked stuck is
-        // seen as steering in this same cycle.
-        specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
-      }
-
-      // A change that needs steering waits for `osq plan` and `osq approve`:
-      // leave its folder alone so a planner can edit it. With autoSteer on the
-      // watcher runs that planner once here, before it leaves the change alone.
-      if (specState.steering) {
-        if ((await findActivePause(activeChanges, Date.now())) === null) {
-          await runAutoSteer(projectRoot, change, specState, config, { ...steer, logger });
-        }
-        continue;
-      }
-
-      // A worktree change commits its pending done tasks before any check, so a
-      // commit a hook rejected is retried by `osq retry <id> change`, then the
-      // clean check runs against the resulting tree.
-      if (worktree && specState.status !== 'regressed') {
-        // A stopped archive may have left the living specs modified and the
-        // record in the worktree; put them back before the dirty check.
-        await restoreArchiveSpecs(change.tree.root, change.folderPath);
-        const pendingHalt = await commitPendingVerifiedTasks(change, config);
-        if (pendingHalt) {
-          await haltWorktreeChange(change, specId, pendingHalt, logger, config.limits);
-          continue;
-        }
-        const worktreeHalt = await checkWorktree(change, config);
-        if (worktreeHalt) {
-          await haltWorktreeChange(change, specId, worktreeHalt, logger, config.limits);
-          continue;
-        }
-        specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
-      }
-
-      if (
-        specState.approvedHash &&
-        (specState.status === 'pending' ||
-          specState.status === 'running' ||
-          specState.status === 'blocked')
-      ) {
-        approvedWaiting++;
-      }
-
-      if (specState.status === 'pending' && specState.nextTask) {
-        await assertNotStale(staleCheck);
-        // While any active change holds a pause, no change starts a task.
-        if ((await findActivePause(activeChanges, Date.now())) !== null) {
-          continue;
-        }
-        if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
-          const syncHalt = await checkSync(projectRoot, change, config, logger);
-          if (syncHalt) {
-            await haltWorktreeChange(change, specId, syncHalt, logger, config.limits);
-            continue;
-          }
-          specState = deriveSpecState(await readChangeFolder(treeRoot, folderPath));
-        }
-        if (!specState.nextTask) {
-          continue;
-        }
-        const taskNumber = specState.nextTask.taskNumber;
-        logger?.info(`${tag('▶ spec', '[spec]')} ${specState.id} picked up (${folder})`);
-
-        // Pre-dispatch scope audit runs before any lock: every earlier
-        // automated done task is compared in one pass, stale tasks are
-        // verified and recorded, and the upcoming task stays untouched.
-        const earlier = specState.tasks
-          .map((task) => task.taskNumber)
-          .filter((number) => Number.parseInt(number, 10) < Number.parseInt(taskNumber, 10));
-        const audit = await auditScopeRegressions({
-          projectRoot: treeRoot,
-          specFolderPath: folderPath,
-          eligibleTaskNumbers: earlier,
-          verifyTimeoutSeconds: config.timeouts.verifyTimeoutSeconds ?? 600,
-          limits: config.limits,
-        });
-        for (const recertified of audit.recertified) {
-          const paths = audit.recertifiedPaths[recertified] ?? [];
-          logger?.info(
-            `${tag('↻', '[recertified]')} task ${recertified} recertified automatically (${paths.join(', ') || 'no differing paths'})`,
-          );
-        }
-        if (audit.stale.length > 0) {
-          const staleNumbers = audit.stale
-            .map((stale) => stale.taskNumber)
-            .sort(compareNumericPrefix);
-          for (const stale of audit.stale) {
-            logger?.info(formatScopeRegressionLine(stale, useSymbols));
-          }
-          logger?.info(
-            `${resolveSymbol('■', '[halted]', useSymbols)} spec ${specState.id} halted: tasks ${staleNumbers.join(', ')} require recertification`,
-          );
-          blockedByRegression.push({
-            id: specState.id,
-            outcome: 'blocked_by_regression',
-            tasks: staleNumbers,
-          });
-          continue;
-        }
-
-        const taskResult = await runTask(treeRoot, folderPath, taskNumber, config, adapter, logger);
-        tasksRun++;
-
-        if (taskResult.success) {
-          await runMutationCheck(treeRoot, folderPath, taskNumber, config, logger);
-          if (worktree) {
-            const halt = await commitWorktreeVerifiedTask(change, config, taskNumber);
-            if (halt) {
-              await haltWorktreeChange(change, specId, halt, logger, config.limits);
-              continue;
-            }
-          }
-          await archiveCompletedSpec(change, specState.id);
-        } else if (taskResult.paused) {
-          // A pause writes no dead record and halts nothing: discard the
-          // agent's edits outside the change folder and wait for the reset.
-          if (worktree) {
-            await discardPausedWorktreeChanges(change, config);
-          }
-        } else {
-          if (
-            worktree &&
-            taskResult.reason !== undefined &&
-            taskResult.reason !== 'regressed' &&
-            taskResult.reason !== 'already_running'
-          ) {
-            const halt = await commitWorktreeDeadTask(
-              change,
-              config,
-              taskNumber,
-              taskResult.reason,
-            );
-            if (halt) {
-              await haltWorktreeChange(change, specId, halt, logger, config.limits);
-              continue;
-            }
-          }
-          logger?.info(
-            `${tag('■ spec', '[halted]')} ${specState.id} halted (task ${taskNumber} dead)`,
-          );
-        }
-      } else if (specState.status === 'done') {
-        await archiveCompletedSpec(change, specState.id);
-      }
-    } catch (err) {
-      if (err instanceof StaleBuildError) {
-        throw err;
-      }
-      logWatcherError(logger, useSymbols, err);
-    }
+  collectLaneOutcomes(activeLanes, summary);
+  if (ownsLanes) {
+    await activeLanes.waitAll();
+    collectLaneOutcomes(activeLanes, summary);
   }
+  const laneError = activeLanes.takeError();
+  if (laneError !== undefined) throw laneError.value;
 
-  if (tasksRun === 0) {
-    const lastArchived = await findLatestArchivedSpec(projectRoot, config).catch(() => undefined);
-    logger?.status(
-      formatIdleStatus(
-        changesDirLabel(config),
-        approvedWaiting,
-        lastArchived,
-        undefined,
-        buildInfo,
-      ),
-    );
-  }
-
-  return { tasksRun, retried, specsArchived, blockedByRegression };
+  await emitIdleStatus(
+    projectRoot,
+    config,
+    logger,
+    approvedWaiting,
+    summary,
+    activeLanes,
+    buildInfo,
+  );
+  return summary;
 }
 
 /** Run autopilot's one step after a cycle, when it is on and commands exist. */
@@ -551,6 +517,15 @@ export async function runWatcherOnce(
   };
 }
 
+/**
+ * Run the watcher continuously, or once. One set of changed lanes serves every
+ * continuous cycle, and stopping waits for every lane to finish.
+ *
+ * @scenario watcher-and-harness: Lanes outlive a cycle
+ * @scenario watcher-and-harness: A new build waits for running lanes
+ * @scenario watcher-and-harness: Abort waits for running lanes
+ * @adr 012
+ */
 export async function startWatcher(
   projectRoot: string,
   config: OsqConfig,
@@ -622,27 +597,40 @@ export async function startWatcher(
   let watcher: ReturnType<typeof watch> | null = null;
 
   // A signal-driven watcher's promise resolves only once the abort has fired
-  // and no cycle is in flight. A watcher without a signal resolves after setup
-  // as before and never awaits this.
+  // and no cycle or lane is in flight. A watcher without a signal resolves
+  // after setup as before and never awaits this.
   let resolveStopped: () => void = () => {};
   const stoppedPromise = new Promise<void>((resolve) => {
     resolveStopped = resolve;
   });
-  const settleIfStopped = (): void => {
-    if (stopped && !isRunningCycle) {
+  let onSigint: () => void = () => {};
+  let settleIfStopped: () => void = () => {};
+  const lanes = new ChangeLanes(config.maxConcurrency, () => settleIfStopped());
+  settleIfStopped = (): void => {
+    if (stopped && !isRunningCycle && lanes.count() === 0) {
+      process.removeListener('SIGINT', onSigint);
       resolveStopped();
     }
   };
 
-  let onSigint: () => void = () => {};
-
   const stop = (): void => {
     if (stopped) return;
     stopped = true;
+    // Stopping closes the lanes so a cycle still in flight starts no task;
+    // running lanes finish, and only then does the watcher settle.
+    lanes.close();
     if (intervalId) clearInterval(intervalId);
     watcher?.close().catch(() => {});
-    process.removeListener('SIGINT', onSigint);
     settleIfStopped();
+  };
+
+  const finishStopped = async (): Promise<void> => {
+    if (!stopped && !interrupted) return;
+    if (options.signal) {
+      await stoppedPromise;
+      return;
+    }
+    await lanes.waitAll();
   };
 
   onSigint = () => {
@@ -655,9 +643,7 @@ export async function startWatcher(
       process.stderr.write(SHOW_CURSOR);
     }
     logger?.info('waiting for running task to exit (press Ctrl+C again to kill)');
-    if (!isRunningCycle) {
-      stop();
-    }
+    stop();
   };
 
   process.on('SIGINT', onSigint);
@@ -668,16 +654,24 @@ export async function startWatcher(
     try {
       // A service build check runs at the top of every continuous cycle, so a
       // new or stale build is seen even while the watcher is idle.
-      if (options.buildCheck) {
+      // Wait for every lane's task to spawn first, so a stop found here can
+      // never be followed by a spawn that was already on its way.
+      if (options.buildCheck && lanes.allSpawned()) {
         await assertNotStale(options.buildCheck);
       }
-      await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck, steer);
+      await runWatcherCycle(projectRoot, config, adapter, logger, staleCheck, steer, lanes);
       await runAutopilotAfter(projectRoot, config, options.autopilot, logger);
     } catch (err) {
       // A wait ends this cycle without stopping the loop or logging an error;
       // the next cycle checks again.
       if (err instanceof BuildWaitError) {
         return;
+      }
+      // A stop waits for every lane, so the service never restarts under a
+      // running task (ADR 012), and a lane that has not spawned yet spawns none.
+      if (err instanceof StaleBuildError) {
+        lanes.close();
+        await lanes.waitAll();
       }
       if (handleStaleBuild(err, staleDeps)) {
         stop();
@@ -703,12 +697,18 @@ export async function startWatcher(
   }
 
   await cycleHandler();
-  if (interrupted || stopped) return;
+  if (interrupted || stopped) {
+    await finishStopped();
+    return;
+  }
 
   const trees = await changeTrees(projectRoot, config);
   // An abort can land while `changeTrees` is in flight; create neither the
-  // file watcher nor the poll interval once it has.
-  if (stopped || interrupted) return;
+  // file watcher nor the poll interval once it has, and still wait for lanes.
+  if (stopped || interrupted) {
+    await finishStopped();
+    return;
+  }
   watcher = watch(
     trees.map((tree) => tree.changesDir),
     { ignoreInitial: true, depth: 3 },

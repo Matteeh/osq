@@ -24,7 +24,6 @@ const GRANDFATHERED = new Set([
   'cli/index.ts#createProgram',
   'core/lifecycle/retry.ts#retrySpec',
   'core/spec/linter.ts#lintChangeFolder',
-  'watcher/loop.ts#runWatcherCycle',
   'watcher/runner.ts#runTask',
   'cli/plan.ts#planCommand',
   'cli/report.ts#toStableMetrics',
