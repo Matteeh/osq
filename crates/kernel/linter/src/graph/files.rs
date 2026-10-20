@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use osq_core::{Edge, EdgeKind, Graph, Location, Node, NodeId};
-use osq_kernel_specs::{Adr, read_capability_ownership, scope_covers_path};
+use osq_kernel_specs::{Adr, CapabilityOwnership, scope_covers_path};
 
 use super::GraphError;
 use super::{adr, specs};
@@ -138,9 +138,13 @@ fn add_tag(graph: &mut Graph, from: &NodeId, tag: &Tag, file: &str, adrs: &[Adr]
     });
 }
 
-/// Adds an `owns` edge per capability and file its globs cover.
-pub(super) fn add_ownership(graph: &mut Graph, root: &Path, openspec: &Path) {
-    let ownerships = read_capability_ownership(&root.join(openspec).join("specs"));
+/// Adds an `owns` edge per capability and file the `ownerships` globs cover.
+pub(super) fn add_ownership(
+    graph: &mut Graph,
+    root: &Path,
+    openspec: &Path,
+    ownerships: &[CapabilityOwnership],
+) {
     let files: Vec<NodeId> = graph
         .nodes()
         .filter(|node| matches!(node.id, NodeId::File(_)))

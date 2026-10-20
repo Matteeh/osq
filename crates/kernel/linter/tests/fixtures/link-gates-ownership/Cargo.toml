@@ -1,0 +1,2 @@
+[workspace]
+members = ["crates/keep", "crates/split", "crates/fresh"]

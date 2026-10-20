@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use osq_core::Graph;
-use osq_kernel_specs::read_decisions;
+use osq_kernel_specs::{CapabilityOwnership, read_capability_ownership, read_decisions};
 
 use super::GraphError;
 use super::{adr, files, specs};
@@ -25,12 +25,23 @@ pub fn build_link_graph(
     decisions: &Path,
     openspec: &Path,
 ) -> Result<Graph, GraphError> {
+    let ownerships = read_capability_ownership(&root.join(openspec).join("specs"));
+    build_link_graph_with(root, decisions, openspec, &ownerships)
+}
+
+/// Builds the link graph, adding the `owns` edges `ownerships` states.
+pub(crate) fn build_link_graph_with(
+    root: &Path,
+    decisions: &Path,
+    openspec: &Path,
+    ownerships: &[CapabilityOwnership],
+) -> Result<Graph, GraphError> {
     let records = read_decisions(root, decisions, openspec);
     let capabilities = specs::read(root, openspec)?;
     let mut graph = Graph::default();
     adr::add(&mut graph, &records, &capabilities);
     specs::add(&mut graph, &capabilities, &records);
     files::add(&mut graph, root, &records.adrs)?;
-    files::add_ownership(&mut graph, root, openspec);
+    files::add_ownership(&mut graph, root, openspec, ownerships);
     Ok(graph)
 }

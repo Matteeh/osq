@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7866d59184ea5ca902438a116e226bc4c64bc764574581684675e318de0c00d2"
+build_stamp: "c6f8a8da"
+project_commit: "f9445afd"
+exit_code: 0
+scope_files: {"crates/kernel/linter/tests/link_gates_corpus.rs":"sha256:b601b970b41eb8e3c2b5edc707190dd64fa9605c25d693589466402834e996dd"}
+---
+2026-10-20T21:19:16.155Z

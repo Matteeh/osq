@@ -13,6 +13,7 @@ use osq_kernel_specs::SpecsError;
 use crate::scan::ScanError;
 
 pub use build::build_link_graph;
+pub(crate) use build::build_link_graph_with;
 
 /// Why building the link graph failed.
 #[derive(Debug, Clone, PartialEq, Eq)]
