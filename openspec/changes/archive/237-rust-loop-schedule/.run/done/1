@@ -1,0 +1,23 @@
+---
+scope_resolver: 2
+scope_hash: sha256:e4db02b5ce4f5e15a87baff7b3d212efd068d86a90f52e5c3390430cf1c99f7d
+build_stamp: c6f8a8da
+project_commit: 37d7cf4a
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:db793840cfbca335c7d656ee3cdd2160a59e901aa68e5ed8ea9a78293a90e7ee
+  crates/kernel/loop/Cargo.toml: sha256:e139c4a94972c32357305067dd711ae553b62f5ca6e933ea12d7bf0e58dd8ed0
+  crates/kernel/loop/src/lib.rs: sha256:efa1bc1f6dab35795b45926793eb2c188c6f6e45022b0d812d4c488d8a56c47c
+  crates/kernel/loop/src/scope.rs: sha256:458e217208d95e680a7447e43a2fee1b45b4dbb365e691fa8ea64828b2370874
+  crates/kernel/loop/src/scope/files.rs: sha256:822534b1ceb000679dfce386d6448c12f91fcbb00efcad9325b474d9cfc53f7a
+  crates/kernel/loop/tests/fixtures/repo/crates/kernel/demo/src/lib.rs: sha256:51d4db0ee56c105feb12fb78d23561a4cfe05f4dae6b423c9661e589175895ea
+  crates/kernel/loop/tests/fixtures/repo/crates/kernel/demo/src/read.rs: sha256:2bafb837f94d13360a870cd1124173780a8105b5ab3d03e1c45f3b7d4d5a4d8e
+  crates/kernel/loop/tests/fixtures/repo/crates/kernel/demo/tests/reading.rs: sha256:d4cbcd033f4550a52ea0910d2daf5a68ee914f634668d650d94cf0e3c1db738a
+  crates/kernel/loop/tests/fixtures/repo/src/a.ts: sha256:b845472cb1d33b9493e25a3537549491562567d08b23938b767322d46a83227a
+  crates/kernel/loop/tests/fixtures/repo/src/b.ts: sha256:9df34a336ea8671b11197c58eec6a8f15dea28ec4dfe6dda31953c600affbc99
+  crates/kernel/loop/tests/scope_files.rs: sha256:d151b5faf59f384e196bd8c8aa62dac5a3036c90aa2116b0f0fc865e7be6964d
+original_scope_hash: sha256:4124f8ef73a0de039a8f6396819720ca8a7ca43e9ae2ace62dac674172035090
+recertified_at: 2026-10-20T21:22:02.034Z
+recertification_count: 1
+---
+2026-10-20T21:14:03.463Z

@@ -541,7 +541,7 @@ in its checks, and causing no decision problem. ADR 022 SHALL also name
 tests, ADR 025 `crates/core/tests/event_corpus.rs`, and ADR 026 the specs
 kernel's golden, validation, replay and parity tests and the linter
 kernel's no-runtime-Node test. ADR 027, scheduling, SHALL also name core's
-scheduler tests, until the loop adds its tests.
+scheduler tests and the loop kernel's scope, schedule and corpus tests.
 The index SHALL link each once, and AGENTS.md's project rules block SHALL
 not change, since none applies to all.
 
@@ -556,7 +556,7 @@ not change, since none applies to all.
 | 024 | `024-rust-link-enforcement.md` | `tests/rust-adrs.test.ts`, `crates/kernel/linter/tests/link_gates.rs`, `crates/kernel/linter/tests/link_gates_corpus.rs` |
 | 025 | `025-rust-on-disk-format.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/event_corpus.rs` |
 | 026 | `026-openspec-in-rust.md` | `tests/rust-adrs.test.ts`, `crates/kernel/specs/tests/golden_corpus.rs`, `crates/kernel/specs/tests/validate_corpus.rs`, `crates/kernel/specs/tests/replay_corpus.rs`, `crates/kernel/specs/tests/openspec_validate_parity_corpus.rs`, `crates/kernel/specs/tests/openspec_archive_parity_corpus.rs`, `crates/kernel/linter/tests/node_spawn_corpus.rs` |
-| 027 | `027-rust-scheduling.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/schedule.rs`, `crates/core/tests/schedule_props.rs` |
+| 027 | `027-rust-scheduling.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/schedule.rs`, `crates/core/tests/schedule_props.rs`, `crates/kernel/loop/tests/scope_files.rs`, `crates/kernel/loop/tests/active_schedule.rs`, `crates/kernel/loop/tests/schedule_corpus.rs` |
 
 #### Scenario: Rules block without the Rust ADRs
 - **WHEN** `renderRulesBlock` renders osq's own decisions

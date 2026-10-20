@@ -65,6 +65,9 @@ const ROWS: readonly RustAdrRow[] = [
       'tests/rust-adrs.test.ts',
       'crates/core/tests/schedule.rs',
       'crates/core/tests/schedule_props.rs',
+      'crates/kernel/loop/tests/scope_files.rs',
+      'crates/kernel/loop/tests/active_schedule.rs',
+      'crates/kernel/loop/tests/schedule_corpus.rs',
     ],
   },
 ];
