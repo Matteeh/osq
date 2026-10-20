@@ -17,9 +17,9 @@ const LINES: &[&str] = &[
     r#"{"type":"dependencies_added","timestamp":"2026-10-17T10:00:00.000Z","data":{"added":[{"file":"Cargo.toml","name":"serde"}]}}"#,
     r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#,
     r#"{"type":"done_manual","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"by hand"}}"#,
-    r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#,
+    r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_red"}}"#,
     r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#,
-    r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"human","attempt":2}}"#,
+    r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"verify_red","attempt":2}}"#,
     r#"{"type":"stuck","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","fingerprint":"abc"}}"#,
     r#"{"type":"harness_retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"phase":"start","attempt":1}}"#,
     r#"{"type":"recertification","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","outcome":"passed","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b"}}"#,
@@ -38,7 +38,7 @@ const LINES: &[&str] = &[
     r#"{"type":"change_verify_rerun","timestamp":"2026-10-17T10:00:00.000Z","data":{"rerun":1,"tests":[],"passed":true}}"#,
     r#"{"type":"archived","timestamp":"2026-10-17T10:00:00.000Z","data":{"archivePath":"openspec/changes/archive/204-rust-core"}}"#,
     r#"{"type":"synced","timestamp":"2026-10-17T10:00:00.000Z","data":{"defaultBranch":"main","commits":2,"duration":300}}"#,
-    r#"{"type":"sync_stopped","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"dirty","message":"m","defaultBranch":"main"}}"#,
+    r#"{"type":"sync_stopped","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"sync_conflict","message":"m","defaultBranch":"main"}}"#,
     r#"{"type":"verification_recorded","timestamp":"2026-10-17T10:00:00.000Z","data":{"outcome":"passed"}}"#,
 ];
 

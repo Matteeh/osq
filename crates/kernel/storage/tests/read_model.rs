@@ -152,8 +152,8 @@ fn expected() -> Vec<Vec<Vec<Value>>> {
             ],
         ],
         vec![
-            vec![text("001-alpha"), text("2"), text("verify_failed")],
-            vec![text("010-late"), text("1"), text("unknown")],
+            vec![text("001-alpha"), text("2"), text("verify_red")],
+            vec![text("010-late"), text("1"), text("timeout")],
         ],
     ]
 }

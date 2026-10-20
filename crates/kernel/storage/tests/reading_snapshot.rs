@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use osq_core::event::DeadReason;
 use osq_core::{ChangeStatus, EventError, TaskId, TaskStatus};
 use osq_kernel_storage::{
     ChangeEntry, ChangeSnapshot, DeadAttempt, Location, StorageError, read_archive, read_change,
@@ -91,7 +92,7 @@ fn archived_change_snapshot() {
         facts.dead_attempts,
         [DeadAttempt {
             task: String::from("2"),
-            reason: String::from("verify_failed"),
+            reason: DeadReason::VerifyRed,
         }]
     );
 }

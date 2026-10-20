@@ -1,5 +1,6 @@
 //! Proves the edges of task id order and the folds' guards.
 
+use osq_core::event::FailureReason;
 use osq_core::{
     Change, ChangeRecord, ChangeState, ComputedSeal, Event, Stream, TaskId, TaskState, TaskStatus,
     apply, apply_change, apply_task, compute_seal, parse_event_line,
@@ -18,11 +19,11 @@ fn computed() -> ComputedSeal {
 }
 
 /// A `Regressed` task at attempt 1 with the given reason.
-fn regressed(reason: &str) -> TaskState {
+fn regressed(reason: FailureReason) -> TaskState {
     TaskState {
         status: TaskStatus::Regressed,
         attempt: 1,
-        reason: Some(reason.to_owned()),
+        reason: Some(reason),
         paused_until: None,
     }
 }
@@ -68,7 +69,7 @@ fn done_clears_an_earlier_reason() {
     ];
     for line in cases {
         assert_eq!(
-            apply_task(regressed("scope_changed"), &event(line)),
+            apply_task(regressed(FailureReason::ScopeRegression), &event(line)),
             done,
             "{line}"
         );
@@ -83,18 +84,18 @@ fn task_regressions_and_retries_leave_the_change_record() {
     let regressed_record = apply_change(
         ChangeRecord::new(),
         &event(
-            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#,
+            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"sync_conflict"}}"#,
         ),
     );
     let cases: &[(ChangeRecord, &str, bool)] = &[
         (
             ChangeRecord::new(),
-            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#,
+            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_regression"}}"#,
             false,
         ),
         (
             regressed_record,
-            r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"human","attempt":2}}"#,
+            r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"verify_red","attempt":2}}"#,
             true,
         ),
     ];

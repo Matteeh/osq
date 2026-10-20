@@ -9,13 +9,13 @@
     "exit_code": 1,
     "scenarios": 3,
     "findings": 1,
-    "reason": "one problem",
+    "reason": "no_scenarios",
     "output": "out"
   },
   {
     "change": "001-run",
     "run": 2,
-    "outcome": "passed",
+    "outcome": "validated",
     "harness": "codex",
     "model": "gpt",
     "duration": 4,

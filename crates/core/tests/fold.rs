@@ -1,12 +1,13 @@
 //! Proves the folds follow the task, change and status tables.
 
+use osq_core::event::FailureReason;
 use osq_core::{
     ChangeRecord, ChangeState, ChangeStatus, Event, Stream, TaskId, TaskState, TaskStatus, apply,
     apply_change, apply_task, change_status, parse_event_line,
 };
 
 /// A task state written as status, attempt, reason and pause-until.
-type TaskSpec = (TaskStatus, u64, Option<&'static str>, Option<&'static str>);
+type TaskSpec = (TaskStatus, u64, Option<FailureReason>, Option<&'static str>);
 
 /// One row of the task transition table: before, event line and after.
 type TaskCase = (TaskSpec, &'static str, TaskSpec);
@@ -33,7 +34,7 @@ fn task(spec: TaskSpec) -> TaskState {
     TaskState {
         status,
         attempt,
-        reason: reason.map(ToOwned::to_owned),
+        reason,
         paused_until: paused_until.map(ToOwned::to_owned),
     }
 }
@@ -55,13 +56,13 @@ const STARTED: &str =
 const DONE: &str = r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#;
 
 /// An event line for a task that died.
-const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#;
+const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_red"}}"#;
 
 /// An event line for a task that regressed.
-const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#;
+const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_regression"}}"#;
 
 /// An event line for a change that regressed.
-const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#;
+const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"sync_conflict"}}"#;
 
 /// An event line for a change that was archived.
 const ARCHIVED: &str = r#"{"type":"archived","timestamp":"2026-10-17T10:00:00.000Z","data":{"archivePath":"openspec/changes/archive/204-rust-core"}}"#;
@@ -131,33 +132,53 @@ const TASK_CASES: &[TaskCase] = &[
     ),
     (
         (TaskStatus::Running, 1, None, None),
-        r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#,
-        (TaskStatus::Dead, 1, Some("verify_failed"), None),
+        r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_red"}}"#,
+        (TaskStatus::Dead, 1, Some(FailureReason::VerifyRed), None),
     ),
     (
-        (TaskStatus::Dead, 1, Some("verify_failed"), None),
+        (TaskStatus::Dead, 1, Some(FailureReason::VerifyRed), None),
         r#"{"type":"stuck","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","fingerprint":"abc"}}"#,
-        (TaskStatus::Dead, 1, Some("verify_failed"), None),
+        (TaskStatus::Dead, 1, Some(FailureReason::VerifyRed), None),
     ),
     (
-        (TaskStatus::Dead, 1, Some("verify_failed"), None),
-        r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"human","attempt":2}}"#,
-        (TaskStatus::Pending, 1, Some("human"), None),
+        (TaskStatus::Dead, 1, Some(FailureReason::VerifyRed), None),
+        r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"verify_red","attempt":2}}"#,
+        (TaskStatus::Pending, 1, Some(FailureReason::VerifyRed), None),
     ),
     (
         (TaskStatus::Done, 1, None, None),
-        r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#,
-        (TaskStatus::Regressed, 1, Some("scope_changed"), None),
+        r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_regression"}}"#,
+        (
+            TaskStatus::Regressed,
+            1,
+            Some(FailureReason::ScopeRegression),
+            None,
+        ),
     ),
     (
-        (TaskStatus::Regressed, 1, Some("scope_changed"), None),
+        (
+            TaskStatus::Regressed,
+            1,
+            Some(FailureReason::ScopeRegression),
+            None,
+        ),
         r#"{"type":"recertification","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","outcome":"passed","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b"}}"#,
         (TaskStatus::Done, 1, None, None),
     ),
     (
-        (TaskStatus::Regressed, 1, Some("scope_changed"), None),
-        r#"{"type":"recertification","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","outcome":"requeued","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b","reason":"verify_failed"}}"#,
-        (TaskStatus::Pending, 1, Some("verify_failed"), None),
+        (
+            TaskStatus::Regressed,
+            1,
+            Some(FailureReason::WorktreeDirty),
+            None,
+        ),
+        r#"{"type":"recertification","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","outcome":"requeued","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b","reason":"scope_regression"}}"#,
+        (
+            TaskStatus::Pending,
+            1,
+            Some(FailureReason::ScopeRegression),
+            None,
+        ),
     ),
     (
         (TaskStatus::Running, 1, None, None),
@@ -184,7 +205,7 @@ const TASK_CASES: &[TaskCase] = &[
 /// The change transition table, one line per row.
 const CHANGE_CASES: &[ChangeCase] = &[
     (
-        r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#,
+        r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"sync_conflict"}}"#,
         (true, None, None),
     ),
     (
@@ -328,14 +349,14 @@ fn retry_clears_a_change_regression() {
     let regressed = apply_change(
         ChangeRecord::new(),
         &event(
-            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#,
+            r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"sync_conflict"}}"#,
         ),
     );
     assert!(regressed.regressed, "the change starts regressed");
     let retried = apply_change(
         regressed,
         &event(
-            r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"change","reason":"human","attempt":1}}"#,
+            r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"change","reason":"worktree_dirty","attempt":1}}"#,
         ),
     );
     assert!(!retried.regressed, "the retry clears the regression");
@@ -401,4 +422,67 @@ fn status_of_a_change() {
         let state = change_state(spec, statuses);
         assert_eq!(change_status(approved, &state), expected, "{spec:?}");
     }
+}
+
+/// An event line for a task that regressed without a reason.
+const REGRESSED_WITHOUT_REASON: &str =
+    r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#;
+
+/// An event line for a task requeued without a reason.
+const REQUEUED_WITHOUT_REASON: &str = r#"{"type":"recertification","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","outcome":"requeued","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b"}}"#;
+
+/// Proves a regression without a reason keeps the earlier task reason.
+///
+/// Covers: rust-core/task-transitions
+#[test]
+fn regressed_without_a_reason_keeps_the_earlier_one() {
+    let before = (
+        TaskStatus::Regressed,
+        1,
+        Some(FailureReason::WorktreeDirty),
+        None,
+    );
+    assert_eq!(
+        apply_task(task(before), &event(REGRESSED_WITHOUT_REASON)),
+        task(before)
+    );
+}
+
+/// Proves a requeue without a reason keeps the earlier task reason.
+///
+/// Covers: rust-core/task-transitions
+#[test]
+fn requeued_without_a_reason_keeps_the_earlier_one() {
+    let before = (
+        TaskStatus::Regressed,
+        1,
+        Some(FailureReason::WorktreeDirty),
+        None,
+    );
+    let after = (
+        TaskStatus::Pending,
+        1,
+        Some(FailureReason::WorktreeDirty),
+        None,
+    );
+    assert_eq!(
+        apply_task(task(before), &event(REQUEUED_WITHOUT_REASON)),
+        task(after)
+    );
+}
+
+/// Proves a retry replaces the earlier task reason with its own.
+///
+/// Covers: rust-core/task-transitions
+#[test]
+fn retry_replaces_the_earlier_reason() {
+    let before = (TaskStatus::Dead, 1, Some(FailureReason::VerifyRed), None);
+    let retry = r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"worktree_dirty","attempt":2}}"#;
+    let after = (
+        TaskStatus::Pending,
+        1,
+        Some(FailureReason::WorktreeDirty),
+        None,
+    );
+    assert_eq!(apply_task(task(before), &event(retry)), task(after));
 }

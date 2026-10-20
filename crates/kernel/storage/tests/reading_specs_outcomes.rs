@@ -146,7 +146,7 @@ fn outcome_dead_ends_the_first_attempt() {
         &format!(
             "{}{}{}",
             line("started", "\"attempt\":1"),
-            line("dead", "\"task\":\"1\",\"reason\":\"r\""),
+            line("dead", "\"task\":\"1\",\"reason\":\"crashed\""),
             line("done", "\"task\":\"1\""),
         ),
     );

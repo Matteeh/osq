@@ -9,12 +9,18 @@
 //! Implements: rust-core/event-lines-round-trip
 //! Implements: rust-core/event-read-errors
 
+pub mod outcomes;
 pub mod payload;
+pub mod reasons;
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 
+pub use outcomes::{
+    AutoSteerOutcome, BaselineOutcome, FocusedOutcome, MutationOutcome, RecertificationOutcome,
+    ValidatorOutcome, VerificationOutcome,
+};
 pub use payload::{
     ArchivedData, AutoSteerRanData, BaselineRanData, ChangeVerifyRerunData, DeadData,
     DependenciesAddedData, DoneData, DoneManualData, ExitContinuedData, ExitedData,
@@ -23,6 +29,10 @@ pub use payload::{
     RejectedData, ResultWrittenData, RetryData, ScopeViolationData, StartedData, StuckData,
     SyncStoppedData, SyncedData, TextData, TokensData, ToolData, UsageLimitData, ValidatorRanData,
     VcsViolationData, VerificationRecordedData, VerifyRanData,
+};
+pub use reasons::{
+    DeadReason, FailureReason, MutationReason, RegressionReason, RequeueReason, SyncStopReason,
+    ValidatorReason,
 };
 
 /// One typed event, with the data of its type.

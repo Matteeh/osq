@@ -12,8 +12,7 @@ use osq_core::{event_line, parse_event_line};
 #[test]
 fn archived_event_logs_round_trip() {
     let archive = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../openspec/changes/archive");
-    let mut files = Vec::new();
-    collect_event_files(&archive, &mut files);
+    let mut files = archived_event_files(&archive);
     files.sort();
     assert!(
         !files.is_empty(),
@@ -25,31 +24,33 @@ fn archived_event_logs_round_trip() {
     }
 }
 
-/// Collects every `.run/events/*.jsonl` file under a directory.
-fn collect_event_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
+/// Collects the `.run/events/*.jsonl` files of each change folder under `archive`.
+fn archived_event_files(archive: &Path) -> Vec<PathBuf> {
+    let Ok(entries) = fs::read_dir(archive) else {
+        return Vec::new();
     };
+    let mut files = Vec::new();
     for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            collect_event_files(&path, out);
-        } else if is_event_file(&path) {
-            out.push(path);
+        let folder = entry.path();
+        if !folder.is_dir() {
+            continue;
+        }
+        let events = folder.join(".run").join("events");
+        let Ok(event_entries) = fs::read_dir(events) else {
+            continue;
+        };
+        for event in event_entries.flatten() {
+            let path = event.path();
+            if path.is_file()
+                && path
+                    .extension()
+                    .is_some_and(|extension| extension == "jsonl")
+            {
+                files.push(path);
+            }
         }
     }
-}
-
-/// Whether a path is an events-file `.jsonl`.
-fn is_event_file(path: &Path) -> bool {
-    let is_jsonl = path
-        .extension()
-        .is_some_and(|extension| extension == "jsonl");
-    let in_events = path
-        .parent()
-        .and_then(Path::file_name)
-        .is_some_and(|name| name == "events");
-    is_jsonl && in_events
+    files
 }
 
 /// Parses and rewrites every line of one event file.

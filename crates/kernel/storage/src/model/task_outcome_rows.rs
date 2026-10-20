@@ -120,7 +120,7 @@ fn dead_reason(snapshot: &ChangeSnapshot, task: &str) -> Option<String> {
     let mut reason = None;
     for dead in &facts.dead_attempts {
         if dead.task == task {
-            reason = Some(dead.reason.clone());
+            reason = Some(dead.reason.as_str().to_owned());
         }
     }
     reason

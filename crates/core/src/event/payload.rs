@@ -10,6 +10,15 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
 
+use super::outcomes::{
+    AutoSteerOutcome, BaselineOutcome, FocusedOutcome, MutationOutcome, RecertificationOutcome,
+    ValidatorOutcome, VerificationOutcome,
+};
+use super::reasons::{
+    DeadReason, FailureReason, MutationReason, RegressionReason, RequeueReason, SyncStopReason,
+    ValidatorReason,
+};
+
 /// A field the JSON has either absent or `null`.
 ///
 /// The inner [`Option`] carries `null`; the field's own [`Option`] carries
@@ -320,7 +329,7 @@ pub struct DeadData {
     /// The task that died.
     pub task: String,
     /// Why the task died.
-    pub reason: String,
+    pub reason: DeadReason,
 }
 
 /// Payload of a `regressed` event.
@@ -347,7 +356,7 @@ pub struct RegressedData {
     pub missing_paths: Option<Vec<String>>,
     /// Why the task regressed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reason: Option<String>,
+    pub reason: Option<RegressionReason>,
     /// Per-path attribution, kept as written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attribution: Option<Value>,
@@ -385,7 +394,7 @@ pub struct RetryData {
     /// The retried task, or `change`.
     pub target: String,
     /// Why the retry happened.
-    pub reason: String,
+    pub reason: FailureReason,
     /// The following execution attempt.
     pub attempt: u64,
     /// Whether the watcher retried on its own.
@@ -432,7 +441,7 @@ pub struct RecertificationData {
     /// The recertified task.
     pub task: String,
     /// The outcome, `passed` or `requeued`.
-    pub outcome: String,
+    pub outcome: RecertificationOutcome,
     /// The paths that differ.
     pub differing_paths: Vec<String>,
     /// Per-path attribution, kept as written.
@@ -454,7 +463,7 @@ pub struct RecertificationData {
     pub attempt: Option<u64>,
     /// The failure reason carried to the next executor.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reason: Option<String>,
+    pub reason: Option<RequeueReason>,
     /// Whether the watcher recertified on its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub automatic: Option<bool>,
@@ -481,7 +490,7 @@ pub struct InstructionsChangedData {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BaselineRanData {
     /// The baseline outcome.
-    pub outcome: String,
+    pub outcome: BaselineOutcome,
     /// The baseline command.
     pub command: String,
     /// The commit the baseline keyed on, or `null`.
@@ -511,7 +520,7 @@ pub struct FocusedRanData {
     /// The scenarios run.
     pub scenarios: Vec<String>,
     /// The run's outcome.
-    pub outcome: String,
+    pub outcome: FocusedOutcome,
     /// The command's exit code.
     pub exit_code: i64,
     /// The wall seconds the run took.
@@ -556,7 +565,7 @@ pub struct MutationRanData {
     /// The tests that ran.
     pub tests: Vec<String>,
     /// The run's outcome.
-    pub outcome: String,
+    pub outcome: MutationOutcome,
     /// Mutants killed.
     pub killed: u64,
     /// Mutants survived.
@@ -571,7 +580,7 @@ pub struct MutationRanData {
     pub exit_code: Nullable<i64>,
     /// Why the pick was not measured.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reason: Option<String>,
+    pub reason: Option<MutationReason>,
     /// The command's bounded output.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
@@ -582,7 +591,7 @@ pub struct MutationRanData {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ValidatorRanData {
     /// The validator outcome.
-    pub outcome: String,
+    pub outcome: ValidatorOutcome,
     /// The validator harness.
     pub harness: String,
     /// The validator model.
@@ -599,7 +608,7 @@ pub struct ValidatorRanData {
     pub restored: Vec<String>,
     /// Why the validator did not run.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub reason: Option<String>,
+    pub reason: Option<ValidatorReason>,
     /// The run's output.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
@@ -610,7 +619,7 @@ pub struct ValidatorRanData {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AutoSteerRanData {
     /// The steering outcome.
-    pub outcome: String,
+    pub outcome: AutoSteerOutcome,
     /// The steering harness.
     pub harness: String,
     /// The steering model.
@@ -717,7 +726,7 @@ pub struct SyncedData {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SyncStoppedData {
     /// Why syncing stopped.
-    pub reason: String,
+    pub reason: SyncStopReason,
     /// The message shown.
     pub message: String,
     /// The default branch synced.
@@ -729,7 +738,7 @@ pub struct SyncStoppedData {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct VerificationRecordedData {
     /// The recorded outcome.
-    pub outcome: String,
+    pub outcome: VerificationOutcome,
     /// A free-form note, or `null`.
     #[serde(
         default,

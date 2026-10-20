@@ -110,14 +110,14 @@ pub(super) fn validator_tables(snapshot: &ChangeSnapshot) -> ValidatorTables {
         tables.runs.push(ValidatorRunRow {
             change: snapshot.folder.clone(),
             run,
-            outcome: data.outcome.clone(),
+            outcome: data.outcome.as_str().to_owned(),
             harness: data.harness.clone(),
             model: data.model.clone(),
             duration: number_f64(&data.duration),
             exit_code: data.exit_code.0,
             scenarios: count_i64(data.scenarios),
             findings: len_i64(findings.len()),
-            reason: data.reason.clone(),
+            reason: data.reason.map(|reason| reason.as_str().to_owned()),
             output: data.output.clone(),
         });
         for (index, finding) in findings.iter().enumerate() {

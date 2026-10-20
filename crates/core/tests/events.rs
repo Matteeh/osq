@@ -60,7 +60,7 @@ const TYPE_LINES: &[(&str, VariantCheck)] = &[
         |event| matches!(event, Event::DoneManual(_)),
     ),
     (
-        r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#,
+        r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_red"}}"#,
         |event| matches!(event, Event::Dead(_)),
     ),
     (
@@ -68,7 +68,7 @@ const TYPE_LINES: &[(&str, VariantCheck)] = &[
         |event| matches!(event, Event::Regressed(_)),
     ),
     (
-        r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"human","attempt":2}}"#,
+        r#"{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"verify_red","attempt":2}}"#,
         |event| matches!(event, Event::Retry(_)),
     ),
     (
@@ -144,7 +144,7 @@ const TYPE_LINES: &[(&str, VariantCheck)] = &[
         |event| matches!(event, Event::Synced(_)),
     ),
     (
-        r#"{"type":"sync_stopped","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"dirty","message":"m","defaultBranch":"main"}}"#,
+        r#"{"type":"sync_stopped","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"sync_conflict","message":"m","defaultBranch":"main"}}"#,
         |event| matches!(event, Event::SyncStopped(_)),
     ),
     (

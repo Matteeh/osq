@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use osq_core::event::DeadReason;
 use osq_core::{EventError, TaskId};
 use osq_kernel_storage::{
     ChangeEntry, DeadAttempt, Location, StorageError, read_archive, read_change,
@@ -12,22 +13,22 @@ use osq_kernel_storage::{
 /// A task stream with one started event, one cost and one dead event.
 const TASK_EVENTS: &str = "{\"type\":\"started\",\"timestamp\":\"2026-10-01T10:00:00.000Z\",\"data\":{\"attempt\":1}}\n\
 {\"type\":\"tokens\",\"timestamp\":\"2026-10-01T10:00:01.000Z\",\"data\":{\"promptTokens\":1,\"candidateTokens\":1,\"cost\":0.5}}\n\
-{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"task\":\"1\",\"reason\":\"r\"}}\n";
+{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"task\":\"9\",\"reason\":\"crashed\"}}\n";
 
 /// A change stream whose started, cost and dead must not reach the facts.
 const CHANGE_EVENTS: &str = "{\"type\":\"started\",\"timestamp\":\"2026-10-01T10:00:00.000Z\",\"data\":{\"attempt\":1}}\n\
 {\"type\":\"tokens\",\"timestamp\":\"2026-10-01T10:00:01.000Z\",\"data\":{\"promptTokens\":1,\"candidateTokens\":1,\"cost\":99.0}}\n\
-{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"target\":\"change\",\"reason\":\"human\",\"attempt\":1}}\n\
-{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.500Z\",\"data\":{\"target\":\"change\",\"reason\":\"human\",\"attempt\":2}}\n\
-{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:03.000Z\",\"data\":{\"target\":\"change\",\"reason\":\"human\",\"attempt\":3,\"automatic\":true}}\n\
-{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:04.000Z\",\"data\":{\"task\":\"change\",\"reason\":\"x\"}}\n\
+{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"target\":\"change\",\"reason\":\"worktree_dirty\",\"attempt\":1}}\n\
+{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.500Z\",\"data\":{\"target\":\"change\",\"reason\":\"worktree_dirty\",\"attempt\":2}}\n\
+{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:03.000Z\",\"data\":{\"target\":\"change\",\"reason\":\"worktree_dirty\",\"attempt\":3,\"automatic\":true}}\n\
+{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:04.000Z\",\"data\":{\"task\":\"change\",\"reason\":\"timeout\"}}\n\
 {\"type\":\"archived\",\"timestamp\":\"2026-10-01T10:30:00.500Z\",\"data\":{\"archivePath\":\"p\"}}\n";
 
 /// A validator stream no fact may read.
 const VALIDATOR_EVENTS: &str = "{\"type\":\"started\",\"timestamp\":\"2026-10-01T10:00:00.000Z\",\"data\":{}}\n\
 {\"type\":\"tokens\",\"timestamp\":\"2026-10-01T10:00:01.000Z\",\"data\":{\"promptTokens\":1,\"candidateTokens\":1,\"cost\":7.0}}\n\
-{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"target\":\"1\",\"reason\":\"human\",\"attempt\":2}}\n\
-{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:03.000Z\",\"data\":{\"task\":\"1\",\"reason\":\"v\"}}\n\
+{\"type\":\"retry\",\"timestamp\":\"2026-10-01T10:00:02.000Z\",\"data\":{\"target\":\"1\",\"reason\":\"verify_red\",\"attempt\":2}}\n\
+{\"type\":\"dead\",\"timestamp\":\"2026-10-01T10:00:03.000Z\",\"data\":{\"task\":\"1\",\"reason\":\"timeout\"}}\n\
 {\"type\":\"archived\",\"timestamp\":\"2026-12-31T00:00:00.000Z\",\"data\":{\"archivePath\":\"v\"}}\n";
 
 /// A fresh temporary project root, with anything at that name removed.
@@ -77,8 +78,8 @@ fn facts_ignore_other_streams() {
     assert_eq!(
         facts.dead_attempts,
         [DeadAttempt {
-            task: String::from("1"),
-            reason: String::from("r"),
+            task: String::from("9"),
+            reason: DeadReason::Crashed,
         }]
     );
     assert_eq!(

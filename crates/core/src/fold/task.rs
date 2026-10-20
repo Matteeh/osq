@@ -4,6 +4,7 @@
 //! Implements: rust-core/fold-determinism
 
 use crate::Event;
+use crate::event::{FailureReason, RecertificationOutcome};
 
 /// A task's status inside its change.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -28,7 +29,7 @@ pub struct TaskState {
     /// The execution attempt.
     pub attempt: u64,
     /// Why the task last changed, when it did.
-    pub reason: Option<String>,
+    pub reason: Option<FailureReason>,
     /// The time a pause lasts until, when the task is paused.
     pub paused_until: Option<String>,
 }
@@ -77,31 +78,30 @@ pub fn apply_task(state: TaskState, event: &Event) -> TaskState {
         },
         Event::Dead(data) => TaskState {
             status: TaskStatus::Dead,
-            reason: Some(data.reason.clone()),
+            reason: Some(data.reason.into()),
             ..state
         },
         Event::Retry(data) => TaskState {
             status: TaskStatus::Pending,
-            reason: Some(data.reason.clone()),
+            reason: Some(data.reason),
             ..state
         },
         Event::Regressed(data) => TaskState {
             status: TaskStatus::Regressed,
-            reason: data.reason.clone().or(state.reason),
+            reason: data.reason.map(FailureReason::from).or(state.reason),
             ..state
         },
-        Event::Recertification(data) => match data.outcome.as_str() {
-            "passed" => TaskState {
+        Event::Recertification(data) => match data.outcome {
+            RecertificationOutcome::Passed => TaskState {
                 status: TaskStatus::Done,
                 reason: None,
                 ..state
             },
-            "requeued" => TaskState {
+            RecertificationOutcome::Requeued => TaskState {
                 status: TaskStatus::Pending,
-                reason: data.reason.clone().or(state.reason),
+                reason: data.reason.map(FailureReason::from).or(state.reason),
                 ..state
             },
-            _ => state,
         },
         Event::Paused(data) => TaskState {
             status: TaskStatus::Pending,

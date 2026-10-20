@@ -1,2 +1,2 @@
 {"type":"started","timestamp":"2026-10-02T10:00:01.000Z","data":{"attempt":1}}
-{"type":"dead","timestamp":"2026-10-02T10:00:02.000Z","data":{"task":" ","reason":"  "}}
+{"type":"dead","timestamp":"2026-10-02T10:00:02.000Z","data":{"task":" ","reason":"timeout"}}

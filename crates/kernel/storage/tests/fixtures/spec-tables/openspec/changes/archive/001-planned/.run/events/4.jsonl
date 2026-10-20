@@ -1,4 +1,4 @@
 {"type":"started","timestamp":"2026-10-01T11:00:01.000Z","data":{"attempt":1}}
-{"type":"dead","timestamp":"2026-10-01T11:01:00.000Z","data":{"task":"4","reason":"  "}}
+{"type":"dead","timestamp":"2026-10-01T11:01:00.000Z","data":{"task":"4","reason":"timeout"}}
 {"type":"started","timestamp":"2026-10-01T11:02:01.000Z","data":{"attempt":2}}
 {"type":"done","timestamp":"2026-10-01T11:03:01.000Z","data":{"task":"4"}}

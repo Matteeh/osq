@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
+use osq_core::event::DeadReason;
 use osq_core::{ChangeState, ChangeStatus, TaskId, change_status};
 
 use super::results::read_disclosures;
@@ -47,8 +48,8 @@ pub struct TaskFile {
 pub struct DeadAttempt {
     /// The event's task, trimmed, else the stream's task id.
     pub task: String,
-    /// The event's reason, trimmed, else `unknown`.
-    pub reason: String,
+    /// The event's reason.
+    pub reason: DeadReason,
 }
 
 /// What the event files of one change say, or `None` without `.run/events/`.

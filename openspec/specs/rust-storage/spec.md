@@ -71,7 +71,7 @@ counts; the `ChangeState` folded with `apply` over its event files; its
 | archive time | `2026-10-01T10:30:00.500Z` |
 | manual retries (halts) | 1 |
 | reported cost | 0.75 |
-| dead attempts | task `2`, reason `verify_failed` |
+| dead attempts | task `2`, reason `verify_red` |
 
 #### Scenario: Active change snapshot
 - **WHEN** `read_change` reads the fixture change `003-beta`
@@ -182,7 +182,8 @@ changes with `read_history`, the manual edit records, and the ownership
 rust-specs `read_capability_ownership` reads from `openspec/specs/`. It SHALL
 then, in one `replace_read_model` transaction, write the changes, fill the
 labels, add the manual edit records, and fill `task_outcomes` with the rows
-`write_task_outcomes` writes.
+`write_task_outcomes` writes. A column that holds a rust-core reason or
+outcome SHALL hold its `as_str` text.
 
 #### Scenario: Columns of the changes table
 - **WHEN** the `changes` row of an archived change is written
@@ -204,7 +205,7 @@ labels, add the manual edit records, and fill `task_outcomes` with the rows
 
 #### Scenario: Columns of the tasks and dead_attempts tables
 - **WHEN** the `tasks` and `dead_attempts` rows of an archived change are written
-- **THEN** `tasks` holds one row per `tasks/<n>.md` in task order, as `change` (the folder), `task` (`<n>`), `title` (the frontmatter `title` when it is a string, trimmed, else empty text), `attempts` (the `started` events in `<n>.jsonl`, 0 without one) and `done` (1 when `.run/done/<n>` exists, else 0); and `dead_attempts` holds one row per `dead` event in the `<n>.jsonl` streams in task and file order, as `change`, `task` (the event's `task`, trimmed, else `<n>`) and `reason` (trimmed, else `unknown`)
+- **THEN** `tasks` holds one row per `tasks/<n>.md` in task order, as `change` (the folder), `task` (`<n>`), `title` (the frontmatter `title` when it is a string, trimmed, else empty text), `attempts` (the `started` events in `<n>.jsonl`, 0 without one) and `done` (1 when `.run/done/<n>` exists, else 0); and `dead_attempts` holds one row per `dead` event in the `<n>.jsonl` streams in task and file order, as `change`, `task` (the event's `task`, trimmed, else `<n>`) and `reason` (the event's reason)
 
 #### Scenario: Fixture project rows
 - **WHEN** `build_read_model` reads the fixture project
@@ -229,8 +230,8 @@ labels, add the manual edit records, and fill `task_outcomes` with the rows
 
 | change | task | reason |
 |---|---|---|
-| `001-alpha` | `2` | `verify_failed` |
-| `010-late` | `1` | `unknown` |
+| `001-alpha` | `2` | `verify_red` |
+| `010-late` | `1` | `timeout` |
 
 ### Requirement: Read model rebuild
 The read model SHALL be a cache, and no state SHALL live only in it.

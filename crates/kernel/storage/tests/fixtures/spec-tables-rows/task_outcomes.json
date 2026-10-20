@@ -28,7 +28,7 @@
     "position": 2,
     "attempts": 2,
     "first_attempt": 0,
-    "dead_reason": "verify_failed",
+    "dead_reason": "verify_red",
     "files_touched": 5
   },
   {
@@ -60,7 +60,7 @@
     "position": 4,
     "attempts": 2,
     "first_attempt": 0,
-    "dead_reason": "unknown",
+    "dead_reason": "timeout",
     "files_touched": null
   },
   {

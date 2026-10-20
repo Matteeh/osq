@@ -189,7 +189,7 @@ fn table_events_skip_the_validator_stream() {
     let root = temp_root("table_events_streams");
     let dir = root.join("openspec/changes/archive/001-x");
     let focused = "{\"type\":\"focused_ran\",\"timestamp\":\"2026-10-01T10:03:00.000Z\",\"data\":{\"command\":\"c\",\"files\":[],\"scenarios\":[],\"outcome\":\"passed\",\"exitCode\":0,\"duration\":1,\"timedOut\":false,\"output\":\"\"}}\n";
-    let validator = "{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:14:00.000Z\",\"data\":{\"outcome\":\"passed\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":1,\"exitCode\":0,\"scenarios\":0,\"findings\":[],\"restored\":[]}}\n";
+    let validator = "{\"type\":\"validator_ran\",\"timestamp\":\"2026-10-01T10:14:00.000Z\",\"data\":{\"outcome\":\"validated\",\"harness\":\"claude\",\"model\":\"m\",\"duration\":1,\"exitCode\":0,\"scenarios\":0,\"findings\":[],\"restored\":[]}}\n";
     write(&dir.join(".run/events/1.jsonl"), focused);
     write(&dir.join(".run/events/change.jsonl"), validator);
     write(&dir.join(".run/events/validator.jsonl"), validator);

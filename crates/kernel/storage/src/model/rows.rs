@@ -99,7 +99,7 @@ pub(super) fn dead_rows(snapshot: &ChangeSnapshot) -> Vec<DeadRow> {
                 .map(|dead| DeadRow {
                     change: snapshot.folder.clone(),
                     task: dead.task.clone(),
-                    reason: dead.reason.clone(),
+                    reason: dead.reason.as_str().to_owned(),
                 })
                 .collect()
         })

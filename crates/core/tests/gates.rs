@@ -13,13 +13,13 @@ const STARTED: &str =
 const DONE: &str = r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#;
 
 /// An event line for a task that died.
-const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#;
+const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_red"}}"#;
 
 /// An event line for a task that regressed.
-const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#;
+const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_regression"}}"#;
 
 /// An event line for a change that regressed.
-const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#;
+const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"sync_conflict"}}"#;
 
 /// Parses one event line into its typed event.
 fn event(line: &str) -> Event {

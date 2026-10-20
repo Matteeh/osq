@@ -77,7 +77,7 @@ pub(super) fn recertification_rows(snapshot: &ChangeSnapshot) -> Vec<Recertifica
                 change: snapshot.folder.clone(),
                 task: data.task.clone(),
                 recertified_at: event.timestamp.clone(),
-                outcome: data.outcome.clone(),
+                outcome: data.outcome.as_str().to_owned(),
                 automatic: flag(data.automatic == Some(true)),
                 path: string_of(entry.get("path")),
                 credited_to: string_of(entry.get("attribution")),

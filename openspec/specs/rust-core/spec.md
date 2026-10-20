@@ -92,6 +92,30 @@ or an array of objects, SHALL keep its JSON value as written.
 | `sync_stopped` | `reason`, `message`, `defaultBranch` | |
 | `verification_recorded` | `outcome` | `note` (or null) |
 
+Each field below SHALL hold its enum, not a string. The enum's variants are
+exactly the values in the table of "Reason and outcome values", the codes
+TypeScript writes. Each variant SHALL read from and write back as its string.
+Each enum SHALL list every variant in a constant `ALL`, in the table's order,
+and `as_str` SHALL give a variant's string. A new value is a spec change.
+The `reason` of `done_manual` and `rejected` stays free text.
+
+| Field | Enum |
+|---|---|
+| `dead` `reason` | `DeadReason` |
+| `regressed` `reason` | `RegressionReason` |
+| `retry` `reason` | `FailureReason` |
+| `recertification` `outcome` | `RecertificationOutcome` |
+| `recertification` `reason` | `RequeueReason` |
+| `baseline_ran` `outcome` | `BaselineOutcome` |
+| `focused_ran` `outcome` | `FocusedOutcome` |
+| `mutation_ran` `outcome` | `MutationOutcome` |
+| `mutation_ran` `reason` | `MutationReason` |
+| `validator_ran` `outcome` | `ValidatorOutcome` |
+| `validator_ran` `reason` | `ValidatorReason` |
+| `auto_steer_ran` `outcome` | `AutoSteerOutcome` |
+| `sync_stopped` `reason` | `SyncStopReason` |
+| `verification_recorded` `outcome` | `VerificationOutcome` |
+
 #### Scenario: Every event type parses
 - **WHEN** a line `{"type":<type>,"timestamp":"2026-10-17T10:00:00.000Z","data":<data>}` is parsed for each row below
 - **THEN** the result is the row's variant with the line's timestamp, and writing it back gives a JSON value equal to the line:
@@ -111,9 +135,9 @@ or an array of objects, SHALL keep its JSON value as written.
 | `dependencies_added` | `{"added":[{"file":"Cargo.toml","name":"serde"}]}` | `DependenciesAdded` |
 | `done` | `{"task":"1"}` | `Done` |
 | `done_manual` | `{"task":"1","reason":"by hand"}` | `DoneManual` |
-| `dead` | `{"task":"1","reason":"verify_failed"}` | `Dead` |
+| `dead` | `{"task":"1","reason":"verify_red"}` | `Dead` |
 | `regressed` | `{"task":"1"}` | `Regressed` |
-| `retry` | `{"target":"1","reason":"human","attempt":2}` | `Retry` |
+| `retry` | `{"target":"1","reason":"verify_red","attempt":2}` | `Retry` |
 | `stuck` | `{"task":"1","fingerprint":"abc"}` | `Stuck` |
 | `harness_retry` | `{"phase":"start","attempt":1}` | `HarnessRetry` |
 | `recertification` | `{"task":"1","outcome":"passed","differingPaths":[],"attribution":[],"command":"cargo test","exitCode":0,"output":"","timedOut":false,"recordedHash":"a","currentHash":"b"}` | `Recertification` |
@@ -132,8 +156,29 @@ or an array of objects, SHALL keep its JSON value as written.
 | `change_verify_rerun` | `{"rerun":1,"tests":[],"passed":true}` | `ChangeVerifyRerun` |
 | `archived` | `{"archivePath":"openspec/changes/archive/204-rust-core"}` | `Archived` |
 | `synced` | `{"defaultBranch":"main","commits":2,"duration":300}` | `Synced` |
-| `sync_stopped` | `{"reason":"dirty","message":"m","defaultBranch":"main"}` | `SyncStopped` |
+| `sync_stopped` | `{"reason":"sync_conflict","message":"m","defaultBranch":"main"}` | `SyncStopped` |
 | `verification_recorded` | `{"outcome":"passed"}` | `VerificationRecorded` |
+
+#### Scenario: Reason and outcome values
+- **WHEN** each enum's `ALL` is read
+- **THEN** the `as_str` of its variants, in order, are exactly the row's values, and each variant writes as that JSON string and reads back from it as the same variant:
+
+| Enum | Values, in order |
+|---|---|
+| `DeadReason` | `spec_conflict`, `already_running`, `no_result`, `verify_red`, `verify_precondition`, `verify_path_missing`, `entry_missing`, `denied_dependency`, `change_verify_red`, `crashed`, `timeout`, `provider_unavailable`, `undeclared_test_change`, `blocked`, `baseline_red`, `regressed`, `vcs_violation`, `scope_violation` |
+| `RegressionReason` | `verify_red`, `verify_path_missing`, `scope_regression`, `worktree_off_branch`, `worktree_dirty`, `commit_failed`, `dependency_changed`, `dependency_diverged`, `stack_cut_failed`, `sync_conflict`, `requirement_changed`, `sync_verify_red`, `sync_failed` |
+| `FailureReason` | `spec_conflict`, `already_running`, `no_result`, `verify_red`, `verify_precondition`, `verify_path_missing`, `entry_missing`, `denied_dependency`, `change_verify_red`, `crashed`, `timeout`, `provider_unavailable`, `undeclared_test_change`, `blocked`, `baseline_red`, `regressed`, `vcs_violation`, `scope_violation`, `scope_regression`, `worktree_off_branch`, `worktree_dirty`, `commit_failed`, `dependency_changed`, `dependency_diverged`, `stack_cut_failed`, `sync_conflict`, `requirement_changed`, `sync_verify_red`, `sync_failed`, `dead` |
+| `RequeueReason` | `scope_regression` |
+| `MutationReason` | `range_unknown`, `timed_out`, `command_failed`, `report_invalid`, `budget` |
+| `ValidatorReason` | `no_base`, `no_scenarios` |
+| `SyncStopReason` | `sync_conflict`, `requirement_changed`, `sync_verify_red`, `sync_failed` |
+| `RecertificationOutcome` | `passed`, `requeued` |
+| `BaselineOutcome` | `passed`, `failed`, `reused` |
+| `FocusedOutcome` | `passed`, `problem`, `failed` |
+| `MutationOutcome` | `measured`, `not_measured` |
+| `ValidatorOutcome` | `validated`, `failed`, `timed_out`, `unreadable`, `not_run` |
+| `AutoSteerOutcome` | `running`, `ready`, `unchanged`, `lint_red`, `failed`, `timed_out` |
+| `VerificationOutcome` | `passed`, `failed` |
 
 ### Requirement: Event lines round-trip
 `parse_event_line` SHALL read one JSON line with exactly the keys `type`,
@@ -144,7 +189,7 @@ read stays absent, a `null` stays `null`, and a number keeps its value, so `56`
 stays `56` and `55.94` stays `55.94`.
 
 #### Scenario: Archived event logs round-trip
-- **WHEN** every non-empty line of every `.run/events/*.jsonl` file under `openspec/changes/archive/` is parsed and written back
+- **WHEN** every non-empty line of every `.run/events/*.jsonl` file of each change folder directly under `openspec/changes/archive/` is parsed and written back
 - **THEN** every line parses, and each written line's JSON value equals the original line's JSON value
 
 #### Scenario: Absent, null and numbers stay as written
@@ -168,8 +213,10 @@ when the line is not one JSON object, `InvalidEnvelope` when its keys are not
 exactly `type`, `timestamp` and `data` or `type` or `timestamp` is not a
 string, `UnknownType` naming the type when `type` is not in the table of
 "Event types", and `InvalidData` naming the type when `data` lacks a required
-field, holds a field the type does not list, or holds a value of the wrong
-JSON kind. Each `EventError` SHALL display as the message of its kind.
+field, holds a field the type does not list, holds a value of the wrong
+JSON kind, or holds a reason or outcome string outside its enum's values in
+"Reason and outcome values", compared byte for byte. Each `EventError` SHALL
+display as the message of its kind.
 
 #### Scenario: Lines that are refused
 - **WHEN** each line below is parsed
@@ -185,6 +232,21 @@ JSON kind. Each `EventError` SHALL display as the message of its kind.
 | `{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{}}` | `InvalidData` naming `done` |
 | `{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","extra":true}}` | `InvalidData` naming `done` |
 | `{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":1}}` | `InvalidData` naming `done` |
+
+#### Scenario: Values outside their set are refused
+- **WHEN** each line below is parsed
+- **THEN** the result is `InvalidData` naming the row's type:
+
+| Line | Type |
+|---|---|
+| `{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}` | `dead` |
+| `{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":" verify_red "}}` | `dead` |
+| `{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":""}}` | `dead` |
+| `{"type":"retry","timestamp":"2026-10-17T10:00:00.000Z","data":{"target":"1","reason":"human","attempt":2}}` | `retry` |
+| `{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}` | `regressed` |
+| `{"type":"baseline_ran","timestamp":"2026-10-17T10:00:00.000Z","data":{"outcome":"green","command":"pnpm verify","commit":null,"treeDigest":null,"exitCode":0,"durationSeconds":12}}` | `baseline_ran` |
+| `{"type":"sync_stopped","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"dirty","message":"m","defaultBranch":"main"}}` | `sync_stopped` |
+| `{"type":"verification_recorded","timestamp":"2026-10-17T10:00:00.000Z","data":{"outcome":"Passed"}}` | `verification_recorded` |
 
 #### Scenario: Read error messages
 - **WHEN** each error below is displayed
@@ -237,7 +299,10 @@ text.
 time a pause lasts until. A new task starts `Pending` with attempt 0, no
 reason and no pause. The task the stream belongs to is the stream's own, so
 the fold reads no `task` field to find it. An event type not in the table
-below leaves the state unchanged.
+below leaves the state unchanged. The reason SHALL be a `FailureReason`:
+every `DeadReason`, `RegressionReason` and `RequeueReason` converts into the
+`FailureReason` with the same string through `From`. The fold SHALL match
+every `RecertificationOutcome` by name, with no catch-all arm.
 
 | Event | Next state |
 |---|---|
@@ -262,17 +327,17 @@ below leaves the state unchanged.
 | `Running`, attempt 1 | `tool` `{"tool":"bash","summary":"ls"}` | `Running`, attempt 1 |
 | `Running`, attempt 1 | `done` `{"task":"1"}` | `Done`, attempt 1, no reason |
 | `Running`, attempt 1 | `done_manual` `{"task":"1","reason":"by hand"}` | `Done`, attempt 1, no reason |
-| `Running`, attempt 1 | `dead` `{"task":"1","reason":"verify_failed"}` | `Dead`, attempt 1, reason `verify_failed` |
-| `Dead`, reason `verify_failed` | `stuck` `{"task":"1","fingerprint":"abc"}` | `Dead`, reason `verify_failed` |
-| `Dead`, attempt 1, reason `verify_failed` | `retry` `{"target":"1","reason":"human","attempt":2}` | `Pending`, attempt 1, reason `human` |
-| `Done`, attempt 1 | `regressed` `{"task":"1","reason":"scope_changed"}` | `Regressed`, attempt 1, reason `scope_changed` |
-| `Regressed`, reason `scope_changed` | `recertification` with `outcome` `passed` | `Done`, no reason |
-| `Regressed`, reason `scope_changed` | `recertification` with `outcome` `requeued` and `reason` `verify_failed` | `Pending`, reason `verify_failed` |
+| `Running`, attempt 1 | `dead` `{"task":"1","reason":"verify_red"}` | `Dead`, attempt 1, reason `verify_red` |
+| `Dead`, reason `verify_red` | `stuck` `{"task":"1","fingerprint":"abc"}` | `Dead`, reason `verify_red` |
+| `Dead`, attempt 1, reason `verify_red` | `retry` `{"target":"1","reason":"verify_red","attempt":2}` | `Pending`, attempt 1, reason `verify_red` |
+| `Done`, attempt 1 | `regressed` `{"task":"1","reason":"scope_regression"}` | `Regressed`, attempt 1, reason `scope_regression` |
+| `Regressed`, reason `scope_regression` | `recertification` with `outcome` `passed` | `Done`, no reason |
+| `Regressed`, reason `worktree_dirty` | `recertification` with `outcome` `requeued` and `reason` `scope_regression` | `Pending`, reason `scope_regression` |
 | `Running`, attempt 1 | `paused` `{"task":"1","until":"2026-10-17T12:00:00.000Z","source":"harness"}` | `Pending`, attempt 1, paused until `2026-10-17T12:00:00.000Z` |
 | `Pending`, attempt 1, paused until `2026-10-17T12:00:00.000Z` | `started` `{"attempt":2}` | `Running`, attempt 2, no pause |
 
 #### Scenario: Done clears an earlier reason
-- **WHEN** each event below is applied to a `Regressed` task with attempt 1 and reason `scope_changed`
+- **WHEN** each event below is applied to a `Regressed` task with attempt 1 and reason `scope_regression`
 - **THEN** the state after it is as given:
 
 | Event data | State after |
@@ -306,14 +371,14 @@ them, and a state SHALL come only from `ChangeState::new` and `apply`.
 
 | Event data | Record after |
 |---|---|
-| `regressed` `{"task":"change","reason":"land_conflict"}` | regressed |
+| `regressed` `{"task":"change","reason":"sync_conflict"}` | regressed |
 | `archived` `{"archivePath":"openspec/changes/archive/204-rust-core"}` | archived at `openspec/changes/archive/204-rust-core` |
 | `rejected` `{"reason":"wrong idea"}` | rejected with `wrong idea` |
 | `synced` `{"defaultBranch":"main","commits":2,"duration":300}` | unchanged |
 | `verify_ran` `{"command":"cargo test"}` | unchanged |
 
 #### Scenario: Retry clears a change regression
-- **WHEN** `retry` `{"target":"change","reason":"human","attempt":1}` is applied to a regressed change record
+- **WHEN** `retry` `{"target":"change","reason":"worktree_dirty","attempt":1}` is applied to a regressed change record
 - **THEN** the record is not regressed
 
 #### Scenario: Task regressions and retries leave the change record
@@ -322,8 +387,8 @@ them, and a state SHALL come only from `ChangeState::new` and `apply`.
 
 | Record before | Event data | Record after |
 |---|---|---|
-| new | `regressed` `{"task":"1","reason":"scope_changed"}` | not regressed |
-| regressed | `retry` `{"target":"1","reason":"human","attempt":2}` | regressed |
+| new | `regressed` `{"task":"1","reason":"scope_regression"}` | not regressed |
+| regressed | `retry` `{"target":"1","reason":"verify_red","attempt":2}` | regressed |
 
 #### Scenario: Events reach their stream's state
 - **WHEN** a change state with tasks `1` and `2` applies `started` `{"attempt":1}` from the task `2` stream, then `regressed` `{"task":"change"}` from the change stream, then `validator_ran` from the validator stream

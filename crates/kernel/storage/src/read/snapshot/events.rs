@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use osq_core::event::DeadReason;
 use osq_core::{ChangeState, Envelope, Event, Stream, TaskId, apply, parse_event_line};
 use yaml_rust2::{Yaml, YamlLoader};
 
@@ -141,7 +142,7 @@ impl Facts {
         }
         match &envelope.event {
             Event::Started(_) => self.record_started(stream),
-            Event::Dead(data) => self.record_dead(stream, &data.task, &data.reason),
+            Event::Dead(data) => self.record_dead(stream, &data.task, data.reason),
             Event::Retry(data) => self.record_retry(stream, data.automatic),
             Event::Tokens(_) => self.record_tokens(stream, line),
             Event::Archived(_) => self.record_archived(stream, &envelope.timestamp),
@@ -156,14 +157,14 @@ impl Facts {
         }
     }
 
-    /// Records one `dead` event of a task stream, with its trimming rules.
-    fn record_dead(&mut self, stream: &Stream, task: &str, reason: &str) {
+    /// Records one `dead` event of a task stream, trimming its task.
+    fn record_dead(&mut self, stream: &Stream, task: &str, reason: DeadReason) {
         let Stream::Task(id) = stream else {
             return;
         };
         self.dead.push(DeadAttempt {
             task: non_empty(task).unwrap_or_else(|| id.as_str().to_owned()),
-            reason: non_empty(reason).unwrap_or_else(|| String::from("unknown")),
+            reason,
         });
     }
 

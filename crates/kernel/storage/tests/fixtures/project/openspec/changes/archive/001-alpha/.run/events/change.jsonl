@@ -1,2 +1,2 @@
-{"type":"retry","timestamp":"2026-10-01T10:10:00.000Z","data":{"target":"change","reason":"human","attempt":1}}
+{"type":"retry","timestamp":"2026-10-01T10:10:00.000Z","data":{"target":"change","reason":"worktree_dirty","attempt":1}}
 {"type":"archived","timestamp":"2026-10-01T10:30:00.500Z","data":{"archivePath":"openspec/changes/archive/001-alpha"}}
