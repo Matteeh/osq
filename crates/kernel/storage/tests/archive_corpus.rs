@@ -99,7 +99,7 @@ fn archived_changes_replay() {
             continue;
         }
         check_fold_matches_markers(snapshot, &mut failures);
-        if number.is_some_and(|number| number >= 38) && snapshot.state.record.archived.is_none() {
+        if number.is_some_and(|number| number >= 38) && snapshot.state.record().archived.is_none() {
             failures.push(format!("change {} has no archived event", snapshot.folder));
         }
     }
@@ -109,7 +109,11 @@ fn archived_changes_replay() {
 /// Records a failure for every task whose fold and done marker disagree.
 fn check_fold_matches_markers(snapshot: &ChangeSnapshot, failures: &mut Vec<String>) {
     for task in &snapshot.tasks {
-        let folded = snapshot.state.tasks.get(&task.id).map(|state| state.status);
+        let folded = snapshot
+            .state
+            .tasks()
+            .get(&task.id)
+            .map(|state| state.status);
         if (folded == Some(TaskStatus::Done)) != task.done {
             failures.push(format!(
                 "change {} task {}: folded {folded:?}, done marker {}",

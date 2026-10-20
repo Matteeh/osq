@@ -290,6 +290,8 @@ task id: a task stream's event goes to `apply_task` for that task, adding the
 task as new when the state lacks it, a change stream's event goes to
 `apply_change`, and a validator stream's event leaves the state unchanged. An
 event type not in the table below leaves the change record unchanged.
+A `ChangeState`'s fields SHALL be private: `record()` and `tasks()` read
+them, and a state SHALL come only from `ChangeState::new` and `apply`.
 
 | Event | Next record |
 |---|---|
@@ -330,6 +332,10 @@ event type not in the table below leaves the change record unchanged.
 #### Scenario: An unknown task stream adds its task
 - **WHEN** a change state with task `1` applies `started` `{"attempt":1}` from the task `3` stream
 - **THEN** the state holds tasks `1` and `3`, and task `3` is `Running` with attempt 1
+
+#### Scenario: Folded state reads back
+- **WHEN** `ChangeState::new([1])` applies `started` `{"attempt":1}` from the task `1` stream, then `archived` `{"archivePath":"openspec/changes/archive/204-rust-core"}` from the change stream
+- **THEN** `tasks()` holds only task `1`, `Running` with attempt 1, and `record()` is archived at `openspec/changes/archive/204-rust-core`, not regressed and not rejected
 
 ### Requirement: Fold determinism
 Folding the same events in the same order SHALL always give equal states, and
@@ -403,13 +409,15 @@ A change SHALL be a `Change<S>` whose state type `S` is `Draft`, `Approved` or
 be the only public constructor. `Change<Draft>::approve(recorded, computed)`
 SHALL be the only way to get a `Change<Approved>`, and
 `Change<Approved>::archive(&state)` the only way to get a `Change<Archived>`.
-`next_task` and `archive` SHALL exist only on `Change<Approved>`, so code that
-calls them on a draft, or builds an approved or archived change by hand, does
-not compile.
+`approve` SHALL take `recorded` as a `Seal` and `computed` as a
+`ComputedSeal`, which only `compute_seal` creates, so approving without
+hashing does not compile. `next_task` and `archive` SHALL exist only on
+`Change<Approved>`, so code that calls them on a draft, or builds an approved
+or archived change by hand, does not compile.
 
 - `approve` SHALL return the approved change holding the seal when `recorded`
-  equals `computed`, and `ApproveError::SealMismatch` with both seals
-  otherwise.
+  equals the computed seal, and `ApproveError::SealMismatch` with the
+  recorded seal and the computed seal as a `Seal` otherwise.
 - `next_task(&state)` SHALL return the lowest pending task id in `TaskId`
   order when `change_status(true, &state)` is `Pending`, and none otherwise.
 - `archive(&state)` SHALL return the archived change when
@@ -419,13 +427,13 @@ not compile.
   built with, in every state.
 
 #### Scenario: Approve checks the seal
-- **WHEN** a draft change is approved with each pair of seals below
+- **WHEN** a draft change is approved with each recorded seal below, and as the computed seal `compute_seal` of the one entry `proposal.md`: `a\n`, which is `sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd`
 - **THEN** the result is as given:
 
-| Recorded | Computed | Result |
-|---|---|---|
-| `sha256:` followed by 64 `a` | `sha256:` followed by 64 `a` | `Change<Approved>` holding that seal |
-| `sha256:` followed by 64 `a` | `sha256:` followed by 64 `b` | `SealMismatch` with both seals |
+| Recorded | Result |
+|---|---|
+| `sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd` | `Change<Approved>` holding that seal |
+| `sha256:` followed by 64 `a` | `SealMismatch` with the recorded seal and `sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd` |
 
 #### Scenario: Next task of an approved change
 - **WHEN** the next task is asked of an approved change with tasks `10`, `2` and `1` in each state below
@@ -451,11 +459,11 @@ not compile.
 | regressed | both `Done` | `NotDone` with `Regressed` |
 
 #### Scenario: Gates cannot be skipped
-- **WHEN** code outside the crate builds a `Change<Approved>` or a `Change<Archived>` without `approve` or `archive`, or calls `next_task` or `archive` on a `Change<Draft>`
+- **WHEN** code outside the crate builds a `Change<Approved>` or a `Change<Archived>` without `approve` or `archive`, calls `next_task` or `archive` on a `Change<Draft>`, passes a `Seal` as the computed seal of `approve`, builds a `ComputedSeal` by hand, builds a `ChangeState` by hand, or writes a `ChangeState`'s record or tasks
 - **THEN** it does not compile
 
 #### Scenario: A change keeps its id and tasks
-- **WHEN** `Change::draft("204-rust-core", [1, 2])` is read as a draft, then approved with equal seals and read, then archived with both tasks `Done` and read
+- **WHEN** `Change::draft("204-rust-core", [1, 2])` is read as a draft, then approved with the seal `compute_seal` gives for its entries as both the recorded and the computed seal and read, then archived with both tasks `Done` and read
 - **THEN** each time `id` is `204-rust-core` and `tasks` is `1`, `2`
 
 ### Requirement: Rust rebuild decisions
@@ -589,11 +597,13 @@ means osq and upstream OpenSpec have diverged.
 | never runs `pnpm add` or `pnpm update` |
 
 ### Requirement: Seal computation
-`compute_seal` SHALL give, without IO, the `Seal` that `hashChangeFolder`
+`compute_seal` SHALL give, without IO, the seal that `hashChangeFolder`
 gives for a folder holding exactly the given entries of relative path and
-bytes. Content SHALL be decoded as JavaScript decodes UTF-8, with CRLF turned
+bytes, as a `ComputedSeal`. Content SHALL be decoded as JavaScript decodes UTF-8, with CRLF turned
 into LF and, in `tasks.md` alone, checkboxes reset as `normalizeTasksMd` does.
-Entries SHALL be ordered by path in UTF-16 code unit order.
+Entries SHALL be ordered by path in UTF-16 code unit order. `compute_seal`
+SHALL be the only way to get a `ComputedSeal`, whose `as_str` gives the
+seal's text and whose `seal` gives it as a `Seal`.
 
 #### Scenario: Seals of entries
 - **WHEN** `compute_seal` runs on the entries of each row below, written as `path`: content
@@ -615,6 +625,10 @@ Entries SHALL be ordered by path in UTF-16 code unit order.
 #### Scenario: JavaScript path order
 - **WHEN** `compute_seal` runs on `a-｡.md` (U+FF61): `2\n` and `a-😀.md` (U+1F600): `1\n`, given in that order and again in the reverse order
 - **THEN** both seals are `sha256:f47bbfc7ba5286ec24f4ddf82d9bf58771d785ef0b0806c45b8e4ca2ff469938`, the seal of UTF-16 order, and neither is `sha256:e5c08cd78230313694389dde3ad3ff879ccbdf90e1e3c5b738ea76dcf9328e79`, the seal of byte order
+
+#### Scenario: Computed seal reads back
+- **WHEN** `compute_seal` runs on the one entry `proposal.md`: `a\n`
+- **THEN** its `as_str` is `sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd`, and its `seal` equals `Seal::parse` of that text
 
 ### Requirement: Pinned Rust toolchain
 `rust-toolchain.toml` SHALL pin Rust `1.99.1` with the `clippy` and

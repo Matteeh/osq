@@ -678,8 +678,9 @@ task in task order, as TypeScript's `deriveTaskOutcomes` does.
 `hashChangeFolder` does: it SHALL walk the folder without following symbolic
 links, leave out every path with a `.run`, `.git` or `.DS_Store` segment at any
 depth and `plan-prompt.md` at the folder's root only, read every regular file
-as bytes, and pass each relative path, with `/` separators, and its bytes to
-rust-core's `compute_seal`. A file or folder it cannot read SHALL be a
+as bytes, pass each relative path, with `/` separators, and its bytes to
+rust-core's `compute_seal`, and return the `ComputedSeal` it gives, so the
+result can approve a change. A file or folder it cannot read SHALL be a
 `StorageError` naming its path.
 
 #### Scenario: Fixture folder seals

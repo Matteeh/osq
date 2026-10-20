@@ -9,7 +9,7 @@
 //! Implements: rust-core/change-typestate
 
 use crate::fold::{ChangeState, ChangeStatus, TaskId, TaskStatus, change_status};
-use crate::seal::Seal;
+use crate::seal::{ComputedSeal, Seal};
 
 /// A change in one of three states: [`Draft`], [`Approved`] or [`Archived`].
 ///
@@ -112,8 +112,25 @@ impl Change<Draft> {
     /// Returns [`ApproveError::SealMismatch`] carrying both seals when
     /// `recorded` does not equal `computed`.
     ///
+    /// Gates cannot be skipped: passing a bare [`Seal`] as the computed seal
+    /// does not compile, because only [`compute_seal`](crate::compute_seal)
+    /// makes a [`ComputedSeal`].
+    ///
+    /// ```compile_fail,E0308
+    /// use osq_core::{Change, Seal, TaskId};
+    ///
+    /// let seal = Seal::parse(&format!("sha256:{}", "a".repeat(64))).unwrap();
+    /// let draft = Change::draft("204-rust-core", [TaskId::new("1")]);
+    /// let _ = draft.approve(seal.clone(), seal);
+    /// ```
+    ///
     /// Implements: rust-core/change-typestate
-    pub fn approve(self, recorded: Seal, computed: Seal) -> Result<Change<Approved>, ApproveError> {
+    pub fn approve(
+        self,
+        recorded: Seal,
+        computed: ComputedSeal,
+    ) -> Result<Change<Approved>, ApproveError> {
+        let computed = computed.seal();
         if recorded == computed {
             Ok(Change {
                 id: self.id,
@@ -165,7 +182,7 @@ impl Change<Approved> {
             .iter()
             .filter(|id| {
                 state
-                    .tasks
+                    .tasks()
                     .get(*id)
                     .is_none_or(|task| task.status == TaskStatus::Pending)
             })

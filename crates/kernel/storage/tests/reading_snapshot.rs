@@ -29,7 +29,7 @@ fn entry(root: &Path, folder: &str, location: Location) -> ChangeEntry {
 
 /// The folded status of one task of a snapshot.
 fn task_status(snapshot: &ChangeSnapshot, id: &str) -> TaskStatus {
-    snapshot.state.tasks[&TaskId::new(id)].status
+    snapshot.state.tasks()[&TaskId::new(id)].status
 }
 
 /// Proves the snapshot of the archived fixture `001-alpha`.
@@ -72,7 +72,7 @@ fn archived_change_snapshot() {
     assert_eq!(task_status(&snapshot, "2"), TaskStatus::Done);
     assert_eq!(task_status(&snapshot, "10"), TaskStatus::Pending);
     assert_eq!(
-        snapshot.state.record.archived.as_deref(),
+        snapshot.state.record().archived.as_deref(),
         Some("openspec/changes/archive/001-alpha")
     );
     assert_eq!(snapshot.status, ChangeStatus::Archived);

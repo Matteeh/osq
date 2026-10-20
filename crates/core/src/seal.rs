@@ -69,6 +69,41 @@ impl fmt::Display for SealError {
 
 impl std::error::Error for SealError {}
 
+/// A seal computed over a folder's entries.
+///
+/// [`compute_seal`] is the only way to get one, so approving a change always
+/// hashes its entries. Gates cannot be skipped: building a `ComputedSeal` by
+/// hand does not compile, because its field is private.
+///
+/// ```compile_fail,E0423
+/// use osq_core::{ComputedSeal, Seal};
+///
+/// let seal = Seal::parse(&format!("sha256:{}", "a".repeat(64))).unwrap();
+/// let computed = ComputedSeal(seal);
+/// ```
+///
+/// Implements: rust-core/seal-computation
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ComputedSeal(Seal);
+
+impl ComputedSeal {
+    /// The seal's text.
+    ///
+    /// Implements: rust-core/seal-computation
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    /// The seal as a [`Seal`].
+    ///
+    /// Implements: rust-core/seal-computation
+    #[must_use]
+    pub fn seal(self) -> Seal {
+        self.0
+    }
+}
+
 /// Computes the seal `hashChangeFolder` gives for a folder holding exactly
 /// `entries`, each a relative path with `/` separators and its bytes.
 ///
@@ -78,7 +113,7 @@ impl std::error::Error for SealError {}
 ///
 /// Implements: rust-core/seal-computation
 #[must_use]
-pub fn compute_seal(entries: &[(&str, &[u8])]) -> Seal {
+pub fn compute_seal(entries: &[(&str, &[u8])]) -> ComputedSeal {
     let mut sorted: Vec<&(&str, &[u8])> = entries.iter().collect();
     sorted.sort_by(|left, right| left.0.encode_utf16().cmp(right.0.encode_utf16()));
     let mut hasher = Sha256::new();
@@ -101,7 +136,7 @@ pub fn compute_seal(entries: &[(&str, &[u8])]) -> Seal {
             let _ = write!(hex, "{byte:02x}");
             hex
         });
-    Seal(format!("sha256:{hex}"))
+    ComputedSeal(Seal(format!("sha256:{hex}")))
 }
 
 /// JavaScript's `\s`: not [`char::is_whitespace`], which counts U+0085 and

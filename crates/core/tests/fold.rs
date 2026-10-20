@@ -47,20 +47,53 @@ fn record(spec: RecordSpec) -> ChangeRecord {
     }
 }
 
+/// An event line for a task whose first attempt started.
+const STARTED: &str =
+    r#"{"type":"started","timestamp":"2026-10-17T10:00:00.000Z","data":{"attempt":1}}"#;
+
+/// An event line for a task that is done.
+const DONE: &str = r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#;
+
+/// An event line for a task that died.
+const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#;
+
+/// An event line for a task that regressed.
+const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#;
+
+/// An event line for a change that regressed.
+const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#;
+
+/// An event line for a change that was archived.
+const ARCHIVED: &str = r#"{"type":"archived","timestamp":"2026-10-17T10:00:00.000Z","data":{"archivePath":"openspec/changes/archive/204-rust-core"}}"#;
+
+/// An event line for a change that was rejected.
+const REJECTED: &str =
+    r#"{"type":"rejected","timestamp":"2026-10-17T10:00:00.000Z","data":{"reason":"wrong idea"}}"#;
+
 /// Builds a change state with one task per given status.
 fn change_state(spec: RecordSpec, statuses: &[TaskStatus]) -> ChangeState {
     let mut state =
         ChangeState::new((0..statuses.len()).map(|index| TaskId::new(index.to_string())));
     for (index, status) in statuses.iter().enumerate() {
-        state.tasks.insert(
-            TaskId::new(index.to_string()),
-            TaskState {
-                status: *status,
-                ..TaskState::new()
-            },
-        );
+        let stream = Stream::Task(TaskId::new(index.to_string()));
+        let line = match status {
+            TaskStatus::Pending => continue,
+            TaskStatus::Running => STARTED,
+            TaskStatus::Done => DONE,
+            TaskStatus::Dead => DEAD,
+            TaskStatus::Regressed => REGRESSED,
+        };
+        state = apply(state, &stream, &event(line));
     }
-    state.record = record(spec);
+    if spec.0 {
+        state = apply(state, &Stream::Change, &event(CHANGE_REGRESSED));
+    }
+    if spec.1.is_some() {
+        state = apply(state, &Stream::Change, &event(ARCHIVED));
+    }
+    if spec.2.is_some() {
+        state = apply(state, &Stream::Change, &event(REJECTED));
+    }
     state
 }
 
@@ -333,11 +366,11 @@ fn events_reach_their_streams_state() {
             r#"{"type":"validator_ran","timestamp":"2026-10-17T10:00:00.000Z","data":{"outcome":"validated","harness":"claude","model":"m","duration":5,"exitCode":0,"scenarios":2,"findings":[],"restored":[]}}"#,
         ),
     );
-    assert_eq!(state.tasks[&TaskId::new("1")].status, TaskStatus::Pending);
-    let task2 = &state.tasks[&TaskId::new("2")];
+    assert_eq!(state.tasks()[&TaskId::new("1")].status, TaskStatus::Pending);
+    let task2 = &state.tasks()[&TaskId::new("2")];
     assert_eq!(task2.status, TaskStatus::Running);
     assert_eq!(task2.attempt, 1);
-    assert!(state.record.regressed, "the change stream's event landed");
+    assert!(state.record().regressed, "the change stream's event landed");
 }
 
 /// Proves a task stream the state lacks adds its task.
@@ -351,10 +384,10 @@ fn an_unknown_task_stream_adds_its_task() {
         &event(r#"{"type":"started","timestamp":"2026-10-17T10:00:00.000Z","data":{"attempt":1}}"#),
     );
     assert_eq!(
-        state.tasks.keys().map(TaskId::as_str).collect::<Vec<_>>(),
+        state.tasks().keys().map(TaskId::as_str).collect::<Vec<_>>(),
         ["1", "3"]
     );
-    let task3 = &state.tasks[&TaskId::new("3")];
+    let task3 = &state.tasks()[&TaskId::new("3")];
     assert_eq!(task3.status, TaskStatus::Running);
     assert_eq!(task3.attempt, 1);
 }

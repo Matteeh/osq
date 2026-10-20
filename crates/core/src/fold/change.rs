@@ -30,12 +30,38 @@ impl ChangeRecord {
 }
 
 /// One change's folded state: its record and one state per task id.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+///
+/// A state comes only from [`ChangeState::new`] and [`apply`]. Gates cannot be
+/// skipped: building a state by hand does not compile, because its fields are
+/// private.
+///
+/// ```compile_fail,E0451
+/// use osq_core::{ChangeRecord, ChangeState, TaskId, TaskState};
+/// use std::collections::BTreeMap;
+///
+/// let state = ChangeState {
+///     record: ChangeRecord::new(),
+///     tasks: BTreeMap::<TaskId, TaskState>::new(),
+/// };
+/// ```
+///
+/// Gates cannot be skipped: writing a state's `record` or `tasks` does not
+/// compile, because its fields are private.
+///
+/// ```compile_fail,E0616
+/// use osq_core::{ChangeRecord, ChangeState, TaskId};
+///
+/// let mut state = ChangeState::new([TaskId::new("1")]);
+/// state.record = ChangeRecord::new();
+/// ```
+///
+/// Implements: rust-core/change-fold
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ChangeState {
     /// The change-level record.
-    pub record: ChangeRecord,
+    record: ChangeRecord,
     /// One state per task id, in task id order.
-    pub tasks: BTreeMap<TaskId, TaskState>,
+    tasks: BTreeMap<TaskId, TaskState>,
 }
 
 impl ChangeState {
@@ -55,6 +81,22 @@ impl ChangeState {
                 .map(|id| (id.into(), TaskState::new()))
                 .collect(),
         }
+    }
+
+    /// The change-level record.
+    ///
+    /// Implements: rust-core/change-fold
+    #[must_use]
+    pub fn record(&self) -> &ChangeRecord {
+        &self.record
+    }
+
+    /// One state per task id, in task id order.
+    ///
+    /// Implements: rust-core/change-fold
+    #[must_use]
+    pub fn tasks(&self) -> &BTreeMap<TaskId, TaskState> {
+        &self.tasks
     }
 }
 

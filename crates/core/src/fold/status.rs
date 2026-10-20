@@ -30,14 +30,14 @@ pub enum ChangeStatus {
 /// Implements: rust-core/change-status
 #[must_use]
 pub fn change_status(approved: bool, state: &ChangeState) -> ChangeStatus {
-    let statuses: Vec<TaskStatus> = state.tasks.values().map(|task| task.status).collect();
-    if state.record.rejected.is_some() {
+    let statuses: Vec<TaskStatus> = state.tasks().values().map(|task| task.status).collect();
+    if state.record().rejected.is_some() {
         ChangeStatus::Rejected
-    } else if state.record.archived.is_some() {
+    } else if state.record().archived.is_some() {
         ChangeStatus::Archived
     } else if !approved {
         ChangeStatus::Unapproved
-    } else if state.record.regressed || statuses.contains(&TaskStatus::Regressed) {
+    } else if state.record().regressed || statuses.contains(&TaskStatus::Regressed) {
         ChangeStatus::Regressed
     } else if statuses.contains(&TaskStatus::Dead) {
         ChangeStatus::Dead

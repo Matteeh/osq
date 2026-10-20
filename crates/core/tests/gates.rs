@@ -1,9 +1,42 @@
 //! Proves the approval seal and the approve and archive gates.
 
 use osq_core::{
-    ApproveError, Approved, ArchiveError, Change, ChangeState, ChangeStatus, Seal, TaskId,
-    TaskStatus,
+    ApproveError, Approved, ArchiveError, Change, ChangeState, ChangeStatus, ComputedSeal, Event,
+    Seal, Stream, TaskId, TaskStatus, apply, compute_seal, parse_event_line,
 };
+
+/// An event line for a task whose first attempt started.
+const STARTED: &str =
+    r#"{"type":"started","timestamp":"2026-10-17T10:00:00.000Z","data":{"attempt":1}}"#;
+
+/// An event line for a task that is done.
+const DONE: &str = r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#;
+
+/// An event line for a task that died.
+const DEAD: &str = r#"{"type":"dead","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"verify_failed"}}"#;
+
+/// An event line for a task that regressed.
+const REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1","reason":"scope_changed"}}"#;
+
+/// An event line for a change that regressed.
+const CHANGE_REGRESSED: &str = r#"{"type":"regressed","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"change","reason":"land_conflict"}}"#;
+
+/// Parses one event line into its typed event.
+fn event(line: &str) -> Event {
+    parse_event_line(line)
+        .unwrap_or_else(|error| panic!("{line}: {error}"))
+        .event
+}
+
+/// Folds one event line from `stream` into `state`.
+fn fold_line(state: ChangeState, stream: &Stream, line: &str) -> ChangeState {
+    apply(state, stream, &event(line))
+}
+
+/// The computed seal of the one entry `proposal.md`: `a\n`.
+fn computed() -> ComputedSeal {
+    compute_seal(&[("proposal.md", b"a\n")])
+}
 
 /// A seal text: `sha256:` and 64 copies of `digit`.
 fn seal_text(digit: char) -> String {
@@ -15,10 +48,11 @@ fn seal(digit: char) -> Seal {
     Seal::parse(&seal_text(digit)).unwrap_or_else(|error| panic!("{digit}: {error}"))
 }
 
-/// An approved change over the given task ids, sealed with `a`s.
+/// An approved change over the given task ids, sealed with `compute_seal`.
 fn approved(ids: &[&str]) -> Change<Approved> {
+    let computed = computed();
     Change::draft("204-rust-core", ids.iter().map(|id| TaskId::new(*id)))
-        .approve(seal('a'), seal('a'))
+        .approve(computed.clone().seal(), computed)
         .expect("equal seals approve")
 }
 
@@ -26,13 +60,18 @@ fn approved(ids: &[&str]) -> Change<Approved> {
 fn change_state(ids: &[&str], statuses: &[TaskStatus], regressed: bool) -> ChangeState {
     let mut state = ChangeState::new(ids.iter().map(|id| TaskId::new(*id)));
     for (id, status) in ids.iter().zip(statuses) {
-        let task = state
-            .tasks
-            .get_mut(&TaskId::new(*id))
-            .expect("the state holds every id");
-        task.status = *status;
+        let stream = Stream::Task(TaskId::new(*id));
+        match status {
+            TaskStatus::Pending => {}
+            TaskStatus::Running => state = fold_line(state, &stream, STARTED),
+            TaskStatus::Done => state = fold_line(state, &stream, DONE),
+            TaskStatus::Dead => state = fold_line(state, &stream, DEAD),
+            TaskStatus::Regressed => state = fold_line(state, &stream, REGRESSED),
+        }
     }
-    state.record.regressed = regressed;
+    if regressed {
+        state = fold_line(state, &Stream::Change, CHANGE_REGRESSED);
+    }
     state
 }
 
@@ -77,15 +116,24 @@ fn seal_texts() {
 #[test]
 fn approve_checks_the_seal() {
     let draft = || Change::draft("204-rust-core", [TaskId::new("1")]);
-    let approved = draft().approve(seal('a'), seal('a')).expect("equal seals");
-    assert_eq!(approved.seal(), &seal('a'), "the change holds the seal");
+    let computed = computed();
+    let matching = computed.clone().seal();
+    let approved = draft()
+        .approve(matching.clone(), computed.clone())
+        .expect("equal seals");
+    assert_eq!(approved.seal(), &matching, "the change holds the seal");
     assert_eq!(
-        draft().approve(seal('a'), seal('b')),
+        draft().approve(seal('a'), computed.clone()),
         Err(ApproveError::SealMismatch {
             recorded: seal('a'),
-            computed: seal('b'),
+            computed: computed.clone().seal(),
         }),
         "a mismatch carries both seals"
+    );
+    assert_eq!(
+        computed.as_str(),
+        "sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd",
+        "the computed seal is the table's"
     );
 }
 

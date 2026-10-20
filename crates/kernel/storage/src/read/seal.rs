@@ -6,7 +6,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
 
-use osq_core::{Seal, compute_seal};
+use osq_core::{ComputedSeal, compute_seal};
 
 use super::error::StorageError;
 
@@ -28,7 +28,7 @@ const ROOT_TRANSIENT: &str = "plan-prompt.md";
 /// cannot be read.
 ///
 /// Implements: rust-storage/change-folder-seal
-pub fn change_folder_seal(folder: &Path) -> Result<Seal, StorageError> {
+pub fn change_folder_seal(folder: &Path) -> Result<ComputedSeal, StorageError> {
     let mut files = Vec::new();
     collect(folder, "", &mut files)?;
     let entries: Vec<(&str, &[u8])> = files

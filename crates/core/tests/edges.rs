@@ -1,8 +1,8 @@
 //! Proves the edges of task id order and the folds' guards.
 
 use osq_core::{
-    Change, ChangeRecord, ChangeState, Event, Seal, TaskId, TaskState, TaskStatus, apply_change,
-    apply_task, parse_event_line,
+    Change, ChangeRecord, ChangeState, ComputedSeal, Event, Stream, TaskId, TaskState, TaskStatus,
+    apply, apply_change, apply_task, compute_seal, parse_event_line,
 };
 
 /// Parses one event line into its typed event.
@@ -12,10 +12,9 @@ fn event(line: &str) -> Event {
         .event
 }
 
-/// A seal of `sha256:` and 64 `a`s.
-fn seal() -> Seal {
-    let a64 = "a".repeat(64);
-    Seal::parse(&format!("sha256:{a64}")).expect("a well-formed seal")
+/// The computed seal of the one entry `proposal.md`: `a\n`.
+fn computed() -> ComputedSeal {
+    compute_seal(&[("proposal.md", b"a\n")])
 }
 
 /// A `Regressed` task at attempt 1 with the given reason.
@@ -121,7 +120,10 @@ fn a_change_keeps_its_id_and_tasks() {
         "the draft keeps its tasks"
     );
 
-    let approved = draft.approve(seal(), seal()).expect("equal seals approve");
+    let computed = computed();
+    let approved = draft
+        .approve(computed.clone().seal(), computed)
+        .expect("equal seals approve");
     assert_eq!(approved.id(), "204-rust-core", "the approved keeps its id");
     assert_eq!(
         task_ids(approved.tasks()),
@@ -130,8 +132,12 @@ fn a_change_keeps_its_id_and_tasks() {
     );
 
     let mut state = ChangeState::new([TaskId::new("1"), TaskId::new("2")]);
-    for task in state.tasks.values_mut() {
-        task.status = TaskStatus::Done;
+    for id in ["1", "2"] {
+        state = apply(
+            state,
+            &Stream::Task(TaskId::new(id)),
+            &event(r#"{"type":"done","timestamp":"2026-10-17T10:00:00.000Z","data":{"task":"1"}}"#),
+        );
     }
     let archived = approved.archive(&state).expect("a done change archives");
     assert_eq!(archived.id(), "204-rust-core", "the archived keeps its id");
