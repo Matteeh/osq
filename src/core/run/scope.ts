@@ -1,6 +1,7 @@
 import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { lockfileFollowsManifest } from '../../kernel/languages/lockfiles.js';
 
 /**
  * Version of the deterministic scope resolver. Consumers that persist scope
@@ -101,6 +102,26 @@ export function scopeCoversPath(scope: readonly string[], relativePath: string):
   }
 
   return false;
+}
+
+/**
+ * True when a changed path is inside the scope, or when it is a lock file that
+ * follows one of the changed paths the scope covers. This is pure: it reads no
+ * file.
+ *
+ * @scenario watcher-and-harness: Dependency added to a crate
+ * @adr 017
+ */
+export function scopeCoversChangedPath(
+  scope: readonly string[],
+  relativePath: string,
+  changedPaths: readonly string[],
+): boolean {
+  if (scopeCoversPath(scope, relativePath)) return true;
+  return lockfileFollowsManifest(
+    relativePath,
+    changedPaths.filter((changed) => scopeCoversPath(scope, changed)),
+  );
 }
 
 /**

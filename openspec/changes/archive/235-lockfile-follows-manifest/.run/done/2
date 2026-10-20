@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:83c16f3e818a2e68d6732cc08f0bbb949b2b1857671c33ee3e4235866285bb49"
+build_stamp: "c6f8a8da"
+project_commit: "e1ba3e79"
+exit_code: 0
+scope_files: {"src/core/run/scope.ts":"sha256:f136194e5b8cabd02837dbf4606af8626ed9380b89770e1e8f2cbd29b0914063","src/core/run/task-commit.ts":"sha256:db2a277e5909701027ffa2c7d020b39a920bd588f3b74a7577498606311887d2","src/watcher/git-guard.ts":"sha256:5b297cc29a20e09727112aca61cb8c7ce3143571803e6304a769719838e51737","tests/lockfile-follows-manifest.test.ts":"sha256:d1c4d86845ddfee14a4d6433c43d63471076da7e652045d169599a34c8f8164f"}
+---
+2026-10-20T21:09:36.061Z

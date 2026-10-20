@@ -4,7 +4,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { getDoneMarkerPath, getEventsPath, getResultPath } from '../status/layout.js';
 import type { Vcs, VcsStatusEntry } from '../vcs/vcs.js';
 import { formatCommitMessage, readCommitTrailers } from './commit-message.js';
-import { scopeCoversPath } from './scope.js';
+import { scopeCoversChangedPath } from './scope.js';
 import { isGatedTestPath } from './test-gate.js';
 
 /** The worktree-root-relative POSIX path of one absolute path. */
@@ -52,10 +52,13 @@ async function existingPaths(root: string, paths: Iterable<string>): Promise<str
 /** Status paths the task's scope covers, plus untracked new test files. */
 function scopedStatusPaths(entries: readonly VcsStatusEntry[], scope: readonly string[]): string[] {
   const paths = new Set<string>();
+  const changedPaths = entries.map((entry) => entry.path);
   for (const entry of entries) {
     if (entry.code === '??' && isGatedTestPath(entry.path)) paths.add(entry.path);
     for (const candidate of [entry.path, entry.from]) {
-      if (candidate !== undefined && scopeCoversPath(scope, candidate)) paths.add(candidate);
+      if (candidate !== undefined && scopeCoversChangedPath(scope, candidate, changedPaths)) {
+        paths.add(candidate);
+      }
     }
   }
   return [...paths];

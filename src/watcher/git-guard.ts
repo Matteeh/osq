@@ -1,7 +1,7 @@
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import type { Logger } from '../core/foundation/logger.js';
-import { scopeCoversPath } from '../core/run/scope.js';
+import { scopeCoversChangedPath } from '../core/run/scope.js';
 import { isGatedTestPath } from '../core/run/test-gate.js';
 import { selectVcs } from '../core/vcs/select.js';
 import {
@@ -79,7 +79,7 @@ function scopeViolations(
     .join('/');
   return changedFiles
     .filter((file) => !isNewUntrackedTest(before, after, file))
-    .filter((file) => !scopeCoversPath(options.scope, file))
+    .filter((file) => !scopeCoversChangedPath(options.scope, file, changedFiles))
     .filter((file) => file !== changePrefix && !file.startsWith(`${changePrefix}/`))
     .sort();
 }
