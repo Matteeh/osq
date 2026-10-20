@@ -29,6 +29,13 @@ pub enum StorageError {
     },
     /// The specs kernel refused a delta spec, a task file or the proposal.
     Specs(SpecsError),
+    /// A manifest's text does not read as its typed fields.
+    Manifest {
+        /// The manifest that did not read.
+        path: PathBuf,
+        /// Why the text was refused.
+        source: serde_json::Error,
+    },
 }
 
 impl fmt::Display for StorageError {
@@ -42,6 +49,9 @@ impl fmt::Display for StorageError {
                 write!(formatter, "{}:{line}: {source}", path.display())
             }
             Self::Specs(source) => write!(formatter, "{source}"),
+            Self::Manifest { path, source } => {
+                write!(formatter, "{}: {source}", path.display())
+            }
         }
     }
 }
@@ -53,6 +63,7 @@ impl std::error::Error for StorageError {
             Self::Read { source, .. } => Some(source),
             Self::EventLine { source, .. } => Some(source),
             Self::Specs(source) => Some(source),
+            Self::Manifest { source, .. } => Some(source),
         }
     }
 }

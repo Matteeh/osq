@@ -7,13 +7,15 @@ import { parse } from 'yaml';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflowPath = path.join(repoRoot, '.github', 'workflows', 'rust.yml');
+const toolchainPath = path.join(repoRoot, 'rust-toolchain.toml');
 const mutantsConfigPath = path.join(repoRoot, '.cargo', 'mutants.toml');
 
 const VERIFY_RUST = 'sh scripts/verify-rust.sh';
 const INSTALL_MUTANTS = 'cargo install cargo-mutants --version 27.1.0 --locked';
 const MUTANTS_RUN = 'sh scripts/mutants-rust.sh';
 const CHECKOUT = 'actions/checkout@';
-const TOOLCHAIN = 'dtolnay/rust-toolchain@';
+const TOOLCHAIN = 'rustup toolchain install';
+const TOOLCHAIN_STEP = 'Install the pinned toolchain';
 const CACHE = 'Swatinem/rust-cache@';
 const PARITY_CLIPPY =
   'cargo clippy -p osq-kernel-specs --features parity --all-targets -- -D warnings';
@@ -118,16 +120,16 @@ describe('rust-core: Rust CI runs the mutation check', () => {
   });
 
   it('sets up the toolchain and cache and installs cargo-mutants 27.1.0', () => {
-    for (const [job, prefix] of [
-      ['cargo', TOOLCHAIN],
-      ['mutants', TOOLCHAIN],
-      ['cargo', CACHE],
-      ['mutants', CACHE],
-    ] as const) {
+    for (const job of ['cargo', 'mutants'] as const) {
       assert.equal(
-        stepUsing(job, prefix).uses,
-        stepUsing('cargo', prefix).uses,
-        `job ${job} must use the same ${prefix} step as the cargo job`,
+        stepRunning(job, TOOLCHAIN).run,
+        stepRunning('cargo', TOOLCHAIN).run,
+        `job ${job} must run the same toolchain step as the cargo job`,
+      );
+      assert.equal(
+        stepUsing(job, CACHE).uses,
+        stepUsing('cargo', CACHE).uses,
+        `job ${job} must use the same ${CACHE} step as the cargo job`,
       );
     }
     assert.ok(
@@ -167,10 +169,11 @@ describe('rust-core: Rust CI runs the mutation check', () => {
 });
 
 describe('rust-core: Rust CI runs the parity tests', () => {
-  it('uses the checkout, pnpm, Node 24, toolchain and cache actions', () => {
-    for (const prefix of [CHECKOUT, PNPM_SETUP, SETUP_NODE, TOOLCHAIN, CACHE]) {
+  it('uses the checkout, pnpm, Node 24 and cache actions and installs the pinned toolchain', () => {
+    for (const prefix of [CHECKOUT, PNPM_SETUP, SETUP_NODE, CACHE]) {
       assert.ok(stepUsing('parity', prefix), `the parity job must use ${prefix}`);
     }
+    assert.ok(stepRunning('parity', TOOLCHAIN), `the parity job must run ${TOOLCHAIN}`);
     assert.equal(
       String(stepUsing('parity', SETUP_NODE).with?.['node-version']),
       '24',
@@ -228,6 +231,88 @@ describe('rust-core: Rust CI runs the parity tests', () => {
         /\bpnpm\s+(?:add|update)\b/,
         'the parity job must not change the lockfile',
       );
+    }
+  });
+});
+
+describe('rust-core: Rust toolchain is pinned once', () => {
+  it('sets channel 1.99.1 and holds nothing else', async () => {
+    const text = await fs.readFile(toolchainPath, 'utf8');
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line !== '' && !line.startsWith('#'));
+
+    assert.deepEqual(rows, [
+      '[toolchain]',
+      'channel = "1.99.1"',
+      'components = ["clippy", "rustfmt"]',
+    ]);
+  });
+
+  it('lists the clippy and rustfmt components', async () => {
+    const text = await fs.readFile(toolchainPath, 'utf8');
+    const components = text.match(/^components\s*=\s*\[([^\]]*)\]\s*$/m)?.[1] ?? '';
+
+    assert.match(components, /["']clippy["']/, 'components must hold clippy');
+    assert.match(components, /["']rustfmt["']/, 'components must hold rustfmt');
+  });
+
+  it('installs the pinned toolchain with one rustup step in each job', () => {
+    for (const job of ['cargo', 'mutants', 'parity']) {
+      const installs = stepsOf(job).filter((step) => (step.run ?? '').trim() === TOOLCHAIN);
+
+      assert.equal(installs.length, 1, `job ${job} must have one ${TOOLCHAIN} step`);
+      assert.equal(installs[0]?.name, TOOLCHAIN_STEP, `job ${job} must name its toolchain step`);
+    }
+  });
+
+  it('installs the toolchain before the cache and every cargo step', () => {
+    for (const job of ['cargo', 'mutants', 'parity']) {
+      const steps = stepsOf(job);
+      const installIndex = steps.findIndex((step) => (step.run ?? '').trim() === TOOLCHAIN);
+      const cacheIndex = steps.findIndex((step) => (step.uses ?? '').startsWith(CACHE));
+      const checkoutIndex = steps.findIndex((step) => (step.uses ?? '').startsWith(CHECKOUT));
+
+      assert.ok(installIndex >= 0, `job ${job} must install the toolchain`);
+      assert.ok(checkoutIndex < installIndex, `job ${job} must check out before installing`);
+      assert.ok(cacheIndex > installIndex, `job ${job} must install before caching`);
+      if (job === 'parity') {
+        for (const prefix of [PNPM_SETUP, SETUP_NODE]) {
+          const index = steps.findIndex((step) => (step.uses ?? '').startsWith(prefix));
+          assert.ok(index < installIndex, `the parity job must use ${prefix} before installing`);
+        }
+      }
+
+      steps.forEach((step, index) => {
+        const run = step.run ?? '';
+        if (index === installIndex) {
+          return;
+        }
+        if (run.includes('cargo') || run.includes('sh scripts/')) {
+          assert.ok(
+            index > installIndex,
+            `job ${job} must install the toolchain before running ${run.trim()}`,
+          );
+        }
+      });
+    }
+  });
+
+  it('names no Rust version or toolchain action itself', () => {
+    for (const job of Object.keys(workflow.jobs ?? {})) {
+      for (const step of stepsOf(job)) {
+        assert.equal(
+          (step.uses ?? '').startsWith('dtolnay/rust-toolchain@'),
+          false,
+          `job ${job} must not use dtolnay/rust-toolchain@`,
+        );
+        assert.equal(
+          Object.hasOwn(step.with ?? {}, 'toolchain'),
+          false,
+          `job ${job} must not name a toolchain under with`,
+        );
+      }
     }
   });
 });

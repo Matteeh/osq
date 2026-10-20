@@ -1,12 +1,12 @@
 //! Parsers for the frontmatter documents the specs kernel reads.
 
-pub mod frontmatter;
-pub mod proposal;
-pub mod sidecar;
-pub mod task_file;
-pub mod task_list;
-pub mod types;
-pub mod yaml;
+pub(crate) mod frontmatter;
+pub(crate) mod proposal;
+pub(crate) mod sidecar;
+pub(crate) mod task_file;
+pub(crate) mod task_list;
+pub(crate) mod types;
+pub(crate) mod yaml;
 
 pub use frontmatter::parse_frontmatter;
 pub use proposal::parse_proposal;

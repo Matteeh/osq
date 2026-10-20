@@ -9,9 +9,10 @@
 use std::fs;
 use std::path::Path;
 
+use osq_kernel_specs::parse_frontmatter;
 use yaml_rust2::Yaml;
 
-use super::text::{frontmatter_yaml, markdown_body};
+use super::text::markdown_body;
 
 /// One manual edit record: a human's kept edit and the specs it touches.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,8 +58,8 @@ pub fn read_manual_edits(project_root: &Path) -> Vec<ManualEdit> {
 
 /// One file's record, or `None` without a string `kept_at` and a `paths` list.
 fn parse_record(file: &str, text: &str) -> Option<ManualEdit> {
-    let document = frontmatter_yaml(text)?;
-    let mapping = document.as_hash()?;
+    let frontmatter = parse_frontmatter(text).ok()?;
+    let mapping = &frontmatter.data;
     let kept_at = mapping
         .get(&Yaml::String(String::from("kept_at")))?
         .as_str()?

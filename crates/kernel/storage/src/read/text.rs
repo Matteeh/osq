@@ -5,7 +5,8 @@
 //!
 //! Implements: rust-storage/text-fields
 
-use yaml_rust2::{Yaml, YamlLoader};
+use osq_kernel_specs::parse_frontmatter;
+use yaml_rust2::Yaml;
 
 /// The fixed-form separator bytes, by their offset in a timestamp.
 const SEPARATORS: [(usize, u8); 7] = [
@@ -23,22 +24,12 @@ const SEPARATORS: [(usize, u8); 7] = [
 /// Implements: rust-storage/text-fields
 #[must_use]
 pub fn frontmatter_string(text: &str, key: &str) -> Option<String> {
-    let (yaml, _) = valid_frontmatter(text)?;
-    let documents = YamlLoader::load_from_str(yaml).ok()?;
-    let mapping = documents.first()?.as_hash()?;
-    mapping
+    let frontmatter = parse_frontmatter(text).ok()?;
+    frontmatter
+        .data
         .get(&Yaml::String(key.to_owned()))?
         .as_str()
         .map(ToOwned::to_owned)
-}
-
-/// The parsed frontmatter document, or `None` without valid frontmatter.
-///
-/// Implements: rust-storage/text-fields
-#[must_use]
-pub(crate) fn frontmatter_yaml(text: &str) -> Option<Yaml> {
-    let (yaml, _) = valid_frontmatter(text)?;
-    YamlLoader::load_from_str(yaml).ok()?.into_iter().next()
 }
 
 /// The text after the frontmatter, or the whole text without one.
@@ -46,9 +37,9 @@ pub(crate) fn frontmatter_yaml(text: &str) -> Option<Yaml> {
 /// Implements: rust-storage/text-fields
 #[must_use]
 pub fn markdown_body(text: &str) -> &str {
-    match valid_frontmatter(text) {
-        Some((_, body)) => body,
-        None => text,
+    match parse_frontmatter(text) {
+        Ok(frontmatter) => &text[text.len() - frontmatter.body.len()..],
+        Err(_) => text,
     }
 }
 
@@ -86,33 +77,6 @@ pub fn timestamp_ms(text: &str) -> Option<i64> {
     let days = days_from_civil(year, month, day);
     let seconds = ((days * 24 + hour) * 60 + minute) * 60 + second;
     Some(seconds * 1000 + millis)
-}
-
-/// Splits a text with frontmatter into its YAML and body, or `None`.
-///
-/// Implements: rust-storage/text-fields
-fn valid_frontmatter(text: &str) -> Option<(&str, &str)> {
-    let (yaml, body) = match_frontmatter(text)?;
-    YamlLoader::load_from_str(yaml).ok()?;
-    Some((yaml, body))
-}
-
-/// Matches the leading `---` block, without checking that its YAML parses.
-fn match_frontmatter(text: &str) -> Option<(&str, &str)> {
-    let rest = text
-        .strip_prefix("---\n")
-        .or_else(|| text.strip_prefix("---\r\n"))?;
-    let index = rest.find("\n---")?;
-    let before = &rest[..index];
-    let yaml = before.strip_suffix('\r').unwrap_or(before);
-    Some((yaml, strip_newline(&rest[index + 4..])))
-}
-
-/// Drops the `\r?\n?` the pattern allows after the closing `---`.
-fn strip_newline(text: &str) -> &str {
-    text.strip_prefix("\r\n")
-        .or_else(|| text.strip_prefix('\n'))
-        .unwrap_or(text)
 }
 
 /// The byte span of the first `## Goal` section, before trimming.

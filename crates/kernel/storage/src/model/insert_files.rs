@@ -2,13 +2,10 @@
 //!
 //! Only these functions touch SQLite (ADR 023).
 
-use std::path::Path;
-
-use rusqlite::{Connection, Transaction, params};
+use rusqlite::{Transaction, params};
 
 use crate::read::ManualEdit;
 
-use super::error::ReadModelError;
 use super::file_rows::{DisclosureRow, ManualEditRow, manual_edit_rows};
 
 /// Inserts one archived snapshot's `disclosures` rows.
@@ -23,21 +20,16 @@ pub(super) fn insert_disclosures(
     Ok(())
 }
 
-/// Adds the manual edit records to `manual_edits` in their own transaction.
+/// Adds the manual edit records to `manual_edits` in the rebuild transaction.
 ///
 /// # Errors
 ///
-/// Returns [`ReadModelError::Sqlite`] when the database cannot be opened or
-/// written.
+/// Returns an error when an insert fails.
 pub(super) fn insert_manual_edits(
-    db_path: &Path,
+    transaction: &Transaction<'_>,
     records: &[ManualEdit],
-) -> Result<(), ReadModelError> {
-    let mut connection = Connection::open(db_path)?;
-    let transaction = connection.transaction()?;
-    insert_manual_rows(&transaction, &manual_edit_rows(records))?;
-    transaction.commit()?;
-    Ok(())
+) -> Result<(), rusqlite::Error> {
+    insert_manual_rows(transaction, &manual_edit_rows(records))
 }
 
 /// Inserts the `manual_edits` rows.

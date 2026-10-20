@@ -96,6 +96,8 @@ pub enum MergeError {
 
 impl MergeError {
     /// The capability merged.
+    ///
+    /// Implements: rust-specs/merge-refusals
     #[must_use]
     pub fn capability(&self) -> &str {
         match self {
@@ -114,6 +116,8 @@ impl MergeError {
     }
 
     /// The requirement name the refusal names, or none for a malformed rename.
+    ///
+    /// Implements: rust-specs/merge-refusals
     #[must_use]
     pub fn requirement(&self) -> Option<&str> {
         match self {

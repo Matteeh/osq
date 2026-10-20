@@ -21,23 +21,22 @@ mod insert_files;
 mod insert_specs;
 mod labels;
 mod notice_rows;
+mod replace;
 mod requirement_rows;
 mod rows;
 mod stream_rows;
 mod task_outcome_rows;
 mod validator_rows;
 
-use std::fs;
-use std::io;
 use std::path::Path;
 
-use rusqlite::{Connection, Transaction, params};
+use rusqlite::{Transaction, params};
 
 use crate::read::{ChangeSnapshot, Location, read_history, read_manual_edits};
 use file_rows::disclosure_rows;
 use insert_events::{insert_events, insert_notices};
 use insert_files::{insert_disclosures, insert_manual_edits};
-use insert_specs::insert_requirements;
+use insert_specs::{insert_requirements, insert_task_outcomes};
 use labels::apply_labels;
 use requirement_rows::requirement_rows;
 use rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
@@ -45,36 +44,18 @@ use rows::{ChangeRow, DeadRow, TaskRow, change_row, dead_rows, task_rows};
 pub use error::ReadModelError;
 pub use insert_specs::write_task_outcomes;
 pub use labels::{TrialLabels, read_trial_labels};
-
-/// Every table's untyped columns, exactly as TypeScript's `osq query` names them.
-const CREATE_TABLES: &str = "\
-CREATE TABLE changes (id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner);\
-CREATE TABLE tasks (change, task, title, attempts, done);\
-CREATE TABLE dead_attempts (change, task, reason);\
-CREATE TABLE requirements (change, capability, kind, requirement, renamed_from);\
-CREATE TABLE pauses (change, task, paused_at, until, source);\
-CREATE TABLE recertifications (change, task, recertified_at, outcome, automatic, path, credited_to, source);\
-CREATE TABLE notices (change, notice, severity, opened, outcome);\
-CREATE TABLE focused_runs (change, task, run, outcome, exit_code, duration, timed_out, scenarios, files);\
-CREATE TABLE mutation_picks (change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios);\
-CREATE TABLE mutation_survivors (id, change, task, pick, file, function, line, column, mutator, replacement, label);\
-CREATE TABLE validator_runs (change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output);\
-CREATE TABLE validator_findings (id, change, run, finding, capability, requirement, scenario, problem, detail, label);\
-CREATE TABLE link_findings (id, change, severity, file, message, label);\
-CREATE TABLE disclosures (change, task, section, text);\
-CREATE TABLE manual_edits (kept_at, record, comment, paths, capabilities);\
-CREATE TABLE task_outcomes (change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched);";
+pub use replace::replace_read_model;
 
 /// Writes the read model database for the given snapshots.
 ///
-/// Any file already at `db_path` is removed first, so a stale database never
-/// leaks rows. Archived snapshots get rows in the given order and the `notices`
-/// table gets the archived and rejected snapshots by folder name.
+/// The database is rebuilt in a file beside `db_path` and renamed over it, so
+/// a failed write leaves any previous database whole. Archived snapshots get
+/// rows in the given order and the `notices` table gets the archived and
+/// rejected snapshots by folder name.
 ///
 /// # Errors
 ///
-/// Returns [`ReadModelError::Io`] when a stale file cannot be removed,
-/// [`ReadModelError::Sqlite`] when the database cannot be opened or written.
+/// Returns the errors [`replace_read_model`] raises.
 ///
 /// Implements: rust-storage/read-model-tables
 /// Implements: rust-storage/read-model-rebuild
@@ -84,30 +65,28 @@ pub fn write_read_model(
     db_path: &Path,
     snapshots: &[ChangeSnapshot],
 ) -> Result<(), ReadModelError> {
-    remove_existing(db_path)?;
-    let mut connection = Connection::open(db_path)?;
-    create_tables(&connection)?;
-    let transaction = connection.transaction()?;
-    for snapshot in snapshots {
-        if snapshot.location == Location::Archived {
-            insert_snapshot(&transaction, snapshot)?;
+    replace_read_model(db_path, |transaction| {
+        for snapshot in snapshots {
+            if snapshot.location == Location::Archived {
+                insert_snapshot(transaction, snapshot)?;
+            }
         }
-    }
-    insert_notices(&transaction, snapshots)?;
-    transaction.commit()?;
-    Ok(())
+        insert_notices(transaction, snapshots)?;
+        Ok(())
+    })
 }
 
 /// Reads a project's archived and rejected changes into the read model.
 ///
-/// The trial labels are read before the database is touched, so a malformed
-/// label file leaves any existing database as it was.
+/// The trial labels, the snapshots, the manual edits and the ownership are all
+/// read before the database is touched, so a malformed label file leaves any
+/// existing database as it was. Every table is then filled in one transaction.
 ///
 /// # Errors
 ///
 /// Returns [`ReadModelError::Labels`] when a label file is malformed,
 /// [`ReadModelError::Storage`] when a change cannot be read, and the errors
-/// [`write_read_model`] raises.
+/// [`replace_read_model`] raises.
 ///
 /// Implements: rust-storage/read-model-tables
 /// Implements: rust-storage/file-table-columns
@@ -116,12 +95,21 @@ pub fn write_read_model(
 pub fn build_read_model(project_root: &Path, db_path: &Path) -> Result<(), ReadModelError> {
     let labels = read_trial_labels(project_root)?;
     let snapshots = read_history(project_root)?;
-    write_read_model(db_path, &snapshots)?;
-    apply_labels(db_path, &labels)?;
-    insert_manual_edits(db_path, &read_manual_edits(project_root))?;
+    let edits = read_manual_edits(project_root);
     let ownerships =
         osq_kernel_specs::read_capability_ownership(&project_root.join("openspec").join("specs"));
-    write_task_outcomes(db_path, &snapshots, &ownerships)
+    replace_read_model(db_path, |transaction| {
+        for snapshot in &snapshots {
+            if snapshot.location == Location::Archived {
+                insert_snapshot(transaction, snapshot)?;
+            }
+        }
+        insert_notices(transaction, &snapshots)?;
+        apply_labels(transaction, &labels)?;
+        insert_manual_edits(transaction, &edits)?;
+        insert_task_outcomes(transaction, &snapshots, &ownerships)?;
+        Ok(())
+    })
 }
 
 /// Inserts one archived snapshot's rows into every table.
@@ -139,19 +127,6 @@ fn insert_snapshot(
     insert_requirements(transaction, &requirement_rows(snapshot))?;
     insert_events(transaction, snapshot)?;
     insert_disclosures(transaction, &disclosure_rows(snapshot))
-}
-
-/// Creates every table in an empty database.
-fn create_tables(connection: &Connection) -> Result<(), rusqlite::Error> {
-    connection.execute_batch(CREATE_TABLES)
-}
-
-/// Removes a file at `db_path`, ignoring one that is not there.
-fn remove_existing(db_path: &Path) -> Result<(), io::Error> {
-    if db_path.exists() {
-        fs::remove_file(db_path)?;
-    }
-    Ok(())
 }
 
 /// Inserts one `changes` row.

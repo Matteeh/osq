@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6f7438f1c03f2797c08d67e7cac4769797f326f2f05e4f5db075743feac48477"
+build_stamp: "ec95e51e"
+project_commit: "9f795ff4"
+exit_code: 0
+scope_files: {"scripts/verify-rust.sh":"sha256:7b964ab94fe0e533fbdb6af90c1bae18a603f2563fed4e542ee30a11939980d7","tests/rust-verify-script.test.ts":"sha256:692704e623520f567a442b8b751e8b564ba0ace842ea84410e8756f47ad0e2d0"}
+---
+2026-10-20T04:10:54.564Z
