@@ -302,7 +302,8 @@ describe('Parallel change lanes', () => {
     await approveIntoWorktree(project, ONE.folder);
     await approveIntoWorktree(project, TWO.folder);
 
-    const adapter = new LaneAdapter();
+    // The first spawn waits until its peer arrives, however slow the machine.
+    const adapter = new LaneAdapter({ holdMs: 30_000 });
     const summary = await runWatcherOnce(project.repo, project.config, adapter);
 
     assert.ok(adapter.maxConcurrent >= 2, 'both tasks ran at the same time');
