@@ -441,8 +441,9 @@ describe('Running lanes outlive a cycle and delay stopping', () => {
     const exits: number[] = [];
     let exitedAt = 0;
 
+    // The build changes only once both lanes spawned, however slow the machine.
     const buildCheck = async (): Promise<string | null> => {
-      if (adapter.spawns.length === 0) return null;
+      if (adapter.spawns.length < 2) return null;
       if (!threwOnce) {
         threwOnce = true;
         markThrew();
