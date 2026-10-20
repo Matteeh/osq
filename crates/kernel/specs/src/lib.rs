@@ -4,8 +4,10 @@
 
 pub mod document;
 pub mod markdown;
+pub mod merge;
 pub mod owners;
 pub mod read;
+pub mod validate;
 
 pub use document::{
     ChecklistItem, Frontmatter, Proposal, Sidecar, SidecarError, SyntaxError, TaskFile,
@@ -17,10 +19,17 @@ pub use markdown::{
     code_ownership, js_trim, normalize_requirement_name, parse_delta, parse_living_spec,
     parse_requirement, parse_scenario, section,
 };
+pub use merge::{
+    MergeChangeError, MergeError, MergedSpec, merge_change, merge_delta, merge_living_spec,
+};
 pub use owners::{
     CapabilityOwnership, owner_capabilities, read_capability_ownership, scope_covers_path,
 };
 pub use read::{
     SpecsError, read_delta, read_living_spec, read_proposal, read_sidecar, read_task_file,
     read_task_list,
+};
+pub use validate::{
+    FindingCode, SpecFinding, check_delta_targets, validate_change, validate_delta,
+    validate_living_spec, validate_living_specs, validate_merged_change,
 };

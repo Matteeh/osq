@@ -32,14 +32,14 @@ workflow with their tests.
 - **THEN** system maps it to rust-core
 
 ### Requirement: Core does no IO
-The `osq-core` crate SHALL depend only on `serde` and `serde_json` at runtime,
-and no file under `crates/core/src/` SHALL name `std::fs`, `std::process`,
-`std::env`, `std::net`, `std::thread`, `SystemTime` or `Instant`. Tests and
-dev-dependencies are exempt.
+The `osq-core` crate SHALL depend only on `serde`, `serde_json` and `sha2` at
+runtime, and no file under `crates/core/src/` SHALL name `std::fs`,
+`std::process`, `std::env`, `std::net`, `std::thread`, `SystemTime` or
+`Instant`. Tests and dev-dependencies are exempt.
 
 #### Scenario: Core source names no IO module
 - **WHEN** the `[dependencies]` table of `crates/core/Cargo.toml` and every `.rs` file under `crates/core/src/` are read
-- **THEN** the table names exactly `serde` and `serde_json`, and no file contains `std::fs`, `std::process`, `std::env`, `std::net`, `std::thread`, `SystemTime` or `Instant`
+- **THEN** the table names exactly `serde`, `serde_json` and `sha2`, and no file contains `std::fs`, `std::process`, `std::env`, `std::net`, `std::thread`, `SystemTime` or `Instant`
 
 ### Requirement: Event types
 The `Event` enum SHALL have exactly one variant per event type below, the
@@ -59,6 +59,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `verify_ran` | `command` | `exitCode`, `duration`, `log`, `verifyCommand`, `output`, `phase`, `expected`, `mismatch`, `missingPaths`, `task` |
 | `result_written` | `path` | `synthesized` |
 | `exited` | `exitCode` | `pid`, `signal`, `timedOut`, `elapsedSeconds` |
+| `exit_continued` | `exitCode` | |
 | `measures` | `phase`, `scopeFiles`, `scopeLines`, `repoFiles`, `repoLines`, `importFanIn`, `proposalWords`, `taskWords`, `deltaRequirements`, `deltaScenarios` | `scopeResolver`, `changedFiles`, `changedLines`, `scopeHashes`, `dependencies`, `functionHashes` |
 | `dependencies_added` | `added` | |
 | `done` | `task` | |
@@ -101,6 +102,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `verify_ran` | `{"command":"cargo test"}` | `VerifyRan` |
 | `result_written` | `{"path":".run/results/1.md"}` | `ResultWritten` |
 | `exited` | `{"exitCode":0}` | `Exited` |
+| `exit_continued` | `{"exitCode":1}` | `ExitContinued` |
 | `measures` | `{"phase":"start","scopeFiles":1,"scopeLines":2,"repoFiles":3,"repoLines":4,"importFanIn":0,"proposalWords":5,"taskWords":6,"deltaRequirements":1,"deltaScenarios":2}` | `Measures` |
 | `dependencies_added` | `{"added":[{"file":"Cargo.toml","name":"serde"}]}` | `DependenciesAdded` |
 | `done` | `{"task":"1"}` | `Done` |
@@ -458,9 +460,11 @@ accepted, applying to the capability group `rust` through
 `applies_to: [group:rust]`, so they govern every capability whose sidecar
 names group `rust` and nothing under `src/`, naming `tests/rust-adrs.test.ts`
 in its checks, and causing no decision problem. ADR 022 SHALL also name
-`crates/core/tests/no_io.rs` and ADR 025 `crates/core/tests/event_corpus.rs`.
-The index SHALL link each once, and AGENTS.md's project rules block SHALL not
-change, since none applies to all.
+`crates/core/tests/no_io.rs`, ADR 025 `crates/core/tests/event_corpus.rs`,
+and ADR 026 the specs kernel's golden, validation, replay and parity tests
+and the linter kernel's no-runtime-Node test. The index SHALL link each
+once, and AGENTS.md's project rules block SHALL not change, since none
+applies to all.
 
 #### Scenario: Rust ADRs are accepted
 - **WHEN** osq's own decisions are read with `readDecisions` and `DEFAULT_CONFIG`
@@ -472,7 +476,7 @@ change, since none applies to all.
 | 023 | `023-rust-code-style.md` | `tests/rust-adrs.test.ts` |
 | 024 | `024-rust-link-enforcement.md` | `tests/rust-adrs.test.ts` |
 | 025 | `025-rust-on-disk-format.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/event_corpus.rs` |
-| 026 | `026-openspec-in-rust.md` | `tests/rust-adrs.test.ts` |
+| 026 | `026-openspec-in-rust.md` | `tests/rust-adrs.test.ts`, `crates/kernel/specs/tests/golden_corpus.rs`, `crates/kernel/specs/tests/validate_corpus.rs`, `crates/kernel/specs/tests/replay_corpus.rs`, `crates/kernel/specs/tests/openspec_validate_parity_corpus.rs`, `crates/kernel/specs/tests/openspec_archive_parity_corpus.rs`, `crates/kernel/linter/tests/node_spawn_corpus.rs` |
 
 #### Scenario: Rules block without the Rust ADRs
 - **WHEN** `renderRulesBlock` renders osq's own decisions
@@ -545,9 +549,11 @@ touched fails the verify. When `OSQ_DIFF` is unset or empty, as in Rust CI's
 A Rust test that reads data outside its own crate, such as the live archive,
 SHALL be a corpus test: it lives in a test target `tests/<name>_corpus.rs`,
 and every test in it carries `#[ignore = "corpus test: <reason>"]`, so
-`scripts/verify-rust.sh` runs it and cargo-mutants does not. Each requirement
-a corpus test proves SHALL also have a fast test on the crate's own fixtures,
-which cargo-mutants runs.
+`scripts/verify-rust.sh` runs it and cargo-mutants does not. A corpus test
+that runs the OpenSpec CLI is a parity test: its test target needs its
+crate's `parity` feature, so `scripts/verify-rust.sh` does not build it, and
+the Rust CI `parity` job runs it. Each requirement a corpus test proves SHALL
+also have a fast test on the crate's own fixtures, which cargo-mutants runs.
 
 #### Scenario: Corpus tests are marked
 - **WHEN** every `crates/**/tests/*_corpus.rs` file is read
@@ -556,3 +562,52 @@ which cargo-mutants runs.
 #### Scenario: Verify runs corpus tests
 - **WHEN** `scripts/verify-rust.sh` is read
 - **THEN** it holds the line `cargo test --workspace -- --include-ignored`
+
+### Requirement: Rust CI parity job
+Rust CI SHALL run the specs kernel's OpenSpec parity tests in a `parity`
+job of `.github/workflows/rust.yml`: against the pinned OpenSpec CLI that
+`pnpm install --frozen-lockfile` installs, on each push and pull request
+to main, and against `@fission-ai/openspec@latest`, installed outside the
+lockfile, on the workflow's weekly schedule. A failure on the schedule
+means osq and upstream OpenSpec have diverged.
+
+#### Scenario: Rust CI runs the parity tests
+- **WHEN** `.github/workflows/rust.yml` is read
+- **THEN** its `parity` job holds each fact below:
+
+| Fact |
+|---|
+| uses `actions/checkout@`, `pnpm/action-setup@`, `actions/setup-node@` with `node-version` 24, `dtolnay/rust-toolchain@` and `Swatinem/rust-cache@` |
+| runs `pnpm install --frozen-lockfile` |
+| runs `cargo clippy -p osq-kernel-specs --features parity --all-targets -- -D warnings` |
+| outside the schedule, runs `cargo test -p osq-kernel-specs --features parity --test openspec_validate_parity_corpus --test openspec_archive_parity_corpus -- --include-ignored` with no `OSQ_OPENSPEC_BIN` |
+| on the schedule, runs `npm install --prefix "$RUNNER_TEMP/openspec-latest" @fission-ai/openspec@latest`, then the same `cargo test` with `OSQ_OPENSPEC_BIN` set to the `openspec` binary under `openspec-latest/node_modules/.bin/` and `OPENSPEC_TELEMETRY` set to `0` |
+| never runs `pnpm add` or `pnpm update` |
+
+### Requirement: Seal computation
+`compute_seal` SHALL give, without IO, the `Seal` that `hashChangeFolder`
+gives for a folder holding exactly the given entries of relative path and
+bytes. Content SHALL be decoded as JavaScript decodes UTF-8, with CRLF turned
+into LF and, in `tasks.md` alone, checkboxes reset as `normalizeTasksMd` does.
+Entries SHALL be ordered by path in UTF-16 code unit order.
+
+#### Scenario: Seals of entries
+- **WHEN** `compute_seal` runs on the entries of each row below, written as `path`: content
+- **THEN** the seal is as given:
+
+| Entries | Seal |
+|---|---|
+| none | `sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `proposal.md`: `a\n` | `sha256:0dde7716d600b92d32148bafc60a3111581ee9c4836ae6925c584dcaac2ab9bd` |
+| `a.md`: `x\r\ny\r\n` | `sha256:84e73026f37063934c900dfa2c1ecf3f8fdebffc3b1483d78a2275a21b248241` |
+| `a.md`: `x\ny\n` | `sha256:84e73026f37063934c900dfa2c1ecf3f8fdebffc3b1483d78a2275a21b248241` |
+| `tasks.md`: `- [x] 1. a\n  - [X] 2. b\n` | `sha256:c66367cc16aa800f014845d20689fc87356ebee7053a9dfd46653693529a011a` |
+| `tasks.md`: `- [ ] 1. a\n  - [ ] 2. b\n` | `sha256:c66367cc16aa800f014845d20689fc87356ebee7053a9dfd46653693529a011a` |
+| `notes/tasks.md`: `- [x] 1. a\n` | `sha256:fa65172b5ab5cee5da25838e4c968ded29d7a4837aa65283758225af2586088f` |
+| `tasks.md`: U+00A0 then `- [x] a\n` | `sha256:ba2854b7aadd6685d64d1624f7b144e4b5e5d69e017060244b846491ef0b304b` |
+| `tasks.md`: U+0085 then `- [x] a\n` | `sha256:52902fea6a1daefdb3316706390ca2fc5a816709f0eb28a514aacc0a31f007d0` |
+| `b.bin`: the bytes `FF FE 41` | `sha256:f2859d36ed56daac01133dde3da6a05522a65da80d2fe1659fd1cf64716c8ac8` |
+
+#### Scenario: JavaScript path order
+- **WHEN** `compute_seal` runs on `a-｡.md` (U+FF61): `2\n` and `a-😀.md` (U+1F600): `1\n`, given in that order and again in the reverse order
+- **THEN** both seals are `sha256:f47bbfc7ba5286ec24f4ddf82d9bf58771d785ef0b0806c45b8e4ca2ff469938`, the seal of UTF-16 order, and neither is `sha256:e5c08cd78230313694389dde3ad3ff879ccbdf90e1e3c5b738ea76dcf9328e79`, the seal of byte order

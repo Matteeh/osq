@@ -13,4 +13,4 @@ pub use fold::{
     ChangeRecord, ChangeState, ChangeStatus, Stream, TaskId, TaskState, TaskStatus, apply,
     apply_change, apply_task, change_status,
 };
-pub use seal::{Seal, SealError};
+pub use seal::{Seal, SealError, compute_seal};

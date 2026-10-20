@@ -206,7 +206,7 @@ describe('Watcher loop permanent logging', () => {
     await useLocalVerifier(tmpDir, spec.folderPath);
     await writeTask1(spec.folderPath);
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-    adapter.setBehavior({ exitCode: 1 });
+    adapter.setBehavior({ exitCode: 1, writeResult: false });
 
     const logger = new CaptureLogger();
     const summary = await runWatcherCycle(tmpDir, DEFAULT_CONFIG, adapter, logger);

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7d295c7e4d55a0567fc990d346b3bd5770e9a19c25eeec3fc0dd36a320566b4f"
+build_stamp: "d12d0cdb"
+project_commit: "5500ab3c"
+exit_code: 0
+scope_files: {"crates/kernel/specs/src/validate/delta.rs":"sha256:92d782a38d2e3f45cbe9f6c4785261558839bf653db820e17f7a610716f811ef","crates/kernel/specs/src/validate/delta_entries.rs":"sha256:36fd4ab5b34c9c1966c3d83f2ff1ed5851aaff9b4b8a2d8d96c31895fb00140c","crates/kernel/specs/src/validate/delta_scan.rs":"sha256:ecedf9f08cf8d39ba361c8634e973e7b1f3e231171c62c9e611254fb5a71bfb9","crates/kernel/specs/src/validate/delta_targets.rs":"sha256:429b880b90c0aee9525f2d8e8a6a750d108a56e2a783430d50696fc04b01601a","crates/kernel/specs/src/validate/living.rs":"sha256:2977dcec86101f63796f1c67e7348c2cb2115a93ced5207cc821fc6f949ab148","crates/kernel/specs/src/validate/requirement.rs":"sha256:031882b1387be7d99bb70cffd9d7fb23750542f3eddd701c7b7a1a8084087418","crates/kernel/specs/tests/validate_corpus.rs":"sha256:09f0c62b1f51c2ecde82549941f00ff383cbd0cd1ed841810c33bc75479e470e"}
+---
+2026-10-18T20:05:17.521Z

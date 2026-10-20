@@ -485,3 +485,530 @@ whose globs cover the path under "Scope globs", sorted by bytes.
 | `src/alpha/a.ts` | `alpha` |
 | `./src/beta/b.ts` | `beta` |
 | `notes/z.md` | none |
+
+### Requirement: Validation findings
+Every finding the specs kernel's validation returns SHALL be a
+`SpecFinding` with a `code`, the `file` it concerns, the 1-based `line` it
+points at, the `requirement` name where one applies or none, a one-sentence
+`message` that names the requirement or scenario where there is one, and a
+`fix` for the human. Every finding blocks, so a finding has no severity. A
+`FindingCode` serializes as its code, and its fix is the code's fixed text
+below. Lines count from 1 in the text after the line ending rule of
+"JavaScript text rules". A finding about a requirement or scenario points
+at its header line, one about a REMOVED name or a rename at that entry's
+line, one about a `##` heading at the heading, a duplicate or conflict at
+the later of the two entries, and a finding about the whole file at line 1.
+Each validation function returns its findings sorted by line, and findings
+on one line in the order of the table below.
+
+#### Scenario: Finding codes
+- **WHEN** each finding code below is serialized and asked for its fix
+- **THEN** the code and the fix are as given:
+
+| Code | Fix |
+|---|---|
+| `missing-purpose` | Add a `## Purpose` section that says what the capability is for. |
+| `missing-requirements` | Add a `## Requirements` section with at least one requirement. |
+| `requirement-outside-section` | Move the requirement under `## Requirements`, or in a delta spec under an ADDED or MODIFIED section. |
+| `delta-section-in-living-spec` | Move the requirements into `## Requirements` and remove the delta heading. |
+| `duplicate-requirement` | Rename or remove one of the requirements, so each name is used once. |
+| `requirement-without-shall` | State the requirement with SHALL or MUST outside code fences. |
+| `requirement-without-scenario` | Add a `#### Scenario:` block with WHEN and THEN bullets. |
+| `scenario-without-when` | Add a `- **WHEN**` bullet to the scenario. |
+| `scenario-without-then` | Add a `- **THEN**` bullet to the scenario. |
+| `duplicate-scenario` | Rename one of the scenarios, so each name is used once in the requirement. |
+| `unknown-delta-section` | Use only `## Purpose` and the ADDED, MODIFIED, REMOVED and RENAMED Requirements sections. |
+| `empty-delta-section` | Add requirements under the heading, or remove it. |
+| `missing-delta-sections` | Add an ADDED, MODIFIED, REMOVED or RENAMED Requirements section. |
+| `unpaired-rename` | Pair each `FROM:` line with a `TO:` line directly after it. |
+| `invalid-rename` | Write each side as `- FROM:` or `- TO:` and a backticked requirement header. |
+| `conflicting-delta` | Name the requirement in one operation only; after a rename, MODIFIED uses the new name. |
+| `unknown-requirement` | Name a requirement the living spec has, or add a new one under ADDED. |
+| `change-without-delta` | Add a delta spec at `specs/<capability>/spec.md`. |
+
+### Requirement: Requirement validation
+Each requirement of a living spec's Requirements section, and each ADDED or
+MODIFIED requirement of a delta spec, SHALL be checked, as "Requirement
+blocks" and "Scenario blocks" read it:
+
+- `requirement-without-shall` when its body, without the lines the fence
+  rule of "Living specs" puts inside a code fence and without the fence
+  lines, holds neither `SHALL` nor `MUST` as a whole word: in that case,
+  with no ASCII letter, digit or `_` directly before or after it;
+- `requirement-without-scenario` when it has no scenario;
+- `scenario-without-when` for each scenario with no WHEN bullet, and
+  `scenario-without-then` for each with no THEN bullet;
+- `duplicate-scenario` for each scenario whose name an earlier scenario of
+  the same requirement has. The same name in two requirements is no
+  finding.
+
+Each of these findings carries the requirement's name.
+
+#### Scenario: Requirement findings
+- **WHEN** each living spec fixture below, under `crates/kernel/specs/tests/fixtures/validate/living/`, is validated as `validate_living_spec` says
+- **THEN** its findings are as given, each with the requirement named:
+
+| File | Findings |
+|---|---|
+| `requirement-without-shall.md` | `requirement-without-shall` at line 8 for `Quiet` |
+| `requirement-without-scenario.md` | `requirement-without-scenario` at line 8 for `Bare` |
+| `scenario-without-when.md` | `scenario-without-when` at line 15 for `Partial` |
+| `scenario-without-then.md` | `scenario-without-then` at line 11 for `Partial` |
+| `duplicate-scenario.md` | `duplicate-scenario` at line 15 for `Repeats` |
+
+#### Scenario: Whole-word keywords
+- **WHEN** a requirement whose body is each text below is checked
+- **THEN** it gives `requirement-without-shall` or not, as given:
+
+| Body | Finding |
+|---|---|
+| `The system SHALL pass.` | none |
+| `It MUST pass.` | none |
+| `(SHALL)` | none |
+| `The system shall pass.` | `requirement-without-shall` |
+| `MUSTARD and SHALLOW` | `requirement-without-shall` |
+| `A_SHALL and MUST2` | `requirement-without-shall` |
+| `~~~\nThe system SHALL pass.\n~~~` | `requirement-without-shall` |
+
+### Requirement: Living spec validation
+`validate_living_spec(file, text)` SHALL return the findings of one living
+spec, each with `file` as given, where `text` reads as "Living specs" says
+and headings count only outside code fences:
+
+- `missing-purpose` when its purpose is empty;
+- `missing-requirements` when it has no requirement;
+- `requirement-outside-section` for each requirement header outside the
+  first `## Requirements` section, with that requirement's name;
+- `delta-section-in-living-spec` for each `##` heading whose trimmed title,
+  lowercased, is `added requirements`, `modified requirements`, `removed
+  requirements` or `renamed requirements`;
+- `duplicate-requirement` for each requirement whose name an earlier
+  requirement of the Requirements section has, with that name;
+- the findings of "Requirement validation" for each requirement of the
+  Requirements section.
+
+`validate_living_specs(specs_dir)` SHALL validate the `spec.md` of each
+folder directly under `specs_dir`, folders in byte order of their names,
+with `file` the joined path written by `Path::display`. A folder without
+a `spec.md` file adds nothing, a missing `specs_dir` gives no finding, and
+a `spec.md` that cannot be read or is not UTF-8 is a read error naming its
+path.
+
+#### Scenario: Living spec findings
+- **WHEN** each living spec fixture below, under `crates/kernel/specs/tests/fixtures/validate/living/`, is validated
+- **THEN** its findings are as given:
+
+| File | Findings |
+|---|---|
+| `valid.md` | none |
+| `missing-purpose.md` | `missing-purpose` at line 1 |
+| `missing-requirements.md` | `missing-requirements` at line 1 |
+| `requirement-outside-section.md` | `requirement-outside-section` at line 17 for `Stray` |
+| `delta-section-in-living-spec.md` | `delta-section-in-living-spec` at line 15 |
+| `duplicate-requirement.md` | `duplicate-requirement` at line 15 for `Twice` |
+
+#### Scenario: Living specs folder
+- **WHEN** `validate_living_specs` reads each folder below
+- **THEN** the result is as given:
+
+| Folder | Result |
+|---|---|
+| `crates/kernel/specs/tests/fixtures/validate/targets/specs/` | no finding |
+| a folder that does not exist | no finding |
+| a folder whose `alpha/spec.md` holds the bytes `0xff 0xfe` | a read error naming that `spec.md` |
+
+### Requirement: Delta spec validation
+`validate_delta(file, text)` SHALL return the findings of one delta spec
+that need no living spec, each with `file` as given, where `text` reads as
+"Delta specs" says and headings and requirement headers count only outside
+code fences:
+
+- `unknown-delta-section` for each `##` heading whose trimmed title,
+  lowercased, is neither one of the four delta section titles nor
+  `purpose`;
+- `empty-delta-section` for each delta section heading whose section holds
+  no requirement header and no line "Delta specs" reads as a removed name
+  or a FROM, TO or invalid rename line;
+- `missing-delta-sections` when the text has no delta section heading;
+- `requirement-outside-section` for each requirement header outside an
+  ADDED, MODIFIED or REMOVED section, text before the first `##` heading
+  included, with that requirement's name;
+- `unpaired-rename` for each unpaired rename side, at its line, with its
+  name;
+- `invalid-rename` for each invalid rename line, at its line;
+- `duplicate-requirement` for each name an earlier entry of the same kind
+  has, the kinds being ADDED, MODIFIED, REMOVED, RENAMED FROM and RENAMED
+  TO, sections of one title counted together;
+- `conflicting-delta` for each pair of entries with the same name in ADDED
+  and MODIFIED, ADDED and REMOVED, MODIFIED and REMOVED, a RENAMED FROM and
+  MODIFIED, a RENAMED FROM and REMOVED, or a RENAMED TO and ADDED, at the
+  later entry, with that name;
+- the findings of "Requirement validation" for each ADDED and MODIFIED
+  requirement.
+
+#### Scenario: Delta spec findings
+- **WHEN** each delta spec fixture below, under `crates/kernel/specs/tests/fixtures/validate/delta/`, is validated
+- **THEN** its findings are as given:
+
+| File | Findings |
+|---|---|
+| `valid.md` | none |
+| `unknown-delta-section.md` | `unknown-delta-section` at line 12 |
+| `empty-delta-section.md` | `empty-delta-section` at line 12 |
+| `missing-delta-sections.md` | `missing-delta-sections` at line 1 |
+| `unpaired-rename.md` | `unpaired-rename` at line 7 for `Orphan` |
+| `invalid-rename.md` | `invalid-rename` at line 7 |
+| `conflicting-delta.md` | `conflicting-delta` at line 14 for `Both` |
+| `duplicate-requirement.md` | `duplicate-requirement` at line 14 for `Twice` |
+| `requirement-outside-section.md` | `requirement-outside-section` at line 6 for `Stray` |
+| `requirement-without-scenario.md` | `requirement-without-scenario` at line 5 for `Bare` |
+
+### Requirement: Delta targets
+`check_delta_targets(file, text, living)` SHALL return an
+`unknown-requirement` finding, with `file` as given and the entry's name,
+for each MODIFIED requirement, REMOVED name and RENAMED FROM name of the
+delta spec `text` that `living`, a parsed living spec or none, has no
+requirement for. A MODIFIED name that is the TO of one of the delta's
+renames counts as known. With no living spec, no requirement is known.
+
+`validate_change(change_dir, specs_dir)` SHALL validate each delta spec of
+a change: the `spec.md` of each folder directly under `change_dir/specs`,
+folders in byte order of their names, against the living spec at
+`specs_dir/<folder>/spec.md`, or none when that is not a file. Each delta's
+findings are those of `validate_delta` and `check_delta_targets`, sorted
+together as "Validation findings" says, with `file` the delta's joined path
+written by `Path::display`. A change with no delta spec gives one
+`change-without-delta` finding for `change_dir/proposal.md` at line 1. A
+delta or living spec that cannot be read or is not UTF-8 is a read error
+naming its path.
+
+#### Scenario: Change findings
+- **WHEN** each change below, under `crates/kernel/specs/tests/fixtures/validate/targets/changes/`, is validated against `crates/kernel/specs/tests/fixtures/validate/targets/specs/`
+- **THEN** its findings are as given, each file under the change folder:
+
+| Change | Findings |
+|---|---|
+| `known` | none |
+| `unknown` | `unknown-requirement` in `specs/alpha/spec.md` at line 5 for `Missing`, at line 14 for `Never there` and at line 18 for `Ghost`, then in `specs/beta/spec.md` at line 5 for `Kept` |
+| `no-delta` | `change-without-delta` in `proposal.md` at line 1 |
+
+#### Scenario: Unreadable delta
+- **WHEN** a change whose `specs/alpha/spec.md` holds the bytes `0xff 0xfe` is validated
+- **THEN** the result is a read error naming that `spec.md`
+
+### Requirement: Validation corpus
+The specs kernel's validation SHALL find nothing in this repository's
+living specs and archived delta specs. The archived changes numbered 001
+to 015, 018 and 019 predate delta specs and are the only archived changes
+without one; the others numbered up to 216 each have at least one.
+
+#### Scenario: Living specs validate
+- **WHEN** `validate_living_specs` reads this repository's `openspec/specs/`
+- **THEN** it gives no finding
+
+#### Scenario: Archived deltas validate
+- **WHEN** `validate_delta` checks every delta spec of the archived changes numbered 001 to 216 in `openspec/changes/archive/`
+- **THEN** it gives no finding, and the changes in that range without a delta spec are exactly 001 to 015, 018 and 019
+
+### Requirement: Delta merge
+`merge_delta(base, capability, delta)` SHALL return the living spec text
+that TypeScript's `mergeDelta` returns for the same base text, capability
+and parsed delta, byte for byte, or the `MergeError` of "Merge refusals".
+With no base, or a base that is only whitespace, it merges into
+`# <capability> Specification`, a `## Purpose` line followed directly by
+the delta's purpose or by `TBD - created by archiving change <capability>.
+Update Purpose after archive.`, and an empty `## Requirements` section.
+It splits the base at its first `## Requirements` heading outside code
+fences into the text before it, the heading line, the text before the
+first requirement header, the requirement blocks, and the text from the
+next `##` heading on. It then applies the renames, the removals (only
+when there is a base), the modifications and the additions, in that
+order. A rename rewrites the block's first line to
+`### Requirement: <to>`, a modification replaces the whole block, and an
+ADDED block equal to an existing block after both are trimmed changes
+nothing. The text is written back as the text before, the heading line,
+the text before the first header when it is not blank, each surviving
+block in its old place and each new block after them, joined by one
+blank line, then the text after. Runs of blank lines outside fences
+become one, and the text ends with one newline. A base with no
+Requirements heading keeps all of its text as given, a leading BOM
+included, followed by a new `## Requirements` heading.
+
+`merge_living_spec(base, capability, delta)` SHALL return the same text,
+or none when that text holds no requirement, as `mergeLivingSpec` does.
+Neither function touches the disk.
+
+#### Scenario: Merge cases
+- **WHEN** each case folder below, under `crates/kernel/specs/tests/fixtures/merge/cases/`, is merged with the capability `cap`, its `base.md` as the base or none when the file is absent, and its `delta.md` parsed by `parse_delta`
+- **THEN** `merge_delta` gives the text of the case's `merged.md`, and `merge_living_spec` gives the result as given:
+
+| Case | `merge_living_spec` |
+|---|---|
+| `ops` | the text of `merged.md` |
+| `new-purpose` | the text of `merged.md` |
+| `new-no-purpose` | the text of `merged.md` |
+| `new-removed-ignored` | the text of `merged.md` |
+| `same-added` | the text of `merged.md` |
+| `no-requirements-header` | the text of `merged.md` |
+| `fence` | the text of `merged.md` |
+| `emptied` | none |
+
+### Requirement: Merge refusals
+A delta that `merge_delta` cannot apply SHALL give a `MergeError`, whose
+`capability()` is the capability merged and whose `requirement()` is the
+requirement name the refusal names, or none for `InvalidRename`. Its
+`Display` writes TypeScript's `DeltaMergeError` message for the same
+refusal. The checks run in this order, and the first that fails is the
+error:
+
+- `InvalidRename { capability, line }`, for the delta's first invalid
+  rename line: ``<capability> RENAMED failed - entry "<line>" is not in the expected form. Write each rename as "- FROM: `### Requirement: X`" followed by "- TO: `### Requirement: Y`".``
+- `UnpairedRename { capability, side, requirement }`, for the first
+  unpaired rename: ``<capability> RENAMED failed for header "### Requirement: <requirement>" - no matching <other side>``, where the other side is `TO` for an unpaired FROM and `FROM` for an unpaired TO.
+- `DuplicateAdded { capability, requirement }`, for an ADDED name an
+  earlier ADDED block has: ``<capability> ADDED failed for header "### Requirement: <requirement>" - duplicate requirement in ADDED``
+- With no base, `ModifiedMissing` for the first MODIFIED name, then
+  `RenameWithoutBase { capability, requirement }` for the first rename's
+  FROM name: ``Cannot apply RENAMED: requirement "<requirement>" not found in base spec``
+- For each rename, `RenameSourceMissing { capability, requirement }`
+  when the spec has no FROM name: ``<capability> RENAMED failed for header "### Requirement: <requirement>" - source not found``,
+  then `RenameTargetExists { capability, requirement }` when it already
+  has the TO name: ``<capability> RENAMED failed for header "### Requirement: <requirement>" - target already exists``
+- With a base, `RemovedMissing { capability, requirement }` for each
+  REMOVED name the spec lacks: ``Cannot apply REMOVED: requirement "<requirement>" not found in base spec``
+- For each MODIFIED block, `ModifiedMissing { capability, requirement }`
+  when the spec lacks its name: ``Cannot apply MODIFIED: requirement "<requirement>" not found in base spec``,
+  then `ScenariosDropped { capability, requirement, scenarios }` when the
+  current block holds a scenario name more times than the new block, the
+  missing names in the current block's order: ``<capability> MODIFIED failed for header "### Requirement: <requirement>" - current spec contains scenario(s) not present in the modified block: "<a>", "<b>". Refresh the change spec before archiving to avoid dropping scenarios.``
+  A scenario name is read from each `####` line outside fences, without
+  the `####`, a closing hash run and a leading `Scenario:` in any case.
+- For each ADDED block, `AddedExists { capability, requirement }` when
+  the spec has a different block of that name: ``<capability> ADDED failed for header "### Requirement: <requirement>" - already exists``,
+  then `AddedNearMiss { capability, requirement }` when a name differs
+  from it only in letter case and whitespace runs: ``<capability> ADDED failed for header "### Requirement: <requirement>" - a requirement differing only in case or spacing already exists``
+
+`MergeError` derives `Debug`, `Clone`, `PartialEq`, `Eq` and
+`serde::Serialize`, and implements `std::error::Error`.
+
+#### Scenario: Refusal cases
+- **WHEN** each case folder below, under `crates/kernel/specs/tests/fixtures/merge/cases/`, is merged as "Merge cases" says
+- **THEN** `merge_delta` and `merge_living_spec` give the error as given, for the capability `cap`, and its `Display` equals the text of the case's `error.txt`:
+
+| Case | Error | Requirement |
+|---|---|---|
+| `invalid-rename` | `InvalidRename` with the line `- FROM: A` | none |
+| `unpaired-from` | `UnpairedRename`, side FROM | `A` |
+| `unpaired-to` | `UnpairedRename`, side TO | `A2` |
+| `duplicate-added` | `DuplicateAdded` | `N` |
+| `modified-without-base` | `ModifiedMissing` | `A` |
+| `rename-without-base` | `RenameWithoutBase` | `A` |
+| `rename-source-missing` | `RenameSourceMissing` | `Z` |
+| `rename-target-exists` | `RenameTargetExists` | `Two words` |
+| `removed-missing` | `RemovedMissing` | `Z` |
+| `modified-missing` | `ModifiedMissing` | `Z` |
+| `scenarios-dropped` | `ScenariosDropped` with the scenarios `S1`, `S2` | `Two words` |
+| `added-exists` | `AddedExists` | `A` |
+| `added-near-miss` | `AddedNearMiss` | `two  Words` |
+
+### Requirement: Change merge
+`merge_change(change_dir, specs_dir)` SHALL merge each delta spec of a
+change as TypeScript's `applyOpenSpecDeltas` does, and write nothing. It
+reads the `spec.md` of each folder directly under `change_dir/specs`,
+folders in byte order of their names, skipping a folder without a
+`spec.md` file, and merges it with `merge_living_spec` into the living
+spec at `specs_dir/<folder>/spec.md`, or none when that is not a file. It
+returns one `MergedSpec { capability, delta, text }` per delta spec, in
+that order: the folder name, the delta's joined path, and the merged text
+or none for a capability the change empties. A change with no `specs`
+folder gives none. A delta or living spec that cannot be read or is not
+UTF-8 is `MergeChangeError::Read` holding the `SpecsError` read error
+naming its path, and the first delta that cannot be applied is
+`MergeChangeError::Merge { path, error }`, with the delta's path and the
+`MergeError`.
+
+#### Scenario: Change merges
+- **WHEN** each change below, under `crates/kernel/specs/tests/fixtures/merge/validate/changes/`, is merged against `crates/kernel/specs/tests/fixtures/merge/validate/specs/`
+- **THEN** the result is as given, and each text equals `merge_living_spec` of the same living spec and delta:
+
+| Change | Result |
+|---|---|
+| `clean` | `alpha` with a text |
+| `emptied` | `beta` with none |
+| `fresh` | `gamma` with a text starting `# gamma Specification\n\n## Purpose\nGamma for the merged validation fixture.\n` |
+| `refused` | a merge error naming `specs/alpha/spec.md` under the change, with `ModifiedMissing` for `alpha` and `Missing` |
+
+#### Scenario: Change merge edges
+- **WHEN** each change below, written under a temporary folder, is merged against `crates/kernel/specs/tests/fixtures/merge/validate/specs/`
+- **THEN** the result is as given:
+
+| Change | Result |
+|---|---|
+| a change with no `specs` folder | no merged spec |
+| a change whose only delta folder `alpha` holds no `spec.md` | no merged spec |
+| a change whose `specs/alpha/spec.md` holds the bytes `0xff 0xfe` | a read error naming that `spec.md` |
+
+### Requirement: Merged spec validation
+`validate_merged_change(change_dir, specs_dir)` SHALL validate the merged
+result of a change, which replaces TypeScript's `merged-spec-check.ts`
+and its Node `openspec` run. It runs `validate_living_spec` on each text
+`merge_change` gives that is not none, and leaves out each finding the
+living spec already has: one whose code and requirement equal those of a
+finding `validate_living_spec` gives for the living spec at
+`specs_dir/<capability>/spec.md`, two absent requirements counting as
+equal. Each kept finding's `file` is the delta's path written by
+`Path::display`, and its `line` is the line of the first requirement
+header outside fences in the delta that names the finding's requirement,
+or 1. Each delta's findings are sorted as "Validation findings" says,
+deltas in `merge_change`'s order. It returns `merge_change`'s error when
+there is one.
+
+#### Scenario: Merged findings
+- **WHEN** each change below, under `crates/kernel/specs/tests/fixtures/merge/validate/changes/`, is validated against `crates/kernel/specs/tests/fixtures/merge/validate/specs/`
+- **THEN** its findings are as given, each file under the change folder:
+
+| Change | Findings |
+|---|---|
+| `clean` | none |
+| `added-flaw` | `requirement-without-scenario` in `specs/alpha/spec.md` at line 5 for `Bare` |
+| `renamed` | `requirement-without-scenario` in `specs/alpha/spec.md` at line 1 for `Renamed` |
+| `emptied` | none |
+| `fresh` | none |
+| `refused` | the merge error of "Change merges" |
+
+### Requirement: Archive parity cases
+The specs kernel's merge SHALL give, for each case of
+`tests/fixtures/openspec-diff/`, the result TypeScript osq's archive
+gives, compared with frozen copies under
+`crates/kernel/specs/tests/fixtures/merge/openspec-diff/`. Each copy holds
+the case's `case.json`, its `specs/` when it has one, the delta specs of
+its changes under `changes/<change>/specs/`, and either `expected/`, the
+living specs TypeScript's `applyOpenSpecDeltas` wrote, or `error.txt`,
+the message of the `DeltaMergeError` it threw. The tests never run
+`node`, `openspec` or `osq`.
+
+#### Scenario: Differential cases
+- **WHEN** each case below has its changes merged with `merge_change` in byte order of their folder names, starting from a copy of its `specs/` or from no living spec, and each merged text is written to that copy, or its folder removed when the text is none, before the next change
+- **THEN** the result is as given:
+
+| Case | Result |
+|---|---|
+| `added` | the copy equals `expected/`, file for file |
+| `given-and` | the copy equals `expected/`, file for file |
+| `modified` | the copy equals `expected/`, file for file |
+| `new-capability` | the copy equals `expected/`, file for file |
+| `removed` | the copy equals `expected/`, file for file |
+| `renamed` | the copy equals `expected/`, file for file |
+| `second-change` | the copy equals `expected/`, file for file |
+| `bare-rename` | a merge error whose `Display` equals `error.txt` |
+| `dropped-scenario` | a merge error whose `Display` equals `error.txt` |
+| `duplicate-added` | a merge error whose `Display` equals `error.txt` |
+
+### Requirement: Archive replay
+Replaying this repository's archive with `merge_change` SHALL give its
+living specs. The replay starts from no living spec and merges, in this
+order: the archived change folders under `openspec/changes/archive/`
+whose `.run/events/change.jsonl` holds no `archived` event with a string
+`timestamp`, in byte order of their names; then the other archived
+folders, by the `timestamp` of the last such event, then by name; then
+each folder directly under `openspec/changes/` other than `archive` that
+holds `.run/archive-specs.json`, in byte order of names, because archive
+has applied its deltas for its change-level verify. Lines of the events
+file that are not JSON objects are ignored. Every capability that has a
+folder under `openspec/specs/` or a delta in a replayed change is
+checked: one whose replay ends with none has no living `spec.md`, and
+every other one's living `spec.md` equals its replay byte for byte. The
+living specs of `cli-foundation`, `metrics-and-reporting`,
+`spec-lint-and-approve`, `status-inspection`, `watcher-and-harness` and
+`web-inspection` predate the merge's Purpose rule and keep one blank line
+after `## Purpose`; each of them equals its replay only once the first
+`## Purpose\n\n` is read as `## Purpose\n`, and differs before.
+
+#### Scenario: Living specs replay
+- **WHEN** the archive and the changes being archived in this repository are replayed
+- **THEN** every checked capability matches its living spec, and the six capabilities named above are exactly those that need the Purpose blank line removed
+
+### Requirement: OpenSpec validate parity
+The specs kernel's validation SHALL give the same pass or fail as
+`openspec validate --strict --json --no-interactive` on every item below,
+except the fixed differences of "Validate differences". The OpenSpec CLI is
+the one `OSQ_OPENSPEC_BIN` names, or `node_modules/.bin/openspec` under the
+repository root when that variable is unset or empty, run with
+`OPENSPEC_TELEMETRY=0` in a temporary project. An item passes in OpenSpec
+when the command exits 0. A missing CLI fails the test, naming the path.
+
+- Each living spec under `openspec/specs/`: OpenSpec validates a copy of
+  the folder with `--specs`, one item per capability, and the Rust side
+  passes when `validate_living_spec` gives no finding.
+- Each archived change under `openspec/changes/archive/`, in the landing
+  order of "Archive replay", against the living specs that replaying the
+  changes before it gives: OpenSpec validates the change with
+  `<name> --type change`, in a project holding that replay as
+  `openspec/specs/` and the change's `proposal.md`, `tasks.md` and
+  `specs/` under `openspec/changes/<name>/`. The Rust side passes when
+  `validate_change` gives no finding and `validate_merged_change` gives no
+  finding and no error, against the same replay. The replay then merges
+  the change with `merge_change`.
+- Each living spec fixture under
+  `crates/kernel/specs/tests/fixtures/validate/living/`, as the only spec
+  of a project, named after its file stem and validated with
+  `<stem> --type spec`. The Rust side runs `validate_living_spec`.
+- Each delta spec fixture under
+  `crates/kernel/specs/tests/fixtures/validate/delta/`, as
+  `specs/alpha/spec.md` of a change `parity` with no living spec. The Rust
+  side runs `validate_delta`.
+- Each change under
+  `crates/kernel/specs/tests/fixtures/validate/targets/changes/`, with
+  `targets/specs/` as the living specs. The Rust side runs
+  `validate_change` and `validate_merged_change` as for an archived change.
+
+A change written to a temporary project without a `proposal.md` gets one
+holding `# Parity fixture\n`, because OpenSpec reads a change only through
+its proposal. The test prints every item whose results differ, not only
+the first. The validate and merge fixture tests are its fast
+counterparts.
+
+#### Scenario: Validate differences
+- **WHEN** the items of "OpenSpec validate parity" are validated by both
+- **THEN** every item gives the same result in both, except exactly these, each of which differs as given:
+
+| Item | Rust | OpenSpec | Why |
+|---|---|---|---|
+| `fixtures/validate/living/valid.md` | pass | fail | OpenSpec warns that a Purpose under 50 characters is too brief, which ADR 026 does not port |
+| `fixtures/validate/delta/empty-delta-section.md` | fail | pass | ADR 026 makes every delta section well formed |
+| `fixtures/validate/delta/invalid-rename.md` | fail | pass | ADR 026 makes every delta section well formed |
+| `fixtures/validate/delta/unknown-delta-section.md` | fail | pass | ADR 026 allows only the four delta sections |
+| `fixtures/validate/targets/changes/unknown` | fail | pass | OpenSpec checks targets only at archive, and ADR 026 checks them at validate |
+
+### Requirement: OpenSpec archive parity
+The specs kernel's merge SHALL give the result `openspec archive` gives on
+each case of `tests/fixtures/openspec-diff/`, as
+`tests/openspec-differential.test.ts` checks for TypeScript. It uses the
+OpenSpec CLI of "OpenSpec validate parity". For each case it builds two
+temporary projects from the case: `templates/openspec/config.yaml` and
+`templates/openspec/schemas/` under `openspec/`, the case's `specs/` as
+`openspec/specs/` when it has one, and its `changes/` as
+`openspec/changes/`. In one project OpenSpec runs `archive <change> --yes
+--json`. In the other, `merge_change` merges each change in byte order of
+names into `openspec/specs/`, writing each text or removing an emptied
+capability's folder before the next. The case's `case.json` names what to
+expect:
+
+- `identical`: OpenSpec validates each change with `validate <change>
+  --type change --strict --json --no-interactive` and archives each, both
+  exiting 0, and the two `openspec/specs/` trees are equal, path for path
+  and byte for byte.
+- `both-refuse`: OpenSpec's archive of the first change exits non-zero
+  with a `status` entry whose `code` is `archive_spec_update_failed`, the
+  Rust merge gives a `MergeChangeError::Merge`, and both trees still equal
+  the case's `specs/`.
+- `osq-refuses`: the Rust merge gives a `MergeChangeError::Merge` whose
+  `MergeError` message holds `### Requirement:`, OpenSpec's archive exits
+  0, and no living spec it leaves holds `### Requirement: <name>` for any
+  `TO:` name of the case's delta specs.
+
+The archive parity cases are its fast counterpart.
+
+#### Scenario: Archive cases match OpenSpec
+- **WHEN** each case under `tests/fixtures/openspec-diff/` is archived by both
+- **THEN** each case gives the result its `case.json` names, and the cases checked are exactly the folders there

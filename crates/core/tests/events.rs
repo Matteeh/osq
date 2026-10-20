@@ -40,6 +40,10 @@ const TYPE_LINES: &[(&str, VariantCheck)] = &[
         |event| matches!(event, Event::Exited(_)),
     ),
     (
+        r#"{"type":"exit_continued","timestamp":"2026-10-17T10:00:00.000Z","data":{"exitCode":1}}"#,
+        |event| matches!(event, Event::ExitContinued(_)),
+    ),
+    (
         r#"{"type":"measures","timestamp":"2026-10-17T10:00:00.000Z","data":{"phase":"start","scopeFiles":1,"scopeLines":2,"repoFiles":3,"repoLines":4,"importFanIn":0,"proposalWords":5,"taskWords":6,"deltaRequirements":1,"deltaScenarios":2}}"#,
         |event| matches!(event, Event::Measures(_)),
     ),

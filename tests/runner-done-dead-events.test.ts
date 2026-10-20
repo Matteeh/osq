@@ -101,7 +101,7 @@ const DEAD_SCENARIOS: readonly DeadScenario[] = [
   {
     name: 'crashed',
     reason: 'crashed',
-    behavior: { exitCode: 7, error: 'boom' },
+    behavior: { exitCode: 7, error: 'boom', writeResult: false },
   },
   {
     name: 'timeout',

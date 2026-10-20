@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9867bb428e0364008b49cadf79288d98415b4e267a9060b78d48409d0b35f948"
+build_stamp: "4d113780"
+project_commit: "b9dc1444"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs-write.ts":"sha256:6b38c2339e1f41fd7e1ce0ffba17a4e680842707d2a14e4d38cd25b5401aacc0","tests/vcs-patch-raw-paths.test.ts":"sha256:1de295af65c2f7fa5db964a310557b540dfe8777215bc281f74626168a3ab4f7"}
+---
+2026-10-19T20:33:59.954Z

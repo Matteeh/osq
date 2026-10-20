@@ -1,0 +1,1 @@
+alpha MODIFIED failed for header "### Requirement: Alpha" - current spec contains scenario(s) not present in the modified block: "Alpha repeats". Refresh the change spec before archiving to avoid dropping scenarios.

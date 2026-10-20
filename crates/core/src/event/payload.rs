@@ -234,6 +234,15 @@ pub struct ExitedData {
     pub elapsed_seconds: Option<serde_json::Number>,
 }
 
+/// Payload of an `exit_continued` event: the agent exited non-zero after
+/// writing its result file, so the watcher judged the attempt by its checks.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExitContinuedData {
+    /// The agent's exit code.
+    pub exit_code: i64,
+}
+
 /// Payload of a `measures` event.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

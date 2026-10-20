@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f880617b019deceeff596bbbab10617a5979bfddc12d559852064c9def969955"
+build_stamp: "d12d0cdb"
+project_commit: "7f7b4329"
+exit_code: 0
+scope_files: {"crates/kernel/specs/src/lib.rs":"sha256:ccc4629368bd48c490b6de3e906385d846a6d3392548c6beffe9e9cbb609e7f2","crates/kernel/specs/src/merge/change.rs":"sha256:f23bce33c08e261fb8db8fffc7eb6dbfab406e1c935a4c82c40f42e2fc5df7d9","crates/kernel/specs/src/merge/mod.rs":"sha256:17c630e2c7c9ea8bf8aee93991551c4fe81f6ec2d11ef730a5253bf5655eaaa6","crates/kernel/specs/src/validate/change.rs":"sha256:3defb7df9cb4102a5c7d676fd096cf1a19c9278a687916ea46ba52e3c7c2d71c","crates/kernel/specs/src/validate/merged.rs":"sha256:bb197b0222a5f0dd521897e1b97a044ae0177194232bb24adb8cbc9edb4c3d34","crates/kernel/specs/src/validate/mod.rs":"sha256:f6b3bb71fa5415b35c15a20a32e231c6bfbc8e4ddc361c201c33014b078c06bf","crates/kernel/specs/tests/merging_changes.rs":"sha256:26e131ae8d3d468d8c6a5978ca7b0928bcfcb2fb0e895894dbec77e6cfeddd30","crates/kernel/specs/tests/merging_changes_differential.rs":"sha256:8a994b793040c7702dda0b25898b4096647e70972c179aad607cec151ddef928","crates/kernel/specs/tests/validating_merged.rs":"sha256:5707cf93b648d9287009db78a721a2f619dbb59315a5e09f72131e668fc51808"}
+---
+2026-10-18T21:11:53.712Z

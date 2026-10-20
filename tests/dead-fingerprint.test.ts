@@ -203,7 +203,7 @@ process.exit(0);
 
   it('normalizes the project root when the agent itself fails', async () => {
     await approveSpec(tmpDir, '001', DEFAULT_CONFIG);
-    adapter.setBehavior({ exitCode: 7, error: `boom at ${tmpDir}` });
+    adapter.setBehavior({ exitCode: 7, error: `boom at ${tmpDir}`, writeResult: false });
 
     const result = await runTask(tmpDir, specFolder, '1', DEFAULT_CONFIG, adapter);
     assert.equal(result.reason, 'crashed');

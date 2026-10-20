@@ -1,0 +1,47 @@
+---
+scope_resolver: 2
+scope_hash: sha256:469711b8330ce94a6d9236274c0bf61974ff40858fcc61cba428c3c51e5615b8
+build_stamp: d12d0cdb
+project_commit: bfcd6043
+exit_code: 0
+scope_files:
+  crates/kernel/specs/src/lib.rs: sha256:38090672da3da33a1b85b51ec1c478b49410e1de3a6e87dc31b64085ca7888e2
+  crates/kernel/specs/src/validate/finding.rs: sha256:c40ea27dbe1299607350d66ce8cdf66069f3a09ad4c4313871e12394584d674d
+  crates/kernel/specs/src/validate/living.rs: sha256:2977dcec86101f63796f1c67e7348c2cb2115a93ced5207cc821fc6f949ab148
+  crates/kernel/specs/src/validate/mod.rs: sha256:2532f7c540730e585227de2a19a0c29678c118fb6b909f72a83a89baab273927
+  crates/kernel/specs/src/validate/outline.rs: sha256:9a58cd5f38532dad8bd8de78a61a5f7daabe7e809e6c5b3d65d18e6cb2825aaa
+  crates/kernel/specs/src/validate/requirement.rs: sha256:031882b1387be7d99bb70cffd9d7fb23750542f3eddd701c7b7a1a8084087418
+  crates/kernel/specs/tests/fixtures/validate/delta/conflicting-delta.md: sha256:9e311f594dcfc082c8f9ea2db65901c1db608e3434e20d9769315eaf0893fc83
+  crates/kernel/specs/tests/fixtures/validate/delta/duplicate-requirement.md: sha256:ad06b9c52349b2d78626a97573d37e9980ed949c911e08f3aaf79178258f92b2
+  crates/kernel/specs/tests/fixtures/validate/delta/empty-delta-section.md: sha256:1daed895a81a44025a9aa639bf24b18b381e1dca1bda75fde894996951b50949
+  crates/kernel/specs/tests/fixtures/validate/delta/invalid-rename.md: sha256:be3c671f0e761115a9c5744d0ab4634b762f3b905a12ad4ce4986107b718a5cd
+  crates/kernel/specs/tests/fixtures/validate/delta/missing-delta-sections.md: sha256:1165d1c35e5301ba13f71c121668e05b74c279ef6c14e1746924b578e4a301af
+  crates/kernel/specs/tests/fixtures/validate/delta/requirement-outside-section.md: sha256:17f9d8831180e9b6a9eb0fe87d040c686d61f2b4c792cc8dcbb022c9ee317476
+  crates/kernel/specs/tests/fixtures/validate/delta/requirement-without-scenario.md: sha256:a4a9b87a3d1710227dc1d87bf4d9fe713afbee957541c11c66831f9f973b00fa
+  crates/kernel/specs/tests/fixtures/validate/delta/unknown-delta-section.md: sha256:829800fb5e115b0e78bba3f6026f5a27ef58016453b66b08694e5a7f7435e94f
+  crates/kernel/specs/tests/fixtures/validate/delta/unpaired-rename.md: sha256:faf3243a9336f9e731e9ecfb0f4c15b6b14724c454f7710f28b10dc17a0a4adb
+  crates/kernel/specs/tests/fixtures/validate/delta/valid.md: sha256:14a9a121c39a28de0a9c2606cebdf78946f624aab5d9db87eb62365b55bcc6ff
+  crates/kernel/specs/tests/fixtures/validate/living/delta-section-in-living-spec.md: sha256:65c6626c3c901522312eec6ede412391e75fe46ef5a91ecc664982a414518467
+  crates/kernel/specs/tests/fixtures/validate/living/duplicate-requirement.md: sha256:5e3ea1dc5f5f3221b7f11061c43eef7b409fda62b902e23f6e2f3674762f9da4
+  crates/kernel/specs/tests/fixtures/validate/living/duplicate-scenario.md: sha256:4c47e4126f7e83796f3107ca86eb7f3fbf399e9c1340510ebd389721bb72ad3d
+  crates/kernel/specs/tests/fixtures/validate/living/missing-purpose.md: sha256:4a8e2c074a1e85050877959e80f69a5c765d6aa2819df61de30ffe6d262dd494
+  crates/kernel/specs/tests/fixtures/validate/living/missing-requirements.md: sha256:1699cfea5547573dbd29b4cabf343c96a036a5cb0a7a90ae156ec082868559ea
+  crates/kernel/specs/tests/fixtures/validate/living/requirement-outside-section.md: sha256:d83847877b903c8a124d704e1b81de6f9a9554181a97efedd0ec4a89b9f8f4ed
+  crates/kernel/specs/tests/fixtures/validate/living/requirement-without-scenario.md: sha256:0f8a4e92539df04f20836d626ee486e6538bf17f88e57c56874bcc4df58bcd95
+  crates/kernel/specs/tests/fixtures/validate/living/requirement-without-shall.md: sha256:46c7cecfe35746b83d7631ca752c075289a20d53070e3bbc584f996c838fe50e
+  crates/kernel/specs/tests/fixtures/validate/living/scenario-without-then.md: sha256:192a59be99c822aa07f3ae355cf7e68c491cb471682bc3fbddf5345a008bbdc3
+  crates/kernel/specs/tests/fixtures/validate/living/scenario-without-when.md: sha256:e8baf0183d2c59c441be6361b9a278a12430ba3c42638fdd7014371e43ca8dba
+  crates/kernel/specs/tests/fixtures/validate/living/valid.md: sha256:d172ae0f0a2781ef8cbc29ffc32b3a3e8302b11f23a8850d3c1194cabbc77245
+  crates/kernel/specs/tests/fixtures/validate/targets/changes/known/specs/alpha/spec.md: sha256:59cc704f052f8bed5aaa2f08bd2a144e2ddcb265af34515c2b3fd9c811dabf91
+  crates/kernel/specs/tests/fixtures/validate/targets/changes/known/specs/gamma/spec.md: sha256:69bd3e3c412fcb71a76843f45b15cda3d79a34af4aff19e953612917f97648af
+  crates/kernel/specs/tests/fixtures/validate/targets/changes/no-delta/proposal.md: sha256:ede51e001ed97bfa5e1e018cbc79fd0a8e324e30dc87b12c7f2c7c48e51032d0
+  crates/kernel/specs/tests/fixtures/validate/targets/changes/unknown/specs/alpha/spec.md: sha256:9f64531843fc777b4c91679792337fcddf02be0b7f15816365fa23bad3985e31
+  crates/kernel/specs/tests/fixtures/validate/targets/changes/unknown/specs/beta/spec.md: sha256:339c32850186b1c9c5ce4202407f1b5d97b598c81e47bb929a90df88e066094b
+  crates/kernel/specs/tests/fixtures/validate/targets/specs/alpha/spec.md: sha256:bb8041de84e74e0551533da6812f7d43df72f301e76c6f3ae27fdbd0cf68dc19
+  crates/kernel/specs/tests/validating_living.rs: sha256:a5ffa82ea51a83de9484ff2fcbe7e49372c59591fe8f364c73f49c4d411d22ba
+  crates/kernel/specs/tests/validating_living_rules.rs: sha256:a0dc1fa1252f95991c1628013c495d03f3de4ef5c34bc0b9d3e1a17b5f4d97b5
+original_scope_hash: sha256:90f5d7ffe61c9968586ba2db36c2b5ef3ebeaa500c23eae72322f9d622ae2175
+recertified_at: 2026-10-18T20:01:32.494Z
+recertification_count: 1
+---
+2026-10-18T19:37:14.062Z

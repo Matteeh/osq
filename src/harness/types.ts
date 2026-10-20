@@ -19,6 +19,7 @@ export type HarnessEventType =
   | 'verify_ran'
   | 'result_written'
   | 'exited'
+  | 'exit_continued'
   | 'measures'
   | 'dependencies_added'
   | 'done'
@@ -120,6 +121,14 @@ export interface ExitedEventData {
   signal?: string;
   timedOut?: boolean;
   elapsedSeconds?: number;
+}
+
+/**
+ * Payload of an `exit_continued` event: the agent exited non-zero after writing
+ * its result file, so the watcher judges the task by its own checks.
+ */
+export interface ExitContinuedEventData {
+  exitCode: number;
 }
 
 /**
@@ -471,6 +480,7 @@ export interface OsqEventData {
   verify_ran: VerifyRanEventData;
   result_written: ResultWrittenEventData;
   exited: ExitedEventData;
+  exit_continued: ExitContinuedEventData;
   measures: MeasuresEventData;
   dependencies_added: DependenciesAddedEventData;
   done: DoneEventData;

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:42f42445f529a7b5e7dd7d09f8417556afb761a8ccaa4ce219caa1f4969918bd"
+build_stamp: "026f4c2c"
+project_commit: "5268ae20"
+exit_code: 0
+scope_files: {"crates/kernel/specs/Cargo.toml":"sha256:2144469e1c25d7003a5c1d1080183ee51feda348b47604573448e124dab65f28","crates/kernel/specs/tests/openspec_archive_parity_corpus.rs":"sha256:3e89e61646550e2b2aedeffaf2c7b6e816b4f90339997aa08a1d732e94b57702"}
+---
+2026-10-19T15:44:23.405Z

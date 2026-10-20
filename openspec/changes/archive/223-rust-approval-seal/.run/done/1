@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b829569d31b438f7bda1c7f3547592fbd7d7b37d1026b39efe5156c7187ce87e"
+build_stamp: "1cea78d4"
+project_commit: "3095c67a"
+exit_code: 0
+scope_files: {"Cargo.lock":"sha256:b66160f4cd2d86cba27bb621a87441004d550a99f3a622d51de33ee02707d695","Cargo.toml":"sha256:8a108a7228a6efcd5ad564f1ca93dbcd0546f86bcf5077cec6e49c6038bb5ec5","crates/core/Cargo.toml":"sha256:889240752e80a1b477560e3b9f3862fb97fc929b8c0fabd465775e628f4031b3","crates/core/src/lib.rs":"sha256:4fa8038a13b3ec83130e6e522ebba5c2cf93582a397c309c1cf106bd0ead9464","crates/core/src/seal.rs":"sha256:9fd60c7bc446f7be6ff77b7f242ac297971aa97e2583d37ad97de99102f1dbc2","crates/core/tests/no_io.rs":"sha256:f5182f3e20ea7f73a06747eb3df0c4e74ca5db7b69f9c31e3efd1a89d398cf25","crates/core/tests/seal_compute.rs":"sha256:8e4a35d2f8a32d249f722d91a458546712c363278247357710a17a13cdf1d950"}
+---
+2026-10-19T21:23:43.900Z
