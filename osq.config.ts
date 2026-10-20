@@ -1,7 +1,7 @@
 import { defineConfig } from "./src/index.js";
 
 export default defineConfig({
-  harness: process.env.OSQ_HARNESS || "opencode",
+  harness: process.env.OSQ_HARNESS || "pi",
   maxConcurrency: 1,
   bannedWords: [{ word: "skipped", paths: ["src/**"] }],
   gates: {
