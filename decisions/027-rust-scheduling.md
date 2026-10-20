@@ -4,6 +4,8 @@ applies_to: [group:rust]
 rule: A pure rule in core starts each approved change whose dependencies are done and whose approved scopes overlap nothing running; changes land one at a time.
 checks:
   - tests/rust-adrs.test.ts
+  - crates/core/tests/schedule.rs
+  - crates/core/tests/schedule_props.rs
 ---
 # 027. Rust scheduling, approved changes in parallel without shared files
 

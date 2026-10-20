@@ -61,7 +61,11 @@ const ROWS: readonly RustAdrRow[] = [
   {
     number: '027',
     file: '027-rust-scheduling.md',
-    checks: ['tests/rust-adrs.test.ts'],
+    checks: [
+      'tests/rust-adrs.test.ts',
+      'crates/core/tests/schedule.rs',
+      'crates/core/tests/schedule_props.rs',
+    ],
   },
 ];
 

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:82a18fa3d46a80dea2d3998a91015f03cad5f576e61684eae6654f13453818f0"
+build_stamp: "c6f8a8da"
+project_commit: "7c6a0ffe"
+exit_code: 0
+scope_files: {"crates/core/src/lib.rs":"sha256:006a64ac8f857698f64d59c17bb4f4442133f14fb820cbfcc9ab598cafc9f0fb","crates/core/src/schedule.rs":"sha256:bc333f4846f1710b38a2e9cbd950e5c60db2e372373d35712cf63c9a7f60139d","crates/core/tests/schedule.rs":"sha256:664eb98ae089292240185ddcfe2dae416abf7034dc244c4d43f5c0dae8b33997","crates/core/tests/schedule_props.rs":"sha256:cd626785066568f442d6cac6b01cf6177fca51bb237107313acddd7f29db8b70"}
+---
+2026-10-20T20:45:12.166Z
