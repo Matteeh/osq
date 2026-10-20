@@ -2,6 +2,7 @@
 //!
 //! A kernel crate depends only on core and other kernel crates (ADR 022).
 
+mod decisions;
 mod document;
 mod markdown;
 mod merge;
@@ -9,6 +10,10 @@ mod owners;
 mod read;
 mod validate;
 
+pub use decisions::{
+    Adr, AppliesTo, DecisionCode, DecisionFinding, DecisionProblems, DecisionRecords,
+    read_decisions, validate_decisions,
+};
 pub use document::{
     ChecklistItem, Frontmatter, Proposal, Sidecar, SidecarError, SyntaxError, TaskFile,
     VerifyStarts, parse_frontmatter, parse_proposal, parse_sidecar, parse_task_file,

@@ -1,0 +1,102 @@
+---
+scope_resolver: 2
+scope_hash: sha256:339f8c7b5d0f7ab675b7969ce75508c6098d057cc2e1ff55b7b51aa97fcd221f
+build_stamp: f0b66360
+project_commit: d4426ac4
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:9ab4203d384a6e5b905f5de8ca3099c7cfd7c5120ca7b0ef4fc13f53b39ac6b3
+  crates/kernel/specs/Cargo.toml: sha256:3f778f710273ee37ebbf95f8b194110dd9b2def37b2fe136275034ae632dc2e9
+  crates/kernel/specs/src/decisions/mod.rs: sha256:25bc8a77e05b7f86a9722e9d353a587fa7da8b69fdae66ed3fe6b6f9a4e78ae2
+  crates/kernel/specs/src/decisions/parse.rs: sha256:db736a0254ea653269b512d0d0d6ae35e4fb62ccd32b9d0315effe5df29ecd47
+  crates/kernel/specs/src/decisions/validate.rs: sha256:7d0b8430ceb0af1e602ff151bed78914043e95ab52c3a7214aad1cd094542ce2
+  crates/kernel/specs/src/lib.rs: sha256:8b7945653147130e9baeab8a7cab592616598562a7990662be4a80016b1febaa
+  crates/kernel/specs/tests/fixtures/decisions/decisions/001-full.md: sha256:7661094d657cbcecc6572e2c230a62c213ac34af1536cd58fb18af36c530bff5
+  crates/kernel/specs/tests/fixtures/decisions/decisions/002-superseded.md: sha256:7e74d3792ac1e343fceac5f1acd54f07da3a70728f6db36605f183b8e47f3a39
+  crates/kernel/specs/tests/fixtures/decisions/decisions/003-no-frontmatter.md: sha256:37099287d207634c2d7c51b45a36ad848b93a130c14cd2db2f6e7ffc851896d4
+  crates/kernel/specs/tests/fixtures/decisions/decisions/005-bad-status.md: sha256:4540bbaade0289d91690cf93d998ce231437927429b7abf4b4ae82318ed985c4
+  crates/kernel/specs/tests/fixtures/decisions/decisions/006-warnings.md: sha256:d8a2edd3bc464d6143872020e8b965cd098c967b863d6e3e4851b2580ad168ee
+  crates/kernel/specs/tests/fixtures/decisions/decisions/007-multiline.md: sha256:c134ba8476e7c8be75a36b50bfea7f283e03d010106498505824ba0caa8f7197
+  crates/kernel/specs/tests/fixtures/decisions/decisions/008-long.md: sha256:7b59e37b2537a1c28c8e61e6ec5caba0df0c231d903c2c53db537fe56cdfe6e7
+  crates/kernel/specs/tests/fixtures/decisions/decisions/009-superseded-missing.md: sha256:7efab8b3f02883efdccd2e8036ac3ce50332d5f5d7350d0007e41e0adef4978e
+  crates/kernel/specs/tests/fixtures/decisions/decisions/010-superseded-unknown.md: sha256:7eed448edb340fd8fed48926e086390e14890bd4cd3eb8eb0068fedfa1b1e94e
+  crates/kernel/specs/tests/fixtures/decisions/decisions/011-notes.txt: sha256:6fdc5810fe36092cea4e28d652b7d8cdb828192ac07cfdf4d517ef9bf6fcf1bc
+  crates/kernel/specs/tests/fixtures/decisions/decisions/04-malformed.md: sha256:62c59768de0bff10e808ad90f58bd3aa4fc0156cbae7ab8fb768eccc37151199
+  crates/kernel/specs/tests/fixtures/decisions/decisions/2-short.md: sha256:0204ad011459903ef4d2ec1d299fb6f72cae8243ca5a5eee724766fb22e8a7f7
+  crates/kernel/specs/tests/fixtures/decisions/decisions/README.md: sha256:84c14fb535899fbd38d163917d03805b70d5d3181c5e947395d61a98ac340183
+  crates/kernel/specs/tests/fixtures/decisions/decisions/draft.md: sha256:29292490b9052c0e4d1e038c9fa4aa6a94a3d0f1df077ad0e90c43498c3fc5d0
+  crates/kernel/specs/tests/fixtures/decisions/openspec/changes/010-new/specs/beta/osq.yml: sha256:99fb4adc81b9f48d9a29bc3c274cd9eca2ad839591326d6aa8d82f77e20c8c28
+  crates/kernel/specs/tests/fixtures/decisions/openspec/changes/010-new/specs/gamma/osq.yml: sha256:99fb4adc81b9f48d9a29bc3c274cd9eca2ad839591326d6aa8d82f77e20c8c28
+  crates/kernel/specs/tests/fixtures/decisions/openspec/changes/_draft/specs/zeta/osq.yml: sha256:99fb4adc81b9f48d9a29bc3c274cd9eca2ad839591326d6aa8d82f77e20c8c28
+  crates/kernel/specs/tests/fixtures/decisions/openspec/changes/archive/001-old/specs/omega/osq.yml: sha256:99fb4adc81b9f48d9a29bc3c274cd9eca2ad839591326d6aa8d82f77e20c8c28
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/alpha/osq.yml: sha256:99fb4adc81b9f48d9a29bc3c274cd9eca2ad839591326d6aa8d82f77e20c8c28
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/alpha/spec.md: sha256:a6098732ccd311fb1f4cf46a2e05389ac24f7207f9be513a0d1d423d8109b2c7
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/beta/osq.yml: sha256:7a24c9096aa55f09611ce333c89ff8b444afd6a5a2e4aa4c9a99bdbae0386f99
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/beta/spec.md: sha256:7bb1347a5ed27cba09c239e19bc971d2ca4848c7b0b427ac540fcd80ae2fb11c
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/delta/osq.yml: sha256:ca03f97eae29ce1f201866fbff05d71a806330ccfadda5a16328323d97c37c3a
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/delta/spec.md: sha256:05945bf34a0c771dd8c98889dec027f78dff6305577b4d4e530c435758d997a8
+  crates/kernel/specs/tests/fixtures/decisions/openspec/specs/gamma/osq.yml: sha256:7a24c9096aa55f09611ce333c89ff8b444afd6a5a2e4aa4c9a99bdbae0386f99
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/001-use-jiti-for-runtime-config-loading.md: sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/002-feature-doc-delta-application.md: sha256:8070235e1d50895e037f04a22ff61a444fee9554747adc749db8930318cc58b7
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/003-git-strategy.md: sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/004-pinned-openspec-validator.md: sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/005-openspec-validator-peer-range.md: sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/006-deterministic-core.md: sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/007-role-environments.md: sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/008-sqlite-read-index.md: sha256:6092cd51f69465f5761f730d7b7de20357d5a4356215b5dfd62f90ffbc498f3e
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/009-loopback-write-actions.md: sha256:5ade4f4c07f87a722b1e17ddee0fbddb317969d4c126db038eb0001ae7fac043
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/010-validator-role.md: sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/011-traceability-trial.md: sha256:7b7d08d211eef9b47c74a528e06aaa2a4b9f6431ed69d435a047082e8649d095
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/012-watch-service.md: sha256:3f07a91207ad5ee8df0cbb5ec3b9eba48a30855a86e74b33b049355e5e65781d
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/013-remote-access.md: sha256:cb223b6fb0c098abbb7296954c4bd583de652381edc9579fd8f2a1b68765cae6
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/014-server-mode.md: sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/015-mcp-transport.md: sha256:ab4cd86f5188fbe454b09290b68fb35e6b885fb51dfb11d8d1ec27a903cb6765
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/016-capability-slices.md: sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/017-language-support.md: sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/018-steering-planner.md: sha256:8266cae323ea058bd259e11bcc0ce2501b6785042dc6c61d33346a4f2306b5dd
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/019-tapped-planner.md: sha256:10cd27115c6de698434e6c092bba4cbc9fecfb7977a820fa292faf2b4c104711
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/020-dashboard-writing.md: sha256:832dbc133b95c14cf6b3a8d4a71178688bb108376632e762192cba3af1b3f8c0
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/021-autopilot.md: sha256:8b137bf59cf7427ef6653b30990c2a03d8c3c4937e8c3298ec674b4b6cc6ee23
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/022-rust-feature-crates.md: sha256:1538605262ef642ef7835a2691ff9c4d45475477cad45a5e4a3ed5db7816d7ef
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/023-rust-code-style.md: sha256:48fcc891224ce6fbe0f003e4621faf7ec58e321046b53e0eda5100828cc4d39c
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/024-rust-link-enforcement.md: sha256:c8db858c4f8a3461d44677c310a130608b4f84564cf1b3d5078d745b14c944a2
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/025-rust-on-disk-format.md: sha256:6fa66cf8ee594b20ce3774112565de4dd1ab275c414d1d035f847c49afab22ea
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/026-openspec-in-rust.md: sha256:8ccbfb725b7514b5fcad04b509ef2674da919a4e452da214b400932aeed6d7d0
+  crates/kernel/specs/tests/fixtures/repo_decisions/decisions/README.md: sha256:1502c4ae1d775a8a38cbce3bc245c138c4ad60e171796de3c40b3d0e3c292e57
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/cli-foundation/osq.yml: sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/cli-foundation/spec.md: sha256:69aaf6a8a07dbafcba3a48c51d3895ecc1c5556eed5a3063b82a290e0209ee5a
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/docs/osq.yml: sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/docs/spec.md: sha256:8c11aa31eeaf4c5cfc4cfc6ed09c8e4a7f8668b82e96405b496e5fb271fb05db
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/languages/osq.yml: sha256:a07641a06797ee49f22916c4b64218e124f4d50187a894c3386f4fa35b13b2ec
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/languages/spec.md: sha256:acaca22d9a4207e500c27ca811308aa770a6563229b8f39083ee1b64476d5c7f
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/metrics-and-reporting/osq.yml: sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/metrics-and-reporting/spec.md: sha256:cbac21d3b3c61dc3e1d9a1f24dc33ced6f5980a70a4492ac9ded49c5637189e0
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-core/osq.yml: sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-core/spec.md: sha256:e9ca13beafb853eac0aff28dee3d9529da264f0d5770cb634e9171f329e7ed08
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-linter/osq.yml: sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-linter/spec.md: sha256:a9d0a61e15d4c66fafd933fd066fd017e54ce5bd0d22124b2a2b836bafbd9e3c
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-specs/osq.yml: sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-specs/spec.md: sha256:1953d09532868c212d4817325448c5c09819e0b5591aa2f3a99eaee1ccd69ad9
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-storage/osq.yml: sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/rust-storage/spec.md: sha256:0bbfe04e664fce5e2e71ff6e7fd8e42ae8accb0c387cc6f5c9819a0e06cfc6c9
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/spec-lint-and-approve/osq.yml: sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/spec-lint-and-approve/spec.md: sha256:0b36391be80f69eba3a16bf65b7790beb94a9d01f481559f161beb46ede2ce6a
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/status-inspection/osq.yml: sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/status-inspection/spec.md: sha256:07c9869bb364a6760ffb5eb1d8aecad744f60a750d4bc93e65eb209d956fbab4
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/traceability/osq.yml: sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/traceability/spec.md: sha256:20aa8535a60ea1897d44fb3f427d7141f50f78da994b7a12945b6062dfb908e1
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/version-control/osq.yml: sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/version-control/spec.md: sha256:e3c549b2fd14bde8ca224939c5fa1778680d9ba10f05e93938dc212fe9a8c1f3
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/watcher-and-harness/osq.yml: sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/watcher-and-harness/spec.md: sha256:6ce3827bb9ab09042928dd3ee12c2b2f89abcf63ed6f13e16af189cc80d5666a
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/web-inspection/osq.yml: sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef
+  crates/kernel/specs/tests/fixtures/repo_decisions/openspec/specs/web-inspection/spec.md: sha256:783d782ec17d92abad20a53e564b6958e8ded30f67b28b5a6c5a31ba5c9e36a4
+  crates/kernel/specs/tests/golden/decisions.json: sha256:8026dc0815f257502b358942197c5429f808077fee6fb468c8502647e048b954
+  crates/kernel/specs/tests/public_api.rs: sha256:1d2daf862c8da2df8dda8f86e1132f01b1d476cca22b435fa02eb6a1bc9fb237
+  crates/kernel/specs/tests/reading_decisions.rs: sha256:793513adcb5ef8d6e51562b837540fc978e45b974d1a1e9245b495f7ff1cbe6e
+  crates/kernel/specs/tests/reading_decisions_edges.rs: sha256:d59b4e8e2510349a318086c93d081b5904c761ee16bad351b7cc83f1702abe5b
+original_scope_hash: sha256:e3a9c10d47379a3abd28a20354049fc43e63e5a9a4f937331e3ec220c70b57bd
+recertified_at: 2026-10-20T12:22:55.386Z
+recertification_count: 1
+---
+2026-10-20T12:13:33.061Z

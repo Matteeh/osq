@@ -1,0 +1,4 @@
+---
+status: accepted
+---
+A file that is not Markdown is never an ADR.

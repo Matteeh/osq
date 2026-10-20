@@ -14,6 +14,7 @@ workspace = true
 osq-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 yaml-rust2.workspace = true
 
 # The OpenSpec parity tests run the Node CLI, so they build only with `parity`

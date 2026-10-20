@@ -7,6 +7,19 @@ use std::path::{Path, PathBuf};
 /// The items `src/lib.rs` re-exports, by module, as the rust-specs table gives them.
 const EXPORTS: &[(&str, &[&str])] = &[
     (
+        "decisions",
+        &[
+            "Adr",
+            "AppliesTo",
+            "DecisionCode",
+            "DecisionFinding",
+            "DecisionProblems",
+            "DecisionRecords",
+            "read_decisions",
+            "validate_decisions",
+        ],
+    ),
+    (
         "document",
         &[
             "ChecklistItem",
@@ -92,8 +105,10 @@ const EXPORTS: &[(&str, &[&str])] = &[
     ),
 ];
 
-/// The four public methods and the requirement each must name.
+/// The six public methods and the requirement each must name.
 const METHODS: &[(&str, &str, &str)] = &[
+    ("decisions/validate.rs", "as_str", "adr-validation"),
+    ("decisions/validate.rs", "fix", "adr-validation"),
     ("validate/finding.rs", "as_str", "validation-findings"),
     ("validate/finding.rs", "fix", "validation-findings"),
     ("merge/error.rs", "capability", "merge-refusals"),

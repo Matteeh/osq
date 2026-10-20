@@ -1,0 +1,13 @@
+{"type":"tool","timestamp":"2026-10-20T12:25:30.532Z","data":{"tool":"Read","summary":"openspec"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:31.409Z","data":{"tool":"Read","summary":"openspec"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:31.417Z","data":{"tool":"Read","summary":"openspec"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:34.171Z","data":{"tool":"Bash","summary":"cd .; grep"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:37.154Z","data":{"tool":"Bash","summary":"cd crate"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:42.188Z","data":{"tool":"Bash","summary":"cd crate"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:44.555Z","data":{"tool":"Read","summary":"/home/mathias/.claude/projects/-home-mathias--osq-worktrees-"}}
+{"type":"text","timestamp":"2026-10-20T12:25:47.673Z","data":{"text":"The tests and code match the spec. One last check: whether the live repo's decisions and the golden file agree with the counts the spec gives."}}
+{"type":"tool","timestamp":"2026-10-20T12:25:49.477Z","data":{"tool":"Bash","summary":"cd .; ls d"}}
+{"type":"tool","timestamp":"2026-10-20T12:25:52.121Z","data":{"tool":"Write","summary":"openspec"}}
+{"type":"file_changed","timestamp":"2026-10-20T12:25:52.149Z","data":{"path":"openspec/changes/230-rust-adr-parse/.run/validator/findings.json"}}
+{"type":"text","timestamp":"2026-10-20T12:25:57.538Z","data":{"text":"All 12 scenarios hold, so I wrote `{\"findings\": []}` to `findings.json`. I read the code, tests and fixtures but ran no build or tests.\n\n- **Code:** All the ADR logic is in `crates/kernel/specs/src/decisions/`, and `src/lib.rs` re-exports exactly the items in the Public API table.\n- **Tests:** Each scenario has a test that checks its THEN: the reading scenarios in `tests/reading_decisions.rs` and the validation scenarios in `tests/validating_decisions.rs`. The golden comparison and the exports and `Implements:` tags are checked too.\n- **Would they pass on the base code?** No. The base had no `decisions` module, so the new tests can't compile there.\n- **Data checks:**\n  - The SHA-256 of `001-full.md` matches the hash the scenario gives.\n  - The golden file holds 26 ADRs, no ignored paths and 14 groups.\n  - All 26 numbered files in `decisions/` have frontmatter with a `status:` line.\n\nThe \"Live decisions validate\" test (`tests/decisions_corpus.rs`) is marked `#[ignore]`, so a plain `cargo test` skips it. It does check the scenario's THEN, so I didn't report it as `no_test`, but that check only runs when someone asks for ignored tests."}}
+{"type":"tokens","timestamp":"2026-10-20T12:25:57.560Z","data":{"promptTokens":298937,"candidateTokens":2312,"totalTokens":301249,"model":"claude-opus-5-5","cachedTokens":249098,"reasoningTokens":385,"cost":0.4947076}}
