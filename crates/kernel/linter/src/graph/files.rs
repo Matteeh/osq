@@ -73,6 +73,7 @@ fn add_file(graph: &mut Graph, root: &Path, path: &Path, adrs: &[Adr]) -> Result
         }),
         status: None,
         public: false,
+        function: false,
     });
     let mut items: Vec<(NodeId, &CodeItem)> = Vec::new();
     for item in &tags.items {
@@ -91,6 +92,7 @@ fn add_file(graph: &mut Graph, root: &Path, path: &Path, adrs: &[Adr]) -> Result
             }),
             status: None,
             public: item.public,
+            function: item.function,
         });
         items.push((id, item));
     }

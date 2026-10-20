@@ -124,7 +124,7 @@ const FINDINGS: &[(bool, &str)] = &[
     (true, "decisions/draft.md: no osq frontmatter, ignored"),
 ];
 
-/// Covers: rust-specs/Decision finding codes
+/// Covers: rust-specs/decision-finding-codes
 #[test]
 fn decision_finding_codes() {
     for (code, text, fix) in CODES {
@@ -134,7 +134,7 @@ fn decision_finding_codes() {
     }
 }
 
-/// Covers: rust-specs/Validation of the decisions fixture
+/// Covers: rust-specs/validation-of-the-decisions-fixture
 #[test]
 fn validation_of_the_decisions_fixture() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/decisions");
@@ -167,7 +167,7 @@ fn displayed(problems: &DecisionProblems) -> Vec<(bool, String)> {
     errors.chain(warnings).collect()
 }
 
-/// Covers: rust-specs/Decision finding codes
+/// Covers: rust-specs/decision-finding-codes
 #[test]
 fn a_rule_at_the_limit_is_not_long() {
     let records = records(vec![adr(
@@ -181,7 +181,7 @@ fn a_rule_at_the_limit_is_not_long() {
     assert!(problems.errors.is_empty(), "{:?}", problems.errors);
 }
 
-/// Covers: rust-specs/Decision finding codes
+/// Covers: rust-specs/decision-finding-codes
 #[test]
 fn superseded_by_compares_nonnumbers_as_text() {
     let records = records(vec![
@@ -235,7 +235,7 @@ fn records(adrs: Vec<Adr>) -> DecisionRecords {
     }
 }
 
-/// Covers: rust-specs/Decision finding codes
+/// Covers: rust-specs/decision-finding-codes
 #[test]
 fn findings_display_with_their_file() {
     let finding = DecisionFinding {

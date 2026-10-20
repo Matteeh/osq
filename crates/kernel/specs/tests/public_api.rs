@@ -115,7 +115,7 @@ const METHODS: &[(&str, &str, &str)] = &[
     ("merge/error.rs", "requirement", "merge-refusals"),
 ];
 
-/// Covers: rust-specs/Specs kernel exports from its root only
+/// Covers: rust-specs/specs-kernel-exports-from-its-root-only
 #[test]
 fn exports_from_the_root_only() {
     let source_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
@@ -151,7 +151,7 @@ fn exports_from_the_root_only() {
     }
 }
 
-/// Covers: rust-specs/Specs kernel public functions are tagged
+/// Covers: rust-specs/specs-kernel-public-functions-are-tagged
 #[test]
 fn public_functions_are_tagged() {
     let source_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");

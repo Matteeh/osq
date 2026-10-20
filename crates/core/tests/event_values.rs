@@ -1,6 +1,4 @@
 //! Proves each reason and outcome enum lists exactly TypeScript's values.
-//!
-//! Implements: rust-core/reason-and-outcome-values
 
 use osq_core::event::{
     AutoSteerOutcome, BaselineOutcome, DeadReason, FailureReason, FocusedOutcome, MutationOutcome,

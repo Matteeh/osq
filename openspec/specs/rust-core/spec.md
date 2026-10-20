@@ -537,11 +537,12 @@ accepted, applying to the capability group `rust` through
 `applies_to: [group:rust]`, so they govern every capability whose sidecar
 names group `rust` and nothing under `src/`, naming `tests/rust-adrs.test.ts`
 in its checks, and causing no decision problem. ADR 022 SHALL also name
-`crates/core/tests/no_io.rs`, ADR 025 `crates/core/tests/event_corpus.rs`,
-and ADR 026 the specs kernel's golden, validation, replay and parity tests
-and the linter kernel's no-runtime-Node test. The index SHALL link each
-once, and AGENTS.md's project rules block SHALL not change, since none
-applies to all.
+`crates/core/tests/no_io.rs`, ADR 024 the linter kernel's link gate
+tests, ADR 025 `crates/core/tests/event_corpus.rs`, and ADR 026 the specs
+kernel's golden, validation, replay and parity tests and the linter
+kernel's no-runtime-Node test. The index SHALL link each once, and
+AGENTS.md's project rules block SHALL not change, since none applies to
+all.
 
 #### Scenario: Rust ADRs are accepted
 - **WHEN** osq's own decisions are read with `readDecisions` and `DEFAULT_CONFIG`
@@ -551,7 +552,7 @@ applies to all.
 |---|---|---|
 | 022 | `022-rust-feature-crates.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/no_io.rs` |
 | 023 | `023-rust-code-style.md` | `tests/rust-adrs.test.ts` |
-| 024 | `024-rust-link-enforcement.md` | `tests/rust-adrs.test.ts` |
+| 024 | `024-rust-link-enforcement.md` | `tests/rust-adrs.test.ts`, `crates/kernel/linter/tests/link_gates.rs`, `crates/kernel/linter/tests/link_gates_corpus.rs` |
 | 025 | `025-rust-on-disk-format.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/event_corpus.rs` |
 | 026 | `026-openspec-in-rust.md` | `tests/rust-adrs.test.ts`, `crates/kernel/specs/tests/golden_corpus.rs`, `crates/kernel/specs/tests/validate_corpus.rs`, `crates/kernel/specs/tests/replay_corpus.rs`, `crates/kernel/specs/tests/openspec_validate_parity_corpus.rs`, `crates/kernel/specs/tests/openspec_archive_parity_corpus.rs`, `crates/kernel/linter/tests/node_spawn_corpus.rs` |
 
@@ -743,8 +744,9 @@ order and then by the key's bytes. An id displays as its kind's prefix, a
 colon and its key. A `Location` holds a `file` and an optional 1-based
 `line`, and displays as `<file>:<line>`, or as `<file>` without a line. A
 `Node` holds its `id`, its `name`, an optional `location`, an optional
-`status`, which an ADR node sets to the ADR's status, and `public`, which
-an item node sets when the item is public. An `EdgeKind` is one of
+`status`, which an ADR node sets to the ADR's status, `public`, which
+an item node sets when the item is public, and `function`, which an item
+or test node sets when the item is a function. An `EdgeKind` is one of
 `applies_to`, `governs`, `owns`, `implements`, `covers`, `reads`,
 `writes`, `supersedes` and `departs`, and `as_str` gives that name. An
 `Edge` holds its `kind`, its `from` and `to` ids and an optional

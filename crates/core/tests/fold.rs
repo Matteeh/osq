@@ -364,7 +364,7 @@ fn retry_clears_a_change_regression() {
 
 /// Proves an event only changes the state of the stream it came from.
 ///
-/// Covers: rust-core/events-reach-their-streams-state
+/// Covers: rust-core/events-reach-their-stream-s-state
 #[test]
 fn events_reach_their_streams_state() {
     let mut state = ChangeState::new([TaskId::new("1"), TaskId::new("2")]);

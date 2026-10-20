@@ -24,6 +24,7 @@ fn one(item: &Item, prefix: &[String], out: &mut Vec<CodeItem>, file_tags: &mut 
             qualified(prefix, &item.sig.ident.to_string()),
             item.sig.ident.span(),
             public(&item.vis),
+            true,
             is_test(&item.attrs),
         )),
         Item::Const(item) => out.push(leaf(
@@ -32,12 +33,14 @@ fn one(item: &Item, prefix: &[String], out: &mut Vec<CodeItem>, file_tags: &mut 
             item.ident.span(),
             public(&item.vis),
             false,
+            false,
         )),
         Item::Static(item) => out.push(leaf(
             &item.attrs,
             qualified(prefix, &item.ident.to_string()),
             item.ident.span(),
             public(&item.vis),
+            false,
             false,
         )),
         Item::Struct(item) => out.push(named(&item.attrs, prefix, &item.ident, &item.vis)),
@@ -62,6 +65,7 @@ fn named(attrs: &[Attribute], prefix: &[String], ident: &syn::Ident, vis: &Visib
         ident.span(),
         public(vis),
         false,
+        false,
     )
 }
 
@@ -78,6 +82,7 @@ fn trait_item(item: &syn::ItemTrait, prefix: &[String], out: &mut Vec<CodeItem>)
                 qualified(&inner, &nested.sig.ident.to_string()),
                 nested.sig.ident.span(),
                 public,
+                true,
                 is_test(&nested.attrs),
             )),
             TraitItem::Const(nested) => out.push(leaf(
@@ -85,6 +90,7 @@ fn trait_item(item: &syn::ItemTrait, prefix: &[String], out: &mut Vec<CodeItem>)
                 qualified(&inner, &nested.ident.to_string()),
                 nested.ident.span(),
                 public,
+                false,
                 false,
             )),
             _ => {}
@@ -103,6 +109,7 @@ fn impl_item(item: &syn::ItemImpl, prefix: &[String], out: &mut Vec<CodeItem>) {
                 qualified(&inner, &nested.sig.ident.to_string()),
                 nested.sig.ident.span(),
                 public(&nested.vis),
+                true,
                 is_test(&nested.attrs),
             )),
             ImplItem::Const(nested) => out.push(leaf(
@@ -110,6 +117,7 @@ fn impl_item(item: &syn::ItemImpl, prefix: &[String], out: &mut Vec<CodeItem>) {
                 qualified(&inner, &nested.ident.to_string()),
                 nested.ident.span(),
                 public(&nested.vis),
+                false,
                 false,
             )),
             _ => {}
@@ -140,12 +148,14 @@ fn leaf(
     name: String,
     span: proc_macro2::Span,
     public: bool,
+    function: bool,
     test: bool,
 ) -> CodeItem {
     CodeItem {
         name,
         line: span.start().line,
         public,
+        function,
         test,
         tags: doc_tags::outer(attrs),
     }

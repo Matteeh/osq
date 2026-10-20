@@ -93,6 +93,8 @@ pub struct Node {
     pub status: Option<String>,
     /// Whether an item is public.
     pub public: bool,
+    /// Whether an item or test is a function.
+    pub function: bool,
 }
 
 /// The kind of an edge.

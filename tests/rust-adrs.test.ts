@@ -34,7 +34,11 @@ const ROWS: readonly RustAdrRow[] = [
   {
     number: '024',
     file: '024-rust-link-enforcement.md',
-    checks: ['tests/rust-adrs.test.ts'],
+    checks: [
+      'tests/rust-adrs.test.ts',
+      'crates/kernel/linter/tests/link_gates.rs',
+      'crates/kernel/linter/tests/link_gates_corpus.rs',
+    ],
   },
   {
     number: '025',

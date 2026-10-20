@@ -22,6 +22,7 @@ pub(super) fn items(mac: &syn::Macro, prefix: &[String], out: &mut Vec<CodeItem>
             name: collect::qualified(prefix, &name.to_string()),
             line: name.span().start().line,
             public: false,
+            function: true,
             test: attrs.iter().any(|group| doc_tags::group_is_test(group)),
             tags: attrs
                 .iter()

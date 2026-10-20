@@ -1,0 +1,38 @@
+---
+scope_resolver: 2
+scope_hash: sha256:e3740c6535c4383a8d6c2e7bb51cfaf7df44d39f0cbeb2ca8d0fbf8ad8bbd619
+build_stamp: 0be93c97
+project_commit: 560022f2
+exit_code: 0
+scope_files:
+  crates/kernel/linter/src/gates.rs: sha256:e792000f6ecf3add8c5959bbcb23bcf48db094f416b1ff04a05b8d61ed386c66
+  crates/kernel/linter/src/gates/complete_capabilities.rs: sha256:1da9d042c79b5ba08d970ea8b901f50433f504d962071ed8b8d128064e8cf3ec
+  crates/kernel/linter/src/gates/live_references.rs: sha256:f2f0a69613ccbabfb5fe952c05ea313a8c7397d47f259656aab3c1e03dbc2b35
+  crates/kernel/linter/src/gates/owned_once.rs: sha256:e09af1fc17f764dd59d25471d4d5cbb6baf9c8001b83a79f23f4f809a50ac53c
+  crates/kernel/linter/src/gates/tagged_functions.rs: sha256:b5fa3bc2be7766e46e38f391231cd4a28c85a759049f7c2af84d793e60f922d4
+  crates/kernel/linter/src/lib.rs: sha256:725514ee813a4f23854c678cee320f814e0903c61a18ed92608c34cf66431d6c
+  crates/kernel/linter/tests/fixtures/link-gates/Cargo.toml: sha256:6e75c87ae4385f1d6e4a1161bd0417bb96eb327cdc41ac0f5bb32392d1b3170d
+  crates/kernel/linter/tests/fixtures/link-gates/crates/alpha/Cargo.toml: sha256:e94be6a138eb165d0c95ffad85e09e1da6c85ed7c5b698ec1805f5c7492ba927
+  crates/kernel/linter/tests/fixtures/link-gates/crates/alpha/src/lib.rs: sha256:8c3d96f41cea69959621c0060f62b704191096953414fd104414318c6ebe40da
+  crates/kernel/linter/tests/fixtures/link-gates/crates/alpha/src/shared.rs: sha256:14f28df215a5f399951ea16c6cacf3a153954ddb8ffeb5580e0409331b5c97c1
+  crates/kernel/linter/tests/fixtures/link-gates/crates/alpha/tests/adding.rs: sha256:bff328e0c9f136e2dd8c4ee5fe0c61e3df7934bdb7477f7014ca6d1d8196a110
+  crates/kernel/linter/tests/fixtures/link-gates/crates/beta/Cargo.toml: sha256:15d7e4b192ab0a838e893a0052d62f6b8faafa5c4a53ee5f2c2b4a70d1915a42
+  crates/kernel/linter/tests/fixtures/link-gates/crates/beta/src/lib.rs: sha256:7143cab302d84a6c3b6181657bba6548362b10632a8a454f4d04867b79eb0603
+  crates/kernel/linter/tests/fixtures/link-gates/decisions/001-tools.md: sha256:6d94612367f3de977bcb9f2eda79c2d22d1c982a242f208a7f63f00f7eec580b
+  crates/kernel/linter/tests/fixtures/link-gates/decisions/002-old.md: sha256:b596dd7a5e3643e924525ddb164180277b71f1386d914a469596ef6b53f90a40
+  crates/kernel/linter/tests/fixtures/link-gates/decisions/003-new.md: sha256:4b31772e75ada9f0e270cbb51be84c7dda13f23b275196c661f63ec85e6f550e
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/alpha/osq.yml: sha256:a98adf8017fe1fe5e729543a4d9a1ec36707be76b90e6470bdb02aedd78ca523
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/alpha/spec.md: sha256:480fa2f7652a83b1f438a9d147e0e368ae0b8e023b305e35115c39d399cc783a
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/beta/osq.yml: sha256:a98adf8017fe1fe5e729543a4d9a1ec36707be76b90e6470bdb02aedd78ca523
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/beta/spec.md: sha256:3acbc0e1b1bd6081778801b768ff9086cacaf67ea88d8f03719f91cb16be91ad
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/gamma/osq.yml: sha256:a98adf8017fe1fe5e729543a4d9a1ec36707be76b90e6470bdb02aedd78ca523
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/gamma/spec.md: sha256:1d8e4f4c381fd998b15d7010c9ee22240520a109c1f2d624596b7437388010fd
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/notes/osq.yml: sha256:d1dd404f7bc4e6404450ab865cac3720cd15aee20207827e54091e59773c3bcd
+  crates/kernel/linter/tests/fixtures/link-gates/openspec/specs/notes/spec.md: sha256:9850a6b341e1211c4c13baf0bdb865522c7fc66316bc3f06f392d71f67a2b9c5
+  crates/kernel/linter/tests/link_gates.rs: sha256:27aa2fdfd1c55b12c0e478a9a182244a85ac51b10ec51cd1ef1f2d6d17c3246b
+  crates/kernel/linter/tests/link_gates_edges.rs: sha256:3faf978f10017c9624b745c2e288a897a45d7530bad44156e919ebaa362681ef
+original_scope_hash: sha256:9ba253eda71edfd96151080875c48baac1651f7c1d4f91e776461f808362eac3
+recertified_at: 2026-10-20T18:39:48.564Z
+recertification_count: 1
+---
+2026-10-20T17:22:14.461Z

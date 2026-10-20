@@ -52,6 +52,7 @@ pub(super) fn add(graph: &mut Graph, capabilities: &[Capability], records: &Deci
             location: Some(capability.location.clone()),
             status: None,
             public: false,
+            function: false,
         });
         for requirement in &capability.spec.requirements {
             let key = format!("{}/{}", capability.name, tag_id(&requirement.name));
@@ -61,6 +62,7 @@ pub(super) fn add(graph: &mut Graph, capabilities: &[Capability], records: &Deci
                 location: Some(capability.location.clone()),
                 status: None,
                 public: false,
+                function: false,
             });
             for scenario in &requirement.scenarios {
                 let key = format!("{}/{}", capability.name, tag_id(&scenario.name));
@@ -70,6 +72,7 @@ pub(super) fn add(graph: &mut Graph, capabilities: &[Capability], records: &Deci
                     location: Some(capability.location.clone()),
                     status: None,
                     public: false,
+                    function: false,
                 });
             }
         }
@@ -99,6 +102,7 @@ fn add_groups(graph: &mut Graph, records: &DecisionRecords) {
             location: None,
             status: None,
             public: false,
+            function: false,
         });
     }
 }

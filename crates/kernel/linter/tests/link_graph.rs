@@ -58,6 +58,8 @@ struct NodeRow {
     status: Option<&'static str>,
     /// Whether the node is public.
     public: bool,
+    /// Whether the node's item is a function.
+    function: bool,
 }
 
 /// The expected nodes of the fixture, in id order.
@@ -70,6 +72,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: Some("superseded"),
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Adr,
@@ -79,6 +82,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: Some("accepted"),
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Adr,
@@ -88,6 +92,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: Some("accepted"),
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Capability,
@@ -97,6 +102,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Capability,
@@ -106,6 +112,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Group,
@@ -115,6 +122,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Requirement,
@@ -124,6 +132,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Requirement,
@@ -133,6 +142,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Requirement,
@@ -142,6 +152,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Requirement,
@@ -151,6 +162,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Scenario,
@@ -160,6 +172,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Scenario,
@@ -169,6 +182,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Scenario,
@@ -178,6 +192,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Scenario,
@@ -187,6 +202,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Scenario,
@@ -196,6 +212,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::File,
@@ -205,6 +222,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::File,
@@ -214,6 +232,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::File,
@@ -223,6 +242,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::File,
@@ -232,6 +252,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: None,
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -241,6 +262,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(16),
         status: None,
         public: true,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -250,6 +272,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(22),
         status: None,
         public: true,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -259,6 +282,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(11),
         status: None,
         public: true,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -268,6 +292,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(30),
         status: None,
         public: false,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -277,6 +302,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(5),
         status: None,
         public: false,
+        function: false,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -286,6 +312,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(6),
         status: None,
         public: true,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -295,6 +322,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(20),
         status: None,
         public: false,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Item,
@@ -304,6 +332,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(7),
         status: None,
         public: true,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Test,
@@ -313,6 +342,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(27),
         status: None,
         public: false,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Test,
@@ -322,6 +352,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(15),
         status: None,
         public: false,
+        function: true,
     },
     NodeRow {
         kind: NodeId::Test,
@@ -331,6 +362,7 @@ const NODE_ROWS: &[NodeRow] = &[
         line: Some(7),
         status: None,
         public: false,
+        function: true,
     },
 ];
 
@@ -585,6 +617,7 @@ fn expected_nodes() -> Vec<Node> {
             }),
             status: row.status.map(str::to_owned),
             public: row.public,
+            function: row.function,
         })
         .collect()
 }

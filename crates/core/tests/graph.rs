@@ -26,6 +26,7 @@ fn node(id: NodeId, name: &str) -> Node {
         location: None,
         status: None,
         public: false,
+        function: false,
     }
 }
 

@@ -4,6 +4,8 @@ applies_to: [group:rust]
 rule: ADRs, capabilities, requirements, code and tests form one link graph in core; every link is tagged in the files, and a missing or broken link blocks the change.
 checks:
   - tests/rust-adrs.test.ts
+  - crates/kernel/linter/tests/link_gates.rs
+  - crates/kernel/linter/tests/link_gates_corpus.rs
 ---
 # 024. Rust link enforcement, one graph of ADRs, capabilities, requirements, code and tests
 

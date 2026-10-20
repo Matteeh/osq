@@ -39,6 +39,8 @@ pub struct CodeItem {
     pub line: usize,
     /// Whether the item, or the trait that declares it, is bare `pub`.
     pub public: bool,
+    /// Whether the item is a function.
+    pub function: bool,
     /// Whether the item is a function carrying a test attribute.
     pub test: bool,
     /// The tags of the item's outer doc attributes, in source order.

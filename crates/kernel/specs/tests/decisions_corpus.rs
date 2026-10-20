@@ -26,7 +26,7 @@ fn living_capabilities(root: &Path) -> Vec<String> {
     names
 }
 
-/// Covers: rust-specs/Live decisions validate
+/// Covers: rust-specs/live-decisions-validate
 #[test]
 #[ignore = "corpus test: reads the live decisions folder"]
 fn live_decisions_validate() {

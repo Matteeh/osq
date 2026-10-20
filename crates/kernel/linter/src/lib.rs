@@ -2,11 +2,16 @@
 //!
 //! A kernel crate depends only on core and other kernel crates (ADR 022).
 
+pub mod gates;
 pub mod graph;
 pub mod scan;
 pub mod tags;
 pub mod workspace;
 
+pub use gates::{
+    CompleteCapabilities, LiveReferences, OwnedOnce, ScopedCapability, TaggedFunctions,
+    change_link_gates, link_gates,
+};
 pub use graph::{GraphError, build_link_graph};
 pub use scan::{NodeSpawn, ScanError, node_spawns};
 pub use tags::{CodeItem, CodeTags, Tag, TagKind, code_tags};

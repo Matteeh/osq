@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:965e560422df4102b2706999ec87c3619017cac92cd474da0942b7a750658931"
+build_stamp: "0be93c97"
+project_commit: "8392f540"
+exit_code: 0
+scope_files: {"crates/kernel/linter/src/gates.rs":"sha256:e792000f6ecf3add8c5959bbcb23bcf48db094f416b1ff04a05b8d61ed386c66","crates/kernel/linter/src/lib.rs":"sha256:725514ee813a4f23854c678cee320f814e0903c61a18ed92608c34cf66431d6c","crates/kernel/linter/tests/fixtures/link-gates-change/Cargo.toml":"sha256:b662866eec69f7022fe9d5dac7804e02ee27656164ab235f590e8321f771ff13","crates/kernel/linter/tests/fixtures/link-gates-change/crates/delta/Cargo.toml":"sha256:c70d0cc9e41940d8d550acef0328208013748526c35891b242bf901fb71a7f6b","crates/kernel/linter/tests/fixtures/link-gates-change/crates/delta/src/lib.rs":"sha256:6f1fb54fc7b221c249fc918fd94040caa5435e51d8cc5e165280f78133809fa0","crates/kernel/linter/tests/fixtures/link-gates-change/crates/delta/tests/totals.rs":"sha256:82fb83eba254b467900717641cc99fec805dac8e95af8d772dd4297064788c8f","crates/kernel/linter/tests/fixtures/link-gates-change/openspec/changes/001-totals/specs/delta/spec.md":"sha256:f47dfb57e196491a9f10073cbddc8357998c0338f3edc38898bed2b0fd458a37","crates/kernel/linter/tests/fixtures/link-gates-change/openspec/specs/delta/osq.yml":"sha256:a98adf8017fe1fe5e729543a4d9a1ec36707be76b90e6470bdb02aedd78ca523","crates/kernel/linter/tests/fixtures/link-gates-change/openspec/specs/delta/spec.md":"sha256:82e9ba978b61b72b9cec7a2b66b0a52e05f716b63bb8551dcc353784f0de0aad","crates/kernel/linter/tests/link_gates_change.rs":"sha256:83f3f51c99f7acbd0e259f598bd9685cf831999ba896389a930ccf91c49a7f30"}
+---
+2026-10-20T18:39:46.164Z

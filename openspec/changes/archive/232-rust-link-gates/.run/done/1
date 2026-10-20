@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d82f3bb7adfeb6e61804eaaeaff8cccdb242405747ce7a0d760fb89eea1f9506"
+build_stamp: "0be93c97"
+project_commit: "b39285c7"
+exit_code: 0
+scope_files: {"crates/core/src/graph.rs":"sha256:5e64d228fb1f102b066abca4515a68337025f44fefbe76f0a6c4cdbc103ca9b0","crates/core/tests/graph.rs":"sha256:e9bc08799d866f717ba6892db786c49829f0f801cf5e1e7fb2d2d7b93a3394c7","crates/kernel/linter/src/graph/adr.rs":"sha256:9bca05e0dee476e7cc3698434c78df35ed2008fad021d73d2ca5587b7885d665","crates/kernel/linter/src/graph/build.rs":"sha256:659cdb3790f9d2e9e06e6801c5360f15dcb51e73334fe0918bc2aac9d2d4a0d5","crates/kernel/linter/src/graph/files.rs":"sha256:d40c276ce51fec6252a18921e88232a5d970e06ce51c966e95e370fe4a33723a","crates/kernel/linter/src/graph/mod.rs":"sha256:d1d0a52d64140af10c09dffc82296ef957c9958188054133eae43d6052eeeb5d","crates/kernel/linter/src/graph/specs.rs":"sha256:d1267b7e4111dc28f27b8a6856b698dd86792fbf14fff44669125794a999f2a2","crates/kernel/linter/src/tags.rs":"sha256:8ec309bd88e9af0391613bd68256f504d2a15ecb6adfa812a21bf80f2f7bf318","crates/kernel/linter/src/tags/collect.rs":"sha256:12910f1bb00df03c373abda184dcb2e77857f3b6fbeb1cf270a979899da97ca3","crates/kernel/linter/src/tags/doc_tags.rs":"sha256:9c67832189a313a15b187171e3d25d4af34e5b41eb2549879625b4d0d29572c2","crates/kernel/linter/src/tags/item_macros.rs":"sha256:6b7f7b52d6b8aa0d357d3b0f1bfcaa486d788fa5ee7dc15c476bd1cd129e0f7b","crates/kernel/linter/tests/code_tags.rs":"sha256:71283a71a9cdb66d656d58ad7814a27218ff02f6b5e9e2cad1f1a27275ce7514","crates/kernel/linter/tests/code_tags_functions.rs":null,"crates/kernel/linter/tests/link_graph.rs":"sha256:b8f44006fa018b90997893cc6c7c6053ca0ab61300519f749fd8455f1b8b43f4"}
+---
+2026-10-20T17:12:42.446Z

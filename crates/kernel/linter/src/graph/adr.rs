@@ -17,6 +17,7 @@ pub(super) fn add(graph: &mut Graph, records: &DecisionRecords, capabilities: &[
             }),
             status: Some(adr.status.clone()),
             public: false,
+            function: false,
         });
     }
     for adr in &records.adrs {

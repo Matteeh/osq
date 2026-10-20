@@ -1,0 +1,387 @@
+diff --git a/crates/core/tests/event_values.rs b/crates/core/tests/event_values.rs
+index 95bbb03a..7c4b9a7a 100644
+--- a/crates/core/tests/event_values.rs
++++ b/crates/core/tests/event_values.rs
+@@ -1,6 +1,4 @@
+ //! Proves each reason and outcome enum lists exactly TypeScript's values.
+-//!
+-//! Implements: rust-core/reason-and-outcome-values
+ 
+ use osq_core::event::{
+     AutoSteerOutcome, BaselineOutcome, DeadReason, FailureReason, FocusedOutcome, MutationOutcome,
+diff --git a/crates/core/tests/fold.rs b/crates/core/tests/fold.rs
+index dfa388ca..fd3911a8 100644
+--- a/crates/core/tests/fold.rs
++++ b/crates/core/tests/fold.rs
+@@ -364,7 +364,7 @@ fn retry_clears_a_change_regression() {
+ 
+ /// Proves an event only changes the state of the stream it came from.
+ ///
+-/// Covers: rust-core/events-reach-their-streams-state
++/// Covers: rust-core/events-reach-their-stream-s-state
+ #[test]
+ fn events_reach_their_streams_state() {
+     let mut state = ChangeState::new([TaskId::new("1"), TaskId::new("2")]);
+diff --git a/crates/kernel/linter/tests/link_gates_corpus.rs b/crates/kernel/linter/tests/link_gates_corpus.rs
+new file mode 100644
+index 00000000..3bf897c0
+--- /dev/null
++++ b/crates/kernel/linter/tests/link_gates_corpus.rs
+@@ -0,0 +1,46 @@
++//! Corpus test: this repository breaks none of the link rules the repository
++//! gate checks.
++
++use std::path::{Path, PathBuf};
++
++use osq_kernel_linter::link_gates;
++
++/// The link rules the repository gate blocks on.
++const GATED: [&str; 3] = [
++    "complete-capabilities",
++    "live-references",
++    "tagged-functions",
++];
++
++/// The repository root, three folders above this crate.
++fn repository_root() -> PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR"))
++        .ancestors()
++        .nth(3)
++        .expect("the repository root is three folders above crates/kernel/linter")
++        .to_path_buf()
++}
++
++/// Covers: rust-linter/repository-passes-the-link-gates
++#[test]
++#[ignore = "corpus test: runs the link gates on this repository"]
++fn repository_passes_the_link_gates() {
++    let findings = link_gates(
++        &repository_root(),
++        Path::new("decisions"),
++        Path::new("openspec"),
++        "rust",
++    )
++    .expect("the repository builds");
++
++    let failures: Vec<String> = findings
++        .iter()
++        .filter(|finding| GATED.contains(&finding.rule.as_str()))
++        .map(|finding| format!("{finding}\n  fix: {}", finding.fix))
++        .collect();
++    assert!(
++        failures.is_empty(),
++        "link gate findings:\n{}",
++        failures.join("\n")
++    );
++}
+diff --git a/crates/kernel/specs/tests/decisions_corpus.rs b/crates/kernel/specs/tests/decisions_corpus.rs
+index 2b3d8ec1..5c6cd7b0 100644
+--- a/crates/kernel/specs/tests/decisions_corpus.rs
++++ b/crates/kernel/specs/tests/decisions_corpus.rs
+@@ -26,7 +26,7 @@ fn living_capabilities(root: &Path) -> Vec<String> {
+     names
+ }
+ 
+-/// Covers: rust-specs/Live decisions validate
++/// Covers: rust-specs/live-decisions-validate
+ #[test]
+ #[ignore = "corpus test: reads the live decisions folder"]
+ fn live_decisions_validate() {
+diff --git a/crates/kernel/specs/tests/public_api.rs b/crates/kernel/specs/tests/public_api.rs
+index 5b550e92..7d11ad1f 100644
+--- a/crates/kernel/specs/tests/public_api.rs
++++ b/crates/kernel/specs/tests/public_api.rs
+@@ -115,7 +115,7 @@ const METHODS: &[(&str, &str, &str)] = &[
+     ("merge/error.rs", "requirement", "merge-refusals"),
+ ];
+ 
+-/// Covers: rust-specs/Specs kernel exports from its root only
++/// Covers: rust-specs/specs-kernel-exports-from-its-root-only
+ #[test]
+ fn exports_from_the_root_only() {
+     let source_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+@@ -151,7 +151,7 @@ fn exports_from_the_root_only() {
+     }
+ }
+ 
+-/// Covers: rust-specs/Specs kernel public functions are tagged
++/// Covers: rust-specs/specs-kernel-public-functions-are-tagged
+ #[test]
+ fn public_functions_are_tagged() {
+     let source_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+diff --git a/crates/kernel/specs/tests/validating_decisions.rs b/crates/kernel/specs/tests/validating_decisions.rs
+index 20b106e9..30b0243d 100644
+--- a/crates/kernel/specs/tests/validating_decisions.rs
++++ b/crates/kernel/specs/tests/validating_decisions.rs
+@@ -124,7 +124,7 @@ const FINDINGS: &[(bool, &str)] = &[
+     (true, "decisions/draft.md: no osq frontmatter, ignored"),
+ ];
+ 
+-/// Covers: rust-specs/Decision finding codes
++/// Covers: rust-specs/decision-finding-codes
+ #[test]
+ fn decision_finding_codes() {
+     for (code, text, fix) in CODES {
+@@ -134,7 +134,7 @@ fn decision_finding_codes() {
+     }
+ }
+ 
+-/// Covers: rust-specs/Validation of the decisions fixture
++/// Covers: rust-specs/validation-of-the-decisions-fixture
+ #[test]
+ fn validation_of_the_decisions_fixture() {
+     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/decisions");
+@@ -167,7 +167,7 @@ fn displayed(problems: &DecisionProblems) -> Vec<(bool, String)> {
+     errors.chain(warnings).collect()
+ }
+ 
+-/// Covers: rust-specs/Decision finding codes
++/// Covers: rust-specs/decision-finding-codes
+ #[test]
+ fn a_rule_at_the_limit_is_not_long() {
+     let records = records(vec![adr(
+@@ -181,7 +181,7 @@ fn a_rule_at_the_limit_is_not_long() {
+     assert!(problems.errors.is_empty(), "{:?}", problems.errors);
+ }
+ 
+-/// Covers: rust-specs/Decision finding codes
++/// Covers: rust-specs/decision-finding-codes
+ #[test]
+ fn superseded_by_compares_nonnumbers_as_text() {
+     let records = records(vec![
+@@ -235,7 +235,7 @@ fn records(adrs: Vec<Adr>) -> DecisionRecords {
+     }
+ }
+ 
+-/// Covers: rust-specs/Decision finding codes
++/// Covers: rust-specs/decision-finding-codes
+ #[test]
+ fn findings_display_with_their_file() {
+     let finding = DecisionFinding {
+diff --git a/openspec/changes/232-rust-link-gates/.run/dead/3.md b/openspec/changes/232-rust-link-gates/.run/dead/3.md
+new file mode 100644
+index 00000000..107c756d
+--- /dev/null
++++ b/openspec/changes/232-rust-link-gates/.run/dead/3.md
+@@ -0,0 +1,54 @@
++---
++reason: blocked
++fingerprint: sha256:9215ed2b377550bce21f7f8643f3d343a279d36cca563466a5d5d6a28aaa64a7
++---
++The gates report 17 findings beyond the ten tags the task names. Every one is
++a tag to a requirement or scenario that this change's own
++`openspec/changes/232-rust-link-gates/specs/rust-linter/spec.md` ADDS
++(`Link gates` and `Live link gates`), so the target is not in the living
++`openspec/specs/rust-linter/spec.md` and cannot become live until this change
++archives. The tags are in files outside this task's scope:
++
++```
++crates/kernel/linter/src/gates.rs:31: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/complete_capabilities.rs:32: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/complete_capabilities.rs:39: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/live_references.rs:34: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/live_references.rs:41: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/owned_once.rs:17: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/owned_once.rs:24: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/tagged_functions.rs:15: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/tagged_functions.rs:22: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/tests/link_gates.rs:240: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates.rs:248: Covers: tag names scenario:rust-linter/link-gates-in-another-group, which does not exist
++crates/kernel/linter/tests/link_gates.rs:280: Covers: tag names scenario:rust-linter/link-gate-errors, which does not exist
++crates/kernel/linter/tests/link_gates_corpus.rs:24: Covers: tag names scenario:rust-linter/repository-passes-the-link-gates, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:72: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:93: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:134: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:179: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++```
++
++Their fix in every case is `Name a living requirement as
++<capability>/<requirement name in kebab-case>.` or `Name a living scenario as
++<capability>/<scenario name in kebab-case>.`
++
++This is a plan-level catch-22, not a code defect the task can fix within its
++scope: ADR 024 makes a tag to a not-yet-living requirement or scenario a
++broken reference, while this change adds the requirements and scenarios its
++own new code tags, and living specs change only when the change archives. One
++of these is needed:
++
++- the corpus test's graph also reads the active change's delta specs, which
++  contradicts `build_link_graph`'s living-spec-only requirement and task 2, or
++- the `Link gates` and `Live link gates` requirements and their scenarios land
++  in an earlier change before this one runs (so the living spec already holds
++  them), or
++- task 3's scope includes the seven `rust-linter` source and test files that
++  carry the new tags, so they can be renamed to existing living requirements
++  (which would then disagree with this change's delta and ADR 024's proposal
++  decision that every new public function is tagged `Implements:
++  rust-linter/link-gates`).
++
++The ten fixes the task specified are done and stay valid under any of the
++three resolutions.
+diff --git a/openspec/changes/232-rust-link-gates/.run/events/3.jsonl b/openspec/changes/232-rust-link-gates/.run/events/3.jsonl
+new file mode 100644
+index 00000000..6371d219
+--- /dev/null
++++ b/openspec/changes/232-rust-link-gates/.run/events/3.jsonl
+@@ -0,0 +1,67 @@
++{"type":"verify_ran","timestamp":"2026-10-20T17:22:17.906Z","data":{"command":"cargo test -p osq-kernel-linter --test link_gates_corpus -- --include-ignored","exitCode":101,"duration":0.1,"log":".run/logs/3-1.log","output":"error: no test target named `link_gates_corpus` in `osq-kernel-linter` package\nhelp: available test targets:\n    code_tags\n    code_tags_edges\n    link_gates\n    link_gates_edges\n    link_graph\n    link_graph_corpus\n    node_spawn_corpus\n    node_spawns\n    node_spawns_workspace\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-20T17:22:34.980Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":5,"scopeLines":1373,"repoFiles":6572,"repoLines":553354,"importFanIn":0,"proposalWords":930,"taskWords":373,"deltaRequirements":7,"deltaScenarios":19}}
++{"type":"started","timestamp":"2026-10-20T17:22:35.054Z","data":{"harness":"opencode","model":"opencode-go/deepseek-v4.1-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"b8458152","pid":446912,"timeoutSeconds":1800,"version":"0.3.0","commit":"0be93c97"}}
++{"type":"tool","timestamp":"2026-10-20T17:22:50.590Z","data":{"tool":"shell","summary":"{\"command\":\"ls; echo ---; cat openspec/changes/232-rust-link"}}
++{"type":"tool","timestamp":"2026-10-20T17:22:50.592Z","data":{"tool":"shell","summary":"{\"command\":\"cat crates/kernel/linter/src/gates.rs\"}"}}
++{"type":"tokens","timestamp":"2026-10-20T17:22:50.646Z","data":{"promptTokens":181783,"candidateTokens":116,"totalTokens":181899,"cachedTokens":768,"reasoningTokens":354,"cost":0.027551754}}
++{"type":"tool","timestamp":"2026-10-20T17:22:55.662Z","data":{"tool":"shell","summary":"{\"command\":\"cat crates/kernel/linter/tests/link_graph_corpus"}}
++{"type":"tool","timestamp":"2026-10-20T17:22:55.664Z","data":{"tool":"shell","summary":"{\"command\":\"cat crates/kernel/linter/src/gates/tagged_functi"}}
++{"type":"tokens","timestamp":"2026-10-20T17:22:55.715Z","data":{"promptTokens":183861,"candidateTokens":157,"totalTokens":184018,"cachedTokens":0,"reasoningTokens":17,"cost":0.027683549999999998}}
++{"type":"tool","timestamp":"2026-10-20T17:22:58.573Z","data":{"tool":"shell","summary":"{\"command\":\"grep -n \\\"Implements\\\\|Covers\\\" crates/core/test"}}
++{"type":"tokens","timestamp":"2026-10-20T17:22:58.623Z","data":{"promptTokens":5857,"candidateTokens":107,"totalTokens":5964,"cachedTokens":182912,"reasoningTokens":21,"cost":0.0015040859999999997}}
++{"type":"tool","timestamp":"2026-10-20T17:23:01.384Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,140p' crates/kernel/linter/tests/link_"}}
++{"type":"tool","timestamp":"2026-10-20T17:23:01.385Z","data":{"tool":"shell","summary":"{\"command\":\"grep -rn \\\"impl.*Display.*Finding\\\\|pub struct F"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:01.432Z","data":{"promptTokens":1187,"candidateTokens":146,"totalTokens":1333,"cachedTokens":188800,"reasoningTokens":82,"cost":0.00088125}}
++{"type":"tool","timestamp":"2026-10-20T17:23:21.644Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '250,300p' crates/core/src/graph.rs; echo"}}
++{"type":"tool","timestamp":"2026-10-20T17:23:21.647Z","data":{"tool":"shell","summary":"{\"command\":\"cat crates/core/tests/event_values.rs | head -15"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:21.700Z","data":{"promptTokens":191589,"candidateTokens":218,"totalTokens":191807,"cachedTokens":0,"reasoningTokens":126,"cost":0.02894475}}
++{"type":"tool","timestamp":"2026-10-20T17:23:25.972Z","data":{"tool":"shell","summary":"{\"command\":\"sed -n '1,30p' crates/kernel/linter/src/lib.rs\"}"}}
++{"type":"tool","timestamp":"2026-10-20T17:23:25.974Z","data":{"tool":"shell","summary":"{\"command\":\"ls crates/kernel/linter/tests/fixtures/; echo =="}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:26.026Z","data":{"promptTokens":2323,"candidateTokens":132,"totalTokens":2455,"cachedTokens":191488,"reasoningTokens":403,"cost":0.0012439140000000003}}
++{"type":"tool","timestamp":"2026-10-20T17:23:28.498Z","data":{"tool":"shell","summary":"{\"command\":\"ls openspec/specs/docs openspec/specs/languages "}}
++{"type":"tool","timestamp":"2026-10-20T17:23:28.517Z","data":{"tool":"shell","summary":"{\"command\":\"for f in openspec/specs/*/osq.yml; do echo \\\"$f:"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:28.567Z","data":{"promptTokens":801,"candidateTokens":133,"totalTokens":934,"cachedTokens":193792,"reasoningTokens":43,"cost":0.000807126}}
++{"type":"tool","timestamp":"2026-10-20T17:23:34.769Z","data":{"tool":"write","summary":"crates/kernel/linter/tests/link_gates_corpus.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:23:35.706Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:35.756Z","data":{"promptTokens":504,"candidateTokens":476,"totalTokens":980,"cachedTokens":194560,"reasoningTokens":543,"cost":0.0012706800000000002}}
++{"type":"tool","timestamp":"2026-10-20T17:23:41.629Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:41.683Z","data":{"promptTokens":2832,"candidateTokens":86,"totalTokens":2918,"cachedTokens":194944,"reasoningTokens":651,"cost":0.001451832}}
++{"type":"tool","timestamp":"2026-10-20T17:23:43.062Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:43.111Z","data":{"promptTokens":784,"candidateTokens":84,"totalTokens":868,"cachedTokens":197760,"reasoningTokens":0,"cost":0.0007612799999999999}}
++{"type":"tool","timestamp":"2026-10-20T17:23:44.595Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:44.639Z","data":{"promptTokens":155,"candidateTokens":79,"totalTokens":234,"cachedTokens":198528,"reasoningTokens":0,"cost":0.000666234}}
++{"type":"tool","timestamp":"2026-10-20T17:23:49.103Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:49.152Z","data":{"promptTokens":434,"candidateTokens":139,"totalTokens":573,"cachedTokens":198656,"reasoningTokens":255,"cost":0.000897468}}
++{"type":"tool","timestamp":"2026-10-20T17:23:52.155Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:52.208Z","data":{"promptTokens":640,"candidateTokens":127,"totalTokens":767,"cachedTokens":199040,"reasoningTokens":16,"cost":0.0007789200000000001}}
++{"type":"tool","timestamp":"2026-10-20T17:23:57.205Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:23:57.249Z","data":{"promptTokens":1680,"candidateTokens":73,"totalTokens":1753,"cachedTokens":199552,"reasoningTokens":488,"cost":0.0011872559999999998}}
++{"type":"tool","timestamp":"2026-10-20T17:24:00.202Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:00.249Z","data":{"promptTokens":1523,"candidateTokens":148,"totalTokens":1671,"cachedTokens":201216,"reasoningTokens":40,"cost":0.000944898}}
++{"type":"tool","timestamp":"2026-10-20T17:24:08.603Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:08.649Z","data":{"promptTokens":1422,"candidateTokens":66,"totalTokens":1488,"cachedTokens":202624,"reasoningTokens":540,"cost":0.001184772}}
++{"type":"tool","timestamp":"2026-10-20T17:24:18.287Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:18.337Z","data":{"promptTokens":1073,"candidateTokens":69,"totalTokens":1142,"cachedTokens":204032,"reasoningTokens":977,"cost":0.001400646}}
++{"type":"tool","timestamp":"2026-10-20T17:24:28.351Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:28.400Z","data":{"promptTokens":3042,"candidateTokens":81,"totalTokens":3123,"cachedTokens":205056,"reasoningTokens":1239,"cost":0.0018634679999999999}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.498Z","data":{"tool":"edit","summary":"crates/core/tests/fold.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.500Z","data":{"tool":"edit","summary":"crates/core/tests/event_values.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.501Z","data":{"tool":"edit","summary":"crates/kernel/specs/tests/public_api.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.502Z","data":{"tool":"edit","summary":"crates/kernel/specs/tests/decisions_corpus.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.503Z","data":{"tool":"edit","summary":"crates/kernel/specs/tests/validating_decisions.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.507Z","data":{"tool":"edit","summary":"crates/kernel/specs/tests/validating_decisions.rs"}}
++{"type":"tool","timestamp":"2026-10-20T17:24:41.508Z","data":{"tool":"edit","summary":"crates/kernel/specs/tests/public_api.rs"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:41.560Z","data":{"promptTokens":1624,"candidateTokens":754,"totalTokens":2378,"cachedTokens":208000,"reasoningTokens":1355,"cost":0.002133}}
++{"type":"tool","timestamp":"2026-10-20T17:24:45.632Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:45.679Z","data":{"promptTokens":2371,"candidateTokens":126,"totalTokens":2497,"cachedTokens":209536,"reasoningTokens":11,"cost":0.0010664580000000002}}
++{"type":"tool","timestamp":"2026-10-20T17:24:58.019Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:24:58.068Z","data":{"promptTokens":588,"candidateTokens":106,"totalTokens":694,"cachedTokens":211840,"reasoningTokens":1625,"cost":0.00176232}}
++{"type":"tool","timestamp":"2026-10-20T17:25:09.797Z","data":{"tool":"write","summary":"openspec/changes/232-rust-link-gates/.run/results/3.md"}}
++{"type":"tokens","timestamp":"2026-10-20T17:25:09.844Z","data":{"promptTokens":2486,"candidateTokens":1614,"totalTokens":4100,"cachedTokens":212352,"reasoningTokens":294,"cost":0.002154756}}
++{"type":"tool","timestamp":"2026-10-20T17:25:13.133Z","data":{"tool":"shell","summary":"{\"command\":\"cd /home/mathias/.osq/worktrees/osq/232-rust-lin"}}
++{"type":"tokens","timestamp":"2026-10-20T17:25:13.179Z","data":{"promptTokens":1995,"candidateTokens":81,"totalTokens":2076,"cachedTokens":214784,"reasoningTokens":58,"cost":0.001027002}}
++{"type":"text","timestamp":"2026-10-20T17:25:16.008Z","data":{"text":"I wrote the result file and made the in-scope changes, but the task is blocked by a plan-level inconsistency.\n\n**What I changed**\n- Added `crates/kernel/linter/tests/link_gates_corpus.rs` proving `rust-linter/repository-passes-the-link-gates`, gating `complete-capabilities`, `live-references`, and `tagged-functions`.\n- Renamed exactly the ten tags the task table lists.\n\n**Why it's blocked**\nAfter those ten fixes, the gate still reports 17 `live-references` findings. Every one is a tag to a requirement or scenario that this change's own `rust-linter` delta **adds** (`Link gates`, `Live link gates`), so the target cannot exist in the living spec until this change archives. The tags live in `crates/kernel/linter/src/gates*` and `tests/link_gates*.rs`, all outside this task's scope. The full list and the three possible planner resolutions are in `openspec/changes/232-rust-link-gates/.run/results/3.md` under `## Blocked`.\n\n`cargo fmt --all --check` passes. The task verify still fails only on the 17 external findings."}}
++{"type":"tokens","timestamp":"2026-10-20T17:25:16.471Z","data":{"promptTokens":234,"candidateTokens":296,"totalTokens":530,"cachedTokens":380449,"reasoningTokens":52,"cost":0.02135868700000003}}
++{"type":"exited","timestamp":"2026-10-20T17:25:16.472Z","data":{"exitCode":0,"pid":446912,"timedOut":false,"elapsedSeconds":161.1}}
++{"type":"measures","timestamp":"2026-10-20T17:25:16.897Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":5,"scopeLines":1373,"repoFiles":6572,"repoLines":553354,"importFanIn":0,"proposalWords":930,"taskWords":373,"deltaRequirements":7,"deltaScenarios":19,"changedFiles":6,"changedLines":49,"scopeHashes":{"crates/core/tests/event_values.rs":{"before":"sha256:58cc78e2a9fec34f82d439d77da8181d1fad24c9fce784b59faed69973626391","after":"sha256:e2f57de474722af647acaa1d306146cc789081d7d24662d0c39ac921b107953a"},"crates/core/tests/fold.rs":{"before":"sha256:b83f9115c4e0933d82b93fed26921e4d9d04ce09c1dab45b4afa5e9e6b86669b","after":"sha256:90279ba7c9ef9a7769d7d639b3410ebd05b11107c056c708c9f535d601a64dfe"},"crates/kernel/linter/tests/link_gates_corpus.rs":{"before":null,"after":"sha256:53b90272d993116e043523ec5a10d641d52eb171809d45830d64aee25d59dd09"},"crates/kernel/specs/tests/decisions_corpus.rs":{"before":"sha256:b475e86768d7aaa8b0e7a22a3e47d3a974c4b587cb97a59205686d8acd44e059","after":"sha256:22642ebee7fd9dff169eebf83dfd4279819c8516ab071a45ef3ae19bb5f64e61"},"crates/kernel/specs/tests/public_api.rs":{"before":"sha256:1d2daf862c8da2df8dda8f86e1132f01b1d476cca22b435fa02eb6a1bc9fb237","after":"sha256:6c15f9924aedd149d3f2289c47e88e16b7c459bba3ff6d873b2275a78a1b9989"},"crates/kernel/specs/tests/validating_decisions.rs":{"before":"sha256:c8a578a610923e71cc4ec1163afd14338a8c163de35b2bbfc345dc3471f7bc58","after":"sha256:f8c2d31bb875c2ee86b560bc386f9694597409efaca824812385fa36c197dc4e"}}}}
++{"type":"dead","timestamp":"2026-10-20T17:25:16.898Z","data":{"task":"3","reason":"blocked"}}
+diff --git a/openspec/changes/232-rust-link-gates/.run/events/change.jsonl b/openspec/changes/232-rust-link-gates/.run/events/change.jsonl
+new file mode 100644
+index 00000000..3f206afe
+--- /dev/null
++++ b/openspec/changes/232-rust-link-gates/.run/events/change.jsonl
+@@ -0,0 +1,3 @@
++{"type":"baseline_ran","timestamp":"2026-10-20T17:03:50.624Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b39285c7f06510e23f35a69bf7139b568430a09c","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":124.52}}
++{"type":"verify_ran","timestamp":"2026-10-20T17:12:42.430Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":57.03,"log":".run/logs/change-1.log","output":"   Doc-tests osq_kernel_linter\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 17 mutants to test\nok       Unmutated baseline in 5s build + 0s test\n INFO Auto-set test timeout to 20s\n17 mutants tested in 19s: 15 caught, 2 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-20T17:22:14.439Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":80.77,"log":".run/logs/change-2.log","output":"   Doc-tests osq_kernel_linter\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 86 mutants to test\nok       Unmutated baseline in 5s build + 0s test\n INFO Auto-set test timeout to 20s\n86 mutants tested in 42s: 77 caught, 9 unviable"}}
+diff --git a/openspec/changes/232-rust-link-gates/.run/results/3.md b/openspec/changes/232-rust-link-gates/.run/results/3.md
+new file mode 100644
+index 00000000..bedfbf97
+--- /dev/null
++++ b/openspec/changes/232-rust-link-gates/.run/results/3.md
+@@ -0,0 +1,79 @@
++## Changed
++
++- Added `crates/kernel/linter/tests/link_gates_corpus.rs`, whose
++  `repository_passes_the_link_gates` test carries
++  `#[ignore = "corpus test: runs the link gates on this repository"]` and
++  `/// Covers: rust-linter/repository-passes-the-link-gates`. It runs
++  `link_gates` on the repository root with `decisions`, `openspec` and group
++  `rust`, and fails on any `complete-capabilities`, `live-references` or
++  `tagged-functions` finding, printing each finding and its fix.
++- Renamed the ten tags of the task table: removed the file tag and the empty
++  `//!` line from `crates/core/tests/event_values.rs`, and renamed the
++  `Covers:` tags in `fold.rs`, `decisions_corpus.rs`, `public_api.rs` (two)
++  and `validating_decisions.rs` (four `Decision finding codes` lines and the
++  `Validation of the decisions fixture` line).
++- With those ten renamed, `cargo test -p osq-kernel-linter --test
++  link_gates_corpus -- --include-ignored` reports no `owned-once`,
++  `complete-capabilities` or `tagged-functions` finding. It still fails on the
++  17 `live-references` findings below.
++
++## Blocked
++
++The gates report 17 findings beyond the ten tags the task names. Every one is
++a tag to a requirement or scenario that this change's own
++`openspec/changes/232-rust-link-gates/specs/rust-linter/spec.md` ADDS
++(`Link gates` and `Live link gates`), so the target is not in the living
++`openspec/specs/rust-linter/spec.md` and cannot become live until this change
++archives. The tags are in files outside this task's scope:
++
++```
++crates/kernel/linter/src/gates.rs:31: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/complete_capabilities.rs:32: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/complete_capabilities.rs:39: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/live_references.rs:34: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/live_references.rs:41: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/owned_once.rs:17: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/owned_once.rs:24: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/tagged_functions.rs:15: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/src/gates/tagged_functions.rs:22: Implements: tag names requirement:rust-linter/link-gates, which does not exist
++crates/kernel/linter/tests/link_gates.rs:240: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates.rs:248: Covers: tag names scenario:rust-linter/link-gates-in-another-group, which does not exist
++crates/kernel/linter/tests/link_gates.rs:280: Covers: tag names scenario:rust-linter/link-gate-errors, which does not exist
++crates/kernel/linter/tests/link_gates_corpus.rs:24: Covers: tag names scenario:rust-linter/repository-passes-the-link-gates, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:72: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:93: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:134: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++crates/kernel/linter/tests/link_gates_edges.rs:179: Covers: tag names scenario:rust-linter/findings-of-the-link-gates-fixture, which does not exist
++```
++
++Their fix in every case is `Name a living requirement as
++<capability>/<requirement name in kebab-case>.` or `Name a living scenario as
++<capability>/<scenario name in kebab-case>.`
++
++This is a plan-level catch-22, not a code defect the task can fix within its
++scope: ADR 024 makes a tag to a not-yet-living requirement or scenario a
++broken reference, while this change adds the requirements and scenarios its
++own new code tags, and living specs change only when the change archives. One
++of these is needed:
++
++- the corpus test's graph also reads the active change's delta specs, which
++  contradicts `build_link_graph`'s living-spec-only requirement and task 2, or
++- the `Link gates` and `Live link gates` requirements and their scenarios land
++  in an earlier change before this one runs (so the living spec already holds
++  them), or
++- task 3's scope includes the seven `rust-linter` source and test files that
++  carry the new tags, so they can be renamed to existing living requirements
++  (which would then disagree with this change's delta and ADR 024's proposal
++  decision that every new public function is tagged `Implements:
++  rust-linter/link-gates`).
++
++The ten fixes the task specified are done and stay valid under any of the
++three resolutions.
++
++## Next
++
++Once the planner resolves the catch-22 above, rerun
++`cargo test -p osq-kernel-linter --test link_gates_corpus -- --include-ignored`
++and then `sh scripts/verify-rust.sh`. Acceptance line 3 is the one still open.
++
++Touched: crates/kernel/linter/tests/link_gates_corpus.rs, crates/core/tests/event_values.rs, crates/core/tests/fold.rs, crates/kernel/specs/tests/validating_decisions.rs, crates/kernel/specs/tests/decisions_corpus.rs, crates/kernel/specs/tests/public_api.rs

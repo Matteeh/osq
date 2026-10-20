@@ -28,6 +28,8 @@ struct Row {
     line: usize,
     /// Whether the item is public.
     public: bool,
+    /// Whether the item is a function.
+    function: bool,
     /// Whether the item is a test.
     test: bool,
     /// The item's tags, in order.
@@ -53,6 +55,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "declared",
         line: 6,
+        function: false,
         public: false,
         test: false,
         tags: &[],
@@ -60,6 +63,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "add",
         line: 12,
+        function: true,
         public: true,
         test: false,
         tags: &[
@@ -78,6 +82,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "helper",
         line: 19,
+        function: true,
         public: false,
         test: false,
         tags: &[],
@@ -85,6 +90,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Total",
         line: 22,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -92,6 +98,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Total::value",
         line: 28,
+        function: true,
         public: true,
         test: false,
         tags: &[TagRow {
@@ -103,6 +110,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Total::reset",
         line: 33,
+        function: true,
         public: false,
         test: false,
         tags: &[],
@@ -110,6 +118,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "<Total as Display>::fmt",
         line: 40,
+        function: true,
         public: false,
         test: false,
         tags: &[],
@@ -117,6 +126,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "<_ as Named>::name",
         line: 47,
+        function: true,
         public: false,
         test: false,
         tags: &[],
@@ -124,6 +134,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Named",
         line: 53,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -131,6 +142,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Named::name",
         line: 57,
+        function: true,
         public: true,
         test: false,
         tags: &[TagRow {
@@ -142,6 +154,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Kind",
         line: 61,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -149,6 +162,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "Alias",
         line: 67,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -156,6 +170,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "LIMIT",
         line: 70,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -163,6 +178,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "COUNTER",
         line: 73,
+        function: false,
         public: false,
         test: false,
         tags: &[],
@@ -170,6 +186,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "inner",
         line: 76,
+        function: false,
         public: true,
         test: false,
         tags: &[],
@@ -177,6 +194,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "inner::double",
         line: 82,
+        function: true,
         public: false,
         test: false,
         tags: &[
@@ -195,6 +213,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "two_plus_two",
         line: 91,
+        function: true,
         public: false,
         test: true,
         tags: &[TagRow {
@@ -206,6 +225,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "later_sums",
         line: 97,
+        function: true,
         public: false,
         test: true,
         tags: &[TagRow {
@@ -217,6 +237,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "any_sum",
         line: 106,
+        function: true,
         public: false,
         test: true,
         tags: &[TagRow {
@@ -228,6 +249,7 @@ const ROWS: &[Row] = &[
     Row {
         name: "mention",
         line: 120,
+        function: true,
         public: true,
         test: false,
         tags: &[],
@@ -249,6 +271,7 @@ fn item(row: &Row) -> CodeItem {
         name: row.name.to_owned(),
         line: row.line,
         public: row.public,
+        function: row.function,
         test: row.test,
         tags: row.tags.iter().map(tag).collect(),
     }
