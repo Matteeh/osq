@@ -1,0 +1,58 @@
+/*
+ * Starlight's theme, mapped onto the landing page's tokens in tokens.css, so the docs
+ * share the rust accent, warm neutrals and fonts. Starlight's gray scale runs from
+ * --sl-color-white (strongest text) to --sl-color-black (page background) in both themes.
+ */
+:root {
+  --sl-font: var(--sans);
+  --sl-font-mono: var(--mono);
+
+  --sl-color-accent-low: var(--accent-soft);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent-hover);
+
+  --sl-color-white: #f1ebe6;
+  --sl-color-gray-1: #e4dcd5;
+  --sl-color-gray-2: #d3cac2;
+  --sl-color-gray-3: #b0a69d;
+  --sl-color-gray-4: #8a8078;
+  --sl-color-gray-5: #4a423c;
+  --sl-color-gray-6: #2e2925;
+  --sl-color-black: #141210;
+
+  --sl-color-bg-nav: var(--surface);
+  --sl-color-bg-sidebar: var(--bg);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-light: var(--line);
+}
+
+:root[data-theme='light'] {
+  --sl-color-white: #1b1714;
+  --sl-color-gray-1: #2e2925;
+  --sl-color-gray-2: #433b35;
+  --sl-color-gray-3: #5c544e;
+  --sl-color-gray-4: #8a8078;
+  --sl-color-gray-5: #c9c0b8;
+  --sl-color-gray-6: #ece7e2;
+  --sl-color-gray-7: #f6f4f2;
+  --sl-color-black: #ffffff;
+
+  --sl-color-bg: var(--bg);
+  --sl-color-text-accent: var(--accent);
+}
+
+/* Host Grotesk for headings, navigation and buttons; Plex Sans for reading, as on the landing page */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.sidebar-content,
+.right-sidebar-panel h2,
+starlight-toc a,
+.pagination-links,
+.sl-link-button,
+site-search button {
+  font-family: var(--display);
+}

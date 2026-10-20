@@ -1,0 +1,16 @@
+---
+// The docs header's title: the landing page's osq_ wordmark, linking home, plus a "docs" label.
+---
+
+<span class="site-title">
+  <a href="/" class="title">osq<span class="cursor">_</span></a>
+  <a href="/docs/" class="section">docs</a>
+</span>
+
+<style>
+  .site-title { display: flex; align-items: baseline; gap: 0.6rem; }
+  .title { font-family: var(--mono); font-weight: 500; font-size: 1.25rem; color: var(--sl-color-white); text-decoration: none; letter-spacing: -0.02em; }
+  .cursor { color: var(--accent); }
+  .section { font-family: var(--display); font-size: 0.95rem; color: var(--sl-color-gray-3); text-decoration: none; }
+  .section:hover, .title:hover { color: var(--accent); }
+</style>
