@@ -8,8 +8,15 @@
 # the verify; without OSQ_DIFF there is nothing to mutate, the step prints
 # `mutation check not run: OSQ_DIFF is not set`, and the script exits 0.
 # CI and osq change verifies run this one script so they cannot drift apart.
+# It first refuses a cargo on PATH that is not the version rust-toolchain.toml pins.
 set -eu
 cd "$(dirname "$0")/.."
+pinned=$(sed -n 's/^[[:space:]]*channel[[:space:]]*=[[:space:]]*"\([^"]*\)".*$/\1/p' rust-toolchain.toml)
+found=$(cargo --version | sed 's/^[^ ]* \([^ ]*\).*/\1/')
+if [ "$found" != "$pinned" ]; then
+    echo "cargo $found is on PATH, but rust-toolchain.toml pins $pinned; put rustup's cargo proxy first on PATH" >&2
+    exit 1
+fi
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace -- --include-ignored

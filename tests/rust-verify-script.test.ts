@@ -8,8 +8,15 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Records each cargo invocation and answers the mutants status it is given. */
+/**
+ * Answers `--version` with `CARGO_VERSION_TEXT` without recording it, records
+ * each other cargo invocation and answers the mutants status it is given.
+ */
 const CARGO_STUB = `#!/bin/sh
+if [ "\${1:-}" = "--version" ]; then
+  printf '%s\\n' "\${CARGO_VERSION_TEXT}"
+  exit 0
+fi
 printf '%s\\n' "$*" >> "$CARGO_LOG_FILE"
 if [ "\${1:-}" = "mutants" ]; then
   exit "\${CARGO_MUTANTS_STATUS:-0}"
@@ -21,6 +28,7 @@ const FORMAT_COMMAND = 'fmt --all --check';
 const CLIPPY_COMMAND = 'clippy --workspace --all-targets -- -D warnings';
 const TEST_COMMAND = 'test --workspace -- --include-ignored';
 const SKIP_LINE = 'mutation check not run: OSQ_DIFF is not set';
+const PINNED_VERSION = 'cargo 1.99.1 (stub)';
 
 interface RunResult {
   readonly code: number | null;
@@ -72,6 +80,7 @@ async function withStub<T>(status: number, fn: (stub: Stub) => Promise<T>): Prom
     env.PATH = `${dir}${path.delimiter}${env.PATH ?? ''}`;
     env.CARGO_LOG_FILE = log;
     env.CARGO_MUTANTS_STATUS = String(status);
+    env.CARGO_VERSION_TEXT = PINNED_VERSION;
 
     return await fn({ log, diff, env });
   } finally {
@@ -131,4 +140,49 @@ describe('rust-core: Verify script names the missing diff', () => {
       assert.ok(result.stdout.includes(SKIP_LINE), `output must hold "${SKIP_LINE}"`);
     });
   });
+});
+
+describe('rust-core: Verify script refuses another toolchain', () => {
+  const rows = [
+    {
+      name: 'the pinned version',
+      version: PINNED_VERSION,
+      exit: 0,
+      output: SKIP_LINE,
+      commands: [FORMAT_COMMAND, CLIPPY_COMMAND, TEST_COMMAND],
+    },
+    {
+      name: 'one patch behind',
+      version: 'cargo 1.99.0 (stub)',
+      exit: 1,
+      output:
+        "cargo 1.99.0 is on PATH, but rust-toolchain.toml pins 1.99.1; put rustup's cargo proxy first on PATH",
+      commands: [],
+    },
+    {
+      name: 'an older minor',
+      version: 'cargo 1.97.0 (stub)',
+      exit: 1,
+      output:
+        "cargo 1.97.0 is on PATH, but rust-toolchain.toml pins 1.99.1; put rustup's cargo proxy first on PATH",
+      commands: [],
+    },
+  ] as const;
+
+  for (const row of rows) {
+    it(`handles cargo --version printing ${row.name}`, async () => {
+      await withStub(0, async (stub) => {
+        stub.env.CARGO_VERSION_TEXT = row.version;
+
+        const result = await runVerify(stub.env);
+        assert.equal(result.code, row.exit, `exit code for ${row.name}`);
+
+        const output = `${result.stdout}${result.stderr}`;
+        assert.ok(output.includes(row.output), `output must hold "${row.output}"`);
+
+        const commands = await recordedCommands(stub.log);
+        assert.deepEqual(commands, row.commands, `cargo commands for ${row.name}`);
+      });
+    });
+  }
 });

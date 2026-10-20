@@ -10,10 +10,10 @@ workspace.
 ## Requirements
 
 ### Requirement: Code ownership
-<!-- source: crates/core/**, tests/rust-adrs.test.ts, tests/rust-ci.test.ts, tests/rust-verify-script.test.ts, scripts/verify-rust.sh, scripts/mutants-rust.sh, .cargo/mutants.toml, .github/workflows/rust.yml -->
+<!-- source: crates/core/**, tests/rust-adrs.test.ts, tests/rust-ci.test.ts, tests/rust-verify-script.test.ts, scripts/verify-rust.sh, scripts/mutants-rust.sh, .cargo/mutants.toml, .github/workflows/rust.yml, rust-toolchain.toml -->
 The rust-core capability SHALL own the `osq-core` crate, the Rust decisions
-test, and the Rust workspace's scripts, cargo-mutants settings and CI
-workflow with their tests.
+test, and the Rust workspace's toolchain file, scripts, cargo-mutants
+settings and CI workflow with their tests.
 
 #### Scenario: Codebase ownership boundaries
 - **WHEN** file ownership is resolved for the `Event` enum, the folds or the change typestate
@@ -29,6 +29,10 @@ workflow with their tests.
 
 #### Scenario: Verify script test ownership
 - **WHEN** file ownership is resolved for `tests/rust-verify-script.test.ts`
+- **THEN** system maps it to rust-core
+
+#### Scenario: Toolchain file ownership
+- **WHEN** file ownership is resolved for `rust-toolchain.toml`
 - **THEN** system maps it to rust-core
 
 ### Requirement: Core does no IO
@@ -531,7 +535,7 @@ touched fails the verify. When `OSQ_DIFF` is unset or empty, as in Rust CI's
 `mutation check not run: OSQ_DIFF is not set` and exit 0 after the tests.
 
 #### Scenario: Verify script steps
-- **WHEN** `sh scripts/verify-rust.sh` runs with a `cargo` on `PATH` that records its arguments and exits with the status of its row for `mutants` and 0 otherwise
+- **WHEN** `sh scripts/verify-rust.sh` runs with a `cargo` on `PATH` that prints `cargo 1.99.1 (stub)` for `--version`, records its other arguments and exits with the status of its row for `mutants` and 0 otherwise
 - **THEN** the script runs the cargo commands and exits as given:
 
 | `OSQ_DIFF` | `mutants` status | cargo commands in order | Exit |
@@ -577,7 +581,7 @@ means osq and upstream OpenSpec have diverged.
 
 | Fact |
 |---|
-| uses `actions/checkout@`, `pnpm/action-setup@`, `actions/setup-node@` with `node-version` 24, `dtolnay/rust-toolchain@` and `Swatinem/rust-cache@` |
+| uses `actions/checkout@`, `pnpm/action-setup@`, `actions/setup-node@` with `node-version` 24 and `Swatinem/rust-cache@`, and runs `rustup toolchain install` |
 | runs `pnpm install --frozen-lockfile` |
 | runs `cargo clippy -p osq-kernel-specs --features parity --all-targets -- -D warnings` |
 | outside the schedule, runs `cargo test -p osq-kernel-specs --features parity --test openspec_validate_parity_corpus --test openspec_archive_parity_corpus -- --include-ignored` with no `OSQ_OPENSPEC_BIN` |
@@ -611,3 +615,42 @@ Entries SHALL be ordered by path in UTF-16 code unit order.
 #### Scenario: JavaScript path order
 - **WHEN** `compute_seal` runs on `a-｡.md` (U+FF61): `2\n` and `a-😀.md` (U+1F600): `1\n`, given in that order and again in the reverse order
 - **THEN** both seals are `sha256:f47bbfc7ba5286ec24f4ddf82d9bf58771d785ef0b0806c45b8e4ca2ff469938`, the seal of UTF-16 order, and neither is `sha256:e5c08cd78230313694389dde3ad3ff879ccbdf90e1e3c5b738ea76dcf9328e79`, the seal of byte order
+
+### Requirement: Pinned Rust toolchain
+`rust-toolchain.toml` SHALL pin Rust `1.99.1` with the `clippy` and
+`rustfmt` components, so a run by hand, the watcher's verify and CI lint
+with the same clippy. Every job of `.github/workflows/rust.yml` SHALL
+install it with `rustup toolchain install`, which reads the file, before
+any step that uses cargo, and SHALL name no Rust version itself. A newer
+Rust is a change that edits this requirement and fixes what clippy raises.
+
+#### Scenario: Rust toolchain is pinned once
+- **WHEN** `rust-toolchain.toml` and `.github/workflows/rust.yml` are read
+- **THEN** they hold each fact below:
+
+| Part | Fact |
+|---|---|
+| `rust-toolchain.toml` | its `[toolchain]` table sets `channel = "1.99.1"` |
+| `rust-toolchain.toml` | its `components` list holds `clippy` and `rustfmt` |
+| `jobs.cargo`, `jobs.mutants` and `jobs.parity` | each has one step whose `run` is exactly `rustup toolchain install` |
+| `jobs.cargo`, `jobs.mutants` and `jobs.parity` | that step comes before the `Swatinem/rust-cache@` step and before every step whose `run` holds `cargo` or `sh scripts/` |
+| every job | no step uses `dtolnay/rust-toolchain@`, and no step has a `toolchain` key under `with` |
+
+### Requirement: Verify script toolchain check
+Before any other cargo command, `scripts/verify-rust.sh` SHALL compare
+the version that `cargo --version` prints, its second word, with the
+`channel` of `rust-toolchain.toml`. When they differ, it SHALL print
+`cargo <found> is on PATH, but rust-toolchain.toml pins <pinned>; put rustup's cargo proxy first on PATH`
+to standard error and exit 1 without running another cargo command, so a
+`cargo` that ignores the toolchain file cannot lint with a different
+clippy.
+
+#### Scenario: Verify script refuses another toolchain
+- **WHEN** `sh scripts/verify-rust.sh` runs with no `OSQ_DIFF` and a `cargo` on `PATH` that prints its row's text for `--version`, records its other arguments and exits 0
+- **THEN** the script exits, prints and runs the cargo commands as given:
+
+| `cargo --version` prints | Exit | Output holds | cargo commands after `--version` |
+|---|---|---|---|
+| `cargo 1.99.1 (stub)` | 0 | `mutation check not run: OSQ_DIFF is not set` | `fmt --all --check`, `clippy --workspace --all-targets -- -D warnings`, `test --workspace -- --include-ignored` |
+| `cargo 1.99.0 (stub)` | 1 | `cargo 1.99.0 is on PATH, but rust-toolchain.toml pins 1.99.1; put rustup's cargo proxy first on PATH` | none |
+| `cargo 1.97.0 (stub)` | 1 | `cargo 1.97.0 is on PATH, but rust-toolchain.toml pins 1.99.1; put rustup's cargo proxy first on PATH` | none |
