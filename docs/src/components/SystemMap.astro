@@ -65,7 +65,7 @@ const fmt = (pts: [number, number][]) => 'M' + pts.map(([x, y]) => `${x.toFixed(
 
 function draw(layout: Layout) {
   const W = layout.w;
-  return edges.map((edge, i) => {
+  return edges.map((edge) => {
     const a = layout.at[edge.from];
     const b = layout.at[edge.to];
     const bend = layout.bends?.[`${edge.from}>${edge.to}`];
@@ -74,7 +74,7 @@ function draw(layout: Layout) {
       : [exit(W, a, centre(W, b)), exit(W, b, centre(W, a))];
     // a bent edge runs along the frame and goes unlabelled; its twin edge already names the link
     const mid: [number, number] = [(pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2];
-    return { d: fmt(pts), mid, label: bend ? '' : edge.label, delay: (-i * 0.9).toFixed(1), gap: Boolean(nodes[edge.to].gap) };
+    return { d: fmt(pts), mid, label: bend ? '' : edge.label, gap: Boolean(nodes[edge.to].gap) };
   });
 }
 
@@ -129,7 +129,6 @@ const parts = [
           {lines.map((line) => (
             <g class:list={['edge', { 'to-gap': line.gap }]}>
               <path class="line" d={line.d} />
-              <path class="pulse" d={line.d} pathLength="100" style={`animation-delay: ${line.delay}s`} />
             </g>
           ))}
           {lines.filter((line) => line.label).map((line) => (
@@ -172,9 +171,7 @@ const parts = [
   .graph svg.narrow { display: none; }
 
   .line { fill: none; stroke: color-mix(in srgb, var(--muted) 45%, transparent); stroke-width: 1.25; }
-  .pulse { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 10 90; animation: travel 7.2s linear infinite; }
   .to-gap .line { stroke-dasharray: 4 4; }
-  .to-gap .pulse { display: none; }
   .label { font-family: var(--mono); font-size: 10px; fill: var(--muted); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
 
   .node rect { fill: var(--accent-soft); stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 1; }
@@ -192,12 +189,10 @@ const parts = [
   .key.code { background: var(--surface); border: 1.5px solid var(--line); }
   .key.gap { border: 1.5px dashed var(--red-fg); }
 
-  @keyframes travel { from { stroke-dashoffset: 10; } to { stroke-dashoffset: -90; } }
   @media (max-width: 960px) { .map { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
   @media (max-width: 560px) {
     .graph { padding: 16px; }
     .graph svg.wide { display: none; }
     .graph svg.narrow { display: block; }
   }
-  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: 0; } }
 </style>
