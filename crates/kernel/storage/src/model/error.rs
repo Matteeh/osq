@@ -11,7 +11,8 @@ pub enum ReadModelError {
     Storage(StorageError),
     /// Opening or writing the SQLite database failed.
     Sqlite(rusqlite::Error),
-    /// Removing a stale database file failed.
+    /// A file operation failed: removing a leftover rebuild file, opening the
+    /// rebuild database, or renaming it over the database path.
     Io(std::io::Error),
     /// A trial labels file is not a JSON object of true or false labels.
     Labels(String),

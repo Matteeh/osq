@@ -2,6 +2,7 @@
 
 mod events;
 mod folder;
+mod manifest;
 mod outcomes;
 mod records;
 mod specs;
@@ -120,12 +121,13 @@ pub struct ChangeSnapshot {
 /// # Errors
 ///
 /// Returns [`StorageError::Read`] when an event file that exists cannot be
-/// read, [`StorageError::EventLine`] when one of its lines is refused, and
+/// read, [`StorageError::EventLine`] when one of its lines is refused,
 /// [`StorageError::Specs`] when a delta spec, a task file or the proposal is
-/// refused by the specs kernel.
+/// refused by the specs kernel, and [`StorageError::Manifest`] when
+/// `.run/manifest.json` does not read as a manifest.
 pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> {
     let proposal = read_proposal(&entry.path);
-    let manifest = read_manifest(&entry.path);
+    let manifest = read_manifest(&entry.path)?;
     let approved = is_approved(&entry.path);
     let verify = read_verify(&entry.path)?;
     let deltas = read_deltas(&entry.path)?;

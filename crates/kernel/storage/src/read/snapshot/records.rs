@@ -5,6 +5,8 @@
 
 use serde_json::Value;
 
+use super::manifest::Manifest;
+
 /// One notice: its id and severity, as written.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Notice {
@@ -103,13 +105,12 @@ fn link_entry(value: &Value) -> Option<LinkEntry> {
     })
 }
 
-/// The manifest's notices record, or `None` when it is absent or malformed.
-pub(super) fn manifest_notices(manifest: Option<&Value>) -> Option<ManifestNotices> {
-    let record = manifest?.get("notices")?;
-    let items = record.get("items")?.as_array()?;
+/// The manifest's notices record, or `None` when it holds none.
+pub(super) fn manifest_notices(manifest: Option<&Manifest>) -> Option<ManifestNotices> {
+    let record = manifest?.notices.as_ref()?;
     Some(ManifestNotices {
-        items: items.iter().filter_map(manifest_notice).collect(),
-        opened: record.get("opened").and_then(Value::as_array).map(|ids| {
+        items: record.items.iter().filter_map(manifest_notice).collect(),
+        opened: record.opened.as_ref().map(|ids| {
             ids.iter()
                 .filter_map(Value::as_str)
                 .map(str::to_owned)

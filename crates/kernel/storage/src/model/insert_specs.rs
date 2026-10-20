@@ -49,17 +49,29 @@ pub fn write_task_outcomes(
 ) -> Result<(), ReadModelError> {
     let mut connection = Connection::open(db_path)?;
     let transaction = connection.transaction()?;
-    for snapshot in snapshots {
-        if snapshot.location == Location::Archived {
-            insert_task_outcomes(&transaction, &task_outcome_rows(snapshot, ownerships))?;
-        }
-    }
+    insert_task_outcomes(&transaction, snapshots, ownerships)?;
     transaction.commit()?;
     Ok(())
 }
 
+/// Fills the `task_outcomes` table for the archived snapshots, in their order.
+///
+/// Rejected snapshots add no row.
+pub(super) fn insert_task_outcomes(
+    transaction: &Transaction<'_>,
+    snapshots: &[ChangeSnapshot],
+    ownerships: &[CapabilityOwnership],
+) -> Result<(), rusqlite::Error> {
+    for snapshot in snapshots {
+        if snapshot.location == Location::Archived {
+            insert_task_outcome_rows(transaction, &task_outcome_rows(snapshot, ownerships))?;
+        }
+    }
+    Ok(())
+}
+
 /// Inserts the `task_outcomes` rows.
-fn insert_task_outcomes(
+fn insert_task_outcome_rows(
     transaction: &Transaction<'_>,
     rows: &[TaskOutcomeRow],
 ) -> Result<(), rusqlite::Error> {

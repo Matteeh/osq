@@ -4,12 +4,12 @@ use std::fs;
 use std::path::Path;
 
 use osq_core::TaskId;
-use serde_json::Value;
 
 use crate::read::StorageError;
 use crate::read::text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 
 use super::TaskFile;
+use super::manifest::Manifest;
 use super::outcomes::TaskOutcomeFacts;
 
 /// The parts of a proposal storage reads: its title and its Goal.
@@ -38,27 +38,38 @@ pub(super) fn read_proposal(folder: &Path) -> Proposal {
     }
 }
 
-/// Reads the manifest as an object, or `None` when it is missing or malformed.
-pub(super) fn read_manifest(folder: &Path) -> Option<Value> {
-    let text = read_text(&folder.join(".run").join("manifest.json"))?;
-    let value: Value = serde_json::from_str(&text).ok()?;
-    value.is_object().then_some(value)
+/// Reads `.run/manifest.json` into its typed fields, or `None` when it is missing.
+///
+/// # Errors
+///
+/// Returns [`StorageError::Read`] when the file exists but cannot be read as
+/// text, and [`StorageError::Manifest`] when its text does not read as a
+/// manifest.
+pub(super) fn read_manifest(folder: &Path) -> Result<Option<Manifest>, StorageError> {
+    let path = folder.join(".run").join("manifest.json");
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(source) if source.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(source) => return Err(StorageError::Read { path, source }),
+    };
+    serde_json::from_str(&text)
+        .map(Some)
+        .map_err(|source| StorageError::Manifest { path, source })
 }
 
 /// The manifest `approvedAt` when the change is approved and it reads.
-pub(super) fn approved_at(approved: bool, manifest: Option<&Value>) -> Option<String> {
+pub(super) fn approved_at(approved: bool, manifest: Option<&Manifest>) -> Option<String> {
     if !approved {
         return None;
     }
-    let value = manifest?.get("approvedAt")?.as_str()?;
+    let value = manifest?.approved_at.as_deref()?;
     timestamp_ms(value).is_some().then(|| value.to_owned())
 }
 
 /// The planner the manifest names, else the brief's, both trimmed.
-pub(super) fn read_planner(folder: &Path, manifest: Option<&Value>) -> Option<String> {
+pub(super) fn read_planner(folder: &Path, manifest: Option<&Manifest>) -> Option<String> {
     let from_manifest = manifest
-        .and_then(|value| value.get("planner"))
-        .and_then(Value::as_str)
+        .and_then(|manifest| manifest.planner.as_deref())
         .and_then(trimmed);
     if from_manifest.is_some() {
         return from_manifest;

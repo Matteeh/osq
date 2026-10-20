@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, Transaction, params};
 use serde_json::Value;
 
 use super::error::ReadModelError;
@@ -36,27 +36,29 @@ pub fn read_trial_labels(project_root: &Path) -> Result<TrialLabels, ReadModelEr
 }
 
 /// Fills the label columns of `validator_findings`, `mutation_survivors` and
-/// `link_findings` after their rows are in.
+/// `link_findings` in the rebuild transaction.
 ///
 /// Implements: rust-storage/trial-labels
 ///
 /// # Errors
 ///
-/// Returns an error when the database cannot be opened or updated.
-pub(super) fn apply_labels(db_path: &Path, labels: &TrialLabels) -> Result<(), ReadModelError> {
-    let connection = Connection::open(db_path)?;
+/// Returns an error when a label update fails.
+pub(super) fn apply_labels(
+    transaction: &Transaction<'_>,
+    labels: &TrialLabels,
+) -> Result<(), rusqlite::Error> {
     apply_label_map(
-        &connection,
+        transaction,
         "UPDATE validator_findings SET label = ? WHERE id = ?",
         &labels.validator,
     )?;
     apply_label_map(
-        &connection,
+        transaction,
         "UPDATE mutation_survivors SET label = ? WHERE id = ?",
         &labels.traceability,
     )?;
     apply_label_map(
-        &connection,
+        transaction,
         "UPDATE link_findings SET label = ? WHERE id = ?",
         &labels.traceability,
     )?;
