@@ -2,30 +2,14 @@
 //! in time.
 
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use osq_kernel_config::Timeouts;
 use osq_kernel_vcs::{GitVcs, Vcs, VcsError};
 
-/// The fake git program: it sleeps when its command is the row's slow one.
-const FAKE_GIT: &str =
-    "#!/bin/sh\nif [ \"$3\" = \"$OSQ_FAKE_SLOW\" ]; then exec sleep 30; fi\nexit 0\n";
-
-/// Serializes the tests that write and start fake git scripts.
-static SPAWN_LOCK: Mutex<()> = Mutex::new(());
-
 /// One row's call under test, with no result value kept.
 type Call = fn(&GitVcs) -> Result<(), VcsError>;
-
-/// Takes the lock that keeps one test writing and starting scripts at a time.
-fn spawn_lock() -> MutexGuard<'static, ()> {
-    SPAWN_LOCK
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-}
 
 /// The limits the timeout rows use.
 fn limits() -> Timeouts {
@@ -36,29 +20,20 @@ fn limits() -> Timeouts {
     }
 }
 
-/// Writes the fake git script `name` into its own folder, giving the folder and
-/// the script's path.
-fn fake_git(name: &str) -> (PathBuf, PathBuf) {
+/// The committed fake git script the timeout rows run in place.
+fn fake_git() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/fake-git.sh")
+}
+
+/// A `GitVcs` on the fake git script, in its own folder `name`, slow on `slow`.
+fn slow_vcs(name: &str, slow: &str) -> GitVcs {
     let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
     let _ = fs::remove_dir_all(&root);
     fs::create_dir_all(&root).unwrap();
-    let script = root.join("git");
-    fs::write(&script, FAKE_GIT).unwrap();
-    let mut permissions = fs::metadata(&script).unwrap().permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(&script, permissions).unwrap();
-    (root, script)
-}
-
-/// A `GitVcs` on the fake git script `name`, slow on `slow`, giving it and the
-/// script's path.
-fn slow_vcs(name: &str, slow: &str) -> (GitVcs, PathBuf) {
-    let (root, script) = fake_git(name);
-    let vcs = GitVcs::new(&root)
-        .with_program(script.to_str().unwrap())
+    GitVcs::new(&root)
+        .with_program(fake_git().to_str().unwrap())
         .with_env("OSQ_FAKE_SLOW", slow)
-        .with_timeouts(&limits());
-    (vcs, script)
+        .with_timeouts(&limits())
 }
 
 /// Asserts `result` is a timeout naming `fake`, `args` and `limit`, reached
@@ -227,13 +202,13 @@ fn write_rows() -> [Row; 7] {
 /// Covers: rust-vcs/commands-that-run-out-of-time
 #[test]
 fn commands_that_run_out_of_time() {
-    let _guard = spawn_lock();
+    let fake = fake_git();
     for (label, slow, args, limit, call) in read_rows().into_iter().chain(write_rows()) {
-        let (vcs, script) = slow_vcs(&format!("run_out_of_time_{label}"), slow);
+        let vcs = slow_vcs(&format!("run_out_of_time_{label}"), slow);
         let started = Instant::now();
         let result = call(&vcs);
         let elapsed = started.elapsed();
-        assert_timed_out(label, result, &script, args, limit, elapsed);
+        assert_timed_out(label, result, &fake, args, limit, elapsed);
     }
 }
 
@@ -242,8 +217,7 @@ fn commands_that_run_out_of_time() {
 /// Covers: rust-vcs/commands-that-finish-in-time
 #[test]
 fn commands_that_finish_in_time() {
-    let _guard = spawn_lock();
-    let (vcs, _) = slow_vcs("finish_in_time", "none");
+    let vcs = slow_vcs("finish_in_time", "none");
     assert_eq!(vcs.root().unwrap(), None);
     vcs.create_branch("side", "main").unwrap();
     vcs.merge_abort().unwrap();

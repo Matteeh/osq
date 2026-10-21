@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6f941f68a4a4c0fcc7a451331a230a61e56788eeede0253767be35787187bfbd"
+build_stamp: "3f811304"
+project_commit: "67d19dd4"
+exit_code: 0
+scope_files: {"crates/kernel/vcs/tests/fake_git_fixture.rs":"sha256:7d0cbef743204551d9a9774ba464b8de3356fba925ba55d7bce39dfbfa1badcd","crates/kernel/vcs/tests/fixtures/fake-git.sh":"sha256:3cdf992c72ed32ac1153da9ca284d5a2959798be74bd034776e699c3ead748c3","crates/kernel/vcs/tests/git_timeouts.rs":"sha256:b525d7ed5583b0cb3c786cb96a8f34facf11c71bff33c668f1dac630411fb809"}
+---
+2026-10-21T18:57:27.557Z

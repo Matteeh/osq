@@ -270,8 +270,17 @@ runs through `run_process` with `request`'s `cwd`, `env`, `timeout` and
   provider <provider>: <detail>. Run: pi auth check --provider
   <provider>`.
 
+The fake pi programs the harness tests run,
+`crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` and
+`crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`, SHALL be
+committed executable and run in place by their absolute path, never
+copied or written by a test. Writing an executable and then starting it
+while other tests fork can fail with `ETXTBSY`, as 251's mutation
+baseline did. A test that needs a program named `pi` on a `PATH` SHALL
+use a symlink or a `PATH` entry that points at the committed file.
+
 #### Scenario: Preflight with a fake pi
-- **WHEN** `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` is copied into a new temporary folder as `pi` and made executable, and `preflight_pi` runs it in that folder with a `timeout` of 2 seconds, a `kill_grace` of 300 milliseconds, the range `>=0.87.0 <0.88.0`, the row's provider and exactly the row's variables; for `--version` the fake prints `FAKE_PI_VERSION` to stdout and `FAKE_PI_VERSION_STDERR` to stderr, each when not empty, and exits with `FAKE_PI_VERSION_EXIT`, else 0; for `auth` it writes its arguments one per line to `auth-args.txt` in its folder, waits 10 seconds when `FAKE_PI_AUTH_WAIT` is `1`, prints `FAKE_PI_AUTH` when it is not empty, and exits with `FAKE_PI_AUTH_EXIT`, else 0
+- **WHEN** `preflight_pi` runs `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` in place as `bin`, with a new temporary folder as `cwd`, a `timeout` of 2 seconds, a `kill_grace` of 300 milliseconds, the range `>=0.87.0 <0.88.0`, the row's provider and exactly the row's variables; for `--version` the fake prints `FAKE_PI_VERSION` to stdout and `FAKE_PI_VERSION_STDERR` to stderr, each when not empty, and exits with `FAKE_PI_VERSION_EXIT`, else 0; for `auth` it writes its arguments one per line to `auth-args.txt` in its working directory, waits 10 seconds when `FAKE_PI_AUTH_WAIT` is `1`, prints `FAKE_PI_AUTH` when it is not empty, and exits with `FAKE_PI_AUTH_EXIT`, else 0
 - **THEN** each run returns the row's result in under 5 seconds:
 
 | Provider | Variables | Result |
@@ -293,6 +302,10 @@ runs through `run_process` with `request`'s `cwd`, `env`, `timeout` and
 #### Scenario: Pi binary that cannot start
 - **WHEN** `preflight_pi` runs with the `bin` `/nonexistent/pi`
 - **THEN** it fails with `PiPreflightError::Binary`, displayed `Pi binary not found or failed: /nonexistent/pi`
+
+#### Scenario: Fake pi programs run in place
+- **WHEN** a test reads the modes of `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` and `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`
+- **THEN** each mode has the owner, group and other execute bits set
 
 ### Requirement: Pi harness
 `PiHarness` in `osq-kernel-harnesses` SHALL implement the runners
@@ -342,7 +355,7 @@ harness carrying the version `preflight_pi` read for that program.
   out`; else stderr when it is not blank; else absent.
 
 #### Scenario: Pi tasks with a fake pi
-- **WHEN** `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh` is copied into a new temporary folder as `pi` and made executable, and a `PiHarness` with that program, the settings provider `deepseek`, model `m-settings` and thinking `high`, and a `kill_grace` of 300 milliseconds starts a request with that folder as `cwd`, the prompt `Do task 1.`, the model `m-role`, the row's timeout and exactly the variable `FAKE_PI_MODE=<row's mode>`; the fake writes its arguments one per line to `args.txt` in its folder, then in mode `settle` and `settle-stubborn` prints the four lines below and runs for 10 seconds, leaving on `SIGTERM` with exit code 143 in `settle` and ignoring `SIGTERM` in `settle-stubborn`; in `missing-key` writes `No API key found for deepseek.` to stderr and exits 1; in `fail` writes `boom` to stderr and exits 2; and in `hang` runs for 10 seconds:
+- **WHEN** a `PiHarness` whose program is `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`, run in place, with the settings provider `deepseek`, model `m-settings` and thinking `high`, and a `kill_grace` of 300 milliseconds starts a request with a new temporary folder as `cwd`, the prompt `Do task 1.`, the model `m-role`, the row's timeout and exactly the variable `FAKE_PI_MODE=<row's mode>`; the fake writes its arguments one per line to `args.txt` in its working directory, then in mode `settle` and `settle-stubborn` prints the four lines below and runs for 10 seconds, leaving on `SIGTERM` with exit code 143 in `settle` and ignoring `SIGTERM` in `settle-stubborn`; in `missing-key` writes `No API key found for deepseek.` to stderr and exits 1; in `fail` writes `boom` to stderr and exits 2; and in `hang` runs for 10 seconds:
 
 ```
 {"type":"tool_execution_start","toolCallId":"c1","toolName":"write","args":{"path":"notes.md"}}

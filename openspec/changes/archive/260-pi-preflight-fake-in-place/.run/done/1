@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:dfc477c17eb40f5058df17c708b259f8d034b57cb10c9c61e9e013b6dada652e"
+build_stamp: "3f811304"
+project_commit: "55bcf452"
+exit_code: 0
+scope_files: {"crates/kernel/harnesses/tests/fake_pi_fixtures.rs":"sha256:e1fdb7cb3e5ace41816f3eb23f0e465d459d76fd88a1a6dcfcea9597c57bba37","crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh":"sha256:c83089eb5560a5817302dbe477f0d13c83915c3c48b391f8ccea019ff0654ec5","crates/kernel/harnesses/tests/pi_preflight.rs":"sha256:e1e6da96ad3e2e4572e8ec13228adb1a765759bb933268887227ba4c350ae9d6"}
+---
+2026-10-21T18:52:07.281Z

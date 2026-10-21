@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -185,19 +184,6 @@ fn temporary_folder(name: &str) -> PathBuf {
     folder
 }
 
-/// Copies the fake pi into the folder as `pi` and makes it executable.
-fn fake_pi(folder: &Path) -> PathBuf {
-    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/fake-pi/preflight.sh");
-    let target = folder.join("pi");
-    fs::copy(source, &target).expect("the fake pi is copied");
-    let mut permissions = fs::metadata(&target)
-        .expect("the fake pi has metadata")
-        .permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(&target, permissions).expect("the fake pi is executable");
-    target
-}
-
 /// Builds one row's request with exactly its variables.
 fn request(row: &Row, folder: &Path, bin: &Path) -> PiPreflight {
     let env = row
@@ -279,9 +265,9 @@ fn check_row(row: &Row, folder: &Path, bin: &Path) {
 /// Covers: rust-harnesses/preflight-with-a-fake-pi
 #[test]
 fn preflight_with_a_fake_pi() {
+    let bin = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/fake-pi/preflight.sh");
     for row in ROWS {
         let folder = temporary_folder(row.name);
-        let bin = fake_pi(&folder);
         let started = Instant::now();
         check_row(row, &folder, &bin);
         let elapsed = started.elapsed();

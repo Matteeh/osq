@@ -69,15 +69,19 @@ from code.
   `<command> failed: <output>` and return `None` from
   `std::error::Error::source`.
 
-The timeout scenarios use a fake git program: an executable shell script
-written under `CARGO_TARGET_TMPDIR` holding
+The timeout scenarios use a fake git program: the committed executable
+`crates/kernel/vcs/tests/fixtures/fake-git.sh`, run in place and never
+copied or written by a test, holding
 `#!/bin/sh\nif [ "$3" = "$OSQ_FAKE_SLOW" ]; then exec sleep 30; fi\nexit 0\n`,
 run as `GitVcs::new(<dir>).with_program(<script>).with_env("OSQ_FAKE_SLOW", <command>).with_timeouts(&limits)`,
-where `<dir>` is a folder under `CARGO_TARGET_TMPDIR` and `limits` is
+where `<script>` is that file's absolute path, `<dir>` is a folder under
+`CARGO_TARGET_TMPDIR` and `limits` is
 `Timeouts { git: Duration::from_millis(200), git_commit: Duration::from_millis(400), ..Timeouts::default() }`.
 Its third argument is the git command's name, after `-c` and
 `core.quotepath=false`, so only the row's command sleeps and every other
-command exits 0 with no output at once.
+command exits 0 with no output at once. Writing an executable and then
+starting it while other tests fork can fail with `ETXTBSY`, which is why
+the script is never written at test time.
 
 #### Scenario: Command for a read
 - **WHEN** `GitVcs::new("/repo").with_program("git-test").with_env("GIT_CONFIG_NOSYSTEM", "1")` builds `command(&["status", "--porcelain=v1"])`
@@ -134,6 +138,10 @@ command exits 0 with no output at once.
 #### Scenario: Commands that finish in time
 - **WHEN** a `GitVcs` on the fake git program, with `OSQ_FAKE_SLOW` set to `none`, runs `root()`, `create_branch("side", "main")` and `merge_abort()`
 - **THEN** `root()` returns `Ok(None)`, since the fake prints nothing, and the two writes return `Ok(())`
+
+#### Scenario: Fake git runs in place
+- **WHEN** a test reads `crates/kernel/vcs/tests/fixtures/fake-git.sh` and its mode
+- **THEN** it holds exactly the script above, and its mode has the owner, group and other execute bits set
 
 ### Requirement: Repository state reads
 `osq-kernel-vcs` SHALL hold the `Vcs` trait, the read half of osq's
