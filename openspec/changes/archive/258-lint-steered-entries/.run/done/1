@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4d8ed988cbb0d7bc470a6b804d02f60c2a77fbb858128d93fc19a72c21696852"
+build_stamp: "3f811304"
+project_commit: "2c1f28d0"
+exit_code: 0
+scope_files: {"src/core/spec/entry-lint.ts":"sha256:71a48c3fe292214b2345c8d1b4e1637068395734cde85cac6455dcd1b029d8ab","tests/entry-lint-worktree.test.ts":"sha256:6c7aef14e86bd67b0e712af621f11b59173ec8a31adaeac9f8b109ad2df3a168"}
+---
+2026-10-21T18:02:41.865Z

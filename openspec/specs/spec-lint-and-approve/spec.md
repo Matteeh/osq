@@ -2378,7 +2378,14 @@ the change cannot provide, through `missingEntryFindings` in
 `src/core/spec/entry-lint.ts`. An entry SHALL count as provided when any of
 these holds:
 
-- it lies inside the change folder;
+- it names a path inside the change folder being linted that exists there,
+  wherever that folder is: in the checkout, in the change's worktree, or in
+  a stacked copy. An entry names a path inside the folder when it starts
+  with `<openspecRoot>/changes/<folder>/`, the folder's place in any tree,
+  or when it resolves from the project root into the folder. The rest of
+  the entry is read inside the folder: a plain path counts when it names an
+  existing file or directory there, and a pattern counts when
+  `resolveScope` matches it to a file there;
 - the `scope` of that task or of an earlier task of the change covers it, as
   `scopeCoversPath` says;
 - with `vcs.enabled` on, it exists at the default branch's tip, as
@@ -2412,6 +2419,22 @@ because a worktree cut from the default branch will not have it.
 | `src/dep.ts` | an approved change's task scope names it | no entry error |
 | `fixture/.osq/.gitignore` | ignored file present only in the checkout | entry error |
 | `src/later.ts` | only task 3's scope names it, and task 2's entry names it | entry error |
+
+#### Scenario: Entries inside the change folder
+- **WHEN** `lintChangeFolder` runs from the main checkout of a git repository with `vcs.enabled` on, on the change folder `001-steer` at the row's place, whose task 1 holds the row's entry, and whose own files are `proposal.md`, `tasks.md`, `tasks/1.md` and `specs/alpha/spec.md`
+- **THEN** it reports as below:
+
+| Folder | Entry | Lint |
+|---|---|---|
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/specs/alpha/spec.md` | no entry error |
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/specs/**` | no entry error |
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/notes/gone.md` | entry error naming it |
+| only in the checkout, uncommitted | `openspec/changes/001-steer/specs/alpha/spec.md` | no entry error |
+| only in the checkout, uncommitted | `openspec/changes/001-steer/notes/gone.md` | entry error naming it |
+
+#### Scenario: Steered change linted from main
+- **WHEN** `osq lint 001` runs in the main checkout, and the change `001-steer` exists only in its worktree on branch `osq/001-steer`, with task 1 done and its `entry` naming `openspec/changes/001-steer/specs/alpha/spec.md`
+- **THEN** it reports no entry error
 
 ### Requirement: Ungoverned ownership warning
 Lint SHALL warn once per Code ownership source glob in a change's delta spec
