@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e215ea5003308f165f2c5b3c67f442396ba0d5f06afc3192ecf6e075a79140c1"
+build_stamp: "e195d914"
+project_commit: "5d633266"
+exit_code: 0
+scope_files: {"crates/kernel/config/src/config.rs":"sha256:05485cae8f1735ef9f032915c0f1eb75a3afbbfedbc33b4a0ba8b33472d7a380","crates/kernel/config/src/lib.rs":"sha256:8f05a620a90a98bc26c06c1c1a27f861fe6059a358024e7b3c34d3b35b6fc250","crates/kernel/config/src/roles/executor.rs":"sha256:e5511b26633857a6e64f5fef29d3fd2750b6594675ecf8579584e14ee288efc0","crates/kernel/config/src/roles/harness.rs":"sha256:780168150c6bcb681589402aff6ef65ea6abd800ded11520569bcd7166fecefd","crates/kernel/config/src/roles/mod.rs":"sha256:ce62f1d675f9c2ccf8b23ba9159e8eb48e3d0d42fa0eccd82e5b33a84f8c2ab3","crates/kernel/config/src/roles/planner.rs":"sha256:3ae70c60ebe117495e9773c304e174177a96ea0ee959d5d08be0593b3b4e91c1","crates/kernel/config/src/roles/validator.rs":"sha256:17780917a78829441b87b05b0de964decd25801ab8de38026c7628bd82f29f3f","crates/kernel/config/tests/roles.rs":"sha256:700f4b169aa5d0f396fd52426a899d16483f12ba515fc46b2d5529733abab2eb"}
+---
+2026-10-21T14:37:22.632Z

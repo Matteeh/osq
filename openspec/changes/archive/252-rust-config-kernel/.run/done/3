@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:e62df9cacf1bde850fd98c21d5df8bd33c5750f4b071ec180947f4bdbbe95b10"
+build_stamp: "e195d914"
+project_commit: "44db1459"
+exit_code: 0
+scope_files: {"decisions/029-rust-config.md":"sha256:98703ae4847b3bfe9aec593d3968898ca0abbe5d2e3a064f013814680a976066","decisions/README.md":"sha256:0ea5a4aa73a9374daf92e0408b06a12ac2d0f92de7d00410d7d2543e298dd39c","tests/rust-adrs.test.ts":"sha256:4eb28dc2adaef304b557722c458cc92f797bba22dca804b6bd8d93d38021ac48"}
+---
+2026-10-21T14:41:24.279Z

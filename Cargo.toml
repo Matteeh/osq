@@ -13,6 +13,7 @@ members = [
     "crates/kernel/harnesses",
     "crates/kernel/agents",
     "crates/kernel/loop",
+    "crates/kernel/config",
     "crates/features/plan",
     "crates/features/approve",
     "crates/features/run",
@@ -43,6 +44,7 @@ osq-kernel-runners = { path = "crates/kernel/runners" }
 osq-kernel-harnesses = { path = "crates/kernel/harnesses" }
 osq-kernel-agents = { path = "crates/kernel/agents" }
 osq-kernel-loop = { path = "crates/kernel/loop" }
+osq-kernel-config = { path = "crates/kernel/config" }
 osq-feature-plan = { path = "crates/features/plan" }
 osq-feature-approve = { path = "crates/features/approve" }
 osq-feature-run = { path = "crates/features/run" }
@@ -60,6 +62,7 @@ syn = { version = "2", features = ["full", "visit"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
 proptest = "1"
 insta = "1"
+toml = { version = "1", default-features = false, features = ["parse", "std", "serde"] }
 
 # The rulebook (ADR 023). Every crate inherits it with `[lints] workspace = true`
 # and may not loosen an entry.

@@ -536,7 +536,7 @@ or archived change by hand, does not compile.
 - **THEN** each time `id` is `204-rust-core` and `tasks` is `1`, `2`
 
 ### Requirement: Rust rebuild decisions
-osq's decisions SHALL include the seven Rust rebuild ADRs 022 to 028, each
+osq's decisions SHALL include the eight Rust rebuild ADRs 022 to 029, each
 accepted, applying to the capability group `rust` through
 `applies_to: [group:rust]`, so they govern every capability whose sidecar
 names group `rust` and nothing under `src/`, naming `tests/rust-adrs.test.ts`
@@ -547,6 +547,7 @@ kernel's golden, validation, replay and parity tests and the linter
 kernel's no-runtime-Node test. ADR 027, scheduling, SHALL also name core's
 scheduler tests and the loop kernel's scope, schedule and corpus tests.
 ADR 028, the Feature trait, SHALL also name core's feature test.
+ADR 029, config, SHALL also name the config kernel's file and role tests.
 The index SHALL link each once, and AGENTS.md's project rules block SHALL
 not change, since none applies to all.
 
@@ -563,13 +564,14 @@ not change, since none applies to all.
 | 026 | `026-openspec-in-rust.md` | `tests/rust-adrs.test.ts`, `crates/kernel/specs/tests/golden_corpus.rs`, `crates/kernel/specs/tests/validate_corpus.rs`, `crates/kernel/specs/tests/replay_corpus.rs`, `crates/kernel/specs/tests/openspec_validate_parity_corpus.rs`, `crates/kernel/specs/tests/openspec_archive_parity_corpus.rs`, `crates/kernel/linter/tests/node_spawn_corpus.rs` |
 | 027 | `027-rust-scheduling.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/schedule.rs`, `crates/core/tests/schedule_props.rs`, `crates/kernel/loop/tests/scope_files.rs`, `crates/kernel/loop/tests/active_schedule.rs`, `crates/kernel/loop/tests/schedule_corpus.rs` |
 | 028 | `028-rust-feature-trait.md` | `tests/rust-adrs.test.ts`, `crates/core/tests/feature.rs` |
+| 029 | `029-rust-config.md` | `tests/rust-adrs.test.ts`, `crates/kernel/config/tests/config_file.rs`, `crates/kernel/config/tests/roles.rs` |
 
 #### Scenario: Rules block without the Rust ADRs
 - **WHEN** `renderRulesBlock` renders osq's own decisions
-- **THEN** no line ends in `ADR 022`, `ADR 023`, `ADR 024`, `ADR 025`, `ADR 026`, `ADR 027` or `ADR 028`, and `checkProjectRules` reports nothing
+- **THEN** no line ends in `ADR 022`, `ADR 023`, `ADR 024`, `ADR 025`, `ADR 026`, `ADR 027`, `ADR 028` or `ADR 029`, and `checkProjectRules` reports nothing
 
 #### Scenario: Rust ADR check files exist
-- **WHEN** every check file named by ADRs 022 to 028 is looked up from the repository root
+- **WHEN** every check file named by ADRs 022 to 029 is looked up from the repository root
 - **THEN** each one exists
 
 ### Requirement: Mutation script

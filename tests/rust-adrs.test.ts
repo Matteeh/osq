@@ -75,6 +75,15 @@ const ROWS: readonly RustAdrRow[] = [
     file: '028-rust-feature-trait.md',
     checks: ['tests/rust-adrs.test.ts', 'crates/core/tests/feature.rs'],
   },
+  {
+    number: '029',
+    file: '029-rust-config.md',
+    checks: [
+      'tests/rust-adrs.test.ts',
+      'crates/kernel/config/tests/config_file.rs',
+      'crates/kernel/config/tests/roles.rs',
+    ],
+  },
 ];
 
 /** The number of times the decisions index links `file`. */
@@ -132,7 +141,7 @@ describe('rust-core: Rules block without the Rust ADRs', () => {
 });
 
 describe('rust-core: Rust ADR check files exist', () => {
-  it('has every check file named by ADRs 022 to 028', async () => {
+  it('has every check file named by ADRs 022 to 029', async () => {
     const records = await readDecisions(repoRoot, DEFAULT_CONFIG);
     for (const row of ROWS) {
       const adr = records.adrs.find((entry) => entry.number === row.number);

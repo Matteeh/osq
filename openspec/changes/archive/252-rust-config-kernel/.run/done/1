@@ -1,0 +1,25 @@
+---
+scope_resolver: 2
+scope_hash: sha256:fe33ed86a8b41cc42096a0a896a1f38f8f83dd62d58ffeb30e4f9e537b604d79
+build_stamp: e195d914
+project_commit: 675dbdc5
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:ec75e33b4de9ae673205f7986da5e79cef3d205447fdcb0fadd366911c601f78
+  Cargo.toml: sha256:b4f7fac2a06bc813fa428d699694a97f4a6eacb3cd62816c20c48a34f50e7ee9
+  crates/kernel/config/Cargo.toml: sha256:5fc960309698a1f94d86d3e869ac5ee8ee583b45958a6d45a8649d5eea9f8534
+  crates/kernel/config/src/blocks/mod.rs: sha256:d9b9d0d9cf6777e176003b157bb5aceaef748faef5b48cb13a0dcb03453da55e
+  crates/kernel/config/src/blocks/timeouts.rs: sha256:1fbcbf1be03ed3efa52699451023180aa5dd013bda2350f4e512d7d3d9be30c4
+  crates/kernel/config/src/blocks/value.rs: sha256:0c593d82523635f2d515fe023d934a044cdd120fb829f9674254bf764360e9a6
+  crates/kernel/config/src/blocks/vcs.rs: sha256:891d69af9c0c66b4308fbbde351c79b6ea1cdcd8a4382ca1c232ca23a2e69f7b
+  crates/kernel/config/src/config.rs: sha256:05485cae8f1735ef9f032915c0f1eb75a3afbbfedbc33b4a0ba8b33472d7a380
+  crates/kernel/config/src/error.rs: sha256:41566e5406a6d0513021b7cb1477b98265cc7dced98912b6df4e89253c68ff87
+  crates/kernel/config/src/lib.rs: sha256:8f05a620a90a98bc26c06c1c1a27f861fe6059a358024e7b3c34d3b35b6fc250
+  crates/kernel/config/tests/config_file.rs: sha256:77cd774e8412a74cad76c3718fff5c950546a266c7cf5968ff534570983de910
+  crates/kernel/config/tests/config_timeouts.rs: sha256:e3109e960521d945aa420fcebc0c846a883ba4678735ad7d57c9173bcd717405
+  crates/kernel/config/tests/config_vcs.rs: sha256:aeb5b5bcef02ff0a997103f43458312a7e1373f11b080523a997438ee8db40d8
+original_scope_hash: sha256:d65509d1fe89ef5f341d37da359162aa51f4ef29778b0b4dc5ed56273761dec9
+recertified_at: 2026-10-21T14:37:25.299Z
+recertification_count: 1
+---
+2026-10-21T14:30:24.233Z

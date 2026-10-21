@@ -63,3 +63,4 @@ The number comes from the file name (`007-ui-framework.md` is ADR 007). A markdo
 - [026. OpenSpec in Rust](026-openspec-in-rust.md)
 - [027. Rust scheduling](027-rust-scheduling.md)
 - [028. Rust Feature trait](028-rust-feature-trait.md)
+- [029. Rust config](029-rust-config.md)
