@@ -1,0 +1,15 @@
+// Prints the plan prompt's sections after ## Brief, as buildOpeningPrompt appends them, under DEFAULT_CONFIG.
+const D = '/home/mathias/projects/osq/dist';
+const { DEFAULT_CONFIG } = await import(`${D}/core/foundation/config.js`);
+const { getRepositoryRecord, formatRepositoryRecordBody } = await import(`${D}/core/report/report.js`);
+const { formatPlanHintSections, HISTORY_HINTS_HEADING } = await import(`${D}/core/report/history-hints.js`);
+const { RECENT_DISCLOSURES_HEADING } = await import(`${D}/core/report/recent-disclosures.js`);
+const { appendManualEditsSection } = await import(`${D}/core/report/manual-edits-section.js`);
+const root = process.argv[2];
+const config = DEFAULT_CONFIG;
+let prompt = `## This repository's record\n\n${formatRepositoryRecordBody(await getRepositoryRecord(root, config))}`;
+const { history, disclosures } = await formatPlanHintSections(root, config);
+if (history !== null) prompt += `\n\n${HISTORY_HINTS_HEADING}\n\n${history}`;
+if (disclosures !== null) prompt += `\n\n${RECENT_DISCLOSURES_HEADING}\n\n${disclosures}`;
+prompt = await appendManualEditsSection(prompt, root, config);
+process.stdout.write(prompt);

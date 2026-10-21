@@ -10,11 +10,16 @@ use serde_json::Value;
 /// `deriveTaskOutcomes` reads it.
 ///
 /// A task without a stream holds the [`Default`] facts: no `start_scope_files`,
-/// no `scope_hash_paths`, no `changed_files` and `first_attempt_passed` false.
+/// no `start_scope_resolver`, no `measured_ms`, no `scope_hash_paths`, no
+/// `changed_files` and `first_attempt_passed` false.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TaskOutcomeFacts {
     /// The `scopeFiles` of the first `measures` event whose phase is `start`.
     pub start_scope_files: Option<u64>,
+    /// The `scopeResolver` of the same first `start` measures event.
+    pub start_scope_resolver: Option<u64>,
+    /// The summed milliseconds of the stream's valid `start` to `end` pairs.
+    pub measured_ms: Option<u64>,
     /// The keys of `scopeHashes` in the last `end` measures event that holds a
     /// JSON object, sorted by bytes.
     pub scope_hash_paths: Option<Vec<String>>,
@@ -41,6 +46,12 @@ pub(super) struct OutcomeAccumulator {
     facts: TaskOutcomeFacts,
     /// Where the first attempt stands.
     first: FirstAttempt,
+    /// The timestamp of the latest `start` since the previous `end`.
+    pending_start_ms: Option<i64>,
+    /// The summed milliseconds of the completed `start` to `end` pairs.
+    covered_ms: i64,
+    /// Whether at least one pair was counted.
+    has_duration: bool,
 }
 
 impl OutcomeAccumulator {
@@ -49,13 +60,16 @@ impl OutcomeAccumulator {
         Self {
             facts: TaskOutcomeFacts::default(),
             first: FirstAttempt::Before,
+            pending_start_ms: None,
+            covered_ms: 0,
+            has_duration: false,
         }
     }
 
-    /// Records one parsed event of the task's own stream.
-    pub(super) fn observe(&mut self, event: &Event) {
+    /// Records one parsed event of the task's own stream and its timestamp.
+    pub(super) fn observe(&mut self, event: &Event, timestamp: Option<i64>) {
         match event {
-            Event::Measures(data) => self.measures(data),
+            Event::Measures(data) => self.measures(data, timestamp),
             Event::Started(_) => self.started(),
             Event::Done(_) => self.done(),
             Event::Dead(_) | Event::Regressed(_) => self.settle(),
@@ -63,15 +77,25 @@ impl OutcomeAccumulator {
         }
     }
 
-    /// Reads the first start's scope count and the last end's changes.
-    fn measures(&mut self, data: &MeasuresData) {
+    /// Reads the first start's scope count and the last end's changes, and
+    /// sums each `start` to `end` pair's milliseconds.
+    fn measures(&mut self, data: &MeasuresData, timestamp: Option<i64>) {
         match data.phase.as_str() {
             "start" => {
                 if self.facts.start_scope_files.is_none() {
                     self.facts.start_scope_files = Some(data.scope_files);
+                    self.facts.start_scope_resolver = data.scope_resolver;
                 }
+                self.pending_start_ms = timestamp;
             }
             "end" => {
+                if let (Some(start), Some(end)) = (self.pending_start_ms, timestamp) {
+                    if end >= start {
+                        self.covered_ms += end - start;
+                        self.has_duration = true;
+                    }
+                }
+                self.pending_start_ms = None;
                 self.facts.changed_files = data.changed_files;
                 if let Some(Value::Object(hashes)) = &data.scope_hashes {
                     let mut paths: Vec<String> = hashes.keys().cloned().collect();
@@ -107,7 +131,10 @@ impl OutcomeAccumulator {
     }
 
     /// Returns the gathered facts.
-    pub(super) fn build(self) -> TaskOutcomeFacts {
+    pub(super) fn build(mut self) -> TaskOutcomeFacts {
+        if self.has_duration {
+            self.facts.measured_ms = Some(u64::try_from(self.covered_ms).unwrap_or(0));
+        }
         self.facts
     }
 }

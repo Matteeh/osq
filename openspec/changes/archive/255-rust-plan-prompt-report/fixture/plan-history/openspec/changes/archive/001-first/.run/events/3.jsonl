@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-09-01T08:22:23.000Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1}}
+{"type":"started","timestamp":"2026-09-01T08:22:24.000Z","data":{"harness":"pi","attempt":1}}
+{"type":"dead","timestamp":"2026-09-01T08:34:24.000Z","data":{"task":"3","reason":"timeout"}}
+{"type":"measures","timestamp":"2026-09-01T08:34:24.000Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1,"changedFiles":4,"scopeHashes":{"src/first/t3-0.ts":{"before":"sha256:a","after":"sha256:b"},"src/first/t3-1.ts":{"before":"sha256:a","after":"sha256:b"},"src/first/t3-2.ts":{"before":"sha256:a","after":"sha256:b"},"src/first/t3-3.ts":{"before":"sha256:a","after":"sha256:b"}}}}

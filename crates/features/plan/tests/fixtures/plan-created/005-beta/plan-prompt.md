@@ -38,3 +38,7 @@ Beta is the next item to plan.
 ### Requirements
 
 - Beta keeps every line of its brief, word for word.
+
+## This repository's record
+
+This repository's measured record is too small (fewer than 5 tasks).

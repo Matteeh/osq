@@ -5,6 +5,7 @@ mod files;
 mod handoff;
 mod number;
 mod prompt;
+mod report;
 mod select;
 
 use std::collections::BTreeMap;
@@ -68,9 +69,14 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
     let paths = dependency_paths(&item.dependencies, &state.groups);
     let proposal = files::proposal(item, &dependencies, &fixes);
     let brief = files::brief(item, &date::utc_date(now_ms));
+    let sections = report::sections(root)?;
+    let prompt = prompt_text(root, &number, &folder, &proposal, &brief, &paths);
     let change = root.join("openspec").join("changes").join(&folder);
     write_folder(&change, &proposal, &brief)?;
-    write_prompt(&change, root, &number, &folder, &proposal, &brief, &paths)?;
+    write(
+        &change.join("plan-prompt.md"),
+        &format!("{prompt}\n\n{sections}"),
+    )?;
     let command = root
         .join(".claude")
         .join("commands")
@@ -117,19 +123,17 @@ fn write(path: &Path, text: &str) -> Result<(), FeatureError> {
     std::fs::write(path, text).map_err(|source| write_error(path, &source))
 }
 
-/// Writes `plan-prompt.md` after the folder's other files, from the files and
-/// folders it names.
+/// Builds `plan-prompt.md`'s first sections from the files and folders it names.
 ///
 /// Implements: rust-plan/plan-prompt
-fn write_prompt(
-    change: &Path,
+fn prompt_text(
     root: &Path,
     id: &str,
     folder: &str,
     proposal: &str,
     brief: &str,
     paths: &[String],
-) -> Result<(), FeatureError> {
+) -> String {
     let planner = planner(root);
     let title = osq_kernel_storage::frontmatter_string(proposal, "title");
     let capabilities = capabilities(root);
@@ -145,7 +149,7 @@ fn write_prompt(
         decisions: &decisions,
         brief,
     };
-    write(&change.join("plan-prompt.md"), &prompt::build(&input))
+    prompt::build(&input)
 }
 
 /// Reads `<root>/PLANNER.md`, or none when it cannot be read.

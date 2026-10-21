@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-09-01T18:57:05.000Z","data":{"phase":"start","scopeFiles":2,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1}}
+{"type":"started","timestamp":"2026-09-01T18:57:06.000Z","data":{"harness":"pi","attempt":1}}
+{"type":"done","timestamp":"2026-09-01T19:09:06.000Z","data":{"task":"1"}}
+{"type":"measures","timestamp":"2026-09-01T19:09:06.000Z","data":{"phase":"end","scopeFiles":2,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1,"changedFiles":2,"scopeHashes":{"src/shared.ts":{"before":"sha256:a","after":"sha256:b"},"src/tenth/t1-1.ts":{"before":"sha256:a","after":"sha256:b"},"src/extra.ts":{"before":"sha256:a","after":"sha256:b"}}}}

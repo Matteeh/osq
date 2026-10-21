@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:28fa327ba341c9f7820a65a770682d56fd4018a5151a5ed1a1fd31e41474b777"
+build_stamp: "e195d914"
+project_commit: "5f05a778"
+exit_code: 0
+scope_files: {"crates/kernel/storage/src/lib.rs":"sha256:c4f05d5a23d5aa5dfc1c4328c858f7fd6176582e18509977cefb1fb48e114754","crates/kernel/storage/src/model/insert_specs.rs":"sha256:36c3a2062adefe0c3185d78c6de8053766dd2d1be3e8662a6f9a18a884a5d65d","crates/kernel/storage/src/model/mod.rs":"sha256:14c836678125e15992d073074a126ebe5217f60f9502983f940494725d8b7ac7","crates/kernel/storage/src/model/task_outcome_rows.rs":"sha256:b405ec8d842d45105f0f3528d53501d3b707c04cb34f918a7560b66994fcedc8","crates/kernel/storage/src/read/snapshot/events.rs":"sha256:e6dfd69fdc9e55a7053ba8adc95075a7cbaef9f1c0df602fc08618b3c107a858","crates/kernel/storage/src/read/snapshot/outcomes.rs":"sha256:04664e250b2cd2b8e579290320bff822fe5b9b8257701b2da6a3e340384df3c6","crates/kernel/storage/tests/reading_measured.rs":"sha256:68894a3e53e4ca5146ec86430e4e9f04163e333be037e6fb86179c755b7a47a0","crates/kernel/storage/tests/task_outcome_query.rs":"sha256:17dc53aeb2b05336e1980685bdf5b471f294a863c4e1b0b80c0def4705a7e1b6"}
+---
+2026-10-21T15:12:33.590Z

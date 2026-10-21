@@ -10,55 +10,77 @@ use std::collections::{BTreeMap, BTreeSet};
 use osq_kernel_specs::CapabilityOwnership;
 use osq_kernel_specs::owner_capabilities;
 
-use crate::read::{ChangeSnapshot, TaskOutcomeFacts};
+use crate::read::{ChangeSnapshot, Location, TaskOutcomeFacts};
 
 use super::rows::{count_i64, flag, len_i64};
 
 /// The quote characters one command token loses at each end.
 const QUOTES: [char; 2] = ['\'', '"'];
 
-/// One row of the `task_outcomes` table.
-pub(super) struct TaskOutcomeRow {
+/// One row of the `task_outcomes` table, as its typed values.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TaskOutcome {
     /// The change folder.
-    pub(super) change: String,
+    pub change: String,
     /// The task id.
-    pub(super) task: String,
+    pub task: String,
     /// The capability owning most of the resolved paths, or null.
-    pub(super) capability: Option<String>,
+    pub capability: Option<String>,
     /// The number of entries in the plan's scope.
-    pub(super) scope_globs: i64,
+    pub scope_globs: i64,
     /// The resolved scope size, or null when it was never measured.
-    pub(super) scope_files: Option<i64>,
+    pub scope_files: Option<i64>,
     /// `one`, `several`, `suite` or `other`.
-    pub(super) verify_kind: &'static str,
+    pub verify_kind: &'static str,
     /// 1 when the plan may change preexisting tests, else 0.
-    pub(super) tests_modify: i64,
+    pub tests_modify: i64,
     /// `red`, `green` or `any`.
-    pub(super) verify_starts: &'static str,
+    pub verify_starts: &'static str,
     /// 1 when a scope entry was already seen in an earlier task, else 0.
-    pub(super) shares_scope: i64,
+    pub shares_scope: i64,
     /// The task's 1-based place in task order.
-    pub(super) position: i64,
+    pub position: i64,
     /// The `started` events of the task's stream, 0 without one.
-    pub(super) attempts: i64,
+    pub attempts: i64,
     /// 1 when the first attempt passed, else 0.
-    pub(super) first_attempt: i64,
+    pub first_attempt: i64,
     /// The last dead attempt's reason for the task, or null.
-    pub(super) dead_reason: Option<String>,
+    pub dead_reason: Option<String>,
     /// The last `end` measures event's changed file count, or null.
-    pub(super) files_touched: Option<i64>,
+    pub files_touched: Option<i64>,
+}
+
+/// The `task_outcomes` rows of the archived snapshots, in their order.
+///
+/// Rejected snapshots give no row.
+///
+/// Implements: rust-storage/task-outcome-query
+#[must_use]
+pub fn task_outcomes(
+    snapshots: &[ChangeSnapshot],
+    ownerships: &[CapabilityOwnership],
+) -> Vec<TaskOutcome> {
+    let mut rows = Vec::new();
+    for snapshot in snapshots {
+        if snapshot.location == Location::Archived {
+            rows.extend(snapshot_outcomes(snapshot, ownerships));
+        }
+    }
+    rows
 }
 
 /// Maps one snapshot's tasks to `task_outcomes` rows, in task order.
-pub(super) fn task_outcome_rows(
+///
+/// Implements: rust-storage/task-outcome-query
+fn snapshot_outcomes(
     snapshot: &ChangeSnapshot,
     ownerships: &[CapabilityOwnership],
-) -> Vec<TaskOutcomeRow> {
+) -> Vec<TaskOutcome> {
     let mut rows = Vec::new();
     let mut seen: BTreeSet<String> = BTreeSet::new();
     for (index, task) in snapshot.tasks.iter().enumerate() {
         let task_id = task.id.as_str().to_owned();
-        rows.push(TaskOutcomeRow {
+        rows.push(TaskOutcome {
             change: snapshot.folder.clone(),
             task: task_id.clone(),
             capability: capability_for(ownerships, &task.outcome),

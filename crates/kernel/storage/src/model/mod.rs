@@ -45,6 +45,7 @@ pub use error::ReadModelError;
 pub use insert_specs::write_task_outcomes;
 pub use labels::{TrialLabels, read_trial_labels};
 pub use replace::replace_read_model;
+pub use task_outcome_rows::{TaskOutcome, task_outcomes};
 
 /// Writes the read model database for the given snapshots.
 ///

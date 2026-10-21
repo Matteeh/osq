@@ -138,7 +138,7 @@ impl Facts {
             self.outcomes
                 .entry(id.clone())
                 .or_insert_with(OutcomeAccumulator::new)
-                .observe(&envelope.event);
+                .observe(&envelope.event, timestamp_ms(&envelope.timestamp));
         }
         match &envelope.event {
             Event::Started(_) => self.record_started(stream),

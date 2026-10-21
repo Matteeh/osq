@@ -18,6 +18,9 @@ const SPECS: &str = "## Capability Specs\n\nAll living specs. Read the requireme
 /// The first three sections for a repository with nothing to add.
 const PLAIN: &str = "# Planning a change for osq\n\n# Change: 001 - A\nChange ID: 001\nChange Folder: 001-a\n\n## Capability Specs\n\nAll living specs. Read the requirements this change writes or whose code it uses, not whole specs: `osq spec <capability>` lists them and `osq spec <capability> <requirement>` prints one.";
 
+/// The record section for a repository with too few measured tasks.
+const RECORD: &str = "## This repository's record\n\nThis repository's measured record is too small (fewer than 5 tasks).";
+
 /// Creates a scratch root for one row, removing any left-over folder.
 fn scratch(name: &str) -> PathBuf {
     let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
@@ -114,7 +117,7 @@ fn prompt_sections() {
         write_queue(&root, QUEUE);
         setup(&root);
         let (prompt, brief) = prompt_and_brief(&root);
-        let expected = format!("{prefix}\n\n## Brief\n\n{brief}");
+        let expected = format!("{prefix}\n\n## Brief\n\n{brief}\n\n{RECORD}");
         assert_eq!(prompt, expected, "row {name}");
     }
 }
@@ -128,7 +131,7 @@ fn title_fallback() {
     write_queue(&root, "## [a] null\n\nDepends on: nothing\n\nA.\n");
     let (prompt, brief) = prompt_and_brief(&root);
     let expected = format!(
-        "# Planning a change for osq\n\n# Change: 001 - \nChange ID: 001\nChange Folder: 001-a\n\n{SPECS}\n\n## Brief\n\n{brief}"
+        "# Planning a change for osq\n\n# Change: 001 - \nChange ID: 001\nChange Folder: 001-a\n\n{SPECS}\n\n## Brief\n\n{brief}\n\n{RECORD}"
     );
     assert_eq!(prompt, expected, "row title fallback");
 }
@@ -157,6 +160,6 @@ fn decision_scopes() {
     );
     let (prompt, brief) = prompt_and_brief(&root);
     let decisions = "## Architecture Decisions\n\nRead in full every ADR that applies to all, and every ADR that applies to a capability this change writes. Name each governing capability ADR in the proposal's ## Decisions section.\n\n- ADR 004: All rule. Applies to: all. Rule: A. Path: decisions/004-all.md\n- ADR 005: Named rule. Applies to: beta, gamma. Rule: B. Path: decisions/005-named.md\n- ADR 006: No scope. Applies to: . Rule: C. Path: decisions/006-none.md";
-    let expected = format!("{PLAIN}\n\n{decisions}\n\n## Brief\n\n{brief}");
+    let expected = format!("{PLAIN}\n\n{decisions}\n\n## Brief\n\n{brief}\n\n{RECORD}");
     assert_eq!(prompt, expected, "row decision scopes");
 }

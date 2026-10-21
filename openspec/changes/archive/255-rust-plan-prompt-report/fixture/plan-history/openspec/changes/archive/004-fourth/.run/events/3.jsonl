@@ -1,0 +1,8 @@
+{"type":"measures","timestamp":"2026-09-01T14:00:28.000Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1}}
+{"type":"started","timestamp":"2026-09-01T14:00:29.000Z","data":{"harness":"pi","attempt":1}}
+{"type":"dead","timestamp":"2026-09-01T14:06:29.000Z","data":{"task":"3","reason":"scope_violation"}}
+{"type":"measures","timestamp":"2026-09-01T14:06:29.000Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1,"changedFiles":1}}
+{"type":"measures","timestamp":"2026-09-01T14:06:59.000Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1}}
+{"type":"started","timestamp":"2026-09-01T14:06:59.000Z","data":{"harness":"pi","attempt":2}}
+{"type":"done","timestamp":"2026-09-01T14:10:59.000Z","data":{"task":"3"}}
+{"type":"measures","timestamp":"2026-09-01T14:10:59.000Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":10,"repoFiles":100,"repoLines":1000,"importFanIn":0,"proposalWords":50,"taskWords":20,"deltaRequirements":1,"deltaScenarios":1,"changedFiles":1,"scopeHashes":{"src/fourth/t3-0.ts":{"before":"sha256:a","after":"sha256:b"}}}}

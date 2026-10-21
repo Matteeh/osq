@@ -6,8 +6,8 @@ pub mod model;
 pub mod read;
 
 pub use model::{
-    TrialLabels, build_read_model, read_trial_labels, replace_read_model, write_read_model,
-    write_task_outcomes,
+    TaskOutcome, TrialLabels, build_read_model, read_trial_labels, replace_read_model,
+    task_outcomes, write_read_model, write_task_outcomes,
 };
 pub use read::{
     CapabilityDelta, ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, HaltMarker, LinkEntry,

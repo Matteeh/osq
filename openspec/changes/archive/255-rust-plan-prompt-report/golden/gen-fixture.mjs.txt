@@ -1,0 +1,172 @@
+// Writes the plan-history fixture repository into the folder named by argv[2].
+import fs from 'node:fs';
+import path from 'node:path';
+
+const out = process.argv[2];
+fs.rmSync(out, { recursive: true, force: true });
+const write = (rel, text) => {
+  const file = path.join(out, rel);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, text);
+};
+
+write('PLANNER.md', '# Planning a change for the history fixture\n');
+write('openspec/queue.md', '## [next] Next\n\nDepends on: nothing\n\nNext.\n');
+write(
+  'openspec/specs/alpha/spec.md',
+  '# alpha Specification\n\n## Purpose\n\nAlpha.\n\n## Requirements\n\n### Requirement: Code ownership\n<!-- source: src/alpha/** -->\nThe alpha capability SHALL own `src/alpha/**`.\n\n#### Scenario: Alpha ownership\n- **WHEN** file ownership is resolved for alpha\n- **THEN** system maps `src/alpha/**` to alpha\n',
+);
+
+const CHANGE_VERIFY = 'node verify.cjs';
+const changes = [
+  { id: '001', slug: 'first', capability: 'alpha', tasks: 6 },
+  { id: '002', slug: 'second', capability: 'beta', tasks: 6 },
+  { id: '003', slug: 'third', capability: 'gamma', tasks: 6 },
+  { id: '004', slug: 'fourth', capability: 'alpha', tasks: 6 },
+  { id: '005', slug: 'fifth', capability: 'delta', tasks: 6 },
+  { id: '006', slug: 'sixth', capability: 'beta', tasks: 5 },
+  { id: '010', slug: 'tenth', capability: 'epsilon', tasks: 2 },
+];
+const DEAD = ['verify_red', 'scope_violation', 'blocked', 'baseline_red', 'timeout'];
+const VERIFIES = [
+  'node --test tests/a.test.ts',
+  'node --test tests/a.test.ts tests/b.test.ts',
+  CHANGE_VERIFY,
+  'cargo test -p alpha',
+  "node --test 'tests/*.test.ts'",
+];
+
+const iso = (ms) => new Date(ms).toISOString();
+let clock = Date.parse('2026-09-01T08:00:00.000Z');
+let serial = 0;
+
+const measures = (phase, scopeFiles, resolver, extra = {}) => ({
+  phase,
+  ...(resolver === undefined ? {} : { scopeResolver: resolver }),
+  scopeFiles,
+  scopeLines: 10,
+  repoFiles: 100,
+  repoLines: 1000,
+  importFanIn: 0,
+  proposalWords: 50,
+  taskWords: 20,
+  deltaRequirements: 1,
+  deltaScenarios: 1,
+  ...extra,
+});
+const line = (type, ms, data) => `${JSON.stringify({ type, timestamp: iso(ms), data })}\n`;
+
+for (const change of changes) {
+  const folder = `openspec/changes/archive/${change.id}-${change.slug}`;
+  write(
+    `${folder}/proposal.md`,
+    `---\ntitle: The ${change.slug} change\ndepends_on: []\nverify: ${CHANGE_VERIFY}\nfeatures:\n  reads: []\n---\n## Goal\n\nThe ${change.slug} change.\n`,
+  );
+  write(
+    `${folder}/specs/${change.capability}/spec.md`,
+    `## ADDED Requirements\n\n### Requirement: ${change.slug} rule\nThe system SHALL ${change.slug}.\n\n#### Scenario: ${change.slug} case\n- **WHEN** it runs\n- **THEN** it ${change.slug}s\n`,
+  );
+  for (let n = 1; n <= change.tasks; n++) {
+    serial++;
+    const s = serial;
+    const verify = VERIFIES[s % VERIFIES.length];
+    const scopeCount = [1, 2, 3, 4, 6, 9, 12][s % 7];
+    const scope = Array.from({ length: scopeCount }, (_, i) =>
+      i === 0 && n > 1 && s % 4 === 0 ? 'src/shared.ts' : `src/${change.slug}/t${n}-${i}.ts`,
+    );
+    if (n === 1 && s % 4 !== 3) scope[0] = 'src/shared.ts';
+    const testsModify = s % 3 === 0;
+    const acceptance = 1 + (s % 5);
+    const title = `When task ${s} runs, it does step ${n} of ${change.slug}`;
+    write(
+      `${folder}/tasks/${n}.md`,
+      `---\ntitle: ${title}\nverify: ${verify}\n${testsModify ? 'tests:\n  modify: true\n' : ''}scope:\n${scope.map((p) => `  - ${p}`).join('\n')}\n---\n## Acceptance\n\n${Array.from({ length: acceptance }, (_, i) => `- [x] Line ${i + 1}.`).join('\n')}\n`,
+    );
+
+    // Event stream: a few shapes, chosen by serial number.
+    const resolver = s % 6 === 0 ? undefined : 2;
+    let events = '';
+    clock += 60_000;
+    const shape = s % 8;
+    if (shape === 7) {
+      // Never started: no stream at all.
+    } else {
+      events += line('measures', clock, measures('start', scopeCount, resolver));
+      clock += 1000;
+      events += line('started', clock, { harness: 'pi', attempt: 1 });
+      const minutes = 2 + ((s * 7) % 11);
+      clock += minutes * 60_000 + (s % 3) * 17_000;
+      if (shape === 2 || shape === 5) {
+        events += line('dead', clock, { task: String(n), reason: DEAD[s % DEAD.length] });
+        events += line(
+          'measures',
+          clock,
+          measures('end', scopeCount, resolver, { changedFiles: scopeCount }),
+        );
+        clock += 30_000;
+        events += line('measures', clock, measures('start', scopeCount, resolver));
+        events += line('started', clock, { harness: 'pi', attempt: 2 });
+        clock += 4 * 60_000;
+      }
+      if (shape === 3) {
+        events += line('dead', clock, { task: String(n), reason: DEAD[(s + 1) % DEAD.length] });
+      } else {
+        events += line('done', clock, { task: String(n) });
+      }
+      const hashes = Object.fromEntries(
+        scope
+          .concat(shape === 4 ? ['src/extra.ts'] : [])
+          .map((p) => [p, { before: 'sha256:a', after: 'sha256:b' }]),
+      );
+      events += line(
+        'measures',
+        clock,
+        measures('end', scopeCount, resolver, { changedFiles: scopeCount, scopeHashes: hashes }),
+      );
+    }
+    if (events) write(`${folder}/.run/events/${n}.jsonl`, events);
+  }
+  clock += 3_600_000;
+  write(
+    `${folder}/.run/events/change.jsonl`,
+    line('archived', clock, { archivePath: folder }),
+  );
+}
+
+// Executor disclosures in the four newest changes; the oldest of them falls out of the window.
+const results = {
+  '004-fourth': {
+    1: '## Changed\n\n- Did it.\n\n## Deviated\n\nThis change is outside the three newest, so its claim never shows.\n\nTouched: src/a.ts\n',
+  },
+  '005-fifth': {
+    2: `## Deviated\n\n${'A long deviation that runs past the character budget of the section. '.repeat(60).trim()}\n\nTouched: src/b.ts\n`,
+    3: '## Missing context\n\nThe task named no fixture.\n\nTouched: src/c.ts\n',
+  },
+  '006-sixth': {
+    1: '## Changed\n\n- Wrote it.\n\nTouched: src/d.ts\n',
+    4: '## Deviated\n\n- Kept the old name.\n  It reads better.\n\n## Outside scope\n\nThe listing skips hidden folders.\n\nTouched: src/e.ts\n',
+  },
+  '010-tenth': {
+    2: '## Deviated\n\nUsed a map.\n\n## Missing context\n\n## Outside scope\n\nNone\nThe second line keeps this section.\n\n## Next\n\nNothing.\n\nTouched: src/f.ts\n',
+    10: '## Deviated\n\nA result file of a task the change does not have.\n',
+  },
+};
+for (const [folder, files] of Object.entries(results)) {
+  for (const [n, text] of Object.entries(files)) {
+    write(`openspec/changes/archive/${folder}/.run/results/${n}.md`, text);
+  }
+}
+
+// Manual edits: one closed by a later change, one open, one open with a multi-line comment.
+write(
+  'openspec/manual/2026-09-01T07-00-00-000Z.md',
+  '---\nkept_at: 2026-09-01T07:00:00.000Z\npaths:\n  - src/alpha/x.ts\ncapabilities:\n  - alpha\n---\nA fix that a later alpha change brought into its spec.\n',
+);
+write(
+  'openspec/manual/2026-12-01T09-00-00-000Z.md',
+  '---\nkept_at: 2026-12-01T09:00:00.000Z\npaths:\n  - src/beta/y.ts\n  - src/gamma/z.ts\ncapabilities:\n  - beta\n  - gamma\n---\nFixed a typo by hand.\n\nSecond paragraph of the comment.\n',
+);
+write(
+  'openspec/manual/2026-12-02T09-00-00-000Z.md',
+  '---\nkept_at: 2026-12-02T09:00:00.000Z\npaths:\n  - osq.config.ts\ncapabilities: []\n---\nKept a config edit.\n',
+);

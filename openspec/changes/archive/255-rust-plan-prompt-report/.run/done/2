@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:51f7302c6f1caba4f335e2bffa19cdfad3a44047363e068aadacb197eae3af79
+build_stamp: e195d914
+project_commit: c47d37b6
+exit_code: 0
+scope_files:
+  crates/features/plan/src/next.rs: sha256:e8f19fc1ee10799eaef2e50e91ad8b7a034a5846023106274639d61877b13bc0
+  crates/features/plan/src/next/report.rs: sha256:4055c586cd8639a131d6b6b330e2e471cfd1e852c8ea111e95ceac00551d0106
+  crates/features/plan/src/next/report/hints.rs: sha256:d26625499531535a47af49e89fad1d2a23199f7362ebaf6eabccfa2155f9e2b2
+  crates/features/plan/src/next/report/record.rs: sha256:1a8b303266bebc93d0e2c0ee6ec363dcd6d762387d17144a8842a876ff07110d
+  crates/features/plan/tests/fixtures/plan-created/005-beta/plan-prompt.md: sha256:d6d876da2a61e37028e009aab515f02833c50ae193d89bb3ef16d92be87d2965
+  crates/features/plan/tests/prompt_history.rs: sha256:d0469e58df29c29d47b7819dd26b32549d34dda349867c0d5db8c88e0009ed22
+  crates/features/plan/tests/prompt_record.rs: sha256:f5d07ac850f652026f32db62b05e59eeeab68d07933c19872f3e6bfeb03545ff
+  crates/features/plan/tests/prompt_sections.rs: sha256:058ad3913d43bcf64801ab13774246636b6866e9023166f98a7efe5077d02785
+original_scope_hash: sha256:4ca0f48c760b3e692169178e34674b75fe7eee2318039b11bffa1f7a13d8b393
+recertified_at: 2026-10-21T15:40:53.611Z
+recertification_count: 1
+---
+2026-10-21T15:28:03.446Z

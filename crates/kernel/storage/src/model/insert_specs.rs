@@ -7,11 +7,11 @@ use std::path::Path;
 use osq_kernel_specs::CapabilityOwnership;
 use rusqlite::{Connection, Transaction, params};
 
-use crate::read::{ChangeSnapshot, Location};
+use crate::read::ChangeSnapshot;
 
 use super::error::ReadModelError;
 use super::requirement_rows::RequirementRow;
-use super::task_outcome_rows::{TaskOutcomeRow, task_outcome_rows};
+use super::task_outcome_rows::{TaskOutcome, task_outcomes};
 
 /// Inserts one archived snapshot's `requirements` rows.
 pub(super) fn insert_requirements(
@@ -57,23 +57,20 @@ pub fn write_task_outcomes(
 /// Fills the `task_outcomes` table for the archived snapshots, in their order.
 ///
 /// Rejected snapshots add no row.
+///
+/// Implements: rust-storage/task-outcome-query
 pub(super) fn insert_task_outcomes(
     transaction: &Transaction<'_>,
     snapshots: &[ChangeSnapshot],
     ownerships: &[CapabilityOwnership],
 ) -> Result<(), rusqlite::Error> {
-    for snapshot in snapshots {
-        if snapshot.location == Location::Archived {
-            insert_task_outcome_rows(transaction, &task_outcome_rows(snapshot, ownerships))?;
-        }
-    }
-    Ok(())
+    insert_task_outcome_rows(transaction, &task_outcomes(snapshots, ownerships))
 }
 
 /// Inserts the `task_outcomes` rows.
 fn insert_task_outcome_rows(
     transaction: &Transaction<'_>,
-    rows: &[TaskOutcomeRow],
+    rows: &[TaskOutcome],
 ) -> Result<(), rusqlite::Error> {
     let mut statement = transaction
         .prepare("INSERT INTO task_outcomes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")?;
