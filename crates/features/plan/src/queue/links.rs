@@ -9,26 +9,26 @@ use super::parse::QueueItem;
 
 /// One change folder that names a queue item, with the queue fields its brief holds.
 #[derive(Clone, Debug)]
-pub(super) struct Folder {
+pub(crate) struct Folder {
     /// The item slug the folder's brief names, trimmed.
-    pub(super) item: String,
+    pub(crate) item: String,
     /// The change folder itself.
-    pub(super) entry: ChangeEntry,
+    pub(crate) entry: ChangeEntry,
     /// The brief's `queue_hash` string, when it holds one.
-    pub(super) queue_hash: Option<String>,
+    pub(crate) queue_hash: Option<String>,
     /// The active folder's snapshot status, when it is readable.
-    pub(super) status: Option<ChangeStatus>,
+    pub(crate) status: Option<ChangeStatus>,
 }
 
 /// One item's folders, grouped by where they sit.
 #[derive(Clone, Debug, Default)]
-pub(super) struct Groups {
+pub(crate) struct Groups {
     /// The active folders.
-    pub(super) active: Vec<Folder>,
+    pub(crate) active: Vec<Folder>,
     /// The archived folders.
-    pub(super) archived: Vec<Folder>,
+    pub(crate) archived: Vec<Folder>,
     /// The rejected folders.
-    pub(super) rejected: Vec<Folder>,
+    pub(crate) rejected: Vec<Folder>,
 }
 
 /// The state, change, rejection count and flag chosen for one queue item.
@@ -148,7 +148,7 @@ fn map_status(status: ChangeStatus) -> &'static str {
 /// A folder's leading digits, or its whole name when it has none.
 ///
 /// Implements: rust-plan/queue-states
-fn change_id(folder: &str) -> String {
+pub(crate) fn change_id(folder: &str) -> String {
     let digits: String = folder.chars().take_while(char::is_ascii_digit).collect();
     if digits.is_empty() {
         folder.to_owned()

@@ -23,7 +23,7 @@ fn write_queue(root: &Path, text: &str) {
 
 /// Runs the feature's `queue` command.
 fn run_queue(root: &Path) -> Result<Output, FeatureError> {
-    PlanFeature.run(&Invocation::new(root, "queue", Vec::new()))
+    PlanFeature::new().run(&Invocation::new(root, "queue", Vec::new()))
 }
 
 /// Proves every row of "Items of a queue".

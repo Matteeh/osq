@@ -44,7 +44,7 @@ fn golden_queue_output() {
     copy_tree(&fixtures().join("golden"), &root);
     let expected =
         fs::read_to_string(fixtures().join("queue.txt")).expect("the golden queue text is read");
-    let output = PlanFeature
+    let output = PlanFeature::new()
         .run(&Invocation::new(&root, "queue", Vec::new()))
         .expect("the golden fixture's queue reads")
         .text;

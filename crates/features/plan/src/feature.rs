@@ -1,12 +1,37 @@
 //! The plan feature's `Feature` implementation.
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::queue;
+use crate::{next, queue};
 
 /// The plan feature.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct PlanFeature;
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PlanFeature {
+    /// The fixed clock, or `None` to read the system clock at each run.
+    now_ms: Option<i64>,
+}
+
+impl PlanFeature {
+    /// The plan feature, reading the system clock at each run.
+    ///
+    /// Implements: rust-plan/plan-feature
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// The plan feature with a fixed clock, `now_ms` in epoch milliseconds.
+    ///
+    /// Implements: rust-plan/plan-feature
+    #[must_use]
+    pub fn at(now_ms: i64) -> Self {
+        Self {
+            now_ms: Some(now_ms),
+        }
+    }
+}
 
 impl Feature for PlanFeature {
     /// The feature's name, `plan`.
@@ -16,31 +41,49 @@ impl Feature for PlanFeature {
         "plan"
     }
 
-    /// The feature's one command, `queue`.
+    /// The feature's commands, `queue` and `plan`.
     ///
     /// Implements: rust-plan/plan-feature
     fn commands(&self) -> Vec<Command> {
-        vec![Command::new(
-            "queue",
-            "print the read-only brief queue projection",
-            "",
-        )]
+        vec![
+            Command::new("queue", "print the read-only brief queue projection", ""),
+            Command::new(
+                "plan",
+                "prepare a change and hand off its opening prompt to your planning tool",
+                "--next [--replan]",
+            ),
+        ]
     }
 
-    /// Runs `queue`, refusing an unknown command or arguments.
+    /// Runs `queue` or `plan`, refusing an unknown command or arguments.
     ///
     /// Implements: rust-plan/plan-feature
     /// Implements: rust-plan/queue-arguments
+    /// Implements: rust-plan/plan-arguments
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
-        if invocation.command != "queue" {
+        if invocation.command != "queue" && invocation.command != "plan" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));
         }
-        if !invocation.args.is_empty() {
-            return Err(FeatureError::usage(
-                "queue",
-                format!("expected no arguments, got {}", invocation.args.len()),
-            ));
+        if invocation.command == "queue" {
+            if !invocation.args.is_empty() {
+                return Err(FeatureError::usage(
+                    "queue",
+                    format!("expected no arguments, got {}", invocation.args.len()),
+                ));
+            }
+            return queue::run_queue(&invocation.root).map(Output::text);
         }
-        queue::run_queue(&invocation.root).map(Output::text)
+        let replan = next::arguments(&invocation.args)?;
+        let now_ms = self.now_ms.unwrap_or_else(system_now_ms);
+        next::run_next(&invocation.root, now_ms, replan).map(Output::text)
     }
+}
+
+/// The system clock in epoch milliseconds.
+fn system_now_ms() -> i64 {
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    i64::try_from(millis).unwrap_or_default()
 }

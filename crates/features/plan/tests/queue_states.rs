@@ -91,7 +91,7 @@ fn active(root: &Path, name: &str, item_line: Option<&str>, hash_line: Option<&s
 
 /// Runs the feature's `queue` command on one root.
 fn run_queue(root: &Path) -> Result<Output, FeatureError> {
-    PlanFeature.run(&Invocation::new(root, "queue", Vec::new()))
+    PlanFeature::new().run(&Invocation::new(root, "queue", Vec::new()))
 }
 
 /// Builds a row's active folder with a `started` event and a running lock.

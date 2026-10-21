@@ -1,0 +1,32 @@
+---
+scope_resolver: 2
+scope_hash: sha256:ca4491443ca259087383ad98bcb0ee858d7ad5fce86eceb50a7458f47565675a
+build_stamp: e195d914
+project_commit: 10a15ed2
+exit_code: 0
+scope_files:
+  crates/features/plan/src/feature.rs: sha256:1a325e842d96258c7f019a6eed290065504f23b5f478cc001983c635494ae032
+  crates/features/plan/src/lib.rs: sha256:8a0d5d5d038bf7ae80ebcb786df550bf91abce4044adf165fd3bbe0e420ee844
+  crates/features/plan/src/next.rs: sha256:95c8a7f693ddb30e21f4a820a90c534fc088ef587ffe945aa5d95377911875e8
+  crates/features/plan/src/next/date.rs: sha256:95e199dcef47a1c46b8895cf96d8c9ad4fcb9ba8622d09cd4b548258d119bafd
+  crates/features/plan/src/next/files.rs: sha256:758e7ac447f1d5058ce10ed46af316263b355e7f0cbdae67ec1bbf0e3c9bb30b
+  crates/features/plan/src/next/handoff.rs: sha256:b816f38ba39315c7625877c9d412d1736b319b64f8c13b5cf11689c553865326
+  crates/features/plan/src/next/number.rs: sha256:461175e0b0cd2bde5b920ece8a115a4819b85bfa6ba75afdec7d0d13003c58dd
+  crates/features/plan/src/next/prompt.rs: sha256:98b801a28e7a156cbf29e0c91299174e96ad52d66589915624264cc786082ae8
+  crates/features/plan/src/next/select.rs: sha256:702e781756976dac3d07fe534439c73276c6d470f403c74750c7b4bcac97d6ee
+  crates/features/plan/src/queue.rs: sha256:1319e2ed7731ab48e72b91b8e0d84f1cbe36ac5792b460bb6977080ae91a6304
+  crates/features/plan/src/queue/links.rs: sha256:f29b099188b67d6332c5b2ea53582aaf37f7bb8c7c9c3a3fd8bd1b2bc6c1c041
+  crates/features/plan/src/queue/parse.rs: sha256:306d623a5c861a9a1d4a6b9a7ba932e45b86836368c75ae0006ba822b33bb5c8
+  crates/features/plan/src/queue/text.rs: sha256:bc0b588689f7f66d7de0b8085a24b9f2a01084b0de775386c0f9301a4767c115
+  crates/features/plan/tests/plan_feature.rs: sha256:7f94888c95323498178d63297a90cf0c5611d9fc66494ec150b99574fc671831
+  crates/features/plan/tests/plan_folder.rs: sha256:8ff98c1a31dbbdb0e2a60f7bbd6f3ec5f895928b7e1ceea925976b71f127a73a
+  crates/features/plan/tests/plan_next.rs: sha256:7775329db0a16a1691b8a41d44ddd7abdb291eb1e1955883eddc6a2010233349
+  crates/features/plan/tests/queue_corpus.rs: sha256:62d8187a1b108d7e8cc3c486a30a0a9c7a0fef7be9a209ee7d65fd5e62afc898
+  crates/features/plan/tests/queue_golden.rs: sha256:d1c18350422f410033c2ebfac33fd4872ab1eadfe7598080bba89aec55709a4b
+  crates/features/plan/tests/queue_items.rs: sha256:74e1422a6aefb0adebbd0fc5957d473052079d5e2defbea9cdbe9eb73f76b940
+  crates/features/plan/tests/queue_states.rs: sha256:b2a8659e40a8a01d7d66f5fa19a83a1bd3d0a4cbb4399b53a528679154d1e6ae
+original_scope_hash: sha256:ec90ee5cf7d2e570aa4896bcc39732768cbfb5753d854c55ba94d1f6f40c3418
+recertified_at: 2026-10-21T12:14:14.836Z
+recertification_count: 1
+---
+2026-10-21T12:07:05.655Z

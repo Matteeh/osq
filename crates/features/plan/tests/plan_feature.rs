@@ -23,20 +23,29 @@ fn invocation(root: &Path, command: &str, args: &[&str]) -> Invocation {
     )
 }
 
-/// Proves the feature's name and its one command.
+/// Proves the feature's name and its two commands.
 ///
 /// Covers: rust-plan/plan-feature-commands
 #[test]
 fn plan_feature_commands() {
-    let feature = PlanFeature;
+    let feature = PlanFeature::new();
     assert_eq!(feature.name(), "plan");
 
     let commands = feature.commands();
-    assert_eq!(commands.len(), 1, "one command");
+    assert_eq!(commands.len(), 2, "two commands");
     assert_eq!(
         commands[0],
         Command::new("queue", "print the read-only brief queue projection", "",),
         "the queue command"
+    );
+    assert_eq!(
+        commands[1],
+        Command::new(
+            "plan",
+            "prepare a change and hand off its opening prompt to your planning tool",
+            "--next [--replan]",
+        ),
+        "the plan command"
     );
 }
 
@@ -57,10 +66,10 @@ fn queue_argument_errors() {
             &["x", "y"],
             "usage of queue: expected no arguments, got 2",
         ),
-        ("plan", &[], "unknown command: plan"),
+        ("planx", &[], "unknown command: planx"),
     ];
     for (command, args, expected) in cases {
-        let result = PlanFeature.run(&invocation(&root, command, args));
+        let result = PlanFeature::new().run(&invocation(&root, command, args));
         assert_eq!(
             result.expect_err("the invocation fails").to_string(),
             expected,

@@ -7,17 +7,19 @@ use sha2::{Digest, Sha256};
 
 /// One queue item as the queue file describes it.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct QueueItem {
+pub(crate) struct QueueItem {
     /// The item's slug.
-    pub(super) slug: String,
+    pub(crate) slug: String,
     /// The item's title.
-    pub(super) title: String,
+    pub(crate) title: String,
     /// The slugs the item depends on, in line order.
-    pub(super) dependencies: Vec<String>,
+    pub(crate) dependencies: Vec<String>,
     /// The slugs the item fixes, in line order.
-    pub(super) fixes: Vec<String>,
+    pub(crate) fixes: Vec<String>,
+    /// The item's brief body, trimmed.
+    pub(crate) body: String,
     /// The `sha256:` digest of the item's raw text.
-    pub(super) hash: String,
+    pub(crate) hash: String,
 }
 
 /// Splits and parses a queue file, refusing the first malformed item.
@@ -131,6 +133,7 @@ fn parse_section(raw: &str, seen: &HashSet<String>) -> Result<QueueItem, String>
         title: title.to_owned(),
         dependencies,
         fixes,
+        body,
         hash: hash_content(raw),
     })
 }

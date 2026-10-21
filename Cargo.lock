@@ -345,6 +345,7 @@ name = "osq-feature-plan"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-specs",
  "osq-kernel-storage",
  "sha2",
 ]

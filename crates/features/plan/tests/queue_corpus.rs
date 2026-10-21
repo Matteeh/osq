@@ -27,7 +27,7 @@ fn this_repository_s_queue() {
         .lines()
         .filter(|line| line.starts_with("## ["))
         .count();
-    let output = PlanFeature
+    let output = PlanFeature::new()
         .run(&Invocation::new(&root, "queue", Vec::new()))
         .expect("this repository's queue parses")
         .text;

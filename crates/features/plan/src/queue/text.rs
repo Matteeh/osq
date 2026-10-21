@@ -8,21 +8,21 @@ use super::parse::QueueItem;
 
 /// One line's worth of a queue item.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct QueueRow {
+pub(crate) struct QueueRow {
     /// The item's slug.
-    pub(super) slug: String,
+    pub(crate) slug: String,
     /// The item's title.
-    pub(super) title: String,
+    pub(crate) title: String,
     /// The item's state.
-    pub(super) state: &'static str,
+    pub(crate) state: &'static str,
     /// The item's change id, when it has a change.
-    pub(super) change: Option<String>,
+    pub(crate) change: Option<String>,
     /// The number of rejected changes the item has.
-    pub(super) rejections: usize,
+    pub(crate) rejections: usize,
     /// The dependency and fix slugs that have not landed.
-    pub(super) unmet: Vec<String>,
+    pub(crate) unmet: Vec<String>,
     /// Whether the item changed since it was planned.
-    pub(super) changed_since_planned: bool,
+    pub(crate) changed_since_planned: bool,
 }
 
 /// Builds each item's row from its chosen state, change and rejection count.
