@@ -36,6 +36,8 @@ pub struct FakeHarness {
     scripts: Vec<StartScript>,
     /// The names this harness reads for its model.
     agent_env: Vec<String>,
+    /// The version this harness reports.
+    version: Option<String>,
     /// What the harness saw.
     record: Rc<RefCell<FakeRecord>>,
 }
@@ -47,8 +49,16 @@ impl FakeHarness {
         Self {
             scripts,
             agent_env: agent_env.iter().map(|name| (*name).to_owned()).collect(),
+            version: None,
             record: Rc::new(RefCell::new(FakeRecord::default())),
         }
+    }
+
+    /// Sets the version this fake reports.
+    #[must_use]
+    pub fn with_version(mut self, version: Option<&str>) -> Self {
+        self.version = version.map(str::to_owned);
+        self
     }
 
     /// The record this fake shares with the test.
@@ -62,6 +72,11 @@ impl Harness for FakeHarness {
     /// Returns the harness's model environment names.
     fn agent_env(&self) -> Vec<String> {
         self.agent_env.clone()
+    }
+
+    /// Returns the version the fake reports.
+    fn harness_version(&self) -> Option<String> {
+        self.version.clone()
     }
 
     /// Plays the next scripted start, recording the request and giving events.
@@ -131,6 +146,7 @@ pub fn exit(exit_code: i32, timed_out: bool) -> HarnessExit {
     HarnessExit {
         exit_code,
         timed_out,
+        error: None,
     }
 }
 

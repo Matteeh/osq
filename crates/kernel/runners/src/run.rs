@@ -27,6 +27,11 @@ pub trait Harness {
     /// Implements: rust-runners/harness-and-model-per-role
     fn agent_env(&self) -> Vec<String>;
 
+    /// The version of the harness program the adapter starts.
+    ///
+    /// Implements: rust-runners/harness-and-model-per-role
+    fn harness_version(&self) -> Option<String>;
+
     /// Starts one process and gives each event to `on_event` as it arrives.
     ///
     /// Implements: rust-runners/harness-and-model-per-role
@@ -85,6 +90,8 @@ pub struct HarnessExit {
     pub exit_code: i32,
     /// Whether the process hit its timeout.
     pub timed_out: bool,
+    /// The start's error text, absent when the harness reported none.
+    pub error: Option<String>,
 }
 
 /// Why a harness could not be started at all.

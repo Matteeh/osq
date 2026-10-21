@@ -73,8 +73,8 @@ struct Row {
     timed_out: bool,
     /// The events the start gives, in order.
     events: &'static [ExpectedEvent],
-    /// The last error, or none.
-    last_error: Option<&'static str>,
+    /// The exit's error, or none.
+    error: Option<&'static str>,
     /// The least time the start may take, or none.
     least: Option<Duration>,
 }
@@ -92,7 +92,7 @@ const ROWS: &[Row] = &[
             ExpectedEvent::FileChanged("notes.md"),
             ExpectedEvent::Text("done"),
         ],
-        last_error: None,
+        error: None,
         least: Some(Duration::from_millis(300)),
     },
     Row {
@@ -106,7 +106,7 @@ const ROWS: &[Row] = &[
             ExpectedEvent::FileChanged("notes.md"),
             ExpectedEvent::Text("done"),
         ],
-        last_error: None,
+        error: None,
         least: Some(Duration::from_millis(600)),
     },
     Row {
@@ -116,7 +116,7 @@ const ROWS: &[Row] = &[
         exit_code: 1,
         timed_out: false,
         events: &[],
-        last_error: Some(
+        error: Some(
             "No API key found for deepseek.\nPi credentials are missing. Run: pi auth check --provider deepseek",
         ),
         least: None,
@@ -128,7 +128,7 @@ const ROWS: &[Row] = &[
         exit_code: 2,
         timed_out: false,
         events: &[],
-        last_error: Some("boom\n"),
+        error: Some("boom\n"),
         least: None,
     },
     Row {
@@ -138,7 +138,7 @@ const ROWS: &[Row] = &[
         exit_code: 124,
         timed_out: true,
         events: &[],
-        last_error: Some("Task execution timed out"),
+        error: Some("Task execution timed out"),
         least: Some(Duration::from_millis(300)),
     },
 ];
@@ -151,8 +151,6 @@ struct Started {
     result: Result<HarnessExit, StartError>,
     /// The events the harness gave, in order.
     events: Vec<Event>,
-    /// The last error the harness recorded.
-    last_error: Option<String>,
     /// How long the start took.
     elapsed: Duration,
 }
@@ -217,12 +215,10 @@ fn start(
         events.push(event);
     });
     let elapsed = started.elapsed();
-    let last_error = harness.last_error().map(str::to_owned);
     Started {
         folder,
         result,
         events,
-        last_error,
         elapsed,
     }
 }
@@ -246,7 +242,7 @@ fn expected_events(events: &[ExpectedEvent]) -> Vec<Event> {
         .collect()
 }
 
-/// Checks one row's exit, events, last error and timing.
+/// Checks one row's exit, events, error and timing.
 fn assert_row(row: &Row) {
     let started = start(row.mode, Some("m-role"), settings(), row.timeout);
     let exit = match started.result {
@@ -261,12 +257,7 @@ fn assert_row(row: &Row) {
         "row {}",
         row.name
     );
-    assert_eq!(
-        row.last_error.map(str::to_owned),
-        started.last_error,
-        "row {}",
-        row.name
-    );
+    assert_eq!(row.error.map(str::to_owned), exit.error, "row {}", row.name);
     assert!(
         started.elapsed < ROW_LIMIT,
         "row {} took {:?}",
@@ -325,12 +316,15 @@ fn pi_start_arguments_and_defaults() {
     );
 
     let no_provider = start("missing-key", Some("m-role"), PiSettings::default(), None);
+    let exit = no_provider
+        .result
+        .expect("the missing-key start exits without a start error");
     assert_eq!(
         Some(
             "No API key found for deepseek.\nPi credentials are missing. Run: pi auth check --provider default"
                 .to_owned()
         ),
-        no_provider.last_error,
+        exit.error,
         "row missing-key-without-a-provider"
     );
 }
@@ -353,11 +347,6 @@ fn pi_harness_that_cannot_start() {
         error.message
     );
     assert!(events.is_empty(), "on_event received {events:?}");
-    assert_eq!(
-        Some(error.message.as_str()),
-        harness.last_error(),
-        "last_error keeps the start error"
-    );
 }
 
 /// Covers: rust-harnesses/pi-agent-names
@@ -377,5 +366,5 @@ fn settled_start_hides_stderr() {
         .unwrap_or_else(|error| panic!("the settled start failed with {}", error.message));
     assert_eq!(0, exit.exit_code, "row settled-with-stderr");
     assert!(!exit.timed_out, "row settled-with-stderr timed out");
-    assert_eq!(None, started.last_error, "row settled-with-stderr");
+    assert_eq!(None, exit.error, "row settled-with-stderr");
 }

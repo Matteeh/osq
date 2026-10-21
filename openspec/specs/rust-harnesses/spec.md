@@ -299,7 +299,8 @@ runs through `run_process` with `request`'s `cwd`, `env`, `timeout` and
 kernel's `Harness` port for pi, running one task as TypeScript's
 `PiAdapter.spawn` does. `PiHarness::new(bin, settings, kill_grace)`
 takes the program (a `String`), a `PiSettings` and a `Duration`, and
-`last_error()` returns the last start's error as an `Option<&str>`.
+`with_preflight(self, ready: &PiReady) -> PiHarness` returns the same
+harness carrying the version `preflight_pi` read for that program.
 
 - `agent_env()` SHALL return, in this order, the names TypeScript's
   `HARNESS_AGENT_ENV.pi` lists: `ANTHROPIC_API_KEY`,
@@ -312,6 +313,10 @@ takes the program (a `String`), a `PiSettings` and a `Duration`, and
   `AI_GATEWAY_API_KEY`, `ZAI_API_KEY`, `MISTRAL_API_KEY`,
   `MINIMAX_API_KEY`, `MOONSHOT_API_KEY`, `OPENCODE_API_KEY`,
   `KIMI_API_KEY` and `PI_CODING_AGENT_DIR`.
+- `harness_version()` SHALL return the `version` of the `PiReady` last
+  given to `with_preflight`, and `None` when none was given or that
+  version is blank, as TypeScript records `harnessVersion` only when
+  its probe read one.
 - `start(request, on_event)` SHALL run `run_process_until` with the
   program `bin`, the arguments `pi_args` builds from the settings'
   `provider` and `thinking`, the request's `model` when set, else the
@@ -325,17 +330,16 @@ takes the program (a `String`), a `PiSettings` and a `Duration`, and
   `kill_grace` after its `agent_settled` line.
 - A program that cannot start SHALL be a `StartError` whose `message`
   is the `ProcessError`'s display, and `on_event` is not called.
-- A settled start SHALL be a `HarnessExit` with exit code 0 and
-  `timed_out` false; any other start has the outcome's exit code and
+- A settled start SHALL be a `HarnessExit` with exit code 0, `timed_out`
+  false and no `error`; any other start has the outcome's exit code and
   `timed_out`.
-- Each start SHALL set `last_error()`. It is absent after a settled
-  start or one that exited 0. After a start that could not start, it is
-  the `StartError`'s message. After any other start it is, in this
-  order: when stderr holds `No API key found`, stderr trimmed, `\n` and
-  `Pi credentials are missing. Run: pi auth check --provider
-  <provider>`, `<provider>` being the settings' provider trimmed, or
-  `default` when it is not set or blank; else, when it timed out, `Task
-  execution timed out`; else stderr when it is not blank; else absent.
+- The `error` of a start that did not settle and exited 0 SHALL be
+  absent. For any other start that did not settle it is, in this order:
+  when stderr holds `No API key found`, stderr trimmed, `\n` and `Pi
+  credentials are missing. Run: pi auth check --provider <provider>`,
+  `<provider>` being the settings' provider trimmed, or `default` when
+  it is not set or blank; else, when it timed out, `Task execution timed
+  out`; else stderr when it is not blank; else absent.
 
 #### Scenario: Pi tasks with a fake pi
 - **WHEN** `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh` is copied into a new temporary folder as `pi` and made executable, and a `PiHarness` with that program, the settings provider `deepseek`, model `m-settings` and thinking `high`, and a `kill_grace` of 300 milliseconds starts a request with that folder as `cwd`, the prompt `Do task 1.`, the model `m-role`, the row's timeout and exactly the variable `FAKE_PI_MODE=<row's mode>`; the fake writes its arguments one per line to `args.txt` in its folder, then in mode `settle` and `settle-stubborn` prints the four lines below and runs for 10 seconds, leaving on `SIGTERM` with exit code 143 in `settle` and ignoring `SIGTERM` in `settle-stubborn`; in `missing-key` writes `No API key found for deepseek.` to stderr and exits 1; in `fail` writes `boom` to stderr and exits 2; and in `hang` runs for 10 seconds:
@@ -347,9 +351,9 @@ takes the program (a `String`), a `PiSettings` and a `Duration`, and
 {"type":"agent_settled"}
 ```
 
-- **THEN** each start returns in under 5 seconds and no sooner than the row's least duration, with the row's exit, events and `last_error()`:
+- **THEN** each start returns in under 5 seconds and no sooner than the row's least duration, with the row's exit, events and exit `error`:
 
-| Mode | Timeout | Exit code | Timed out | Events | `last_error()` | Least duration |
+| Mode | Timeout | Exit code | Timed out | Events | Exit `error` | Least duration |
 |---|---|---|---|---|---|---|
 | `settle` | none | 0 | false | `Tool` `write` with summary `notes.md`, `FileChanged` `notes.md`, `Text` `done` | none | 300 ms |
 | `settle-stubborn` | none | 0 | false | `Tool` `write` with summary `notes.md`, `FileChanged` `notes.md`, `Text` `done` | none | 600 ms |
@@ -359,11 +363,11 @@ takes the program (a `String`), a `PiSettings` and a `Duration`, and
 
 #### Scenario: Pi start arguments and defaults
 - **WHEN** the `settle` row above runs once with the request's model `m-role`, once with no request model, and the `missing-key` row runs with settings that have no provider
-- **THEN** the first `args.txt` holds `pi_args` for provider `deepseek`, model `m-role`, thinking `high` and the prompt `Do task 1.`; the second holds the same with model `m-settings`; and the third start's `last_error()` is `No API key found for deepseek.\nPi credentials are missing. Run: pi auth check --provider default`
+- **THEN** the first `args.txt` holds `pi_args` for provider `deepseek`, model `m-role`, thinking `high` and the prompt `Do task 1.`; the second holds the same with model `m-settings`; and the third start's exit `error` is `No API key found for deepseek.\nPi credentials are missing. Run: pi auth check --provider default`
 
 #### Scenario: Pi harness that cannot start
 - **WHEN** a `PiHarness` with the program `/nonexistent/pi` starts a request
-- **THEN** it returns a `StartError` whose message starts `cannot start /nonexistent/pi: `, `on_event` is never called, and `last_error()` is that message
+- **THEN** it returns a `StartError` whose message starts `cannot start /nonexistent/pi: `, and `on_event` is never called
 
 #### Scenario: Pi agent names
 - **WHEN** `agent_env()` is read from a `PiHarness`
@@ -372,3 +376,15 @@ takes the program (a `String`), a `PiSettings` and a `Duration`, and
 #### Scenario: Real pi run
 - **WHEN** the test `crates/kernel/harnesses/tests/real_pi_run.rs`, marked ignored, runs with the variable `OSQ_PI_INTEGRATION` set to `1`, and starts a `PiHarness` with `resolve_pi_binary(None, <the test's environment>)`, the provider from `OSQ_PI_PROVIDER` when set, and a `kill_grace` of 5 seconds, in a new temporary folder, with the prompt `Reply with the word done and nothing else.`, a timeout of 300 seconds, and the environment `role_env` builds for the agent role from the test's environment and the harness's `agent_env()`
 - **THEN** the start exits 0 and gives at least one `Text` event; without `OSQ_PI_INTEGRATION` set to `1` the test returns at once and passes
+
+#### Scenario: Pi harness version
+- **WHEN** `harness_version()` is read from a `PiHarness` built with `PiHarness::new` and then, per row, given the row's `PiReady` through `with_preflight`
+- **THEN** it returns the row's version:
+
+| `PiReady` given | `harness_version()` |
+|---|---|
+| none | none |
+| version `0.87.1`, no warning | `0.87.1` |
+| version `pi 9.0.0`, warning `outside` | `pi 9.0.0` |
+| version empty, warning `outside` | none |
+| version `   `, no warning | none |

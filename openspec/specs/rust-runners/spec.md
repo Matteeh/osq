@@ -121,6 +121,7 @@ name, and `Harness` is the port every harness adapter implements:
 ```rust
 pub trait Harness {
     fn agent_env(&self) -> Vec<String>;
+    fn harness_version(&self) -> Option<String>;
     fn start(
         &mut self,
         request: &StartRequest,
@@ -128,6 +129,11 @@ pub trait Harness {
     ) -> Result<HarnessExit, StartError>;
 }
 ```
+
+`harness_version()` SHALL return the version of the harness program the
+adapter starts, for the `harness_version` of the `started` record its
+caller writes, and `None` when the adapter has none; the runner itself
+never reads it.
 
 The runner SHALL pass the role's harness a `StartRequest` with the
 role, the harness name, the role's `model` and `timeout`, and the
@@ -139,7 +145,9 @@ harness is not in `harnesses` SHALL be
 `RunError::UnknownHarness { role, harness }`, with no harness started
 and no event given. A start that ends without a failed start or a usage
 limit SHALL be `RunOutcome::Exited` with the harness's `HarnessExit`
-(`exit_code` and `timed_out`); judging it is the caller's work.
+unchanged: `exit_code`, `timed_out` and `error`, the start's error text
+as an `Option<String>`, absent when the harness reported none; judging
+it is the caller's work.
 
 #### Scenario: Each role gets its harness and model
 - **WHEN** settings give the executor `pi` with model `deepseek-flash` and a timeout of 60 seconds, the planner `claude` with model `claude-opus-5-5` and the validator `claude` with no model, and `run_task` runs each role with fake `pi` and `claude` harnesses that exit 0
@@ -158,6 +166,15 @@ limit SHALL be `RunOutcome::Exited` with the harness's `HarnessExit`
 #### Scenario: Unknown harness
 - **WHEN** settings give the validator `codex` and `harnesses` holds only `pi` and `claude`
 - **THEN** `run_task` for the validator returns `RunError::UnknownHarness` naming `Validator` and `codex`, no fake is started, and `on_event` is never called
+
+#### Scenario: Exit error and harness version
+- **WHEN** settings give the executor `pi` with `start_retries` 0, and `run_task` runs the executor once per row with a fake `pi` whose one start exits as the row says and whose `harness_version()` is the row's version, and the test reads `harness_version()` from that fake through the `harnesses` map after the run
+- **THEN** each outcome is `Exited` with the row's exit code, `timed_out` false and error, and the version read is the row's:
+
+| Fake exit | Fake version | Outcome error | Version read |
+|---|---|---|---|
+| exit 0, no error | `0.87.1` | none | `0.87.1` |
+| exit 1, error `boom` | none | `boom` | none |
 
 ### Requirement: Start retries
 A start SHALL count as failed when the harness's `start` returns a

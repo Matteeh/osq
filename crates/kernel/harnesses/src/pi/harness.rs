@@ -5,6 +5,7 @@ use std::time::Duration;
 use osq_core::event::Event;
 use osq_kernel_runners::{Harness, HarnessExit, StartError, StartRequest};
 
+use super::preflight::PiReady;
 use super::{PiSettings, PiStreamState, pi_args, pi_line_events};
 use crate::process::{ProcessOutcome, ProcessSpec, run_process_until};
 
@@ -55,8 +56,8 @@ pub struct PiHarness {
     settings: PiSettings,
     /// How long the runner waits after pi settles or exits.
     kill_grace: Duration,
-    /// The last start's error, when it had one.
-    last_error: Option<String>,
+    /// The version preflight read for this program, when it read one.
+    version: Option<String>,
 }
 
 impl PiHarness {
@@ -69,16 +70,21 @@ impl PiHarness {
             bin,
             settings,
             kill_grace,
-            last_error: None,
+            version: None,
         }
     }
 
-    /// Returns the error text of the last start, when it had one.
+    /// Returns this harness carrying the version `ready` read, when it read one.
     ///
     /// Implements: rust-harnesses/pi-harness
     #[must_use]
-    pub fn last_error(&self) -> Option<&str> {
-        self.last_error.as_deref()
+    pub fn with_preflight(mut self, ready: &PiReady) -> Self {
+        self.version = if ready.version.trim().is_empty() {
+            None
+        } else {
+            Some(ready.version.clone())
+        };
+        self
     }
 
     /// Builds the settings for one start, preferring the request's model.
@@ -148,6 +154,13 @@ impl Harness for PiHarness {
         AGENT_ENV.iter().map(|name| (*name).to_owned()).collect()
     }
 
+    /// Returns the version preflight read for the program, when it read one.
+    ///
+    /// Implements: rust-harnesses/pi-harness
+    fn harness_version(&self) -> Option<String> {
+        self.version.clone()
+    }
+
     /// Starts one pi task and gives each translated stdout line to `on_event`.
     ///
     /// Implements: rust-harnesses/pi-harness
@@ -166,23 +179,23 @@ impl Harness for PiHarness {
             state.settled()
         });
         match outcome {
-            Err(error) => {
-                let message = error.to_string();
-                self.last_error = Some(message.clone());
-                Err(StartError { message })
-            }
+            Err(error) => Err(StartError {
+                message: error.to_string(),
+            }),
             Ok(outcome) => {
                 let settled = state.settled();
-                self.last_error = self.failure(&outcome, settled);
+                let error = self.failure(&outcome, settled);
                 if settled {
                     Ok(HarnessExit {
                         exit_code: 0,
                         timed_out: false,
+                        error,
                     })
                 } else {
                     Ok(HarnessExit {
                         exit_code: outcome.exit_code,
                         timed_out: outcome.timed_out,
+                        error,
                     })
                 }
             }

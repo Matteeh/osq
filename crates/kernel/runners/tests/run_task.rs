@@ -7,8 +7,8 @@ use std::time::Duration;
 use osq_core::Event;
 use osq_core::event::{HarnessRetryData, PausedData, TextData, ToolData, UsageLimitData};
 use osq_kernel_runners::{
-    Harness, PauseSource, Role, RoleSettings, RunError, RunOutcome, RunnerSettings, TaskRequest,
-    UsagePause, run_task,
+    Harness, HarnessExit, PauseSource, Role, RoleSettings, RunError, RunOutcome, RunnerSettings,
+    TaskRequest, UsagePause, run_task,
 };
 
 mod support;
@@ -622,6 +622,61 @@ fn usage_limit_with_error_pauses_for_the_wait() {
     ));
     assert_eq!(events, expected);
     assert_eq!(runner_retries(&events).len(), 0);
+}
+
+/// Builds the exit a fake start returns with the row's error text.
+fn exit_with_error(exit_code: i32, error: Option<&str>) -> HarnessExit {
+    HarnessExit {
+        exit_code,
+        timed_out: false,
+        error: error.map(str::to_owned),
+    }
+}
+
+/// Proves an exited start carries its error and the port its harness version.
+///
+/// Covers: rust-runners/exit-error-and-harness-version
+#[test]
+fn exit_error_and_harness_version() {
+    let mut settings = retry_settings();
+    settings.start_retries = 0;
+    let rows = [
+        ("exit 0, no error", 0, None, Some("0.87.1")),
+        ("exit 1, error boom", 1, Some("boom"), None),
+    ];
+    for (name, exit_code, error, version) in rows {
+        let pi = FakeHarness::new(
+            vec![StartScript::Run {
+                events: Vec::new(),
+                exit: exit_with_error(exit_code, error),
+            }],
+            &[],
+        )
+        .with_version(version);
+        let mut map: BTreeMap<String, Box<dyn Harness>> = BTreeMap::new();
+        map.insert("pi".to_owned(), Box::new(pi));
+        let mut clock = FakeClock::new(NOW_MS);
+        let mut events = Vec::new();
+        let outcome = run_task(
+            &settings,
+            &task(Role::Executor),
+            &mut map,
+            &mut clock,
+            &mut |event| events.push(event),
+        );
+        let expected = HarnessExit {
+            exit_code,
+            timed_out: false,
+            error: error.map(str::to_owned),
+        };
+        assert_eq!(Ok(RunOutcome::Exited(expected)), outcome, "row {name}");
+        assert_eq!(events.len(), 0, "row {name} events");
+        assert_eq!(
+            version.map(str::to_owned),
+            map.get("pi").and_then(|harness| harness.harness_version()),
+            "row {name} version"
+        );
+    }
 }
 
 /// Proves a bare limit with exit 0 pauses for the wait.
