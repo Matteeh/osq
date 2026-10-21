@@ -1,0 +1,1 @@
+- [ ] a file not named tasks.md keeps its box

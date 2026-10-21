@@ -312,6 +312,10 @@ name = "osq-feature-archive"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "serde_json",
+ "yaml-rust2",
 ]
 
 [[package]]
