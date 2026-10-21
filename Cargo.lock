@@ -388,6 +388,7 @@ name = "osq-feature-run"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-specs",
 ]
 
 [[package]]
