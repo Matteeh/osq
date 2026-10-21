@@ -26,9 +26,37 @@ use super::{ProcessError, ProcessOutcome, ProcessSpec};
 /// because the runner pipes both.
 ///
 /// Implements: rust-harnesses/process-runner
+/// Implements: rust-harnesses/process-stop-after-a-line
 pub fn run_process(
     spec: &ProcessSpec,
     on_line: &mut dyn FnMut(&str),
+) -> Result<ProcessOutcome, ProcessError> {
+    run_process_until(spec, &mut |line| {
+        on_line(line);
+        false
+    })
+}
+
+/// Runs one program and stops it after the first line `on_line` accepts.
+///
+/// Behaves as [`run_process`], except that the first `true` from `on_line`
+/// asks the program to stop with `SIGTERM` after `spec.kill_grace`, then kills
+/// it with `SIGKILL` after another `spec.kill_grace`. A stop is not a timeout;
+/// a timeout still ends the run as [`run_process`] says.
+///
+/// # Errors
+///
+/// Returns [`ProcessError::Spawn`] when the program cannot be started.
+///
+/// # Panics
+///
+/// Panics when the child has no stdout or stderr pipe, which cannot happen
+/// because the runner pipes both.
+///
+/// Implements: rust-harnesses/process-stop-after-a-line
+pub fn run_process_until(
+    spec: &ProcessSpec,
+    on_line: &mut dyn FnMut(&str) -> bool,
 ) -> Result<ProcessOutcome, ProcessError> {
     let mut child = spawn(spec)?;
     let pid = child.id();
@@ -69,7 +97,7 @@ fn spawn(spec: &ProcessSpec) -> Result<Child, ProcessError> {
 fn receive(
     receiver: &Receiver<Message>,
     state: &mut RunState,
-    on_line: &mut dyn FnMut(&str),
+    on_line: &mut dyn FnMut(&str) -> bool,
     pid: u32,
     exited: &Arc<AtomicBool>,
 ) {

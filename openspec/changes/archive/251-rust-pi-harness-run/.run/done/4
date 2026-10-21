@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c57931e0d09df4bb037e0f60c8a529e5432ae343618afa1cf33ce89195849b8d"
+build_stamp: "e195d914"
+project_commit: "9f65b5c4"
+exit_code: 0
+scope_files: {"crates/kernel/harnesses/tests/pi_harness_run.rs":"sha256:200babefe8c6854031e3b7fee0a67b2af7aee91360f4c7a872be0327e0ef508c"}
+---
+2026-10-21T14:16:59.045Z

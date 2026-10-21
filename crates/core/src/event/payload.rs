@@ -450,8 +450,9 @@ pub struct RecertificationData {
     pub command: String,
     /// The command's exit code.
     pub exit_code: i64,
-    /// The captured output.
-    pub output: String,
+    /// The captured output, absent on a recertification TypeScript's sync writes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output: Option<String>,
     /// Whether the command timed out.
     pub timed_out: bool,
     /// The recorded scope hash.

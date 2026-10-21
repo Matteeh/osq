@@ -18,8 +18,12 @@ pub(super) struct RunState {
     stderr: Option<String>,
     /// Whether the run counts as timed out.
     timed_out: bool,
-    /// When the runner asks the program to stop.
+    /// Whether a line already asked the program to stop.
+    stop_requested: bool,
+    /// When the runner asks the program to stop after its timeout.
     timeout_at: Option<Instant>,
+    /// When the runner asks the program to stop after a line asked it to.
+    stop_at: Option<Instant>,
     /// When the runner kills the program.
     kill_at: Option<Instant>,
     /// When the runner stops waiting for stdout to close.
@@ -36,7 +40,9 @@ impl RunState {
             stdout_closed: false,
             stderr: None,
             timed_out: false,
+            stop_requested: false,
             timeout_at: timeout.map(|limit| Instant::now() + limit),
+            stop_at: None,
             kill_at: None,
             stdout_at: None,
             kill_grace,
@@ -50,7 +56,7 @@ impl RunState {
 
     /// The earliest deadline still waiting, if any.
     pub(super) fn deadline(&self) -> Option<Instant> {
-        [self.timeout_at, self.kill_at, self.stdout_at]
+        [self.timeout_at, self.stop_at, self.kill_at, self.stdout_at]
             .into_iter()
             .flatten()
             .min()
@@ -63,7 +69,18 @@ impl RunState {
             self.timeout_at = None;
             if !exited.load(Ordering::SeqCst) {
                 self.timed_out = true;
-                self.kill_at = Some(now + self.kill_grace);
+                if self.kill_at.is_none() {
+                    self.kill_at = Some(now + self.kill_grace);
+                }
+                signal(pid, "TERM");
+            }
+        }
+        if self.stop_at.is_some_and(|deadline| now >= deadline) {
+            self.stop_at = None;
+            if !exited.load(Ordering::SeqCst) {
+                if self.kill_at.is_none() {
+                    self.kill_at = Some(now + self.kill_grace);
+                }
                 signal(pid, "TERM");
             }
         }
@@ -83,12 +100,13 @@ impl RunState {
     }
 
     /// Folds one message from a helper thread into the state.
-    pub(super) fn apply(&mut self, message: Message, on_line: &mut dyn FnMut(&str)) {
+    pub(super) fn apply(&mut self, message: Message, on_line: &mut dyn FnMut(&str) -> bool) {
         match message {
-            Message::Line(line) => on_line(&line),
+            Message::Line(line) => self.line(&line, on_line),
             Message::Exited(status) => {
                 self.exit = Some(status);
                 self.timeout_at = None;
+                self.stop_at = None;
                 self.kill_at = None;
                 if !self.stdout_closed {
                     self.stdout_at = Some(Instant::now() + self.kill_grace);
@@ -99,6 +117,14 @@ impl RunState {
                 self.stdout_at = None;
             }
             Message::Stderr(text) => self.stderr = Some(text),
+        }
+    }
+
+    /// Gives one stdout line to the caller and arms a stop on the first `true`.
+    fn line(&mut self, line: &str, on_line: &mut dyn FnMut(&str) -> bool) {
+        if on_line(line) && !self.stop_requested {
+            self.stop_requested = true;
+            self.stop_at = Some(Instant::now() + self.kill_grace);
         }
     }
 

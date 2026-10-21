@@ -13,7 +13,7 @@ use std::fmt;
 use std::path::PathBuf;
 use std::time::Duration;
 
-pub use runner::run_process;
+pub use runner::{run_process, run_process_until};
 
 /// Everything the runner needs to start one program.
 #[derive(Debug, Clone, PartialEq, Eq)]

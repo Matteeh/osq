@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8f9c90267dd5408c60d9b240b38fee36a56b1d4a315c536ee97a4c4e3fbdc3dd"
+build_stamp: "e195d914"
+project_commit: "0db82fd1"
+exit_code: 0
+scope_files: {"crates/core/src/event/payload.rs":"sha256:c60436846e65b1c7d15e39a540fb099460ce20ca2a03620477c670a348c71d3c","crates/core/tests/sync_recertification.rs":"sha256:8362d5d477ce5e5494e92871bc53b14802a1f7f5d8f23d75a7e56b069fa613ab"}
+---
+2026-10-21T14:00:29.197Z

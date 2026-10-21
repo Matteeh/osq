@@ -1,0 +1,22 @@
+---
+scope_resolver: 2
+scope_hash: sha256:6bec51b43d3b6d86d198ff0bccf534da4306f2bd29fdec95986d89fcb7a567df
+build_stamp: e195d914
+project_commit: 02a3ef49
+exit_code: 0
+scope_files:
+  crates/kernel/harnesses/src/lib.rs: sha256:437df11aec5a4c32333cedda825635ede2f06aa6ae7434515216bd863beffcf0
+  crates/kernel/harnesses/src/pi.rs: sha256:537f65ef6fc2665474707f1e3b15fc8e370cdb0a796fa1d1d1401afc28bf0b06
+  crates/kernel/harnesses/src/pi/preflight.rs: sha256:b98d58dd4facc6b20ce6a26ec85267ab8782ee779415f214e6b5366255948ddf
+  crates/kernel/harnesses/src/pi/preflight/auth.rs: sha256:c4fa0fc848379e803b48f0fc31d89ae8600c5aa42d11a295458e104af416a2b2
+  crates/kernel/harnesses/src/pi/preflight/binary.rs: sha256:a7cfa53e849daaddd58e62b288fb49575e287b020bcc203946e87e6b49b9db9c
+  crates/kernel/harnesses/src/pi/preflight/error.rs: sha256:81512c32e51304648c8f30521334df711a4cc979eccf19b0fda4a16f2d3b67fe
+  crates/kernel/harnesses/src/pi/preflight/version.rs: sha256:1a17046b541414c0186a4b1238529f25466690b50dee82e6e4cf3c0f58c3c370
+  crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh: sha256:c83089eb5560a5817302dbe477f0d13c83915c3c48b391f8ccea019ff0654ec5
+  crates/kernel/harnesses/tests/pi_preflight.rs: sha256:4d39eda401520e29006ee998945abc2b0059b1a87fb9998cec8ec204f89c9858
+  crates/kernel/harnesses/tests/pi_version.rs: sha256:36832cf3c8121a6399f9970358cc9776baa90a58573b8225a706c2f1a66ce36c
+original_scope_hash: sha256:0df929dfcf86d1c23f08bac452749ec3643f57420c9c85d2972fa67cd602e910
+recertified_at: 2026-10-21T13:15:04.856Z
+recertification_count: 1
+---
+2026-10-21T13:00:30.165Z

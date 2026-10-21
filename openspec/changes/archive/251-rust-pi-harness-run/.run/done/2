@@ -1,0 +1,25 @@
+---
+scope_resolver: 2
+scope_hash: sha256:bcb93e1dc79503f268c8dd6f97a98a8ef35011315ff9afb2ea22d952a974005e
+build_stamp: e195d914
+project_commit: cdfbcfbb
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:11e6714d8b913215d885fc46646ec030d38a5705d7728151790f2e8d3b59ac12
+  crates/kernel/harnesses/Cargo.toml: sha256:4c5c0d580c0f1f5e45e7dd00f1bde712f2f29dc2e27766b3911eb808940bad50
+  crates/kernel/harnesses/src/lib.rs: sha256:437df11aec5a4c32333cedda825635ede2f06aa6ae7434515216bd863beffcf0
+  crates/kernel/harnesses/src/pi.rs: sha256:537f65ef6fc2665474707f1e3b15fc8e370cdb0a796fa1d1d1401afc28bf0b06
+  crates/kernel/harnesses/src/pi/harness.rs: sha256:d210f55f176213a52282e71b57b87abbd2ad48c96944908f725c265db2b0f761
+  crates/kernel/harnesses/src/process.rs: sha256:eba0470924c1fc7a4d52cd81682ce0899a957f63ee8d8499eca1427cffd3aeb5
+  crates/kernel/harnesses/src/process/readers.rs: sha256:4175d0884d7afa5be9a1291cad97e7cf705ebbd31696f4bde5967817c309108a
+  crates/kernel/harnesses/src/process/runner.rs: sha256:bbb80761798b7c4e7d617ba29a8557f9c1b8731fab80f8f1aaa54c4a9dd76467
+  crates/kernel/harnesses/src/process/state.rs: sha256:893413c8cf91e22ae8d7fa33b8052161e629e43a68889c32516bcb788894ce6b
+  crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh: sha256:9efad297941e1d2a47ba96b5117819d814557afadd5bb533b9239a7ecd1b9d22
+  crates/kernel/harnesses/tests/pi_harness_run.rs: sha256:200babefe8c6854031e3b7fee0a67b2af7aee91360f4c7a872be0327e0ef508c
+  crates/kernel/harnesses/tests/real_pi_run.rs: sha256:00d88327c7d4e19e92d95f4c91b87e5f1f1acdbaa3dc07210a6d622ebeab0089
+  crates/kernel/harnesses/tests/stop_run.rs: sha256:5b5c77e5130e5f5a92038c6ff36eab5e2e69852b4670a61645fd56b34c985cc1
+original_scope_hash: sha256:b7cf558507ed80c18c93b5eb714cde95554e1c9f1f8dc4c8b48362aafc638459
+recertified_at: 2026-10-21T14:17:05.766Z
+recertification_count: 2
+---
+2026-10-21T13:14:52.120Z

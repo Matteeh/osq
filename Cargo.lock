@@ -381,6 +381,7 @@ name = "osq-kernel-harnesses"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-runners",
  "serde_json",
 ]
 

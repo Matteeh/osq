@@ -6,13 +6,21 @@
 //! shape today's pi writes.
 
 mod args;
+mod harness;
 mod path;
+mod preflight;
 mod stream;
 mod summary;
 
 use std::collections::BTreeMap;
 
 use osq_core::event::Event;
+
+pub use harness::PiHarness;
+pub use preflight::{
+    PiPreflight, PiPreflightError, PiReady, PiVersionAssessment, PiVersionRange, assess_pi_version,
+    preflight_pi, resolve_pi_binary,
+};
 
 /// The pi settings a runner chose for one task.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

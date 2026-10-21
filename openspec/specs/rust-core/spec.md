@@ -73,7 +73,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `retry` | `target`, `reason`, `attempt` | `automatic` |
 | `stuck` | `task`, `fingerprint` | |
 | `harness_retry` | `phase`, `attempt` | `maxAttempts`, `delayMs`, `success`, `error` |
-| `recertification` | `task`, `outcome`, `differingPaths`, `attribution`, `command`, `exitCode`, `output`, `timedOut`, `recordedHash`, `currentHash` | `attempt`, `reason`, `automatic` |
+| `recertification` | `task`, `outcome`, `differingPaths`, `attribution`, `command`, `exitCode`, `timedOut`, `recordedHash`, `currentHash` | `output`, `attempt`, `reason`, `automatic` |
 | `rejected` | `reason` | |
 | `instructions_changed` | `changed` | |
 | `baseline_ran` | `outcome`, `command`, `commit` (or null), `treeDigest` (or null), `exitCode`, `durationSeconds` | `reusedFrom`, `output` |
@@ -205,6 +205,10 @@ stays `56` and `55.94` stays `55.94`.
 | `{"type":"verify_ran","timestamp":"2026-10-17T10:00:00.000Z","data":{"command":"pnpm verify","exitCode":0,"duration":56}}` |
 | `{"type":"verify_ran","timestamp":"2026-10-17T10:00:00.000Z","data":{"command":"pnpm verify","exitCode":0,"duration":55.94}}` |
 | `{"type":"done","timestamp":"2026-10-17T10:00:00Z","data":{"task":"1"}}` |
+
+#### Scenario: Sync recertification without output
+- **WHEN** the line `{"type":"recertification","timestamp":"2026-10-21T13:15:02.371Z","data":{"task":"2","outcome":"passed","differingPaths":["Cargo.lock (modified)"],"attribution":[{"path":"Cargo.lock (modified)","attribution":"sync"}],"command":"cargo test -p osq-kernel-harnesses","exitCode":0,"timedOut":false,"recordedHash":"sha256:b7","currentHash":"sha256:3d","automatic":true}`, which TypeScript's sync recertification writes, is parsed and written back
+- **THEN** it parses to `Event::Recertification` with outcome `passed`, no `output` and `automatic` `true`, and the written line's JSON value equals the line and holds no `output` key
 
 ### Requirement: Event read errors
 `parse_event_line` SHALL refuse a line it cannot read exactly, with an
