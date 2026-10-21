@@ -22,8 +22,10 @@
 //! Implements: rust-storage/change-folder-seal
 //! Implements: rust-storage/marker-facts
 //! Implements: rust-storage/planning-facts
+//! Implements: rust-storage/land-facts
 
 mod error;
+mod land;
 mod listing;
 mod manual;
 mod results;
@@ -33,6 +35,7 @@ mod snapshot;
 mod text;
 
 pub use error::StorageError;
+pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
 pub use results::TaskDisclosure;

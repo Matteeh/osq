@@ -1,0 +1,156 @@
+//! Proves the change `land` picks for a query and the already-landed outputs.
+
+mod support;
+
+use support::LandRepo;
+
+/// What one lookup row expects.
+enum Expected {
+    /// A land whose output begins with this line.
+    Landed,
+    /// A refusal with this message.
+    Failed(&'static str),
+}
+
+/// Proves every row of "Change for a query".
+///
+/// Covers: rust-land/change-for-a-query
+#[test]
+fn change_for_a_query() {
+    let rows: [(&str, &str, Expected); 9] = [
+        ("fixture by 1", "1", Expected::Landed),
+        ("fixture by 001", "001", Expected::Landed),
+        ("fixture by padded spaces", "  1  ", Expected::Landed),
+        ("fixture by name", "001-alpha-orders", Expected::Landed),
+        ("fixture by prefix", "001-alpha", Expected::Landed),
+        (
+            "no change 2",
+            "2",
+            Expected::Failed("No archived change \"2\" in an osq worktree"),
+        ),
+        (
+            "no change alpha",
+            "alpha",
+            Expected::Failed("No archived change \"alpha\" in an osq worktree"),
+        ),
+        (
+            "active only",
+            "1",
+            Expected::Failed("001-alpha-orders has not archived on osq/001-alpha-orders"),
+        ),
+        (
+            "renamed branch",
+            "1",
+            Expected::Failed("No archived change \"1\" in an osq worktree"),
+        ),
+    ];
+    for (index, (name, query, expected)) in rows.into_iter().enumerate() {
+        let repo = LandRepo::new(&format!("lookup-{index}"));
+        match index {
+            7 => {
+                repo.add_unarchived_change("001-alpha-orders");
+            }
+            8 => {
+                let change = repo.add_fixture_change();
+                repo.rename_branch(&change, "work/001-alpha-orders");
+            }
+            _ => {
+                repo.add_fixture_change();
+            }
+        }
+        let before = repo.head(repo.checkout());
+        match expected {
+            Expected::Landed => {
+                let output = repo
+                    .run(query)
+                    .unwrap_or_else(|error| panic!("{name}: {error}"));
+                assert!(
+                    output.text.starts_with("Landed 001-alpha-orders as "),
+                    "{name}: {}",
+                    output.text
+                );
+            }
+            Expected::Failed(message) => {
+                let error = repo.run(query).expect_err(name);
+                assert_eq!(
+                    error.to_string(),
+                    format!("land failed: {message}"),
+                    "{name}"
+                );
+                assert_eq!(repo.head(repo.checkout()), before, "{name}: main unchanged");
+            }
+        }
+    }
+}
+
+/// Proves the checkout fallback leaves out an archived folder the query misses.
+///
+/// Covers: rust-land/change-for-a-query
+#[test]
+fn checkout_fallback_skips_unmatched_archives() {
+    let repo = LandRepo::new("lookup_skips_unmatched_archive");
+    repo.add_unarchived_change("001-alpha-orders");
+    repo.write(
+        repo.checkout(),
+        "openspec/changes/archive/002-beta/proposal.md",
+        "---\ntitle: B\n---\n",
+    );
+    repo.commit(
+        repo.checkout(),
+        "land another change",
+        &["openspec/changes/archive/002-beta/proposal.md"],
+    );
+    let error = repo
+        .run("1")
+        .expect_err("the active change has not archived");
+    assert_eq!(
+        error.to_string(),
+        "land failed: 001-alpha-orders has not archived on osq/001-alpha-orders"
+    );
+}
+
+/// Proves both rows of "Already landed".
+///
+/// Covers: rust-land/already-landed
+#[test]
+fn already_landed() {
+    let rows = [
+        (
+            "worktree remains",
+            false,
+            "001-alpha-orders has already landed; Rust land does not remove worktrees yet\n",
+        ),
+        (
+            "worktree removed",
+            true,
+            "001-alpha-orders has already landed; nothing to clean up\n",
+        ),
+    ];
+    for (index, (name, remove, expected)) in rows.into_iter().enumerate() {
+        let repo = LandRepo::new(&format!("landed-{index}"));
+        let change = repo.add_fixture_change();
+        repo.write(
+            repo.checkout(),
+            "openspec/changes/archive/001-alpha-orders/proposal.md",
+            "---\ntitle: A\n---\n",
+        );
+        repo.commit(
+            repo.checkout(),
+            "land the fixture change",
+            &["openspec/changes/archive/001-alpha-orders/proposal.md"],
+        );
+        if remove {
+            repo.remove_worktree(&change);
+        }
+        let before = repo.head(repo.checkout());
+        let output = repo
+            .run("1")
+            .unwrap_or_else(|error| panic!("{name}: {error}"));
+        assert_eq!(output.text, expected, "{name}");
+        assert_eq!(
+            repo.head(repo.checkout()),
+            before,
+            "{name}: main gains no commit"
+        );
+    }
+}

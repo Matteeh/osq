@@ -1,0 +1,39 @@
+---
+scope_resolver: 2
+scope_hash: sha256:3453366d00a239ac6306474f057581a33e3e91e614a655247a5847bda8646530
+build_stamp: 3f811304
+project_commit: 6eb188f4
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:36668b631ed3ccc1b40cdbfc6f4f35ea3e3c117243162b1052c492a020df4c5d
+  crates/features/land/Cargo.toml: sha256:74d5ea423712680dad00fd89dbfdcd83d6b69becd893346953443224ce049cd5
+  crates/features/land/src/feature.rs: sha256:22295413c6766b4f102c68d9b16e2e1e18fa07c63bba28a796083a43cbf10b7d
+  crates/features/land/src/land.rs: sha256:c2d2407b284280d0299f27283b217f860e6799409edc030226e037bff625b1fa
+  crates/features/land/src/land/checks.rs: sha256:30a2d51e3d7f4d34d10c1e810078d0f7d0624bd4dee8dff9db9c9ae3c40392de
+  crates/features/land/src/land/find.rs: sha256:72de5a7b57dc9909bbeacf4d7f17a37cdc9520b2828d3fbb59e3b5a7fd555cae
+  crates/features/land/src/land/message.rs: sha256:66734596b56c0747f67f57c581a4314b7ea80e002d47ef074b63b9ae0118efe1
+  crates/features/land/src/land/text.rs: sha256:df67b04293ebf7ede877fcd25763d01fcc464d5923b45a2ffcbf669c526e1541
+  crates/features/land/src/lib.rs: sha256:24609c1f62b7793e35f14047213db34e5a4d29e8ef45f33a588d09e3c67261ef
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/approved: sha256:3f6aa6859e71b2299e6c9cfb6b8ac565bb282224f12b3e6a68b5eefa8554ea05
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/approver: sha256:5df43f12005680127e80fe935a0f1aaf290d60a1d52b90e8646f638124d84c5e
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/base: sha256:5ecf8d2cc410094e8b82dd0bc178a57f3aa1e80916689beb00fe56148b1b1256
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/done/1: sha256:be6b1c86481d5b5866f12edc502b1b0d8adfd79a19916c4b1476175ffad85e44
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/done/2: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/events/1.jsonl: sha256:f59d64593fb89b18d73f7fa8051c4bd8cf84a3522edb59dd30e198b72150effd
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/events/2.jsonl: sha256:0d4c88a1fd1240ff16541e1b2e3956aaa1398308cd367b0621608fdedcb73505
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/.run/events/change.jsonl: sha256:56089ae525f50998f6ab146288100c2c7064b916541ceeec915ea51837f55585
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/proposal.md: sha256:3001239f91a1a42a413df0e8dbf44e343c7e4389c7d6cfa940ae40eb1fecd80f
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/specs/orders/spec.md: sha256:2b51ed7296d33a771c8be6624c9bebd7e5e4d7d2b1d443c5023e8b9374defe27
+  crates/features/land/tests/fixtures/land-change/001-alpha-orders/tasks.md: sha256:a78be1eca7c710c8456daa3d45f5af3f49bdb219304464024924c9830e6bb295
+  crates/features/land/tests/fixtures/land-message.txt: sha256:3e6935ee6f561f95a733bc9df2ff7bf01b0672f9a0963e15fd76da92e3bf5c71
+  crates/features/land/tests/land_commit.rs: sha256:032b42b003cef5502892e411d588b3f473fb07dbf39d71991486593e1dc91216
+  crates/features/land/tests/land_feature.rs: sha256:b2c038b105daf2cf0548e7d0efd2a57bc801de7165952d161cad14464a4db414
+  crates/features/land/tests/land_lookup.rs: sha256:7f0ada624ad349f347fc6917805d84c0fe6a953a724ad96fd9abd70a06486b96
+  crates/features/land/tests/land_message.rs: sha256:13117c988e3652f19f5904494d664a47edd078948334fa6f485c14d13f6f8015
+  crates/features/land/tests/land_settings.rs: sha256:33db900ddccfb0e40cce136b710633220197a35b36e27cb724506904d8eb348f
+  crates/features/land/tests/support/mod.rs: sha256:bbd9cbecbfe600199787328d201a91e6374a9da2efe797ca7b7ee255ee8f4963
+original_scope_hash: sha256:e4db7be80e4095af64b9cc3796225e82f23df268bbbeb0bbd25f7cfb72153766
+recertified_at: 2026-10-21T17:46:43.202Z
+recertification_count: 1
+---
+2026-10-21T17:36:07.910Z

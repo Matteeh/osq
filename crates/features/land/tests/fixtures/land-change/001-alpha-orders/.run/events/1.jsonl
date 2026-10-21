@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-10-20T10:00:00.000Z","data":{"harness":"claude","model":"opus","osqVersion":"0.2.0"}}
+not json
+{"type":"started","timestamp":"2026-10-20T11:00:00.000Z","data":{"harness":"pi","model":"deepseek/flash","osqVersion":"0.3.0"}}
