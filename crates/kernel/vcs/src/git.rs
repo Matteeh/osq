@@ -2,28 +2,22 @@
 
 mod history;
 mod merge;
+mod run;
 mod state;
 mod write;
 
-use std::io::Write as _;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Command;
+
+use osq_kernel_config::Timeouts;
 
 use crate::port::{DiffStat, FastForward, Head, MergeOutcome, StatusEntry, Worktree};
 use crate::{Vcs, VcsError};
 
+use run::RunOutput;
+
 /// Environment variables that would redirect osq's own git reads.
 const GIT_ENV_VARS: [&str; 3] = ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"];
-
-/// One git command's exit status and decoded streams.
-struct RunOutput {
-    /// Whether git exited with code 0.
-    success: bool,
-    /// Standard output, decoded with invalid bytes replaced.
-    stdout: String,
-    /// Standard error, decoded with invalid bytes replaced.
-    stderr: String,
-}
 
 /// The git-backed implementation of the port.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,10 +28,12 @@ pub struct GitVcs {
     program: String,
     /// The extra environment variables, in the order they were added.
     env: Vec<(String, String)>,
+    /// The limits that bound every command.
+    timeouts: Timeouts,
 }
 
 impl GitVcs {
-    /// A `git` program run in the directory `root`.
+    /// A `git` program run in the directory `root` with the default limits.
     ///
     /// Implements: rust-vcs/git-command
     #[must_use]
@@ -46,6 +42,7 @@ impl GitVcs {
             root: root.into(),
             program: "git".to_owned(),
             env: Vec::new(),
+            timeouts: Timeouts::default(),
         }
     }
 
@@ -64,6 +61,15 @@ impl GitVcs {
     #[must_use]
     pub fn with_env(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.env.push((key.into(), value.into()));
+        self
+    }
+
+    /// Bounds every command by `timeouts`.
+    ///
+    /// Implements: rust-vcs/git-command
+    #[must_use]
+    pub fn with_timeouts(mut self, timeouts: &Timeouts) -> Self {
+        self.timeouts = *timeouts;
         self
     }
 
@@ -96,30 +102,7 @@ impl GitVcs {
         env: &[(&str, &str)],
         input: Option<&str>,
     ) -> Result<RunOutput, VcsError> {
-        let mut command = self.command(args);
-        for (key, value) in env {
-            command.env(key, value);
-        }
-        command
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        let mut child = command.spawn().map_err(|source| VcsError::Spawn {
-            command: self.command_line(args),
-            source,
-        })?;
-        if let (Some(text), Some(mut pipe)) = (input, child.stdin.take()) {
-            let _ = pipe.write_all(text.as_bytes());
-        }
-        let output = child.wait_with_output().map_err(|source| VcsError::Spawn {
-            command: self.command_line(args),
-            source,
-        })?;
-        Ok(RunOutput {
-            success: output.status.success(),
-            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
-            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
-        })
+        run::run(self, args, env, input)
     }
 
     /// Runs one read and gives its standard output, or none when it failed.

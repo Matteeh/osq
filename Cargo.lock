@@ -465,6 +465,7 @@ name = "osq-kernel-vcs"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
 ]
 
 [[package]]
