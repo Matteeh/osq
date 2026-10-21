@@ -1,0 +1,74 @@
+[
+  {
+    "line": 10,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 1342,
+      "candidateTokens": 142,
+      "totalTokens": 1996,
+      "cachedTokens": 512,
+      "reasoningTokens": 87,
+      "cost": 0.000576072,
+      "provider": "deepseek",
+      "model": "deepseek-flash"
+    }
+  },
+  {
+    "line": 11,
+    "type": "tool",
+    "data": {
+      "tool": "write",
+      "summary": "hello.txt"
+    }
+  },
+  {
+    "line": 12,
+    "type": "file_changed",
+    "data": {
+      "path": "hello.txt"
+    }
+  },
+  {
+    "line": 14,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 222,
+      "candidateTokens": 60,
+      "totalTokens": 2074,
+      "cachedTokens": 1792,
+      "reasoningTokens": 4,
+      "cost": 0.000149352,
+      "provider": "deepseek",
+      "model": "deepseek-flash"
+    }
+  },
+  {
+    "line": 15,
+    "type": "tool",
+    "data": {
+      "tool": "bash",
+      "summary": "cat hello.txt"
+    }
+  },
+  {
+    "line": 19,
+    "type": "text",
+    "data": {
+      "text": "Done. Created `hello.txt` containing `hi` and confirmed with `cat`, which output `hi`."
+    }
+  },
+  {
+    "line": 19,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 168,
+      "candidateTokens": 23,
+      "totalTokens": 2111,
+      "cachedTokens": 1920,
+      "reasoningTokens": 0,
+      "cost": 0.00008952,
+      "provider": "deepseek",
+      "model": "deepseek-flash"
+    }
+  }
+]

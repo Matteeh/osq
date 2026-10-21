@@ -1,0 +1,209 @@
+[
+  {
+    "line": 2,
+    "type": "tool",
+    "data": {
+      "tool": "edit",
+      "summary": "src/main.rs"
+    }
+  },
+  {
+    "line": 3,
+    "type": "file_changed",
+    "data": {
+      "path": "src/main.rs"
+    }
+  },
+  {
+    "line": 4,
+    "type": "tool",
+    "data": {
+      "tool": "write",
+      "summary": "/work/other/notes.md"
+    }
+  },
+  {
+    "line": 5,
+    "type": "file_changed",
+    "data": {
+      "path": "../other/notes.md"
+    }
+  },
+  {
+    "line": 6,
+    "type": "tool",
+    "data": {
+      "tool": "edit",
+      "summary": "./src/lib.rs"
+    }
+  },
+  {
+    "line": 7,
+    "type": "file_changed",
+    "data": {
+      "path": "./src/lib.rs"
+    }
+  },
+  {
+    "line": 8,
+    "type": "tool",
+    "data": {
+      "tool": "write",
+      "summary": "failed.txt"
+    }
+  },
+  {
+    "line": 11,
+    "type": "file_changed",
+    "data": {
+      "path": "late.txt"
+    }
+  },
+  {
+    "line": 13,
+    "type": "tool",
+    "data": {
+      "tool": "read",
+      "summary": "README.md"
+    }
+  },
+  {
+    "line": 15,
+    "type": "tool",
+    "data": {
+      "tool": "bash",
+      "summary": "cd . && ls src && echo /work/proje"
+    }
+  },
+  {
+    "line": 16,
+    "type": "tool",
+    "data": {
+      "tool": "bash",
+      "summary": "ls \".\" /work/project2/x"
+    }
+  },
+  {
+    "line": 17,
+    "type": "tool",
+    "data": {
+      "tool": "bash",
+      "summary": "echo 0123456789012345678901234567890123456789012345678901234"
+    }
+  },
+  {
+    "line": 18,
+    "type": "tool",
+    "data": {
+      "tool": "grep",
+      "summary": "fn main"
+    }
+  },
+  {
+    "line": 19,
+    "type": "tool",
+    "data": {
+      "tool": "find",
+      "summary": "crates"
+    }
+  },
+  {
+    "line": 20,
+    "type": "tool",
+    "data": {
+      "tool": "ls",
+      "summary": ""
+    }
+  },
+  {
+    "line": 21,
+    "type": "tool",
+    "data": {
+      "tool": "todo",
+      "summary": "{\"items\":[\"a\",\"b\"]}"
+    }
+  },
+  {
+    "line": 22,
+    "type": "tool",
+    "data": {
+      "tool": "tool",
+      "summary": "{}"
+    }
+  },
+  {
+    "line": 23,
+    "type": "tool",
+    "data": {
+      "tool": "read",
+      "summary": ""
+    }
+  },
+  {
+    "line": 24,
+    "type": "harness_retry",
+    "data": {
+      "phase": "start",
+      "attempt": 1,
+      "maxAttempts": 3,
+      "delayMs": 2000,
+      "error": "overloaded"
+    }
+  },
+  {
+    "line": 25,
+    "type": "harness_retry",
+    "data": {
+      "phase": "end",
+      "attempt": 1,
+      "success": true
+    }
+  },
+  {
+    "line": 26,
+    "type": "harness_retry",
+    "data": {
+      "phase": "end",
+      "attempt": 0,
+      "success": false,
+      "error": "gave up"
+    }
+  },
+  {
+    "line": 27,
+    "type": "text",
+    "data": {
+      "text": "First.\nSecond."
+    }
+  },
+  {
+    "line": 27,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 10,
+      "candidateTokens": 5,
+      "totalTokens": 15
+    }
+  },
+  {
+    "line": 29,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 0,
+      "candidateTokens": 0,
+      "totalTokens": 0
+    }
+  },
+  {
+    "line": 30,
+    "type": "tokens",
+    "data": {
+      "promptTokens": 7,
+      "candidateTokens": 3,
+      "totalTokens": 12,
+      "cachedTokens": 4,
+      "cost": 0,
+      "model": "m1"
+    }
+  }
+]

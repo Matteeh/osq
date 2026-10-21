@@ -1,0 +1,18 @@
+---
+scope_resolver: 2
+scope_hash: sha256:55af1cef6ae551c2a7b03f2c6f7fe1a25709344ecfbaa332ae79bcd697f63377
+build_stamp: e195d914
+project_commit: 7faad92e
+exit_code: 0
+scope_files:
+  crates/kernel/harnesses/src/lib.rs: sha256:c065ad041114e879f840086939eaefdf2245efbe8bfd8d7b3c9d18b65d7b095d
+  crates/kernel/harnesses/src/process.rs: sha256:9908c2b9af017acdec7cefbbcee22cdebf928e330ba6b852f6591cf65418f935
+  crates/kernel/harnesses/src/process/readers.rs: sha256:4175d0884d7afa5be9a1291cad97e7cf705ebbd31696f4bde5967817c309108a
+  crates/kernel/harnesses/src/process/runner.rs: sha256:9da8652cf3b7f92d5cc68eb460400ccbd8c00a8580b45b1789c76fb599628615
+  crates/kernel/harnesses/src/process/state.rs: sha256:45de59ca3072088059d3fbdf3f44f1d6f2316b578394a35f8b0cb91503778a07
+  crates/kernel/harnesses/tests/process_runner.rs: sha256:575667bd2efbf5a7b60dc235eec699f904181a003fd5b5c599a348fa2be20fb6
+original_scope_hash: sha256:063335f8a0c9995a8ab8e6e56e9f40d3ceec57ebbb265bb11cda57ba8f984fb4
+recertified_at: 2026-10-21T07:01:09.658Z
+recertification_count: 1
+---
+2026-10-21T06:50:58.818Z

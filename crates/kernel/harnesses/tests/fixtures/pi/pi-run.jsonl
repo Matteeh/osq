@@ -1,0 +1,22 @@
+{"type":"session","version":3,"id":"captured-session","timestamp":"2026-01-01T00:00:00.000Z"}
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"system","content":""}}
+{"type":"message_end","message":{"role":"system","content":""}}
+{"type":"message_start","message":{"role":"user","content":""}}
+{"type":"message_end","message":{"role":"user","content":""}}
+{"type":"message_update","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"assistantMessageEvent":{"type":"thinking_start","contentIndex":0}}
+{"type":"message_start","message":{"role":"assistant"}}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"thinking","thinking":""},{"type":"toolCall","id":"call_write","name":"write"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":1342,"output":142,"cacheRead":512,"cacheWrite":0,"reasoning":87,"totalTokens":1996,"cost":{"input":0.0004026,"output":0.0001704,"cacheRead":0.000003072,"cacheWrite":0,"total":0.000576072}},"stopReason":"toolUse"}}
+{"type":"tool_execution_start","toolCallId":"call_write","toolName":"write","args":{"path":"hello.txt"}}
+{"type":"tool_execution_end","toolCallId":"call_write","toolName":"write","result":{"content":[]},"isError":false}
+{"type":"message_start","message":{"role":"assistant"}}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"thinking","thinking":""},{"type":"toolCall","id":"call_bash","name":"bash"}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":222,"output":60,"cacheRead":1792,"cacheWrite":0,"reasoning":4,"totalTokens":2074,"cost":{"input":0.00006659999999999999,"output":0.000072,"cacheRead":0.000010752,"cacheWrite":0,"total":0.000149352}},"stopReason":"toolUse"}}
+{"type":"tool_execution_start","toolCallId":"call_bash","toolName":"bash","args":{"command":"cat hello.txt"}}
+{"type":"tool_execution_update","toolCallId":"call_bash","toolName":"bash","args":{"command":"cat hello.txt"},"partialResult":{"content":[]}}
+{"type":"tool_execution_end","toolCallId":"call_bash","toolName":"bash","result":{"content":[]},"isError":false}
+{"type":"message_start","message":{"role":"assistant"}}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Done. Created `hello.txt` containing `hi` and confirmed with `cat`, which output `hi`."}],"provider":"deepseek","model":"deepseek-flash","usage":{"input":168,"output":23,"cacheRead":1920,"cacheWrite":0,"reasoning":0,"totalTokens":2111,"cost":{"input":0.0000504,"output":0.0000276,"cacheRead":0.00001152,"cacheWrite":0,"total":0.00008952}},"stopReason":"stop"}}
+{"type":"turn_end","message":{"role":"assistant","content":[]}}
+{"type":"agent_end","messages":[]}
+{"type":"agent_settled"}

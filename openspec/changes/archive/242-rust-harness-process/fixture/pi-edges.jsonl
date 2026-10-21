@@ -1,0 +1,37 @@
+{"type":"session","version":3,"id":"edges-session","timestamp":"2026-01-01T00:00:00.000Z"}
+{"type":"tool_execution_start","toolCallId":"call_edit","toolName":"edit","args":{"path":"/work/project/src/main.rs","oldText":"a","newText":"b"}}
+{"type":"tool_execution_end","toolCallId":"call_edit","toolName":"edit","isError":false}
+{"type":"tool_execution_start","toolCallId":"call_outside","toolName":"write","args":{"path":"/work/other/notes.md"}}
+{"type":"tool_execution_end","toolCallId":"call_outside","toolName":"write","isError":false}
+{"type":"tool_execution_start","toolCallId":"call_relative","toolName":"edit","args":{"path":"./src/lib.rs"}}
+{"type":"tool_execution_end","toolCallId":"call_relative","isError":false}
+{"type":"tool_execution_start","toolCallId":"call_fail","toolName":"write","args":{"path":"failed.txt"}}
+{"type":"tool_execution_end","toolCallId":"call_fail","toolName":"write","isError":true}
+{"type":"tool_execution_end","toolCallId":"call_no_flag","toolName":"write","args":{"path":"no-flag.txt"}}
+{"type":"tool_execution_end","toolName":"write","args":{"path":"late.txt"},"isError":false}
+{"type":"tool_execution_end","toolName":"edit","isError":false}
+{"type":"tool_execution_start","toolCallId":"call_read","toolName":"read","args":{"path":"/work/project/README.md"}}
+{"type":"tool_execution_end","toolCallId":"call_read","toolName":"read","isError":false}
+{"type":"tool_execution_start","toolCallId":"call_cd","toolName":"bash","args":{"command":"cd /work/project && ls /work/project/src && echo /work/project"}}
+{"type":"tool_execution_start","toolName":"bash","args":{"command":"ls \"/work/project\" /work/project2/x"}}
+{"type":"tool_execution_start","toolName":"bash","args":{"command":"echo 0123456789012345678901234567890123456789012345678901234567890123456789 done"}}
+{"type":"tool_execution_start","toolName":"grep","args":{"pattern":"fn main","path":"src"}}
+{"type":"tool_execution_start","toolName":"find","args":{"path":"crates"}}
+{"type":"tool_execution_start","toolName":"ls","args":{}}
+{"type":"tool_execution_start","toolName":"todo","args":{"items":["a","b"]}}
+{"type":"tool_execution_start"}
+{"type":"tool_execution_start","toolName":"read","args":{"path":7}}
+{"type":"auto_retry_start","attempt":1,"maxAttempts":3,"delayMs":2000,"errorMessage":"overloaded"}
+{"type":"auto_retry_end","attempt":1,"success":true}
+{"type":"auto_retry_end","success":false,"finalError":"gave up"}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"First."},{"type":"text","text":""},{"type":"thinking","thinking":"hidden"},{"type":"text","text":"Second."}],"usage":{"input":10,"output":5}}}
+{"type":"message_end","message":{"role":"assistant"}}
+{"type":"message_end","message":{"role":"assistant","content":"plain","usage":{}}}
+{"type":"message_end","message":{"role":"assistant","usage":{"input":7,"output":3,"totalTokens":12,"cacheRead":4,"cost":{"total":0}},"provider":"","model":"m1"}}
+{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"ignored"}],"usage":{"input":1,"output":1}}}
+not json at all
+[1,2]
+"text"
+
+{"type":"compaction_start"}
+{"type":"agent_settled"}
