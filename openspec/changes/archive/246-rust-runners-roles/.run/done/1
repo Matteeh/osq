@@ -1,0 +1,18 @@
+---
+scope_resolver: 2
+scope_hash: sha256:3ba2c4ccf22423c2e11de61f0e1f5cb1037bb86b86613d720bb383fdb74ffccc
+build_stamp: e195d914
+project_commit: 2a27bdd1
+exit_code: 0
+scope_files:
+  crates/kernel/runners/src/env.rs: sha256:190fb21d4f55dfc822d5de729eb0e5f2f1e3f4eecaa66a7ed246e325225c50b2
+  crates/kernel/runners/src/lib.rs: sha256:94fb45d2e98f9e196106a2884357394d8671401048fef5819c203c877e0d634b
+  crates/kernel/runners/src/pause.rs: sha256:60deb135df96d328f818678d8d11f19a913a20dcc5a1c040df3a2af927357566
+  crates/kernel/runners/src/pause/time.rs: sha256:fb310c2d9b67ea7e768a0d9796cbe734cca05a453d5aaacd958cdad6ad84f858
+  crates/kernel/runners/tests/role_env.rs: sha256:68f81b3f694c33a1fcd86f0718b9c11254db8b6912f5883bac0636a899adc61a
+  crates/kernel/runners/tests/usage_pause.rs: sha256:810342775131ee45a0bc5b2de6bb3fda5afaa2997d154b5f9067c38cc3bb35c4
+original_scope_hash: sha256:2b4a010fbb0e6c4dd45e4e11378ba02881ed413030202502c0c4d3ec6ab7a427
+recertified_at: 2026-10-21T09:04:03.171Z
+recertification_count: 1
+---
+2026-10-21T08:56:01.746Z

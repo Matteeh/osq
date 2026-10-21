@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:d3622121c44418fc66adf9708afe7e6e05da36e46a3a6abbd8ae89e19dc64f9c"
+build_stamp: "e195d914"
+project_commit: "7691d7cb"
+exit_code: 0
+scope_files: {"crates/kernel/runners/src/clock.rs":"sha256:fd79e3c9c5f925eab9a0decd56bba26059fbf0cda640708a0fa8cf58a5e41a7b","crates/kernel/runners/src/lib.rs":"sha256:94fb45d2e98f9e196106a2884357394d8671401048fef5819c203c877e0d634b","crates/kernel/runners/src/run.rs":"sha256:afece7badf35af92c58cdefb0e33a701634f1510798a67949e9d129dd3b083f7","crates/kernel/runners/src/run/events.rs":"sha256:dbff4b9ee7a4882d7ee107b9efae95744f6f9a27625b12bfc9369fb26989738d","crates/kernel/runners/src/run/failure.rs":"sha256:765d648284e07212052e63d850cec18e3a3308d491dfbb8e112bbf9df78262f9","crates/kernel/runners/src/run/pause.rs":"sha256:54216d74ed4012484e9cd3b5d7f5949d4c6cafda42dd4b1993b17545192fdec2","crates/kernel/runners/src/settings.rs":"sha256:b6e0cdf6b73c246a6946cbe97d026ba210435cb5984c31adf1b9d2d99ea14c6c","crates/kernel/runners/tests/run_task.rs":"sha256:69de8dfcdb0a0f482c13a51de93bd16a6570505a62177168de985ab1bd48df77","crates/kernel/runners/tests/support/mod.rs":"sha256:60c6f4425760cb4913a6f465ed794ee9decbc03eccc605ed2146f9470c0ba868","crates/kernel/runners/tests/system_clock.rs":"sha256:d8adaed97912c73466e544c05db675c8d077083fed257790640ae0ae1d69a0fc"}
+---
+2026-10-21T09:04:01.921Z
