@@ -1,3 +1,4 @@
+import { commitArchivedRetry } from '../core/lifecycle/retry-archived.js';
 import { assertPlanCommitted } from '../core/lifecycle/retry-plan-edits.js';
 import { retrySpec } from '../core/lifecycle/retry.js';
 import { CommandError } from './command-error.js';
@@ -7,8 +8,10 @@ export type RetryCommandOptions = CommandInputs;
 
 /**
  * Refuse a retry while the change's worktree holds uncommitted plan edits,
- * then run the preserving retry transition.
+ * then run the preserving retry transition and commit an archived change's retry.
  * @scenario watcher-and-harness: Plan edits not committed
+ * @scenario cli-foundation: Retrying a land stop on an archived change
+ * @scenario cli-foundation: Retrying a task of an archived change
  * @adr 003
  */
 export async function retryCommand(
@@ -22,6 +25,7 @@ export async function retryCommand(
   try {
     await assertPlanCommitted(inputs.cwd, specId, config);
     const result = await retrySpec(inputs.cwd, specId, target, config);
+    await commitArchivedRetry(inputs.cwd, config, result);
     const label = result.target === 'change' ? 'change' : `task ${result.target}`;
     const lines: string[] = [];
     if (result.recertification === 'passed') {

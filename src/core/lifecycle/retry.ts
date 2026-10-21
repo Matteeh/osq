@@ -11,14 +11,13 @@ import { runVerificationCommand } from '../run/verification.js';
 import { tailVerifyOutput } from '../run/verify-excerpt.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
-import { findChange } from '../status/change-locations.js';
 import { getChangeRunDir } from '../status/layout.js';
 import { refreshRecertifiedDoneMarker } from './recertify.js';
+import { findRetryChange as findRetry } from './retry-archived.js';
 import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
 // Retry renames active failure markers into attempt-suffixed history; a numeric
-// scope regression with an automated done marker is recertified by re-running
-// its verify without an agent.
+// scope regression is recertified by re-running its verify without an agent.
 
 const CHANGE_TARGET = 'change';
 const NUMERIC_TARGET = /^\d+$/;
@@ -86,10 +85,11 @@ function markerReason(content: string, fallback: string): string {
 }
 
 /**
- * Validate approval, running state, and active failure before any mutation,
- * then recertify a scope regression or preserve the failure.
+ * Validate approval, running state, and failure before mutation, then recertify or preserve.
  * @scenario watcher-and-harness: Lock of a stopped watcher
  * @scenario watcher-and-harness: Killed watcher's task resumed
+ * @scenario cli-foundation: Retrying a land stop on an archived change
+ * @scenario cli-foundation: Retrying a task of an archived change
  * @adr 003
  */
 export async function retrySpec(
@@ -104,7 +104,7 @@ export async function retrySpec(
     throw new Error(`Invalid retry target "${target}": expected a numeric task or "change".`);
   }
 
-  const { folderPath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
+  const { folderPath, tree } = await findRetry(projectRoot, config, specIdOrPrefix, rawTarget);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
   const runDir = getChangeRunDir(folderPath);

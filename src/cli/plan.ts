@@ -16,6 +16,7 @@ import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
+import { refuseFinishedChange } from './plan-finished.js';
 import { writePromptHandoff } from './plan-prompt-handoff.js';
 import {
   buildBaseOpeningPrompt,
@@ -92,7 +93,6 @@ export async function planCommand(
   }
   const name = (nameOrId ?? '').trim();
   validatePlanModeOptions(name, options);
-
   const inputs = resolveInputs(options);
   const cwd = inputs.cwd;
   const config = await inputs.config();
@@ -102,7 +102,6 @@ export async function planCommand(
   const plannerSelection = isSession ? resolvePlannerSelection(config) : null;
   const briefModel = plannerSelection?.briefModel ?? null;
   const createdOutput: Writer | null = isSession ? inputs.stdout : null;
-
   let queueSelection: QueuePlanSelection | null = null;
   let folderPath: string | null = null;
   let specId: string | null = null;
@@ -148,6 +147,7 @@ export async function planCommand(
     folderPath = created.folderPath;
     specId = created.specId;
   } else if (!isResumed) {
+    await refuseFinishedChange(cwd, config, name);
     const created = await createChange(cwd, createdOutput, name, { config });
     folderPath = created.folderPath;
     specId = created.specId;
