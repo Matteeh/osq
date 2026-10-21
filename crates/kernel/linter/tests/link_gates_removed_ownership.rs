@@ -139,7 +139,7 @@ fn an_emptied_capability_is_left_out_and_another_stays() {
 /// Covers: rust-linter/removed-ownership-with-no-new-owner
 #[test]
 fn removed_ownership_stops_counting_living_globs() {
-    let root = fixture_with_keep_notes();
+    let root = fixture_with_keep_notes("link-gates-removed-ownership-keep-notes-orphan");
     check_rows(
         &change_findings_at(&root, "openspec/changes/004-orphan"),
         &[
@@ -153,7 +153,7 @@ fn removed_ownership_stops_counting_living_globs() {
 /// Covers: rust-linter/removed-ownership-with-no-new-owner
 #[test]
 fn another_removed_requirement_keeps_ownership() {
-    let root = fixture_with_keep_notes();
+    let root = fixture_with_keep_notes("link-gates-removed-ownership-keep-notes-notes");
     check_rows(
         &change_findings_at(&root, "openspec/changes/005-notes"),
         &[owned_once(
@@ -185,9 +185,11 @@ fn fixture_with_decisions() -> PathBuf {
     root
 }
 
-/// A copy of the fixture whose `keep` spec has a second requirement.
-fn fixture_with_keep_notes() -> PathBuf {
-    let root = copy_fixture("link-gates-removed-ownership-keep-notes");
+/// A copy of the fixture in the scratch folder `name`, whose `keep` spec has a
+/// second requirement; each test passes its own `name` so parallel tests never
+/// share a copy.
+fn fixture_with_keep_notes(name: &str) -> PathBuf {
+    let root = copy_fixture(name);
     let keep = root.join("openspec/specs/keep/spec.md");
     let mut spec = fs::read_to_string(&keep).expect("the keep spec reads");
     spec.push_str("\n### Requirement: Keeps notes\nThe system SHALL keep notes.\n");
