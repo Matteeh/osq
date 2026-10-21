@@ -317,8 +317,9 @@ not committed before the sync then survive a stop:
    `skipVerify` set the suffix is left out. It SHALL then merge, without
    committing, the commit "Sync takes landed branch tips" names: the default
    branch itself, or a bridge commit holding its tree. A conflict at a
-   path under the living specs directory or under the archive directory is
-   resolved in step 3. A conflict at any other path SHALL abort the merge and
+   path under the living specs directory or under the archive directory, or
+   at a lock file `lockRebuildCommand` gives a command for, is resolved in
+   step 3. A conflict at any other path SHALL abort the merge and
    stop with `<folder>: <paths, comma-separated> conflict with <default
    branch>; run osq plan <id>, and approving the revised plan restarts
    osq/<folder> from <default branch>`, for an active or an archived change.
@@ -332,7 +333,15 @@ not committed before the sync then survive a stop:
    keeps the default branch's copies, because archive has not applied its
    deltas yet. It SHALL stage every file this step wrote or removed. A delta
    that no longer applies SHALL abort the merge and stop with the merge
-   error's message.
+   error's message. For every conflicting lock file, in path order, it SHALL
+   then put the default branch's copy in place, run the command
+   `lockRebuildCommand` gives for it in the lock file's folder through
+   `runVerificationCommand` with the prepare role, bounded by
+   `timeouts.verifyTimeoutSeconds`, and stage the lock file. The command adds
+   back the change's own entries, so the change's manifests decide the
+   result. A failed command SHALL abort the merge and stop with `<folder>:
+   rebuilding <lock file> failed on osq/<folder> merged with <default
+   branch>:` and the last `limits.cardOutputLines` lines of its output.
 4. It SHALL run `vcs.prepare` in the worktree when it is set, as approval
    does. A failure SHALL abort the merge and stop with its output.
 5. For an archived change, it SHALL run the proposal's `verify` in the
@@ -432,6 +441,18 @@ not committed before the sync then survive a stop:
 #### Scenario: Sync records its check
 - **WHEN** an archived change's proposal has `check: node check.cjs`, the sync merges, and both its `verify` and its check pass
 - **THEN** the sync commit's `.run/events/change.jsonl` ends with a `verify_ran` event for the verify, a `verify_ran` event whose command is `node check.cjs`, then a `synced` event
+
+#### Scenario: Both add a crate to one Cargo workspace
+- **WHEN** `002` is active in its worktree, and `002` and the default branch each added a different crate under `crates/` of a Cargo workspace whose members are `crates/*`, each with only a path dependency, so the merge conflicts only in `Cargo.lock`
+- **THEN** the sync commits `osq: 002 sync main`, `Cargo.lock` on the branch lists both new crates and holds no conflict marker, and `cargo metadata --offline --locked --format-version 1` exits 0 in the worktree
+
+#### Scenario: Lock file and code conflict
+- **WHEN** `002` is active, the merge conflicts in `Cargo.lock` as above, and the default branch and `002` also changed the same line of `src/app.txt`
+- **THEN** the sync throws a `SyncStop` with reason `sync_conflict` whose message names `src/app.txt` and not `Cargo.lock`, and the worktree's HEAD and status are unchanged
+
+#### Scenario: Lock file that cannot be rebuilt
+- **WHEN** `002` is active, the merge conflicts only in `Cargo.lock`, and `002`'s new crate depends on `osq-no-such-crate = "1"`, which no offline registry holds
+- **THEN** the sync throws a `SyncStop` with reason `sync_failed` whose message starts `002-<words>: rebuilding Cargo.lock failed on osq/002-<words> merged with main:`, and the worktree's HEAD and status are unchanged
 
 ### Requirement: Land refusals
 `landChange` in `src/core/vcs/land.ts` SHALL refuse, writing nothing, in this

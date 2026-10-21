@@ -3,10 +3,10 @@ import type { OsqConfig } from '../foundation/config.js';
 import { runPrepare } from '../spec/approve-worktree.js';
 import { parseSpecMdFromFolder } from '../spec/parser.js';
 import type { LocatedChange } from '../status/change-locations.js';
-import { getSpecsDir } from '../status/layout.js';
 import { selectVcs } from './select.js';
 import { syncBridge } from './sync-bridge.js';
 import { eventsRelative, readEvents, readRequirementsBase, restoreEvents } from './sync-files.js';
+import { blockedConflicts, rebuildLockfiles } from './sync-lockfiles.js';
 import { createSyncRecertifyState, restoreSyncRecertified } from './sync-recertify.js';
 import { assertRequirementsUnchanged, rebuildLivingSpecs } from './sync-specs.js';
 import { SyncStop } from './sync-stop.js';
@@ -39,22 +39,6 @@ async function stopAfter(vcs: Vcs, error: unknown, context: SyncContext): Promis
   await restoreSyncRecertified(context.recertify);
   if (error instanceof SyncStop) return error;
   return new SyncStop('sync_failed', error instanceof Error ? error.message : String(error));
-}
-
-/** Whether `target` is `prefix` or under it. */
-function isUnder(prefix: string, target: string): boolean {
-  return target === prefix || target.startsWith(`${prefix}/`);
-}
-
-/** The conflict paths neither the living specs nor the archive directory owns. */
-function blockedConflicts(
-  conflicts: readonly string[],
-  config: OsqConfig,
-  change: LocatedChange,
-): string[] {
-  const specs = getSpecsDir(config.paths.openspecRoot).split(path.sep).join('/');
-  const archive = path.relative(change.tree.root, change.tree.archiveDir).split(path.sep).join('/');
-  return conflicts.filter((conflict) => !isUnder(specs, conflict) && !isUnder(archive, conflict));
 }
 
 /** The stop raised when a code path conflicts with the default branch. */
@@ -172,6 +156,7 @@ async function finishSync(
     context.archived,
     merge.conflicts,
   );
+  await rebuildLockfiles(worktreeRoot, change, vcs, config, defaultBranch, merge.conflicts);
   await runPrepare(worktreeRoot, config, worktreeBranch(change.folderName));
   await runSyncVerify({
     worktreeRoot,
