@@ -4,6 +4,7 @@
 
 mod pi;
 mod process;
+mod verify;
 
 pub use pi::{
     PiHarness, PiPreflight, PiPreflightError, PiReady, PiSettings, PiStreamState,
@@ -11,3 +12,4 @@ pub use pi::{
     resolve_pi_binary,
 };
 pub use process::{ProcessError, ProcessOutcome, ProcessSpec, run_process, run_process_until};
+pub use verify::{VerifyOutcome, VerifyRequest, run_verify};
