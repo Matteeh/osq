@@ -2,9 +2,9 @@
 import Ledger from './Ledger.astro';
 
 const steps = [
-  { who: 'Anyone', you: true, title: 'Write a brief', body: 'What you want and why, in plain words. No technical detail needed: a business goal or a ticket from your backlog is enough.' },
-  { who: 'An engineer and a strong model', you: true, title: 'Spec it', body: 'Turns the brief into a detailed technical spec: the exact behavior to build, split into small tasks, each with the files it may touch and the test that proves it.' },
-  { who: 'An engineer', you: true, title: 'Approve', body: 'A one-screen summary rates every change in the spec red, amber or grey by risk, so removed behavior or a departure from a team decision stands out. Nothing runs before an engineer says yes.' },
+  { who: 'Anyone', you: true, title: 'Write a brief', body: 'What you want and why, in plain words. No technical detail: a business goal or a backlog ticket is enough.' },
+  { who: 'An engineer and a strong model', you: true, title: 'Spec it', body: 'Turns the brief into a detailed technical spec: small tasks, each with the files it may touch and the test that proves it.' },
+  { who: 'An engineer', you: true, title: 'Approve', body: 'Every change in the spec is color-coded by risk, so the risky ones stand out. Nothing runs before an engineer says yes.' },
   { who: 'Coding agents', title: 'Build', body: 'One fresh agent per task. A failed task retries with the reason, or comes back to you.' },
   { who: 'osq', title: 'Verify and land', body: 'Re-tests the whole change, updates the specs, and merges it into your main branch.' },
 ];
