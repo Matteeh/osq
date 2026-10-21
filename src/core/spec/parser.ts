@@ -8,6 +8,41 @@ export interface FrontmatterResult {
   body: string;
 }
 
+/** The first YAML parse error in a file's frontmatter, with its file line. */
+export interface FrontmatterYamlError {
+  readonly message: string;
+  readonly line: number;
+}
+
+/**
+ * Reports the first YAML error in a file's frontmatter, or nothing when the
+ * frontmatter parses or is absent. The line counts from the opening `---` as
+ * line 1, so it is the error's frontmatter line plus one.
+ *
+ * @scenario spec-lint-and-approve: Proposal frontmatter that does not parse
+ * @scenario spec-lint-and-approve: Task frontmatter that does not parse
+ * @scenario spec-lint-and-approve: Other readers of frontmatter that does not parse
+ * @adr 006
+ */
+export function frontmatterYamlError(content: string): FrontmatterYamlError | null {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const lineCounter = new YAML.LineCounter();
+  const doc = YAML.parseDocument(match[1], { lineCounter, prettyErrors: false });
+  const [error] = doc.errors;
+  if (error === undefined) {
+    return null;
+  }
+
+  return {
+    message: error.message,
+    line: lineCounter.linePos(error.pos[0]).line + 1,
+  };
+}
+
 export function parseFrontmatter(content: string): FrontmatterResult {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) {

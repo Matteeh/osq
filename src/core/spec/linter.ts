@@ -41,6 +41,7 @@ import {
 } from './openspec-version.js';
 import {
   type TaskData,
+  frontmatterYamlError,
   hasDeclaredWrites,
   parseFrontmatter,
   parseSpecMd,
@@ -1044,6 +1045,9 @@ function readTestsModifyDeclaration(content: string): TestsModifyDeclaration {
  *
  * @scenario spec-lint-and-approve: Entry names a file no tree has
  * @scenario spec-lint-and-approve: Entries the change provides
+ * @scenario spec-lint-and-approve: Proposal frontmatter that does not parse
+ * @scenario spec-lint-and-approve: Task frontmatter that does not parse
+ * @scenario spec-lint-and-approve: Other readers of frontmatter that does not parse
  * @adr 006
  */
 export async function lintChangeFolder(
@@ -1089,9 +1093,17 @@ export async function lintChangeFolder(
   const docRepoPath = repositoryPath(projectRoot, resolvedDoc.path);
   const specContent = await fs.readFile(resolvedDoc.path, 'utf8');
   const spec = parseSpecMd(specContent);
+  const docYamlError = frontmatterYamlError(specContent);
+
+  if (docYamlError !== null) {
+    findings.error(
+      { file: docRepoPath },
+      `${path.basename(resolvedDoc.path)} frontmatter is not valid YAML at line ${docYamlError.line}: ${docYamlError.message}`,
+    );
+  }
 
   // Check: proposals must declare a change-level verify command
-  if (resolvedDoc.kind === 'proposal' && !spec.verify) {
+  if (docYamlError === null && resolvedDoc.kind === 'proposal' && !spec.verify) {
     findings.error(
       { file: docRepoPath },
       'proposal.md must declare a verify command in frontmatter',
@@ -1132,7 +1144,7 @@ export async function lintChangeFolder(
   }
 
   // Check: the change-level verify participates in the same trust analysis
-  if (spec.verify) {
+  if (docYamlError === null && spec.verify) {
     const docLabel = path.basename(resolvedDoc.path);
     const analysis = await analyzeVerifyCommand(projectRoot, spec.verify, packageScripts, runners);
     if (analysis.placeholder) {
@@ -1150,7 +1162,7 @@ export async function lintChangeFolder(
   }
 
   // Check: features.writes is retired; delta specs are the sole writes declaration
-  if (hasDeclaredWrites(parseFrontmatter(specContent).data)) {
+  if (docYamlError === null && hasDeclaredWrites(parseFrontmatter(specContent).data)) {
     findings.error(
       { file: docRepoPath },
       'features.writes is no longer supported in proposal frontmatter; write declarations are derived strictly from delta specs under specs/<capability>/spec.md',
@@ -1159,7 +1171,7 @@ export async function lintChangeFolder(
 
   // Check: every proposal relates to a capability and declares any capability
   // it creates. A legacy spec.md change document is exempt, as for Surface.
-  if (resolvedDoc.kind === 'proposal') {
+  if (docYamlError === null && resolvedDoc.kind === 'proposal') {
     for (const finding of await collectCapabilityRelationFindings({
       projectRoot,
       folderPath,
@@ -1175,7 +1187,7 @@ export async function lintChangeFolder(
   // Check: a generated capability move's ADDED and REMOVED blocks match the
   // living requirement they move and land somewhere. A proposal without
   // `generated` gets no finding from it.
-  if (resolvedDoc.kind === 'proposal') {
+  if (docYamlError === null && resolvedDoc.kind === 'proposal') {
     for (const finding of await collectGeneratedMoveFindings({
       projectRoot,
       folderPath,
@@ -1190,7 +1202,7 @@ export async function lintChangeFolder(
   // Check: capability sidecars a change carries, broken living sidecars, and,
   // with requireGroups, a created or written capability without a real group.
   // A legacy spec.md change document is exempt, as for the relation checks.
-  if (resolvedDoc.kind === 'proposal') {
+  if (docYamlError === null && resolvedDoc.kind === 'proposal') {
     const sidecar = await collectSidecarFindings({
       projectRoot,
       openspecRoot: resolveOpenSpecRoot(config),
@@ -1215,19 +1227,21 @@ export async function lintChangeFolder(
     );
   }
 
-  // Check: depends_on exists
-  for (const dep of spec.dependsOn) {
-    const exists = await checkDependencyExists(projectRoot, dep, config);
-    if (!exists) {
-      findings.error({ file: docRepoPath }, `depends_on names missing change: ${dep}`);
+  if (docYamlError === null) {
+    // Check: depends_on exists
+    for (const dep of spec.dependsOn) {
+      const exists = await checkDependencyExists(projectRoot, dep, config);
+      if (!exists) {
+        findings.error({ file: docRepoPath }, `depends_on names missing change: ${dep}`);
+      }
     }
-  }
 
-  // Check: fixes names an existing active, archived, or rejected change
-  for (const fixed of spec.fixes) {
-    const exists = await checkDependencyExists(projectRoot, fixed, config);
-    if (!exists) {
-      findings.error({ file: docRepoPath }, `fixes names missing change: ${fixed}`);
+    // Check: fixes names an existing active, archived, or rejected change
+    for (const fixed of spec.fixes) {
+      const exists = await checkDependencyExists(projectRoot, fixed, config);
+      if (!exists) {
+        findings.error({ file: docRepoPath }, `fixes names missing change: ${fixed}`);
+      }
     }
   }
 
@@ -1253,6 +1267,21 @@ export async function lintChangeFolder(
     const taskRepoPath = repositoryPath(projectRoot, taskPath);
     const taskContent = await fs.readFile(taskPath, 'utf8');
     const task = parseTaskMd(taskContent);
+    const taskYamlError = frontmatterYamlError(taskContent);
+    if (taskYamlError !== null) {
+      findings.error(
+        { file: taskRepoPath },
+        `Task in ${taskFile} frontmatter is not valid YAML at line ${taskYamlError.line}: ${taskYamlError.message}`,
+      );
+    }
+
+    // Check: acceptance items must each occupy their own line
+    scanFusedAcceptance(taskFile, taskRepoPath, taskContent, findings);
+
+    // A task whose frontmatter does not parse stays out of every other check.
+    if (taskYamlError !== null) {
+      continue;
+    }
 
     entryLintTasks.push({
       number: taskFile.replace(/\.md$/, ''),
@@ -1260,9 +1289,6 @@ export async function lintChangeFolder(
       scope: task.scope,
       entry: task.entry,
     });
-
-    // Check: acceptance items must each occupy their own line
-    scanFusedAcceptance(taskFile, taskRepoPath, taskContent, findings);
 
     // Check: tests.modify, when declared, must be a boolean
     const testsModify = readTestsModifyDeclaration(taskContent);
@@ -1418,22 +1444,24 @@ export async function lintChangeFolder(
   const importGraph =
     options.importGraph ??
     (await buildImportGraph(projectRoot, { skip: [config.paths.openspecRoot] }));
-  for (const finding of await collectImpactFindings({
-    projectRoot,
-    folderPath,
-    config,
-    proposalPath: docRepoPath,
-    reads: spec.features.reads,
-    tasks: resolvedTaskScopes.map((scope) => ({
-      taskNumber: scope.taskNumber,
-      taskPath: scope.taskPath,
-      existingPaths: scope.existingPaths,
-      testsModify: scope.task.testsModify,
-      verify: scope.task.verify,
-    })),
-    importGraph,
-  })) {
-    findings.addOwn(finding);
+  if (docYamlError === null) {
+    for (const finding of await collectImpactFindings({
+      projectRoot,
+      folderPath,
+      config,
+      proposalPath: docRepoPath,
+      reads: spec.features.reads,
+      tasks: resolvedTaskScopes.map((scope) => ({
+        taskNumber: scope.taskNumber,
+        taskPath: scope.taskPath,
+        existingPaths: scope.existingPaths,
+        testsModify: scope.task.testsModify,
+        verify: scope.task.verify,
+      })),
+      importGraph,
+    })) {
+      findings.addOwn(finding);
+    }
   }
 
   // Check: scenario traceability links and the blast radius of changed
