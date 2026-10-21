@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:8ba81f32fc018b89244bd619ba749bdba247950419ffd216ed0d6c7f57af8672"
+build_stamp: "e195d914"
+project_commit: "53e4646b"
+exit_code: 0
+scope_files: {"crates/features/report/src/query.rs":"sha256:ced2a9ccc79cf5bed06ecd4281ed44b8afadeca2588fa94b7da7d99d6cac3d73","crates/features/report/src/query/authorize.rs":"sha256:d268b33acdb5a58af84c5f7210bbcd17fd68a694415f54c850f15c46337bb750","crates/features/report/tests/query_authorize.rs":"sha256:2a8880a37df700ddf4c3614aa88b4dbe5654aa8ea09f3644ad67b28d603545ec"}
+---
+2026-10-21T08:33:58.756Z

@@ -347,6 +347,9 @@ name = "osq-feature-report"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-storage",
+ "rusqlite",
+ "serde_json",
 ]
 
 [[package]]

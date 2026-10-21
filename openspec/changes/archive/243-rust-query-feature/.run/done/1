@@ -1,0 +1,42 @@
+---
+scope_resolver: 2
+scope_hash: sha256:9ae9ab9d5da8eff80747a342318e21ed45c973c3026d481e1f040d90fe57a7a9
+build_stamp: e195d914
+project_commit: 6639be40
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:d9eb8e2a178161798e1ced9453fc9bc13b58fd9fce99f1335db926116c23cbb1
+  crates/features/report/Cargo.toml: sha256:a178ce272b236624e90cbd3c9539159205e8e9172e5c081baf743ff9eb15a113
+  crates/features/report/src/feature.rs: sha256:33dc7016043bc7cc15deeac22df5b3c40e638ab301617748e88d1c0168c430eb
+  crates/features/report/src/lib.rs: sha256:7635228d12933c6f2d9a0c59654747162daff854784d68ee674d5ff824749779
+  crates/features/report/src/query.rs: sha256:ced2a9ccc79cf5bed06ecd4281ed44b8afadeca2588fa94b7da7d99d6cac3d73
+  crates/features/report/src/query/text.rs: sha256:141f7aae3952ac450fded77e15ef6740608bdee6f22e963de2afff2e666cbf1e
+  crates/features/report/tests/fixtures/bad-labels/openspec/changes/archive/001-one/proposal.md: sha256:bac5f4708d24f722e2feef7dfe416610f8341a1108dbb3236cc808dd6d3222c9
+  crates/features/report/tests/fixtures/bad-labels/openspec/trials/validator.json: sha256:5eca3939dcadefd117fb101b262df57b1c2238908c929e2778429bbe58cb308c
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/1.jsonl: sha256:b109cd63904f972b71e28f923bbcd2b48837d994c918c3527eea0fde264dc673
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/10.jsonl: sha256:6a415d539dbde1d8a0617e467ebc11165afc1ea3d44de91917a19eaefe80324d
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/2.jsonl: sha256:dd3c457242cff3eb20988b042c37c382f182da30df229a2014133b9824c3afd0
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/events/change.jsonl: sha256:69d1bba886a3e6d5d318a04917fe30afac2b82b14163df5eecf1388da60c0cfa
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/manifest.json: sha256:47a28e529a4e822af39e75ae332aa447c44f25c656c38a9863238aff991f3701
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/.run/plan.jsonl: sha256:b329117fbead76b117963bb9b203d515fcc5cc7921ee10139b1561cb71191ff7
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/proposal.md: sha256:43f2f2e215c9c8ec5fb94af5af8441b70a13a36e06ce68fa51e0b4977eb5a52d
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/tasks/1.md: sha256:2be89ce279c0d7eb1d330492314851fc610afeeae7df3c88689ad89065d0a360
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/001-run/tasks/2.md: sha256:1a9ac3f1a89add07ede495e755f48111e36a1a280588aaf7e544f3bb87ba7b90
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/002-quiet/.run/manifest.json: sha256:1539387a1a5bcfcacb175299c246c250cb561c932578fd34b02cb3b14e8c3334
+  crates/features/report/tests/fixtures/history/openspec/changes/archive/002-quiet/proposal.md: sha256:3111cda8cd54b8882d43ec9ef7addde3f4af3494ee6643498168dbaf0c7346ea
+  crates/features/report/tests/fixtures/history/openspec/changes/rejected/003-dropped/.run/plan.jsonl: sha256:239806b53a0b0f2092908e9dedc58f223ea835d15dbaff2f18fb0029399d03b1
+  crates/features/report/tests/fixtures/history/openspec/changes/rejected/003-dropped/proposal.md: sha256:2d1b65bc6c00c8e80482cc4a4dafa05b10c7335aca05988ab3093d4e155768f6
+  crates/features/report/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/manifest.json: sha256:23448122b9c6702a7da9c154ac227912f08763f09a2123fcf312cbf8f58e7642
+  crates/features/report/tests/fixtures/history/openspec/changes/rejected/004-noted/.run/plan.jsonl: sha256:c99f8472d5639a618c9198a4b19b1134f5c1135ae009ea8473ccd0307145de3d
+  crates/features/report/tests/fixtures/history/openspec/changes/rejected/004-noted/proposal.md: sha256:000ffcf89c4306fa8e5492275ee19762012fb8ad5a65a91ca74e941655587799
+  crates/features/report/tests/fixtures/history/openspec/trials/traceability.json: sha256:2408bb2049e29aae768e0111ab8fcad7b21854728baec13d9e5afedd3e0e8313
+  crates/features/report/tests/fixtures/history/openspec/trials/validator.json: sha256:69ea4ab30355642e63fe49c56adc2f4027d51d70ab06187a421eab91e15b35b5
+  crates/features/report/tests/fixtures/queries.json: sha256:d05d9c267201f82d49d5cef83461f096c0db7a464abbc1a75e6fc3ad60404fe7
+  crates/features/report/tests/query_run.rs: sha256:37a30a464560de39e053e9e859b3a81c5d7092d8322c26dd00f0c2b0d9e50e6c
+  crates/features/report/tests/report_feature.rs: sha256:aa238f4a274fae02271a4950abb4ff0565ad83bc0581ec9bf027f1bd2fa1863e
+  crates/features/report/tests/support/mod.rs: sha256:2303d202367ea3a11cdaa51219a75143e2d2014e7739c2a74d7dd510d9c695b9
+original_scope_hash: sha256:23db2953b182cfd079156bb438c3f7b0b5fbb28d9354e83df8a5d8db50d70c45
+recertified_at: 2026-10-21T08:34:05.542Z
+recertification_count: 1
+---
+2026-10-21T08:25:42.747Z

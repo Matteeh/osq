@@ -1,0 +1,330 @@
+[
+  {
+    "name": "table-list",
+    "group": "run",
+    "fixture": "history",
+    "select": null,
+    "result": "output",
+    "text": "changes(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "blank-select",
+    "group": "run",
+    "fixture": "history",
+    "select": "  \n",
+    "result": "output",
+    "text": "changes(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "all-changes",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM changes",
+    "result": "output",
+    "text": "id\tfolder\ttitle\tarchived_on\tgoal\ttasks\tattempts\thalts\telapsed_seconds\tcost\tplanner\n001\t001-run\tRun\t2026-10-01\tRun every trial.\t2\t2\t1\t\t\t\n002\t002-quiet\tQuiet\t\t\t0\t\t\t\t\t"
+  },
+  {
+    "name": "all-requirements",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM requirements",
+    "result": "output",
+    "text": "change\tcapability\tkind\trequirement\trenamed_from"
+  },
+  {
+    "name": "all-tasks",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM tasks",
+    "result": "output",
+    "text": "change\ttask\ttitle\tattempts\tdone\n001-run\t1\tWhen one, run\t1\t0\n001-run\t2\tWhen two, run\t1\t0"
+  },
+  {
+    "name": "all-dead-attempts",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM dead_attempts",
+    "result": "output",
+    "text": "change\ttask\treason"
+  },
+  {
+    "name": "all-disclosures",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM disclosures",
+    "result": "output",
+    "text": "change\ttask\tsection\ttext"
+  },
+  {
+    "name": "all-notices",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM notices",
+    "result": "output",
+    "text": "change\tnotice\tseverity\topened\toutcome\n001-run\tdraft-only\tamber\t\tplanned_again\n001-run\tscope-wide\tred\t1\thalted\n001-run\tno-tests\tgrey\t0\thalted\n002-quiet\tno-tests\tamber\t\tapproved\n003-dropped\tfirst-draft\tamber\t\tplanned_again\n003-dropped\tlast-draft\tred\t\trejected\n003-dropped\talso-last\tgrey\t\trejected\n004-noted\tscope-wide\tgrey\t0\trejected"
+  },
+  {
+    "name": "all-validator-runs",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM validator_runs",
+    "result": "output",
+    "text": "change\trun\toutcome\tharness\tmodel\tduration\texit_code\tscenarios\tfindings\treason\toutput\n001-run\t1\tfailed\tclaude\topus\t2.5\t1\t3\t1\tno_scenarios\tout\n001-run\t2\tvalidated\tcodex\tgpt\t4\t\t0\t0\t\t"
+  },
+  {
+    "name": "all-validator-findings",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM validator_findings",
+    "result": "output",
+    "text": "id\tchange\trun\tfinding\tcapability\trequirement\tscenario\tproblem\tdetail\tlabel\n001.v1.1\t001-run\t1\t1\trust-storage\tPauses\tOne pause\tno test\tthe test is missing\t1"
+  },
+  {
+    "name": "all-focused-runs",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM focused_runs",
+    "result": "output",
+    "text": "change\ttask\trun\toutcome\texit_code\tduration\ttimed_out\tscenarios\tfiles\n001-run\t1\t1\tpassed\t0\t1.5\t0\trust-storage: One\\nrust-storage: Two\tsrc/a.rs\\nsrc/b.rs\n001-run\t2\t1\tfailed\t1\t2\t1\t\t"
+  },
+  {
+    "name": "all-mutation-picks",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM mutation_picks",
+    "result": "output",
+    "text": "change\ttask\tpick\tfile\tfunction\toutcome\treason\tkilled\tsurvived\tinvalid\tduration\tscenarios\n001-run\t1\t1\tsrc/a.rs\tf\tnot_measured\tcommand_failed\t2\t2\t1\t3.25\trust-storage: One\n001-run\t2\t1\tsrc/b.rs\tg\tmeasured\t\t1\t0\t0\t3\t"
+  },
+  {
+    "name": "all-mutation-survivors",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM mutation_survivors",
+    "result": "output",
+    "text": "id\tchange\ttask\tpick\tfile\tfunction\tline\tcolumn\tmutator\treplacement\tlabel\n001.1.m1.1\t001-run\t1\t1\tsrc/a.rs\tf\t4\t7\treplace\ttrue\t0\n001.1.m1.2\t001-run\t1\t1\t\tf\t\t\t\t\t"
+  },
+  {
+    "name": "all-link-findings",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM link_findings",
+    "result": "output",
+    "text": "id\tchange\tseverity\tfile\tmessage\tlabel\n001.l1\t001-run\twarning\tsrc/a.rs\tsrc/a.rs:3: tag is not valid\t1"
+  },
+  {
+    "name": "all-task-outcomes",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM task_outcomes",
+    "result": "output",
+    "text": "change\ttask\tcapability\tscope_globs\tscope_files\tverify_kind\ttests_modify\tverify_starts\tshares_scope\tposition\tattempts\tfirst_attempt\tdead_reason\tfiles_touched\n001-run\t1\t\t0\t\tsuite\t0\tred\t0\t1\t1\t0\t\t\n001-run\t2\t\t0\t\tsuite\t0\tred\t0\t2\t1\t0\t\t"
+  },
+  {
+    "name": "all-pauses",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM pauses",
+    "result": "output",
+    "text": "change\ttask\tpaused_at\tuntil\tsource\n001-run\t1\t2026-10-01T10:02:00.000Z\t2026-10-01T12:00:00.000Z\tharness\n001-run\t10\t2026-10-01T10:12:00.000Z\t2026-10-01T13:00:00.000Z\tusage_limit"
+  },
+  {
+    "name": "all-recertifications",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM recertifications",
+    "result": "output",
+    "text": "change\ttask\trecertified_at\toutcome\tautomatic\tpath\tcredited_to\tsource\n001-run\t1\t2026-10-01T10:05:00.000Z\tpassed\t1\tsrc/a.rs (modified)\t2\tfile_changed\n001-run\t1\t2026-10-01T10:05:00.000Z\tpassed\t1\tsrc/b.rs (modified)\tunknown\tmeasures\n001-run\t1\t2026-10-01T10:05:00.000Z\tpassed\t1\tsrc/c.rs (modified)\tunknown\t\n001-run\t2\t2026-10-01T10:10:00.000Z\trequeued\t0\tsrc/d.rs (deleted)\t1\tfile_changed"
+  },
+  {
+    "name": "all-manual-edits",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM manual_edits",
+    "result": "output",
+    "text": "kept_at\trecord\tcomment\tpaths\tcapabilities"
+  },
+  {
+    "name": "grouped-count",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT task, count(*) AS n FROM recertifications GROUP BY task ORDER BY task",
+    "result": "output",
+    "text": "task\tn\n1\t3\n2\t1"
+  },
+  {
+    "name": "join",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT c.title, t.task, t.title FROM changes c JOIN tasks t ON t.change = c.folder ORDER BY t.task",
+    "result": "output",
+    "text": "title\ttask\ttitle\nRun\t1\tWhen one, run\nRun\t2\tWhen two, run"
+  },
+  {
+    "name": "trailing-semicolon",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT id, title FROM changes ORDER BY id;  \n",
+    "result": "output",
+    "text": "id\ttitle\n001\tRun\n002\tQuiet"
+  },
+  {
+    "name": "recursive-cte",
+    "group": "run",
+    "fixture": "history",
+    "select": "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM n WHERE x < 3) SELECT x FROM n",
+    "result": "output",
+    "text": "x\n1\n2\n3"
+  },
+  {
+    "name": "literal-values",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT NULL AS empty, 'a' || char(10) || 'b' AS lines, 1.5 AS real, 7 AS whole, x'0102' AS bytes",
+    "result": "output",
+    "text": "empty\tlines\treal\twhole\tbytes\n\ta\\nb\t1.5\t7\t1,2"
+  },
+  {
+    "name": "refused-insert",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "INSERT INTO changes (id) VALUES ('9')",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-update",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "UPDATE tasks SET done = 1",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-delete",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "DELETE FROM changes",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-pragma",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "PRAGMA table_info(changes)",
+    "result": "failed",
+    "text": "osq query refused: the statement would run a pragma\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-attach",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "ATTACH DATABASE 'other.db' AS other",
+    "result": "failed",
+    "text": "osq query refused: the statement would attach a database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-detach",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "DETACH DATABASE other",
+    "result": "failed",
+    "text": "osq query refused: the statement would attach a database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-hidden-table",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "SELECT name FROM sqlite_master",
+    "result": "failed",
+    "text": "osq query refused: the statement would read a table osq does not expose (sqlite_master)\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-drop",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "DROP TABLE changes",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-create",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "CREATE TABLE t (a)",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-second-select",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "SELECT 1; SELECT 2",
+    "result": "failed",
+    "text": "osq query refused: the input holds a second statement after the first\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-double-semicolon",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "SELECT 1;;",
+    "result": "failed",
+    "text": "osq query refused: the input holds a second statement after the first\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-second-write",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "SELECT 1; DELETE FROM changes",
+    "result": "failed",
+    "text": "osq query refused: the input holds a second statement after the first\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-transaction",
+    "group": "authorize",
+    "fixture": "history",
+    "select": "BEGIN",
+    "result": "failed",
+    "text": "osq query refused: the statement is not a read-only SELECT over the history tables\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "sqlite-error-no-statement",
+    "group": "run",
+    "fixture": "history",
+    "select": ";",
+    "result": "failed",
+    "text": "osq query refused: The SQL query contains no statements.\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "sqlite-error-syntax",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELEC 1",
+    "result": "failed",
+    "text": "osq query refused: near \"SELEC\": syntax error\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "sqlite-error-unknown-table",
+    "group": "run",
+    "fixture": "history",
+    "select": "SELECT * FROM nope",
+    "result": "failed",
+    "text": "osq query refused: no such table: nope\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "labels-error",
+    "group": "run",
+    "fixture": "bad-labels",
+    "select": "SELECT 1",
+    "result": "failed",
+    "text": "openspec/trials/validator.json must be a JSON object of true or false labels"
+  },
+  {
+    "name": "labels-refused-first",
+    "group": "authorize",
+    "fixture": "bad-labels",
+    "select": "DELETE FROM changes",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  }
+]
