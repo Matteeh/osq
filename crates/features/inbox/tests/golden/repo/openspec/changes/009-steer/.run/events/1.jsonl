@@ -1,0 +1,3 @@
+{"type":"started","timestamp":"2026-10-09T10:00:00.000Z","data":{"attempt":1}}
+{"type":"done","timestamp":"2026-10-09T10:01:00.000Z","data":{"task":"1"}}
+{"type":"regressed","timestamp":"2026-10-09T10:05:00.000Z","data":{"task":"1","reason":"verify_red"}}

@@ -1,0 +1,2 @@
+{"type":"started","timestamp":"2026-10-05T10:02:00.000Z","data":{"attempt":1}}
+{"type":"dead","timestamp":"2026-10-05T10:03:00.000Z","data":{"task":"2","reason":"crashed"}}

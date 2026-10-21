@@ -319,6 +319,7 @@ name = "osq-feature-inbox"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-storage",
 ]
 
 [[package]]

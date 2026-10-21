@@ -3,9 +3,11 @@
 mod events;
 mod folder;
 mod manifest;
+mod markers;
 mod outcomes;
 mod records;
 mod specs;
+mod steps;
 mod table_events;
 
 use std::collections::BTreeMap;
@@ -19,6 +21,7 @@ use super::results::read_disclosures;
 use super::{ChangeEntry, Location, StorageError, TaskDisclosure};
 use events::read_events;
 use folder::{approved_at, read_manifest, read_planner, read_proposal, read_task_files};
+pub use markers::{HaltMarker, RunningLock, TaskMarkers};
 pub use outcomes::TaskOutcomeFacts;
 pub use records::{LinkEntry, ManifestNotices, Notice, PlanRecord};
 use records::{manifest_notices, plan_records};
@@ -41,6 +44,8 @@ pub struct TaskFile {
     pub plan: osq_kernel_specs::TaskFile,
     /// What the task's own stream says, the default without one.
     pub outcome: TaskOutcomeFacts,
+    /// The task's `.run` halt markers, lock and blocked section.
+    pub markers: TaskMarkers,
 }
 
 /// One `dead` event: the task that died and why.
@@ -110,6 +115,14 @@ pub struct ChangeSnapshot {
     pub deltas: Vec<CapabilityDelta>,
     /// The proposal's verify, or empty text when the change has no proposal.
     pub verify: String,
+    /// Whether `proposal.md` exists.
+    pub proposal: bool,
+    /// Whether `brief.md` exists.
+    pub brief: bool,
+    /// The proposal's human steps before approval, trimmed.
+    pub before_approval: Option<String>,
+    /// `.run/regressed/change.md`, or `None` without the file.
+    pub change_regressed: Option<HaltMarker>,
 }
 
 /// Reads one change folder into its snapshot.
@@ -118,9 +131,10 @@ pub struct ChangeSnapshot {
 /// Implements: rust-storage/delta-capabilities
 /// Implements: rust-storage/task-plans
 /// Implements: rust-storage/task-stream-outcomes
+/// Implements: rust-storage/marker-facts
+/// Implements: rust-storage/planning-facts
 ///
 /// # Errors
-///
 /// Returns [`StorageError::Read`] when an event file that exists cannot be
 /// read, [`StorageError::EventLine`] when one of its lines is refused,
 /// [`StorageError::Specs`] when a delta spec, a task file or the proposal is
@@ -154,6 +168,12 @@ pub fn read_change(entry: &ChangeEntry) -> Result<ChangeSnapshot, StorageError> 
         disclosures: read_disclosures(&entry.path),
         deltas,
         verify,
+        proposal: entry.path.join("proposal.md").exists(),
+        brief: entry.path.join("brief.md").exists(),
+        before_approval: steps::before_approval(&entry.path),
+        change_regressed: markers::read_halt_marker(
+            &entry.path.join(".run").join("regressed").join("change.md"),
+        ),
     })
 }
 

@@ -1,0 +1,2 @@
+{"type":"archived","timestamp":"2026-09-30T10:00:00.000Z","data":{"archivePath":"openspec/changes/archive/023-early"}}
+{"type":"validator_ran","timestamp":"2026-09-30T10:01:00.000Z","data":{"outcome":"validated","harness":"claude","model":"claude-opus-5-5","duration":20,"exitCode":0,"scenarios":2,"findings":[],"restored":[]}}

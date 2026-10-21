@@ -10,6 +10,7 @@ use crate::read::text::{frontmatter_string, goal_section, markdown_body, timesta
 
 use super::TaskFile;
 use super::manifest::Manifest;
+use super::markers::read_task_markers;
 use super::outcomes::TaskOutcomeFacts;
 
 /// The parts of a proposal storage reads: its title and its Goal.
@@ -115,6 +116,7 @@ fn task_file(folder: &Path, path: &Path) -> Result<Option<TaskFile>, StorageErro
         started: 0,
         plan,
         outcome: TaskOutcomeFacts::default(),
+        markers: read_task_markers(folder, id),
     }))
 }
 

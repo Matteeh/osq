@@ -12,3 +12,4 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-storage.workspace = true

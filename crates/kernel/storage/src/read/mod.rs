@@ -20,6 +20,8 @@
 //! Implements: rust-storage/task-plans
 //! Implements: rust-storage/task-stream-outcomes
 //! Implements: rust-storage/change-folder-seal
+//! Implements: rust-storage/marker-facts
+//! Implements: rust-storage/planning-facts
 
 mod error;
 mod listing;
@@ -37,7 +39,8 @@ pub use results::TaskDisclosure;
 pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};
 pub use snapshot::{
-    CapabilityDelta, ChangeSnapshot, DeadAttempt, EventFacts, LinkEntry, ManifestNotices, Notice,
-    PlanRecord, TableEvent, TaskFile, TaskOutcomeFacts, read_archive, read_change, read_history,
+    CapabilityDelta, ChangeSnapshot, DeadAttempt, EventFacts, HaltMarker, LinkEntry,
+    ManifestNotices, Notice, PlanRecord, RunningLock, TableEvent, TaskFile, TaskMarkers,
+    TaskOutcomeFacts, read_archive, read_change, read_history,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};

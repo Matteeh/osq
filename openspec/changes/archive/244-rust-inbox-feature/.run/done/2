@@ -1,0 +1,72 @@
+---
+scope_resolver: 2
+scope_hash: sha256:0c4e23ca2cabf64aef2b037572a5633d63edf174149cb71c51c40a608f70bbd3
+build_stamp: e195d914
+project_commit: 3baddf0a
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:c71b03af6ec3ee4403d243e80289468e3f0f5e1fa65d78cb70749ae3b0bc8f90
+  crates/features/inbox/Cargo.toml: sha256:884788000244f8c8c7fed5e225b8d047e496b2ee06629680a1bd9ed7d33e77f7
+  crates/features/inbox/src/lib.rs: sha256:28bb3f20c19bb6edc146cec6a174c37b687ac9abb71127e20ee8029969465e09
+  crates/features/inbox/src/needs/entry.rs: sha256:15155d1cecd5ec7196a66dca270adb1bb26f097239923e424c389a0cfcbfbc1e
+  crates/features/inbox/src/needs/line.rs: sha256:242d86c36af80fea4bc671339a213e564a4be22fe4544c0698846020501fbdfd
+  crates/features/inbox/src/needs/mod.rs: sha256:07d01e33367bb7e5f650d43eea8078dd286bd317e4b75afca6ce801e3194a359
+  crates/features/inbox/src/needs/placeholder.rs: sha256:ad4eeb10eb221f86ce11173569e2aa99256641bc2d3c31a39b81a18dce1ea5fb
+  crates/features/inbox/src/needs/steering.rs: sha256:87cf071ee4a796b5977430391c5be5280a4e03ca8f2b500c17a83e72bff38fc5
+  crates/features/inbox/src/read.rs: sha256:101283a39dffe74bec98a48c23de888249e98ea6491c4aa605c1e1096fee28fe
+  crates/features/inbox/src/text.rs: sha256:775c8298b67da085932f77c9afdf919e602653555dcba787b8f2b38684ac06b5
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/001-brief/brief.md: sha256:7aa4eba0695d3b30cab1d4c94d516e1a2571b3ba4d37f5715b6fd2114b62b7dc
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/001-brief/proposal.md: sha256:33e40dcb21e2482016f24cd869026366095f903b7bb8f888759208e591cc078c
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/002-lint/proposal.md: sha256:08bc6ffdd698f3853934daf3a87e574b266e86e08070035a0bb79379359c52c6
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/003-ready/proposal.md: sha256:18ffb59ce93285ce147179488f92e79d5de4125a370f905127e3f40ac95a79ad
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/004-steps/proposal.md: sha256:d51b98366f78e30112b40863c3f17a0ab7f7c69c19c82e880855bc5f7070fd07
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/approved: sha256:15a4608df5beea559d693d2029936fb4ea1c5caf31da357ee261befa96d1dbc6
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/dead/2.md: sha256:48b5e55efc57f1b6af544d1bb4abb11ac9378391c54abc3a95f663f7b1b0b9a0
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/done/1: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/events/1.jsonl: sha256:8f24edd1a25bc5f8445e021a2d7f3f28a738a4561ecbce93e10c9f9c42a83ce3
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/events/2.jsonl: sha256:5f46bad5677ce5d0829a38d2813788d3e2d1995d13ed392875fdc08ea3f0330e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/events/change.jsonl: sha256:ffa22c73c7844d2ff145317089685a87054ad8c29df8136ce7e71a1625c6d4f9
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/.run/regressed/change.md: sha256:b2fed57db9e2c51335c02af834056df0e5def6be6f12818303ac520ff8e3252b
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/proposal.md: sha256:9aca2605c4c93a773b6c7eea2068df421fa282ea36507e943401862cc08e6114
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/tasks/1.md: sha256:da08d1d25b690e6861af25759e8462735dffd61fc1ab83e59055febc0bb43a6b
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/005-dead/tasks/2.md: sha256:4fb39790c32be06d06ad2c5d53d4991e956274f26db9a08769f146a525459b2f
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/approved: sha256:2882dc3ba8aee091a536c230f08ea32d69e287190eae00d3b151a8b399d1699e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/dead/1.md: sha256:f9afb17139dac0189bc69a6daed4faddb04a3d1b0c689ab536a5c88f7720039e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/dead/2.md: sha256:c8001fc5d753ed4c0dc69ab528d9bf06a5fd67ba819ca270f9adee8db6a67f29
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/events/1.jsonl: sha256:d933637561e4eda482508c453ee639d24b6532a4e120c20ce334e21e5fb9f01e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/events/2.jsonl: sha256:10688ac36df23d4784d40cc5add013930c7959c739e86f6729574e67476a8e24
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/.run/results/1.md: sha256:10e67e1983ba630dc2a81c8536abcf63004763667346a2b9825e48b0b6edaa39
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/proposal.md: sha256:6ff3448f001811990b3a2ca93435e324c84287ee72f588db21d76c856bb00ec1
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/tasks/1.md: sha256:07550773068f2e79a1740da796373c7efcfa70fe0ca8791c41d1d960fd849d2a
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/006-blocked/tasks/2.md: sha256:b83cb5476f5b3c5fdcdca1d777aad40ed6d41a27510332f9c7c0dcd6aa817025
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/007-entry/.run/approved: sha256:96a74f743bbfd95a3d8de927908dde73d9ada8239c0bfa729cc1c22ad79f3ef2
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/007-entry/.run/dead/1.md: sha256:e8ebe8270859eb757d91175ff4203c0c2177ecb342c5712b5142b0e88c63d87d
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/007-entry/.run/events/1.jsonl: sha256:c5e97c1af35a6bf24ddaae42eeeb9783ed13562ee3e3354e675b40ff89420c00
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/007-entry/proposal.md: sha256:0fe24d62c26c8c9142a5c86fd61b43005068b89219cf929f42be3f462cc77395
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/007-entry/tasks/1.md: sha256:dff469c2393df031bbeec5592789232ec3f2f87222040a26cfca23a398e96db5
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/008-stuck/.run/approved: sha256:cdfe238d15d621dc9ec8398c8a7022809c81b14d9ff50a0ca070880864f1cc1c
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/008-stuck/.run/dead/1.md: sha256:c562cae6719d764021766f208fb216c8f91c686c62ed8e20f7f17f883759c511
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/008-stuck/.run/events/1.jsonl: sha256:ef8dafc9ec2711b72a701fda38841c6e91d0461d2517979ce25bf16e27e74ee5
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/008-stuck/proposal.md: sha256:e81a81560edb2a7a47f2a73f02d04462fe871b05039e80d9c65d07086c8a8b24
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/008-stuck/tasks/1.md: sha256:92c893fcb7b59be946c9193b4ac94ebf9a058c54559b38471d04fbe1f99d437f
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/.run/approved: sha256:e2c1cc314fa6b68c9d3a206ff9a7437811dddfbb8c9e8cb340845397df118e96
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/.run/events/1.jsonl: sha256:72eac071f4c302f3a80384b29d52ac0c9529c820b40709ff845a6fb2bdf411b0
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/.run/events/change.jsonl: sha256:bae50e5b62ef5cea61dc76768ac10e3f2be30c467f2898f96d750ffdd2bbde5e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/.run/regressed/1.md: sha256:be6e2268b5324b48905ce8051276e6132242cb7c9c747872a64a4da7cedd48ea
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/.run/regressed/change.md: sha256:3c06cbb30beb660c7176159271ac8a15dafb976a090733ab6e0df9a7536477d8
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/proposal.md: sha256:06eb9c0817f688a3cc6bf2c1b7064f7a2d0bcc02d705af4b16b6e2bc972e14f7
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/009-steer/tasks/1.md: sha256:2a6b6a13ec0e8555b21f8ab3a3036652d7474fc4c2c6162d26690d00266c60e0
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/.run/approved: sha256:2121a1abaa74cece451bc62e59869686c72870f3ca5991ac6acd79ab50ed695c
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/.run/events/1.jsonl: sha256:096c024aad928481529172fa12aecff04e292a8d0a58ded04d0afb206cf5b51e
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/.run/events/2.jsonl: sha256:ad0e2626d6d65449b413028b13f7bf6303f338041d0cc4fb05f00242f65ea826
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/.run/regressed/1.md: sha256:221266abcba2e43b4ccba9ccf60a0d1c2f63894631831dd9348c044c2cba9364
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/proposal.md: sha256:f25c25f749b78a35ade8438f7490b3ecec873b3d5bc016e98d24dd9ff7989fd8
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/tasks/1.md: sha256:7c8bed94f46bcbcd19be7ba7ecc528b117d9c1efbf075bb852bbf2dcc3f95c91
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/010-scope/tasks/2.md: sha256:e38252797516e0ade14f2631babc76ab4b65a85f4ea9337acedfdcdde394b141
+  crates/features/inbox/tests/fixtures/needs-you/openspec/changes/rejected/011-dropped/proposal.md: sha256:0aa203a0e64b06d1758f90a80c62618138dc13decf73cc435747623b7730837e
+  crates/features/inbox/tests/inbox_command.rs: sha256:692f55ad66d39a2f5fc6c28c507c67845f0a2e40f9a987ec2d54816772ef85e7
+original_scope_hash: sha256:b8abd3eedda85809d9e4e7d39dff523d4c205c6783c23ad16f24b7094f190f34
+recertified_at: 2026-10-21T09:03:03.621Z
+recertification_count: 1
+---
+2026-10-21T08:50:41.051Z

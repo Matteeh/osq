@@ -1,0 +1,19 @@
+Needs you
+  001: Unplanned with a brief — unplanned — osq plan 001
+  002: Unplanned without a brief — unplanned — osq lint 002
+  003: Ready plan — osq approve 003
+  004: Steps first — do the steps before approval first — osq approve 004
+  005: Plain halts — change regressed — osq retry 005 change
+  005: Plain halts — task 2: When two runs, it crashes — osq retry 005 2
+  006: Blocked task — task 1: When the key is missing, the task blocks — needs steering: blocked (blocked): The task needs the API key from the human. — osq plan 006
+  007: Missing entry files — task 1: When the entry is read, it exists — needs steering: blocked (entry_missing): missing entry files src/missing.rs, lib/gone.rs — osq plan 007
+  008: Stuck task — task 1: When it runs, it times out — needs steering: stuck (timeout) — osq plan 008
+  009: Change regression to steer — needs steering: regression (verify_red) — osq plan 009
+  010: Passing scope regression — task 1: When its files change, it recertifies — osq retry 010 1
+  021: Second landed — validator timed_out 2× in a row: Validator timed out — osq show 021
+Running
+  (none)
+Landed since last look
+  021: Second landed — archived 2026-10-02T10:00:00.000Z — disclosed: missing context 1, outside scope 1 — osq show 021
+  020: First landed — archived 2026-10-01T10:00:00.000Z — disclosed: deviated 1 — osq show 020
+  023: Early landed — archived 2026-09-30T10:00:00.000Z — osq show 023
