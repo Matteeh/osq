@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:d1e635bab961b8793b41dd863c1a1b5b1b2a81fdd650a4981a61a8f755eed8ae
+build_stamp: e195d914
+project_commit: 6dc6c1ad
+exit_code: 0
+scope_files:
+  crates/features/plan/src/feature.rs: sha256:04b8e2bb71b475bb61535f61fb11cd028457d950bb187d89b7b573f2657a441c
+  crates/features/plan/src/lib.rs: sha256:a3d5d7ed61b42d913aa179d4b037309cb3045835da7c2de5e21363e80f085c01
+  crates/features/plan/src/queue.rs: sha256:ab18914b4e8040e04b13660de1f8e1867677f1c822b517f8a4ba3b28efc64ecd
+  crates/features/plan/src/queue/parse.rs: sha256:4ddd9ce02d955ba6bd179e746a16533942cc5c72a773d3ff161047879d259f6d
+  crates/features/plan/src/queue/text.rs: sha256:03bc1142b0f62e983c4fa355afa7655dedfc8775e51e691ec0d966794e3428e6
+  crates/features/plan/tests/plan_feature.rs: sha256:c6802d62ec13d5655a779c094341092b4a34c1bdce1563829db3fbef0df5a978
+  crates/features/plan/tests/queue_corpus.rs: sha256:a27d53ed6662b59330b047d9ba0a7dbf8fd27a246dd47d900c5e094de78e3a16
+  crates/features/plan/tests/queue_items.rs: sha256:f24aea020d7574196bae4d3230ab7decdd40c71730469fd43917dcb02e4b6297
+original_scope_hash: sha256:cdedf2f2667b312c8f934c00f62eaef079577a0b7d5110e54c8b0552126f7a3a
+recertified_at: 2026-10-21T09:22:27.951Z
+recertification_count: 1
+---
+2026-10-21T09:15:35.877Z
