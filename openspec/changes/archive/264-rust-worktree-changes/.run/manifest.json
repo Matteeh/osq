@@ -1,0 +1,66 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4",
+    "PLANNER.md": "sha256:61a4f4fa9ca0a352bb81b10189a38e01c1f93b669378080c56e53d6cf03740d0",
+    "config": "sha256:c42ea9bcfc34ede3e90b78e4e38ce0307545b101a4ce0cca8e4c98d2955a3ecf",
+    "rust-config": "sha256:3e7de584b7f36267a060cacef0fd121ee3a6262df17dab4d0c4607670a9a9896",
+    "rust-config/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-core": "sha256:ec31eb468b3fa9dad79d0d36f74014c6a16d615e77eef45eaa856a5bd87b4780",
+    "rust-core/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "version-control": "sha256:ebaa554cd071ad0f5a94aab3dcf5fd10fd1d99dd51425c96f9c77d522808b248",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "rust-plan": "sha256:1aeeb65812e72619907c26348d2c168e8a437dec2d0023b69ce7a538dad92994",
+    "rust-plan/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-storage": "sha256:06d1cc64a3fec3df222d1cd6760ab5dc2a1e8bc97edbf87bc6c34fdce557f870",
+    "rust-storage/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce",
+    "rust-vcs": "sha256:e796ad1aa5c72887d9010913f1d7f31f37705ccdef9cb2e337f08eeb0380116c",
+    "rust-vcs/osq.yml": "sha256:3b3041b96f4b26d7a73cf055a355854b1dc5ccedbbb851d5d01eb6ee173a8fce"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-21T19:37:11.436Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-21T19:46:49.295Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path",
+      "verify_without_test"
+    ],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a",
+    "022": "sha256:1538605262ef642ef7835a2691ff9c4d45475477cad45a5e4a3ed5db7816d7ef",
+    "023": "sha256:48fcc891224ce6fbe0f003e4621faf7ec58e321046b53e0eda5100828cc4d39c",
+    "024": "sha256:4278b5fc9cdc6825874b3c8391ef92576d35b04c7c350d3869506d865d0ab02d",
+    "025": "sha256:6fa66cf8ee594b20ce3774112565de4dd1ab275c414d1d035f847c49afab22ea",
+    "026": "sha256:8ccbfb725b7514b5fcad04b509ef2674da919a4e452da214b400932aeed6d7d0",
+    "027": "sha256:ab9a82ce191d52285c6c9ba7454faac092516f172b5782ac140299a6bc2edf0f",
+    "028": "sha256:b9bba82fba3f8db00fd9f75704b48781a9d08eba79f378f63ccf6c061f48f965",
+    "029": "sha256:98703ae4847b3bfe9aec593d3968898ca0abbe5d2e3a064f013814680a976066"
+  }
+}

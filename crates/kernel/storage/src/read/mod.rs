@@ -23,6 +23,8 @@
 //! Implements: rust-storage/marker-facts
 //! Implements: rust-storage/planning-facts
 //! Implements: rust-storage/land-facts
+//! Implements: rust-storage/change-trees
+//! Implements: rust-storage/change-listing-across-trees
 
 mod error;
 mod land;
@@ -33,6 +35,7 @@ mod seal;
 mod sections;
 mod snapshot;
 mod text;
+mod trees;
 
 pub use error::StorageError;
 pub use land::{LandFacts, LandTask, read_land_facts};
@@ -47,3 +50,4 @@ pub use snapshot::{
     TaskOutcomeFacts, read_archive, read_change, read_history,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
+pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};

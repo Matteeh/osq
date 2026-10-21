@@ -10,10 +10,10 @@ pub use model::{
     task_outcomes, write_read_model, write_task_outcomes,
 };
 pub use read::{
-    CapabilityDelta, ChangeEntry, ChangeSnapshot, DeadAttempt, EventFacts, HaltMarker, LandFacts,
-    LandTask, LinkEntry, Location, ManifestNotices, ManualEdit, Notice, PlanRecord, ResultSections,
-    RunningLock, StorageError, TableEvent, TaskDisclosure, TaskFile, TaskMarkers, TaskOutcomeFacts,
-    change_folder_seal, frontmatter_string, goal_section, list_changes, markdown_body,
-    parse_result_sections, read_archive, read_change, read_history, read_land_facts,
-    read_manual_edits, timestamp_ms,
+    CapabilityDelta, ChangeEntry, ChangeSnapshot, ChangeTree, DeadAttempt, EventFacts, HaltMarker,
+    LandFacts, LandTask, LinkEntry, Location, ManifestNotices, ManualEdit, Notice, PlanRecord,
+    ResultSections, RunningLock, StorageError, TableEvent, TaskDisclosure, TaskFile, TaskMarkers,
+    TaskOutcomeFacts, TreeCandidate, change_folder_seal, change_trees, frontmatter_string,
+    goal_section, list_changes, list_tree_changes, markdown_body, parse_result_sections,
+    read_archive, read_change, read_history, read_land_facts, read_manual_edits, timestamp_ms,
 };

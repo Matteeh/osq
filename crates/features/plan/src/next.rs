@@ -62,7 +62,7 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
     let state = queue::read_state(root, "plan")?;
     let (item, _) =
         select::choose(&state, replan).map_err(|message| FeatureError::failed("plan", message))?;
-    let number = number::next(root);
+    let number = number::next(root).map_err(|message| FeatureError::failed("plan", message))?;
     let folder = format!("{number}-{}", item.slug);
     let dependencies = select::landed_ids(&item.dependencies, &state.groups);
     let fixes = select::landed_ids(&item.fixes, &state.groups);
