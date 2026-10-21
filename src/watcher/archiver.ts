@@ -1,4 +1,3 @@
-import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
@@ -27,43 +26,36 @@ export interface ArchivedEventData {
 
 export { applyOpenSpecDeltas } from '../core/spec/apply-deltas.js';
 
-/** Rewrite every unchecked `[ ]` checkbox to `[x]`. Pure; reads no `.run/` state. */
+/**
+ * Tick only the unchecked boxes `hashChangeFolder` clears: a `-` bullet after
+ * any spaces or tabs, one or more spaces or tabs, then `[ ]`. A `*` bullet and
+ * every other line keep their bytes. Pure; reads no `.run/` state.
+ *
+ * @scenario watcher-and-harness: Root task lines
+ * @scenario watcher-and-harness: Archived seal matches approval
+ * @adr 002
+ */
 export function tickAllTaskCheckboxes(content: string): string {
-  return content.replace(/^([ \t]*[-*][ \t]+\[)[ ](\])/gm, '$1x$2');
+  return content.replace(/^([ \t]*-[ \t]+\[)[ ](\])/gm, '$1x$2');
 }
 
+/** Tick the archived folder's root `tasks.md`, leaving a missing file absent. */
 async function ensureArchivedTasksTicked(folderPath: string): Promise<void> {
-  const stack: string[] = [folderPath];
+  const tasksPath = path.join(folderPath, 'tasks.md');
+  const content = await fs.readFile(tasksPath, 'utf8').catch(() => null);
+  if (content === null) {
+    return;
+  }
 
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (current === undefined) {
-      break;
-    }
-
-    const entries = await fs.readdir(current, { withFileTypes: true }).catch((): Dirent[] => []);
-    for (const entry of entries) {
-      if (entry.name === '.run' || entry.name === '.git' || entry.name === '.DS_Store') {
-        continue;
-      }
-
-      const fullPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(fullPath);
-      } else if (entry.isFile() && entry.name === 'tasks.md') {
-        const content = await fs.readFile(fullPath, 'utf8');
-        const ticked = tickAllTaskCheckboxes(content);
-        if (ticked !== content) {
-          await fs.writeFile(fullPath, ticked, 'utf8');
-        }
-      }
-    }
+  const ticked = tickAllTaskCheckboxes(content);
+  if (ticked !== content) {
+    await fs.writeFile(tasksPath, ticked, 'utf8');
   }
 }
 
 /**
  * Delete the transient archive record, remove `plan-prompt.md`, move the
- * folder to the canonical archive, and tick every `tasks.md`. The caller has
+ * folder to the canonical archive, and tick its root `tasks.md`. The caller has
  * already applied the change's deltas and sidecars.
  */
 async function relocateArchivedSpec(
@@ -117,7 +109,16 @@ async function relocateArchivedSpec(
   return targetPath;
 }
 
-/** Apply deltas, move the folder to the canonical archive, and tick every `tasks.md`. */
+/**
+ * Apply deltas, move the folder to the canonical archive, and tick its root
+ * `tasks.md`, leaving nested ones and every `*` bullet as they are.
+ *
+ * @scenario watcher-and-harness: Archived seal matches approval
+ * @scenario watcher-and-harness: Root task lines
+ * @scenario watcher-and-harness: Nested tasks file keeps its bytes
+ * @scenario watcher-and-harness: Archive without a root tasks file
+ * @adr 002
+ */
 export async function archiveSpecFolder(
   projectRoot: string,
   specFolderPath: string,

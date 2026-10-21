@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c6f80df11f3f290407ef057ce2fd16f9476844eb77bd277cb5e1c8e257cfc72b"
+build_stamp: "e195d914"
+project_commit: "67e55605"
+exit_code: 0
+scope_files: {"crates/features/archive/src/tick.rs":"sha256:47a27d890f8ee0ec1eda494d9b20e96b72049a58b2729883110283ac89b05018","crates/features/archive/tests/archive_move.rs":"sha256:192f7122f635596fbfcf6a50dec4172ef9f4d3a076a47325ffaa030f353df0bd","crates/features/archive/tests/archive_seal.rs":"sha256:31a6519aa0ee6fb6b175b2fb923939128177050c8e57311314dd8478d0099957","crates/features/archive/tests/fixtures/project/openspec/changes/007-sample/.run/approved":"sha256:9c5eb831d3daddef3804d0657fb095690281ebe3e541147f56ed61f7ed925437","crates/features/archive/tests/fixtures/project/openspec/changes/007-sample/notes/tasks.md":"sha256:79af1210ecdbb8c521c539e53ca045e4d60f86a5fd3c4ea551aa262b20aba3b8","crates/features/archive/tests/golden/project/openspec/changes/archive/007-sample/.run/approved":"sha256:9c5eb831d3daddef3804d0657fb095690281ebe3e541147f56ed61f7ed925437","crates/features/archive/tests/golden/project/openspec/changes/archive/007-sample/notes/tasks.md":"sha256:79af1210ecdbb8c521c539e53ca045e4d60f86a5fd3c4ea551aa262b20aba3b8","crates/features/archive/tests/golden/project/openspec/changes/archive/007-sample/tasks.md":"sha256:0dbd4cdd84d79093c3b2afb778dd4e2dd3e89964e74b62fa92a21f58e0494798"}
+---
+2026-10-21T14:41:27.426Z

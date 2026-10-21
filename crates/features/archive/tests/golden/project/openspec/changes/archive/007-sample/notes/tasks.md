@@ -1,1 +1,1 @@
-- [x] a nested tasks file is ticked too
+- [ ] a nested tasks file keeps its bytes

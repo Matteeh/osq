@@ -85,7 +85,7 @@ fn ticked_task_lines() {
             "- [x] 1. When alpha changes, alpha does it twice",
         ),
         ("  - [ ] an indented item", "  - [x] an indented item"),
-        ("* [ ] a star item", "* [x] a star item"),
+        ("* [ ] a star item", "* [ ] a star item"),
         ("-\t[ ] a tab after the dash", "-\t[x] a tab after the dash"),
         (
             "- [x] an item already ticked",
@@ -106,7 +106,7 @@ fn ticked_task_lines() {
     }
     assert_eq!(
         read(&archived.join("notes/tasks.md")),
-        "- [x] a nested tasks file is ticked too\n"
+        "- [ ] a nested tasks file keeps its bytes\n"
     );
     let todo = read(&archived.join("notes/todo.md"));
     assert_eq!(todo, "- [ ] a file not named tasks.md keeps its box\n");

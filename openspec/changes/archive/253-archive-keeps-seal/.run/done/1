@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6d68bc3b11e1bb1af001d11b33ae551c6fdc34ce1f4776ddbd8474533c53380b"
+build_stamp: "e195d914"
+project_commit: "2bc55329"
+exit_code: 0
+scope_files: {"src/watcher/archiver.ts":"sha256:e621dda90345fe8496c6c5cf8e9b2302ca1d3ba206bc3e6ad60f84db2d47674b","tests/archive-keeps-seal.test.ts":"sha256:9d859690eb35fd4884431d2791f927c04f633eb09ae0865e219630a716f7d829"}
+---
+2026-10-21T14:36:10.081Z
