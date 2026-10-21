@@ -4,7 +4,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use crate::blocks::{self, Timeouts, VcsConfig};
+use crate::blocks::{self, PiConfig, Timeouts, VcsConfig};
 use crate::error::ConfigError;
 use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
 
@@ -19,6 +19,7 @@ const TOP_LEVEL_KEYS: &[&str] = &[
     "executor",
     "planner",
     "validator",
+    "pi",
 ];
 
 /// The settings `osq.toml` holds.
@@ -36,6 +37,8 @@ pub struct Config {
     pub planner: PlannerConfig,
     /// The validator's settings, absent when osq runs no validator.
     pub validator: Option<ValidatorConfig>,
+    /// The pi harness's settings.
+    pub pi: PiConfig,
 }
 
 impl Default for Config {
@@ -48,6 +51,7 @@ impl Default for Config {
             planner: PlannerConfig::following(&executor),
             executor,
             validator: None,
+            pi: PiConfig::default(),
         }
     }
 }
@@ -109,6 +113,10 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         Some(table) => Some(roles::validator::read_validator(table)?),
         None => None,
     };
+    let pi = match blocks::value::table(&table, "pi")? {
+        Some(table) => blocks::pi::read_pi(table)?,
+        None => PiConfig::default(),
+    };
     Ok(Config {
         max_concurrency,
         timeouts,
@@ -116,5 +124,6 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         executor,
         planner,
         validator,
+        pi,
     })
 }

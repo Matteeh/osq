@@ -28,9 +28,9 @@ system.
 It parses `text` as a TOML table, and text that is not valid TOML SHALL be
 `ConfigError::Syntax` with the parser's display text as `message`. It then
 reads the top-level keys `maxConcurrency`, `timeouts`, `vcs`, `executor`,
-`planner` and `validator` into `Config`, whose fields are
-`max_concurrency`, `timeouts`, `vcs`, `executor`, `planner` and
-`validator`, as the requirements of each key say. `Config` SHALL derive
+`planner`, `validator` and `pi` into `Config`, whose fields are
+`max_concurrency`, `timeouts`, `vcs`, `executor`, `planner`,
+`validator` and `pi`, as the requirements of each key say. `Config` SHALL derive
 `Debug`, `Clone`, `PartialEq` and `Eq`, and `Config::default()` SHALL
 equal `parse_config("")`.
 
@@ -296,3 +296,29 @@ with reason `is required when validator.enabled is true`.
 | `[validator]\nmodel = "m"` | `InvalidValue { key: "validator.harness", reason: "is required when validator.enabled is true" }` |
 | `[validator]\nharness = "claude"` | `InvalidValue { key: "validator.model", reason: "is required when validator.enabled is true" }` |
 | `[validator]\nenabled = false\ntimeoutSeconds = 0` | `InvalidValue { key: "validator.timeoutSeconds", reason: "must be a positive integer" }` |
+
+### Requirement: Pi settings
+`pi` SHALL be a table read into `Config.pi`, a `PiConfig` struct deriving
+`Debug`, `Clone`, `Default`, `PartialEq` and `Eq`, as TypeScript's
+`validatePiConfig` reads it. Its keys, in reading order, are `bin`,
+`provider`, `model` and `thinking`, read into the `Option<String>` fields
+of the same names. Each follows the shared string rule and is `None` when
+unset, so an absent `pi` table gives `PiConfig::default()`.
+
+#### Scenario: Pi settings read
+- **WHEN** `parse_config` reads each row's text
+- **THEN** it returns the row's result:
+
+| Text | Result |
+|---|---|
+| empty | `pi` equals `PiConfig::default()` |
+| `[pi]` | `pi` equals `PiConfig::default()` |
+| `[pi]\nbin = " /opt/pi/bin/pi "\nprovider = " deepseek "\nmodel = "deepseek/deepseek-flash"\nthinking = "high"` | `pi` holds `bin` `/opt/pi/bin/pi`, `provider` `deepseek`, `model` `deepseek/deepseek-flash` and `thinking` `high` |
+| `[pi]\nprovider = "deepseek"` | `pi` holds `provider` `deepseek` and no other field |
+| `[pi]\nbin = "  "` | `InvalidValue` with key `pi.bin` and reason `must be a non-empty string` |
+| `[pi]\nprovider = ""` | `InvalidValue` with key `pi.provider` and reason `must be a non-empty string` |
+| `[pi]\nmodel = " "` | `InvalidValue` with key `pi.model` and reason `must be a non-empty string` |
+| `[pi]\nthinking = ""` | `InvalidValue` with key `pi.thinking` and reason `must be a non-empty string` |
+| `[pi]\nmodel = 3` | `WrongType` with key `pi.model` and expected `a string` |
+| `[pi]\nharness = "pi"` | `UnknownKey` with key `pi.harness` |
+| `pi = "pi"` | `WrongType` with key `pi` and expected `a table` |

@@ -15,6 +15,7 @@ mod summary;
 use std::collections::BTreeMap;
 
 use osq_core::event::Event;
+use osq_kernel_config::PiConfig;
 
 pub use harness::PiHarness;
 pub use preflight::{
@@ -31,6 +32,20 @@ pub struct PiSettings {
     pub model: Option<String>,
     /// The thinking level pi should use, when set.
     pub thinking: Option<String>,
+}
+
+impl PiSettings {
+    /// Builds pi's settings from the config kernel's `[pi]` table.
+    ///
+    /// Implements: rust-harnesses/pi-harness-from-config
+    #[must_use]
+    pub fn from_config(pi: &PiConfig) -> Self {
+        Self {
+            provider: pi.provider.clone(),
+            model: pi.model.clone(),
+            thinking: pi.thinking.clone(),
+        }
+    }
 }
 
 /// One tool call remembered between pi's start and end lines.
