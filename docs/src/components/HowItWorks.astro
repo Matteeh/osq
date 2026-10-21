@@ -69,9 +69,25 @@ const leaves = [38.8, 41, 43.2].map((x) => box(x - 0.6, x + 0.6, -5, -5, 8.4, 9.
 const gate = { back: path([58, -5, 0], [58, -5, 15]), front: path([58, 5, 0], [58, 5, 15]), beam: path([58, -5.5, 15], [58, 5.5, 15]) };
 // the bar sits low across the belt and lifts straight up to the top beam to let the box through
 const barrier = path([58, -5, 6.6], [58, 5, 6.6]);
-// 4. two robot arms, one from behind the belt and one from the front
-const armBack = { base: box(75, 79, -11, -7, 0, 3), d: path([77, -9, 3], [77, -9, 13], [80, -4, 17], [82, -0.5, 12]), joints: [[77, -9, 13], [80, -4, 17]] as V[], hand: [82, -0.5, 12] as V };
-const armFront = { base: box(86, 90, 7, 11, 0, 3), d: path([88, 9, 3], [88, 9, 12], [86, 4, 16], [83, 0.5, 11.5]), joints: [[88, 9, 12], [86, 4, 16]] as V[], hand: [83, 0.5, 11.5] as V };
+// 4. a lamp behind the belt whose head reaches over the box and rains code down into it
+const LIT = 18.3;
+const lamp = {
+  base: box(80.5, 85.5, -12.5, -6, 0, 1.4),
+  post: box(82.3, 83.7, -10.2, -8.8, 1.4, 19),
+  head: box(81.2, 84.8, -10.8, 1.6, 19, 20.8),
+  shade: box(81.6, 84.4, -3.4, 1.2, LIT, 19),
+};
+// a sheet of light from the shade to the box's top, as wide on screen as the box
+const beam = pts([81.7, 1.3, LIT], [84.3, -1.3, LIT], [84.3, -1.3, BELT + 2.6], [81.7, 1.3, BELT + 2.6]);
+const fall = (LIT - BELT - 2.6) * S;
+// columns of falling bits, in px from the shade's centre; each column loops on its own clock
+const rain = [
+  { x: -13, d: 1.1, delay: -0.2, bits: '10110' },
+  { x: -6.5, d: 0.8, delay: -0.6, bits: '01101' },
+  { x: 0, d: 1.0, delay: -0.1, bits: '11010' },
+  { x: 6.5, d: 0.9, delay: -0.5, bits: '00111' },
+  { x: 13, d: 1.2, delay: -0.8, bits: '10011' },
+];
 // 5. the scanner arch and the crate that is main
 const scanner = { back: box(105, 107, -6, -4, 0, 13), front: box(105, 107, 4, 6, 0, 13), top: box(105, 107, -6, 6, 13, 15) };
 const scanPlane = pts([106, -3.6, 12.6], [106, 3.6, 12.6], [106, 3.6, BELT + 0.2], [106, -3.6, BELT + 0.2]);
@@ -80,7 +96,7 @@ const landed = [137, 141.5].map((x) => box(x - 1.3, x + 1.3, -4.7, -2.1, 8, 10.6
 const crateLabel = p([140, 6, 3.2]);
 const retry = (() => {
   const [ax, ay] = p([106, 0, 17]);
-  const [bx, by] = p([84, 0, 21]);
+  const [bx, by] = p([84, 0, 23.5]);
   return { d: `M${ax.toFixed(1)} ${ay.toFixed(1)} C${(ax - 10).toFixed(1)} ${(ay - 70).toFixed(1)} ${(bx + 40).toFixed(1)} ${(by - 60).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`, label: [(ax + bx) / 2 + 10, Math.min(ay, by) - 52] };
 })();
 const humans = [
@@ -90,7 +106,7 @@ const badges = [
   { v: [3.7, 5, 17] as V, you: true },
   { v: [31, -8.5, 22] as V, you: true },
   { v: [58, 0, 21] as V, you: true },
-  { v: [83, 0, 24] as V, you: false },
+  { v: [83, 0, 28] as V, you: false },
   { v: [106, 0, 20] as V, you: false },
 ];
 ---
@@ -103,7 +119,7 @@ const badges = [
     <figure class="factory">
       <div class="scroller">
         <svg viewBox="0 0 1150 500" role="img" aria-labelledby="factory-title">
-          <title id="factory-title">An isometric factory line. People plan a brief around a table and send it down a pipe, where it lands on the belt as a task box, an engineer and a model turn it into a spec of small tasks, an engineer opens the gate, two robot arms build each task, and a scanner checks every one before it lands in main. A failed task loops back to the arms.</title>
+          <title id="factory-title">An isometric factory line. People plan a brief around a table and send it down a pipe, where it lands on the belt as a task box, an engineer and a model turn it into a spec of small tasks, an engineer opens the gate, a lamp rains code down into each task to build it, and a scanner checks every one before it lands in main. A failed task loops back to the lamp.</title>
 
           <!-- floor -->
           <polygon class="slab-top" points={box(-4, 146, -12, 12, -1.5, 0).top} />
@@ -128,14 +144,13 @@ const badges = [
           {leaves.map((pt) => <polygon class="leaf" points={pt} />)}
           <circle class="blink" r="3.5" transform={at([39, -5, 3])} />
 
-          <polygon class="m-top" points={armBack.base.top} />
-          <polygon class="m-front" points={armBack.base.front} />
-          <polygon class="m-side" points={armBack.base.side} />
-          <g class="arm a1">
-            <path class="limb" d={armBack.d} />
-            {armBack.joints.map((v) => <circle class="joint" r="4" transform={at(v)} />)}
-            <path class="grip" transform={at(armBack.hand)} d="M-6 0 H6 M-6 0 V7 M6 0 V7" />
-          </g>
+          {[lamp.base, lamp.post].map((b) => (
+            <g>
+              <polygon class="m-top" points={b.top} />
+              <polygon class="m-front" points={b.front} />
+              <polygon class="m-side" points={b.side} />
+            </g>
+          ))}
 
           <path class="post" d={gate.back} />
           <polygon class="m-top" points={scanner.back.top} />
@@ -220,15 +235,23 @@ const badges = [
           <path class="post" d={gate.beam} />
           <circle class="lamp" r="5" transform={at([58, 0, 17.5])} />
 
-          <!-- the front arm -->
-          <polygon class="m-top" points={armFront.base.top} />
-          <polygon class="m-front" points={armFront.base.front} />
-          <polygon class="m-side" points={armFront.base.side} />
-          <g class="arm a2">
-            <path class="limb" d={armFront.d} />
-            {armFront.joints.map((v) => <circle class="joint" r="4" transform={at(v)} />)}
-            <path class="grip" transform={at(armFront.hand)} d="M-6 0 H6 M-6 0 V7 M6 0 V7" />
+          <!-- the lamp's head over the belt, and the code it rains into the box -->
+          <polygon class="beam" points={beam} />
+          <g transform={at([83, 0, LIT])}>
+            <clipPath id="rain-clip"><rect x="-22" y="1" width="44" height={(fall - 5).toFixed(1)} /></clipPath>
+            <g class="rain" clip-path="url(#rain-clip)">
+              {rain.map((c) => (
+                <g class="col" style={`animation-duration: ${c.d}s; animation-delay: ${c.delay}s`}>
+                  {[...c.bits].map((b, i) => <text x={c.x} y={i * 10} style={`opacity: ${(i + 1) / c.bits.length}`} class:list={{ lead: i === c.bits.length - 1 }}>{b}</text>)}
+                </g>
+              ))}
+            </g>
           </g>
+          <polygon class="m-top" points={lamp.head.top} />
+          <polygon class="m-front" points={lamp.head.front} />
+          <polygon class="m-side" points={lamp.head.side} />
+          <polygon class="shade" points={lamp.shade.front} />
+          <polygon class="shade" points={lamp.shade.side} />
 
           <!-- the scanner: front post, top, and the plane that checks each task -->
           <polygon class="scan" points={scanPlane} />
@@ -327,11 +350,12 @@ const badges = [
   .b3 { animation-name: talk3; }
   .barrier { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; animation: gate 16s ease-in-out infinite; }
   .lamp { animation: lamp 16s linear infinite; }
-  .limb { fill: none; stroke: var(--muted); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
-  .joint { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
-  .grip { fill: none; stroke: var(--fg); stroke-width: 2.5; stroke-linecap: round; }
-  .arm { animation: work 16s ease-in-out infinite; }
-  .a2 { animation-name: work2; }
+  .shade { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; animation: shade 16s linear infinite; }
+  .beam { fill: var(--accent); opacity: 0; animation: beam 16s linear infinite; }
+  .rain { opacity: 0; animation: rain 16s linear infinite; }
+  .col { animation: fall 1s linear infinite; }
+  .col text { fill: var(--accent); font: 500 10px var(--mono); text-anchor: middle; }
+  .col text.lead { fill: var(--fg); }
   .scan { fill: var(--green-fg); opacity: 0.12; stroke: var(--green-fg); stroke-width: 1.5; animation: scan 16s linear infinite; }
   .retry { fill: none; stroke: var(--red-fg); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: 0.8; animation: flow 1.2s linear infinite; }
   .note { fill: var(--muted); font: 13px var(--sans); }
@@ -379,8 +403,12 @@ const badges = [
   @keyframes leaf { 0%, 19% { opacity: 0; } 22%, 96% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes gate { 0%, 41% { transform: translateY(0); } 44%, 51% { transform: translateY(-52px); } 55%, 100% { transform: translateY(0); } }
   @keyframes lamp { 0%, 41.9% { fill: var(--red-fg); } 42%, 52.9% { fill: var(--green-fg); } 53%, 100% { fill: var(--red-fg); } }
-  @keyframes work { 0%, 51% { transform: translateY(0); } 54% { transform: translateY(8px); } 57% { transform: translateY(0); } 60% { transform: translateY(8px); } 63% { transform: translateY(0); } 100% { transform: translateY(0); } }
-  @keyframes work2 { 0%, 52.5% { transform: translateY(0); } 55.5% { transform: translateY(8px); } 58.5% { transform: translateY(0); } 61.5% { transform: translateY(8px); } 64.5%, 100% { transform: translateY(0); } }
+  /* the lamp lights while the box sits under it, 51-66% */
+  @keyframes shade { 0%, 50% { fill: var(--accent-soft); } 52%, 64% { fill: var(--accent); } 66%, 100% { fill: var(--accent-soft); } }
+  @keyframes beam { 0%, 50% { opacity: 0; } 52%, 64% { opacity: 0.1; } 66%, 100% { opacity: 0; } }
+  @keyframes rain { 0%, 51% { opacity: 0; } 52.5%, 64% { opacity: 1; } 65.5%, 100% { opacity: 0; } }
+  /* each column starts just above the shade and falls through the box's lid */
+  @keyframes fall { from { translate: 0 -46px; } to { translate: 0 80px; } }
   @keyframes scan { 0%, 71% { opacity: 0.08; } 73%, 78% { opacity: 0.35; } 80%, 100% { opacity: 0.08; } }
 
   ol { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
