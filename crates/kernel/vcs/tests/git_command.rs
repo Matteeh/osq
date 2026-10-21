@@ -21,7 +21,9 @@ fn environment(command: &std::process::Command) -> BTreeMap<String, Option<Strin
 /// Asserts a read failed to start the program named by `expected`.
 fn assert_spawn(result: Result<(), VcsError>, expected: &str) {
     let error = result.expect_err("the missing program must fail");
-    let VcsError::Spawn { command, source } = &error;
+    let VcsError::Spawn { command, source } = &error else {
+        panic!("expected VcsError::Spawn, got {error}");
+    };
     assert_eq!(command, expected);
     assert_eq!(source.kind(), std::io::ErrorKind::NotFound);
     assert_eq!(

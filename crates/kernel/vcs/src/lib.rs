@@ -8,4 +8,4 @@ mod port;
 
 pub use error::VcsError;
 pub use git::GitVcs;
-pub use port::{DiffStat, Head, StatusEntry, Vcs, Worktree};
+pub use port::{DiffStat, FastForward, Head, MergeOutcome, StatusEntry, Vcs, Worktree};

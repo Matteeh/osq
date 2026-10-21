@@ -1,4 +1,4 @@
-//! The read half of osq's version-control port.
+//! osq's version-control port.
 
 use std::path::PathBuf;
 
@@ -46,7 +46,34 @@ pub struct DiffStat {
     pub removed: u64,
 }
 
-/// The read half of osq's version-control port.
+/// What a merge left behind: a clean staged result or the paths in conflict.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MergeOutcome {
+    /// The merge succeeded, with its result staged and not committed.
+    Clean,
+    /// The merge stopped on these unmerged paths.
+    Conflict {
+        /// The paths relative to the repository, sorted.
+        paths: Vec<String>,
+    },
+}
+
+/// What a fast-forward did: move HEAD, or leave it for uncommitted paths.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FastForward {
+    /// HEAD moved to the commit, and these paths changed.
+    Done {
+        /// The changed paths relative to the repository, sorted.
+        changed: Vec<String>,
+    },
+    /// Nothing was written, because these uncommitted paths would be lost.
+    Blocked {
+        /// The blocked paths relative to the repository, sorted.
+        paths: Vec<String>,
+    },
+}
+
+/// osq's version-control port.
 pub trait Vcs {
     /// The repository's top level, or none when git cannot name one.
     ///
@@ -180,4 +207,121 @@ pub trait Vcs {
     ///
     /// Implements: rust-vcs/history-reads
     fn trailer_values(&self, from: &str, to: &str, key: &str) -> Result<Vec<String>, VcsError>;
+
+    /// Creates the branch `name` at `base`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the branch.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn create_branch(&self, name: &str, base: &str) -> Result<(), VcsError>;
+
+    /// Renames the branch `from` to `to`, keeping every commit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the name.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn rename_branch(&self, from: &str, to: &str) -> Result<(), VcsError>;
+
+    /// Adds a worktree at `path` for the existing branch `branch`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the worktree.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_add(&self, path: &str, branch: &str) -> Result<(), VcsError>;
+
+    /// Removes the worktree at `path`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses, such as for a worktree
+    /// with modified or untracked files.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_remove(&self, path: &str) -> Result<(), VcsError>;
+
+    /// Drops git's records of worktrees whose folder no longer exists.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_prune(&self) -> Result<(), VcsError>;
+
+    /// Stages exactly `paths`, deletions included; nothing runs when it is
+    /// empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn stage(&self, paths: &[&str]) -> Result<(), VcsError>;
+
+    /// Stages and commits only `paths`, leaving anything else staged as it
+    /// was, or with no paths commits the index as it stands, and gives the new
+    /// commit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when any command git refuses fails.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn commit(&self, paths: &[&str], message: &str, author: &str) -> Result<String, VcsError>;
+
+    /// Commits `source`'s tree with `parent` first and then each of
+    /// `extra_parents`, authored by `author`, leaving every ref, the index and
+    /// the working tree untouched.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the commit.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn commit_tree(
+        &self,
+        source: &str,
+        parent: &str,
+        message: &str,
+        author: &str,
+        extra_parents: &[&str],
+    ) -> Result<String, VcsError>;
+
+    /// Merges `rev`, squashed or not, leaving the result staged and not
+    /// committed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses to start the merge, and
+    /// [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn merge(&self, rev: &str, squash: bool) -> Result<MergeOutcome, VcsError>;
+
+    /// Aborts the merge in progress.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses, such as when no merge is
+    /// in progress.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn merge_abort(&self) -> Result<(), VcsError>;
+
+    /// Fast-forwards to `commit`, unless an uncommitted path it changes would
+    /// be overwritten.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the fast-forward, and
+    /// [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn fast_forward(&self, commit: &str) -> Result<FastForward, VcsError>;
 }

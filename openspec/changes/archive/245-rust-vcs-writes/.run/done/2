@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a82a07091acbb46e08253947e7b2b3c4753038e804a3c36450e2bcc0a21cbb5b"
+build_stamp: "e195d914"
+project_commit: "d36c2859"
+exit_code: 0
+scope_files: {"crates/kernel/vcs/src/git.rs":"sha256:552ca2de39cc4e07407566060fd670ba57a99cc7f99452d4c901d27676fdc433","crates/kernel/vcs/src/git/merge.rs":"sha256:884bd5be8ef41efd8acb82d3070add5278a50171ccb51e38277d78a262f5c310","crates/kernel/vcs/src/lib.rs":"sha256:fe1a3a936d8d3f2a2f97e56f99693d69e95dd375f18ce52b801fdb5436389ead","crates/kernel/vcs/src/port.rs":"sha256:cff0fcf58027e8174264954ba6df379c691e46194c17afcc8791bce3bed4d757","crates/kernel/vcs/tests/merge_writes.rs":"sha256:039fe8791bc412cdbbcaab00d024d5fe99fd4921ee0d62fc521419c88b5dbe51"}
+---
+2026-10-21T08:30:07.294Z

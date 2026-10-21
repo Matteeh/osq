@@ -1,18 +1,31 @@
-//! `GitVcs`: one git process for each command a read needs.
+//! `GitVcs`: one git process for each command a read or a write needs.
 
 mod history;
+mod merge;
 mod state;
+mod write;
 
+use std::io::Write as _;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
-use crate::port::{DiffStat, Head, StatusEntry, Worktree};
+use crate::port::{DiffStat, FastForward, Head, MergeOutcome, StatusEntry, Worktree};
 use crate::{Vcs, VcsError};
 
 /// Environment variables that would redirect osq's own git reads.
 const GIT_ENV_VARS: [&str; 3] = ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"];
 
-/// The git-backed implementation of the read half of the port.
+/// One git command's exit status and decoded streams.
+struct RunOutput {
+    /// Whether git exited with code 0.
+    success: bool,
+    /// Standard output, decoded with invalid bytes replaced.
+    stdout: String,
+    /// Standard error, decoded with invalid bytes replaced.
+    stderr: String,
+}
+
+/// The git-backed implementation of the port.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GitVcs {
     /// The directory every git command runs in.
@@ -75,19 +88,66 @@ impl GitVcs {
         command
     }
 
-    /// Runs one command and gives its standard output, or none when it failed.
-    fn read(&self, args: &[&str]) -> Result<Option<String>, VcsError> {
-        let output = self
-            .command(args)
-            .output()
-            .map_err(|source| VcsError::Spawn {
-                command: self.command_line(args),
-                source,
-            })?;
-        if !output.status.success() {
-            return Ok(None);
+    /// Runs one command with extra environment variables and optional standard
+    /// input, giving its exit and both decoded streams.
+    fn run(
+        &self,
+        args: &[&str],
+        env: &[(&str, &str)],
+        input: Option<&str>,
+    ) -> Result<RunOutput, VcsError> {
+        let mut command = self.command(args);
+        for (key, value) in env {
+            command.env(key, value);
         }
-        Ok(Some(String::from_utf8_lossy(&output.stdout).into_owned()))
+        command
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let mut child = command.spawn().map_err(|source| VcsError::Spawn {
+            command: self.command_line(args),
+            source,
+        })?;
+        if let (Some(text), Some(mut pipe)) = (input, child.stdin.take()) {
+            let _ = pipe.write_all(text.as_bytes());
+        }
+        let output = child.wait_with_output().map_err(|source| VcsError::Spawn {
+            command: self.command_line(args),
+            source,
+        })?;
+        Ok(RunOutput {
+            success: output.status.success(),
+            stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        })
+    }
+
+    /// Runs one read and gives its standard output, or none when it failed.
+    fn read(&self, args: &[&str]) -> Result<Option<String>, VcsError> {
+        let output = self.run(args, &[], None)?;
+        if output.success {
+            Ok(Some(output.stdout))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Runs one write, giving its exit and streams, or the refusal git gives
+    /// with the joined command and its output.
+    fn write(
+        &self,
+        args: &[&str],
+        env: &[(&str, &str)],
+        input: Option<&str>,
+    ) -> Result<RunOutput, VcsError> {
+        let output = self.run(args, env, input)?;
+        if !output.success {
+            return Err(VcsError::Failed {
+                command: self.command_line(args),
+                output: format!("{}{}", output.stdout, output.stderr),
+            });
+        }
+        Ok(output)
     }
 
     /// The program and every argument, joined by single spaces.
@@ -258,5 +318,133 @@ impl Vcs for GitVcs {
     /// Implements: rust-vcs/history-reads
     fn trailer_values(&self, from: &str, to: &str, key: &str) -> Result<Vec<String>, VcsError> {
         history::trailer_values(self, from, to, key)
+    }
+
+    /// Creates a branch.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the branch.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn create_branch(&self, name: &str, base: &str) -> Result<(), VcsError> {
+        write::create_branch(self, name, base)
+    }
+
+    /// Renames a branch.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the name.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn rename_branch(&self, from: &str, to: &str) -> Result<(), VcsError> {
+        write::rename_branch(self, from, to)
+    }
+
+    /// Adds a worktree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the worktree.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_add(&self, path: &str, branch: &str) -> Result<(), VcsError> {
+        write::worktree_add(self, path, branch)
+    }
+
+    /// Removes a worktree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the worktree.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_remove(&self, path: &str) -> Result<(), VcsError> {
+        write::worktree_remove(self, path)
+    }
+
+    /// Prunes worktrees whose folder no longer exists.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses.
+    ///
+    /// Implements: rust-vcs/branch-and-worktree-writes
+    fn worktree_prune(&self) -> Result<(), VcsError> {
+        write::worktree_prune(self)
+    }
+
+    /// Stages exactly some paths.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn stage(&self, paths: &[&str]) -> Result<(), VcsError> {
+        write::stage(self, paths)
+    }
+
+    /// Stages and commits only some paths, and gives the new commit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when a command git refuses fails.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn commit(&self, paths: &[&str], message: &str, author: &str) -> Result<String, VcsError> {
+        write::commit(self, paths, message, author)
+    }
+
+    /// Commits a tree with its parents, and gives the new commit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the commit.
+    ///
+    /// Implements: rust-vcs/commit-writes
+    fn commit_tree(
+        &self,
+        source: &str,
+        parent: &str,
+        message: &str,
+        author: &str,
+        extra_parents: &[&str],
+    ) -> Result<String, VcsError> {
+        write::commit_tree(self, source, parent, message, author, extra_parents)
+    }
+
+    /// Merges a rev, squashed or not.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses to start the merge.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn merge(&self, rev: &str, squash: bool) -> Result<MergeOutcome, VcsError> {
+        merge::merge(self, rev, squash)
+    }
+
+    /// Aborts the merge in progress.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the abort.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn merge_abort(&self) -> Result<(), VcsError> {
+        merge::merge_abort(self)
+    }
+
+    /// Fast-forwards to a commit unless uncommitted paths block it.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses the fast-forward.
+    ///
+    /// Implements: rust-vcs/merge-writes
+    fn fast_forward(&self, commit: &str) -> Result<FastForward, VcsError> {
+        merge::fast_forward(self, commit)
     }
 }

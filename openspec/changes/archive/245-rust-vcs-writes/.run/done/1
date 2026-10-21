@@ -1,0 +1,20 @@
+---
+scope_resolver: 2
+scope_hash: sha256:2a7b3798edd04a0468a9e60ee08cbf383f4f7b47c36e141509d1384944347249
+build_stamp: e195d914
+project_commit: 8283b1b2
+exit_code: 0
+scope_files:
+  crates/kernel/vcs/src/error.rs: sha256:5589e08cbadfa9a01693468f4b6948f5a82d630cb9d447fcb3c61b56be73b328
+  crates/kernel/vcs/src/git.rs: sha256:552ca2de39cc4e07407566060fd670ba57a99cc7f99452d4c901d27676fdc433
+  crates/kernel/vcs/src/git/write.rs: sha256:de3a780bb4084c7012658d4ecfdbb7f32cf49be0e9be5fd4914eff10509b3a42
+  crates/kernel/vcs/src/lib.rs: sha256:fe1a3a936d8d3f2a2f97e56f99693d69e95dd375f18ce52b801fdb5436389ead
+  crates/kernel/vcs/src/port.rs: sha256:cff0fcf58027e8174264954ba6df379c691e46194c17afcc8791bce3bed4d757
+  crates/kernel/vcs/tests/branch_and_commit_writes.rs: sha256:644e35b74378902e907bf7af013959779d1263add51a1e5b85056ec2e2cdfc5f
+  crates/kernel/vcs/tests/git_command.rs: sha256:ba7f9e479c5bc076656d9b0b019b02d21306d133f435775bd47fd4cdcff9b70c
+  crates/kernel/vcs/tests/history_reads.rs: sha256:35123d37d7413b3c0190e66b88b626ee6918bbc3d73f78c1adf8d86a1d13c8f3
+original_scope_hash: sha256:9aa787db21de4c47ed2188a3a2076775d857b5b9be2a35a75e9fdd4f43047a78
+recertified_at: 2026-10-21T08:30:09.462Z
+recertification_count: 1
+---
+2026-10-21T08:23:50.267Z
