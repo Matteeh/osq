@@ -292,3 +292,21 @@ stops only for those in files the land writes.
 | `002-beta-orders` holding `specs/orders/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T12:00:00.000Z` and `.run/stacked-on` holding `001-alpha-orders sha256:x\n` |
 | `002-beta-orders` holding `specs/billing/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T14:00:00.000Z` and `.run/stacked-on` holding `001-alpha-orders sha256:x\n`, and `003-gamma-orders` holding `specs/orders/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T12:00:00.000Z` and `.run/stacked-on` holding `002-beta-orders sha256:y\n` |
 | `002-beta-orders` holding `specs/orders/spec.md`, `.run/approved` and an `archived` event at `2026-10-20T12:00:00.000Z`, with the fixture change's `.run/events/change.jsonl` removed on its branch |
+
+### Requirement: Land git limits
+`land` SHALL build every `GitVcs` it runs, at the root and in a change's
+worktree, with `with_timeouts` and the loaded config's `timeouts`, so
+`timeouts.gitSeconds` bounds each git read and `timeouts.gitCommitSeconds`
+each commit and merge. A git command that runs out of time SHALL fail with
+its `VcsError::TimedOut` display, `<command> timed out after <limit>`, as
+"Land settings" says for every `VcsError`, and the checkout's HEAD SHALL stay
+unchanged.
+
+#### Scenario: A slow git status stops land at the configured limit
+- **WHEN** `land` runs with the id `1` on a land repository holding the fixture change, whose `osq.toml` adds `[timeouts]\ngitSeconds = 1\n`, with `extensions.worktreeConfig` set to `true` and `core.fsmonitor` set to `sleep 30` in the row's worktree config
+- **THEN** within 5 seconds it gives a `Failed` error for the command `land` with the message `git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all timed out after 1s`, and the checkout's HEAD is unchanged:
+
+| Worktree config | Status that runs out of time |
+|---|---|
+| the change's worktree | the change worktree's status, read before the commit |
+| the checkout | the checkout's status, read by the fast-forward |

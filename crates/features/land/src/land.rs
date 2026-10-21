@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_config::{ManualEdits, load_config};
+use osq_kernel_config::{ManualEdits, Timeouts, load_config};
 use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
 use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree};
 
@@ -31,13 +31,15 @@ const LAND: &str = "land";
 /// Implements: rust-land/land-message
 /// Implements: rust-land/land-commit
 /// Implements: rust-land/land-refusals
+/// Implements: rust-land/land-git-limits
 pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
+    let timeouts = config.timeouts;
     let settings = config.vcs;
     if !settings.enabled {
         return Err(failed(text::NEEDS_GIT));
     }
-    let vcs = GitVcs::new(root);
+    let vcs = git_vcs(root, &timeouts);
     let Some(repo_root) = vcs.root().map_err(|error| failed(error.to_string()))? else {
         return Err(failed(text::NEEDS_GIT));
     };
@@ -54,15 +56,17 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         .worktree
         .as_ref()
         .map(|change| read_land_facts(&change_archive(change, &located.folder)));
-    check_refusals(&vcs, &worktrees, &located, facts.as_ref(), &default_branch)?;
+    check_refusals(
+        &vcs,
+        &timeouts,
+        &worktrees,
+        &located,
+        facts.as_ref(),
+        &default_branch,
+    )?;
 
     if located.landed {
-        let output = if located.worktree.is_some() {
-            text::landed_worktree(&located.folder)
-        } else {
-            text::landed_nothing(&located.folder)
-        };
-        return Ok(output);
+        return Ok(landed_output(&located));
     }
 
     let change = located
@@ -73,7 +77,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         .as_ref()
         .expect("a change that has not landed sits in a worktree");
 
-    let Some(tip) = worktree_head(change)? else {
+    let Some(tip) = worktree_head(change, &timeouts)? else {
         return Err(moved(&default_branch, &located.folder));
     };
     let Some(base) = checkout_head(&vcs)? else {
@@ -113,11 +117,23 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
     }
 }
 
+/// The output for a change that already landed.
+///
+/// Implements: rust-land/land-lookup
+fn landed_output(located: &Located) -> String {
+    if located.worktree.is_some() {
+        text::landed_worktree(&located.folder)
+    } else {
+        text::landed_nothing(&located.folder)
+    }
+}
+
 /// Runs every refusal before a land reports or writes, in its required order.
 ///
 /// Implements: rust-land/land-refusals
 fn check_refusals(
     vcs: &GitVcs,
+    timeouts: &Timeouts,
     worktrees: &[WorktreeChange],
     located: &Located,
     facts: Option<&LandFacts>,
@@ -136,7 +152,7 @@ fn check_refusals(
     }
 
     if let Some(change) = &located.worktree {
-        let status = GitVcs::new(&change.path)
+        let status = git_vcs(&change.path, timeouts)
             .status()
             .map_err(|error| failed(error.to_string()))?;
         if let Some(message) = checks::unclean_worktree(&change.path, &status) {
@@ -303,8 +319,11 @@ fn change_archive(change: &WorktreeChange, folder: &str) -> PathBuf {
 /// The worktree's HEAD commit, when it has one.
 ///
 /// Implements: rust-land/land-commit
-fn worktree_head(change: &WorktreeChange) -> Result<Option<String>, FeatureError> {
-    Ok(GitVcs::new(&change.path)
+fn worktree_head(
+    change: &WorktreeChange,
+    timeouts: &Timeouts,
+) -> Result<Option<String>, FeatureError> {
+    Ok(git_vcs(&change.path, timeouts)
         .head()
         .map_err(|error| failed(error.to_string()))?
         .sha)
@@ -322,6 +341,13 @@ fn checkout_head(vcs: &GitVcs) -> Result<Option<String>, FeatureError> {
 /// Implements: rust-land/land-commit
 fn moved(default_branch: &str, folder: &str) -> FeatureError {
     failed(text::moved(default_branch, text::change_id(folder)))
+}
+
+/// A `GitVcs` at `root` bounded by the loaded config's `timeouts`.
+///
+/// Implements: rust-land/land-git-limits
+fn git_vcs(root: &Path, timeouts: &Timeouts) -> GitVcs {
+    GitVcs::new(root).with_timeouts(timeouts)
 }
 
 /// Builds the failed error for a land step.
