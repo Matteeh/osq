@@ -3,6 +3,7 @@
 mod history;
 mod merge;
 mod run;
+mod setup;
 mod state;
 mod write;
 
@@ -11,7 +12,7 @@ use std::process::Command;
 
 use osq_kernel_config::Timeouts;
 
-use crate::port::{DiffStat, FastForward, Head, MergeOutcome, StatusEntry, Worktree};
+use crate::port::{DiffStat, FastForward, Head, LineEnding, MergeOutcome, StatusEntry, Worktree};
 use crate::{Vcs, VcsError};
 
 use run::RunOutput;
@@ -197,6 +198,39 @@ impl Vcs for GitVcs {
     /// Implements: rust-vcs/repository-state-reads
     fn config_value(&self, key: &str) -> Result<Option<String>, VcsError> {
         state::config_value(self, key)
+    }
+
+    /// Git's version, or none when it cannot report one.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn version(&self) -> Result<Option<String>, VcsError> {
+        setup::version(self)
+    }
+
+    /// The executable hook files git would run.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn hook_names(&self) -> Result<Vec<String>, VcsError> {
+        setup::hook_names(self)
+    }
+
+    /// Every tracked file's index line ending.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn line_endings(&self) -> Result<Vec<LineEnding>, VcsError> {
+        setup::line_endings(self)
     }
 
     /// The default branch, else `fallback`.

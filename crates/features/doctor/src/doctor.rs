@@ -4,6 +4,9 @@
 //! pi (ADR 023). Doctor writes no file (ADR 025).
 
 mod changes;
+mod decisions;
+mod git;
+mod managed;
 mod probe;
 
 use std::collections::BTreeMap;
@@ -17,6 +20,9 @@ use osq_kernel_harnesses::{
 };
 
 use changes::change_lines;
+use decisions::decisions_line;
+use git::git_lines;
+use managed::managed_blocks_line;
 use probe::probe;
 
 /// TypeScript's `PI_TESTED_RANGE`, held in code as it holds it (ADR 029).
@@ -36,7 +42,12 @@ const PI_TESTED_RANGE: PiVersionRange = PiVersionRange {
 pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
     let env: BTreeMap<String, String> = std::env::vars().collect();
     let (mut lines, config) = collect_lines(root, &env);
+    lines.push(managed_blocks_line(root, &config));
+    if let Some(line) = decisions_line(root, &config) {
+        lines.push(line);
+    }
     lines.extend(change_lines(root, &config));
+    lines.extend(git_lines(root, &config, &env));
     if lines.iter().any(|line| line.starts_with("[fail]")) {
         return Err(FeatureError::failed("doctor", lines.join("\n")));
     }

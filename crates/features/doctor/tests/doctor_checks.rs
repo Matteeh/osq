@@ -3,6 +3,7 @@
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{Duration, Instant};
 
 use osq_core::{Feature, FeatureError, Invocation};
@@ -65,9 +66,11 @@ const ROWS: &[Row] = &[
         files: &[],
         expected: Expected::Output(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -76,9 +79,11 @@ const ROWS: &[Row] = &[
         files: &[],
         expected: Expected::Failed(concat!(
             "[fail] config: failed to load: pi.bin must be a non-empty string\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -89,9 +94,11 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -102,9 +109,11 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.90.0\n",
             "[warn] harness-version: Pi 0.90.0 is outside the tested range >=0.87.0 <0.88.0\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -115,9 +124,11 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.87.2\n",
             "[ok] harness-version: Pi 0.87.2 (tested >=0.87.0 <0.88.0)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -128,9 +139,11 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake>\n",
             "[warn] harness-version: Pi version \"\" is outside the tested range >=0.87.0 <0.88.0\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -140,9 +153,11 @@ const ROWS: &[Row] = &[
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: pi)\n",
             "[fail] harness: binary unavailable: <fake> (exited with code 2)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -153,9 +168,11 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[fail] harness: binary unavailable: /nonexistent/pi ",
             "(cannot start /nonexistent/pi: No such file or directory (os error 2))\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -165,9 +182,11 @@ const ROWS: &[Row] = &[
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: pi)\n",
             "[fail] harness: binary unavailable: <fake> (timed out)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -185,9 +204,11 @@ const ROWS: &[Row] = &[
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
             "[ok] harness-auth: deepseek credentials ready\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -206,9 +227,11 @@ const ROWS: &[Row] = &[
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
             "[fail] harness-auth: deepseek credentials not ready: No API key found for deepseek\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -220,9 +243,11 @@ const ROWS: &[Row] = &[
             "[ok] harness: <fake> 0.90.0\n",
             "[warn] harness-version: Pi 0.90.0 is outside the tested range >=0.87.0 <0.88.0\n",
             "[fail] harness-auth: deepseek credentials not ready: pi auth check exited with code 3\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -235,9 +260,11 @@ const ROWS: &[Row] = &[
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
             "[fail] harness-auth: deepseek credentials not ready: ",
             "Pi binary not found or failed: <fake>\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
 ];
@@ -265,17 +292,68 @@ fn write_file(path: &Path, content: &str) {
     fs::write(path, text).unwrap_or_else(|error| panic!("{} is written: {error}", path.display()));
 }
 
-/// Replaces the fake pi placeholder with its absolute path.
-fn substitute(text: &str, fake: &Path) -> String {
+/// The managed files doctor checks, paired with their test fixture copies.
+const MANAGED_FILES: [(&str, &str); 3] = [
+    ("AGENTS.md", "agents-block.txt"),
+    ("PLANNER.md", "planner-block.txt"),
+    (".claude/commands/osq-plan.md", "claude-plan-command.txt"),
+];
+
+/// Writes the managed files every doctor root holds, each with a trailing
+/// newline after the test copy.
+fn managed_files(root: &Path) {
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/managed");
+    for (path, fixture) in MANAGED_FILES {
+        let text = fs::read_to_string(fixtures.join(fixture)).expect("the managed fixture reads");
+        let full = root.join(path);
+        fs::create_dir_all(full.parent().expect("the managed file has a parent"))
+            .expect("the managed file's folders are created");
+        fs::write(full, format!("{text}\n")).expect("the managed file is written");
+    }
+}
+
+/// Makes the scratch root a git repository.
+fn git_init(root: &Path) {
+    let output = Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(root)
+        .output()
+        .expect("git starts");
+    assert!(
+        output.status.success(),
+        "git init: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+/// The `git` line for a repository doctor accepts.
+fn git_line() -> String {
+    let output = Command::new("git")
+        .arg("--version")
+        .output()
+        .expect("git starts");
+    assert!(
+        output.status.success(),
+        "git --version: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let version = String::from_utf8_lossy(&output.stdout);
+    let first = version.lines().next().unwrap_or("").trim();
+    format!("[ok] git: {first}")
+}
+
+/// Replaces the fake pi and git placeholders with their runtime text.
+fn substitute(text: &str, fake: &Path, git: &str) -> String {
     text.replace("<fake>", &fake.to_string_lossy())
+        .replace("<git>", git)
 }
 
 /// Checks one row's result against its expected text.
-fn check_row(row: &Row, fake: &Path, result: Result<osq_core::Output, FeatureError>) {
+fn check_row(row: &Row, fake: &Path, git: &str, result: Result<osq_core::Output, FeatureError>) {
     match row.expected {
         Expected::Output(text) => {
             let output = result.unwrap_or_else(|error| panic!("row {} failed: {error}", row.name));
-            assert_eq!(substitute(text, fake), output.text, "row {}", row.name);
+            assert_eq!(substitute(text, fake, git), output.text, "row {}", row.name);
         }
         Expected::Failed(text) => {
             let error = result.expect_err("the row's check fails");
@@ -284,7 +362,7 @@ fn check_row(row: &Row, fake: &Path, result: Result<osq_core::Output, FeatureErr
                     command, message, ..
                 } => {
                     assert_eq!("doctor", command, "row {}", row.name);
-                    assert_eq!(substitute(text, fake), *message, "row {}", row.name);
+                    assert_eq!(substitute(text, fake, git), *message, "row {}", row.name);
                 }
                 other => panic!("row {} returned {other:?}", row.name),
             }
@@ -298,11 +376,14 @@ fn check_row(row: &Row, fake: &Path, result: Result<osq_core::Output, FeatureErr
 #[test]
 fn doctor_checks_with_a_fake_pi() {
     let fake = fake_pi();
+    let git = git_line();
     let feature = DoctorFeature;
     for row in ROWS {
         let root = scratch(row.name);
+        managed_files(&root);
+        git_init(&root);
         if let Some(config) = row.config {
-            write_file(&root.join("osq.toml"), &substitute(config, &fake));
+            write_file(&root.join("osq.toml"), &substitute(config, &fake, &git));
         }
         for (name, content) in row.files {
             write_file(&root.join(name), content);
@@ -311,7 +392,7 @@ fn doctor_checks_with_a_fake_pi() {
         let result = feature.run(&Invocation::new(&root, "doctor", Vec::new()));
         let elapsed = started.elapsed();
         assert!(elapsed < ROW_LIMIT, "row {} took {elapsed:?}", row.name);
-        check_row(row, &fake, result);
+        check_row(row, &fake, &git, result);
     }
 }
 

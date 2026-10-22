@@ -24,6 +24,15 @@ pub struct StatusEntry {
     pub from: Option<String>,
 }
 
+/// One tracked file's index line ending, as `git ls-files --eol` reports it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LineEnding {
+    /// The path relative to the repository.
+    pub path: String,
+    /// The value after `i/`, such as `lf`, `crlf`, `mixed`, `none` or `-text`.
+    pub index: String,
+}
+
 /// One entry of `git worktree list`, with its branch and HEAD.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Worktree {
@@ -110,6 +119,33 @@ pub trait Vcs {
     ///
     /// Implements: rust-vcs/repository-state-reads
     fn config_value(&self, key: &str) -> Result<Option<String>, VcsError>;
+
+    /// Git's version, or none when git cannot report one.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn version(&self) -> Result<Option<String>, VcsError>;
+
+    /// The executable hook files git would run, in byte order.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn hook_names(&self) -> Result<Vec<String>, VcsError>;
+
+    /// Every tracked file's index line ending, in git's order.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/setup-reads
+    fn line_endings(&self) -> Result<Vec<LineEnding>, VcsError>;
 
     /// The branch `refs/remotes/origin/HEAD` names without its `origin/` prefix.
     ///

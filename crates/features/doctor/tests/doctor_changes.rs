@@ -38,9 +38,11 @@ const ROWS: &[Row] = &[
         files: &[],
         expected: Expected::Output(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -48,9 +50,11 @@ const ROWS: &[Row] = &[
         files: &[("001-a/.run/running/1.pid", LIVE)],
         expected: Expected::Output(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[ok] done-markers: all done markers verified\n",
+            "<git>\n",
         )),
     },
     Row {
@@ -67,12 +71,14 @@ const ROWS: &[Row] = &[
         ],
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[fail] locks: orphaned lock(s): ",
             "openspec/changes/001-a/.run/running/1.pid, ",
             "openspec/changes/001-a/.run/locks/2.pid, ",
             "openspec/changes/002-b/.run/running/1.pid\n",
             "[ok] archives: all archives valid\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -86,10 +92,12 @@ const ROWS: &[Row] = &[
         ],
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[fail] archives: invalid archive(s): ",
             "openspec/changes/archive/002-b, openspec/changes/archive/004-d\n",
-            "[ok] done-markers: all done markers verified",
+            "[ok] done-markers: all done markers verified\n",
+            "<git>",
         )),
     },
     Row {
@@ -107,10 +115,12 @@ const ROWS: &[Row] = &[
         ],
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: agy)\n",
+            "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
             "[fail] done-markers: unverified done marker placed by hand: ",
-            "openspec/changes/001-a/.run/done/2.md",
+            "openspec/changes/001-a/.run/done/2.md\n",
+            "<git>",
         )),
     },
 ];
@@ -127,6 +137,44 @@ fn scratch(name: &str) -> PathBuf {
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, text).unwrap();
+}
+
+/// The managed files doctor checks, paired with their test fixture copies.
+const MANAGED_FILES: [(&str, &str); 3] = [
+    ("AGENTS.md", "agents-block.txt"),
+    ("PLANNER.md", "planner-block.txt"),
+    (".claude/commands/osq-plan.md", "claude-plan-command.txt"),
+];
+
+/// Writes the managed files every doctor root holds, each with a trailing
+/// newline after the test copy.
+fn managed_files(root: &Path) {
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/managed");
+    for (path, fixture) in MANAGED_FILES {
+        let text = fs::read_to_string(fixtures.join(fixture)).expect("the managed fixture reads");
+        write(&root.join(path), &format!("{text}\n"));
+    }
+}
+
+/// Makes a scratch root a git repository.
+fn git_init(root: &Path) {
+    git(root, &["init", "-q"]);
+}
+
+/// The `git` line for a repository doctor accepts.
+fn git_line() -> String {
+    let output = Command::new("git")
+        .arg("--version")
+        .output()
+        .expect("git starts");
+    assert!(
+        output.status.success(),
+        "git --version: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let version = String::from_utf8_lossy(&output.stdout);
+    let first = version.lines().next().unwrap_or("").trim();
+    format!("[ok] git: {first}")
 }
 
 /// Runs git in a folder, failing with both streams when it refuses.
@@ -164,6 +212,7 @@ fn repository(base: &Path, worktrees: &Path) -> PathBuf {
             worktrees.display()
         ),
     );
+    managed_files(&repo);
     commit(&repo, "main commit");
     repo
 }
@@ -176,8 +225,11 @@ fn doctor(root: &Path) -> Result<String, FeatureError> {
 }
 
 /// Checks a row's result against its expected text, with the live pid filled in.
-fn check_row(row: &Row, result: Result<String, FeatureError>, live: i64) {
-    let substitute = |text: &'static str| text.replace("<live>", &live.to_string());
+fn check_row(row: &Row, git: &str, result: Result<String, FeatureError>, live: i64) {
+    let substitute = |text: &'static str| {
+        text.replace("<live>", &live.to_string())
+            .replace("<git>", git)
+    };
     match row.expected {
         Expected::Output(text) => {
             let output = result.unwrap_or_else(|error| panic!("row {} failed: {error}", row.name));
@@ -204,8 +256,11 @@ fn check_row(row: &Row, result: Result<String, FeatureError>, live: i64) {
 #[test]
 fn doctor_change_lines() {
     let live = i64::from(std::process::id());
+    let git = git_line();
     for row in ROWS {
         let root = scratch(row.name);
+        managed_files(&root);
+        git_init(&root);
         for (path, text) in row.files {
             write(
                 &root.join("openspec/changes").join(path),
@@ -213,7 +268,7 @@ fn doctor_change_lines() {
             );
         }
         let result = doctor(&root);
-        check_row(row, result, live);
+        check_row(row, &git, result, live);
     }
 }
 
@@ -245,6 +300,7 @@ fn doctor_reads_every_worktree() {
         &repo.join("openspec/changes/002-run/.run/running/1.pid"),
         DEAD,
     );
+    let git = git_line();
     let error = doctor(&repo).expect_err("the worktree lock is orphaned");
     match &error {
         FeatureError::Failed {
@@ -254,12 +310,17 @@ fn doctor_reads_every_worktree() {
             assert_eq!(
                 concat!(
                     "[ok] config: loaded (harness: agy)\n",
+                    "[ok] managed-blocks: managed blocks valid\n",
                     "[fail] locks: orphaned lock(s): ",
                     "../worktrees/002-run/openspec/changes/002-run/.run/running/1.pid\n",
                     "[ok] archives: all archives valid\n",
-                    "[ok] done-markers: all done markers verified",
-                ),
-                *message
+                    "[ok] done-markers: all done markers verified\n",
+                    "<git>\n",
+                    "[warn] gitattributes: .gitattributes has no current osq line endings block; ",
+                    "run osq init",
+                )
+                .replace("<git>", &git),
+                message.as_str()
             );
         }
         other => panic!("doctor returned {other:?}"),
@@ -279,6 +340,7 @@ fn doctor_reads_stacked_changes() {
         &worktrees.join("repo/.stacked/040-stack/openspec/changes/040-stack/.run/running/1.pid"),
         DEAD,
     );
+    let git = git_line();
     let error = doctor(&repo).expect_err("the stacked lock is orphaned");
     match &error {
         FeatureError::Failed {
@@ -288,13 +350,18 @@ fn doctor_reads_stacked_changes() {
             assert_eq!(
                 concat!(
                     "[ok] config: loaded (harness: agy)\n",
+                    "[ok] managed-blocks: managed blocks valid\n",
                     "[fail] locks: orphaned lock(s): ",
                     "../worktrees/repo/.stacked/040-stack/openspec/changes/040-stack/",
                     ".run/running/1.pid\n",
                     "[ok] archives: all archives valid\n",
-                    "[ok] done-markers: all done markers verified",
-                ),
-                *message
+                    "[ok] done-markers: all done markers verified\n",
+                    "<git>\n",
+                    "[warn] gitattributes: .gitattributes has no current osq line endings block; ",
+                    "run osq init",
+                )
+                .replace("<git>", &git),
+                message.as_str()
             );
         }
         other => panic!("doctor returned {other:?}"),
