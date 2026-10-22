@@ -22,6 +22,10 @@ members = [
     "crates/features/inbox",
     "crates/features/report",
     "crates/features/metaloop",
+    "crates/features/show",
+    "crates/features/lint",
+    "crates/features/doctor",
+    "crates/features/retry",
     "crates/apps/cli",
 ]
 
@@ -53,6 +57,10 @@ osq-feature-land = { path = "crates/features/land" }
 osq-feature-inbox = { path = "crates/features/inbox" }
 osq-feature-report = { path = "crates/features/report" }
 osq-feature-metaloop = { path = "crates/features/metaloop" }
+osq-feature-show = { path = "crates/features/show" }
+osq-feature-lint = { path = "crates/features/lint" }
+osq-feature-doctor = { path = "crates/features/doctor" }
+osq-feature-retry = { path = "crates/features/retry" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.11"

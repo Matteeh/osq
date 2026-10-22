@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:16b84f6da8139f9e976c45d8e4be7bb5289493c6b7ccb386834d4d13e27ed0fb"
+build_stamp: "3f811304"
+project_commit: "fae7872f"
+exit_code: 0
+scope_files: {"Cargo.toml":"sha256:09e04e1f5f9b6f7551c974eacf1e26cb9b56e295b922eb5f18d8742c808f58cc","crates/apps/cli/Cargo.toml":"sha256:0a49c4d405bb97ab5bd106c75ff993e77367635330c4eb4e902b737d5c7a54cb","crates/apps/cli/src/lib.rs":"sha256:ce8fb2d69b5f433801d11b1130b8fe554cc8d75bad14fa48f8dcac9a46ec45ce","crates/apps/cli/tests/dispatch.rs":"sha256:2200f29cedd7fb8b848a11294d182f51ecbceccbadf09f96489692accdf1cefb","crates/features/doctor/Cargo.toml":"sha256:900471b1c8c8334d439c38d71bb53ad501aac08cbc332da1f35c6bef5614ae32","crates/features/doctor/src/lib.rs":"sha256:14a7921e80a4b995d0a6b1fd8ba5195c6227034d563add4caaab4b2df500a48e","crates/features/doctor/tests/feature.rs":"sha256:9da2c262d92e34cd05459eeee7a0702d4ae26c60c987210ed2e0b94d4073693e","crates/features/lint/Cargo.toml":"sha256:211fbea00943ddf965936dd2c41391264f5909bd915cd6a206a8bf0f7ed18b75","crates/features/lint/src/lib.rs":"sha256:e76c81470a5c325feb04eedcfaf132c8f9712818ad198109c87629414a76f125","crates/features/lint/tests/feature.rs":"sha256:ebbf2c4fc04c61b67b627f20fd6f51215987482761bf04b8f6760783de1950a9","crates/features/retry/Cargo.toml":"sha256:e735a30537c48d9d8a1f133d1a9a5b963f3635bc59994da807825df36d88c527","crates/features/retry/src/lib.rs":"sha256:3b40e4cb62eba9880f5f0adc184e0d993906a0fb66f034870f9d4fb267e13908","crates/features/retry/tests/feature.rs":"sha256:0e7171f7423fd228ec87d915c590ad5e9ade9a0198075d333462675d20bf0a02","crates/features/show/Cargo.toml":"sha256:ecab436597a6be26a100f528e087b7d1bed18fd7277a902dbc5eeec4a24afec4","crates/features/show/src/lib.rs":"sha256:97e533f19ad2ff9e8497a0417e4b7f3009d51beb1423df696928905ba5ef86e9","crates/features/show/tests/feature.rs":"sha256:f30823dde4483079c9b80768d0fe6dd3a7509b559b531b49bf93706d90d6a3a6"}
+---
+2026-10-21T22:25:02.303Z

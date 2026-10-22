@@ -298,12 +298,16 @@ dependencies = [
  "osq-core",
  "osq-feature-approve",
  "osq-feature-archive",
+ "osq-feature-doctor",
  "osq-feature-inbox",
  "osq-feature-land",
+ "osq-feature-lint",
  "osq-feature-metaloop",
  "osq-feature-plan",
  "osq-feature-report",
+ "osq-feature-retry",
  "osq-feature-run",
+ "osq-feature-show",
 ]
 
 [[package]]
@@ -337,6 +341,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "osq-feature-doctor"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+]
+
+[[package]]
 name = "osq-feature-inbox"
 version = "0.0.0"
 dependencies = [
@@ -354,6 +365,13 @@ dependencies = [
  "osq-kernel-config",
  "osq-kernel-storage",
  "osq-kernel-vcs",
+]
+
+[[package]]
+name = "osq-feature-lint"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
 ]
 
 [[package]]
@@ -386,11 +404,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "osq-feature-retry"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+]
+
+[[package]]
 name = "osq-feature-run"
 version = "0.0.0"
 dependencies = [
  "osq-core",
  "osq-kernel-specs",
+]
+
+[[package]]
+name = "osq-feature-show"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
 ]
 
 [[package]]

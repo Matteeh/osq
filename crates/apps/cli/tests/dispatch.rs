@@ -94,7 +94,10 @@ fn registered_features() {
     let names: Vec<&str> = registry.iter().map(|feature| feature.name()).collect();
     assert_eq!(
         names,
-        ["plan", "approve", "archive", "land", "inbox", "report"]
+        [
+            "plan", "approve", "archive", "land", "inbox", "report", "show", "lint", "doctor",
+            "retry",
+        ]
     );
 }
 

@@ -19,6 +19,10 @@ osq-feature-archive.workspace = true
 osq-feature-land.workspace = true
 osq-feature-inbox.workspace = true
 osq-feature-report.workspace = true
+osq-feature-show.workspace = true
+osq-feature-lint.workspace = true
+osq-feature-doctor.workspace = true
+osq-feature-retry.workspace = true
 osq-feature-metaloop.workspace = true
 
 [[bin]]
