@@ -3,15 +3,14 @@
 use std::fmt;
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use osq_core::{Change, FeatureError, Seal};
+use osq_kernel_config::load_config;
 use osq_kernel_specs::{MergeChangeError, MergedSpec, merge_change};
-use osq_kernel_storage::{
-    ChangeEntry, ChangeSnapshot, Location, change_folder_seal, list_changes, read_change,
-};
+use osq_kernel_storage::{ChangeEntry, ChangeSnapshot, change_folder_seal, read_change};
 
-use crate::{apply, record};
+use crate::{apply, commit, lookup, record, relocate};
 
 /// The command's name, as its errors and invocation spell it.
 const COMMAND: &str = "archive";
@@ -22,32 +21,53 @@ const SPECS: &str = "openspec/specs";
 /// The approval marker inside a change folder.
 const APPROVED: &str = ".run/approved";
 
-/// Runs `archive` for one change argument, returning the change folder's path.
+/// Runs `archive` for one change argument, returning the output text.
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error when the change is not found, is not approved, is
-/// not done, its deltas do not merge, or a living file cannot be written.
+/// Returns a `Failed` error when the config does not load, the change is not
+/// found, is not approved, is not done, its deltas do not merge, a living file
+/// cannot be written, or a worktree commit fails.
 ///
 /// Implements: rust-archive/change-lookup
 /// Implements: rust-archive/archive-record
 /// Implements: rust-archive/archive-put-back
-pub(crate) fn run(root: &Path, argument: &str) -> Result<PathBuf, FeatureError> {
-    let entry = find(root, argument)?;
-    let snapshot = read_change(&entry).map_err(failed)?;
-    pass_gates(&entry, &snapshot)?;
-    refuse_stopped(&entry, &snapshot.folder)?;
-    let merged = merge(&entry, root)?;
-    if let Err(source) = record::write(root, &entry.path) {
-        record::restore(root, &entry.path);
-        return Err(cannot_write(root, &record::path(&entry.path), &source));
+/// Implements: rust-archive/archive-move
+/// Implements: rust-archive/worktree-archive
+pub(crate) fn run(root: &Path, argument: &str) -> Result<String, FeatureError> {
+    let config = load_config(root).map_err(|error| failed(error.to_string()))?;
+    let found = lookup::find(root, &config, argument).map_err(failed)?;
+    let entry = &found.entry;
+    let snapshot = read_change(entry).map_err(failed)?;
+    pass_gates(entry, &snapshot)?;
+    refuse_stopped(entry, &snapshot.folder)?;
+    let merged = merge(entry, &found.tree_root)?;
+    if let Err(source) = record::write(&found.tree_root, &entry.path) {
+        record::restore(&found.tree_root, &entry.path);
+        return Err(cannot_write(
+            &found.tree_root,
+            &record::path(&entry.path),
+            &source,
+        ));
     }
-    if let Err(error) = apply::write(root, &entry.path, &merged) {
-        record::restore(root, &entry.path);
-        return Err(write_failure(root, &error));
+    if let Err(error) = apply::write(&found.tree_root, &entry.path, &merged) {
+        record::restore(&found.tree_root, &entry.path);
+        return Err(write_failure(&found.tree_root, &error));
     }
     record::remove(&entry.path);
-    Ok(entry.path)
+    let archived = relocate::run(&found.tree_root, &entry.path).map_err(failed)?;
+    if found.worktree {
+        commit::run(
+            &found.tree_root,
+            &config,
+            &entry.path,
+            &entry.folder,
+            snapshot.title.as_deref(),
+            &archived,
+        )?;
+        return Ok(format!("{archived} on osq/{}", entry.folder));
+    }
+    Ok(archived)
 }
 
 /// Refuses a change that still holds a stopped archive's record.
@@ -63,24 +83,6 @@ fn refuse_stopped(entry: &ChangeEntry, folder: &str) -> Result<(), FeatureError>
 /// Builds a `Failed` error for the archive command.
 fn failed(message: impl fmt::Display) -> FeatureError {
     FeatureError::failed(COMMAND, message.to_string())
-}
-
-/// The first active change folder the argument names, by folder or leading digits.
-fn find(root: &Path, argument: &str) -> Result<ChangeEntry, FeatureError> {
-    list_changes(root)
-        .into_iter()
-        .find(|entry| entry.location == Location::Active && names(entry, argument))
-        .ok_or_else(|| failed(format_args!("no active change {argument}")))
-}
-
-/// Whether one change folder has the argument's name or leading digits.
-fn names(entry: &ChangeEntry, argument: &str) -> bool {
-    entry.folder == argument || leading_digits(&entry.folder) == argument
-}
-
-/// The leading digits of a folder name.
-fn leading_digits(folder: &str) -> String {
-    folder.chars().take_while(char::is_ascii_digit).collect()
 }
 
 /// Passes the approval, done and marker gates before anything is written.

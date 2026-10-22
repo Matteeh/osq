@@ -1,0 +1,45 @@
+name: 007-sample
+tip:
+osq: 007 approved
+
+commit:
+A	openspec/changes/007-sample/.run/approved
+A	openspec/changes/007-sample/.run/done/1
+A	openspec/changes/007-sample/.run/done/2
+A	openspec/changes/007-sample/.run/events/1.jsonl
+A	openspec/changes/007-sample/.run/events/2.jsonl
+A	openspec/changes/007-sample/notes/tasks.md
+A	openspec/changes/007-sample/notes/todo.md
+A	openspec/changes/007-sample/plan-prompt.md
+A	openspec/changes/007-sample/proposal.md
+A	openspec/changes/007-sample/specs/alpha/spec.md
+A	openspec/changes/007-sample/specs/beta/spec.md
+A	openspec/changes/007-sample/specs/epsilon/osq.yml
+A	openspec/changes/007-sample/specs/gamma/spec.md
+A	openspec/changes/007-sample/tasks.md
+A	openspec/changes/007-sample/tasks/1.md
+A	openspec/changes/007-sample/tasks/2.md
+status:
+D  openspec/changes/007-sample/plan-prompt.md
+D  openspec/changes/007-sample/tasks.md
+R  openspec/changes/007-sample/.run/approved -> openspec/changes/archive/007-sample/.run/approved
+R  openspec/changes/007-sample/.run/done/1 -> openspec/changes/archive/007-sample/.run/done/1
+R  openspec/changes/007-sample/.run/done/2 -> openspec/changes/archive/007-sample/.run/done/2
+R  openspec/changes/007-sample/.run/events/1.jsonl -> openspec/changes/archive/007-sample/.run/events/1.jsonl
+R  openspec/changes/007-sample/.run/events/2.jsonl -> openspec/changes/archive/007-sample/.run/events/2.jsonl
+R  openspec/changes/007-sample/notes/tasks.md -> openspec/changes/archive/007-sample/notes/tasks.md
+R  openspec/changes/007-sample/notes/todo.md -> openspec/changes/archive/007-sample/notes/todo.md
+R  openspec/changes/007-sample/proposal.md -> openspec/changes/archive/007-sample/proposal.md
+R  openspec/changes/007-sample/specs/alpha/spec.md -> openspec/changes/archive/007-sample/specs/alpha/spec.md
+R  openspec/changes/007-sample/specs/beta/spec.md -> openspec/changes/archive/007-sample/specs/beta/spec.md
+R  openspec/changes/007-sample/specs/epsilon/osq.yml -> openspec/changes/archive/007-sample/specs/epsilon/osq.yml
+R  openspec/changes/007-sample/specs/gamma/spec.md -> openspec/changes/archive/007-sample/specs/gamma/spec.md
+A  openspec/changes/archive/007-sample/tasks.md
+R  openspec/changes/007-sample/tasks/1.md -> openspec/changes/archive/007-sample/tasks/1.md
+R  openspec/changes/007-sample/tasks/2.md -> openspec/changes/archive/007-sample/tasks/2.md
+M  openspec/specs/alpha/spec.md
+D  openspec/specs/beta/osq.yml
+D  openspec/specs/beta/spec.md
+M  openspec/specs/epsilon/osq.yml
+A  openspec/specs/gamma/osq.yml
+A  openspec/specs/gamma/spec.md

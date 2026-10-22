@@ -2,7 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::{archive, relocate};
+use crate::archive;
 
 /// The archive feature: a unit struct with no state (ADR 028).
 ///
@@ -29,7 +29,7 @@ impl Feature for ArchiveFeature {
         )]
     }
 
-    /// Runs `archive` with one change argument, returning the archived path.
+    /// Runs `archive` with one change argument, returning where it archived.
     ///
     /// # Errors
     ///
@@ -39,6 +39,7 @@ impl Feature for ArchiveFeature {
     ///
     /// Implements: rust-archive/archive-arguments
     /// Implements: rust-archive/archive-move
+    /// Implements: rust-archive/worktree-archive
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
         if invocation.command != "archive" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));
@@ -52,9 +53,7 @@ impl Feature for ArchiveFeature {
                 ),
             ));
         }
-        let path = archive::run(&invocation.root, &invocation.args[0])?;
-        let archived = relocate::run(&invocation.root, &path)
-            .map_err(|error| FeatureError::failed("archive", error.to_string()))?;
-        Ok(Output::text(archived))
+        let text = archive::run(&invocation.root, &invocation.args[0])?;
+        Ok(Output::text(text))
     }
 }

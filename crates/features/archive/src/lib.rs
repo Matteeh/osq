@@ -4,7 +4,9 @@
 
 mod apply;
 mod archive;
+mod commit;
 mod feature;
+mod lookup;
 mod record;
 mod relocate;
 mod tick;
