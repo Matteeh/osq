@@ -1,0 +1,7 @@
+outcome: failed
+No active failure marker for change-level regression in 008-healthy; retry is refused.
+tree:
+--- .run/approved
+sha256:4c8566e4a12c8da8f29d2c731100232d7f96b0ec25a4f7564d8af8a0dfa6122c
+--- .run/done/1
+2026-10-01T10:00:00.000Z

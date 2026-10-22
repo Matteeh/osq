@@ -1,0 +1,17 @@
+outcome: output
+Retried 004 task 2 (next attempt: 2)
+  Reason: requirement_changed
+  Retained: .run/regressed/2.1.md
+  Retained: .run/done/2.1
+tree:
+--- .run/approved
+sha256:77227533404a0d7104a62c319ee46d792b62ad5c1d2e3cdbfd6a0f4f1e9ce826
+--- .run/done/2.1
+2026-10-01T10:00:00.000Z
+--- .run/events/2.jsonl
+{"data":{"attempt":2,"reason":"requirement_changed","target":"2"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/2.1.md
+---
+reason: requirement_changed
+---
+A requirement the task proves changed on main.

@@ -1,0 +1,17 @@
+outcome: output
+Retried 010 task 1 (next attempt: 2)
+  Reason: scope_regression
+  Retained: .run/regressed/1.1.md
+  Retained: .run/done/1.1
+tree:
+--- .run/approved
+sha256:2269cfe4f2c3b3d2e53228f48e88d2c58252330119949a129413b9411a28b2aa
+--- .run/done/1.1
+2026-10-01T10:00:00.000Z
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"scope_regression","target":"1"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/1.1.md
+---
+reason: scope_regression
+---
+- src/a.txt

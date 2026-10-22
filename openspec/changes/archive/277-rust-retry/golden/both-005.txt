@@ -1,0 +1,17 @@
+outcome: output
+Retried 005 task 1 (next attempt: 2)
+  Reason: regressed
+  Retained: .run/regressed/1.1.md
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:9104a0885f1fdbf40e6ad84f657ee89605a69ca434dd6794327e87dce9478b2f
+--- .run/dead/1.1.md
+---
+reason: timeout
+---
+The task ran out of time.
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"regressed","target":"1"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/1.1.md
+A regression marker with no frontmatter.

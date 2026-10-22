@@ -414,6 +414,9 @@ name = "osq-feature-retry"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "serde_json",
 ]
 
 [[package]]
