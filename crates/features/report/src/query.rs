@@ -1,13 +1,14 @@
 //! Running one read-only query over the read model.
 
 mod authorize;
+mod json;
 mod text;
 
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use osq_core::{FeatureError, Invocation, Output};
+use osq_core::{FeatureError, Output};
 use osq_kernel_storage::build_read_model;
 use rusqlite::{Connection, Statement};
 
@@ -26,11 +27,11 @@ const REFUSED: &str = "osq query refused: ";
 /// The message for an argument that holds no SQL statement.
 const NO_STATEMENT: &str = "The SQL query contains no statements.";
 
-/// Runs the report feature's `query` for one invocation.
+/// Runs the report feature's `query` for one select and output mode.
 ///
-/// With no argument, or one that is blank, it returns the table list and
+/// With no select, or one that is blank, it returns the table list and
 /// touches no file. Otherwise it builds the read model and prints one
-/// statement's rows.
+/// statement's rows, as text or JSON.
 ///
 /// # Errors
 ///
@@ -40,11 +41,16 @@ const NO_STATEMENT: &str = "The SQL query contains no statements.";
 /// Implements: rust-report/query-output-parity
 /// Implements: rust-report/query-table-list
 /// Implements: rust-report/query-rows
-pub(super) fn run_query(invocation: &Invocation) -> Result<Output, FeatureError> {
-    match invocation.args.first() {
+/// Implements: rust-report/query-json-output
+pub(super) fn run_query(
+    root: &Path,
+    select: Option<&str>,
+    json: bool,
+) -> Result<Output, FeatureError> {
+    match select {
         None => Ok(Output::text(text::table_list())),
         Some(select) if select.trim().is_empty() => Ok(Output::text(text::table_list())),
-        Some(select) => query_rows(&invocation.root, select),
+        Some(select) => query_rows(root, select, json),
     }
 }
 
@@ -66,7 +72,8 @@ fn prepare_directory(root: &Path) -> Result<PathBuf, FeatureError> {
 /// Implements: rust-report/query-rows
 /// Implements: rust-report/query-errors
 /// Implements: rust-report/query-refusals
-fn query_rows(root: &Path, select: &str) -> Result<Output, FeatureError> {
+/// Implements: rust-report/query-json-output
+fn query_rows(root: &Path, select: &str, json: bool) -> Result<Output, FeatureError> {
     let absolute = std::path::absolute(root).map_err(|error| failed(error.to_string()))?;
     {
         let validation = authorize::schema_database()?;
@@ -80,26 +87,32 @@ fn query_rows(root: &Path, select: &str) -> Result<Output, FeatureError> {
     let home = env::var("HOME").unwrap_or_default();
     let mut statement =
         authorize::prepare(&connection, select)?.ok_or_else(|| refused(NO_STATEMENT))?;
-    let rows = read_rows(&mut statement, &absolute.to_string_lossy(), &home)?;
+    let rows = read_rows(&mut statement, &absolute.to_string_lossy(), &home, json)?;
     Ok(Output::text(rows))
 }
 
-/// Formats the prepared statement's header and rows.
+/// Formats the prepared statement's rows as text or as one JSON array.
 ///
 /// Implements: rust-report/query-output-parity
 /// Implements: rust-report/query-rows
 /// Implements: rust-report/query-errors
+/// Implements: rust-report/query-json-output
 fn read_rows(
     statement: &mut Statement<'_>,
     root: &str,
     home: &str,
+    json: bool,
 ) -> Result<String, FeatureError> {
     let columns = statement
         .column_names()
         .iter()
         .map(|name| (*name).to_owned())
         .collect::<Vec<_>>();
-    let mut lines = vec![columns.join("\t")];
+    let mut output = if json {
+        Vec::new()
+    } else {
+        vec![columns.join("\t")]
+    };
     let mut rows = statement
         .query([])
         .map_err(|error| failed(sqlite_message(&error)))?;
@@ -112,11 +125,23 @@ fn read_rows(
             let value = row
                 .get_ref(index)
                 .map_err(|error| failed(sqlite_message(&error)))?;
-            cells.push(text::cell_text(value, root, home));
+            cells.push(if json {
+                json::value_text(value, root, home)
+            } else {
+                text::cell_text(value, root, home)
+            });
         }
-        lines.push(cells.join("\t"));
+        output.push(if json {
+            json::object_text(&columns, &cells)
+        } else {
+            cells.join("\t")
+        });
     }
-    Ok(lines.join("\n"))
+    if json {
+        Ok(format!("[{}]", output.join(",")))
+    } else {
+        Ok(output.join("\n"))
+    }
 }
 
 /// A refusal: the cause, a newline and the table list.

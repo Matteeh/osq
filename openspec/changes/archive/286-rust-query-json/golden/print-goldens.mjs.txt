@@ -1,0 +1,64 @@
+// Prints TypeScript's `osq query --json` result for each case of rust-report
+// "Golden JSON query output" into queries-json.json.
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <scratch folder> <output file>
+// Each case runs the built `runQuery` with `{ json: true }` and the default
+// config on a fresh copy of its fixture from crates/features/report/tests/fixtures/,
+// as `osq query --json` does. A case that returns gives `output` and the
+// returned text; a case that throws a QueryError gives `failed` and its message.
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const load = (file) => import(pathToFileURL(path.resolve(file)).href);
+const { DEFAULT_CONFIG } = await load('dist/index.js');
+const { QueryError, runQuery } = await load('dist/core/report/query-run.js');
+
+const FIXTURES = path.resolve('crates/features/report/tests/fixtures');
+const [scratch, output] = process.argv.slice(2);
+
+const TABLES = [
+  'changes', 'requirements', 'tasks', 'dead_attempts', 'disclosures', 'notices',
+  'validator_runs', 'validator_findings', 'focused_runs', 'mutation_picks',
+  'mutation_survivors', 'link_findings', 'task_outcomes', 'pauses',
+  'recertifications', 'manual_edits',
+];
+
+const cases = [
+  ['table-list', 'history', null],
+  ['blank-select', 'history', '  \n'],
+  ...TABLES.map((table) => [`all-${table.replaceAll('_', '-')}`, 'history', `SELECT * FROM ${table}`]),
+  ['empty-result', 'history', 'SELECT id, title FROM changes WHERE 0'],
+  ['grouped-count', 'history', 'SELECT task, count(*) AS n FROM recertifications GROUP BY task ORDER BY task'],
+  ['join', 'history', 'SELECT c.title, t.task, t.title FROM changes c JOIN tasks t ON t.change = c.folder ORDER BY t.task'],
+  ['trailing-semicolon', 'history', 'SELECT id, title FROM changes ORDER BY id;  \n'],
+  ['literal-values', 'history', "SELECT NULL AS empty, 'a' || char(10) || 'b' AS lines, 1.5 AS real, 7 AS whole, x'0102' AS bytes"],
+  ['empty-blob', 'history', "SELECT x'' AS empty_bytes, zeroblob(3) AS zeros"],
+  ['integers', 'history', 'SELECT 0 AS zero, -7 AS negative, 9007199254740991 AS largest, -9007199254740991 AS smallest'],
+  ['reals', 'history', 'SELECT 1e21 AS a, 1e20 AS b, 1e-7 AS c, 0.000001 AS d, 2.0 AS e, -0.0 AS f, 0.1 + 0.2 AS g, 1.0 / 3 AS h, 5e-324 AS i, 1.7976931348623157e308 AS j, -1.5e-10 AS k, 123456.789 AS l, 1e300 * 1e300 AS m, -1e300 * 1e300 AS n'],
+  ['string-escapes', 'history', `SELECT '"q" \\ /' AS quotes, char(8) || char(9) || char(10) || char(12) || char(13) AS named, char(0) || char(1) || char(27) || char(31) AS control, char(8232) || char(8233) AS raw`],
+  ['non-ascii', 'history', `SELECT 'é ü' AS latin, char(128512) AS emoji, char(55296) AS surrogate`],
+  ['key-escapes', 'history', `SELECT 1 AS "a""b", 2 AS "c\\d"`],
+  ['integer-keys', 'history', `SELECT 'x' AS b, 2, 'y' AS a, 1, 10 AS "10", 4294967295 AS "4294967295", 4294967294 AS "4294967294", 3 AS "01", 4 AS "-1", 5 AS "1.5"`],
+  ['duplicate-keys', 'history', 'SELECT 1 AS a, 2 AS b, 3 AS a, 4 AS "2", 5 AS "2"'],
+  ['refused-delete', 'history', 'DELETE FROM changes'],
+  ['refused-second-select', 'history', 'SELECT 1; SELECT 2'],
+  ['sqlite-error-no-statement', 'history', ';'],
+  ['sqlite-error-syntax', 'history', 'SELEC 1'],
+  ['labels-error', 'bad-labels', 'SELECT 1'],
+];
+
+const results = [];
+for (const [name, fixture, select] of cases) {
+  const root = path.join(path.resolve(scratch), name);
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.cpSync(path.join(FIXTURES, fixture), root, { recursive: true });
+  try {
+    const text = await runQuery(root, DEFAULT_CONFIG, select, { json: true });
+    results.push({ name, fixture, select, result: 'output', text });
+  } catch (error) {
+    if (!(error instanceof QueryError)) throw error;
+    results.push({ name, fixture, select, result: 'failed', text: error.message });
+  }
+}
+fs.writeFileSync(output, `${JSON.stringify(results, null, 2)}\n`);

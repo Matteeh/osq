@@ -24,24 +24,25 @@ fn report_feature_commands() {
         commands[0].summary,
         "run one read-only SELECT over the osq history tables"
     );
-    assert_eq!(commands[0].usage, "[select]");
+    assert_eq!(commands[0].usage, "[--json] [select]");
 }
 
-/// Proves both argument-error rows and that neither writes a file.
+/// Proves every argument-error row and that none writes a file.
 ///
 /// Covers: rust-report/query-argument-errors
 #[test]
 fn query_argument_errors() {
     let root = history_root();
-    let result = ReportFeature.run(&Invocation::new(
-        &root,
-        "query",
+    for args in [
         vec!["a".to_owned(), "b".to_owned()],
-    ));
-    assert_eq!(
-        result.expect_err("two arguments fail").to_string(),
-        "usage of query: expected at most one select, got 2 arguments"
-    );
+        vec!["--json".to_owned(), "a".to_owned(), "b".to_owned()],
+    ] {
+        let result = ReportFeature.run(&Invocation::new(&root, "query", args));
+        assert_eq!(
+            result.expect_err("two selects fail").to_string(),
+            "usage of query: expected at most one select, got 2 arguments"
+        );
+    }
     let result = ReportFeature.run(&Invocation::new(&root, "report", Vec::new()));
     assert_eq!(
         result.expect_err("an unknown command fails").to_string(),

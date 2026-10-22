@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:9fc73749d305c5f86e8ad4d301066d68ced48c59cdc9f7b528ddb9e6c50805d4"
+build_stamp: "63250a84"
+project_commit: "24684253"
+exit_code: 0
+scope_files: {"crates/features/report/src/feature.rs":"sha256:f832d260f34739e1338386ff1f46ab5a4225725bb1142edcbedad8477f58e129","crates/features/report/src/query.rs":"sha256:65e5ebc22e81670e06213703526cc80e129f4fef37f831411be2f2d3f8cc53b5","crates/features/report/src/query/json.rs":"sha256:a7df3fab127088cf05355ee96ef5fe67a7006b6928da7463af9f9e4d35fafe94","crates/features/report/src/query/text.rs":"sha256:0a35f069289db7f976fd5a1332a2ba19e1aca620f6209c5a58c70bb1e76329fb","crates/features/report/tests/fixtures/queries-json.json":"sha256:55d2fc32e0d5e13fd47296824b680d3af0d86cc7b565067f127c8fec3d3ead68","crates/features/report/tests/query_json.rs":"sha256:6d7dc8eca7303f546f99467f149ff8a11ca19c31b79a992df3728a6379e706c9","crates/features/report/tests/report_feature.rs":"sha256:4edbef3549a8946f62098169ad03772785b327f235ec663da5d2389c5159d447"}
+---
+2026-10-22T14:23:50.923Z
