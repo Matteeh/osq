@@ -1,22 +1,71 @@
-//! Finding the active change a steering id names.
+//! Finding the change a steering id names.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use osq_kernel_storage::{ChangeEntry, Location, list_changes};
+use osq_core::FeatureError;
+use osq_kernel_config::{Config, load_config};
+use osq_kernel_storage::{ChangeEntry, ChangeTree, list_changes, list_tree_changes};
 
-/// Finds the first active change whose name matches `id`.
+use crate::trees;
+
+/// One change the lookup may steer, with the root of the tree it sits in.
+pub(super) struct Found {
+    /// The change folder.
+    pub(super) entry: ChangeEntry,
+    /// The root of the tree the change sits in.
+    pub(super) tree_root: PathBuf,
+    /// Whether the tree names the change folder.
+    pub(super) named: bool,
+}
+
+/// Reads the root's config and lists every change the lookup may steer.
+///
+/// # Errors
+///
+/// Returns the display of the first config or git error.
 ///
 /// Implements: rust-plan/steering-lookup
-pub(super) fn find(root: &Path, id: &str) -> Option<ChangeEntry> {
-    list_changes(root)
-        .into_iter()
-        .find(|entry| entry.location == Location::Active && matches(&entry.folder, id))
+pub(super) fn candidates(root: &Path) -> Result<(Config, Vec<Found>), FeatureError> {
+    let config =
+        load_config(root).map_err(|error| FeatureError::failed("plan", error.to_string()))?;
+    if !config.vcs.enabled {
+        let found = list_changes(root)
+            .into_iter()
+            .map(|entry| Found {
+                entry,
+                tree_root: root.to_path_buf(),
+                named: false,
+            })
+            .collect();
+        return Ok((config, found));
+    }
+    let tree_set = trees::list(root, &config, false)
+        .map_err(|message| FeatureError::failed("plan", message))?;
+    Ok((config, found_in(&tree_set.trees)))
+}
+
+/// Every change of every tree, each with the tree that holds it.
+///
+/// Implements: rust-plan/steering-lookup
+fn found_in(trees: &[ChangeTree]) -> Vec<Found> {
+    let mut found = Vec::new();
+    for entry in list_tree_changes(trees) {
+        let Some(tree) = trees.iter().find(|tree| entry.path.starts_with(&tree.root)) else {
+            continue;
+        };
+        found.push(Found {
+            named: tree.folder.as_deref() == Some(entry.folder.as_str()),
+            tree_root: tree.root.clone(),
+            entry,
+        });
+    }
+    found
 }
 
 /// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
 ///
 /// Implements: rust-plan/steering-lookup
-fn matches(folder: &str, query: &str) -> bool {
+pub(super) fn matches(folder: &str, query: &str) -> bool {
     let trimmed = query.trim();
     let padded = padded(trimmed);
     matches_prefix(folder, trimmed) || matches_prefix(folder, &padded)

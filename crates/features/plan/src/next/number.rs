@@ -1,11 +1,13 @@
 //! Choosing the next change number from the checkout's change folders and,
 //! with vcs enabled, every worktree, stacked approval and `osq/` branch.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use osq_kernel_config::{Config, VcsConfig, load_config};
-use osq_kernel_storage::{TreeCandidate, change_trees, list_tree_changes};
-use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
+use osq_kernel_config::{Config, load_config};
+use osq_kernel_storage::list_tree_changes;
+use osq_kernel_vcs::Vcs;
+
+use crate::trees;
 
 /// The branch prefix every osq change branch carries.
 const BRANCH_PREFIX: &str = "osq/";
@@ -56,15 +58,13 @@ fn checkout_highest(root: &Path) -> u128 {
 ///
 /// Implements: rust-plan/next-change-number
 fn trees_highest(root: &Path, config: &Config) -> Result<u128, String> {
-    let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let worktrees = vcs.worktree_list().map_err(|error| error.to_string())?;
-    let branches = vcs
+    let tree_set = trees::list(root, config, true)?;
+    let branches = tree_set
+        .vcs
         .list_branches(BRANCH_PREFIX)
         .map_err(|error| error.to_string())?;
-    let candidates: Vec<TreeCandidate> = worktrees.into_iter().map(candidate).collect();
-    let stacked = stacked_folders(&vcs, root, &config.vcs)?;
     let mut highest = 0_u128;
-    for entry in list_tree_changes(&change_trees(root, &candidates, &stacked)) {
+    for entry in list_tree_changes(&tree_set.trees) {
         if let Some(number) = leading_number(&entry.folder) {
             highest = highest.max(number);
         }
@@ -75,39 +75,6 @@ fn trees_highest(root: &Path, config: &Config) -> Result<u128, String> {
         }
     }
     Ok(highest)
-}
-
-/// Turns one git worktree into a tree candidate.
-///
-/// Implements: rust-plan/next-change-number
-fn candidate(worktree: Worktree) -> TreeCandidate {
-    TreeCandidate {
-        path: PathBuf::from(worktree.path),
-        branch: worktree.branch,
-    }
-}
-
-/// The folders directly under the stacked approvals root, or none when the
-/// home is unset or the root cannot be read.
-///
-/// Implements: rust-plan/next-change-number
-fn stacked_folders(vcs: &GitVcs, root: &Path, config: &VcsConfig) -> Result<Vec<PathBuf>, String> {
-    let Some(home) = std::env::var_os("HOME") else {
-        return Ok(Vec::new());
-    };
-    let repo_root = vcs
-        .root()
-        .map_err(|error| error.to_string())?
-        .unwrap_or_else(|| root.to_path_buf());
-    let stacked = stacked_root(config, &repo_root, Path::new(&home));
-    let Ok(entries) = std::fs::read_dir(&stacked) else {
-        return Ok(Vec::new());
-    };
-    Ok(entries
-        .flatten()
-        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
-        .map(|entry| entry.path())
-        .collect())
 }
 
 /// Reads an entry name's leading digits into their value.

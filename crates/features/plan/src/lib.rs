@@ -7,5 +7,6 @@ mod feature;
 mod next;
 mod queue;
 mod steer;
+mod trees;
 
 pub use feature::PlanFeature;

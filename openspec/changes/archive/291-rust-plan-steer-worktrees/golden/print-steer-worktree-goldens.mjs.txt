@@ -1,0 +1,107 @@
+// Prints TypeScript's `osq plan <id>` handoff and steering `plan-prompt.md`
+// for each row of rust-plan "Steering in worktrees equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-steer-worktree-goldens.mjs <fixture steer-worktrees> <golden folder>
+// Each case builds a fresh scratch git repository: `<scratch>/repo` on `trunk`
+// holding the fixture's `project/`, an `osq.config.mjs` and an `osq.toml`
+// that turn git on with the default branch `trunk`, committed as `init`. Each
+// folder under the fixture's `changes/` then gets its own worktree at
+// `<scratch>/trees/<folder>` on a new branch `osq/<folder>` from `trunk`,
+// holding the folder at `openspec/changes/<folder>`, or at
+// `openspec/changes/archive/<folder>` for `003-land-stop`, with `.run/base`
+// holding `init`'s commit id, committed as `osq: <folder>`. Then `trunk` takes
+// the fixture's `trunk/` over the repository, committed as `trunk moves`. The
+// built CLI runs `plan <id>` with `repo` as the working directory.
+// `<name>.out.txt` holds the handoff, or `failed: ` and the error message for
+// a failed run; `<name>.prompt.txt` holds the change's new plan-prompt.md.
+// Both write the scratch folder's path `<scratch>`.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.com>';
+const ARCHIVED = new Set(['003-land-stop']);
+
+const cases = [
+  { name: 'blocked-001', folder: '001-blocked', args: ['1'] },
+  { name: 'requirement-002', folder: '002-requirement', args: ['002'] },
+  { name: 'land-stop-003', folder: '003-land-stop', args: ['3'] },
+  { name: 'healthy-004', folder: '004-healthy', args: ['4'] },
+  { name: 'conflict-005', folder: '005-conflict', args: ['5'] },
+];
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function changePath(scratch, folder) {
+  const changes = (root) => path.join(root, 'openspec', 'changes');
+  if (folder === '005-conflict') return path.join(changes(path.join(scratch, 'repo')), folder);
+  const tree = path.join(scratch, 'trees', folder);
+  if (ARCHIVED.has(folder)) return path.join(changes(tree), 'archive', folder);
+  return path.join(changes(tree), folder);
+}
+
+function repository(scratch) {
+  const repo = path.join(scratch, 'repo');
+  fs.mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'trunk']);
+  git(repo, ['config', 'user.name', 'osq']);
+  git(repo, ['config', 'user.email', 'osq@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.cpSync(path.join(fixture, 'project'), repo, { recursive: true });
+  fs.writeFileSync(
+    path.join(repo, 'osq.config.mjs'),
+    `export default { vcs: { enabled: true, author: '${AUTHOR}', defaultBranch: 'trunk' } };\n`,
+  );
+  fs.writeFileSync(
+    path.join(repo, 'osq.toml'),
+    `[vcs]\nenabled = true\nauthor = "${AUTHOR}"\ndefaultBranch = "trunk"\n`,
+  );
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'init']);
+  const base = git(repo, ['rev-parse', 'HEAD']).trim();
+  for (const folder of fs.readdirSync(path.join(fixture, 'changes')).sort()) {
+    const worktree = path.join(scratch, 'trees', folder);
+    git(repo, ['worktree', 'add', '-q', '-b', `osq/${folder}`, worktree, 'trunk']);
+    const target = changePath(scratch, folder);
+    fs.cpSync(path.join(fixture, 'changes', folder), target, { recursive: true });
+    fs.writeFileSync(path.join(target, '.run', 'base'), `${base}\n`);
+    git(worktree, ['add', '-A']);
+    git(worktree, ['commit', '-q', '-m', `osq: ${folder}`]);
+  }
+  fs.cpSync(path.join(fixture, 'trunk'), repo, { recursive: true });
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'trunk moves']);
+  return repo;
+}
+
+for (const c of cases) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-steer-trees-')));
+  const repo = repository(scratch);
+  const run = spawnSync(process.execPath, [BIN, 'plan', ...c.args], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  const mask = (text) => text.split(scratch).join('<scratch>');
+  let out;
+  if (run.status === 0) {
+    if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+    out = run.stdout;
+  } else {
+    if (run.stdout !== '') throw new Error(`${c.name}: unexpected stdout ${run.stdout}`);
+    out = `failed: ${run.stderr}`;
+  }
+  fs.writeFileSync(path.join(golden, `${c.name}.out.txt`), mask(out));
+  const promptPath = path.join(changePath(scratch, c.folder), 'plan-prompt.md');
+  if (fs.existsSync(promptPath)) {
+    fs.writeFileSync(path.join(golden, `${c.name}.prompt.txt`), mask(fs.readFileSync(promptPath, 'utf8')));
+  }
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

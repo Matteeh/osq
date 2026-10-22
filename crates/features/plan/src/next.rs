@@ -56,13 +56,7 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
         .join("commands")
         .join("osq-plan.md")
         .is_file();
-    Ok(handoff::format(
-        root,
-        &folder,
-        &number,
-        "unplanned",
-        command,
-    ))
+    Ok(handoff::format(&change, &number, "unplanned", command))
 }
 
 /// Reads each active change folder that has a proposal or a spec.

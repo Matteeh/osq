@@ -1,0 +1,39 @@
+# Planning a change
+
+Plan the steered change carefully.
+
+# Change: 005 - A checkout conflict
+Change ID: 005
+Change Folder: 005-conflict
+
+## Capability Specs
+
+All living specs. Read the requirements this change writes or whose code it uses, not whole specs: `osq spec <capability>` lists them and `osq spec <capability> <requirement>` prints one.
+
+- openspec/specs/alpha/spec.md
+
+## Brief
+
+### Goal
+
+Conflict in the checkout.
+
+## This repository's record
+
+This repository's measured record is too small (fewer than 5 tasks).
+
+## Steering
+
+osq halted this change and asks you to revise its plan.
+
+### change conflict (sync_conflict)
+Evidence: <scratch>/repo/openspec/changes/005-conflict/.run/regressed/change.md
+
+```
+Merging trunk conflicted in src/one.txt.
+```
+
+The change runs in <scratch>/repo; read its code there. Edit only <scratch>/repo/openspec/changes/005-conflict.
+Approval restarts osq/005-conflict from trunk, and every task runs again.
+Every task runs again after the restart. Revise any task the conflict shows is wrong.
+Run `osq lint 005` and fix every finding. A human runs `osq approve 005`, and the run continues from the first task that is not done.

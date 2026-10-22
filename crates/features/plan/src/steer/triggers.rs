@@ -68,10 +68,15 @@ impl Trigger {
         format!(".run/{folder}/{name}.md")
     }
 
-    /// Whether the trigger needs the default branch, which this port leaves out.
+    /// Whether the trigger needs the default branch.
     pub(super) fn has_default(&self) -> bool {
         matches!(self.kind, Kind::Conflict | Kind::RequirementChanged)
             || (self.kind == Kind::Regression && self.reason == "sync_verify_red")
+    }
+
+    /// Whether the trigger is a changed requirement.
+    pub(super) fn is_requirement_changed(&self) -> bool {
+        self.kind == Kind::RequirementChanged
     }
 
     /// Whether the trigger is a sync conflict.

@@ -1,0 +1,6 @@
+<scratch>/trees/002-requirement/openspec/changes/002-requirement: ask your planning tool to plan change 002-requirement — next: dead (needs steering) — osq plan 002
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 002-requirement.
+Read <scratch>/trees/002-requirement/openspec/changes/002-requirement/plan-prompt.md and follow it exactly; it is your complete prompt.
