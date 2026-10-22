@@ -1,0 +1,29 @@
+out:
+Rejected 001 (001-alpha)
+  Reason: why
+  Worktree removed: <scratch>/trees/001-alpha
+  Branch kept: osq/001-alpha
+branches:
+osq/001-alpha
+worktrees:
+<scratch>/repo
+tip:
+osq: 001 rejected
+
+why
+rejected to openspec/changes/rejected/001-alpha
+
+Osq-Change: 001-alpha
+
+commit:
+D	openspec/changes/001-alpha/.run/approved
+D	openspec/changes/001-alpha/.run/dead/1.md
+D	openspec/changes/001-alpha/proposal.md
+D	openspec/changes/001-alpha/tasks/1.md
+A	openspec/changes/rejected/001-alpha/.run/approved
+A	openspec/changes/rejected/001-alpha/.run/dead/1.md
+A	openspec/changes/rejected/001-alpha/.run/events/change.jsonl
+A	openspec/changes/rejected/001-alpha/.run/rejected.md
+A	openspec/changes/rejected/001-alpha/proposal.md
+A	openspec/changes/rejected/001-alpha/tasks/1.md
+status:

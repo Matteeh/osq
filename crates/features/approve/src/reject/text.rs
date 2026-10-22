@@ -2,6 +2,8 @@
 
 use std::path::Path;
 
+use super::worktree::Outcome;
+
 /// The refusal for an active change whose rejected destination exists.
 ///
 /// Implements: rust-approve/reject-refusals
@@ -38,8 +40,29 @@ pub(crate) fn rejected(folder: &str, reason: &str, destination: &Path) -> String
     )
 }
 
+/// The lines a worktree rejection prints.
+///
+/// Implements: rust-approve/worktree-rejection
+pub(crate) fn worktree_rejected(folder: &str, reason: &str, outcome: &Outcome) -> String {
+    let kept = if outcome.removed {
+        format!("  Worktree removed: {}\n", outcome.tree.display())
+    } else {
+        format!(
+            "  Worktree kept: {} ({})\n",
+            outcome.tree.display(),
+            outcome.why.as_deref().unwrap_or_default()
+        )
+    };
+    format!(
+        "Rejected {} ({folder})\n  Reason: {reason}\n{kept}  Branch kept: osq/{folder}\n",
+        id(folder)
+    )
+}
+
 /// A folder's leading digits, or the whole name when it has none.
-fn id(folder: &str) -> &str {
+///
+/// Implements: rust-approve/rejection-record
+pub(crate) fn id(folder: &str) -> &str {
     let digits = folder.bytes().take_while(u8::is_ascii_digit).count();
     if digits == 0 {
         folder

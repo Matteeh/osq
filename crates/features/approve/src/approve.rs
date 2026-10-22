@@ -83,7 +83,7 @@ pub(crate) fn run_approve(
 /// The repository root when git is on, meaning git's top level is `root` itself.
 ///
 /// Implements: rust-approve/worktree-approval
-fn git_repo(root: &Path, config: &Config) -> Option<PathBuf> {
+pub(crate) fn git_repo(root: &Path, config: &Config) -> Option<PathBuf> {
     if !config.vcs.enabled {
         return None;
     }

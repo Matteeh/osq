@@ -1,0 +1,22 @@
+out:
+Rejected 003 (003-root)
+  Reason: why
+  Destination: <scratch>/repo/openspec/changes/rejected/003-root
+branches:
+worktrees:
+<scratch>/repo
+tip:
+init
+
+commit:
+A	README.md
+A	openspec/changes/003-root/proposal.md
+A	openspec/changes/003-root/tasks/1.md
+A	osq.toml
+status:
+ D openspec/changes/003-root/proposal.md
+ D openspec/changes/003-root/tasks/1.md
+?? openspec/changes/rejected/003-root/.run/events/change.jsonl
+?? openspec/changes/rejected/003-root/.run/rejected.md
+?? openspec/changes/rejected/003-root/proposal.md
+?? openspec/changes/rejected/003-root/tasks/1.md
