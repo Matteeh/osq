@@ -16,6 +16,7 @@ use osq_feature_lint::LintFeature;
 use osq_feature_plan::PlanFeature;
 use osq_feature_report::ReportFeature;
 use osq_feature_retry::RetryFeature;
+use osq_feature_run::RunFeature;
 use osq_feature_show::ShowFeature;
 
 /// The first line of the top-level help.
@@ -42,6 +43,7 @@ pub fn features() -> Vec<Box<dyn Feature>> {
     vec![
         Box::new(PlanFeature::new()),
         Box::new(ApproveFeature),
+        Box::new(RunFeature),
         Box::new(ArchiveFeature),
         Box::new(LandFeature),
         Box::new(InboxFeature::new()),

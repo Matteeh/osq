@@ -95,10 +95,50 @@ fn registered_features() {
     assert_eq!(
         names,
         [
-            "plan", "approve", "archive", "land", "inbox", "report", "show", "lint", "doctor",
-            "retry",
+            "plan", "approve", "run", "archive", "land", "inbox", "report", "show", "lint",
+            "doctor", "retry",
         ]
     );
+}
+
+/// Proves each run row through the real registry, leaving the root empty.
+///
+/// Covers: rust-cli/run-through-the-registry
+#[test]
+fn run_through_the_registry() {
+    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join("dispatch-run-through-the-registry");
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("the scratch root is created");
+    let cases: [(&[&str], String); 2] = [
+        (
+            &["run", "1"],
+            "usage of run: expected <id> <task>\n".to_owned(),
+        ),
+        (
+            &["run", "1", "1"],
+            format!(
+                "run failed: Spec \"1\" not found in {}/openspec/changes\n",
+                root.display()
+            ),
+        ),
+    ];
+    let registry = features();
+    for (arguments, stderr) in cases {
+        let result = run_cli(&registry, &root, &args(arguments));
+        assert_eq!(
+            result,
+            CliResult {
+                stdout: String::new(),
+                stderr,
+                code: 1,
+            },
+            "{arguments:?}"
+        );
+        let entries = fs::read_dir(&root)
+            .expect("the scratch root is read")
+            .count();
+        assert_eq!(entries, 0, "the root stays empty after {arguments:?}");
+    }
 }
 
 /// Proves every help row, byte for byte.
