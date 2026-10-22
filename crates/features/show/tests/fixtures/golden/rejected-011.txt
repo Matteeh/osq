@@ -1,0 +1,43 @@
+Spec: 011-rejected (011)
+Title: Alpha counts twice
+Status: [unapproved]
+Location: active
+Approval: unapproved
+Depends on: none
+Features:
+  Reads: none
+  Writes: none
+
+Goal:
+  Alpha counts every call twice. Nobody wanted that. It was rejected.
+
+Tasks:
+  [ ] 1. When alpha is called, it counts twice [pending]
+      Verify: node --test tests/alpha.test.ts
+      Scope: src/alpha.ts
+      Acceptance:
+        - [ ] One call counts two.
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  2026-10-06T09:00:00.000Z [Task change] rejected (reason: Nobody wants double counting.)
+Change: 011-rejected
+Goal: Alpha counts every call twice. Nobody wanted that.
+Before approval, do these first:
+  - Ask whether anyone wants double counting.
+Tasks:
+  1. When alpha is called, it counts twice (1 scope file)
+Capabilities:
+  (none)
+Decisions:
+  ADR 001: Every change keeps the test suite green.
+Human steps:
+  ### Before approval
+  
+  - Ask whether anyone wants double counting.
+  
+  ### After landing
+  
+  None

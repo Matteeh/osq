@@ -1,0 +1,21 @@
+diff --git a/openspec/changes/274-rust-show/.run/dead/1.md b/openspec/changes/274-rust-show/.run/dead/1.md
+new file mode 100644
+index 00000000..05816d6c
+--- /dev/null
++++ b/openspec/changes/274-rust-show/.run/dead/1.md
+@@ -0,0 +1,8 @@
++---
++reason: crashed
++pid: 3060070
++started_at: 2026-10-22T08:03:41.481Z
++reaped_at: 2026-10-22T08:06:05.594Z
++fingerprint: sha256:c0d7f94d6155e0a95721649b815b7052f5ccdb9af12f765c07fa491acffa8f0e
++---
++Task execution terminated by watcher reaper (crashed).
+diff --git a/openspec/changes/274-rust-show/.run/events/1.jsonl b/openspec/changes/274-rust-show/.run/events/1.jsonl
+new file mode 100644
+index 00000000..64a95223
+--- /dev/null
++++ b/openspec/changes/274-rust-show/.run/events/1.jsonl
+@@ -0,0 +1 @@
++{"type":"dead","timestamp":"2026-10-22T08:06:05.597Z","data":{"task":"1","reason":"crashed"}}

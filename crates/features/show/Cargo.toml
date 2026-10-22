@@ -12,3 +12,9 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-storage.workspace = true
+osq-kernel-specs.workspace = true
+osq-kernel-loop.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+yaml-rust2.workspace = true

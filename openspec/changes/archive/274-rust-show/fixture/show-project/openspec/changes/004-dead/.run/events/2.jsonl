@@ -1,0 +1,1 @@
+{"type":"verify_ran","timestamp":"2026-10-04T08:59:00.000Z","data":{"command":"node --test tests/beta.test.ts","phase":"pre_spawn","expected":"red"}}

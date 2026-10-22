@@ -1,0 +1,55 @@
+Spec: 002-approved (002)
+Title: Beta prints the count
+Status: [pending]
+Next: running — osq show 002
+Location: active
+Approval: approved (sha256:approved-002)
+Depends on: none
+Features:
+  Reads: alpha
+  Writes: beta
+
+Goal:
+  Beta prints alpha's count.
+
+Contract:
+  ### Requirement: Beta prints
+  Beta SHALL print the count.
+  
+  #### Scenario: Beta prints
+  - **WHEN** beta runs
+  - **THEN** it prints the count
+
+Tasks:
+  [x] 1. When beta runs, it prints the count [done]
+      Verify: node --test tests/beta.test.ts
+      Pre-spawn verify: started red: tests/beta.test.ts missing
+      Dependencies added: serde (Cargo.toml), left-pad (package.json)
+      Scope: src/beta.ts, tests/beta.test.ts
+      Acceptance:
+        - [x] Beta prints the count.
+      Result:
+        ## Changed
+        
+        - Beta prints the count.
+        
+        Touched: src/beta.ts, tests/beta.test.ts
+  [ ] 2. When beta prints, it adds a newline [pending]
+      Verify: node --test tests/beta.test.ts
+      Pre-spawn verify: started green, but it declared red
+      Instructions changed after approval: scope, verify
+      Scope: src/beta.ts
+      Acceptance:
+        - [ ] The printed count ends with a newline.
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  2026-10-02T09:00:00.000Z [Task 1] verify_ran (command: node --test tests/beta.test.ts, exitCode: 1, duration: 0.25, phase: pre_spawn, expected: red, missingPaths: tests/beta.test.ts)
+  2026-10-02T09:00:01.000Z [Task 1] started (harness: pi, model: deepseek-flash, attempt: 1)
+  2026-10-02T09:05:00.000Z [Task 1] dependencies_added (added: [object Object],[object Object],[object Object],[object Object])
+  2026-10-02T09:06:00.000Z [Task 1] verify_ran (command: node --test tests/beta.test.ts, exitCode: 0, duration: 1.5, ok: true, tags: fast,,7,nested, note: null)
+  2026-10-02T09:06:01.000Z [Task 1] done
+  2026-10-02T10:00:00.000Z [Task 2] instructions_changed (changed: scope,verify)
+  2026-10-02T10:00:05.000Z [Task 2] verify_ran (command: node --test tests/beta.test.ts, exitCode: 0, duration: 0.5, phase: pre_spawn, expected: red)

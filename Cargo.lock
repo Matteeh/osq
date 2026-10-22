@@ -438,6 +438,12 @@ name = "osq-feature-show"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-loop",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "serde",
+ "serde_json",
+ "yaml-rust2",
 ]
 
 [[package]]

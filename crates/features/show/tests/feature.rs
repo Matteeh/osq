@@ -1,9 +1,9 @@
-//! Proves the empty show feature's name, commands and refusals.
+//! Proves the show feature's name, command and refusal.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use osq_core::{Feature, Invocation};
+use osq_core::{Command, Feature, FeatureError, Invocation};
 use osq_feature_show::ShowFeature;
 
 /// Creates an empty scratch project root for one test.
@@ -14,26 +14,25 @@ fn scratch(name: &str) -> PathBuf {
     root
 }
 
-/// Proves both rows of "Empty show feature".
+/// Proves the feature's name, its one command and its refusal of another command.
 ///
-/// Covers: rust-show/empty-show-feature
+/// Covers: rust-show/show-feature-commands
 #[test]
-fn empty_show_feature() {
+fn show_feature_commands() {
     let feature = ShowFeature;
     assert_eq!(feature.name(), "show");
-    assert!(feature.commands().is_empty(), "it lists no command");
-    let root = scratch("empty-show-feature");
-    for (command, text) in [
-        ("show", "unknown command: show"),
-        ("inbox", "unknown command: inbox"),
-    ] {
-        let result = feature.run(&Invocation::new(&root, command, Vec::new()));
-        assert_eq!(
-            result
-                .expect_err("the feature refuses every invocation")
-                .to_string(),
-            text,
-            "{command}"
-        );
-    }
+    assert_eq!(
+        feature.commands(),
+        [Command::new(
+            "show",
+            "show detailed change information, tasks, and event timeline",
+            "<id>",
+        )]
+    );
+    let root = scratch("show-feature-commands");
+    let error = feature
+        .run(&Invocation::new(&root, "inbox", Vec::new()))
+        .expect_err("the feature refuses another command");
+    assert_eq!(error.to_string(), "unknown command: inbox");
+    assert!(matches!(error, FeatureError::UnknownCommand { .. }));
 }

@@ -1,0 +1,65 @@
+Spec: 004-dead (004)
+Title: Beta formats the count
+Status: [dead]
+Next: dead — osq retry 004 1
+After landing:
+  Check the output by hand.
+Location: active
+Approval: approved (sha256:approved-004)
+Depends on: 002
+Features:
+  Reads: none
+  Writes: none
+
+Goal:
+  Beta formats the count with commas.
+
+Tasks:
+  [!] 1. When beta formats, it adds commas [dead] (reason: verify_red)
+      Verify: node --test tests/beta.test.ts
+      Pre-spawn verify: started green, as declared
+      Retries: 1 (0 automatic)
+      Disclosures: deviated, outside scope
+      Scope: src/beta.ts
+      Acceptance:
+        - [ ] A thousand prints as 1,000.
+      Failure diagnostic:
+        Task verification failed.
+        expected 1,000
+        received 1000
+      Result:
+        ## Changed
+        
+        - Beta formats with commas.
+        
+        ## Deviated
+        
+        - Used a regular expression instead of Intl.
+        
+        ## Missing context
+        
+        None
+        
+        ## Outside scope
+        
+        - `src/alpha.ts` returns a string.
+        
+        Touched: src/beta.ts
+  [ ] 2. When beta formats a negative count, it keeps the sign [pending]
+      Verify: node --test tests/beta.test.ts
+      Pre-spawn verify: unavailable
+      Scope: src/beta.ts
+      Acceptance:
+        - [ ] Minus a thousand prints as -1,000.
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  2026-10-04T08:59:00.000Z [Task 2] verify_ran (command: node --test tests/beta.test.ts, phase: pre_spawn, expected: red)
+  2026-10-04T09:00:00.000Z [Task 1] verify_ran (command: node --test tests/beta.test.ts, exitCode: 0, duration: 0.2, phase: pre_spawn, expected: green, missingPaths: tests/beta.test.ts,)
+  2026-10-04T09:00:01.000Z [Task 1] started (attempt: 1)
+  2026-10-04T09:01:00.000Z [Task 1] stuck (fingerprint:  )
+  2026-10-04T09:02:00.000Z [Task 1] retry
+  2026-10-04T09:03:00.000Z [Task 1] verify_ran (command: node --test tests/beta.test.ts, exitCode: 1, duration: 0.7)
+  2026-10-04T09:03:01.000Z [Task 1] dead (reason: verify_red)

@@ -1,0 +1,191 @@
+{"type":"verify_ran","timestamp":"2026-10-22T10:41:57.833Z","data":{"command":"cargo test -p osq-feature-show --test show_archived --test show_text","exitCode":101,"duration":0.11,"log":".run/logs/6-1.log","output":"error: no test target named `show_archived` in `osq-feature-show` package\nhelp: available test targets:\n    feature\n    show_digest\n    show_flags\n    show_lookup\n    show_outline\n    show_runs\n    show_status\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-10-22T10:42:50.057Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":24,"repoFiles":16102,"repoLines":823063,"importFanIn":0,"proposalWords":737,"taskWords":297,"deltaRequirements":8,"deltaScenarios":12}}
+{"type":"started","timestamp":"2026-10-22T10:42:50.611Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"752ff3b3","pid":1679132,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"63250a84"}}
+{"type":"text","timestamp":"2026-10-22T10:42:52.439Z","data":{"text":"I'll start by reading the task file, proposal, and delta spec."}}
+{"type":"tokens","timestamp":"2026-10-22T10:42:52.439Z","data":{"promptTokens":1941,"candidateTokens":242,"totalTokens":6407,"cachedTokens":4224,"reasoningTokens":0,"cost":0.000898044,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:52.443Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/tasks/6.md"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:52.445Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/proposal.md"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:52.447Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/specs/rust-show/spec.md"}}
+{"type":"tokens","timestamp":"2026-10-22T10:42:54.009Z","data":{"promptTokens":5529,"candidateTokens":285,"totalTokens":12214,"cachedTokens":6400,"reasoningTokens":20,"cost":0.0020391,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:54.017Z","data":{"tool":"bash","summary":"ls -la openspec/changes/274-rust-show/.run/results/ 2>/dev/n"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:54.023Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/golden/archived-010.txt"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:54.033Z","data":{"tool":"read","summary":"crates/features/show/src/archived.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:42:56.711Z","data":{"promptTokens":2183,"candidateTokens":421,"totalTokens":14764,"cachedTokens":12160,"reasoningTokens":11,"cost":0.0012330599999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.711Z","data":{"tool":"read","summary":"src/core/status/show-model-events.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.712Z","data":{"tool":"read","summary":"src/core/status/show-model-validation.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.713Z","data":{"tool":"read","summary":"src/core/status/show-validation-lines.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.714Z","data":{"tool":"read","summary":"src/core/status/show-land-model.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.715Z","data":{"tool":"read","summary":"src/core/status/show-land-gates.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:56.715Z","data":{"tool":"read","summary":"src/core/status/show-land-lines.ts"}}
+{"type":"tokens","timestamp":"2026-10-22T10:42:59.005Z","data":{"promptTokens":6441,"candidateTokens":273,"totalTokens":21434,"cachedTokens":14720,"reasoningTokens":0,"cost":0.00234822,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:59.015Z","data":{"tool":"read","summary":"src/core/status/show-text.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:59.048Z","data":{"tool":"read","summary":"src/core/report/report.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:59.049Z","data":{"tool":"read","summary":"crates/features/show/src/text.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:42:59.049Z","data":{"tool":"read","summary":"crates/features/show/src/header.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:01.324Z","data":{"promptTokens":15812,"candidateTokens":281,"totalTokens":37469,"cachedTokens":21376,"reasoningTokens":65,"cost":0.005209056,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:01.328Z","data":{"tool":"read","summary":"crates/features/show/src/archived/section.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:01.330Z","data":{"tool":"read","summary":"crates/features/show/src/events.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:01.333Z","data":{"tool":"read","summary":"crates/features/show/tests/show_runs.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:03.681Z","data":{"promptTokens":3174,"candidateTokens":342,"totalTokens":40892,"cachedTokens":37376,"reasoningTokens":59,"cost":0.0015868559999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:03.685Z","data":{"tool":"read","summary":"crates/features/show/src/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:03.687Z","data":{"tool":"read","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:03.690Z","data":{"tool":"read","summary":"crates/features/show/src/events/read.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:03.693Z","data":{"tool":"read","summary":"crates/features/show/src/events/timeline.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:06.487Z","data":{"promptTokens":7789,"candidateTokens":356,"totalTokens":48977,"cachedTokens":40832,"reasoningTokens":78,"cost":0.0030088919999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:06.496Z","data":{"tool":"read","summary":"crates/features/show/src/lib.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:06.503Z","data":{"tool":"read","summary":"crates/features/show/src/digest.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:06.509Z","data":{"tool":"read","summary":"crates/features/show/src/runs.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:06.510Z","data":{"tool":"read","summary":"crates/features/show/src/tasks.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:08.548Z","data":{"promptTokens":1026,"candidateTokens":325,"totalTokens":50247,"cachedTokens":48896,"reasoningTokens":41,"cost":0.0009911759999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:08.553Z","data":{"tool":"bash","summary":"find crates/features/show/tests/fixtures/show-project -type "}}
+{"type":"tool","timestamp":"2026-10-22T10:43:08.564Z","data":{"tool":"read","summary":"crates/features/show/src/digest/section.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:08.569Z","data":{"tool":"read","summary":"crates/features/show/src/digest/section/read.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:08.573Z","data":{"tool":"read","summary":"crates/features/show/src/digest/section/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:10.533Z","data":{"promptTokens":4432,"candidateTokens":215,"totalTokens":54823,"cachedTokens":50176,"reasoningTokens":31,"cost":0.001888656,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:10.540Z","data":{"tool":"read","summary":"src/core/report/archive-record.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:10.547Z","data":{"tool":"bash","summary":"ls crates/kernel/*/src; echo ---; cat crates/features/show/C"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:12.735Z","data":{"promptTokens":3801,"candidateTokens":395,"totalTokens":58980,"cachedTokens":54784,"reasoningTokens":35,"cost":0.001943004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:12.759Z","data":{"tool":"bash","summary":"cd crates/features/show/tests/fixtures/show-project/openspec"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:12.765Z","data":{"tool":"bash","summary":"cd .; find crat"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:16.355Z","data":{"promptTokens":3855,"candidateTokens":500,"totalTokens":63235,"cachedTokens":58880,"reasoningTokens":419,"cost":0.00210978,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:16.367Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_archived --test s"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:18.012Z","data":{"promptTokens":204,"candidateTokens":89,"totalTokens":63397,"cachedTokens":63104,"reasoningTokens":18,"cost":0.000546624,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:18.041Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show 2>&1 | tail -80"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:22.297Z","data":{"promptTokens":916,"candidateTokens":220,"totalTokens":64496,"cachedTokens":63360,"reasoningTokens":71,"cost":0.0009189599999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:22.311Z","data":{"tool":"read","summary":"crates/features/show/tests/show_outline.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:22.316Z","data":{"tool":"read","summary":"crates/features/show/tests/show_digest.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:28.588Z","data":{"promptTokens":3979,"candidateTokens":1150,"totalTokens":69513,"cachedTokens":64384,"reasoningTokens":910,"cost":0.002960004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:28.593Z","data":{"tool":"bash","summary":"cd .; grep -n \""}}
+{"type":"tool","timestamp":"2026-10-22T10:43:28.596Z","data":{"tool":"bash","summary":"cd .; sed -n '1"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:30.909Z","data":{"promptTokens":1205,"candidateTokens":219,"totalTokens":70928,"cachedTokens":69504,"reasoningTokens":0,"cost":0.001041324,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:30.919Z","data":{"tool":"read","summary":"src/core/status/show-model.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:30.920Z","data":{"tool":"read","summary":"src/core/status/show-output.ts"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:30.920Z","data":{"tool":"bash","summary":"cd .; sed -n '1"}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:33.166Z","data":{"promptTokens":3787,"candidateTokens":367,"totalTokens":75066,"cachedTokens":70912,"reasoningTokens":51,"cost":0.002001972,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:33.179Z","data":{"tool":"bash","summary":"cd .; grep -n \""}}
+{"type":"tool","timestamp":"2026-10-22T10:43:33.239Z","data":{"tool":"bash","summary":"cd .; grep -n \""}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:35.658Z","data":{"promptTokens":7059,"candidateTokens":279,"totalTokens":82346,"cachedTokens":75008,"reasoningTokens":66,"cost":0.0029025479999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:35.677Z","data":{"tool":"bash","summary":"cd .; grep -n \""}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:42.152Z","data":{"promptTokens":5431,"candidateTokens":1177,"totalTokens":88912,"cachedTokens":82304,"reasoningTokens":921,"cost":0.0035355239999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:42.159Z","data":{"tool":"bash","summary":"cd .; grep -rn "}}
+{"type":"tool","timestamp":"2026-10-22T10:43:42.178Z","data":{"tool":"bash","summary":"cd .; grep -rn "}}
+{"type":"tokens","timestamp":"2026-10-22T10:43:48.891Z","data":{"promptTokens":3371,"candidateTokens":1110,"totalTokens":93313,"cachedTokens":88832,"reasoningTokens":994,"cost":0.0028762919999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:43:48.901Z","data":{"tool":"bash","summary":"cd .; sed -n '1"}}
+{"type":"tokens","timestamp":"2026-10-22T10:44:04.225Z","data":{"promptTokens":1987,"candidateTokens":2906,"totalTokens":98205,"cachedTokens":93312,"reasoningTokens":2794,"cost":0.004643172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:04.272Z","data":{"tool":"bash","summary":"cd .; grep -rn "}}
+{"type":"text","timestamp":"2026-10-22T10:44:43.145Z","data":{"text":"Now I'll implement the archived sections. Starting with shared value helpers and verification."}}
+{"type":"tokens","timestamp":"2026-10-22T10:44:43.145Z","data":{"promptTokens":752,"candidateTokens":9095,"totalTokens":108023,"cachedTokens":98176,"reasoningTokens":7293,"cost":0.011728655999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:43.150Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:43.151Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/values.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:43.153Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/verification.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:43.162Z","data":{"path":"crates/features/show/src/archived/section/values.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:43.164Z","data":{"path":"crates/features/show/src/archived/section/verification.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:43.166Z","data":{"path":"crates/features/show/src/archived/section.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:44:47.152Z","data":{"promptTokens":200,"candidateTokens":1118,"totalTokens":109222,"cachedTokens":107904,"reasoningTokens":62,"cost":0.002049024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:47.155Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/validation.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:47.156Z","data":{"path":"crates/features/show/src/archived/section/validation.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:44:49.812Z","data":{"promptTokens":196,"candidateTokens":636,"totalTokens":109888,"cachedTokens":109056,"reasoningTokens":139,"cost":0.001476336,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:49.815Z","data":{"tool":"edit","summary":"crates/features/show/src/archived/section/validation.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:44:49.816Z","data":{"tool":"edit","summary":"crates/features/show/src/archived/section/verification.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:49.820Z","data":{"path":"crates/features/show/src/archived/section/validation.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:44:49.822Z","data":{"path":"crates/features/show/src/archived/section/verification.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:02.847Z","data":{"promptTokens":259,"candidateTokens":3712,"totalTokens":113667,"cachedTokens":109696,"reasoningTokens":1364,"cost":0.005190276,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:02.851Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/recertifications.r"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:02.853Z","data":{"path":"crates/features/show/src/archived/section/recertifications.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:06.681Z","data":{"promptTokens":163,"candidateTokens":623,"totalTokens":114322,"cachedTokens":113536,"reasoningTokens":466,"cost":0.001477716,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:06.685Z","data":{"tool":"bash","summary":"cd .; grep -rn "}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:16.150Z","data":{"promptTokens":2393,"candidateTokens":2736,"totalTokens":119433,"cachedTokens":114304,"reasoningTokens":516,"cost":0.004686923999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:16.153Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/land.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:16.155Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/land/read.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:16.157Z","data":{"path":"crates/features/show/src/archived/section/land.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:16.159Z","data":{"path":"crates/features/show/src/archived/section/land/read.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:25.895Z","data":{"promptTokens":195,"candidateTokens":2604,"totalTokens":122095,"cachedTokens":119296,"reasoningTokens":1018,"cost":0.003899076,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:25.897Z","data":{"tool":"write","summary":"crates/features/show/src/archived/section/land/gates.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:25.899Z","data":{"path":"crates/features/show/src/archived/section/land/gates.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:27.710Z","data":{"promptTokens":143,"candidateTokens":118,"totalTokens":122245,"cachedTokens":121984,"reasoningTokens":42,"cost":0.000916404,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:27.713Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_runs 2>&1 | tail "}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:35.009Z","data":{"promptTokens":186,"candidateTokens":1676,"totalTokens":124102,"cachedTokens":122240,"reasoningTokens":187,"cost":0.00280044,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:35.012Z","data":{"tool":"write","summary":"crates/features/show/tests/show_archived.rs"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:35.013Z","data":{"tool":"write","summary":"crates/features/show/tests/show_text.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:35.020Z","data":{"path":"crates/features/show/tests/show_archived.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:45:35.021Z","data":{"path":"crates/features/show/tests/show_text.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:36.513Z","data":{"promptTokens":248,"candidateTokens":84,"totalTokens":124236,"cachedTokens":123904,"reasoningTokens":3,"cost":0.000918624,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:36.515Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_archived --test s"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:39.087Z","data":{"promptTokens":300,"candidateTokens":163,"totalTokens":124623,"cachedTokens":124160,"reasoningTokens":81,"cost":0.00103056,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:39.088Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo clippy -p osq-feature-show --all-ta"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:45.873Z","data":{"promptTokens":1063,"candidateTokens":779,"totalTokens":126386,"cachedTokens":124544,"reasoningTokens":290,"cost":0.002000964,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:45.876Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:49.064Z","data":{"promptTokens":275,"candidateTokens":110,"totalTokens":126721,"cachedTokens":126336,"reasoningTokens":13,"cost":0.000972516,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:49.069Z","data":{"tool":"bash","summary":"cd . && sed -n "}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:51.351Z","data":{"promptTokens":394,"candidateTokens":144,"totalTokens":127258,"cachedTokens":126720,"reasoningTokens":3,"cost":0.0010513200000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:51.354Z","data":{"tool":"bash","summary":"cd . && sed -i "}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:54.976Z","data":{"promptTokens":227,"candidateTokens":272,"totalTokens":127603,"cachedTokens":127104,"reasoningTokens":175,"cost":0.0011571239999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:54.979Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:56.738Z","data":{"promptTokens":1055,"candidateTokens":174,"totalTokens":128717,"cachedTokens":127488,"reasoningTokens":20,"cost":0.001290228,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:56.741Z","data":{"tool":"bash","summary":"cd . && for f i"}}
+{"type":"tokens","timestamp":"2026-10-22T10:45:59.536Z","data":{"promptTokens":238,"candidateTokens":270,"totalTokens":129148,"cachedTokens":128640,"reasoningTokens":89,"cost":0.00116724,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:45:59.539Z","data":{"tool":"bash","summary":"cd . && mkdir -"}}
+{"type":"tokens","timestamp":"2026-10-22T10:47:55.362Z","data":{"promptTokens":233,"candidateTokens":234,"totalTokens":129491,"cachedTokens":129024,"reasoningTokens":59,"cost":0.001124844,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:47:55.367Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:27.499Z","data":{"promptTokens":649,"candidateTokens":231,"totalTokens":130288,"cachedTokens":129408,"reasoningTokens":66,"cost":0.0012483479999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:27.502Z","data":{"tool":"bash","summary":"cd . && nl -ba "}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:33.392Z","data":{"promptTokens":1843,"candidateTokens":959,"totalTokens":132978,"cachedTokens":130176,"reasoningTokens":834,"cost":0.002484756,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:33.394Z","data":{"tool":"bash","summary":"cd . && grep -r"}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:38.178Z","data":{"promptTokens":224,"candidateTokens":115,"totalTokens":133203,"cachedTokens":132864,"reasoningTokens":0,"cost":0.001002384,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:38.185Z","data":{"tool":"bash","summary":"cd . && cat .ca"}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:40.423Z","data":{"promptTokens":197,"candidateTokens":195,"totalTokens":133512,"cachedTokens":133120,"reasoningTokens":107,"cost":0.0010918199999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:40.427Z","data":{"tool":"bash","summary":"cd . && sed -n "}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:41.985Z","data":{"promptTokens":462,"candidateTokens":81,"totalTokens":134047,"cachedTokens":133504,"reasoningTokens":0,"cost":0.001036824,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:41.987Z","data":{"tool":"bash","summary":"cd . && cat scr"}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:44.077Z","data":{"promptTokens":313,"candidateTokens":226,"totalTokens":134555,"cachedTokens":134016,"reasoningTokens":105,"cost":0.001169196,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:44.080Z","data":{"tool":"bash","summary":"grep -rn \"mutants::skip\\|skip\" $(dirname $(which cargo-mutan"}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:46.109Z","data":{"promptTokens":277,"candidateTokens":115,"totalTokens":134920,"cachedTokens":134528,"reasoningTokens":0,"cost":0.0010282680000000002,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:46.113Z","data":{"tool":"bash","summary":"ls -d ~/.cargo/registry/src/*/cargo-mutants-* 2>/dev/null | "}}
+{"type":"tokens","timestamp":"2026-10-22T10:49:52.698Z","data":{"promptTokens":415,"candidateTokens":952,"totalTokens":136279,"cachedTokens":134912,"reasoningTokens":795,"cost":0.002076372,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:49:52.709Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:51:42.793Z","data":{"promptTokens":1191,"candidateTokens":5999,"totalTokens":143382,"cachedTokens":136192,"reasoningTokens":4748,"cost":0.008373252,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:51:42.796Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:51:44.989Z","data":{"promptTokens":534,"candidateTokens":109,"totalTokens":144003,"cachedTokens":143360,"reasoningTokens":11,"cost":0.00115116,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:51:44.996Z","data":{"tool":"bash","summary":"cd . && sed -n "}}
+{"type":"tokens","timestamp":"2026-10-22T10:51:47.501Z","data":{"promptTokens":319,"candidateTokens":374,"totalTokens":144693,"cachedTokens":144000,"reasoningTokens":4,"cost":0.0014085,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:51:47.504Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:52:22.657Z","data":{"promptTokens":254,"candidateTokens":7141,"totalTokens":151907,"cachedTokens":144512,"reasoningTokens":7037,"cost":0.009512472,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:52:22.660Z","data":{"tool":"bash","summary":"cd . && sed -n "}}
+{"type":"tokens","timestamp":"2026-10-22T10:52:53.416Z","data":{"promptTokens":1006,"candidateTokens":9692,"totalTokens":162506,"cachedTokens":151808,"reasoningTokens":3449,"cost":0.012843048,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:52:53.419Z","data":{"tool":"write","summary":"crates/features/show/tests/show_archived.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:52:53.421Z","data":{"path":"crates/features/show/tests/show_archived.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:52:55.173Z","data":{"promptTokens":230,"candidateTokens":107,"totalTokens":162641,"cachedTokens":162304,"reasoningTokens":6,"cost":0.001171224,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:52:55.177Z","data":{"tool":"bash","summary":"cd . && cargo f"}}
+{"type":"tokens","timestamp":"2026-10-22T10:53:01.918Z","data":{"promptTokens":794,"candidateTokens":1172,"totalTokens":164526,"cachedTokens":162560,"reasoningTokens":615,"cost":0.00261996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:53:01.920Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:53:05.387Z","data":{"promptTokens":256,"candidateTokens":185,"totalTokens":164921,"cachedTokens":164480,"reasoningTokens":12,"cost":0.00128568,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:53:05.391Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:53:56.579Z","data":{"promptTokens":249,"candidateTokens":183,"totalTokens":165168,"cachedTokens":164736,"reasoningTokens":5,"cost":0.001282716,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:53:56.582Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:55:02.943Z","data":{"promptTokens":240,"candidateTokens":167,"totalTokens":165399,"cachedTokens":164992,"reasoningTokens":7,"cost":0.001262352,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:55:02.949Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:56:31.954Z","data":{"promptTokens":215,"candidateTokens":2726,"totalTokens":168189,"cachedTokens":165248,"reasoningTokens":1070,"cost":0.004327187999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:56:31.959Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:56:36.007Z","data":{"promptTokens":969,"candidateTokens":216,"totalTokens":169249,"cachedTokens":168064,"reasoningTokens":123,"cost":0.001558284,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:56:36.008Z","data":{"tool":"bash","summary":"cd . && grep -n"}}
+{"type":"tokens","timestamp":"2026-10-22T10:56:38.267Z","data":{"promptTokens":246,"candidateTokens":314,"totalTokens":169648,"cachedTokens":169088,"reasoningTokens":0,"cost":0.001465128,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:56:38.270Z","data":{"tool":"bash","summary":"cd . && python3"}}
+{"type":"tokens","timestamp":"2026-10-22T10:56:43.730Z","data":{"promptTokens":272,"candidateTokens":257,"totalTokens":170129,"cachedTokens":169600,"reasoningTokens":154,"cost":0.0014076,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:56:43.733Z","data":{"tool":"bash","summary":"cd . && OSQ_CHA"}}
+{"type":"tokens","timestamp":"2026-10-22T10:58:05.670Z","data":{"promptTokens":1035,"candidateTokens":372,"totalTokens":171519,"cachedTokens":170112,"reasoningTokens":194,"cost":0.001777572,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:58:05.673Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"tokens","timestamp":"2026-10-22T10:59:06.674Z","data":{"promptTokens":191,"candidateTokens":361,"totalTokens":171944,"cachedTokens":171392,"reasoningTokens":261,"cost":0.0015188519999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:59:06.677Z","data":{"tool":"bash","summary":"cd . && cargo t"}}
+{"type":"tokens","timestamp":"2026-10-22T10:59:10.827Z","data":{"promptTokens":326,"candidateTokens":619,"totalTokens":172849,"cachedTokens":171904,"reasoningTokens":117,"cost":0.001872024,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:59:10.831Z","data":{"tool":"write","summary":"openspec/changes/274-rust-show/.run/results/6.md"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:59:10.835Z","data":{"path":"openspec/changes/274-rust-show/.run/results/6.md"}}
+{"type":"tokens","timestamp":"2026-10-22T10:59:18.340Z","data":{"promptTokens":209,"candidateTokens":1318,"totalTokens":174199,"cachedTokens":172672,"reasoningTokens":1058,"cost":0.0026803319999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:59:18.344Z","data":{"tool":"bash","summary":"cd . && cargo m"}}
+{"type":"text","timestamp":"2026-10-22T11:01:15.164Z","data":{"text":"Implemented task 6.\n\n- Replaced the archived section stubs with TypeScript-shaped `Verification:`, `Validation:`, `Recertifications:` and git-off `Land:` output.\n- Added modules for shared value formatting, validation, recertifications and land gates/reads.\n- Added `tests/show_archived.rs` with the archived golden plus edge coverage, and `tests/show_text.rs` proving every golden row byte for byte.\n- Task verify passes; `sh scripts/verify-rust.sh` passes; targeted `cargo-mutants` runs report no missed mutants.\n\nResult written to `openspec/changes/274-rust-show/.run/results/6.md`."}}
+{"type":"tokens","timestamp":"2026-10-22T11:01:15.164Z","data":{"promptTokens":235,"candidateTokens":164,"totalTokens":174479,"cachedTokens":174080,"reasoningTokens":21,"cost":0.00131178,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-22T11:01:15.200Z","data":{"exitCode":0,"pid":1679132,"timedOut":false,"elapsedSeconds":1104.6}}
+{"type":"format_ran","timestamp":"2026-10-22T11:01:17.773Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/features/show/src/archived/section.rs' 'crates/features/show/src/archived/section/land.rs' 'crates/features/show/src/archived/section/land/gates.rs' 'crates/features/show/src/archived/section/land/read.rs' 'crates/features/show/src/archived/section/recertifications.rs' 'crates/features/show/src/archived/section/validation.rs' 'crates/features/show/src/archived/section/values.rs' 'crates/features/show/src/archived/section/verification.rs' 'crates/features/show/tests/show_archived.rs' 'crates/features/show/tests/show_text.rs'","files":["crates/features/show/src/archived/section.rs","crates/features/show/src/archived/section/land.rs","crates/features/show/src/archived/section/land/gates.rs","crates/features/show/src/archived/section/land/read.rs","crates/features/show/src/archived/section/recertifications.rs","crates/features/show/src/archived/section/validation.rs","crates/features/show/src/archived/section/values.rs","crates/features/show/src/archived/section/verification.rs","crates/features/show/tests/show_archived.rs","crates/features/show/tests/show_text.rs"],"exitCode":0,"duration":1.1,"timedOut":false,"output":"Checked 0 files in 290µs. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-22T11:01:20.442Z","data":{"command":"cargo test -p osq-feature-show --test show_archived --test show_text","exitCode":0,"duration":0.91,"log":".run/logs/6-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/show_archived.rs (target/debug/deps/show_archived-88fe809035308014)\n\nrunning 8 tests\ntest land_without_gates ... ok\ntest land_gates_stop_at_the_last_archive ... ok\ntest recertification_targets ... ok\ntest recertification_edges ... ok\ntest land_edges ... ok\ntest verification_edges ... ok\ntest validation_edges ... ok\ntest show_archived_change ... ok\n\ntest result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/show_text.rs (target/debug/deps/show_text-c5ab1efc6ccefd7f)\n\nrunning 1 test\ntest show_text_equals_typescript ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n"}}
+{"type":"measures","timestamp":"2026-10-22T11:09:50.814Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":24,"repoFiles":16102,"repoLines":823063,"importFanIn":0,"proposalWords":737,"taskWords":297,"deltaRequirements":8,"deltaScenarios":12,"changedFiles":10,"changedLines":1577,"scopeHashes":{"crates/features/show/src/archived/section.rs":{"before":"sha256:d64e745009b651bb5772c1765171a0b4edc9a5f54a8c0322ff2eae5449746b8d","after":"sha256:53c639b688482884ff889520b5590b3e0cfdc06ffa7878bce523aefc43cc418f"},"crates/features/show/tests/show_archived.rs":{"before":null,"after":"sha256:96f1fb8807dd21d6bc1f9c4dcbf3475f7fec0bcaf831daf32c73c7c84dba02ed"},"crates/features/show/tests/show_text.rs":{"before":null,"after":"sha256:cd5a5a9c9c43778734596a122beb8d26c109777d04124610ccad7cfb37e7049b"},"crates/features/show/src/archived/section/land.rs":{"before":null,"after":"sha256:03a66289d2a1ed86dc9b19d93d26293ab18891a2d9352b08bbb895936e097c40"},"crates/features/show/src/archived/section/land/gates.rs":{"before":null,"after":"sha256:c6d0cb570c59468bdfb0eb82f9d977fb469f8581160731885764f25a705e2de8"},"crates/features/show/src/archived/section/land/read.rs":{"before":null,"after":"sha256:6643858ac68b621c1034623527c09a91d60a66531d9144b5f815236622d18aca"},"crates/features/show/src/archived/section/recertifications.rs":{"before":null,"after":"sha256:cfa8cc8aa3034d667b1f9bbef8c776727e82521669d19289f872dd6c578588d8"},"crates/features/show/src/archived/section/validation.rs":{"before":null,"after":"sha256:cdee225b4d39353c617f60c0e1467000dbdc98c696fbc6cde5346c4763cc82b8"},"crates/features/show/src/archived/section/values.rs":{"before":null,"after":"sha256:ec23652d22cc860f3e5d4b767c564fbd3ecfe5d27f3ccaf399f9bea02baf31f0"},"crates/features/show/src/archived/section/verification.rs":{"before":null,"after":"sha256:d9ed1c1c0864144cbc4430f5a6b8abb7b81a148116a2da46c68e36ad41dffc59"}}}}
+{"type":"done","timestamp":"2026-10-22T11:09:50.820Z","data":{"task":"6"}}
+{"type":"verify_ran","timestamp":"2026-10-22T11:10:02.629Z","data":{"command":"cargo test -p osq-feature-show --test show_archived --test show_text","exitCode":0,"duration":0.17,"log":".run/logs/6-3.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/show_archived.rs (target/debug/deps/show_archived-88fe809035308014)\n\nrunning 8 tests\ntest land_without_gates ... ok\ntest land_gates_stop_at_the_last_archive ... ok\ntest recertification_targets ... ok\ntest recertification_edges ... ok\ntest verification_edges ... ok\ntest land_edges ... ok\ntest validation_edges ... ok\ntest show_archived_change ... ok\n\ntest result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n     Running tests/show_text.rs (target/debug/deps/show_text-c5ab1efc6ccefd7f)\n\nrunning 1 test\ntest show_text_equals_typescript ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n"}}

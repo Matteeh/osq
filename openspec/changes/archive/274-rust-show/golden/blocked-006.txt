@@ -1,0 +1,26 @@
+Spec: 006-blocked (006)
+Title: Beta waits for formatting
+Status: [blocked]
+Next: blocked (waiting for 004) — osq show 004
+Location: active
+Approval: approved (sha256:approved-006)
+Depends on: 004, 010
+Features:
+  Reads: none
+  Writes: none
+
+Goal:
+  Beta uses the formatted count.
+
+Tasks:
+  [ ] 1. When beta prints, it uses the formatter [pending]
+      Verify: node --test tests/beta.test.ts
+      Scope: src/beta.ts
+      Acceptance:
+        - [ ] Beta calls the formatter.
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  (no events recorded)

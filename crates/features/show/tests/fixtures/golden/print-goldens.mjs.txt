@@ -1,0 +1,58 @@
+// Prints TypeScript's `osq show` output for each row of rust-show "Show text equals TypeScript's"
+// and "Show errors equal TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <fixture show-project> <golden folder>
+// Each case runs the built CLI on a fresh copy of the fixture, with the copy as
+// the working directory and no osq config, so vcs is off. git ignores
+// `.run/running/`, so the script writes 003-running's `.run/running/1.pid` into
+// each copy. A case that exits 0
+// writes its stdout to <name>.txt; a case that fails writes its stderr to
+// <name>.err.txt with the copy's path replaced by <root>.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+
+const cases = [
+  { name: 'active-001', args: ['1'] },
+  { name: 'approved-002', args: ['approved'] },
+  { name: 'running-003', args: ['003'] },
+  { name: 'dead-004', args: ['004-dead'] },
+  { name: 'steering-005', args: ['5'] },
+  { name: 'blocked-006', args: ['006'] },
+  { name: 'unplanned-007', args: ['007'] },
+  { name: 'archived-010', args: ['10'] },
+  { name: 'archived-path-010', args: ['openspec/changes/archive/010-archived'] },
+  { name: 'rejected-011', args: ['011'] },
+  { name: 'unknown-999', args: ['999'] },
+  { name: 'blank-id', args: ['  '] },
+  { name: 'no-proposal-012', args: ['012'] },
+];
+
+for (const c of cases) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-show-'));
+  fs.cpSync(fixture, root, { recursive: true });
+  // git ignores `.run/running/`, so the running marker is written into each copy.
+  const running = path.join(root, 'openspec', 'changes', '003-running', '.run', 'running');
+  fs.mkdirSync(running, { recursive: true });
+  fs.writeFileSync(path.join(running, '1.pid'), '{"pid":4242,"startedAt":1759395600000}\n');
+  const run = spawnSync(process.execPath, [BIN, 'show', ...c.args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  if (run.stdout.includes(root)) {
+    throw new Error(`${c.name}: output names the scratch root`);
+  }
+  if (run.status === 0) {
+    if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+    fs.writeFileSync(path.join(golden, `${c.name}.txt`), run.stdout);
+  } else {
+    if (run.stdout !== '') throw new Error(`${c.name}: unexpected stdout ${run.stdout}`);
+    fs.writeFileSync(path.join(golden, `${c.name}.err.txt`), run.stderr.split(root).join('<root>'));
+  }
+  fs.rmSync(root, { recursive: true, force: true });
+}

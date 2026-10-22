@@ -1,0 +1,206 @@
+{"type":"verify_ran","timestamp":"2026-10-22T09:50:22.195Z","data":{"command":"cargo test -p osq-feature-show --test show_runs","exitCode":101,"duration":0.11,"log":".run/logs/3-1.log","output":"error: no test target named `show_runs` in `osq-feature-show` package\nhelp: available test targets:\n    feature\n    show_lookup\n    show_outline\n    show_status\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-10-22T09:51:05.714Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":23,"repoFiles":15715,"repoLines":816443,"importFanIn":0,"proposalWords":737,"taskWords":377,"deltaRequirements":8,"deltaScenarios":12}}
+{"type":"started","timestamp":"2026-10-22T09:51:06.132Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"f1ac79e2","pid":2846902,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"63250a84"}}
+{"type":"text","timestamp":"2026-10-22T09:51:08.007Z","data":{"text":"I'll start by reading the task file, proposal, and delta spec."}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:08.007Z","data":{"promptTokens":1976,"candidateTokens":166,"totalTokens":6366,"cachedTokens":4224,"reasoningTokens":0,"cost":0.0008173439999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:08.025Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:08.031Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/proposal.md"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:10.031Z","data":{"promptTokens":2305,"candidateTokens":175,"totalTokens":8752,"cachedTokens":6272,"reasoningTokens":17,"cost":0.000939132,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:10.036Z","data":{"tool":"read","summary":"openspec/changes/274-rust-show/specs/rust-show/spec.md"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:10.036Z","data":{"tool":"bash","summary":"find crates/features/show -type f | sort && echo --- && ls o"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:11.893Z","data":{"promptTokens":6028,"candidateTokens":323,"totalTokens":15055,"cachedTokens":8704,"reasoningTokens":43,"cost":0.002248224,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:11.905Z","data":{"tool":"read","summary":"crates/features/show/src/events.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:11.909Z","data":{"tool":"read","summary":"crates/features/show/src/runs.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:11.912Z","data":{"tool":"read","summary":"crates/features/show/src/runs/section.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:11.912Z","data":{"tool":"read","summary":"crates/features/show/src/tasks.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:13.553Z","data":{"promptTokens":1072,"candidateTokens":211,"totalTokens":16259,"cachedTokens":14976,"reasoningTokens":0,"cost":0.000664656,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:13.561Z","data":{"tool":"read","summary":"crates/features/show/src/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:13.567Z","data":{"tool":"read","summary":"crates/features/show/src/text.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:13.569Z","data":{"tool":"read","summary":"crates/features/show/tests/show_outline.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:15.509Z","data":{"promptTokens":4784,"candidateTokens":306,"totalTokens":21346,"cachedTokens":16256,"reasoningTokens":114,"cost":0.001899936,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:15.526Z","data":{"tool":"bash","summary":"cat src/core/status/show-model-events.ts; echo '=====RUN-LIN"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:15.530Z","data":{"tool":"bash","summary":"cat src/core/status/show-text.ts; echo '=====PRE-SPAWN'; cat"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:17.150Z","data":{"promptTokens":8619,"candidateTokens":229,"totalTokens":30096,"cachedTokens":21248,"reasoningTokens":62,"cost":0.0029879879999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:17.158Z","data":{"tool":"bash","summary":"grep -n \"stringList\\|TimelineEvent\" src/core/status/show-typ"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:17.162Z","data":{"tool":"bash","summary":"grep -rn \"readEventStreams\\|taskEventsMap\\|timeline\" src/cor"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:18.778Z","data":{"promptTokens":1789,"candidateTokens":204,"totalTokens":32073,"cachedTokens":30080,"reasoningTokens":0,"cost":0.00096198,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:18.791Z","data":{"tool":"bash","summary":"sed -n '180,215p' src/core/status/show-types.ts; echo ===MOD"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:18.795Z","data":{"tool":"bash","summary":"for f in approved-002 running-003 dead-004 archived-010; do "}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:21.028Z","data":{"promptTokens":5072,"candidateTokens":254,"totalTokens":37326,"cachedTokens":32000,"reasoningTokens":156,"cost":0.0020184,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:21.034Z","data":{"tool":"bash","summary":"for f in $(find crates/features/show/tests/fixtures/show-pro"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:25.102Z","data":{"promptTokens":2540,"candidateTokens":693,"totalTokens":40481,"cachedTokens":37248,"reasoningTokens":501,"cost":0.001817088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:25.115Z","data":{"tool":"bash","summary":"cat crates/features/show/Cargo.toml; echo ===LIB; cat crates"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:25.120Z","data":{"tool":"bash","summary":"grep -rn \"serde_json\\|json\" crates/features/show/src crates/"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:26.909Z","data":{"promptTokens":3366,"candidateTokens":193,"totalTokens":44007,"cachedTokens":40448,"reasoningTokens":43,"cost":0.001484088,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:26.919Z","data":{"tool":"bash","summary":"cat Cargo.toml | sed -n '1,220p'"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:26.920Z","data":{"tool":"bash","summary":"find crates -path '*src*' -name '*.rs' | xargs grep -ln \"ser"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:29.271Z","data":{"promptTokens":1359,"candidateTokens":266,"totalTokens":45529,"cachedTokens":43904,"reasoningTokens":64,"cost":0.000990324,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:29.276Z","data":{"tool":"bash","summary":"find crates/core/src/event crates/kernel/storage/src -type f"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:29.277Z","data":{"tool":"bash","summary":"grep -rn \"jsonl\\|events\" crates/kernel/storage/src/read crat"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:31.776Z","data":{"promptTokens":4789,"candidateTokens":282,"totalTokens":50511,"cachedTokens":45440,"reasoningTokens":43,"cost":0.00204774,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:31.783Z","data":{"tool":"bash","summary":"sed -n '1,120p' crates/kernel/storage/src/read/snapshot/even"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:31.787Z","data":{"tool":"bash","summary":"grep -rn \"fn .*event\\|EventLine\\|struct.*Event\" crates/core/"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:39.541Z","data":{"promptTokens":2497,"candidateTokens":1523,"totalTokens":54452,"cachedTokens":50432,"reasoningTokens":1286,"cost":0.002879292,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:39.548Z","data":{"tool":"bash","summary":"cat openspec/changes/274-rust-show/tasks/4.md; echo =====5; "}}
+{"type":"tool","timestamp":"2026-10-22T09:51:39.553Z","data":{"tool":"bash","summary":"cat crates/features/show/src/archived.rs; echo ===SECTION; c"}}
+{"type":"tokens","timestamp":"2026-10-22T09:51:42.215Z","data":{"promptTokens":2693,"candidateTokens":302,"totalTokens":57395,"cachedTokens":54400,"reasoningTokens":89,"cost":0.0014967000000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:42.219Z","data":{"tool":"bash","summary":"grep -n \"chrono\\|time =\" Cargo.toml crates/*/Cargo.toml crat"}}
+{"type":"tool","timestamp":"2026-10-22T09:51:42.226Z","data":{"tool":"bash","summary":"grep -rn \"Date\\|parse.*time\\|from_rfc3339\\|datetime\\|iso\" cr"}}
+{"type":"tokens","timestamp":"2026-10-22T09:52:10.866Z","data":{"promptTokens":4292,"candidateTokens":5679,"totalTokens":67315,"cachedTokens":57344,"reasoningTokens":5588,"cost":0.008446463999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:52:10.871Z","data":{"tool":"bash","summary":"sed -n '1,180p' tests/line-budget.test.ts; echo ===FUNC; sed"}}
+{"type":"tokens","timestamp":"2026-10-22T09:52:13.095Z","data":{"promptTokens":2321,"candidateTokens":224,"totalTokens":69745,"cachedTokens":67200,"reasoningTokens":64,"cost":0.0013683,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:52:13.100Z","data":{"tool":"bash","summary":"grep -rn \"MapAccess\\|visit_map\\|preserve_order\\|Ordered\" cra"}}
+{"type":"tool","timestamp":"2026-10-22T09:52:13.105Z","data":{"tool":"bash","summary":"grep -rn \"serde_json::from_str\\|Deserializer\" crates/feature"}}
+{"type":"tokens","timestamp":"2026-10-22T09:52:15.048Z","data":{"promptTokens":137,"candidateTokens":120,"totalTokens":69889,"cachedTokens":69632,"reasoningTokens":41,"cost":0.0006028920000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:52:15.054Z","data":{"tool":"bash","summary":"cat crates/features/show/src/feature.rs; echo ===HEADER; cat"}}
+{"type":"text","timestamp":"2026-10-22T09:53:08.941Z","data":{"text":"Now I'll implement the event reader and timeline section."}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:08.941Z","data":{"promptTokens":950,"candidateTokens":13388,"totalTokens":84226,"cachedTokens":69888,"reasoningTokens":10409,"cost":0.016769928,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:08.950Z","data":{"tool":"write","summary":"crates/features/show/src/events.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:08.950Z","data":{"tool":"write","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:08.968Z","data":{"tool":"write","summary":"crates/features/show/src/events/read.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:08.968Z","data":{"tool":"write","summary":"crates/features/show/src/events/timeline.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:08.969Z","data":{"path":"crates/features/show/src/events.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:08.969Z","data":{"path":"crates/features/show/src/events/model.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:08.969Z","data":{"path":"crates/features/show/src/events/read.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:08.969Z","data":{"path":"crates/features/show/src/events/timeline.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:19.130Z","data":{"promptTokens":224,"candidateTokens":3588,"totalTokens":87908,"cachedTokens":84096,"reasoningTokens":5,"cost":0.004877375999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.133Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.134Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/values.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.136Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/pre_spawn.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.138Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/retries.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.140Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.142Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/instructions.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.143Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/dependencies.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.144Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/focused.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:19.145Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.147Z","data":{"path":"crates/features/show/src/runs/section.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.148Z","data":{"path":"crates/features/show/src/runs/section/values.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.149Z","data":{"path":"crates/features/show/src/runs/section/pre_spawn.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.151Z","data":{"path":"crates/features/show/src/runs/section/retries.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.153Z","data":{"path":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.155Z","data":{"path":"crates/features/show/src/runs/section/instructions.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.155Z","data":{"path":"crates/features/show/src/runs/section/dependencies.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.156Z","data":{"path":"crates/features/show/src/runs/section/focused.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:19.157Z","data":{"path":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:24.404Z","data":{"promptTokens":329,"candidateTokens":1452,"totalTokens":89589,"cachedTokens":87808,"reasoningTokens":183,"cost":0.002367948,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:24.409Z","data":{"tool":"edit","summary":"crates/features/show/src/events.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:24.412Z","data":{"tool":"edit","summary":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:24.416Z","data":{"tool":"write","summary":"crates/features/show/tests/show_runs.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:24.419Z","data":{"path":"crates/features/show/tests/show_runs.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:24.419Z","data":{"path":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:24.423Z","data":{"path":"crates/features/show/src/events.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:26.050Z","data":{"promptTokens":200,"candidateTokens":88,"totalTokens":89760,"cachedTokens":89472,"reasoningTokens":20,"cost":0.000702432,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:26.053Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_runs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:31.814Z","data":{"promptTokens":1288,"candidateTokens":926,"totalTokens":91942,"cachedTokens":89728,"reasoningTokens":750,"cost":0.002035968,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:31.817Z","data":{"tool":"edit","summary":"crates/features/show/src/events.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:33.832Z","data":{"promptTokens":209,"candidateTokens":257,"totalTokens":92242,"cachedTokens":91776,"reasoningTokens":27,"cost":0.0009217559999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:33.835Z","data":{"tool":"edit","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:33.836Z","data":{"tool":"edit","summary":"crates/features/show/src/events.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:33.838Z","data":{"path":"crates/features/show/src/events/model.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:33.840Z","data":{"path":"crates/features/show/src/events.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:35.160Z","data":{"promptTokens":139,"candidateTokens":68,"totalTokens":92367,"cachedTokens":92160,"reasoningTokens":0,"cost":0.00067626,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:35.163Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_runs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:37.632Z","data":{"promptTokens":226,"candidateTokens":81,"totalTokens":92595,"cachedTokens":92288,"reasoningTokens":18,"cost":0.000718728,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:37.635Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:41.648Z","data":{"promptTokens":679,"candidateTokens":434,"totalTokens":93657,"cachedTokens":92544,"reasoningTokens":367,"cost":0.001279764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:41.651Z","data":{"tool":"bash","summary":"cargo fmt --all && sh scripts/verify-rust.sh"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:46.364Z","data":{"promptTokens":429,"candidateTokens":569,"totalTokens":94566,"cachedTokens":93568,"reasoningTokens":438,"cost":0.001372908,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:46.367Z","data":{"tool":"edit","summary":"crates/features/show/src/events/read.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:53:46.368Z","data":{"path":"crates/features/show/src/events/read.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:53:47.851Z","data":{"promptTokens":134,"candidateTokens":67,"totalTokens":94665,"cachedTokens":94464,"reasoningTokens":0,"cost":0.000687384,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:53:47.854Z","data":{"tool":"bash","summary":"cargo fmt --all && sh scripts/verify-rust.sh"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:30.240Z","data":{"promptTokens":13333,"candidateTokens":1016,"totalTokens":108941,"cachedTokens":94592,"reasoningTokens":956,"cost":0.005786652,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:30.243Z","data":{"tool":"bash","summary":"cat scripts/verify-rust.sh"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:32.400Z","data":{"promptTokens":467,"candidateTokens":155,"totalTokens":109550,"cachedTokens":108928,"reasoningTokens":44,"cost":0.000979668,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:32.403Z","data":{"tool":"bash","summary":"sed -n '1,120p' crates/kernel/linter/tests/link_gates_corpus"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:34.318Z","data":{"promptTokens":539,"candidateTokens":271,"totalTokens":110250,"cachedTokens":109440,"reasoningTokens":34,"cost":0.00114354,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:34.321Z","data":{"tool":"edit","summary":"crates/features/show/src/events.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:34.322Z","data":{"tool":"edit","summary":"crates/features/show/src/runs/section.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:54:34.324Z","data":{"path":"crates/features/show/src/events.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:54:34.326Z","data":{"path":"crates/features/show/src/runs/section.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:36.433Z","data":{"promptTokens":228,"candidateTokens":122,"totalTokens":110430,"cachedTokens":110080,"reasoningTokens":31,"cost":0.00087528,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:36.437Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/274-rust-show cargo test -p osq-"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:41.543Z","data":{"promptTokens":342,"candidateTokens":75,"totalTokens":110753,"cachedTokens":110336,"reasoningTokens":17,"cost":0.000854616,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:41.546Z","data":{"tool":"bash","summary":"cargo mutants --version"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:43.258Z","data":{"promptTokens":185,"candidateTokens":99,"totalTokens":110876,"cachedTokens":110592,"reasoningTokens":31,"cost":0.000837852,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:43.262Z","data":{"tool":"bash","summary":"cargo mutants --help | sed -n '1,180p'"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:45.863Z","data":{"promptTokens":1393,"candidateTokens":204,"totalTokens":112445,"cachedTokens":110848,"reasoningTokens":98,"cost":0.0013277879999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:45.867Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-show -f 'crates/features/show/s"}}
+{"type":"tokens","timestamp":"2026-10-22T09:54:47.743Z","data":{"promptTokens":245,"candidateTokens":141,"totalTokens":112770,"cachedTokens":112384,"reasoningTokens":24,"cost":0.000917004,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:54:47.746Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-show -f 'crates/features/show/s"}}
+{"type":"tokens","timestamp":"2026-10-22T09:56:21.240Z","data":{"promptTokens":764,"candidateTokens":1502,"totalTokens":115034,"cachedTokens":112768,"reasoningTokens":1441,"cost":0.002708208,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:21.242Z","data":{"tool":"bash","summary":"cat scripts/mutants-rust.sh"}}
+{"type":"tokens","timestamp":"2026-10-22T09:56:32.986Z","data":{"promptTokens":372,"candidateTokens":2084,"totalTokens":117400,"cachedTokens":114944,"reasoningTokens":1926,"cost":0.003302064,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:32.989Z","data":{"tool":"bash","summary":"nl -ba crates/features/show/src/runs/section/mutation.rs | s"}}
+{"type":"tokens","timestamp":"2026-10-22T09:56:45.048Z","data":{"promptTokens":941,"candidateTokens":2193,"totalTokens":120510,"cachedTokens":117376,"reasoningTokens":2089,"cost":0.003618156,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:45.051Z","data":{"tool":"bash","summary":"nl -ba crates/features/show/src/events/model.rs | sed -n '1,"}}
+{"type":"tokens","timestamp":"2026-10-22T09:56:50.423Z","data":{"promptTokens":3210,"candidateTokens":1111,"totalTokens":124769,"cachedTokens":120448,"reasoningTokens":121,"cost":0.003018888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:50.426Z","data":{"tool":"edit","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:50.426Z","data":{"tool":"edit","summary":"crates/features/show/src/events/read.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:50.428Z","data":{"tool":"edit","summary":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"tool","timestamp":"2026-10-22T09:56:50.430Z","data":{"tool":"write","summary":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:56:50.432Z","data":{"path":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:56:50.434Z","data":{"path":"crates/features/show/src/events/model.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:56:50.435Z","data":{"path":"crates/features/show/src/events/read.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:56:50.435Z","data":{"path":"crates/features/show/src/runs/section/mutation.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:10.722Z","data":{"promptTokens":211,"candidateTokens":5080,"totalTokens":129963,"cachedTokens":124672,"reasoningTokens":2604,"cost":0.0069073319999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:10.726Z","data":{"tool":"edit","summary":"crates/features/show/tests/show_runs.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:57:10.736Z","data":{"path":"crates/features/show/tests/show_runs.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:12.897Z","data":{"promptTokens":203,"candidateTokens":168,"totalTokens":130163,"cachedTokens":129792,"reasoningTokens":95,"cost":0.0010412519999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:12.900Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-feature-show --test sho"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:21.047Z","data":{"promptTokens":326,"candidateTokens":1289,"totalTokens":131663,"cachedTokens":130048,"reasoningTokens":1184,"cost":0.002424888,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:21.049Z","data":{"tool":"bash","summary":"ls -a | grep mutants; find . -name 'mutants.toml' -o -name '"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:24.036Z","data":{"promptTokens":147,"candidateTokens":63,"totalTokens":131794,"cachedTokens":131584,"reasoningTokens":0,"cost":0.000909204,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:24.039Z","data":{"tool":"bash","summary":"cat .cargo/mutants.toml"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:39.139Z","data":{"promptTokens":169,"candidateTokens":2649,"totalTokens":134530,"cachedTokens":131712,"reasoningTokens":2519,"cost":0.004019772,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:39.142Z","data":{"tool":"bash","summary":"grep -rn \"mutants::skip\\|skip attribute\\|skip_attribute\" ~/."}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:47.586Z","data":{"promptTokens":2532,"candidateTokens":1555,"totalTokens":138615,"cachedTokens":134528,"reasoningTokens":1456,"cost":0.0034327679999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:47.589Z","data":{"tool":"bash","summary":"grep -n \"raw_value\\|\\[features\\]\" -A30 ~/.cargo/registry/src"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:57.036Z","data":{"promptTokens":553,"candidateTokens":1746,"totalTokens":140795,"cachedTokens":138496,"reasoningTokens":1364,"cost":0.003092076,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:57.040Z","data":{"tool":"edit","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:57:57.040Z","data":{"path":"crates/features/show/src/events/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:57:58.926Z","data":{"promptTokens":154,"candidateTokens":88,"totalTokens":140914,"cachedTokens":140672,"reasoningTokens":15,"cost":0.0009958319999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:57:58.929Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-feature-show --test sho"}}
+{"type":"tokens","timestamp":"2026-10-22T09:58:02.065Z","data":{"promptTokens":295,"candidateTokens":126,"totalTokens":141221,"cachedTokens":140800,"reasoningTokens":9,"cost":0.0010845,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:58:02.068Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-show -f 'crates/features/show/s"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:17.897Z","data":{"promptTokens":221,"candidateTokens":160,"totalTokens":141565,"cachedTokens":141184,"reasoningTokens":70,"cost":0.001105404,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:17.900Z","data":{"tool":"bash","summary":"sed -n '850,950p' ~/.cargo/registry/src/index.crates.io-*/ca"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:20.225Z","data":{"promptTokens":973,"candidateTokens":141,"totalTokens":142554,"cachedTokens":141440,"reasoningTokens":65,"cost":0.00130974,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:20.227Z","data":{"tool":"bash","summary":"nl -ba crates/features/show/src/events/model.rs | sed -n '18"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:28.174Z","data":{"promptTokens":397,"candidateTokens":1381,"totalTokens":144242,"cachedTokens":142464,"reasoningTokens":1232,"cost":0.002631084,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:28.177Z","data":{"tool":"bash","summary":"python3 - <<'PY'\np='crates/features/show/src/events/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:32.684Z","data":{"promptTokens":256,"candidateTokens":616,"totalTokens":144872,"cachedTokens":144000,"reasoningTokens":541,"cost":0.00168,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:32.688Z","data":{"tool":"bash","summary":"cargo doc -p osq-feature-show --no-deps 2>&1 | tail -40"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:37.610Z","data":{"promptTokens":404,"candidateTokens":505,"totalTokens":145677,"cachedTokens":144768,"reasoningTokens":337,"cost":0.001595808,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:37.615Z","data":{"tool":"bash","summary":"python3 - <<'PY'\np='crates/features/show/src/events/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:41.033Z","data":{"promptTokens":341,"candidateTokens":349,"totalTokens":146354,"cachedTokens":145664,"reasoningTokens":180,"cost":0.001395084,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:41.037Z","data":{"tool":"bash","summary":"python3 - <<'PY'\np='crates/features/show/src/events/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:43.489Z","data":{"promptTokens":251,"candidateTokens":127,"totalTokens":146554,"cachedTokens":146176,"reasoningTokens":58,"cost":0.001104756,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:43.492Z","data":{"tool":"bash","summary":"nl -ba crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:49.457Z","data":{"promptTokens":350,"candidateTokens":1033,"totalTokens":147815,"cachedTokens":146432,"reasoningTokens":867,"cost":0.002223192,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:49.460Z","data":{"tool":"edit","summary":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T09:59:49.461Z","data":{"path":"crates/features/show/src/runs/section/stuck.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T09:59:51.638Z","data":{"promptTokens":137,"candidateTokens":144,"totalTokens":147993,"cachedTokens":147712,"reasoningTokens":7,"cost":0.001100172,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T09:59:51.642Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-feature-show --test sho"}}
+{"type":"tokens","timestamp":"2026-10-22T10:01:09.256Z","data":{"promptTokens":258,"candidateTokens":275,"totalTokens":148501,"cachedTokens":147968,"reasoningTokens":200,"cost":0.001295208,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:01:09.257Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/274-rust-show sh scripts/verify-"}}
+{"type":"tokens","timestamp":"2026-10-22T10:01:12.267Z","data":{"promptTokens":321,"candidateTokens":114,"totalTokens":148915,"cachedTokens":148480,"reasoningTokens":5,"cost":0.0011239800000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:01:12.267Z","data":{"tool":"edit","summary":"crates/features/show/src/events/model.rs"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:01:12.268Z","data":{"path":"crates/features/show/src/events/model.rs"}}
+{"type":"tokens","timestamp":"2026-10-22T10:01:14.984Z","data":{"promptTokens":210,"candidateTokens":81,"totalTokens":149027,"cachedTokens":148736,"reasoningTokens":0,"cost":0.0010526160000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:01:14.987Z","data":{"tool":"bash","summary":"cargo fmt --all && OSQ_CHANGE=openspec/changes/274-rust-show"}}
+{"type":"tokens","timestamp":"2026-10-22T10:02:30.962Z","data":{"promptTokens":16237,"candidateTokens":514,"totalTokens":165743,"cachedTokens":148992,"reasoningTokens":377,"cost":0.0063818519999999995,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:02:30.965Z","data":{"tool":"bash","summary":"ls -la openspec/changes/274-rust-show/.run/results/ 2>/dev/n"}}
+{"type":"tokens","timestamp":"2026-10-22T10:02:37.963Z","data":{"promptTokens":441,"candidateTokens":1232,"totalTokens":167305,"cachedTokens":165632,"reasoningTokens":497,"cost":0.002604492,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:02:37.966Z","data":{"tool":"write","summary":"openspec/changes/274-rust-show/.run/results/3.md"}}
+{"type":"file_changed","timestamp":"2026-10-22T10:02:37.969Z","data":{"path":"openspec/changes/274-rust-show/.run/results/3.md"}}
+{"type":"tokens","timestamp":"2026-10-22T10:02:41.148Z","data":{"promptTokens":169,"candidateTokens":292,"totalTokens":167629,"cachedTokens":167168,"reasoningTokens":224,"cost":0.0014041079999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-22T10:02:41.151Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-show --test show_runs"}}
+{"type":"text","timestamp":"2026-10-22T10:02:43.593Z","data":{"text":"Task complete.\n\n- Implemented event stream reading, ordered JSON data rendering, and the `Event Timeline:` section in `crates/features/show/src/events.rs` and `src/events/**`.\n- Implemented all task run-history lines in `src/runs/section.rs` and `src/runs/section/**`.\n- Added `tests/show_runs.rs` proving the `rust-show/show-run-history` scenario plus edge-case coverage.\n- Verified with `cargo test -p osq-feature-show --test show_runs`, `OSQ_CHANGE=openspec/changes/274-rust-show sh scripts/verify-rust.sh`, and manual cargo-mutants over every touched source file: 114 caught, 0 missed, 7 unviable.\n- Wrote `openspec/changes/274-rust-show/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-10-22T10:02:43.593Z","data":{"promptTokens":258,"candidateTokens":182,"totalTokens":167992,"cachedTokens":167552,"reasoningTokens":0,"cost":0.0013011119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-22T10:02:43.627Z","data":{"exitCode":0,"pid":2846902,"timedOut":false,"elapsedSeconds":697.5}}
+{"type":"format_ran","timestamp":"2026-10-22T10:02:46.265Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/features/show/src/events.rs' 'crates/features/show/src/events/model.rs' 'crates/features/show/src/events/read.rs' 'crates/features/show/src/events/timeline.rs' 'crates/features/show/src/runs/section.rs' 'crates/features/show/src/runs/section/dependencies.rs' 'crates/features/show/src/runs/section/focused.rs' 'crates/features/show/src/runs/section/instructions.rs' 'crates/features/show/src/runs/section/mutation.rs' 'crates/features/show/src/runs/section/pre_spawn.rs' 'crates/features/show/src/runs/section/retries.rs' 'crates/features/show/src/runs/section/stuck.rs' 'crates/features/show/src/runs/section/values.rs' 'crates/features/show/tests/show_runs.rs'","files":["crates/features/show/src/events.rs","crates/features/show/src/events/model.rs","crates/features/show/src/events/read.rs","crates/features/show/src/events/timeline.rs","crates/features/show/src/runs/section.rs","crates/features/show/src/runs/section/dependencies.rs","crates/features/show/src/runs/section/focused.rs","crates/features/show/src/runs/section/instructions.rs","crates/features/show/src/runs/section/mutation.rs","crates/features/show/src/runs/section/pre_spawn.rs","crates/features/show/src/runs/section/retries.rs","crates/features/show/src/runs/section/stuck.rs","crates/features/show/src/runs/section/values.rs","crates/features/show/tests/show_runs.rs"],"exitCode":0,"duration":1.14,"timedOut":false,"output":"Checked 0 files in 384µs. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-22T10:02:48.665Z","data":{"command":"cargo test -p osq-feature-show --test show_runs","exitCode":0,"duration":0.88,"log":".run/logs/3-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/show_runs.rs (target/debug/deps/show_runs-89ca23fb7819b2ff)\n\nrunning 4 tests\ntest event_files_follow_typescript_order ... ok\ntest event_values_follow_javascript ... ok\ntest run_lines_cover_every_recorded_edge ... ok\ntest show_run_history ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n"}}
+{"type":"measures","timestamp":"2026-10-22T10:05:35.156Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":23,"repoFiles":15715,"repoLines":816443,"importFanIn":0,"proposalWords":737,"taskWords":377,"deltaRequirements":8,"deltaScenarios":12,"changedFiles":14,"changedLines":970,"scopeHashes":{"crates/features/show/src/events.rs":{"before":"sha256:fd3e09c938e47d8d9af000976aea6122cb86589b0f01c83a0a18265694773735","after":"sha256:3c1d40842f70e999ee62af914522c9edbd1c7f68cd295ab1b07bd518302bcb88"},"crates/features/show/src/runs/section.rs":{"before":"sha256:c30037c8aaa8659fca69c1fb82a7d3f34d2a05c87cac7e969d3c5f6b6539efc1","after":"sha256:698c0cb2562eae0ec379b203bbe6fbcb125a184d7bf7a69ad8f3c13aecaa15b4"},"crates/features/show/tests/show_runs.rs":{"before":null,"after":"sha256:fefafaeb3578043bfc3c03099bd52776e19b2b88dc0cc898a7a1b866c0bbc69f"},"crates/features/show/src/events/model.rs":{"before":null,"after":"sha256:89fdb166be2d7c0cc56fe8ee23850b4dcb9ec164edbbdbea10c35f8472a8b903"},"crates/features/show/src/events/read.rs":{"before":null,"after":"sha256:7f2a15d06077fb273a5469dc02fcd00cf9dd0abd42703c9ecf188267d9fa4b93"},"crates/features/show/src/events/timeline.rs":{"before":null,"after":"sha256:2e472d568d2e6204f5e9fcb3f8e862c408db91c40e921214340b1e40058e1997"},"crates/features/show/src/runs/section/dependencies.rs":{"before":null,"after":"sha256:47744274d976f46afb72a74e2353dc3637212703a024be9048da00def73550ad"},"crates/features/show/src/runs/section/focused.rs":{"before":null,"after":"sha256:957a25c59ae72d564870bf52122884197771b42473ad750c6399fbc2bcbd1f34"},"crates/features/show/src/runs/section/instructions.rs":{"before":null,"after":"sha256:c6eafc347a8fbdc14b3bf703a3faddb5cad07baa63c45eb7cda029d060afcbbe"},"crates/features/show/src/runs/section/mutation.rs":{"before":null,"after":"sha256:c8890dde7b19444569c56236ec5a7378501d4be7b6787eaf1ddbe9c4d53815a2"},"crates/features/show/src/runs/section/pre_spawn.rs":{"before":null,"after":"sha256:28ec833f75071596b4a01648dbac0a8b4d3d5b594a9ecc0fa15fddc508551749"},"crates/features/show/src/runs/section/retries.rs":{"before":null,"after":"sha256:42b089098d4e373c3fb3a0561266d7c057f8b054ccc1c9aac37c8e74d163c2b5"},"crates/features/show/src/runs/section/stuck.rs":{"before":null,"after":"sha256:04e0d27068d7e15e5534fc5855352b3692a3ca82251561a8a54d5a1f929c1baf"},"crates/features/show/src/runs/section/values.rs":{"before":null,"after":"sha256:32e9bef3355b4db60b72872c6c514247d54595e85183454fbefc1e2262684b39"}}}}
+{"type":"done","timestamp":"2026-10-22T10:05:35.167Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-10-22T11:10:02.109Z","data":{"command":"cargo test -p osq-feature-show --test show_runs","exitCode":0,"duration":0.15,"log":".run/logs/3-3.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/show_runs.rs (target/debug/deps/show_runs-89ca23fb7819b2ff)\n\nrunning 4 tests\ntest event_files_follow_typescript_order ... ok\ntest event_values_follow_javascript ... ok\ntest run_lines_cover_every_recorded_edge ... ok\ntest show_run_history ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n"}}

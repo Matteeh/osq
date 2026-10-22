@@ -1,0 +1,6 @@
+{"type":"verify_ran","timestamp":"2026-10-04T09:00:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":0,"duration":0.2,"phase":"pre_spawn","expected":"green","missingPaths":["tests/beta.test.ts",""]}}
+{"type":"started","timestamp":"2026-10-04T09:00:01.000Z","data":{"attempt":1}}
+{"type":"stuck","timestamp":"2026-10-04T09:01:00.000Z","data":{"fingerprint":" "}}
+{"type":"retry","timestamp":"2026-10-04T09:02:00.000Z","data":{}}
+{"type":"verify_ran","timestamp":"2026-10-04T09:03:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":1,"duration":0.7}}
+{"type":"dead","timestamp":"2026-10-04T09:03:01.000Z","data":{"reason":"verify_red"}}
