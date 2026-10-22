@@ -3,6 +3,7 @@
 //! The lines are pure text; only the orchestrator reads the config and starts
 //! pi (ADR 023). Doctor writes no file (ADR 025).
 
+mod changes;
 mod probe;
 
 use std::collections::BTreeMap;
@@ -15,6 +16,7 @@ use osq_kernel_harnesses::{
     resolve_pi_binary,
 };
 
+use changes::change_lines;
 use probe::probe;
 
 /// TypeScript's `PI_TESTED_RANGE`, held in code as it holds it (ADR 029).
@@ -33,7 +35,8 @@ const PI_TESTED_RANGE: PiVersionRange = PiVersionRange {
 /// Implements: rust-doctor/doctor-pi-checks
 pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
     let env: BTreeMap<String, String> = std::env::vars().collect();
-    let lines = collect_lines(root, &env);
+    let (mut lines, config) = collect_lines(root, &env);
+    lines.extend(change_lines(root, &config));
     if lines.iter().any(|line| line.starts_with("[fail]")) {
         return Err(FeatureError::failed("doctor", lines.join("\n")));
     }
@@ -45,30 +48,41 @@ pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
     Ok(output)
 }
 
-/// Builds the check lines for one root and one process environment.
+/// Builds the configuration and pi lines for one root and one process
+/// environment, along with the config the change checks use.
 ///
 /// Implements: rust-doctor/doctor-pi-checks
-fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> Vec<String> {
-    let config = match load_config(root) {
-        Ok(config) => config,
-        Err(error) => return vec![format!("[fail] config: failed to load: {error}")],
-    };
-    let mut lines = vec![config_line(&config)];
+fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> (Vec<String>, Config) {
+    match load_config(root) {
+        Ok(config) => {
+            let mut lines = vec![config_line(&config)];
+            lines.extend(pi_lines(root, env, &config));
+            (lines, config)
+        }
+        Err(error) => (
+            vec![format!("[fail] config: failed to load: {error}")],
+            Config::default(),
+        ),
+    }
+}
+
+/// Builds the harness, version and auth lines for a loaded config.
+///
+/// Implements: rust-doctor/doctor-pi-checks
+fn pi_lines(root: &Path, env: &BTreeMap<String, String>, config: &Config) -> Vec<String> {
     if config.executor.harness != Harness::Pi {
-        return lines;
+        return Vec::new();
     }
     let bin = resolve_pi_binary(config.pi.bin.as_deref(), env);
     let version = match probe(&bin, root, env, &config.timeouts) {
         Ok(version) => version,
         Err(reason) => {
-            lines.push(format!(
+            return vec![format!(
                 "[fail] harness: binary unavailable: {bin} ({reason})"
-            ));
-            return lines;
+            )];
         }
     };
-    lines.push(harness_line(&bin, &version));
-    lines.push(version_line(&version));
+    let mut lines = vec![harness_line(&bin, &version), version_line(&version)];
     if let Some(provider) = config.pi.provider.as_deref() {
         lines.push(auth_line(&bin, provider, root, env, &config.timeouts));
     }

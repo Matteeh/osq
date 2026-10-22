@@ -30,7 +30,9 @@
 //! Implements: rust-storage/after-land-failure-record
 //! Implements: rust-storage/queue-item-titles
 //! Implements: rust-storage/retry-context
+//! Implements: rust-storage/change-folder-files
 
+mod change_files;
 mod error;
 mod land;
 mod listing;
@@ -45,6 +47,7 @@ mod snapshot;
 mod text;
 mod trees;
 
+pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
 pub use error::StorageError;
 pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};

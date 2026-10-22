@@ -63,15 +63,23 @@ const ROWS: &[Row] = &[
         name: "config-defaults",
         config: None,
         files: &[],
-        expected: Expected::Output("[ok] config: loaded (harness: agy)\n"),
+        expected: Expected::Output(concat!(
+            "[ok] config: loaded (harness: agy)\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
+        )),
     },
     Row {
         name: "blank-pi-bin",
         config: Some("[pi]\nbin = \"  \""),
         files: &[],
-        expected: Expected::Failed(
-            "[fail] config: failed to load: pi.bin must be a non-empty string",
-        ),
+        expected: Expected::Failed(concat!(
+            "[fail] config: failed to load: pi.bin must be a non-empty string\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
+        )),
     },
     Row {
         name: "tested-version",
@@ -81,6 +89,9 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
         )),
     },
     Row {
@@ -91,6 +102,9 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.90.0\n",
             "[warn] harness-version: Pi 0.90.0 is outside the tested range >=0.87.0 <0.88.0\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
         )),
     },
     Row {
@@ -101,6 +115,9 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.87.2\n",
             "[ok] harness-version: Pi 0.87.2 (tested >=0.87.0 <0.88.0)\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
         )),
     },
     Row {
@@ -111,6 +128,9 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake>\n",
             "[warn] harness-version: Pi version \"\" is outside the tested range >=0.87.0 <0.88.0\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
         )),
     },
     Row {
@@ -119,7 +139,10 @@ const ROWS: &[Row] = &[
         files: &[("fake-pi-version", "0.87.1"), ("fake-pi-version-exit", "2")],
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: pi)\n",
-            "[fail] harness: binary unavailable: <fake> (exited with code 2)",
+            "[fail] harness: binary unavailable: <fake> (exited with code 2)\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
     Row {
@@ -129,7 +152,10 @@ const ROWS: &[Row] = &[
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: pi)\n",
             "[fail] harness: binary unavailable: /nonexistent/pi ",
-            "(cannot start /nonexistent/pi: No such file or directory (os error 2))",
+            "(cannot start /nonexistent/pi: No such file or directory (os error 2))\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
     Row {
@@ -138,7 +164,10 @@ const ROWS: &[Row] = &[
         files: &[("fake-pi-version-wait", "")],
         expected: Expected::Failed(concat!(
             "[ok] config: loaded (harness: pi)\n",
-            "[fail] harness: binary unavailable: <fake> (timed out)",
+            "[fail] harness: binary unavailable: <fake> (timed out)\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
     Row {
@@ -156,6 +185,9 @@ const ROWS: &[Row] = &[
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
             "[ok] harness-auth: deepseek credentials ready\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified\n",
         )),
     },
     Row {
@@ -173,7 +205,10 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
-            "[fail] harness-auth: deepseek credentials not ready: No API key found for deepseek",
+            "[fail] harness-auth: deepseek credentials not ready: No API key found for deepseek\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
     Row {
@@ -184,7 +219,10 @@ const ROWS: &[Row] = &[
             "[ok] config: loaded (harness: pi)\n",
             "[ok] harness: <fake> 0.90.0\n",
             "[warn] harness-version: Pi 0.90.0 is outside the tested range >=0.87.0 <0.88.0\n",
-            "[fail] harness-auth: deepseek credentials not ready: pi auth check exited with code 3",
+            "[fail] harness-auth: deepseek credentials not ready: pi auth check exited with code 3\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
     Row {
@@ -196,7 +234,10 @@ const ROWS: &[Row] = &[
             "[ok] harness: <fake> 0.87.1\n",
             "[ok] harness-version: Pi 0.87.1 (tested >=0.87.0 <0.88.0)\n",
             "[fail] harness-auth: deepseek credentials not ready: ",
-            "Pi binary not found or failed: <fake>",
+            "Pi binary not found or failed: <fake>\n",
+            "[ok] locks: no orphaned locks\n",
+            "[ok] archives: all archives valid\n",
+            "[ok] done-markers: all done markers verified",
         )),
     },
 ];
