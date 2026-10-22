@@ -106,8 +106,6 @@ fn land_from_the_branch_tip() {
 
 /// One row of "Land commit stops".
 enum Stop {
-    /// `main` gained a commit after the branch was cut.
-    Moved,
     /// The checkout's `src/one.txt` holds an edit and `osq.toml` keeps edits.
     Blocked,
     /// The checkout's `src/one.txt` holds an edit and `osq.toml` blocks edits.
@@ -123,11 +121,6 @@ fn land_commit_stops() {
         "[vcs]\nenabled = true\nauthor = \"osq <osq@example.invalid>\"\nmanualEdits = \"block\"\n";
     let rows = [
         (
-            "main moved",
-            Stop::Moved,
-            "main moved while landing; run osq land 001 again",
-        ),
-        (
             "checkout file blocks",
             Stop::Blocked,
             "The checkout has uncommitted changes in files this land writes: src/one.txt; keep them with osq manual \"<why>\", or commit or stash them, then run osq land 001 again",
@@ -142,10 +135,6 @@ fn land_commit_stops() {
         let repo = LandRepo::new(&format!("stop-{index}"));
         repo.add_fixture_change();
         match stop {
-            Stop::Moved => {
-                repo.write(repo.checkout(), "other.txt", "other\n");
-                repo.commit(repo.checkout(), "main moves", &["other.txt"]);
-            }
             Stop::Blocked => {
                 repo.write(repo.checkout(), "src/one.txt", "edit\n");
             }

@@ -5,6 +5,7 @@ mod after;
 mod checks;
 mod find;
 mod message;
+mod sync;
 mod text;
 mod time;
 
@@ -46,13 +47,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
     let Some(repo_root) = vcs.root().map_err(|error| failed(error.to_string()))? else {
         return Err(failed(text::NEEDS_GIT));
     };
-    let fallback = settings
-        .default_branch
-        .as_deref()
-        .unwrap_or(text::DEFAULT_BRANCH);
-    let default_branch = vcs
-        .default_branch(fallback)
-        .map_err(|error| failed(error.to_string()))?;
+    let default_branch = land_default_branch(&vcs, &settings)?;
     let worktrees = worktree_changes(&vcs, root)?;
     let located = locate(root, &vcs, &worktrees, &default_branch, query)?;
     let facts = located
@@ -67,11 +62,9 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         facts.as_ref(),
         &default_branch,
     )?;
-
     if located.landed {
         return landed_output(&repo_root, &located, &settings, &timeouts);
     }
-
     let change = located
         .worktree
         .as_ref()
@@ -79,7 +72,13 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
     let facts = facts
         .as_ref()
         .expect("a change that has not landed sits in a worktree");
-
+    let synced = sync::run(
+        &change.path,
+        &located.folder,
+        &default_branch,
+        &settings,
+        &timeouts,
+    )?;
     let Some(tip) = worktree_head(change, &timeouts)? else {
         return Err(moved(&default_branch, &located.folder));
     };
@@ -93,7 +92,8 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         return Err(moved(&default_branch, &located.folder));
     }
     let author = settings.author.clone().unwrap_or_default();
-    let message = message::format(&located.folder, facts, change.head.as_deref());
+    let head = synced.as_deref().or(change.head.as_deref());
+    let message = message::format(&located.folder, facts, head);
     let commit = vcs
         .commit_tree(&tip, &base, &message, &author, &[])
         .map_err(|error| failed(error.to_string()))?;
@@ -388,6 +388,18 @@ fn checkout_head(vcs: &GitVcs) -> Result<Option<String>, FeatureError> {
 /// Implements: rust-land/land-commit
 fn moved(default_branch: &str, folder: &str) -> FeatureError {
     failed(text::moved(default_branch, text::change_id(folder)))
+}
+
+/// The default branch the land uses, from settings or the remote head.
+///
+/// Implements: rust-land/land-settings
+fn land_default_branch(vcs: &GitVcs, settings: &VcsConfig) -> Result<String, FeatureError> {
+    let fallback = settings
+        .default_branch
+        .as_deref()
+        .unwrap_or(text::DEFAULT_BRANCH);
+    vcs.default_branch(fallback)
+        .map_err(|error| failed(error.to_string()))
 }
 
 /// A `GitVcs` at `root` bounded by the loaded config's `timeouts`.
