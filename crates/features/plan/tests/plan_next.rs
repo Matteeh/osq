@@ -89,13 +89,14 @@ fn run_plan(root: &Path, args: &[&str]) -> Result<Output, FeatureError> {
 /// Covers: rust-plan/plan-argument-errors
 #[test]
 fn plan_argument_errors() {
-    let cases: [(&str, &[&str]); 6] = [
+    let cases: [(&str, &[&str]); 7] = [
         ("no args", &[]),
         ("replan alone", &["--replan"]),
         ("next twice", &["--next", "--next"]),
         ("replan twice", &["--next", "--replan", "--replan"]),
-        ("next without dashes", &["next"]),
         ("unknown after next", &["--next", "x"]),
+        ("two ids", &["a", "b"]),
+        ("unknown flag", &["--steer"]),
     ];
     for (name, args) in cases {
         let root = scratch(&format!("plan_argument_errors/{}", name.replace(' ', "_")));
@@ -105,7 +106,7 @@ fn plan_argument_errors() {
             }) => {
                 assert_eq!(
                     (command.as_str(), message.as_str()),
-                    ("plan", "expected --next [--replan]"),
+                    ("plan", "expected --next [--replan] or one change id"),
                     "row {name}"
                 );
             }

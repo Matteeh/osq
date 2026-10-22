@@ -2,7 +2,7 @@
 
 mod date;
 mod files;
-mod handoff;
+pub(crate) mod handoff;
 mod number;
 mod prompt;
 mod report;
@@ -15,33 +15,6 @@ use osq_core::FeatureError;
 use osq_kernel_storage::ChangeSnapshot;
 
 use crate::queue::{self, Groups};
-
-/// Reads a `plan` invocation's arguments into whether it replans.
-///
-/// Implements: rust-plan/plan-arguments
-pub(crate) fn arguments(args: &[String]) -> Result<bool, FeatureError> {
-    let mut next = 0_usize;
-    let mut replan = 0_usize;
-    for argument in args {
-        match argument.as_str() {
-            "--next" => next += 1,
-            "--replan" => replan += 1,
-            _ => return Err(usage()),
-        }
-    }
-    if next == 1 && replan <= 1 {
-        Ok(replan == 1)
-    } else {
-        Err(usage())
-    }
-}
-
-/// Builds the refusal for a `plan` invocation with other arguments.
-///
-/// Implements: rust-plan/plan-arguments
-fn usage() -> FeatureError {
-    FeatureError::usage("plan", "expected --next [--replan]")
-}
 
 /// Runs `plan --next` on `root` at `now_ms`, returning the handoff text.
 ///
@@ -70,7 +43,8 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
     let proposal = files::proposal(item, &dependencies, &fixes);
     let brief = files::brief(item, &date::utc_date(now_ms));
     let sections = report::sections(root)?;
-    let prompt = prompt_text(root, &number, &folder, &proposal, &brief, &paths);
+    let title = osq_kernel_storage::frontmatter_string(&proposal, "title");
+    let prompt = opening_prompt(root, &number, title.as_deref(), &folder, &paths, &brief);
     let change = root.join("openspec").join("changes").join(&folder);
     write_folder(&change, &proposal, &brief)?;
     write(
@@ -82,7 +56,13 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
         .join("commands")
         .join("osq-plan.md")
         .is_file();
-    Ok(handoff::format(root, &folder, &number, command))
+    Ok(handoff::format(
+        root,
+        &folder,
+        &number,
+        "unplanned",
+        command,
+    ))
 }
 
 /// Reads each active change folder that has a proposal or a spec.
@@ -123,33 +103,41 @@ fn write(path: &Path, text: &str) -> Result<(), FeatureError> {
     std::fs::write(path, text).map_err(|source| write_error(path, &source))
 }
 
-/// Builds `plan-prompt.md`'s first sections from the files and folders it names.
+/// Builds `plan-prompt.md`'s first sections from the values a plan gives.
 ///
 /// Implements: rust-plan/plan-prompt
-fn prompt_text(
+/// Implements: rust-plan/steering-prompt
+pub(crate) fn opening_prompt(
     root: &Path,
     id: &str,
+    title: Option<&str>,
     folder: &str,
-    proposal: &str,
+    dependencies: &[String],
     brief: &str,
-    paths: &[String],
 ) -> String {
     let planner = planner(root);
-    let title = osq_kernel_storage::frontmatter_string(proposal, "title");
     let capabilities = capabilities(root);
     let decisions =
         osq_kernel_specs::read_decisions(root, Path::new("decisions"), Path::new("openspec")).adrs;
     let input = prompt::Prompt {
         planner: planner.as_deref(),
         id,
-        title: title.as_deref(),
+        title,
         folder,
-        dependencies: paths,
+        dependencies,
         capabilities: &capabilities,
         decisions: &decisions,
         brief,
     };
     prompt::build(&input)
+}
+
+/// Reads the plan prompt's sections after `## Brief`.
+///
+/// Implements: rust-plan/plan-prompt
+/// Implements: rust-plan/steering-prompt
+pub(crate) fn sections(root: &Path) -> Result<String, FeatureError> {
+    report::sections(root)
 }
 
 /// Reads `<root>/PLANNER.md`, or none when it cannot be read.

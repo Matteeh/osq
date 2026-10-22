@@ -1,0 +1,6 @@
+<root>/openspec/changes/006-sync-red: ask your planning tool to plan change 006-sync-red — next: dead (needs steering) — osq plan 006
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 006-sync-red.
+Read <root>/openspec/changes/006-sync-red/plan-prompt.md and follow it exactly; it is your complete prompt.
