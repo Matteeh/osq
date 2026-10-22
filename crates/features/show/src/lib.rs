@@ -5,6 +5,7 @@
 mod archived;
 mod digest;
 mod events;
+mod facts;
 mod feature;
 mod header;
 mod lookup;

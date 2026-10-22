@@ -2,9 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::lookup;
-use crate::model;
-use crate::text;
+use crate::{facts, lookup, model, text};
 
 /// The show feature: a unit struct with no state (ADR 028).
 ///
@@ -54,9 +52,14 @@ impl Feature for ShowFeature {
                 "specify a spec ID to show (e.g. osq show 001)",
             ));
         }
-        let found = lookup::resolve(&invocation.root, id)?;
-        let change =
-            model::read(&found).map_err(|message| FeatureError::failed("show", message))?;
-        Ok(Output::text(format!("{}\n", text::format(&change))))
+        let facts = facts::read(&invocation.root)?;
+        let found = lookup::resolve(&invocation.root, id, facts.entries())?;
+        let land = facts.land(&found)?;
+        let change = model::read(&found, &facts, land.as_ref())
+            .map_err(|message| FeatureError::failed("show", message))?;
+        Ok(Output::text(format!(
+            "{}\n",
+            text::format(&change, land.as_ref())
+        )))
     }
 }

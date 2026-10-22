@@ -8,6 +8,7 @@ mod validation;
 mod values;
 mod verification;
 
+use crate::facts::LandFacts;
 use crate::model::Change;
 
 /// The `Verification:` lines, or none for a change without a history.
@@ -33,7 +34,7 @@ pub(crate) fn recertifications(change: &Change) -> Vec<String> {
 
 /// The land-view lines, or none for a change that was not archived.
 ///
-/// Implements: rust-show/show-text
-pub(crate) fn land(change: &Change) -> Vec<String> {
-    land::lines(change)
+/// Implements: rust-show/show-land-lines
+pub(crate) fn land(change: &Change, facts: Option<&LandFacts>) -> Vec<String> {
+    land::lines(change, facts)
 }

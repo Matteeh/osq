@@ -14,6 +14,7 @@ use osq_kernel_specs::{parse_frontmatter, read_proposal, read_task_file};
 use osq_kernel_storage::{Location, parse_result_sections};
 use yaml_rust2::Yaml;
 
+use crate::facts::{Facts, LandFacts};
 use crate::lookup::Found;
 
 pub(crate) use next::NextStep;
@@ -158,7 +159,11 @@ pub(crate) struct Change {
 ///
 /// Returns the message TypeScript prints when the folder has neither a
 /// proposal nor a spec, or when the specs kernel refuses a file.
-pub(crate) fn read(found: &Found) -> Result<Change, String> {
+pub(crate) fn read(
+    found: &Found,
+    facts: &Facts,
+    land: Option<&LandFacts>,
+) -> Result<Change, String> {
     let folder = &found.path;
     let proposal_path = folder.join("proposal.md");
     let spec_path = folder.join("spec.md");
@@ -186,6 +191,9 @@ pub(crate) fn read(found: &Found) -> Result<Change, String> {
         .then_some(Steering);
     let status = status(found.location, &tasks, approved_hash.is_some(), &unmet);
     let id = id(&found.folder);
+    let archived_unlanded = found.location == Location::Archived
+        && facts.vcs_enabled()
+        && land.is_some_and(|land| !land.landed);
     let next = next_step(&NextInput {
         location: found.location,
         id: &id,
@@ -197,6 +205,7 @@ pub(crate) fn read(found: &Found) -> Result<Change, String> {
         change_regressed: change_regressed.as_ref(),
         unmet: &unmet,
         steering,
+        archived_unlanded,
     });
     Ok(Change {
         id,
@@ -533,6 +542,8 @@ struct NextInput<'a> {
     unmet: &'a [String],
     /// The active steering trigger marker, when there is one.
     steering: Option<Steering>,
+    /// Whether the change is archived but its default branch lacks it.
+    archived_unlanded: bool,
 }
 
 /// A marker that an approved change has an active steering trigger.
@@ -547,6 +558,8 @@ fn next_step(input: &NextInput<'_>) -> Option<NextStep> {
     if input.location == Location::Archived {
         return Some(if input.steering.is_some() {
             NextStep::dead_steering(input.id)
+        } else if input.archived_unlanded {
+            NextStep::archived_not_landed(input.id)
         } else {
             NextStep::landed()
         });

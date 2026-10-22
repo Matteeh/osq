@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_storage::{Location, list_changes};
+use osq_kernel_storage::{ChangeEntry, Location};
 
 /// One change folder found by its id, prefix or path.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -21,7 +21,11 @@ pub(crate) struct Found {
 /// # Errors
 ///
 /// Returns [`FeatureError::failed`] for an id no change folder matches.
-pub(crate) fn resolve(root: &Path, id: &str) -> Result<Found, FeatureError> {
+pub(crate) fn resolve(
+    root: &Path,
+    id: &str,
+    entries: &[ChangeEntry],
+) -> Result<Found, FeatureError> {
     let trimmed = id.trim();
     if trimmed.contains('/') || Path::new(trimmed).is_absolute() {
         let candidate = if Path::new(trimmed).is_absolute() {
@@ -30,14 +34,14 @@ pub(crate) fn resolve(root: &Path, id: &str) -> Result<Found, FeatureError> {
             root.join(trimmed)
         };
         if candidate.is_dir() {
-            return Ok(found(root, candidate));
+            return Ok(found(candidate, entries));
         }
     }
-    for entry in list_changes(root) {
+    for entry in entries {
         if matches_folder(&entry.folder, trimmed) {
             return Ok(Found {
-                folder: entry.folder,
-                path: entry.path,
+                folder: entry.folder.clone(),
+                path: entry.path.clone(),
                 location: entry.location,
             });
         }
@@ -49,14 +53,14 @@ pub(crate) fn resolve(root: &Path, id: &str) -> Result<Found, FeatureError> {
 }
 
 /// Builds a found folder for an existing path, taking its location from the listing.
-fn found(root: &Path, candidate: PathBuf) -> Found {
+fn found(candidate: PathBuf, entries: &[ChangeEntry]) -> Found {
     let folder = candidate
         .file_name()
         .and_then(|name| name.to_str())
         .unwrap_or_default()
         .to_owned();
-    let location = list_changes(root)
-        .into_iter()
+    let location = entries
+        .iter()
         .find(|entry| same_path(&entry.path, &candidate))
         .map_or(Location::Active, |entry| entry.location);
     Found {

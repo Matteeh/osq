@@ -1,10 +1,11 @@
 //! Building the whole `osq show` text in TypeScript's order.
 
+use crate::facts::LandFacts;
 use crate::model::Change;
 use crate::{archived, digest, events, header, planning, tasks};
 
 /// The whole text of one change, without the final newline.
-pub(crate) fn format(change: &Change) -> String {
+pub(crate) fn format(change: &Change, land: Option<&LandFacts>) -> String {
     let mut lines = header::lines(change);
     lines.extend(prose("Goal:", &change.goal));
     lines.extend(prose("Contract:", &change.contract));
@@ -13,7 +14,7 @@ pub(crate) fn format(change: &Change) -> String {
     lines.extend(planning::section(change));
     lines.extend(archived::recertifications(change));
     lines.extend(events::section(change));
-    lines.extend(archived::land(change));
+    lines.extend(archived::land(change, land));
     lines.extend(digest::lines(change));
     lines.join("\n")
 }

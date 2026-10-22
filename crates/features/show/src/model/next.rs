@@ -69,6 +69,15 @@ impl NextStep {
         Self::new("landed", None, None)
     }
 
+    /// The next step of an archived change the default branch lacks.
+    pub(crate) fn archived_not_landed(id: &str) -> Self {
+        Self::new(
+            "archived",
+            Some("not landed".to_owned()),
+            Some(format!("osq land {id}")),
+        )
+    }
+
     /// Builds a next step from its state, detail and command.
     fn new(state: &'static str, detail: Option<String>, command: Option<String>) -> Self {
         Self {
