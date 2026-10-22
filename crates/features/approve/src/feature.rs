@@ -2,7 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::approve;
+use crate::approve::{self, ApproveOptions};
 use crate::reject;
 
 /// The approve feature: a unit struct with no state (ADR 028).
@@ -24,7 +24,11 @@ impl Feature for ApproveFeature {
     /// Implements: rust-approve/approve-feature
     fn commands(&self) -> Vec<Command> {
         vec![
-            Command::new("approve", "lint, hash, and approve change folders", "<id>"),
+            Command::new(
+                "approve",
+                "lint, hash, and approve change folders",
+                "<id> [--base-ok] [--ignore-dirty]",
+            ),
             Command::new(
                 "reject",
                 "move an eligible active change intact into rejected history",
@@ -47,16 +51,33 @@ impl Feature for ApproveFeature {
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
         match invocation.command.as_str() {
             "approve" => {
-                if invocation.args.len() != 1 {
+                let (ids, options) = approve_arguments(&invocation.args);
+                if ids.len() != 1 {
                     return Err(FeatureError::usage(
                         "approve",
-                        format!("expected one change id, got {}", invocation.args.len()),
+                        format!("expected one change id, got {}", ids.len()),
                     ));
                 }
-                approve::run_approve(&invocation.root, &invocation.args[0]).map(Output::text)
+                approve::run_approve(&invocation.root, ids[0], options).map(Output::text)
             }
             "reject" => reject::run_reject(&invocation.root, &invocation.args).map(Output::text),
             other => Err(FeatureError::unknown_command(other)),
         }
     }
+}
+
+/// Splits an `approve` invocation into its change ids and its two flags.
+///
+/// Implements: rust-approve/approve-arguments
+fn approve_arguments(args: &[String]) -> (Vec<&str>, ApproveOptions) {
+    let mut ids = Vec::new();
+    let mut options = ApproveOptions::default();
+    for arg in args {
+        match arg.as_str() {
+            "--base-ok" => options.base_ok = true,
+            "--ignore-dirty" => options.ignore_dirty = true,
+            id => ids.push(id),
+        }
+    }
+    (ids, options)
 }

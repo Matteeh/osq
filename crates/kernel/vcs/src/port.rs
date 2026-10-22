@@ -226,6 +226,16 @@ pub trait Vcs {
     /// Implements: rust-vcs/branch-and-worktree-writes
     fn rename_branch(&self, from: &str, to: &str) -> Result<(), VcsError>;
 
+    /// Deletes the branch `name`, refusing any branch HEAD does not hold.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses, such as for a missing
+    /// branch, a branch a worktree has checked out, or one HEAD does not hold.
+    ///
+    /// Implements: rust-vcs/branch-deletion
+    fn delete_branch(&self, name: &str) -> Result<(), VcsError>;
+
     /// Adds a worktree at `path` for the existing branch `branch`.
     ///
     /// # Errors

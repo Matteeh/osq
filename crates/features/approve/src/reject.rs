@@ -5,7 +5,7 @@ mod eligibility;
 mod markers;
 mod record;
 mod text;
-mod time;
+pub(crate) mod time;
 
 use std::fs;
 use std::path::Path;

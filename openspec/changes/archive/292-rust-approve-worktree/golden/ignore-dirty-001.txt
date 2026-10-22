@@ -1,0 +1,32 @@
+outcome: output
+Approved 001 (001-alpha-twice)
+  Hash: sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
+  Worktree: <root>/worktrees/repo/001-alpha-twice
+  Branch: osq/001-alpha-twice
+branches:
+osq/001-alpha-twice
+worktrees:
+<root>/worktrees/repo/001-alpha-twice osq/001-alpha-twice
+checkout copy: absent
+commit:
+osq: 001 approved
+Osq Bot <bot@example.com>
+parent <base>
+A	openspec/changes/001-alpha-twice/.run/approved
+A	openspec/changes/001-alpha-twice/.run/approver
+A	openspec/changes/001-alpha-twice/.run/base
+A	openspec/changes/001-alpha-twice/plan-prompt.md
+A	openspec/changes/001-alpha-twice/proposal.md
+A	openspec/changes/001-alpha-twice/specs/alpha/spec.md
+A	openspec/changes/001-alpha-twice/tasks.md
+A	openspec/changes/001-alpha-twice/tasks/1.md
+record:
+{"at":"<at>","op":"worktree-add","root":"<root>/repo"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+tree:
+--- .run/approved
+sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1
+--- .run/approver
+Osq Tester <tester@example.com>
+--- .run/base
+<base>

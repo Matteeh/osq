@@ -13,3 +13,4 @@ workspace = true
 [dependencies]
 osq-core.workspace = true
 osq-kernel-config.workspace = true
+serde_json.workspace = true

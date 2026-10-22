@@ -1,0 +1,9 @@
+outcome: failed
+HEAD is on feature, not the default branch main; pass --base-ok to approve from it
+branches:
+worktrees:
+checkout copy: present
+commit:
+none
+record:
+tree:

@@ -1,0 +1,9 @@
+outcome: failed
+uncommitted changes in task scope: src/alpha/index.js; commit them or pass --ignore-dirty
+branches:
+worktrees:
+checkout copy: present
+commit:
+none
+record:
+tree:

@@ -19,7 +19,11 @@ fn approve_feature_commands() {
     assert_eq!(commands.len(), 2, "two commands");
     assert_eq!(
         commands[0],
-        Command::new("approve", "lint, hash, and approve change folders", "<id>"),
+        Command::new(
+            "approve",
+            "lint, hash, and approve change folders",
+            "<id> [--base-ok] [--ignore-dirty]"
+        ),
         "the approve command"
     );
     assert_eq!(
@@ -58,6 +62,18 @@ fn approve_argument_errors() {
             vec!["1"],
             "unknown command: queue",
         ),
+        (
+            "only flags",
+            "approve",
+            vec!["--base-ok", "--ignore-dirty"],
+            "usage of approve: expected one change id, got 0",
+        ),
+        (
+            "flags around two ids",
+            "approve",
+            vec!["1", "--base-ok", "2"],
+            "usage of approve: expected one change id, got 2",
+        ),
     ];
     for (name, command, args, expected) in cases {
         let result = run_args(&root, command, &args);
@@ -68,5 +84,23 @@ fn approve_argument_errors() {
             FeatureError::UnknownCommand { .. } => {}
             other => panic!("{name}: expected a usage or unknown command error, got {other:?}"),
         }
+    }
+    let error = run_args(
+        &root,
+        "approve",
+        &["--ignore-dirty", "9", "--base-ok", "--base-ok"],
+    )
+    .expect_err("an unknown change is refused");
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "approve failed: Spec \"9\" not found in {}",
+            root.join("openspec/changes").display()
+        ),
+        "flags leave one change id"
+    );
+    match error {
+        FeatureError::Failed { command, .. } => assert_eq!(command, "approve", "failed command"),
+        other => panic!("expected a failed error, got {other:?}"),
     }
 }

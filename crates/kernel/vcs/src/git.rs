@@ -73,6 +73,17 @@ impl GitVcs {
         self
     }
 
+    /// The tree record file's path in the repository's common git directory.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/tree-record
+    pub fn tree_record_path(&self) -> Result<Option<PathBuf>, VcsError> {
+        state::tree_record_path(self)
+    }
+
     /// Builds the command for one git command.
     ///
     /// Implements: rust-vcs/git-command
@@ -323,6 +334,17 @@ impl Vcs for GitVcs {
     /// Implements: rust-vcs/branch-and-worktree-writes
     fn rename_branch(&self, from: &str, to: &str) -> Result<(), VcsError> {
         write::rename_branch(self, from, to)
+    }
+
+    /// Deletes a branch, never forcing one HEAD does not hold.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when git refuses.
+    ///
+    /// Implements: rust-vcs/branch-deletion
+    fn delete_branch(&self, name: &str) -> Result<(), VcsError> {
+        write::delete_branch(self, name)
     }
 
     /// Adds a worktree.

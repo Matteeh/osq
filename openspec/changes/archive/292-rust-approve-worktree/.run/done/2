@@ -1,0 +1,35 @@
+---
+scope_resolver: 2
+scope_hash: sha256:26bcf48c5c74c72898e477cdb680d438f0e0c2a51b1c1cfc7f794dfa767a635d
+build_stamp: ed155511
+project_commit: a1a1a29a
+exit_code: 0
+scope_files:
+  crates/features/approve/Cargo.toml: sha256:1940fc7c807f8384da28a64b209028af0189034bec717f4d3b03a881abc01d3d
+  crates/features/approve/src/approve.rs: sha256:15e417c53e76885b90057534bc72f6a112420c4d135ae4d2e88ddb812ab1eb4c
+  crates/features/approve/src/approve/worktree.rs: sha256:8883f000fdd9f23dc9d1a8d4bb138b5e99dc676302a6f1848bf7865f194dcc94
+  crates/features/approve/src/approve/worktree/copy.rs: sha256:6b2b79f4d23b946e247c5789a451d6791b0c68f8e53058bf00828c4a8d93dff5
+  crates/features/approve/src/approve/worktree/markers.rs: sha256:32b79f23e8dff517cdb31f7dc68d4951ecf4d678c8632d91e2cbf7bef6faaada
+  crates/features/approve/src/approve/worktree/path.rs: sha256:359ac60e67113ecf69c86c1730628da72553209301b7ab2bdd9931306754697f
+  crates/features/approve/src/approve/worktree/prepare.rs: sha256:36855d1516d8c0bbc61213406fa67c8aabcac0a9a8beddfe1059685feb20b71c
+  crates/features/approve/src/approve/worktree/record.rs: sha256:ec01b8e842e50ac40a871dddac4dd4a7f2c67f08123456c244f1a29037b34133
+  crates/features/approve/src/approve/worktree/text.rs: sha256:f9afaba5f9b596060a1853a0c95e4ccaccae46d79805456a20ddc38ddaf09ea2
+  crates/features/approve/src/reject.rs: sha256:9fdce8327028508cee0915aba730ce28c330e7d7dc9c6b42da655cfa52b85cd3
+  crates/features/approve/tests/approve_worktree.rs: sha256:4de609520d26e9b8a41b6bf6b7e0beba0d589eebbf544f645594b422f6e1b344
+  crates/features/approve/tests/fixtures/approve-worktree/base-ok-001.txt: sha256:da473596c977a8886771d2ac96fc74128e8abcf221d30799a6fc4c6f821940e3
+  crates/features/approve/tests/fixtures/approve-worktree/branch-exists-001.txt: sha256:098385de76a8c4ab2dce925b57b668893504d09709c41fbc41f4cae5e7a97ce1
+  crates/features/approve/tests/fixtures/approve-worktree/committed-002.txt: sha256:71774cb6081d7ad54b73f415c4284cf3d966a1a33c19aef386d889c0f5a0ec69
+  crates/features/approve/tests/fixtures/approve-worktree/dirty-block-001.txt: sha256:5f4a9821cdf576f968fdacc739d320633aab46f21b432c066c2e07cdfc4dfe06
+  crates/features/approve/tests/fixtures/approve-worktree/dirty-keep-001.txt: sha256:e42ce3eb3a3c53f901f7d0445432f1dce931fa5d365f389d66de344da89403fd
+  crates/features/approve/tests/fixtures/approve-worktree/draft-001.txt: sha256:da473596c977a8886771d2ac96fc74128e8abcf221d30799a6fc4c6f821940e3
+  crates/features/approve/tests/fixtures/approve-worktree/ignore-dirty-001.txt: sha256:da473596c977a8886771d2ac96fc74128e8abcf221d30799a6fc4c6f821940e3
+  crates/features/approve/tests/fixtures/approve-worktree/off-default-001.txt: sha256:8f51a93749070e6020408cdf8f55365fa7edf79a1dcbb76df90e9a0c8ac0de85
+  crates/features/approve/tests/fixtures/approve-worktree/prepare-fails-001.txt: sha256:cc896482b9dd2bc0c3484467e2adb59ccef41ab48cfb451e6a0baa1ba89011a2
+  crates/features/approve/tests/fixtures/approve-worktree/prepare-passes-001.txt: sha256:da473596c977a8886771d2ac96fc74128e8abcf221d30799a6fc4c6f821940e3
+  crates/features/approve/tests/fixtures/approve-worktree/rejected-branch-001.txt: sha256:e382b06b9d43fcd0061d80f51bff7a76d989764dfc238d3cfbf78d60d9a067e2
+  crates/features/approve/tests/worktree_support/mod.rs: sha256:ff237b61fb0840d6457c7035b9cab87bc1959544d1eaa06cabf2a5a77dc2d77d
+original_scope_hash: sha256:eb011abc1fcda1f62ba7a46b5f8c6126cd1313f99cb9a061339be53397b875e4
+recertified_at: 2026-10-22T18:24:03.888Z
+recertification_count: 1
+---
+2026-10-22T18:10:54.611Z
