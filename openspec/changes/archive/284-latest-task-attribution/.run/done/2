@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:39da8d8d910d313ac095e6038d171d69180d065d06518070bce40f5d1635eef3"
+build_stamp: "63250a84"
+project_commit: "9923ae50"
+exit_code: 0
+scope_files: {"src/watcher/auto-recertify.ts":"sha256:2b4154f84e46aa480a5734060963117ea7705851f7ac5ab42a08f8229b6e3529","tests/auto-recertify-repeat.test.ts":"sha256:10511886760382300e6e14de2eb197ff07d777944199caa3fa0dc8a82101b075"}
+---
+2026-10-22T14:08:46.005Z

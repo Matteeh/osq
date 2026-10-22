@@ -900,18 +900,26 @@ sorted differing paths, verification command and result, recorded and current
 scope hashes, resolver upgrade context, and per-path attribution whether
 verification passed or failed.
 
-A differing path SHALL be attributed to a later done task only when exactly one
-later task's normalized file-change events name a resolver-produced path and
-the current file hash agrees with that task's resolver-produced completion hash
-when available. When no later task's file-change events name the path, the
-audit SHALL credit it from measured hashes instead: the candidates are the
-later done tasks whose `measures` end segments for the path, read through
+`attributeScopePaths` in `src/core/run/scope-attribution.ts` SHALL attribute
+each differing path. The candidates for a path are the later done tasks whose
+normalized file-change events name the resolver-produced path. When no later
+task's file-change events name the path, the candidates are instead the later
+done tasks whose `measures` end segments for the path, read through
 `readEndSegments`, hold at least one segment whose `before` differs from its
-`after`, and the same completion-hash check applies. A path credited this way
-SHALL carry `source: "measures"` in its attribution entry; a path credited from
-file-change events, `ambiguous`, or `unknown` SHALL carry no `source` key.
-Multiple qualifying tasks SHALL be `ambiguous`; absence of a trustworthy
-candidate SHALL be `unknown`.
+`after`.
+
+- No candidate SHALL be `unknown`.
+- One candidate SHALL be credited unless its done marker records a completion
+  hash for the path that differs from the current file hash; then the path
+  SHALL be `unknown`.
+- Several candidates SHALL credit the highest-numbered candidate whose done
+  marker's `scope_files` records the path with a hash equal to the current file
+  hash, where `null` means the file is absent. When no candidate records a
+  matching hash, the path SHALL be `ambiguous`.
+
+A path credited from measured segments SHALL carry `source: "measures"` in its
+attribution entry; a path credited from file-change events, `ambiguous`, or
+`unknown` SHALL carry no `source` key.
 
 An active regression marker SHALL make later audits idempotent. Any newly
 regressed task SHALL return `blocked_by_regression` without locking, running,
@@ -951,8 +959,25 @@ one stale-task line followed by one numerically ordered change summary.
 - **THEN** the attribution entry is `{ path: "src/a.ts (modified)", attribution: "3" }` with no `source` key
 
 #### Scenario: Two later tasks measured the path
-- **WHEN** no stream holds a `file_changed` event and the `measures` end events of both task 2 and task 3 change `src/a.ts`
-- **THEN** the attribution entry is `{ path: "src/a.ts (modified)", attribution: "ambiguous" }`
+- **WHEN** task 1's `src/a.ts` differs from its recorded `h1` and now hashes to `h3`, no stream holds a `file_changed` event, and the `measures` end events of task 2 and task 3 change `src/a.ts`, with the done markers of tasks 2 and 3 recording the hashes in the row
+- **THEN** the attribution entry is the row's entry
+
+| task 2 records | task 3 records | attribution entry |
+| --- | --- | --- |
+| `h2` | `h3` | `{ path: "src/a.ts (modified)", attribution: "3", source: "measures" }` |
+| no hash | no hash | `{ path: "src/a.ts (modified)", attribution: "ambiguous" }` |
+
+#### Scenario: Two later tasks named the path
+- **WHEN** task 1's `src/a.ts` differs from its recorded `h1` and now hashes to `h3`, the streams of task 2 and task 3 each hold a `file_changed` event for `src/a.ts`, and the done markers of tasks 2 and 3 record the hashes in the row
+- **THEN** the attribution entry is the row's entry, with no `source` key
+
+| task 2 records | task 3 records | attribution entry |
+| --- | --- | --- |
+| `h2` | `h3` | `{ path: "src/a.ts (modified)", attribution: "3" }` |
+| `h3` | `h2` | `{ path: "src/a.ts (modified)", attribution: "2" }` |
+| `h3` | no hash | `{ path: "src/a.ts (modified)", attribution: "2" }` |
+| `h2` | `h2` | `{ path: "src/a.ts (modified)", attribution: "ambiguous" }` |
+| no hash | no hash | `{ path: "src/a.ts (modified)", attribution: "ambiguous" }` |
 
 ### Requirement: Archive scope recertification audit
 Before the existing archive-time task and change verification sequence, the
@@ -1565,12 +1590,15 @@ of these hold:
 
 1. A later-numbered task in the same change has a resolved approved `scope`
    that covers the path, as `scopeCoversPath` decides.
-2. That later task's `measures` end events carry the path from the done task's
-   recorded hash to the current hash without a gap: one end event's `before`
-   equals the done marker's recorded `scope_files` hash, each later end event's
-   `before` equals the previous one's `after`, and the last end event's `after`
-   equals the current hash. A missing hash counts as `null`, which means the
-   file was absent.
+2. The `measures` end events of the later tasks whose scope covers the path,
+   read in task order, carry the path from the done task's recorded hash to the
+   current hash without a gap. The chain starts at the first end event whose
+   `before` equals the done marker's recorded `scope_files` hash; end events
+   before it are left out, because they end at or before a hash an earlier
+   recertification already accepted. Each later end event's `before` equals the
+   previous one's `after`, and the last end event's `after` equals the current
+   hash. When no end event's `before` equals the recorded hash, the path is not
+   carried. A missing hash counts as `null`, which means the file was absent.
 3. The done task's verify passes at detection.
 
 Within one task's stream, an end event whose `before` for the path equals the
@@ -1620,6 +1648,10 @@ halt the change exactly as before.
 #### Scenario: Segments of a kept attempt
 - **WHEN** task 2's stream holds two `measures` end events for `src/a.ts`, the first from `h1` to `h2` and the second from `h2` to `h3`
 - **THEN** `readEndSegments` returns both segments in stream order
+
+#### Scenario: A third task extends the file again
+- **WHEN** a change has five tasks, tasks 1, 2 and 3 all have `src/a.ts` in scope, the harness reports no `file_changed` event, task 2 and task 3 each change `src/a.ts`, and task 1's verify passes, and the watcher runs one cycle per task until task 4 is done
+- **THEN** no cycle reports a blocked regression, no `.run/regressed/1.md` exists, task 1's done marker holds the current hash with `recertification_count: 2`, and task 1's second `recertification` event carries `automatic: true` and attribution `[{ path: "src/a.ts (modified)", attribution: "3", source: "measures" }]`
 
 ### Requirement: Governing decisions in the manifest
 The approval manifest SHALL carry `decisions`, an object from the number of

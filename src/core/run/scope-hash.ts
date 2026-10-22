@@ -6,6 +6,7 @@ import { compareNumericPrefix } from '../status/state.js';
 import { resolveScope } from './scope.js';
 
 export { SCOPE_RESOLVER_VERSION } from './scope.js';
+export { attributeScopePaths } from './scope-attribution.js';
 export { buildScopeRegressionMarker, parseActiveStaleTask } from './scope-regression-marker.js';
 
 /** Per-file content hashes plus a single combined digest for a task scope. */
@@ -43,7 +44,8 @@ export interface StaleTaskAudit {
   alreadyActive: boolean;
 }
 
-interface DifferingPath {
+/** One resolver-produced path that differs, with its decorated display form. */
+export interface DifferingPath {
   path: string;
   display: string;
 }
@@ -116,69 +118,6 @@ export function normalizePath(value: string): string {
     .trim()
     .replace(/\\/g, '/')
     .replace(/^(?:\.\/)+/, '');
-}
-
-/**
- * Attribute each differing path to a later done task. A sole typed
- * `file_changed` candidate wins when its recorded completion hash matches the
- * current tree when one is available; otherwise the candidates come from the
- * later tasks' measured paths, and only an entry credited that way carries
- * `source: 'measures'`. Two qualifying tasks are `ambiguous`, none `unknown`.
- *
- * @scenario watcher-and-harness: Later edit attribution
- * @scenario watcher-and-harness: Credit from measured hashes
- * @scenario watcher-and-harness: Typed event wins
- * @scenario watcher-and-harness: Two later tasks measured the path
- */
-export function attributeScopePaths(
-  staleTaskNumber: string,
-  differing: DifferingPath[],
-  currentFileHashes: Record<string, string | null>,
-  changesByPath: Map<string, Set<string>>,
-  completionHashes: Map<string, Record<string, string | null>>,
-  measuredPathsByTask: Map<string, Set<string>> = new Map(),
-): ScopePathAttribution[] {
-  const staleNumber = Number.parseInt(staleTaskNumber, 10);
-  return differing.map((entry) => {
-    const candidates = [...(changesByPath.get(entry.path) ?? [])]
-      .filter((number) => Number.parseInt(number, 10) > staleNumber)
-      .sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
-    if (candidates.length > 0) {
-      const attribution =
-        candidates.length > 1
-          ? 'ambiguous'
-          : contradicted(candidates[0], entry.path, currentFileHashes, completionHashes)
-            ? 'unknown'
-            : candidates[0];
-      return { path: entry.display, attribution };
-    }
-    const measured = [...measuredPathsByTask.entries()]
-      .filter(
-        ([number, paths]) => Number.parseInt(number, 10) > staleNumber && paths.has(entry.path),
-      )
-      .map(([number]) => number)
-      .sort((a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10));
-    if (measured.length === 0) return { path: entry.display, attribution: 'unknown' };
-    if (measured.length > 1) return { path: entry.display, attribution: 'ambiguous' };
-    if (contradicted(measured[0], entry.path, currentFileHashes, completionHashes)) {
-      return { path: entry.display, attribution: 'unknown' };
-    }
-    return { path: entry.display, attribution: measured[0], source: 'measures' };
-  });
-}
-
-/** True when a sole candidate's recorded completion hash contradicts the tree. */
-function contradicted(
-  taskNumber: string | undefined,
-  filePath: string,
-  currentFileHashes: Record<string, string | null>,
-  completionHashes: Map<string, Record<string, string | null>>,
-): boolean {
-  if (taskNumber === undefined) return false;
-  const completionHash = completionHashes.get(taskNumber)?.[filePath];
-  return (
-    typeof completionHash === 'string' && completionHash !== (currentFileHashes[filePath] ?? null)
-  );
 }
 
 export interface DoneMarkerInfo {
