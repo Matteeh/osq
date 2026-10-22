@@ -2,6 +2,7 @@ import { defineConfig } from './src/index.js';
 
 export default defineConfig({
   harness: process.env.OSQ_HARNESS || 'pi',
+  timeouts: { verifyTimeoutSeconds: 6400 },
   maxConcurrency: 3,
   bannedWords: [{ word: 'skipped', paths: ['src/**'] }],
   gates: {
