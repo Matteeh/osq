@@ -5,6 +5,7 @@ mod done;
 mod events;
 mod find;
 mod lock;
+mod pause;
 mod refusals;
 mod run;
 mod scope;

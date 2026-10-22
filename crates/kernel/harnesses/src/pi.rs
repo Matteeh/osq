@@ -7,6 +7,7 @@
 
 mod args;
 mod harness;
+mod limit;
 mod path;
 mod preflight;
 mod stream;

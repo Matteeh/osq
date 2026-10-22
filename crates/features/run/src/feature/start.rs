@@ -11,10 +11,13 @@ use osq_kernel_runners::{
     Harness, Role, RoleSettings, RunOutcome, RunnerSettings, SystemClock, TaskRequest, run_task,
 };
 
-use super::{events, text, time};
+use super::{events, pause, text, time};
 
 /// The harness every Rust run starts for now.
 const HARNESS: &str = "pi";
+
+/// TypeScript's default `gates.usageLimitWaitSeconds`.
+const USAGE_LIMIT_WAIT: Duration = Duration::from_secs(1800);
 
 /// What one executor start ended with.
 pub(crate) struct Started {
@@ -106,7 +109,10 @@ pub(crate) fn run(
             started_ms,
             exit: None,
         }),
-        Ok(RunOutcome::Paused(_)) => Err(failed(text::usage_limit(task, name))),
+        Ok(RunOutcome::Paused(paused)) => {
+            pause::write(folder, &paused)?;
+            Err(failed(text::usage_limit(task, name)))
+        }
         Err(error) => Err(failed(error.to_string())),
     }
 }
@@ -146,7 +152,7 @@ fn runner_settings(config: &Config) -> RunnerSettings {
         agent_env: Vec::new(),
         start_retries: 0,
         retry_delay: Duration::ZERO,
-        usage_limit_wait: Duration::ZERO,
+        usage_limit_wait: USAGE_LIMIT_WAIT,
     }
 }
 

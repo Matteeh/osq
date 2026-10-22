@@ -1,9 +1,11 @@
 //! Translating one pi stdout line into the core events it implies.
 
-use osq_core::event::{Event, FileChangedData, HarnessRetryData, TextData, TokensData, ToolData};
+use osq_core::event::{
+    Event, FileChangedData, HarnessRetryData, TextData, TokensData, ToolData, UsageLimitData,
+};
 use serde_json::{Map, Value};
 
-use super::{PiStreamState, ToolCall, path, summary};
+use super::{PiStreamState, ToolCall, limit, path, summary};
 
 /// Turns one stdout line into the events TypeScript writes for it.
 pub(super) fn events(line: &str, project_root: &str, state: &mut PiStreamState) -> Vec<Event> {
@@ -99,7 +101,22 @@ fn message_end(event: &Map<String, Value>) -> Vec<Event> {
     if let Some(data) = tokens(message) {
         events.push(Event::Tokens(data));
     }
+    if let Some(error) = usage_limit(message) {
+        events.push(Event::UsageLimit(UsageLimitData {
+            resets_at: None,
+            error: Some(error),
+        }));
+    }
     events
+}
+
+/// Reads the account-limit error of an assistant message, when it names one.
+fn usage_limit(message: &Map<String, Value>) -> Option<String> {
+    if text_field(message, "stopReason") != Some("error") {
+        return None;
+    }
+    let error = text_field(message, "errorMessage")?;
+    limit::is_usage_limit(error).then(|| error.to_owned())
 }
 
 /// Joins the non-empty text parts of an assistant message.
