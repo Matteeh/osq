@@ -29,6 +29,7 @@
 //! Implements: rust-storage/autopilot-stop-record
 //! Implements: rust-storage/after-land-failure-record
 //! Implements: rust-storage/queue-item-titles
+//! Implements: rust-storage/retry-context
 
 mod error;
 mod land;
@@ -37,6 +38,7 @@ mod manual;
 mod pending;
 mod queue;
 mod results;
+mod retry;
 mod seal;
 mod sections;
 mod snapshot;
@@ -53,6 +55,7 @@ pub use pending::{
 };
 pub use queue::{QueueTitle, read_queue_titles};
 pub use results::TaskDisclosure;
+pub use retry::{RetryContext, read_retry_context};
 pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};
 pub use snapshot::{

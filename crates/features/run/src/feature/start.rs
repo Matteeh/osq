@@ -46,6 +46,7 @@ pub(crate) fn run(
     name: &str,
     task: &str,
     config: &Config,
+    attempt: u64,
     prompt: &str,
 ) -> Result<Started, FeatureError> {
     let source_env: BTreeMap<String, String> = std::env::vars().collect();
@@ -67,7 +68,7 @@ pub(crate) fn run(
     events::append(
         folder,
         &format!("{task}.jsonl"),
-        Event::Started(started_data(config)),
+        Event::Started(started_data(config, attempt)),
     )?;
     let mut gathered = Vec::new();
     let outcome = run_task(
@@ -149,13 +150,13 @@ fn runner_settings(config: &Config) -> RunnerSettings {
     }
 }
 
-/// Builds the `started` event the executor start writes.
-fn started_data(config: &Config) -> StartedData {
+/// Builds the `started` event the executor start writes for `attempt`.
+fn started_data(config: &Config, attempt: u64) -> StartedData {
     StartedData {
         harness: Some(HARNESS.to_owned()),
         model: config.executor.model.clone(),
         osq_version: None,
-        attempt: Some(1),
+        attempt: Some(attempt),
         project_commit: None,
         commit: None,
         pid: None,

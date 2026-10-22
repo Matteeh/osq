@@ -7,7 +7,7 @@ use osq_core::FeatureError;
 use osq_core::event::DeadReason;
 use osq_kernel_config::Config;
 use osq_kernel_specs::read_task_file;
-use osq_kernel_storage::{ChangeEntry, change_folder_seal};
+use osq_kernel_storage::{ChangeEntry, change_folder_seal, read_retry_context};
 
 use super::{dead, done, lock, refusals, scope, start, text, verdict};
 use crate::prompt::{PriorAttempt, executor_prompt};
@@ -54,9 +54,23 @@ fn after_lock(
     let task_file = read_task_file(&entry.path.join("tasks").join(format!("{task}.md")))
         .map_err(|error| failed(error.to_string()))?;
     let before = scope::snapshot(root)?;
-    let prompt = executor_prompt(root, &entry.path, task, &PriorAttempt::default())
+    let context = read_retry_context(&entry.path, task);
+    let prior = PriorAttempt {
+        attempt: u32::try_from(context.attempt).unwrap_or(u32::MAX),
+        reason: context.reason,
+        output: context.output,
+    };
+    let prompt = executor_prompt(root, &entry.path, task, &prior)
         .map_err(|error| failed(error.to_string()))?;
-    let started = start::run(root, &entry.path, &entry.folder, task, config, &prompt)?;
+    let started = start::run(
+        root,
+        &entry.path,
+        &entry.folder,
+        task,
+        config,
+        context.attempt,
+        &prompt,
+    )?;
     let after = scope::snapshot(root)?;
     let wrote_result = result_written(entry, task, started.started_ms);
     if let Some(exit) = started.exit {
