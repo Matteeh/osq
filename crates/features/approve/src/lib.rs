@@ -4,5 +4,6 @@
 
 mod approve;
 mod feature;
+mod reject;
 
 pub use feature::ApproveFeature;

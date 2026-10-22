@@ -1,9 +1,9 @@
 //! Running `approve`: find the active change, refuse steering, then seal it.
 
-mod find;
+pub(crate) mod find;
 mod lint;
 mod steering;
-mod text;
+pub(crate) mod text;
 
 use std::fs;
 use std::path::Path;

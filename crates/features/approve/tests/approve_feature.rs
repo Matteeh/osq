@@ -7,7 +7,7 @@ use osq_feature_approve::ApproveFeature;
 
 use support::{run_args, scratch};
 
-/// Proves the feature's name and its one command.
+/// Proves the feature's name and its commands.
 ///
 /// Covers: rust-approve/approve-feature-commands
 #[test]
@@ -16,11 +16,20 @@ fn approve_feature_commands() {
     assert_eq!(feature.name(), "approve");
 
     let commands = feature.commands();
-    assert_eq!(commands.len(), 1, "one command");
+    assert_eq!(commands.len(), 2, "two commands");
     assert_eq!(
         commands[0],
         Command::new("approve", "lint, hash, and approve change folders", "<id>"),
         "the approve command"
+    );
+    assert_eq!(
+        commands[1],
+        Command::new(
+            "reject",
+            "move an eligible active change intact into rejected history",
+            "<id> --reason <text>"
+        ),
+        "the reject command"
     );
 }
 
