@@ -1,39 +1,21 @@
-//! Proves the empty lint feature's name, commands and refusals.
+//! Proves the lint feature's name and one command.
 
-use std::fs;
-use std::path::{Path, PathBuf};
-
-use osq_core::{Feature, Invocation};
+use osq_core::{Command, Feature};
 use osq_feature_lint::LintFeature;
 
-/// Creates an empty scratch project root for one test.
-fn scratch(name: &str) -> PathBuf {
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
-    let _ = fs::remove_dir_all(&root);
-    fs::create_dir_all(&root).expect("the scratch root is created");
-    root
-}
-
-/// Proves both rows of "Empty lint feature".
+/// Proves "Lint feature commands".
 ///
-/// Covers: rust-lint/empty-lint-feature
+/// Covers: rust-lint/lint-feature-commands
 #[test]
-fn empty_lint_feature() {
+fn lint_feature_commands() {
     let feature = LintFeature;
     assert_eq!(feature.name(), "lint");
-    assert!(feature.commands().is_empty(), "it lists no command");
-    let root = scratch("empty-lint-feature");
-    for (command, text) in [
-        ("lint", "unknown command: lint"),
-        ("inbox", "unknown command: inbox"),
-    ] {
-        let result = feature.run(&Invocation::new(&root, command, Vec::new()));
-        assert_eq!(
-            result
-                .expect_err("the feature refuses every invocation")
-                .to_string(),
-            text,
-            "{command}"
-        );
-    }
+    assert_eq!(
+        feature.commands(),
+        vec![Command::new(
+            "lint",
+            "validate a change's delta specs and the Rust link gates",
+            "<id>",
+        )]
+    );
 }

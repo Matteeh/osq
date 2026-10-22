@@ -12,3 +12,6 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-specs.workspace = true
+osq-kernel-linter.workspace = true
+osq-kernel-storage.workspace = true

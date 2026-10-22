@@ -373,6 +373,9 @@ name = "osq-feature-lint"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-linter",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
 ]
 
 [[package]]
