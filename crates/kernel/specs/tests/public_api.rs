@@ -15,6 +15,7 @@ const EXPORTS: &[(&str, &[&str])] = &[
             "DecisionFinding",
             "DecisionProblems",
             "DecisionRecords",
+            "project_rules_errors",
             "read_decisions",
             "validate_decisions",
         ],

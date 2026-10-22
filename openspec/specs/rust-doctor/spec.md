@@ -246,24 +246,11 @@ The errors, in this order, are:
 
 1. The errors of rust-specs `validate_decisions`, each displayed as `<file>: <message>`. Its living capabilities are the names of the folders directly under `openspec/specs` that hold a `spec.md`, in byte order. Its maximum rule length is `limits.maxRuleLength`.
 2. `<adr path>: check file <file> does not exist` for each `checks` entry of each accepted ADR, in ADR order, when nothing exists at that path under the root.
-3. The project rules errors.
+3. The project rules errors: those of rust-specs `project_rules_errors` with
+   the ADRs read, the text of `AGENTS.md` and `limits.maxProjectRules`.
 
 The system-wide ADRs are the accepted ADRs whose `governs` is `all`, in
-ADR order. With none there is no expected rules block. Otherwise the
-expected block is `<!-- OSQ:RULES:START -->\n## Project rules\n\n`, then
-one line `- <rule> ADR <number>` for each system-wide ADR, joined by `\n`,
-then `\n<!-- OSQ:RULES:END -->`. The current block in `AGENTS.md` runs
-from the first `<!-- OSQ:RULES:START -->` through the first
-`<!-- OSQ:RULES:END -->`. There is no current block when either marker is
-missing or the end comes before the start. When the current block differs
-from the expected one, the error is:
-
-- `` AGENTS.md is missing its project rules block; run `osq init` `` when there is no current block.
-- `` AGENTS.md has an unexpected project rules block; run `osq init` `` when there is no expected block.
-- `` AGENTS.md project rules block is out of date; run `osq init` `` otherwise.
-
-When the number of system-wide ADRs exceeds `limits.maxProjectRules`, the
-error is `AGENTS.md holds <count> project rules, more than limits.maxProjectRules (<max>)`.
+ADR order.
 
 With any error the line is `[fail] decisions: <errors joined by "; ">`.
 Otherwise the warnings are those of `validate_decisions`, displayed the

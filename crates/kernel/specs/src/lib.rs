@@ -12,7 +12,7 @@ mod validate;
 
 pub use decisions::{
     Adr, AppliesTo, DecisionCode, DecisionFinding, DecisionProblems, DecisionRecords,
-    read_decisions, validate_decisions,
+    project_rules_errors, read_decisions, validate_decisions,
 };
 pub use document::{
     ChecklistItem, Frontmatter, Proposal, Sidecar, SidecarError, SyntaxError, TaskFile,

@@ -5,6 +5,8 @@ use std::path::Path;
 use osq_core::Finding;
 use osq_kernel_specs::{MergeError, SpecFinding};
 
+use super::finding::Finding as RuleFinding;
+
 /// The refusal for a query that names no active change.
 ///
 /// Implements: rust-lint/lint-lookup
@@ -17,6 +19,36 @@ pub(crate) fn not_found(query: &str, changes: &Path) -> String {
 /// Implements: rust-lint/lint-findings
 pub(crate) fn valid(folder: &str) -> String {
     format!("{folder}: valid\n")
+}
+
+/// The output for a change with warnings and no error: each warning line, then
+/// `<folder>: valid`.
+///
+/// Implements: rust-lint/lint-findings
+pub(crate) fn warnings(folder: &str, lines: &[String]) -> String {
+    let mut output = String::new();
+    for line in lines {
+        output.push_str(line);
+        output.push('\n');
+    }
+    output.push_str(&valid(folder));
+    output
+}
+
+/// One line for a proposal rule or banned word finding, as `formatFinding` writes it.
+///
+/// Implements: rust-lint/lint-findings
+pub(crate) fn rule_line(folder: &str, finding: &RuleFinding) -> String {
+    let qualifier = finding
+        .section
+        .as_ref()
+        .map_or_else(String::new, |section| format!(" ({section})"));
+    format!(
+        "{folder}: {} {}{qualifier}: {}",
+        finding.severity.as_str(),
+        finding.file,
+        finding.message
+    )
 }
 
 /// The failure message for a change with `findings`.

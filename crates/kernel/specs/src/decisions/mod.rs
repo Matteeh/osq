@@ -1,8 +1,10 @@
 //! Reading architecture decision records and the capability groups they name.
 
 mod parse;
+mod rules;
 mod validate;
 
+pub use rules::project_rules_errors;
 pub use validate::{DecisionCode, DecisionFinding, DecisionProblems, validate_decisions};
 
 use crate::document::parse_sidecar;
