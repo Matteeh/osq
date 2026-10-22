@@ -89,7 +89,9 @@ describe('osq init PLANNER.md', () => {
 
   it('managed block instructs planners to write files with the file tool', () => {
     assert.ok(
-      MANAGED_PLANNER_BLOCK.includes('Write files with the file tool, never through a shell echo.'),
+      MANAGED_PLANNER_BLOCK.includes(
+        'Write file contents with the file tool, never through a shell echo or heredoc.',
+      ),
     );
   });
 
@@ -155,7 +157,11 @@ describe('osq init PLANNER.md', () => {
   it('repository PLANNER.md carries the file-tool instruction', async () => {
     const content = await fs.readFile(path.join(process.cwd(), 'PLANNER.md'), 'utf8');
 
-    assert.ok(content.includes('Write files with the file tool, never through a shell echo.'));
+    assert.ok(
+      content.includes(
+        'Write file contents with the file tool, never through a shell echo or heredoc.',
+      ),
+    );
   });
 
   it('scaffoldProject initializes PLANNER.md and reports it on InitResult', async () => {

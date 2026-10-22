@@ -13,7 +13,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const PLANNER_MD = path.join(REPO_ROOT, 'PLANNER.md');
 const TEMPLATE_PLANNER_MD = path.join(REPO_ROOT, 'templates', 'PLANNER.md');
 
-const PRECEDING_BULLET = '- Write files with the file tool, never through a shell echo.';
+const PRECEDING_BULLET =
+  '- Write file contents with the file tool, never through a shell echo or heredoc. A script may make mechanical edits, such as one scope change across several task files; `osq lint` checks the result.';
 const NEW_BULLET = [
   '- A project with no accepted ADR that applies to all writes its architecture',
   '  and style ADRs first, each with a one-sentence rule and a checks test where',

@@ -32,7 +32,7 @@ your complete prompt; read it and follow it exactly.
   human should not approve before that message.
 - Grep for what already exists; verify every version, flag, or API before use.
 - For osq's own history, such as earlier changes to a requirement, dead reasons, or executor disclosures, run `osq query "<select>"` and add `LIMIT`; `osq query` alone lists its tables. Don't open event files for it.
-- Write files with the file tool, never through a shell echo.
+- Write file contents with the file tool, never through a shell echo or heredoc. A script may make mechanical edits, such as one scope change across several task files; `osq lint` checks the result.
 - A project with no accepted ADR that applies to all writes its architecture
   and style ADRs first, each with a one-sentence rule and a checks test where
   the rule can be tested.
