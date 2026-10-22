@@ -1,16 +1,18 @@
 //! Running `land`: settings, the worktree lookup, the message, the commit and
 //! the checkout's fast-forward.
 
+mod after;
 mod checks;
 mod find;
 mod message;
 mod text;
+mod time;
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_config::{ManualEdits, Timeouts, load_config};
+use osq_kernel_config::{ManualEdits, Timeouts, VcsConfig, load_config};
 use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
 use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree};
 
@@ -32,6 +34,7 @@ const LAND: &str = "land";
 /// Implements: rust-land/land-commit
 /// Implements: rust-land/land-refusals
 /// Implements: rust-land/land-git-limits
+/// Implements: rust-land/land-after-land-command
 pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
     let timeouts = config.timeouts;
@@ -95,9 +98,9 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         .commit_tree(&tip, &base, &message, &author, &[])
         .map_err(|error| failed(error.to_string()))?;
     match vcs.fast_forward(&commit) {
-        Ok(FastForward::Done { changed }) => {
-            Ok(text::landed(&located.folder, &commit, &repo_root, &changed))
-        }
+        Ok(FastForward::Done { changed }) => finish(
+            &repo_root, &located, &settings, &timeouts, &commit, &changed,
+        ),
         Ok(FastForward::Blocked { paths }) => {
             let block = settings.manual_edits == ManualEdits::Block;
             Err(failed(text::blocked(
@@ -115,6 +118,32 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
             }
         }
     }
+}
+
+/// The output of a finished land, with its after-land lines when configured.
+///
+/// # Errors
+///
+/// Returns a `Failed` error with the command `land` when the after-land command
+/// fails or its record cannot be written.
+///
+/// Implements: rust-land/land-commit
+/// Implements: rust-land/land-after-land-command
+fn finish(
+    root: &Path,
+    located: &Located,
+    settings: &VcsConfig,
+    timeouts: &Timeouts,
+    commit: &str,
+    changed: &[String],
+) -> Result<String, FeatureError> {
+    after::finish(
+        root,
+        &located.folder,
+        settings.after_land.as_deref(),
+        timeouts,
+        text::landed(&located.folder, commit, root, changed),
+    )
 }
 
 /// The output for a change that already landed.
