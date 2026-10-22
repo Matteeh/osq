@@ -96,12 +96,15 @@ worktree holds `openspec/changes/archive/<x>`, or else the first folder of
 the root's rust-storage `list_changes` whose location is archived and
 which matches the query. When the default branch holds the path
 `openspec/changes/archive/<folder>`, as the vcs kernel's `path_exists`
-reads it, the change has landed, and `land` SHALL write nothing and,
-after the checks of "Land refusals" that apply to a landed change, return
-the output `<folder> has already landed; nothing to clean up` and
-a newline when no worktree change is `<folder>`, or
+reads it, the change has landed. `land` SHALL then make no commit and,
+after the checks of "Land refusals" that apply to a landed change, run
+"Land after-land retry", which writes only the after-land record and what
+its command writes. Its landed line is
+`<folder> has already landed; nothing to clean up` and a newline when no
+worktree change is `<folder>`, or
 `<folder> has already landed; Rust land does not remove worktrees yet`
-and a newline when one is.
+and a newline when one is. Without a retry, `land` SHALL return the
+landed line as its output.
 
 Otherwise `land` SHALL fail, writing nothing, in this order: with
 `<x> has not archived on osq/<x>` for the first worktree change matching
@@ -343,7 +346,7 @@ none, as TypeScript's `watchStateDir` computes it.
 
 The record and the line texts are TypeScript's, so its inbox shows the
 failure as an `after-land-failed` item. A landed change's second `land`
-does not rerun the command.
+reruns the command only as "Land after-land retry" says.
 
 #### Scenario: After-land outcomes
 - **WHEN** `land` runs with the query `1` on a land repository holding the fixture change, whose `osq.toml` also holds the row's lines under `[vcs]` and `[timeouts]`
@@ -360,3 +363,44 @@ does not rerun the command.
 #### Scenario: A passing command clears the record
 - **WHEN** the record for the repository's checkout holds `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` and `land` runs with the query `1` with `afterLand = "true"` under `[vcs]`
 - **THEN** the output ends with `After-land command passed: true` and a newline, and the record no longer exists
+
+### Requirement: Land after-land retry
+For a landed change, after the checks of "Land refusals" that apply to a
+landed change pass, `land` SHALL rerun the after-land command as
+TypeScript's `retryAfterLand` does: only when `vcs.afterLand` is set and
+rust-storage `read_after_land_failure`, given the checkout root and
+`HOME`, returns a record whose `change` equals the change's folder. It
+SHALL then run the configured command, not the record's `command`, exactly
+as "Land after-land command" runs it, and remove or rewrite the record as
+that requirement says, with the new exit code and time.
+
+- When the command exits 0, `land` SHALL return the line
+  `After-land command passed: <command>` and a newline, followed by "Land
+  lookup"'s landed line.
+- Otherwise `land` SHALL fail with `FeatureError::failed` with the command
+  `land`, whose message is `After-land command failed: <command>`, the
+  output tail "Land after-land command" names, `run osq land <id> again to
+  retry it` and "Land lookup"'s landed line without its newline, joined by
+  newlines, as TypeScript's `cleanupLanded` orders its lines.
+
+With `vcs.afterLand` unset, with no record, with a record that does not
+parse, or with one that names another change, `land` SHALL run nothing,
+leave the record's bytes as they are, and return "Land lookup"'s landed
+line. A refusal of "Land refusals" runs nothing and leaves the record.
+
+#### Scenario: Retry on a landed change
+- **WHEN** `land` runs with the query `1` on a land repository holding the fixture change whose worktree remains, after `main` gained a commit that adds `openspec/changes/archive/001-alpha-orders/proposal.md`, with the row's record for the repository's checkout and the row's `afterLand` under `[vcs]`
+- **THEN** `main` gains no commit, and `land` returns the row's output or fails with the row's message, written with `\n` escapes, where `<landed>` is `001-alpha-orders has already landed; Rust land does not remove worktrees yet`, and the checkout's `built.txt` and the record are as the row says:
+
+| Record | `afterLand` | Result | `built.txt` | Record after |
+|---|---|---|---|---|
+| `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` | `"printf 'built\\n' > built.txt"` | output `After-land command passed: printf 'built\n' > built.txt\n<landed>\n` | holds `built\n` | none |
+| `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` | `"echo one; exit 3"` | failure `After-land command failed: echo one; exit 3\none\nrun osq land 001 again to retry it\n<landed>` | none | `change` `001-alpha-orders`, `command` `echo one; exit 3`, `exitCode` 3, and a `failedAt` that ends with `Z`, is 24 characters long and is not `2026-10-01T10:00:00.000Z` |
+| `{"change":"002-beta-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` | `"printf 'built\\n' > built.txt"` | output `<landed>\n` | none | the same bytes |
+| none | `"printf 'built\\n' > built.txt"` | output `<landed>\n` | none | none |
+| `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` | unset | output `<landed>\n` | none | the same bytes |
+| `not json` | `"printf 'built\\n' > built.txt"` | output `<landed>\n` | none | the same bytes |
+
+#### Scenario: Refused retry runs nothing
+- **WHEN** `land` runs with the query `1` on a land repository holding the fixture change after `main` gained a commit that adds `openspec/changes/archive/001-alpha-orders/proposal.md`, whose checkout is on a new branch `feature` cut from `main`, with the record `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` for the repository's checkout and `afterLand = "printf 'built\\n' > built.txt"` under `[vcs]`
+- **THEN** it gives a `Failed` error for the command `land` with `osq land runs on main; the checkout is on feature`, the checkout has no `built.txt`, and the record keeps its bytes

@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::Timeouts;
 use osq_kernel_harnesses::{VerifyRequest, run_verify};
+use osq_kernel_storage::read_after_land_failure;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
@@ -49,6 +50,41 @@ pub(crate) fn finish(
     match run(root, folder, command, timeouts)? {
         Outcome::Passed(line) => Ok(format!("{output}{line}\n")),
         Outcome::Failed(lines) => Err(failed(format!("{output}{}", lines.join("\n")))),
+    }
+}
+
+/// Reruns the after-land command for a landed change whose record names it.
+///
+/// # Errors
+///
+/// Returns a `Failed` error with the command `land` carrying the failure lines
+/// and the landed line when the rerun fails or its record cannot be written.
+///
+/// Implements: rust-land/land-after-land-retry
+pub(crate) fn retry(
+    root: &Path,
+    folder: &str,
+    command: Option<&str>,
+    timeouts: &Timeouts,
+    landed: String,
+) -> Result<String, FeatureError> {
+    let Some(command) = command else {
+        return Ok(landed);
+    };
+    let home = std::env::var("HOME").unwrap_or_default();
+    let Some(record) = read_after_land_failure(root, Path::new(&home)) else {
+        return Ok(landed);
+    };
+    if record.change != folder {
+        return Ok(landed);
+    }
+    match run(root, folder, command, timeouts)? {
+        Outcome::Passed(line) => Ok(format!("{line}\n{landed}")),
+        Outcome::Failed(lines) => Err(failed(format!(
+            "{}\n{}",
+            lines.join("\n"),
+            landed.trim_end_matches('\n')
+        ))),
     }
 }
 

@@ -35,10 +35,10 @@ const LAND: &str = "land";
 /// Implements: rust-land/land-refusals
 /// Implements: rust-land/land-git-limits
 /// Implements: rust-land/land-after-land-command
+/// Implements: rust-land/land-after-land-retry
 pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let timeouts = config.timeouts;
-    let settings = config.vcs;
+    let (timeouts, settings) = (config.timeouts, config.vcs);
     if !settings.enabled {
         return Err(failed(text::NEEDS_GIT));
     }
@@ -69,7 +69,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
     )?;
 
     if located.landed {
-        return Ok(landed_output(&located));
+        return landed_output(&repo_root, &located, &settings, &timeouts);
     }
 
     let change = located
@@ -146,15 +146,33 @@ fn finish(
     )
 }
 
-/// The output for a change that already landed.
+/// The output for a change that already landed, with a retry when configured.
+///
+/// # Errors
+///
+/// Returns a `Failed` error with the command `land` when the after-land retry
+/// fails or its record cannot be written.
 ///
 /// Implements: rust-land/land-lookup
-fn landed_output(located: &Located) -> String {
-    if located.worktree.is_some() {
+/// Implements: rust-land/land-after-land-retry
+fn landed_output(
+    root: &Path,
+    located: &Located,
+    settings: &VcsConfig,
+    timeouts: &Timeouts,
+) -> Result<String, FeatureError> {
+    let landed = if located.worktree.is_some() {
         text::landed_worktree(&located.folder)
     } else {
         text::landed_nothing(&located.folder)
-    }
+    };
+    after::retry(
+        root,
+        &located.folder,
+        settings.after_land.as_deref(),
+        timeouts,
+        landed,
+    )
 }
 
 /// Runs every refusal before a land reports or writes, in its required order.
