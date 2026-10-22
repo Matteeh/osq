@@ -346,6 +346,8 @@ name = "osq-feature-doctor"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
 ]
 
 [[package]]
