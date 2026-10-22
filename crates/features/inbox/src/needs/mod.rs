@@ -5,8 +5,11 @@
 
 mod entry;
 mod line;
+mod pending;
 mod placeholder;
 mod steering;
+
+pub(crate) use pending::{after_land, autopilot_stopped};
 
 use std::cmp::Ordering;
 

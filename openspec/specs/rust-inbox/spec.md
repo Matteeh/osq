@@ -33,6 +33,10 @@ and its `commands()` is one `Command` with the name `inbox`, the summary
 - read the changes as "Inbox trees" says, and refuse a change that
   `read_change` refuses with `FeatureError::failed("inbox", <the storage
   error's text>)`;
+- read the pause, after-land and autopilot stop records and the queue
+  titles only through rust-storage `read_usage_pause`,
+  `read_after_land_failure`, `read_autopilot_stop` and `read_queue_titles`,
+  with the home taken from the `HOME` environment variable;
 - otherwise return `Output::text` holding the inbox text followed by one
   newline. The inbox text is `Inbox empty.` when all three groups are
   empty. Otherwise it is the lines `Needs you`, that group's item lines,
@@ -41,8 +45,10 @@ and its `commands()` is one `Command` with the name `inbox`, the summary
   the one line `  (none)`.
 
 The feature writes nothing. The item lines are those of "Needs-you items",
-"Running items", "Landed items", "Validator failing item" and "Archived
-items". Ids compare by the number they lead with, then by bytes.
+"Running items", "Paused items", "Landed items", "Validator failing item",
+"Archived items", "After-land failed item" and "Autopilot stopped item",
+in the order "Needs-you order" gives. Ids compare by the number they lead
+with, then by bytes.
 
 #### Scenario: Inbox feature description
 - **WHEN** `InboxFeature::new()` is asked for its name and commands
@@ -73,7 +79,7 @@ items". Ids compare by the number they lead with, then by bytes.
 The Needs you group SHALL hold, as TypeScript's `projectNeedsYou`,
 `applySteeringItems` and `formatInboxText` do under `DEFAULT_CONFIG`, the
 items of each active change whose snapshot has `proposal`, in listing
-order, followed by "Validator failing item", sorted stably by id. A
+order, placed with the group's other items as "Needs-you order" says. A
 change's id is its snapshot id, or its folder name when that is empty; its
 title is its snapshot title, or empty text. A task's title is its
 `TaskFile` title, or `<id>.md` when that is empty.
@@ -169,10 +175,11 @@ Each item is one line, with `<head>` for `  <id>: <title>`:
 
 ### Requirement: Running items
 The Running group SHALL hold, as TypeScript's `projectRunning` does, one
-item for each task of an active change, in listing order and then task id
-order, whose folded status is `Running`, whose markers hold a `lock`, and
-whose lock's pid is above 0 and names a live process, which is when
-`/proc/<pid>` exists. The item's elapsed seconds are
+item for each task of an active change whose folded status is `Running`,
+whose markers hold a `lock`, and whose lock's pid is above 0 and names a
+live process, which is when `/proc/<pid>` exists, together with the items
+of "Paused items", sorted stably by change id and then by task id, both
+compared as ids compare. The item's elapsed seconds are
 `(now_ms - started_at_ms) / 1000`, rounded to the nearest whole number, and
 0 when that is below 0. Its duration text is `0s` for 0 seconds, `<s>s`
 below 60 seconds, and otherwise `<m>m <s>s` for `m` whole minutes and `s`
@@ -295,3 +302,117 @@ its `.run/approved`. `<head>` is `  <id>: <title, else folder>`.
 | `006-blocked` | approved archived change titled `Blocked archive` with `.run/dead/1.md` with `reason: blocked` | `  006: Blocked archive — needs steering: blocked (blocked) — osq plan 006` |
 | `007-merged` | approved archived change titled `Merged change`, its branch merged into `main` | none |
 | `008-active` | approved active change titled `Active change` with `.run/dead/1.md` with `reason: verify_red`, uncommitted | `  008: Active change — task 1: When run, it works — osq retry 008 1` |
+
+### Requirement: Paused items
+The Running group SHALL also hold, as TypeScript's `projectPaused` does,
+one paused item for each approved active change whose
+`read_usage_pause` record has an `until` whose `timestamp_ms` is later than
+`now_ms` and a `task` that equals one of the change's task ids, unless a
+running item of "Running items" already names that change and task. Its id,
+title and task title are those of "Running items", and its line is
+`  <id>: <title> — task <n>: <task title> — paused until <day> <time> UTC — osq show <id>`,
+where `<day>` is the `until` timestamp's first ten characters and `<time>`
+its five characters after the `T`.
+
+#### Scenario: Paused tasks
+- **WHEN** `InboxFeature::at(1761134400000)`, the time `2026-10-22T12:00:00.000Z`, runs `inbox` on a scratch project with no `osq.toml` whose active changes, each with a `proposal.md` holding the row's title and one task `tasks/1.md` titled `When it runs` unless the row says otherwise, are the rows below, where `paused.md` gives the row's `.run/paused.md` frontmatter lines, each with the body `usage limit reached`
+- **THEN** its output text is exactly the lines below, each followed by a newline:
+
+| Folder | Title | Approved | Tasks | `paused.md` |
+|---|---|---|---|---|
+| `001-wait` | `Wait` | yes | `1` titled `When one waits`, `2` titled `When two waits` | `task: "2"`, `until: "2026-10-22T12:30:00.000Z"`, `source: wait` |
+| `002-live` | `Live` | yes | `1` titled `When live runs`, whose event file's one event is `started` and whose `.run/running/1.pid` holds the test's own pid and `startedAt` 1761134400000 | `task: "1"`, `until: "2026-10-22T13:00:00.000Z"`, `source: wait` |
+| `003-passed` | `Passed` | yes | one | `task: "1"`, `until: "2026-10-22T11:59:59.999Z"`, `source: wait` |
+| `004-unapproved` | `Unapproved` | no | one | `task: "1"`, `until: "2026-10-22T13:00:00.000Z"`, `source: wait` |
+| `005-notask` | `No task` | yes | one | `task: "9"`, `until: "2026-10-22T13:00:00.000Z"`, `source: wait` |
+| `006-number` | `Number` | yes | one | `task: 1`, `until: "2026-10-22T13:00:00.000Z"`, `source: wait` |
+| `007-source` | `Source` | yes | one | `task: "1"`, `until: "2026-10-22T13:00:00.000Z"`, `source: later` |
+| `008-harness` | `Harness` | yes | one | `task: "1"`, `until: "2026-10-23T00:05:00.000Z"`, `source: harness` |
+
+| Line |
+|---|
+| `Needs you` |
+| `  004: Unapproved — osq approve 004` |
+| `Running` |
+| `  001: Wait — task 2: When two waits — paused until 2026-10-22 12:30 UTC — osq show 001` |
+| `  002: Live — task 1: When live runs — 0s — osq show 002` |
+| `  008: Harness — task 1: When it runs — paused until 2026-10-23 00:05 UTC — osq show 008` |
+| `Landed since last look` |
+| `  (none)` |
+
+### Requirement: After-land failed item
+The Needs you group SHALL also hold, as TypeScript's `afterLandFailedItem`
+does, one after-land-failed item when `read_after_land_failure` of the
+project root and the `HOME` folder gives a record, and none when `HOME` is
+unset. Its id is the digits the record's `change` leads with, or the whole
+`change` when it leads with no digit. Its title is the title of the project
+root's archived change whose folder is the record's `change`, or the
+record's `change` when there is no such change or its title is empty. Its
+line is `  <id>: <title> — after-land command failed — osq land <id>`.
+
+#### Scenario: Failed after-land commands
+- **WHEN** `InboxFeature::new()` runs `inbox` on a scratch project with no `osq.toml` whose one change is the archived `030-shipped`, titled `Shipped`, with no `archived` event, and whose `after-land.json` under the real home's `watch_state_dir` of that project holds the row's text, removed when the test ends
+- **THEN** its output text is `Needs you`, the row's line, `Running`, `  (none)`, `Landed since last look` and `  (none)`, each followed by a newline, or `Inbox empty.` and a newline when the row has no line:
+
+| `after-land.json` | Needs-you line |
+|---|---|
+| `{"change":"030-shipped","command":"pnpm build","exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` | `  030: Shipped — after-land command failed — osq land 030` |
+| `{"change":"031-gone","command":"pnpm build","exitCode":2,"failedAt":"2026-10-22T10:00:00.000Z"}` | `  031: 031-gone — after-land command failed — osq land 031` |
+| `{"change":"plain","command":"pnpm build","exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` | `  plain: plain — after-land command failed — osq land plain` |
+| `{"change":"030-shipped","command":"pnpm build","exitCode":"1","failedAt":"2026-10-22T10:00:00.000Z"}` | none |
+| `not json` | none |
+| no file | none |
+
+### Requirement: Autopilot stopped item
+The Needs you group SHALL also hold, as TypeScript's `autopilotStoppedItem`
+does, one autopilot-stopped item when `read_autopilot_stop` gives a record.
+Its id is the record's `change`, or its `item` when `change` is `None`.
+With a `change`, its title is the title of the first listed change, in the
+order "Inbox trees" lists every location, whose folder matches the
+`change`, or the `change` when none matches or that title is empty. A
+folder matches when it equals the trimmed `change` or its padded form, or
+starts with either followed by `-`, where the padded form is the number the
+trimmed `change` leads with written with at least three digits, or the
+trimmed `change` when it leads with no digit. Without a `change`, its title
+is the title `read_queue_titles` gives for the slug `item`, or the `item`
+when it gives none. Its line is
+`  <id>: <title> — autopilot stopped: <reason><detail> — <command>`, where
+`<command>` is the record's `command` and `<detail>` is empty without a
+detail, and otherwise `: ` followed by the detail with every run of
+whitespace read as one space.
+
+#### Scenario: Autopilot stops
+- **WHEN** `InboxFeature::new()` runs `inbox` on a scratch project with no `osq.toml` whose one change is the archived `040-stopped`, titled `Stopped`, with no `archived` event, whose `openspec/queue.md` is `# q\n\n## [next-item] The next item\n\nDepends on: nothing\n\n### Goal\n\nX.\n` unless the row says otherwise, and whose `openspec/.run/autopilot-stop.md` is `---`, the row's frontmatter lines, `at: 2026-10-22T10:00:00.000Z`, `---` and the row's body
+- **THEN** its output text is `Needs you`, the row's line, `Running`, `  (none)`, `Landed since last look` and `  (none)`, each followed by a newline, or `Inbox empty.` and a newline when the row has no line:
+
+| Frontmatter | Body | Needs-you line |
+|---|---|---|
+| `reason: halted`, `item: stopped-item`, `change: "040"`, `command: osq retry 040 1` | `task 1 died:\n  verify_red\n` | `  040: Stopped — autopilot stopped: halted: task 1 died: verify_red — osq retry 040 1` |
+| `reason: land_stopped`, `item: gone-item`, `change: "041"`, `command: osq land 041` | empty | `  041: 041 — autopilot stopped: land_stopped — osq land 041` |
+| `reason: halted`, `item: stopped-item`, `change: "40"`, `command: osq retry 040 1` | empty | `  40: Stopped — autopilot stopped: halted — osq retry 040 1` |
+| `reason: plan_refused`, `item: next-item`, `command: osq queue approve` | empty | `  next-item: The next item — autopilot stopped: plan_refused — osq queue approve` |
+| `reason: queue_unreadable`, `item: next-item`, `command: osq queue approve`, with `## [Bad Slug] Broken\n\nDepends on: nothing\n\nY.\n` appended to the queue | `bad slug\n` | `  next-item: next-item — autopilot stopped: queue_unreadable: bad slug — osq queue approve` |
+| `reason: not_approved`, `item: other-item`, `command: osq queue approve` | empty | `  other-item: other-item — autopilot stopped: not_approved — osq queue approve` |
+| `reason: bogus`, `item: next-item`, `command: osq queue approve` | empty | none |
+
+### Requirement: Needs-you order
+The Needs you group SHALL list, as TypeScript's `readInbox` does, the
+items of "Needs-you items", then those of "Archived items", then the item
+of "After-land failed item", then that of "Validator failing item", then
+that of "Autopilot stopped item", sorted stably by id.
+
+#### Scenario: Items of one change in TypeScript's order
+- **WHEN** `InboxFeature::new()` runs `inbox` on a scratch project with no `osq.toml` holding the unapproved active change `049-draft`, titled `Draft`, and the archived change `050-all`, titled `All`, whose change stream's one event is `validator_ran` at `2026-10-22T09:00:00.000Z` with the outcome `failed` and the output `boom`, with `{"change":"050-all","command":"pnpm build","exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` as its `after-land.json` under the real home's `watch_state_dir` of that project, removed when the test ends, and an `openspec/.run/autopilot-stop.md` with `reason: land_stopped`, `item: all-item`, `change: "050"`, `command: osq land 050`, `at: 2026-10-22T10:00:00.000Z` and an empty body
+- **THEN** its output text is exactly these lines, each followed by a newline:
+
+| Line |
+|---|
+| `Needs you` |
+| `  049: Draft — osq approve 049` |
+| `  050: All — after-land command failed — osq land 050` |
+| `  050: All — validator failed 1× in a row: boom — osq show 050` |
+| `  050: All — autopilot stopped: land_stopped — osq land 050` |
+| `Running` |
+| `  (none)` |
+| `Landed since last look` |
+| `  (none)` |

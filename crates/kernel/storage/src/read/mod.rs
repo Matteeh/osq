@@ -25,11 +25,17 @@
 //! Implements: rust-storage/land-facts
 //! Implements: rust-storage/change-trees
 //! Implements: rust-storage/change-listing-across-trees
+//! Implements: rust-storage/usage-pause-record
+//! Implements: rust-storage/autopilot-stop-record
+//! Implements: rust-storage/after-land-failure-record
+//! Implements: rust-storage/queue-item-titles
 
 mod error;
 mod land;
 mod listing;
 mod manual;
+mod pending;
+mod queue;
 mod results;
 mod seal;
 mod sections;
@@ -41,6 +47,11 @@ pub use error::StorageError;
 pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
+pub use pending::{
+    AfterLandFailure, AutopilotStop, PauseRecord, read_after_land_failure, read_autopilot_stop,
+    read_usage_pause, watch_state_dir,
+};
+pub use queue::{QueueTitle, read_queue_titles};
 pub use results::TaskDisclosure;
 pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};

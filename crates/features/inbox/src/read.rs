@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::{Config, VcsConfig, load_config};
 use osq_kernel_storage::{
-    ChangeEntry, ChangeSnapshot, ChangeTree, Location, TreeCandidate, change_trees, list_changes,
-    list_tree_changes, read_change,
+    ChangeEntry, ChangeSnapshot, ChangeTree, Location, PauseRecord, TreeCandidate, change_trees,
+    list_changes, list_tree_changes, read_change, read_usage_pause,
 };
 use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
 
@@ -15,6 +15,8 @@ use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
 pub(crate) struct Changes {
     /// Every listed change, for the needs-you, running and validator groups.
     pub(crate) all: Vec<ChangeSnapshot>,
+    /// Each entry's usage pause, aligned with `all`.
+    pub(crate) pauses: Vec<Option<PauseRecord>>,
     /// The project root's changes, for the landed group.
     pub(crate) root: Vec<ChangeSnapshot>,
     /// The archived worktree changes and their git facts.
@@ -52,31 +54,43 @@ pub(crate) fn changes(root: &Path) -> Result<Changes, FeatureError> {
     let stacked = stacked_folders(&vcs, root, &config.vcs)?;
     let trees = change_trees(root, &candidates, &stacked);
     let entries = list_tree_changes(&trees);
-    let mut snapshots = Vec::with_capacity(entries.len());
-    for entry in &entries {
-        snapshots.push(read(entry)?);
-    }
+    let (snapshots, pauses) = read_entries(&entries)?;
     let archived = archived_changes(&vcs, &config, &trees, &entries, &snapshots, &worktrees)?;
     Ok(Changes {
         all: snapshots,
-        root: read_root(root)?,
+        pauses,
+        root: read_root(root)?.0,
         archived,
     })
 }
 
 /// Reads the project root alone, as a project without git does.
 fn root_only(root: &Path) -> Result<Changes, FeatureError> {
-    let snapshots = read_root(root)?;
+    let (snapshots, pauses) = read_root(root)?;
     Ok(Changes {
         all: snapshots.clone(),
+        pauses,
         root: snapshots,
         archived: Vec::new(),
     })
 }
 
 /// Reads every change folder directly under the project root.
-fn read_root(root: &Path) -> Result<Vec<ChangeSnapshot>, FeatureError> {
-    list_changes(root).iter().map(read).collect()
+fn read_root(root: &Path) -> Result<(Vec<ChangeSnapshot>, Vec<Option<PauseRecord>>), FeatureError> {
+    read_entries(&list_changes(root))
+}
+
+/// Reads change entries and their usage pauses, in entry order.
+fn read_entries(
+    entries: &[ChangeEntry],
+) -> Result<(Vec<ChangeSnapshot>, Vec<Option<PauseRecord>>), FeatureError> {
+    let mut snapshots = Vec::with_capacity(entries.len());
+    let mut pauses = Vec::with_capacity(entries.len());
+    for entry in entries {
+        snapshots.push(read(entry)?);
+        pauses.push(read_usage_pause(&entry.path));
+    }
+    Ok((snapshots, pauses))
 }
 
 /// Reads one change entry, refusing the storage error.
