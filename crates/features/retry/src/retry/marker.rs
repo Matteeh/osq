@@ -70,36 +70,34 @@ pub(crate) fn read(
     })
 }
 
-/// Refuses a scope regression whose done marker records a scope hash.
+/// The done marker facts a recertification needs.
+pub(crate) struct Recertified {
+    /// The scope hash the done marker recorded.
+    pub(crate) recorded_hash: String,
+}
+
+/// Picks a task scope regression whose done marker records a scope hash.
 ///
-/// # Errors
-///
-/// Returns a `Failed` error with the command `retry` naming the TypeScript
-/// command for a task that needs recertification.
-///
-/// Implements: rust-retry/retry-refusals
-pub(crate) fn check_scope(
+/// Implements: rust-retry/scope-recertification
+pub(crate) fn recertification(
     folder: &Path,
-    folder_name: &str,
     target: &str,
     failure: &Failure,
-) -> Result<(), FeatureError> {
+) -> Option<Recertified> {
     let recertifiable = target != CHANGE
         && failure.has_regressed
         && !failure.has_dead
         && failure.reason == FailureReason::ScopeRegression;
     if !recertifiable {
-        return Ok(());
+        return None;
     }
     let done = folder.join(".run").join("done").join(target);
-    let Ok(text) = fs::read_to_string(done) else {
-        return Ok(());
-    };
-    let recorded = frontmatter_text(&text, "scope_hash");
-    if recorded.is_some_and(|hash| !hash.is_empty()) {
-        return Err(text::recertification(target, folder_name));
+    let text = fs::read_to_string(done).ok()?;
+    let recorded_hash = frontmatter_text(&text, "scope_hash")?;
+    if recorded_hash.is_empty() {
+        return None;
     }
-    Ok(())
+    Some(Recertified { recorded_hash })
 }
 
 /// The reason text of one marker, or its fallback when it has none.

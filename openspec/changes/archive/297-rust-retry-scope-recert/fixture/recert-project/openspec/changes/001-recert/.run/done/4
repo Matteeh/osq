@@ -1,0 +1,12 @@
+---
+scope_resolver: 2
+scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
+build_stamp: "1234567"
+exit_code: 0
+scope_files:
+  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
+recertified_at: 2026-10-02T10:00:00.000Z
+recertification_count: 1
+---
+2026-10-01T10:00:00.000Z

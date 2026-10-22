@@ -116,15 +116,6 @@ pub(crate) fn unknown_reason(reason: &str) -> FeatureError {
     ))
 }
 
-/// The refusal naming recertification for a scope regression with a hash.
-///
-/// Implements: rust-retry/retry-refusals
-pub(crate) fn recertification(task: &str, folder: &str) -> FeatureError {
-    failed(format!(
-        "Task {task} of {folder} needs recertification, which Rust retry does not run yet; run the TypeScript osq retry."
-    ))
-}
-
 /// The output lines after the markers are retained and the event is written.
 ///
 /// Implements: rust-retry/retry-record
@@ -142,8 +133,35 @@ pub(crate) fn retried(
     };
     let mut text = format!("Retried {id} {label} (next attempt: {attempt})\n");
     let _ = writeln!(text, "  Reason: {reason}");
+    push_retained(&mut text, retained);
+    text
+}
+
+/// The output lines of a passing recertification.
+///
+/// Implements: rust-retry/scope-recertification
+pub(crate) fn recertified(id: &str, task: &str, retained: &[String]) -> String {
+    let mut text = format!("Recertified {id} task {task} (scope regression cleared)\n");
+    text.push_str("  Reason: scope_regression\n");
+    push_retained(&mut text, retained);
+    text
+}
+
+/// The output lines of a recertification that must run again.
+///
+/// Implements: rust-retry/scope-recertification
+pub(crate) fn requeued(id: &str, task: &str, attempt: u64, retained: &[String]) -> String {
+    let mut text = format!("Requeued {id} task {task} for agent work (next attempt: {attempt})\n");
+    text.push_str("  Reason: scope_regression\n");
+    push_retained(&mut text, retained);
+    text
+}
+
+/// Appends one `Retained` line per renamed file.
+///
+/// Implements: rust-retry/retry-record
+fn push_retained(text: &mut String, retained: &[String]) {
     for path in retained {
         let _ = writeln!(text, "  Retained: {path}");
     }
-    text
 }

@@ -149,7 +149,8 @@ fn restore_all(files: &[PathBuf], earlier: &[Option<String>]) {
 /// Renames one marker and records its path relative to the change folder.
 ///
 /// Implements: rust-retry/retry-record
-fn retain(
+/// Implements: rust-retry/scope-recertification
+pub(crate) fn retain(
     from: &Path,
     to: &Path,
     folder: &Path,
@@ -186,16 +187,28 @@ fn append_event(
     reason: osq_core::event::FailureReason,
     attempt: u64,
 ) -> Result<(), FeatureError> {
-    let dir = folder.join(".run").join("events");
-    fs::create_dir_all(&dir).map_err(|error| write_error(&dir, &error))?;
-    let envelope = Envelope {
-        timestamp: time::format_utc(time::now_ms()),
-        event: Event::Retry(RetryData {
+    append_line(
+        folder,
+        target,
+        Event::Retry(RetryData {
             target: target.to_owned(),
             reason,
             attempt,
             automatic: None,
         }),
+    )
+}
+
+/// Appends one event line with the current time to the target's stream.
+///
+/// Implements: rust-retry/retry-record
+/// Implements: rust-retry/scope-recertification
+pub(crate) fn append_line(folder: &Path, target: &str, event: Event) -> Result<(), FeatureError> {
+    let dir = folder.join(".run").join("events");
+    fs::create_dir_all(&dir).map_err(|error| write_error(&dir, &error))?;
+    let envelope = Envelope {
+        timestamp: time::format_utc(time::now_ms()),
+        event,
     };
     let path = dir.join(format!("{target}.jsonl"));
     let mut file = OpenOptions::new()

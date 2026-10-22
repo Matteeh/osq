@@ -425,10 +425,13 @@ version = "0.0.0"
 dependencies = [
  "osq-core",
  "osq-kernel-config",
+ "osq-kernel-harnesses",
  "osq-kernel-specs",
  "osq-kernel-storage",
  "osq-kernel-vcs",
  "serde_json",
+ "sha2",
+ "yaml-rust2",
 ]
 
 [[package]]

@@ -1,0 +1,8 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+build_stamp: "63250a84"
+exit_code: 0
+scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+---
+2026-10-01T10:00:00.000Z

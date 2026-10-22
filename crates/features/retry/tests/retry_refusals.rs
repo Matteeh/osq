@@ -18,7 +18,7 @@ fn retry_refusals_osq_adds() {
         ),
         (
             ["11", "1"],
-            "Task 1 of 011-scope-hash needs recertification, which Rust retry does not run yet; run the TypeScript osq retry.",
+            "<root>/openspec/changes/011-scope-hash/tasks/1.md: No such file or directory (os error 2)",
         ),
     ];
     for (index, (args, expected)) in rows.into_iter().enumerate() {
@@ -26,6 +26,7 @@ fn retry_refusals_osq_adds() {
         let root = scratch_copy("retry_refusals", &name);
         let before = tree(&root);
         let error = run(&root, args).expect_err("the retry is refused");
+        let expected = expected.replace("<root>", &root.display().to_string());
         assert_eq!(failed_message(error), expected, "{args:?}");
         assert_eq!(tree(&root), before, "{args:?}: every file is unchanged");
     }

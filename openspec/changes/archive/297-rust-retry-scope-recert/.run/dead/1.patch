@@ -1,0 +1,2738 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 91b88b9e8..cf7cb56b1 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -420,10 +420,13 @@ version = "0.0.0"
+ dependencies = [
+  "osq-core",
+  "osq-kernel-config",
++ "osq-kernel-harnesses",
+  "osq-kernel-specs",
+  "osq-kernel-storage",
+  "osq-kernel-vcs",
+  "serde_json",
++ "sha2",
++ "yaml-rust2",
+ ]
+ 
+ [[package]]
+diff --git a/crates/features/retry/Cargo.toml b/crates/features/retry/Cargo.toml
+index 3bc9b2bae..709fbcc7d 100644
+--- a/crates/features/retry/Cargo.toml
++++ b/crates/features/retry/Cargo.toml
+@@ -13,7 +13,10 @@ workspace = true
+ [dependencies]
+ osq-core.workspace = true
+ osq-kernel-config.workspace = true
++osq-kernel-harnesses.workspace = true
+ osq-kernel-specs.workspace = true
+ osq-kernel-storage.workspace = true
+ osq-kernel-vcs.workspace = true
+ serde_json.workspace = true
++sha2.workspace = true
++yaml-rust2.workspace = true
+diff --git a/crates/features/retry/src/retry.rs b/crates/features/retry/src/retry.rs
+index 56ae3e66d..8f74f1d4a 100644
+--- a/crates/features/retry/src/retry.rs
++++ b/crates/features/retry/src/retry.rs
+@@ -2,12 +2,16 @@
+ 
+ mod approval;
+ mod args;
++mod excerpt;
+ mod find;
+ mod marker;
++mod recertify;
+ mod record;
+ mod running;
++mod scope;
+ mod text;
+ mod time;
++mod yaml;
+ 
+ use std::path::Path;
+ 
+@@ -23,12 +27,13 @@ use osq_kernel_storage::list_changes;
+ ///
+ /// Implements: rust-retry/retry-refusals
+ /// Implements: rust-retry/retry-record
++/// Implements: rust-retry/scope-recertification
+ /// Implements: rust-retry/archived-retry
+ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, FeatureError> {
+     let target = args::target(raw_target)?;
+     let changes = list_changes(root);
+     if let Some(entry) = find::find_change(&changes, id) {
+-        return finish(&entry.path, &entry.folder, target).map(|recorded| recorded.text);
++        return finish(root, &entry.path, &entry.folder, target).map(|recorded| recorded.text);
+     }
+     let Some(archived) = find::find_archived(root, id)? else {
+         let changes_dir = root.join("openspec").join("changes");
+@@ -40,7 +45,7 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
+     if target != args::CHANGE {
+         return Err(text::archived_task(folder_name, spec_id));
+     }
+-    let recorded = finish(folder, folder_name, target)?;
++    let recorded = finish(&archived.tree.root, folder, folder_name, target)?;
+     record::commit(
+         &archived.tree.root,
+         folder,
+@@ -51,7 +56,7 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
+     Ok(recorded.text)
+ }
+ 
+-/// Checks approval, running state and the marker, then records the retry.
++/// Checks approval, running state and the marker, then recertifies or records.
+ ///
+ /// # Errors
+ ///
+@@ -59,7 +64,9 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
+ ///
+ /// Implements: rust-retry/retry-refusals
+ /// Implements: rust-retry/retry-record
++/// Implements: rust-retry/scope-recertification
+ fn finish(
++    root: &Path,
+     folder: &Path,
+     folder_name: &str,
+     target: &str,
+@@ -68,6 +75,12 @@ fn finish(
+     approval::check(folder, spec_id)?;
+     running::check(folder, spec_id, target)?;
+     let failure = marker::read(folder, folder_name, target)?;
+-    marker::check_scope(folder, folder_name, target, &failure)?;
++    if let Some(recorded) = marker::recertification(folder, target, &failure) {
++        let text = recertify::run(root, folder, folder_name, target, &failure, &recorded)?;
++        return Ok(record::Recorded {
++            text,
++            retained: Vec::new(),
++        });
++    }
+     record::record(folder, spec_id, target, &failure)
+ }
+diff --git a/crates/features/retry/src/retry/args.rs b/crates/features/retry/src/retry/args.rs
+index 295f25091..f4c590aa1 100644
+--- a/crates/features/retry/src/retry/args.rs
++++ b/crates/features/retry/src/retry/args.rs
+@@ -7,6 +7,9 @@ use super::text;
+ /// The change target that names a change-level regression.
+ pub(crate) const CHANGE: &str = "change";
+ 
++/// The regression reason a recertification clears.
++pub(crate) const SCOPE_REGRESSION: &str = "scope_regression";
++
+ /// Trims the target and refuses anything but `change` or all ASCII digits.
+ ///
+ /// # Errors
+diff --git a/crates/features/retry/src/retry/excerpt.rs b/crates/features/retry/src/retry/excerpt.rs
+new file mode 100644
+index 000000000..67f61d2ee
+--- /dev/null
++++ b/crates/features/retry/src/retry/excerpt.rs
+@@ -0,0 +1,48 @@
++//! The tail a `recertification` event keeps of one verify output.
++
++/// The configured output limits a recertification event reads.
++#[derive(Clone, Copy)]
++pub(crate) struct Limits {
++    /// The most lines the tail keeps.
++    pub(crate) lines: usize,
++    /// The most characters one kept line holds.
++    pub(crate) chars: usize,
++}
++
++/// The output unchanged within both limits, or its last lines cut to the limit.
++///
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn tail(output: &str, limits: Limits) -> String {
++    let trimmed = output.trim_end();
++    if trimmed.is_empty() {
++        return String::new();
++    }
++    let lines: Vec<&str> = trimmed.split('\n').collect();
++    if lines.len() <= limits.lines && lines.iter().all(|line| count(line) <= limits.chars) {
++        return output.to_owned();
++    }
++    let start = lines.len().saturating_sub(limits.lines);
++    lines[start..]
++        .iter()
++        .map(|line| cut(line, limits.chars))
++        .collect::<Vec<_>>()
++        .join("\n")
++}
++
++/// One line, cut to `chars` characters with the rest counted.
++///
++/// Implements: rust-retry/scope-recertification
++fn cut(line: &str, chars: usize) -> String {
++    if count(line) <= chars {
++        return (*line).to_owned();
++    }
++    let kept: String = line.chars().take(chars).collect();
++    format!("{kept}… ({} more characters)", count(line) - chars)
++}
++
++/// The number of Unicode scalar values in one line.
++///
++/// Implements: rust-retry/scope-recertification
++fn count(line: &str) -> usize {
++    line.chars().count()
++}
+diff --git a/crates/features/retry/src/retry/marker.rs b/crates/features/retry/src/retry/marker.rs
+index 1dc8d36dc..957e6f29f 100644
+--- a/crates/features/retry/src/retry/marker.rs
++++ b/crates/features/retry/src/retry/marker.rs
+@@ -70,36 +70,25 @@ pub(crate) fn read(
+     })
+ }
+ 
+-/// Refuses a scope regression whose done marker records a scope hash.
++/// The done marker's recorded scope hash when this retry is a recertification.
+ ///
+-/// # Errors
+-///
+-/// Returns a `Failed` error with the command `retry` naming the TypeScript
+-/// command for a task that needs recertification.
++/// A task retry with a regressed marker, no dead marker, a
++/// `scope_regression` reason and a done marker holding a non-empty string
++/// `scope_hash` is recertified rather than retained.
+ ///
+-/// Implements: rust-retry/retry-refusals
+-pub(crate) fn check_scope(
+-    folder: &Path,
+-    folder_name: &str,
+-    target: &str,
+-    failure: &Failure,
+-) -> Result<(), FeatureError> {
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn recertification(folder: &Path, target: &str, failure: &Failure) -> Option<String> {
+     let recertifiable = target != CHANGE
+         && failure.has_regressed
+         && !failure.has_dead
+         && failure.reason == FailureReason::ScopeRegression;
+     if !recertifiable {
+-        return Ok(());
++        return None;
+     }
+     let done = folder.join(".run").join("done").join(target);
+-    let Ok(text) = fs::read_to_string(done) else {
+-        return Ok(());
+-    };
+-    let recorded = frontmatter_text(&text, "scope_hash");
+-    if recorded.is_some_and(|hash| !hash.is_empty()) {
+-        return Err(text::recertification(target, folder_name));
+-    }
+-    Ok(())
++    let text = fs::read_to_string(done).ok()?;
++    let recorded = frontmatter_text(&text, "scope_hash")?;
++    (!recorded.is_empty()).then_some(recorded)
+ }
+ 
+ /// The reason text of one marker, or its fallback when it has none.
+diff --git a/crates/features/retry/src/retry/recertify.rs b/crates/features/retry/src/retry/recertify.rs
+new file mode 100644
+index 000000000..144e6c331
+--- /dev/null
++++ b/crates/features/retry/src/retry/recertify.rs
+@@ -0,0 +1,197 @@
++//! Rerunning a scope-regressed task's verify and recertifying or requeueing it.
++
++mod fields;
++
++use std::collections::BTreeMap;
++use std::fs;
++use std::path::Path;
++
++use osq_core::FeatureError;
++use osq_core::event::{Event, RecertificationData, RecertificationOutcome, RequeueReason};
++use osq_kernel_config::{Config, load_config};
++use osq_kernel_harnesses::{VerifyOutcome, VerifyRequest, run_verify};
++use osq_kernel_specs::{parse_frontmatter, read_task_file};
++
++use super::marker::Failure;
++use super::{args, excerpt, record, scope, text};
++
++/// Recertifies a task's scope regression by rerunning its verify.
++///
++/// # Errors
++///
++/// Returns a `Failed` error with the command `retry` when the task file or
++/// config cannot be read, when the verify cannot start, or when the done
++/// marker, a retained file or the event cannot be written.
++///
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn run(
++    root: &Path,
++    folder: &Path,
++    folder_name: &str,
++    target: &str,
++    failure: &Failure,
++    recorded: &str,
++) -> Result<String, FeatureError> {
++    let task = read_task_file(&folder.join("tasks").join(format!("{target}.md")))
++        .map_err(|error| text::failed(error.to_string()))?;
++    let config = load_config(root).map_err(|error| text::failed(error.to_string()))?;
++    let regressed = folder
++        .join(".run")
++        .join("regressed")
++        .join(format!("{target}.md"));
++    let marker = read_marker(&regressed)?;
++    let outcome = verify(root, folder, &task.verify, &config)?;
++    let current = scope::hash(root, &task.scope);
++    let passed = outcome.exit_code == 0;
++    if passed {
++        fields::rewrite(folder, target, recorded, &current)?;
++    }
++    let mut retained = Vec::new();
++    retain(folder, target, failure.ordinal, passed, &mut retained)?;
++    record::append(
++        folder,
++        target,
++        Event::Recertification(data(Facts {
++            target,
++            failure,
++            recorded,
++            command: &task.verify,
++            marker: &marker,
++            outcome: &outcome,
++            current_hash: current.hash.clone(),
++            config: &config,
++            passed,
++        })),
++    )?;
++    let id = args::id(folder_name);
++    Ok(if passed {
++        text::recertified(id, target, &retained)
++    } else {
++        text::requeued(id, target, failure.ordinal + 1, &retained)
++    })
++}
++
++/// Reads a regression marker's frontmatter and body.
++///
++/// Implements: rust-retry/scope-recertification
++fn read_marker(path: &Path) -> Result<osq_kernel_specs::Frontmatter, FeatureError> {
++    let text = fs::read_to_string(path)
++        .map_err(|error| text::failed(format!("cannot read {}: {error}", path.display())))?;
++    parse_frontmatter(&text)
++        .map_err(|error| text::failed(format!("{}: {}", path.display(), error.message)))
++}
++
++/// Runs the task's verify in the root with the change folder's absolute path.
++///
++/// Implements: rust-retry/scope-recertification
++fn verify(
++    root: &Path,
++    folder: &Path,
++    command: &str,
++    config: &Config,
++) -> Result<VerifyOutcome, FeatureError> {
++    let change = fs::canonicalize(folder).unwrap_or_else(|_| folder.to_path_buf());
++    let request = VerifyRequest {
++        command: command.to_owned(),
++        cwd: root.to_path_buf(),
++        source_env: std::env::vars().collect::<BTreeMap<_, _>>(),
++        configured_env: Vec::new(),
++        agent_env: Vec::new(),
++        change: Some(change.to_string_lossy().into_owned()),
++        diff: None,
++        extra_env: BTreeMap::new(),
++        timeout: Some(config.timeouts.verify_timeout),
++        kill_grace: config.timeouts.harness_kill_grace,
++    };
++    run_verify(&request).map_err(|error| text::failed(error.to_string()))
++}
++
++/// Retains the regressed marker and, unless the verify passed, the done marker.
++///
++/// Implements: rust-retry/scope-recertification
++fn retain(
++    folder: &Path,
++    target: &str,
++    ordinal: u64,
++    passed: bool,
++    retained: &mut Vec<String>,
++) -> Result<(), FeatureError> {
++    let run = folder.join(".run");
++    record::retain(
++        &run.join("regressed").join(format!("{target}.md")),
++        &run.join("regressed").join(format!("{target}.{ordinal}.md")),
++        folder,
++        retained,
++    )?;
++    if passed {
++        return Ok(());
++    }
++    let done = run.join("done").join(target);
++    if done.exists() {
++        record::retain(
++            &done,
++            &run.join("done").join(format!("{target}.{ordinal}")),
++            folder,
++            retained,
++        )?;
++    }
++    Ok(())
++}
++
++/// Everything one `recertification` event records.
++struct Facts<'a> {
++    /// The recertified task.
++    target: &'a str,
++    /// The active failure facts, for the attempt number.
++    failure: &'a Failure,
++    /// The done marker's recorded scope hash.
++    recorded: &'a str,
++    /// The verify command that ran.
++    command: &'a str,
++    /// The regression marker's frontmatter and body.
++    marker: &'a osq_kernel_specs::Frontmatter,
++    /// The verify's outcome.
++    outcome: &'a VerifyOutcome,
++    /// The task's current scope hash.
++    current_hash: String,
++    /// The root's config, for the output limits.
++    config: &'a Config,
++    /// Whether the verify passed.
++    passed: bool,
++}
++
++/// Builds the one `recertification` event's data.
++///
++/// Implements: rust-retry/scope-recertification
++fn data(facts: Facts<'_>) -> RecertificationData {
++    let outcome = if facts.passed {
++        RecertificationOutcome::Passed
++    } else {
++        RecertificationOutcome::Requeued
++    };
++    RecertificationData {
++        task: facts.target.to_owned(),
++        outcome,
++        differing_paths: fields::differing_paths(&facts.marker.body),
++        attribution: fields::attribution(&facts.marker.data),
++        command: facts.command.to_owned(),
++        exit_code: i64::from(facts.outcome.exit_code),
++        output: Some(excerpt::tail(&facts.outcome.output, limits(facts.config))),
++        timed_out: facts.outcome.timed_out,
++        recorded_hash: facts.recorded.to_owned(),
++        current_hash: facts.current_hash,
++        attempt: (!facts.passed).then_some(facts.failure.ordinal + 1),
++        reason: (!facts.passed).then_some(RequeueReason::ScopeRegression),
++        automatic: None,
++    }
++}
++
++/// The configured output limits one recertification event reads.
++///
++/// Implements: rust-retry/scope-recertification
++fn limits(config: &Config) -> excerpt::Limits {
++    excerpt::Limits {
++        lines: usize::try_from(config.limits.marker_output_lines).unwrap_or(usize::MAX),
++        chars: usize::try_from(config.limits.marker_line_chars).unwrap_or(usize::MAX),
++    }
++}
+diff --git a/crates/features/retry/src/retry/recertify/fields.rs b/crates/features/retry/src/retry/recertify/fields.rs
+new file mode 100644
+index 000000000..a792f01da
+--- /dev/null
++++ b/crates/features/retry/src/retry/recertify/fields.rs
+@@ -0,0 +1,154 @@
++//! Reading a regression marker's facts and rewriting the recertified done marker.
++
++use std::fs;
++use std::path::Path;
++
++use osq_core::FeatureError;
++use osq_kernel_specs::{js_trim, parse_frontmatter};
++use serde_json::{Map, Number, Value};
++use yaml_rust2::yaml::{Hash, Yaml};
++
++use super::super::scope::ScopeHash;
++use super::super::text;
++use super::super::time;
++use super::super::yaml;
++
++/// The differing paths in a regression marker's first body paragraph.
++///
++/// Implements: rust-retry/scope-recertification
++pub(super) fn differing_paths(body: &str) -> Vec<String> {
++    let first = body.split("\n\n").next().unwrap_or_default();
++    first
++        .split('\n')
++        .filter_map(|line| line.strip_prefix("- "))
++        .map(|path| js_trim(path).to_owned())
++        .collect()
++}
++
++/// The marker's `attribution` list as JSON, or an empty list for any other value.
++///
++/// Implements: rust-retry/scope-recertification
++pub(super) fn attribution(data: &Hash) -> Value {
++    match data.get(&Yaml::String("attribution".to_owned())) {
++        Some(Yaml::Array(items)) => Value::Array(items.iter().map(json).collect()),
++        _ => Value::Array(Vec::new()),
++    }
++}
++
++/// Rewrites `.run/done/<task>` with the current scope evidence.
++///
++/// Implements: rust-retry/recertified-done-marker
++pub(super) fn rewrite(
++    folder: &Path,
++    task: &str,
++    recorded: &str,
++    current: &ScopeHash,
++) -> Result<(), FeatureError> {
++    let path = folder.join(".run").join("done").join(task);
++    let text = fs::read_to_string(&path)
++        .map_err(|error| text::failed(format!("cannot read {}: {error}", path.display())))?;
++    let mut frontmatter = parse_frontmatter(&text)
++        .map_err(|error| text::failed(format!("{}: {}", path.display(), error.message)))?;
++    let data = &mut frontmatter.data;
++    if !keeps_original(data) {
++        data.replace(
++            key("original_scope_hash"),
++            Yaml::String(recorded.to_owned()),
++        );
++    }
++    data.replace(key("scope_hash"), Yaml::String(current.hash.clone()));
++    data.replace(key("scope_files"), files(&current.files));
++    data.replace(key("scope_resolver"), Yaml::Integer(2));
++    data.replace(
++        key("recertified_at"),
++        Yaml::String(time::format_utc(time::now_ms())),
++    );
++    data.replace(
++        key("recertification_count"),
++        Yaml::Integer(next_count(data)),
++    );
++    let marker = format!("---\n{}---\n{}", yaml::stringify(data), frontmatter.body);
++    fs::write(&path, marker)
++        .map_err(|error| text::failed(format!("cannot write {}: {error}", path.display())))
++}
++
++/// A frontmatter key as the YAML mapping holds it.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn key(name: &str) -> Yaml {
++    Yaml::String(name.to_owned())
++}
++
++/// Whether the marker already keeps a non-empty `original_scope_hash` string.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn keeps_original(data: &Hash) -> bool {
++    matches!(
++        data.get(&key("original_scope_hash")),
++        Some(Yaml::String(text)) if !text.is_empty()
++    )
++}
++
++/// The marker's next recertification count.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn next_count(data: &Hash) -> i64 {
++    match data.get(&key("recertification_count")) {
++        Some(Yaml::Integer(count)) if *count >= 1 => count.saturating_add(1),
++        _ => 1,
++    }
++}
++
++/// The `scope_files` mapping of every resolved path to its hash or null.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn files(entries: &[(String, Option<String>)]) -> Yaml {
++    let mut map = Hash::new();
++    for (path, hash) in entries {
++        let value = match hash {
++            Some(hash) => Yaml::String(hash.clone()),
++            None => Yaml::Null,
++        };
++        map.insert(Yaml::String(path.clone()), value);
++    }
++    Yaml::Hash(map)
++}
++
++/// One YAML value as the JSON a `recertification` event carries.
++///
++/// Implements: rust-retry/scope-recertification
++fn json(value: &Yaml) -> Value {
++    match value {
++        Yaml::String(text) => Value::String(text.clone()),
++        Yaml::Integer(number) => Value::Number(Number::from(*number)),
++        Yaml::Boolean(flag) => Value::Bool(*flag),
++        Yaml::Array(items) => Value::Array(items.iter().map(json).collect()),
++        Yaml::Hash(mapping) => {
++            let mut object = Map::new();
++            for (key, value) in mapping {
++                object.insert(text_value(key), json(value));
++            }
++            Value::Object(object)
++        }
++        Yaml::Real(text) => text
++            .parse::<f64>()
++            .ok()
++            .and_then(Number::from_f64)
++            .map_or_else(|| Value::String(text.clone()), Value::Number),
++        Yaml::Null | Yaml::BadValue | Yaml::Alias(_) => Value::Null,
++    }
++}
++
++/// A YAML key as the text a JSON object key uses.
++///
++/// Implements: rust-retry/scope-recertification
++fn text_value(value: &Yaml) -> String {
++    match value {
++        Yaml::String(text) | Yaml::Real(text) => text.clone(),
++        Yaml::Integer(number) => number.to_string(),
++        Yaml::Boolean(flag) => (if *flag { "true" } else { "false" }).to_owned(),
++        Yaml::Null | Yaml::BadValue | Yaml::Alias(_) | Yaml::Array(_) | Yaml::Hash(_) => {
++            String::new()
++        }
++    }
++}
+diff --git a/crates/features/retry/src/retry/record.rs b/crates/features/retry/src/retry/record.rs
+index a4b8366a4..e67ca7f2d 100644
+--- a/crates/features/retry/src/retry/record.rs
++++ b/crates/features/retry/src/retry/record.rs
+@@ -69,7 +69,16 @@ pub(crate) fn record(
+         }
+     }
+     let attempt = failure.ordinal + 1;
+-    append_event(folder, target, failure.reason, attempt)?;
++    append(
++        folder,
++        target,
++        Event::Retry(RetryData {
++            target: target.to_owned(),
++            reason: failure.reason,
++            attempt,
++            automatic: None,
++        }),
++    )?;
+     let text = text::retried(id, target, failure.reason.as_str(), attempt, &retained);
+     Ok(Recorded { text, retained })
+ }
+@@ -149,7 +158,8 @@ fn restore_all(files: &[PathBuf], earlier: &[Option<String>]) {
+ /// Renames one marker and records its path relative to the change folder.
+ ///
+ /// Implements: rust-retry/retry-record
+-fn retain(
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn retain(
+     from: &Path,
+     to: &Path,
+     folder: &Path,
+@@ -177,25 +187,16 @@ fn relative(folder: &Path, path: &Path) -> String {
+         .replace('\\', "/")
+ }
+ 
+-/// Appends one `retry` event with the current time and no `automatic` key.
++/// Appends one event with the current time.
+ ///
+ /// Implements: rust-retry/retry-record
+-fn append_event(
+-    folder: &Path,
+-    target: &str,
+-    reason: osq_core::event::FailureReason,
+-    attempt: u64,
+-) -> Result<(), FeatureError> {
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn append(folder: &Path, target: &str, event: Event) -> Result<(), FeatureError> {
+     let dir = folder.join(".run").join("events");
+     fs::create_dir_all(&dir).map_err(|error| write_error(&dir, &error))?;
+     let envelope = Envelope {
+         timestamp: time::format_utc(time::now_ms()),
+-        event: Event::Retry(RetryData {
+-            target: target.to_owned(),
+-            reason,
+-            attempt,
+-            automatic: None,
+-        }),
++        event,
+     };
+     let path = dir.join(format!("{target}.jsonl"));
+     let mut file = OpenOptions::new()
+diff --git a/crates/features/retry/src/retry/scope.rs b/crates/features/retry/src/retry/scope.rs
+new file mode 100644
+index 000000000..ddc4e1c5d
+--- /dev/null
++++ b/crates/features/retry/src/retry/scope.rs
+@@ -0,0 +1,171 @@
++//! Resolving a task's scope and hashing its files, as TypeScript's `resolveScope` does.
++
++use std::collections::BTreeMap;
++use std::fmt::Write as _;
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_specs::{js_trim, scope_covers_path};
++use sha2::{Digest, Sha256};
++
++/// One resolved scope path and the regular file it names, when one exists.
++struct Resolved {
++    /// The normalized project-relative or declared path.
++    path: String,
++    /// The readable file, or none for a missing or out-of-project entry.
++    file: Option<PathBuf>,
++}
++
++/// A task's current per-file hashes and their combined digest.
++pub(crate) struct ScopeHash {
++    /// The `sha256:` digest of every `<path>:<hash>` line.
++    pub(crate) hash: String,
++    /// Each resolved path and its file hash, in path order.
++    pub(crate) files: Vec<(String, Option<String>)>,
++}
++
++/// Resolves and hashes one task scope below `root`.
++///
++/// Implements: rust-retry/recertified-done-marker
++pub(crate) fn hash(root: &Path, scope: &[String]) -> ScopeHash {
++    let resolved = resolve(root, scope);
++    let mut lines = Vec::with_capacity(resolved.len());
++    let mut files = Vec::with_capacity(resolved.len());
++    for entry in resolved {
++        let file_hash = entry.file.as_deref().and_then(file_hash);
++        let suffix = file_hash.clone().unwrap_or_default();
++        lines.push(format!("{}:{suffix}", entry.path));
++        files.push((entry.path, file_hash));
++    }
++    ScopeHash {
++        hash: digest(&lines.join("\n")),
++        files,
++    }
++}
++
++/// Resolves every scope entry, keeping the first result for one path.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn resolve(root: &Path, scope: &[String]) -> Vec<Resolved> {
++    let mut results: BTreeMap<String, Option<PathBuf>> = BTreeMap::new();
++    for raw in scope {
++        let normalized = normalize(raw);
++        if is_pattern(&normalized) {
++            resolve_pattern(root, &normalized, &mut results);
++        } else {
++            resolve_exact(root, &normalized, &mut results);
++        }
++    }
++    results
++        .into_iter()
++        .map(|(path, file)| Resolved { path, file })
++        .collect()
++}
++
++/// Adds every file a pattern matches below its search root.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn resolve_pattern(root: &Path, entry: &str, results: &mut BTreeMap<String, Option<PathBuf>>) {
++    let scope = [entry.to_owned()];
++    for relative in files_under(root) {
++        if !scope_covers_path(&scope, &relative) || results.contains_key(&relative) {
++            continue;
++        }
++        results.insert(relative.clone(), Some(root.join(&relative)));
++    }
++}
++
++/// Adds one exact entry, with a file only for an in-project regular file.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn resolve_exact(root: &Path, entry: &str, results: &mut BTreeMap<String, Option<PathBuf>>) {
++    if results.contains_key(entry) {
++        return;
++    }
++    if entry == ".." || entry.starts_with("../") || Path::new(entry).is_absolute() {
++        results.insert(entry.to_owned(), None);
++        return;
++    }
++    let path = root.join(entry);
++    let file = fs::symlink_metadata(&path)
++        .is_ok_and(|metadata| metadata.file_type().is_file())
++        .then_some(path);
++    results.insert(entry.to_owned(), file);
++}
++
++/// Every regular file below `root`, as paths relative to the project root.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn files_under(root: &Path) -> Vec<String> {
++    let mut files = Vec::new();
++    walk(root, "", &mut files);
++    files.sort();
++    files
++}
++
++/// Walks one folder without following symbolic links, adding its files.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn walk(dir: &Path, prefix: &str, files: &mut Vec<String>) {
++    let Ok(entries) = fs::read_dir(dir) else {
++        return;
++    };
++    let mut names: Vec<String> = entries
++        .flatten()
++        .filter_map(|entry| entry.file_name().into_string().ok())
++        .collect();
++    names.sort();
++    for name in names {
++        let path = dir.join(&name);
++        let Ok(kind) = fs::symlink_metadata(&path) else {
++            continue;
++        };
++        let relative = if prefix.is_empty() {
++            name
++        } else {
++            format!("{prefix}/{name}")
++        };
++        if kind.file_type().is_dir() {
++            walk(&path, &relative, files);
++        } else if kind.file_type().is_file() {
++            files.push(normalize(&relative));
++        }
++    }
++}
++
++/// Trims an entry, turns its backslashes into `/` and drops leading `./`.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn normalize(value: &str) -> String {
++    js_trim(value)
++        .replace('\\', "/")
++        .trim_start_matches("./")
++        .to_string()
++}
++
++/// Whether an entry is a glob or a trailing-directory pattern.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn is_pattern(entry: &str) -> bool {
++    entry.contains('*') || entry.contains('?') || entry.ends_with('/')
++}
++
++/// The `sha256:` hash of one regular file read as UTF-8 with replacement.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn file_hash(path: &Path) -> Option<String> {
++    let bytes = fs::read(path).ok()?;
++    Some(digest(&String::from_utf8_lossy(&bytes)))
++}
++
++/// The `sha256:` digest of `content` as lowercase hexadecimal.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn digest(content: &str) -> String {
++    let hash = Sha256::digest(content.as_bytes());
++    let mut hex = String::with_capacity(64);
++    for byte in hash {
++        let _ = write!(hex, "{byte:02x}");
++    }
++    format!("sha256:{hex}")
++}
+diff --git a/crates/features/retry/src/retry/text.rs b/crates/features/retry/src/retry/text.rs
+index 73fd59c84..46121adb1 100644
+--- a/crates/features/retry/src/retry/text.rs
++++ b/crates/features/retry/src/retry/text.rs
+@@ -116,13 +116,34 @@ pub(crate) fn unknown_reason(reason: &str) -> FeatureError {
+     ))
+ }
+ 
+-/// The refusal naming recertification for a scope regression with a hash.
++/// The output lines a passing recertification prints.
+ ///
+-/// Implements: rust-retry/retry-refusals
+-pub(crate) fn recertification(task: &str, folder: &str) -> FeatureError {
+-    failed(format!(
+-        "Task {task} of {folder} needs recertification, which Rust retry does not run yet; run the TypeScript osq retry."
+-    ))
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn recertified(id: &str, task: &str, retained: &[String]) -> String {
++    let mut text = format!("Recertified {id} task {task} (scope regression cleared)\n");
++    let _ = writeln!(text, "  Reason: {}", super::args::SCOPE_REGRESSION);
++    retained_lines(&mut text, retained);
++    text
++}
++
++/// The output lines a failing recertification prints.
++///
++/// Implements: rust-retry/scope-recertification
++pub(crate) fn requeued(id: &str, task: &str, attempt: u64, retained: &[String]) -> String {
++    let mut text = format!("Requeued {id} task {task} for agent work (next attempt: {attempt})\n");
++    let _ = writeln!(text, "  Reason: {}", super::args::SCOPE_REGRESSION);
++    retained_lines(&mut text, retained);
++    text
++}
++
++/// Writes one `  Retained:` line per retained file.
++///
++/// Implements: rust-retry/retry-record
++/// Implements: rust-retry/scope-recertification
++fn retained_lines(text: &mut String, retained: &[String]) {
++    for path in retained {
++        let _ = writeln!(text, "  Retained: {path}");
++    }
+ }
+ 
+ /// The output lines after the markers are retained and the event is written.
+@@ -142,8 +163,6 @@ pub(crate) fn retried(
+     };
+     let mut text = format!("Retried {id} {label} (next attempt: {attempt})\n");
+     let _ = writeln!(text, "  Reason: {reason}");
+-    for path in retained {
+-        let _ = writeln!(text, "  Retained: {path}");
+-    }
++    retained_lines(&mut text, retained);
+     text
+ }
+diff --git a/crates/features/retry/src/retry/yaml.rs b/crates/features/retry/src/retry/yaml.rs
+new file mode 100644
+index 000000000..99ec62c10
+--- /dev/null
++++ b/crates/features/retry/src/retry/yaml.rs
+@@ -0,0 +1,213 @@
++//! Writing frontmatter as the `yaml` package's `stringify` does.
++
++use yaml_rust2::yaml::{Hash, Yaml};
++
++/// The indentation one nesting level adds.
++const INDENT: usize = 2;
++
++/// Writes one frontmatter mapping, ending with a newline.
++///
++/// Implements: rust-retry/recertified-done-marker
++pub(crate) fn stringify(mapping: &Hash) -> String {
++    let mut lines = Vec::new();
++    for (key, value) in mapping {
++        lines.extend(entry(&key_text(key), value, 0));
++    }
++    lines.push(String::new());
++    lines.join("\n")
++}
++
++/// One mapping key, its value and any nested block.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn entry(key: &str, value: &Yaml, indent: usize) -> Vec<String> {
++    let base = " ".repeat(indent);
++    let name = format!("{base}{}:", scalar(key));
++    match value {
++        Yaml::Hash(mapping) if mapping.is_empty() => vec![format!("{name} {{}}")],
++        Yaml::Hash(mapping) => {
++            let mut lines = vec![name];
++            lines.extend(block(mapping, indent + INDENT));
++            lines
++        }
++        Yaml::Array(items) if items.is_empty() => vec![format!("{name} []")],
++        Yaml::Array(items) => {
++            let mut lines = vec![name];
++            lines.extend(sequence(items, indent + INDENT));
++            lines
++        }
++        other => vec![format!("{name} {}", render(other))],
++    }
++}
++
++/// A non-empty mapping's entries, one per line group.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn block(mapping: &Hash, indent: usize) -> Vec<String> {
++    let mut lines = Vec::new();
++    for (key, value) in mapping {
++        lines.extend(entry(&key_text(key), value, indent));
++    }
++    lines
++}
++
++/// A non-empty sequence's items, starting each on its dash line.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn sequence(items: &[Yaml], indent: usize) -> Vec<String> {
++    let base = " ".repeat(indent);
++    let mut lines = Vec::new();
++    for item in items {
++        match item {
++            Yaml::Hash(mapping) if mapping.is_empty() => lines.push(format!("{base}- {{}}")),
++            Yaml::Hash(mapping) => {
++                let nested = block(mapping, indent + INDENT);
++                lines.push(join_dash(&base, &nested[0], indent + INDENT));
++                lines.extend(nested.into_iter().skip(1));
++            }
++            Yaml::Array(values) if values.is_empty() => lines.push(format!("{base}- []")),
++            Yaml::Array(values) => {
++                let nested = sequence(values, indent + INDENT);
++                lines.push(join_dash(&base, &nested[0], indent + INDENT));
++                lines.extend(nested.into_iter().skip(1));
++            }
++            other => lines.push(format!("{base}- {}", render(other))),
++        }
++    }
++    lines
++}
++
++/// Puts a nested item's first line after the parent dash.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn join_dash(base: &str, line: &str, indent: usize) -> String {
++    let rest = line.get(indent..).unwrap_or(line);
++    format!("{base}- {rest}")
++}
++
++/// A YAML key's text, as an integer key's decimal text for an integer.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn key_text(key: &Yaml) -> String {
++    value_text(key)
++}
++
++/// A YAML value's text, as the YAML writer reads it.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn value_text(value: &Yaml) -> String {
++    match value {
++        Yaml::String(text) | Yaml::Real(text) => text.clone(),
++        Yaml::Integer(number) => number.to_string(),
++        Yaml::Boolean(flag) => (if *flag { "true" } else { "false" }).to_owned(),
++        Yaml::Null | Yaml::BadValue | Yaml::Alias(_) => "null".to_owned(),
++        Yaml::Array(_) | Yaml::Hash(_) => String::new(),
++    }
++}
++
++/// Writes one non-string scalar as its own text, without string quoting.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn render(value: &Yaml) -> String {
++    match value {
++        Yaml::String(text) => scalar(text),
++        Yaml::Integer(number) => number.to_string(),
++        Yaml::Real(text) => text.clone(),
++        Yaml::Boolean(flag) => (if *flag { "true" } else { "false" }).to_owned(),
++        Yaml::Null | Yaml::BadValue | Yaml::Alias(_) | Yaml::Array(_) | Yaml::Hash(_) => {
++            "null".to_owned()
++        }
++    }
++}
++
++/// Writes one string, plain when the YAML writer may and JSON-quoted otherwise.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn scalar(text: &str) -> String {
++    if plain(text) {
++        return text.to_owned();
++    }
++    serde_json::to_string(text).unwrap_or_else(|_| format!("\"{text}\""))
++}
++
++/// Whether a string is written without quotes.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn plain(text: &str) -> bool {
++    let Some(first) = text.chars().next() else {
++        return false;
++    };
++    let start = first.is_ascii_alphanumeric() || matches!(first, '.' | '_' | '/');
++    let body = text.chars().all(|character| {
++        character.is_ascii_alphanumeric()
++            || matches!(character, '.' | '_' | '/' | '-' | '+' | ':' | '@')
++    });
++    start && body && !text.ends_with(':') && !reserved(text)
++}
++
++/// Whether a plain string would read back as another YAML kind.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn reserved(text: &str) -> bool {
++    matches!(
++        text,
++        "null"
++            | "Null"
++            | "NULL"
++            | "true"
++            | "True"
++            | "TRUE"
++            | "false"
++            | "False"
++            | "FALSE"
++            | ".inf"
++            | ".Inf"
++            | ".INF"
++            | ".nan"
++            | ".NaN"
++            | ".NAN"
++    ) || integer(text)
++        || float(text)
++}
++
++/// Whether a string is an integer in decimal, octal or hexadecimal.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn integer(text: &str) -> bool {
++    let unsigned = text.strip_prefix(['-', '+']).unwrap_or(text);
++    let decimal = !unsigned.is_empty() && unsigned.bytes().all(|byte| byte.is_ascii_digit());
++    let octal = unsigned.strip_prefix("0o").is_some_and(|digits| {
++        !digits.is_empty() && digits.bytes().all(|byte| matches!(byte, b'0'..=b'7'))
++    });
++    let hex = unsigned.strip_prefix("0x").is_some_and(|digits| {
++        !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_hexdigit())
++    });
++    decimal || octal || hex
++}
++
++/// Whether a string is a float the YAML writer resolves.
++///
++/// Implements: rust-retry/recertified-done-marker
++fn float(text: &str) -> bool {
++    let unsigned = text.strip_prefix(['-', '+']).unwrap_or(text);
++    let (mantissa, exponent) = match unsigned.split_once(['e', 'E']) {
++        Some((mantissa, exponent)) => (mantissa, Some(exponent)),
++        None => (unsigned, None),
++    };
++    if exponent.is_some_and(|digits| {
++        let digits = digits.strip_prefix(['-', '+']).unwrap_or(digits);
++        digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit())
++    }) {
++        return false;
++    }
++    let (whole, fraction) = match mantissa.split_once('.') {
++        Some((whole, fraction)) => (whole, Some(fraction)),
++        None => (mantissa, None),
++    };
++    let number = |part: &str| part.bytes().all(|byte| byte.is_ascii_digit());
++    let has_digits = !whole.is_empty() || fraction.is_some_and(|part| !part.is_empty());
++    if !number(whole) || !fraction.is_none_or(number) || !has_digits {
++        return false;
++    }
++    fraction.is_some() || exponent.is_some()
++}
+diff --git a/crates/features/retry/tests/fixtures/recert-golden/again-4.txt b/crates/features/retry/tests/fixtures/recert-golden/again-4.txt
+new file mode 100644
+index 000000000..b4d9db5e7
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-golden/again-4.txt
+@@ -0,0 +1,118 @@
++outcome: output
++Recertified 001 task 4 (scope regression cleared)
++  Reason: scope_regression
++  Retained: .run/regressed/4.1.md
++tree:
++--- .run/approved
++sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
++--- .run/done/1
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++project_commit: "ae1fff77"
++exit_code: 0
++scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/2
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
++---
++2026-10-03T10:00:00.000Z
++--- .run/done/2.1
++2026-10-01T10:00:00.000Z
++--- .run/done/3
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/4
++---
++scope_resolver: 2
++scope_hash: sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06
++build_stamp: "1234567"
++exit_code: 0
++scope_files:
++  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae
++original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
++recertified_at: <timestamp>
++recertification_count: 2
++---
++2026-10-01T10:00:00.000Z
++--- .run/events/1.jsonl
++{"data":{"task":"1"},"timestamp":"<timestamp>","type":"done"}
++--- .run/events/4.jsonl
++{"data":{"attribution":[],"command":"sh checks/pass.sh","currentHash":"sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06","differingPaths":["src/one.txt (modified)"],"exitCode":0,"outcome":"passed","output":"pass\n","recordedHash":"sha256:2222222222222222222222222222222222222222222222222222222222222222","task":"4","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
++--- .run/regressed/1.md
++---
++reason: scope_regression
++task: "1"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/pass.sh"
++exit_code: 1
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
++---
++Task 1 scope changed after completion:
++- src/one.txt (modified)
++- src/two/a.txt (modified)
++
++(no output)
++Full output: the verify_ran event in .run/events/1.jsonl
++--- .run/regressed/2.1.md
++---
++reason: scope_regression
++task: "2"
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++--- .run/regressed/2.md
++---
++reason: scope_regression
++task: "2"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/fail.sh"
++exit_code: 3
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++
++fail
++Full output: the verify_ran event in .run/events/2.jsonl
++--- .run/regressed/3.md
++---
++reason: scope_regression
++task: "3"
++---
++Task 3 scope changed after completion:
++- src/two/a.txt (modified)
++- src/two/deep/b.txt (added)
++not a path line
++- src/two/c.txt (deleted)
++
++- src/after/blank.txt (modified)
++--- .run/regressed/4.1.md
++---
++reason: scope_regression
++task: "4"
++attribution: "not a list"
++---
++Task 4 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-golden/long-3.txt b/crates/features/retry/tests/fixtures/recert-golden/long-3.txt
+new file mode 100644
+index 000000000..36ed04fdc
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-golden/long-3.txt
+@@ -0,0 +1,119 @@
++outcome: output
++Requeued 001 task 3 for agent work (next attempt: 2)
++  Reason: scope_regression
++  Retained: .run/regressed/3.1.md
++  Retained: .run/done/3.1
++tree:
++--- .run/approved
++sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
++--- .run/done/1
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++project_commit: "ae1fff77"
++exit_code: 0
++scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/2
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
++---
++2026-10-03T10:00:00.000Z
++--- .run/done/2.1
++2026-10-01T10:00:00.000Z
++--- .run/done/3.1
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/4
++---
++scope_resolver: 2
++scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
++build_stamp: "1234567"
++exit_code: 0
++scope_files:
++  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
++original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
++recertified_at: <timestamp>
++recertification_count: 1
++---
++2026-10-01T10:00:00.000Z
++--- .run/events/1.jsonl
++{"data":{"task":"1"},"timestamp":"<timestamp>","type":"done"}
++--- .run/events/3.jsonl
++{"data":{"attempt":2,"attribution":[],"command":"sh checks/long.sh","currentHash":"sha256:aa7da01efad91002a86deb7638a3a1648fea7b55632fc4b30e17e1bb57d74342","differingPaths":["src/two/a.txt (modified)","src/two/deep/b.txt (added)","src/two/c.txt (deleted)"],"exitCode":1,"outcome":"requeued","output":"line 7\nline 8\nline 9\nline 10\nline 11\nline 12\nline 13\nline 14\nline 15\nline 16\nline 17\nline 18\nline 19\nline 20\nline 21\nline 22\nline 23\nline 24\nline 25\nline 26\nline 27\nline 28\nline 29\nline 30\nline 31\nline 32\nline 33\nline 34\nline 35\nline 36\nline 37\nline 38\nline 39\nline 40\nline 41\nline 42\nline 43\nline 44\nline 45\n0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789… (50 more characters)","reason":"scope_regression","recordedHash":"sha256:1111111111111111111111111111111111111111111111111111111111111111","task":"3","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
++--- .run/regressed/1.md
++---
++reason: scope_regression
++task: "1"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/pass.sh"
++exit_code: 1
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
++---
++Task 1 scope changed after completion:
++- src/one.txt (modified)
++- src/two/a.txt (modified)
++
++(no output)
++Full output: the verify_ran event in .run/events/1.jsonl
++--- .run/regressed/2.1.md
++---
++reason: scope_regression
++task: "2"
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++--- .run/regressed/2.md
++---
++reason: scope_regression
++task: "2"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/fail.sh"
++exit_code: 3
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++
++fail
++Full output: the verify_ran event in .run/events/2.jsonl
++--- .run/regressed/3.1.md
++---
++reason: scope_regression
++task: "3"
++---
++Task 3 scope changed after completion:
++- src/two/a.txt (modified)
++- src/two/deep/b.txt (added)
++not a path line
++- src/two/c.txt (deleted)
++
++- src/after/blank.txt (modified)
++--- .run/regressed/4.md
++---
++reason: scope_regression
++task: "4"
++attribution: "not a list"
++---
++Task 4 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-golden/passed-1.txt b/crates/features/retry/tests/fixtures/recert-golden/passed-1.txt
+new file mode 100644
+index 000000000..1f830a996
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-golden/passed-1.txt
+@@ -0,0 +1,124 @@
++outcome: output
++Recertified 001 task 1 (scope regression cleared)
++  Reason: scope_regression
++  Retained: .run/regressed/1.1.md
++tree:
++--- .run/approved
++sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
++--- .run/done/1
++---
++scope_resolver: 2
++scope_hash: sha256:c90f675dbfc9efc316808d87f8e77fa763d9b9597fa64e839fe51cfb9eaeaf26
++build_stamp: 63250a84
++project_commit: ae1fff77
++exit_code: 0
++scope_files:
++  missing.txt: null
++  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae
++  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7
++  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f
++original_scope_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
++recertified_at: <timestamp>
++recertification_count: 1
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/2
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
++---
++2026-10-03T10:00:00.000Z
++--- .run/done/2.1
++2026-10-01T10:00:00.000Z
++--- .run/done/3
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/4
++---
++scope_resolver: 2
++scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
++build_stamp: "1234567"
++exit_code: 0
++scope_files:
++  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
++original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
++recertified_at: <timestamp>
++recertification_count: 1
++---
++2026-10-01T10:00:00.000Z
++--- .run/events/1.jsonl
++{"data":{"task":"1"},"timestamp":"<timestamp>","type":"done"}
++{"data":{"attribution":[{"attribution":"2","path":"src/one.txt (modified)","source":"measures"},{"attribution":"unknown","path":"src/two/a.txt (modified)"}],"command":"sh checks/pass.sh","currentHash":"sha256:c90f675dbfc9efc316808d87f8e77fa763d9b9597fa64e839fe51cfb9eaeaf26","differingPaths":["src/one.txt (modified)","src/two/a.txt (modified)"],"exitCode":0,"outcome":"passed","output":"pass\n","recordedHash":"sha256:1111111111111111111111111111111111111111111111111111111111111111","task":"1","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
++--- .run/regressed/1.1.md
++---
++reason: scope_regression
++task: "1"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/pass.sh"
++exit_code: 1
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
++---
++Task 1 scope changed after completion:
++- src/one.txt (modified)
++- src/two/a.txt (modified)
++
++(no output)
++Full output: the verify_ran event in .run/events/1.jsonl
++--- .run/regressed/2.1.md
++---
++reason: scope_regression
++task: "2"
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++--- .run/regressed/2.md
++---
++reason: scope_regression
++task: "2"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/fail.sh"
++exit_code: 3
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++
++fail
++Full output: the verify_ran event in .run/events/2.jsonl
++--- .run/regressed/3.md
++---
++reason: scope_regression
++task: "3"
++---
++Task 3 scope changed after completion:
++- src/two/a.txt (modified)
++- src/two/deep/b.txt (added)
++not a path line
++- src/two/c.txt (deleted)
++
++- src/after/blank.txt (modified)
++--- .run/regressed/4.md
++---
++reason: scope_regression
++task: "4"
++attribution: "not a list"
++---
++Task 4 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt b/crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt
+new file mode 100644
+index 000000000..00bde6f10
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt
+@@ -0,0 +1,89 @@
++// Prints TypeScript's `osq retry` result and `.run` tree for each row of
++// rust-retry "Recertification equals TypeScript's".
++// Run from the repository root after `pnpm build`:
++//   node print-recert-goldens.mjs <fixture recert-project> <golden folder>
++// Each case runs the built CLI on a fresh copy of the fixture, with the copy as
++// the working directory and no osq config, so vcs is off and every limit and
++// timeout is TypeScript's default.
++// A golden holds the outcome, the text and every file under the change's
++// `.run/`, sorted by path. Each event line is parsed, its `timestamp` replaced
++// by `<timestamp>`, and written back with sorted keys. In every other file a
++// line that starts `recertified_at: ` is written `recertified_at: <timestamp>`.
++import { spawnSync } from 'node:child_process';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++
++const BIN = path.resolve('dist', 'cli', 'bin.js');
++const [fixture, golden] = process.argv.slice(2);
++const FOLDER = '001-recert';
++
++const cases = [
++  { name: 'passed-1', args: ['1', '1'] },
++  { name: 'requeued-2', args: ['1', '2'] },
++  { name: 'long-3', args: ['001', '3'] },
++  { name: 'again-4', args: ['1', '4'] },
++];
++
++function sorted(value) {
++  if (Array.isArray(value)) return value.map(sorted);
++  if (value && typeof value === 'object') {
++    return Object.fromEntries(
++      Object.keys(value)
++        .sort()
++        .map((key) => [key, sorted(value[key])]),
++    );
++  }
++  return value;
++}
++
++function eventLine(line) {
++  const parsed = JSON.parse(line);
++  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
++  return JSON.stringify(sorted(parsed));
++}
++
++function files(base, dir, out) {
++  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++    const full = path.join(dir, entry.name);
++    const relative = path.relative(base, full).split(path.sep).join('/');
++    if (entry.isDirectory()) files(base, full, out);
++    else out.push(relative);
++  }
++  return out;
++}
++
++function blankStamp(line) {
++  return line.startsWith('recertified_at: ') ? 'recertified_at: <timestamp>' : line;
++}
++
++function tree(folder) {
++  const lines = [];
++  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
++    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
++    lines.push(`--- ${relative}`);
++    if (relative.endsWith('.jsonl')) {
++      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
++    } else {
++      const body = text.endsWith('\n') ? text.slice(0, -1) : text;
++      lines.push(body.split('\n').map(blankStamp).join('\n'));
++    }
++  }
++  return lines.join('\n');
++}
++
++for (const c of cases) {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-recert-'));
++  fs.cpSync(fixture, root, { recursive: true });
++  const folder = path.join(root, 'openspec', 'changes', FOLDER);
++  const run = spawnSync(process.execPath, [BIN, 'retry', ...c.args], {
++    cwd: root,
++    encoding: 'utf8',
++    env: { ...process.env, NO_COLOR: '1' },
++  });
++  if (run.status !== 0) throw new Error(`${c.name}: exit ${run.status}: ${run.stderr}`);
++  if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
++  const head = `outcome: output\n${run.stdout}`;
++  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${head}tree:\n${tree(folder)}\n`);
++  fs.rmSync(root, { recursive: true, force: true });
++}
+diff --git a/crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt b/crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt
+new file mode 100644
+index 000000000..57ee9e685
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt
+@@ -0,0 +1,119 @@
++outcome: output
++Requeued 001 task 2 for agent work (next attempt: 3)
++  Reason: scope_regression
++  Retained: .run/regressed/2.2.md
++  Retained: .run/done/2.2
++tree:
++--- .run/approved
++sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
++--- .run/done/1
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++project_commit: "ae1fff77"
++exit_code: 0
++scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/2.1
++2026-10-01T10:00:00.000Z
++--- .run/done/2.2
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
++---
++2026-10-03T10:00:00.000Z
++--- .run/done/3
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
++---
++2026-10-01T10:00:00.000Z
++--- .run/done/4
++---
++scope_resolver: 2
++scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
++build_stamp: "1234567"
++exit_code: 0
++scope_files:
++  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
++original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
++recertified_at: <timestamp>
++recertification_count: 1
++---
++2026-10-01T10:00:00.000Z
++--- .run/events/1.jsonl
++{"data":{"task":"1"},"timestamp":"<timestamp>","type":"done"}
++--- .run/events/2.jsonl
++{"data":{"attempt":3,"attribution":[{"attribution":"ambiguous","path":"src/one.txt (modified)"}],"command":"sh checks/fail.sh","currentHash":"sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06","differingPaths":["src/one.txt (modified)"],"exitCode":3,"outcome":"requeued","output":"fail\n","reason":"scope_regression","recordedHash":"sha256:1111111111111111111111111111111111111111111111111111111111111111","task":"2","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
++--- .run/regressed/1.md
++---
++reason: scope_regression
++task: "1"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/pass.sh"
++exit_code: 1
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
++---
++Task 1 scope changed after completion:
++- src/one.txt (modified)
++- src/two/a.txt (modified)
++
++(no output)
++Full output: the verify_ran event in .run/events/1.jsonl
++--- .run/regressed/2.1.md
++---
++reason: scope_regression
++task: "2"
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++--- .run/regressed/2.2.md
++---
++reason: scope_regression
++task: "2"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/fail.sh"
++exit_code: 3
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++
++fail
++Full output: the verify_ran event in .run/events/2.jsonl
++--- .run/regressed/3.md
++---
++reason: scope_regression
++task: "3"
++---
++Task 3 scope changed after completion:
++- src/two/a.txt (modified)
++- src/two/deep/b.txt (added)
++not a path line
++- src/two/c.txt (deleted)
++
++- src/after/blank.txt (modified)
++--- .run/regressed/4.md
++---
++reason: scope_regression
++task: "4"
++attribution: "not a list"
++---
++Task 4 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-project/checks/fail.sh b/crates/features/retry/tests/fixtures/recert-project/checks/fail.sh
+new file mode 100644
+index 000000000..8ee86c1e6
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/checks/fail.sh
+@@ -0,0 +1,2 @@
++echo fail
++exit 3
+diff --git a/crates/features/retry/tests/fixtures/recert-project/checks/long.sh b/crates/features/retry/tests/fixtures/recert-project/checks/long.sh
+new file mode 100644
+index 000000000..fa799ff5b
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/checks/long.sh
+@@ -0,0 +1,13 @@
++i=1
++while [ "$i" -le 45 ]; do
++  echo "line $i"
++  i=$((i + 1))
++done
++long=""
++j=0
++while [ "$j" -lt 45 ]; do
++  long="${long}0123456789"
++  j=$((j + 1))
++done
++echo "$long"
++exit 1
+diff --git a/crates/features/retry/tests/fixtures/recert-project/checks/pass.sh b/crates/features/retry/tests/fixtures/recert-project/checks/pass.sh
+new file mode 100644
+index 000000000..fecdd72ce
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/checks/pass.sh
+@@ -0,0 +1 @@
++echo pass
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved
+new file mode 100644
+index 000000000..2241e8ac6
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved
+@@ -0,0 +1 @@
++sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1 b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1
+new file mode 100644
+index 000000000..a7e85cc92
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1
+@@ -0,0 +1,9 @@
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++project_commit: "ae1fff77"
++exit_code: 0
++scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
++---
++2026-10-01T10:00:00.000Z
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2 b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2
+new file mode 100644
+index 000000000..1ca3d8df9
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2
+@@ -0,0 +1,8 @@
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
++---
++2026-10-03T10:00:00.000Z
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1 b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1
+new file mode 100644
+index 000000000..f25e4328d
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1
+@@ -0,0 +1 @@
++2026-10-01T10:00:00.000Z
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3 b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3
+new file mode 100644
+index 000000000..b507c1bb4
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3
+@@ -0,0 +1,8 @@
++---
++scope_resolver: 2
++scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++build_stamp: "63250a84"
++exit_code: 0
++scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
++---
++2026-10-01T10:00:00.000Z
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4 b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4
+new file mode 100644
+index 000000000..b72582149
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4
+@@ -0,0 +1,12 @@
++---
++scope_resolver: 2
++scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
++build_stamp: "1234567"
++exit_code: 0
++scope_files:
++  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
++original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
++recertified_at: 2026-10-02T10:00:00.000Z
++recertification_count: 1
++---
++2026-10-01T10:00:00.000Z
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl
+new file mode 100644
+index 000000000..0aadb99d8
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl
+@@ -0,0 +1 @@
++{"type":"done","data":{"task":"1"},"timestamp":"2026-10-01T10:00:00.000Z"}
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md
+new file mode 100644
+index 000000000..352219a6f
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md
+@@ -0,0 +1,18 @@
++---
++reason: scope_regression
++task: "1"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/pass.sh"
++exit_code: 1
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
++---
++Task 1 scope changed after completion:
++- src/one.txt (modified)
++- src/two/a.txt (modified)
++
++(no output)
++Full output: the verify_ran event in .run/events/1.jsonl
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md
+new file mode 100644
+index 000000000..e3d107f7b
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md
+@@ -0,0 +1,6 @@
++---
++reason: scope_regression
++task: "2"
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md
+new file mode 100644
+index 000000000..fd56b8fa8
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md
+@@ -0,0 +1,17 @@
++---
++reason: scope_regression
++task: "2"
++recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
++current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
++verify_command: "sh checks/fail.sh"
++exit_code: 3
++duration: 0.01
++timed_out: false
++verification_passed: false
++attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
++---
++Task 2 scope changed after completion:
++- src/one.txt (modified)
++
++fail
++Full output: the verify_ran event in .run/events/2.jsonl
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md
+new file mode 100644
+index 000000000..b8424e0d8
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md
+@@ -0,0 +1,11 @@
++---
++reason: scope_regression
++task: "3"
++---
++Task 3 scope changed after completion:
++- src/two/a.txt (modified)
++- src/two/deep/b.txt (added)
++not a path line
++- src/two/c.txt (deleted)
++
++- src/after/blank.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md
+new file mode 100644
+index 000000000..471c05675
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md
+@@ -0,0 +1,7 @@
++---
++reason: scope_regression
++task: "4"
++attribution: "not a list"
++---
++Task 4 scope changed after completion:
++- src/one.txt (modified)
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md
+new file mode 100644
+index 000000000..66ef4d88a
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md
+@@ -0,0 +1 @@
++# 001 recert
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md
+new file mode 100644
+index 000000000..52cdc1c68
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md
+@@ -0,0 +1,8 @@
++---
++title: Passing verify over a file, a glob and a missing file
++verify: sh checks/pass.sh
++scope:
++  - src/one.txt
++  - src/two/**
++  - missing.txt
++---
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md
+new file mode 100644
+index 000000000..a2ef9904b
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md
+@@ -0,0 +1,6 @@
++---
++title: Failing verify with an earlier retry
++verify: sh checks/fail.sh
++scope:
++  - src/one.txt
++---
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md
+new file mode 100644
+index 000000000..adc2d9154
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md
+@@ -0,0 +1,6 @@
++---
++title: Failing verify with long output over a folder
++verify: sh checks/long.sh
++scope:
++  - ./src/two/
++---
+diff --git a/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md
+new file mode 100644
+index 000000000..8cb748d4a
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md
+@@ -0,0 +1,7 @@
++---
++title: Passing verify on a marker recertified before
++verify: sh checks/pass.sh
++scope:
++  - src/one.txt
++  - src/none/*.txt
++---
+diff --git a/crates/features/retry/tests/fixtures/recert-project/src/one.txt b/crates/features/retry/tests/fixtures/recert-project/src/one.txt
+new file mode 100644
+index 000000000..76b98c43d
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/src/one.txt
+@@ -0,0 +1 @@
++one, edited after the task finished
+diff --git a/crates/features/retry/tests/fixtures/recert-project/src/two/a.txt b/crates/features/retry/tests/fixtures/recert-project/src/two/a.txt
+new file mode 100644
+index 000000000..789819226
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/src/two/a.txt
+@@ -0,0 +1 @@
++a
+diff --git a/crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt b/crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt
+new file mode 100644
+index 000000000..617807982
+--- /dev/null
++++ b/crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt
+@@ -0,0 +1 @@
++b
+diff --git a/crates/features/retry/tests/retry_recert.rs b/crates/features/retry/tests/retry_recert.rs
+new file mode 100644
+index 000000000..332f0a562
+--- /dev/null
++++ b/crates/features/retry/tests/retry_recert.rs
+@@ -0,0 +1,497 @@
++//! Proves retry recertifies a scope regression as TypeScript does.
++
++mod support;
++
++#[path = "../src/retry/excerpt.rs"]
++mod source_excerpt;
++
++use std::fmt::Write as _;
++use std::fs;
++
++use osq_kernel_storage::change_folder_seal;
++use support::{
++    change_folder, copy_tree, dump, failed_message, fixture, parse_golden, run, scratch, tree,
++    write,
++};
++
++/// The done marker's recorded hash every scope-files row starts from.
++const RECORDED: &str = "sha256:2222222222222222222222222222222222222222222222222222222222222222";
++
++/// The marker every recertified task 4 carries as its current scope hash.
++const CURRENT: &str = "sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06";
++
++/// One row of "Recertification equals TypeScript's".
++struct GoldenRow {
++    /// The row's golden and scratch folder name.
++    name: &'static str,
++    /// The two literal retry arguments.
++    args: [&'static str; 2],
++}
++
++/// Every row of "Recertification equals TypeScript's", in table order.
++const GOLDEN_ROWS: [GoldenRow; 4] = [
++    GoldenRow {
++        name: "passed-1",
++        args: ["1", "1"],
++    },
++    GoldenRow {
++        name: "requeued-2",
++        args: ["1", "2"],
++    },
++    GoldenRow {
++        name: "long-3",
++        args: ["001", "3"],
++    },
++    GoldenRow {
++        name: "again-4",
++        args: ["1", "4"],
++    },
++];
++
++/// A fresh scratch copy of the recertification fixture.
++fn scratch_recert(name: &str) -> std::path::PathBuf {
++    let root = scratch("retry_recert", name);
++    copy_tree(&fixture("recert-project"), &root);
++    root
++}
++
++/// Writes a golden's `recertified_at` line as the script blanks it.
++fn blank_stamp(dump: &str) -> String {
++    dump.lines()
++        .map(|line| {
++            if line.starts_with("recertified_at: ") {
++                "recertified_at: <timestamp>"
++            } else {
++                line
++            }
++        })
++        .collect::<Vec<_>>()
++        .join("\n")
++}
++
++/// Proves every row of "Recertification equals TypeScript's".
++///
++/// Covers: rust-retry/recertification-equals-typescript-s
++#[test]
++fn recertification_equals_typescript() {
++    for row in &GOLDEN_ROWS {
++        let root = scratch_recert(row.name);
++        let folder = change_folder(&root, "001-recert");
++        let result = run(&root, row.args).expect("the retry recertifies");
++        let text = fs::read_to_string(fixture("recert-golden").join(format!("{}.txt", row.name)))
++            .expect("the golden reads");
++        let (outcome, body, tree) = parse_golden(&text);
++        assert_eq!(outcome, "output", "{}: outcome", row.name);
++        assert_eq!(result.text, body, "{}: output", row.name);
++        assert_eq!(
++            format!("{}\n", blank_stamp(&dump(&folder))),
++            tree,
++            "{}: tree",
++            row.name
++        );
++    }
++}
++
++/// Proves a config that does not load refuses before any write.
++///
++/// Covers: rust-retry/recertification-refusals
++#[test]
++fn recertification_refusals() {
++    let root = scratch_recert("refusal");
++    let before = tree(&root);
++    write(&root, "osq.toml", "bogus = 1\n");
++    let error = run(&root, ["1", "1"]).expect_err("the config is refused");
++    assert_eq!(failed_message(error), "bogus is not an osq.toml key");
++    let mut after = tree(&root);
++    after.remove("osq.toml");
++    assert_eq!(after, before, "every file apart from osq.toml is unchanged");
++}
++
++/// One row of "Recertified scope files".
++struct ScopeRow {
++    /// The row's scratch folder name.
++    name: &'static str,
++    /// The scope entries the row writes.
++    entries: &'static [&'static str],
++    /// The row's expected `scope_hash` value.
++    hash: &'static str,
++    /// The row's expected `scope_files` line and indented lines.
++    files: &'static [&'static str],
++}
++
++/// Every row of "Recertified scope files", in table order.
++const SCOPE_ROWS: [ScopeRow; 10] = [
++    ScopeRow {
++        name: "outside-exact",
++        entries: &["../outside.txt"],
++        hash: "sha256:985bc8dcecaee4913c191e1d3b327a931d48951f486500edd41ab73a57918030",
++        files: &["scope_files:", "  ../outside.txt: null"],
++    },
++    ScopeRow {
++        name: "absolute-exact",
++        entries: &["/abs/file.txt"],
++        hash: "sha256:d84705e84283af54e8d2e9a3d8f1a7f34c018c3aeb577b80d8186dd3577d841a",
++        files: &["scope_files:", "  /abs/file.txt: null"],
++    },
++    ScopeRow {
++        name: "outside-patterns",
++        entries: &["../*.txt", "/abs/*.txt"],
++        hash: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
++        files: &["scope_files: {}"],
++    },
++    ScopeRow {
++        name: "directory-exact",
++        entries: &["src"],
++        hash: "sha256:7aaf195b39732b39c116a660cd4ffe54eae09e8fc8a4970b2d7e295e68ad4892",
++        files: &["scope_files:", "  src: null"],
++    },
++    ScopeRow {
++        name: "windows-exact",
++        entries: &[r".\src\one.txt"],
++        hash: CURRENT,
++        files: &[
++            "scope_files:",
++            "  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae",
++        ],
++    },
++    ScopeRow {
++        name: "star",
++        entries: &["src/two/*"],
++        hash: "sha256:30f9c1fbb55d70fb0e7a241e42ceb8099db0c1fe1d5e8fe749159a2b7964bb7d",
++        files: &[
++            "scope_files:",
++            "  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
++        ],
++    },
++    ScopeRow {
++        name: "question",
++        entries: &["src/two/deep/?.txt"],
++        hash: "sha256:3515f8747e9ad61510ae928351f0d194a568fb85538f2a36a8cf865bcc42f53a",
++        files: &[
++            "scope_files:",
++            "  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f",
++        ],
++    },
++    ScopeRow {
++        name: "duplicate-exact",
++        entries: &["src/one.txt", "./src/one.txt"],
++        hash: CURRENT,
++        files: &[
++            "scope_files:",
++            "  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae",
++        ],
++    },
++    ScopeRow {
++        name: "globstar",
++        entries: &["src/two/**/*.txt"],
++        hash: "sha256:aa7da01efad91002a86deb7638a3a1648fea7b55632fc4b30e17e1bb57d74342",
++        files: &[
++            "scope_files:",
++            "  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
++            "  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f",
++        ],
++    },
++    ScopeRow {
++        name: "globstar-all",
++        entries: &["src/**"],
++        hash: "sha256:d21bc7711678dcf1a2bd9bc1c5e7be5282b4baa70f6d001ba39ab0937d5ef4ac",
++        files: &[
++            "scope_files:",
++            "  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae",
++            "  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
++            "  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f",
++        ],
++    },
++];
++
++/// Writes task 4 with the row's scope and reseals the change folder.
++fn write_scope(folder: &std::path::Path, entries: &[&str]) {
++    let mut text = String::from("---\ntitle: t\nverify: sh checks/pass.sh\nscope:\n");
++    for entry in entries {
++        let json = serde_json::to_string(entry).expect("the entry is a JSON string");
++        let _ = writeln!(text, "  - {json}");
++    }
++    text.push_str("---\n");
++    write(folder, "tasks/4.md", text);
++    let seal = change_folder_seal(folder).expect("the folder is sealed");
++    write(folder, ".run/approved", format!("{}\n", seal.as_str()));
++}
++
++/// The `scope_files` line and its indented lines from a marker.
++fn scope_files(lines: &[String]) -> Vec<String> {
++    let start = lines
++        .iter()
++        .position(|line| line.starts_with("scope_files:"))
++        .expect("the marker holds scope_files");
++    if lines[start] == "scope_files: {}" {
++        return vec![lines[start].clone()];
++    }
++    let mut found = vec![lines[start].clone()];
++    for line in &lines[start + 1..] {
++        if !line.starts_with("  ") {
++            break;
++        }
++        found.push(line.clone());
++    }
++    found
++}
++
++/// Proves every row of "Recertified scope files".
++///
++/// Covers: rust-retry/recertified-scope-files
++#[test]
++fn recertified_scope_files() {
++    for row in &SCOPE_ROWS {
++        let root = scratch_recert(row.name);
++        let folder = change_folder(&root, "001-recert");
++        if row.name.starts_with("outside") {
++            let parent = root.parent().expect("the scratch root has a parent");
++            write(parent, "outside.txt", "outside\n");
++        }
++        write_scope(&folder, row.entries);
++        run(&root, ["1", "4"]).expect("the retry recertifies");
++        let marker = fs::read_to_string(folder.join(".run/done/4")).expect("the marker reads");
++        let lines: Vec<String> = marker.lines().map(str::to_owned).collect();
++        assert!(
++            lines.contains(&format!("scope_hash: {}", row.hash)),
++            "{}: scope_hash",
++            row.name
++        );
++        let expected: Vec<String> = row.files.iter().map(|line| (*line).to_owned()).collect();
++        assert_eq!(scope_files(&lines), expected, "{}: scope_files", row.name);
++    }
++}
++
++/// Proves the output tail keeps both marker limits, cutting only past them.
++///
++/// Covers: rust-retry/recertification-equals-typescript-s
++#[test]
++fn recertification_output_tail() {
++    let limits = source_excerpt::Limits { lines: 2, chars: 3 };
++    let rows: [(&str, &str); 6] = [
++        ("abcd", "abc… (1 more characters)"),
++        ("a\nb\nc", "b\nc"),
++        ("a\nb\n", "a\nb\n"),
++        ("ab\ncd\n", "ab\ncd\n"),
++        ("\n\n", ""),
++        ("a\nb\nc\nd", "c\nd"),
++    ];
++    for (output, expected) in rows {
++        assert_eq!(source_excerpt::tail(output, limits), expected, "{output:?}");
++    }
++}
++
++/// One row of "Recertified marker text".
++struct TextRow {
++    /// The row's scratch folder name.
++    name: &'static str,
++    /// The frontmatter line the row writes after `scope_hash`.
++    line: &'static str,
++    /// The marker lines the rewrite must hold after `scope_hash`.
++    expected: &'static [&'static str],
++}
++
++/// Every row of "Recertified marker text", in table order.
++const TEXT_ROWS: [TextRow; 28] = [
++    TextRow {
++        name: "boolean",
++        line: "flag: true",
++        expected: &["flag: true"],
++    },
++    TextRow {
++        name: "empty",
++        line: "note: \"\"",
++        expected: &["note: \"\""],
++    },
++    TextRow {
++        name: "hex",
++        line: "stamp: \"0x1f\"",
++        expected: &["stamp: \"0x1f\""],
++    },
++    TextRow {
++        name: "exponent",
++        line: "stamp: \"12e45\"",
++        expected: &["stamp: \"12e45\""],
++    },
++    TextRow {
++        name: "negative",
++        line: "stamp: \"-1\"",
++        expected: &["stamp: \"-1\""],
++    },
++    TextRow {
++        name: "capitalised",
++        line: "stamp: \"True\"",
++        expected: &["stamp: \"True\""],
++    },
++    TextRow {
++        name: "colon",
++        line: "stamp: \"a:\"",
++        expected: &["stamp: \"a:\""],
++    },
++    TextRow {
++        name: "plain",
++        line: "stamp: a.b/c_d-e+f:g@h",
++        expected: &["stamp: a.b/c_d-e+f:g@h"],
++    },
++    TextRow {
++        name: "dotted",
++        line: "stamp: 1.2.3",
++        expected: &["stamp: 1.2.3"],
++    },
++    TextRow {
++        name: "null",
++        line: "nothing:",
++        expected: &["nothing: null"],
++    },
++    TextRow {
++        name: "nested-list",
++        line: "list: [{a: 1, b: [x]}, [y, z], {}, []]",
++        expected: &[
++            "list:",
++            "  - a: 1",
++            "    b:",
++            "      - x",
++            "  - - y",
++            "    - z",
++            "  - {}",
++            "  - []",
++        ],
++    },
++    TextRow {
++        name: "nested-map",
++        line: "nested: {a: {b: c}}",
++        expected: &["nested:", "  a:", "    b: c"],
++    },
++    TextRow {
++        name: "integer-key",
++        line: "codes: {7: seven}",
++        expected: &["codes:", "  \"7\": seven"],
++    },
++    TextRow {
++        name: "count-zero",
++        line: "recertification_count: 0",
++        expected: &[
++            "recertification_count: 1",
++            "original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222",
++        ],
++    },
++    TextRow {
++        name: "count-string",
++        line: "recertification_count: \"3\"",
++        expected: &[
++            "recertification_count: 1",
++            "original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222",
++        ],
++    },
++    TextRow {
++        name: "original-empty",
++        line: "original_scope_hash: \"\"",
++        expected: &[
++            "original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222",
++            "scope_files:",
++        ],
++    },
++    TextRow {
++        name: "count-negative",
++        line: "recertification_count: -1",
++        expected: &[
++            "recertification_count: 1",
++            "original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222",
++        ],
++    },
++    TextRow {
++        name: "count-one",
++        line: "recertification_count: 1",
++        expected: &[
++            "recertification_count: 2",
++            "original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222",
++        ],
++    },
++    TextRow {
++        name: "empty-list",
++        line: "empty_list: []",
++        expected: &["empty_list: []"],
++    },
++    TextRow {
++        name: "empty-map",
++        line: "empty_map: {}",
++        expected: &["empty_map: {}"],
++    },
++    TextRow {
++        name: "deep",
++        line: "deep: [[{a: b}]]",
++        expected: &["deep:", "  - - a: b"],
++    },
++    TextRow {
++        name: "deeper",
++        line: "deeper: [[[a]]]",
++        expected: &["deeper:", "  - - - a"],
++    },
++    TextRow {
++        name: "octal",
++        line: "stamp: \"0o7\"",
++        expected: &["stamp: \"0o7\""],
++    },
++    TextRow {
++        name: "octal-empty",
++        line: "stamp: \"0o\"",
++        expected: &["stamp: 0o"],
++    },
++    TextRow {
++        name: "hex-empty",
++        line: "stamp: \"0x\"",
++        expected: &["stamp: 0x"],
++    },
++    TextRow {
++        name: "exponent-empty",
++        line: "stamp: \"1e\"",
++        expected: &["stamp: 1e"],
++    },
++    TextRow {
++        name: "exponent-junk",
++        line: "stamp: \"1ex\"",
++        expected: &["stamp: 1ex"],
++    },
++    TextRow {
++        name: "leading-dot",
++        line: "stamp: \".5\"",
++        expected: &["stamp: \".5\""],
++    },
++];
++
++/// Writes task 4's done marker with the row's frontmatter line.
++fn write_marker(folder: &std::path::Path, line: &str) {
++    write(
++        folder,
++        ".run/done/4",
++        format!("---\nscope_hash: {RECORDED}\n{line}\n---\n2026-10-01T10:00:00.000Z\n"),
++    );
++}
++
++/// Proves every row of "Recertified marker text".
++///
++/// Covers: rust-retry/recertified-marker-text
++#[test]
++fn recertified_marker_text() {
++    for row in &TEXT_ROWS {
++        let root = scratch_recert(row.name);
++        let folder = change_folder(&root, "001-recert");
++        write_marker(&folder, row.line);
++        run(&root, ["1", "4"]).expect("the retry recertifies");
++        let marker = fs::read_to_string(folder.join(".run/done/4")).expect("the marker reads");
++        let lines: Vec<&str> = marker.lines().collect();
++        assert_eq!(lines[0], "---", "{}: opening", row.name);
++        assert_eq!(
++            lines[1],
++            format!("scope_hash: {CURRENT}"),
++            "{}: scope_hash",
++            row.name
++        );
++        assert_eq!(
++            &lines[2..2 + row.expected.len()],
++            row.expected,
++            "{}: frontmatter",
++            row.name
++        );
++    }
++}
+diff --git a/crates/features/retry/tests/retry_refusals.rs b/crates/features/retry/tests/retry_refusals.rs
+index 59061c36d..ca498f9b8 100644
+--- a/crates/features/retry/tests/retry_refusals.rs
++++ b/crates/features/retry/tests/retry_refusals.rs
+@@ -18,7 +18,7 @@ fn retry_refusals_osq_adds() {
+         ),
+         (
+             ["11", "1"],
+-            "Task 1 of 011-scope-hash needs recertification, which Rust retry does not run yet; run the TypeScript osq retry.",
++            "<root>/openspec/changes/011-scope-hash/tasks/1.md: No such file or directory (os error 2)",
+         ),
+     ];
+     for (index, (args, expected)) in rows.into_iter().enumerate() {
+@@ -26,6 +26,7 @@ fn retry_refusals_osq_adds() {
+         let root = scratch_copy("retry_refusals", &name);
+         let before = tree(&root);
+         let error = run(&root, args).expect_err("the retry is refused");
++        let expected = expected.replace("<root>", &root.display().to_string());
+         assert_eq!(failed_message(error), expected, "{args:?}");
+         assert_eq!(tree(&root), before, "{args:?}: every file is unchanged");
+     }
+diff --git a/openspec/changes/297-rust-retry-scope-recert/.run/dead/1.md b/openspec/changes/297-rust-retry-scope-recert/.run/dead/1.md
+new file mode 100644
+index 000000000..410d30d6c
+--- /dev/null
++++ b/openspec/changes/297-rust-retry-scope-recert/.run/dead/1.md
+@@ -0,0 +1,8 @@
++---
++reason: crashed
++pid: 2348770
++started_at: 2026-10-22T16:59:19.079Z
++reaped_at: 2026-10-22T17:28:27.160Z
++fingerprint: sha256:c0d7f94d6155e0a95721649b815b7052f5ccdb9af12f765c07fa491acffa8f0e
++---
++Task execution terminated by watcher reaper (crashed).
+diff --git a/openspec/changes/297-rust-retry-scope-recert/.run/events/1.jsonl b/openspec/changes/297-rust-retry-scope-recert/.run/events/1.jsonl
+new file mode 100644
+index 000000000..d1d138002
+--- /dev/null
++++ b/openspec/changes/297-rust-retry-scope-recert/.run/events/1.jsonl
+@@ -0,0 +1,176 @@
++{"type":"verify_ran","timestamp":"2026-10-22T17:04:24.740Z","data":{"command":"cargo test -p osq-feature-retry --test feature --test retry_goldens --test retry_refusals --test retry_archived --test retry_recert","exitCode":101,"duration":0.32,"log":".run/logs/1-1.log","output":"error: no test target named `retry_recert` in `osq-feature-retry` package\nhelp: available test targets:\n    feature\n    retry_archived\n    retry_goldens\n    retry_refusals\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-22T17:04:35.674Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":99,"scopeLines":2829,"repoFiles":6285,"repoLines":627628,"importFanIn":0,"proposalWords":738,"taskWords":578,"deltaRequirements":5,"deltaScenarios":7,"dependencies":{"crates/features/retry/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-specs","osq-kernel-storage","osq-kernel-vcs","serde_json"]}}}
++{"type":"started","timestamp":"2026-10-22T17:04:36.155Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"00670883","pid":2639105,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"63250a84"}}
++{"type":"text","timestamp":"2026-10-22T17:04:37.918Z","data":{"text":"I'll start by reading the task file, proposal, and supporting context."}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:37.918Z","data":{"promptTokens":7691,"candidateTokens":258,"totalTokens":8461,"cachedTokens":512,"reasoningTokens":0,"cost":0.002619972,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:37.919Z","data":{"tool":"read","summary":"openspec/changes/297-rust-retry-scope-recert/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:37.919Z","data":{"tool":"read","summary":"openspec/changes/297-rust-retry-scope-recert/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:37.919Z","data":{"tool":"read","summary":"openspec/changes/297-rust-retry-scope-recert/specs/rust-retr"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:39.142Z","data":{"promptTokens":8996,"candidateTokens":168,"totalTokens":17612,"cachedTokens":8448,"reasoningTokens":13,"cost":0.002951088,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:39.147Z","data":{"tool":"bash","summary":"find crates/features/retry -type f | sort && echo \"---\" && c"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:39.148Z","data":{"tool":"read","summary":"crates/features/retry/src/retry.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:40.879Z","data":{"promptTokens":3451,"candidateTokens":308,"totalTokens":21295,"cachedTokens":17536,"reasoningTokens":12,"cost":0.0015101159999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:40.880Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/marker.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:40.880Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/record.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:40.880Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/text.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:40.881Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/time.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:42.987Z","data":{"promptTokens":5161,"candidateTokens":436,"totalTokens":26845,"cachedTokens":21248,"reasoningTokens":0,"cost":0.0021989879999999994,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.987Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/args.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.987Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/find.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.988Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/approval.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.988Z","data":{"tool":"read","summary":"crates/features/retry/src/retry/running.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.989Z","data":{"tool":"read","summary":"crates/features/retry/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:42.989Z","data":{"tool":"read","summary":"crates/features/retry/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:44.925Z","data":{"promptTokens":2945,"candidateTokens":382,"totalTokens":30079,"cachedTokens":26752,"reasoningTokens":9,"cost":0.001502412,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:44.925Z","data":{"tool":"read","summary":"crates/features/retry/tests/support/mod.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:44.926Z","data":{"tool":"read","summary":"crates/features/retry/tests/retry_refusals.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:44.926Z","data":{"tool":"read","summary":"crates/features/retry/tests/retry_goldens.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:44.926Z","data":{"tool":"read","summary":"crates/features/retry/tests/retry_archived.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:44.927Z","data":{"tool":"read","summary":"crates/features/retry/tests/feature.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:47.480Z","data":{"promptTokens":9679,"candidateTokens":451,"totalTokens":40082,"cachedTokens":29952,"reasoningTokens":42,"cost":0.0036246119999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.480Z","data":{"tool":"read","summary":"src/core/lifecycle/retry.ts"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.480Z","data":{"tool":"read","summary":"src/core/lifecycle/recertify.ts"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.481Z","data":{"tool":"read","summary":"src/core/run/scope.ts"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.481Z","data":{"tool":"read","summary":"src/core/run/scope-hash.ts"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.482Z","data":{"tool":"read","summary":"src/core/run/verify-excerpt.ts"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:47.482Z","data":{"tool":"read","summary":"src/cli/retry.ts"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:49.417Z","data":{"promptTokens":7819,"candidateTokens":183,"totalTokens":48066,"cachedTokens":40064,"reasoningTokens":8,"cost":0.002805684,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:49.417Z","data":{"tool":"read","summary":"openspec/changes/297-rust-retry-scope-recert/golden/print-re"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:49.418Z","data":{"tool":"read","summary":"openspec/changes/297-rust-retry-scope-recert/golden/passed-1"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:51.159Z","data":{"promptTokens":2627,"candidateTokens":150,"totalTokens":50777,"cachedTokens":48000,"reasoningTokens":29,"cost":0.0012561,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:51.160Z","data":{"tool":"bash","summary":"find openspec/changes/297-rust-retry-scope-recert/fixture -t"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:52.897Z","data":{"promptTokens":8262,"candidateTokens":226,"totalTokens":59176,"cachedTokens":50688,"reasoningTokens":82,"cost":0.003053928,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:52.897Z","data":{"tool":"bash","summary":"sed -n '1,200p' Cargo.toml; echo \"=== harnesses lib\"; find c"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:54.790Z","data":{"promptTokens":2316,"candidateTokens":287,"totalTokens":61739,"cachedTokens":59136,"reasoningTokens":0,"cost":0.0013940159999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:54.791Z","data":{"tool":"read","summary":"crates/kernel/harnesses/src/verify.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:54.791Z","data":{"tool":"read","summary":"crates/kernel/harnesses/src/verify/runner.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:54.791Z","data":{"tool":"read","summary":"crates/kernel/harnesses/src/verify/env.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:54.792Z","data":{"tool":"read","summary":"crates/core/src/event/payload.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:57.557Z","data":{"promptTokens":10400,"candidateTokens":339,"totalTokens":72435,"cachedTokens":61696,"reasoningTokens":57,"cost":0.003896976,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:57.557Z","data":{"tool":"read","summary":"crates/core/src/event/outcomes.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:57.558Z","data":{"tool":"read","summary":"crates/core/src/event/reasons.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:57.558Z","data":{"tool":"read","summary":"crates/features/run/src/feature/verdict.rs"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:57.558Z","data":{"tool":"read","summary":"crates/kernel/config/src/config.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:04:59.655Z","data":{"promptTokens":8922,"candidateTokens":236,"totalTokens":81478,"cachedTokens":72320,"reasoningTokens":24,"cost":0.00339372,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:59.656Z","data":{"tool":"bash","summary":"cat crates/kernel/config/src/blocks/limits.rs; echo ===; cat"}}
++{"type":"tool","timestamp":"2026-10-22T17:04:59.656Z","data":{"tool":"bash","summary":"cat crates/kernel/specs/src/document/frontmatter.rs; echo =="}}
++{"type":"tokens","timestamp":"2026-10-22T17:05:02.264Z","data":{"promptTokens":6936,"candidateTokens":308,"totalTokens":88652,"cachedTokens":81408,"reasoningTokens":78,"cost":0.002938848,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:02.264Z","data":{"tool":"bash","summary":"cat crates/kernel/specs/src/owners/glob.rs; echo ===TYPES; s"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:02.265Z","data":{"tool":"bash","summary":"grep -rn \"yaml_rust2\" crates --include=*.rs | head -50; echo"}}
++{"type":"tokens","timestamp":"2026-10-22T17:05:04.354Z","data":{"promptTokens":4577,"candidateTokens":197,"totalTokens":93350,"cachedTokens":88576,"reasoningTokens":75,"cost":0.002140956,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:04.354Z","data":{"tool":"bash","summary":"cat crates/features/archive/src/apply.rs; echo ===CORE_SCOPE"}}
++{"type":"tokens","timestamp":"2026-10-22T17:05:06.946Z","data":{"promptTokens":3614,"candidateTokens":139,"totalTokens":97065,"cachedTokens":93312,"reasoningTokens":39,"cost":0.0018108719999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:06.947Z","data":{"tool":"bash","summary":"cd openspec/changes/297-rust-retry-scope-recert/fixture/rece"}}
++{"type":"tokens","timestamp":"2026-10-22T17:05:09.095Z","data":{"promptTokens":1795,"candidateTokens":225,"totalTokens":99044,"cachedTokens":97024,"reasoningTokens":123,"cost":0.001390644,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:09.096Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-retry --test feature --test retry_"}}
++{"type":"tokens","timestamp":"2026-10-22T17:05:59.707Z","data":{"promptTokens":165,"candidateTokens":9566,"totalTokens":108675,"cachedTokens":98944,"reasoningTokens":9401,"cost":0.012122364,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:05:59.708Z","data":{"tool":"bash","summary":"ls ~/.cargo/registry/src/*/yaml-rust2-0.13*/src/ 2>/dev/null"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:01.873Z","data":{"promptTokens":254,"candidateTokens":166,"totalTokens":108964,"cachedTokens":108544,"reasoningTokens":13,"cost":0.000926664,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:01.874Z","data":{"tool":"bash","summary":"grep -n \"hashlink\" ~/.cargo/registry/src/*/yaml-rust2-0.13.0"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:03.520Z","data":{"promptTokens":501,"candidateTokens":81,"totalTokens":109510,"cachedTokens":108928,"reasoningTokens":0,"cost":0.000901068,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:03.520Z","data":{"tool":"bash","summary":"sed -n '330,400p' ~/.cargo/registry/src/*/hashlink-*/src/lin"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:07.972Z","data":{"promptTokens":730,"candidateTokens":638,"totalTokens":110808,"cachedTokens":109440,"reasoningTokens":550,"cost":0.00164124,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:07.973Z","data":{"tool":"bash","summary":"cat crates/kernel/config/src/error.rs; echo ===; cat crates/"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:10.810Z","data":{"promptTokens":1301,"candidateTokens":361,"totalTokens":112382,"cachedTokens":110720,"reasoningTokens":260,"cost":0.00148782,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:10.810Z","data":{"tool":"bash","summary":"grep -n \"struct ComputedSeal\\|impl ComputedSeal\\|fn as_str\" "}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:17.285Z","data":{"promptTokens":1241,"candidateTokens":1096,"totalTokens":114593,"cachedTokens":112256,"reasoningTokens":923,"cost":0.0023610359999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:17.285Z","data":{"tool":"bash","summary":"cp -R openspec/changes/297-rust-retry-scope-recert/fixture/r"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:19.239Z","data":{"promptTokens":856,"candidateTokens":233,"totalTokens":115649,"cachedTokens":114560,"reasoningTokens":11,"cost":0.00122376,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:19.239Z","data":{"tool":"edit","summary":"crates/features/retry/Cargo.toml"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:06:19.243Z","data":{"path":"crates/features/retry/Cargo.toml"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:28.982Z","data":{"promptTokens":226,"candidateTokens":1480,"totalTokens":117162,"cachedTokens":115456,"reasoningTokens":1384,"cost":0.002536536,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:28.982Z","data":{"tool":"bash","summary":"sed -n '200,220p' crates/features/land/src/land/after.rs; se"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:36.147Z","data":{"promptTokens":278,"candidateTokens":1804,"totalTokens":119202,"cachedTokens":117120,"reasoningTokens":5,"cost":0.0029509199999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:36.148Z","data":{"tool":"write","summary":"crates/features/retry/src/retry/scope.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:06:36.149Z","data":{"path":"crates/features/retry/src/retry/scope.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:45.344Z","data":{"promptTokens":192,"candidateTokens":2269,"totalTokens":121501,"cachedTokens":119040,"reasoningTokens":301,"cost":0.0034946400000000002,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:45.345Z","data":{"tool":"write","summary":"crates/features/retry/src/retry/yaml.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:06:45.345Z","data":{"path":"crates/features/retry/src/retry/yaml.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:50.906Z","data":{"promptTokens":187,"candidateTokens":885,"totalTokens":122416,"cachedTokens":121344,"reasoningTokens":695,"cost":0.001846164,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:50.907Z","data":{"tool":"edit","summary":"crates/features/retry/src/retry/yaml.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:06:50.908Z","data":{"path":"crates/features/retry/src/retry/yaml.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:53.600Z","data":{"promptTokens":211,"candidateTokens":472,"totalTokens":122923,"cachedTokens":122240,"reasoningTokens":4,"cost":0.00136314,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:53.601Z","data":{"tool":"write","summary":"crates/features/retry/src/retry/excerpt.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:06:53.601Z","data":{"path":"crates/features/retry/src/retry/excerpt.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:06:57.733Z","data":{"promptTokens":201,"candidateTokens":880,"totalTokens":123833,"cachedTokens":122752,"reasoningTokens":197,"cost":0.0018528119999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:06:57.733Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:01.658Z","data":{"promptTokens":199,"candidateTokens":798,"totalTokens":124645,"cachedTokens":123648,"reasoningTokens":150,"cost":0.001759188,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:01.658Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:16.700Z","data":{"promptTokens":178,"candidateTokens":3351,"totalTokens":128073,"cachedTokens":124544,"reasoningTokens":2524,"cost":0.004821864,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:16.701Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:24.130Z","data":{"promptTokens":215,"candidateTokens":1812,"totalTokens":129899,"cachedTokens":127872,"reasoningTokens":331,"cost":0.003006132,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:24.130Z","data":{"tool":"write","summary":"crates/features/retry/src/retry/recertify/fields.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:07:24.131Z","data":{"path":"crates/features/retry/src/retry/recertify/fields.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:35.792Z","data":{"promptTokens":141,"candidateTokens":2771,"totalTokens":132704,"cachedTokens":129792,"reasoningTokens":1126,"cost":0.004146252,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:35.792Z","data":{"tool":"write","summary":"crates/features/retry/src/retry/recertify.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:07:35.793Z","data":{"path":"crates/features/retry/src/retry/recertify.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:41.345Z","data":{"promptTokens":256,"candidateTokens":1243,"totalTokens":133979,"cachedTokens":132480,"reasoningTokens":278,"cost":0.0023632799999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:41.345Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:47.575Z","data":{"promptTokens":233,"candidateTokens":1401,"totalTokens":135394,"cachedTokens":133760,"reasoningTokens":271,"cost":0.0025536599999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:47.576Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:07:49.763Z","data":{"promptTokens":297,"candidateTokens":76,"totalTokens":135669,"cachedTokens":135296,"reasoningTokens":4,"cost":0.000992076,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:07:49.764Z","data":{"tool":"bash","summary":"cargo check -p osq-feature-retry 2>&1 | tail -80"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:00.902Z","data":{"promptTokens":1042,"candidateTokens":717,"totalTokens":137311,"cachedTokens":135552,"reasoningTokens":290,"cost":0.001986312,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:00.902Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:18.035Z","data":{"promptTokens":237,"candidateTokens":3479,"totalTokens":140804,"cachedTokens":137088,"reasoningTokens":3024,"cost":0.005068428000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:18.035Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:23.083Z","data":{"promptTokens":146,"candidateTokens":950,"totalTokens":141768,"cachedTokens":140672,"reasoningTokens":848,"cost":0.0020278320000000002,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:23.084Z","data":{"tool":"bash","summary":"grep -rn \"250\\|line.*budget\\|wc -l\" scripts/verify-rust.sh c"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:36.380Z","data":{"promptTokens":1528,"candidateTokens":4139,"totalTokens":147363,"cachedTokens":141696,"reasoningTokens":17,"cost":0.006275376,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:36.381Z","data":{"tool":"write","summary":"crates/features/retry/tests/retry_recert.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T17:08:36.382Z","data":{"path":"crates/features/retry/tests/retry_recert.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:37.982Z","data":{"promptTokens":194,"candidateTokens":109,"totalTokens":147503,"cachedTokens":147200,"reasoningTokens":7,"cost":0.0010722,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:37.983Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-retry --test feature --test retry_"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:46.848Z","data":{"promptTokens":1444,"candidateTokens":140,"totalTokens":149040,"cachedTokens":147456,"reasoningTokens":53,"cost":0.001485936,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:46.849Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo clippy -p osq-feature-retry --all-t"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:51.586Z","data":{"promptTokens":656,"candidateTokens":244,"totalTokens":149892,"cachedTokens":148992,"reasoningTokens":47,"cost":0.001383552,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:51.587Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:54.985Z","data":{"promptTokens":213,"candidateTokens":282,"totalTokens":150255,"cachedTokens":149760,"reasoningTokens":180,"cost":0.00130086,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:54.985Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-retry --test feature --test retry_"}}
++{"type":"tokens","timestamp":"2026-10-22T17:08:57.704Z","data":{"promptTokens":608,"candidateTokens":98,"totalTokens":150850,"cachedTokens":150144,"reasoningTokens":10,"cost":0.001200864,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:08:57.704Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/297-rust-retry-scope-recert sh s"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:11.383Z","data":{"promptTokens":1084,"candidateTokens":296,"totalTokens":152164,"cachedTokens":150784,"reasoningTokens":159,"cost":0.001585104,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:11.384Z","data":{"tool":"bash","summary":"grep -rn \"does not run yet\\|needs recertification\" crates/fe"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:20.080Z","data":{"promptTokens":2744,"candidateTokens":1175,"totalTokens":155983,"cachedTokens":152064,"reasoningTokens":1072,"cost":0.003145584,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:20.081Z","data":{"tool":"bash","summary":"grep -rn \"Cargo.lock\" openspec/changes --include='*.md' | he"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:25.011Z","data":{"promptTokens":3324,"candidateTokens":693,"totalTokens":159921,"cachedTokens":155904,"reasoningTokens":599,"cost":0.002764224,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:25.012Z","data":{"tool":"bash","summary":"grep -rn \"Cargo.lock\\|lockfile\\|scope.*allow\\|allowed.*Cargo"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:27.217Z","data":{"promptTokens":966,"candidateTokens":165,"totalTokens":161003,"cachedTokens":159872,"reasoningTokens":48,"cost":0.001447032,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:27.218Z","data":{"tool":"bash","summary":"cat src/kernel/languages/lockfiles.ts; echo ===; sed -n '1,1"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:34.168Z","data":{"promptTokens":2742,"candidateTokens":1117,"totalTokens":164755,"cachedTokens":160896,"reasoningTokens":1051,"cost":0.003128376,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:34.168Z","data":{"tool":"bash","summary":"cargo mutants --version 2>&1 | head -5"}}
++{"type":"tokens","timestamp":"2026-10-22T17:11:36.736Z","data":{"promptTokens":171,"candidateTokens":287,"totalTokens":165066,"cachedTokens":164608,"reasoningTokens":179,"cost":0.001383348,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:11:36.737Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-feature-retry -f crat"}}
++{"type":"tokens","timestamp":"2026-10-22T17:12:52.654Z","data":{"promptTokens":412,"candidateTokens":230,"totalTokens":165634,"cachedTokens":164992,"reasoningTokens":145,"cost":0.0013895519999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:12:52.656Z","data":{"tool":"bash","summary":"nl -ba crates/features/retry/src/retry/scope.rs | sed -n '80"}}
++{"type":"tokens","timestamp":"2026-10-22T17:13:15.878Z","data":{"promptTokens":691,"candidateTokens":3976,"totalTokens":170299,"cachedTokens":165632,"reasoningTokens":3198,"cost":0.005972292,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:13:15.879Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:13:24.122Z","data":{"promptTokens":140,"candidateTokens":630,"totalTokens":171010,"cachedTokens":170240,"reasoningTokens":370,"cost":0.0018194399999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:13:24.124Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:13:29.681Z","data":{"promptTokens":194,"candidateTokens":114,"totalTokens":171316,"cachedTokens":171008,"reasoningTokens":6,"cost":0.001221048,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:13:29.681Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-feature-retry -f crat"}}
++{"type":"tokens","timestamp":"2026-10-22T17:14:20.528Z","data":{"promptTokens":257,"candidateTokens":140,"totalTokens":171533,"cachedTokens":171136,"reasoningTokens":57,"cost":0.001271916,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:14:20.528Z","data":{"tool":"bash","summary":"cargo mutants --help 2>&1 | grep -A2 -E \"\\-f, --file|--file\""}}
++{"type":"tokens","timestamp":"2026-10-22T17:14:22.568Z","data":{"promptTokens":240,"candidateTokens":277,"totalTokens":171909,"cachedTokens":171392,"reasoningTokens":38,"cost":0.001432752,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:14:22.568Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-feature-retry -f crat"}}
++{"type":"tokens","timestamp":"2026-10-22T17:17:50.639Z","data":{"promptTokens":624,"candidateTokens":1571,"totalTokens":174099,"cachedTokens":171904,"reasoningTokens":1422,"cost":0.003103824,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:17:50.639Z","data":{"tool":"bash","summary":"nl -ba crates/features/retry/src/retry/yaml.rs | sed -n '20,"}}
++{"type":"tokens","timestamp":"2026-10-22T17:18:11.976Z","data":{"promptTokens":1733,"candidateTokens":4322,"totalTokens":180135,"cachedTokens":174080,"reasoningTokens":2999,"cost":0.00675078,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:18:11.976Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\n# fields: use >= 1"}}
++{"type":"tokens","timestamp":"2026-10-22T17:18:15.377Z","data":{"promptTokens":358,"candidateTokens":172,"totalTokens":180626,"cachedTokens":180096,"reasoningTokens":12,"cost":0.001394376,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:18:15.378Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
++{"type":"tokens","timestamp":"2026-10-22T17:18:19.295Z","data":{"promptTokens":220,"candidateTokens":170,"totalTokens":180998,"cachedTokens":180608,"reasoningTokens":26,"cost":0.001353648,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:18:19.296Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-feature-retry -f crat"}}
++{"type":"tokens","timestamp":"2026-10-22T17:21:08.799Z","data":{"promptTokens":213,"candidateTokens":241,"totalTokens":181318,"cachedTokens":180864,"reasoningTokens":54,"cost":0.0014382839999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:21:08.801Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-feature-retry -f crat"}}
++{"type":"tokens","timestamp":"2026-10-22T17:22:33.537Z","data":{"promptTokens":148,"candidateTokens":306,"totalTokens":181702,"cachedTokens":181248,"reasoningTokens":168,"cost":0.001499088,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:22:33.537Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-retry --test feature --test retry_"}}
++{"type":"tokens","timestamp":"2026-10-22T17:24:24.000Z","data":{"promptTokens":799,"candidateTokens":2298,"totalTokens":184729,"cachedTokens":181632,"reasoningTokens":689,"cost":0.004087092,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T17:24:24.001Z","data":{"tool":"bash","summary":"mkdir -p openspec/changes/297-rust-retry-scope-recert/.run/r"}}
++{"type":"text","timestamp":"2026-10-22T17:24:27.868Z","data":{"text":"Implemented task 1.\n\n- Ported Rust recertification: done-marker detection, `read_task_file`, config loading, `run_verify`, scope resolution/hash, done-marker rewrite, marker retention, `recertification` event, and `Recertified`/`Requeued` output.\n- Added the YAML writer, output-tail excerpt, scope resolver, and regression-field extraction.\n- Copied the recert fixture and goldens unchanged and added `tests/retry_recert.rs`.\n- Updated the `11`, `1` refusal expectation and removed the old recertification refusal text.\n- Confirmed no missed mutants on every changed Rust source file.\n\nVerify passed:\n\n```sh\ncargo test -p osq-feature-retry --test feature --test retry_goldens --test retry_refusals --test retry_archived --test retry_recert\nOSQ_CHANGE=openspec/changes/297-rust-retry-scope-recert sh scripts/verify-rust.sh\n```\n\nResult written to `openspec/changes/297-rust-retry-scope-recert/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-22T17:24:27.868Z","data":{"promptTokens":188,"candidateTokens":479,"totalTokens":185243,"cachedTokens":184576,"reasoningTokens":236,"cost":0.0017386559999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-22T17:24:27.907Z","data":{"exitCode":0,"pid":2639105,"timedOut":false,"elapsedSeconds":1191.8}}
++{"type":"dependencies_added","timestamp":"2026-10-22T17:24:30.395Z","data":{"added":[{"file":"crates/features/retry/Cargo.toml","name":"osq-kernel-harnesses"},{"file":"crates/features/retry/Cargo.toml","name":"sha2"},{"file":"crates/features/retry/Cargo.toml","name":"yaml-rust2"}]}}
++{"type":"format_ran","timestamp":"2026-10-22T17:24:31.937Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/features/retry/Cargo.toml' 'crates/features/retry/src/retry.rs' 'crates/features/retry/src/retry/args.rs' 'crates/features/retry/src/retry/excerpt.rs' 'crates/features/retry/src/retry/marker.rs' 'crates/features/retry/src/retry/recertify.rs' 'crates/features/retry/src/retry/recertify/fields.rs' 'crates/features/retry/src/retry/record.rs' 'crates/features/retry/src/retry/scope.rs' 'crates/features/retry/src/retry/text.rs' 'crates/features/retry/src/retry/yaml.rs' 'crates/features/retry/tests/fixtures/recert-golden/again-4.txt' 'crates/features/retry/tests/fixtures/recert-golden/long-3.txt' 'crates/features/retry/tests/fixtures/recert-golden/passed-1.txt' 'crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt' 'crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt' 'crates/features/retry/tests/fixtures/recert-project/checks/fail.sh' 'crates/features/retry/tests/fixtures/recert-project/checks/long.sh' 'crates/features/retry/tests/fixtures/recert-project/checks/pass.sh' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md' 'crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md' 'crates/features/retry/tests/fixtures/recert-project/src/one.txt' 'crates/features/retry/tests/fixtures/recert-project/src/two/a.txt' 'crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt' 'crates/features/retry/tests/retry_recert.rs' 'crates/features/retry/tests/retry_refusals.rs'","files":["crates/features/retry/Cargo.toml","crates/features/retry/src/retry.rs","crates/features/retry/src/retry/args.rs","crates/features/retry/src/retry/excerpt.rs","crates/features/retry/src/retry/marker.rs","crates/features/retry/src/retry/recertify.rs","crates/features/retry/src/retry/recertify/fields.rs","crates/features/retry/src/retry/record.rs","crates/features/retry/src/retry/scope.rs","crates/features/retry/src/retry/text.rs","crates/features/retry/src/retry/yaml.rs","crates/features/retry/tests/fixtures/recert-golden/again-4.txt","crates/features/retry/tests/fixtures/recert-golden/long-3.txt","crates/features/retry/tests/fixtures/recert-golden/passed-1.txt","crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt","crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt","crates/features/retry/tests/fixtures/recert-project/checks/fail.sh","crates/features/retry/tests/fixtures/recert-project/checks/long.sh","crates/features/retry/tests/fixtures/recert-project/checks/pass.sh","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md","crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md","crates/features/retry/tests/fixtures/recert-project/src/one.txt","crates/features/retry/tests/fixtures/recert-project/src/two/a.txt","crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt","crates/features/retry/tests/retry_recert.rs","crates/features/retry/tests/retry_refusals.rs"],"exitCode":0,"duration":1.47,"timedOut":false,"output":"Checked 0 files in 1882µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-22T17:24:35.896Z","data":{"command":"cargo test -p osq-feature-retry --test feature --test retry_goldens --test retry_refusals --test retry_archived --test retry_recert","exitCode":0,"duration":1.54,"log":".run/logs/1-2.log","output":"     Running tests/retry_archived.rs (target/debug/deps/retry_archived-ea61d210fbb0aa12)\n\nrunning 3 tests\ntest archived_retry_ignores_the_root_archive ... ok\ntest archived_retry_commit_fails ... ok\ntest archived_retry_equals_typescript ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s\n\n     Running tests/retry_goldens.rs (target/debug/deps/retry_goldens-78f591ee73769a71)\n\nrunning 2 tests\ntest utc_text_for_fixed_times ... ok\ntest retry_equals_typescript ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s\n\n     Running tests/retry_recert.rs (target/debug/deps/retry_recert-43f2cb633514dea9)\n\nrunning 5 tests\ntest recertification_output_tail ... ok\ntest recertification_refusals ... ok\ntest recertification_equals_typescript ... ok\ntest recertified_scope_files ... ok\ntest recertified_marker_text ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s\n\n     Running tests/retry_refusals.rs (target/debug/deps/retry_refusals-ea6fe78c459bcf29)\n\nrunning 7 tests\ntest retry_allows_an_empty_scope_hash ... ok\ntest retry_creates_the_event_folder ... ok\ntest retry_treats_a_non_string_reason_as_its_kind ... ok\ntest retry_recertifies_only_a_task_scope_regression ... ok\ntest retry_refusals_osq_adds ... ok\ntest retry_refuses_before_writing ... ok\ntest retry_refuses_other_targets ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s"}}
++{"type":"dead","timestamp":"2026-10-22T17:28:27.161Z","data":{"task":"1","reason":"crashed"}}
+diff --git a/openspec/changes/297-rust-retry-scope-recert/.run/events/change.jsonl b/openspec/changes/297-rust-retry-scope-recert/.run/events/change.jsonl
+new file mode 100644
+index 000000000..183e4566c
+--- /dev/null
++++ b/openspec/changes/297-rust-retry-scope-recert/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-22T17:04:24.420Z","data":{"outcome":"passed","command":"pnpm verify","commit":"0067088350c53aa1b8a2f4e449c65463304b5051","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":297.52}}
+diff --git a/openspec/changes/297-rust-retry-scope-recert/.run/results/1.md b/openspec/changes/297-rust-retry-scope-recert/.run/results/1.md
+new file mode 100644
+index 000000000..ff2d9a763
+--- /dev/null
++++ b/openspec/changes/297-rust-retry-scope-recert/.run/results/1.md
+@@ -0,0 +1,16 @@
++## Changed
++- Ported TypeScript's recertification branch into Rust retry: `marker::recertification` now selects a scope regression with a recorded done hash instead of refusing it; `retry::finish` branches to a new `recertify` orchestrator.
++- Added `scope.rs` for `resolveScope`/`computeTaskScopeHash`, `yaml.rs` for the marker rewrite, `excerpt.rs` for `tailVerifyOutput`, and `recertify/fields.rs` for differing paths, attribution and the done-marker refresh.
++- Recertification reads the task through `read_task_file`, loads config, runs the task verify via `run_verify` with the absolute change folder, writes the `recertification` event, retains the regressed marker and queues the done marker on failure, and prints the `Recertified`/`Requeued` lines.
++- Reused the existing retain and event-append steps in `record.rs`, added the new output text to `text.rs`, and removed the old recertification refusal.
++- Added `osq-kernel-harnesses`, `sha2` and `yaml-rust2` to the crate manifest, and updated the `11`, `1` refusal row to the missing-task error.
++- Copied the recert fixture and goldens unchanged and added `tests/retry_recert.rs` for the four new scenarios plus output-tail boundary cases.
++
++## Deviated
++- `Cargo.lock` was rewritten by cargo for the three new crate dependencies. The task scope lists only `crates/features/retry/**`, but the dependencies cannot land without the lock update; the workspace's lock-file rule lets `Cargo.lock` follow the covered `crates/features/retry/Cargo.toml`.
++- The scope resolver walks the project once per pattern rather than stopping at the pattern's search root. This is behaviorally identical because `scope_covers_path` filters every candidate, and it keeps the out-of-project pattern cases at no results without an extra optimization branch.
++
++## Missing context
++- The task scope omitted the root `Cargo.lock` even though the acceptance line requires the three new crate dependencies.
++
++Touched: Cargo.lock, crates/features/retry/Cargo.toml, crates/features/retry/src/retry.rs, crates/features/retry/src/retry/args.rs, crates/features/retry/src/retry/excerpt.rs, crates/features/retry/src/retry/marker.rs, crates/features/retry/src/retry/recertify.rs, crates/features/retry/src/retry/recertify/fields.rs, crates/features/retry/src/retry/record.rs, crates/features/retry/src/retry/scope.rs, crates/features/retry/src/retry/text.rs, crates/features/retry/src/retry/yaml.rs, crates/features/retry/tests/retry_refusals.rs, crates/features/retry/tests/retry_recert.rs, crates/features/retry/tests/fixtures/recert-golden/again-4.txt, crates/features/retry/tests/fixtures/recert-golden/long-3.txt, crates/features/retry/tests/fixtures/recert-golden/passed-1.txt, crates/features/retry/tests/fixtures/recert-golden/print-recert-goldens.mjs.txt, crates/features/retry/tests/fixtures/recert-golden/requeued-2.txt, crates/features/retry/tests/fixtures/recert-project/checks/fail.sh, crates/features/retry/tests/fixtures/recert-project/checks/long.sh, crates/features/retry/tests/fixtures/recert-project/checks/pass.sh, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/approved, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/1, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/2.1, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/3, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/done/4, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/events/1.jsonl, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/1.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.1.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/2.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/3.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/.run/regressed/4.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/proposal.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/1.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/2.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/3.md, crates/features/retry/tests/fixtures/recert-project/openspec/changes/001-recert/tasks/4.md, crates/features/retry/tests/fixtures/recert-project/src/one.txt, crates/features/retry/tests/fixtures/recert-project/src/two/a.txt, crates/features/retry/tests/fixtures/recert-project/src/two/deep/b.txt

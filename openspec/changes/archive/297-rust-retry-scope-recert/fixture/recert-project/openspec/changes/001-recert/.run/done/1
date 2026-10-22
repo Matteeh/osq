@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+build_stamp: "63250a84"
+project_commit: "ae1fff77"
+exit_code: 0
+scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
+---
+2026-10-01T10:00:00.000Z
