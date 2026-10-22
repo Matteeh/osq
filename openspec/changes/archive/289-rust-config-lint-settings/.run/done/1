@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a34cd7765f9fc0a44618334a57f581d64f2aefeb1fbffbfa68c44edc5aca1b0d"
+build_stamp: "63250a84"
+project_commit: "407045b7"
+exit_code: 0
+scope_files: {"crates/kernel/config/src/blocks/banned_words.rs":"sha256:4318047f50e3dc53f9b333ed2bedaff6dfb45abf9e7283c51273ef3be9e97237","crates/kernel/config/src/blocks/limits.rs":"sha256:47f4347e8648409a53185910aba60c9e8bda8f6c1a1412f3714079026b0fdb02","crates/kernel/config/src/blocks/mod.rs":"sha256:d53a5b57f16bfcfb147d76ec3d2c75de4f8606f606a620a2f8c97081499a518c","crates/kernel/config/src/config.rs":"sha256:688a255b14228a84158e2eb56100c5e45d2e98ebbcbc11a54c3a36d8f1c3abf2","crates/kernel/config/src/lib.rs":"sha256:dba86f6316e826022d8ad3b9552bc94f6f9111f3d5de5aac6572a2492b44f090","crates/kernel/config/tests/config_banned_words.rs":"sha256:5bab691480ac5813371fb7fa6908f5c171a8f4944cab34d8315f73324175cbd5","crates/kernel/config/tests/config_limits.rs":"sha256:61c34abf6d9952351572f6461f6dc5c0c503d21ad73d816aedec3b07cc25a3f2"}
+---
+2026-10-22T14:51:06.420Z
