@@ -1,0 +1,17 @@
+outcome: output
+Retried 001 change (next attempt: 2)
+  Reason: sync_verify_red
+  Retained: .run/regressed/change.1.md
+tree:
+--- .run/approved
+sha256:e937713152a20ac71f035bda9e0dd4ea35b87933534f387b1827a6ed626153b1
+--- .run/events/change.jsonl
+{"data":{"reason":"sync_verify_red","target":"change"},"timestamp":"<timestamp>","type":"regressed"}
+{"data":{"attempt":2,"reason":"sync_verify_red","target":"change"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/change.1.md
+---
+reason: sync_verify_red
+---
+osq land synced the default branch and its verify failed.
+tip: osq: 001 land retry
+status:

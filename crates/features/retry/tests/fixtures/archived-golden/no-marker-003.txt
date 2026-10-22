@@ -1,0 +1,7 @@
+outcome: failed
+No active failure marker for change-level regression in 003-no-marker; retry is refused.
+tree:
+--- .run/approved
+sha256:87df42c0804f771035e23461ebc7b484f805cd709edfbcb7665759e3b22bd393
+tip: osq: 003-no-marker archived
+status:

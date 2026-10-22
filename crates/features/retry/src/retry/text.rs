@@ -35,6 +35,22 @@ pub(crate) fn not_found(query: &str, changes: &Path) -> FeatureError {
     ))
 }
 
+/// The refusal for a task target on an archived change.
+///
+/// Implements: rust-retry/archived-retry
+pub(crate) fn archived_task(folder: &str, id: &str) -> FeatureError {
+    failed(format!(
+        "{folder} has archived; osq retry clears only its land stop: osq retry {id} change"
+    ))
+}
+
+/// The failure for an archived retry whose commit did not finish.
+///
+/// Implements: rust-retry/archived-retry
+pub(crate) fn commit_failed(error: &str) -> FeatureError {
+    failed(format!("osq could not record the retry: {error}"))
+}
+
 /// The refusal for a change without a non-blank approval marker.
 ///
 /// Implements: rust-retry/retry-refusals

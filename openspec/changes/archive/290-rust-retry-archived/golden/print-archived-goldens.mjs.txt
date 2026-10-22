@@ -1,0 +1,141 @@
+// Prints TypeScript's `osq retry` result for each row of rust-retry
+// "Archived retry equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-archived-goldens.mjs <fixture archived-project> <golden folder>
+// Each case builds a fresh scratch git repository: `<scratch>/repo` on `main`
+// with `README.md`, `osq.config.mjs` and `osq.toml`, both naming git on or off
+// as the case says, committed as `init`. Each fixture folder then gets its own
+// worktree at `<scratch>/trees/<folder>` on a new branch `osq/<folder>` from
+// `main`, holding the folder at `openspec/changes/archive/<folder>`, committed
+// as `osq: <folder> archived`. The built CLI runs `retry` with `repo` as the
+// working directory.
+// A golden holds the outcome, the text with `repo`'s path written `<root>`,
+// then `tree:` and every file under the case's archive folder's `.run/`,
+// sorted by path, each event line parsed, its `timestamp` replaced by
+// `<timestamp>` and written back with sorted keys, then `tip:` and the subject
+// of `osq/<folder>`'s tip commit, then `status:` and each line of `git status
+// --porcelain` in the case's worktree.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.com>';
+const FOLDERS = ['001-land-stop', '002-stale', '003-no-marker'];
+
+const cases = [
+  { name: 'land-stop-001', folder: '001-land-stop', args: ['1', 'change'], git: true },
+  { name: 'land-stop-task-001', folder: '001-land-stop', args: ['1', '1'], git: true },
+  { name: 'land-stop-padded-001', folder: '001-land-stop', args: ['001-land-stop', ' change '], git: true },
+  { name: 'stale-002', folder: '002-stale', args: ['2', 'change'], git: true },
+  { name: 'no-marker-003', folder: '003-no-marker', args: ['3', 'change'], git: true },
+  { name: 'git-off-001', folder: '001-land-stop', args: ['1', 'change'], git: false },
+];
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sorted(value[key])]),
+    );
+  }
+  return value;
+}
+
+function eventLine(line) {
+  const parsed = JSON.parse(line);
+  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
+  return JSON.stringify(sorted(parsed));
+}
+
+function files(base, dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function tree(folder) {
+  const lines = [];
+  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    if (relative.endsWith('.jsonl')) {
+      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
+    } else {
+      lines.push(text.endsWith('\n') ? text.slice(0, -1) : text);
+    }
+  }
+  return lines.join('\n');
+}
+
+function repository(scratch, gitOn) {
+  const repo = path.join(scratch, 'repo');
+  fs.mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'osq']);
+  git(repo, ['config', 'user.email', 'osq@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.writeFileSync(path.join(repo, 'README.md'), 'fixture\n');
+  fs.writeFileSync(
+    path.join(repo, 'osq.config.mjs'),
+    `export default { vcs: { enabled: ${gitOn}, author: '${AUTHOR}' } };\n`,
+  );
+  fs.writeFileSync(
+    path.join(repo, 'osq.toml'),
+    `[vcs]\nenabled = ${gitOn}\nauthor = "${AUTHOR}"\n`,
+  );
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'init']);
+  for (const folder of FOLDERS) {
+    const worktree = path.join(scratch, 'trees', folder);
+    git(repo, ['worktree', 'add', '-q', '-b', `osq/${folder}`, worktree, 'main']);
+    const archive = path.join(worktree, 'openspec', 'changes', 'archive', folder);
+    fs.cpSync(path.join(fixture, folder), archive, { recursive: true });
+    git(worktree, ['add', '-A']);
+    git(worktree, ['commit', '-q', '-m', `osq: ${folder} archived`]);
+  }
+  return repo;
+}
+
+for (const c of cases) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-retry-archived-')));
+  const repo = repository(scratch, c.git);
+  const run = spawnSync(process.execPath, [BIN, 'retry', ...c.args], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  let head;
+  if (run.status === 0) {
+    if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+    head = `outcome: output\n${run.stdout}`;
+  } else {
+    if (run.stdout !== '') throw new Error(`${c.name}: unexpected stdout ${run.stdout}`);
+    const prefix = `Error retrying ${c.args[0]} ${c.args[1]}:\n  `;
+    const stderr = run.stderr.split(repo).join('<root>');
+    if (!stderr.startsWith(prefix)) throw new Error(`${c.name}: unexpected stderr ${stderr}`);
+    head = `outcome: failed\n${stderr.slice(prefix.length)}`;
+  }
+  if (!head.endsWith('\n')) head += '\n';
+  const worktree = path.join(scratch, 'trees', c.folder);
+  const archive = path.join(worktree, 'openspec', 'changes', 'archive', c.folder);
+  const tip = git(repo, ['log', '-1', '--format=%s', `osq/${c.folder}`]).trimEnd();
+  const status = git(worktree, ['status', '--porcelain']);
+  const body = `tree:\n${tree(archive)}\ntip: ${tip}\nstatus:\n${status}`;
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${head}${body}`);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

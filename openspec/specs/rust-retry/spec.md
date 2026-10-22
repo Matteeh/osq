@@ -20,8 +20,8 @@ struct that implements core's `Feature` and derives `Clone`, `Copy`,
 `Debug` and `Default`. Its `name()` is `retry`, and its `commands()` is one
 command with the name `retry`, the summary `clear a dead or regressed task
 or change so it runs again` and the usage `<id> <task|change>`. The crate
-depends on `osq-core`, `osq-kernel-storage` and `osq-kernel-specs`, and on
-no feature crate.
+depends on `osq-core`, `osq-kernel-storage`, `osq-kernel-specs`,
+`osq-kernel-config` and `osq-kernel-vcs`, and on no feature crate.
 
 #### Scenario: Retry feature commands
 - **WHEN** a test reads `RetryFeature`'s name and commands
@@ -53,8 +53,9 @@ with its texts, writing nothing:
 1. a target that, trimmed, is neither `change` nor all ASCII digits:
    `Invalid retry target "<target>": expected a numeric task or "change".`;
 2. an id that matches no active change, matched as TypeScript's
-   `matchesFolder` does among rust-storage `list_changes` entries:
-   `Spec "<id>" not found in <root>/openspec/changes`;
+   `matchesFolder` does among rust-storage `list_changes` entries, and no
+   archived change of an osq worktree as rust-retry "Archived retry" finds
+   it: `Spec "<id>" not found in <root>/openspec/changes`;
 3. `.run/approved` missing or blank:
    ``Change <id> is not approved. Run `osq approve <id>` before retrying.``;
 4. `.run/approved` trimmed other than rust-storage `change_folder_seal` of
@@ -139,3 +140,39 @@ A `retry` that is not refused SHALL, as TypeScript's
 | `13`, `1` | `013-blank-reason` | none | `blank-reason-013.txt` |
 | `1`, `x` | `001-dead` | none | `bad-target.txt` |
 | `99`, `1` | `001-dead` | none | `not-found.txt` |
+
+### Requirement: Archived retry
+When no active change matches the id, `retry` SHALL load the root's config
+through rust-config `load_config`, failing with the config error's text.
+With `vcs.enabled` and a rust-vcs `GitVcs` root, it SHALL list rust-storage
+`change_trees` from the `worktree_list` worktrees and no stacked folders,
+and take the first archived entry of `list_tree_changes` that lies in a
+tree naming a folder and matches the id as `matchesFolder` does. Without
+one, or with vcs off, the not-found refusal stands. A numeric target on
+that change SHALL fail, writing nothing, with `<folder> has archived; osq
+retry clears only its land stop: osq retry <id> change`. For `change`,
+refusals 3 to 7 and rust-retry "Retry record" SHALL apply to its folder.
+It SHALL then commit, in the change's tree with git timeouts from config,
+the marker, `.run/events/change.jsonl` and each retained file, as paths
+relative to the tree root with `/`, with the message `osq: <id> land
+retry` and the author `vcs.author`. When the commit fails, retry SHALL put
+each of those files back as `HEAD` holds it, removing one `HEAD` lacks,
+stage the paths again ignoring a failure, and fail with `osq could not
+record the retry: <git error>`.
+
+#### Scenario: Archived retry equals TypeScript's
+- **WHEN** a test builds the row's scratch repository as `crates/features/retry/tests/fixtures/archived-golden/print-archived-goldens.mjs.txt` describes, with `osq.toml` naming git on or off as the row says, and runs `retry` with the row's arguments at `<scratch>/repo`
+- **THEN** the result, the archive folder's `.run/` tree, the tip subject of `osq/<folder>` and the worktree's `git status --porcelain` equal the row's golden in `crates/features/retry/tests/fixtures/archived-golden/`, a copy of `openspec/changes/290-rust-retry-archived/golden/`, written as that script writes them:
+
+| Arguments | Git | Golden |
+|---|---|---|
+| `1`, `change` | on | `land-stop-001.txt` |
+| `001-land-stop`, ` change ` | on | `land-stop-padded-001.txt` |
+| `1`, `1` | on | `land-stop-task-001.txt` |
+| `2`, `change` | on | `stale-002.txt` |
+| `3`, `change` | on | `no-marker-003.txt` |
+| `1`, `change` | off | `git-off-001.txt` |
+
+#### Scenario: Archived retry commit fails
+- **WHEN** the git-on repository of "Archived retry equals TypeScript's" also holds a `pre-commit` hook in its `.git/hooks/` that exits 1, and `retry` runs with `1`, `change`
+- **THEN** it gives a `Failed` error for the command `retry` whose message starts with `osq could not record the retry: `, and the archive folder's `.run/` tree, the tip subject and the worktree status equal those `land-stop-task-001.txt` holds
