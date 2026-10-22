@@ -59,15 +59,17 @@ impl Feature for InboxFeature {
         )]
     }
 
-    /// Prints the three inbox groups of the project root.
+    /// Prints the three inbox groups of the project root and every tree.
     ///
     /// # Errors
     ///
     /// Returns [`FeatureError::unknown_command`] for another command,
     /// [`FeatureError::usage`] for any argument, and [`FeatureError::failed`]
-    /// when a change folder cannot be read.
+    /// when the config, git or a change folder cannot be read.
     ///
     /// Implements: rust-inbox/inbox-command
+    /// Implements: rust-inbox/inbox-trees
+    /// Implements: rust-inbox/archived-items
     /// Implements: rust-inbox/needs-you-items
     /// Implements: rust-inbox/running-items
     /// Implements: rust-inbox/landed-items
@@ -80,18 +82,19 @@ impl Feature for InboxFeature {
         if !invocation.args.is_empty() {
             return Err(FeatureError::usage("inbox", "takes no arguments"));
         }
-        let snapshots = read::changes(&invocation.root)?;
+        let changes = read::changes(&invocation.root)?;
         let now_ms = self.now_ms.unwrap_or_else(system_now_ms);
-        let mut items = needs::needs_you(&snapshots);
-        if let Some(item) = groups::validator::item(&snapshots) {
+        let mut items = needs::needs_you(&changes.all);
+        if let Some(item) = groups::validator::item(&changes.all) {
             items.push(item);
         }
+        items.extend(needs::archived(&changes.archived));
         let needs_you: Vec<String> = needs::sort(items)
             .into_iter()
             .map(|item| item.line)
             .collect();
-        let running = groups::running::lines(&snapshots, now_ms);
-        let landed = groups::landed::lines(&snapshots);
+        let running = groups::running::lines(&changes.all, now_ms);
+        let landed = groups::landed::lines(&changes.root);
         Ok(Output::text(format!(
             "{}\n",
             text::inbox_text(&needs_you, &running, &landed)

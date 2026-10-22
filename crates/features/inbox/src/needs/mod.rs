@@ -104,6 +104,35 @@ pub(crate) fn needs_you(snapshots: &[ChangeSnapshot]) -> Vec<Item> {
     sort(items)
 }
 
+/// The archived worktree changes' needs-you items.
+pub(crate) fn archived(changes: &[crate::read::ArchivedChange]) -> Vec<Item> {
+    changes
+        .iter()
+        .filter_map(|change| archived_item(&change.snapshot, change.not_landed))
+        .collect()
+}
+
+/// One archived change's item, steering first and not-landed second.
+fn archived_item(snapshot: &ChangeSnapshot, not_landed: bool) -> Option<Item> {
+    let id = change_id(snapshot);
+    let title = snapshot
+        .title
+        .clone()
+        .unwrap_or_else(|| snapshot.folder.clone());
+    let line = match steering::first(snapshot) {
+        Some(trigger) => format!(
+            "  {id}: {title} — needs steering: {} ({}) — osq plan {id}",
+            trigger.name(),
+            trigger.reason
+        ),
+        None if not_landed => {
+            format!("  {id}: {title} — archived, not landed — osq land {id}")
+        }
+        None => return None,
+    };
+    Some(Item { id, line })
+}
+
 /// Sorts items stably by id: the number the id leads with, then its bytes.
 pub(crate) fn sort(mut items: Vec<Item>) -> Vec<Item> {
     items.sort_by(|left, right| compare_ids(&left.id, &right.id));
