@@ -14,7 +14,7 @@ fn scratch(name: &str) -> PathBuf {
     root
 }
 
-/// Proves the feature's name, its one command and its refusal of another command.
+/// Proves the feature's name, its two commands and its refusal of another command.
 ///
 /// Covers: rust-show/show-feature-commands
 #[test]
@@ -23,11 +23,18 @@ fn show_feature_commands() {
     assert_eq!(feature.name(), "show");
     assert_eq!(
         feature.commands(),
-        [Command::new(
-            "show",
-            "show detailed change information, tasks, and event timeline",
-            "<id>",
-        )]
+        [
+            Command::new(
+                "show",
+                "show detailed change information, tasks, and event timeline",
+                "<id>",
+            ),
+            Command::new(
+                "spec",
+                "list living capabilities and their requirements, or print one requirement",
+                "[capability] [requirement]",
+            ),
+        ]
     );
     let root = scratch("show-feature-commands");
     let error = feature

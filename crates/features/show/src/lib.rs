@@ -12,6 +12,7 @@ mod lookup;
 mod model;
 mod planning;
 mod runs;
+mod spec;
 mod tasks;
 mod text;
 

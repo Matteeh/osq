@@ -2,7 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::{facts, lookup, model, text};
+use crate::{facts, lookup, model, spec, text};
 
 /// The show feature: a unit struct with no state (ADR 028).
 ///
@@ -18,28 +18,41 @@ impl Feature for ShowFeature {
         "show"
     }
 
-    /// The feature's one command, `show`.
+    /// The feature's two commands, `show` then `spec`.
     ///
     /// Implements: rust-show/show-command
     fn commands(&self) -> Vec<Command> {
-        vec![Command::new(
-            "show",
-            "show detailed change information, tasks, and event timeline",
-            "<id>",
-        )]
+        vec![
+            Command::new(
+                "show",
+                "show detailed change information, tasks, and event timeline",
+                "<id>",
+            ),
+            Command::new(
+                "spec",
+                "list living capabilities and their requirements, or print one requirement",
+                "[capability] [requirement]",
+            ),
+        ]
     }
 
-    /// Shows the change named by exactly one argument.
+    /// Runs `show` or `spec`, refusing every other command.
     ///
     /// # Errors
     ///
     /// Returns [`FeatureError::unknown_command`] for another command,
-    /// [`FeatureError::usage`] for a missing, extra or blank id, and
-    /// [`FeatureError::failed`] when the change cannot be found or read.
+    /// [`FeatureError::usage`] for a missing, extra or blank `show` id or too
+    /// many `spec` arguments, and [`FeatureError::failed`] when a change or
+    /// living spec cannot be found or read.
     ///
     /// Implements: rust-show/show-command
     /// Implements: rust-show/show-arguments
+    /// Implements: rust-show/spec-command
+    /// Implements: rust-show/spec-arguments
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
+        if invocation.command == "spec" {
+            return spec::run(&invocation.root, &invocation.args);
+        }
         if invocation.command != "show" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));
         }
