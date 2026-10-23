@@ -16,7 +16,7 @@ import { getHarnessAdapter } from '../harness/index.js';
 import type { HarnessAdapter } from '../harness/types.js';
 import { CommandError } from './command-error.js';
 import { type CommandInputs, type Writer, resolveInputs } from './command-inputs.js';
-import { refuseFinishedChange } from './plan-finished.js';
+import { refuseUnplannableName } from './plan-finished.js';
 import { writePromptHandoff } from './plan-prompt-handoff.js';
 import {
   buildBaseOpeningPrompt,
@@ -147,11 +147,11 @@ export async function planCommand(
     folderPath = created.folderPath;
     specId = created.specId;
   } else if (!isResumed) {
-    await refuseFinishedChange(cwd, config, name);
+    await refuseUnplannableName(cwd, config, name);
+    const rawBrief = await readBriefInput(options.brief);
     const created = await createChange(cwd, createdOutput, name, { config });
     folderPath = created.folderPath;
     specId = created.specId;
-    const rawBrief = await readBriefInput(options.brief);
     await writeBriefAndManifest(cwd, config, folderPath, briefModel, rawBrief);
   }
 
