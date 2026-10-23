@@ -339,22 +339,22 @@ fn fast_forwards_on_a_repository() {
 #[test]
 fn merge_writes_with_a_program_that_cannot_start() {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-    let vcs = GitVcs::new(root).with_program("osq-missing-git");
+    let vcs = GitVcs::new(root).with_program("/nonexistent/osq-missing-git");
     let rows = [
         (
-            "osq-missing-git -c core.quotepath=false merge --no-ff --no-commit feature",
+            "/nonexistent/osq-missing-git -c core.quotepath=false merge --no-ff --no-commit feature",
             vcs.merge("feature", false).map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false merge --squash feature",
+            "/nonexistent/osq-missing-git -c core.quotepath=false merge --squash feature",
             vcs.merge("feature", true).map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false merge --abort",
+            "/nonexistent/osq-missing-git -c core.quotepath=false merge --abort",
             vcs.merge_abort(),
         ),
         (
-            "osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all",
+            "/nonexistent/osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all",
             vcs.fast_forward("feature").map(|_| ()),
         ),
     ];

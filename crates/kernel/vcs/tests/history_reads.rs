@@ -140,27 +140,27 @@ fn reads_of_the_history_repository() {
 #[test]
 fn history_reads_with_a_program_that_cannot_start() {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-    let vcs = GitVcs::new(root).with_program("osq-missing-git");
+    let vcs = GitVcs::new(root).with_program("/nonexistent/osq-missing-git");
     let rows = [
         (
-            "osq-missing-git -c core.quotepath=false merge-base main feature",
+            "/nonexistent/osq-missing-git -c core.quotepath=false merge-base main feature",
             vcs.merge_base("main", "feature").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false merge-base --is-ancestor main feature",
+            "/nonexistent/osq-missing-git -c core.quotepath=false merge-base --is-ancestor main feature",
             vcs.is_ancestor("main", "feature").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false rev-list --count main..feature",
+            "/nonexistent/osq-missing-git -c core.quotepath=false rev-list --count main..feature",
             vcs.count_commits("main", "feature").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false diff --numstat --no-renames \
+            "/nonexistent/osq-missing-git -c core.quotepath=false diff --numstat --no-renames \
              main...feature -- . :(exclude)skip",
             vcs.diff_stat("main", "feature", &["skip"]).map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false log \
+            "/nonexistent/osq-missing-git -c core.quotepath=false log \
              --format=%x1e%(trailers:key=Osq-Change,valueonly,separator=%x1f) \
              main..feature",
             vcs.trailer_values("main", "feature", "Osq-Change")

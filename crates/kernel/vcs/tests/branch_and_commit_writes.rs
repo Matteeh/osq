@@ -253,26 +253,26 @@ fn branch_and_worktree_writes_on_a_repository() {
 #[test]
 fn branch_and_worktree_writes_with_a_program_that_cannot_start() {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-    let vcs = GitVcs::new(root).with_program("osq-missing-git");
+    let vcs = GitVcs::new(root).with_program("/nonexistent/osq-missing-git");
     let rows = [
         (
-            "osq-missing-git -c core.quotepath=false branch osq/new main",
+            "/nonexistent/osq-missing-git -c core.quotepath=false branch osq/new main",
             vcs.create_branch("osq/new", "main"),
         ),
         (
-            "osq-missing-git -c core.quotepath=false branch -m osq/one osq/renamed",
+            "/nonexistent/osq-missing-git -c core.quotepath=false branch -m osq/one osq/renamed",
             vcs.rename_branch("osq/one", "osq/renamed"),
         ),
         (
-            "osq-missing-git -c core.quotepath=false worktree add /tmp/osq-tree osq/one",
+            "/nonexistent/osq-missing-git -c core.quotepath=false worktree add /tmp/osq-tree osq/one",
             vcs.worktree_add("/tmp/osq-tree", "osq/one"),
         ),
         (
-            "osq-missing-git -c core.quotepath=false worktree remove /tmp/osq-tree",
+            "/nonexistent/osq-missing-git -c core.quotepath=false worktree remove /tmp/osq-tree",
             vcs.worktree_remove("/tmp/osq-tree"),
         ),
         (
-            "osq-missing-git -c core.quotepath=false worktree prune",
+            "/nonexistent/osq-missing-git -c core.quotepath=false worktree prune",
             vcs.worktree_prune(),
         ),
     ];
@@ -587,23 +587,23 @@ fn commit_from_a_tree_that_git_is_set_to_sign() {
 #[test]
 fn commit_writes_with_a_program_that_cannot_start() {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-    let vcs = GitVcs::new(root).with_program("osq-missing-git");
+    let vcs = GitVcs::new(root).with_program("/nonexistent/osq-missing-git");
     vcs.stage(&[]).unwrap();
     let rows = [
         (
-            "osq-missing-git -c core.quotepath=false add -A -- a.txt",
+            "/nonexistent/osq-missing-git -c core.quotepath=false add -A -- a.txt",
             vcs.stage(&["a.txt"]),
         ),
         (
-            "osq-missing-git -c core.quotepath=false add -- a.txt",
+            "/nonexistent/osq-missing-git -c core.quotepath=false add -- a.txt",
             vcs.commit(&["a.txt"], "m\n", BOT).map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false commit --author=Osq Bot <bot@example.com> -F -",
+            "/nonexistent/osq-missing-git -c core.quotepath=false commit --author=Osq Bot <bot@example.com> -F -",
             vcs.commit(&[], "m\n", BOT).map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false config --type=bool --get commit.gpgSign",
+            "/nonexistent/osq-missing-git -c core.quotepath=false config --type=bool --get commit.gpgSign",
             vcs.commit_tree("feature", "main", "m\n", BOT, &[])
                 .map(|_| ()),
         ),

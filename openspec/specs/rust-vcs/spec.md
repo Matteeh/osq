@@ -96,20 +96,20 @@ the script is never written at test time.
 | `GIT_WORK_TREE` | removed |
 
 #### Scenario: State reads with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each read below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each read below
 - **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`, the error displays as `could not run ` followed by that command, `: ` and the source, and `source()` gives the source:
 
 | Read | Command |
 |---|---|
-| `root()` | `osq-missing-git -c core.quotepath=false rev-parse --show-toplevel` |
-| `head()` | `osq-missing-git -c core.quotepath=false rev-parse --verify --quiet HEAD` |
-| `status()` | `osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` |
-| `config_value("osq.example")` | `osq-missing-git -c core.quotepath=false config --get osq.example` |
-| `default_branch("main")` | `osq-missing-git -c core.quotepath=false symbolic-ref --quiet --short refs/remotes/origin/HEAD` |
-| `show("HEAD", "a.txt")` | `osq-missing-git -c core.quotepath=false show HEAD:a.txt` |
-| `path_exists("HEAD", "a.txt")` | `osq-missing-git -c core.quotepath=false cat-file -e HEAD:a.txt` |
-| `list_branches("osq/")` | `osq-missing-git -c core.quotepath=false branch --list --format=%(refname:short) osq/*` |
-| `worktree_list()` | `osq-missing-git -c core.quotepath=false worktree list --porcelain` |
+| `root()` | `/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --show-toplevel` |
+| `head()` | `/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --verify --quiet HEAD` |
+| `status()` | `/nonexistent/osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` |
+| `config_value("osq.example")` | `/nonexistent/osq-missing-git -c core.quotepath=false config --get osq.example` |
+| `default_branch("main")` | `/nonexistent/osq-missing-git -c core.quotepath=false symbolic-ref --quiet --short refs/remotes/origin/HEAD` |
+| `show("HEAD", "a.txt")` | `/nonexistent/osq-missing-git -c core.quotepath=false show HEAD:a.txt` |
+| `path_exists("HEAD", "a.txt")` | `/nonexistent/osq-missing-git -c core.quotepath=false cat-file -e HEAD:a.txt` |
+| `list_branches("osq/")` | `/nonexistent/osq-missing-git -c core.quotepath=false branch --list --format=%(refname:short) osq/*` |
+| `worktree_list()` | `/nonexistent/osq-missing-git -c core.quotepath=false worktree list --porcelain` |
 
 #### Scenario: Default timeouts
 - **WHEN** a test compares `GitVcs::new("/repo")` with `GitVcs::new("/repo").with_timeouts(&Timeouts::default())`, and with `GitVcs::new("/repo").with_timeouts(&limits)`
@@ -302,16 +302,16 @@ TypeScript's `GitVcs`, through "Git command", with the words of
 | `trailer_values("main", "nope", "Osq-Change")` | none |
 
 #### Scenario: History reads with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each read below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each read below
 - **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`:
 
 | Read | Command |
 |---|---|
-| `merge_base("main", "feature")` | `osq-missing-git -c core.quotepath=false merge-base main feature` |
-| `is_ancestor("main", "feature")` | `osq-missing-git -c core.quotepath=false merge-base --is-ancestor main feature` |
-| `count_commits("main", "feature")` | `osq-missing-git -c core.quotepath=false rev-list --count main..feature` |
-| `diff_stat("main", "feature", &["skip"])` | `osq-missing-git -c core.quotepath=false diff --numstat --no-renames main...feature -- . :(exclude)skip` |
-| `trailer_values("main", "feature", "Osq-Change")` | `osq-missing-git -c core.quotepath=false log --format=%x1e%(trailers:key=Osq-Change,valueonly,separator=%x1f) main..feature` |
+| `merge_base("main", "feature")` | `/nonexistent/osq-missing-git -c core.quotepath=false merge-base main feature` |
+| `is_ancestor("main", "feature")` | `/nonexistent/osq-missing-git -c core.quotepath=false merge-base --is-ancestor main feature` |
+| `count_commits("main", "feature")` | `/nonexistent/osq-missing-git -c core.quotepath=false rev-list --count main..feature` |
+| `diff_stat("main", "feature", &["skip"])` | `/nonexistent/osq-missing-git -c core.quotepath=false diff --numstat --no-renames main...feature -- . :(exclude)skip` |
+| `trailer_values("main", "feature", "Osq-Change")` | `/nonexistent/osq-missing-git -c core.quotepath=false log --format=%x1e%(trailers:key=Osq-Change,valueonly,separator=%x1f) main..feature` |
 
 ### Requirement: Branch and worktree writes
 The `Vcs` trait SHALL also hold the branch and worktree writes below, and
@@ -358,16 +358,16 @@ phrase.
 The refused `create_branch` error also displays as its `command`, then ` failed: ` and its `output`, and its `source()` is `None`.
 
 #### Scenario: Branch and worktree writes with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each write below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each write below
 - **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`:
 
 | Write | Command |
 |---|---|
-| `create_branch("osq/new", "main")` | `osq-missing-git -c core.quotepath=false branch osq/new main` |
-| `rename_branch("osq/one", "osq/renamed")` | `osq-missing-git -c core.quotepath=false branch -m osq/one osq/renamed` |
-| `worktree_add("/tmp/osq-tree", "osq/one")` | `osq-missing-git -c core.quotepath=false worktree add /tmp/osq-tree osq/one` |
-| `worktree_remove("/tmp/osq-tree")` | `osq-missing-git -c core.quotepath=false worktree remove /tmp/osq-tree` |
-| `worktree_prune()` | `osq-missing-git -c core.quotepath=false worktree prune` |
+| `create_branch("osq/new", "main")` | `/nonexistent/osq-missing-git -c core.quotepath=false branch osq/new main` |
+| `rename_branch("osq/one", "osq/renamed")` | `/nonexistent/osq-missing-git -c core.quotepath=false branch -m osq/one osq/renamed` |
+| `worktree_add("/tmp/osq-tree", "osq/one")` | `/nonexistent/osq-missing-git -c core.quotepath=false worktree add /tmp/osq-tree osq/one` |
+| `worktree_remove("/tmp/osq-tree")` | `/nonexistent/osq-missing-git -c core.quotepath=false worktree remove /tmp/osq-tree` |
+| `worktree_prune()` | `/nonexistent/osq-missing-git -c core.quotepath=false worktree prune` |
 
 ### Requirement: Commit writes
 The `Vcs` trait SHALL also hold the index and commit writes below, and
@@ -439,16 +439,16 @@ names after it, in order, and "the author `Osq Bot`" is `Osq Bot <bot@example.co
 - **THEN** it is refused with `gpg failed to sign the data`, with `command` `git -c core.quotepath=false commit-tree feature^{tree} -p main -p other -F - -S`, and `main` names the commit it named before
 
 #### Scenario: Commit writes with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each write below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each write below
 - **THEN** it gives the row's answer, a `VcsError::Spawn` whose source's kind is `NotFound` wherever the row names a command:
 
 | Write | Answer |
 |---|---|
 | `stage(&[])` | `Ok(())` |
-| `stage(&["a.txt"])` | `osq-missing-git -c core.quotepath=false add -A -- a.txt` |
-| `commit(&["a.txt"], "m\n", "Osq Bot <bot@example.com>")` | `osq-missing-git -c core.quotepath=false add -- a.txt` |
-| `commit(&[], "m\n", "Osq Bot <bot@example.com>")` | `osq-missing-git -c core.quotepath=false commit --author=Osq Bot <bot@example.com> -F -` |
-| `commit_tree("feature", "main", "m\n", "Osq Bot <bot@example.com>", &[])` | `osq-missing-git -c core.quotepath=false config --type=bool --get commit.gpgSign` |
+| `stage(&["a.txt"])` | `/nonexistent/osq-missing-git -c core.quotepath=false add -A -- a.txt` |
+| `commit(&["a.txt"], "m\n", "Osq Bot <bot@example.com>")` | `/nonexistent/osq-missing-git -c core.quotepath=false add -- a.txt` |
+| `commit(&[], "m\n", "Osq Bot <bot@example.com>")` | `/nonexistent/osq-missing-git -c core.quotepath=false commit --author=Osq Bot <bot@example.com> -F -` |
+| `commit_tree("feature", "main", "m\n", "Osq Bot <bot@example.com>", &[])` | `/nonexistent/osq-missing-git -c core.quotepath=false config --type=bool --get commit.gpgSign` |
 
 ### Requirement: Merge writes
 The `Vcs` trait SHALL also hold the merges below, and `GitVcs` SHALL
@@ -506,15 +506,15 @@ repository, sorted, and each deriving `Debug`, `Clone`, `PartialEq` and
 | `fast_forward("nope")` | refused with `not something we can merge`, with `command` `git -c core.quotepath=false merge --ff-only nope` | `HEAD` names `ahead`'s commit |
 
 #### Scenario: Merge writes with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each write below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each write below
 - **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`:
 
 | Write | Command |
 |---|---|
-| `merge("feature", false)` | `osq-missing-git -c core.quotepath=false merge --no-ff --no-commit feature` |
-| `merge("feature", true)` | `osq-missing-git -c core.quotepath=false merge --squash feature` |
-| `merge_abort()` | `osq-missing-git -c core.quotepath=false merge --abort` |
-| `fast_forward("feature")` | `osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` |
+| `merge("feature", false)` | `/nonexistent/osq-missing-git -c core.quotepath=false merge --no-ff --no-commit feature` |
+| `merge("feature", true)` | `/nonexistent/osq-missing-git -c core.quotepath=false merge --squash feature` |
+| `merge_abort()` | `/nonexistent/osq-missing-git -c core.quotepath=false merge --abort` |
+| `fast_forward("feature")` | `/nonexistent/osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` |
 
 ### Requirement: Stacked approvals folder
 `stacked_root(vcs: &VcsConfig, repo_root: &Path, home: &Path) -> PathBuf` in
@@ -638,14 +638,14 @@ the same isolated git settings.
 - **THEN** `version()` returns `Some(<version>)` as above, and `hook_names()` and `line_endings()` return empty lists
 
 #### Scenario: Setup reads with a program that cannot start
-- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each read below
+- **WHEN** a `GitVcs` whose program is `/nonexistent/osq-missing-git` runs each read below
 - **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`:
 
 | Read | Command |
 |---|---|
-| `version()` | `osq-missing-git -c core.quotepath=false --version` |
-| `hook_names()` | `osq-missing-git -c core.quotepath=false rev-parse --git-path hooks` |
-| `line_endings()` | `osq-missing-git -c core.quotepath=false ls-files --eol -z` |
+| `version()` | `/nonexistent/osq-missing-git -c core.quotepath=false --version` |
+| `hook_names()` | `/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --git-path hooks` |
+| `line_endings()` | `/nonexistent/osq-missing-git -c core.quotepath=false ls-files --eol -z` |
 
 ### Requirement: Patch and discard
 The `Vcs` trait SHALL also hold `patch` and `discard`, and `GitVcs` SHALL

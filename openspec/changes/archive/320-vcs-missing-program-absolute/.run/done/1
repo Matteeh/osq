@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f59b80172b37020466e54ed6059d3e99546c2f4f6ff830931607993d17240727"
+build_stamp: "4b9a2af8"
+project_commit: "e299bc96"
+exit_code: 0
+scope_files: {"crates/kernel/vcs/tests/branch_and_commit_writes.rs":"sha256:316449f710f3f1e0c27aae9b55e4f9681003e18df70e19e145a7b3baab69d759","crates/kernel/vcs/tests/git_command.rs":"sha256:aa583d6ecbc2d454978e237758f773024301b648b6ba74f23090217002bdf59e","crates/kernel/vcs/tests/history_reads.rs":"sha256:84cf2a60b206d3c63f500ae63884608456ba6ae02fed3d56d7238c7ba42c2913","crates/kernel/vcs/tests/merge_writes.rs":"sha256:20341607f7c89ba113df8eeea53aeb418e0d32ec34247432461c07f09fc73c1e","crates/kernel/vcs/tests/setup_reads.rs":"sha256:573c733a4e47d2d26b422e4a8f1df202e0d9672268f852d7aa3915d94a76d1aa","crates/kernel/vcs/tests/tree_record.rs":"sha256:82fd3498338e1bacbb497d77ccfbc31ba526f669e3895699fbdabb154b8a955d"}
+---
+2026-10-23T21:30:06.225Z

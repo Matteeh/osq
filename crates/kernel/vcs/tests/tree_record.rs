@@ -99,7 +99,7 @@ fn tree_record_without_git() {
     let printing_nothing = scratch.vcs(&folder).with_program(silent.to_str().unwrap());
     assert_eq!(printing_nothing.tree_record_path().unwrap(), None);
 
-    let missing = GitVcs::new(&folder).with_program("osq-missing-git");
+    let missing = GitVcs::new(&folder).with_program("/nonexistent/osq-missing-git");
     let error = missing
         .tree_record_path()
         .expect_err("a program that cannot start must fail");
@@ -108,7 +108,7 @@ fn tree_record_without_git() {
     };
     assert_eq!(
         command,
-        "osq-missing-git -c core.quotepath=false rev-parse --git-common-dir"
+        "/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --git-common-dir"
     );
     assert_eq!(source.kind(), std::io::ErrorKind::NotFound);
 

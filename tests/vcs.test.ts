@@ -80,7 +80,7 @@ describe('Vcs selection', () => {
   it('returns NoVcs when the git binary cannot be found', async () => {
     const dir = await makeTempDir('osq-vcs-nobinary-');
     const vcs = await selectVcs(dir, DEFAULT_CONFIG, {
-      gitBinary: 'osq-definitely-not-a-real-binary',
+      gitBinary: '/nonexistent/osq-definitely-not-a-real-binary',
     });
     assert.equal(vcs.kind, 'none');
     assert.equal(vcs.unavailableReason, 'git not found');

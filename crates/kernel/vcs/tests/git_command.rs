@@ -74,45 +74,45 @@ fn command_for_a_read() {
 #[test]
 fn state_reads_with_a_program_that_cannot_start() {
     let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR"));
-    let vcs = GitVcs::new(root).with_program("osq-missing-git");
+    let vcs = GitVcs::new(root).with_program("/nonexistent/osq-missing-git");
     let rows = [
         (
-            "osq-missing-git -c core.quotepath=false rev-parse --show-toplevel",
+            "/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --show-toplevel",
             vcs.root().map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false rev-parse --verify --quiet HEAD",
+            "/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --verify --quiet HEAD",
             vcs.head().map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false status --porcelain=v1 -z \
+            "/nonexistent/osq-missing-git -c core.quotepath=false status --porcelain=v1 -z \
              --untracked-files=all",
             vcs.status().map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false config --get osq.example",
+            "/nonexistent/osq-missing-git -c core.quotepath=false config --get osq.example",
             vcs.config_value("osq.example").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false symbolic-ref --quiet --short \
+            "/nonexistent/osq-missing-git -c core.quotepath=false symbolic-ref --quiet --short \
              refs/remotes/origin/HEAD",
             vcs.default_branch("main").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false show HEAD:a.txt",
+            "/nonexistent/osq-missing-git -c core.quotepath=false show HEAD:a.txt",
             vcs.show("HEAD", "a.txt").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false cat-file -e HEAD:a.txt",
+            "/nonexistent/osq-missing-git -c core.quotepath=false cat-file -e HEAD:a.txt",
             vcs.path_exists("HEAD", "a.txt").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false branch --list \
+            "/nonexistent/osq-missing-git -c core.quotepath=false branch --list \
              --format=%(refname:short) osq/*",
             vcs.list_branches("osq/").map(|_| ()),
         ),
         (
-            "osq-missing-git -c core.quotepath=false worktree list --porcelain",
+            "/nonexistent/osq-missing-git -c core.quotepath=false worktree list --porcelain",
             vcs.worktree_list().map(|_| ()),
         ),
     ];

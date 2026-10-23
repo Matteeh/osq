@@ -84,7 +84,7 @@ describe('doctor git check', () => {
     const dir = await makeTempDir('osq-doctor-git-missing-');
 
     const checks = await checkGit(dir, DEFAULT_CONFIG, {
-      gitBinary: 'osq-definitely-not-a-real-binary',
+      gitBinary: '/nonexistent/osq-definitely-not-a-real-binary',
     });
 
     const git = find(checks, 'git');
@@ -128,7 +128,7 @@ describe('doctor git check', () => {
     process.env.GIT_DIR = path.join(dir, 'other.git');
     try {
       const checks = await checkGit(dir, DEFAULT_CONFIG, {
-        gitBinary: 'osq-definitely-not-a-real-binary',
+        gitBinary: '/nonexistent/osq-definitely-not-a-real-binary',
       });
       const report = { ok: checks.every((check) => check.ok), checks };
       const lines: string[] = [];

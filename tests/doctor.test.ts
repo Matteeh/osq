@@ -241,7 +241,7 @@ describe('runDoctorChecks', () => {
     await writeHealthyRepo(tmpDir);
     await fs.writeFile(
       path.join(tmpDir, 'osq.config.ts'),
-      "export default { harness: 'opencode', opencode: { bin: 'osq-missing-bin-xyz' } };\n",
+      "export default { harness: 'opencode', opencode: { bin: '/nonexistent/osq-missing-bin-xyz' } };\n",
     );
 
     const report = await runDoctorChecks(tmpDir);

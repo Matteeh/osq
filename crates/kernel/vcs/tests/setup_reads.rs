@@ -171,18 +171,18 @@ fn setup_reads_outside_a_repository() {
 #[test]
 fn setup_reads_with_a_program_that_cannot_start() {
     let scratch = Scratch::new("setup_reads_missing_program");
-    let vcs = GitVcs::new(scratch.path()).with_program("osq-missing-git");
+    let vcs = GitVcs::new(scratch.path()).with_program("/nonexistent/osq-missing-git");
 
     assert_spawn(
         vcs.version(),
-        "osq-missing-git -c core.quotepath=false --version",
+        "/nonexistent/osq-missing-git -c core.quotepath=false --version",
     );
     assert_spawn(
         vcs.hook_names(),
-        "osq-missing-git -c core.quotepath=false rev-parse --git-path hooks",
+        "/nonexistent/osq-missing-git -c core.quotepath=false rev-parse --git-path hooks",
     );
     assert_spawn(
         vcs.line_endings(),
-        "osq-missing-git -c core.quotepath=false ls-files --eol -z",
+        "/nonexistent/osq-missing-git -c core.quotepath=false ls-files --eol -z",
     );
 }

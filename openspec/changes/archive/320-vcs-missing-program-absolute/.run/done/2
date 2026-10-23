@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:14d846a679cda0d2246e3d5a6d6848d5a92cbe149ec05da1b774b7aa153c5dff"
+build_stamp: "4b9a2af8"
+project_commit: "972c3646"
+exit_code: 0
+scope_files: {"tests/doctor.test.ts":"sha256:6b6c462345a68c8818ca7545c2622a2b88e1de5c1d0e96cfbb5c615f5bd57e35","tests/vcs-doctor.test.ts":"sha256:fd46d9d65f5d826971a88db8e6faa5ebb2abdd8bd0a3ac160783b07ca7f6e53f","tests/vcs.test.ts":"sha256:e2ca28c229f3bd2b9e928375d3f5c4445f0a207f28d4ba384ac6bc949e9bbac7"}
+---
+2026-10-23T21:37:10.547Z
