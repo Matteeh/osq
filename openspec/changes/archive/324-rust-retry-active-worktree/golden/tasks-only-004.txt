@@ -1,0 +1,23 @@
+outcome: output
+Retried 004 task 1 (next attempt: 2)
+  Reason: verify_red
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:79b5f3218fce4cc15492ffd96172b6731ab7aaafd1a180155ffe6ff05495bd5f
+--- .run/dead/1.1.md
+---
+reason: verify_red
+---
+error: four
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"verify_red","target":"1"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/note.txt
+note
+tip: osq: 004-plan-edits approved
+status:
+ D openspec/changes/004-plan-edits/.run/dead/1.md
+ M openspec/changes/004-plan-edits/tasks.md
+?? openspec/changes/004-plan-edits/.run/dead/1.1.md
+?? openspec/changes/004-plan-edits/.run/events/1.jsonl
+?? openspec/changes/004-plan-edits/.run/note.txt

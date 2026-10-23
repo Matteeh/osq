@@ -1,0 +1,14 @@
+outcome: failed
+Spec "1" not found in <root>/openspec/changes
+tree:
+--- .run/approved
+sha256:76dada38cff46e57e8d15c623ffecfcbab8a4646fa905eea02823335195301f7
+--- .run/dead/1.md
+---
+reason: verify_red
+---
+error: one
+--- .run/events/1.jsonl
+{"data":{"reason":"verify_red","task":"1"},"timestamp":"<timestamp>","type":"dead"}
+tip: osq: 001-dead approved
+status:

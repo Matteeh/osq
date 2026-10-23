@@ -1,0 +1,20 @@
+outcome: output
+Retried 001 task 1 (next attempt: 2)
+  Reason: verify_red
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:76dada38cff46e57e8d15c623ffecfcbab8a4646fa905eea02823335195301f7
+--- .run/dead/1.1.md
+---
+reason: verify_red
+---
+error: one
+--- .run/events/1.jsonl
+{"data":{"reason":"verify_red","task":"1"},"timestamp":"<timestamp>","type":"dead"}
+{"data":{"attempt":2,"reason":"verify_red","target":"1"},"timestamp":"<timestamp>","type":"retry"}
+tip: osq: 001-dead approved
+status:
+ D openspec/changes/001-dead/.run/dead/1.md
+ M openspec/changes/001-dead/.run/events/1.jsonl
+?? openspec/changes/001-dead/.run/dead/1.1.md

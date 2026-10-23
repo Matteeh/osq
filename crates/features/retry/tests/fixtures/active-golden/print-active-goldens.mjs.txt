@@ -1,0 +1,183 @@
+// Prints TypeScript's `osq retry` result for each row of rust-retry
+// "Active worktree retry equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-active-goldens.mjs <fixture active-project> <golden folder>
+// Each case builds a fresh scratch git repository: `<scratch>/repo` on `main`
+// with `README.md`, `checks/pass.sh` holding `exit 0`, `src/a.txt` holding
+// `main`, and `osq.config.mjs` and `osq.toml`, both naming git on or off as the
+// case says, committed as `init`. Each fixture folder then gets its own
+// worktree at `<scratch>/trees/<folder>` on a new branch `osq/<folder>` from
+// `main`, holding the folder at `openspec/changes/<folder>`, committed as
+// `osq: <folder> approved`. Before that commit, `003-recert`'s worktree gets
+// `src/a.txt` holding `worktree`, and `004-plan-edits` gets `tasks.md` holding
+// TASKS. Then the case's `edit` runs. The built CLI runs `retry` with `repo`
+// as the working directory and `<scratch>/home` as an empty HOME.
+// A golden holds the outcome, the text with `repo`'s path written `<root>`,
+// then `tree:` and every file under the case's worktree change folder's
+// `.run/`, sorted by path, each event line parsed, its `timestamp` replaced by
+// `<timestamp>` and written back with sorted keys, and any other line that
+// starts `recertified_at: ` written `recertified_at: <timestamp>`, then `tip:`
+// and the subject of `osq/<folder>`'s tip commit, then `status:` and each line
+// of `git status --porcelain --untracked-files=all` in the case's worktree.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.com>';
+const FOLDERS = ['001-dead', '002-change', '003-recert', '004-plan-edits'];
+const TASKS = '# Tasks\n\n- [ ] 1. Dead task\n';
+
+function tickTasks(worktree) {
+  const file = path.join(worktree, 'openspec', 'changes', '004-plan-edits', 'tasks.md');
+  fs.writeFileSync(file, TASKS.replace('- [ ]', '- [x]'));
+}
+
+function planEdits(worktree) {
+  const folder = path.join(worktree, 'openspec', 'changes', '004-plan-edits');
+  tickTasks(worktree);
+  fs.appendFileSync(path.join(folder, 'proposal.md'), '\nA new line.\n');
+  fs.writeFileSync(path.join(folder, 'notes.md'), 'notes\n');
+}
+
+function runFile(worktree) {
+  const folder = path.join(worktree, 'openspec', 'changes', '004-plan-edits');
+  tickTasks(worktree);
+  fs.writeFileSync(path.join(folder, '.run', 'note.txt'), 'note\n');
+}
+
+function draft(repo) {
+  const folder = path.join(repo, 'openspec', 'changes', '001-dead');
+  fs.mkdirSync(folder, { recursive: true });
+  fs.writeFileSync(path.join(folder, 'proposal.md'), '# 001 draft\n');
+}
+
+const cases = [
+  { name: 'dead-001', folder: '001-dead', args: ['1', '1'], git: true },
+  { name: 'change-002', folder: '002-change', args: ['2', 'change'], git: true },
+  { name: 'recert-003', folder: '003-recert', args: ['3', '1'], git: true },
+  { name: 'plan-edits-004', folder: '004-plan-edits', args: ['4', '1'], git: true, edit: planEdits },
+  { name: 'tasks-only-004', folder: '004-plan-edits', args: ['4', '1'], git: true, edit: runFile },
+  { name: 'draft-001', folder: '001-dead', args: ['1', '1'], git: true, repoEdit: draft },
+  { name: 'git-off-001', folder: '001-dead', args: ['1', '1'], git: false },
+];
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sorted(value[key])]),
+    );
+  }
+  return value;
+}
+
+function eventLine(line) {
+  const parsed = JSON.parse(line);
+  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
+  return JSON.stringify(sorted(parsed));
+}
+
+function files(base, dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function tree(folder) {
+  const lines = [];
+  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    if (relative.endsWith('.jsonl')) {
+      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
+    } else {
+      const body = text.endsWith('\n') ? text.slice(0, -1) : text;
+      for (const line of body.split('\n')) {
+        lines.push(line.startsWith('recertified_at: ') ? 'recertified_at: <timestamp>' : line);
+      }
+    }
+  }
+  return lines.join('\n');
+}
+
+function repository(scratch, gitOn) {
+  const repo = path.join(scratch, 'repo');
+  fs.mkdirSync(path.join(repo, 'checks'), { recursive: true });
+  fs.mkdirSync(path.join(repo, 'src'), { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'osq']);
+  git(repo, ['config', 'user.email', 'osq@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.writeFileSync(path.join(repo, 'README.md'), 'fixture\n');
+  fs.writeFileSync(path.join(repo, 'checks', 'pass.sh'), 'exit 0\n');
+  fs.writeFileSync(path.join(repo, 'src', 'a.txt'), 'main\n');
+  fs.writeFileSync(
+    path.join(repo, 'osq.config.mjs'),
+    `export default { vcs: { enabled: ${gitOn}, author: '${AUTHOR}' } };\n`,
+  );
+  fs.writeFileSync(
+    path.join(repo, 'osq.toml'),
+    `[vcs]\nenabled = ${gitOn}\nauthor = "${AUTHOR}"\n`,
+  );
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'init']);
+  for (const folder of FOLDERS) {
+    const worktree = path.join(scratch, 'trees', folder);
+    git(repo, ['worktree', 'add', '-q', '-b', `osq/${folder}`, worktree, 'main']);
+    const change = path.join(worktree, 'openspec', 'changes', folder);
+    fs.cpSync(path.join(fixture, folder), change, { recursive: true });
+    if (folder === '003-recert') fs.writeFileSync(path.join(worktree, 'src', 'a.txt'), 'worktree\n');
+    if (folder === '004-plan-edits') fs.writeFileSync(path.join(change, 'tasks.md'), TASKS);
+    git(worktree, ['add', '-A']);
+    git(worktree, ['commit', '-q', '-m', `osq: ${folder} approved`]);
+  }
+  return repo;
+}
+
+for (const c of cases) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-retry-active-')));
+  const home = path.join(scratch, 'home');
+  fs.mkdirSync(home);
+  const repo = repository(scratch, c.git);
+  const worktree = path.join(scratch, 'trees', c.folder);
+  c.edit?.(worktree);
+  c.repoEdit?.(repo);
+  const run = spawnSync(process.execPath, [BIN, 'retry', ...c.args], {
+    cwd: repo,
+    encoding: 'utf8',
+    env: { ...process.env, HOME: home, NO_COLOR: '1' },
+  });
+  let head;
+  if (run.status === 0) {
+    if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+    head = `outcome: output\n${run.stdout}`;
+  } else {
+    if (run.stdout !== '') throw new Error(`${c.name}: unexpected stdout ${run.stdout}`);
+    const prefix = `Error retrying ${c.args[0]} ${c.args[1]}:\n  `;
+    const stderr = run.stderr.split(repo).join('<root>');
+    if (!stderr.startsWith(prefix)) throw new Error(`${c.name}: unexpected stderr ${stderr}`);
+    head = `outcome: failed\n${stderr.slice(prefix.length)}`;
+  }
+  if (!head.endsWith('\n')) head += '\n';
+  const change = path.join(worktree, 'openspec', 'changes', c.folder);
+  const tip = git(repo, ['log', '-1', '--format=%s', `osq/${c.folder}`]).trimEnd();
+  const status = git(worktree, ['status', '--porcelain', '--untracked-files=all']);
+  const body = `tree:\n${tree(change)}\ntip: ${tip}\nstatus:\n${status}`;
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${head}${body}`);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

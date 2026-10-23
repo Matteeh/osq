@@ -54,9 +54,10 @@ with its texts, writing nothing:
 1. a target that, trimmed, is neither `change` nor all ASCII digits:
    `Invalid retry target "<target>": expected a numeric task or "change".`;
 2. an id that matches no active change, matched as TypeScript's
-   `matchesFolder` does among rust-storage `list_changes` entries, and no
-   archived change of an osq worktree as rust-retry "Archived retry" finds
-   it: `Spec "<id>" not found in <root>/openspec/changes`;
+   `matchesFolder` does among the active entries rust-retry "Active
+   worktree retry" lists, and no archived change of an osq worktree as
+   rust-retry "Archived retry" finds it:
+   `Spec "<id>" not found in <root>/openspec/changes`;
 3. `.run/approved` missing or blank:
    ``Change <id> is not approved. Run `osq approve <id>` before retrying.``;
 4. `.run/approved` trimmed other than rust-storage `change_folder_seal` of
@@ -208,20 +209,23 @@ A task `retry` of an active change that passes refusals 1 to 7 SHALL be a
 recertification, as in TypeScript's `retrySpec`, when the task has a
 regressed marker and no dead marker, the reason is `scope_regression`, and
 the frontmatter of `.run/done/<task>` holds a `scope_hash` that is a string
-and not empty. A recertification SHALL, in this order:
+and not empty. The change's tree root is the root of the rust-storage
+`ChangeTree` that holds its folder: the worktree for a change in an osq
+worktree, else the root. A recertification SHALL, in this order:
 
 1. read `tasks/<task>.md` of the change folder through rust-specs
    `read_task_file`, failing with that error's text;
 2. load the root's config through rust-config `load_config`, failing with
    the config error's text;
 3. run the task file's `verify` through rust-harnesses `run_verify` in the
-   root, with the process environment as its source, no configured or agent
-   names, `OSQ_CHANGE` set to the change folder's absolute path, no
-   `OSQ_DIFF`, the timeout `timeouts.verifyTimeout` and the kill grace
-   `timeouts.harnessKillGrace`, failing with the process error's text when
-   the command cannot start;
+   change's tree root, with the process environment as its source, no
+   configured or agent names, `OSQ_CHANGE` set to the change folder's
+   absolute path, no `OSQ_DIFF`, the timeout `timeouts.verifyTimeout` and
+   the kill grace `timeouts.harnessKillGrace`, failing with the process
+   error's text when the command cannot start;
 4. take the task's current scope files and scope hash, as rust-retry
-   "Recertified done marker" says;
+   "Recertified done marker" says, with paths relative to the change's
+   tree root;
 5. when the verify's exit code is 0, rewrite `.run/done/<task>` as rust-retry
    "Recertified done marker" says;
 6. rename `.run/regressed/<task>.md` to `<task>.<ordinal>.md`, and when the
@@ -359,3 +363,46 @@ string.
 | `recertification_count: 0` | `recertification_count: 1`, `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222` |
 | `recertification_count: "3"` | `recertification_count: 1`, `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222` |
 | `original_scope_hash: ""` | `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222`, `scope_files:` |
+
+### Requirement: Active worktree retry
+With `vcs.enabled` and a rust-vcs `GitVcs` root, `retry` SHALL look for
+the active change among the active entries of rust-storage
+`list_tree_changes`, over `change_trees` built from the root's
+`worktree_list` worktrees and no stacked folders, as TypeScript's
+`findChange` does. A failing worktree listing SHALL fail `retry` with the
+`VcsError`'s display. With vcs off, it SHALL look among the active
+entries of `list_changes` for the root. Refusals 3 to 7, rust-retry
+"Retry record" and rust-retry "Scope recertification" SHALL then apply to
+the folder that entry names, in its own tree. A retry of an active change
+SHALL commit nothing.
+
+#### Scenario: Active worktree retry equals TypeScript's
+- **WHEN** a test builds the row's scratch repository as `crates/features/retry/tests/fixtures/active-golden/print-active-goldens.mjs.txt` describes, from the change folders in `crates/features/retry/tests/fixtures/active-project/`, with `osq.toml` naming git on or off as the row says, and runs `retry` with the row's arguments at `<scratch>/repo`
+- **THEN** the result, the worktree change folder's `.run/` tree, the tip subject of `osq/<folder>` and the worktree's `git status --porcelain --untracked-files=all` equal the row's golden in `crates/features/retry/tests/fixtures/active-golden/`, a copy of `openspec/changes/324-rust-retry-active-worktree/golden/`, written as that script writes them:
+
+| Arguments | Git | Edit | Golden |
+|---|---|---|---|
+| `1`, `1` | on | none | `dead-001.txt` |
+| `2`, `change` | on | none | `change-002.txt` |
+| `3`, `1` | on | none | `recert-003.txt` |
+| `4`, `1` | on | plan edits | `plan-edits-004.txt` |
+| `4`, `1` | on | tasks ticked and a `.run` file | `tasks-only-004.txt` |
+| `1`, `1` | on | a draft `001-dead` in the checkout | `draft-001.txt` |
+| `1`, `1` | off | none | `git-off-001.txt` |
+
+### Requirement: Plan edits refusal
+After it finds an active change in a tree that names a folder, and before
+refusal 3, `retry` SHALL refuse a change whose worktree holds plan edits
+its last commit lacks, as TypeScript's `assertPlanCommitted` does, writing
+nothing. It SHALL read rust-vcs `status` with a `GitVcs` at the tree's
+root and the config's `timeouts`, failing with the `VcsError`'s display
+when that fails. A plan edit is an entry's `path` or `from` that lies under
+the change folder, relative to the tree's root with `/`, other than the
+folder's `tasks.md` and anything under its `.run/`. The edits, relative to
+the change folder, sorted by bytes and without repeats, give the refusal
+`Change <id> has plan edits not committed in its worktree: <edits joined by ", ">. Run osq approve <id> to approve them.`
+A change in the root's own tree is never refused this way.
+
+#### Scenario: Plan edits refused
+- **WHEN** a test builds the git-on repository of "Active worktree retry equals TypeScript's", then in `004-plan-edits`'s worktree renames `tasks/1.md` to `tasks/2.md` with `git mv` and writes `.run/extra.txt`, and runs `retry` with `4`, `1`
+- **THEN** it gives a `Failed` error for the command `retry` with the message `Change 004 has plan edits not committed in its worktree: tasks/1.md, tasks/2.md. Run osq approve 004 to approve them.`, and the worktree's change folder is unchanged apart from those two edits

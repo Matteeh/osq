@@ -148,7 +148,7 @@ fn message(id: &str, title: Option<&str>, archive_path: &str, folder: &str) -> S
 /// A path relative to `root`, with every component joined by `/`.
 ///
 /// Implements: rust-retry/archived-retry
-fn relative(root: &Path, path: &Path) -> String {
+pub(crate) fn relative(root: &Path, path: &Path) -> String {
     path.strip_prefix(root)
         .unwrap_or(path)
         .components()

@@ -29,6 +29,7 @@ use super::{excerpt, scope, text};
 /// Implements: rust-retry/scope-recertification
 pub(crate) fn run(
     root: &Path,
+    tree_root: &Path,
     folder: &Path,
     id: &str,
     task: &str,
@@ -40,7 +41,7 @@ pub(crate) fn run(
     let config = load_config(root).map_err(|error| text::failed(error.to_string()))?;
     let request = VerifyRequest {
         command: task_file.verify.clone(),
-        cwd: root.to_path_buf(),
+        cwd: tree_root.to_path_buf(),
         source_env: std::env::vars().collect::<BTreeMap<_, _>>(),
         configured_env: Vec::new(),
         agent_env: Vec::new(),
@@ -51,7 +52,7 @@ pub(crate) fn run(
         kill_grace: config.timeouts.harness_kill_grace,
     };
     let outcome = run_verify(&request).map_err(|error| text::failed(error.to_string()))?;
-    let current = scope::compute_hash(root, &task_file.scope);
+    let current = scope::compute_hash(tree_root, &task_file.scope);
     let passed = outcome.exit_code == 0;
     let now = format_utc(now_ms());
     if passed {

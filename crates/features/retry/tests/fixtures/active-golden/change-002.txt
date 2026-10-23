@@ -1,0 +1,24 @@
+outcome: output
+Retried 002 change (next attempt: 2)
+  Reason: change_verify_red
+  Retained: .run/regressed/change.1.md
+tree:
+--- .run/approved
+sha256:6355b90f79bb6653505486e68debb22fedaf4ce93b6dcc933bbd5bae2e8b293c
+--- .run/done/1
+---
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+---
+2026-10-01T10:00:00.000Z
+--- .run/events/change.jsonl
+{"data":{"attempt":2,"reason":"change_verify_red","target":"change"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/change.1.md
+---
+reason: change_verify_red
+---
+The change's verify failed.
+tip: osq: 002-change approved
+status:
+ D openspec/changes/002-change/.run/regressed/change.md
+?? openspec/changes/002-change/.run/events/change.jsonl
+?? openspec/changes/002-change/.run/regressed/change.1.md

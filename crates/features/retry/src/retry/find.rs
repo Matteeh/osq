@@ -5,45 +5,41 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::Config;
 use osq_kernel_storage::{
-    ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_tree_changes,
+    ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_changes, list_tree_changes,
 };
 use osq_kernel_vcs::{GitVcs, Vcs, Worktree};
 
 use super::text;
 
-/// An archived change in an osq worktree, its tree and the loaded config.
-pub(crate) struct Archived {
-    /// The archived change folder.
+/// A change folder and the tree that holds it.
+pub(crate) struct Located {
+    /// The change folder.
     pub(crate) entry: ChangeEntry,
-    /// The worktree tree that holds it.
+    /// The tree that holds it.
     pub(crate) tree: ChangeTree,
-    /// The root's config.
-    pub(crate) config: Config,
 }
 
-/// Finds the first active change whose name matches `query`.
-///
-/// Implements: rust-retry/retry-refusals
-pub(crate) fn find_change<'a>(changes: &'a [ChangeEntry], query: &str) -> Option<&'a ChangeEntry> {
-    changes
-        .iter()
-        .find(|entry| entry.location == Location::Active && matches(&entry.folder, query))
+/// A project's trees and every change folder they hold.
+pub(crate) struct Trees {
+    /// The trees, the project root's own first.
+    pub(crate) trees: Vec<ChangeTree>,
+    /// Every change folder, each from the tree that owns it.
+    pub(crate) entries: Vec<ChangeEntry>,
 }
 
-/// Finds the first archived worktree change whose name matches `query`.
+/// Lists the project's trees and changes when git is on, or none when it is off.
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the command `retry` when the worktree list
-/// cannot be read.
+/// Returns a `Failed` error with the command `retry` with the `VcsError`'s
+/// display when the worktree list cannot be read.
 ///
-/// Implements: rust-retry/archived-retry
-pub(crate) fn find_archived(
+/// Implements: rust-retry/active-worktree-retry
+pub(crate) fn trees(
     root: &Path,
     config: &Config,
     repo: Option<&Path>,
-    query: &str,
-) -> Result<Option<Archived>, FeatureError> {
+) -> Result<Option<Trees>, FeatureError> {
     if repo.is_none() {
         return Ok(None);
     }
@@ -54,20 +50,65 @@ pub(crate) fn find_archived(
     let candidates: Vec<TreeCandidate> = worktrees.iter().map(candidate).collect();
     let trees = change_trees(root, &candidates, &[]);
     let entries = list_tree_changes(&trees);
-    let found = entries.into_iter().find_map(|entry| {
-        if entry.location != Location::Archived || !matches(&entry.folder, query) {
-            return None;
-        }
-        let tree = trees
-            .iter()
-            .find(|tree| tree.folder.is_some() && entry.path.starts_with(&tree.root))?;
-        Some((entry, tree.clone()))
-    });
-    Ok(found.map(|(entry, tree)| Archived {
-        entry,
-        tree,
-        config: config.clone(),
-    }))
+    Ok(Some(Trees { trees, entries }))
+}
+
+/// Finds the first active change whose name matches `query`.
+///
+/// Implements: rust-retry/active-worktree-retry
+pub(crate) fn find_active(root: &Path, listed: Option<&Trees>, query: &str) -> Option<Located> {
+    if let Some(trees) = listed {
+        return active_in(trees, query);
+    }
+    let entries = list_changes(root);
+    let entry = entries
+        .iter()
+        .find(|entry| entry.location == Location::Active && matches(&entry.folder, query))?;
+    Some(Located {
+        entry: entry.clone(),
+        tree: ChangeTree {
+            root: root.to_path_buf(),
+            folder: None,
+        },
+    })
+}
+
+/// Finds the first active change of a listed tree set whose name matches.
+///
+/// Implements: rust-retry/active-worktree-retry
+fn active_in(trees: &Trees, query: &str) -> Option<Located> {
+    let entry = trees
+        .entries
+        .iter()
+        .find(|entry| entry.location == Location::Active && matches(&entry.folder, query))?;
+    let tree = trees
+        .trees
+        .iter()
+        .find(|tree| tree.folder.as_deref() == Some(entry.folder.as_str()))
+        .or_else(|| trees.trees.first())?;
+    Some(Located {
+        entry: entry.clone(),
+        tree: tree.clone(),
+    })
+}
+
+/// Finds the first archived worktree change whose name matches `query`.
+///
+/// Implements: rust-retry/archived-retry
+pub(crate) fn find_archived(trees: Option<&Trees>, query: &str) -> Option<Located> {
+    let trees = trees?;
+    let entry = trees
+        .entries
+        .iter()
+        .find(|entry| entry.location == Location::Archived && matches(&entry.folder, query))?;
+    let tree = trees
+        .trees
+        .iter()
+        .find(|tree| tree.folder.is_some() && entry.path.starts_with(&tree.root))?;
+    Some(Located {
+        entry: entry.clone(),
+        tree: tree.clone(),
+    })
 }
 
 /// Turns one git worktree into a tree candidate.

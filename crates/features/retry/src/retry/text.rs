@@ -107,6 +107,15 @@ pub(crate) fn no_marker(target: &str, folder: &str) -> FeatureError {
     }
 }
 
+/// The refusal naming the plan edits a worktree change has not committed.
+///
+/// Implements: rust-retry/plan-edits-refusal
+pub(crate) fn plan_edits(id: &str, edits: &str) -> FeatureError {
+    failed(format!(
+        "Change {id} has plan edits not committed in its worktree: {edits}. Run osq approve {id} to approve them."
+    ))
+}
+
 /// The refusal for a marker reason that is not one osq knows.
 ///
 /// Implements: rust-retry/retry-refusals

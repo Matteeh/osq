@@ -1,0 +1,37 @@
+outcome: output
+Recertified 003 task 1 (scope regression cleared)
+  Reason: scope_regression
+  Retained: .run/regressed/1.1.md
+tree:
+--- .run/approved
+sha256:9a7c078f9abc94796b52018b2707a4096f8d128028db470409f50406ce6bddb1
+--- .run/done/1
+---
+scope_resolver: 2
+scope_hash: sha256:189d9bb16ea187a963fb7048f3303dad573606cb493bd64febf8d7c6549cbdf9
+exit_code: 0
+scope_files:
+  src/a.txt: sha256:04d645983333da9af808f0b3278fb9c7e6b308fe1120409fe7080af2f061fdc6
+original_scope_hash: sha256:1111111111111111111111111111111111111111111111111111111111111111
+recertified_at: <timestamp>
+recertification_count: 1
+---
+2026-10-01T10:00:00.000Z
+--- .run/events/1.jsonl
+{"data":{"attribution":[{"attribution":"unknown","path":"src/a.txt (modified)"}],"command":"test -f openspec/changes/003-recert/proposal.md","currentHash":"sha256:189d9bb16ea187a963fb7048f3303dad573606cb493bd64febf8d7c6549cbdf9","differingPaths":["src/a.txt (modified)"],"exitCode":0,"outcome":"passed","output":"","recordedHash":"sha256:1111111111111111111111111111111111111111111111111111111111111111","task":"1","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
+--- .run/regressed/1.1.md
+---
+reason: scope_regression
+task: "1"
+attribution: [{"path":"src/a.txt (modified)","attribution":"unknown"}]
+---
+Task 1 scope changed after completion:
+- src/a.txt (modified)
+
+(no output)
+tip: osq: 003-recert approved
+status:
+ M openspec/changes/003-recert/.run/done/1
+ D openspec/changes/003-recert/.run/regressed/1.md
+?? openspec/changes/003-recert/.run/events/1.jsonl
+?? openspec/changes/003-recert/.run/regressed/1.1.md
