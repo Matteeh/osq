@@ -85,13 +85,15 @@ fn candidate(worktree: Worktree) -> TreeCandidate {
     }
 }
 
-/// Whether the change lives in a worktree other than the checkout `root`.
+/// Whether the change lives in an osq worktree: a tree other than the root, or
+/// the root itself when it is a linked worktree rather than the main checkout.
 ///
 /// Implements: rust-run/verified-task-commit
+/// Implements: rust-run/worktree-checks
 pub(crate) fn is_worktree(root: &Path, tree_root: &Path) -> bool {
     let checkout = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     let tree = fs::canonicalize(tree_root).unwrap_or_else(|_| tree_root.to_path_buf());
-    tree != checkout
+    tree != checkout || root.join(".git").is_file()
 }
 
 /// The changes folder a not-found message names.

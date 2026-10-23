@@ -37,6 +37,15 @@ pub(crate) fn marker_exists(task: &str, folder: &str, kind: &str) -> String {
     format!("Task {task} of {folder} is {kind}; nothing to run")
 }
 
+/// The failure for a change its worktree check halted as `reason`.
+///
+/// Implements: rust-run/worktree-halt
+pub(crate) fn halted(folder: &str, reason: &str) -> String {
+    let digits: String = folder.chars().take_while(char::is_ascii_digit).collect();
+    let id = if digits.is_empty() { folder } else { &digits };
+    format!("spec {id} halted ({reason})")
+}
+
 /// The refusal for a lock another run holds.
 ///
 /// Implements: rust-run/run-refusals

@@ -48,6 +48,7 @@ impl VerifyMeta {
 /// Implements: rust-run/executor-start
 /// Implements: rust-run/run-verdict
 /// Implements: rust-run/done-record
+/// Implements: rust-run/worktree-halt
 pub(crate) fn append(folder: &Path, stream: &str, event: Event) -> Result<(), FeatureError> {
     let dir = folder.join(".run").join("events");
     fs::create_dir_all(&dir).map_err(|error| failed(&dir, &error))?;

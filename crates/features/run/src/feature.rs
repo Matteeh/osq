@@ -1,10 +1,13 @@
 //! The run feature's `Feature` implementation and its private pieces.
 
+mod catch_up;
+mod checks;
 mod commit;
 mod dead;
 mod done;
 mod events;
 mod find;
+mod halt;
 mod lock;
 mod log;
 mod message;

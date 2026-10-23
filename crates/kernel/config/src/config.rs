@@ -4,7 +4,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use crate::blocks::{self, BannedWord, Limits, PiConfig, Timeouts, VcsConfig};
+use crate::blocks::{self, BannedWord, Gates, Limits, PiConfig, Timeouts, VcsConfig};
 use crate::error::ConfigError;
 use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
 
@@ -21,6 +21,7 @@ const TOP_LEVEL_KEYS: &[&str] = &[
     "validator",
     "pi",
     "limits",
+    "gates",
     "bannedWords",
 ];
 
@@ -43,6 +44,8 @@ pub struct Config {
     pub pi: PiConfig,
     /// Every lint limit osq applies.
     pub limits: Limits,
+    /// The gates a run applies.
+    pub gates: Gates,
     /// The words the project bans from its code.
     pub banned_words: Vec<BannedWord>,
 }
@@ -59,6 +62,7 @@ impl Default for Config {
             validator: None,
             pi: PiConfig::default(),
             limits: Limits::default(),
+            gates: Gates::default(),
             banned_words: Vec::new(),
         }
     }
@@ -129,6 +133,10 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         Some(table) => blocks::limits::read_limits(table)?,
         None => Limits::default(),
     };
+    let gates = match blocks::value::table(&table, "gates")? {
+        Some(table) => blocks::gates::read_gates(table)?,
+        None => Gates::default(),
+    };
     let banned_words = blocks::banned_words::read_banned_words(table.get("bannedWords"))?;
     Ok(Config {
         max_concurrency,
@@ -139,6 +147,7 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         validator,
         pi,
         limits,
+        gates,
         banned_words,
     })
 }

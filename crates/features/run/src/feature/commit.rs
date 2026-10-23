@@ -4,12 +4,13 @@ use std::fs;
 use std::path::Path;
 
 use osq_core::FeatureError;
+use osq_core::event::RegressionReason;
 use osq_kernel_config::Config;
 use osq_kernel_specs::{TaskFile, read_task_file};
 use osq_kernel_storage::ChangeEntry;
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{message, pause, scope, text};
+use super::{halt, message, pause, scope, text};
 
 /// Commits a verified task with the paths its scope audit allows, its untracked
 /// test files and its records.
@@ -17,7 +18,8 @@ use super::{message, pause, scope, text};
 /// # Errors
 ///
 /// Returns a `Failed` error with the command `run` when git status or the
-/// commit fails, leaving every file as it was.
+/// commit fails, leaving every file as it was; a failed commit also records a
+/// `commit_failed` halt.
 ///
 /// Implements: rust-run/verified-task-commit
 pub(crate) fn verified(
@@ -40,9 +42,14 @@ pub(crate) fn verified(
     let trailers = message::read_trailers(&entry.path, task);
     let text = message::format(&subject, &task_file.title, &outcome, &trailers);
     let author = config.vcs.author.as_deref().unwrap_or_default();
-    vcs.commit(&refs, &text, author)
-        .map(|_| ())
-        .map_err(|error| failed(text::commit_failed(task, &entry.folder, &error)))
+    match vcs.commit(&refs, &text, author) {
+        Ok(_) => Ok(()),
+        Err(error) => {
+            let detail = error.to_string();
+            halt::record(&entry.path, RegressionReason::CommitFailed, &detail, config)?;
+            Err(failed(text::commit_failed(task, &entry.folder, detail)))
+        }
+    }
 }
 
 /// Records a dead task in its change's worktree: saves its patch, discards the
@@ -61,11 +68,34 @@ pub(crate) fn dead(
     reason: &str,
     config: &Config,
 ) -> Result<(), String> {
+    dead_with(root, folder, task, reason, config, false)
+}
+
+/// Records a dead task, keeping its existing patch when `keep_patch` is set.
+///
+/// # Errors
+///
+/// Returns the display of the patch, discard or commit failure, leaving the
+/// files as that step left them.
+///
+/// Implements: rust-run/dead-task-commit
+/// Implements: rust-run/commit-catch-up
+pub(crate) fn dead_with(
+    root: &Path,
+    folder: &Path,
+    task: &str,
+    reason: &str,
+    config: &Config,
+    keep_patch: bool,
+) -> Result<(), String> {
     let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let patch = vcs.patch(None).map_err(|error| error.to_string())?;
     let dir = folder.join(".run").join("dead");
-    fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
-    fs::write(dir.join(format!("{task}.patch")), patch).map_err(|error| error.to_string())?;
+    let patch_path = dir.join(format!("{task}.patch"));
+    if !(keep_patch && patch_path.exists()) {
+        let patch = vcs.patch(None).map_err(|error| error.to_string())?;
+        fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+        fs::write(&patch_path, patch).map_err(|error| error.to_string())?;
+    }
     let status = vcs.status().map_err(|error| error.to_string())?;
     let outside = pause::outside_change(root, folder, &status);
     let discard: Vec<&str> = outside.iter().map(String::as_str).collect();

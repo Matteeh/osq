@@ -18,6 +18,8 @@ pub(crate) const A_BOOLEAN: &str = "a boolean";
 pub(crate) const A_STRING: &str = "a string";
 /// The `reason` text for an integer below one.
 pub(crate) const MUST_BE_POSITIVE: &str = "must be a positive integer";
+/// The `reason` text for an integer below zero.
+pub(crate) const MUST_BE_NON_NEGATIVE: &str = "must be a non-negative integer";
 /// The `reason` text for a string that is empty after trimming.
 pub(crate) const MUST_BE_NON_EMPTY: &str = "must be a non-empty string";
 
@@ -103,6 +105,32 @@ pub(crate) fn positive_integer(table: &Table, path: &str) -> Result<Option<u64>,
         });
     }
     Ok(Some(value))
+}
+
+/// Reads the non-negative integer at the dotted `path`, absent when unset.
+///
+/// # Errors
+///
+/// Returns `ConfigError::WrongType` when the value is not a TOML integer and
+/// `ConfigError::InvalidValue` when it is below zero.
+///
+/// Implements: rust-config/gate-settings
+pub(crate) fn non_negative_integer(table: &Table, path: &str) -> Result<Option<u64>, ConfigError> {
+    let Some(value) = table.get(key_of(path)) else {
+        return Ok(None);
+    };
+    let Value::Integer(raw) = value else {
+        return Err(ConfigError::WrongType {
+            key: path.to_owned(),
+            expected: AN_INTEGER,
+        });
+    };
+    u64::try_from(*raw)
+        .map(Some)
+        .map_err(|_| ConfigError::InvalidValue {
+            key: path.to_owned(),
+            reason: MUST_BE_NON_NEGATIVE.to_owned(),
+        })
 }
 
 /// Reads the boolean at the dotted `path`, absent when it is unset.

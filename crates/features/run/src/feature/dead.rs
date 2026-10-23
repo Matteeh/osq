@@ -5,10 +5,10 @@ use std::io::Write;
 use std::path::Path;
 
 use osq_core::FeatureError;
-use osq_core::event::{DeadData, DeadReason, Envelope, Event, event_line};
+use osq_core::event::{DeadData, DeadReason, Envelope, Event, RegressionReason, event_line};
 use osq_kernel_config::Config;
 
-use super::{commit, text, time};
+use super::{commit, halt, text, time};
 
 /// What a death needs to be committed in the change's osq worktree.
 pub(crate) struct Death<'a> {
@@ -61,6 +61,7 @@ pub(crate) fn kill<T>(
     record(folder, task, reason, marker)?;
     if death.commits {
         if let Err(error) = commit::dead(death.root, folder, task, reason.as_str(), death.config) {
+            halt::record(folder, RegressionReason::CommitFailed, &error, death.config)?;
             return Err(failed_text(text::commit_failed_dead(
                 task,
                 name,

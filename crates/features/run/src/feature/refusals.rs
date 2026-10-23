@@ -8,7 +8,7 @@ use osq_kernel_config::{Config, Harness, load_config};
 use osq_kernel_storage::{ChangeEntry, list_changes};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{find, text, worktree};
+use super::{catch_up, checks, find, text, worktree};
 
 /// The change, the config and the root of the tree the change lives in.
 pub(crate) type Checked = (ChangeEntry, Config, PathBuf);
@@ -19,8 +19,8 @@ pub(crate) type Checked = (ChangeEntry, Config, PathBuf);
 ///
 /// Returns a `Failed` error with the command `run` for a config error, an id
 /// that names no active change, a missing task file, a non-pi executor
-/// harness, a root outside git, and a task that is already done, dead or
-/// regressed.
+/// harness, a root outside git, a failed worktree check, and a task that is
+/// already done, dead or regressed.
 ///
 /// Implements: rust-run/run-refusals
 /// Implements: rust-run/worktree-run
@@ -42,6 +42,10 @@ pub(crate) fn check(root: &Path, id: &str, task: &str) -> Result<Checked, Featur
     let expected = fs::canonicalize(&tree_root).unwrap_or_else(|_| tree_root.clone());
     if repository.as_deref() != Some(expected.as_path()) {
         return Err(failed(text::no_git(&tree_root)));
+    }
+    if worktree::is_worktree(root, &tree_root) {
+        catch_up::run(&tree_root, &entry, &config)?;
+        checks::run(&tree_root, &entry, &config)?;
     }
     check_markers(&entry, task)?;
     Ok((entry, config, tree_root))

@@ -79,12 +79,12 @@ fn not_toml() {
 /// Covers: rust-config/unknown-top-level-key
 #[test]
 fn unknown_top_level_key() {
-    let text = "[gates]\nbaselineVerify = \"pnpm verify\"\n[limits]\nmaxScopeFiles = 9";
+    let text = "[server]\nport = 4174\n[limits]\nmaxScopeFiles = 9";
     let error = parse_config(text).expect_err("neither table is an osq.toml key");
     assert_eq!(
         error,
         ConfigError::UnknownKey {
-            key: "gates".to_owned()
+            key: "server".to_owned()
         }
     );
 }

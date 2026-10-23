@@ -139,21 +139,13 @@ fn trailers_from_the_last_started_event() {
 fn an_untracked_test_file_is_committed() {
     let repo = worktree_support::build("untracked-test");
     let task = format!("{CHANGE}/tasks/1.md");
-    let narrowed = support::read_text(&repo.worktree, &task).replace("  - src/**", "  - src/a.txt");
+    let narrowed = support::read_text(&repo.worktree, &task)
+        .replace("  - src/**", "  - src/a.txt\n  - src/tests/new.rs");
     support::write(&repo.worktree, &task, narrowed);
     support::write_seal(&repo.worktree);
     worktree_support::git(&repo.worktree, &["add", "-A"]);
     worktree_support::git(&repo.worktree, &["commit", "-q", "-m", "reapprove"]);
-    support::write(&repo.worktree, "tests/old.rs", "//! Old.\n");
-    worktree_support::git(&repo.worktree, &["add", "-A"]);
-    worktree_support::git(&repo.worktree, &["commit", "-q", "-m", "add a root test"]);
-    support::write(
-        &repo.worktree,
-        "tests/old.rs",
-        "//! Changed before the run.\n",
-    );
-    support::write(&repo.worktree, "src/tests/new.rs", "//! A new test.\n");
-    worktree_support::mode(&repo, "done");
+    worktree_support::mode(&repo, "added-test");
     worktree_support::run(&repo, &[FOLDER, TASK]).expect("the run succeeds");
     let tip = worktree_support::tip(&repo.checkout, "osq/001-a");
     let status = worktree_support::name_status(&repo.worktree, &tip);

@@ -28,10 +28,10 @@ system.
 It parses `text` as a TOML table, and text that is not valid TOML SHALL be
 `ConfigError::Syntax` with the parser's display text as `message`. It then
 reads the top-level keys `maxConcurrency`, `timeouts`, `vcs`, `executor`,
-`planner`, `validator`, `pi`, `limits` and `bannedWords` into `Config`,
-whose fields are `max_concurrency`, `timeouts`, `vcs`, `executor`,
-`planner`, `validator`, `pi`, `limits` and `banned_words`, as the
-requirements of each key say. `Config` SHALL derive
+`planner`, `validator`, `pi`, `limits`, `gates` and `bannedWords` into
+`Config`, whose fields are `max_concurrency`, `timeouts`, `vcs`,
+`executor`, `planner`, `validator`, `pi`, `limits`, `gates` and
+`banned_words`, as the requirements of each key say. `Config` SHALL derive
 `Debug`, `Clone`, `PartialEq` and `Eq`, and `Config::default()` SHALL
 equal `parse_config("")`.
 
@@ -59,8 +59,8 @@ applied.
 - **THEN** it returns `ConfigError::Syntax` whose `message` is not empty
 
 #### Scenario: Unknown top-level key
-- **WHEN** `parse_config` reads `[gates]\nbaselineVerify = "pnpm verify"\n[limits]\nmaxScopeFiles = 9`
-- **THEN** it returns `ConfigError::UnknownKey` with `key` `gates`
+- **WHEN** `parse_config` reads `[server]\nport = 4174\n[limits]\nmaxScopeFiles = 9`
+- **THEN** it returns `ConfigError::UnknownKey` with `key` `server`
 
 ### Requirement: Config errors
 `ConfigError` SHALL be an enum with the variants `Read { path: PathBuf,
@@ -453,3 +453,32 @@ word, paths } entries`, so its text is TypeScript's error text,
 | `[[bannedWords]]\nword = "skipped"\npaths = ["src/**"]\nnote = "x"` | `UnknownKey { key: "bannedWords.note" }` |
 | `[[bannedWords]]\nword = ""\nnote = "x"` | `UnknownKey { key: "bannedWords.note" }` |
 | `[[bannedWords]]\nword = "skipped"\npaths = ["src/**"]\n[[bannedWords]]\nword = ""\npaths = ["src/**"]` | list error |
+
+### Requirement: Gate settings
+`gates` SHALL be a table read into `Config.gates`, a `Gates` struct
+deriving `Debug`, `Clone`, `Copy`, `PartialEq` and `Eq`, as TypeScript
+merges `gates` over `DEFAULT_GATES_CONFIG`. Its one key is
+`commitRetries`, read into `commit_retries: u64`, the catch-ups a run may
+try after a `commit_failed` halt; it takes TypeScript's default 2, a named
+constant in the config crate, when unset, so an absent `gates` table
+gives `Gates::default()`. Unlike the shared integer rule, 0 is allowed: a
+value that is not a TOML integer is `WrongType` with `an integer`, and a
+negative one is `InvalidValue` with reason `must be a non-negative
+integer`. Any other key in `gates`, TypeScript's other gates included, is
+`UnknownKey`.
+
+#### Scenario: Gate values
+- **WHEN** `parse_config` reads the row's text
+- **THEN** it returns the row's result, where a number is `Config.gates.commit_retries`:
+
+| Text | Result |
+|---|---|
+| `` | 2 |
+| `[gates]` | 2 |
+| `[gates]\ncommitRetries = 0` | 0 |
+| `[gates]\ncommitRetries = 5` | 5 |
+| `[gates]\ncommitRetries = -1` | `InvalidValue { key: "gates.commitRetries", reason: "must be a non-negative integer" }` |
+| `[gates]\ncommitRetries = "2"` | `WrongType { key: "gates.commitRetries", expected: "an integer" }` |
+| `[gates]\ncommitRetries = 1.5` | `WrongType { key: "gates.commitRetries", expected: "an integer" }` |
+| `[gates]\nbaselineVerify = "pnpm verify"` | `UnknownKey { key: "gates.baselineVerify" }` |
+| `gates = 1` | `WrongType { key: "gates", expected: "a table" }` |

@@ -1,0 +1,476 @@
+diff --git a/crates/kernel/config/src/blocks/gates.rs b/crates/kernel/config/src/blocks/gates.rs
+new file mode 100644
+index 000000000..033752b14
+--- /dev/null
++++ b/crates/kernel/config/src/blocks/gates.rs
+@@ -0,0 +1,46 @@
++//! The `[gates]` table and its TypeScript defaults.
++
++use toml::Table;
++
++use crate::error::ConfigError;
++
++use super::value;
++
++/// The `gates` keys `osq.toml` may hold, in reading order.
++const KEYS: &[&str] = &["commitRetries"];
++
++/// TypeScript's default for `gates.commitRetries`.
++const DEFAULT_COMMIT_RETRIES: u64 = 2;
++
++/// The task-boundary gates `osq.toml`'s `[gates]` table holds.
++///
++/// Implements: rust-config/gate-settings
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub struct Gates {
++    /// The catch-ups a run may try after a `commit_failed` halt.
++    pub commit_retries: u64,
++}
++
++impl Default for Gates {
++    fn default() -> Self {
++        Self {
++            commit_retries: DEFAULT_COMMIT_RETRIES,
++        }
++    }
++}
++
++/// Reads `osq.toml`'s `[gates]` table over the defaults.
++///
++/// # Errors
++///
++/// Returns the first unknown key, wrong type or refused value in reading order.
++///
++/// Implements: rust-config/gate-settings
++pub(crate) fn read_gates(table: &Table) -> Result<Gates, ConfigError> {
++    value::check_keys(table, KEYS, "gates")?;
++    let defaults = Gates::default();
++    Ok(Gates {
++        commit_retries: value::non_negative_integer(table, "gates.commitRetries")?
++            .unwrap_or(defaults.commit_retries),
++    })
++}
+diff --git a/crates/kernel/config/src/blocks/mod.rs b/crates/kernel/config/src/blocks/mod.rs
+index eda332d46..91ceee84a 100644
+--- a/crates/kernel/config/src/blocks/mod.rs
++++ b/crates/kernel/config/src/blocks/mod.rs
+@@ -1,6 +1,7 @@
+ //! The typed tables `osq.toml` holds and the readers they share.
+ 
+ pub(crate) mod banned_words;
++pub(crate) mod gates;
+ pub(crate) mod limits;
+ pub(crate) mod pi;
+ pub(crate) mod timeouts;
+@@ -8,6 +9,7 @@ pub(crate) mod value;
+ pub(crate) mod vcs;
+ 
+ pub use banned_words::BannedWord;
++pub use gates::Gates;
+ pub use limits::Limits;
+ pub use pi::PiConfig;
+ pub use timeouts::Timeouts;
+diff --git a/crates/kernel/config/src/blocks/value.rs b/crates/kernel/config/src/blocks/value.rs
+index 0ba9b8b75..c7ad44557 100644
+--- a/crates/kernel/config/src/blocks/value.rs
++++ b/crates/kernel/config/src/blocks/value.rs
+@@ -18,6 +18,8 @@ pub(crate) const A_BOOLEAN: &str = "a boolean";
+ pub(crate) const A_STRING: &str = "a string";
+ /// The `reason` text for an integer below one.
+ pub(crate) const MUST_BE_POSITIVE: &str = "must be a positive integer";
++/// The `reason` text for an integer below zero.
++pub(crate) const MUST_BE_NON_NEGATIVE: &str = "must be a non-negative integer";
+ /// The `reason` text for a string that is empty after trimming.
+ pub(crate) const MUST_BE_NON_EMPTY: &str = "must be a non-empty string";
+ 
+@@ -105,6 +107,31 @@ pub(crate) fn positive_integer(table: &Table, path: &str) -> Result<Option<u64>,
+     Ok(Some(value))
+ }
+ 
++/// Reads the non-negative integer at the dotted `path`, absent when unset.
++///
++/// # Errors
++///
++/// Returns `ConfigError::WrongType` when the value is not a TOML integer and
++/// `ConfigError::InvalidValue` when it is below zero.
++///
++/// Implements: rust-config/config-errors
++pub(crate) fn non_negative_integer(table: &Table, path: &str) -> Result<Option<u64>, ConfigError> {
++    let Some(value) = table.get(key_of(path)) else {
++        return Ok(None);
++    };
++    let Value::Integer(raw) = value else {
++        return Err(ConfigError::WrongType {
++            key: path.to_owned(),
++            expected: AN_INTEGER,
++        });
++    };
++    let value = u64::try_from(*raw).map_err(|_| ConfigError::InvalidValue {
++        key: path.to_owned(),
++        reason: MUST_BE_NON_NEGATIVE.to_owned(),
++    })?;
++    Ok(Some(value))
++}
++
+ /// Reads the boolean at the dotted `path`, absent when it is unset.
+ ///
+ /// # Errors
+diff --git a/crates/kernel/config/src/config.rs b/crates/kernel/config/src/config.rs
+index a9d12265b..3d57f20ff 100644
+--- a/crates/kernel/config/src/config.rs
++++ b/crates/kernel/config/src/config.rs
+@@ -4,7 +4,7 @@ use std::fs;
+ use std::io::ErrorKind;
+ use std::path::Path;
+ 
+-use crate::blocks::{self, BannedWord, Limits, PiConfig, Timeouts, VcsConfig};
++use crate::blocks::{self, BannedWord, Gates, Limits, PiConfig, Timeouts, VcsConfig};
+ use crate::error::ConfigError;
+ use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
+ 
+@@ -21,10 +21,13 @@ const TOP_LEVEL_KEYS: &[&str] = &[
+     "validator",
+     "pi",
+     "limits",
++    "gates",
+     "bannedWords",
+ ];
+ 
+ /// The settings `osq.toml` holds.
++///
++/// Implements: rust-config/config-file
+ #[derive(Debug, Clone, PartialEq, Eq)]
+ pub struct Config {
+     /// How many tasks osq runs at once.
+@@ -43,6 +46,8 @@ pub struct Config {
+     pub pi: PiConfig,
+     /// Every lint limit osq applies.
+     pub limits: Limits,
++    /// The task-boundary gates osq applies.
++    pub gates: Gates,
+     /// The words the project bans from its code.
+     pub banned_words: Vec<BannedWord>,
+ }
+@@ -59,6 +64,7 @@ impl Default for Config {
+             validator: None,
+             pi: PiConfig::default(),
+             limits: Limits::default(),
++            gates: Gates::default(),
+             banned_words: Vec::new(),
+         }
+     }
+@@ -129,6 +135,10 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
+         Some(table) => blocks::limits::read_limits(table)?,
+         None => Limits::default(),
+     };
++    let gates = match blocks::value::table(&table, "gates")? {
++        Some(table) => blocks::gates::read_gates(table)?,
++        None => Gates::default(),
++    };
+     let banned_words = blocks::banned_words::read_banned_words(table.get("bannedWords"))?;
+     Ok(Config {
+         max_concurrency,
+@@ -139,6 +149,7 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
+         validator,
+         pi,
+         limits,
++        gates,
+         banned_words,
+     })
+ }
+diff --git a/crates/kernel/config/src/lib.rs b/crates/kernel/config/src/lib.rs
+index 250e2a63a..bf7e09176 100644
+--- a/crates/kernel/config/src/lib.rs
++++ b/crates/kernel/config/src/lib.rs
+@@ -7,7 +7,7 @@ mod config;
+ mod error;
+ mod roles;
+ 
+-pub use blocks::{BannedWord, Limits, ManualEdits, PiConfig, Timeouts, VcsConfig};
++pub use blocks::{BannedWord, Gates, Limits, ManualEdits, PiConfig, Timeouts, VcsConfig};
+ pub use config::{Config, load_config, parse_config};
+ pub use error::ConfigError;
+ pub use roles::{ExecutorConfig, Harness, PlannerConfig, ValidatorConfig};
+diff --git a/crates/kernel/config/tests/config_file.rs b/crates/kernel/config/tests/config_file.rs
+index 479e5ec4f..448978ab1 100644
+--- a/crates/kernel/config/tests/config_file.rs
++++ b/crates/kernel/config/tests/config_file.rs
+@@ -79,12 +79,12 @@ fn not_toml() {
+ /// Covers: rust-config/unknown-top-level-key
+ #[test]
+ fn unknown_top_level_key() {
+-    let text = "[gates]\nbaselineVerify = \"pnpm verify\"\n[limits]\nmaxScopeFiles = 9";
+-    let error = parse_config(text).expect_err("neither table is an osq.toml key");
++    let text = "[server]\nport = 4174\n[limits]\nmaxScopeFiles = 9";
++    let error = parse_config(text).expect_err("server is not an osq.toml key");
+     assert_eq!(
+         error,
+         ConfigError::UnknownKey {
+-            key: "gates".to_owned()
++            key: "server".to_owned()
+         }
+     );
+ }
+diff --git a/crates/kernel/config/tests/config_gates.rs b/crates/kernel/config/tests/config_gates.rs
+new file mode 100644
+index 000000000..575364717
+--- /dev/null
++++ b/crates/kernel/config/tests/config_gates.rs
+@@ -0,0 +1,71 @@
++//! Gate tests: the TypeScript default, every `[gates]` value and every
++//! error the non-negative integer rule reports.
++
++use osq_kernel_config::{ConfigError, Gates, parse_config};
++
++/// Proves every row of the gate values table.
++///
++/// Covers: rust-config/gate-values
++#[test]
++fn gate_values() {
++    let accepted = [
++        ("", 2u64),
++        ("[gates]", 2),
++        ("[gates]\ncommitRetries = 0", 0),
++        ("[gates]\ncommitRetries = 5", 5),
++    ];
++    for (text, expected) in accepted {
++        let config = parse_config(text).expect("the text is valid");
++        assert_eq!(
++            config.gates,
++            Gates {
++                commit_retries: expected
++            },
++            "for {text:?}"
++        );
++    }
++    let refused = [
++        (
++            "[gates]\ncommitRetries = -1",
++            ConfigError::InvalidValue {
++                key: "gates.commitRetries".to_owned(),
++                reason: "must be a non-negative integer".to_owned(),
++            },
++        ),
++        (
++            "[gates]\ncommitRetries = \"2\"",
++            ConfigError::WrongType {
++                key: "gates.commitRetries".to_owned(),
++                expected: "an integer",
++            },
++        ),
++        (
++            "[gates]\ncommitRetries = 1.5",
++            ConfigError::WrongType {
++                key: "gates.commitRetries".to_owned(),
++                expected: "an integer",
++            },
++        ),
++        (
++            "[gates]\nbaselineVerify = \"pnpm verify\"",
++            ConfigError::UnknownKey {
++                key: "gates.baselineVerify".to_owned(),
++            },
++        ),
++        (
++            "gates = 1",
++            ConfigError::WrongType {
++                key: "gates".to_owned(),
++                expected: "a table",
++            },
++        ),
++    ];
++    for (text, expected) in refused {
++        assert_eq!(
++            parse_config(text).expect_err("the text must fail"),
++            expected,
++            "for {text:?}"
++        );
++    }
++    assert_eq!(Gates::default().commit_retries, 2);
++}
+diff --git a/openspec/changes/312-rust-run-worktree-checks/.run/dead/1.md b/openspec/changes/312-rust-run-worktree-checks/.run/dead/1.md
+new file mode 100644
+index 000000000..59b4adf69
+--- /dev/null
++++ b/openspec/changes/312-rust-run-worktree-checks/.run/dead/1.md
+@@ -0,0 +1,48 @@
++---
++reason: change_verify_red
++command: "sh scripts/verify-rust.sh"
++exit_code: 101
++fingerprint: sha256:67ea3f808abb5bf1a517d8ebb800a0590a3c41cd29de8e72b9e7732bd4e625f4
++---
++Change-level verification failed after task verification passed.
++
++test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
++
++     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)
++
++running 1 test
++test stacked_folder_paths ... ok
++
++test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)
++
++running 3 tests
++test directory_outside_any_repository ... ok
++test unborn_repository ... ok
++test state_of_the_read_repository ... ok
++
++test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
++
++     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)
++
++running 2 tests
++test tree_record_without_git ... FAILED
++test tree_record_path_and_lines ... ok
++
++failures:
++
++---- tree_record_without_git stdout ----
++
++thread 'tree_record_without_git' (1609125) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:
++called `Result::unwrap()` on an `Err` value: Spawn { command: "target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir", source: Os { code: 26, kind: ExecutableFileBusy, message: "Text file busy" } }
++note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
++
++
++failures:
++    tree_record_without_git
++
++test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++
++error: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`
++Full output: .run/logs/change-1.log
+diff --git a/openspec/changes/312-rust-run-worktree-checks/.run/events/1.jsonl b/openspec/changes/312-rust-run-worktree-checks/.run/events/1.jsonl
+new file mode 100644
+index 000000000..e3594ef35
+--- /dev/null
++++ b/openspec/changes/312-rust-run-worktree-checks/.run/events/1.jsonl
+@@ -0,0 +1,83 @@
++{"type":"verify_ran","timestamp":"2026-10-23T13:44:26.255Z","data":{"command":"cargo test -p osq-kernel-config --test config_gates --test config_file","exitCode":101,"duration":0.74,"log":".run/logs/1-1.log","output":"error: no test target named `config_gates` in `osq-kernel-config` package\nhelp: available test targets:\n    config_banned_words\n    config_file\n    config_limits\n    config_pi\n    config_timeouts\n    config_vcs\n    roles\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-23T13:44:32.922Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":16,"scopeLines":1498,"repoFiles":6725,"repoLines":666421,"importFanIn":0,"proposalWords":719,"taskWords":221,"deltaRequirements":8,"deltaScenarios":18}}
++{"type":"instructions_changed","timestamp":"2026-10-23T13:44:33.287Z","data":{"changed":["AGENTS.md","ADR 003 added","ADR 006 added","ADR 007 added","ADR 014 added","ADR 016 added","ADR 017 added","ADR 022 added","ADR 023 added","ADR 024 added","ADR 025 added","ADR 026 added","ADR 027 added","ADR 028 added","ADR 029 added"]}}
++{"type":"started","timestamp":"2026-10-23T13:44:33.675Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"7408d33a","pid":958153,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"4b9a2af8"}}
++{"type":"text","timestamp":"2026-10-23T13:44:36.061Z","data":{"text":"I'll start by reading the task file, proposal, and delta specs."}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:36.061Z","data":{"promptTokens":7235,"candidateTokens":174,"totalTokens":7921,"cachedTokens":512,"reasoningTokens":0,"cost":0.0023823719999999994,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:36.062Z","data":{"tool":"read","summary":"openspec/changes/312-rust-run-worktree-checks/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:36.063Z","data":{"tool":"read","summary":"openspec/changes/312-rust-run-worktree-checks/proposal.md"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:37.607Z","data":{"promptTokens":1992,"candidateTokens":207,"totalTokens":10007,"cachedTokens":7808,"reasoningTokens":0,"cost":0.000892848,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:37.614Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:37.615Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:39.397Z","data":{"promptTokens":2635,"candidateTokens":225,"totalTokens":12844,"cachedTokens":9984,"reasoningTokens":0,"cost":0.001120404,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:39.406Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:39.407Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:41.800Z","data":{"promptTokens":6433,"candidateTokens":288,"totalTokens":19521,"cachedTokens":12800,"reasoningTokens":48,"cost":0.0023523000000000003,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:41.808Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:41.821Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:44.477Z","data":{"promptTokens":3319,"candidateTokens":345,"totalTokens":23120,"cachedTokens":19456,"reasoningTokens":139,"cost":0.001526436,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:44.477Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:44.477Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:46.580Z","data":{"promptTokens":148,"candidateTokens":271,"totalTokens":23459,"cachedTokens":23040,"reasoningTokens":63,"cost":0.00050784,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:46.580Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:46.581Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:48.561Z","data":{"promptTokens":2299,"candidateTokens":159,"totalTokens":25882,"cachedTokens":23424,"reasoningTokens":56,"cost":0.001021044,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:48.562Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:44:55.390Z","data":{"promptTokens":226,"candidateTokens":1233,"totalTokens":27187,"cachedTokens":25728,"reasoningTokens":1046,"cost":0.001701768,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:55.390Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tool","timestamp":"2026-10-23T13:44:55.391Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:45:12.799Z","data":{"promptTokens":3081,"candidateTokens":3284,"totalTokens":33501,"cachedTokens":27136,"reasoningTokens":1506,"cost":0.0050279159999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:12.800Z","data":{"tool":"write","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:12.800Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:12.800Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:12.801Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:12.801Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:12.804Z","data":{"path":"crates/kernel/config/src/blocks/gates.rs"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:12.806Z","data":{"path":"crates/kernel/config/src/blocks/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:12.807Z","data":{"path":"crates/kernel/config/src/blocks/value.rs"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:12.807Z","data":{"path":"crates/kernel/config/src/lib.rs"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:12.808Z","data":{"path":"crates/kernel/config/src/config.rs"}}
++{"type":"tokens","timestamp":"2026-10-23T13:45:17.261Z","data":{"promptTokens":334,"candidateTokens":955,"totalTokens":34697,"cachedTokens":33408,"reasoningTokens":87,"cost":0.0014466479999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:17.261Z","data":{"tool":"write","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:17.262Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:17.262Z","data":{"path":"crates/kernel/config/tests/config_gates.rs"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:17.262Z","data":{"path":"crates/kernel/config/tests/config_file.rs"}}
++{"type":"tokens","timestamp":"2026-10-23T13:45:19.487Z","data":{"promptTokens":235,"candidateTokens":235,"totalTokens":35030,"cachedTokens":34560,"reasoningTokens":120,"cost":0.0005598599999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:19.488Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:45:21.776Z","data":{"promptTokens":1312,"candidateTokens":263,"totalTokens":36519,"cachedTokens":34944,"reasoningTokens":23,"cost":0.0009188639999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:21.777Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:21.777Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:45:21.780Z","data":{"path":"crates/kernel/config/tests/config_file.rs"}}
++{"type":"tokens","timestamp":"2026-10-23T13:45:27.909Z","data":{"promptTokens":467,"candidateTokens":301,"totalTokens":37248,"cachedTokens":36480,"reasoningTokens":203,"cost":0.00072018,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:45:27.910Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:49:00.660Z","data":{"promptTokens":1018,"candidateTokens":199,"totalTokens":38465,"cachedTokens":37248,"reasoningTokens":88,"cost":0.000767688,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:49:00.661Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:25.464Z","data":{"promptTokens":582,"candidateTokens":243,"totalTokens":39225,"cachedTokens":38400,"reasoningTokens":147,"cost":0.0006965999999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:25.464Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:27.189Z","data":{"promptTokens":939,"candidateTokens":114,"totalTokens":40221,"cachedTokens":39168,"reasoningTokens":0,"cost":0.0006535079999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:27.190Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:29.166Z","data":{"promptTokens":421,"candidateTokens":245,"totalTokens":40858,"cachedTokens":40192,"reasoningTokens":74,"cost":0.000661452,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:29.166Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:48.862Z","data":{"promptTokens":216,"candidateTokens":255,"totalTokens":41175,"cachedTokens":40704,"reasoningTokens":152,"cost":0.000615024,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:48.862Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:54.455Z","data":{"promptTokens":15717,"candidateTokens":793,"totalTokens":57598,"cachedTokens":41088,"reasoningTokens":526,"cost":0.005913228,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:54.455Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:54.456Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:52:54.460Z","data":{"path":"crates/kernel/config/src/config.rs"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:57.866Z","data":{"promptTokens":448,"candidateTokens":181,"totalTokens":58101,"cachedTokens":57472,"reasoningTokens":67,"cost":0.000696432,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:57.867Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:52:59.867Z","data":{"promptTokens":2040,"candidateTokens":163,"totalTokens":60187,"cachedTokens":57984,"reasoningTokens":52,"cost":0.001155504,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:52:59.867Z","data":{"tool":"bash","summary":"cd /home/mathias/.osq/worktrees/osq/312-rust-run-worktree-ch"}}
++{"type":"tokens","timestamp":"2026-10-23T13:54:59.431Z","data":{"promptTokens":294,"candidateTokens":871,"totalTokens":61325,"cachedTokens":60160,"reasoningTokens":239,"cost":0.0014943600000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:54:59.431Z","data":{"tool":"write","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:54:59.432Z","data":{"path":"openspec/changes/312-rust-run-worktree-checks/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-23T13:55:02.053Z","data":{"promptTokens":200,"candidateTokens":299,"totalTokens":61683,"cachedTokens":61184,"reasoningTokens":150,"cost":0.000785904,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:55:02.054Z","data":{"tool":"edit","summary":"/home/mathias/.osq/worktrees/osq/312-rust-run-worktree-check"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:55:02.055Z","data":{"path":"openspec/changes/312-rust-run-worktree-checks/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-23T13:55:04.147Z","data":{"text":"Task complete.\n\n- Added `Gates` with `commit_retries` and TypeScript's default `2` in `blocks/gates.rs`.\n- Added `value::non_negative_integer` and wired `Config.gates` between `limits` and `bannedWords`.\n- Exported `Gates`, added `tests/config_gates.rs`, and updated `unknown_top_level_key`.\n- Passed the task verify, `OSQ_CHANGE=... sh scripts/verify-rust.sh`, and a manual mutation check (29/29 mutants caught).\n- Wrote `openspec/changes/312-rust-run-worktree-checks/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-23T13:55:04.147Z","data":{"promptTokens":179,"candidateTokens":149,"totalTokens":61896,"cachedTokens":61568,"reasoningTokens":7,"cost":0.000601908,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-23T13:55:04.168Z","data":{"exitCode":0,"pid":958153,"timedOut":false,"elapsedSeconds":630.5}}
++{"type":"format_ran","timestamp":"2026-10-23T13:55:07.276Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/kernel/config/src/blocks/gates.rs' 'crates/kernel/config/src/blocks/mod.rs' 'crates/kernel/config/src/blocks/value.rs' 'crates/kernel/config/src/config.rs' 'crates/kernel/config/src/lib.rs' 'crates/kernel/config/tests/config_file.rs' 'crates/kernel/config/tests/config_gates.rs'","files":["crates/kernel/config/src/blocks/gates.rs","crates/kernel/config/src/blocks/mod.rs","crates/kernel/config/src/blocks/value.rs","crates/kernel/config/src/config.rs","crates/kernel/config/src/lib.rs","crates/kernel/config/tests/config_file.rs","crates/kernel/config/tests/config_gates.rs"],"exitCode":0,"duration":1.35,"timedOut":false,"output":"Checked 0 files in 1082µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-23T13:55:11.469Z","data":{"command":"cargo test -p osq-kernel-config --test config_gates --test config_file","exitCode":0,"duration":1.05,"log":".run/logs/1-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s\n     Running tests/config_file.rs (target/debug/deps/config_file-138c5d6c6af1180f)\n\nrunning 6 tests\ntest error_texts ... ok\ntest unknown_top_level_key ... ok\ntest not_toml ... ok\ntest loaded_osq_toml ... ok\ntest missing_osq_toml ... ok\ntest unreadable_osq_toml ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/config_gates.rs (target/debug/deps/config_gates-63621d6f19bd9dfd)\n\nrunning 1 test\ntest gate_values ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"}}
++{"type":"measures","timestamp":"2026-10-23T13:56:52.489Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":16,"scopeLines":1498,"repoFiles":6725,"repoLines":666421,"importFanIn":0,"proposalWords":719,"taskWords":221,"deltaRequirements":8,"deltaScenarios":18,"changedFiles":7,"changedLines":159,"scopeHashes":{"crates/kernel/config/src/blocks/banned_words.rs":{"before":"sha256:4318047f50e3dc53f9b333ed2bedaff6dfb45abf9e7283c51273ef3be9e97237","after":"sha256:4318047f50e3dc53f9b333ed2bedaff6dfb45abf9e7283c51273ef3be9e97237"},"crates/kernel/config/src/blocks/limits.rs":{"before":"sha256:47f4347e8648409a53185910aba60c9e8bda8f6c1a1412f3714079026b0fdb02","after":"sha256:47f4347e8648409a53185910aba60c9e8bda8f6c1a1412f3714079026b0fdb02"},"crates/kernel/config/src/blocks/mod.rs":{"before":"sha256:d53a5b57f16bfcfb147d76ec3d2c75de4f8606f606a620a2f8c97081499a518c","after":"sha256:8730048b371c32c3b80894330dc689c6be4662bdf29e262b1c975ea92775718a"},"crates/kernel/config/src/blocks/pi.rs":{"before":"sha256:7a364c48ee6f198289baf4e16967781ef603177b283e5c7a7228837eb6c154d0","after":"sha256:7a364c48ee6f198289baf4e16967781ef603177b283e5c7a7228837eb6c154d0"},"crates/kernel/config/src/blocks/timeouts.rs":{"before":"sha256:1fbcbf1be03ed3efa52699451023180aa5dd013bda2350f4e512d7d3d9be30c4","after":"sha256:1fbcbf1be03ed3efa52699451023180aa5dd013bda2350f4e512d7d3d9be30c4"},"crates/kernel/config/src/blocks/value.rs":{"before":"sha256:0c593d82523635f2d515fe023d934a044cdd120fb829f9674254bf764360e9a6","after":"sha256:723e62e57af0e449482c5740a6394d41a48e54b126ecd84fa3313bae5eb34ee9"},"crates/kernel/config/src/blocks/vcs.rs":{"before":"sha256:891d69af9c0c66b4308fbbde351c79b6ea1cdcd8a4382ca1c232ca23a2e69f7b","after":"sha256:891d69af9c0c66b4308fbbde351c79b6ea1cdcd8a4382ca1c232ca23a2e69f7b"},"crates/kernel/config/src/config.rs":{"before":"sha256:688a255b14228a84158e2eb56100c5e45d2e98ebbcbc11a54c3a36d8f1c3abf2","after":"sha256:3297d483ad91430f30a9f06a22d47cb657b9f064e38b2cd7107f5d4a4da35c7f"},"crates/kernel/config/src/error.rs":{"before":"sha256:41566e5406a6d0513021b7cb1477b98265cc7dced98912b6df4e89253c68ff87","after":"sha256:41566e5406a6d0513021b7cb1477b98265cc7dced98912b6df4e89253c68ff87"},"crates/kernel/config/src/lib.rs":{"before":"sha256:dba86f6316e826022d8ad3b9552bc94f6f9111f3d5de5aac6572a2492b44f090","after":"sha256:8911b3a6a32cc07c939f7e9b95e59cab6ce59894b15b0b2224a7528a0f2988fc"},"crates/kernel/config/src/roles/executor.rs":{"before":"sha256:e5511b26633857a6e64f5fef29d3fd2750b6594675ecf8579584e14ee288efc0","after":"sha256:e5511b26633857a6e64f5fef29d3fd2750b6594675ecf8579584e14ee288efc0"},"crates/kernel/config/src/roles/harness.rs":{"before":"sha256:780168150c6bcb681589402aff6ef65ea6abd800ded11520569bcd7166fecefd","after":"sha256:780168150c6bcb681589402aff6ef65ea6abd800ded11520569bcd7166fecefd"},"crates/kernel/config/src/roles/mod.rs":{"before":"sha256:ce62f1d675f9c2ccf8b23ba9159e8eb48e3d0d42fa0eccd82e5b33a84f8c2ab3","after":"sha256:ce62f1d675f9c2ccf8b23ba9159e8eb48e3d0d42fa0eccd82e5b33a84f8c2ab3"},"crates/kernel/config/src/roles/planner.rs":{"before":"sha256:3ae70c60ebe117495e9773c304e174177a96ea0ee959d5d08be0593b3b4e91c1","after":"sha256:3ae70c60ebe117495e9773c304e174177a96ea0ee959d5d08be0593b3b4e91c1"},"crates/kernel/config/src/roles/validator.rs":{"before":"sha256:17780917a78829441b87b05b0de964decd25801ab8de38026c7628bd82f29f3f","after":"sha256:17780917a78829441b87b05b0de964decd25801ab8de38026c7628bd82f29f3f"},"crates/kernel/config/tests/config_file.rs":{"before":"sha256:77cd774e8412a74cad76c3718fff5c950546a266c7cf5968ff534570983de910","after":"sha256:d568e4e1783045460ed85bacb7121827ad9a3b3929024a9bd9ecbddafb1a5fc4"},"crates/kernel/config/tests/config_gates.rs":{"before":null,"after":"sha256:e09ddd14071236bafddbde8614b762a7850500a5a4fa9392d7cace65fbb61847"},"crates/kernel/config/src/blocks/gates.rs":{"before":null,"after":"sha256:d4bb936096cccc0c3f15b4b3afca26bb8d9b741bb38ea5fec0cd96f52eaf7526"}}}}
++{"type":"dead","timestamp":"2026-10-23T13:56:52.492Z","data":{"task":"1","reason":"change_verify_red"}}
+diff --git a/openspec/changes/312-rust-run-worktree-checks/.run/events/change.jsonl b/openspec/changes/312-rust-run-worktree-checks/.run/events/change.jsonl
+new file mode 100644
+index 000000000..020cc437a
+--- /dev/null
++++ b/openspec/changes/312-rust-run-worktree-checks/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-23T13:44:25.514Z","data":{"outcome":"passed","command":"pnpm verify","commit":"7408d33ac6c9d2aef0207fca88d9f0d7724f2baf","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":402.85}}
++{"type":"verify_ran","timestamp":"2026-10-23T13:56:52.482Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":101,"duration":101.01,"log":".run/logs/change-1.log","output":"\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s\n\n     Running tests/stacked_root.rs (target/debug/deps/stacked_root-41dd481270836377)\n\nrunning 1 test\ntest stacked_folder_paths ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/state_reads.rs (target/debug/deps/state_reads-ccbb6773fcf1b04d)\n\nrunning 3 tests\ntest directory_outside_any_repository ... ok\ntest unborn_repository ... ok\ntest state_of_the_read_repository ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n     Running tests/tree_record.rs (target/debug/deps/tree_record-54bbc12ae44e4326)\n\nrunning 2 tests\ntest tree_record_without_git ... FAILED\ntest tree_record_path_and_lines ... ok\n\nfailures:\n\n---- tree_record_without_git stdout ----\n\nthread 'tree_record_without_git' (1609125) panicked at crates/kernel/vcs/tests/tree_record.rs:100:52:\ncalled `Result::unwrap()` on an `Err` value: Spawn { command: \"target/tmp/tree_record_without_git/silent-git.sh -c core.quotepath=false rev-parse --git-common-dir\", source: Os { code: 26, kind: ExecutableFileBusy, message: \"Text file busy\" } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    tree_record_without_git\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\nerror: test failed, to rerun pass `-p osq-kernel-vcs --test tree_record`"}}
+diff --git a/openspec/changes/312-rust-run-worktree-checks/.run/results/1.md b/openspec/changes/312-rust-run-worktree-checks/.run/results/1.md
+new file mode 100644
+index 000000000..10a2f0add
+--- /dev/null
++++ b/openspec/changes/312-rust-run-worktree-checks/.run/results/1.md
+@@ -0,0 +1,29 @@
++## Changed
++
++- Added `crates/kernel/config/src/blocks/gates.rs` with the `Gates` struct
++  (`commit_retries: u64`), its `DEFAULT_COMMIT_RETRIES = 2` default and
++  `read_gates`, which checks `gates` keys before reading `commitRetries`.
++- Added `value::non_negative_integer`, beside `positive_integer`, which allows
++  0, reports `WrongType` with `an integer`, and reports a negative value as
++  `InvalidValue` with `must be a non-negative integer`.
++- Added `Config.gates`, read from the `gates` table after `limits`, and the
++  `gates` top-level key; `Config::default()` uses `Gates::default()`.
++- Exported `Gates` from the crate root and documented it with
++  `Implements: rust-config/gate-settings`; tagged `Config` with
++  `Implements: rust-config/config-file`.
++- Added `crates/kernel/config/tests/config_gates.rs` proving every row of the
++  "Gate values" table, tagged `Covers: rust-config/gate-values`.
++- Updated `unknown_top_level_key` in `tests/config_file.rs` to the `[server]`
++  text and the `server` key.
++- Ran `cargo fmt --all`; `cargo test -p osq-kernel-config --test config_gates
++  --test config_file` passes, `OSQ_CHANGE=... sh scripts/verify-rust.sh`
++  passes, and a manual `cargo mutants` run over `gates.rs`, `value.rs` and
++  `config.rs` caught all 29 mutants.
++
++## Deviated
++
++- Added `Implements: rust-config/config-file` to the `Config` struct doc even
++  though the task only requires public items added by this task to carry a
++  tag, so the changed public type ends its doc with one too.
++
++Touched: crates/kernel/config/src/blocks/gates.rs, crates/kernel/config/src/blocks/mod.rs, crates/kernel/config/src/blocks/value.rs, crates/kernel/config/src/config.rs, crates/kernel/config/src/lib.rs, crates/kernel/config/tests/config_gates.rs, crates/kernel/config/tests/config_file.rs

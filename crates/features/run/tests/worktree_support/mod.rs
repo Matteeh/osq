@@ -30,6 +30,7 @@ pub fn build(name: &str) -> Repo {
     support::copy_tree(&support::fixture("run-project"), &checkout);
     support::remove(&checkout, ".gitignore");
     support::git(&checkout, &["init", "-q"]);
+    support::write(&checkout, ".git/info/exclude", "fake-pi-mode\n");
     support::git(&checkout, &["add", "-A"]);
     support::git(&checkout, &["commit", "-q", "-m", "fixture"]);
     support::write(&checkout, "osq.toml", config());
@@ -105,6 +106,15 @@ pub fn disable_git(repo: &Repo) {
 /// Returns the run feature's error for a refused or failed run.
 pub fn run(repo: &Repo, args: &[&str]) -> Result<Output, FeatureError> {
     support::run(&repo.checkout, args)
+}
+
+/// Runs `run` from the worktree with literal arguments.
+///
+/// # Errors
+///
+/// Returns the run feature's error for a refused or failed run.
+pub fn run_in_worktree(repo: &Repo, args: &[&str]) -> Result<Output, FeatureError> {
+    support::run(&repo.worktree, args)
 }
 
 /// Runs `git` in `root` with the test's isolated settings.
