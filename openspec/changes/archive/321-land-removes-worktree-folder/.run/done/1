@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:38f1fb0a6545b02ff4a9fe68cfb5fa7a29c0fb42c7bb10dccc9489a551a5dfd8"
+build_stamp: "4b9a2af8"
+project_commit: "04c7a5cb"
+exit_code: 0
+scope_files: {"src/core/vcs/git-vcs.ts":"sha256:818614d8802d7efbe038986b5a23f5ee6832bf89463c3cbf98a2e18bfb53f784","tests/vcs-git-timeout-message.test.ts":"sha256:0b4548557e60d7d901d68414c8cb88750055e8ba1c4bab38e075b386680114ed"}
+---
+2026-10-23T22:42:39.349Z

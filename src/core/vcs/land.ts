@@ -3,7 +3,7 @@ import type { OsqConfig } from '../foundation/config.js';
 import { buildSquashMessage } from '../run/squash-message.js';
 import { readDependencyState } from '../spec/stack-dependencies.js';
 import type { LocatedChange } from '../status/change-locations.js';
-import { type AfterLandOutcome, retryAfterLand, runAfterLand } from './land-after.js';
+import { type AfterLandOutcome, runAfterLand } from './land-after.js';
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
@@ -11,6 +11,7 @@ import {
   assertNoEarlierChange,
   assertNoSteering,
 } from './land-checks.js';
+import { cleanupChange, cleanupLanded } from './land-cleanup.js';
 import { landId, requireGit, resolveChange } from './land-resolve.js';
 import { recordLandStop, recordsLandStop } from './land-stop.js';
 import { MANUAL_KEEP_ADVICE } from './manual-edits.js';
@@ -44,53 +45,6 @@ async function resolveWorktree(
     (entry) => path.resolve(entry.path) === path.resolve(target),
   );
   return listed ? target : null;
-}
-
-/** Remove the change's worktree, reporting the attempt. */
-async function cleanupChange(
-  projectRoot: string,
-  config: OsqConfig,
-  vcs: Vcs,
-  folder: string,
-): Promise<{ lines: string[]; removed: boolean }> {
-  const lines: string[] = [];
-  if (config.vcs === undefined) return { lines, removed: false };
-  const repoRoot = (await vcs.root()) ?? projectRoot;
-  const target = worktreePath(config.vcs, repoRoot, folder);
-  const listed = (await vcs.worktreeList()).some(
-    (entry) => path.resolve(entry.path) === path.resolve(target),
-  );
-  if (!listed) return { lines, removed: false };
-  try {
-    await vcs.worktreeRemove(target);
-    lines.push(`Removed worktree ${target}`);
-  } catch (error) {
-    lines.push(`Kept worktree ${target}:`);
-    lines.push(error instanceof Error ? error.message : String(error));
-  }
-  return { lines, removed: true };
-}
-
-/** The two cleanup outcomes for a change the default branch already holds. */
-async function cleanupLanded(
-  projectRoot: string,
-  config: OsqConfig,
-  vcs: Vcs,
-  change: LocatedChange,
-  progress: (line: string) => void,
-  options: LandOptions,
-): Promise<LandResult> {
-  const after = await retryAfterLand(projectRoot, config, change, progress, options.home);
-  const cleanup = await cleanupChange(projectRoot, config, vcs, change.folderName);
-  const already = cleanup.removed
-    ? [`${change.folderName} has already landed`, ...cleanup.lines]
-    : [`${change.folderName} has already landed; nothing to clean up`];
-  return {
-    lines: [...(after?.lines ?? []), ...already],
-    code: after?.code ?? 0,
-    changed: [],
-    ...(after !== null ? { afterLand: after.outcome } : {}),
-  };
 }
 
 /** Options a land takes beyond the change folder it resolves. */
@@ -242,7 +196,7 @@ export async function landChange(
       `Kept branch ${worktreeBranch(change.folderName)}`,
       ...(after?.lines ?? []),
     ],
-    code: after?.code ?? 0,
+    code: cleanup.failed ? 1 : (after?.code ?? 0),
     changed: changed.map((entry) => path.join(repoRoot, entry)),
     ...(after !== null ? { afterLand: after.outcome } : {}),
   };

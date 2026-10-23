@@ -26,7 +26,6 @@ import type {
 
 /** Default bound in seconds for each git read when `timeouts.gitSeconds` is unset. */
 export const DEFAULT_GIT_SECONDS = 10;
-
 /** Environment variables that would redirect osq's own git reads. */
 const GIT_ENV_VARS = ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE'] as const;
 
@@ -45,7 +44,8 @@ function childGitEnv(extra?: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return env;
 }
 
-/** Run `git` with an argument list, never a shell, bounded by `timeoutSeconds`. */
+/** Run `git` with an argument list, never a shell, bounded by `timeoutSeconds`.
+ * @scenario version-control: Prune past its time limit */
 export function runGit(
   binary: string,
   args: string[],
@@ -65,9 +65,10 @@ export function runGit(
         maxBuffer: Number.POSITIVE_INFINITY,
       },
       (error, stdout, stderr) => {
-        let code = 0;
-        if (error) code = typeof error.code === 'number' ? error.code : 1;
-        resolve({ code, stdout: String(stdout), stderr: String(stderr) });
+        const code = error ? (typeof error.code === 'number' ? error.code : 1) : 0;
+        const suffix = `git ${args.join(' ')} timed out after ${timeoutSeconds}s`;
+        const text = error?.killed === true ? `${String(stderr)}${suffix}` : String(stderr);
+        resolve({ code, stdout: String(stdout), stderr: text });
       },
     );
   });
