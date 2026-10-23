@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a8f562c6345896b3406b88c1c55b1bbde10ed78bb8f9e7bac4a2ddb439142b7d"
+build_stamp: "63250a84"
+project_commit: "615cf3d8"
+exit_code: 0
+scope_files: {"Cargo.lock":"sha256:7584f93423ef21c99c3c98e7583bd655a0a08cf63d13bf870874d68ac66c9859","crates/features/doctor/Cargo.toml":"sha256:6940e81aca25fec998596ac2536c65d8970734d80b507581ad4cca0a928a5bdd","crates/features/doctor/src/doctor.rs":"sha256:49fabe44e8c27cad8188d20bfb55a458fbc1ee0fa483d2ea130e097df1cf411b","crates/features/doctor/src/doctor/probe.rs":"sha256:73a0248e2f8736c2d072b8b23cfdf4b6c220ee1dfdd80c7245da11c14e1ed0c2","crates/features/doctor/src/feature.rs":"sha256:00a0a078f0ff1a430ad00157ce6d51185474dcf25c26806605710312298e425a","crates/features/doctor/src/lib.rs":"sha256:65b3c2e408799c2e751aed4a74eddb574354fb9544ed9bc6b13c306d61fd570d","crates/features/doctor/tests/doctor_checks.rs":"sha256:bdce9621e049b04ef4c324df41b45d4eaae610e4e6f30d88e6b42f079cb9a7d0","crates/features/doctor/tests/feature.rs":"sha256:ddff736607ecc090fa4dd2beb47d653b6c977cbac6b32145123d8a09acba381e","crates/features/doctor/tests/fixtures/fake-pi/doctor.sh":"sha256:3b44e4a8344de0835b5e2d91526c556b79b0eb44678f22f8d3da19e83df31eeb"}
+---
+2026-10-22T10:00:14.735Z

@@ -908,3 +908,455 @@ values, so a feature reads the same rows without SQL (ADR 022).
 #### Scenario: Rejected snapshots give no outcome
 - **WHEN** `task_outcomes` runs over a rejected snapshot that has tasks
 - **THEN** it returns no row
+
+### Requirement: Land facts
+`read_land_facts(folder: &Path) -> LandFacts` in `osq-kernel-storage` SHALL
+read one change folder into the facts a land needs, as TypeScript's
+`buildSquashMessage` in `src/core/run/squash-message.ts`, `readLandedAt`,
+`listDeltaCapabilities` and `parseStackedOn` read them. It SHALL never
+fail: a file that is missing or cannot be read counts as absent, and a line
+it cannot use is passed over. `LandFacts` and `LandTask` SHALL be public,
+exported from the crate root, and derive `Debug`, `Clone`, `PartialEq`,
+`Eq` and `Default`. `LandFacts` SHALL hold:
+
+- `goal: String`: `goal_section` of `markdown_body` of `proposal.md`, or
+  the empty string when there is no `proposal.md` or no `## Goal` section.
+- `tasks: Vec<LandTask>`: one per item rust-specs `parse_task_list` gives
+  for `tasks.md`, in its order, and none without `tasks.md`.
+- `base`, `approved` and `approver: Option<String>`: the trimmed text of
+  `.run/base`, `.run/approved` and `.run/approver`, and `None` when the
+  file is missing or its trimmed text is empty.
+- `archived_at: Option<String>`: the `timestamp` of the last line of
+  `.run/events/change.jsonl` that parses as a JSON object whose `type` is
+  the string `archived` and whose `timestamp` is a string `timestamp_ms`
+  accepts, and `None` without one.
+- `capabilities: Vec<String>`: the names of the directories directly under
+  `specs/`, sorted, and none without `specs/`.
+- `stacked_on: Vec<String>`: for each line of `.run/stacked-on` that holds
+  at least two words split on whitespace, its first word, in file order.
+
+`LandTask` SHALL hold `number: u32`, the item's number or else its
+1-based position in the list; `title: String`, the item's title; `manual:
+bool`, true only when `.run/done/<number>` has frontmatter whose `manual`
+key is the YAML boolean `true`; and `model` and `version:
+Option<String>`, read from the last line of `.run/events/<number>.jsonl`
+that parses as a JSON object whose `type` is the string `started` and
+whose `data` is an object whose `harness`, `model` and `osqVersion` are
+all strings: `model` is `<harness> <model>` and `version` is the
+`osqVersion`, and both are `None` without such a line.
+
+#### Scenario: Land facts of an archived change
+- **WHEN** `read_land_facts` reads a copy of `tests/fixtures/land-change/001-alpha-orders`, which is `openspec/changes/256-rust-land-feature/fixture/001-alpha-orders` copied byte for byte
+- **THEN** it gives these facts:
+
+| Field | Value |
+|---|---|
+| `goal` | `Orders gain alpha.` |
+| `tasks` | number 1, title `When one, two`, manual true, model `pi deepseek/flash`, version `0.3.0`; number 2, title `When three, four`, manual false, model `pi deepseek/flash`, version `0.3.1` |
+| `base` | `abc123` |
+| `approved` | `sha256:aaaa` |
+| `approver` | `Mathias <m@example.invalid>` |
+| `archived_at` | `2026-10-20T13:00:00.000Z` |
+| `capabilities` | `orders` |
+| `stacked_on` | none |
+
+#### Scenario: Land facts pass over what they cannot use
+- **WHEN** `read_land_facts` reads a folder holding only the row's files, written with `\n` escapes
+- **THEN** it gives `LandFacts::default()` except for the row's facts:
+
+| Files | Facts |
+|---|---|
+| none, and the folder does not exist | none |
+| `proposal.md` holding `---\ntitle: A\n---\n## Verify\n\nx\n` | none |
+| `proposal.md` holding `---\ntitle: A\n---\n## Goal\n\n  Ship it.  \n\n## Verify\n\nx\n` | `goal` `Ship it.` |
+| `.run/base` holding `  \n` and `.run/approver` holding `\n` | none |
+| `.run/approved` holding `  sha256:b  \n` | `approved` `sha256:b` |
+| `tasks.md` holding `- [ ] Unnumbered\n- [x] 7. Seven\n` | `tasks` number 1, title `Unnumbered`; number 7, title `Seven`; each manual false, no model, no version |
+| `tasks.md` holding `- [ ] 1. One\n` and `.run/done/1` holding `---\nmanual: "true"\n---\n` | `tasks` number 1, title `One`, manual false |
+| `tasks.md` holding `- [ ] 1. One\n` and `.run/done/1` holding `manual: true\n` | `tasks` number 1, title `One`, manual false |
+| `tasks.md` holding `- [ ] 1. One\n` and `.run/events/1.jsonl` holding `{"type":"started","data":{"harness":"pi","model":"m","osqVersion":"1"}}\n{"type":"started","data":{"harness":"pi","model":7,"osqVersion":"2"}}\nnot json\n` | `tasks` number 1, title `One`, manual false, model `pi m`, version `1` |
+| `tasks.md` holding `- [ ] 1. One\n` and `.run/events/1.jsonl` holding `{"type":"finished","data":{"harness":"pi","model":"m","osqVersion":"1"}}\n["started"]\n` | `tasks` number 1, title `One`, manual false, no model, no version |
+| `.run/events/change.jsonl` holding `{"type":"archived","timestamp":"2026-10-20T13:00:00.000Z"}\n{"type":"archived","timestamp":"yesterday"}\n{"type":"archived","timestamp":7}\nnot json\n` | `archived_at` `2026-10-20T13:00:00.000Z` |
+| `.run/events/change.jsonl` holding `{"type":"archived","timestamp":"2026-10-20T13:00:00.000Z"}\n{"type":"archived","timestamp":"2026-10-21T08:00:00.000Z","data":{}}\n` | `archived_at` `2026-10-21T08:00:00.000Z` |
+| `specs/b/spec.md`, `specs/a/spec.md` and `specs/notes.md` | `capabilities` `a`, `b` |
+| `.run/stacked-on` holding `001-a sha256:x\nlonely\n\n002-b sha256:y overlap orders\n` | `stacked_on` `001-a`, `002-b` |
+
+### Requirement: Change trees
+`change_trees(project_root: &Path, worktrees: &[TreeCandidate],
+stacked: &[PathBuf]) -> Vec<ChangeTree>` in `osq-kernel-storage` SHALL give
+the trees as TypeScript's `changeTrees` does: a `ChangeTree` is a `root`
+and the `folder` it names. First the project root, naming none. Then each
+worktree (`path`, `branch`) on `osq/<folder>`, not at the root's real path,
+holding `changes/<folder>/.run/approved` or the folder in `archive/` or
+`rejected/`. Then each `stacked` folder no worktree names.
+
+#### Scenario: Trees of a project
+- **WHEN** `change_trees` reads a project root and the row's worktrees, under a new folder in `CARGO_TARGET_TMPDIR`, with no stacked folders
+- **THEN** it returns the project root, then the row's trees:
+
+| Worktree | Branch | Holds | Trees after the root |
+|---|---|---|---|
+| `wt-a` | `osq/002-b` | `openspec/changes/002-b/.run/approved` | `wt-a` naming `002-b` |
+| `wt-a` | `osq/002-b` | `openspec/changes/archive/002-b/` | `wt-a` naming `002-b` |
+| `wt-a` | `osq/002-b` | `openspec/changes/002-b/` with no `.run/approved` | none |
+| `wt-a` | `main` | `openspec/changes/002-b/.run/approved` | none |
+| the project root itself | `osq/002-b` | `openspec/changes/002-b/.run/approved` | none |
+
+#### Scenario: Stacked trees
+- **WHEN** `change_trees` reads a project root, a worktree `wt-a` on `osq/002-b` holding an approved `002-b`, and the stacked folders `.stacked/002-b` and `.stacked/003-c`
+- **THEN** it returns the project root, `wt-a` naming `002-b`, and `.stacked/003-c` naming `003-c`
+
+### Requirement: Change listing across trees
+`list_tree_changes(trees: &[ChangeTree]) -> Vec<ChangeEntry>` SHALL list
+every tree's change folders as `list_changes` reads a root, as TypeScript's
+`listChanges` does. A tree naming a folder gives only that folder, minus an
+archived or rejected entry the first tree also holds there. The first tree
+drops an active folder another tree names. Entries sort by location, then
+leading number, ties in tree order, and each `path` is in its own tree.
+
+#### Scenario: Changes across trees
+- **WHEN** `list_tree_changes` reads the project root holding active `001-a` and `002-b` and archived `000-z`, then a tree naming `002-b` that holds active `002-b` and archived `000-z`, then a tree naming `003-c` that holds archived `003-c`
+- **THEN** it returns active `001-a` from the root, active `002-b` from the second tree, archived `000-z` from the root, and archived `003-c` from the third tree, in that order
+
+#### Scenario: Root alone
+- **WHEN** `list_tree_changes` reads only the project root tree
+- **THEN** it returns what `list_changes` returns for that root
+
+### Requirement: Usage pause record
+`read_usage_pause(folder: &Path) -> Option<PauseRecord>` in
+`osq-kernel-storage` SHALL read a change folder's `.run/paused.md` as
+TypeScript's `readUsagePause` does. `PauseRecord` SHALL be public, exported
+from the crate root, derive `Debug`, `Clone`, `PartialEq` and `Eq`, and
+hold `task: String`, `until: String`, `source: String` and `error:
+Option<String>`. It SHALL return `None` when the file is missing or cannot
+be read, when its frontmatter does not parse, when `task` or `until` is
+not a string, when `until` is not a timestamp `timestamp_ms` accepts, or
+when `source` is not `harness` or `wait`. `error` is the body, trimmed,
+and `None` when that is empty or `usage limit reached`.
+
+#### Scenario: Pause records
+- **WHEN** `read_usage_pause` reads a scratch change folder whose `.run/paused.md` is `---`, the row's frontmatter lines, `---` and the row's body
+- **THEN** it returns the row's record:
+
+| Frontmatter | Body | Record |
+|---|---|---|
+| `task: "2"`, `until: "2026-10-22T12:30:00.000Z"`, `source: wait` | `usage limit reached\n` | task `2`, until `2026-10-22T12:30:00.000Z`, source `wait`, no error |
+| `task: "1"`, `until: 2026-10-23T00:05:00.000Z`, `source: harness` | `  rate limited  \n` | task `1`, until `2026-10-23T00:05:00.000Z`, source `harness`, error `rate limited` |
+| `task: "1"`, `until: "2026-10-23T00:05:00.000Z"`, `source: wait` | `\n` | task `1`, until `2026-10-23T00:05:00.000Z`, source `wait`, no error |
+| `task: 1`, `until: "2026-10-23T00:05:00.000Z"`, `source: wait` | `usage limit reached\n` | none |
+| `task: "1"`, `source: wait` | `usage limit reached\n` | none |
+| `task: "1"`, `until: soon`, `source: wait` | `usage limit reached\n` | none |
+| `task: "1"`, `until: "2026-10-23T00:05:00.000Z"`, `source: later` | `usage limit reached\n` | none |
+| `task: "1"`, `until: "2026-10-23T00:05:00.000Z"` | `usage limit reached\n` | none |
+| `task: [` | `usage limit reached\n` | none |
+
+#### Scenario: No pause file
+- **WHEN** `read_usage_pause` reads a scratch change folder with no `.run/paused.md`
+- **THEN** it returns `None`
+
+### Requirement: Autopilot stop record
+`read_autopilot_stop(project_root: &Path) -> Option<AutopilotStop>` in
+`osq-kernel-storage` SHALL read `<project_root>/openspec/.run/autopilot-stop.md`
+as TypeScript's `readAutopilotStop` does. `AutopilotStop` SHALL be public,
+exported from the crate root, derive `Debug`, `Clone`, `PartialEq` and
+`Eq`, and hold `reason: String`, `item: String`, `change: Option<String>`,
+`command: String`, `at: String` and `detail: Option<String>`. It SHALL
+return `None` when the file is missing or cannot be read, when its
+frontmatter does not parse, when `reason` is not one of `queue_unreadable`,
+`not_approved`, `changed_since_approval`, `rejected`, `plan_refused`,
+`planner_not_ready`, `approve_refused`, `halted` and `land_stopped`, when
+`item`, `command` or `at` is not a string, or when `change` is present and
+not a string. `change` is `None` when the key is absent. `detail` is the
+body with one trailing `\n` removed, and `None` when the body, trimmed, is
+empty.
+
+#### Scenario: Stop records
+- **WHEN** `read_autopilot_stop` reads a scratch project whose `openspec/.run/autopilot-stop.md` is `---`, the row's frontmatter lines, `---` and the row's body, where the base lines are `reason: halted`, `item: stopped-item`, `change: "040"`, `command: osq retry 040 1` and `at: 2026-10-22T10:00:00.000Z`
+- **THEN** it returns the row's record:
+
+| Frontmatter | Body | Record |
+|---|---|---|
+| the base lines | `task 1 died:\n  verify_red\n` | reason `halted`, item `stopped-item`, change `040`, command `osq retry 040 1`, at `2026-10-22T10:00:00.000Z`, detail `task 1 died:\n  verify_red` |
+| the base lines without `change` | empty | the first row's record with no change and no detail |
+| the base lines | `\n\n` | the first row's record with no detail |
+| the base lines | `line\n\n` | the first row's record with detail `line\n` |
+| the base lines with `reason: bogus` | empty | none |
+| the base lines with `change: 40` | empty | none |
+| the base lines with `change: null` | empty | none |
+| the base lines without `item` | empty | none |
+| the base lines without `command` | empty | none |
+| the base lines without `at` | empty | none |
+| `reason: [` | empty | none |
+
+#### Scenario: Every stop reason
+- **WHEN** `read_autopilot_stop` reads the base lines of "Stop records" with each of `queue_unreadable`, `not_approved`, `changed_since_approval`, `rejected`, `plan_refused`, `planner_not_ready`, `approve_refused`, `halted` and `land_stopped` as the reason, and an empty body
+- **THEN** it returns a record with that reason each time
+
+#### Scenario: No stop file
+- **WHEN** `read_autopilot_stop` reads a scratch project with no `openspec/.run/autopilot-stop.md`
+- **THEN** it returns `None`
+
+### Requirement: After-land failure record
+`watch_state_dir(project_root: &Path, home: &Path) -> PathBuf` in
+`osq-kernel-storage` SHALL return, as TypeScript's `watchStateDir` does,
+`<home>/.osq/watch/<hash>`, where `<hash>` is the lowercase hex SHA-256 of
+the project root's canonical path, or of its absolute path when it cannot
+be canonicalized, as UTF-8 text.
+
+`read_after_land_failure(project_root: &Path, home: &Path) ->
+Option<AfterLandFailure>` SHALL read `after-land.json` in that folder as
+TypeScript's `readAfterLandFailure` does. `AfterLandFailure` SHALL be
+public, exported from the crate root, derive `Debug`, `Clone`, `PartialEq`
+and `Eq`, and hold `change: String`, `command: String`, `exit_code: i64`
+and `failed_at: String`. It SHALL return `None` when the file is missing or
+cannot be read, when it does not parse as a JSON object, when `change`,
+`command` or `failedAt` is not a string, or when `exitCode` is not a whole
+number that fits `i64`.
+
+#### Scenario: Watch state folder
+- **WHEN** `watch_state_dir` is given the project root `/nonexistent/osq-project` and the home `/home/h`
+- **THEN** it returns `/home/h/.osq/watch/84ade4b4937a142d12c5438d1dc81c2e2229362203630b653b27e43e8cc8fcde`
+
+#### Scenario: Watch state folder through a symlink
+- **WHEN** `watch_state_dir` is given a symlink to a scratch project folder, and then that folder itself, with the same home
+- **THEN** both calls return the same path
+
+#### Scenario: After-land records
+- **WHEN** `read_after_land_failure` reads a scratch project and a scratch home whose `watch_state_dir` folder holds an `after-land.json` with the row's text
+- **THEN** it returns the row's record:
+
+| `after-land.json` | Record |
+|---|---|
+| `{"change":"030-shipped","command":"pnpm build","exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` | change `030-shipped`, command `pnpm build`, exit code 1, failed at `2026-10-22T10:00:00.000Z` |
+| `{"change":"030-shipped","command":"pnpm build","exitCode":"1","failedAt":"2026-10-22T10:00:00.000Z"}` | none |
+| `{"command":"pnpm build","exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` | none |
+| `{"change":"030-shipped","command":5,"exitCode":1,"failedAt":"2026-10-22T10:00:00.000Z"}` | none |
+| `{"change":"030-shipped","command":"pnpm build","exitCode":1}` | none |
+| `[]` | none |
+| `not json` | none |
+
+#### Scenario: No after-land file
+- **WHEN** `read_after_land_failure` reads a scratch project and a scratch home with no `after-land.json`
+- **THEN** it returns `None`
+
+### Requirement: Queue item titles
+`read_queue_titles(project_root: &Path) -> Vec<QueueTitle>` in
+`osq-kernel-storage` SHALL read `<project_root>/openspec/queue.md` as
+TypeScript's `parseQueue` does, and return one `QueueTitle` per item in
+file order. `QueueTitle` SHALL be public, exported from the crate root,
+derive `Debug`, `Clone`, `PartialEq` and `Eq`, and hold `slug: String` and
+`title: String`. It SHALL return no item when the file is missing or cannot
+be read, and when `parseQueue` would throw on any item: a heading line that
+starts with `##`, optional spaces or tabs and `[` but is not `## [<slug>]
+<title>`, a slug that is not lowercase words of letters and digits joined
+by `-`, a repeated slug, a first non-blank line after the heading that is
+not `Depends on:` with a value, a dependency or fix that is not a slug,
+repeats, or names the item itself or no earlier item, an empty `Fixes:`
+line right after `Depends on:`, an empty body, or a body holding a second
+`Depends on:` or `Fixes:` line. A title is trimmed, and a `\r` before a
+line's `\n` is ignored.
+
+#### Scenario: Queue titles
+- **WHEN** `read_queue_titles` reads a scratch project whose `openspec/queue.md` holds the row's text, where `<ok a>` stands for `## [a] A\n\nDepends on: nothing\n\nBody.\n\n`
+- **THEN** it returns the row's titles:
+
+| `queue.md` | Titles |
+|---|---|
+| `# Queue\n\nPreamble.\n\n## [first] First item\n\nDepends on: nothing\n\nBody.\n\n## [second] Second item  \n\nDepends on: first\nFixes: first\n\nBody.\n\n` | `first` titled `First item`, then `second` titled `Second item` |
+| `## [first] First\r\n\r\nDepends on: nothing\r\n\r\nBody.\r\n` | `first` titled `First` |
+| `##[first] First\n\nDepends on: nothing\n\nBody.\n` | none |
+| `## [Bad_Slug] Title\n\nDepends on: nothing\n\nBody.\n` | none |
+| `## [first]   \n\nDepends on: nothing\n\nBody.\n` | none |
+| `<ok a>## [a] Again\n\nDepends on: nothing\n\nBody.\n` | none |
+| `## [first] First\n\nBody.\n` | none |
+| `## [first] First\n\nDepends on:\n\nBody.\n` | none |
+| `## [first] First\n\nDepends on: later\n\nBody.\n` | none |
+| `## [first] First\n\nDepends on: first\n\nBody.\n` | none |
+| `<ok a>## [b] B\n\nDepends on: a, a\n\nBody.\n` | none |
+| `<ok a>## [b] B\n\nDepends on: A\n\nBody.\n` | none |
+| `<ok a>## [b] B\n\nDepends on: nothing\nFixes:\n\nBody.\n` | none |
+| `<ok a>## [b] B\n\nDepends on: nothing\nFixes: later\n\nBody.\n` | none |
+| `<ok a>## [b] B\n\nDepends on: nothing\nFixes: a, a\n\nBody.\n` | none |
+| `## [first] First\n\nDepends on: nothing\n\n` | none |
+| `## [first] First\n\nDepends on: nothing\n\nBody.\n\nDepends on: nothing\n` | none |
+| `<ok a>## [b] B\n\nDepends on: nothing\nFixes: a\n\nBody.\n  Fixes: a\n` | none |
+
+#### Scenario: No queue file
+- **WHEN** `read_queue_titles` reads a scratch project with no `openspec/queue.md`
+- **THEN** it returns no item
+
+### Requirement: Retry context
+`read_retry_context(folder: &Path, task: &str) -> RetryContext` in
+`osq-kernel-storage` SHALL read, as TypeScript's `readRetryContext` does,
+the lines of `<folder>/.run/events/<task>.jsonl` in file order, passing
+over a blank line and one that is not a JSON object. `RetryContext` SHALL
+be public, exported from the crate root, derive `Debug`, `Clone`,
+`PartialEq` and `Eq`, and hold `attempt: u64`, `reason: Option<String>`
+and `output: Option<String>`. Starting from attempt 1 with neither:
+
+- a `retry` line takes its data's `attempt` when that is a whole number
+  that fits `u64`, its `reason` when that is a non-empty string, and sets
+  the output to the body of `.run/dead/<task>.<attempt - 1>.md`, after
+  `markdown_body` and with ANSI escape codes removed, or to none when that
+  file cannot be read;
+- a `recertification` line whose data's `outcome` is `requeued` takes its
+  `attempt` and `reason` the same way, and its `output` when that is a
+  string;
+- every other line changes nothing.
+
+A missing event file gives attempt 1. At the end an empty reason or output
+is `None`. An ANSI escape code is ESC `[`, any of `0-9`, `;` and `?`, any
+characters from space to `/`, and one from `@` to `~`; or ESC `]`, any
+characters but BEL, and BEL or ESC `\`.
+
+#### Scenario: Retry contexts
+- **WHEN** `read_retry_context` reads task `1` of a scratch change folder whose `.run/events/1.jsonl` holds the row's lines, each followed by a newline, and whose `.run/dead/` holds the row's markers, where `retry <n>` is a `retry` event with the data `{"target":"1","reason":"verify_red","attempt":<n>}`, `requeued {...}` is a `recertification` event whose data is `{"task":"1","outcome":"requeued","differingPaths":["src/a.rs"],"attribution":{},"command":"cargo test","exitCode":1,"timedOut":false,"recordedHash":"a","currentHash":"b"}` with the fields in braces added, `passed {...}` is the same with the outcome `passed`, and `<marker>` is `---\nreason: verify_red\n---\nerror: one\n`
+- **THEN** it returns the row's context:
+
+| Lines | Markers | Attempt | Reason | Output |
+|---|---|---|---|---|
+| no event file | none | 1 | none | none |
+| `retry 2` | `1.1.md` holding `<marker>` | 2 | `verify_red` | `error: one\n` |
+| `retry 2` | none | 2 | `verify_red` | none |
+| `retry 2` | `1.1.md` holding `---\nreason: verify_red\n---\n` ESC `[31merror` ESC `[0m: red\n` ESC `]8;;http://x` BEL `link` ESC `]8;;` BEL `\n` | 2 | `verify_red` | `error: red\nlink\n` |
+| `requeued {"attempt":3,"reason":"scope_regression","output":"fail\n"}` | none | 3 | `scope_regression` | `fail\n` |
+| `passed {"attempt":5,"reason":"scope_regression","output":"fail\n"}` | none | 1 | none | none |
+| `retry 2`, `requeued {"attempt":3,"output":"x"}` | `1.1.md` holding `<marker>` | 3 | `verify_red` | `x` |
+| `requeued {"attempt":2,"reason":"scope_regression","output":"fail"}`, `retry 3` | none | 3 | `verify_red` | none |
+| `retry 2`, `requeued {"attempt":3,"reason":"scope_regression"}` | `1.1.md` holding `<marker>` | 3 | `scope_regression` | `error: one\n` |
+| an empty line, `not json`, `[1]`, three spaces, `retry 2` | `1.1.md` holding `no frontmatter\n` | 2 | `verify_red` | `no frontmatter\n` |
+| a `retry` event with the data `{"target":"1","reason":"verify_red","attempt":2.5}` | `1.0.md` holding `---\nreason: verify_red\n---\nzero\n` | 1 | `verify_red` | `zero\n` |
+| a `retry` event with the data `{"target":"1","reason":"","attempt":2}` | none | 2 | none | none |
+| `requeued {"attempt":2,"output":""}` | none | 2 | none | none |
+| `requeued {"attempt":2,"output":"  \n"}` | none | 2 | none | `  \n` |
+
+### Requirement: Change folder files
+`read_change_files(folder: &Path) -> ChangeFiles` in `osq-kernel-storage`
+SHALL read the files of one change folder that TypeScript's
+`checkLocks`, `checkArchives` and `checkDoneMarkers` read, and SHALL never
+fail. `ChangeFiles`, `LockFile` and `DoneMarker` SHALL be public, exported
+from the crate root, and derive `Debug`, `Clone`, `PartialEq` and `Eq`.
+
+`ChangeFiles` holds:
+
+- `has_proposal: bool`, whether `proposal.md` or `spec.md` exists in the
+  folder, as a file, a folder or anything else.
+- `has_tasks: bool`, whether `tasks` or `tasks.md` exists in the folder, as
+  a file, a folder or anything else.
+- `locks: Vec<LockFile>`, one per entry of `.run/running` whose name ends
+  `.pid`, then one per entry of `.run/locks` whose name ends `.pid`, each
+  folder's names in byte order. A missing folder adds none.
+- `done_markers: Vec<DoneMarker>`, one per entry of `.run/done`, in byte
+  order of the names. A missing folder adds none.
+
+`LockFile` holds `path: PathBuf`, the folder's path joined with the
+entry's relative path, and `pid: Option<i64>`, the `pid` member of the
+file's JSON object when that member is a JSON integer, and `None` when the
+entry cannot be read as text, is not a JSON object, or has no integer `pid`.
+
+`DoneMarker` holds `path: PathBuf`, the folder's path joined with the
+entry's relative path, and `verified: bool`, true when the entry reads as
+text, its frontmatter parses through rust-specs `parse_frontmatter`, and
+either `scope_hash` is a string, or `manual` is the boolean `true` and
+`reason` is a string.
+
+#### Scenario: Lock pids
+- **WHEN** `read_change_files` reads a scratch change folder whose `.run/running/1.pid` holds the row's text
+- **THEN** `locks` is one `LockFile` with that path and the row's pid:
+
+| Text | Pid |
+|---|---|
+| `{"pid":4242,"startedAt":1}` | `Some(4242)` |
+| `{"pid":-1}` | `Some(-1)` |
+| `{"pid":"4242"}` | `None` |
+| `{"pid":1.5}` | `None` |
+| `{}` | `None` |
+| `[4242]` | `None` |
+| `not json` | `None` |
+
+#### Scenario: Done marker kinds
+- **WHEN** `read_change_files` reads a scratch change folder whose `.run/done/1.md` holds the row's text
+- **THEN** `done_markers` is one `DoneMarker` with that path and the row's verified value:
+
+| Text | Verified |
+|---|---|
+| `---\nscope_hash: abc\n---\n` | `true` |
+| `---\nscope_hash: "12"\n---\n` | `true` |
+| `---\nscope_hash: 12\n---\n` | `false` |
+| `---\nmanual: true\nreason: checked by hand\n---\n` | `true` |
+| `---\nmanual: "true"\nreason: checked by hand\n---\n` | `false` |
+| `---\nmanual: true\n---\n` | `false` |
+| `---\nmanual: true\nreason: 3\n---\n` | `false` |
+| `---\nreason: checked by hand\n---\n` | `false` |
+| `done\n` | `false` |
+| `---\nscope_hash: [\n---\n` | `false` |
+
+#### Scenario: Change folder file order and presence
+- **WHEN** `read_change_files` reads a scratch change folder holding the row's entries, each file written with the text `{"pid":1}` unless the row says otherwise
+- **THEN** it returns the row's facts, paths written relative to the folder:
+
+| Entries | Facts |
+|---|---|
+| none | `has_proposal` false, `has_tasks` false, no locks, no done markers |
+| `proposal.md`, `tasks/1.md` | `has_proposal` true, `has_tasks` true, no locks, no done markers |
+| `spec.md`, `tasks.md` | `has_proposal` true, `has_tasks` true, no locks, no done markers |
+| folder `proposal.md`, folder `tasks.md` | `has_proposal` true, `has_tasks` true, no locks, no done markers |
+| `.run/running/2.pid`, `.run/running/10.pid`, `.run/running/notes.txt`, `.run/locks/1.pid`, folder `.run/running/3.pid` | locks `.run/running/10.pid` pid `Some(1)`, `.run/running/2.pid` pid `Some(1)`, `.run/running/3.pid` pid `None`, `.run/locks/1.pid` pid `Some(1)` |
+| `.run/done/2.md` text `done`, `.run/done/10.md` text `done`, folder `.run/done/3.md` | done markers `.run/done/10.md`, `.run/done/2.md`, `.run/done/3.md`, each verified `false` |
+
+### Requirement: Now facts
+`read_now_facts(folder: &Path) -> NowFacts` in `osq-kernel-storage` SHALL
+read the files of one change folder that TypeScript's `readChangeFolder`
+reads to give each task its current status, and SHALL never fail.
+`NowFacts` and `NowTask` SHALL be public, exported from the crate root, and
+derive `Debug`, `Clone`, `PartialEq` and `Eq`.
+
+`NowFacts` holds:
+
+- `has_proposal: bool`, whether `proposal.md` or `spec.md` exists in the
+  folder, following symlinks.
+- `tasks: Vec<NowTask>`, one per entry of the folder's `tasks/` whose name
+  ends `.md`, of any kind, in byte order of the names. A missing `tasks/`
+  adds none.
+
+`NowTask` holds, where `<n>` is the entry's name without `.md`:
+
+- `id: String`, `<n>`.
+- `done: bool`, whether an entry `.run/done/<n>` exists, of any kind.
+- `manual: bool`, true when `.run/done/<n>` reads as text, its frontmatter
+  parses through rust-specs `parse_frontmatter`, and its `manual` is the
+  boolean `true`.
+- `dead: bool`, whether an entry `.run/dead/<n>.md` exists, of any kind.
+- `regressed: bool`, whether an entry `.run/regressed/<n>.md` exists, of
+  any kind.
+- `running: bool`, whether an entry `.run/running/<n>.pid` exists, of any
+  kind, whatever it holds.
+
+A marker whose name is not one of these, such as `.run/dead/3.1.md` or
+`.run/regressed/change.md`, belongs to no task. Tests build each folder
+under `CARGO_TARGET_TMPDIR`, since `.run/running/` and `*.pid` files are
+not committed.
+
+#### Scenario: Now facts of a change folder
+- **WHEN** `read_now_facts` reads a scratch change folder holding `proposal.md`, `tasks/1.md`, `tasks/10.md`, `tasks/2.md`, `tasks/3.md`, a folder `tasks/4.md`, `tasks/notes.txt`, `.run/done/1` holding `---\nmanual: true\n---\n`, `.run/done/2` holding `---\nmanual: "true"\nreason: by hand\n---\n`, `.run/done/3` holding `done\n`, a folder `.run/done/4`, `.run/dead/2.md`, `.run/dead/3.1.md`, `.run/regressed/3.md`, `.run/regressed/change.md` and `.run/running/10.pid` holding `not json\n`
+- **THEN** `has_proposal` is true and `tasks` is, in this order:
+
+| Id | Done | Manual | Dead | Regressed | Running |
+|---|---|---|---|---|---|
+| `1` | true | true | false | false | false |
+| `10` | false | false | false | false | true |
+| `2` | true | false | true | false | false |
+| `3` | true | false | false | true | false |
+| `4` | true | false | false | false | false |
+
+#### Scenario: Now facts edges
+- **WHEN** `read_now_facts` reads a scratch change folder holding only the row's entries
+- **THEN** it returns the row's facts:
+
+| Entries | Facts |
+|---|---|
+| none | `has_proposal` false, no tasks |
+| `spec.md`, `tasks/1.md` | `has_proposal` true, task `1` with every flag false |
+| `tasks/1.md`, `.run/done/1` holding `---\nmanual: [\n---\n` | `has_proposal` false, task `1` done, not manual |
+| `proposal.md`, `tasks/1.md`, `.run/done/1` holding `---\nmanual: true\nreason: 3\n---\n` | `has_proposal` true, task `1` done and manual |
+| `proposal.md`, `tasks.md` | `has_proposal` true, no tasks |

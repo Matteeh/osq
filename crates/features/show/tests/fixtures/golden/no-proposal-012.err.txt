@@ -1,0 +1,1 @@
+Show error: Neither proposal.md nor spec.md found in <root>/openspec/changes/012-noproposal

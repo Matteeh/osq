@@ -1,0 +1,6 @@
+<scratch>/trees/003-land-stop/openspec/changes/archive/003-land-stop: ask your planning tool to plan change 003-land-stop — next: dead (needs steering) — osq plan 003
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 003-land-stop.
+Read <scratch>/trees/003-land-stop/openspec/changes/archive/003-land-stop/plan-prompt.md and follow it exactly; it is your complete prompt.

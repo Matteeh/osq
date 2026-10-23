@@ -1,0 +1,24 @@
+---
+scope_resolver: 2
+scope_hash: sha256:caf4363b68779bc3b81b9c81f3f917120cc467d3935e8e5f8f85e15564957716
+build_stamp: ed155511
+project_commit: 4fd12247
+exit_code: 0
+scope_files:
+  crates/features/doctor/src/doctor.rs: sha256:ad054c2cc2b7948fba4554d84e6447d822613011a019afe455ca593a554c8979
+  crates/features/doctor/src/doctor/git.rs: sha256:fed37e4b2a37e41d7ed5860437dab789b0925d22847a235b2247312d8968983b
+  crates/features/doctor/src/doctor/managed.rs: sha256:a4c63a85b513bf7c91c064e10512ba37315162bf8c72e8f7c049879364c32f71
+  crates/features/doctor/src/doctor/managed/agents-block.txt: sha256:d73303a5a737871fdd2c20aed1a89b696050776e719555cd9659bf5cc4915d92
+  crates/features/doctor/src/doctor/managed/claude-plan-command.txt: sha256:3294bcaf4156049b2543eb50d56a861e1a749983e931029f0b6b4d3cf0f54347
+  crates/features/doctor/src/doctor/managed/planner-block.txt: sha256:e9218ed7589ee894f1400b34c174a14da9884b4c000de5d0075fb60be42897b6
+  crates/features/doctor/tests/doctor_changes.rs: sha256:baeea20c6d2741eb259d3fce0f9524e57e24f8596cacb7fffa343809634be47b
+  crates/features/doctor/tests/doctor_checks.rs: sha256:e25a4ff88ab90dbc89e09c0356a804807b30c9b02659b1f790b2f779198baa9a
+  crates/features/doctor/tests/doctor_setup.rs: sha256:eb246dd20812f36ba328d9b6ff9dc28f7add82aa625c4c28efe8c23d8101ab73
+  crates/features/doctor/tests/fixtures/managed/agents-block.txt: sha256:d73303a5a737871fdd2c20aed1a89b696050776e719555cd9659bf5cc4915d92
+  crates/features/doctor/tests/fixtures/managed/claude-plan-command.txt: sha256:3294bcaf4156049b2543eb50d56a861e1a749983e931029f0b6b4d3cf0f54347
+  crates/features/doctor/tests/fixtures/managed/planner-block.txt: sha256:e9218ed7589ee894f1400b34c174a14da9884b4c000de5d0075fb60be42897b6
+original_scope_hash: sha256:06e51a88587f7783ca7ff377a921faf0f7f9848d9eb0738fa33f953110996bf2
+recertified_at: 2026-10-22T19:18:59.956Z
+recertification_count: 1
+---
+2026-10-22T19:07:09.142Z

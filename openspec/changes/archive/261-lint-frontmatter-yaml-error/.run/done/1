@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:fd85efa627f3fbc7baf1c69db8327c777663117f81f0beb1f3d19261c8178173"
+build_stamp: "3f811304"
+project_commit: "cb9fabb4"
+exit_code: 0
+scope_files: {"src/core/spec/linter.ts":"sha256:bddf53d4325f97f979fbdca516596c53529048526790bdd804a12b8639439cbf","src/core/spec/parser.ts":"sha256:0fe017673ed519a948e9c3259d7c2138467284429392d961d8bb498c00fd1668","tests/lint-frontmatter-yaml.test.ts":"sha256:478b71e5b0a691011601696e34b0c96641ba01a919d2bc500426e21f3f00b1b3"}
+---
+2026-10-21T19:22:07.439Z

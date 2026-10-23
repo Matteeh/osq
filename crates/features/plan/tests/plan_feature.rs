@@ -43,7 +43,7 @@ fn plan_feature_commands() {
         Command::new(
             "plan",
             "prepare a change and hand off its opening prompt to your planning tool",
-            "--next [--replan]",
+            "--next [--replan] | <id>",
         ),
         "the plan command"
     );

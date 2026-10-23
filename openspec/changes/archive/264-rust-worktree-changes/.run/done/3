@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:b1012e4e6e3df2fb7c219cb04a8431396d993078da571607977bd71af570a68c"
+build_stamp: "3f811304"
+project_commit: "d6a9a330"
+exit_code: 0
+scope_files: {"crates/features/plan/Cargo.toml":"sha256:0dea97cafb10d31518834093c6d4312c992651fbc7642bb58103583875f2549c","crates/features/plan/src/next.rs":"sha256:16135a4c8451b6ee2bbd7f4b45163949441b733e52d60a2a92ba6356b3ed135c","crates/features/plan/src/next/number.rs":"sha256:664507aa3c6868a768a992cbb21b738ccba425a04708fc1999a9a928a5d72a76","crates/features/plan/tests/next_number_trees.rs":"sha256:487cd662f6d76019949cb787087b188099157ebd3292c117b0a8b84b52df1ca6"}
+---
+2026-10-21T20:14:42.027Z

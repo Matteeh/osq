@@ -56,9 +56,9 @@ async function pathCarriedWithoutGap(
     if (!scopeCoversPath(task.scope, filePath)) continue;
     segments.push(...(await readEndSegments(specFolderPath, task.number, filePath)));
   }
-  if (segments.length === 0) return false;
-  if (segments[0].before !== expectedStart) return false;
-  for (let index = 1; index < segments.length; index++) {
+  const start = segments.findIndex((segment) => segment.before === expectedStart);
+  if (start === -1) return false;
+  for (let index = start + 1; index < segments.length; index++) {
     if (segments[index].before !== segments[index - 1].after) return false;
   }
   return segments[segments.length - 1].after === expectedEnd;
@@ -75,6 +75,7 @@ async function pathCarriedWithoutGap(
  * @scenario watcher-and-harness: Verify fails at detection
  * @scenario watcher-and-harness: Human edit breaks the chain
  * @scenario watcher-and-harness: File outside every later scope
+ * @scenario watcher-and-harness: A third task extends the file again
  */
 export async function autoRecertify(input: AutomaticRecertificationInput): Promise<boolean> {
   const { specFolderPath, taskNumber, differing } = input;

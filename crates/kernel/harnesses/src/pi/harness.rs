@@ -1,11 +1,13 @@
 //! Starting pi through the process runner and translating its stream.
 
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use osq_core::event::Event;
+use osq_kernel_config::Config;
 use osq_kernel_runners::{Harness, HarnessExit, StartError, StartRequest};
 
-use super::preflight::PiReady;
+use super::preflight::{PiReady, resolve_pi_binary};
 use super::{PiSettings, PiStreamState, pi_args, pi_line_events};
 use crate::process::{ProcessOutcome, ProcessSpec, run_process_until};
 
@@ -48,7 +50,7 @@ const DEFAULT_PROVIDER: &str = "default";
 const TIMEOUT_ERROR: &str = "Task execution timed out";
 
 /// The pi adapter for the runners kernel's harness port.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiHarness {
     /// The pi program to start.
     bin: String,
@@ -72,6 +74,18 @@ impl PiHarness {
             kill_grace,
             version: None,
         }
+    }
+
+    /// Builds a harness from the loaded config and the caller's variables.
+    ///
+    /// Implements: rust-harnesses/pi-harness-from-config
+    #[must_use]
+    pub fn from_config(config: &Config, env: &BTreeMap<String, String>) -> Self {
+        Self::new(
+            resolve_pi_binary(config.pi.bin.as_deref(), env),
+            PiSettings::from_config(&config.pi),
+            config.timeouts.harness_kill_grace,
+        )
     }
 
     /// Returns this harness carrying the version `ready` read, when it read one.

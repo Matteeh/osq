@@ -7,13 +7,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// The `changes` directory under `openspec/`.
-const CHANGES: &str = "changes";
+pub(super) const CHANGES: &str = "changes";
 
 /// The directory holding archived changes.
-const ARCHIVE: &str = "archive";
+pub(super) const ARCHIVE: &str = "archive";
 
 /// The directory holding rejected changes.
-const REJECTED: &str = "rejected";
+pub(super) const REJECTED: &str = "rejected";
 
 /// Where a change folder sits under `openspec/changes/`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,7 +45,17 @@ pub struct ChangeEntry {
 /// Implements: rust-storage/change-listing
 #[must_use]
 pub fn list_changes(project_root: &Path) -> Vec<ChangeEntry> {
-    let changes = project_root.join("openspec").join(CHANGES);
+    list_entries(project_root)
+}
+
+/// The `changes` directory of one project root.
+pub(super) fn changes_dir(project_root: &Path) -> PathBuf {
+    project_root.join("openspec").join(CHANGES)
+}
+
+/// Every change folder of one project root, one location after another.
+pub(super) fn list_entries(project_root: &Path) -> Vec<ChangeEntry> {
+    let changes = changes_dir(project_root);
     let mut entries = Vec::new();
     collect(&changes, Location::Active, &mut entries);
     collect(&changes.join(ARCHIVE), Location::Archived, &mut entries);
@@ -54,7 +64,7 @@ pub fn list_changes(project_root: &Path) -> Vec<ChangeEntry> {
 }
 
 /// Appends one location's change folders, sorted, to `entries`.
-fn collect(dir: &Path, location: Location, entries: &mut Vec<ChangeEntry>) {
+pub(super) fn collect(dir: &Path, location: Location, entries: &mut Vec<ChangeEntry>) {
     let mut names = directory_names(dir);
     names.retain(|name| is_change_name(name, location));
     names.sort_by(|left, right| compare_names(left, right));
@@ -94,7 +104,7 @@ fn is_change_name(name: &str, location: Location) -> bool {
 }
 
 /// Orders two folder names by leading number first, then by name.
-fn compare_names(left: &str, right: &str) -> Ordering {
+pub(super) fn compare_names(left: &str, right: &str) -> Ordering {
     match (leading_number(left), leading_number(right)) {
         (Some(a), Some(b)) => a.cmp(&b).then_with(|| left.cmp(right)),
         _ => left.cmp(right),

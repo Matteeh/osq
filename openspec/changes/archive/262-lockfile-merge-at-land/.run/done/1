@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0752e85066dd0ccd3477a5ec57116cfa39c52b65a79a0f6aa5745be22ce880a6"
+build_stamp: "3f811304"
+project_commit: "5bfb7315"
+exit_code: 0
+scope_files: {"src/kernel/languages/lockfiles.ts":"sha256:f353f1d038b39a40a14b998c7012fdec01c1308f34f6306f7bd090c5a1763611","tests/languages-lock-rebuild.test.ts":"sha256:cdc94d382ffef27bcf7fe3b5b2fd9b7aa701bc04c04409b9b690fa99c5c3d941"}
+---
+2026-10-21T19:35:25.620Z

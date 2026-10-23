@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:98805d24fd91035c0699a3e002ebdd4d952731d99041e89082945e5129a1e106"
+build_stamp: "ed155511"
+project_commit: "b4bc7953"
+exit_code: 0
+scope_files: {"crates/kernel/vcs/src/error.rs":"sha256:5c2fe2700f54d88a818c02d36e891d3dde6c2a056217606bc72c697188fa49ea","crates/kernel/vcs/src/git.rs":"sha256:b4a19ffcfbf53f610e15668eec49b7190d04c7080337710194e360a6ae62444b","crates/kernel/vcs/src/git/history.rs":"sha256:074b4e214e4968ce1248e97769fd7fd20024ec842bb712ca85f626a42e22f1e7","crates/kernel/vcs/src/git/merge.rs":"sha256:884bd5be8ef41efd8acb82d3070add5278a50171ccb51e38277d78a262f5c310","crates/kernel/vcs/src/git/patch_and_discard.rs":"sha256:0485df78a259207c6b84d7ea950441c82644d47e9699a458b4588d366ae59dc4","crates/kernel/vcs/src/git/run.rs":"sha256:b81ea76ee8c5e75e947b6c10671ef5c91c0ac43b72822bbf6b5777fbdf36923f","crates/kernel/vcs/src/git/setup.rs":"sha256:bfc134768903a181f39c5a0962fbe36588e8addaf14d3954682b248cc60c9449","crates/kernel/vcs/src/git/state.rs":"sha256:11d4addba27e45db54e6e0e0d635013045a04fbff5bddd0d72a094ea10960fc3","crates/kernel/vcs/src/git/write.rs":"sha256:ba54f3e7b557e8048cd2a83e72d336324f90c5a6abb41d32f5076aae19c3794e","crates/kernel/vcs/src/lib.rs":"sha256:bcb5f59159cb8149f7dbf9bca4222b811f2467120d4ae6919367e545c512ff73","crates/kernel/vcs/src/port.rs":"sha256:b984030ec5cfbe6bdf63bb33b851013a60430c67d427031ede4df054c9c6973b","crates/kernel/vcs/src/record.rs":"sha256:292143e12d570319fb3ac9819b85c87680cb554b7788d95a70fba6b62ed67474","crates/kernel/vcs/src/stacked.rs":"sha256:f59511f8498d6289700a94d322c66316495952c8da53d307673b361ff2b80cd3","crates/kernel/vcs/tests/patch_and_discard.rs":"sha256:8d8498b323aaa8d186209572f0d1d0fde6fb68f91d67bfee2b68e05117427f7a"}
+---
+2026-10-22T22:11:22.141Z

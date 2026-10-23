@@ -1,0 +1,37 @@
+Spec: 007-unplanned (007)
+Title: Alpha resets at midnight
+Status: [unapproved]
+Next: unplanned — osq plan 007
+Location: active
+Approval: unapproved
+Depends on: none
+Features:
+  Reads: none
+  Writes: none
+
+Goal:
+  What problem this change solves and why.
+
+Tasks:
+  [ ] 1. When initial condition, expected outcome [pending]
+      Verify: node -e "process.exit(0)"
+      Acceptance:
+        - [ ] Acceptance criterion 1
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  (no events recorded)
+Change: 007-unplanned
+Goal: What problem this change solves and why.
+Tasks:
+  1. When initial condition, expected outcome (0 scope files)
+Capabilities:
+  (none)
+Decisions:
+  ADR 001: Every change keeps the test suite green.
+Human steps:
+  None
+Flag: verify without a test in task 1 — node -e "process.exit(0)"
+Flag: verify without a test in the proposal — node -e "process.exit(0)"

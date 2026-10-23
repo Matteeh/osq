@@ -18,18 +18,18 @@ pub fn scratch(name: &str) -> PathBuf {
         .join("archive_feature")
         .join(name);
     let _ = fs::remove_dir_all(&root);
-    copy(&fixture(), &root);
+    copy_tree(&fixture(), &root);
     root
 }
 
 /// Copies every file and folder under `from` into `to`.
-fn copy(from: &Path, to: &Path) {
+pub fn copy_tree(from: &Path, to: &Path) {
     fs::create_dir_all(to).unwrap();
     for entry in fs::read_dir(from).unwrap() {
         let entry = entry.unwrap();
         let target = to.join(entry.file_name());
         if entry.file_type().unwrap().is_dir() {
-            copy(&entry.path(), &target);
+            copy_tree(&entry.path(), &target);
         } else {
             fs::copy(entry.path(), target).unwrap();
         }

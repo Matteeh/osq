@@ -7,9 +7,11 @@ mod needs;
 mod read;
 mod text;
 
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
+use osq_kernel_storage::{read_after_land_failure, read_autopilot_stop, read_queue_titles};
 
 /// The inbox command: lists what needs a human.
 ///
@@ -59,19 +61,25 @@ impl Feature for InboxFeature {
         )]
     }
 
-    /// Prints the three inbox groups of the project root.
+    /// Prints the three inbox groups of the project root and every tree.
     ///
     /// # Errors
     ///
     /// Returns [`FeatureError::unknown_command`] for another command,
     /// [`FeatureError::usage`] for any argument, and [`FeatureError::failed`]
-    /// when a change folder cannot be read.
+    /// when the config, git or a change folder cannot be read.
     ///
     /// Implements: rust-inbox/inbox-command
+    /// Implements: rust-inbox/inbox-trees
+    /// Implements: rust-inbox/archived-items
     /// Implements: rust-inbox/needs-you-items
     /// Implements: rust-inbox/running-items
     /// Implements: rust-inbox/landed-items
     /// Implements: rust-inbox/validator-failing-item
+    /// Implements: rust-inbox/paused-items
+    /// Implements: rust-inbox/after-land-failed-item
+    /// Implements: rust-inbox/autopilot-stopped-item
+    /// Implements: rust-inbox/needs-you-order
     /// Implements: rust-inbox/typescript-inbox-parity
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
         if invocation.command != "inbox" {
@@ -80,18 +88,31 @@ impl Feature for InboxFeature {
         if !invocation.args.is_empty() {
             return Err(FeatureError::usage("inbox", "takes no arguments"));
         }
-        let snapshots = read::changes(&invocation.root)?;
+        let changes = read::changes(&invocation.root)?;
         let now_ms = self.now_ms.unwrap_or_else(system_now_ms);
-        let mut items = needs::needs_you(&snapshots);
-        if let Some(item) = groups::validator::item(&snapshots) {
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        let after_land = home
+            .as_deref()
+            .and_then(|home| read_after_land_failure(&invocation.root, home));
+        let stop = read_autopilot_stop(&invocation.root);
+        let queue = read_queue_titles(&invocation.root);
+        let mut items = needs::needs_you(&changes.all);
+        items.extend(needs::archived(&changes.archived));
+        if let Some(failure) = after_land.as_ref() {
+            items.push(needs::after_land(&changes.root, failure));
+        }
+        if let Some(item) = groups::validator::item(&changes.all) {
             items.push(item);
+        }
+        if let Some(stop) = stop.as_ref() {
+            items.push(needs::autopilot_stopped(&changes.all, &queue, stop));
         }
         let needs_you: Vec<String> = needs::sort(items)
             .into_iter()
             .map(|item| item.line)
             .collect();
-        let running = groups::running::lines(&snapshots, now_ms);
-        let landed = groups::landed::lines(&snapshots);
+        let running = groups::running::lines(&changes.all, &changes.pauses, now_ms);
+        let landed = groups::landed::lines(&changes.root);
         Ok(Output::text(format!(
             "{}\n",
             text::inbox_text(&needs_you, &running, &landed)

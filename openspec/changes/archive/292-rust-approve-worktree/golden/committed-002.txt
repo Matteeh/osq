@@ -1,0 +1,27 @@
+outcome: output
+Approved 002 (002-gamma)
+  Hash: sha256:49b75cb4fb4c7919d8d8cefc32d6741e12571819b450b5f5033840c8dce4f715
+  Worktree: <root>/worktrees/repo/002-gamma
+  Branch: osq/002-gamma
+branches:
+osq/002-gamma
+worktrees:
+<root>/worktrees/repo/002-gamma osq/002-gamma
+checkout copy: present
+commit:
+osq: 002 approved
+Osq Bot <bot@example.com>
+parent <base>
+A	openspec/changes/002-gamma/.run/approver
+A	openspec/changes/002-gamma/.run/base
+M	openspec/changes/002-gamma/.run/approved
+record:
+{"at":"<at>","op":"worktree-add","root":"<root>/repo"}
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/002-gamma"}
+tree:
+--- .run/approved
+sha256:49b75cb4fb4c7919d8d8cefc32d6741e12571819b450b5f5033840c8dce4f715
+--- .run/approver
+Osq Tester <tester@example.com>
+--- .run/base
+<base>

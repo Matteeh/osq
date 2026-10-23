@@ -1,0 +1,103 @@
+[
+  {
+    "name": "clean-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "current-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "osq/001-alpha-orders already has main\n",
+    "error": null,
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "spec-conflict-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "spec": "# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: Beta\nThe system SHALL beta.\n\n#### Scenario: Beta works\n- **WHEN** beta\n- **THEN** beta\n\n### Requirement: Alpha\nThe system SHALL alpha.\n\n#### Scenario: Alpha works\n- **WHEN** alpha\n- **THEN** alpha\n"
+  },
+  {
+    "name": "code-conflict-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "vcs-off-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "osq sync needs vcs.enabled and git",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "dirty-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "<wt> has uncommitted changes: notes.txt; commit or discard them first",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": " M notes.txt\n",
+    "regressed": false
+  },
+  {
+    "name": "run-dirt-001",
+    "query": "001",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/archive/001-alpha-orders/.run/extra\n",
+    "regressed": false
+  },
+  {
+    "name": "renamed-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "<wt> has uncommitted changes: moved.txt, notes.txt; commit or discard them first",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "R  notes.txt -> moved.txt\n",
+    "regressed": false
+  },
+  {
+    "name": "tasks-dirt-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/archive/001-alpha-orders/tasks.md\n",
+    "regressed": false
+  },
+  {
+    "name": "missing-2",
+    "query": "2",
+    "exit": 1,
+    "stdout": "",
+    "error": "No change \"2\" runs in an osq worktree",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  }
+]

@@ -298,12 +298,16 @@ dependencies = [
  "osq-core",
  "osq-feature-approve",
  "osq-feature-archive",
+ "osq-feature-doctor",
  "osq-feature-inbox",
  "osq-feature-land",
+ "osq-feature-lint",
  "osq-feature-metaloop",
  "osq-feature-plan",
  "osq-feature-report",
+ "osq-feature-retry",
  "osq-feature-run",
+ "osq-feature-show",
 ]
 
 [[package]]
@@ -321,8 +325,12 @@ name = "osq-feature-approve"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
 ]
 
 [[package]]
@@ -330,10 +338,24 @@ name = "osq-feature-archive"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
  "serde_json",
  "yaml-rust2",
+]
+
+[[package]]
+name = "osq-feature-doctor"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
 ]
 
 [[package]]
@@ -341,7 +363,9 @@ name = "osq-feature-inbox"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
 ]
 
 [[package]]
@@ -349,6 +373,28 @@ name = "osq-feature-land"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "osq-feature-lint"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-linter",
+ "osq-kernel-loop",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
+ "yaml-rust2",
 ]
 
 [[package]]
@@ -363,8 +409,10 @@ name = "osq-feature-plan"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
  "sha2",
 ]
 
@@ -373,9 +421,26 @@ name = "osq-feature-report"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
  "rusqlite",
  "serde_json",
+]
+
+[[package]]
+name = "osq-feature-retry"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
+ "sha2",
+ "yaml-rust2",
 ]
 
 [[package]]
@@ -383,6 +448,28 @@ name = "osq-feature-run"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-harnesses",
+ "osq-kernel-runners",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "sha2",
+]
+
+[[package]]
+name = "osq-feature-show"
+version = "0.0.0"
+dependencies = [
+ "osq-core",
+ "osq-kernel-config",
+ "osq-kernel-loop",
+ "osq-kernel-specs",
+ "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde",
+ "serde_json",
+ "yaml-rust2",
 ]
 
 [[package]]
@@ -404,6 +491,7 @@ name = "osq-kernel-harnesses"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-runners",
  "serde_json",
 ]
@@ -454,6 +542,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "sha2",
  "yaml-rust2",
 ]
 
@@ -462,6 +551,8 @@ name = "osq-kernel-vcs"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
+ "serde_json",
 ]
 
 [[package]]

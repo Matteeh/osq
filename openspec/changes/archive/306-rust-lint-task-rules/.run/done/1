@@ -1,0 +1,33 @@
+---
+scope_resolver: 2
+scope_hash: sha256:9ee673d179e2f5fe921031e1f4059613b6e5ae92548366063d2b2ac7a0fbc432
+build_stamp: ed155511
+project_commit: 6609e7b1
+exit_code: 0
+scope_files:
+  crates/features/lint/Cargo.toml: sha256:c439a9c58a6fde761d42a94db79cba3784f2f651d0d88a9cda12f5fd811c7cbf
+  crates/features/lint/src/lint.rs: sha256:fd34fa66832d3c686746ed3590e6e639435309126a613416beae87447d5a93e2
+  crates/features/lint/src/lint/proposal.rs: sha256:66b5243054b4652ea07c18812465ec875ef2552f95ed9a7d2b534a86fd664465
+  crates/features/lint/src/lint/verify.rs: sha256:5923862aef26df7066fae79cbdb3eabdee892926c586bd00c5422be740fe2044
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/001-clean/proposal.md: sha256:974891624539207449ef1d03507de9aa4e5469f60c3c3a6394009436c844fe87
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/001-clean/specs/delta/spec.md: sha256:a5920eb39eeed13f498d10784b9d660a633ce61c1e65dadc3e1d206ef7168c9d
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/001-clean/tasks/1.md: sha256:11ef8bbe6986a40393882f27ea9c5125412ee56e384dfce3a2f95fb1d9383703
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/002-bad-delta/proposal.md: sha256:8f0f574d82560a521648d0e0c63fa4faec8093c0663279569a30b6d7b35b6980
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/002-bad-delta/specs/delta/spec.md: sha256:1688203b824700246dfa8a52e1e6ffc4c4514dba00bfa3e59f02666618917e89
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/002-bad-delta/tasks/1.md: sha256:11ef8bbe6986a40393882f27ea9c5125412ee56e384dfce3a2f95fb1d9383703
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/003-dangling-tag/proposal.md: sha256:fba8db28033fe87bc49ed762d7cc9a01acc8d2b47a9968855e83946e36ec5bd4
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/003-dangling-tag/specs/delta/spec.md: sha256:e930d4d55e10e34fc4d100c4399c0b4deac7b1617db78d3b66de56ed4afbc27a
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/003-dangling-tag/tasks/1.md: sha256:11ef8bbe6986a40393882f27ea9c5125412ee56e384dfce3a2f95fb1d9383703
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/004-merge-conflict/proposal.md: sha256:aadbccd21c3778028cbc2a4b4964fb4749b8f28e6b86f0802348b1bc4b417992
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/004-merge-conflict/specs/delta/spec.md: sha256:167e97ff2ea9433a44dd2298400cee31e3b73693ae0ae4ea8dbe39485496145a
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/004-merge-conflict/tasks/1.md: sha256:11ef8bbe6986a40393882f27ea9c5125412ee56e384dfce3a2f95fb1d9383703
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/005-no-delta/proposal.md: sha256:db0eb14452a9d156b55a737e307e083ee2a38765ddb435cd67878425d129a17b
+  crates/features/lint/tests/fixtures/lint-project/openspec/changes/005-no-delta/tasks/1.md: sha256:11ef8bbe6986a40393882f27ea9c5125412ee56e384dfce3a2f95fb1d9383703
+  crates/features/lint/tests/lint_banned_words.rs: sha256:0b728cd88f1ac7f6ad55c6f7301d3423fad64399857fb95d693fe93d27ea640c
+  crates/features/lint/tests/lint_proposal_rules.rs: sha256:9b35f2e8f9efb955df0d4a2581e7354431c15ad0b13fc4a08a3abb364143bcbe
+  crates/features/lint/tests/lint_proposal_verify.rs: sha256:9b6b96d5f0923d9e24db0d846cac6662ebf18806c6e7d86f97e21736acdee7b0
+original_scope_hash: sha256:cf2991b7868a62d808615ca8605439128cc90835a9fa3defde6f3a6de0c1172a
+recertified_at: 2026-10-23T09:26:12.622Z
+recertification_count: 2
+---
+2026-10-23T07:09:10.921Z

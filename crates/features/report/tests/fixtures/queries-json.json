@@ -1,0 +1,254 @@
+[
+  {
+    "name": "table-list",
+    "fixture": "history",
+    "select": null,
+    "result": "output",
+    "text": "changes(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "blank-select",
+    "fixture": "history",
+    "select": "  \n",
+    "result": "output",
+    "text": "changes(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "all-changes",
+    "fixture": "history",
+    "select": "SELECT * FROM changes",
+    "result": "output",
+    "text": "[{\"id\":\"001\",\"folder\":\"001-run\",\"title\":\"Run\",\"archived_on\":\"2026-10-01\",\"goal\":\"Run every trial.\",\"tasks\":2,\"attempts\":2,\"halts\":1,\"elapsed_seconds\":null,\"cost\":null,\"planner\":null},{\"id\":\"002\",\"folder\":\"002-quiet\",\"title\":\"Quiet\",\"archived_on\":null,\"goal\":null,\"tasks\":0,\"attempts\":null,\"halts\":null,\"elapsed_seconds\":null,\"cost\":null,\"planner\":null}]"
+  },
+  {
+    "name": "all-requirements",
+    "fixture": "history",
+    "select": "SELECT * FROM requirements",
+    "result": "output",
+    "text": "[]"
+  },
+  {
+    "name": "all-tasks",
+    "fixture": "history",
+    "select": "SELECT * FROM tasks",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"title\":\"When one, run\",\"attempts\":1,\"done\":0},{\"change\":\"001-run\",\"task\":\"2\",\"title\":\"When two, run\",\"attempts\":1,\"done\":0}]"
+  },
+  {
+    "name": "all-dead-attempts",
+    "fixture": "history",
+    "select": "SELECT * FROM dead_attempts",
+    "result": "output",
+    "text": "[]"
+  },
+  {
+    "name": "all-disclosures",
+    "fixture": "history",
+    "select": "SELECT * FROM disclosures",
+    "result": "output",
+    "text": "[]"
+  },
+  {
+    "name": "all-notices",
+    "fixture": "history",
+    "select": "SELECT * FROM notices",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"notice\":\"draft-only\",\"severity\":\"amber\",\"opened\":null,\"outcome\":\"planned_again\"},{\"change\":\"001-run\",\"notice\":\"scope-wide\",\"severity\":\"red\",\"opened\":1,\"outcome\":\"halted\"},{\"change\":\"001-run\",\"notice\":\"no-tests\",\"severity\":\"grey\",\"opened\":0,\"outcome\":\"halted\"},{\"change\":\"002-quiet\",\"notice\":\"no-tests\",\"severity\":\"amber\",\"opened\":null,\"outcome\":\"approved\"},{\"change\":\"003-dropped\",\"notice\":\"first-draft\",\"severity\":\"amber\",\"opened\":null,\"outcome\":\"planned_again\"},{\"change\":\"003-dropped\",\"notice\":\"last-draft\",\"severity\":\"red\",\"opened\":null,\"outcome\":\"rejected\"},{\"change\":\"003-dropped\",\"notice\":\"also-last\",\"severity\":\"grey\",\"opened\":null,\"outcome\":\"rejected\"},{\"change\":\"004-noted\",\"notice\":\"scope-wide\",\"severity\":\"grey\",\"opened\":0,\"outcome\":\"rejected\"}]"
+  },
+  {
+    "name": "all-validator-runs",
+    "fixture": "history",
+    "select": "SELECT * FROM validator_runs",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"run\":1,\"outcome\":\"failed\",\"harness\":\"claude\",\"model\":\"opus\",\"duration\":2.5,\"exit_code\":1,\"scenarios\":3,\"findings\":1,\"reason\":\"no_scenarios\",\"output\":\"out\"},{\"change\":\"001-run\",\"run\":2,\"outcome\":\"validated\",\"harness\":\"codex\",\"model\":\"gpt\",\"duration\":4,\"exit_code\":null,\"scenarios\":0,\"findings\":0,\"reason\":null,\"output\":null}]"
+  },
+  {
+    "name": "all-validator-findings",
+    "fixture": "history",
+    "select": "SELECT * FROM validator_findings",
+    "result": "output",
+    "text": "[{\"id\":\"001.v1.1\",\"change\":\"001-run\",\"run\":1,\"finding\":1,\"capability\":\"rust-storage\",\"requirement\":\"Pauses\",\"scenario\":\"One pause\",\"problem\":\"no test\",\"detail\":\"the test is missing\",\"label\":1}]"
+  },
+  {
+    "name": "all-focused-runs",
+    "fixture": "history",
+    "select": "SELECT * FROM focused_runs",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"run\":1,\"outcome\":\"passed\",\"exit_code\":0,\"duration\":1.5,\"timed_out\":0,\"scenarios\":\"rust-storage: One\\nrust-storage: Two\",\"files\":\"src/a.rs\\nsrc/b.rs\"},{\"change\":\"001-run\",\"task\":\"2\",\"run\":1,\"outcome\":\"failed\",\"exit_code\":1,\"duration\":2,\"timed_out\":1,\"scenarios\":\"\",\"files\":\"\"}]"
+  },
+  {
+    "name": "all-mutation-picks",
+    "fixture": "history",
+    "select": "SELECT * FROM mutation_picks",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"pick\":1,\"file\":\"src/a.rs\",\"function\":\"f\",\"outcome\":\"not_measured\",\"reason\":\"command_failed\",\"killed\":2,\"survived\":2,\"invalid\":1,\"duration\":3.25,\"scenarios\":\"rust-storage: One\"},{\"change\":\"001-run\",\"task\":\"2\",\"pick\":1,\"file\":\"src/b.rs\",\"function\":\"g\",\"outcome\":\"measured\",\"reason\":null,\"killed\":1,\"survived\":0,\"invalid\":0,\"duration\":3,\"scenarios\":\"\"}]"
+  },
+  {
+    "name": "all-mutation-survivors",
+    "fixture": "history",
+    "select": "SELECT * FROM mutation_survivors",
+    "result": "output",
+    "text": "[{\"id\":\"001.1.m1.1\",\"change\":\"001-run\",\"task\":\"1\",\"pick\":1,\"file\":\"src/a.rs\",\"function\":\"f\",\"line\":4,\"column\":7,\"mutator\":\"replace\",\"replacement\":\"true\",\"label\":0},{\"id\":\"001.1.m1.2\",\"change\":\"001-run\",\"task\":\"1\",\"pick\":1,\"file\":null,\"function\":\"f\",\"line\":null,\"column\":null,\"mutator\":null,\"replacement\":null,\"label\":null}]"
+  },
+  {
+    "name": "all-link-findings",
+    "fixture": "history",
+    "select": "SELECT * FROM link_findings",
+    "result": "output",
+    "text": "[{\"id\":\"001.l1\",\"change\":\"001-run\",\"severity\":\"warning\",\"file\":\"src/a.rs\",\"message\":\"src/a.rs:3: tag is not valid\",\"label\":1}]"
+  },
+  {
+    "name": "all-task-outcomes",
+    "fixture": "history",
+    "select": "SELECT * FROM task_outcomes",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"capability\":null,\"scope_globs\":0,\"scope_files\":null,\"verify_kind\":\"suite\",\"tests_modify\":0,\"verify_starts\":\"red\",\"shares_scope\":0,\"position\":1,\"attempts\":1,\"first_attempt\":0,\"dead_reason\":null,\"files_touched\":null},{\"change\":\"001-run\",\"task\":\"2\",\"capability\":null,\"scope_globs\":0,\"scope_files\":null,\"verify_kind\":\"suite\",\"tests_modify\":0,\"verify_starts\":\"red\",\"shares_scope\":0,\"position\":2,\"attempts\":1,\"first_attempt\":0,\"dead_reason\":null,\"files_touched\":null}]"
+  },
+  {
+    "name": "all-pauses",
+    "fixture": "history",
+    "select": "SELECT * FROM pauses",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"paused_at\":\"2026-10-01T10:02:00.000Z\",\"until\":\"2026-10-01T12:00:00.000Z\",\"source\":\"harness\"},{\"change\":\"001-run\",\"task\":\"10\",\"paused_at\":\"2026-10-01T10:12:00.000Z\",\"until\":\"2026-10-01T13:00:00.000Z\",\"source\":\"usage_limit\"}]"
+  },
+  {
+    "name": "all-recertifications",
+    "fixture": "history",
+    "select": "SELECT * FROM recertifications",
+    "result": "output",
+    "text": "[{\"change\":\"001-run\",\"task\":\"1\",\"recertified_at\":\"2026-10-01T10:05:00.000Z\",\"outcome\":\"passed\",\"automatic\":1,\"path\":\"src/a.rs (modified)\",\"credited_to\":\"2\",\"source\":\"file_changed\"},{\"change\":\"001-run\",\"task\":\"1\",\"recertified_at\":\"2026-10-01T10:05:00.000Z\",\"outcome\":\"passed\",\"automatic\":1,\"path\":\"src/b.rs (modified)\",\"credited_to\":\"unknown\",\"source\":\"measures\"},{\"change\":\"001-run\",\"task\":\"1\",\"recertified_at\":\"2026-10-01T10:05:00.000Z\",\"outcome\":\"passed\",\"automatic\":1,\"path\":\"src/c.rs (modified)\",\"credited_to\":\"unknown\",\"source\":null},{\"change\":\"001-run\",\"task\":\"2\",\"recertified_at\":\"2026-10-01T10:10:00.000Z\",\"outcome\":\"requeued\",\"automatic\":0,\"path\":\"src/d.rs (deleted)\",\"credited_to\":\"1\",\"source\":\"file_changed\"}]"
+  },
+  {
+    "name": "all-manual-edits",
+    "fixture": "history",
+    "select": "SELECT * FROM manual_edits",
+    "result": "output",
+    "text": "[]"
+  },
+  {
+    "name": "empty-result",
+    "fixture": "history",
+    "select": "SELECT id, title FROM changes WHERE 0",
+    "result": "output",
+    "text": "[]"
+  },
+  {
+    "name": "grouped-count",
+    "fixture": "history",
+    "select": "SELECT task, count(*) AS n FROM recertifications GROUP BY task ORDER BY task",
+    "result": "output",
+    "text": "[{\"task\":\"1\",\"n\":3},{\"task\":\"2\",\"n\":1}]"
+  },
+  {
+    "name": "join",
+    "fixture": "history",
+    "select": "SELECT c.title, t.task, t.title FROM changes c JOIN tasks t ON t.change = c.folder ORDER BY t.task",
+    "result": "output",
+    "text": "[{\"title\":\"When one, run\",\"task\":\"1\"},{\"title\":\"When two, run\",\"task\":\"2\"}]"
+  },
+  {
+    "name": "trailing-semicolon",
+    "fixture": "history",
+    "select": "SELECT id, title FROM changes ORDER BY id;  \n",
+    "result": "output",
+    "text": "[{\"id\":\"001\",\"title\":\"Run\"},{\"id\":\"002\",\"title\":\"Quiet\"}]"
+  },
+  {
+    "name": "literal-values",
+    "fixture": "history",
+    "select": "SELECT NULL AS empty, 'a' || char(10) || 'b' AS lines, 1.5 AS real, 7 AS whole, x'0102' AS bytes",
+    "result": "output",
+    "text": "[{\"empty\":null,\"lines\":\"a\\nb\",\"real\":1.5,\"whole\":7,\"bytes\":{\"0\":1,\"1\":2}}]"
+  },
+  {
+    "name": "empty-blob",
+    "fixture": "history",
+    "select": "SELECT x'' AS empty_bytes, zeroblob(3) AS zeros",
+    "result": "output",
+    "text": "[{\"empty_bytes\":{},\"zeros\":{\"0\":0,\"1\":0,\"2\":0}}]"
+  },
+  {
+    "name": "integers",
+    "fixture": "history",
+    "select": "SELECT 0 AS zero, -7 AS negative, 9007199254740991 AS largest, -9007199254740991 AS smallest",
+    "result": "output",
+    "text": "[{\"zero\":0,\"negative\":-7,\"largest\":9007199254740991,\"smallest\":-9007199254740991}]"
+  },
+  {
+    "name": "reals",
+    "fixture": "history",
+    "select": "SELECT 1e21 AS a, 1e20 AS b, 1e-7 AS c, 0.000001 AS d, 2.0 AS e, -0.0 AS f, 0.1 + 0.2 AS g, 1.0 / 3 AS h, 5e-324 AS i, 1.7976931348623157e308 AS j, -1.5e-10 AS k, 123456.789 AS l, 1e300 * 1e300 AS m, -1e300 * 1e300 AS n",
+    "result": "output",
+    "text": "[{\"a\":1e+21,\"b\":100000000000000000000,\"c\":1e-7,\"d\":0.000001,\"e\":2,\"f\":0,\"g\":0.30000000000000004,\"h\":0.3333333333333333,\"i\":5e-324,\"j\":1.7976931348623157e+308,\"k\":-1.5e-10,\"l\":123456.789,\"m\":null,\"n\":null}]"
+  },
+  {
+    "name": "string-escapes",
+    "fixture": "history",
+    "select": "SELECT '\"q\" \\ /' AS quotes, char(8) || char(9) || char(10) || char(12) || char(13) AS named, char(0) || char(1) || char(27) || char(31) AS control, char(8232) || char(8233) AS raw",
+    "result": "output",
+    "text": "[{\"quotes\":\"\\\"q\\\" \\\\ /\",\"named\":\"\\b\\t\\n\\f\\r\",\"control\":\"\\u0000\\u0001\\u001b\\u001f\",\"raw\":\"  \"}]"
+  },
+  {
+    "name": "non-ascii",
+    "fixture": "history",
+    "select": "SELECT 'é ü' AS latin, char(128512) AS emoji, char(55296) AS surrogate",
+    "result": "output",
+    "text": "[{\"latin\":\"é ü\",\"emoji\":\"😀\",\"surrogate\":\"���\"}]"
+  },
+  {
+    "name": "key-escapes",
+    "fixture": "history",
+    "select": "SELECT 1 AS \"a\"\"b\", 2 AS \"c\\d\"",
+    "result": "output",
+    "text": "[{\"a\\\"b\":1,\"c\\\\d\":2}]"
+  },
+  {
+    "name": "integer-keys",
+    "fixture": "history",
+    "select": "SELECT 'x' AS b, 2, 'y' AS a, 1, 10 AS \"10\", 4294967295 AS \"4294967295\", 4294967294 AS \"4294967294\", 3 AS \"01\", 4 AS \"-1\", 5 AS \"1.5\"",
+    "result": "output",
+    "text": "[{\"1\":1,\"2\":2,\"10\":10,\"4294967294\":4294967294,\"b\":\"x\",\"a\":\"y\",\"4294967295\":4294967295,\"01\":3,\"-1\":4,\"1.5\":5}]"
+  },
+  {
+    "name": "duplicate-keys",
+    "fixture": "history",
+    "select": "SELECT 1 AS a, 2 AS b, 3 AS a, 4 AS \"2\", 5 AS \"2\"",
+    "result": "output",
+    "text": "[{\"2\":5,\"a\":3,\"b\":2}]"
+  },
+  {
+    "name": "refused-delete",
+    "fixture": "history",
+    "select": "DELETE FROM changes",
+    "result": "failed",
+    "text": "osq query refused: the statement would write to the database\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "refused-second-select",
+    "fixture": "history",
+    "select": "SELECT 1; SELECT 2",
+    "result": "failed",
+    "text": "osq query refused: the input holds a second statement after the first\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "sqlite-error-no-statement",
+    "fixture": "history",
+    "select": ";",
+    "result": "failed",
+    "text": "osq query refused: The SQL query contains no statements.\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "sqlite-error-syntax",
+    "fixture": "history",
+    "select": "SELEC 1",
+    "result": "failed",
+    "text": "osq query refused: near \"SELEC\": syntax error\nchanges(id, folder, title, archived_on, goal, tasks, attempts, halts, elapsed_seconds, cost, planner)\nrequirements(change, capability, kind, requirement, renamed_from)\ntasks(change, task, title, attempts, done)\ndead_attempts(change, task, reason)\ndisclosures(change, task, section, text)\nnotices(change, notice, severity, opened, outcome)\nvalidator_runs(change, run, outcome, harness, model, duration, exit_code, scenarios, findings, reason, output)\nvalidator_findings(id, change, run, finding, capability, requirement, scenario, problem, detail, label)\nfocused_runs(change, task, run, outcome, exit_code, duration, timed_out, scenarios, files)\nmutation_picks(change, task, pick, file, function, outcome, reason, killed, survived, invalid, duration, scenarios)\nmutation_survivors(id, change, task, pick, file, function, line, column, mutator, replacement, label)\nlink_findings(id, change, severity, file, message, label)\ntask_outcomes(change, task, capability, scope_globs, scope_files, verify_kind, tests_modify, verify_starts, shares_scope, position, attempts, first_attempt, dead_reason, files_touched)\npauses(change, task, paused_at, until, source)\nrecertifications(change, task, recertified_at, outcome, automatic, path, credited_to, source)\nmanual_edits(kept_at, record, comment, paths, capabilities)"
+  },
+  {
+    "name": "labels-error",
+    "fixture": "bad-labels",
+    "select": "SELECT 1",
+    "result": "failed",
+    "text": "openspec/trials/validator.json must be a JSON object of true or false labels"
+  }
+]

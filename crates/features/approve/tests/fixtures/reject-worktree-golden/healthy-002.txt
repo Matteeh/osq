@@ -1,0 +1,15 @@
+error:
+Change 002-healthy is approved and healthy; only a failed change may be rejected.
+branches:
+osq/002-healthy
+worktrees:
+<scratch>/repo
+<scratch>/trees/002-healthy
+tip:
+osq: 002 approved
+
+commit:
+A	openspec/changes/002-healthy/.run/approved
+A	openspec/changes/002-healthy/proposal.md
+A	openspec/changes/002-healthy/tasks/1.md
+status:

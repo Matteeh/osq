@@ -1,0 +1,13 @@
+{"type":"verify_ran","timestamp":"2026-10-03T09:00:00.000Z","data":{"command":"node --test tests/alpha.test.ts","exitCode":0,"duration":0.3,"phase":"pre_spawn","expected":"red","missingPaths":[]}}
+{"type":"started","timestamp":"2026-10-03T09:00:01.000Z","data":{"attempt":1}}
+{"type":"focused_ran","timestamp":"2026-10-03T09:01:00.000Z","data":{"outcome":"passed","duration":1.234}}
+{"type":"retry","timestamp":"2026-10-03T09:02:00.000Z","data":{"automatic":true}}
+{"type":"focused_ran","timestamp":"2026-10-03T09:03:00.000Z","data":{"outcome":"failed","duration":2}}
+{"type":"focused_ran","timestamp":"2026-10-03T09:03:30.000Z","data":{"outcome":"weird"}}
+{"type":"retry","timestamp":"2026-10-03T09:04:00.000Z","data":{"automatic":false}}
+{"type":"mutation_ran","timestamp":"2026-10-03T09:04:30.000Z","data":{"file":"src/old.ts","function":"old","outcome":"measured","killed":1,"survived":0}}
+{"type":"measures","timestamp":"2026-10-03T09:05:00.000Z","data":{"phase":"start","scopeFiles":1}}
+{"type":"mutation_ran","timestamp":"2026-10-03T09:06:00.000Z","data":{"file":"src/alpha.ts","function":"alpha","outcome":"measured","killed":3,"survived":1,"survivors":[{"line":1,"column":22,"mutator":"ArithmeticOperator","replacement":"0"},{"file":"src/other.ts","line":2,"column":3,"mutator":"BooleanLiteral","replacement":"false"},{"line":"x","column":1,"mutator":"Bad","replacement":"y"}]}}
+{"type":"mutation_ran","timestamp":"2026-10-03T09:06:30.000Z","data":{"file":"src/alpha.ts","function":"log","outcome":"not_measured","reason":"timeout"}}
+{"type":"mutation_ran","timestamp":"2026-10-03T09:06:40.000Z","data":{"file":"src/alpha.ts","function":"","outcome":"measured"}}
+{"type":"stuck","timestamp":"2026-10-03T09:07:00.000Z","data":{"fingerprint":"sha256:same-failure"}}

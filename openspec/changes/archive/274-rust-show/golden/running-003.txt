@@ -1,0 +1,49 @@
+Spec: 003-running (003)
+Title: Alpha logs each call
+Status: [running]
+Next: running — osq show 003
+Location: active
+Approval: approved (sha256:approved-003)
+Depends on: none
+Features:
+  Reads: none
+  Writes: none
+
+Goal:
+  Alpha logs each call.
+
+Contract:
+  ### Requirement: Alpha logs
+  Alpha SHALL log each call.
+
+Tasks:
+  [>] 1. When alpha is called, it logs the call [running]
+      Verify: node --test tests/alpha.test.ts
+      Pre-spawn verify: started green, but it declared red
+      Retries: 2 (1 automatic)
+      Stuck: same failure twice (sha256:same-failure)
+      Focused runs: passed 1.23s, failed 2.00s (attempt ended, verify skipped), unavailable unavailables
+      Mutation: src/alpha.ts#alpha 3 of 4 killed; src/alpha.ts#log not measured (timeout)
+        Survived: src/alpha.ts:1:22 ArithmeticOperator -> 0
+        Survived: src/other.ts:2:3 BooleanLiteral -> false
+      Scope: src/alpha.ts
+      Acceptance:
+        - [ ] Each call writes one log line.
+
+Planning Sessions:
+  (no planning sessions)
+
+Event Timeline:
+  2026-10-03T09:00:00.000Z [Task 1] verify_ran (command: node --test tests/alpha.test.ts, exitCode: 0, duration: 0.3, phase: pre_spawn, expected: red, missingPaths: )
+  2026-10-03T09:00:01.000Z [Task 1] started (attempt: 1)
+  2026-10-03T09:01:00.000Z [Task 1] focused_ran (outcome: passed, duration: 1.234)
+  2026-10-03T09:02:00.000Z [Task 1] retry (automatic: true)
+  2026-10-03T09:03:00.000Z [Task 1] focused_ran (outcome: failed, duration: 2)
+  2026-10-03T09:03:30.000Z [Task 1] focused_ran (outcome: weird)
+  2026-10-03T09:04:00.000Z [Task 1] retry (automatic: false)
+  2026-10-03T09:04:30.000Z [Task 1] mutation_ran (file: src/old.ts, function: old, outcome: measured, killed: 1, survived: 0)
+  2026-10-03T09:05:00.000Z [Task 1] measures (phase: start, scopeFiles: 1)
+  2026-10-03T09:06:00.000Z [Task 1] mutation_ran (file: src/alpha.ts, function: alpha, outcome: measured, killed: 3, survived: 1, survivors: [object Object],[object Object],[object Object])
+  2026-10-03T09:06:30.000Z [Task 1] mutation_ran (file: src/alpha.ts, function: log, outcome: not_measured, reason: timeout)
+  2026-10-03T09:06:40.000Z [Task 1] mutation_ran (file: src/alpha.ts, function: , outcome: measured)
+  2026-10-03T09:07:00.000Z [Task 1] stuck (fingerprint: sha256:same-failure)

@@ -1,0 +1,333 @@
+# rust-retry Specification
+
+## Purpose
+The retry feature clears a dead or regressed task or change so it runs again, as TypeScript's `osq retry` does. It holds the feature's logic and its command, as ADR 022 says.
+
+## Requirements
+
+### Requirement: Code ownership
+<!-- source: crates/features/retry/** -->
+The rust-retry capability SHALL own the `osq-feature-retry` crate: its
+manifest, its source, its tests and their fixtures.
+
+#### Scenario: Retry crate ownership
+- **WHEN** file ownership is resolved for the retry feature
+- **THEN** system maps `crates/features/retry/**` to rust-retry
+
+### Requirement: Retry command
+`osq-feature-retry` SHALL expose one public item, `RetryFeature`, a unit
+struct that implements core's `Feature` and derives `Clone`, `Copy`,
+`Debug` and `Default`. Its `name()` is `retry`, and its `commands()` is one
+command with the name `retry`, the summary `clear a dead or regressed task
+or change so it runs again` and the usage `<id> <task|change>`. The crate
+depends on `osq-core`, `osq-kernel-storage`, `osq-kernel-specs`,
+`osq-kernel-config`, `osq-kernel-vcs` and `osq-kernel-harnesses`, and on no
+feature crate.
+
+#### Scenario: Retry feature commands
+- **WHEN** a test reads `RetryFeature`'s name and commands
+- **THEN** the name is `retry`, and the commands are exactly one, with the name `retry`, the summary `clear a dead or regressed task or change so it runs again` and the usage `<id> <task|change>`
+
+### Requirement: Retry arguments
+`RetryFeature::run` SHALL return `FeatureError::unknown_command` with the
+invocation's command for any command but `retry`, and
+`FeatureError::usage("retry", "expected a change id and a target, got <n>")`
+for a `retry` invocation with `n` arguments when `n` is not 2, before it
+reads any file. Every other failure of `retry` SHALL be
+`FeatureError::failed` with the command `retry` and the message the other
+retry requirements name.
+
+#### Scenario: Retry argument errors
+- **WHEN** a test runs the invocation in the row with a scratch root that holds no `openspec/` folder
+- **THEN** it gives the row's error:
+
+| Invocation | Error |
+|---|---|
+| `retry` with args `1` | `Usage` error displayed `usage of retry: expected a change id and a target, got 1` |
+| `retry` with args `1`, `2`, `3` | `Usage` error displayed `usage of retry: expected a change id and a target, got 3` |
+| `inbox` with no args | `UnknownCommand` error displayed `unknown command: inbox` |
+
+### Requirement: Retry refusals
+`retry <id> <target>` SHALL refuse, in TypeScript's `retrySpec` order and
+with its texts, writing nothing:
+
+1. a target that, trimmed, is neither `change` nor all ASCII digits:
+   `Invalid retry target "<target>": expected a numeric task or "change".`;
+2. an id that matches no active change, matched as TypeScript's
+   `matchesFolder` does among rust-storage `list_changes` entries, and no
+   archived change of an osq worktree as rust-retry "Archived retry" finds
+   it: `Spec "<id>" not found in <root>/openspec/changes`;
+3. `.run/approved` missing or blank:
+   ``Change <id> is not approved. Run `osq approve <id>` before retrying.``;
+4. `.run/approved` trimmed other than rust-storage `change_folder_seal` of
+   the folder: ``Change <id> no longer matches its approved hash. Run `osq approve <id>` before retrying.``;
+5. for `change`, any `.run/running/*.pid`:
+   `Change <id> has a running task; retry is refused.`; for a task, a
+   `.run/running/<task>.pid` whose JSON object's `pid` is an integer of a
+   process that is not running:
+   `Task <task> was left running by a stopped watcher (pid <pid>); run osq watch to reap it, then osq retry <id> <task> if it stays dead.`,
+   and any other `.run/running/<task>.pid`:
+   `Task <task> is running; retry is refused.`;
+6. no `.run/regressed/<target>.md` and, for a task, no
+   `.run/dead/<target>.md`:
+   `No active failure marker for task <task> in <folder>; retry is refused.`,
+   or `No active failure marker for change-level regression in <folder>; retry is refused.`;
+7. a marker reason that is not a rust-core `FailureReason`:
+   `Marker reason "<reason>" is not one osq knows; retry is refused.`
+
+`<id>` here is the folder's leading digits, or the whole folder name when
+it has none. A process is running when `pid` is above 0 and `/proc/<pid>`
+exists. The reason is the regressed marker's, else the dead marker's,
+read as the frontmatter `reason` trimmed through rust-specs
+`parse_frontmatter`; when that is missing, blank, not a string or the
+frontmatter does not parse, it is `regressed` or `dead` respectively.
+
+#### Scenario: Retry refusals osq adds
+- **WHEN** `retry` runs with the row's arguments on a copy of `crates/features/retry/tests/fixtures/retry-project/`
+- **THEN** it gives a `Failed` error for the command `retry` with the row's message, where `<root>` is the copy's root, and leaves every file in the copy unchanged:
+
+| Arguments | Message |
+|---|---|
+| `12`, `1` | `Marker reason "weird" is not one osq knows; retry is refused.` |
+| `11`, `1` | `<root>/openspec/changes/011-scope-hash/tasks/1.md: No such file or directory (os error 2)` |
+
+### Requirement: Retry record
+A `retry` that is not refused and is not a recertification, as rust-retry
+"Scope recertification" names one, SHALL, as TypeScript's
+`retainFailureMarkers` and `appendTargetEvent` do:
+
+- take the ordinal as one more than the highest `<n>` of any
+  `<target>.<n>.md` in `.run/dead/` or `.run/regressed/`, or 1;
+- rename `.run/regressed/<target>.md` to `<target>.<ordinal>.md`, then
+  `.run/dead/<target>.md` to `<target>.<ordinal>.md`, then, for a task
+  with a regressed marker, `.run/done/<target>` to
+  `<target>.<ordinal>` when it exists, each when present;
+- append to `.run/events/<target>.jsonl`, creating the folder, one
+  `retry` event line through rust-core `event_line`, with the target, the
+  reason, the attempt `ordinal + 1`, no `automatic` key, and the current
+  time as an ISO 8601 UTC timestamp to the millisecond;
+- return the output `Retried <id> task <task> (next attempt: <attempt>)`,
+  or `Retried <id> change (next attempt: <attempt>)`, then
+  `  Reason: <reason>` and one `  Retained: <path>` per renamed file in
+  rename order, the path relative to the change folder with `/`, each
+  line followed by a newline.
+
+#### Scenario: Retry equals TypeScript's
+- **WHEN** `retry` runs with the row's arguments on a new copy of `crates/features/retry/tests/fixtures/retry-project/`, after writing the row's running marker into the row's change folder, where a live pid is the test's own process id and a stale pid is `2147483646`
+- **THEN** the result and the change folder's `.run/` tree, apart from `running/`, equal the row's golden in `crates/features/retry/tests/fixtures/golden/`, a copy of `openspec/changes/277-rust-retry/golden/`; the golden gives `outcome: output` and the output, or `outcome: failed` and the `Failed` message for the command `retry` with the copy's root written `<root>`, then `tree:` and each file as `--- <path>` and its text, an event line parsed, its `timestamp` written `<timestamp>`, and written back with sorted keys:
+
+| Arguments | Change folder | Running marker | Golden |
+|---|---|---|---|
+| `1`, `1` | `001-dead` | none | `dead-001.txt` |
+| `001`, ` 1 ` | `001-dead` | none | `padded-001.txt` |
+| `2`, `1` | `002-history` | none | `history-002.txt` |
+| `3`, `change` | `003-change-regressed` | none | `change-003.txt` |
+| `3`, `1` | `003-change-regressed` | none | `change-003-task.txt` |
+| `004`, `2` | `004-task-regressed` | none | `regressed-004.txt` |
+| `005-dead-and-regressed`, `1` | `005-dead-and-regressed` | none | `both-005.txt` |
+| `6`, `1` | `006-unapproved` | none | `unapproved-006.txt` |
+| `7`, `1` | `007-stale` | none | `stale-007.txt` |
+| `8`, `1` | `008-healthy` | none | `healthy-008.txt` |
+| `8`, `change` | `008-healthy` | none | `healthy-008-change.txt` |
+| `9`, `1` | `009-running` | `1.pid` with a live pid | `running-live-009.txt` |
+| `9`, `1` | `009-running` | `1.pid` with a stale pid | `running-stale-009.txt` |
+| `9`, `1` | `009-running` | `1.pid` holding `not json` | `running-garbage-009.txt` |
+| `9`, `change` | `009-running` | `1.pid` with a live pid | `running-change-009.txt` |
+| `9`, `1` | `009-running` | `2.pid` with a live pid | `running-other-009.txt` |
+| `10`, `1` | `010-scope-plain` | none | `scope-plain-010.txt` |
+| `13`, `1` | `013-blank-reason` | none | `blank-reason-013.txt` |
+| `1`, `x` | `001-dead` | none | `bad-target.txt` |
+| `99`, `1` | `001-dead` | none | `not-found.txt` |
+
+### Requirement: Archived retry
+When no active change matches the id, `retry` SHALL load the root's config
+through rust-config `load_config`, failing with the config error's text.
+With `vcs.enabled` and a rust-vcs `GitVcs` root, it SHALL list rust-storage
+`change_trees` from the `worktree_list` worktrees and no stacked folders,
+and take the first archived entry of `list_tree_changes` that lies in a
+tree naming a folder and matches the id as `matchesFolder` does. Without
+one, or with vcs off, the not-found refusal stands. A numeric target on
+that change SHALL fail, writing nothing, with `<folder> has archived; osq
+retry clears only its land stop: osq retry <id> change`. For `change`,
+refusals 3 to 7 and rust-retry "Retry record" SHALL apply to its folder.
+It SHALL then commit, in the change's tree with git timeouts from config,
+the marker, `.run/events/change.jsonl` and each retained file, as paths
+relative to the tree root with `/`, with the message `osq: <id> land
+retry` and the author `vcs.author`. When the commit fails, retry SHALL put
+each of those files back as `HEAD` holds it, removing one `HEAD` lacks,
+stage the paths again ignoring a failure, and fail with `osq could not
+record the retry: <git error>`.
+
+#### Scenario: Archived retry equals TypeScript's
+- **WHEN** a test builds the row's scratch repository as `crates/features/retry/tests/fixtures/archived-golden/print-archived-goldens.mjs.txt` describes, with `osq.toml` naming git on or off as the row says, and runs `retry` with the row's arguments at `<scratch>/repo`
+- **THEN** the result, the archive folder's `.run/` tree, the tip subject of `osq/<folder>` and the worktree's `git status --porcelain` equal the row's golden in `crates/features/retry/tests/fixtures/archived-golden/`, a copy of `openspec/changes/290-rust-retry-archived/golden/`, written as that script writes them:
+
+| Arguments | Git | Golden |
+|---|---|---|
+| `1`, `change` | on | `land-stop-001.txt` |
+| `001-land-stop`, ` change ` | on | `land-stop-padded-001.txt` |
+| `1`, `1` | on | `land-stop-task-001.txt` |
+| `2`, `change` | on | `stale-002.txt` |
+| `3`, `change` | on | `no-marker-003.txt` |
+| `1`, `change` | off | `git-off-001.txt` |
+
+#### Scenario: Archived retry commit fails
+- **WHEN** the git-on repository of "Archived retry equals TypeScript's" also holds a `pre-commit` hook in its `.git/hooks/` that exits 1, and `retry` runs with `1`, `change`
+- **THEN** it gives a `Failed` error for the command `retry` whose message starts with `osq could not record the retry: `, and the archive folder's `.run/` tree, the tip subject and the worktree status equal those `land-stop-task-001.txt` holds
+
+### Requirement: Scope recertification
+A task `retry` of an active change that passes refusals 1 to 7 SHALL be a
+recertification, as in TypeScript's `retrySpec`, when the task has a
+regressed marker and no dead marker, the reason is `scope_regression`, and
+the frontmatter of `.run/done/<task>` holds a `scope_hash` that is a string
+and not empty. A recertification SHALL, in this order:
+
+1. read `tasks/<task>.md` of the change folder through rust-specs
+   `read_task_file`, failing with that error's text;
+2. load the root's config through rust-config `load_config`, failing with
+   the config error's text;
+3. run the task file's `verify` through rust-harnesses `run_verify` in the
+   root, with the process environment as its source, no configured or agent
+   names, `OSQ_CHANGE` set to the change folder's absolute path, no
+   `OSQ_DIFF`, the timeout `timeouts.verifyTimeout` and the kill grace
+   `timeouts.harnessKillGrace`, failing with the process error's text when
+   the command cannot start;
+4. take the task's current scope files and scope hash, as rust-retry
+   "Recertified done marker" says;
+5. when the verify's exit code is 0, rewrite `.run/done/<task>` as rust-retry
+   "Recertified done marker" says;
+6. rename `.run/regressed/<task>.md` to `<task>.<ordinal>.md`, and when the
+   exit code is not 0 also `.run/done/<task>` to `<task>.<ordinal>`, with the
+   ordinal rust-retry "Retry record" takes;
+7. append to `.run/events/<task>.jsonl` one `recertification` event line
+   through rust-core `event_line`, with the current time as an ISO 8601 UTC
+   timestamp to the millisecond, the task, the outcome `passed` for exit
+   code 0 and `requeued` otherwise, the differing paths, the attribution,
+   the command, the exit code, the output, whether it timed out, the done
+   marker's `scope_hash` as the recorded hash and the current scope hash,
+   and, only when requeued, the attempt `ordinal + 1` and the reason
+   `scope_regression`, with no `automatic` key;
+8. return `Recertified <id> task <task> (scope regression cleared)` when it
+   passed, or `Requeued <id> task <task> for agent work (next attempt: <ordinal + 1>)`,
+   then `  Reason: scope_regression` and one `  Retained: <path>` per
+   renamed file in rename order, the path relative to the change folder
+   with `/`, each line followed by a newline.
+
+Steps 1 to 3 write nothing when they fail. The differing paths are the
+lines of the regressed marker's body before its first blank line that
+start with `- `, that prefix removed and the rest trimmed. The attribution
+is the regressed marker's frontmatter `attribution` as JSON when it is a
+list, and an empty list otherwise. The output is TypeScript's
+`tailVerifyOutput` of the command's output with `limits.markerOutputLines`
+lines and `limits.markerLineChars` characters: empty when the output is
+blank after trimming its end; the output unchanged when the trimmed output
+has at most that many lines and none longer than that many characters;
+otherwise its last that many lines, each longer line cut to that many
+characters followed by `… (<n> more characters)`, joined with a newline.
+
+#### Scenario: Recertification equals TypeScript's
+- **WHEN** `retry` runs with the row's arguments on a new copy of `crates/features/retry/tests/fixtures/recert-project/`
+- **THEN** the output and the `.run/` tree of the copy's `openspec/changes/001-recert/` equal the row's golden in `crates/features/retry/tests/fixtures/recert-golden/`, a copy of `openspec/changes/297-rust-retry-scope-recert/golden/`, written as rust-retry "Retry equals TypeScript's" writes a golden, with every line outside an event file that starts `recertified_at: ` written `recertified_at: <timestamp>`:
+
+| Arguments | Golden |
+|---|---|
+| `1`, `1` | `passed-1.txt` |
+| `1`, `2` | `requeued-2.txt` |
+| `001`, `3` | `long-3.txt` |
+| `1`, `4` | `again-4.txt` |
+
+#### Scenario: Recertification refusals
+- **WHEN** a new copy of `crates/features/retry/tests/fixtures/recert-project/` also holds an `osq.toml` holding `bogus = 1`, and `retry` runs with `1`, `1`
+- **THEN** it gives a `Failed` error for the command `retry` with the message `bogus is not an osq.toml key`, and every file in the copy apart from `osq.toml` is unchanged
+
+### Requirement: Recertified done marker
+A recertification SHALL take the task's scope files as TypeScript's
+`resolveScope` does. Each `scope` entry is trimmed, its `\` turned into
+`/` and its leading `./` removed, repeatedly. An entry holding `*` or `?`,
+or ending in `/`, is a pattern; any other entry is exact.
+
+- A pattern searches below its root: the part before its first `*` or `?`
+  up to its last `/`, or the project when that part has no `/`, or for an
+  entry with neither the entry without its trailing `/`. A root that is
+  `..`, starts with `../` or is absolute gives nothing. Otherwise the
+  pattern gives every regular file below the root, symbolic links not
+  followed, whose project-relative path rust-specs `scope_covers_path`
+  matches with the entry, and a pattern that matches no file gives nothing.
+- An exact entry that starts with `/` or `../`, or is `..`, gives itself
+  with no hash. Otherwise it gives itself with the hash of the regular
+  file at that path, or no hash when that path is not a regular file or
+  is a symbolic link.
+
+The first result for a path wins, and the results are sorted by bytes. A
+file's hash is `sha256:` and the lowercase hex SHA-256 of its text read as
+UTF-8 with invalid bytes replaced, or no hash when it cannot be read. The
+scope hash is `sha256:` and the lowercase hex SHA-256 of one line
+`<path>:<hash>` per result, with an empty hash for no hash, joined with a
+newline.
+
+The rewrite SHALL keep the done marker's body and every frontmatter key in
+its place, as TypeScript's `refreshRecertifiedDoneMarker` does. It sets
+`original_scope_hash` to the recorded hash when that key is not a non-empty
+string, then `scope_hash` to the current scope hash, `scope_files` to a
+mapping of each result's path to its hash or null, `scope_resolver` to 2,
+`recertified_at` to the current time as an ISO 8601 UTC timestamp to the
+millisecond, and `recertification_count` to one more than its value when
+that is an integer above 0, or 1. A key the marker lacks is added at the
+end in that order. The marker is written as `---`, a newline, the
+frontmatter, `---`, a newline and the body.
+
+The frontmatter SHALL be written as the `yaml` package's `stringify`
+writes it: one `<key>: <value>` line per key; a non-empty mapping or list
+as a block on the lines below its key, indented two more spaces; a list
+item as `- ` and its value, where a mapping or list item starts on the
+dash's line and its later lines are indented two past the dash; `{}` for
+an empty mapping, `[]` for an empty list, `null`, `true`, `false`, an
+integer in decimal and a float as its source text. A key is written as a
+string, an integer key as its decimal text. A string is written plain
+when it is not empty, starts with an ASCII letter or digit, `.`, `_` or
+`/`, holds only ASCII letters and digits and `.`, `_`, `/`, `-`, `+`, `:`
+and `@`, does not end with `:`, and is not `null`, `Null`, `NULL`, `true`,
+`True`, `TRUE`, `false`, `False`, `FALSE`, an integer, a `0o` octal or
+`0x` hex integer, a float such as `1.5`, `.5` or `12e45`, `.inf`, `.Inf`,
+`.INF`, `.nan`, `.NaN` or `.NAN`; any other string is written as a JSON
+string.
+
+#### Scenario: Recertified scope files
+- **WHEN** a new copy of `crates/features/retry/tests/fixtures/recert-project/` has `openspec/changes/001-recert/tasks/4.md` rewritten to `---`, `title: t`, `verify: sh checks/pass.sh`, `scope:` and one `  - <entry as a JSON string>` line per row entry, then `---`, each line followed by a newline, and `.run/approved` rewritten to rust-storage `change_folder_seal` of that folder and a newline, and `retry` runs with `1`, `4`
+- **THEN** the rewritten `.run/done/4` holds the row's `scope_hash` line, and its `scope_files` line and the indented lines after it are the row's:
+
+| Scope entries | `scope_hash` | `scope_files` lines |
+|---|---|---|
+| `../outside.txt` | `sha256:985bc8dcecaee4913c191e1d3b327a931d48951f486500edd41ab73a57918030` | `scope_files:`, `  ../outside.txt: null` |
+| `/abs/file.txt` | `sha256:d84705e84283af54e8d2e9a3d8f1a7f34c018c3aeb577b80d8186dd3577d841a` | `scope_files:`, `  /abs/file.txt: null` |
+| `../*.txt`, `/abs/*.txt` | `sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `scope_files: {}` |
+| `src` | `sha256:7aaf195b39732b39c116a660cd4ffe54eae09e8fc8a4970b2d7e295e68ad4892` | `scope_files:`, `  src: null` |
+| `.\src\one.txt` | `sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06` | `scope_files:`, `  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae` |
+| `src/two/*` | `sha256:30f9c1fbb55d70fb0e7a241e42ceb8099db0c1fe1d5e8fe749159a2b7964bb7d` | `scope_files:`, `  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7` |
+| `src/two/deep/?.txt` | `sha256:3515f8747e9ad61510ae928351f0d194a568fb85538f2a36a8cf865bcc42f53a` | `scope_files:`, `  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f` |
+| `src/one.txt`, `./src/one.txt` | `sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06` | `scope_files:`, `  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae` |
+| `src/two/**/*.txt` | `sha256:aa7da01efad91002a86deb7638a3a1648fea7b55632fc4b30e17e1bb57d74342` | `scope_files:`, `  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7`, `  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f` |
+| `src/**` | `sha256:d21bc7711678dcf1a2bd9bc1c5e7be5282b4baa70f6d001ba39ab0937d5ef4ac` | `scope_files:`, `  src/one.txt: sha256:7ebb69bac93710c46aa44d35d31ef4965e35c47dd614e1305bfd4a9f96a411ae`, `  src/two/a.txt: sha256:87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7`, `  src/two/deep/b.txt: sha256:0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f` |
+
+#### Scenario: Recertified marker text
+- **WHEN** a new copy of `crates/features/retry/tests/fixtures/recert-project/` has `openspec/changes/001-recert/.run/done/4` rewritten to `---`, `scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222`, the row's frontmatter line, `---` and `2026-10-01T10:00:00.000Z`, each line followed by a newline, and `retry` runs with `1`, `4`
+- **THEN** the rewritten marker's lines start with `---`, `scope_hash: sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06` and the row's lines:
+
+| Frontmatter line | Lines |
+|---|---|
+| `flag: true` | `flag: true` |
+| `note: ""` | `note: ""` |
+| `stamp: "0x1f"` | `stamp: "0x1f"` |
+| `stamp: "12e45"` | `stamp: "12e45"` |
+| `stamp: "-1"` | `stamp: "-1"` |
+| `stamp: "True"` | `stamp: "True"` |
+| `stamp: "a:"` | `stamp: "a:"` |
+| `stamp: a.b/c_d-e+f:g@h` | `stamp: a.b/c_d-e+f:g@h` |
+| `stamp: 1.2.3` | `stamp: 1.2.3` |
+| `nothing:` | `nothing: null` |
+| `list: [{a: 1, b: [x]}, [y, z], {}, []]` | `list:`, `  - a: 1`, `    b:`, `      - x`, `  - - y`, `    - z`, `  - {}`, `  - []` |
+| `nested: {a: {b: c}}` | `nested:`, `  a:`, `    b: c` |
+| `codes: {7: seven}` | `codes:`, `  "7": seven` |
+| `recertification_count: 0` | `recertification_count: 1`, `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222` |
+| `recertification_count: "3"` | `recertification_count: 1`, `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222` |
+| `original_scope_hash: ""` | `original_scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222`, `scope_files:` |

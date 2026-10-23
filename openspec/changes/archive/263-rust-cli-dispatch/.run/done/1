@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:0c0f832a30e11cf13ba74e637688fc51132a65a6b768fe399e8bc67c53401581"
+build_stamp: "3f811304"
+project_commit: "ce9d52b7"
+exit_code: 0
+scope_files: {"crates/kernel/linter/src/gates/change.rs":"sha256:7cc8011c50e3cf059764da6c1e60b299aa5dfd9ec9e382172b188ac3d27caf15","crates/kernel/linter/tests/fixtures/link-gates-ownership/openspec/changes/003-retire/specs/fresh/spec.md":"sha256:54d3d5d49c017a29b83b513af94335bae99525e940f28d3b48308cb7bb8d06ab","crates/kernel/linter/tests/fixtures/link-gates-ownership/openspec/changes/003-retire/specs/keep/spec.md":"sha256:ee340569cd68e91239737aff1222bc684883cab3e37cd9e1cb5e23fcb19deb82","crates/kernel/linter/tests/fixtures/link-gates-ownership/openspec/changes/004-orphan/specs/keep/spec.md":"sha256:1d6484168d9e13adfcf3359ff06554a98b3897a98a5d918a40c7eb1a77322476","crates/kernel/linter/tests/link_gates_removed_ownership.rs":"sha256:eee5bde280f6d5f4a56738d79d522e6424856b7984d63ab2ca575936d87f3857"}
+---
+2026-10-21T20:13:15.156Z

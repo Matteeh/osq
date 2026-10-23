@@ -1,0 +1,801 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index dc653478..524d4588 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -348,6 +348,8 @@ dependencies = [
+  "osq-core",
+  "osq-kernel-config",
+  "osq-kernel-harnesses",
++ "osq-kernel-storage",
++ "osq-kernel-vcs",
+ ]
+ 
+ [[package]]
+diff --git a/crates/features/doctor/Cargo.toml b/crates/features/doctor/Cargo.toml
+index 070e9438..d08f6ede 100644
+--- a/crates/features/doctor/Cargo.toml
++++ b/crates/features/doctor/Cargo.toml
+@@ -14,3 +14,5 @@ workspace = true
+ osq-core.workspace = true
+ osq-kernel-config.workspace = true
+ osq-kernel-harnesses.workspace = true
++osq-kernel-storage.workspace = true
++osq-kernel-vcs.workspace = true
+diff --git a/crates/features/doctor/src/doctor.rs b/crates/features/doctor/src/doctor.rs
+index 422024b2..29aa922e 100644
+--- a/crates/features/doctor/src/doctor.rs
++++ b/crates/features/doctor/src/doctor.rs
+@@ -3,6 +3,7 @@
+ //! The lines are pure text; only the orchestrator reads the config and starts
+ //! pi (ADR 023). Doctor writes no file (ADR 025).
+ 
++mod changes;
+ mod probe;
+ 
+ use std::collections::BTreeMap;
+@@ -33,7 +34,8 @@ const PI_TESTED_RANGE: PiVersionRange = PiVersionRange {
+ /// Implements: rust-doctor/doctor-pi-checks
+ pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
+     let env: BTreeMap<String, String> = std::env::vars().collect();
+-    let lines = collect_lines(root, &env);
++    let (mut lines, config) = collect_lines(root, &env);
++    lines.extend(changes::change_lines(root, &config));
+     if lines.iter().any(|line| line.starts_with("[fail]")) {
+         return Err(FeatureError::failed("doctor", lines.join("\n")));
+     }
+@@ -45,18 +47,38 @@ pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
+     Ok(output)
+ }
+ 
+-/// Builds the check lines for one root and one process environment.
++/// Builds the config and pi check lines for one root and process environment,
++/// along with the config the change checks use.
+ ///
+ /// Implements: rust-doctor/doctor-pi-checks
+-fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> Vec<String> {
+-    let config = match load_config(root) {
+-        Ok(config) => config,
+-        Err(error) => return vec![format!("[fail] config: failed to load: {error}")],
++fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> (Vec<String>, Config) {
++    let loaded = load_config(root);
++    let config = match &loaded {
++        Ok(config) => config.clone(),
++        Err(_) => Config::default(),
+     };
+-    let mut lines = vec![config_line(&config)];
+-    if config.executor.harness != Harness::Pi {
+-        return lines;
++    let mut lines = Vec::new();
++    match loaded {
++        Ok(loaded) => {
++            lines.push(config_line(&loaded));
++            if loaded.executor.harness == Harness::Pi {
++                append_pi_lines(&mut lines, &loaded, root, env);
++            }
++        }
++        Err(error) => lines.push(format!("[fail] config: failed to load: {error}")),
+     }
++    (lines, config)
++}
++
++/// Appends the harness, version and auth lines when the harness is pi.
++///
++/// Implements: rust-doctor/doctor-pi-checks
++fn append_pi_lines(
++    lines: &mut Vec<String>,
++    config: &Config,
++    root: &Path,
++    env: &BTreeMap<String, String>,
++) {
+     let bin = resolve_pi_binary(config.pi.bin.as_deref(), env);
+     let version = match probe(&bin, root, env, &config.timeouts) {
+         Ok(version) => version,
+@@ -64,7 +86,7 @@ fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> Vec<String> {
+             lines.push(format!(
+                 "[fail] harness: binary unavailable: {bin} ({reason})"
+             ));
+-            return lines;
++            return;
+         }
+     };
+     lines.push(harness_line(&bin, &version));
+@@ -72,7 +94,6 @@ fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> Vec<String> {
+     if let Some(provider) = config.pi.provider.as_deref() {
+         lines.push(auth_line(&bin, provider, root, env, &config.timeouts));
+     }
+-    lines
+ }
+ 
+ /// Formats the configuration line the loaded config earned.
+diff --git a/crates/features/doctor/src/doctor/changes.rs b/crates/features/doctor/src/doctor/changes.rs
+new file mode 100644
+index 00000000..0557bac6
+--- /dev/null
++++ b/crates/features/doctor/src/doctor/changes.rs
+@@ -0,0 +1,187 @@
++//! Building doctor's locks, archives and done-marker lines from the storage
++//! read model.
++//!
++//! Only this module reads files, `/proc`, `HOME` and git; the line builders stay
++//! pure (ADR 023). Doctor reads the change folders through storage alone
++//! (ADR 022) and writes no file (ADR 025).
++
++use std::fs;
++use std::path::{Component, Path, PathBuf};
++
++use osq_kernel_config::{Config, VcsConfig};
++use osq_kernel_storage::{
++    ChangeEntry, Location, TreeCandidate, change_trees, list_changes, list_tree_changes,
++    read_change_files,
++};
++use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
++
++/// The paths each check found, in listing order.
++#[derive(Default)]
++struct Found {
++    /// Every orphaned lock path, relative to the root.
++    orphaned: Vec<String>,
++    /// Every invalid archive folder path, relative to the root.
++    invalid_archives: Vec<String>,
++    /// Every unverified done marker path, relative to the root.
++    unverified: Vec<String>,
++}
++
++/// Builds the locks, archives and done-marker lines for one root and config.
++///
++/// Implements: rust-doctor/doctor-change-checks
++pub(super) fn change_lines(root: &Path, config: &Config) -> Vec<String> {
++    let root = real_path(root);
++    let mut found = Found::default();
++    for entry in change_folders(&root, config) {
++        collect_entry(&root, &entry, &mut found);
++    }
++    vec![
++        locks_line(&found.orphaned),
++        archives_line(&found.invalid_archives),
++        done_markers_line(&found.unverified),
++    ]
++}
++
++/// Appends one change folder's problems to the checks' findings.
++///
++/// Implements: rust-doctor/doctor-change-checks
++fn collect_entry(root: &Path, entry: &ChangeEntry, found: &mut Found) {
++    let files = read_change_files(&entry.path);
++    match entry.location {
++        Location::Active => {
++            for lock in files.locks {
++                if !is_live(lock.pid) {
++                    found.orphaned.push(relative(root, &lock.path));
++                }
++            }
++            for marker in files.done_markers {
++                if !marker.verified {
++                    found.unverified.push(relative(root, &marker.path));
++                }
++            }
++        }
++        Location::Archived => {
++            if !files.has_proposal || !files.has_tasks {
++                found.invalid_archives.push(relative(root, &entry.path));
++            }
++        }
++        Location::Rejected => {}
++    }
++}
++
++/// Lists the root's change folders, across worktrees when git allows it.
++///
++/// Implements: rust-doctor/doctor-change-checks
++fn change_folders(root: &Path, config: &Config) -> Vec<ChangeEntry> {
++    if config.vcs.enabled {
++        if let Some(entries) = worktree_changes(root, config) {
++            return entries;
++        }
++    }
++    list_changes(root)
++}
++
++/// Lists the changes across the worktrees and stacked folders, or none when a
++/// git call fails.
++///
++/// Implements: rust-doctor/doctor-change-checks
++fn worktree_changes(root: &Path, config: &Config) -> Option<Vec<ChangeEntry>> {
++    let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
++    let repo_root = vcs.root().ok().flatten()?;
++    let worktrees = vcs.worktree_list().ok()?;
++    let candidates: Vec<TreeCandidate> = worktrees.into_iter().map(candidate).collect();
++    let stacked = stacked_folders(&config.vcs, &repo_root);
++    let trees = change_trees(root, &candidates, &stacked);
++    Some(list_tree_changes(&trees))
++}
++
++/// Turns one git worktree into a tree candidate.
++fn candidate(worktree: Worktree) -> TreeCandidate {
++    TreeCandidate {
++        path: PathBuf::from(worktree.path),
++        branch: worktree.branch,
++    }
++}
++
++/// The folders directly under the stacked approvals root, or none when the
++/// home is unset or the root cannot be read.
++fn stacked_folders(config: &VcsConfig, repo_root: &Path) -> Vec<PathBuf> {
++    let Some(home) = std::env::var_os("HOME") else {
++        return Vec::new();
++    };
++    let stacked = stacked_root(config, repo_root, Path::new(&home));
++    let Ok(entries) = fs::read_dir(&stacked) else {
++        return Vec::new();
++    };
++    entries
++        .flatten()
++        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
++        .map(|entry| entry.path())
++        .collect()
++}
++
++/// Resolves a path's symlinks, falling back to the path as given.
++fn real_path(path: &Path) -> PathBuf {
++    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
++}
++
++/// Whether a lock pid names a live process, as `/proc` knows it.
++fn is_live(pid: Option<i64>) -> bool {
++    let Some(pid) = pid.and_then(|pid| u32::try_from(pid).ok()) else {
++        return false;
++    };
++    pid >= 1 && Path::new("/proc").join(pid.to_string()).exists()
++}
++
++/// Writes a path relative to the root as Node's `path.relative` does.
++#[must_use]
++fn relative(root: &Path, path: &Path) -> String {
++    let root_parts: Vec<Component> = root.components().collect();
++    let path_parts: Vec<Component> = path.components().collect();
++    let shared = root_parts
++        .iter()
++        .zip(&path_parts)
++        .take_while(|(left, right)| left == right)
++        .count();
++    let mut parts: Vec<String> = Vec::new();
++    for _ in shared..root_parts.len() {
++        parts.push("..".to_owned());
++    }
++    for component in &path_parts[shared..] {
++        parts.push(component.as_os_str().to_string_lossy().into_owned());
++    }
++    parts.join("/")
++}
++
++/// Formats the locks line from the orphaned lock paths.
++#[must_use]
++fn locks_line(orphaned: &[String]) -> String {
++    if orphaned.is_empty() {
++        return "[ok] locks: no orphaned locks".to_owned();
++    }
++    format!("[fail] locks: orphaned lock(s): {}", orphaned.join(", "))
++}
++
++/// Formats the archives line from the invalid archive folder paths.
++#[must_use]
++fn archives_line(invalid: &[String]) -> String {
++    if invalid.is_empty() {
++        return "[ok] archives: all archives valid".to_owned();
++    }
++    format!(
++        "[fail] archives: invalid archive(s): {}",
++        invalid.join(", ")
++    )
++}
++
++/// Formats the done-markers line from the unverified marker paths.
++#[must_use]
++fn done_markers_line(unverified: &[String]) -> String {
++    if unverified.is_empty() {
++        return "[ok] done-markers: all done markers verified".to_owned();
++    }
++    format!(
++        "[fail] done-markers: unverified done marker placed by hand: {}",
++        unverified.join(", ")
++    )
++}
+diff --git a/crates/features/doctor/tests/doctor_changes.rs b/crates/features/doctor/tests/doctor_changes.rs
+new file mode 100644
+index 00000000..2b9104c1
+--- /dev/null
++++ b/crates/features/doctor/tests/doctor_changes.rs
+@@ -0,0 +1,298 @@
++//! Proves doctor's locks, archives and done-marker lines and its worktree scan.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++use std::process::Command;
++
++use osq_core::{Feature, FeatureError, Invocation, Output};
++use osq_feature_doctor::DoctorFeature;
++
++/// The lock text a dead pid writes.
++const DEAD: &str = r#"{"pid":2147483647,"startedAt":1}"#;
++
++/// The result one change-lines row expects.
++enum Expected {
++    /// Success with exactly this text.
++    Output(&'static str),
++    /// Failure with exactly this message.
++    Failed(&'static str),
++}
++
++/// One row of "Doctor change lines".
++struct Row {
++    /// The row's name and its scratch folder.
++    name: &'static str,
++    /// Files written in the root, folder-relative, with their exact text.
++    files: Vec<(&'static str, String)>,
++    /// What doctor returns for the row.
++    expected: Expected,
++}
++
++/// Creates a fresh scratch root under `CARGO_TARGET_TMPDIR`.
++fn scratch(name: &str) -> PathBuf {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
++    let _ = fs::remove_dir_all(&root);
++    fs::create_dir_all(&root).expect("the scratch root is created");
++    root
++}
++
++/// Writes one file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    fs::create_dir_all(path.parent().expect("a file has a parent")).expect("the parent exists");
++    fs::write(path, text).expect("the file is written");
++}
++
++/// Runs doctor with no arguments on a root.
++fn run(root: &Path) -> Result<Output, FeatureError> {
++    DoctorFeature.run(&Invocation::new(root, "doctor", Vec::new()))
++}
++
++/// Checks that doctor succeeded with exactly `expected`.
++fn check_output(result: Result<Output, FeatureError>, expected: &str, name: &str) {
++    let output = result.unwrap_or_else(|error| panic!("row {name} failed: {error}"));
++    assert_eq!(expected, output.text, "row {name}");
++}
++
++/// Checks that doctor failed for `doctor` with exactly `expected`.
++fn check_failed(result: Result<Output, FeatureError>, expected: &str, name: &str) {
++    let error = result.expect_err("the row's check fails");
++    match &error {
++        FeatureError::Failed {
++            command, message, ..
++        } => {
++            assert_eq!("doctor", command, "row {name}");
++            assert_eq!(expected, *message, "row {name}");
++        }
++        other => panic!("row {name} returned {other:?}"),
++    }
++}
++
++/// The healthy result every passing row ends with.
++const HEALTHY_OUTPUT: &str = concat!(
++    "[ok] config: loaded (harness: agy)\n",
++    "[ok] locks: no orphaned locks\n",
++    "[ok] archives: all archives valid\n",
++    "[ok] done-markers: all done markers verified\n",
++);
++
++/// Builds one row from its parts.
++fn row(name: &'static str, files: Vec<(&'static str, String)>, expected: Expected) -> Row {
++    Row {
++        name,
++        files,
++        expected,
++    }
++}
++
++/// The rows of "Doctor change lines", in table order.
++fn rows() -> Vec<Row> {
++    let live = format!(r#"{{"pid":{},"startedAt":1}}"#, std::process::id());
++    vec![
++        row("none", Vec::new(), Expected::Output(HEALTHY_OUTPUT)),
++        row(
++            "live-lock",
++            vec![("openspec/changes/001-a/.run/running/1.pid", live)],
++            Expected::Output(HEALTHY_OUTPUT),
++        ),
++        orphaned_locks_row(),
++        invalid_archives_row(),
++        done_markers_row(),
++    ]
++}
++
++/// The row with orphaned locks, an invalid-looking archive lock and a rejected
++/// lock that neither check reads.
++fn orphaned_locks_row() -> Row {
++    row(
++        "orphaned-locks",
++        vec![
++            ("openspec/changes/001-a/.run/running/1.pid", DEAD.to_owned()),
++            (
++                "openspec/changes/001-a/.run/locks/2.pid",
++                "not json".to_owned(),
++            ),
++            (
++                "openspec/changes/001-a/.run/running/notes.txt",
++                DEAD.to_owned(),
++            ),
++            (
++                "openspec/changes/002-b/.run/running/1.pid",
++                r#"{"pid":0}"#.to_owned(),
++            ),
++            ("openspec/changes/archive/003-c/proposal.md", "x".to_owned()),
++            ("openspec/changes/archive/003-c/tasks.md", "x".to_owned()),
++            (
++                "openspec/changes/archive/003-c/.run/running/1.pid",
++                DEAD.to_owned(),
++            ),
++            (
++                "openspec/changes/rejected/004-d/.run/running/1.pid",
++                DEAD.to_owned(),
++            ),
++        ],
++        Expected::Failed(concat!(
++            "[ok] config: loaded (harness: agy)\n",
++            "[fail] locks: orphaned lock(s): ",
++            "openspec/changes/001-a/.run/running/1.pid, ",
++            "openspec/changes/001-a/.run/locks/2.pid, ",
++            "openspec/changes/002-b/.run/running/1.pid\n",
++            "[ok] archives: all archives valid\n",
++            "[ok] done-markers: all done markers verified",
++        )),
++    )
++}
++
++/// The row with one archive missing tasks and one missing a proposal.
++fn invalid_archives_row() -> Row {
++    row(
++        "invalid-archives",
++        vec![
++            ("openspec/changes/archive/002-b/proposal.md", "x".to_owned()),
++            ("openspec/changes/archive/003-c/spec.md", "x".to_owned()),
++            ("openspec/changes/archive/003-c/tasks/1.md", "x".to_owned()),
++            ("openspec/changes/archive/004-d/tasks.md", "x".to_owned()),
++            ("openspec/changes/rejected/005-e/x.md", "x".to_owned()),
++        ],
++        Expected::Failed(concat!(
++            "[ok] config: loaded (harness: agy)\n",
++            "[ok] locks: no orphaned locks\n",
++            "[fail] archives: invalid archive(s): ",
++            "openspec/changes/archive/002-b, openspec/changes/archive/004-d\n",
++            "[ok] done-markers: all done markers verified",
++        )),
++    )
++}
++
++/// The row with one hand-placed active done marker and one archived marker.
++fn done_markers_row() -> Row {
++    row(
++        "done-markers",
++        vec![
++            (
++                "openspec/changes/001-a/.run/done/1.md",
++                "---\nscope_hash: abc\n---\n".to_owned(),
++            ),
++            ("openspec/changes/001-a/.run/done/2.md", "done\n".to_owned()),
++            (
++                "openspec/changes/001-a/.run/done/3.md",
++                "---\nmanual: true\nreason: checked by hand\n---\n".to_owned(),
++            ),
++            ("openspec/changes/archive/002-b/proposal.md", "x".to_owned()),
++            ("openspec/changes/archive/002-b/tasks.md", "x".to_owned()),
++            (
++                "openspec/changes/archive/002-b/.run/done/1.md",
++                "done\n".to_owned(),
++            ),
++        ],
++        Expected::Failed(concat!(
++            "[ok] config: loaded (harness: agy)\n",
++            "[ok] locks: no orphaned locks\n",
++            "[ok] archives: all archives valid\n",
++            "[fail] done-markers: unverified done marker placed by hand: ",
++            "openspec/changes/001-a/.run/done/2.md",
++        )),
++    )
++}
++
++/// Proves every row of "Doctor change lines", each in its own scratch root.
++///
++/// Covers: rust-doctor/doctor-change-lines
++#[test]
++fn doctor_change_lines() {
++    for row in rows() {
++        let root = scratch(&format!("doctor_change_{}", row.name));
++        for (relative, text) in &row.files {
++            write(&root.join(relative), text);
++        }
++        let result = run(&root);
++        match row.expected {
++            Expected::Output(expected) => check_output(result, expected, row.name),
++            Expected::Failed(expected) => check_failed(result, expected, row.name),
++        }
++    }
++}
++
++/// Runs git in a folder, failing with both streams when it refuses.
++fn git(repo: &Path, args: &[&str]) {
++    let output = Command::new("git")
++        .args(args)
++        .current_dir(repo)
++        .output()
++        .expect("git starts");
++    assert!(
++        output.status.success(),
++        "git {args:?}: {}{}",
++        String::from_utf8_lossy(&output.stdout),
++        String::from_utf8_lossy(&output.stderr)
++    );
++}
++
++/// Builds the scratch repository with one commit on `main`.
++fn repository(base: &Path, worktrees: &Path) -> PathBuf {
++    let repo = base.join("repo");
++    fs::create_dir_all(&repo).expect("the repository exists");
++    git(&repo, &["init", "-b", "main"]);
++    git(&repo, &["config", "user.name", "osq"]);
++    git(&repo, &["config", "user.email", "osq@example.com"]);
++    write(
++        &repo.join("osq.toml"),
++        &format!(
++            "[vcs]\nenabled = true\nauthor = \"osq <osq@example.com>\"\nworktreeRoot = \"{}\"\n",
++            worktrees.display()
++        ),
++    );
++    git(&repo, &["add", "-A"]);
++    git(&repo, &["commit", "-m", "main commit"]);
++    repo
++}
++
++/// Adds one worktree on `osq/<folder>` and returns its path.
++fn worktree(repo: &Path, worktrees: &Path, folder: &str) -> PathBuf {
++    let path = worktrees.join(folder);
++    fs::create_dir_all(worktrees).expect("the worktree root exists");
++    let branch = format!("osq/{folder}");
++    git(
++        repo,
++        &[
++            "worktree",
++            "add",
++            "-b",
++            &branch,
++            path.to_str().expect("the path is text"),
++            "main",
++        ],
++    );
++    path
++}
++
++/// Proves doctor finds a lock left in a worktree and names it from the root.
++///
++/// Covers: rust-doctor/doctor-reads-every-worktree
++#[test]
++fn doctor_reads_every_worktree() {
++    let base = scratch("doctor_reads_every_worktree");
++    let worktrees = base.join("worktrees");
++    let repo = repository(&base, &worktrees);
++    let tree = worktree(&repo, &worktrees, "002-run");
++    let change = tree.join("openspec/changes/002-run");
++    write(&change.join(".run/approved"), "sha256:0001\n");
++    write(&change.join(".run/running/1.pid"), DEAD);
++    write(
++        &repo.join("openspec/changes/002-run/.run/running/1.pid"),
++        DEAD,
++    );
++    git(&tree, &["add", "-A"]);
++    git(&tree, &["commit", "-m", "002-run"]);
++    let result = run(&repo);
++    check_failed(
++        result,
++        concat!(
++            "[ok] config: loaded (harness: agy)\n",
++            "[fail] locks: orphaned lock(s): ",
++            "../worktrees/002-run/openspec/changes/002-run/.run/running/1.pid\n",
++            "[ok] archives: all archives valid\n",
++            "[ok] done-markers: all done markers verified",
++        ),
++        "every-worktree",
++    );
++}
+diff --git a/crates/features/doctor/tests/doctor_checks.rs b/crates/features/doctor/tests/doctor_checks.rs
+index 1b159e43..62272791 100644
+--- a/crates/features/doctor/tests/doctor_checks.rs
++++ b/crates/features/doctor/tests/doctor_checks.rs
+@@ -11,6 +11,11 @@ use osq_feature_doctor::DoctorFeature;
+ /// The longest a doctor row may take.
+ const ROW_LIMIT: Duration = Duration::from_secs(5);
+ 
++/// The three healthy change lines every pi row ends with.
++const HEALTHY: &str = "[ok] locks: no orphaned locks\n\
++[ok] archives: all archives valid\n\
++[ok] done-markers: all done markers verified";
++
+ /// Runs pi without a provider.
+ const PI_CONFIG: &str = r#"[executor]
+ harness = "pi"
+@@ -234,7 +239,8 @@ fn check_row(row: &Row, fake: &Path, result: Result<osq_core::Output, FeatureErr
+     match row.expected {
+         Expected::Output(text) => {
+             let output = result.unwrap_or_else(|error| panic!("row {} failed: {error}", row.name));
+-            assert_eq!(substitute(text, fake), output.text, "row {}", row.name);
++            let expected = format!("{}{HEALTHY}\n", substitute(text, fake));
++            assert_eq!(expected, output.text, "row {}", row.name);
+         }
+         Expected::Failed(text) => {
+             let error = result.expect_err("the row's check fails");
+@@ -242,8 +248,9 @@ fn check_row(row: &Row, fake: &Path, result: Result<osq_core::Output, FeatureErr
+                 FeatureError::Failed {
+                     command, message, ..
+                 } => {
++                    let expected = format!("{}\n{HEALTHY}", substitute(text, fake));
+                     assert_eq!("doctor", command, "row {}", row.name);
+-                    assert_eq!(substitute(text, fake), *message, "row {}", row.name);
++                    assert_eq!(expected, *message, "row {}", row.name);
+                 }
+                 other => panic!("row {} returned {other:?}", row.name),
+             }
+diff --git a/openspec/changes/288-rust-doctor-changes/.run/dead/2.md b/openspec/changes/288-rust-doctor-changes/.run/dead/2.md
+new file mode 100644
+index 00000000..398e94cb
+--- /dev/null
++++ b/openspec/changes/288-rust-doctor-changes/.run/dead/2.md
+@@ -0,0 +1,48 @@
++---
++reason: change_verify_red
++command: "sh scripts/verify-rust.sh"
++exit_code: 2
++fingerprint: sha256:fa121cec707e75967a3091388123b8bb843a5279d71c3c6fe7505ec9fdd03993
++---
++Change-level verification failed after task verification passed.
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_loop
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_runners
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_specs
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_storage
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++   Doc-tests osq_kernel_vcs
++
++running 0 tests
++
++test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
++
++Found 62 mutants to test
++ok       Unmutated baseline in 8s build + 4s test
++ INFO Auto-set test timeout to 22s
++MISSED   crates/features/doctor/src/doctor/changes.rs:109:5: replace stacked_folders -> Vec<PathBuf> with vec![] in 0s build + 1s test
++MISSED   crates/features/doctor/src/doctor/changes.rs:109:5: replace stacked_folders -> Vec<PathBuf> with vec![Default::default()] in 0s build + 1s test
++62 mutants tested in 2m: 2 missed, 54 caught, 6 unviable
++Full output: .run/logs/change-2.log
+diff --git a/openspec/changes/288-rust-doctor-changes/.run/events/2.jsonl b/openspec/changes/288-rust-doctor-changes/.run/events/2.jsonl
+new file mode 100644
+index 00000000..8f038452
+--- /dev/null
++++ b/openspec/changes/288-rust-doctor-changes/.run/events/2.jsonl
+@@ -0,0 +1,72 @@
++{"type":"verify_ran","timestamp":"2026-10-22T15:10:57.944Z","data":{"command":"cargo test -p osq-feature-doctor --test feature --test doctor_checks --test doctor_changes","exitCode":101,"duration":0.15,"log":".run/logs/2-1.log","output":"error: no test target named `doctor_changes` in `osq-feature-doctor` package\nhelp: available test targets:\n    doctor_checks\n    feature\n","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-22T15:11:46.796Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":7,"scopeLines":1597,"repoFiles":18120,"repoLines":854734,"importFanIn":0,"proposalWords":674,"taskWords":445,"deltaRequirements":4,"deltaScenarios":8,"dependencies":{"crates/features/doctor/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-harnesses"]}}}
++{"type":"instructions_changed","timestamp":"2026-10-22T15:11:46.879Z","data":{"changed":["AGENTS.md","ADR 003 added","ADR 006 added","ADR 007 added","ADR 014 added","ADR 016 added","ADR 017 added","ADR 022 added","ADR 023 added","ADR 024 added","ADR 025 added","ADR 026 added","ADR 027 added","ADR 028 added","ADR 029 added"]}}
++{"type":"started","timestamp":"2026-10-22T15:11:47.122Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"8ba58d7e","pid":3884826,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"63250a84"}}
++{"type":"tokens","timestamp":"2026-10-22T15:11:48.594Z","data":{"promptTokens":3061,"candidateTokens":206,"totalTokens":7491,"cachedTokens":4224,"reasoningTokens":15,"cost":0.001190844,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:48.594Z","data":{"tool":"bash","summary":"cat openspec/changes/288-rust-doctor-changes/tasks/2.md; ech"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:48.595Z","data":{"tool":"bash","summary":"cat openspec/changes/288-rust-doctor-changes/specs/rust-doct"}}
++{"type":"tokens","timestamp":"2026-10-22T15:11:50.220Z","data":{"promptTokens":7903,"candidateTokens":286,"totalTokens":15613,"cachedTokens":7424,"reasoningTokens":10,"cost":0.002758644,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:50.220Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:50.221Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:11:52.203Z","data":{"promptTokens":7219,"candidateTokens":325,"totalTokens":23032,"cachedTokens":15488,"reasoningTokens":54,"cost":0.002648628,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:52.203Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:52.203Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:11:54.779Z","data":{"promptTokens":7679,"candidateTokens":339,"totalTokens":30930,"cachedTokens":22912,"reasoningTokens":28,"cost":0.0028479720000000003,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:54.779Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:54.780Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:11:57.094Z","data":{"promptTokens":6792,"candidateTokens":370,"totalTokens":38010,"cachedTokens":30848,"reasoningTokens":127,"cost":0.002666688,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:57.095Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:11:57.095Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:00.528Z","data":{"promptTokens":3964,"candidateTokens":569,"totalTokens":42421,"cachedTokens":37888,"reasoningTokens":287,"cost":0.002099328,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:00.528Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:00.529Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:02.473Z","data":{"promptTokens":3655,"candidateTokens":304,"totalTokens":46327,"cachedTokens":42368,"reasoningTokens":14,"cost":0.0017155080000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:02.473Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:02.473Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:25.943Z","data":{"promptTokens":3183,"candidateTokens":5092,"totalTokens":54483,"cachedTokens":46208,"reasoningTokens":4976,"cost":0.007342547999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:25.943Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:36.300Z","data":{"promptTokens":1297,"candidateTokens":2711,"totalTokens":58408,"cachedTokens":54400,"reasoningTokens":2592,"cost":0.0039686999999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:36.300Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:42.113Z","data":{"promptTokens":1000,"candidateTokens":1737,"totalTokens":61105,"cachedTokens":58368,"reasoningTokens":6,"cost":0.0027346079999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:42.113Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:12:42.114Z","data":{"path":"crates/features/doctor/src/doctor/changes.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:46.984Z","data":{"promptTokens":226,"candidateTokens":1203,"totalTokens":62357,"cachedTokens":60928,"reasoningTokens":11,"cost":0.001876968,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:46.984Z","data":{"tool":"edit","summary":"cra"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:46.985Z","data":{"tool":"edit","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:12:46.998Z","data":{"path":"crates/features/doctor/src/doctor.rs"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:12:46.999Z","data":{"path":"crates/features/doctor/Cargo.toml"}}
++{"type":"tokens","timestamp":"2026-10-22T15:12:49.936Z","data":{"promptTokens":250,"candidateTokens":618,"totalTokens":63076,"cachedTokens":62208,"reasoningTokens":21,"cost":0.0011898479999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:12:49.937Z","data":{"tool":"edit","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:12:49.938Z","data":{"path":"crates/features/doctor/tests/doctor_checks.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:06.298Z","data":{"promptTokens":155,"candidateTokens":4632,"totalTokens":67763,"cachedTokens":62976,"reasoningTokens":1857,"cost":0.005982756,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:06.298Z","data":{"tool":"write","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:13:06.299Z","data":{"path":"crates/features/doctor/tests/doctor_changes.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:07.489Z","data":{"promptTokens":229,"candidateTokens":104,"totalTokens":67917,"cachedTokens":67584,"reasoningTokens":5,"cost":0.000599004,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:07.489Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:13.572Z","data":{"promptTokens":685,"candidateTokens":212,"totalTokens":68737,"cachedTokens":67840,"reasoningTokens":107,"cost":0.00086694,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:13.572Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:18.089Z","data":{"promptTokens":255,"candidateTokens":470,"totalTokens":69461,"cachedTokens":68736,"reasoningTokens":362,"cost":0.0010529159999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:18.089Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:19.880Z","data":{"promptTokens":147,"candidateTokens":157,"totalTokens":69680,"cachedTokens":69376,"reasoningTokens":59,"cost":0.000648756,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:19.881Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:28.981Z","data":{"promptTokens":1224,"candidateTokens":3066,"totalTokens":73922,"cachedTokens":69632,"reasoningTokens":4,"cost":0.004464192,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:28.982Z","data":{"tool":"edit","summary":"cra"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:13:28.990Z","data":{"path":"crates/features/doctor/tests/doctor_changes.rs"}}
++{"type":"tokens","timestamp":"2026-10-22T15:13:30.867Z","data":{"promptTokens":249,"candidateTokens":112,"totalTokens":74089,"cachedTokens":73728,"reasoningTokens":6,"cost":0.000651468,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:13:30.868Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:14:47.615Z","data":{"promptTokens":16325,"candidateTokens":242,"totalTokens":90551,"cachedTokens":73984,"reasoningTokens":43,"cost":0.005631804,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:14:47.615Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tool","timestamp":"2026-10-22T15:14:47.616Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:14:51.634Z","data":{"promptTokens":735,"candidateTokens":314,"totalTokens":91545,"cachedTokens":90496,"reasoningTokens":165,"cost":0.001140276,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:14:51.634Z","data":{"tool":"bash","summary":"cd .;"}}
++{"type":"tokens","timestamp":"2026-10-22T15:14:55.829Z","data":{"promptTokens":168,"candidateTokens":653,"totalTokens":92213,"cachedTokens":91392,"reasoningTokens":162,"cost":0.0013823519999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-22T15:14:55.830Z","data":{"tool":"write","summary":"ope"}}
++{"type":"file_changed","timestamp":"2026-10-22T15:14:55.830Z","data":{"path":"openspec/changes/288-rust-doctor-changes/.run/results/2.md"}}
++{"type":"text","timestamp":"2026-10-22T15:14:57.583Z","data":{"text":"Task complete.\n\n- Implemented doctor's `locks`, `archives`, and `done-markers` checks in `crates/features/doctor/src/doctor/changes.rs`.\n- Doctor now always appends those lines after config/pi lines, even when config loading or pi probing fails.\n- Added storage/vcs dependencies and updated `Cargo.lock`.\n- Updated fake-pi expectations and added `doctor_changes.rs` coverage for all change-line rows plus the worktree scenario.\n- Task verify and proposal verify both pass.\n- Wrote result to `openspec/changes/288-rust-doctor-changes/.run/results/2.md`."}}
++{"type":"tokens","timestamp":"2026-10-22T15:14:57.583Z","data":{"promptTokens":238,"candidateTokens":137,"totalTokens":92407,"cachedTokens":92032,"reasoningTokens":0,"cost":0.000787992,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-22T15:14:57.616Z","data":{"exitCode":0,"pid":3884826,"timedOut":false,"elapsedSeconds":190.5}}
++{"type":"dependencies_added","timestamp":"2026-10-22T15:14:58.190Z","data":{"added":[{"file":"crates/features/doctor/Cargo.toml","name":"osq-kernel-storage"},{"file":"crates/features/doctor/Cargo.toml","name":"osq-kernel-vcs"}]}}
++{"type":"format_ran","timestamp":"2026-10-22T15:14:58.634Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'Cargo.lock' 'crates/features/doctor/Cargo.toml' 'crates/features/doctor/src/doctor.rs' 'crates/features/doctor/src/doctor/changes.rs' 'crates/features/doctor/tests/doctor_changes.rs' 'crates/features/doctor/tests/doctor_checks.rs'","files":["Cargo.lock","crates/features/doctor/Cargo.toml","crates/features/doctor/src/doctor.rs","crates/features/doctor/src/doctor/changes.rs","crates/features/doctor/tests/doctor_changes.rs","crates/features/doctor/tests/doctor_checks.rs"],"exitCode":0,"duration":0.42,"timedOut":false,"output":"Checked 0 files in 981µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-22T15:15:01.447Z","data":{"command":"cargo test -p osq-feature-doctor --test feature --test doctor_checks --test doctor_changes","exitCode":0,"duration":1.26,"log":".run/logs/2-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/doctor_changes.rs (target/debug/deps/doctor_changes-a54893f822fdf67b)\n\nrunning 2 tests\ntest doctor_change_lines ... ok\ntest doctor_reads_every_worktree ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n     Running tests/doctor_checks.rs (target/debug/deps/doctor_checks-dc63dfd7e31746fe)\n\nrunning 2 tests\ntest doctor_fake_pi_runs_in_place ... ok\ntest doctor_checks_with_a_fake_pi ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s\n\n     Running tests/feature.rs (target/debug/deps/feature-022eb1b4833322aa)\n\nrunning 2 tests\ntest doctor_feature_commands ... ok\ntest doctor_argument_errors ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"}}
++{"type":"measures","timestamp":"2026-10-22T15:18:01.774Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":7,"scopeLines":1597,"repoFiles":18120,"repoLines":854734,"importFanIn":0,"proposalWords":674,"taskWords":445,"deltaRequirements":4,"deltaScenarios":8,"dependencies":{"crates/features/doctor/Cargo.toml":["osq-core","osq-kernel-config","osq-kernel-harnesses"]},"changedFiles":6,"changedLines":519,"scopeHashes":{"Cargo.lock":{"before":"sha256:a9db21b9db16b24d6a9a635d496e748b47a7146052e7001fec67558b12a030ed","after":"sha256:7dc8be9787ae874b11a2b47cdcc20c47d3e53a02eaaa1ec9b4083e31f551a161"},"crates/features/doctor/Cargo.toml":{"before":"sha256:6940e81aca25fec998596ac2536c65d8970734d80b507581ad4cca0a928a5bdd","after":"sha256:ee89d3ad0bf1e67b24d7e2b0a71f5ccf72b73c17e9b3fe06f775bbcde3859868"},"crates/features/doctor/src/doctor.rs":{"before":"sha256:49fabe44e8c27cad8188d20bfb55a458fbc1ee0fa483d2ea130e097df1cf411b","after":"sha256:298767a33751bc5a7dfc63df538e89abd8a68cef1aae3ee4648831bc9af1a538"},"crates/features/doctor/src/doctor/probe.rs":{"before":"sha256:73a0248e2f8736c2d072b8b23cfdf4b6c220ee1dfdd80c7245da11c14e1ed0c2","after":"sha256:73a0248e2f8736c2d072b8b23cfdf4b6c220ee1dfdd80c7245da11c14e1ed0c2"},"crates/features/doctor/src/feature.rs":{"before":"sha256:00a0a078f0ff1a430ad00157ce6d51185474dcf25c26806605710312298e425a","after":"sha256:00a0a078f0ff1a430ad00157ce6d51185474dcf25c26806605710312298e425a"},"crates/features/doctor/src/lib.rs":{"before":"sha256:65b3c2e408799c2e751aed4a74eddb574354fb9544ed9bc6b13c306d61fd570d","after":"sha256:65b3c2e408799c2e751aed4a74eddb574354fb9544ed9bc6b13c306d61fd570d"},"crates/features/doctor/tests/doctor_changes.rs":{"before":null,"after":"sha256:aa005bc51f3548ed69835764924124df95a11bf274d007092e53540175ed9b66"},"crates/features/doctor/tests/doctor_checks.rs":{"before":"sha256:bdce9621e049b04ef4c324df41b45d4eaae610e4e6f30d88e6b42f079cb9a7d0","after":"sha256:566665d830fb1cd8393f8c10c9abd2af57d9b353dfa6558435223c66f72e0858"},"crates/features/doctor/src/doctor/changes.rs":{"before":null,"after":"sha256:3a1358935f60b396f6da921dcceed89cee7897a3eda6b59eeda6f9fbcc278eca"}}}}
++{"type":"dead","timestamp":"2026-10-22T15:18:01.777Z","data":{"task":"2","reason":"change_verify_red"}}
+diff --git a/openspec/changes/288-rust-doctor-changes/.run/events/change.jsonl b/openspec/changes/288-rust-doctor-changes/.run/events/change.jsonl
+new file mode 100644
+index 00000000..7198a464
+--- /dev/null
++++ b/openspec/changes/288-rust-doctor-changes/.run/events/change.jsonl
+@@ -0,0 +1,3 @@
++{"type":"baseline_ran","timestamp":"2026-10-22T14:59:07.647Z","data":{"outcome":"passed","command":"pnpm verify","commit":"12d878f8cdba11f2122f2e0c2c898591f43dbb6e","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":269.81}}
++{"type":"verify_ran","timestamp":"2026-10-22T15:10:47.518Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":180.78,"log":".run/logs/change-1.log","output":"   Doc-tests osq_kernel_linter\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 24 mutants to test\nok       Unmutated baseline in 8s build + 3s test\n INFO Auto-set test timeout to 20s\n24 mutants tested in 2m: 21 caught, 3 unviable"}}
++{"type":"verify_ran","timestamp":"2026-10-22T15:18:01.754Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":2,"duration":180.3,"log":".run/logs/change-2.log","output":"running 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 62 mutants to test\nok       Unmutated baseline in 8s build + 4s test\n INFO Auto-set test timeout to 22s\nMISSED   crates/features/doctor/src/doctor/changes.rs:109:5: replace stacked_folders -> Vec<PathBuf> with vec![] in 0s build + 1s test\nMISSED   crates/features/doctor/src/doctor/changes.rs:109:5: replace stacked_folders -> Vec<PathBuf> with vec![Default::default()] in 0s build + 1s test\n62 mutants tested in 2m: 2 missed, 54 caught, 6 unviable"}}
+diff --git a/openspec/changes/288-rust-doctor-changes/.run/results/2.md b/openspec/changes/288-rust-doctor-changes/.run/results/2.md
+new file mode 100644
+index 00000000..de581275
+--- /dev/null
++++ b/openspec/changes/288-rust-doctor-changes/.run/results/2.md
+@@ -0,0 +1,11 @@
++## Changed
++
++- Added `src/doctor/changes.rs`, which takes the root's real path, lists change folders through storage (`list_tree_changes` over `change_trees` when vcs is enabled and git succeeds, otherwise `list_changes`), reads them with `read_change_files`, and builds the `locks`, `archives` and `done-markers` lines. Locks use `/proc/<pid>` liveness, archived folders need a proposal and tasks, active done markers must be verified, rejected folders are skipped, and printed paths are relative to the real root as Node's `path.relative` writes them.
++- Changed `collect_lines` to return the loaded config, or `Config::default()` on a load failure, so `run_doctor` always appends the change lines after the config and pi lines, including when config or pi fails.
++- Added `osq-kernel-storage` and `osq-kernel-vcs` workspace dependencies to the doctor crate, and updated `Cargo.lock`.
++- Extended every fake-pi row in `doctor_checks.rs` to end with the three healthy change lines.
++- Added `doctor_changes.rs`, proving every "Doctor change lines" row in its own scratch root and "Doctor reads every worktree" against a scratch repository and worktree.
++
++The task verify and the proposal verify (`OSQ_CHANGE=openspec/changes/288-rust-doctor-changes sh scripts/verify-rust.sh`) both pass; the mutation step reported that `OSQ_DIFF` was not set.
++
++Touched: Cargo.lock, crates/features/doctor/Cargo.toml, crates/features/doctor/src/doctor.rs, crates/features/doctor/src/doctor/changes.rs, crates/features/doctor/tests/doctor_checks.rs, crates/features/doctor/tests/doctor_changes.rs

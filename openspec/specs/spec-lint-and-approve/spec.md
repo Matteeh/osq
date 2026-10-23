@@ -1665,10 +1665,13 @@ all found, though the checkout holds no copy of them.
 ### Requirement: Approval after steering
 `osq approve <id>` SHALL look the change up with `findSteeringChange`, so an
 archived change that needs steering is found in its worktree. When the change
-is in an osq worktree and its derived state has `steering`, `osq approve`
-SHALL approve the revised plan where the change runs, through
+is in an osq worktree and `humanSteering` of its derived state, as the
+status-inspection requirement "Dead task steering" defines it, is not empty,
+`osq approve` SHALL approve the revised plan where the change runs, through
 `approveSteeredChange` in `src/core/spec/approve-steer.ts`, instead of
-"Approval into a worktree". It SHALL refuse, writing nothing, with
+"Approval into a worktree". The triggers below are those `humanSteering`
+returns: the derived state's `steering` when it has any, and otherwise one
+`dead` trigger per dead task. It SHALL refuse, writing nothing, with
 `<folder> has a task running; approve it after the task ends` while any task
 of the change runs. When any trigger is a default-branch trigger, as
 `isDefaultBranchTrigger` says, it SHALL then approve as "Approval after a
@@ -1681,7 +1684,7 @@ default-branch trigger" says. Otherwise it SHALL:
    with `writeApprovalSeal`.
 3. Commit the change folder in the worktree with subject `osq: <id> approved`
    and author `vcs.author`, as the first approval did.
-4. Retire each trigger, in the order `deriveSteering` returns them, through
+4. Retire each trigger, in the order `humanSteering` returns them, through
    `retrySpec` for its target, so each marker is kept under its next attempt
    number exactly as `osq retry` keeps it.
 
@@ -1709,6 +1712,10 @@ and its triggers then retired the same way, with the same line.
 #### Scenario: Blocked task approved again in its worktree
 - **WHEN** task 1 of a two-task change in a worktree is done, task 2 died with `blocked`, `tasks/2.md` was edited in the worktree, and a human runs `osq approve <id>`
 - **THEN** the worktree's HEAD is a new `osq: <id> approved` commit holding the edited `tasks/2.md`, `.run/approved` holds the edited folder's hash, `.run/dead/2.md` is now `.run/dead/2.1.md`, `.run/done/1` remains, the output says `Continues from task 2`, and the checkout holds no copy of the change
+
+#### Scenario: Dead task approved again in its worktree
+- **WHEN** task 1 of a two-task change in a worktree is done, task 2 died with `reason: timeout` and no `stuck`, `tasks/2.md` was edited in the worktree, and a human runs `osq approve <id>`
+- **THEN** the worktree's HEAD is a new `osq: <id> approved` commit holding the edited `tasks/2.md`, `.run/approved` holds the edited folder's hash, `.run/dead/2.md` is now `.run/dead/2.1.md`, `.run/done/1` remains, the output says `Continues from task 2`, no branch was created, and the checkout holds no copy of the change
 
 #### Scenario: The run continues
 - **WHEN** that change is approved again and watcher cycles run
@@ -2378,7 +2385,14 @@ the change cannot provide, through `missingEntryFindings` in
 `src/core/spec/entry-lint.ts`. An entry SHALL count as provided when any of
 these holds:
 
-- it lies inside the change folder;
+- it names a path inside the change folder being linted that exists there,
+  wherever that folder is: in the checkout, in the change's worktree, or in
+  a stacked copy. An entry names a path inside the folder when it starts
+  with `<openspecRoot>/changes/<folder>/`, the folder's place in any tree,
+  or when it resolves from the project root into the folder. The rest of
+  the entry is read inside the folder: a plain path counts when it names an
+  existing file or directory there, and a pattern counts when
+  `resolveScope` matches it to a file there;
 - the `scope` of that task or of an earlier task of the change covers it, as
   `scopeCoversPath` says;
 - with `vcs.enabled` on, it exists at the default branch's tip, as
@@ -2412,6 +2426,22 @@ because a worktree cut from the default branch will not have it.
 | `src/dep.ts` | an approved change's task scope names it | no entry error |
 | `fixture/.osq/.gitignore` | ignored file present only in the checkout | entry error |
 | `src/later.ts` | only task 3's scope names it, and task 2's entry names it | entry error |
+
+#### Scenario: Entries inside the change folder
+- **WHEN** `lintChangeFolder` runs from the main checkout of a git repository with `vcs.enabled` on, on the change folder `001-steer` at the row's place, whose task 1 holds the row's entry, and whose own files are `proposal.md`, `tasks.md`, `tasks/1.md` and `specs/alpha/spec.md`
+- **THEN** it reports as below:
+
+| Folder | Entry | Lint |
+|---|---|---|
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/specs/alpha/spec.md` | no entry error |
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/specs/**` | no entry error |
+| only in a worktree of branch `osq/001-steer` outside the checkout, uncommitted on the default branch | `openspec/changes/001-steer/notes/gone.md` | entry error naming it |
+| only in the checkout, uncommitted | `openspec/changes/001-steer/specs/alpha/spec.md` | no entry error |
+| only in the checkout, uncommitted | `openspec/changes/001-steer/notes/gone.md` | entry error naming it |
+
+#### Scenario: Steered change linted from main
+- **WHEN** `osq lint 001` runs in the main checkout, and the change `001-steer` exists only in its worktree on branch `osq/001-steer`, with task 1 done and its `entry` naming `openspec/changes/001-steer/specs/alpha/spec.md`
+- **THEN** it reports no entry error
 
 ### Requirement: Ungoverned ownership warning
 Lint SHALL warn once per Code ownership source glob in a change's delta spec
@@ -2624,3 +2654,37 @@ since paths such as `app/[id]/page.tsx` are real.
 | `scope` | `app/[id]/page.tsx` | no brace group error |
 | `scope` | `src/{single}.ts` | no brace group error |
 | `scope` | `tests/golden/events/**` | no brace group error |
+
+### Requirement: Frontmatter YAML errors
+Frontmatter, the text between the opening and next `---` lines, SHALL not
+parse exactly when `YAML.parse` throws on it. Its error's message is the
+first `yaml` error's message without position, and its line is the file
+line where that error starts, the opening `---` being line 1.
+`parseFrontmatter` SHALL keep reading such frontmatter as empty data.
+
+#### Scenario: Other readers of frontmatter that does not parse
+- **WHEN** `parseFrontmatter` reads a file whose frontmatter does not parse
+- **THEN** it returns empty data and the whole file as its body, as it did before
+
+### Requirement: Change document frontmatter YAML error
+When the change document's frontmatter does not parse, `osq lint` SHALL
+report `<document> frontmatter is not valid YAML at line <line>: <message>`
+on it, `<document>` being `proposal.md` or `spec.md`, and run no check that
+reads that frontmatter: verify, `features.writes`, capability relations,
+generated moves, sidecars, `depends_on`, `fixes` and undeclared reads. Body
+and task checks still run.
+
+#### Scenario: Proposal frontmatter that does not parse
+- **WHEN** `osq lint` checks a change whose `proposal.md` starts with the lines `---`, `title: Lint: broken`, `depends_on: []` and `verify: pnpm verify`, and is otherwise one that lint accepts
+- **THEN** lint fails with exactly one error on `proposal.md`, `proposal.md frontmatter is not valid YAML at line 2: Nested mappings are not allowed in compact mappings`, and no finding names a missing verify command
+
+### Requirement: Task frontmatter YAML error
+When a task file's frontmatter does not parse, `osq lint` SHALL report `Task
+in <file> frontmatter is not valid YAML at line <line>: <message>` on it, run
+none of that task's other checks apart from the control-character and
+fused-acceptance checks, which read its raw text, and leave the task out of
+every check across tasks.
+
+#### Scenario: Task frontmatter that does not parse
+- **WHEN** `osq lint` checks a change whose `tasks/1.md` starts with the lines `---`, `title: When a: b, c`, `verify: node --test tests/a.test.ts` and `scope:`, and is otherwise one that lint accepts
+- **THEN** lint fails with exactly one error on `tasks/1.md`, `Task in 1.md frontmatter is not valid YAML at line 2: Nested mappings are not allowed in compact mappings`, and no other finding names `tasks/1.md`

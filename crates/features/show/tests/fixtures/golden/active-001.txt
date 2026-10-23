@@ -1,0 +1,93 @@
+Spec: 001-active (001)
+Title: Alpha learns to count
+Status: [unapproved]
+Next: ready for approval (do the steps before approval first) — osq approve 001
+After landing:
+  - Tell the beta team.
+  - Remove the backup.
+Location: active
+Approval: unapproved
+Depends on: none
+Features:
+  Reads: beta
+  Writes: alpha, alpha-extra, gamma
+
+Goal:
+  Alpha counts its calls. Beta reads the count!
+  Gamma stores nothing yet.
+
+Contract:
+  ### Requirement: Alpha counts
+  Alpha SHALL count its calls.
+  
+  #### Scenario: Alpha counts
+  - **WHEN** alpha is called twice
+  - **THEN** its count is two
+
+Tasks:
+  [ ] 1. When alpha is called, it counts [pending]
+      Verify: node --test tests/alpha.test.ts
+      Scope: src/alpha.ts, tests/alpha.test.ts, package.json
+      Acceptance:
+        - [ ] Alpha counts each call.
+        - [ ] The count starts at zero.
+  [ ] 2. When gamma is new, it stores the count [pending]
+      Verify: node --test tests/gamma.test.ts
+      Scope: src/alpha.ts, src/gamma/**, tests/gamma.test.ts, tests/everything.test.ts
+      Acceptance:
+        - [ ] Gamma stores the count alpha gives it.
+  [ ] 3. When beta reads the count, it prints it [pending]
+      Verify: node scripts/print-count.mjs
+      Scope: src/beta.ts
+      Acceptance:
+        - [ ] Beta prints the count.
+
+Planning Sessions:
+  2026-10-01T09:00:00.000Z claude/claude-opus-5-5 exit: 0 wall: 12m 30s
+  2026-10-01T10:00:00.000Z pi/unavailable agent: planner exit: unavailable wall: unavailable
+
+Event Timeline:
+  (no events recorded)
+Change: 001-active
+Goal: Alpha counts its calls. Beta reads the count!
+Before approval, do these first:
+  - Back up the alpha data.
+Tasks:
+  1. When alpha is called, it counts (3 scope files)
+     tests.modify: existing tests in scope: tests/alpha.test.ts
+  2. When gamma is new, it stores the count (2 scope files)
+     tests.modify: existing tests in scope: tests/everything.test.ts
+  3. When beta reads the count, it prints it (1 scope file)
+Capabilities:
+  alpha:
+    added: Alpha counts
+    modified: Alpha starts
+    removed: Alpha sleeps
+  alpha-extra:
+    added: Alpha extra
+    modified: (none)
+    removed: (none)
+  gamma (new capability):
+    added: Gamma stores
+    modified: (none)
+    removed: (none)
+Decisions:
+  ADR 001: Every change keeps the test suite green.
+  ADR 002: Alpha writes go through the alpha module.
+Human steps:
+  ### Before approval
+  
+  - Back up the alpha data.
+  
+  ### After landing
+  
+  - Tell the beta team.
+  - Remove the backup.
+Flag: shared files in tasks 1 and 2 — src/alpha.ts; when task 2 changes them, the watcher re-runs task 1's verify and halts only if it fails
+Flag: package manifest in scope — package.json in task 1
+Flag: verify without a test in task 3 — node scripts/print-count.mjs
+Flag: removes 1 requirements from alpha — Alpha sleeps
+Flag: unknown capability alpha-extra resembles alpha — no living spec at openspec/specs/alpha-extra/spec.md
+Flag: verify starts conflict in task 2 — tests/gamma.test.ts is named by the verify but created by this task, which declares verify_starts: green
+Flag: departs from ADR 001 — Departs from ADR 001: the count test is rewritten while the suite is red.
+Flag: task 2 may modify a check of ADR 001 — tests/everything.test.ts enforces ADR 001: Every change keeps the test suite green. Record it as Departs from ADR 001: in ## Decisions.

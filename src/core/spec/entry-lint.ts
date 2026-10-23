@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
 import { entryExists } from '../run/entry-paths.js';
 import { resolveScope, scopeCoversPath } from '../run/scope.js';
-import { listChanges } from '../status/change-locations.js';
+import { changesDirLabel, listChanges } from '../status/change-locations.js';
 import { selectVcs } from '../vcs/select.js';
 import type { Vcs } from '../vcs/vcs.js';
 import { parseTaskMd } from './parser.js';
@@ -31,11 +31,51 @@ function isPatternEntry(entry: string): boolean {
   return /[*?]/.test(trimmed) || trimmed.endsWith('/');
 }
 
-/** Whether `entry` names a path inside the change folder being linted. */
-function liesInsideChangeFolder(projectRoot: string, folderPath: string, entry: string): boolean {
+/** POSIX form of a path, for comparing an entry against the repository layout. */
+function toPosix(value: string): string {
+  return value.split(path.sep).join('/');
+}
+
+/**
+ * The part of `entry` inside the change folder being linted, or null when the
+ * entry names no path there. The entry may carry the folder's place in any
+ * tree, or resolve from the project root into the folder.
+ */
+function entryInsideChangeFolder(
+  projectRoot: string,
+  config: OsqConfig,
+  folderPath: string,
+  entry: string,
+): string | null {
+  const folder = path.basename(folderPath);
+  const prefix = `${toPosix(changesDirLabel(config))}/${folder}/`;
+  const normalized = toPosix(entry.trim());
+  if (normalized.startsWith(prefix)) return normalized.slice(prefix.length);
+
   const absolute = path.resolve(projectRoot, entry);
-  const relative = path.relative(folderPath, absolute);
-  return !relative.startsWith('..') && !path.isAbsolute(relative);
+  const relative = path.relative(path.resolve(folderPath), absolute);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  return toPosix(relative);
+}
+
+/**
+ * Whether `entry` names a path inside the change folder that exists there,
+ * wherever that folder is. The rest of the entry is read inside the folder: a
+ * plain path must exist there, and a pattern must match a file there.
+ */
+async function providedInsideChangeFolder(
+  projectRoot: string,
+  config: OsqConfig,
+  folderPath: string,
+  entry: string,
+): Promise<boolean> {
+  const rest = entryInsideChangeFolder(projectRoot, config, folderPath, entry);
+  if (rest === null) return false;
+  if (isPatternEntry(rest)) {
+    const matches = await resolveScope(folderPath, [rest]);
+    return matches.some((match) => match.absolutePath !== null);
+  }
+  return entryExists(folderPath, rest);
 }
 
 /**
@@ -104,6 +144,8 @@ async function providedByApprovedChange(
  *
  * @scenario spec-lint-and-approve: Entry names a file no tree has
  * @scenario spec-lint-and-approve: Entries the change provides
+ * @scenario spec-lint-and-approve: Entries inside the change folder
+ * @scenario spec-lint-and-approve: Steered change linted from main
  * @adr 006
  */
 export async function missingEntryFindings(
@@ -122,7 +164,7 @@ export async function missingEntryFindings(
   for (const task of tasks) {
     const coveringScopes = [...earlierScopes, task.scope];
     for (const entry of task.entry) {
-      let provided = liesInsideChangeFolder(projectRoot, folderPath, entry);
+      let provided = await providedInsideChangeFolder(projectRoot, config, folderPath, entry);
       if (!provided) provided = coveringScopes.some((scope) => scopeCoversPath(scope, entry));
       if (!provided) provided = await entryInTree(projectRoot, vcs, git, defaultBranch, entry);
       if (!provided) {

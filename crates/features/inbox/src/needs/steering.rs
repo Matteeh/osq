@@ -52,9 +52,14 @@ impl Trigger {
     }
 }
 
+/// The first active trigger of an approved change, if any.
+pub(crate) fn first(snapshot: &ChangeSnapshot) -> Option<Trigger> {
+    triggers(snapshot).into_iter().next()
+}
+
 /// Keeps only the first trigger's item, with `osq plan` and the trigger.
 pub(crate) fn apply(snapshot: &ChangeSnapshot, entries: &mut Vec<Entry>) {
-    let Some(first) = triggers(snapshot).into_iter().next() else {
+    let Some(first) = first(snapshot) else {
         return;
     };
     let kept = take_target(entries, &first);

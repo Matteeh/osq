@@ -32,6 +32,11 @@ pub(super) fn rename_branch(vcs: &GitVcs, from: &str, to: &str) -> Result<(), Vc
         .map(|_| ())
 }
 
+/// Deletes `name`, never forcing a branch HEAD does not hold.
+pub(super) fn delete_branch(vcs: &GitVcs, name: &str) -> Result<(), VcsError> {
+    vcs.write(&["branch", "-d", name], &[], None).map(|_| ())
+}
+
 /// Adds a worktree at `path` for `branch`.
 pub(super) fn worktree_add(vcs: &GitVcs, path: &str, branch: &str) -> Result<(), VcsError> {
     vcs.write(&["worktree", "add", path, branch], &[], None)

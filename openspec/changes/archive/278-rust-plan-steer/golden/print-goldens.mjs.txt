@@ -1,0 +1,45 @@
+// Prints TypeScript's `osq plan <id>` handoff and steering `plan-prompt.md` for
+// each row of rust-plan "Steering equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <fixture steer-project> <golden folder>
+// Each case runs the built CLI on a fresh copy of the fixture, with the copy as
+// the working directory and no osq config, so vcs is off. It writes the
+// handoff to <name>.out.txt and the change's new plan-prompt.md to
+// <name>.prompt.txt, each with the copy's path replaced by <root>.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+
+const cases = [
+  { name: 'blocked-001', folder: '001-blocked', args: ['1'] },
+  { name: 'stuck-002', folder: '002-stuck', args: ['002'] },
+  { name: 'regression-003', folder: '003-regression', args: ['003-regression'] },
+  { name: 'conflict-004', folder: '004-conflict', args: ['4'] },
+  { name: 'requirement-005', folder: '005-requirement', args: ['5'] },
+  { name: 'sync-red-006', folder: '006-sync-red', args: ['6'] },
+  { name: 'many-007', folder: '007-many', args: ['7'] },
+  { name: 'untitled-010', folder: '010-untitled', args: ['10'] },
+];
+
+for (const c of cases) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-steer-'));
+  fs.cpSync(fixture, root, { recursive: true });
+  const run = spawnSync(process.execPath, [BIN, 'plan', ...c.args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  if (run.status !== 0) throw new Error(`${c.name}: exit ${run.status}: ${run.stderr}`);
+  if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+  const prompt = fs.readFileSync(
+    path.join(root, 'openspec', 'changes', c.folder, 'plan-prompt.md'),
+    'utf8',
+  );
+  fs.writeFileSync(path.join(golden, `${c.name}.out.txt`), run.stdout.split(root).join('<root>'));
+  fs.writeFileSync(path.join(golden, `${c.name}.prompt.txt`), prompt.split(root).join('<root>'));
+  fs.rmSync(root, { recursive: true, force: true });
+}

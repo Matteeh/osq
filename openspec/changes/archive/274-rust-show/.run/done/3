@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:4bb783148a2b5ede5015e0ed5a854a03994ebe25b155fe31474a454855bd1e02"
+build_stamp: "63250a84"
+project_commit: "f1ac79e2"
+exit_code: 0
+scope_files: {"crates/features/show/src/events.rs":"sha256:3c1d40842f70e999ee62af914522c9edbd1c7f68cd295ab1b07bd518302bcb88","crates/features/show/src/events/model.rs":"sha256:89fdb166be2d7c0cc56fe8ee23850b4dcb9ec164edbbdbea10c35f8472a8b903","crates/features/show/src/events/read.rs":"sha256:7f2a15d06077fb273a5469dc02fcd00cf9dd0abd42703c9ecf188267d9fa4b93","crates/features/show/src/events/timeline.rs":"sha256:2e472d568d2e6204f5e9fcb3f8e862c408db91c40e921214340b1e40058e1997","crates/features/show/src/runs/section.rs":"sha256:698c0cb2562eae0ec379b203bbe6fbcb125a184d7bf7a69ad8f3c13aecaa15b4","crates/features/show/src/runs/section/dependencies.rs":"sha256:47744274d976f46afb72a74e2353dc3637212703a024be9048da00def73550ad","crates/features/show/src/runs/section/focused.rs":"sha256:957a25c59ae72d564870bf52122884197771b42473ad750c6399fbc2bcbd1f34","crates/features/show/src/runs/section/instructions.rs":"sha256:c6eafc347a8fbdc14b3bf703a3faddb5cad07baa63c45eb7cda029d060afcbbe","crates/features/show/src/runs/section/mutation.rs":"sha256:c8890dde7b19444569c56236ec5a7378501d4be7b6787eaf1ddbe9c4d53815a2","crates/features/show/src/runs/section/pre_spawn.rs":"sha256:28ec833f75071596b4a01648dbac0a8b4d3d5b594a9ecc0fa15fddc508551749","crates/features/show/src/runs/section/retries.rs":"sha256:42b089098d4e373c3fb3a0561266d7c057f8b054ccc1c9aac37c8e74d163c2b5","crates/features/show/src/runs/section/stuck.rs":"sha256:04e0d27068d7e15e5534fc5855352b3692a3ca82251561a8a54d5a1f929c1baf","crates/features/show/src/runs/section/values.rs":"sha256:32e9bef3355b4db60b72872c6c514247d54595e85183454fbefc1e2262684b39","crates/features/show/tests/show_runs.rs":"sha256:fefafaeb3578043bfc3c03099bd52776e19b2b88dc0cc898a7a1b866c0bbc69f"}
+---
+2026-10-22T10:05:35.166Z

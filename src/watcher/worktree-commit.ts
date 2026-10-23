@@ -180,8 +180,8 @@ export async function newArchiveName(
 }
 
 /**
- * Commit one archived change in a worktree. A failure only logs git's output;
- * it never halts, so the worktree is left as it is.
+ * Commit one archived change in a worktree. A failure logs git's output and
+ * returns a `commit_failed` halt, so the caller can record it on the archive.
  */
 export async function commitWorktreeArchive(
   change: LocatedChange,
@@ -189,9 +189,9 @@ export async function commitWorktreeArchive(
   archiveName: string,
   title: string,
   logger?: Logger,
-): Promise<void> {
+): Promise<WorktreeHalt | null> {
   const vcs = await selectVcs(change.tree.root, config);
-  if (vcs.kind !== 'git') return;
+  if (vcs.kind !== 'git') return null;
   const root = (await vcs.root()) ?? change.tree.root;
   const archivePath = path
     .relative(root, path.join(change.tree.archiveDir, archiveName))
@@ -207,7 +207,10 @@ export async function commitWorktreeArchive(
       archivePath,
       title,
     );
+    return null;
   } catch (err) {
-    logger?.warn(`archive commit failed: ${errorMessage(err)}`);
+    const output = errorMessage(err);
+    logger?.warn(`archive commit failed: ${output}`);
+    return { reason: 'commit_failed', detail: output };
   }
 }

@@ -33,10 +33,30 @@ Every read and write runs the commands `command` builds, waits for each,
 and decodes its standard output and standard error as UTF-8 with invalid
 bytes replaced.
 
-- A command that exits with a code other than 0, or is ended by a signal,
-  gives the read's empty answer, which "Repository state reads" and
-  "History reads" name, and the write's answer, which "Branch and worktree
-  writes", "Commit writes" and "Merge writes" name.
+Every command SHALL be bounded by a limit from rust-config's `Timeouts`, as
+TypeScript's `GitVcs` bounds it. `with_timeouts(timeouts: &Timeouts)` sets
+the limits and returns the changed `GitVcs`, and `GitVcs::new` uses
+`Timeouts::default()`, which are TypeScript's defaults, so
+`GitVcs::new(root)` equals `GitVcs::new(root).with_timeouts(&Timeouts::default())`.
+The commands TypeScript runs through `runCommit` are bounded by
+`timeouts.git_commit`: `commit`, `commit-tree`, and every `merge`
+command, which `merge`, `merge_abort` and `fast_forward` run. Every other
+command is bounded by `timeouts.git`. A command still running when its
+limit has passed SHALL be killed and waited for, so it leaves no process
+behind, and SHALL give `VcsError::TimedOut { command, limit }`, from a read
+and from a write alike. `command` is joined as for `Spawn`, and `limit` is
+the `std::time::Duration` that bounded it. `VcsError::TimedOut` SHALL
+display as `<command> timed out after <limit>`, with the limit in
+`Duration`'s `Debug` form, such as `200ms` or `10s`, and return `None` from
+`std::error::Error::source`. The limit counts from the start of the
+process. Waiting SHALL take no fixed polling interval or other number
+from code.
+
+- A command that exits with a code other than 0, or is ended by a signal
+  other than the kill of its own limit, gives the read's empty answer,
+  which "Repository state reads" and "History reads" name, and the write's
+  answer, which "Branch and worktree writes", "Commit writes" and "Merge
+  writes" name.
 - A program that cannot be started gives `VcsError::Spawn { command, source }`:
   `command` is the program and every argument joined by single spaces, and
   `source` is the `std::io::Error` starting it failed with. `VcsError::Spawn`
@@ -48,6 +68,20 @@ bytes replaced.
   message holds them. `VcsError::Failed` SHALL display as
   `<command> failed: <output>` and return `None` from
   `std::error::Error::source`.
+
+The timeout scenarios use a fake git program: the committed executable
+`crates/kernel/vcs/tests/fixtures/fake-git.sh`, run in place and never
+copied or written by a test, holding
+`#!/bin/sh\nif [ "$3" = "$OSQ_FAKE_SLOW" ]; then exec sleep 30; fi\nexit 0\n`,
+run as `GitVcs::new(<dir>).with_program(<script>).with_env("OSQ_FAKE_SLOW", <command>).with_timeouts(&limits)`,
+where `<script>` is that file's absolute path, `<dir>` is a folder under
+`CARGO_TARGET_TMPDIR` and `limits` is
+`Timeouts { git: Duration::from_millis(200), git_commit: Duration::from_millis(400), ..Timeouts::default() }`.
+Its third argument is the git command's name, after `-c` and
+`core.quotepath=false`, so only the row's command sleeps and every other
+command exits 0 with no output at once. Writing an executable and then
+starting it while other tests fork can fail with `ETXTBSY`, which is why
+the script is never written at test time.
 
 #### Scenario: Command for a read
 - **WHEN** `GitVcs::new("/repo").with_program("git-test").with_env("GIT_CONFIG_NOSYSTEM", "1")` builds `command(&["status", "--porcelain=v1"])`
@@ -76,6 +110,38 @@ bytes replaced.
 | `path_exists("HEAD", "a.txt")` | `osq-missing-git -c core.quotepath=false cat-file -e HEAD:a.txt` |
 | `list_branches("osq/")` | `osq-missing-git -c core.quotepath=false branch --list --format=%(refname:short) osq/*` |
 | `worktree_list()` | `osq-missing-git -c core.quotepath=false worktree list --porcelain` |
+
+#### Scenario: Default timeouts
+- **WHEN** a test compares `GitVcs::new("/repo")` with `GitVcs::new("/repo").with_timeouts(&Timeouts::default())`, and with `GitVcs::new("/repo").with_timeouts(&limits)`
+- **THEN** the first two are equal and the third differs from them
+
+#### Scenario: Commands that run out of time
+- **WHEN** a `GitVcs` on the fake git program, slow on the row's slow command, runs the row's call
+- **THEN** within 10 seconds it returns `VcsError::TimedOut` whose `command` is the row's command, with `<fake>` the script's path, and whose `limit` is the row's limit; the error displays as that command, ` timed out after ` and the limit, and `source()` gives `None`:
+
+| Call | Slow command | Command | Limit |
+|---|---|---|---|
+| `root()` | `rev-parse` | `<fake> -c core.quotepath=false rev-parse --show-toplevel` | `200ms` |
+| `status()` | `status` | `<fake> -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` | `200ms` |
+| `show("HEAD", "a.txt")` | `show` | `<fake> -c core.quotepath=false show HEAD:a.txt` | `200ms` |
+| `is_ancestor("main", "side")` | `merge-base` | `<fake> -c core.quotepath=false merge-base --is-ancestor main side` | `200ms` |
+| `count_commits("main", "side")` | `rev-list` | `<fake> -c core.quotepath=false rev-list --count main..side` | `200ms` |
+| `worktree_list()` | `worktree` | `<fake> -c core.quotepath=false worktree list --porcelain` | `200ms` |
+| `create_branch("side", "main")` | `branch` | `<fake> -c core.quotepath=false branch side main` | `200ms` |
+| `stage(&["a.txt"])` | `add` | `<fake> -c core.quotepath=false add -A -- a.txt` | `200ms` |
+| `commit(&[], "m", "a <b>")` | `commit` | `<fake> -c core.quotepath=false commit --author=a <b> -F -` | `400ms` |
+| `commit_tree("side", "main", "m", "a <b>", &[])` | `commit-tree` | `<fake> -c core.quotepath=false commit-tree side^{tree} -p main -F -` | `400ms` |
+| `merge("side", false)` | `merge` | `<fake> -c core.quotepath=false merge --no-ff --no-commit side` | `400ms` |
+| `merge_abort()` | `merge` | `<fake> -c core.quotepath=false merge --abort` | `400ms` |
+| `fast_forward("side")` | `merge` | `<fake> -c core.quotepath=false merge --ff-only side` | `400ms` |
+
+#### Scenario: Commands that finish in time
+- **WHEN** a `GitVcs` on the fake git program, with `OSQ_FAKE_SLOW` set to `none`, runs `root()`, `create_branch("side", "main")` and `merge_abort()`
+- **THEN** `root()` returns `Ok(None)`, since the fake prints nothing, and the two writes return `Ok(())`
+
+#### Scenario: Fake git runs in place
+- **WHEN** a test reads `crates/kernel/vcs/tests/fixtures/fake-git.sh` and its mode
+- **THEN** it holds exactly the script above, and its mode has the owner, group and other execute bits set
 
 ### Requirement: Repository state reads
 `osq-kernel-vcs` SHALL hold the `Vcs` trait, the read half of osq's
@@ -449,3 +515,190 @@ repository, sorted, and each deriving `Debug`, `Clone`, `PartialEq` and
 | `merge("feature", true)` | `osq-missing-git -c core.quotepath=false merge --squash feature` |
 | `merge_abort()` | `osq-missing-git -c core.quotepath=false merge --abort` |
 | `fast_forward("feature")` | `osq-missing-git -c core.quotepath=false status --porcelain=v1 -z --untracked-files=all` |
+
+### Requirement: Stacked approvals folder
+`stacked_root(vcs: &VcsConfig, repo_root: &Path, home: &Path) -> PathBuf` in
+`osq-kernel-vcs` SHALL give the folder that holds one stacked approval per
+change, as TypeScript's `stackedPath` gives its parent:
+`<worktree root>/<repo_root's last component>/.stacked`. The worktree root
+is `vcs.worktree_root`, with a leading `~` alone or `~/` replaced by `home`.
+It reads no file.
+
+#### Scenario: Stacked folder paths
+- **WHEN** `stacked_root` reads the row's `worktree_root`, the repository root `/work/osq` and the home `/home/me`
+- **THEN** it returns the row's folder:
+
+| `worktree_root` | Folder |
+|---|---|
+| `~/.osq/worktrees` | `/home/me/.osq/worktrees/osq/.stacked` |
+| `~` | `/home/me/osq/.stacked` |
+| `/srv/trees` | `/srv/trees/osq/.stacked` |
+| `~other/trees` | `~other/trees/osq/.stacked` |
+
+### Requirement: Branch deletion
+The `Vcs` trait SHALL hold `delete_branch(name)`, taking `&self` and
+returning `Result<(), VcsError>`, and `GitVcs` SHALL implement it through
+"Git command" as `branch -d <name>`: `Ok(())` when git deletes the branch,
+and `VcsError::Failed` when git refuses, as it does for a missing branch,
+a branch a worktree has checked out, or a branch whose commits HEAD does
+not hold. It SHALL never pass `-D` or `--force`, so no commit is ever
+lost (ADR 003). TypeScript's `GitVcs` has no such write; Rust approve uses
+it to roll back a branch it created that holds no commit of its own.
+
+#### Scenario: Branch deletions
+- **WHEN** `delete_branch` runs with the row's name on a repository made with `git init -b main`, holding a commit `base` with `a.txt` (`one\n`), a branch `osq/merged` at `base`, a branch `osq/ahead` one commit past `base` changing `a.txt` to `two\n`, and a branch `osq/busy` at `base` checked out in the worktree beside the repository named after it plus `-busy`
+- **THEN** it gives the row's answer, and the branches are then as the row says:
+
+| Name | Answer | Branches after |
+|---|---|---|
+| `osq/merged` | `Ok(())` | `osq/merged` is gone |
+| `osq/ahead` | `VcsError::Failed` | `osq/ahead` still points at its commit |
+| `osq/busy` | `VcsError::Failed` | `osq/busy` still exists |
+| `osq/missing` | `VcsError::Failed` | unchanged |
+
+### Requirement: Tree record
+`GitVcs` SHALL have `tree_record_path(&self)`, returning
+`Result<Option<PathBuf>, VcsError>`: the directory `rev-parse
+--git-common-dir` prints in its root, resolved against that root when
+relative, joined with `osq-trees.jsonl`, or none when git refuses or
+prints nothing, and `VcsError::Spawn` when git cannot start, as
+TypeScript's `resolveTreeRecordPath` in `src/core/vcs/tree-record.ts`
+gives it. The crate SHALL export `append_tree_record(path, at, op, root)`,
+with `path` and `root` as `&Path` and `at` and `op` as `&str`, which
+appends one line to `path`: the JSON object with the keys `at`, `op` and
+`root` in that order, `root` written with `display()`, and a newline,
+exactly as TypeScript's `appendTreeRecord` writes it with `JSON.stringify`
+for the same values. It SHALL ignore every failure to open or write the
+file, as TypeScript does.
+
+#### Scenario: Tree record path and lines
+- **WHEN** a test reads `tree_record_path` in the row's folder and then calls `append_tree_record` twice on the path it gives, with `at` `2026-10-22T10:00:00.000Z`, the ops `worktree-add` and `commit`, and the roots `/r/repo` and `/r/wt "x"`
+- **THEN** the path is the row's, and the file then holds `{"at":"2026-10-22T10:00:00.000Z","op":"worktree-add","root":"/r/repo"}\n{"at":"2026-10-22T10:00:00.000Z","op":"commit","root":"/r/wt \"x\""}\n`, written with `\n` escapes:
+
+| Folder | Path |
+|---|---|
+| a repository made with `git init -b main` | its canonical directory joined with `.git/osq-trees.jsonl` |
+| a worktree of that repository, added for a new branch | the same path |
+
+#### Scenario: Tree record without git
+- **WHEN** `tree_record_path` runs in a folder git does not know as a repository, with `GIT_CEILING_DIRECTORIES` set to that folder's parent through `GitVcs::with_env`, and `append_tree_record` runs with a path inside a folder that does not exist
+- **THEN** the path is none, and the append returns without a panic and creates no file
+
+### Requirement: Setup reads
+The `Vcs` trait SHALL hold three more reads, the ones TypeScript's doctor
+asks git for, and `GitVcs` SHALL implement them as TypeScript's `GitVcs`
+and `probeVersion` do. Each runs through "Git command", is bounded by
+`timeouts.git`, and gives an error only as "Git command" says:
+
+```rust
+fn version(&self) -> Result<Option<String>, VcsError>;
+fn hook_names(&self) -> Result<Vec<String>, VcsError>;
+fn line_endings(&self) -> Result<Vec<LineEnding>, VcsError>;
+```
+
+- `version()` runs `--version`. It gives `None` when the command fails.
+  Otherwise it takes the standard output, or the standard error when the
+  output is empty, trims it, and gives its first line, trimmed.
+- `hook_names()` runs `rev-parse --git-path hooks`. Its trimmed output
+  names the hooks folder, joined to the `GitVcs` root when it is relative.
+  It gives the names of the folder's entries that do not end in `.sample`,
+  are files after following symlinks, and have any execute bit set, in
+  byte order. It gives an empty list when the command fails or the folder
+  cannot be read.
+- `line_endings()` runs `ls-files --eol -z` and splits the output on NUL.
+  It passes over an empty record and a record without a tab. For each
+  other record, `path` is the text after the first tab. `index` is the
+  text before that tab, from its third character up to its first space,
+  or up to the tab when it has no space. The entries keep git's order. It
+  gives an empty list when the command fails.
+
+`LineEnding` SHALL be a public struct with the fields `path: String` and
+`index: String`, exported from the crate root, and SHALL derive `Debug`,
+`Clone`, `PartialEq` and `Eq`.
+
+The tests build their repositories as "Repository state reads" says, with
+the same isolated git settings.
+
+#### Scenario: Setup reads of a repository
+- **WHEN** the reads run on a repository made with `git init -b main` and `core.autocrlf` set to `false`. It holds one commit of `bin.dat` (the bytes 0, 1 and 2), `crlf.txt` (`a\r\n`), `dir/ü.txt` (`a\n`), `empty.txt` (empty), `lf.txt` (`a\n`) and `mixed.txt` (`a\r\nb\n`). Its `.git/hooks` folder holds `pre-commit` and `commit-msg` with mode 755, `post-commit` with mode 644, `pre-push.sample` with mode 755, and a folder `pre-rebase` with mode 755
+- **THEN** each read returns the row's answer, with `<version>` the first line of what `git --version` prints in the scratch folder, trimmed:
+
+| Read | Answer |
+|---|---|
+| `version()` | `Some(<version>)` |
+| `hook_names()` | `commit-msg`, `pre-commit` |
+| `line_endings()` | (`bin.dat`, `-text`), (`crlf.txt`, `crlf`), (`dir/ü.txt`, `lf`), (`empty.txt`, `none`), (`lf.txt`, `lf`), (`mixed.txt`, `mixed`) |
+
+#### Scenario: Hooks folder from config
+- **WHEN** `hook_names()` runs on a repository made with `git init -b main`, whose `core.hooksPath` is the absolute path of a folder outside it holding `pre-commit` with mode 755 and `notes.txt` with mode 644
+- **THEN** it returns `pre-commit`
+
+#### Scenario: Setup reads outside a repository
+- **WHEN** the reads run on an empty directory in the scratch folder that no repository holds
+- **THEN** `version()` returns `Some(<version>)` as above, and `hook_names()` and `line_endings()` return empty lists
+
+#### Scenario: Setup reads with a program that cannot start
+- **WHEN** a `GitVcs` whose program is `osq-missing-git` runs each read below
+- **THEN** it returns `VcsError::Spawn` whose `command` is the row's command and whose source's kind is `NotFound`:
+
+| Read | Command |
+|---|---|
+| `version()` | `osq-missing-git -c core.quotepath=false --version` |
+| `hook_names()` | `osq-missing-git -c core.quotepath=false rev-parse --git-path hooks` |
+| `line_endings()` | `osq-missing-git -c core.quotepath=false ls-files --eol -z` |
+
+### Requirement: Patch and discard
+The `Vcs` trait SHALL also hold `patch` and `discard`, and `GitVcs` SHALL
+implement them with the git arguments of TypeScript's `patch` and
+`discard` in `src/core/vcs/git-vcs-write.ts`, through "Git command".
+
+- `patch(base: Option<&str>)` gives `String`, the binary diff of the whole
+  working tree, untracked files included, against `base`, or `HEAD`
+  without one, leaving the index and the working tree as they were. It
+  reads `rev-parse --git-path index`, resolved against the root, copies
+  that file, when it exists, into a new temporary folder as `index`, runs
+  `add -A` with `GIT_INDEX_FILE` set to the copy, and answers the output
+  of `-c core.quotepath=false diff --cached --binary <base>` run with the
+  same variable. The temporary folder is removed whatever happens.
+  `VcsError::Failed` when `add` or `diff` fails.
+- `discard(paths: &[&str])` gives `()`, returning the listed paths to
+  HEAD's state in an osq worktree. Nothing runs when `paths` is empty.
+  Otherwise it reads `rev-parse --git-dir`, `rev-parse --git-common-dir`
+  and `symbolic-ref --quiet --short HEAD`, and refuses with
+  `VcsError::Failed` whose `command` is `git discard` and whose `output` is
+  `discard requires a linked worktree` when the first two name the same
+  folder, resolved against the root, or `discard requires HEAD on a branch
+  starting "osq/"` when HEAD is on no branch or a branch that does not
+  start with `osq/`. Then the paths HEAD tracks under `paths` are those
+  `ls-tree -r --name-only HEAD -- <paths>` lists, and the paths the index
+  tracks are those `ls-files -- <paths>` lists. It runs `rm --cached -q --
+  <index paths HEAD does not track>` when there are any, `restore
+  --source=HEAD --staged --worktree -- <HEAD paths>` when there are any,
+  and `clean -fd -- <paths>`. `VcsError::Failed` when any of them fails.
+
+#### Scenario: Patch leaves the tree as it was
+- **WHEN** a test runs `patch(None)` on a repository whose commit holds `a.txt` (`one\n`) and `b.txt` (`gone\n`), after `a.txt` is changed to `two\n`, `b.txt` is deleted, `c.txt` (`new\n`) is staged and `d.txt` (`loose\n`) is left untracked
+- **THEN** the answer starts with `diff --git a/a.txt b/a.txt` and holds a `diff --git` line for `b.txt`, `c.txt` and `d.txt`, `+two`, `-gone`, `+new` and `+loose`, and `git status --porcelain` prints the same lines before and after
+
+#### Scenario: Patch against a base
+- **WHEN** a test runs `patch(Some(<first>))` on a repository with a first commit holding `a.txt` (`one\n`) and a second changing it to `two\n`, with a clean working tree
+- **THEN** the answer holds `-one` and `+two`
+
+#### Scenario: Discard in an osq worktree
+- **WHEN** a test runs `discard` with the row's paths in the `-one` worktree of a repository whose `main` commit holds `a.txt` (`one\n`) and `keep.txt` (`keep\n`), the worktree on a new branch `osq/one`, after `a.txt` is changed to `two\n`, `c.txt` (`new\n`) is staged, `d/e.txt` (`loose\n`) is left untracked and `keep.txt` is changed to `kept\n`
+- **THEN** it returns `Ok(())`, and `git status --porcelain --untracked-files=all` in the worktree prints the row's lines:
+
+| Paths | Status |
+|---|---|
+| none | ` M a.txt`, `A  c.txt`, ` M keep.txt`, `?? d/e.txt` |
+| `a.txt`, `c.txt`, `d` | ` M keep.txt` |
+| `a.txt` | `A  c.txt`, ` M keep.txt`, `?? d/e.txt` |
+
+#### Scenario: Discard refusals
+- **WHEN** a test runs `discard` with the paths `a.txt` in the row's tree, after `a.txt` is changed to `two\n` there
+- **THEN** it gives `VcsError::Failed` with the `command` `git discard` and the row's `output`, and `a.txt` still holds `two\n`:
+
+| Tree | Output |
+|---|---|
+| the repository itself, on `main` | `discard requires a linked worktree` |
+| the `-one` worktree on a new branch `work` | `discard requires HEAD on a branch starting "osq/"` |

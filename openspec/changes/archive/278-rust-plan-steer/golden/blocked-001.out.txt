@@ -1,0 +1,6 @@
+<root>/openspec/changes/001-blocked: ask your planning tool to plan change 001-blocked — next: dead (needs steering) — osq plan 001
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 001-blocked.
+Read <root>/openspec/changes/001-blocked/plan-prompt.md and follow it exactly; it is your complete prompt.

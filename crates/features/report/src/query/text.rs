@@ -198,7 +198,8 @@ pub(super) fn cell_text(value: ValueRef<'_>, root: &str, home: &str) -> String {
 /// Replaces the root with `.`, then a non-empty home with `~`.
 ///
 /// Implements: rust-report/query-cells
-fn rewrite_paths(text: &str, root: &str, home: &str) -> String {
+/// Implements: rust-report/query-json-values
+pub(super) fn rewrite_paths(text: &str, root: &str, home: &str) -> String {
     let rewritten = text.replace(root, ".");
     if home.is_empty() {
         rewritten

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:7a77b35c039079b2a719384e504e90c2fbbda5d5e951f186e0fbd681d6919896"
+build_stamp: "63250a84"
+project_commit: "2bd6cbc6"
+exit_code: 0
+scope_files: {"Cargo.lock":"sha256:a9db21b9db16b24d6a9a635d496e748b47a7146052e7001fec67558b12a030ed","crates/kernel/storage/Cargo.toml":"sha256:1b397b45035657b7b2bb42273b3301dfa8a1b753f8a2a5265ac441158ac8d9f9","crates/kernel/storage/src/lib.rs":"sha256:94a1b46f83d93f81f1a4ff1a458f41e5d8d2c2b3a77cdba3a42b23d4ba355a05","crates/kernel/storage/src/read/mod.rs":"sha256:61fc4a177aee839adaa980ee17066f293d302b01d6c8438980b3b1024981ba7d","crates/kernel/storage/src/read/pending.rs":"sha256:9a2e2d8fb05a0c6a37c7c7f5c6f5a561354b8a3f864ac565b88e3db6bf90a3e8","crates/kernel/storage/src/read/queue.rs":"sha256:ad1ca3c7b5e4a40453287b8aea4f539a0d3885b3945750a3d93c4c59ee8694a4","crates/kernel/storage/tests/reading_pending_records.rs":"sha256:82e76976c8a8a3c3001767029e9fcd58addf1525889ed50e85877375e106a9e8","crates/kernel/storage/tests/reading_queue_titles.rs":"sha256:558599f38ff5cfe19f2eccbed712f8b1773e325d0db511cb6429f43dd80972ef"}
+---
+2026-10-22T13:18:16.153Z

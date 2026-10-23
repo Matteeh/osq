@@ -1,0 +1,119 @@
+outcome: output
+Requeued 001 task 2 for agent work (next attempt: 3)
+  Reason: scope_regression
+  Retained: .run/regressed/2.2.md
+  Retained: .run/done/2.2
+tree:
+--- .run/approved
+sha256:f066c780aee2a76935a25e60d360b09050c6f2df71f8e1640564494ad2291801
+--- .run/done/1
+---
+scope_resolver: 2
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+build_stamp: "63250a84"
+project_commit: "ae1fff77"
+exit_code: 0
+scope_files: {"missing.txt":null,"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","src/two/deep/b.txt":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
+---
+2026-10-01T10:00:00.000Z
+--- .run/done/2.1
+2026-10-01T10:00:00.000Z
+--- .run/done/2.2
+---
+scope_resolver: 2
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+build_stamp: "63250a84"
+exit_code: 0
+scope_files: {"src/one.txt":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+---
+2026-10-03T10:00:00.000Z
+--- .run/done/3
+---
+scope_resolver: 2
+scope_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+build_stamp: "63250a84"
+exit_code: 0
+scope_files: {"src/two/a.txt":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+---
+2026-10-01T10:00:00.000Z
+--- .run/done/4
+---
+scope_resolver: 2
+scope_hash: sha256:2222222222222222222222222222222222222222222222222222222222222222
+build_stamp: "1234567"
+exit_code: 0
+scope_files:
+  src/one.txt: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+original_scope_hash: sha256:3333333333333333333333333333333333333333333333333333333333333333
+recertified_at: <timestamp>
+recertification_count: 1
+---
+2026-10-01T10:00:00.000Z
+--- .run/events/1.jsonl
+{"data":{"task":"1"},"timestamp":"<timestamp>","type":"done"}
+--- .run/events/2.jsonl
+{"data":{"attempt":3,"attribution":[{"attribution":"ambiguous","path":"src/one.txt (modified)"}],"command":"sh checks/fail.sh","currentHash":"sha256:3cfb4fa0947b1fa72f558e0825b1115022423a0aeea283d1bef4ae6536db3a06","differingPaths":["src/one.txt (modified)"],"exitCode":3,"outcome":"requeued","output":"fail\n","reason":"scope_regression","recordedHash":"sha256:1111111111111111111111111111111111111111111111111111111111111111","task":"2","timedOut":false},"timestamp":"<timestamp>","type":"recertification"}
+--- .run/regressed/1.md
+---
+reason: scope_regression
+task: "1"
+recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+verify_command: "sh checks/pass.sh"
+exit_code: 1
+duration: 0.01
+timed_out: false
+verification_passed: false
+attribution: [{"path":"src/one.txt (modified)","attribution":"2","source":"measures"},{"path":"src/two/a.txt (modified)","attribution":"unknown"}]
+---
+Task 1 scope changed after completion:
+- src/one.txt (modified)
+- src/two/a.txt (modified)
+
+(no output)
+Full output: the verify_ran event in .run/events/1.jsonl
+--- .run/regressed/2.1.md
+---
+reason: scope_regression
+task: "2"
+---
+Task 2 scope changed after completion:
+- src/one.txt (modified)
+--- .run/regressed/2.2.md
+---
+reason: scope_regression
+task: "2"
+recorded_hash: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+current_hash: "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+verify_command: "sh checks/fail.sh"
+exit_code: 3
+duration: 0.01
+timed_out: false
+verification_passed: false
+attribution: [{"path":"src/one.txt (modified)","attribution":"ambiguous"}]
+---
+Task 2 scope changed after completion:
+- src/one.txt (modified)
+
+fail
+Full output: the verify_ran event in .run/events/2.jsonl
+--- .run/regressed/3.md
+---
+reason: scope_regression
+task: "3"
+---
+Task 3 scope changed after completion:
+- src/two/a.txt (modified)
+- src/two/deep/b.txt (added)
+not a path line
+- src/two/c.txt (deleted)
+
+- src/after/blank.txt (modified)
+--- .run/regressed/4.md
+---
+reason: scope_regression
+task: "4"
+attribution: "not a list"
+---
+Task 4 scope changed after completion:
+- src/one.txt (modified)

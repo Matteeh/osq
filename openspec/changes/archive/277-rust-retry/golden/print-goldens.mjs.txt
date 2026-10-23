@@ -1,0 +1,120 @@
+// Prints TypeScript's `osq retry` result and `.run` tree for each row of
+// rust-retry "Retry equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-goldens.mjs <fixture retry-project> <golden folder>
+// Each case runs the built CLI on a fresh copy of the fixture, with the copy as
+// the working directory and no osq config, so vcs is off. git ignores
+// `.run/running/`, so the script writes a case's running marker into its copy.
+// A golden holds the outcome, the text and every file under the change's
+// `.run/` except `running/`, sorted by path. Each event line is parsed, its
+// `timestamp` replaced by `<timestamp>`, and written back with sorted keys.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+const STALE_PID = 2147483646;
+
+const cases = [
+  { name: 'dead-001', folder: '001-dead', args: ['1', '1'] },
+  { name: 'padded-001', folder: '001-dead', args: ['001', ' 1 '] },
+  { name: 'history-002', folder: '002-history', args: ['2', '1'] },
+  { name: 'change-003', folder: '003-change-regressed', args: ['3', 'change'] },
+  { name: 'change-003-task', folder: '003-change-regressed', args: ['3', '1'] },
+  { name: 'regressed-004', folder: '004-task-regressed', args: ['004', '2'] },
+  { name: 'both-005', folder: '005-dead-and-regressed', args: ['005-dead-and-regressed', '1'] },
+  { name: 'unapproved-006', folder: '006-unapproved', args: ['6', '1'] },
+  { name: 'stale-007', folder: '007-stale', args: ['7', '1'] },
+  { name: 'healthy-008', folder: '008-healthy', args: ['8', '1'] },
+  { name: 'healthy-008-change', folder: '008-healthy', args: ['8', 'change'] },
+  { name: 'running-live-009', folder: '009-running', args: ['9', '1'], pid: ['1', 'live'] },
+  { name: 'running-stale-009', folder: '009-running', args: ['9', '1'], pid: ['1', 'stale'] },
+  { name: 'running-garbage-009', folder: '009-running', args: ['9', '1'], pid: ['1', 'garbage'] },
+  { name: 'running-change-009', folder: '009-running', args: ['9', 'change'], pid: ['1', 'live'] },
+  { name: 'running-other-009', folder: '009-running', args: ['9', '1'], pid: ['2', 'live'] },
+  { name: 'scope-plain-010', folder: '010-scope-plain', args: ['10', '1'] },
+  { name: 'blank-reason-013', folder: '013-blank-reason', args: ['13', '1'] },
+  { name: 'bad-target', folder: '001-dead', args: ['1', 'x'] },
+  { name: 'not-found', folder: '001-dead', args: ['99', '1'] },
+];
+
+function pidText(kind) {
+  if (kind === 'live') return `{"pid":${process.pid},"startedAt":1759395600000}\n`;
+  if (kind === 'stale') return `{"pid":${STALE_PID},"startedAt":1759395600000}\n`;
+  return 'not json\n';
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sorted(value[key])]),
+    );
+  }
+  return value;
+}
+
+function eventLine(line) {
+  const parsed = JSON.parse(line);
+  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
+  return JSON.stringify(sorted(parsed));
+}
+
+function files(base, dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (relative === '.run/running') continue;
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function tree(folder) {
+  const lines = [];
+  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    if (relative.endsWith('.jsonl')) {
+      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
+    } else {
+      lines.push(text.endsWith('\n') ? text.slice(0, -1) : text);
+    }
+  }
+  return lines.join('\n');
+}
+
+for (const c of cases) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-retry-'));
+  fs.cpSync(fixture, root, { recursive: true });
+  const folder = path.join(root, 'openspec', 'changes', c.folder);
+  if (c.pid) {
+    const running = path.join(folder, '.run', 'running');
+    fs.mkdirSync(running, { recursive: true });
+    fs.writeFileSync(path.join(running, `${c.pid[0]}.pid`), pidText(c.pid[1]));
+  }
+  const run = spawnSync(process.execPath, [BIN, 'retry', ...c.args], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  let head;
+  if (run.status === 0) {
+    if (run.stderr !== '') throw new Error(`${c.name}: unexpected stderr ${run.stderr}`);
+    head = `outcome: output\n${run.stdout}`;
+  } else {
+    if (run.stdout !== '') throw new Error(`${c.name}: unexpected stdout ${run.stdout}`);
+    const prefix = `Error retrying ${c.args[0]} ${c.args[1]}:\n  `;
+    const stderr = run.stderr.split(root).join('<root>');
+    if (!stderr.startsWith(prefix)) throw new Error(`${c.name}: unexpected stderr ${stderr}`);
+    head = `outcome: failed\n${stderr.slice(prefix.length)}`;
+  }
+  if (!head.endsWith('\n')) head += '\n';
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${head}tree:\n${tree(folder)}\n`);
+  fs.rmSync(root, { recursive: true, force: true });
+}

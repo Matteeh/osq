@@ -2,7 +2,8 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::approve;
+use crate::approve::{self, ApproveOptions};
+use crate::reject;
 
 /// The approve feature: a unit struct with no state (ADR 028).
 ///
@@ -18,36 +19,65 @@ impl Feature for ApproveFeature {
         "approve"
     }
 
-    /// The feature's one command, `approve <id>`.
+    /// The feature's commands, `approve` and then `reject`.
     ///
     /// Implements: rust-approve/approve-feature
     fn commands(&self) -> Vec<Command> {
-        vec![Command::new(
-            "approve",
-            "lint, hash, and approve change folders",
-            "<id>",
-        )]
+        vec![
+            Command::new(
+                "approve",
+                "lint, hash, and approve change folders",
+                "<id> [--base-ok] [--ignore-dirty]",
+            ),
+            Command::new(
+                "reject",
+                "move an eligible active change intact into rejected history",
+                "<id> --reason <text>",
+            ),
+        ]
     }
 
-    /// Runs `approve` with one change id.
+    /// Runs `approve` with one change id, or `reject` with an id and a reason.
     ///
     /// # Errors
     ///
-    /// Returns `UnknownCommand` for another command, `Usage` for an argument
-    /// count other than one, and `Failed` with the command `approve` for every
-    /// failure the other approve requirements name.
+    /// Returns `UnknownCommand` for another command, `Usage` for `approve`
+    /// with an argument count other than one or for `reject` with arguments it
+    /// cannot read, and `Failed` with the running command for every failure the
+    /// other approve and reject requirements name.
     ///
     /// Implements: rust-approve/approve-arguments
+    /// Implements: rust-approve/reject-arguments
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
-        if invocation.command != "approve" {
-            return Err(FeatureError::unknown_command(invocation.command.as_str()));
+        match invocation.command.as_str() {
+            "approve" => {
+                let (ids, options) = approve_arguments(&invocation.args);
+                if ids.len() != 1 {
+                    return Err(FeatureError::usage(
+                        "approve",
+                        format!("expected one change id, got {}", ids.len()),
+                    ));
+                }
+                approve::run_approve(&invocation.root, ids[0], options).map(Output::text)
+            }
+            "reject" => reject::run_reject(&invocation.root, &invocation.args).map(Output::text),
+            other => Err(FeatureError::unknown_command(other)),
         }
-        if invocation.args.len() != 1 {
-            return Err(FeatureError::usage(
-                "approve",
-                format!("expected one change id, got {}", invocation.args.len()),
-            ));
-        }
-        approve::run_approve(&invocation.root, &invocation.args[0]).map(Output::text)
     }
+}
+
+/// Splits an `approve` invocation into its change ids and its two flags.
+///
+/// Implements: rust-approve/approve-arguments
+fn approve_arguments(args: &[String]) -> (Vec<&str>, ApproveOptions) {
+    let mut ids = Vec::new();
+    let mut options = ApproveOptions::default();
+    for arg in args {
+        match arg.as_str() {
+            "--base-ok" => options.base_ok = true,
+            "--ignore-dirty" => options.ignore_dirty = true,
+            id => ids.push(id),
+        }
+    }
+    (ids, options)
 }

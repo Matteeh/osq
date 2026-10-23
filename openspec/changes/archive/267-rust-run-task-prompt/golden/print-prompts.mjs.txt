@@ -1,0 +1,51 @@
+// Prints TypeScript's executor prompt for each case of rust-run "Executor prompts equal TypeScript's".
+// Run from the repository root: node print-prompts.mjs <fixture prompt-project> <golden folder>
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const D = path.resolve('dist');
+const { buildExecutorPrompt } = await import(`${D}/harness/prompt.js`);
+const { parseTaskMd } = await import(`${D}/core/spec/parser.js`);
+const { DEFAULT_CONFIG } = await import(`${D}/core/foundation/config.js`);
+
+const [fixture, golden] = process.argv.slice(2);
+const longOutput = Array.from({ length: 120 }, (_, i) => `line ${i + 1}: é verify failed`).join('\n');
+const RESULT = '## Changed\n\n- Earlier attempt.\n\nTouched: none\n';
+
+const cases = [
+  { name: 'sample-1-first', change: '001-sample', task: '1', attempt: 1 },
+  { name: 'sample-2-retry', change: '001-sample', task: '2', attempt: 3, reason: 'verify_red', output: longOutput, result: true },
+  { name: 'sample-1-blank-output', change: '001-sample', task: '1', attempt: 2, output: '  \n\t' },
+  { name: 'bare-1-result', change: '002-bare', task: '1', attempt: 1, result: true },
+  { name: 'bare-1-short-output', change: '002-bare', task: '1', attempt: 2, reason: 'change_verify_red', output: 'error: one\nerror: two' },
+];
+
+for (const c of cases) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-prompt-'));
+  fs.cpSync(fixture, root, { recursive: true });
+  const folder = path.join(root, 'openspec', 'changes', c.change);
+  if (c.result) {
+    fs.mkdirSync(path.join(folder, '.run', 'results'), { recursive: true });
+    fs.writeFileSync(path.join(folder, '.run', 'results', `${c.task}.md`), RESULT);
+  }
+  const task = parseTaskMd(fs.readFileSync(path.join(folder, 'tasks', `${c.task}.md`), 'utf8'));
+  const prompt = buildExecutorPrompt({
+    projectRoot: root,
+    specFolderPath: folder,
+    taskNumber: c.task,
+    taskTitle: task.title,
+    verifyCommand: task.verify,
+    scope: task.scope,
+    entry: task.entry,
+    skills: task.skills,
+    tier: 'coding',
+    timeoutSeconds: 1800,
+    config: DEFAULT_CONFIG,
+    attempt: c.attempt,
+    priorFailureReason: c.reason,
+    ...(c.output ? { priorFailureOutput: c.output } : {}),
+  });
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), prompt);
+  fs.rmSync(root, { recursive: true, force: true });
+}

@@ -1,0 +1,15 @@
+osq: 001 alpha orders
+
+Orders gain alpha.
+
+[manual] task 1: When one, two
+[verified] task 2: When three, four
+
+Osq-Change: 001-alpha-orders
+Osq-Base: abc123
+Osq-Head: <head>
+Osq-Approved: sha256:aaaa
+Osq-Approved-By: Mathias <m@example.invalid>
+Osq-Model: pi deepseek/flash
+Osq-Version: 0.3.0
+Osq-Version: 0.3.1

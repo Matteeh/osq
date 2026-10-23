@@ -11,19 +11,16 @@ import { runVerificationCommand } from '../run/verification.js';
 import { tailVerifyOutput } from '../run/verify-excerpt.js';
 import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
-import { findChange } from '../status/change-locations.js';
 import { getChangeRunDir } from '../status/layout.js';
 import { refreshRecertifiedDoneMarker } from './recertify.js';
+import { type Rollback, findRetryChange as findRetry, readRollback } from './retry-archived.js';
 import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
-// Retry renames active failure markers into attempt-suffixed history; a numeric
-// scope regression with an automated done marker is recertified by re-running
-// its verify without an agent.
+// Retry renames active failure markers into history; scope regressions are recertified.
 
 const CHANGE_TARGET = 'change';
 const NUMERIC_TARGET = /^\d+$/;
 const SCOPE_REGRESSION = 'scope_regression';
-
 export interface RetryResult {
   readonly specId: string;
   readonly folderName: string;
@@ -34,8 +31,8 @@ export interface RetryResult {
   readonly attempt: number;
   readonly retainedMarkers: string[];
   readonly recertification?: 'passed' | 'requeued';
+  readonly rollback?: Rollback;
 }
-
 export interface RetryOptions {
   /** True when the watcher, rather than a human, requested this retry. */
   readonly automatic?: boolean;
@@ -86,10 +83,11 @@ function markerReason(content: string, fallback: string): string {
 }
 
 /**
- * Validate approval, running state, and active failure before any mutation,
- * then recertify a scope regression or preserve the failure.
+ * Validate approval, running state, and failure before mutation, then recertify or preserve.
  * @scenario watcher-and-harness: Lock of a stopped watcher
  * @scenario watcher-and-harness: Killed watcher's task resumed
+ * @scenario cli-foundation: Retrying a land stop on an archived change
+ * @scenario cli-foundation: Retrying a task of an archived change
  * @adr 003
  */
 export async function retrySpec(
@@ -104,7 +102,7 @@ export async function retrySpec(
     throw new Error(`Invalid retry target "${target}": expected a numeric task or "change".`);
   }
 
-  const { folderPath, tree } = await findChange(projectRoot, config, specIdOrPrefix);
+  const { folderPath, tree } = await findRetry(projectRoot, config, specIdOrPrefix, rawTarget);
   const folderName = path.basename(folderPath);
   const specId = folderName.match(/^(\d+)/)?.[1] ?? folderName;
   const runDir = getChangeRunDir(folderPath);
@@ -159,6 +157,7 @@ export async function retrySpec(
       retainedOrdinal(deadEntries, rawTarget),
       retainedOrdinal(regressedEntries, rawTarget),
     ) + 1;
+  const rollback = await readRollback(folderPath, rawTarget, reason);
 
   // A scope regression with an automated done marker is recertified from core
   // rather than handing the trusted completion back to an agent.
@@ -245,5 +244,6 @@ export async function retrySpec(
     attempt,
     retainedMarkers,
     ...(recertification ? { recertification } : {}),
+    ...(rollback ? { rollback } : {}),
   };
 }

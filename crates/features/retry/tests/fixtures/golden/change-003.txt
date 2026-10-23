@@ -1,0 +1,14 @@
+outcome: output
+Retried 003 change (next attempt: 2)
+  Reason: worktree_dirty
+  Retained: .run/regressed/change.1.md
+tree:
+--- .run/approved
+sha256:ed15abcff1b4d305f600dcd25049fa7a5242977cf05d18f7646d495f06628273
+--- .run/events/change.jsonl
+{"data":{"attempt":2,"reason":"worktree_dirty","target":"change"},"timestamp":"<timestamp>","type":"retry"}
+--- .run/regressed/change.1.md
+---
+reason: worktree_dirty
+---
+openspec/changes/003-change-regressed/proposal.md

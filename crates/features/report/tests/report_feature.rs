@@ -10,7 +10,7 @@ fn history_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/history")
 }
 
-/// Proves the feature's name and its one command.
+/// Proves the feature's name and its two commands.
 ///
 /// Covers: rust-report/report-feature-commands
 #[test]
@@ -18,34 +18,41 @@ fn report_feature_commands() {
     let feature = ReportFeature;
     assert_eq!(feature.name(), "report");
     let commands = feature.commands();
-    assert_eq!(commands.len(), 1);
-    assert_eq!(commands[0].name, "query");
+    assert_eq!(commands.len(), 2);
+    assert_eq!(commands[0].name, "report");
     assert_eq!(
         commands[0].summary,
+        "display delivery metrics and task completion report"
+    );
+    assert_eq!(commands[0].usage, "[--json]");
+    assert_eq!(commands[1].name, "query");
+    assert_eq!(
+        commands[1].summary,
         "run one read-only SELECT over the osq history tables"
     );
-    assert_eq!(commands[0].usage, "[select]");
+    assert_eq!(commands[1].usage, "[--json] [select]");
 }
 
-/// Proves both argument-error rows and that neither writes a file.
+/// Proves every argument-error row and that none writes a file.
 ///
 /// Covers: rust-report/query-argument-errors
 #[test]
 fn query_argument_errors() {
     let root = history_root();
-    let result = ReportFeature.run(&Invocation::new(
-        &root,
-        "query",
+    for args in [
         vec!["a".to_owned(), "b".to_owned()],
-    ));
-    assert_eq!(
-        result.expect_err("two arguments fail").to_string(),
-        "usage of query: expected at most one select, got 2 arguments"
-    );
-    let result = ReportFeature.run(&Invocation::new(&root, "report", Vec::new()));
+        vec!["--json".to_owned(), "a".to_owned(), "b".to_owned()],
+    ] {
+        let result = ReportFeature.run(&Invocation::new(&root, "query", args));
+        assert_eq!(
+            result.expect_err("two selects fail").to_string(),
+            "usage of query: expected at most one select, got 2 arguments"
+        );
+    }
+    let result = ReportFeature.run(&Invocation::new(&root, "summary", Vec::new()));
     assert_eq!(
         result.expect_err("an unknown command fails").to_string(),
-        "unknown command: report"
+        "unknown command: summary"
     );
     assert!(
         !root.join(".osq").exists(),

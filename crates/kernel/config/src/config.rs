@@ -4,7 +4,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use crate::blocks::{self, Timeouts, VcsConfig};
+use crate::blocks::{self, BannedWord, Limits, PiConfig, Timeouts, VcsConfig};
 use crate::error::ConfigError;
 use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
 
@@ -19,6 +19,9 @@ const TOP_LEVEL_KEYS: &[&str] = &[
     "executor",
     "planner",
     "validator",
+    "pi",
+    "limits",
+    "bannedWords",
 ];
 
 /// The settings `osq.toml` holds.
@@ -36,6 +39,12 @@ pub struct Config {
     pub planner: PlannerConfig,
     /// The validator's settings, absent when osq runs no validator.
     pub validator: Option<ValidatorConfig>,
+    /// The pi harness's settings.
+    pub pi: PiConfig,
+    /// Every lint limit osq applies.
+    pub limits: Limits,
+    /// The words the project bans from its code.
+    pub banned_words: Vec<BannedWord>,
 }
 
 impl Default for Config {
@@ -48,6 +57,9 @@ impl Default for Config {
             planner: PlannerConfig::following(&executor),
             executor,
             validator: None,
+            pi: PiConfig::default(),
+            limits: Limits::default(),
+            banned_words: Vec::new(),
         }
     }
 }
@@ -109,6 +121,15 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         Some(table) => Some(roles::validator::read_validator(table)?),
         None => None,
     };
+    let pi = match blocks::value::table(&table, "pi")? {
+        Some(table) => blocks::pi::read_pi(table)?,
+        None => PiConfig::default(),
+    };
+    let limits = match blocks::value::table(&table, "limits")? {
+        Some(table) => blocks::limits::read_limits(table)?,
+        None => Limits::default(),
+    };
+    let banned_words = blocks::banned_words::read_banned_words(table.get("bannedWords"))?;
     Ok(Config {
         max_concurrency,
         timeouts,
@@ -116,5 +137,8 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         executor,
         planner,
         validator,
+        pi,
+        limits,
+        banned_words,
     })
 }

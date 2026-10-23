@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:5caf1eb9b573760bc7d307abac7ba6772789153a690ecf251239dedfdf36a92d"
+build_stamp: "63250a84"
+project_commit: "752ff3b3"
+exit_code: 0
+scope_files: {"crates/features/show/src/archived/section.rs":"sha256:53c639b688482884ff889520b5590b3e0cfdc06ffa7878bce523aefc43cc418f","crates/features/show/src/archived/section/land.rs":"sha256:03a66289d2a1ed86dc9b19d93d26293ab18891a2d9352b08bbb895936e097c40","crates/features/show/src/archived/section/land/gates.rs":"sha256:c6d0cb570c59468bdfb0eb82f9d977fb469f8581160731885764f25a705e2de8","crates/features/show/src/archived/section/land/read.rs":"sha256:6643858ac68b621c1034623527c09a91d60a66531d9144b5f815236622d18aca","crates/features/show/src/archived/section/recertifications.rs":"sha256:cfa8cc8aa3034d667b1f9bbef8c776727e82521669d19289f872dd6c578588d8","crates/features/show/src/archived/section/validation.rs":"sha256:cdee225b4d39353c617f60c0e1467000dbdc98c696fbc6cde5346c4763cc82b8","crates/features/show/src/archived/section/values.rs":"sha256:ec23652d22cc860f3e5d4b767c564fbd3ecfe5d27f3ccaf399f9bea02baf31f0","crates/features/show/src/archived/section/verification.rs":"sha256:d9ed1c1c0864144cbc4430f5a6b8abb7b81a148116a2da46c68e36ad41dffc59","crates/features/show/tests/show_archived.rs":"sha256:96f1fb8807dd21d6bc1f9c4dcbf3475f7fec0bcaf831daf32c73c7c84dba02ed","crates/features/show/tests/show_text.rs":"sha256:cd5a5a9c9c43778734596a122beb8d26c109777d04124610ccad7cfb37e7049b"}
+---
+2026-10-22T11:09:50.820Z

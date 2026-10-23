@@ -1,0 +1,16 @@
+osq Delivery Metrics Report
+
+Specs Summary:
+  Total specs: 0 (0 active, 0 archived)
+
+Now:
+  Total tasks: 0
+  Done: 0
+  Verified done: 0
+  Manual done: 0
+  Dead: 0
+  Regressed: 0
+  Running: 0
+  Pending: 0
+  Unmarked: 0
+  Completion rate: 0%

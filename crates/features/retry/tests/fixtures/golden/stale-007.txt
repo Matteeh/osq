@@ -1,0 +1,10 @@
+outcome: failed
+Change 007 no longer matches its approved hash. Run `osq approve 007` before retrying.
+tree:
+--- .run/approved
+sha256:0000000000000000000000000000000000000000000000000000000000000000
+--- .run/dead/1.md
+---
+reason: blocked
+---
+Stale approval.

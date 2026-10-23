@@ -1,0 +1,17 @@
+---
+scope_resolver: 2
+scope_hash: sha256:90a19893e8e42a9ceae8f75343fa586fcabe342cbe6062ab26758bd50f6aea67
+build_stamp: ed155511
+project_commit: cc4add05
+exit_code: 0
+scope_files:
+  Cargo.lock: sha256:7be0440e90600f6ac35948a057d7e2c204d0c71bbd6b292d68e7d2da214ee05b
+  crates/features/doctor/Cargo.toml: sha256:9a576bf481011d5df9d713e215586244f9c494a04b48378ed76459c59a8159fc
+  crates/features/doctor/src/doctor.rs: sha256:ad054c2cc2b7948fba4554d84e6447d822613011a019afe455ca593a554c8979
+  crates/features/doctor/src/doctor/decisions.rs: sha256:e25b5d9420b8bf398493ec7014e7437af8ce81f577e5f65eac5415908e64a181
+  crates/features/doctor/tests/doctor_decisions.rs: sha256:19589dc3856c1904c29dbfbdef371d91bbf2821ce857a5791da042d00967e848
+original_scope_hash: sha256:b3cdee6c5c674592c92262a6eb86d26d6eaddb8989c26bc3df37ff8311d7395d
+recertified_at: 2026-10-22T19:18:58.460Z
+recertification_count: 1
+---
+2026-10-22T19:18:47.076Z

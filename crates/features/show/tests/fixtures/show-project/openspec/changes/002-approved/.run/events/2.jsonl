@@ -1,0 +1,2 @@
+{"type":"instructions_changed","timestamp":"2026-10-02T10:00:00.000Z","data":{"changed":["scope","verify"]}}
+{"type":"verify_ran","timestamp":"2026-10-02T10:00:05.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":0,"duration":0.5,"phase":"pre_spawn","expected":"red"}}

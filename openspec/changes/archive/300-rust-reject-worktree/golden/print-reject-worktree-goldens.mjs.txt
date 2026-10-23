@@ -1,0 +1,127 @@
+// Prints what TypeScript's reject leaves for each row of rust-approve
+// "Worktree rejections equal TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-reject-worktree-goldens.mjs <fixture> <golden folder>
+// <fixture> is crates/features/approve/tests/fixtures/reject-worktree.
+// Each case builds a fresh scratch git repository: `<scratch>/repo` on `main`
+// with `README.md` holding `fixture` and `osq.toml` holding a `[vcs]` table
+// with `enabled = true`, `author = "osq <osq@example.com>"` and `worktreeRoot`
+// set to `<scratch>/worktrees`, plus, for the `root` case, the fixture's
+// `003-root` under `openspec/changes/`, committed as `init` with the git
+// settings `user.name` `osq`, `user.email` `osq@example.com` and
+// `commit.gpgsign` `false`. Every other case then adds a worktree at
+// `<scratch>/trees/<folder>` on a new branch `osq/<folder>` from `main`,
+// copies the fixture's `<folder>` into its `openspec/changes/`, and commits it
+// there as `osq: <id> approved`. Then:
+// - `other-changes` writes `<scratch>/trees/001-alpha/notes.txt` holding `x`;
+// - `hook-fails` writes an executable `<scratch>/repo/.git/hooks/pre-commit`
+//   that prints `refused by hook` to stderr and exits 1;
+// - `locked` runs `git worktree lock <scratch>/trees/001-alpha` in the repo.
+// The reject runs as `osq reject <id> --reason why` runs it: `rejectSpec`,
+// then the lines `rejectCommand` in src/cli/reject.ts prints, or its error.
+// A golden holds `out:` and those lines, or `error:` and the message, then
+// `branches:` and each `osq/` branch, then `worktrees:` and each worktree
+// path from `git worktree list --porcelain`, then `tip:` and the full message
+// of the case's branch tip, then `commit:` and each line of
+// `git show --no-renames --name-status --format=` of that tip, then `status:`
+// and each line of `git status --porcelain --untracked-files=all` in the
+// case's tree when it still exists, else in the repo. The scratch folder is
+// written `<scratch>`.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const DIST = path.resolve('dist');
+const { defineConfig } = await import(path.join(DIST, 'index.js'));
+const { rejectSpec } = await import(path.join(DIST, 'core', 'lifecycle', 'reject.js'));
+
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.com>';
+
+const cases = [
+  { name: 'removed-001', folder: '001-alpha', id: '1', worktree: true },
+  { name: 'other-changes-001', folder: '001-alpha', id: '1', worktree: true, other: true },
+  { name: 'hook-fails-001', folder: '001-alpha', id: '1', worktree: true, hook: true },
+  { name: 'locked-001', folder: '001-alpha', id: '1', worktree: true, locked: true },
+  { name: 'healthy-002', folder: '002-healthy', id: '2', worktree: true },
+  { name: 'root-003', folder: '003-root', id: '3', worktree: false },
+];
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function repository(scratch, c) {
+  const repo = path.join(scratch, 'repo');
+  fs.mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'osq']);
+  git(repo, ['config', 'user.email', 'osq@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.writeFileSync(path.join(repo, 'README.md'), 'fixture\n');
+  fs.writeFileSync(
+    path.join(repo, 'osq.toml'),
+    `[vcs]\nenabled = true\nauthor = "${AUTHOR}"\nworktreeRoot = "${path.join(scratch, 'worktrees')}"\n`,
+  );
+  const from = path.join(fixture, c.folder);
+  if (!c.worktree) {
+    fs.cpSync(from, path.join(repo, 'openspec', 'changes', c.folder), { recursive: true });
+  }
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'init']);
+  if (!c.worktree) return { repo, tree: repo, branch: 'main' };
+  const tree = path.join(scratch, 'trees', c.folder);
+  git(repo, ['worktree', 'add', '-q', '-b', `osq/${c.folder}`, tree, 'main']);
+  fs.cpSync(from, path.join(tree, 'openspec', 'changes', c.folder), { recursive: true });
+  git(tree, ['add', '-A']);
+  git(tree, ['commit', '-q', '-m', `osq: ${c.id.padStart(3, '0')} approved`]);
+  return { repo, tree, branch: `osq/${c.folder}` };
+}
+
+function lines(result) {
+  const out = [`Rejected ${result.specId} (${result.folderName})`, `  Reason: ${result.reason}`];
+  if (result.worktree !== undefined) {
+    if (result.worktree.removed) out.push(`  Worktree removed: ${result.worktree.path}`);
+    else out.push(`  Worktree kept: ${result.worktree.path} (${result.worktree.why ?? ''})`);
+    out.push(`  Branch kept: ${result.branch}`);
+  } else {
+    out.push(`  Destination: ${result.destinationPath}`);
+  }
+  return out.map((line) => `${line}\n`).join('');
+}
+
+for (const c of cases) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-reject-worktree-')));
+  const { repo, tree, branch } = repository(scratch, c);
+  if (c.other) fs.writeFileSync(path.join(tree, 'notes.txt'), 'x\n');
+  if (c.hook) {
+    const hook = path.join(repo, '.git', 'hooks', 'pre-commit');
+    fs.writeFileSync(hook, '#!/bin/sh\necho refused by hook >&2\nexit 1\n', { mode: 0o755 });
+  }
+  if (c.locked) git(repo, ['worktree', 'lock', tree]);
+  const config = defineConfig({
+    vcs: { enabled: true, author: AUTHOR, worktreeRoot: path.join(scratch, 'worktrees') },
+  });
+  let head;
+  try {
+    head = `out:\n${lines(await rejectSpec(repo, c.id, 'why', config))}`;
+  } catch (error) {
+    head = `error:\n${error.message}\n`;
+  }
+  const branches = git(repo, ['branch', '--list', 'osq/*', '--format=%(refname:short)']);
+  const worktrees = git(repo, ['worktree', 'list', '--porcelain'])
+    .split('\n')
+    .filter((line) => line.startsWith('worktree '))
+    .map((line) => `${line.slice('worktree '.length)}\n`)
+    .join('');
+  const tip = git(repo, ['log', '-1', '--format=%B', branch]);
+  const commit = git(repo, ['show', '--no-renames', '--name-status', '--format=', branch]);
+  const statusIn = fs.existsSync(tree) ? tree : repo;
+  const status = git(statusIn, ['status', '--porcelain', '--untracked-files=all']);
+  const body = `${head}branches:\n${branches}worktrees:\n${worktrees}tip:\n${tip}commit:\n${commit}status:\n${status}`;
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), body.split(scratch).join('<scratch>'));
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

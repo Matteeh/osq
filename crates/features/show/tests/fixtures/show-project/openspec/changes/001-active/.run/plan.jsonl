@@ -1,0 +1,6 @@
+{"type":"plan_started","sessionId":"s-1","timestamp":"2026-10-01T09:00:00.000Z","data":{"harness":"claude","model":"claude-opus-5-5","osqVersion":"0.3.0","briefHash":"sha256:aa"}}
+{"type":"plan_ready","timestamp":"2026-10-01T09:12:00.000Z","data":{"hash":"sha256:ready","notices":[]}}
+{"type":"plan_exited","sessionId":"s-1","timestamp":"2026-10-01T09:12:30.000Z","data":{"exitCode":0,"wallSeconds":750,"usage":{}}}
+{"type":"plan_started","sessionId":"s-2","timestamp":"2026-10-01T10:00:00.000Z","source":"observed","data":{"harness":"pi","model":null,"agent":"planner","osqVersion":"0.3.0","briefHash":"sha256:bb"}}
+not json
+{"type":"plan_exited","sessionId":"s-0","timestamp":"2026-10-01T08:00:00.000Z","data":{"exitCode":1,"wallSeconds":5,"usage":{}}}

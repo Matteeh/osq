@@ -1,0 +1,926 @@
+diff --git a/crates/apps/cli/src/lib.rs b/crates/apps/cli/src/lib.rs
+new file mode 100644
+index 00000000..47bf7fa9
+--- /dev/null
++++ b/crates/apps/cli/src/lib.rs
+@@ -0,0 +1,165 @@
++//! The osq command line: the feature registry and one command line's dispatch.
++
++use std::path::Path;
++
++use osq_core::{Command, Feature, FeatureError, Invocation};
++use osq_feature_approve::ApproveFeature;
++use osq_feature_archive::ArchiveFeature;
++use osq_feature_inbox::InboxFeature;
++use osq_feature_land::LandFeature;
++use osq_feature_plan::PlanFeature;
++use osq_feature_report::ReportFeature;
++
++/// The first line of the top-level help.
++const TOP_USAGE: &str = "Usage: osq-rs <command> [args]";
++
++/// One command line's result: its two streams and its exit code.
++///
++/// Implements: rust-cli/command-line-result
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct CliResult {
++    /// The text to write to the process's stdout.
++    ///
++    /// Implements: rust-cli/command-line-result
++    pub stdout: String,
++    /// The text to write to the process's stderr.
++    ///
++    /// Implements: rust-cli/command-line-result
++    pub stderr: String,
++    /// The process exit code, 0 for success and 1 for a refusal.
++    ///
++    /// Implements: rust-cli/command-line-result
++    pub code: u8,
++}
++
++/// Every feature the binary registers, in dispatch order.
++///
++/// Implements: rust-cli/feature-registry
++#[must_use]
++pub fn features() -> Vec<Box<dyn Feature>> {
++    vec![
++        Box::new(PlanFeature::new()),
++        Box::new(ApproveFeature),
++        Box::new(ArchiveFeature),
++        Box::new(LandFeature),
++        Box::new(InboxFeature::new()),
++        Box::new(ReportFeature),
++    ]
++}
++
++/// Runs one command line, without the program name, and returns its result.
++///
++/// Implements: rust-cli/command-line-result
++/// Implements: rust-cli/cli-help
++/// Implements: rust-cli/command-dispatch
++#[must_use]
++pub fn run_cli(features: &[Box<dyn Feature>], root: &Path, args: &[String]) -> CliResult {
++    match args.split_first() {
++        None => ok(top_help(features)),
++        Some((first, _rest)) if is_help(first) => ok(top_help(features)),
++        Some((name, rest)) => {
++            if rest.first().is_some_and(|second| is_help(second)) {
++                if let Some(text) = command_help(features, name) {
++                    return ok(text);
++                }
++            }
++            dispatch(features, root, name, rest)
++        }
++    }
++}
++
++/// Whether an argument asks for help.
++fn is_help(argument: &str) -> bool {
++    argument == "--help" || argument == "-h"
++}
++
++/// A successful result with its stdout text and an empty stderr.
++fn ok(stdout: String) -> CliResult {
++    CliResult {
++        stdout,
++        stderr: String::new(),
++        code: 0,
++    }
++}
++
++/// The top-level help built from every feature's commands.
++fn top_help(features: &[Box<dyn Feature>]) -> String {
++    let mut text = format!("{TOP_USAGE}\n\nCommands:\n");
++    for feature in features {
++        for command in feature.commands() {
++            text.push_str("  ");
++            text.push_str(&command_usage(&command));
++            text.push_str("  ");
++            text.push_str(&command.summary);
++            text.push('\n');
++        }
++    }
++    text
++}
++
++/// One command's help built from its `Command` data.
++fn command_help(features: &[Box<dyn Feature>], name: &str) -> Option<String> {
++    let command = find_command(features, name)?;
++    Some(format!(
++        "Usage: osq-rs {}\n\n{}\n",
++        command_usage(&command),
++        command.summary
++    ))
++}
++
++/// The first command any feature lists with a name.
++fn find_command(features: &[Box<dyn Feature>], name: &str) -> Option<Command> {
++    features
++        .iter()
++        .flat_map(|feature| feature.commands())
++        .find(|command| command.name == name)
++}
++
++/// A command's name followed by its usage when it has one.
++fn command_usage(command: &Command) -> String {
++    let mut text = command.name.clone();
++    if !command.usage.is_empty() {
++        text.push(' ');
++        text.push_str(&command.usage);
++    }
++    text
++}
++
++/// Runs the command through the first feature that lists it.
++fn dispatch(features: &[Box<dyn Feature>], root: &Path, name: &str, args: &[String]) -> CliResult {
++    for feature in features {
++        if lists_command(feature.as_ref(), name) {
++            return run_feature(feature.as_ref(), root, name, args);
++        }
++    }
++    CliResult {
++        stdout: String::new(),
++        stderr: format!("unknown command: {name}\n"),
++        code: 1,
++    }
++}
++
++/// Whether a feature lists a command with a name.
++fn lists_command(feature: &dyn Feature, name: &str) -> bool {
++    feature
++        .commands()
++        .iter()
++        .any(|command| command.name == name)
++}
++
++/// Runs one feature's command and turns its result into a CLI result.
++fn run_feature(feature: &dyn Feature, root: &Path, name: &str, args: &[String]) -> CliResult {
++    match feature.run(&Invocation::new(root, name, args.to_vec())) {
++        Ok(output) => ok(output.text),
++        Err(error) => refusal(&error),
++    }
++}
++
++/// A refused command: its error text and code 1.
++fn refusal(error: &FeatureError) -> CliResult {
++    CliResult {
++        stdout: String::new(),
++        stderr: format!("{error}\n"),
++        code: 1,
++    }
++}
+diff --git a/crates/apps/cli/src/main.rs b/crates/apps/cli/src/main.rs
+index 1df6a9c2..8ef03408 100644
+--- a/crates/apps/cli/src/main.rs
++++ b/crates/apps/cli/src/main.rs
+@@ -1,4 +1,58 @@
+-//! The osq command line: parses arguments, dispatches to the registered features and prints.
++//! The `osq-rs` entry point: the process's IO around [`osq_cli::run_cli`].
+ 
+-/// Entry point; no feature is registered yet.
+-fn main() {}
++use std::env;
++use std::io::{self, Write as _};
++use std::process::ExitCode;
++
++use osq_cli::CliResult;
++
++/// Runs the process's command line and exits with its code.
++///
++/// Implements: rust-cli/cli-entry-point
++fn main() -> ExitCode {
++    let root = match env::current_dir() {
++        Ok(root) => root,
++        Err(error) => return refuse(&format!("cannot read the current directory: {error}")),
++    };
++    let Some(args) = arguments() else {
++        return ExitCode::from(1);
++    };
++    let features = osq_cli::features();
++    let result = osq_cli::run_cli(&features, &root, &args);
++    write(&result);
++    ExitCode::from(result.code)
++}
++
++/// The process's arguments after the program name, or `None` after an error.
++fn arguments() -> Option<Vec<String>> {
++    let mut args = Vec::new();
++    for argument in env::args_os().skip(1) {
++        match argument.into_string() {
++            Ok(argument) => args.push(argument),
++            Err(argument) => {
++                refuse(&format!(
++                    "argument is not valid UTF-8: {}",
++                    argument.to_string_lossy()
++                ));
++                return None;
++            }
++        }
++    }
++    Some(args)
++}
++
++/// Writes one error line to stderr and returns exit code 1.
++fn refuse(message: &str) -> ExitCode {
++    let _ = writeln!(io::stderr(), "{message}");
++    ExitCode::from(1)
++}
++
++/// Writes the result's stdout and stderr to the process's streams.
++fn write(result: &CliResult) {
++    let mut stdout = io::stdout();
++    let mut stderr = io::stderr();
++    let _ = stdout.write_all(result.stdout.as_bytes());
++    let _ = stdout.flush();
++    let _ = stderr.write_all(result.stderr.as_bytes());
++    let _ = stderr.flush();
++}
+diff --git a/crates/apps/cli/tests/binary.rs b/crates/apps/cli/tests/binary.rs
+new file mode 100644
+index 00000000..df23d6de
+--- /dev/null
++++ b/crates/apps/cli/tests/binary.rs
+@@ -0,0 +1,125 @@
++//! Proves the built `osq-rs` binary's output, errors and exit codes.
++
++mod support;
++
++use std::fs;
++use std::path::Path;
++use std::process::{Command, Output};
++
++/// The path of the built `osq-rs` binary.
++const BINARY: &str = env!("CARGO_BIN_EXE_osq-rs");
++
++/// Runs the binary in `root` with literal arguments.
++fn run_binary(root: &Path, args: &[&str]) -> Output {
++    Command::new(BINARY)
++        .current_dir(root)
++        .args(args)
++        .output()
++        .expect("the binary runs")
++}
++
++/// The text of one captured stream.
++fn text(bytes: &[u8]) -> String {
++    String::from_utf8(bytes.to_vec()).expect("the stream is UTF-8")
++}
++
++/// Proves that each command prints what its feature returns on a fresh copy.
++///
++/// Covers: rust-cli/commands-through-the-binary
++#[test]
++fn commands_through_the_binary() {
++    let cases: [(&[&str], &str); 3] = [
++        (&["inbox"], "inbox"),
++        (&["queue"], "queue"),
++        (&["query", "SELECT 1 AS one"], "query"),
++    ];
++    for (args, command) in cases {
++        let actual = support::fixture_copy(&format!("cli-binary-actual-{command}"));
++        let expected = support::fixture_copy(&format!("cli-binary-expected-{command}"));
++        let output = run_binary(&actual, args);
++        assert_eq!(
++            text(&output.stdout),
++            support::feature_text(&expected, command, &args[1..]),
++            "{command}"
++        );
++        assert_eq!(text(&output.stderr), "", "{command}");
++        assert_eq!(output.status.code(), Some(0), "{command}");
++    }
++}
++
++/// Proves that a feature's refusal reaches stderr with exit code 1.
++///
++/// Covers: rust-cli/feature-error-through-the-binary
++#[test]
++fn feature_error_through_the_binary() {
++    let root = support::fixture_copy("cli-binary-feature-error");
++    let output = run_binary(&root, &["inbox", "extra"]);
++    assert_eq!(text(&output.stdout), "");
++    assert_eq!(text(&output.stderr), "usage of inbox: takes no arguments\n");
++    assert_eq!(output.status.code(), Some(1));
++}
++
++/// Proves that an unknown command exits 1 with its one-line error.
++///
++/// Covers: rust-cli/binary-exit-code
++#[test]
++fn binary_exit_code() {
++    let root = support::fixture_copy("cli-binary-exit-code");
++    let output = run_binary(&root, &["nope"]);
++    assert_eq!(text(&output.stdout), "");
++    assert_eq!(text(&output.stderr), "unknown command: nope\n");
++    assert_eq!(output.status.code(), Some(1));
++}
++
++/// Proves that a non-UTF-8 argument is a one-line error and code 1.
++///
++/// Covers: rust-cli/binary-exit-code
++#[cfg(unix)]
++#[test]
++fn binary_refuses_a_non_utf8_argument() {
++    use std::ffi::OsString;
++    use std::os::unix::ffi::OsStringExt;
++
++    let root = support::fixture_copy("cli-binary-non-utf8");
++    let output = Command::new(BINARY)
++        .current_dir(&root)
++        .arg(OsString::from_vec(vec![0xff]))
++        .output()
++        .expect("the binary runs");
++    let stderr = text(&output.stderr);
++    assert_eq!(text(&output.stdout), "");
++    assert!(
++        stderr.starts_with("argument is not valid UTF-8: "),
++        "{stderr}"
++    );
++    assert!(stderr.contains('\u{fffd}'), "{stderr}");
++    assert_eq!(stderr.lines().count(), 1, "{stderr}");
++    assert_eq!(output.status.code(), Some(1));
++}
++
++/// Proves that an unreadable current directory is a one-line error and code 1.
++///
++/// Covers: rust-cli/binary-exit-code
++#[cfg(unix)]
++#[test]
++fn binary_refuses_an_unreadable_current_directory() {
++    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join("cli-binary-unreadable-cwd");
++    let _ = fs::remove_dir_all(&root);
++    fs::create_dir_all(&root).unwrap();
++    let output = Command::new("sh")
++        .arg("-c")
++        .arg("cd \"$1\" && rmdir \"$1\" && exec \"$2\"")
++        .arg("sh")
++        .arg(&root)
++        .arg(BINARY)
++        .output()
++        .expect("the shell runs");
++    let stderr = text(&output.stderr);
++    assert_eq!(text(&output.stdout), "");
++    assert!(
++        stderr.starts_with("cannot read the current directory: "),
++        "{stderr}"
++    );
++    assert_eq!(stderr.lines().count(), 1, "{stderr}");
++    assert_eq!(output.status.code(), Some(1));
++}
+diff --git a/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md b/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md
+new file mode 100644
+index 00000000..90f4951e
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md
+@@ -0,0 +1,10 @@
++---
++queue_item: alpha
++queue_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
++planner: null
++date: 2026-10-01
++---
++
++### Goal
++
++Alpha is first.
+diff --git a/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md b/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md
+new file mode 100644
+index 00000000..77f22c9a
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md
+@@ -0,0 +1,10 @@
++---
++title: Alpha comes first
++depends_on: []
++verify: cargo test
++features:
++  reads: []
++---
++## Goal
++
++Alpha is first.
+diff --git a/crates/apps/cli/tests/fixtures/project/openspec/queue.md b/crates/apps/cli/tests/fixtures/project/openspec/queue.md
+new file mode 100644
+index 00000000..e3d1513e
+--- /dev/null
++++ b/crates/apps/cli/tests/fixtures/project/openspec/queue.md
+@@ -0,0 +1,9 @@
++# Fixture queue
++
++## [alpha] Alpha comes first
++
++Depends on: nothing
++
++### Goal
++
++Alpha is first.
+diff --git a/crates/apps/cli/tests/run_cli.rs b/crates/apps/cli/tests/run_cli.rs
+new file mode 100644
+index 00000000..0261126d
+--- /dev/null
++++ b/crates/apps/cli/tests/run_cli.rs
+@@ -0,0 +1,170 @@
++//! Proves the registry, the help texts and the dispatch of one command line.
++
++mod support;
++
++use std::fs;
++use std::path::Path;
++
++use osq_cli::{CliResult, features, run_cli};
++use osq_core::{Command, Feature, Output};
++
++/// Runs `run_cli` on literal arguments against an unused root.
++fn run(features: &[Box<dyn Feature>], args: &[&str]) -> CliResult {
++    let args: Vec<String> = args.iter().map(|arg| (*arg).to_owned()).collect();
++    run_cli(features, Path::new("/unused"), &args)
++}
++
++/// The `alpha` test feature, whose one command has a usage.
++fn alpha() -> support::TestFeature {
++    support::TestFeature::new(
++        "alpha",
++        vec![Command::new("one", "does one", "<id>")],
++        Ok(Output::text("one ran")),
++    )
++}
++
++/// The `beta` test feature, whose one command has no usage.
++fn beta() -> support::TestFeature {
++    support::TestFeature::new(
++        "beta",
++        vec![Command::new("two", "does two", "")],
++        Ok(Output::text("two ran")),
++    )
++}
++
++/// Proves that the CLI crate's files sit under `crates/apps/cli`.
++///
++/// Covers: rust-cli/cli-crate-ownership
++#[test]
++fn cli_crate_ownership() {
++    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
++    assert_eq!(manifest.file_name().unwrap(), "cli");
++    assert_eq!(manifest.parent().unwrap().file_name().unwrap(), "apps");
++    assert_eq!(
++        manifest
++            .parent()
++            .unwrap()
++            .parent()
++            .unwrap()
++            .file_name()
++            .unwrap(),
++        "crates"
++    );
++    for file in ["Cargo.toml", "src/lib.rs", "src/main.rs"] {
++        assert!(manifest.join(file).is_file(), "{file}");
++    }
++    let manifest_text = fs::read_to_string(manifest.join("Cargo.toml")).unwrap();
++    assert!(manifest_text.contains("name = \"osq-cli\""));
++    assert!(manifest_text.contains("name = \"osq-rs\""));
++}
++
++/// Proves the registered feature names and their order.
++///
++/// Covers: rust-cli/registered-features
++#[test]
++fn registered_features() {
++    let features = features();
++    let names: Vec<&str> = features.iter().map(|feature| feature.name()).collect();
++    assert_eq!(
++        names,
++        ["plan", "approve", "archive", "land", "inbox", "report"]
++    );
++}
++
++/// Proves the top-level and command help rows built from `Command` data.
++///
++/// Covers: rust-cli/help-from-the-features-data
++#[test]
++fn help_from_the_features_data() {
++    let top =
++        "Usage: osq-rs <command> [args]\n\nCommands:\n  one <id>  does one\n  two  does two\n";
++    let cases: [(&[&str], &str); 5] = [
++        (&[], top),
++        (&["--help"], top),
++        (&["-h"], top),
++        (&["one", "--help"], "Usage: osq-rs one <id>\n\ndoes one\n"),
++        (&["two", "-h"], "Usage: osq-rs two\n\ndoes two\n"),
++    ];
++    for (args, expected) in cases {
++        let features = support::boxed(vec![alpha(), beta()]);
++        let result = run(&features, args);
++        assert_eq!(result.stdout, expected, "{args:?}");
++        assert_eq!(result.stderr, "", "{args:?}");
++        assert_eq!(result.code, 0, "{args:?}");
++    }
++}
++
++/// Proves that the top-level help holds every registered command and no other.
++///
++/// Covers: rust-cli/help-lists-every-registered-command
++#[test]
++fn help_lists_every_registered_command() {
++    let features = features();
++    let result = run(&features, &["--help"]);
++    let commands: Vec<Command> = features
++        .iter()
++        .flat_map(|feature| feature.commands())
++        .collect();
++    let mut expected = vec![
++        "Usage: osq-rs <command> [args]".to_owned(),
++        String::new(),
++        "Commands:".to_owned(),
++    ];
++    for command in &commands {
++        let usage = if command.usage.is_empty() {
++            String::new()
++        } else {
++            format!(" {}", command.usage)
++        };
++        expected.push(format!("  {}{}  {}", command.name, usage, command.summary));
++    }
++    expected.push(String::new());
++    assert_eq!(result.stdout, expected.join("\n"));
++    assert_eq!(result.stdout.lines().count(), commands.len() + 3);
++    assert_eq!(result.stderr, "");
++    assert_eq!(result.code, 0);
++}
++
++/// Proves that an unlisted command refuses and calls no feature.
++///
++/// Covers: rust-cli/unknown-command
++#[test]
++fn unknown_command() {
++    let alpha = alpha();
++    let beta = beta();
++    let alpha_calls = alpha.counter();
++    let beta_calls = beta.counter();
++    let features = support::boxed(vec![alpha, beta]);
++    let result = run(&features, &["nope"]);
++    assert_eq!(result.stdout, "");
++    assert_eq!(result.stderr, "unknown command: nope\n");
++    assert_eq!(result.code, 1);
++    assert_eq!(support::calls(&alpha_calls), 0);
++    assert_eq!(support::calls(&beta_calls), 0);
++}
++
++/// Proves that dispatch picks the first feature that lists the command.
++///
++/// Covers: rust-cli/first-feature-wins
++#[test]
++fn first_feature_wins() {
++    let first = support::TestFeature::new(
++        "first",
++        vec![Command::new("same", "runs first", "")],
++        Ok(Output::text("first")),
++    );
++    let second = support::TestFeature::new(
++        "second",
++        vec![Command::new("same", "runs second", "")],
++        Ok(Output::text("second")),
++    );
++    let first_calls = first.counter();
++    let second_calls = second.counter();
++    let features = support::boxed(vec![first, second]);
++    let result = run(&features, &["same"]);
++    assert_eq!(result.stdout, "first");
++    assert_eq!(result.stderr, "");
++    assert_eq!(result.code, 0);
++    assert_eq!(support::calls(&first_calls), 1);
++    assert_eq!(support::calls(&second_calls), 0);
++}
+diff --git a/crates/apps/cli/tests/support/mod.rs b/crates/apps/cli/tests/support/mod.rs
+new file mode 100644
+index 00000000..472b01a0
+--- /dev/null
++++ b/crates/apps/cli/tests/support/mod.rs
+@@ -0,0 +1,128 @@
++//! Helpers shared by the CLI crate's tests: a feature double and fixture copies.
++//!
++//! Each test binary compiles this module on its own, so some helpers are
++//! unused in a given binary even though another test uses them.
++#![allow(dead_code)]
++
++use std::fs;
++use std::path::{Path, PathBuf};
++use std::sync::Arc;
++use std::sync::atomic::{AtomicUsize, Ordering};
++
++use osq_cli::features;
++use osq_core::{Command, Feature, FeatureError, Invocation, Output};
++
++/// A counter shared with a feature double after it is boxed.
++pub type Counter = Arc<AtomicUsize>;
++
++/// A feature double that records how often its `run` is called.
++pub struct TestFeature {
++    /// The feature's name.
++    name: &'static str,
++    /// The commands the feature lists.
++    commands: Vec<Command>,
++    /// What `run` returns.
++    result: Result<Output, FeatureError>,
++    /// How many times `run` was called.
++    calls: Counter,
++}
++
++impl TestFeature {
++    /// Builds a feature double from its name, commands and result.
++    pub fn new(
++        name: &'static str,
++        commands: Vec<Command>,
++        result: Result<Output, FeatureError>,
++    ) -> Self {
++        Self {
++            name,
++            commands,
++            result,
++            calls: Arc::new(AtomicUsize::new(0)),
++        }
++    }
++
++    /// A handle on the call counter that outlives the box.
++    pub fn counter(&self) -> Counter {
++        Arc::clone(&self.calls)
++    }
++}
++
++impl Feature for TestFeature {
++    /// The feature's name.
++    fn name(&self) -> &str {
++        self.name
++    }
++
++    /// The commands the feature lists.
++    fn commands(&self) -> Vec<Command> {
++        self.commands.clone()
++    }
++
++    /// Records the call and returns the configured result.
++    fn run(&self, _invocation: &Invocation) -> Result<Output, FeatureError> {
++        self.calls.fetch_add(1, Ordering::SeqCst);
++        self.result.clone()
++    }
++}
++
++/// The number of calls a counter has recorded.
++pub fn calls(counter: &Counter) -> usize {
++    counter.load(Ordering::SeqCst)
++}
++
++/// Wraps test features in the boxes `run_cli` takes.
++pub fn boxed(features: Vec<TestFeature>) -> Vec<Box<dyn Feature>> {
++    features
++        .into_iter()
++        .map(|feature| Box::new(feature) as Box<dyn Feature>)
++        .collect()
++}
++
++/// A fresh copy of the crate's fixture project under `CARGO_TARGET_TMPDIR`.
++pub fn fixture_copy(name: &str) -> PathBuf {
++    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/project");
++    let target = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
++    let _ = fs::remove_dir_all(&target);
++    fs::create_dir_all(&target).unwrap();
++    copy_dir(&source, &target);
++    fs::canonicalize(target).unwrap()
++}
++
++/// Copies every file and folder of `source` into `target`.
++fn copy_dir(source: &Path, target: &Path) {
++    for entry in fs::read_dir(source).unwrap() {
++        let entry = entry.unwrap();
++        let destination = target.join(entry.file_name());
++        if entry.file_type().unwrap().is_dir() {
++            fs::create_dir_all(&destination).unwrap();
++            copy_dir(&entry.path(), &destination);
++        } else {
++            fs::copy(entry.path(), destination).unwrap();
++        }
++    }
++}
++
++/// The registered feature that lists a command, built fresh from `features()`.
++pub fn feature_for(command: &str) -> Box<dyn Feature> {
++    features()
++        .into_iter()
++        .find(|feature| {
++            feature
++                .commands()
++                .iter()
++                .any(|listed| listed.name == command)
++        })
++        .unwrap_or_else(|| panic!("no feature lists {command}"))
++}
++
++/// The text the feature that lists `command` returns for one invocation.
++pub fn feature_text(root: &Path, command: &str, args: &[&str]) -> String {
++    let feature = feature_for(command);
++    let invocation = Invocation::new(
++        root,
++        command,
++        args.iter().map(|arg| (*arg).to_owned()).collect(),
++    );
++    feature.run(&invocation).expect("the feature succeeds").text
++}
+diff --git a/openspec/changes/263-rust-cli-dispatch/.run/dead/1.md b/openspec/changes/263-rust-cli-dispatch/.run/dead/1.md
+new file mode 100644
+index 00000000..c5ee9793
+--- /dev/null
++++ b/openspec/changes/263-rust-cli-dispatch/.run/dead/1.md
+@@ -0,0 +1,5 @@
++---
++reason: blocked
++fingerprint: sha256:4ebc4443949cff1df35b0d1e5014532f8a3e65b7b887956ce40dcc40c3757900
++---
++- Completion needs either a linter change so `change_link_gates` drops the ownership of a capability whose delta REMOVES its `Code ownership` requirement, or a planner revision of this change's rust-workspace delta that avoids the overlap during the change's own run. The CLI crate itself is implemented and its task verify passes.
+diff --git a/openspec/changes/263-rust-cli-dispatch/.run/events/1.jsonl b/openspec/changes/263-rust-cli-dispatch/.run/events/1.jsonl
+new file mode 100644
+index 00000000..750f6d8b
+--- /dev/null
++++ b/openspec/changes/263-rust-cli-dispatch/.run/events/1.jsonl
+@@ -0,0 +1,139 @@
++{"type":"verify_ran","timestamp":"2026-10-21T19:40:43.537Z","data":{"command":"cargo test -p osq-cli","exitCode":0,"duration":15.46,"log":".run/logs/1-1.log","output":"   Compiling fallible-iterator v0.3.0\n   Compiling smallvec v1.16.3\n   Compiling bitflags v2.13.2\n   Compiling fallible-streaming-iterator v0.1.9\n   Compiling winnow v1.0.3\n   Compiling toml_parser v1.1.2+spec-1.1.0\n   Compiling hashlink v0.12.2\n   Compiling hybrid-array v0.4.15\n   Compiling syn v3.0.9\n   Compiling yaml-rust2 v0.13.0\n   Compiling crypto-common v0.2.2\n   Compiling block-buffer v0.12.1\n   Compiling libsqlite3-sys v0.38.2\n   Compiling digest v0.11.3\n   Compiling sha2 v0.11.0\n   Compiling serde_spanned v1.1.1\n   Compiling toml_datetime v1.1.1+spec-1.1.0\n   Compiling toml v1.1.2+spec-1.1.0\n   Compiling serde_derive v1.0.229\n   Compiling osq-kernel-config v0.0.0 (crates/kernel/config)\n   Compiling osq-core v0.0.0 (crates/core)\n   Compiling osq-kernel-specs v0.0.0 (crates/kernel/specs)\n   Compiling osq-kernel-vcs v0.0.0 (crates/kernel/vcs)\n   Compiling osq-feature-metaloop v0.0.0 (crates/features/metaloop)\n   Compiling osq-feature-run v0.0.0 (crates/features/run)\n   Compiling rusqlite v0.40.2\n   Compiling osq-kernel-storage v0.0.0 (crates/kernel/storage)\n   Compiling osq-feature-archive v0.0.0 (crates/features/archive)\n   Compiling osq-feature-approve v0.0.0 (crates/features/approve)\n   Compiling osq-feature-inbox v0.0.0 (crates/features/inbox)\n   Compiling osq-feature-land v0.0.0 (crates/features/land)\n   Compiling osq-feature-report v0.0.0 (crates/features/report)\n   Compiling osq-feature-plan v0.0.0 (crates/features/plan)\n   Compiling osq-cli v0.0.0 (crates/apps/cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.13s\n     Running unittests src/main.rs (target/debug/deps/osq_rs-6b396e09b6c11043)\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s","phase":"pre_spawn","expected":"red","mismatch":true}}
++{"type":"measures","timestamp":"2026-10-21T19:40:53.630Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":2,"scopeLines":32,"repoFiles":5719,"repoLines":580662,"importFanIn":0,"proposalWords":613,"taskWords":323,"deltaRequirements":7,"deltaScenarios":9,"dependencies":{"crates/apps/cli/Cargo.toml":["osq-core","osq-feature-approve","osq-feature-archive","osq-feature-inbox","osq-feature-land","osq-feature-metaloop","osq-feature-plan","osq-feature-report","osq-feature-run"]}}}
++{"type":"started","timestamp":"2026-10-21T19:40:54.143Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"ac29fc38","pid":4190393,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"3f811304"}}
++{"type":"text","timestamp":"2026-10-21T19:40:56.190Z","data":{"text":"I'll start by reading the task file, proposal, and delta specs."}}
++{"type":"tokens","timestamp":"2026-10-21T19:40:56.190Z","data":{"promptTokens":5546,"candidateTokens":333,"totalTokens":6391,"cachedTokens":512,"reasoningTokens":0,"cost":0.0020664719999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:56.190Z","data":{"tool":"read","summary":"openspec/changes/263-rust-cli-dispatch/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:56.191Z","data":{"tool":"read","summary":"openspec/changes/263-rust-cli-dispatch/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:56.191Z","data":{"tool":"read","summary":"openspec/changes/263-rust-cli-dispatch/specs/rust-cli/spec.m"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:56.192Z","data":{"tool":"read","summary":"openspec/changes/263-rust-cli-dispatch/specs/rust-workspace/"}}
++{"type":"tokens","timestamp":"2026-10-21T19:40:57.973Z","data":{"promptTokens":3626,"candidateTokens":491,"totalTokens":10389,"cachedTokens":6272,"reasoningTokens":7,"cost":0.0017146319999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.974Z","data":{"tool":"read","summary":"crates/core/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.974Z","data":{"tool":"read","summary":"crates/apps/cli/Cargo.toml"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.974Z","data":{"tool":"read","summary":"crates/apps/cli/src/main.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.975Z","data":{"tool":"read","summary":"crates/features/inbox/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.975Z","data":{"tool":"read","summary":"crates/features/plan/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.975Z","data":{"tool":"read","summary":"crates/features/report/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:57.976Z","data":{"tool":"read","summary":"crates/features/inbox/tests/inbox_command.rs"}}
++{"type":"tokens","timestamp":"2026-10-21T19:40:59.950Z","data":{"promptTokens":7405,"candidateTokens":424,"totalTokens":18197,"cachedTokens":10368,"reasoningTokens":38,"cost":0.0027925079999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:59.951Z","data":{"tool":"bash","summary":"ls crates/features/*/src/ && echo \"---\" && find crates/apps/"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:59.951Z","data":{"tool":"bash","summary":"for c in approve archive land plan report inbox; do echo \"=="}}
++{"type":"tool","timestamp":"2026-10-21T19:40:59.952Z","data":{"tool":"read","summary":"crates/features/approve/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:59.952Z","data":{"tool":"read","summary":"crates/features/archive/src/feature.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:40:59.953Z","data":{"tool":"read","summary":"crates/features/land/src/feature.rs"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:02.184Z","data":{"promptTokens":2843,"candidateTokens":367,"totalTokens":21386,"cachedTokens":18176,"reasoningTokens":113,"cost":0.0014023559999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:02.185Z","data":{"tool":"read","summary":"crates/features/plan/src/queue.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:02.185Z","data":{"tool":"bash","summary":"ls crates/features/plan/src/queue crates/features/report/src"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:02.186Z","data":{"tool":"bash","summary":"find crates -path '*/tests/fixtures/*' -type f | head -80"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:03.968Z","data":{"promptTokens":4868,"candidateTokens":337,"totalTokens":26581,"cachedTokens":21376,"reasoningTokens":29,"cost":0.001993056,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:03.968Z","data":{"tool":"read","summary":"crates/features/report/src/query.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:03.969Z","data":{"tool":"bash","summary":"cat crates/features/plan/tests/fixtures/plan-repo/openspec/q"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:03.969Z","data":{"tool":"bash","summary":"cat crates/features/plan/src/queue/parse.rs; echo '---text--"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:06.336Z","data":{"promptTokens":6731,"candidateTokens":176,"totalTokens":33403,"cachedTokens":26496,"reasoningTokens":17,"cost":0.0023894759999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:06.336Z","data":{"tool":"bash","summary":"cat crates/features/report/tests/support/mod.rs; echo '--- q"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:16.607Z","data":{"promptTokens":2922,"candidateTokens":2582,"totalTokens":38784,"cachedTokens":33280,"reasoningTokens":2247,"cost":0.004174679999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:16.608Z","data":{"tool":"bash","summary":"rg -n \"Covers: .*code-ownership|Code ownership|code_ownershi"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:16.608Z","data":{"tool":"bash","summary":"rg -n \"CARGO_BIN_EXE|CARGO_TARGET_TMPDIR\" crates --glob '*.r"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:16.609Z","data":{"tool":"bash","summary":"sed -n '1,160p' crates/features/report/tests/report_feature."}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:19.044Z","data":{"promptTokens":2527,"candidateTokens":373,"totalTokens":41684,"cachedTokens":38784,"reasoningTokens":65,"cost":0.001438404,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:19.044Z","data":{"tool":"bash","summary":"rg -n \"rust-workspace|placeholder crate|Covers: .*ownership\""}}
++{"type":"tool","timestamp":"2026-10-21T19:41:19.044Z","data":{"tool":"bash","summary":"sed -n '1,120p' openspec/changes/263-rust-cli-dispatch/tasks"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:19.045Z","data":{"tool":"bash","summary":"rg -n \"osq-cli|rust-cli\" openspec/specs openspec/changes/263"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:24.089Z","data":{"promptTokens":3459,"candidateTokens":858,"totalTokens":45917,"cachedTokens":41600,"reasoningTokens":655,"cost":0.0023168999999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:24.090Z","data":{"tool":"bash","summary":"rg -n \"CliResult|run_cli|features\\(\\)\" crates decisions open"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:24.090Z","data":{"tool":"bash","summary":"ls decisions | tail -20; echo '---'; sed -n '1,160p' decisio"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:26.689Z","data":{"promptTokens":4457,"candidateTokens":319,"totalTokens":50600,"cachedTokens":45824,"reasoningTokens":67,"cost":0.001994844,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:26.689Z","data":{"tool":"bash","summary":"rg -n \"pub fn build_read_model\" -A80 crates/kernel/storage/s"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:26.690Z","data":{"tool":"bash","summary":"cat crates/features/plan/tests/fixtures/plan-repo/openspec/c"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:29.732Z","data":{"promptTokens":3613,"candidateTokens":449,"totalTokens":54622,"cachedTokens":50560,"reasoningTokens":360,"cost":0.0019260599999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:29.732Z","data":{"tool":"bash","summary":"rg -n \"fn read_history|fn read_trial_labels|fn read_manual_e"}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:39.243Z","data":{"promptTokens":3850,"candidateTokens":1739,"totalTokens":60117,"cachedTokens":54528,"reasoningTokens":1519,"cost":0.0035689679999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:39.245Z","data":{"tool":"bash","summary":"rg -n \"CARGO_MANIFEST_DIR.*Cargo.toml|Cargo.toml\\\"\\)|package"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:39.245Z","data":{"tool":"bash","summary":"rg -n \"Code ownership\" openspec/specs/*/spec.md | head -30; "}}
++{"type":"tokens","timestamp":"2026-10-21T19:41:41.547Z","data":{"promptTokens":6422,"candidateTokens":270,"totalTokens":66724,"cachedTokens":60032,"reasoningTokens":129,"cost":0.002610792,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:41:41.547Z","data":{"tool":"bash","summary":"rg -n \"ownership\" crates/features/*/tests crates/apps 2>/dev"}}
++{"type":"tokens","timestamp":"2026-10-21T19:42:13.414Z","data":{"promptTokens":1776,"candidateTokens":7809,"totalTokens":76273,"cachedTokens":66688,"reasoningTokens":7663,"cost":0.010303728,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:13.415Z","data":{"tool":"bash","summary":"sed -n '1,40p' crates/features/land/tests/support/mod.rs; ec"}}
++{"type":"tokens","timestamp":"2026-10-21T19:42:30.236Z","data":{"promptTokens":937,"candidateTokens":4353,"totalTokens":81450,"cachedTokens":76160,"reasoningTokens":4232,"cost":0.005961660000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:30.237Z","data":{"tool":"bash","summary":"cat crates/features/inbox/src/groups/running.rs; echo '--- n"}}
++{"type":"tokens","timestamp":"2026-10-21T19:42:33.754Z","data":{"promptTokens":1933,"candidateTokens":444,"totalTokens":83785,"cachedTokens":81408,"reasoningTokens":376,"cost":0.001601148,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:33.755Z","data":{"tool":"bash","summary":"cat rust-toolchain.toml; which cargo; cargo --version"}}
++{"type":"text","timestamp":"2026-10-21T19:42:49.774Z","data":{"text":"Now I'll implement the library, entry point, tests, and fixture."}}
++{"type":"tokens","timestamp":"2026-10-21T19:42:49.774Z","data":{"promptTokens":140,"candidateTokens":4940,"totalTokens":88792,"cachedTokens":83712,"reasoningTokens":1944,"cost":0.006472272,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:49.775Z","data":{"tool":"write","summary":"crates/apps/cli/src/lib.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:49.775Z","data":{"tool":"write","summary":"crates/apps/cli/src/main.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:49.776Z","data":{"tool":"write","summary":"crates/apps/cli/tests/support/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:42:49.778Z","data":{"path":"crates/apps/cli/src/lib.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:42:49.778Z","data":{"path":"crates/apps/cli/src/main.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:42:49.779Z","data":{"path":"crates/apps/cli/tests/support/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-21T19:42:53.528Z","data":{"promptTokens":158,"candidateTokens":916,"totalTokens":89778,"cachedTokens":88704,"reasoningTokens":4,"cost":0.001678824,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:42:53.532Z","data":{"tool":"write","summary":"crates/apps/cli/tests/run_cli.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:42:53.532Z","data":{"path":"crates/apps/cli/tests/run_cli.rs"}}
++{"type":"tokens","timestamp":"2026-10-21T19:43:02.007Z","data":{"promptTokens":207,"candidateTokens":3106,"totalTokens":92913,"cachedTokens":89600,"reasoningTokens":17,"cost":0.0043269,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:02.009Z","data":{"tool":"write","summary":"crates/apps/cli/tests/run_cli.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:02.009Z","data":{"tool":"write","summary":"crates/apps/cli/tests/binary.rs"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:02.010Z","data":{"tool":"write","summary":"crates/apps/cli/tests/fixtures/project/openspec/queue.md"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:02.011Z","data":{"tool":"write","summary":"crates/apps/cli/tests/fixtures/project/openspec/changes/001-"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:02.011Z","data":{"tool":"write","summary":"crates/apps/cli/tests/fixtures/project/openspec/changes/001-"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:43:02.011Z","data":{"path":"crates/apps/cli/tests/run_cli.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:43:02.012Z","data":{"path":"crates/apps/cli/tests/binary.rs"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:43:02.013Z","data":{"path":"crates/apps/cli/tests/fixtures/project/openspec/queue.md"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:43:02.014Z","data":{"path":"crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:43:02.014Z","data":{"path":"crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md"}}
++{"type":"tokens","timestamp":"2026-10-21T19:43:03.681Z","data":{"promptTokens":268,"candidateTokens":72,"totalTokens":93140,"cachedTokens":92800,"reasoningTokens":10,"cost":0.0007236,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:03.681Z","data":{"tool":"bash","summary":"cargo test -p osq-cli"}}
++{"type":"tokens","timestamp":"2026-10-21T19:43:07.972Z","data":{"promptTokens":590,"candidateTokens":121,"totalTokens":93767,"cachedTokens":93056,"reasoningTokens":55,"cost":0.000880536,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:43:07.972Z","data":{"tool":"bash","summary":"cargo fmt --all && sh scripts/verify-rust.sh"}}
++{"type":"tokens","timestamp":"2026-10-21T19:44:08.970Z","data":{"promptTokens":13715,"candidateTokens":352,"totalTokens":107763,"cachedTokens":93696,"reasoningTokens":126,"cost":0.005099076,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:44:08.971Z","data":{"tool":"bash","summary":"sed -n '1,120p' crates/kernel/linter/tests/link_gates_corpus"}}
++{"type":"tool","timestamp":"2026-10-21T19:44:08.976Z","data":{"tool":"bash","summary":"ls crates/kernel/linter/tests; rg -n \"change_link_gates|read"}}
++{"type":"tokens","timestamp":"2026-10-21T19:44:11.478Z","data":{"promptTokens":844,"candidateTokens":339,"totalTokens":108831,"cachedTokens":107648,"reasoningTokens":202,"cost":0.0013058879999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:44:11.479Z","data":{"tool":"bash","summary":"rg -n \"OSQ_CHANGE\" src scripts crates | head -40"}}
++{"type":"tool","timestamp":"2026-10-21T19:44:11.479Z","data":{"tool":"bash","summary":"rg -n \"fn change_link_gates\" -A60 crates/kernel/linter/src |"}}
++{"type":"tokens","timestamp":"2026-10-21T19:44:13.672Z","data":{"promptTokens":2683,"candidateTokens":200,"totalTokens":111683,"cachedTokens":108800,"reasoningTokens":115,"cost":0.0016977000000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:44:13.673Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/263-rust-cli-dispatch sh scripts"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:06.901Z","data":{"promptTokens":1070,"candidateTokens":329,"totalTokens":113015,"cachedTokens":111616,"reasoningTokens":166,"cost":0.001385496,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:06.901Z","data":{"tool":"bash","summary":"sed -n '90,180p' crates/kernel/linter/src/gates/change.rs; e"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:11.873Z","data":{"promptTokens":2285,"candidateTokens":914,"totalTokens":116095,"cachedTokens":112896,"reasoningTokens":669,"cost":0.002459676,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:11.875Z","data":{"tool":"bash","summary":"ls openspec/changes/archive | tail -30; echo '--- find chang"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:11.875Z","data":{"tool":"bash","summary":"for d in openspec/changes/archive/240* openspec/changes/arch"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:13.808Z","data":{"promptTokens":1167,"candidateTokens":193,"totalTokens":117328,"cachedTokens":115968,"reasoningTokens":19,"cost":0.0012775080000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:13.810Z","data":{"tool":"bash","summary":"find openspec/changes/archive/244-rust-inbox-feature/specs -"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:16.912Z","data":{"promptTokens":6921,"candidateTokens":406,"totalTokens":124575,"cachedTokens":117248,"reasoningTokens":197,"cost":0.003266988,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:16.918Z","data":{"tool":"bash","summary":"rg -l \"rust-inbox\" openspec/changes/archive/*/specs/*/spec.m"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:16.919Z","data":{"tool":"bash","summary":"rg -n \"crates/features/inbox/\\*\\*|crates/apps/cli/\\*\\*\" open"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:29.478Z","data":{"promptTokens":1351,"candidateTokens":2367,"totalTokens":128262,"cachedTokens":124544,"reasoningTokens":2257,"cost":0.003992964,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:29.479Z","data":{"tool":"bash","summary":"rg -n \"REMOVED|removed\" crates/kernel/specs/src/delta -g '*."}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:40.151Z","data":{"promptTokens":1100,"candidateTokens":1844,"totalTokens":131200,"cachedTokens":128256,"reasoningTokens":1646,"cost":0.003312336,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:40.151Z","data":{"tool":"bash","summary":"rg -l \"REMOVED Requirements\" openspec/changes/archive/*/spec"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:40.152Z","data":{"tool":"bash","summary":"rg -n \"merge_ownership|changed_link|REMOVED.*Code ownership|"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:44.846Z","data":{"promptTokens":237,"candidateTokens":658,"totalTokens":131967,"cachedTokens":131072,"reasoningTokens":510,"cost":0.001647132,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:44.847Z","data":{"tool":"bash","summary":"rg -n \"OSQ_CHANGE\" src -g '*.ts' | head -40"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:44.847Z","data":{"tool":"bash","summary":"rg -n \"OSQ_CHANGE\" src/core src/watcher src/harness -g '*.ts"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:46.655Z","data":{"promptTokens":2333,"candidateTokens":133,"totalTokens":134306,"cachedTokens":131840,"reasoningTokens":27,"cost":0.0016505399999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:46.656Z","data":{"tool":"bash","summary":"OSQ_CHANGE=\"$PWD/openspec/changes/263-rust-cli-dispatch\" car"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:54.357Z","data":{"promptTokens":599,"candidateTokens":225,"totalTokens":135096,"cachedTokens":134272,"reasoningTokens":153,"cost":0.001255332,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:54.358Z","data":{"tool":"bash","summary":"which cargo-mutants || true; cargo mutants --version 2>/dev/"}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:56.561Z","data":{"promptTokens":222,"candidateTokens":172,"totalTokens":135306,"cachedTokens":134912,"reasoningTokens":78,"cost":0.0010824720000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:56.562Z","data":{"tool":"bash","summary":"cargo mutants -p osq-cli -f src/lib.rs -f src/main.rs -o \"$("}}
++{"type":"tokens","timestamp":"2026-10-21T19:45:58.758Z","data":{"promptTokens":167,"candidateTokens":154,"totalTokens":135489,"cachedTokens":135168,"reasoningTokens":47,"cost":0.001045908,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:45:58.758Z","data":{"tool":"bash","summary":"cargo mutants -p osq-cli -f crates/apps/cli/src/lib.rs -f cr"}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:36.332Z","data":{"promptTokens":257,"candidateTokens":705,"totalTokens":136258,"cachedTokens":135296,"reasoningTokens":540,"cost":0.0017348759999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:36.332Z","data":{"tool":"bash","summary":"rg -n \"complete-capabilities|complete_capabilities|owns no f"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:36.333Z","data":{"tool":"bash","summary":"rg -n \"removed|Removed\" crates/kernel/linter/src/gates crate"}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:45.457Z","data":{"promptTokens":1583,"candidateTokens":2012,"totalTokens":139787,"cachedTokens":136192,"reasoningTokens":900,"cost":0.003706452,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:45.457Z","data":{"tool":"write","summary":"openspec/changes/263-rust-cli-dispatch/.run/results/1.md"}}
++{"type":"file_changed","timestamp":"2026-10-21T19:46:45.458Z","data":{"path":"openspec/changes/263-rust-cli-dispatch/.run/results/1.md"}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:49.957Z","data":{"promptTokens":174,"candidateTokens":766,"totalTokens":140588,"cachedTokens":139648,"reasoningTokens":607,"cost":0.001809288,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:49.957Z","data":{"tool":"bash","summary":"rg -n \"proposal.*verify|verify.*proposal|proposalVerify|chan"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:49.957Z","data":{"tool":"bash","summary":"rg -n \"runVerificationCommand|prepareVerifyEnv\" src -g '*.ts"}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:51.669Z","data":{"promptTokens":2125,"candidateTokens":162,"totalTokens":142831,"cachedTokens":140544,"reasoningTokens":0,"cost":0.0016751639999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:51.674Z","data":{"tool":"bash","summary":"sed -n '40,110p' src/watcher/change-verify.ts; sed -n '60,10"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:51.675Z","data":{"tool":"bash","summary":"rg -n \"verifyChange|changeVerify|runChangeVerify\" src/watche"}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:54.929Z","data":{"promptTokens":2110,"candidateTokens":423,"totalTokens":145253,"cachedTokens":142720,"reasoningTokens":336,"cost":0.00199692,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-21T19:46:54.930Z","data":{"tool":"read","summary":"openspec/changes/263-rust-cli-dispatch/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-21T19:46:57.292Z","data":{"text":"Implemented the CLI dispatch crate within scope:\n\n- `crates/apps/cli/src/lib.rs`: `CliResult`, `features()`, `run_cli`, help and first-feature dispatch.\n- `crates/apps/cli/src/main.rs`: process entry point, stream writing, exit codes, UTF-8/cwd errors.\n- Integration tests for all listed scenarios plus entry-point error cases.\n- Fixture project for `inbox`, `queue`, and `query`.\n\n`cargo test -p osq-cli` passes (11 tests), and cargo-mutants found 0 missed mutants in the new library and binary sources.\n\nTask is blocked at the proposal verify: the change's `rust-workspace` `Code ownership` delta is REMOVED, but `change_link_gates` ignores removed ownership, so `crates/apps/cli/**` is owned by both `rust-cli` and `rust-workspace` during this change. Details are in `openspec/changes/263-rust-cli-dispatch/.run/results/1.md` under `Blocked` and `Outside scope`."}}
++{"type":"tokens","timestamp":"2026-10-21T19:46:57.292Z","data":{"promptTokens":1155,"candidateTokens":296,"totalTokens":146603,"cachedTokens":145152,"reasoningTokens":61,"cost":0.001572612,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-21T19:46:57.320Z","data":{"exitCode":0,"pid":4190393,"timedOut":false,"elapsedSeconds":363.2}}
++{"type":"measures","timestamp":"2026-10-21T19:46:58.705Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":2,"scopeLines":32,"repoFiles":5719,"repoLines":580662,"importFanIn":0,"proposalWords":613,"taskWords":323,"deltaRequirements":7,"deltaScenarios":9,"dependencies":{"crates/apps/cli/Cargo.toml":["osq-core","osq-feature-approve","osq-feature-archive","osq-feature-inbox","osq-feature-land","osq-feature-metaloop","osq-feature-plan","osq-feature-report","osq-feature-run"]},"changedFiles":8,"changedLines":678,"scopeHashes":{"crates/apps/cli/Cargo.toml":{"before":"sha256:c2e9ffb6faddf71ad19a9c51a74c227272a5002c8221fd980391c761db8395cd","after":"sha256:c2e9ffb6faddf71ad19a9c51a74c227272a5002c8221fd980391c761db8395cd"},"crates/apps/cli/src/main.rs":{"before":"sha256:66eeb4fc60cadba76af060628500c5ce9624a4ea05bb6417ceee8c8f5b03d97f","after":"sha256:3f84722c89a30ee3daeca5c71974afe1f2a79da7ad1a1fbee95ae93ad2eb4d4a"},"crates/apps/cli/src/lib.rs":{"before":null,"after":"sha256:41f6bcacde92ba7d5ab7ea910c071674a9e0e11f791c8de1468a900f68e4c559"},"crates/apps/cli/tests/binary.rs":{"before":null,"after":"sha256:27c5bdb7b27bbee6bd55f6c960d542c11b9e35945aed35f59d82bf7b4b3e9bef"},"crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md":{"before":null,"after":"sha256:c4f736b20be0694d839f96b6d9fd8e7c476c68655e7c30bac1a335b80ef25844"},"crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md":{"before":null,"after":"sha256:157fb1add50fced6e9ee13f07bbcad089657137c215e1a300fee8e52a0948dee"},"crates/apps/cli/tests/fixtures/project/openspec/queue.md":{"before":null,"after":"sha256:72a5524c59884914e3920085e33406bf5674814afa06178705d1c13eddfa5094"},"crates/apps/cli/tests/run_cli.rs":{"before":null,"after":"sha256:5dd8c04f66bacd7ac5d595e64dc4283fc2963a41dde272b53b044dead8f5490e"},"crates/apps/cli/tests/support/mod.rs":{"before":null,"after":"sha256:cb6d84d138f3d1a7265af5ecf1b0731a401f8e8d0bfd47037ae71b3c36a47700"}}}}
++{"type":"dead","timestamp":"2026-10-21T19:46:58.707Z","data":{"task":"1","reason":"blocked"}}
+diff --git a/openspec/changes/263-rust-cli-dispatch/.run/events/change.jsonl b/openspec/changes/263-rust-cli-dispatch/.run/events/change.jsonl
+new file mode 100644
+index 00000000..ff8955e7
+--- /dev/null
++++ b/openspec/changes/263-rust-cli-dispatch/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-21T19:40:28.075Z","data":{"outcome":"passed","command":"pnpm verify","commit":"ac29fc388a67459adf1c20589c15a38a5547e68e","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":235.11}}
+diff --git a/openspec/changes/263-rust-cli-dispatch/.run/results/1.md b/openspec/changes/263-rust-cli-dispatch/.run/results/1.md
+new file mode 100644
+index 00000000..896e697f
+--- /dev/null
++++ b/openspec/changes/263-rust-cli-dispatch/.run/results/1.md
+@@ -0,0 +1,32 @@
++## Changed
++
++- Added `crates/apps/cli/src/lib.rs` with `CliResult`, `features()` and `run_cli`. The registry is `plan`, `approve`, `archive`, `land`, `inbox`, `report`; help is built only from each feature's `commands()`; dispatch calls the first feature that lists the name and maps `Output`/`FeatureError` to stdout/stderr and code 0/1.
++- Replaced the empty `crates/apps/cli/src/main.rs` with the entry point: it reads the current directory and UTF-8 arguments, calls `run_cli`, writes both streams, and exits with the result code. Unreadable directories and non-UTF-8 arguments print one stderr line and exit 1.
++- Added `crates/apps/cli/tests/run_cli.rs` for registry order, crate ownership, both help forms, help covering every registered command, unknown commands, and first-feature-wins.
++- Added `crates/apps/cli/tests/binary.rs` for `inbox`, `queue` and `query SELECT 1 AS one` through the built binary against fresh fixture copies, a feature error, unknown command exit code, and the two entry-point input errors.
++- Added `crates/apps/cli/tests/support/mod.rs` with the feature double, call counters and fixture copy helper.
++- Added the fixture project under `crates/apps/cli/tests/fixtures/project/` with `openspec/queue.md` and change `001-alpha` (`brief.md`, `proposal.md`).
++- `cargo test -p osq-cli` passes (11 tests). `cargo fmt --all` was run. `cargo mutants -p osq-cli -f crates/apps/cli/src/lib.rs -f crates/apps/cli/src/main.rs` reported 28 caught, 7 unviable, 0 missed.
++
++## Deviated
++
++- Added two extra binary tests beyond the listed scenarios, for non-UTF-8 arguments and an unreadable current directory, because "CLI entry point" requires those errors and the mutation gate covers `main.rs`. Both are tagged `Covers: rust-cli/binary-exit-code`.
++
++## Missing context
++
++- The proposal's verify cannot pass with `OSQ_CHANGE` set to this change. `change_link_gates` merges ADDED/MODIFIED `Code ownership` deltas but ignores REMOVED ones, so the living `rust-workspace` ownership of `crates/apps/cli/**` remains while the `rust-cli` delta adds the same globs. The corpus test then reports every new `crates/apps/cli` file as owned by both capabilities. Without `OSQ_CHANGE`, the same corpus test reports the new `rust-cli` tags as not living. The planner needs to decide how this change removes `rust-workspace`'s ownership during its own run, or add a linter change that applies REMOVED `Code ownership` requirements.
++
++## Outside scope
++
++- `crates/kernel/linter`'s `merge_ownership` ignores `delta.removed`, so a change that removes a capability's only `Code ownership` requirement overlaps with the capability that takes over its files. I left it unchanged.
++- The same linter gap means `sh scripts/verify-rust.sh` fails in `link_gates_corpus` with OSQ_CHANGE set: `crates/apps/cli/src/lib.rs`, `main.rs`, `tests/binary.rs`, `tests/run_cli.rs` and `tests/support/mod.rs` are reported as owned by `rust-cli, rust-workspace`.
++
++## Blocked
++
++- Completion needs either a linter change so `change_link_gates` drops the ownership of a capability whose delta REMOVES its `Code ownership` requirement, or a planner revision of this change's rust-workspace delta that avoids the overlap during the change's own run. The CLI crate itself is implemented and its task verify passes.
++
++## Next
++
++- Once ownership is resolved, rerun `sh scripts/verify-rust.sh` with `OSQ_CHANGE` pointing at this change; no `crates/apps/cli` work remains.
++
++Touched: crates/apps/cli/src/lib.rs, crates/apps/cli/src/main.rs, crates/apps/cli/tests/run_cli.rs, crates/apps/cli/tests/binary.rs, crates/apps/cli/tests/support/mod.rs, crates/apps/cli/tests/fixtures/project/openspec/queue.md, crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/brief.md, crates/apps/cli/tests/fixtures/project/openspec/changes/001-alpha/proposal.md

@@ -4,5 +4,6 @@
 
 mod feature;
 mod query;
+mod report;
 
 pub use feature::ReportFeature;

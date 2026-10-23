@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:6ca664c92f2553cfc9327b51155643f6f03015fe4553a3d23065fc9fc72eea9d"
+build_stamp: "3f811304"
+project_commit: "f3494311"
+exit_code: 0
+scope_files: {"crates/kernel/harnesses/Cargo.toml":"sha256:35b929f2cd6ec35c31fb63eac39fab301da40e21893c7dcf68c2a0b805fc017a","crates/kernel/harnesses/src/pi.rs":"sha256:70a0551e624784b96c70b92dd42bb9a661ee642d661f46c21bb01141d608c1d2","crates/kernel/harnesses/src/pi/harness.rs":"sha256:ecd51ea4936f8234c1aa9312f8c9f711c2d4656a9d497091641e8e31da0a15db","crates/kernel/harnesses/tests/pi_config.rs":"sha256:1ba5f92a1a5a9192e2cfea4fb41c219c2177f2a8ddfe62b8dc4a5a8acbf14c2a"}
+---
+2026-10-21T20:35:47.915Z

@@ -1,0 +1,10 @@
+outcome: failed
+branch osq/001-alpha-twice already exists
+branches:
+osq/001-alpha-twice
+worktrees:
+checkout copy: present
+commit:
+none
+record:
+tree:

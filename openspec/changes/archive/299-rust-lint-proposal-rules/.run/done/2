@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:2969234afa4c90faacd0e5e58f728b6a0d17cebf71e8556e3871981a6d1f07e3"
+build_stamp: "ed155511"
+project_commit: "abc330e7"
+exit_code: 0
+scope_files: {"crates/features/lint/Cargo.toml":"sha256:50ee603ae649712233be7734e53f41652de91a9ed1692f442dd883c4d7915b99","crates/features/lint/src/feature.rs":"sha256:d7db7bb71998e36548b1879fc056dfb6e8688657daee7654d132fac5a2793753","crates/features/lint/src/lib.rs":"sha256:41e72be6074fbced52995f5462175f4da279f95c5ad9ee68a5953bd9dc712c1e","crates/features/lint/src/lint.rs":"sha256:1fcc0a3daa7c867ca381e2670aa7ef2669debba354beb47f3cc8bb41e2be5e48","crates/features/lint/src/lint/banned.rs":"sha256:983890ba8f1914ca7b5826462868ccd081df26666ce0b9d7f1c1e0e3aae646a5","crates/features/lint/src/lint/find.rs":"sha256:3239f27ff430eeb4e7a2e91c642f829a364755e1ddd9dc4625189995eeba9e89","crates/features/lint/src/lint/finding.rs":"sha256:85a74f4c30ab8eac046ad2b42c550eb447799b7944a71b1140e3e79189702c46","crates/features/lint/src/lint/proposal.rs":"sha256:fe8eb1270207a74d25c08805a2e153d846c0d4fa68adfdac0fcbe34dde093547","crates/features/lint/src/lint/text.rs":"sha256:da9efc53548f69ed6318bccf41213bac97b5597a59eb1bb0d59367c85ae54e1e","crates/features/lint/tests/copy/mod.rs":"sha256:d0e42a0a16aaa456b71c82d6d56ad3af3b0acd41fbcab5ab87b02b54128d0436","crates/features/lint/tests/lint_banned_words.rs":"sha256:3fd6adf53aa57e11d356d9aa9d125925f94fa4abc7aa41039afe03593018c3d2","crates/features/lint/tests/lint_config_error.rs":"sha256:87f121e9faf28864e9bb5ebb17b70b2c4dab85dac4f599718824da76c1683147","crates/features/lint/tests/lint_proposal_rules.rs":"sha256:678b387946a3fa383209e0c609b513c1823feaceab2db9f30742e497d4fb66b6"}
+---
+2026-10-22T21:59:00.112Z

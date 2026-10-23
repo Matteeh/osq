@@ -1,0 +1,14 @@
+outcome: output
+Retried 009 task 1 (next attempt: 2)
+  Reason: crashed
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:d94fc831328d471517b780aed1a758131594afc28bf88deef7141bc57dc69f2c
+--- .run/dead/1.1.md
+---
+reason: crashed
+---
+Left by a stopped watcher.
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"crashed","target":"1"},"timestamp":"<timestamp>","type":"retry"}

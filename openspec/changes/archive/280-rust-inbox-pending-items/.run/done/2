@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:48f4de57ff660e3cd472f64438b5dcfac4567f7e33d05e4494d167accf5226a4"
+build_stamp: "63250a84"
+project_commit: "8ad59193"
+exit_code: 0
+scope_files: {"crates/features/inbox/src/groups/landed.rs":"sha256:feafd0d431651f06cf29343d04f6da348399081877baa5d7e0bb641df31e10fd","crates/features/inbox/src/groups/mod.rs":"sha256:a1ecf1987e7317bf125017a47b2d2ac24f6cda57e6576bc5dceb036ac92d5d97","crates/features/inbox/src/groups/running.rs":"sha256:d3269ce2430cc5ead4d5a8e35c17aaafa31e1e57eb965bbdb5d02254d3b663ab","crates/features/inbox/src/groups/validator.rs":"sha256:4a0c7a67943c38dd590ab8af849b8d94594ec6623cc626fdabf7e5d1ec61acff","crates/features/inbox/src/lib.rs":"sha256:036c9b6bb66a5e73a4b3c14c641279cc09556268d75b8976d0b5128df85d7dac","crates/features/inbox/src/needs/entry.rs":"sha256:15155d1cecd5ec7196a66dca270adb1bb26f097239923e424c389a0cfcbfbc1e","crates/features/inbox/src/needs/line.rs":"sha256:242d86c36af80fea4bc671339a213e564a4be22fe4544c0698846020501fbdfd","crates/features/inbox/src/needs/mod.rs":"sha256:965d84a8e45deb53abba15e00b4caec7a449b701bbad768cc4448ac1e4bf6e65","crates/features/inbox/src/needs/pending.rs":"sha256:3d0fad3fd00b52744f8146aada8f6860039214c42a433700035e596c5bd75adc","crates/features/inbox/src/needs/placeholder.rs":"sha256:ad4eeb10eb221f86ce11173569e2aa99256641bc2d3c31a39b81a18dce1ea5fb","crates/features/inbox/src/needs/steering.rs":"sha256:484dcee7c3859ef8c51622d28d8a28fba8a38b791c2f0ffab79dc45f13f906ea","crates/features/inbox/src/read.rs":"sha256:0006a559529a196b6cb5f9d494f75038c7c3e8481c5d83e7f6676652e654a471","crates/features/inbox/src/text.rs":"sha256:775c8298b67da085932f77c9afdf919e602653555dcba787b8f2b38684ac06b5","crates/features/inbox/tests/inbox_pending.rs":"sha256:8932492412c8c2339680fc6188db65497515ab54c83948c832cba49f2ebc3de9"}
+---
+2026-10-22T13:51:51.682Z

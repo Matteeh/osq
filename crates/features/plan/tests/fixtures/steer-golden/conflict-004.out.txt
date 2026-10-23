@@ -1,0 +1,6 @@
+<root>/openspec/changes/004-conflict: ask your planning tool to plan change 004-conflict — next: dead (needs steering) — osq plan 004
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 004-conflict.
+Read <root>/openspec/changes/004-conflict/plan-prompt.md and follow it exactly; it is your complete prompt.

@@ -1,0 +1,64 @@
+{
+  "hashes": {
+    "AGENTS.md": "sha256:761112c2642102844fdd97aae94bf28d8788c9a0b437a831a45ff44e7fdb19e4",
+    "PLANNER.md": "sha256:61a4f4fa9ca0a352bb81b10189a38e01c1f93b669378080c56e53d6cf03740d0",
+    "config": "sha256:c42ea9bcfc34ede3e90b78e4e38ce0307545b101a4ce0cca8e4c98d2955a3ecf",
+    "watcher-and-harness": "sha256:00fc1398a41d4850c80e487c48286cbbec95a3faccfb91d13664cb70447f965d",
+    "watcher-and-harness/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "version-control": "sha256:ebaa554cd071ad0f5a94aab3dcf5fd10fd1d99dd51425c96f9c77d522808b248",
+    "version-control/osq.yml": "sha256:d09692258aa26d12677eaf783de4c5ba2345d558f6131c539aedf4b4eda1451d",
+    "status-inspection": "sha256:aa0bab8283c192a3152703ef7902309a23e99a1a8aa44562ad9d67f8ab286c02",
+    "status-inspection/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "metrics-and-reporting": "sha256:6eb16daab4ea8a31737d9a1563ae89f270a9ae618078fe57e608f0ccbe3492fb",
+    "metrics-and-reporting/osq.yml": "sha256:faedbf0a24f9159525d85a32c88db564c04db3b9e478434c7e46f86bd10a83ef",
+    "spec-lint-and-approve": "sha256:da771789d8577e4b04052a241156d21bdd6cbd51ed632364e55460673d6b083e",
+    "spec-lint-and-approve/osq.yml": "sha256:a275cd20890b4cf264e187c9b563425c98b5f5c4a9f7d3ac5edc5e91c1a45cab",
+    "cli-foundation": "sha256:a94727ec60df27db9c40d2f5024274d29fae17f134b60e3925dbbf73c12c2446",
+    "cli-foundation/osq.yml": "sha256:1b0b8ca1b05c237157315e0c8197b60ab4f0b256264e667ed98e71e33583de2b"
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-21T17:56:44.798Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-21T18:43:43.702Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {
+    "001": "sha256:18c59321f4720079ac24a1ef3bbbb05104a9b90e937e51c88491240675fb9493",
+    "003": "sha256:cacef39eea8412531cec5008ba35bdc30d74dc535a261222fb5d3e6541767a0b",
+    "004": "sha256:c18e829f99fe2d2a5f62203091034b98ef816c7847fed6aad017eef129391fb1",
+    "005": "sha256:f6df675055be6f5dc534e324d077095bd0086fd059cb41b619c74c87ed6824e2",
+    "006": "sha256:a55c26adebdaaa019c5d997a7e7a01cf08d50e95e38cc1e7fdbf868f0875e06f",
+    "007": "sha256:d2fba8a64b17280b889e9946db28a762a89b61f2bde5d6df2c7f9f7f1e92fc14",
+    "010": "sha256:31cde3749dc495a563ad9a5609f9d6d11c2d62ad9f1dd6abdf53111cbb0c5807",
+    "012": "sha256:3f07a91207ad5ee8df0cbb5ec3b9eba48a30855a86e74b33b049355e5e65781d",
+    "014": "sha256:ab56982584a83e7d442f1f2fde3f7e7ec9e8f3d64fb7f63023ed1995220c8a1b",
+    "015": "sha256:ab4cd86f5188fbe454b09290b68fb35e6b885fb51dfb11d8d1ec27a903cb6765",
+    "016": "sha256:435b33b9417b2112cc981604bcf830fffbc418fffba1bcc1f2bb2e528f2575dc",
+    "017": "sha256:0585ef11f18f35b3411503083a204c4b51670a65c0ae9dbdc71e4e82785e742a",
+    "018": "sha256:8266cae323ea058bd259e11bcc0ce2501b6785042dc6c61d33346a4f2306b5dd",
+    "019": "sha256:10cd27115c6de698434e6c092bba4cbc9fecfb7977a820fa292faf2b4c104711",
+    "021": "sha256:8b137bf59cf7427ef6653b30990c2a03d8c3c4937e8c3298ec674b4b6cc6ee23"
+  }
+}

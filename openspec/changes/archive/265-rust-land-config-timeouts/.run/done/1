@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a87b667a467797ff9df4153a3c6dafd3c429f12bd9dca153ea958cf053d5021a"
+build_stamp: "3f811304"
+project_commit: "2d0cff0e"
+exit_code: 0
+scope_files: {"crates/features/land/src/land.rs":"sha256:88dcfc7ed93e1f6060acc5e873d37c935a1a92afebcf6c57c12b502bfb349f2d","crates/features/land/tests/land_timeouts.rs":"sha256:a04cc79b7acd37704c95df1a3a2c26313e75307289266893814172ff543ca0a3"}
+---
+2026-10-21T20:27:47.677Z

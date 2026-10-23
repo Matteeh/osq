@@ -249,11 +249,11 @@ The `osq doctor` command SHALL inspect all `.run/done/` markers across active ch
 - **THEN** doctor done-markers check reports ok
 
 ### Requirement: Planner file tool protocol instruction
-The managed planner instructions block in `PLANNER.md` and `src/core/init.ts` SHALL instruct planners to write files using the file tool rather than shell echo.
+The managed planner block in `PLANNER.md`, `templates/PLANNER.md` and `src/core/foundation/init-blocks.ts` SHALL instruct planners to write file contents with the file tool, never through a shell echo or heredoc, and SHALL allow a script to make mechanical edits whose result `osq lint` checks.
 
 #### Scenario: Managed block includes file tool instruction
 - **WHEN** `PLANNER.md` or `MANAGED_PLANNER_BLOCK` is inspected
-- **THEN** the text contains `Write files with the file tool, never through a shell echo.`
+- **THEN** the text contains `Write file contents with the file tool, never through a shell echo or heredoc.` and `A script may make mechanical edits, such as one scope change across several task files;`
 
 ### Requirement: Planner protocol rules in documentation and templates
 The managed planner block in `PLANNER.md`, `templates/PLANNER.md`, and
@@ -526,6 +526,21 @@ execution attempts. A failure SHALL requeue the task and report that agent work
 is pending. Dead tasks, other regression reasons, and change-level regressions
 SHALL retain their established retry behavior. No new retry flag SHALL exist.
 
+When no active change matches the id, retry SHALL look for an archived change
+that an osq worktree holds, the first in `changeTrees` order whose folder
+matches the id as `matchesFolder` does. For such a change, `osq retry <id>
+change` SHALL check its approval and its `.run/regressed/change.md` as for an
+active change. It SHALL then retain the marker and append the `retry` event
+through the same preserving transition. Then it SHALL commit the retained
+marker, the removed `change.md` and `.run/events/change.jsonl` on the
+change's branch `osq/<folder>` with the message `osq: <id> land retry`,
+authored by `vcs.author`. That leaves the worktree's status empty, so the
+next `osq land <id>` runs its sync again. When that commit fails, retry SHALL
+put the marker and the event file back as they were and fail with `osq could
+not record the retry: <git output>`. A numeric target on such a change SHALL
+fail without mutation with `<folder> has archived; osq retry clears only its
+land stop: osq retry <id> change`.
+
 #### Scenario: Retrying a failed task
 - **WHEN** a user retries an approved dead or non-scope-regressed numeric task that is not running
 - **THEN** the CLI performs the existing preserving retry transition and reports its next execution attempt
@@ -545,6 +560,14 @@ SHALL retain their established retry behavior. No new retry flag SHALL exist.
 #### Scenario: Approval remediation
 - **WHEN** the approval marker is missing or its hash differs from the authored change folder
 - **THEN** retry exits non-zero without mutation and names `osq approve <id>` as the next step
+
+#### Scenario: Retrying a land stop on an archived change
+- **WHEN** an archived one-task change's `osq land <id>` stopped with `sync_verify_red` because the default branch added `src/two.txt` holding `bad`, the default branch then changed `src/two.txt` to `good`, and a human runs `osq retry <id> change` in the checkout
+- **THEN** retry prints `Retried <id> change`, and the worktree's archive folder holds `.run/regressed/change.1.md` and no `.run/regressed/change.md`. Its `.run/events/change.jsonl` ends with a `retry` event whose target is `change`, the branch tip of `osq/<folder>` has the message `osq: <id> land retry`, and the worktree's status is empty. The next `osq land <id>` exits 0
+
+#### Scenario: Retrying a task of an archived change
+- **WHEN** the same stopped land holds `.run/regressed/change.md`, and a human runs `osq retry <id> 1` in the checkout
+- **THEN** retry exits non-zero with `<folder> has archived; osq retry clears only its land stop: osq retry <id> change`, and the branch tip and the archive folder's files are unchanged
 
 ### Requirement: Explicit rejection command
 The CLI SHALL provide `osq reject <id> --reason <text>` for moving an eligible
@@ -2207,16 +2230,29 @@ which knows every tree and finds an archived change in a worktree that needs
 steering. When the change's derived state has `steering`, as the
 status-inspection requirement "Steering triggers" defines it, planning SHALL
 reopen that change's own folder, wherever it is, and build the usual prompt
-sections for it, then append a `## Steering` section. When an approved change
-outside the checkout, in a worktree or a stacked approval, has no `steering`,
-`osq plan <id>` SHALL fail with
+sections for it, then append a `## Steering` section. When an approved
+change in an osq worktree has no `steering` but `humanSteering`, as the
+status-inspection requirement "Dead task steering" defines it, returns
+`dead` triggers, planning SHALL reopen it the same way, with those triggers
+in its `## Steering` section. When an approved change outside the checkout,
+in a worktree or a stacked approval, has neither, `osq plan <id>` SHALL fail
+with
 `<folder> is approved and needs no steering; osq plan <id> reopens an approved change only when it needs steering`
-and write nothing. A change in the checkout without `steering`, or one
-`findSteeringChange` does not find, SHALL be planned exactly as before.
+and write nothing. When no active change matches the name and an archived
+change in any tree does, as `matchesFolder` matches it, `osq plan <id>`
+SHALL write nothing, create no change folder, and fail with
+`<folder> has <state>, so osq plan <id> has nothing to reopen. Start new work with an item in <queue> and osq plan --next, or with osq plan <name> --brief <file>.`
+There `<state>` is `landed` when `readDependencyState` reads the folder as
+`landed` and `archived` otherwise, and `<queue>` is the queue file's path
+relative to the project root, such as `openspec/queue.md`. Any other change
+in the checkout without `steering`, or one neither lookup finds, SHALL be
+planned exactly as before.
 
 The `## Steering` section SHALL hold, in order: the line
-`osq halted this change and asks you to revise its plan.`; for each trigger in
-`deriveSteering` order, a `### <describeTrigger>` heading, the line
+`osq halted this change and asks you to revise its plan.`, or
+`A task of this change died, and a human asked to revise its plan.` when
+every trigger is `dead`; for each trigger in `humanSteering` order, a
+`### <describeTrigger>` heading, the line
 `Evidence: <absolute path of the trigger's marker>`, and the marker's body
 without its frontmatter inside a fenced block. Under a `requirement_changed`
 trigger, for each requirement `changedRequirements` reports between the
@@ -2249,6 +2285,10 @@ directory, and read planning usage from that directory.
 - **WHEN** task 2 of a change that runs in a worktree died with `blocked` and the stated need `Needs src/three.txt`, and a human runs `osq plan <id>` in the checkout
 - **THEN** the worktree's change folder holds `plan-prompt.md` ending in the `## Steering` section with `### task 2 blocked (blocked)`, the dead marker's path, `Needs src/three.txt`, and `Done tasks stay done: 1.`, the checkout holds no copy of the change, and no new change folder was created
 
+#### Scenario: Plan a dead task in its worktree
+- **WHEN** task 1 of a change that runs in a worktree is done, task 2 died with `reason: timeout` and the body `Agent timed out`, without `stuck`, and a human runs `osq plan <id>` in the checkout
+- **THEN** the worktree's change folder holds `plan-prompt.md` ending in the `## Steering` section with `A task of this change died, and a human asked to revise its plan.`, `### task 2 dead (timeout)`, the dead marker's path, `Agent timed out`, and `Done tasks stay done: 1.`, the checkout holds no copy of the change, and no new change folder was created
+
 #### Scenario: Session in the worktree
 - **WHEN** `osq plan <id> --session` runs for a change in a worktree that needs steering, with a fake interactive adapter
 - **THEN** the adapter is started with the worktree root as `cwd` and a prompt that holds the `## Steering` section
@@ -2264,6 +2304,15 @@ directory, and read planning usage from that directory.
 #### Scenario: Changed requirement text in the prompt
 - **WHEN** an active change in a worktree halted with `requirement_changed` on `orders: Order totals`, which the default branch rewrote to hold `rounded to cents`
 - **THEN** its `## Steering` section holds `#### orders: Order totals on main` and a fenced block holding `rounded to cents`
+
+#### Scenario: Plan a finished change
+- **WHEN** a human runs `osq plan 1` in the checkout, with the row's state for change `001-order-flow` and no active change folder
+- **THEN** the command fails with the row's message, the changes directory holds the same folders as before, and no file changes in the checkout:
+
+| State | Message |
+|---|---|
+| landed: the default branch holds `openspec/changes/archive/001-order-flow`, and its worktree is gone | `001-order-flow has landed, so osq plan 1 has nothing to reopen. Start new work with an item in openspec/queue.md and osq plan --next, or with osq plan <name> --brief <file>.` |
+| archived in the checkout with `vcs.enabled` off | `001-order-flow has archived, so osq plan 1 has nothing to reopen. Start new work with an item in openspec/queue.md and osq plan --next, or with osq plan <name> --brief <file>.` |
 
 ### Requirement: History lookup in managed blocks
 The managed `PLANNER.md` block SHALL tell planners to look up osq's own

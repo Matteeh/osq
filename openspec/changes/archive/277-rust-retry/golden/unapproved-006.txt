@@ -1,0 +1,8 @@
+outcome: failed
+Change 006 is not approved. Run `osq approve 006` before retrying.
+tree:
+--- .run/dead/1.md
+---
+reason: blocked
+---
+Unapproved.

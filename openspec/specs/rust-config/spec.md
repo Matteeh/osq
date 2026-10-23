@@ -28,9 +28,10 @@ system.
 It parses `text` as a TOML table, and text that is not valid TOML SHALL be
 `ConfigError::Syntax` with the parser's display text as `message`. It then
 reads the top-level keys `maxConcurrency`, `timeouts`, `vcs`, `executor`,
-`planner` and `validator` into `Config`, whose fields are
-`max_concurrency`, `timeouts`, `vcs`, `executor`, `planner` and
-`validator`, as the requirements of each key say. `Config` SHALL derive
+`planner`, `validator`, `pi`, `limits` and `bannedWords` into `Config`,
+whose fields are `max_concurrency`, `timeouts`, `vcs`, `executor`,
+`planner`, `validator`, `pi`, `limits` and `banned_words`, as the
+requirements of each key say. `Config` SHALL derive
 `Debug`, `Clone`, `PartialEq` and `Eq`, and `Config::default()` SHALL
 equal `parse_config("")`.
 
@@ -296,3 +297,159 @@ with reason `is required when validator.enabled is true`.
 | `[validator]\nmodel = "m"` | `InvalidValue { key: "validator.harness", reason: "is required when validator.enabled is true" }` |
 | `[validator]\nharness = "claude"` | `InvalidValue { key: "validator.model", reason: "is required when validator.enabled is true" }` |
 | `[validator]\nenabled = false\ntimeoutSeconds = 0` | `InvalidValue { key: "validator.timeoutSeconds", reason: "must be a positive integer" }` |
+
+### Requirement: Pi settings
+`pi` SHALL be a table read into `Config.pi`, a `PiConfig` struct deriving
+`Debug`, `Clone`, `Default`, `PartialEq` and `Eq`, as TypeScript's
+`validatePiConfig` reads it. Its keys, in reading order, are `bin`,
+`provider`, `model` and `thinking`, read into the `Option<String>` fields
+of the same names. Each follows the shared string rule and is `None` when
+unset, so an absent `pi` table gives `PiConfig::default()`.
+
+#### Scenario: Pi settings read
+- **WHEN** `parse_config` reads each row's text
+- **THEN** it returns the row's result:
+
+| Text | Result |
+|---|---|
+| empty | `pi` equals `PiConfig::default()` |
+| `[pi]` | `pi` equals `PiConfig::default()` |
+| `[pi]\nbin = " /opt/pi/bin/pi "\nprovider = " deepseek "\nmodel = "deepseek/deepseek-flash"\nthinking = "high"` | `pi` holds `bin` `/opt/pi/bin/pi`, `provider` `deepseek`, `model` `deepseek/deepseek-flash` and `thinking` `high` |
+| `[pi]\nprovider = "deepseek"` | `pi` holds `provider` `deepseek` and no other field |
+| `[pi]\nbin = "  "` | `InvalidValue` with key `pi.bin` and reason `must be a non-empty string` |
+| `[pi]\nprovider = ""` | `InvalidValue` with key `pi.provider` and reason `must be a non-empty string` |
+| `[pi]\nmodel = " "` | `InvalidValue` with key `pi.model` and reason `must be a non-empty string` |
+| `[pi]\nthinking = ""` | `InvalidValue` with key `pi.thinking` and reason `must be a non-empty string` |
+| `[pi]\nmodel = 3` | `WrongType` with key `pi.model` and expected `a string` |
+| `[pi]\nharness = "pi"` | `UnknownKey` with key `pi.harness` |
+| `pi = "pi"` | `WrongType` with key `pi` and expected `a table` |
+
+### Requirement: Lint limits
+`limits` SHALL be a table read into `Config.limits`, a `Limits` struct of
+`u64` fields deriving `Debug`, `Clone`, `Copy`, `PartialEq` and `Eq`, as
+TypeScript merges `limits` over `DEFAULT_CONFIG.limits`. Its keys, in
+reading order, follow the shared integer rule and take the default when
+unset, so an absent `limits` table gives `Limits::default()`:
+
+| Key | Field | Default |
+|---|---|---|
+| `maxScopeFiles` | `max_scope_files` | 8 |
+| `maxFeatureWrites` | `max_feature_writes` | 2 |
+| `maxContractTables` | `max_contract_tables` | 1 |
+| `maxAcceptanceLines` | `max_acceptance_lines` | 7 |
+| `importGraphDepth` | `import_graph_depth` | 2 |
+| `maxListedImporters` | `max_listed_importers` | 8 |
+| `maxRuleLength` | `max_rule_length` | 160 |
+| `maxProjectRules` | `max_project_rules` | 10 |
+| `cardOutputLines` | `card_output_lines` | 20 |
+| `markerOutputLines` | `marker_output_lines` | 40 |
+| `markerLineChars` | `marker_line_chars` | 400 |
+| `maxListedLineEndings` | `max_listed_line_endings` | 5 |
+
+The defaults are TypeScript's `DEFAULT_CONFIG.limits`, each a named
+constant in the config crate.
+
+#### Scenario: Limit defaults
+- **WHEN** `parse_config` reads each text below
+- **THEN** `limits` equals `Limits::default()`, which holds every default of the table above, `max_scope_files` 8 and `max_listed_line_endings` 5 among them
+
+| Text |
+|---|
+| the empty text |
+| `[limits]` |
+| `[limits]\nmaxScopeFiles = 8` |
+
+#### Scenario: Every limit set
+- **WHEN** `parse_config` reads `[limits]\nmaxScopeFiles = 11\nmaxFeatureWrites = 12\nmaxContractTables = 13\nmaxAcceptanceLines = 14\nimportGraphDepth = 15\nmaxListedImporters = 16\nmaxRuleLength = 17\nmaxProjectRules = 18\ncardOutputLines = 19\nmarkerOutputLines = 20\nmarkerLineChars = 21\nmaxListedLineEndings = 22`
+- **THEN** `limits` holds, in field order, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 and 22
+
+#### Scenario: One limit set
+- **WHEN** `parse_config` reads `[limits]\n<key> = 99` for each key below
+- **THEN** `limits` holds 99 in the row's field and the default in every other field
+
+| Key | Field |
+|---|---|
+| `maxScopeFiles` | `max_scope_files` |
+| `maxFeatureWrites` | `max_feature_writes` |
+| `maxContractTables` | `max_contract_tables` |
+| `maxAcceptanceLines` | `max_acceptance_lines` |
+| `importGraphDepth` | `import_graph_depth` |
+| `maxListedImporters` | `max_listed_importers` |
+| `maxRuleLength` | `max_rule_length` |
+| `maxProjectRules` | `max_project_rules` |
+| `cardOutputLines` | `card_output_lines` |
+| `markerOutputLines` | `marker_output_lines` |
+| `markerLineChars` | `marker_line_chars` |
+| `maxListedLineEndings` | `max_listed_line_endings` |
+
+#### Scenario: Each limit refuses zero
+- **WHEN** `parse_config` reads `[limits]\n<key> = 0` for each key of the "One limit set" table
+- **THEN** it returns `InvalidValue { key: "limits.<key>", reason: "must be a positive integer" }`, such as `limits.maxScopeFiles` for `maxScopeFiles`
+
+#### Scenario: Limit errors
+- **WHEN** `parse_config` reads each text below
+- **THEN** it returns the error in the table
+
+| Text | Error |
+|---|---|
+| `limits = 5` | `WrongType { key: "limits", expected: "a table" }` |
+| `[limits]\nmaxScopeFile = 9` | `UnknownKey { key: "limits.maxScopeFile" }` |
+| `[limits]\nzzz = 1\nmaxScopeFiles = 0` | `UnknownKey { key: "limits.zzz" }` |
+| `[limits]\nmaxScopeFiles = "8"` | `WrongType { key: "limits.maxScopeFiles", expected: "an integer" }` |
+| `[limits]\nmarkerLineChars = 2.5` | `WrongType { key: "limits.markerLineChars", expected: "an integer" }` |
+| `[limits]\nmaxRuleLength = -1` | `InvalidValue { key: "limits.maxRuleLength", reason: "must be a positive integer" }` |
+| `[limits]\nmaxScopeFiles = 0\nmaxListedLineEndings = 0` | `InvalidValue { key: "limits.maxScopeFiles", reason: "must be a positive integer" }` |
+
+### Requirement: Banned words
+`bannedWords` SHALL be a list read into `Config.banned_words:
+Vec<BannedWord>`, as TypeScript's `validateBannedWordsConfig` reads it.
+`BannedWord` SHALL be a struct with the fields `word: String` and `paths:
+Vec<String>`, deriving `Debug`, `Clone`, `PartialEq` and `Eq`. An absent
+`bannedWords` gives an empty list. The list may be written as
+`[[bannedWords]]` tables or as an inline array; both are a TOML array of
+tables.
+
+Each entry is a table whose keys are `word` and `paths`. The entries are
+read in file order. For each entry, its keys SHALL be checked first, and an
+unknown key SHALL be `UnknownKey` with `key` `bannedWords.<key>`. Then
+`word` SHALL be a string that is not empty after trimming, and `paths` SHALL
+be a list of at least one string, each not empty after trimming. The word
+and every path are kept trimmed, and the paths keep their order.
+
+Every other fault, whether `bannedWords` is not a list, an entry is not a
+table, or `word` or `paths` is missing, of the wrong type or empty, SHALL be
+`InvalidValue` with `key` `bannedWords` and reason `must be a list of {
+word, paths } entries`, so its text is TypeScript's error text,
+`bannedWords must be a list of { word, paths } entries`.
+
+#### Scenario: Banned words read
+- **WHEN** `parse_config` reads each row's text
+- **THEN** `banned_words` is the row's list
+
+| Text | `banned_words` |
+|---|---|
+| the empty text | empty |
+| `bannedWords = []` | empty |
+| `[[bannedWords]]\nword = " skipped "\npaths = [" src/** ", "crates/**"]` | word `skipped` with paths `src/**` and `crates/**` |
+| `[[bannedWords]]\nword = "skipped"\npaths = ["src/**"]\n[[bannedWords]]\nword = "todo"\npaths = ["crates/**"]` | word `skipped` with path `src/**`, then word `todo` with path `crates/**` |
+| `bannedWords = [{ word = "skipped", paths = ["src/**"] }]` | word `skipped` with path `src/**` |
+
+#### Scenario: Banned word errors
+- **WHEN** `parse_config` reads each row's text
+- **THEN** it returns the row's error, where "list error" is `InvalidValue { key: "bannedWords", reason: "must be a list of { word, paths } entries" }`, whose text is `bannedWords must be a list of { word, paths } entries`
+
+| Text | Error |
+|---|---|
+| `bannedWords = "skipped"` | list error |
+| `bannedWords = ["skipped"]` | list error |
+| `[[bannedWords]]\npaths = ["src/**"]` | list error |
+| `[[bannedWords]]\nword = " "\npaths = ["src/**"]` | list error |
+| `[[bannedWords]]\nword = 3\npaths = ["src/**"]` | list error |
+| `[[bannedWords]]\nword = "skipped"` | list error |
+| `[[bannedWords]]\nword = "skipped"\npaths = []` | list error |
+| `[[bannedWords]]\nword = "skipped"\npaths = "src/**"` | list error |
+| `[[bannedWords]]\nword = "skipped"\npaths = ["src/**", " "]` | list error |
+| `[[bannedWords]]\nword = "skipped"\npaths = [1]` | list error |
+| `[[bannedWords]]\nword = "skipped"\npaths = ["src/**"]\nnote = "x"` | `UnknownKey { key: "bannedWords.note" }` |
+| `[[bannedWords]]\nword = ""\nnote = "x"` | `UnknownKey { key: "bannedWords.note" }` |
+| `[[bannedWords]]\nword = "skipped"\npaths = ["src/**"]\n[[bannedWords]]\nword = ""\npaths = ["src/**"]` | list error |

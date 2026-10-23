@@ -270,8 +270,17 @@ runs through `run_process` with `request`'s `cwd`, `env`, `timeout` and
   provider <provider>: <detail>. Run: pi auth check --provider
   <provider>`.
 
+The fake pi programs the harness tests run,
+`crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` and
+`crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`, SHALL be
+committed executable and run in place by their absolute path, never
+copied or written by a test. Writing an executable and then starting it
+while other tests fork can fail with `ETXTBSY`, as 251's mutation
+baseline did. A test that needs a program named `pi` on a `PATH` SHALL
+use a symlink or a `PATH` entry that points at the committed file.
+
 #### Scenario: Preflight with a fake pi
-- **WHEN** `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` is copied into a new temporary folder as `pi` and made executable, and `preflight_pi` runs it in that folder with a `timeout` of 2 seconds, a `kill_grace` of 300 milliseconds, the range `>=0.87.0 <0.88.0`, the row's provider and exactly the row's variables; for `--version` the fake prints `FAKE_PI_VERSION` to stdout and `FAKE_PI_VERSION_STDERR` to stderr, each when not empty, and exits with `FAKE_PI_VERSION_EXIT`, else 0; for `auth` it writes its arguments one per line to `auth-args.txt` in its folder, waits 10 seconds when `FAKE_PI_AUTH_WAIT` is `1`, prints `FAKE_PI_AUTH` when it is not empty, and exits with `FAKE_PI_AUTH_EXIT`, else 0
+- **WHEN** `preflight_pi` runs `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` in place as `bin`, with a new temporary folder as `cwd`, a `timeout` of 2 seconds, a `kill_grace` of 300 milliseconds, the range `>=0.87.0 <0.88.0`, the row's provider and exactly the row's variables; for `--version` the fake prints `FAKE_PI_VERSION` to stdout and `FAKE_PI_VERSION_STDERR` to stderr, each when not empty, and exits with `FAKE_PI_VERSION_EXIT`, else 0; for `auth` it writes its arguments one per line to `auth-args.txt` in its working directory, waits 10 seconds when `FAKE_PI_AUTH_WAIT` is `1`, prints `FAKE_PI_AUTH` when it is not empty, and exits with `FAKE_PI_AUTH_EXIT`, else 0
 - **THEN** each run returns the row's result in under 5 seconds:
 
 | Provider | Variables | Result |
@@ -293,6 +302,10 @@ runs through `run_process` with `request`'s `cwd`, `env`, `timeout` and
 #### Scenario: Pi binary that cannot start
 - **WHEN** `preflight_pi` runs with the `bin` `/nonexistent/pi`
 - **THEN** it fails with `PiPreflightError::Binary`, displayed `Pi binary not found or failed: /nonexistent/pi`
+
+#### Scenario: Fake pi programs run in place
+- **WHEN** a test reads the modes of `crates/kernel/harnesses/tests/fixtures/fake-pi/preflight.sh` and `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`
+- **THEN** each mode has the owner, group and other execute bits set
 
 ### Requirement: Pi harness
 `PiHarness` in `osq-kernel-harnesses` SHALL implement the runners
@@ -342,7 +355,7 @@ harness carrying the version `preflight_pi` read for that program.
   out`; else stderr when it is not blank; else absent.
 
 #### Scenario: Pi tasks with a fake pi
-- **WHEN** `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh` is copied into a new temporary folder as `pi` and made executable, and a `PiHarness` with that program, the settings provider `deepseek`, model `m-settings` and thinking `high`, and a `kill_grace` of 300 milliseconds starts a request with that folder as `cwd`, the prompt `Do task 1.`, the model `m-role`, the row's timeout and exactly the variable `FAKE_PI_MODE=<row's mode>`; the fake writes its arguments one per line to `args.txt` in its folder, then in mode `settle` and `settle-stubborn` prints the four lines below and runs for 10 seconds, leaving on `SIGTERM` with exit code 143 in `settle` and ignoring `SIGTERM` in `settle-stubborn`; in `missing-key` writes `No API key found for deepseek.` to stderr and exits 1; in `fail` writes `boom` to stderr and exits 2; and in `hang` runs for 10 seconds:
+- **WHEN** a `PiHarness` whose program is `crates/kernel/harnesses/tests/fixtures/fake-pi/run.sh`, run in place, with the settings provider `deepseek`, model `m-settings` and thinking `high`, and a `kill_grace` of 300 milliseconds starts a request with a new temporary folder as `cwd`, the prompt `Do task 1.`, the model `m-role`, the row's timeout and exactly the variable `FAKE_PI_MODE=<row's mode>`; the fake writes its arguments one per line to `args.txt` in its working directory, then in mode `settle` and `settle-stubborn` prints the four lines below and runs for 10 seconds, leaving on `SIGTERM` with exit code 143 in `settle` and ignoring `SIGTERM` in `settle-stubborn`; in `missing-key` writes `No API key found for deepseek.` to stderr and exits 1; in `fail` writes `boom` to stderr and exits 2; and in `hang` runs for 10 seconds:
 
 ```
 {"type":"tool_execution_start","toolCallId":"c1","toolName":"write","args":{"path":"notes.md"}}
@@ -388,3 +401,118 @@ harness carrying the version `preflight_pi` read for that program.
 | version `pi 9.0.0`, warning `outside` | `pi 9.0.0` |
 | version empty, warning `outside` | none |
 | version `   `, no warning | none |
+
+### Requirement: Pi harness from config
+`PiSettings::from_config(pi: &PiConfig) -> PiSettings` in
+`osq-kernel-harnesses` SHALL copy the rust-config `PiConfig`'s
+`provider`, `model` and `thinking`. `PiHarness::from_config(config:
+&Config, env: &BTreeMap<String, String>) -> PiHarness` SHALL equal
+`PiHarness::new` with `resolve_pi_binary(config.pi.bin.as_deref(), env)`,
+`PiSettings::from_config(&config.pi)` and
+`config.timeouts.harness_kill_grace`. `PiHarness` SHALL derive
+`PartialEq` and `Eq` as well as `Debug` and `Clone`.
+
+#### Scenario: Pi harness built from osq.toml
+- **WHEN** `PiHarness::from_config` runs with `parse_config` of the row's text and the row's `OSQ_PI_PATH`
+- **THEN** it equals `PiHarness::new` with the row's program, settings and kill grace:
+
+| Text | `OSQ_PI_PATH` | Program | Provider | Model | Thinking | Kill grace |
+|---|---|---|---|---|---|---|
+| empty | not set | `pi` | none | none | none | 5000 ms |
+| empty | `/env/pi` | `/env/pi` | none | none | none | 5000 ms |
+| `[pi]\nbin = "/opt/pi/bin/pi"\nprovider = "deepseek"\nmodel = "deepseek/deepseek-flash"\nthinking = "high"` | `/env/pi` | `/opt/pi/bin/pi` | `deepseek` | `deepseek/deepseek-flash` | `high` | 5000 ms |
+| `[pi]\nmodel = "m1"\n[timeouts]\nharnessKillGracePeriodMs = 300` | not set | `pi` | none | `m1` | none | 300 ms |
+
+### Requirement: Verify command
+`run_verify(request: &VerifyRequest) -> Result<VerifyOutcome,
+ProcessError>` in `osq-kernel-harnesses` SHALL run `request.command` as
+`runVerificationCommand` does: through `/bin/sh -c` in `request.cwd`, in
+its own process group, stdin closed. Past `request.timeout` the group gets
+`SIGTERM`, then `SIGKILL` after `request.kill_grace`. After the shell
+exits, the runner waits at most `kill_grace` for the output pipes to
+close. A shell that cannot start is `ProcessError::Spawn`.
+
+#### Scenario: Verify runs of small commands
+- **WHEN** `run_verify` runs each row's command in a new temporary folder, given as its canonical path, with the source environment `PATH` set to the test's `PATH`, no configured or agent names, no change, no diff, a `kill_grace` of 300 milliseconds and the row's timeout
+- **THEN** the outcome has the row's output, exit code and timed-out flag, and each run returns in under 5 seconds:
+
+| Command | Timeout | Output | Exit code | Timed out |
+|---|---|---|---|---|
+| `echo out; sleep 0.2; echo err >&2; exit 3` | none | `out\nerr\n` | 3 | false |
+| `printf 'a\n\n   \nb'` | none | `a\n\n   \nb` | 0 | false |
+| `kill -KILL $$` | none | empty | 1 | false |
+| `echo started; sleep 10` | 300 ms | `started\n` | 1 | true |
+| `(sleep 10) & echo done` | none | `done\n` | 0 | false |
+| `pwd -P; echo "$(pwd -P)/src/a.rs:1"` | none | `.\nsrc/a.rs:1\n` | 0 | false |
+
+#### Scenario: Verify stops the whole group
+- **WHEN** `run_verify` runs `sh -c 'sleep 1; echo late > late.txt' & echo started; wait` in a new temporary folder with a timeout of 300 milliseconds and a `kill_grace` of 300 milliseconds, and the test then waits 1.5 seconds
+- **THEN** the outcome is timed out with exit code 1 and output `started\n`, and `late.txt` does not exist in the folder
+
+#### Scenario: Verify shell that cannot start
+- **WHEN** `run_verify` runs with a `cwd` that does not exist
+- **THEN** it returns `ProcessError::Spawn` naming `/bin/sh`
+
+### Requirement: Verify environment
+The command SHALL see exactly `role_env(EnvRole::Verify, source_env,
+configured_env, agent_env, extra)` with no extra, then `OSQ_CHANGE` set to
+`request.change` and `OSQ_DIFF` to `request.diff`, each removed when
+`None` even if the source holds it, then every `request.extra_env`
+variable set last. So a model key the agent names list never reaches
+verify, even when it is configured (ADR 007).
+
+#### Scenario: Verify variables
+- **WHEN** `run_verify` runs `printf '%s\n' "${OSQ_CHANGE-unset}" "${OSQ_DIFF-unset}" "${OSQ_MUTANT-unset}" "${DEEPSEEK_API_KEY-unset}" "${ANTHROPIC_API_KEY-unset}" "${CI-unset}"` with the configured names `DEEPSEEK_API_KEY` and `CI`, the agent names `DEEPSEEK_API_KEY` and `ANTHROPIC_API_KEY`, and the row's source, change, diff and extra variables
+- **THEN** its output is the row's six lines, each followed by `\n`:
+
+| Source | Change | Diff | Extra | Lines |
+|---|---|---|---|---|
+| `DEEPSEEK_API_KEY=sk-model`, `ANTHROPIC_API_KEY=sk-ant`, `CI=true` | `/p/openspec/changes/001-a` | `/tmp/d/change.patch` | none | `/p/openspec/changes/001-a`, `/tmp/d/change.patch`, `unset`, `unset`, `unset`, `true` |
+| `OSQ_CHANGE=/stale`, `OSQ_DIFF=/stale` | none | none | none | `unset`, `unset`, `unset`, `unset`, `unset`, `unset` |
+| none | `/p/c` | none | `OSQ_MUTANT=1`, `OSQ_CHANGE=/x` | `/x`, `unset`, `1`, `unset`, `unset`, `unset` |
+
+### Requirement: Verify outcome
+`VerifyOutcome` SHALL hold `exit_code` (an `i32`), `timed_out`, `output`
+and `duration`. `output` is stdout and stderr in the order the runner read
+them, decoded as `String::from_utf8_lossy` does, then made relative to
+`cwd` as `relativizeToolSummary` does: `<cwd>/` is removed and `<cwd>`
+followed by the end, whitespace or one of `"'()[]{},;:` becomes `.`. A
+timed-out run has exit code 1, and so does a run a signal ended.
+
+#### Scenario: Verify outcome duration
+- **WHEN** `run_verify` runs `sleep 0.3` with no timeout
+- **THEN** the outcome's `duration` is at least 300 milliseconds and under 5 seconds, and its exit code is 0
+
+### Requirement: Pi usage limit
+`pi_line_events` SHALL also give one `UsageLimit` event for a
+`message_end` line whose `message.role` is `assistant`, whose
+`message.stopReason` is `error` and whose `message.errorMessage` is a
+non-empty string holding, in any ASCII letter case, one of pi 0.87.0's
+account-limit texts: `GoUsageLimitError`, `FreeUsageLimitError`,
+`Monthly usage limit reached`, `available balance`, `insufficient_quota`,
+`out of budget`, `quota exceeded` or `billing`, the errors pi itself
+refuses to retry because the account hit a limit, or DeepSeek's
+`insufficient balance`. The event comes
+after the `Text` and `Tokens` events "Pi stream events" gives for the
+line, with `error` set to `errorMessage` and no `resetsAt`, since pi
+reports no reset time. TypeScript's pi adapter writes no usage limit, so
+this is the one event the Rust pi stream gives that TypeScript's
+`processPiStdoutLine` does not; every other line still gives exactly
+TypeScript's events.
+
+#### Scenario: Pi usage limits
+- **WHEN** `pi_line_events` reads each row's line with the project root `/work/project` and a fresh state
+- **THEN** it gives the row's events, in order:
+
+| Line | Events |
+|---|---|
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":"429 Monthly usage limit reached"}}` | `UsageLimit` with `error` `429 Monthly usage limit reached` |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":"Error: INSUFFICIENT_QUOTA"}}` | `UsageLimit` with `error` `Error: INSUFFICIENT_QUOTA` |
+| `{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"partial"}],"usage":{"input":1,"output":2},"stopReason":"error","errorMessage":"Out Of Budget this month"}}` | `Text` with `partial`; `Tokens` with `promptTokens` 1, `candidateTokens` 2 and `totalTokens` 3; `UsageLimit` with `error` `Out Of Budget this month` |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":"402 Insufficient Balance"}}` | `UsageLimit` with `error` `402 Insufficient Balance` |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":"503 overloaded"}}` | none |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"stop","errorMessage":"quota exceeded"}}` | none |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error"}}` | none |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":""}}` | none |
+| `{"type":"message_end","message":{"role":"assistant","content":[],"stopReason":"error","errorMessage":42}}` | none |
+| `{"type":"message_end","message":{"role":"user","content":[],"stopReason":"error","errorMessage":"billing"}}` | none |

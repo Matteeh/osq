@@ -1,0 +1,10 @@
+outcome: failed
+Task 1 is running; retry is refused.
+tree:
+--- .run/approved
+sha256:d94fc831328d471517b780aed1a758131594afc28bf88deef7141bc57dc69f2c
+--- .run/dead/1.md
+---
+reason: crashed
+---
+Left by a stopped watcher.

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:78d33d76e9a5f51d4c810e02e8678429a160c805916c7bee27e15931d8a52412"
+build_stamp: "ed155511"
+project_commit: "5c5fab4c"
+exit_code: 0
+scope_files: {"src/core/lifecycle/retry-archived.ts":"sha256:387cec3a283f084e789a6f87d6eaaea7e044e765ad9c0b0da8a2f236d5e46f26","src/core/lifecycle/retry.ts":"sha256:6d77a33ce4cc482de895bf198ec190d2979bed4e39918c22e0282772bbe019ef","src/watcher/archive-catch-up.ts":"sha256:6f079478e9caea440e64ee30d60c18409bb0d6a0ede757fb1c8005b51c2a6443","src/watcher/archive-change.ts":"sha256:b7282ca3a81901979e3beac0f731b1bbcbb488867409295395fb9379a5c20ffb","src/watcher/loop.ts":"sha256:15ae1033ae944b267f8d9e4d14614f2a72d2c2c0a296f4b3b0cea09a1e318d07","src/watcher/worktree-commit.ts":"sha256:c7c17cabda081335d630d007ad704deb750bbf15ca7265208dce15f18e768766","tests/archive-commit-recovery.test.ts":"sha256:22536529f8678fa33afafd6b6baeb637d2d2e02c35706b2e101e530d71572362"}
+---
+2026-10-22T22:29:42.546Z

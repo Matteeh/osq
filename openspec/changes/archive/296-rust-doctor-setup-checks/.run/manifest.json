@@ -1,0 +1,48 @@
+{
+  "hashes": {
+    "AGENTS.md": null,
+    "PLANNER.md": null,
+    "config": null,
+    "rust-config": null,
+    "rust-config/osq.yml": null,
+    "rust-specs": null,
+    "rust-specs/osq.yml": null,
+    "rust-doctor": null,
+    "rust-doctor/osq.yml": null,
+    "rust-vcs": null,
+    "rust-vcs/osq.yml": null
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "<synthetic>",
+  "effort": "high",
+  "createdAt": "2026-10-22T16:23:22.079Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-22T17:42:31.311Z",
+  "approvalFlags": {
+    "ids": [
+      "sensitive_path",
+      "shared_file",
+      "verify_without_test"
+    ],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "tests_modify",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {}
+}

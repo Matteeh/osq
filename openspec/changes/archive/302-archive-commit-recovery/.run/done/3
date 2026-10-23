@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:028ff34a3b41dfa4157dbeb9411de292b03e5f02f2db5b268934d47687a783ab"
+build_stamp: "ed155511"
+project_commit: "d613e655"
+exit_code: 0
+scope_files: {"src/core/vcs/land-checks.ts":"sha256:8146554e08315bb77a17a9e5cf96f60703c1f24058ff0a016c13dd7a2d9d9a91","src/core/vcs/land.ts":"sha256:7d906e3c6d16741ea15ab46e3ee6dde8aa1e7c60c39ccd75e4435e200613e043","tests/vcs-land-archive-commit.test.ts":"sha256:10116b0d42c637fdd10ca4a59f9b85eaeb9177b02e1a945dea4b08a3ad0e7874"}
+---
+2026-10-22T23:28:06.240Z

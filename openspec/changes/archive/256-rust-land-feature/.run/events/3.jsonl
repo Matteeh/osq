@@ -1,0 +1,107 @@
+{"type":"verify_ran","timestamp":"2026-10-21T17:36:17.066Z","data":{"command":"cargo test -p osq-feature-land --test refusals","exitCode":101,"duration":0.13,"log":".run/logs/3-1.log","output":"error: no test target named `refusals` in `osq-feature-land` package\nhelp: available test targets:\n    land_commit\n    land_feature\n    land_lookup\n    land_message\n    land_settings\n","phase":"pre_spawn","expected":"red","mismatch":false}}
+{"type":"measures","timestamp":"2026-10-21T17:36:58.774Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":1,"scopeLines":246,"repoFiles":14318,"repoLines":782210,"importFanIn":0,"proposalWords":1002,"taskWords":542,"deltaRequirements":8,"deltaScenarios":15}}
+{"type":"started","timestamp":"2026-10-21T17:36:59.097Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"2136bc4f","pid":110296,"timeoutSeconds":1800,"harnessVersion":"0.87.0","version":"0.3.0","commit":"3f811304"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:01.020Z","data":{"promptTokens":4016,"candidateTokens":251,"totalTokens":8491,"cachedTokens":4224,"reasoningTokens":17,"cost":0.001531344,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:01.020Z","data":{"tool":"read","summary":"openspec/changes/256-rust-land-feature/tasks/3.md"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:01.021Z","data":{"tool":"read","summary":"openspec/changes/256-rust-land-feature/proposal.md"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:01.021Z","data":{"tool":"read","summary":"openspec/changes/256-rust-land-feature/specs/rust-land/spec."}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:03.369Z","data":{"promptTokens":8649,"candidateTokens":299,"totalTokens":17396,"cachedTokens":8448,"reasoningTokens":88,"cost":0.0030041879999999997,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:03.370Z","data":{"tool":"bash","summary":"find crates/features/land -maxdepth 4 -type f | sort && echo"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:03.370Z","data":{"tool":"bash","summary":"wc -l crates/features/land/src/land.rs crates/features/land/"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:05.228Z","data":{"promptTokens":501,"candidateTokens":218,"totalTokens":17999,"cachedTokens":17280,"reasoningTokens":0,"cost":0.00051558,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:05.229Z","data":{"tool":"read","summary":"crates/features/land/src/land.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:05.229Z","data":{"tool":"read","summary":"crates/features/land/tests/support/mod.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:05.230Z","data":{"tool":"read","summary":"crates/kernel/storage/src/read/land.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:07.292Z","data":{"promptTokens":7686,"candidateTokens":298,"totalTokens":25904,"cachedTokens":17920,"reasoningTokens":15,"cost":0.0027709199999999996,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:07.293Z","data":{"tool":"read","summary":"crates/features/land/src/land/find.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:07.293Z","data":{"tool":"read","summary":"crates/features/land/src/land/text.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:07.293Z","data":{"tool":"read","summary":"src/core/vcs/land-checks.ts"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:07.294Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:09.227Z","data":{"promptTokens":5440,"candidateTokens":228,"totalTokens":31524,"cachedTokens":25856,"reasoningTokens":11,"cost":0.002060736,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:09.227Z","data":{"tool":"read","summary":"src/core/vcs/land.ts"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:09.228Z","data":{"tool":"read","summary":"crates/features/land/tests/land_commit.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:09.228Z","data":{"tool":"read","summary":"crates/features/land/tests/land_lookup.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:11.376Z","data":{"promptTokens":5457,"candidateTokens":277,"totalTokens":37222,"cachedTokens":31488,"reasoningTokens":51,"cost":0.002158428,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:11.376Z","data":{"tool":"bash","summary":"find crates/kernel/vcs/src -type f | sort && echo '---' && g"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:11.376Z","data":{"tool":"bash","summary":"cat crates/features/land/Cargo.toml && echo '---' && cat cra"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:12.996Z","data":{"promptTokens":3712,"candidateTokens":235,"totalTokens":41067,"cachedTokens":37120,"reasoningTokens":0,"cost":0.00161832,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:12.996Z","data":{"tool":"read","summary":"crates/kernel/vcs/src/port.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:12.996Z","data":{"tool":"read","summary":"crates/features/land/tests/land_settings.rs"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:12.997Z","data":{"tool":"bash","summary":"cat openspec/changes/256-rust-land-feature/.run/results/1.md"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:15.145Z","data":{"promptTokens":3546,"candidateTokens":445,"totalTokens":44951,"cachedTokens":40960,"reasoningTokens":68,"cost":0.00184356,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:15.145Z","data":{"tool":"bash","summary":"find crates/features/land/tests/fixtures/land-change -type f"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:15.146Z","data":{"tool":"bash","summary":"sed -n '1,220p' crates/features/land/tests/land_message.rs &"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:15.146Z","data":{"tool":"bash","summary":"grep -n \"pub enum Location\\|pub struct ChangeEntry\\|pub fn l"}}
+{"type":"tokens","timestamp":"2026-10-21T17:37:29.979Z","data":{"promptTokens":2865,"candidateTokens":2964,"totalTokens":50757,"cachedTokens":44928,"reasoningTokens":2874,"cost":0.004685867999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:37:29.980Z","data":{"tool":"bash","summary":"sed -n '1,260p' tests/line-budget.test.ts && echo '---' && s"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:16.923Z","data":{"promptTokens":1289,"candidateTokens":10248,"totalTokens":62225,"cachedTokens":50688,"reasoningTokens":9192,"cost":0.012988428,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:16.924Z","data":{"tool":"write","summary":"crates/features/land/src/land/checks.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:38:16.925Z","data":{"path":"crates/features/land/src/land/checks.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:19.730Z","data":{"promptTokens":173,"candidateTokens":448,"totalTokens":62701,"cachedTokens":62080,"reasoningTokens":262,"cost":0.00096198,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:19.731Z","data":{"tool":"edit","summary":"crates/features/land/src/land/checks.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:38:19.734Z","data":{"path":"crates/features/land/src/land/checks.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:27.684Z","data":{"promptTokens":142,"candidateTokens":2530,"totalTokens":65264,"cachedTokens":62592,"reasoningTokens":896,"cost":0.003454152,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:27.684Z","data":{"tool":"edit","summary":"crates/features/land/src/land.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:38:27.688Z","data":{"path":"crates/features/land/src/land.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:29.021Z","data":{"promptTokens":143,"candidateTokens":87,"totalTokens":65382,"cachedTokens":65152,"reasoningTokens":9,"cost":0.0005382119999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:29.021Z","data":{"tool":"read","summary":"crates/features/land/src/land.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:31.282Z","data":{"promptTokens":2787,"candidateTokens":348,"totalTokens":68415,"cachedTokens":65280,"reasoningTokens":101,"cost":0.0016453799999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:31.283Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:51.303Z","data":{"promptTokens":180,"candidateTokens":5825,"totalTokens":74357,"cachedTokens":68352,"reasoningTokens":2362,"cost":0.007454112,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:51.304Z","data":{"tool":"write","summary":"crates/features/land/tests/refusals.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:38:51.304Z","data":{"path":"crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:54.950Z","data":{"promptTokens":146,"candidateTokens":749,"totalTokens":75135,"cachedTokens":74240,"reasoningTokens":230,"cost":0.0013880399999999999,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:54.950Z","data":{"tool":"edit","summary":"crates/features/land/tests/refusals.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:38:54.952Z","data":{"path":"crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:56.427Z","data":{"promptTokens":161,"candidateTokens":80,"totalTokens":75249,"cachedTokens":75008,"reasoningTokens":7,"cost":0.000594348,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:56.427Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-feature-land --test ref"}}
+{"type":"tokens","timestamp":"2026-10-21T17:38:59.891Z","data":{"promptTokens":465,"candidateTokens":312,"totalTokens":75913,"cachedTokens":75136,"reasoningTokens":80,"cost":0.000964716,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:38:59.891Z","data":{"tool":"edit","summary":"crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:01.275Z","data":{"promptTokens":183,"candidateTokens":77,"totalTokens":76036,"cachedTokens":75776,"reasoningTokens":8,"cost":0.0006019560000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:01.276Z","data":{"tool":"bash","summary":"tail -25 crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:02.890Z","data":{"promptTokens":259,"candidateTokens":178,"totalTokens":76469,"cachedTokens":76032,"reasoningTokens":0,"cost":0.000747492,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:02.891Z","data":{"tool":"edit","summary":"crates/features/land/tests/refusals.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:39:02.892Z","data":{"path":"crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:04.026Z","data":{"promptTokens":215,"candidateTokens":77,"totalTokens":76580,"cachedTokens":76288,"reasoningTokens":4,"cost":0.000614628,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:04.026Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo test -p osq-feature-land --test ref"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:06.718Z","data":{"promptTokens":233,"candidateTokens":173,"totalTokens":76950,"cachedTokens":76544,"reasoningTokens":47,"cost":0.000736764,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:06.718Z","data":{"tool":"bash","summary":"cargo test -p osq-feature-land"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:06.719Z","data":{"tool":"bash","summary":"cargo clippy -p osq-feature-land --all-targets -- -D warning"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:16.164Z","data":{"promptTokens":1038,"candidateTokens":2123,"totalTokens":80089,"cachedTokens":76928,"reasoningTokens":754,"cost":0.0033205679999999994,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:16.164Z","data":{"tool":"edit","summary":"crates/features/land/src/land.rs"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:39:16.167Z","data":{"path":"crates/features/land/src/land.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:17.751Z","data":{"promptTokens":248,"candidateTokens":100,"totalTokens":80220,"cachedTokens":79872,"reasoningTokens":7,"cost":0.000673632,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:17.751Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo clippy -p osq-feature-land --all-ta"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:22.575Z","data":{"promptTokens":309,"candidateTokens":870,"totalTokens":81307,"cachedTokens":80128,"reasoningTokens":795,"cost":0.001617468,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:22.575Z","data":{"tool":"bash","summary":"sed -n '195,340p' crates/features/land/tests/refusals.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:27.011Z","data":{"promptTokens":1468,"candidateTokens":1214,"totalTokens":83962,"cachedTokens":81280,"reasoningTokens":91,"cost":0.00238488,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:27.011Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:29.191Z","data":{"promptTokens":349,"candidateTokens":249,"totalTokens":84438,"cachedTokens":83840,"reasoningTokens":7,"cost":0.00090654,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:29.191Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:32.869Z","data":{"promptTokens":303,"candidateTokens":632,"totalTokens":85287,"cachedTokens":84352,"reasoningTokens":77,"cost":0.0013554119999999998,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:32.870Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/fea"}}
+{"type":"tokens","timestamp":"2026-10-21T17:39:35.767Z","data":{"promptTokens":300,"candidateTokens":154,"totalTokens":85702,"cachedTokens":85248,"reasoningTokens":68,"cost":0.000786288,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:39:35.767Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-land -f crates/features/land/sr"}}
+{"type":"tokens","timestamp":"2026-10-21T17:40:09.009Z","data":{"promptTokens":134,"candidateTokens":103,"totalTokens":85869,"cachedTokens":85632,"reasoningTokens":15,"cost":0.000677592,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:40:09.009Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-land -f crates/features/land/sr"}}
+{"type":"tokens","timestamp":"2026-10-21T17:40:41.112Z","data":{"promptTokens":167,"candidateTokens":191,"totalTokens":86118,"cachedTokens":85760,"reasoningTokens":122,"cost":0.00079386,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:40:41.113Z","data":{"tool":"bash","summary":"sed -n '1,260p' scripts/mutants-rust.sh"}}
+{"type":"tokens","timestamp":"2026-10-21T17:40:44.001Z","data":{"promptTokens":384,"candidateTokens":326,"totalTokens":86726,"cachedTokens":86016,"reasoningTokens":237,"cost":0.001022496,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:40:44.001Z","data":{"tool":"bash","summary":"cargo mutants -p osq-feature-land -f crates/features/land/te"}}
+{"type":"tokens","timestamp":"2026-10-21T17:40:45.751Z","data":{"promptTokens":227,"candidateTokens":183,"totalTokens":86938,"cachedTokens":86528,"reasoningTokens":106,"cost":0.000806868,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:40:45.752Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/256-rust-land-feature sh scripts"}}
+{"type":"tokens","timestamp":"2026-10-21T17:41:47.551Z","data":{"promptTokens":16216,"candidateTokens":569,"totalTokens":103697,"cachedTokens":86912,"reasoningTokens":495,"cost":0.006069072,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:41:47.552Z","data":{"tool":"bash","summary":"sed -n '140,175p' crates/kernel/vcs/src/git/state.rs"}}
+{"type":"tokens","timestamp":"2026-10-21T17:41:49.357Z","data":{"promptTokens":405,"candidateTokens":92,"totalTokens":104177,"cachedTokens":103680,"reasoningTokens":14,"cost":0.0008539800000000001,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:41:49.358Z","data":{"tool":"bash","summary":"grep -n \"fn read\" -A40 crates/kernel/vcs/src/git.rs | head -"}}
+{"type":"tokens","timestamp":"2026-10-21T17:41:56.324Z","data":{"promptTokens":516,"candidateTokens":1420,"totalTokens":106000,"cachedTokens":104064,"reasoningTokens":951,"cost":0.0024831840000000003,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"tool","timestamp":"2026-10-21T17:41:56.324Z","data":{"tool":"write","summary":"openspec/changes/256-rust-land-feature/.run/results/3.md"}}
+{"type":"file_changed","timestamp":"2026-10-21T17:41:56.334Z","data":{"path":"openspec/changes/256-rust-land-feature/.run/results/3.md"}}
+{"type":"text","timestamp":"2026-10-21T17:41:58.719Z","data":{"text":"Implemented task 3.\n\n- Added `src/land/checks.rs` with the pure refusal texts and earlier-change selection, including the direct/indirect stacked-on exclusion.\n- Wired refusals into `run_land` in the required order.\n- Added `tests/refusals.rs`, covering all three scenarios plus two extra edge cases for mutation coverage.\n- `cargo test -p osq-feature-land --test refusals`, clippy, targeted `cargo mutants`, and `sh scripts/verify-rust.sh` all pass.\n\nResult written to `openspec/changes/256-rust-land-feature/.run/results/3.md`."}}
+{"type":"tokens","timestamp":"2026-10-21T17:41:58.719Z","data":{"promptTokens":178,"candidateTokens":283,"totalTokens":106317,"cachedTokens":105856,"reasoningTokens":143,"cost":0.001028136,"provider":"deepseek","model":"deepseek-flash"}}
+{"type":"exited","timestamp":"2026-10-21T17:41:58.744Z","data":{"exitCode":0,"pid":110296,"timedOut":false,"elapsedSeconds":299.7}}
+{"type":"format_ran","timestamp":"2026-10-21T17:42:01.113Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/features/land/src/land.rs' 'crates/features/land/src/land/checks.rs' 'crates/features/land/tests/refusals.rs'","files":["crates/features/land/src/land.rs","crates/features/land/src/land/checks.rs","crates/features/land/tests/refusals.rs"],"exitCode":0,"duration":1.12,"timedOut":false,"output":"Checked 0 files in 241µs. No fixes applied.\n"}}
+{"type":"verify_ran","timestamp":"2026-10-21T17:42:03.527Z","data":{"command":"cargo test -p osq-feature-land --test refusals","exitCode":0,"duration":1.29,"log":".run/logs/3-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/refusals.rs (target/debug/deps/refusals-71031fb55be35755)\n\nrunning 4 tests\ntest change_without_capabilities_does_not_refuse ... ok\ntest refusals_for_a_landed_change ... ok\ntest refusals_before_the_land ... ok\ntest earlier_changes_that_do_not_refuse ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s\n\n"}}
+{"type":"measures","timestamp":"2026-10-21T17:46:35.621Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":1,"scopeLines":246,"repoFiles":14318,"repoLines":782210,"importFanIn":0,"proposalWords":1002,"taskWords":542,"deltaRequirements":8,"deltaScenarios":15,"changedFiles":3,"changedLines":586,"scopeHashes":{"crates/features/land/src/land.rs":{"before":"sha256:38371c9e9eaa12a2bc4660e7e37e576bb2e74180cebc80e8597629768d76c4f0","after":"sha256:c2d2407b284280d0299f27283b217f860e6799409edc030226e037bff625b1fa"},"crates/features/land/src/land/checks.rs":{"before":null,"after":"sha256:30a2d51e3d7f4d34d10c1e810078d0f7d0624bd4dee8dff9db9c9ae3c40392de"},"crates/features/land/tests/refusals.rs":{"before":null,"after":"sha256:c5baed48999bb81dc1cc18623b80bee06495a0b77e522f5d4935c4ab435a9975"}}}}
+{"type":"done","timestamp":"2026-10-21T17:46:35.634Z","data":{"task":"3"}}
+{"type":"verify_ran","timestamp":"2026-10-21T17:46:44.613Z","data":{"command":"cargo test -p osq-feature-land --test refusals","exitCode":0,"duration":0.68,"log":".run/logs/3-3.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s\n     Running tests/refusals.rs (target/debug/deps/refusals-71031fb55be35755)\n\nrunning 4 tests\ntest change_without_capabilities_does_not_refuse ... ok\ntest refusals_for_a_landed_change ... ok\ntest refusals_before_the_land ... ok\ntest earlier_changes_that_do_not_refuse ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s\n\n"}}

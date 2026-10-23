@@ -1,0 +1,130 @@
+[
+  {
+    "name": "capabilities",
+    "root": "project",
+    "args": [],
+    "code": 0,
+    "stdout": "alpha\nbeta\n",
+    "stderr": ""
+  },
+  {
+    "name": "capabilities-blank-argument",
+    "root": "project",
+    "args": [""],
+    "code": 0,
+    "stdout": "alpha\nbeta\n",
+    "stderr": ""
+  },
+  {
+    "name": "alpha-requirements",
+    "root": "project",
+    "args": ["alpha"],
+    "code": 0,
+    "stdout": "First rule\nClosed name\nLast rule\n",
+    "stderr": ""
+  },
+  {
+    "name": "alpha-requirements-blank-argument",
+    "root": "project",
+    "args": ["alpha", ""],
+    "code": 0,
+    "stdout": "First rule\nClosed name\nLast rule\n",
+    "stderr": ""
+  },
+  {
+    "name": "beta-no-requirements",
+    "root": "project",
+    "args": ["beta"],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "first-rule",
+    "root": "project",
+    "args": ["alpha", "First rule"],
+    "code": 0,
+    "stdout": "### Requirement: First rule\nThe system SHALL do the first thing.\n\n#### Scenario: First case\n- **WHEN** one thing happens\n- **THEN** a second thing follows\n",
+    "stderr": ""
+  },
+  {
+    "name": "closed-name-padded",
+    "root": "project",
+    "args": ["alpha", "  Closed name  "],
+    "code": 0,
+    "stdout": "### Requirement: Closed name ##\nThe system SHALL strip closing hashes from a requirement name.\n\n```text\n### Requirement: Fenced header\n```\n\n#### Scenario: Closed case\n- **WHEN** a header ends in hashes\n- **THEN** its name leaves them out\n",
+    "stderr": ""
+  },
+  {
+    "name": "closed-name-hashes",
+    "root": "project",
+    "args": ["alpha", "Closed name ##"],
+    "code": 0,
+    "stdout": "### Requirement: Closed name ##\nThe system SHALL strip closing hashes from a requirement name.\n\n```text\n### Requirement: Fenced header\n```\n\n#### Scenario: Closed case\n- **WHEN** a header ends in hashes\n- **THEN** its name leaves them out\n",
+    "stderr": ""
+  },
+  {
+    "name": "last-rule",
+    "root": "project",
+    "args": ["alpha", "Last rule"],
+    "code": 0,
+    "stdout": "### Requirement: Last rule\nThe system SHALL end the file with trailing blank lines.\n",
+    "stderr": ""
+  },
+  {
+    "name": "unknown-capability",
+    "root": "project",
+    "args": ["gamma"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "No living capability \"gamma\". Capabilities: alpha, beta\n"
+  },
+  {
+    "name": "folder-without-spec",
+    "root": "project",
+    "args": ["notes"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "No living capability \"notes\". Capabilities: alpha, beta\n"
+  },
+  {
+    "name": "path-like-capability",
+    "root": "project",
+    "args": ["../alpha"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "No living capability \"../alpha\". Capabilities: alpha, beta\n"
+  },
+  {
+    "name": "unknown-requirement",
+    "root": "project",
+    "args": ["alpha", "first rule"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "alpha has no requirement \"first rule\". osq spec alpha lists them.\n"
+  },
+  {
+    "name": "fenced-header",
+    "root": "project",
+    "args": ["alpha", "Fenced header"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "alpha has no requirement \"Fenced header\". osq spec alpha lists them.\n"
+  },
+  {
+    "name": "empty-root-capabilities",
+    "root": "empty",
+    "args": [],
+    "code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "empty-root-unknown",
+    "root": "empty",
+    "args": ["alpha"],
+    "code": 1,
+    "stdout": "",
+    "stderr": "No living capability \"alpha\". Capabilities: \n"
+  }
+]

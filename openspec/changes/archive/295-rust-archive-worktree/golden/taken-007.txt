@@ -1,0 +1,48 @@
+name: 007-sample-1
+tip:
+osq: 007 archived
+
+The sample change modifies alpha, empties beta, creates gamma and replaces epsilon's sidecar
+archived to openspec/changes/archive/007-sample-1
+
+Osq-Change: 007-sample
+
+commit:
+D	openspec/changes/007-sample/.run/approved
+D	openspec/changes/007-sample/.run/done/1
+D	openspec/changes/007-sample/.run/done/2
+D	openspec/changes/007-sample/.run/events/1.jsonl
+D	openspec/changes/007-sample/.run/events/2.jsonl
+D	openspec/changes/007-sample/notes/tasks.md
+D	openspec/changes/007-sample/notes/todo.md
+D	openspec/changes/007-sample/plan-prompt.md
+D	openspec/changes/007-sample/proposal.md
+D	openspec/changes/007-sample/specs/alpha/spec.md
+D	openspec/changes/007-sample/specs/beta/spec.md
+D	openspec/changes/007-sample/specs/epsilon/osq.yml
+D	openspec/changes/007-sample/specs/gamma/spec.md
+D	openspec/changes/007-sample/tasks.md
+D	openspec/changes/007-sample/tasks/1.md
+D	openspec/changes/007-sample/tasks/2.md
+A	openspec/changes/archive/007-sample-1/.run/approved
+A	openspec/changes/archive/007-sample-1/.run/done/1
+A	openspec/changes/archive/007-sample-1/.run/done/2
+A	openspec/changes/archive/007-sample-1/.run/events/1.jsonl
+A	openspec/changes/archive/007-sample-1/.run/events/2.jsonl
+A	openspec/changes/archive/007-sample-1/notes/tasks.md
+A	openspec/changes/archive/007-sample-1/notes/todo.md
+A	openspec/changes/archive/007-sample-1/proposal.md
+A	openspec/changes/archive/007-sample-1/specs/alpha/spec.md
+A	openspec/changes/archive/007-sample-1/specs/beta/spec.md
+A	openspec/changes/archive/007-sample-1/specs/epsilon/osq.yml
+A	openspec/changes/archive/007-sample-1/specs/gamma/spec.md
+A	openspec/changes/archive/007-sample-1/tasks.md
+A	openspec/changes/archive/007-sample-1/tasks/1.md
+A	openspec/changes/archive/007-sample-1/tasks/2.md
+M	openspec/specs/alpha/spec.md
+D	openspec/specs/beta/osq.yml
+D	openspec/specs/beta/spec.md
+M	openspec/specs/epsilon/osq.yml
+A	openspec/specs/gamma/osq.yml
+A	openspec/specs/gamma/spec.md
+status:

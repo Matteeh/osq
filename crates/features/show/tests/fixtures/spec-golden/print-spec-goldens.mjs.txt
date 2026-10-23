@@ -1,0 +1,58 @@
+// Prints TypeScript's `osq spec` result for each row of rust-show
+// "Spec equals TypeScript's".
+// Copy this file to a scratch folder as print-spec-goldens.mjs, then run it
+// from the repository root after `pnpm build`:
+//   node <scratch>/print-spec-goldens.mjs <fixture spec-project> <golden folder>
+// Each row runs the built CLI in a fresh scratch folder under the system temp
+// folder: for the root `project` a copy of the fixture, for the root `empty`
+// an empty folder. It writes `<golden folder>/spec.json`: an array with one
+// object per row, in row order, holding `name`, `root`, `args`, `code`,
+// `stdout` and `stderr` exactly as the process gave them.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const [fixture, golden] = process.argv.slice(2);
+
+const rows = [
+  { name: 'capabilities', root: 'project', args: [] },
+  { name: 'capabilities-blank-argument', root: 'project', args: [''] },
+  { name: 'alpha-requirements', root: 'project', args: ['alpha'] },
+  { name: 'alpha-requirements-blank-argument', root: 'project', args: ['alpha', ''] },
+  { name: 'beta-no-requirements', root: 'project', args: ['beta'] },
+  { name: 'first-rule', root: 'project', args: ['alpha', 'First rule'] },
+  { name: 'closed-name-padded', root: 'project', args: ['alpha', '  Closed name  '] },
+  { name: 'closed-name-hashes', root: 'project', args: ['alpha', 'Closed name ##'] },
+  { name: 'last-rule', root: 'project', args: ['alpha', 'Last rule'] },
+  { name: 'unknown-capability', root: 'project', args: ['gamma'] },
+  { name: 'folder-without-spec', root: 'project', args: ['notes'] },
+  { name: 'path-like-capability', root: 'project', args: ['../alpha'] },
+  { name: 'unknown-requirement', root: 'project', args: ['alpha', 'first rule'] },
+  { name: 'fenced-header', root: 'project', args: ['alpha', 'Fenced header'] },
+  { name: 'empty-root-capabilities', root: 'empty', args: [] },
+  { name: 'empty-root-unknown', root: 'empty', args: ['alpha'] },
+];
+
+const results = [];
+for (const row of rows) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-spec-golden-')));
+  if (row.root === 'project') fs.cpSync(fixture, scratch, { recursive: true });
+  const run = spawnSync(process.execPath, [BIN, 'spec', ...row.args], {
+    cwd: scratch,
+    encoding: 'utf8',
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+  results.push({
+    name: row.name,
+    root: row.root,
+    args: row.args,
+    code: run.status,
+    stdout: run.stdout,
+    stderr: run.stderr,
+  });
+  fs.rmSync(scratch, { recursive: true, force: true });
+}
+fs.mkdirSync(golden, { recursive: true });
+fs.writeFileSync(path.join(golden, 'spec.json'), `${JSON.stringify(results, null, 2)}\n`);

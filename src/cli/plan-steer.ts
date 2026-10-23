@@ -8,6 +8,7 @@ import { findSteeringChange } from '../core/status/steering-change.js';
 import {
   type SteeringTrigger,
   describeTrigger,
+  humanSteering,
   isDefaultBranchTrigger,
   steeringMarkerPath,
 } from '../core/status/steering.js';
@@ -73,19 +74,26 @@ async function requirementLines(
   return lines;
 }
 
-/** The `## Steering` section for one located approved change. */
+/** The `## Steering` section for one located approved change and its triggers. */
 async function buildSteeringSection(
   change: LocatedChange,
   state: SpecState,
+  triggers: readonly SteeringTrigger[],
   config: OsqConfig,
 ): Promise<string> {
-  const triggers = state.steering ?? [];
   const hasDefault = triggers.some(isDefaultBranchTrigger);
   const conflict = triggers.some((trigger) => trigger.trigger === 'conflict');
+  const allDead = triggers.every((trigger) => trigger.trigger === 'dead');
   const vcs = hasDefault ? await selectVcs(change.tree.root, config) : null;
   const defaultBranch = vcs ? await vcs.defaultBranch() : '';
 
-  const lines = ['## Steering', '', 'osq halted this change and asks you to revise its plan.'];
+  const lines = [
+    '## Steering',
+    '',
+    allDead
+      ? 'A task of this change died, and a human asked to revise its plan.'
+      : 'osq halted this change and asks you to revise its plan.',
+  ];
   for (const trigger of triggers) {
     lines.push('', ...(await triggerLines(change.folderPath, trigger)));
     if (trigger.trigger === 'requirement_changed' && vcs !== null) {
@@ -117,6 +125,9 @@ async function buildSteeringSection(
  * The steering plan for a named change, or null when `findSteeringChange`
  * finds none or a checkout change needs no steering. An approved change outside
  * the checkout that needs none is an error: planning must not create a duplicate.
+ *
+ * @scenario cli-foundation: Plan a dead task in its worktree
+ * @scenario cli-foundation: Approved change needs no steering
  */
 export async function readSteeringPlan(
   projectRoot: string,
@@ -126,7 +137,9 @@ export async function readSteeringPlan(
   const found = await findSteeringChange(projectRoot, config, name);
   if (found === null) return null;
   const { change, state } = found;
-  if (!state.steering || state.steering.length === 0) {
+  const triggers =
+    change.tree.worktreeFolder !== undefined ? humanSteering(state) : (state.steering ?? []);
+  if (triggers.length === 0) {
     const outside =
       change.tree.worktreeFolder !== undefined || change.tree.stackedFolder !== undefined;
     if (outside) {
@@ -136,5 +149,9 @@ export async function readSteeringPlan(
     }
     return null;
   }
-  return { change, id: state.id, section: await buildSteeringSection(change, state, config) };
+  return {
+    change,
+    id: state.id,
+    section: await buildSteeringSection(change, state, triggers, config),
+  };
 }

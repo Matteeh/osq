@@ -179,16 +179,35 @@ describe('Scope path credit from measured hashes', () => {
     ]);
   });
 
-  it('records ambiguous when two later tasks measured the path', async () => {
+  it('credits the latest of two later tasks that measured the path', async () => {
     const fixture = await setup(3);
     await fs.writeFile(path.join(fixture.root, SCOPE), 'current\n', 'utf8');
     const current = await computeTaskScopeHash(fixture.root, [SCOPE]);
     const currentHash = current.fileHashes[SCOPE] ?? null;
     await writeDone(fixture, 1, 'sha256:stale-task-1', { [SCOPE]: 'sha256:recorded-task-1' });
-    await writeDone(fixture, 2, 'sha256:task-2', { [SCOPE]: currentHash });
+    await writeDone(fixture, 2, 'sha256:task-2', { [SCOPE]: 'sha256:measured-task-2' });
     await writeDone(fixture, 3, 'sha256:task-3', { [SCOPE]: currentHash });
-    await appendMeasuresEnd(fixture, 2, SCOPE, 'sha256:recorded-task-1', currentHash);
-    await appendMeasuresEnd(fixture, 3, SCOPE, 'sha256:recorded-task-1', currentHash);
+    await appendMeasuresEnd(fixture, 2, SCOPE, 'sha256:recorded-task-1', 'sha256:measured-task-2');
+    await appendMeasuresEnd(fixture, 3, SCOPE, 'sha256:measured-task-2', currentHash);
+
+    const result = await audit(fixture);
+
+    assert.equal(result.stale.length, 1);
+    assert.deepEqual(result.stale[0]?.attribution, [
+      { path: `${SCOPE} (modified)`, attribution: '3', source: 'measures' },
+    ]);
+  });
+
+  it('records ambiguous when neither of two later tasks measured the path records the current hash', async () => {
+    const fixture = await setup(3);
+    await fs.writeFile(path.join(fixture.root, SCOPE), 'current\n', 'utf8');
+    const current = await computeTaskScopeHash(fixture.root, [SCOPE]);
+    const currentHash = current.fileHashes[SCOPE] ?? null;
+    await writeDone(fixture, 1, 'sha256:stale-task-1', { [SCOPE]: 'sha256:recorded-task-1' });
+    await writeDone(fixture, 2, 'sha256:task-2', {});
+    await writeDone(fixture, 3, 'sha256:task-3', {});
+    await appendMeasuresEnd(fixture, 2, SCOPE, 'sha256:recorded-task-1', 'sha256:measured-task-2');
+    await appendMeasuresEnd(fixture, 3, SCOPE, 'sha256:measured-task-2', currentHash);
 
     const result = await audit(fixture);
 

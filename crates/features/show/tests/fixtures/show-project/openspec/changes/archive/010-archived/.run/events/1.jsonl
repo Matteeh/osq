@@ -1,0 +1,6 @@
+{"type":"started","timestamp":"2026-10-05T09:00:00.000Z","data":{"attempt":1}}
+{"type":"verify_ran","timestamp":"2026-10-05T09:05:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":1,"duration":0.4}}
+{"type":"verify_ran","timestamp":"2026-10-05T09:06:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":0,"duration":0.6}}
+{"type":"done","timestamp":"2026-10-05T09:06:01.000Z"}
+{"type":"recertification","timestamp":"2026-10-05T09:30:00.000Z","data":{"task":"1","outcome":"passed","command":"node --test tests/beta.test.ts","exitCode":0,"timedOut":false,"differingPaths":["src/beta.ts","src/beta.ts"],"attribution":[{"path":"src/beta.ts","attribution":2},{"path":"src/extra.ts","attribution":"ambiguous"}]}}
+{"type":"recertification","timestamp":"bad time","data":{"outcome":"maybe","differingPaths":["src/zeta.ts"]}}

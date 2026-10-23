@@ -1,0 +1,19 @@
+{
+  "completionRate": 100,
+  "now": {
+    "dead": 0,
+    "done": 1,
+    "manual": 0,
+    "pending": 0,
+    "regressed": 0,
+    "running": 0,
+    "total": 1,
+    "unmarked": 0,
+    "verified": 1
+  },
+  "specs": {
+    "active": 0,
+    "archived": 1,
+    "total": 1
+  }
+}

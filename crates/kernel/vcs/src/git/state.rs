@@ -1,9 +1,10 @@
 //! Each repository state read's git arguments and its pure parser.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::VcsError;
 use crate::port::{Head, StatusEntry, Worktree};
+use crate::record::TREE_RECORD_FILE;
 
 use super::GitVcs;
 
@@ -166,4 +167,22 @@ pub(super) fn list_branches(vcs: &GitVcs, prefix: &str) -> Result<Vec<String>, V
 pub(super) fn worktree_list(vcs: &GitVcs) -> Result<Vec<Worktree>, VcsError> {
     let output = vcs.read(&["worktree", "list", "--porcelain"])?;
     Ok(output.as_deref().map(parse_worktrees).unwrap_or_default())
+}
+
+/// Reads the tree record's path from the repository's common git directory.
+pub(super) fn tree_record_path(vcs: &GitVcs) -> Result<Option<PathBuf>, VcsError> {
+    let output = vcs.read(&["rev-parse", "--git-common-dir"])?;
+    Ok(output
+        .as_deref()
+        .and_then(|text| parse_tree_record_path(&vcs.root, text)))
+}
+
+/// The record file under `root` for the common directory git prints, or none
+/// when it prints nothing.
+fn parse_tree_record_path(root: &Path, output: &str) -> Option<PathBuf> {
+    let common = output.trim();
+    if common.is_empty() {
+        return None;
+    }
+    Some(root.join(common).join(TREE_RECORD_FILE))
 }

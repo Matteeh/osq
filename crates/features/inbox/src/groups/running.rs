@@ -1,16 +1,34 @@
 //! The Running group's lines.
 
+use std::collections::HashSet;
 use std::num::NonZeroU64;
 use std::path::Path;
 
 use osq_core::TaskStatus;
-use osq_kernel_storage::{ChangeSnapshot, Location, RunningLock, TaskFile};
+use osq_kernel_storage::{
+    ChangeSnapshot, Location, PauseRecord, RunningLock, TaskFile, timestamp_ms,
+};
 
-use super::change_id;
+use super::{change_id, compare_ids};
 
-/// The running lines of every live task of an active change.
-pub(crate) fn lines(snapshots: &[ChangeSnapshot], now_ms: i64) -> Vec<String> {
-    let mut lines = Vec::new();
+/// One Running group item before it is rendered.
+struct Item {
+    /// The change id.
+    id: String,
+    /// The task id as written.
+    task: String,
+    /// The item's one rendered line.
+    line: String,
+}
+
+/// The running and paused lines, sorted by change id then task id.
+pub(crate) fn lines(
+    snapshots: &[ChangeSnapshot],
+    pauses: &[Option<PauseRecord>],
+    now_ms: i64,
+) -> Vec<String> {
+    let mut items = Vec::new();
+    let mut running_keys = HashSet::new();
     for snapshot in snapshots {
         if snapshot.location != Location::Active {
             continue;
@@ -24,10 +42,47 @@ pub(crate) fn lines(snapshots: &[ChangeSnapshot], now_ms: i64) -> Vec<String> {
             if !is_live(lock.pid) {
                 continue;
             }
-            lines.push(line(&id, &title, task, now_ms, lock.started_at_ms));
+            running_keys.insert((id.clone(), task.id.as_str().to_owned()));
+            items.push(Item {
+                id: id.clone(),
+                task: task.id.as_str().to_owned(),
+                line: running_line(&id, &title, task, now_ms, lock.started_at_ms),
+            });
         }
     }
-    lines
+    for (snapshot, pause) in snapshots.iter().zip(pauses) {
+        let Some(pause) = pause else {
+            continue;
+        };
+        if snapshot.location != Location::Active || !snapshot.approved {
+            continue;
+        }
+        if timestamp_ms(&pause.until).is_none_or(|until| until <= now_ms) {
+            continue;
+        }
+        let Some(task) = snapshot
+            .tasks
+            .iter()
+            .find(|task| task.id.as_str() == pause.task)
+        else {
+            continue;
+        };
+        let id = change_id(snapshot);
+        if running_keys.contains(&(id.clone(), task.id.as_str().to_owned())) {
+            continue;
+        }
+        let title = snapshot.title.clone().unwrap_or_default();
+        let rendered = paused_line(&id, &title, task, &pause.until);
+        items.push(Item {
+            id,
+            task: task.id.as_str().to_owned(),
+            line: rendered,
+        });
+    }
+    items.sort_by(|left, right| {
+        compare_ids(&left.id, &right.id).then_with(|| compare_ids(&left.task, &right.task))
+    });
+    items.into_iter().map(|item| item.line).collect()
 }
 
 /// A task's lock when the fold says it is running.
@@ -43,19 +98,43 @@ fn running_lock<'a>(snapshot: &'a ChangeSnapshot, task: &'a TaskFile) -> Option<
     task.markers.lock.as_ref()
 }
 
-/// One task's line, with its rounded elapsed time.
-fn line(id: &str, title: &str, task: &TaskFile, now_ms: i64, started_at_ms: i64) -> String {
+/// One running task's line, with its rounded elapsed time.
+fn running_line(id: &str, title: &str, task: &TaskFile, now_ms: i64, started_at_ms: i64) -> String {
     let seconds = elapsed_seconds(now_ms, started_at_ms);
+    format!(
+        "{} — {} — osq show {id}",
+        head(id, title, task),
+        duration(seconds)
+    )
+}
+
+/// One paused task's line, with its fixed-form resume time.
+fn paused_line(id: &str, title: &str, task: &TaskFile, until: &str) -> String {
+    format!(
+        "{} — paused until {} UTC — osq show {id}",
+        head(id, title, task),
+        pause_until(until)
+    )
+}
+
+/// A running or paused item's change and task head.
+fn head(id: &str, title: &str, task: &TaskFile) -> String {
     let task_title = if task.title.is_empty() {
         format!("{}.md", task.id)
     } else {
         task.title.clone()
     };
-    format!(
-        "  {id}: {title} — task {}: {task_title} — {} — osq show {id}",
-        task.id,
-        duration(seconds)
-    )
+    format!("  {id}: {title} — task {}: {task_title}", task.id)
+}
+
+/// A fixed-form timestamp as `<day> <time>`, both in UTC.
+fn pause_until(until: &str) -> String {
+    let day: String = until.chars().take(10).collect();
+    let time = until
+        .split_once('T')
+        .map(|(_, rest)| rest.chars().take(5).collect::<String>())
+        .unwrap_or_default();
+    format!("{day} {time}")
 }
 
 /// Whether a pid names a live process: above 0 and `/proc/<pid>` exists.

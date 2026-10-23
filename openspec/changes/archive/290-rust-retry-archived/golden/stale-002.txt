@@ -1,0 +1,12 @@
+outcome: failed
+Change 002 no longer matches its approved hash. Run `osq approve 002` before retrying.
+tree:
+--- .run/approved
+sha256:0000000000000000000000000000000000000000000000000000000000000000
+--- .run/regressed/change.md
+---
+reason: sync_verify_red
+---
+osq land synced the default branch and its verify failed.
+tip: osq: 002-stale archived
+status:

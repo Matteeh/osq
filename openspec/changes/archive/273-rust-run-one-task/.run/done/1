@@ -1,0 +1,15 @@
+---
+scope_resolver: 2
+scope_hash: sha256:e7aa0da5fa0c44052ea785f8f5d6a9c5b15f531dee882c7525861210c279fca5
+build_stamp: 3f811304
+project_commit: d724c8df
+exit_code: 0
+scope_files:
+  crates/features/run/src/lib.rs: sha256:e93c26fbf655492338633ee9f099ed91d8918e499711a78f93616811bbdd5028
+  crates/features/run/src/tick.rs: sha256:966acd8cc18b68af51ccbcecd8f51e12249a40de96828d8316729bce51e34c9a
+  crates/features/run/tests/task_checkbox.rs: sha256:e0996d1bb03c31f50b70566f3c7a95499982123b126846a49786f68ef004b003
+original_scope_hash: sha256:0cee7e6922f166462a96e7ca9e824607e89e933a9cae919d87c491cabf306f4a
+recertified_at: 2026-10-22T06:49:17.223Z
+recertification_count: 1
+---
+2026-10-22T06:34:16.710Z

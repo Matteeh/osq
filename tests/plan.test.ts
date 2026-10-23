@@ -170,7 +170,11 @@ describe('osq plan command', () => {
       prompt.startsWith(plannerContent.trim()),
       'prompt must begin with the full PLANNER.md content',
     );
-    assert.ok(prompt.includes('Write files with the file tool, never through a shell echo.'));
+    assert.ok(
+      prompt.includes(
+        'Write file contents with the file tool, never through a shell echo or heredoc.',
+      ),
+    );
 
     const changeIdx = prompt.indexOf('# Change: 001 - smoke');
     const specsIdx = prompt.indexOf('## Capability Specs');

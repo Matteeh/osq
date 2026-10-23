@@ -1,6 +1,7 @@
 /** Archive one completed change: verify the tree, move it, commit, print the manual steps. */
 
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { OsqConfig } from '../core/foundation/config.js';
 import { type Logger, resolveSymbol } from '../core/foundation/logger.js';
 import { parseSpecMdFromFolder, resolveChangeDoc } from '../core/spec/parser.js';
@@ -109,7 +110,16 @@ export async function archiveCompletedSpec(
   if (worktree && before !== null) {
     const archiveName = await newArchiveName(change.tree.archiveDir, before);
     if (archiveName !== null) {
-      await commitWorktreeArchive(change, config, archiveName, proposalTitle, logger);
+      const halt = await commitWorktreeArchive(change, config, archiveName, proposalTitle, logger);
+      if (halt !== null) {
+        const archivedChange: LocatedChange = {
+          ...change,
+          folderName: archiveName,
+          folderPath: path.join(change.tree.archiveDir, archiveName),
+          location: 'archived',
+        };
+        await haltWorktreeChange(archivedChange, specId, halt, logger, config.limits);
+      }
     }
   }
   if (humanSteps) {

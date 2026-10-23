@@ -8,6 +8,7 @@ pub mod feature;
 pub mod fold;
 pub mod graph;
 pub mod schedule;
+pub mod scope;
 pub mod seal;
 
 pub use change::{ApproveError, Approved, ArchiveError, Archived, Change, Draft};
@@ -21,5 +22,9 @@ pub use graph::{Edge, EdgeKind, Finding, Graph, Location, Node, NodeId, Rule, ru
 pub use schedule::{
     Dependency, QueuedChange, RunningChange, Schedule, ScheduleState, ScheduledChange, lock_unit,
     schedule,
+};
+pub use scope::{
+    ChangedPath, DisallowReason, Disallowed, LockRule, PathChange, ScopeAudit, audit_scope,
+    scope_covers_path,
 };
 pub use seal::{ComputedSeal, Seal, SealError, compute_seal};

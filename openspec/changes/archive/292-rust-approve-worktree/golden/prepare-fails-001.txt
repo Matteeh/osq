@@ -1,0 +1,13 @@
+outcome: failed
+prepare failed in worktree <root>/worktrees/repo/001-alpha-twice on branch osq/001-alpha-twice:
+prepare said no
+branches:
+osq/001-alpha-twice
+worktrees:
+<root>/worktrees/repo/001-alpha-twice osq/001-alpha-twice
+checkout copy: present
+commit:
+none
+record:
+{"at":"<at>","op":"worktree-add","root":"<root>/repo"}
+tree:

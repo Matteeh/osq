@@ -1,0 +1,1 @@
+Error: specify a spec ID to show (e.g. osq show 001)

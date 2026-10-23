@@ -1,5 +1,10 @@
 import { LANGUAGE_PRESETS } from './presets.js';
 
+/** The offline command that rebuilds each lock file osq knows how to rebuild. */
+const LOCK_REBUILD_COMMANDS: ReadonlyMap<string, string> = new Map([
+  ['Cargo.lock', 'cargo update --workspace --offline'],
+]);
+
 /** The folder part of a POSIX path, `''` for a root file. */
 function folderOf(filePath: string): string {
   const slash = filePath.lastIndexOf('/');
@@ -16,6 +21,18 @@ function baseNameOf(filePath: string): string {
 function isAtOrBelow(folder: string, parent: string): boolean {
   if (parent === '') return true;
   return folder === parent || folder.startsWith(`${parent}/`);
+}
+
+/**
+ * The offline command that rebuilds `lockfile` from its manifests, run in the
+ * lock file's folder, or `null` when osq knows none. This is pure: it reads no
+ * file.
+ *
+ * @scenario languages: Rebuild command of a lock file
+ * @adr 017
+ */
+export function lockRebuildCommand(lockfile: string): string | null {
+  return LOCK_REBUILD_COMMANDS.get(baseNameOf(lockfile)) ?? null;
 }
 
 /**

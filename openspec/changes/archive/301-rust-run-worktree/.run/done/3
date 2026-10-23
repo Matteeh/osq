@@ -1,0 +1,36 @@
+---
+scope_resolver: 2
+scope_hash: sha256:e901b794a111c2bc2b6dea5de3a8e8ed56dd0f9581b7f276e4452514d230fcbb
+build_stamp: 4b9a2af8
+project_commit: 9051bf58
+exit_code: 0
+scope_files:
+  crates/features/run/src/feature.rs: sha256:d7aa1a9bfcc4b92bf0794fd0102cdde74576c5a355a9f022899d2486f4b2dd92
+  crates/features/run/src/feature/commit.rs: sha256:c9707cce60ffc427e84ca046a14e2c7f5785f4a1a049b482f14883176e2359f7
+  crates/features/run/src/feature/dead.rs: sha256:10dcfdab56e5780c42dac3954cfea8de4910812216e0a158d331603624557d6d
+  crates/features/run/src/feature/done.rs: sha256:e3f241681c4b27e67d4dccc9c07d6e86b09f2cd28496e7ac5ec70fa9b9a532a6
+  crates/features/run/src/feature/events.rs: sha256:79b6c002a57fceb29c88ab8dce6aeb385f767896d8d1af2c8cb3b0631f1335e0
+  crates/features/run/src/feature/find.rs: sha256:72142b55f781daf4ad0a8ca44e49f969022aa3426ee6f819c8507a1d633d5a17
+  crates/features/run/src/feature/lock.rs: sha256:e9dcdab622feb25a0e75998e24fdb331227a8d5e2ea27aa484cf68033ff5071c
+  crates/features/run/src/feature/message.rs: sha256:a1206f172abb54739f3ae05d294547afaced2d632bd60184d555ad6c8c8e04ab
+  crates/features/run/src/feature/pause.rs: sha256:321741d886bde4824eedc9ef8aa9a0ed38bf3a7fd79dfc44e6f3b72078528d0c
+  crates/features/run/src/feature/refusals.rs: sha256:7dd76d0a72daa3720c507460f7f7e2cafc8fe06aa8a6269079305ec273ad8fcf
+  crates/features/run/src/feature/run.rs: sha256:761f98e46372ff683be543b7868fd922204bc1e08967f1a5b4feb85a99230951
+  crates/features/run/src/feature/scope.rs: sha256:e35073b87b248a84cbaf2b8c9dc5aa2d099016791ee400de74a6676fc5a1c9f4
+  crates/features/run/src/feature/start.rs: sha256:20c2b38baa6d7cdbf69c608c4cb5e9f263d98a78499447ead5bb62f14a3bc1f6
+  crates/features/run/src/feature/text.rs: sha256:2c0e2334e021a15e5836c162f64089cf91f1b108de73fc47703744df058da4e6
+  crates/features/run/src/feature/time.rs: sha256:b1c8515b5480fabe14caca8d00f72cf75b63d5e9821e6db7644436bce8e0aa8b
+  crates/features/run/src/feature/verdict.rs: sha256:cd2a72d8b35deaaf526ff380871881d9e603e187ae092e6f667e3b9df8354cd7
+  crates/features/run/src/feature/worktree.rs: sha256:434a002adb9329fc1022775e3d14d300631802a6fc6d5499c9ba973c17bc15c8
+  crates/features/run/src/lib.rs: sha256:e93c26fbf655492338633ee9f099ed91d8918e499711a78f93616811bbdd5028
+  crates/features/run/src/prompt.rs: sha256:6d9f4ed20fe188049cf19f439bafdc58c9b4c90ae62a7581673c4edd379c1488
+  crates/features/run/src/prompt/lines.rs: sha256:6e1417424be02158d3a9c5a309ea280a260de76c1b200a7b3d5bd8830cd84c03
+  crates/features/run/src/prompt/statements.rs: sha256:3fbe7efbb2271af91a40f385f19899b2114245809ef5f00e75d99d6e80e3db18
+  crates/features/run/src/tick.rs: sha256:966acd8cc18b68af51ccbcecd8f51e12249a40de96828d8316729bce51e34c9a
+  crates/features/run/tests/run_worktree.rs: sha256:7fba3cf7960f0d8e1a5b352c628f134d6100a961035c04ff0cdb3a040f0fdb47
+  crates/features/run/tests/worktree_support/mod.rs: sha256:35f5965181fb97daa0344263a718b8d4ccb9ae1aaa4e681dbe5fffe3bd6058da
+original_scope_hash: sha256:7af1418558287db0d02781246cc0222f14bbcb13940461ee19ccd630bc0df234
+recertified_at: 2026-10-23T11:04:18.038Z
+recertification_count: 1
+---
+2026-10-23T10:44:38.348Z

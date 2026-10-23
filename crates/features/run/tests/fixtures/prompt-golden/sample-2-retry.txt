@@ -1,0 +1,135 @@
+You are a coding agent working autonomously on an osq task. Follow AGENTS.md strictly.
+Task File: openspec/changes/001-sample/tasks/2.md
+Parent Spec: openspec/changes/001-sample/proposal.md
+Task Title: When zeta exists, it owns its crate
+Scope: crates/zeta/**
+Entry: 
+Verify Command: node verify.cjs zeta
+Result Destination: openspec/changes/001-sample/.run/results/2.md
+
+Prior Context:
+- Prior Attempt: 3
+- Prior Failure: verify_red
+- Prior Failure Output:
+  line 1: é verify failed
+  line 2: é verify failed
+  line 3: é verify failed
+  line 4: é verify failed
+  line 5: é verify failed
+  line 6: é verify failed
+  line 7: é verify failed
+  line 8: é verify failed
+  line 9: é verify failed
+  line 10: é verify failed
+  line 11: é verify failed
+  line 12: é verify failed
+  line 13: é verify failed
+  line 14: é verify failed
+  line 15: é verify failed
+  line 16: é verify failed
+  line 17: é verify failed
+  line 18: é verify failed
+  line 19: é verify failed
+  line 20: é verify failed
+  line 21: é verify failed
+  line 22: é verify failed
+  line 23: é verify failed
+  line 24: é verify failed
+  line 25: é verify failed
+  line 26: é verify failed
+  line 27: é verify failed
+  line 28: é verify failed
+  line 29: é verify failed
+  line 30: é verify failed
+  line 31: é verify failed
+  line 32: é verify failed
+  line 33: é verify failed
+  line 34: é verify failed
+  line 35: é verify failed
+  line 36: é verify failed
+  line 37: é verify failed
+  line 38: é verify failed
+  line 39: é verify failed
+  line 40: é verify failed
+  line 41: é verify failed
+  line 42: é verify failed
+  line 43: é verify failed
+  line 44: é verify failed
+  line 45: é verify failed
+  line 46: é verify failed
+  line 47: é verify failed
+  line 48: é verify failed
+  line 49: é verify failed
+  line 50: é verify failed
+  line 51: é verify failed
+  line 52: é verify failed
+  line 53: é verify failed
+  line 54: é verify failed
+  line 55: é verify failed
+  line 56: é verify failed
+  line 57: é verify failed
+  line 58: é verify failed
+  line 59: é verify failed
+  line 60: é verify failed
+  line 61: é verify failed
+  line 62: é verify failed
+  line 63: é verify failed
+  line 64: é verify failed
+  line 65: é verify failed
+  line 66: é verify failed
+  line 67: é verify failed
+  line 68: é verify failed
+  line 69: é verify failed
+  line 70: é verify failed
+  line 71: é verify failed
+  line 72: é verify failed
+  line 73: é verify failed
+  line 74: é verify failed
+  line 75: é verify failed
+  line 76: é verify failed
+  line 77: é verify failed
+  line 78: é verify failed
+  line 79: é verify failed
+  line 80: é verify failed
+  line 81: …
+- Prior Result: openspec/changes/001-sample/.run/results/2.md
+
+Delta Specs:
+- openspec/changes/001-sample/specs/alpha/spec.md
+- openspec/changes/001-sample/specs/zeta/spec.md
+
+Living Capability Specs:
+- openspec/specs/alpha/spec.md
+- openspec/specs/beta/spec.md
+
+Rules:
+1. Read your task file, its parent `proposal.md`, and the delta specs it names. From living capability specs, read only the requirements the task or proposal names; `osq spec <capability> <requirement>` prints one. Nothing else.
+2. Can't finish within your task's `scope`, or too big for one pass? Write what you need under `## Blocked` in `.run/results/<n>.md`, and exit without code.
+3. Read a previous result file for this task if present. Run the task's `verify`. Start from what fails. A `verify` that names a file your task creates fails until that file exists, so starting red is expected.
+4. Tests for each acceptance line before implementing.
+5. Minimal code to pass. Write only `.run/results/<n>.md` and files inside the task's `scope`; the task's `scope` wins over any other ownership rule you were given.
+6. New test files are always allowed. Change a preexisting test only when the task sets `tests.modify: true` and the file is inside `scope`; any other test change kills the task.
+7. Run the task's `verify` command before exiting. Then run the proposal's `verify`; the watcher runs both itself and kills the task if either fails.
+
+Capability Rules:
+- alpha: New rule — The alpha capability SHALL do the new thing across lines.
+- alpha: Bare rule
+- alpha: Changed rule — The alpha capability SHALL do the new thing instead.
+- alpha: Old rule — **Reason**: New rule replaces it. **Migration**: Use New rule.
+- zeta: Code ownership — The zeta capability SHALL own the `zeta` crate.
+
+Exiting:
+Write `.run/results/<n>.md` first, with these headings in this order. Leave out any that would be empty.
+
+- `## Changed`: what you changed.
+- `## Deviated`: for the reviewer: what you did differently from the task, and why.
+- `## Missing context`: for the planner: what the task lacked that you needed.
+- `## Outside scope`: for the human: what you found broken outside your scope and left alone.
+- `## Blocked`: for the human: what you need before this task can be finished within its scope.
+- `## Next`: for unfinished work, the acceptance line to pick up next.
+
+End the file with one line, `Touched: <path>, <path>`, listing every file you changed other than the result file, relative to the project root.
+
+Then exit. One attempt. Do not ask questions.
+
+CRITICAL: Before exiting, you MUST write openspec/changes/001-sample/.run/results/2.md as the Exiting rules above describe. Change no file outside Scope except that result file. Never run git.

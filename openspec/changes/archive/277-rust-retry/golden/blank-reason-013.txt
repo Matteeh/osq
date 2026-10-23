@@ -1,0 +1,14 @@
+outcome: output
+Retried 013 task 1 (next attempt: 2)
+  Reason: dead
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:f43a007b7cb3494323dd4e49efb287d1659382a1e10e4dec602aaaea77231b45
+--- .run/dead/1.1.md
+---
+reason: "  "
+---
+A blank reason.
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"dead","target":"1"},"timestamp":"<timestamp>","type":"retry"}

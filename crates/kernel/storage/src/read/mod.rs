@@ -22,20 +22,46 @@
 //! Implements: rust-storage/change-folder-seal
 //! Implements: rust-storage/marker-facts
 //! Implements: rust-storage/planning-facts
+//! Implements: rust-storage/land-facts
+//! Implements: rust-storage/change-trees
+//! Implements: rust-storage/change-listing-across-trees
+//! Implements: rust-storage/usage-pause-record
+//! Implements: rust-storage/autopilot-stop-record
+//! Implements: rust-storage/after-land-failure-record
+//! Implements: rust-storage/queue-item-titles
+//! Implements: rust-storage/retry-context
+//! Implements: rust-storage/change-folder-files
+//! Implements: rust-storage/now-facts
 
+mod change_files;
 mod error;
+mod land;
 mod listing;
 mod manual;
+mod now;
+mod pending;
+mod queue;
 mod results;
+mod retry;
 mod seal;
 mod sections;
 mod snapshot;
 mod text;
+mod trees;
 
+pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
 pub use error::StorageError;
+pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
+pub use now::{NowFacts, NowTask, read_now_facts};
+pub use pending::{
+    AfterLandFailure, AutopilotStop, PauseRecord, read_after_land_failure, read_autopilot_stop,
+    read_usage_pause, watch_state_dir,
+};
+pub use queue::{QueueTitle, read_queue_titles};
 pub use results::TaskDisclosure;
+pub use retry::{RetryContext, read_retry_context};
 pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};
 pub use snapshot::{
@@ -44,3 +70,4 @@ pub use snapshot::{
     TaskOutcomeFacts, read_archive, read_change, read_history,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
+pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};

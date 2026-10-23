@@ -4,9 +4,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::{next, queue};
+use crate::arguments::{Arguments, parse};
+use crate::{next, queue, steer};
 
 /// The plan feature.
+///
+/// Implements: rust-plan/plan-feature
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PlanFeature {
     /// The fixed clock, or `None` to read the system clock at each run.
@@ -50,7 +53,7 @@ impl Feature for PlanFeature {
             Command::new(
                 "plan",
                 "prepare a change and hand off its opening prompt to your planning tool",
-                "--next [--replan]",
+                "--next [--replan] | <id>",
             ),
         ]
     }
@@ -60,6 +63,9 @@ impl Feature for PlanFeature {
     /// Implements: rust-plan/plan-feature
     /// Implements: rust-plan/queue-arguments
     /// Implements: rust-plan/plan-arguments
+    /// Implements: rust-plan/steering-lookup
+    /// Implements: rust-plan/steering-prompt
+    /// Implements: rust-plan/steering-handoff
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
         if invocation.command != "queue" && invocation.command != "plan" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));
@@ -73,9 +79,13 @@ impl Feature for PlanFeature {
             }
             return queue::run_queue(&invocation.root).map(Output::text);
         }
-        let replan = next::arguments(&invocation.args)?;
         let now_ms = self.now_ms.unwrap_or_else(system_now_ms);
-        next::run_next(&invocation.root, now_ms, replan).map(Output::text)
+        match parse(&invocation.args)? {
+            Arguments::Next { replan } => {
+                next::run_next(&invocation.root, now_ms, replan).map(Output::text)
+            }
+            Arguments::Steer(id) => steer::run_steer(&invocation.root, &id).map(Output::text),
+        }
     }
 }
 

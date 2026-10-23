@@ -1,0 +1,15 @@
+outcome: output
+Retried 001 task 1 (next attempt: 2)
+  Reason: blocked
+  Retained: .run/dead/1.1.md
+tree:
+--- .run/approved
+sha256:1f694ebcafe81b9b050240caef32c64d4cebd600e4fdd7a6f9f169bfc1bcdda2
+--- .run/dead/1.1.md
+---
+reason: blocked
+---
+Needs a wider scope.
+--- .run/events/1.jsonl
+{"data":{"reason":"blocked","task":"1"},"timestamp":"<timestamp>","type":"dead"}
+{"data":{"attempt":2,"reason":"blocked","target":"1"},"timestamp":"<timestamp>","type":"retry"}

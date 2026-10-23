@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:a70f90faac8bd6d03f6d133b7e0c2adc8c057ba7899b4ec165b272367a3bc551"
+build_stamp: "63250a84"
+project_commit: "7460e9d5"
+exit_code: 0
+scope_files: {"Cargo.lock":"sha256:7dc8be9787ae874b11a2b47cdcc20c47d3e53a02eaaa1ec9b4083e31f551a161","crates/features/doctor/Cargo.toml":"sha256:ee89d3ad0bf1e67b24d7e2b0a71f5ccf72b73c17e9b3fe06f775bbcde3859868","crates/features/doctor/src/doctor.rs":"sha256:8720fb399e240ee9d010ca60d63c1687a0a18987fe763be58a64c86973d87f08","crates/features/doctor/src/doctor/changes.rs":"sha256:d0d8076b93e117769f8e38dc1ecfc6042a91cac538ba2d0884be43b4ff9c03a5","crates/features/doctor/src/doctor/probe.rs":"sha256:73a0248e2f8736c2d072b8b23cfdf4b6c220ee1dfdd80c7245da11c14e1ed0c2","crates/features/doctor/src/feature.rs":"sha256:00a0a078f0ff1a430ad00157ce6d51185474dcf25c26806605710312298e425a","crates/features/doctor/src/lib.rs":"sha256:65b3c2e408799c2e751aed4a74eddb574354fb9544ed9bc6b13c306d61fd570d","crates/features/doctor/tests/doctor_changes.rs":"sha256:033701d5119964d7b14f3f40ee2198d647f67938c745388c0d69e567640fcffc","crates/features/doctor/tests/doctor_checks.rs":"sha256:5292b415a617c896d7359d681e885e1b2152808e4fc6cf3e74c6008dd282bf5b"}
+---
+2026-10-22T15:27:08.277Z

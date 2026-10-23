@@ -1,0 +1,9 @@
+{"type":"verify_ran","timestamp":"2026-10-05T09:20:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":0,"duration":3.2}}
+{"type":"verify_ran","timestamp":"2026-10-05T09:21:00.000Z","data":{"command":"node scripts/check.mjs","exitCode":2,"duration":0.4}}
+{"type":"check_ran","timestamp":"2026-10-05T09:21:00.000Z","data":{"command":"node scripts/check.mjs","exitCode":2}}
+{"type":"check_ran","timestamp":"2026-10-05T09:22:00.000Z","data":{"command":" "}}
+{"type":"validator_ran","timestamp":"2026-10-05T09:25:00.000Z","data":{"outcome":"validated","harness":"claude","model":"claude-opus-5-5","duration":42.6,"exitCode":0,"scenarios":3,"findings":[{"kind":"scenario","capability":"beta","requirement":"Beta caches","scenario":"Beta caches","problem":"no_test","detail":"No test reads twice."}],"restored":["tests/beta.test.ts"]}}
+{"type":"verification_recorded","timestamp":"2026-10-05T09:40:00.000Z","data":{"outcome":"passed","note":"Looked fine by hand."}}
+{"type":"verification_recorded","timestamp":"2026-10-05T09:41:00.000Z","data":{"outcome":"unsure"}}
+{"type":"archived","timestamp":"2026-10-05T09:45:00.000Z","data":{"commit":"abc1234"}}
+{"type":"verify_ran","timestamp":"2026-10-05T10:00:00.000Z","data":{"command":"node --test tests/beta.test.ts","exitCode":1,"duration":9}}

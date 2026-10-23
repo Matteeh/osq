@@ -1,0 +1,45 @@
+# Planning a change
+
+Plan the steered change carefully.
+
+# Change: 007 - Many triggers
+Change ID: 007
+Change Folder: 007-many
+
+## Capability Specs
+
+All living specs. Read the requirements this change writes or whose code it uses, not whole specs: `osq spec <capability>` lists them and `osq spec <capability> <requirement>` prints one.
+
+- openspec/specs/alpha/spec.md
+
+## Brief
+
+### Goal
+
+Trigger many things.
+
+## This repository's record
+
+This repository's measured record is too small (fewer than 5 tasks).
+
+## Steering
+
+osq halted this change and asks you to revise its plan.
+
+### change regression (verify_red)
+Evidence: <root>/openspec/changes/007-many/.run/regressed/change.md
+
+```
+The change-level verify failed.
+```
+
+### task 10 blocked (entry_missing)
+Evidence: <root>/openspec/changes/007-many/.run/dead/10.md
+
+```
+
+```
+
+The change runs in <root>; read its code there. Edit only <root>/openspec/changes/007-many.
+Done tasks stay done: none. Add a task for new work instead of rewriting a done one.
+Run `osq lint 007` and fix every finding. A human runs `osq approve 007`, and the run continues from the first task that is not done.

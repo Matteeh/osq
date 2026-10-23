@@ -1,0 +1,22 @@
+[package]
+name = "osq-feature-lint"
+description = "The lint feature: checks a change folder with the specs kernel's validation and the linter kernel's gates and prints the findings, as TypeScript's `osq lint` does."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+osq-core.workspace = true
+osq-kernel-config.workspace = true
+osq-kernel-specs.workspace = true
+osq-kernel-linter.workspace = true
+osq-kernel-storage.workspace = true
+osq-kernel-loop.workspace = true
+osq-kernel-vcs.workspace = true
+serde_json.workspace = true
+yaml-rust2.workspace = true

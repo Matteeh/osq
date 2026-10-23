@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c9b7caa54294f49a5cd53f2fc2551020e183e50f86fac8728133f19a385896a7"
+build_stamp: "3f811304"
+project_commit: "084e92b7"
+exit_code: 0
+scope_files: {"Cargo.lock":"sha256:7aae4321997cb465cc6f18fda0243793a625c011982163b24399c64d3739ebaa","crates/kernel/vcs/Cargo.toml":"sha256:8a43a9a30a2baf602dac854f3fc309f24c6ec73ed11a470449508316534e03a7","crates/kernel/vcs/src/error.rs":"sha256:5c2fe2700f54d88a818c02d36e891d3dde6c2a056217606bc72c697188fa49ea","crates/kernel/vcs/src/git.rs":"sha256:3df0f5f351bd99ca7a716ccd61aca2e042821c9009109e999f86f82ee56f734b","crates/kernel/vcs/src/git/run.rs":"sha256:b81ea76ee8c5e75e947b6c10671ef5c91c0ac43b72822bbf6b5777fbdf36923f","crates/kernel/vcs/tests/git_timeouts.rs":"sha256:926472ab0cae593276e1dabc6910bf783e26927dc3825b5315d7b665bd949916"}
+---
+2026-10-21T17:35:58.471Z

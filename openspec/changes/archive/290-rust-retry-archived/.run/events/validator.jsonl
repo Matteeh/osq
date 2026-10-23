@@ -1,0 +1,7 @@
+{"type":"tool","timestamp":"2026-10-22T15:09:04.920Z","data":{"tool":"Read","summary":"ope"}}
+{"type":"tool","timestamp":"2026-10-22T15:09:05.509Z","data":{"tool":"Read","summary":"ope"}}
+{"type":"tool","timestamp":"2026-10-22T15:09:05.872Z","data":{"tool":"Read","summary":"ope"}}
+{"type":"tool","timestamp":"2026-10-22T15:09:14.059Z","data":{"tool":"Bash","summary":"cd .;"}}
+{"type":"usage_limit","timestamp":"2026-10-22T15:09:14.484Z","data":{"resetsAt":"2026-10-22T17:30:00.000Z"}}
+{"type":"text","timestamp":"2026-10-22T15:09:14.484Z","data":{"text":"You've hit your session limit · resets 8:30pm (Europe/Helsinki)"}}
+{"type":"tokens","timestamp":"2026-10-22T15:09:14.489Z","data":{"promptTokens":43102,"candidateTokens":901,"totalTokens":44003,"model":"claude-opus-5-5","cachedTokens":13928,"reasoningTokens":284,"cost":0.2541816}}

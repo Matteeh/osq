@@ -15,7 +15,7 @@ import { findChange } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
 import { findSteeringChange } from '../status/steering-change.js';
 import { selectVcs } from '../vcs/select.js';
-import { approveSteeredChange, retireSteering } from './approve-steer.js';
+import { approveSteeredChange, retireSteering, worktreeNeedsSteering } from './approve-steer.js';
 import {
   type ApprovalReviewOptions,
   confirmApproval,
@@ -199,7 +199,7 @@ export async function approveSpec(
   }
 
   try {
-    if (change.tree.worktreeFolder !== undefined && state.steering) {
+    if (worktreeNeedsSteering(change, state)) {
       return await approveSteeredChange(projectRoot, change, config, options);
     }
 

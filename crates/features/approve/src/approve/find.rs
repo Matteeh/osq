@@ -14,7 +14,7 @@ pub(crate) fn find_change<'a>(changes: &'a [ChangeEntry], query: &str) -> Option
 /// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
 ///
 /// Implements: rust-approve/approve-lookup
-fn matches(folder: &str, query: &str) -> bool {
+pub(crate) fn matches(folder: &str, query: &str) -> bool {
     let trimmed = query.trim();
     let padded = padded(trimmed);
     matches_prefix(folder, trimmed) || matches_prefix(folder, &padded)

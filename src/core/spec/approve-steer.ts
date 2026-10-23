@@ -9,8 +9,8 @@ import {
 import { findUnpricedPlanningModels } from '../report/planning-price-gaps.js';
 import { resolveOsqPackageVersion } from '../report/planning.js';
 import type { LocatedChange } from '../status/change-locations.js';
-import { deriveSpecState, readChangeFolder } from '../status/state.js';
-import { type SteeringTrigger, isDefaultBranchTrigger } from '../status/steering.js';
+import { type SpecState, deriveSpecState, readChangeFolder } from '../status/state.js';
+import { type SteeringTrigger, humanSteering, isDefaultBranchTrigger } from '../status/steering.js';
 import { selectVcs } from '../vcs/select.js';
 import { worktreeBranch } from '../vcs/worktree.js';
 import { approveDefaultBranchSteering } from './approve-default-branch.js';
@@ -48,12 +48,21 @@ export async function retireSteering(
 }
 
 /**
+ * Whether a change in an osq worktree has a trigger a human may steer it by.
+ * @scenario spec-lint-and-approve: Dead task approved again in its worktree
+ */
+export function worktreeNeedsSteering(change: LocatedChange, state: SpecState): boolean {
+  return change.tree.worktreeFolder !== undefined && humanSteering(state).length > 0;
+}
+
+/**
  * Approve a worktree change's revised plan where it runs. Lint and the digest
  * read the checkout, the worktree receives the seal and the `osq: <id>
  * approved` commit, and each steering trigger is then retired as `osq retry`
  * would. Nothing is written to the checkout and no branch or worktree is made.
  *
  * @scenario spec-lint-and-approve: Approved commit fails
+ * @scenario spec-lint-and-approve: Dead task approved again in its worktree
  */
 export async function approveSteeredChange(
   projectRoot: string,
@@ -68,7 +77,7 @@ export async function approveSteeredChange(
   if (state.tasks.some((task) => task.status === 'running')) {
     throw new Error(`${folderName} has a task running; approve it after the task ends`);
   }
-  const triggers = state.steering ?? [];
+  const triggers = humanSteering(state);
   if (triggers.some(isDefaultBranchTrigger)) {
     return approveDefaultBranchSteering(projectRoot, change, config, options);
   }

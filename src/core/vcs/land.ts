@@ -7,9 +7,9 @@ import { type AfterLandOutcome, retryAfterLand, runAfterLand } from './land-afte
 import {
   OSQ_LAND_NEEDS_GIT,
   assertCheckoutBranch,
+  assertLandableWorktree,
   assertNoEarlierChange,
   assertNoSteering,
-  assertWorktreeClean,
 } from './land-checks.js';
 import { landId, requireGit, resolveChange } from './land-resolve.js';
 import { recordLandStop, recordsLandStop } from './land-stop.js';
@@ -197,7 +197,7 @@ export async function landChange(
   const worktree = await resolveWorktree(projectRoot, config, vcs, change);
   if (worktree !== null) {
     const worktreeVcs = await selectVcs(worktree, config);
-    assertWorktreeClean(worktree, await worktreeVcs.status());
+    await assertLandableWorktree(worktree, change, await worktreeVcs.status());
   }
   if (!alreadyLanded) {
     await assertNoSteering(change);

@@ -1,0 +1,64 @@
+// Prints the rows of rust-show "Status and next step from markers" from TypeScript.
+// Run from the repository root after `pnpm build`:
+//   node print-status-table.mjs
+// Each row writes a fresh root with `openspec/changes/001-a/proposal.md`, its
+// `tasks/1.md` and the row's other files, paths relative to the change folder,
+// then prints the `Status:` line, the `Next:` line and the first task line of
+// `osq show 1`.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const BIN = path.resolve('dist', 'cli', 'bin.js');
+const proposal = (extra) =>
+  `---\ntitle: A works\n${extra}features:\n  reads: []\n---\n## Goal\n\nA works.\n\n## Human steps\n\n### Before approval\n\nNone\n\n### After landing\n\nNone\n`;
+const VERIFY = 'verify: node --test tests/a.test.ts\n';
+const task = '---\ntitle: When a runs, it works\nverify: node --test tests/a.test.ts\nscope:\n  - src/a.ts\n---\n## Acceptance\n\n- [ ] A works.\n';
+
+const rows = [
+  ['unapproved', VERIFY, {}],
+  ['unapproved, no verify', '', {}],
+  ['unapproved, sentinel verify', 'verify: node -e "process.exit(0)"\n', {}],
+  ['unapproved, sentinel verify, brief', 'verify: node -e "process.exit(0)"\n', { 'brief.md': 'x\n' }],
+  ['approved', VERIFY, { '.run/approved': 'sha\n' }],
+  ['approved, done 1', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '' }],
+  ['approved, running 1', VERIFY, { '.run/approved': 'sha\n', '.run/running/1.pid': '{"pid":1,"startedAt":2}\n' }],
+  ['dead verify_red', VERIFY, { '.run/approved': 'sha\n', '.run/dead/1.md': '---\nreason: verify_red\n---\n' }],
+  ['dead blocked', VERIFY, { '.run/approved': 'sha\n', '.run/dead/1.md': '---\nreason: blocked\n---\n' }],
+  ['dead entry_missing', VERIFY, { '.run/approved': 'sha\n', '.run/dead/1.md': '---\nreason: entry_missing\n---\n' }],
+  ['dead stuck', VERIFY, { '.run/approved': 'sha\n', '.run/dead/1.md': '---\nreason: crashed\nstuck: true\nfingerprint: f\n---\n' }],
+  ['dead blocked, done 1', VERIFY, { '.run/approved': 'sha\n', '.run/dead/1.md': '---\nreason: blocked\n---\n', '.run/done/1': '' }],
+  ['regressed 1 scope_regression passed', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/1.md': '---\nreason: scope_regression\nverification_passed: true\n---\n' }],
+  ['regressed 1 scope_regression', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/1.md': '---\nreason: scope_regression\n---\n' }],
+  ['regressed change sync_conflict', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: sync_conflict\n---\n' }],
+  ['regressed change requirement_changed', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: requirement_changed\n---\n' }],
+  ['regressed change verify_red', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: verify_red\n---\n' }],
+  ['regressed change verify_path_missing', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: verify_path_missing\n---\n' }],
+  ['regressed change sync_verify_red', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: sync_verify_red\n---\n' }],
+  ['regressed change other', VERIFY, { '.run/approved': 'sha\n', '.run/done/1': '', '.run/regressed/change.md': '---\nreason: other\n---\n' }],
+  ['depends 002 missing', VERIFY + 'depends_on: ["002"]\n', { '.run/approved': 'sha\n' }],
+  ['depends 2 archived', VERIFY + 'depends_on: [2]\n', { '.run/approved': 'sha\n', '../archive/002-b/tasks/1.md': task }],
+  ['depends 002 rejected', VERIFY + 'depends_on: ["002"]\n', { '.run/approved': 'sha\n', '../rejected/002-b/tasks/1.md': task }],
+  ['depends 002 active unfinished', VERIFY + 'depends_on: ["002"]\n', { '.run/approved': 'sha\n', '../002-b/proposal.md': proposal(VERIFY), '../002-b/tasks/1.md': task }],
+  ['depends 002 active done', VERIFY + 'depends_on: ["002"]\n', { '.run/approved': 'sha\n', '../002-b/proposal.md': proposal(VERIFY), '../002-b/tasks/1.md': task, '../002-b/.run/done/1': '' }],
+  ['depends 002 active no tasks', VERIFY + 'depends_on: ["002"]\n', { '.run/approved': 'sha\n', '../002-b/proposal.md': proposal(VERIFY) }],
+];
+
+for (const [name, front, files] of rows) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-next-'));
+  const folder = path.join(root, 'openspec', 'changes', '001-a');
+  const all = { 'proposal.md': proposal(front), 'tasks/1.md': task, ...files };
+  for (const [rel, content] of Object.entries(all)) {
+    const file = path.join(folder, rel);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, content);
+  }
+  const run = spawnSync(process.execPath, [BIN, 'show', '1'], { cwd: root, encoding: 'utf8' });
+  const lines = run.stdout.split('\n');
+  const status = lines.find((l) => l.startsWith('Status: '));
+  const next = lines.find((l) => l.startsWith('Next: '));
+  const taskLine = lines.find((l) => l.startsWith('  ['));
+  console.log(`| ${name} | \`${status}\` | \`${next}\` | \`${taskLine?.trim()}\` |${run.status ? ` ERR ${run.stderr}` : ''}`);
+  fs.rmSync(root, { recursive: true, force: true });
+}

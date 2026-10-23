@@ -1,0 +1,36 @@
+---
+scope_resolver: 2
+scope_hash: sha256:16c5c27de8b21b66b209ca9dbf448e7d3e9518266248464d5d11cfcf1bfc013e
+build_stamp: 3f811304
+project_commit: 62e8edc3
+exit_code: 0
+scope_files:
+  crates/features/run/Cargo.toml: sha256:ded5653e02340582207afe3814bbcb8c00eb6c338aa57bc295f985b416036e4c
+  crates/features/run/src/feature.rs: sha256:21d01387154bd182b140492f3e70d6162f5899f46ed1bdfb1eb7e314d732c6b6
+  crates/features/run/src/feature/dead.rs: sha256:d68fb634f7232bccd8684e4708f9cc6019826e2744de28bbd6ea20418e59bb99
+  crates/features/run/src/feature/done.rs: sha256:e3f241681c4b27e67d4dccc9c07d6e86b09f2cd28496e7ac5ec70fa9b9a532a6
+  crates/features/run/src/feature/events.rs: sha256:79b6c002a57fceb29c88ab8dce6aeb385f767896d8d1af2c8cb3b0631f1335e0
+  crates/features/run/src/feature/find.rs: sha256:8ee43a6c4fdac6a1b47b37c2d22ca25dba54ed81f1fa57d51781fd05b11d2dca
+  crates/features/run/src/feature/lock.rs: sha256:e9dcdab622feb25a0e75998e24fdb331227a8d5e2ea27aa484cf68033ff5071c
+  crates/features/run/src/feature/refusals.rs: sha256:e7c963889e11f1f4d1023eae1b5f24b207b033e81d96b6ec8cdef4f64bd14e33
+  crates/features/run/src/feature/run.rs: sha256:99057735881ebc5a6b26ef20f34bebd0f6076118e4f3c551ac0a867e5eee0858
+  crates/features/run/src/feature/scope.rs: sha256:20f11eb9913aefb9cc0325d4c94800d72018f9801c49e7db17667a88652e92c7
+  crates/features/run/src/feature/start.rs: sha256:a49c7a42bd20c0b3ad7769fe82f97c19bca410374cc077e55e0a1fbf61154a7a
+  crates/features/run/src/feature/text.rs: sha256:0c8e37d81e93632e386f4d0654a04e4c3d8666ede8032777c0678cdd5736860b
+  crates/features/run/src/feature/time.rs: sha256:b1c8515b5480fabe14caca8d00f72cf75b63d5e9821e6db7644436bce8e0aa8b
+  crates/features/run/src/feature/verdict.rs: sha256:aadc9a19da031a952353db75977d13523d407f300e5bf1193bcdb169a8e24c7f
+  crates/features/run/src/lib.rs: sha256:e93c26fbf655492338633ee9f099ed91d8918e499711a78f93616811bbdd5028
+  crates/features/run/tests/fixtures/run-project/.gitignore: sha256:07f1dd99a91cb1349496e454099c9831c60ad88125e66d76ded8c76245d21348
+  crates/features/run/tests/fixtures/run-project/openspec/changes/001-a/proposal.md: sha256:02ebd20013fd550a09011acca6a2ec527ce000d75f73a833ff39c4d7ae721580
+  crates/features/run/tests/fixtures/run-project/openspec/changes/001-a/tasks.md: sha256:6191cd5ea1a8ac7dee6df94027aab06dd791f46f40044434f76638d3cbd2d257
+  crates/features/run/tests/fixtures/run-project/openspec/changes/001-a/tasks/1.md: sha256:7824ec622c15eccbc2d1cfe623c49516236860650a5e93edc688e7d4835a5962
+  crates/features/run/tests/fixtures/run-project/src/Cargo.toml: sha256:2b9b2a26dd076dadc69a715d9835b426f1b28addd982682fa672d58375f3363b
+  crates/features/run/tests/fixtures/run-project/src/keep.txt: sha256:85893b0a982ef41b25a9660fc5cf2a7884c4e9ec2a432b869429049d37422d7a
+  crates/features/run/tests/fixtures/run-project/src/tests/old.rs: sha256:6d026891afa9ed5fa64e4d6dd2806f898e3a136c9530fa52aaf321054c809d0f
+  crates/features/run/tests/run_refusals.rs: sha256:cf820c5a993b51215d9b22ecbbd0f209fa4cb76c4eb37f886fffa4877d7acac5
+  crates/features/run/tests/support/mod.rs: sha256:cac79f34e8071284599c4fdd62e0c4eced59cf94814bf2b4c777f2250f8010dc
+original_scope_hash: sha256:7141ed9c4fec865c01ea3d419597e897f48337191eaff73cb3d182867bf5032b
+recertified_at: 2026-10-22T08:29:35.446Z
+recertification_count: 1
+---
+2026-10-22T06:49:12.995Z
