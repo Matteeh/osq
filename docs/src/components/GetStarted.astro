@@ -1,5 +1,5 @@
 ---
-import { links } from '../data/site';
+import { harnesses, links } from '../data/site';
 ---
 
 <section id="start">
@@ -8,6 +8,10 @@ import { links } from '../data/site';
       <span class="eyebrow">Get started</span>
       <h2>Running in a few minutes</h2>
       <p class="lede">osq needs Node.js 24 or newer and one supported coding agent. It adds a few folders to your repo and nothing else.</p>
+      <div class="agents">
+        <span>Works with</span>
+        {harnesses.map((name) => <span class="pill">{name}</span>)}
+      </div>
       <div class="oss">
         <h3>Open source</h3>
         <p>osq is MIT licensed and developed in the open. Everything it knows about your project lives in plain files in your own repository, so you can read it, diff it, or walk away with it.</p>
@@ -37,6 +41,8 @@ pnpm osq land 042</pre>
   .start { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
   .intro { display: grid; gap: 16px; }
   .lede { font-size: 16px; }
+  .agents { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .agents .pill { font-size: 13px; padding: 6px 12px; font-weight: 500; }
   .oss { display: grid; gap: 12px; margin-top: 8px; }
   .oss p { color: var(--muted); font-size: 15px; }
   pre { margin: 0; background: var(--code-bg); color: var(--code-fg); font-family: var(--mono); font-size: 13.5px; line-height: 1.7; padding: 20px; border-radius: 8px; overflow-x: auto; }
