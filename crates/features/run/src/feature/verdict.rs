@@ -12,10 +12,7 @@ use osq_kernel_harnesses::{VerifyOutcome, VerifyRequest, run_verify};
 use osq_kernel_specs::{TaskFile, read_proposal};
 use osq_kernel_storage::{ChangeEntry, parse_result_sections};
 
-use super::{dead, events};
-
-/// The most output bytes a dead marker's body keeps.
-const OUTPUT_TAIL_BYTES: usize = 2000;
+use super::{dead, events, log, output};
 
 /// Judges a task that wrote a result file: blocked, then both verifies.
 ///
@@ -62,17 +59,17 @@ pub(crate) fn judge(
             death,
         );
     }
-    let task_verify = verify(
+    let (task_verify, task_log) = verify(
         root,
         entry,
         config,
         &task_file.verify,
         config.timeouts.task_timeout,
-        &format!("{task}.jsonl"),
+        task,
         Some(task),
     )?;
     if failed(&task_verify) {
-        let marker = task_marker(&task_file.verify, &task_verify);
+        let marker = task_marker(&task_file.verify, &task_verify, &task_log, config);
         return dead::kill(
             &entry.path,
             &entry.folder,
@@ -84,17 +81,17 @@ pub(crate) fn judge(
     }
     let proposal = read_proposal(&entry.path.join("proposal.md"))
         .map_err(|error| failed_error(error.to_string()))?;
-    let change_verify = verify(
+    let (change_verify, change_log) = verify(
         root,
         entry,
         config,
         &proposal.verify,
         config.timeouts.verify_timeout,
-        "change.jsonl",
+        "change",
         None,
     )?;
     if failed(&change_verify) {
-        let marker = change_marker(&proposal.verify, &change_verify);
+        let marker = change_marker(&proposal.verify, &change_verify, &change_log, config);
         return dead::kill(
             &entry.path,
             &entry.folder,
@@ -107,7 +104,7 @@ pub(crate) fn judge(
     Ok(())
 }
 
-/// Runs one verify command and appends its `verify_ran` event.
+/// Runs one verify command, writes its log and appends its `verify_ran` event.
 ///
 /// The task's verify goes to the task's stream; the proposal's goes to
 /// `change.jsonl`, as TypeScript records them.
@@ -117,9 +114,9 @@ fn verify(
     config: &Config,
     command: &str,
     timeout: Duration,
-    stream: &str,
+    target: &str,
     task: Option<&str>,
-) -> Result<VerifyOutcome, FeatureError> {
+) -> Result<(VerifyOutcome, String), FeatureError> {
     let request = VerifyRequest {
         command: command.to_owned(),
         cwd: root.to_path_buf(),
@@ -133,8 +130,10 @@ fn verify(
         kill_grace: config.timeouts.harness_kill_grace,
     };
     let outcome = run_verify(&request).map_err(|error| failed_error(error.to_string()))?;
-    events::verify_ran(&entry.path, stream, task, command, &outcome)?;
-    Ok(outcome)
+    let log = log::write_log(&entry.path, target, &outcome.output)?;
+    let stream = task.map_or_else(|| "change.jsonl".to_owned(), |task| format!("{task}.jsonl"));
+    events::verify_ran(&entry.path, &stream, task, command, &outcome, &log, config)?;
+    Ok((outcome, log))
 }
 
 /// Whether one verify outcome is red, by exit or by timeout.
@@ -142,23 +141,28 @@ fn failed(outcome: &VerifyOutcome) -> bool {
     outcome.timed_out || outcome.exit_code != 0
 }
 
-/// The task verify's dead marker, with its command and output tail.
-fn task_marker(command: &str, outcome: &VerifyOutcome) -> String {
+/// The task verify's dead marker, with its command and output excerpt.
+fn task_marker(command: &str, outcome: &VerifyOutcome, log: &str, config: &Config) -> String {
     if outcome.timed_out {
+        let excerpt = excerpt(&outcome.output, log, config);
         format!(
-            "---\nreason: verify_red\ntimed_out: true\ncommand: \"{command}\"\n---\nWatcher independent verify timed out:\n{}\n",
-            tail(&outcome.output)
+            "---\nreason: verify_red\ntimed_out: true\ncommand: \"{command}\"\n---\nWatcher independent verify timed out:\n{excerpt}\n"
         )
     } else {
+        let output = if outcome.output.is_empty() {
+            format!("Process exited with code {}", outcome.exit_code)
+        } else {
+            outcome.output.clone()
+        };
+        let excerpt = excerpt(&output, log, config);
         format!(
-            "---\nreason: verify_red\ncommand: \"{command}\"\n---\nWatcher independent verify failed:\n{}\n",
-            tail(&outcome.output)
+            "---\nreason: verify_red\ncommand: \"{command}\"\n---\nWatcher independent verify failed:\n{excerpt}\n"
         )
     }
 }
 
-/// The proposal verify's dead marker, with its command and output tail.
-fn change_marker(command: &str, outcome: &VerifyOutcome) -> String {
+/// The proposal verify's dead marker, with its command and output excerpt.
+fn change_marker(command: &str, outcome: &VerifyOutcome, log: &str, config: &Config) -> String {
     let timed_out = if outcome.timed_out {
         "timed_out: true\n"
     } else {
@@ -169,23 +173,21 @@ fn change_marker(command: &str, outcome: &VerifyOutcome) -> String {
     } else {
         "failed"
     };
+    let excerpt = excerpt(&outcome.output, log, config);
     format!(
-        "---\nreason: change_verify_red\n{timed_out}command: \"{command}\"\nexit_code: {}\n---\nChange-level verification {result} after task verification passed.\n{}\n",
-        outcome.exit_code,
-        tail(&outcome.output)
+        "---\nreason: change_verify_red\n{timed_out}command: \"{command}\"\nexit_code: {}\n---\nChange-level verification {result} after task verification passed.\n{excerpt}\n",
+        outcome.exit_code
     )
 }
 
-/// The last 2000 bytes of an output, cut on a character boundary.
-fn tail(output: &str) -> &str {
-    let mut start = output.len().saturating_sub(OUTPUT_TAIL_BYTES);
-    for _ in 0..3 {
-        if output.is_char_boundary(start) {
-            break;
-        }
-        start += 1;
-    }
-    &output[start..]
+/// The excerpt of one output, sized by the config's marker limits.
+fn excerpt(output: &str, log: &str, config: &Config) -> String {
+    output::excerpt_verify_output(
+        output,
+        log,
+        config.limits.marker_output_lines,
+        config.limits.marker_line_chars,
+    )
 }
 
 /// Gives one path relative to the root as a POSIX path.

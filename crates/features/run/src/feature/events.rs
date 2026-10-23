@@ -6,9 +6,10 @@ use std::path::Path;
 
 use osq_core::FeatureError;
 use osq_core::event::{DoneData, Envelope, Event, ScopeViolationData, VerifyRanData, event_line};
+use osq_kernel_config::Config;
 use osq_kernel_harnesses::VerifyOutcome;
 
-use super::time;
+use super::{output, time};
 
 /// Appends one event to `.run/events/<stream>` and creates the folder when needed.
 ///
@@ -51,14 +52,21 @@ pub(crate) fn verify_ran(
     task: Option<&str>,
     command: &str,
     outcome: &VerifyOutcome,
+    log: &str,
+    config: &Config,
 ) -> Result<(), FeatureError> {
+    let tail = output::tail_verify_output(
+        &outcome.output,
+        config.limits.marker_output_lines,
+        config.limits.marker_line_chars,
+    );
     let data = VerifyRanData {
         command: command.to_owned(),
         exit_code: Some(i64::from(outcome.exit_code)),
         duration: None,
-        log: None,
+        log: Some(log.to_owned()),
         verify_command: None,
-        output: Some(outcome.output.clone()),
+        output: (!tail.is_empty()).then_some(tail),
         phase: None,
         expected: None,
         mismatch: None,

@@ -388,7 +388,7 @@ fn start_timeout_dies() {
     );
 }
 
-/// Proves a red verify marker keeps its timeout flag and the last 2000 bytes.
+/// Proves a red verify marker keeps its timeout flag and the config's tail.
 ///
 /// Covers: rust-run/run-outcomes
 #[test]
@@ -419,6 +419,10 @@ fn verify_timeout_keeps_the_output_tail() {
         .split_once("---\nWatcher independent verify timed out:\n")
         .map(|(_, body)| body)
         .expect("the timeout body");
-    assert_eq!(body.len(), 2000, "the output tail plus its newline");
-    assert!(body.contains('é'), "the output tail keeps its characters");
+    let lines = vec!["é"; 40].join("\n");
+    assert_eq!(
+        body,
+        format!("{lines}\nFull output: .run/logs/1-1.log\n"),
+        "the output tail and its full-output line"
+    );
 }
