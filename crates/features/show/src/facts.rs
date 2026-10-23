@@ -22,6 +22,8 @@ pub(crate) struct Facts {
     git: Option<Git>,
     /// Every change folder the lookup searches, in TypeScript's order.
     entries: Vec<ChangeEntry>,
+    /// The roots of the repo's osq worktrees, without the checkout itself.
+    worktrees: Vec<PathBuf>,
 }
 
 /// The git reader every earlier land read shares.
@@ -65,14 +67,15 @@ pub(crate) fn read(root: &Path) -> Result<Facts, FeatureError> {
         Some(repo_root) => Some(open_git(vcs, repo_root, &config)?),
         None => None,
     };
-    let entries = match &git {
+    let (entries, worktrees) = match &git {
         Some(git) => across_trees(root, &config, git)?,
-        None => list_changes(root),
+        None => (list_changes(root), Vec::new()),
     };
     Ok(Facts {
         config,
         git,
         entries,
+        worktrees,
     })
 }
 
@@ -113,18 +116,38 @@ fn open_git(vcs: GitVcs, repo_root: PathBuf, config: &Config) -> Result<Git, Fea
 }
 
 /// The changes across the root, its worktrees and its stacked folders.
-fn across_trees(root: &Path, config: &Config, git: &Git) -> Result<Vec<ChangeEntry>, FeatureError> {
+fn across_trees(
+    root: &Path,
+    config: &Config,
+    git: &Git,
+) -> Result<(Vec<ChangeEntry>, Vec<PathBuf>), FeatureError> {
     let worktrees = git
         .vcs
         .worktree_list()
         .map_err(|error| failed(error.to_string()))?;
     let candidates: Vec<TreeCandidate> = worktrees.iter().map(candidate).collect();
+    let roots = osq_worktree_roots(root, &worktrees);
     let stacked = stacked_folders(&git.repo_root, &config.vcs);
-    Ok(list_tree_changes(&change_trees(
-        root,
-        &candidates,
-        &stacked,
-    )))
+    Ok((
+        list_tree_changes(&change_trees(root, &candidates, &stacked)),
+        roots,
+    ))
+}
+
+/// The roots of the worktrees whose branch names a change, without the checkout.
+fn osq_worktree_roots(root: &Path, worktrees: &[Worktree]) -> Vec<PathBuf> {
+    let checkout = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    worktrees
+        .iter()
+        .filter(|worktree| {
+            worktree
+                .branch
+                .as_deref()
+                .is_some_and(|branch| branch.starts_with("osq/"))
+        })
+        .map(|worktree| PathBuf::from(&worktree.path))
+        .filter(|path| std::fs::canonicalize(path).unwrap_or_else(|_| path.clone()) != checkout)
+        .collect()
 }
 
 impl Facts {
@@ -136,6 +159,19 @@ impl Facts {
     /// Whether osq may write to git.
     pub(crate) fn vcs_enabled(&self) -> bool {
         self.config.vcs.enabled
+    }
+
+    /// The worktree root an active change lives in, or none in the checkout.
+    ///
+    /// Implements: rust-show/status-command
+    pub(crate) fn worktree(&self, entry: &ChangeEntry) -> Option<&Path> {
+        if entry.location != Location::Active {
+            return None;
+        }
+        self.worktrees
+            .iter()
+            .map(PathBuf::as_path)
+            .find(|root| entry.path.starts_with(root))
     }
 
     /// The git land facts of one archived change, or none when git is off.

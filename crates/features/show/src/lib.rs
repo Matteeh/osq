@@ -13,6 +13,7 @@ mod model;
 mod planning;
 mod runs;
 mod spec;
+mod status;
 mod tasks;
 mod text;
 

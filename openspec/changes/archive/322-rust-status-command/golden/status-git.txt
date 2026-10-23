@@ -1,0 +1,40 @@
+Active specs:
+001-active: Alpha learns to count [unapproved] (unapproved)
+  next: ready for approval (do the steps before approval first) — osq approve 001
+  [ ] 1. When alpha is called, it counts [pending]
+  [ ] 2. When gamma is new, it stores the count [pending]
+  [ ] 3. When beta reads the count, it prints it [pending]
+002-approved: Beta prints the count [running] (approved)
+  worktree: <root>-wt
+  warning: a task is running in this worktree; do not edit it until the task ends
+  last sync: 2026-10-24T08:00:00.000Z, 2 commits from main
+  sync stopped: 2026-10-24T09:00:00.000Z (conflict); run osq sync 002 again once it is fixed
+    src/alpha.ts conflicts
+  next: running — osq show 002
+  [x] 1. When beta runs, it prints the count [done]
+  [>] 2. When beta prints, it adds a newline [running]
+003-running: Alpha logs each call [running] (approved)
+  next: running — osq show 003
+  [>] 1. When alpha is called, it logs the call [running]
+004-dead: Beta formats the count [dead] (approved)
+  next: dead — osq retry 004 1
+  [!] 1. When beta formats, it adds commas [dead] (reason: verify_red)
+  [ ] 2. When beta formats a negative count, it keeps the sign [pending]
+005-steering: Gamma reads a file it cannot find [dead] (approved)
+  next: dead (needs steering) — osq plan 005
+  [!] 1. When gamma starts, it reads its store [dead] (reason: blocked)
+006-blocked: Beta waits for formatting [blocked] (approved)
+  next: blocked (waiting for 004, 010) — osq show 004
+  [ ] 1. When beta prints, it uses the formatter [pending]
+007-unplanned: Alpha resets at midnight [unapproved] (unapproved)
+  next: unplanned — osq plan 007
+  [ ] 1. When initial condition, expected outcome [pending]
+
+Archived specs: 1
+Not landed:
+  010: Beta reads alpha's count — osq land 010
+
+Rejected specs:
+011-rejected: Alpha counts twice [rejected] (reason: Nobody wants double counting., at: unavailable)
+
+Watcher: not running — osq watch --background

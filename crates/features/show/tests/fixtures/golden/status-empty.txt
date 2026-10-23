@@ -1,0 +1,9 @@
+Active specs:
+  (none)
+
+Archived specs: 0
+
+Rejected specs:
+  (none)
+
+Watcher: not running — osq watch --background

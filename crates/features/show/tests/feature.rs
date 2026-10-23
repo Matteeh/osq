@@ -14,7 +14,7 @@ fn scratch(name: &str) -> PathBuf {
     root
 }
 
-/// Proves the feature's name, its two commands and its refusal of another command.
+/// Proves the feature's name, its three commands and its refusal of another command.
 ///
 /// Covers: rust-show/show-feature-commands
 #[test]
@@ -33,6 +33,11 @@ fn show_feature_commands() {
                 "spec",
                 "list living capabilities and their requirements, or print one requirement",
                 "[capability] [requirement]",
+            ),
+            Command::new(
+                "status",
+                "show status overview of change folders and tasks",
+                "",
             ),
         ]
     );

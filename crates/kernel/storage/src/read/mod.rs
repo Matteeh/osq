@@ -32,6 +32,8 @@
 //! Implements: rust-storage/retry-context
 //! Implements: rust-storage/change-folder-files
 //! Implements: rust-storage/now-facts
+//! Implements: rust-storage/watch-state-records
+//! Implements: rust-storage/validator-failing-record
 
 mod change_files;
 mod error;
@@ -48,6 +50,8 @@ mod sections;
 mod snapshot;
 mod text;
 mod trees;
+mod validator;
+mod watch;
 
 pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
 pub use error::StorageError;
@@ -71,3 +75,5 @@ pub use snapshot::{
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};
+pub use validator::{ValidatorFailing, validator_failing};
+pub use watch::{ServiceRecord, WatchState, WatcherMode, WatcherRecord, read_watch_state};

@@ -2,7 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::{facts, lookup, model, spec, text};
+use crate::{facts, lookup, model, spec, status, text};
 
 /// The show feature: a unit struct with no state (ADR 028).
 ///
@@ -18,7 +18,7 @@ impl Feature for ShowFeature {
         "show"
     }
 
-    /// The feature's two commands, `show` then `spec`.
+    /// The feature's three commands: `show`, then `spec`, then `status`.
     ///
     /// Implements: rust-show/show-command
     fn commands(&self) -> Vec<Command> {
@@ -33,25 +33,38 @@ impl Feature for ShowFeature {
                 "list living capabilities and their requirements, or print one requirement",
                 "[capability] [requirement]",
             ),
+            Command::new(
+                "status",
+                "show status overview of change folders and tasks",
+                "",
+            ),
         ]
     }
 
-    /// Runs `show` or `spec`, refusing every other command.
+    /// Runs `show`, `spec` or `status`, refusing every other command.
     ///
     /// # Errors
     ///
     /// Returns [`FeatureError::unknown_command`] for another command,
-    /// [`FeatureError::usage`] for a missing, extra or blank `show` id or too
-    /// many `spec` arguments, and [`FeatureError::failed`] when a change or
-    /// living spec cannot be found or read.
+    /// [`FeatureError::usage`] for a missing, extra or blank `show` id, too
+    /// many `spec` arguments or any `status` argument, and
+    /// [`FeatureError::failed`] when a change or living spec cannot be found
+    /// or read.
     ///
     /// Implements: rust-show/show-command
     /// Implements: rust-show/show-arguments
     /// Implements: rust-show/spec-command
     /// Implements: rust-show/spec-arguments
+    /// Implements: rust-show/status-command
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
         if invocation.command == "spec" {
             return spec::run(&invocation.root, &invocation.args);
+        }
+        if invocation.command == "status" {
+            if !invocation.args.is_empty() {
+                return Err(FeatureError::usage("status", "takes no arguments"));
+            }
+            return status::run(&invocation.root);
         }
         if invocation.command != "show" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));

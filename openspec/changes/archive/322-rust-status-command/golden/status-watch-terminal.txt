@@ -1,0 +1,33 @@
+Active specs:
+001-active: Alpha learns to count [unapproved] (unapproved)
+  next: ready for approval (do the steps before approval first) — osq approve 001
+  [ ] 1. When alpha is called, it counts [pending]
+  [ ] 2. When gamma is new, it stores the count [pending]
+  [ ] 3. When beta reads the count, it prints it [pending]
+002-approved: Beta prints the count [pending] (approved)
+  next: running — osq show 002
+  [x] 1. When beta runs, it prints the count [done]
+  [ ] 2. When beta prints, it adds a newline [pending]
+003-running: Alpha logs each call [running] (approved)
+  next: running — osq show 003
+  [>] 1. When alpha is called, it logs the call [running]
+004-dead: Beta formats the count [dead] (approved)
+  next: dead — osq retry 004 1
+  [!] 1. When beta formats, it adds commas [dead] (reason: verify_red)
+  [ ] 2. When beta formats a negative count, it keeps the sign [pending]
+005-steering: Gamma reads a file it cannot find [dead] (approved)
+  next: dead (needs steering) — osq plan 005
+  [!] 1. When gamma starts, it reads its store [dead] (reason: blocked)
+006-blocked: Beta waits for formatting [blocked] (approved)
+  next: blocked (waiting for 004) — osq show 004
+  [ ] 1. When beta prints, it uses the formatter [pending]
+007-unplanned: Alpha resets at midnight [unapproved] (unapproved)
+  next: unplanned — osq plan 007
+  [ ] 1. When initial condition, expected outcome [pending]
+
+Archived specs: 1
+
+Rejected specs:
+011-rejected: Alpha counts twice [rejected] (reason: Nobody wants double counting., at: unavailable)
+
+Watcher: running in a terminal, osq v0.3.0 (abc1234), pid <pid>
