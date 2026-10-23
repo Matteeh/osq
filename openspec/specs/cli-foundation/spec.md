@@ -2230,9 +2230,13 @@ which knows every tree and finds an archived change in a worktree that needs
 steering. When the change's derived state has `steering`, as the
 status-inspection requirement "Steering triggers" defines it, planning SHALL
 reopen that change's own folder, wherever it is, and build the usual prompt
-sections for it, then append a `## Steering` section. When an approved change
-outside the checkout, in a worktree or a stacked approval, has no `steering`,
-`osq plan <id>` SHALL fail with
+sections for it, then append a `## Steering` section. When an approved
+change in an osq worktree has no `steering` but `humanSteering`, as the
+status-inspection requirement "Dead task steering" defines it, returns
+`dead` triggers, planning SHALL reopen it the same way, with those triggers
+in its `## Steering` section. When an approved change outside the checkout,
+in a worktree or a stacked approval, has neither, `osq plan <id>` SHALL fail
+with
 `<folder> is approved and needs no steering; osq plan <id> reopens an approved change only when it needs steering`
 and write nothing. When no active change matches the name and an archived
 change in any tree does, as `matchesFolder` matches it, `osq plan <id>`
@@ -2245,8 +2249,10 @@ in the checkout without `steering`, or one neither lookup finds, SHALL be
 planned exactly as before.
 
 The `## Steering` section SHALL hold, in order: the line
-`osq halted this change and asks you to revise its plan.`; for each trigger in
-`deriveSteering` order, a `### <describeTrigger>` heading, the line
+`osq halted this change and asks you to revise its plan.`, or
+`A task of this change died, and a human asked to revise its plan.` when
+every trigger is `dead`; for each trigger in `humanSteering` order, a
+`### <describeTrigger>` heading, the line
 `Evidence: <absolute path of the trigger's marker>`, and the marker's body
 without its frontmatter inside a fenced block. Under a `requirement_changed`
 trigger, for each requirement `changedRequirements` reports between the
@@ -2278,6 +2284,10 @@ directory, and read planning usage from that directory.
 #### Scenario: Plan a blocked change in its worktree
 - **WHEN** task 2 of a change that runs in a worktree died with `blocked` and the stated need `Needs src/three.txt`, and a human runs `osq plan <id>` in the checkout
 - **THEN** the worktree's change folder holds `plan-prompt.md` ending in the `## Steering` section with `### task 2 blocked (blocked)`, the dead marker's path, `Needs src/three.txt`, and `Done tasks stay done: 1.`, the checkout holds no copy of the change, and no new change folder was created
+
+#### Scenario: Plan a dead task in its worktree
+- **WHEN** task 1 of a change that runs in a worktree is done, task 2 died with `reason: timeout` and the body `Agent timed out`, without `stuck`, and a human runs `osq plan <id>` in the checkout
+- **THEN** the worktree's change folder holds `plan-prompt.md` ending in the `## Steering` section with `A task of this change died, and a human asked to revise its plan.`, `### task 2 dead (timeout)`, the dead marker's path, `Agent timed out`, and `Done tasks stay done: 1.`, the checkout holds no copy of the change, and no new change folder was created
 
 #### Scenario: Session in the worktree
 - **WHEN** `osq plan <id> --session` runs for a change in a worktree that needs steering, with a fake interactive adapter

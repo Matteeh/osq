@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:333a9aa80ee188dc90cfaf39eafa8ecb10526b8c03a478c2b67df7754227df24"
+build_stamp: "4b9a2af8"
+project_commit: "50aa4573"
+exit_code: 0
+scope_files: {"src/cli/plan-steer.ts":"sha256:37cfd45e930989763c0e895d4c2084a7b8f288180be94cb64d38991c6080a96d","src/core/status/steering.ts":"sha256:5cdacbc97be8ac972ca64260ae5c898c972704fed4de5e3c653771ce643497b0","tests/steering-dead-plan.test.ts":"sha256:8e97c941df0d4edf0908f66b75dd0ece2b16ba3b48e81ad67e6806e91320a971"}
+---
+2026-10-23T09:53:48.408Z

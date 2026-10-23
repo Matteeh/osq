@@ -1665,10 +1665,13 @@ all found, though the checkout holds no copy of them.
 ### Requirement: Approval after steering
 `osq approve <id>` SHALL look the change up with `findSteeringChange`, so an
 archived change that needs steering is found in its worktree. When the change
-is in an osq worktree and its derived state has `steering`, `osq approve`
-SHALL approve the revised plan where the change runs, through
+is in an osq worktree and `humanSteering` of its derived state, as the
+status-inspection requirement "Dead task steering" defines it, is not empty,
+`osq approve` SHALL approve the revised plan where the change runs, through
 `approveSteeredChange` in `src/core/spec/approve-steer.ts`, instead of
-"Approval into a worktree". It SHALL refuse, writing nothing, with
+"Approval into a worktree". The triggers below are those `humanSteering`
+returns: the derived state's `steering` when it has any, and otherwise one
+`dead` trigger per dead task. It SHALL refuse, writing nothing, with
 `<folder> has a task running; approve it after the task ends` while any task
 of the change runs. When any trigger is a default-branch trigger, as
 `isDefaultBranchTrigger` says, it SHALL then approve as "Approval after a
@@ -1681,7 +1684,7 @@ default-branch trigger" says. Otherwise it SHALL:
    with `writeApprovalSeal`.
 3. Commit the change folder in the worktree with subject `osq: <id> approved`
    and author `vcs.author`, as the first approval did.
-4. Retire each trigger, in the order `deriveSteering` returns them, through
+4. Retire each trigger, in the order `humanSteering` returns them, through
    `retrySpec` for its target, so each marker is kept under its next attempt
    number exactly as `osq retry` keeps it.
 
@@ -1709,6 +1712,10 @@ and its triggers then retired the same way, with the same line.
 #### Scenario: Blocked task approved again in its worktree
 - **WHEN** task 1 of a two-task change in a worktree is done, task 2 died with `blocked`, `tasks/2.md` was edited in the worktree, and a human runs `osq approve <id>`
 - **THEN** the worktree's HEAD is a new `osq: <id> approved` commit holding the edited `tasks/2.md`, `.run/approved` holds the edited folder's hash, `.run/dead/2.md` is now `.run/dead/2.1.md`, `.run/done/1` remains, the output says `Continues from task 2`, and the checkout holds no copy of the change
+
+#### Scenario: Dead task approved again in its worktree
+- **WHEN** task 1 of a two-task change in a worktree is done, task 2 died with `reason: timeout` and no `stuck`, `tasks/2.md` was edited in the worktree, and a human runs `osq approve <id>`
+- **THEN** the worktree's HEAD is a new `osq: <id> approved` commit holding the edited `tasks/2.md`, `.run/approved` holds the edited folder's hash, `.run/dead/2.md` is now `.run/dead/2.1.md`, `.run/done/1` remains, the output says `Continues from task 2`, no branch was created, and the checkout holds no copy of the change
 
 #### Scenario: The run continues
 - **WHEN** that change is approved again and watcher cycles run

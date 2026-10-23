@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:c1e5a2663827699ee7fb39d9035c288f59183ef31f77d52c7797abc872fc7e52"
+build_stamp: "4b9a2af8"
+project_commit: "6b4290b9"
+exit_code: 0
+scope_files: {"src/core/spec/approve-steer.ts":"sha256:40a74c9d0a2daac8afd64c20a62069a95be3fc23e6c1564d139c8be1755a65a0","src/core/spec/approve.ts":"sha256:3883014a9ca36c35855e9343e443410e3c2d26a2ed99acc6572d17c4b6e2dcad","tests/steering-dead-approve.test.ts":"sha256:b0f2b99144556c8be4856c86540fd7bb186bccc56926fc7d53f08291c7988964"}
+---
+2026-10-23T10:06:51.012Z

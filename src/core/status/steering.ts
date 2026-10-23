@@ -1,10 +1,11 @@
 import { parseFrontmatter } from '../spec/parser.js';
 import { getDeadMarkerPath, getRegressedMarkerPath } from './layout.js';
-import type { ChangeFolderSnapshot } from './state.js';
+import type { ChangeFolderSnapshot, SpecState } from './state.js';
 
 export type SteeringTriggerName =
   | 'stuck'
   | 'blocked'
+  | 'dead'
   | 'regression'
   | 'conflict'
   | 'requirement_changed';
@@ -99,6 +100,23 @@ export function deriveSteering(snapshot: ChangeFolderSnapshot): SteeringTrigger[
     if (trigger) triggers.push(trigger);
   }
   return triggers;
+}
+
+/**
+ * The triggers a human may steer an approved change by: the derived steering
+ * unchanged when any exists, otherwise one `dead` trigger per dead task.
+ *
+ * @scenario status-inspection: Dead task without a trigger
+ * @scenario status-inspection: Run triggers win
+ * @scenario status-inspection: Nothing died
+ * @adr 018
+ * @adr 021
+ */
+export function humanSteering(state: SpecState): SteeringTrigger[] {
+  if (state.steering && state.steering.length > 0) return state.steering;
+  return state.tasks
+    .filter((task) => task.status === 'dead')
+    .map((task) => ({ target: task.taskNumber, trigger: 'dead', reason: task.deadReason ?? '' }));
 }
 
 /** Whether a trigger is one the default branch stops a change with. */
