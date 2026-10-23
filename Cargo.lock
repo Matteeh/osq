@@ -450,6 +450,7 @@ dependencies = [
  "osq-core",
  "osq-kernel-config",
  "osq-kernel-harnesses",
+ "osq-kernel-loop",
  "osq-kernel-runners",
  "osq-kernel-specs",
  "osq-kernel-storage",

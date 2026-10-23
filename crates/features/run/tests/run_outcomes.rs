@@ -422,7 +422,7 @@ fn verify_timeout_keeps_the_output_tail() {
     let lines = vec!["é"; 40].join("\n");
     assert_eq!(
         body,
-        format!("{lines}\nFull output: .run/logs/1-1.log\n"),
+        format!("{lines}\nFull output: .run/logs/1-2.log\n"),
         "the output tail and its full-output line"
     );
 }

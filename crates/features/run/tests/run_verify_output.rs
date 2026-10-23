@@ -44,10 +44,10 @@ const ROWS: &[Row] = &[
         command: r"printf 'one\ntwo\nthree-long\n'; exit 1",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify failed:\ntwo\nthree… (5 more characters)\nFull output: .run/logs/1-1.log\n",
+        body: "Watcher independent verify failed:\ntwo\nthree… (5 more characters)\nFull output: .run/logs/1-2.log\n",
         stream: "1.jsonl",
         output: Some("two\nthree… (5 more characters)"),
-        log: "1-1.log",
+        log: "1-2.log",
         full: "one\ntwo\nthree-long\n",
     },
     Row {
@@ -56,10 +56,10 @@ const ROWS: &[Row] = &[
         command: r"printf 'ok\n'; exit 1",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify failed:\nok\nFull output: .run/logs/1-1.log\n",
+        body: "Watcher independent verify failed:\nok\nFull output: .run/logs/1-2.log\n",
         stream: "1.jsonl",
         output: Some("ok\n"),
-        log: "1-1.log",
+        log: "1-2.log",
         full: "ok\n",
     },
     Row {
@@ -68,10 +68,10 @@ const ROWS: &[Row] = &[
         command: "exit 1",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify failed:\nProcess exited with code 1\nFull output: .run/logs/1-1.log\n",
+        body: "Watcher independent verify failed:\nProcess exited with code 1\nFull output: .run/logs/1-2.log\n",
         stream: "1.jsonl",
         output: None,
-        log: "1-1.log",
+        log: "1-2.log",
         full: "",
     },
     Row {
@@ -80,10 +80,10 @@ const ROWS: &[Row] = &[
         command: r"printf 'a\n✖ failing tests:\nb\nc\n'; exit 1",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify failed:\n✖ failing tests:\nb\nc\nFull output: .run/logs/1-1.log\n",
+        body: "Watcher independent verify failed:\n✖ failing tests:\nb\nc\nFull output: .run/logs/1-2.log\n",
         stream: "1.jsonl",
         output: Some("c"),
-        log: "1-1.log",
+        log: "1-2.log",
         full: "a\n✖ failing tests:\nb\nc\n",
     },
     Row {
@@ -92,10 +92,10 @@ const ROWS: &[Row] = &[
         command: r"printf 'x\ny\nz\n'; sleep 5",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify timed out:\ny\nz\nFull output: .run/logs/1-1.log\n",
+        body: "Watcher independent verify timed out:\ny\nz\nFull output: .run/logs/1-2.log\n",
         stream: "1.jsonl",
         output: Some("y\nz"),
-        log: "1-1.log",
+        log: "1-2.log",
         full: "x\ny\nz\n",
     },
     Row {
@@ -313,10 +313,10 @@ fn log_count_skips_other_names() {
         command: r"printf 'x\n'; exit 1",
         proposal: false,
         reason: "verify_red",
-        body: "Watcher independent verify failed:\nx\nFull output: .run/logs/1-3.log\n",
+        body: "Watcher independent verify failed:\nx\nFull output: .run/logs/1-4.log\n",
         stream: "1.jsonl",
         output: Some("x\n"),
-        log: "1-3.log",
+        log: "1-4.log",
         full: "x\n",
     };
     let root = support::repo(row.name);
@@ -330,7 +330,7 @@ fn log_count_skips_other_names() {
     ] {
         support::write(&root, &format!("{logs}/{name}"), "old\n");
     }
-    support::write(&root, &format!("{logs}/1-4.log/keep"), "");
+    support::write(&root, &format!("{logs}/1-9.log/keep"), "");
     support::write(
         &root,
         "osq.toml",

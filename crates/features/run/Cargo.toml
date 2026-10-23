@@ -18,4 +18,5 @@ osq-kernel-storage.workspace = true
 osq-kernel-vcs.workspace = true
 osq-kernel-runners.workspace = true
 osq-kernel-harnesses.workspace = true
+osq-kernel-loop.workspace = true
 sha2.workspace = true

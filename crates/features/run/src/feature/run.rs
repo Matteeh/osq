@@ -9,7 +9,7 @@ use osq_kernel_config::Config;
 use osq_kernel_specs::read_task_file;
 use osq_kernel_storage::{ChangeEntry, change_folder_seal, read_retry_context};
 
-use super::{commit, dead, done, lock, refusals, scope, start, text, verdict, worktree};
+use super::{commit, dead, done, lock, pre_spawn, refusals, scope, start, text, verdict, worktree};
 use crate::prompt::{PriorAttempt, executor_prompt};
 
 /// Runs one task of an active change once.
@@ -62,8 +62,11 @@ fn after_lock(
     check_approval(entry, task, &death)?;
     let task_file = read_task_file(&entry.path.join("tasks").join(format!("{task}.md")))
         .map_err(|error| failed(error.to_string()))?;
-    let before = scope::snapshot(root)?;
     let context = read_retry_context(&entry.path, task);
+    if context.attempt == 1 {
+        pre_spawn::run(root, entry, task, &task_file, config, &death)?;
+    }
+    let before = scope::snapshot(root)?;
     let prior = PriorAttempt {
         attempt: u32::try_from(context.attempt).unwrap_or(u32::MAX),
         reason: context.reason,

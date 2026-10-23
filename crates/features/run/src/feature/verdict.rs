@@ -12,7 +12,7 @@ use osq_kernel_harnesses::{VerifyOutcome, VerifyRequest, run_verify};
 use osq_kernel_specs::{TaskFile, read_proposal};
 use osq_kernel_storage::{ChangeEntry, parse_result_sections};
 
-use super::{dead, events, log, output};
+use super::{dead, events, log, output, pre_spawn};
 
 /// Judges a task that wrote a result file: blocked, then both verifies.
 ///
@@ -65,8 +65,8 @@ pub(crate) fn judge(
         config,
         &task_file.verify,
         config.timeouts.task_timeout,
-        task,
-        Some(task),
+        VerifyStream::Task(task),
+        None,
     )?;
     if failed(&task_verify) {
         let marker = task_marker(&task_file.verify, &task_verify, &task_log, config);
@@ -87,7 +87,7 @@ pub(crate) fn judge(
         config,
         &proposal.verify,
         config.timeouts.verify_timeout,
-        "change",
+        VerifyStream::Change,
         None,
     )?;
     if failed(&change_verify) {
@@ -104,19 +104,32 @@ pub(crate) fn judge(
     Ok(())
 }
 
+/// Which stream a verify's event belongs to.
+#[derive(Clone, Copy)]
+pub(crate) enum VerifyStream<'a> {
+    /// The task's own verify, on the task's stream.
+    Task(&'a str),
+    /// The proposal's verify, on `change.jsonl`.
+    Change,
+}
+
 /// Runs one verify command, writes its log and appends its `verify_ran` event.
 ///
 /// The task's verify goes to the task's stream; the proposal's goes to
 /// `change.jsonl`, as TypeScript records them.
-fn verify(
+pub(crate) fn verify(
     root: &Path,
     entry: &ChangeEntry,
     config: &Config,
     command: &str,
     timeout: Duration,
-    target: &str,
-    task: Option<&str>,
+    stream: VerifyStream<'_>,
+    pre_spawn: Option<&pre_spawn::PreSpawn<'_>>,
 ) -> Result<(VerifyOutcome, String), FeatureError> {
+    let (target, task) = match stream {
+        VerifyStream::Task(task) => (task, Some(task)),
+        VerifyStream::Change => ("change", None),
+    };
     let request = VerifyRequest {
         command: command.to_owned(),
         cwd: root.to_path_buf(),
@@ -132,7 +145,21 @@ fn verify(
     let outcome = run_verify(&request).map_err(|error| failed_error(error.to_string()))?;
     let log = log::write_log(&entry.path, target, &outcome.output)?;
     let stream = task.map_or_else(|| "change.jsonl".to_owned(), |task| format!("{task}.jsonl"));
-    events::verify_ran(&entry.path, &stream, task, command, &outcome, &log, config)?;
+    let meta = pre_spawn.map_or_else(events::VerifyMeta::default, |start| {
+        events::VerifyMeta::pre_spawn(start, &outcome)
+    });
+    events::verify_ran(
+        &entry.path,
+        &events::VerifyEvent {
+            stream: &stream,
+            task,
+            command,
+            outcome: &outcome,
+            log: &log,
+            config,
+            meta: &meta,
+        },
+    )?;
     Ok((outcome, log))
 }
 
@@ -181,7 +208,7 @@ fn change_marker(command: &str, outcome: &VerifyOutcome, log: &str, config: &Con
 }
 
 /// The excerpt of one output, sized by the config's marker limits.
-fn excerpt(output: &str, log: &str, config: &Config) -> String {
+pub(crate) fn excerpt(output: &str, log: &str, config: &Config) -> String {
     output::excerpt_verify_output(
         output,
         log,

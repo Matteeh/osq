@@ -281,7 +281,8 @@ it is missing, as TypeScript's `writeVerifyLog` does. The `verify_ran`
 event SHALL hold that path as `log`, and as `output` the tail TypeScript's
 `tailVerifyOutput` keeps with `limits.markerOutputLines` and
 `limits.markerLineChars` from the config, with no `output` when the tail
-is empty.
+is empty. On a first attempt the "Pre-spawn verify" log is already there,
+so the task's verify writes the task's second log.
 
 A dead marker's body SHALL hold the excerpt TypeScript's
 `excerptVerifyOutput` builds with the same two limits and the log path as
@@ -318,11 +319,11 @@ a constant in the run crate.
 
 | Settings | Verify | Command | Reason | Body | Stream | `output` | Log |
 |---|---|---|---|---|---|---|---|
-| `markerOutputLines = 2`, `markerLineChars = 5` under `[limits]` | task | `printf 'one\ntwo\nthree-long\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\ntwo\nthree… (5 more characters)\nFull output: .run/logs/1-1.log\n` | `1.jsonl` | `two\nthree… (5 more characters)` | `1-1.log` |
-| none | task | `printf 'ok\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\nok\nFull output: .run/logs/1-1.log\n` | `1.jsonl` | `ok\n` | `1-1.log` |
-| none | task | `exit 1` | `verify_red` | `Watcher independent verify failed:\nProcess exited with code 1\nFull output: .run/logs/1-1.log\n` | `1.jsonl` | none | `1-1.log` |
-| `markerOutputLines = 1` under `[limits]` | task | `printf 'a\n✖ failing tests:\nb\nc\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\n✖ failing tests:\nb\nc\nFull output: .run/logs/1-1.log\n` | `1.jsonl` | `c` | `1-1.log` |
-| `markerOutputLines = 2` under `[limits]`, `taskTimeoutSeconds = 1` under `[timeouts]` | task | `printf 'x\ny\nz\n'; sleep 5` | `verify_red` | `Watcher independent verify timed out:\ny\nz\nFull output: .run/logs/1-1.log\n` | `1.jsonl` | `y\nz` | `1-1.log` |
+| `markerOutputLines = 2`, `markerLineChars = 5` under `[limits]` | task | `printf 'one\ntwo\nthree-long\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\ntwo\nthree… (5 more characters)\nFull output: .run/logs/1-2.log\n` | `1.jsonl` | `two\nthree… (5 more characters)` | `1-2.log` |
+| none | task | `printf 'ok\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\nok\nFull output: .run/logs/1-2.log\n` | `1.jsonl` | `ok\n` | `1-2.log` |
+| none | task | `exit 1` | `verify_red` | `Watcher independent verify failed:\nProcess exited with code 1\nFull output: .run/logs/1-2.log\n` | `1.jsonl` | none | `1-2.log` |
+| `markerOutputLines = 1` under `[limits]` | task | `printf 'a\n✖ failing tests:\nb\nc\n'; exit 1` | `verify_red` | `Watcher independent verify failed:\n✖ failing tests:\nb\nc\nFull output: .run/logs/1-2.log\n` | `1.jsonl` | `c` | `1-2.log` |
+| `markerOutputLines = 2` under `[limits]`, `taskTimeoutSeconds = 1` under `[timeouts]` | task | `printf 'x\ny\nz\n'; sleep 5` | `verify_red` | `Watcher independent verify timed out:\ny\nz\nFull output: .run/logs/1-2.log\n` | `1.jsonl` | `y\nz` | `1-2.log` |
 | `markerOutputLines = 2` under `[limits]` | proposal | `printf 'one\ntwo\nthree\n'; exit 2` | `change_verify_red` | `Change-level verification failed after task verification passed.\ntwo\nthree\nFull output: .run/logs/change-1.log\n` | `change.jsonl` | `two\nthree` | `change-1.log` |
 
 ### Requirement: Done record
@@ -480,3 +481,76 @@ pause" says. It commits nothing.
 #### Scenario: Paused worktree discards outside files
 - **WHEN** a test builds the repository "Worktree run finds its tree" builds and runs `run` with `1` and `1` with a fake pi that writes `src/a.txt` and then reports a usage limit
 - **THEN** it gives a `Failed` error for the command `run` with the message `task 1 of 001-a paused on a usage limit`, the worktree holds `openspec/changes/001-a/.run/paused.md` but no `src/a.txt`, and the tip of `osq/001-a` is still the approval commit
+
+### Requirement: Pre-spawn verify
+When the attempt "Run attempts" reads is 1, `run` SHALL run the task's
+verify once with rust-harnesses `run_verify` after the approval check and
+before it snapshots the tree for the scope audit and starts pi, in the
+tree the task runs in, with the timeout and environment the task's verify
+gets in "Run verdict", as TypeScript's `runPreSpawnVerify` does with
+`gates.preSpawnVerify` set to `fail`. It writes that run's log and
+appends its `verify_ran` event to `.run/events/<task>.jsonl` as "Run
+verdict" does, with `phase` `pre_spawn`, `expected` the task's
+`verify_starts`, `missingPaths` when the verify names paths the tree
+lacks, and `mismatch`.
+
+The named paths are the operands TypeScript's `listNamedPaths` picks from
+the command, each once in command order: tokens split at whitespace
+outside quotes with the quotes dropped, keeping a token that holds `/` or
+`\` and does not start with `-` or `/`, hold `=`, or start with a URL
+scheme. A named path is missing when nothing exists at it, or, for a
+pattern holding `*` or `?`, when rust-loop `scope_files` resolves it to
+no regular file. A run passes when it exits 0 without timing out. The
+start mismatches when `verify_starts` is `red` and the run passes with no
+missing path, or when it is `green` and the run fails; `any` never
+mismatches.
+
+A mismatch SHALL kill the task as `verify_precondition` before pi starts,
+with the dead marker `---\nreason: verify_precondition\ncommand:
+"<verify>"\nexpected: <verify_starts>\nexit_code: <code>\n---\nPre-spawn
+verify precondition not met (expected <verify_starts>, exit code
+<code>):\n<excerpt>\n`, where `<excerpt>` is the "Run verdict" excerpt of
+the run's output with its log as the source. A later attempt runs no
+pre-spawn verify; the first attempt's event stays the task's record.
+
+#### Scenario: Pre-spawn verify outcomes
+- **WHEN** `run` runs with the arguments `1`, `1` on the "Run outcomes" repository with `fake-pi-mode` holding `done`, whose task 1 has the row's `verify_starts` and `verify`, and whose `.run/approved` holds the change folder's new seal
+- **THEN** the task ends as the row says, and the first `verify_ran` event of `.run/events/1.jsonl` has `phase` `pre_spawn`, `expected` the row's start, the row's `mismatch`, the row's `missingPaths` or none, and `log` `.run/logs/1-1.log`:
+
+| Start | Verify | `mismatch` | `missingPaths` | Result |
+|---|---|---|---|---|
+| `red` | `test -f src/a.txt` | false | none | done |
+| `red` | `true` | true | none | `verify_precondition` |
+| `red` | `true src/a.txt` | false | `src/a.txt` | done |
+| `red` | `true src/*.txt` | true | none | `verify_precondition` |
+| `red` | `true src/gen/*.rs` | false | `src/gen/*.rs` | done |
+| `green` | `true` | false | none | done |
+| `green` | `test -f src/a.txt` | true | none | `verify_precondition` |
+| `green` | `true src/a.txt` | false | `src/a.txt` | done |
+| `any` | `true` | false | none | done |
+| `any` | `test -f src/a.txt` | false | none | done |
+
+#### Scenario: Pre-spawn marker
+- **WHEN** `run` runs with the arguments `1`, `1` on the "Run outcomes" repository with `fake-pi-mode` holding `done`, whose task 1 has the row's `verify_starts` and `verify`, and whose `.run/approved` holds the change folder's new seal
+- **THEN** the task dies as `verify_precondition`, `.run/events/1.jsonl` holds no `started` event, and `.run/dead/1.md` is the row's marker, where `\n` stands for a newline:
+
+| Start | Verify | Marker |
+|---|---|---|
+| `red` | `true` | `---\nreason: verify_precondition\ncommand: "true"\nexpected: red\nexit_code: 0\n---\nPre-spawn verify precondition not met (expected red, exit code 0):\n(no output)\nFull output: .run/logs/1-1.log\n` |
+| `green` | `echo no; exit 3` | `---\nreason: verify_precondition\ncommand: "echo no; exit 3"\nexpected: green\nexit_code: 3\n---\nPre-spawn verify precondition not met (expected green, exit code 3):\nno\nFull output: .run/logs/1-1.log\n` |
+
+#### Scenario: Pre-spawn named paths
+- **WHEN** `run` runs with the arguments `1`, `1` on the "Run outcomes" repository with `fake-pi-mode` holding `done`, whose task 1 has `verify_starts: any` and the row's `verify`, and whose `.run/approved` holds the change folder's new seal
+- **THEN** the first `verify_ran` event of `.run/events/1.jsonl` has the row's `missingPaths`, or none, however the task ends:
+
+| Verify | `missingPaths` |
+|---|---|
+| `true src/a.txt src/a.txt` | `src/a.txt` |
+| `true "src/b c.txt" 'src/d.txt'` | `src/b c.txt`, `src/d.txt` |
+| `true --out=src/x.txt -o src/keep.txt /src/a.txt https://h/p.txt` | none |
+| `bin/check src/keep.txt` | `bin/check` |
+| `true src/tests src/*.txt src/gen/*.rs` | `src/gen/*.rs` |
+
+#### Scenario: Pre-spawn verify on a later attempt
+- **WHEN** `run` runs with the arguments `1`, `1` on the "Run outcomes" repository with `fake-pi-mode` holding `done`, whose task 1 has `verify_starts: red` and the verify `true`, after writing the `retry 2` line of rust-run "Prior context handed to pi" to `.run/events/1.jsonl` and its `1.1.md` marker to `.run/dead/`, and whose `.run/approved` holds the change folder's new seal
+- **THEN** the task is done, no `verify_ran` event of `.run/events/1.jsonl` has a `phase`, and the last one has `log` `.run/logs/1-1.log`
