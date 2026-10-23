@@ -68,7 +68,16 @@ async function setupLookupRoot(): Promise<string> {
     const deltaDir = path.join(openspec, 'changes', CHANGE_SLUG, 'specs', capability);
     await fs.mkdir(deltaDir, { recursive: true });
     await fs.copyFile(
-      path.join(REPO_ROOT, 'openspec', 'changes', CHANGE_SLUG, 'specs', capability, 'spec.md'),
+      path.join(
+        REPO_ROOT,
+        'openspec',
+        'changes',
+        'archive',
+        CHANGE_SLUG,
+        'specs',
+        capability,
+        'spec.md',
+      ),
       path.join(deltaDir, 'spec.md'),
     );
   }

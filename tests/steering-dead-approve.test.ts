@@ -79,6 +79,7 @@ async function setupLookupRoot(): Promise<string> {
       REPO_ROOT,
       'openspec',
       'changes',
+      'archive',
       CHANGE_SLUG,
       'specs',
       'spec-lint-and-approve',
