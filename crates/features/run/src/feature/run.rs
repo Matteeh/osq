@@ -9,7 +9,7 @@ use osq_kernel_config::Config;
 use osq_kernel_specs::read_task_file;
 use osq_kernel_storage::{ChangeEntry, change_folder_seal, read_retry_context};
 
-use super::{dead, done, lock, refusals, scope, start, text, verdict};
+use super::{commit, dead, done, lock, refusals, scope, start, text, verdict, worktree};
 use crate::prompt::{PriorAttempt, executor_prompt};
 
 /// Runs one task of an active change once.
@@ -23,12 +23,14 @@ use crate::prompt::{PriorAttempt, executor_prompt};
 /// Implements: rust-run/run-lock
 /// Implements: rust-run/run-approval-check
 /// Implements: rust-run/dead-record
+/// Implements: rust-run/worktree-run
 pub(crate) fn run_one(root: &Path, id: &str, task: &str) -> Result<String, FeatureError> {
-    let (entry, config) = refusals::check(root, id, task)?;
+    let (entry, config, tree_root) = refusals::check(root, id, task)?;
     if !lock::acquire(&entry.path, task)? {
         return Err(failed(text::already_running(task, &entry.folder)));
     }
-    let outcome = after_lock(root, &entry, task, &config);
+    let commits = worktree::is_worktree(root, &tree_root);
+    let outcome = after_lock(&tree_root, &entry, task, &config, commits);
     lock::release(&entry.path, task);
     outcome
 }
@@ -44,13 +46,20 @@ pub(crate) fn run_one(root: &Path, id: &str, task: &str) -> Result<String, Featu
 /// Implements: rust-run/run-scope-audit
 /// Implements: rust-run/run-verdict
 /// Implements: rust-run/done-record
+/// Implements: rust-run/verified-task-commit
 fn after_lock(
     root: &Path,
     entry: &ChangeEntry,
     task: &str,
     config: &Config,
+    commits: bool,
 ) -> Result<String, FeatureError> {
-    check_approval(entry, task)?;
+    let death = dead::Death {
+        root,
+        config,
+        commits,
+    };
+    check_approval(entry, task, &death)?;
     let task_file = read_task_file(&entry.path.join("tasks").join(format!("{task}.md")))
         .map_err(|error| failed(error.to_string()))?;
     let before = scope::snapshot(root)?;
@@ -62,15 +71,16 @@ fn after_lock(
     };
     let prompt = executor_prompt(root, &entry.path, task, &prior)
         .map_err(|error| failed(error.to_string()))?;
-    let started = start::run(
+    let started = start::run(&start::Start {
         root,
-        &entry.path,
-        &entry.folder,
+        folder: &entry.path,
+        name: &entry.folder,
         task,
         config,
-        context.attempt,
-        &prompt,
-    )?;
+        commits,
+        attempt: context.attempt,
+        prompt: &prompt,
+    })?;
     let after = scope::snapshot(root)?;
     let wrote_result = result_written(entry, task, started.started_ms);
     if let Some(exit) = started.exit {
@@ -86,7 +96,7 @@ fn after_lock(
                     reason.as_str(),
                     exit.code
                 );
-                return dead::kill(&entry.path, &entry.folder, task, reason, &marker);
+                return dead::kill(&entry.path, &entry.folder, task, reason, &marker, &death);
             }
             start::exit_continued(&entry.path, task, exit.code)?;
         }
@@ -94,9 +104,12 @@ fn after_lock(
         return Err(failed(text::cannot_start(task, &entry.folder)));
     }
     let changes = scope::changed(&before, &after);
-    scope::audit(root, entry, task, &task_file, changes)?;
-    verdict::judge(root, entry, task, &task_file, config)?;
+    scope::audit(root, entry, task, &task_file, changes, &death)?;
+    verdict::judge(root, entry, task, &task_file, config, &death)?;
     done::record(entry, task)?;
+    if commits {
+        commit::verified(root, entry, task, &task_file, config)?;
+    }
     Ok(text::done(task, &entry.folder))
 }
 
@@ -126,30 +139,45 @@ fn result_written(entry: &ChangeEntry, task: &str, started_ms: i64) -> bool {
 ///
 /// Implements: rust-run/run-approval-check
 /// Implements: rust-run/dead-record
-fn check_approval(entry: &ChangeEntry, task: &str) -> Result<(), FeatureError> {
+fn check_approval(
+    entry: &ChangeEntry,
+    task: &str,
+    death: &dead::Death<'_>,
+) -> Result<(), FeatureError> {
     let path = entry.path.join(".run").join("approved");
     let approved = fs::read_to_string(&path)
         .ok()
         .map(|text| text.trim().to_owned());
     let Some(approved) = approved else {
-        return die(entry, task, &text::missing_approval());
+        return die(entry, task, &text::missing_approval(), death);
     };
     let computed = change_folder_seal(&entry.path).map_err(|error| failed(error.to_string()))?;
     let current = computed.as_str();
     if approved == current {
         return Ok(());
     }
-    die(entry, task, &text::changed_approval(&approved, current))
+    die(
+        entry,
+        task,
+        &text::changed_approval(&approved, current),
+        death,
+    )
 }
 
 /// Records a `spec_conflict` death and returns the failed ending.
-fn die(entry: &ChangeEntry, task: &str, marker: &str) -> Result<(), FeatureError> {
+fn die(
+    entry: &ChangeEntry,
+    task: &str,
+    marker: &str,
+    death: &dead::Death<'_>,
+) -> Result<(), FeatureError> {
     dead::kill(
         &entry.path,
         &entry.folder,
         task,
         DeadReason::SpecConflict,
         marker,
+        death,
     )
 }
 

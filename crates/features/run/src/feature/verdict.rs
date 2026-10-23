@@ -31,6 +31,7 @@ pub(crate) fn judge(
     task: &str,
     task_file: &TaskFile,
     config: &Config,
+    death: &dead::Death<'_>,
 ) -> Result<(), FeatureError> {
     let result_path = entry
         .path
@@ -47,6 +48,7 @@ pub(crate) fn judge(
             task,
             DeadReason::NoResult,
             &marker,
+            death,
         );
     };
     if let Some(blocked) = parse_result_sections(&text).blocked {
@@ -57,6 +59,7 @@ pub(crate) fn judge(
             task,
             DeadReason::Blocked,
             &marker,
+            death,
         );
     }
     let task_verify = verify(
@@ -76,6 +79,7 @@ pub(crate) fn judge(
             task,
             DeadReason::VerifyRed,
             &marker,
+            death,
         );
     }
     let proposal = read_proposal(&entry.path.join("proposal.md"))
@@ -97,6 +101,7 @@ pub(crate) fn judge(
             task,
             DeadReason::ChangeVerifyRed,
             &marker,
+            death,
         );
     }
     Ok(())

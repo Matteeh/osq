@@ -19,6 +19,26 @@ const HARNESS: &str = "pi";
 /// TypeScript's default `gates.usageLimitWaitSeconds`.
 const USAGE_LIMIT_WAIT: Duration = Duration::from_secs(1800);
 
+/// Everything one executor start needs.
+pub(crate) struct Start<'a> {
+    /// The root of the tree the change lives in.
+    pub(crate) root: &'a std::path::Path,
+    /// The change folder.
+    pub(crate) folder: &'a std::path::Path,
+    /// The change folder's name.
+    pub(crate) name: &'a str,
+    /// The task number.
+    pub(crate) task: &'a str,
+    /// The config with the executor and the limits.
+    pub(crate) config: &'a Config,
+    /// Whether the change lives in a worktree rather than the checkout.
+    pub(crate) commits: bool,
+    /// The attempt number the started event records.
+    pub(crate) attempt: u64,
+    /// The executor's prompt.
+    pub(crate) prompt: &'a str,
+}
+
 /// What one executor start ended with.
 pub(crate) struct Started {
     /// The epoch milliseconds just before the start.
@@ -43,35 +63,27 @@ pub(crate) struct Exit {
 ///
 /// Returns a `Failed` error when an event cannot be written, when the runner
 /// cannot find pi, and on a usage limit, which fails the run without a marker.
-pub(crate) fn run(
-    root: &std::path::Path,
-    folder: &std::path::Path,
-    name: &str,
-    task: &str,
-    config: &Config,
-    attempt: u64,
-    prompt: &str,
-) -> Result<Started, FeatureError> {
+pub(crate) fn run(start: &Start<'_>) -> Result<Started, FeatureError> {
     let source_env: BTreeMap<String, String> = std::env::vars().collect();
-    let settings = runner_settings(config);
+    let settings = runner_settings(start.config);
     let request = TaskRequest {
         role: Role::Executor,
-        task: task.to_owned(),
-        prompt: prompt.to_owned(),
-        cwd: root.to_path_buf(),
+        task: start.task.to_owned(),
+        prompt: start.prompt.to_owned(),
+        cwd: start.root.to_path_buf(),
         source_env: source_env.clone(),
         extra_env: BTreeMap::new(),
     };
     let mut harnesses: BTreeMap<String, Box<dyn Harness>> = BTreeMap::new();
     harnesses.insert(
         HARNESS.to_owned(),
-        Box::new(PiHarness::from_config(config, &source_env)),
+        Box::new(PiHarness::from_config(start.config, &source_env)),
     );
     let started_ms = time::now_ms();
     events::append(
-        folder,
-        &format!("{task}.jsonl"),
-        Event::Started(started_data(config, attempt)),
+        start.folder,
+        &format!("{}.jsonl", start.task),
+        Event::Started(started_data(start.config, start.attempt)),
     )?;
     let mut gathered = Vec::new();
     let outcome = run_task(
@@ -82,13 +94,13 @@ pub(crate) fn run(
         &mut |event| gathered.push(event),
     );
     for event in gathered {
-        events::append(folder, &format!("{task}.jsonl"), event)?;
+        events::append(start.folder, &format!("{}.jsonl", start.task), event)?;
     }
     match outcome {
         Ok(RunOutcome::Exited(exit)) => {
             events::append(
-                folder,
-                &format!("{task}.jsonl"),
+                start.folder,
+                &format!("{}.jsonl", start.task),
                 Event::Exited(ExitedData {
                     exit_code: i64::from(exit.exit_code),
                     pid: None,
@@ -110,8 +122,11 @@ pub(crate) fn run(
             exit: None,
         }),
         Ok(RunOutcome::Paused(paused)) => {
-            pause::write(folder, &paused)?;
-            Err(failed(text::usage_limit(task, name)))
+            pause::write(start.folder, &paused)?;
+            if start.commits {
+                pause::discard_worktree(start.root, start.folder, start.config)?;
+            }
+            Err(failed(text::usage_limit(start.task, start.name)))
         }
         Err(error) => Err(failed(error.to_string())),
     }
@@ -161,7 +176,7 @@ fn started_data(config: &Config, attempt: u64) -> StartedData {
     StartedData {
         harness: Some(HARNESS.to_owned()),
         model: config.executor.model.clone(),
-        osq_version: None,
+        osq_version: Some(env!("CARGO_PKG_VERSION").to_owned()),
         attempt: Some(attempt),
         project_commit: None,
         commit: None,

@@ -11,6 +11,14 @@ pub(crate) fn find_change<'a>(changes: &'a [ChangeEntry], query: &str) -> Option
         .find(|entry| entry.location == Location::Active && matches(&entry.folder, query))
 }
 
+/// Whether one change folder matches a query as TypeScript's `matchesFolder`.
+///
+/// Implements: rust-run/run-refusals
+/// Implements: rust-run/worktree-run
+pub(crate) fn names(entry: &ChangeEntry, query: &str) -> bool {
+    matches(&entry.folder, query)
+}
+
 /// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
 ///
 /// Implements: rust-run/run-refusals

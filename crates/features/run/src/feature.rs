@@ -1,10 +1,12 @@
 //! The run feature's `Feature` implementation and its private pieces.
 
+mod commit;
 mod dead;
 mod done;
 mod events;
 mod find;
 mod lock;
+mod message;
 mod pause;
 mod refusals;
 mod run;
@@ -13,6 +15,7 @@ mod start;
 mod text;
 mod time;
 mod verdict;
+mod worktree;
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 

@@ -15,6 +15,10 @@ use sha2::{Digest, Sha256};
 
 use super::{dead, events};
 
+/// A change folder no status path can match, so the commit counts only scope
+/// paths and the records it names itself.
+const NO_CHANGE_FOLDER: &str = "\u{0}";
+
 /// One status entry's code and the hash of the file's bytes, or none when missing.
 type Snapshot = BTreeMap<String, (String, Option<String>)>;
 
@@ -97,21 +101,16 @@ fn change_of(
 /// is outside the scope or a frozen test changed.
 ///
 /// Implements: rust-run/run-scope-audit
+/// Implements: rust-run/dead-task-commit
 pub(crate) fn audit(
     root: &Path,
     entry: &ChangeEntry,
     task: &str,
     task_file: &TaskFile,
     changes: Vec<ChangedPath>,
+    death: &dead::Death<'_>,
 ) -> Result<(), FeatureError> {
-    let audit = ScopeAudit {
-        scope: task_file.scope.clone(),
-        tests_modify: task_file.tests_modify,
-        change_folder: relative(root, &entry.path),
-        test_folders: test_folders(root, &changes),
-        lock_rules: lock_rules(),
-        changes,
-    };
+    let audit = audit_input(root, entry, task_file, changes);
     let disallowed = audit_scope(&audit);
     let outside = outside_files(&disallowed);
     if !outside.is_empty() {
@@ -126,6 +125,7 @@ pub(crate) fn audit(
             task,
             DeadReason::ScopeViolation,
             &marker,
+            death,
         );
     }
     if disallowed.is_empty() {
@@ -152,7 +152,111 @@ pub(crate) fn audit(
         task,
         DeadReason::UndeclaredTestChange,
         &marker,
+        death,
     )
+}
+
+/// The audit facts every scope decision shares.
+fn audit_input(
+    root: &Path,
+    entry: &ChangeEntry,
+    task_file: &TaskFile,
+    changes: Vec<ChangedPath>,
+) -> ScopeAudit {
+    ScopeAudit {
+        scope: task_file.scope.clone(),
+        tests_modify: task_file.tests_modify,
+        change_folder: relative(root, &entry.path),
+        test_folders: test_folders(root, &changes),
+        lock_rules: lock_rules(),
+        changes,
+    }
+}
+
+/// Every path a verified task's commit holds, relative to `root`, sorted and
+/// without repeats: the status paths the scope audit allows, each untracked
+/// test file, and whichever records exist.
+///
+/// Implements: rust-run/verified-task-commit
+pub(crate) fn commit_paths(
+    root: &Path,
+    entry: &ChangeEntry,
+    task: &str,
+    task_file: &TaskFile,
+    status: &[StatusEntry],
+) -> Vec<String> {
+    let changes = status_changes(status);
+    let mut audit = audit_input(root, entry, task_file, changes);
+    NO_CHANGE_FOLDER.clone_into(&mut audit.change_folder);
+    let outside: BTreeSet<String> = audit_scope(&audit)
+        .into_iter()
+        .filter(|item| item.reason == DisallowReason::OutsideScope)
+        .map(|item| item.path)
+        .collect();
+    let mut selected = BTreeSet::new();
+    for item in status {
+        let candidates = std::iter::once(&item.path).chain(item.from.iter());
+        for candidate in candidates {
+            if !outside.contains(candidate) {
+                selected.insert(candidate.clone());
+            }
+        }
+        if item.code == "??"
+            && audit
+                .test_folders
+                .iter()
+                .any(|folder| at_or_under(&item.path, folder))
+        {
+            selected.insert(item.path.clone());
+        }
+    }
+    let change = relative(root, &entry.path);
+    for record in records(&change, task) {
+        if root.join(&record).exists() {
+            selected.insert(record);
+        }
+    }
+    selected.into_iter().collect()
+}
+
+/// Each status entry's path, typed as a change for the scope audit.
+fn status_changes(status: &[StatusEntry]) -> Vec<ChangedPath> {
+    status
+        .iter()
+        .map(|item| ChangedPath {
+            path: item.path.clone(),
+            change: change_of_code(&item.code),
+        })
+        .collect()
+}
+
+/// How one porcelain code changed its path.
+fn change_of_code(code: &str) -> PathChange {
+    if code == "??" {
+        PathChange::Added
+    } else if code.contains('D') {
+        PathChange::Deleted
+    } else {
+        PathChange::Modified
+    }
+}
+
+/// The four records a verified task commits when they exist.
+fn records(change: &str, task: &str) -> [String; 4] {
+    [
+        format!("{change}/.run/done/{task}"),
+        format!("{change}/.run/results/{task}.md"),
+        format!("{change}/.run/events/{task}.jsonl"),
+        format!("{change}/tasks.md"),
+    ]
+}
+
+/// Whether `path` equals `folder` or lies under it.
+fn at_or_under(path: &str, folder: &str) -> bool {
+    path == folder
+        || path
+            .strip_prefix(folder)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 /// The sorted paths whose reason is outside the task's scope.
@@ -198,7 +302,7 @@ fn join(folder: &str, name: &str) -> String {
 }
 
 /// Gives one path relative to the root as a POSIX path.
-fn relative(root: &Path, path: &Path) -> String {
+pub(crate) fn relative(root: &Path, path: &Path) -> String {
     let relative: PathBuf = path
         .strip_prefix(root)
         .map_or_else(|_| path.to_path_buf(), Path::to_path_buf);

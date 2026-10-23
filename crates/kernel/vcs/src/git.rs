@@ -2,6 +2,7 @@
 
 mod history;
 mod merge;
+mod patch_and_discard;
 mod run;
 mod setup;
 mod state;
@@ -452,6 +453,28 @@ impl Vcs for GitVcs {
         extra_parents: &[&str],
     ) -> Result<String, VcsError> {
         write::commit_tree(self, source, parent, message, author, extra_parents)
+    }
+
+    /// The binary diff of the working tree, untracked files included.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when `add` or `diff` fails.
+    ///
+    /// Implements: rust-vcs/patch-and-discard
+    fn patch(&self, base: Option<&str>) -> Result<String, VcsError> {
+        patch_and_discard::patch(self, base)
+    }
+
+    /// Returns paths to HEAD's state in an osq worktree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when a precondition fails or git refuses.
+    ///
+    /// Implements: rust-vcs/patch-and-discard
+    fn discard(&self, paths: &[&str]) -> Result<(), VcsError> {
+        patch_and_discard::discard(self, paths)
     }
 
     /// Merges a rev, squashed or not.

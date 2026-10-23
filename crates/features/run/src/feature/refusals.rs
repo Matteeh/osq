@@ -1,14 +1,17 @@
 //! Everything `run` refuses before it writes anything.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
 use osq_kernel_config::{Config, Harness, load_config};
 use osq_kernel_storage::{ChangeEntry, list_changes};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{find, text};
+use super::{find, text, worktree};
+
+/// The change, the config and the root of the tree the change lives in.
+pub(crate) type Checked = (ChangeEntry, Config, PathBuf);
 
 /// Checks every refusal that does not need the lock, in the requirement's order.
 ///
@@ -20,16 +23,12 @@ use super::{find, text};
 /// regressed.
 ///
 /// Implements: rust-run/run-refusals
-pub(crate) fn check(
-    root: &Path,
-    id: &str,
-    task: &str,
-) -> Result<(ChangeEntry, Config), FeatureError> {
+/// Implements: rust-run/worktree-run
+pub(crate) fn check(root: &Path, id: &str, task: &str) -> Result<Checked, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let changes = list_changes(root);
-    let entry = find::find_change(&changes, id)
-        .ok_or_else(|| failed(text::not_found(id, &root.join("openspec").join("changes"))))?;
-    if !task_file(entry, task).is_file() {
+    let found = find_change(root, &config, id)?;
+    let (entry, tree_root) = (found.entry, found.root);
+    if !task_file(&entry, task).is_file() {
         return Err(failed(text::missing_task(task, &entry.folder)));
     }
     if config.executor.harness != Harness::Pi {
@@ -37,15 +36,38 @@ pub(crate) fn check(
             config.executor.harness.as_str(),
         )));
     }
-    let repository = GitVcs::new(root)
+    let repository = GitVcs::new(&tree_root)
         .root()
         .map_err(|error| failed(error.to_string()))?;
-    let expected = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    let expected = fs::canonicalize(&tree_root).unwrap_or_else(|_| tree_root.clone());
     if repository.as_deref() != Some(expected.as_path()) {
-        return Err(failed(text::no_git(root)));
+        return Err(failed(text::no_git(&tree_root)));
     }
-    check_markers(entry, task)?;
-    Ok((entry.clone(), config))
+    check_markers(&entry, task)?;
+    Ok((entry, config, tree_root))
+}
+
+/// Finds the change, in its worktree when git is on and in the root otherwise.
+///
+/// # Errors
+///
+/// Returns a `Failed` error with the display of the first git error, and for
+/// an id no active change matches.
+///
+/// Implements: rust-run/run-refusals
+/// Implements: rust-run/worktree-run
+fn find_change(root: &Path, config: &Config, id: &str) -> Result<worktree::Found, FeatureError> {
+    if worktree::git_on(root, config)? {
+        return worktree::find(root, config, id);
+    }
+    let changes = list_changes(root);
+    find::find_change(&changes, id)
+        .cloned()
+        .map(|entry| worktree::Found {
+            entry,
+            root: root.to_path_buf(),
+        })
+        .ok_or_else(|| failed(text::not_found(id, &root.join("openspec").join("changes"))))
 }
 
 /// The `tasks/<task>.md` path of one change folder.

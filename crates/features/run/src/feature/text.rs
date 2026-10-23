@@ -72,6 +72,25 @@ pub(crate) fn died(task: &str, folder: &str, reason: &str) -> String {
     format!("task {task} of {folder} died: {reason}")
 }
 
+/// The failure for a verified task whose commit git refused.
+///
+/// Implements: rust-run/verified-task-commit
+pub(crate) fn commit_failed(task: &str, folder: &str, error: impl std::fmt::Display) -> String {
+    format!("task {task} of {folder} is done, but osq could not commit it: {error}")
+}
+
+/// The failure for a dead task whose dead commit git refused.
+///
+/// Implements: rust-run/dead-task-commit
+pub(crate) fn commit_failed_dead(
+    task: &str,
+    folder: &str,
+    reason: &str,
+    error: impl std::fmt::Display,
+) -> String {
+    format!("task {task} of {folder} died: {reason}; osq could not commit it: {error}")
+}
+
 /// TypeScript's dead marker for a missing approval.
 ///
 /// Implements: rust-run/run-approval-check

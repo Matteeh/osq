@@ -6,8 +6,19 @@ use std::path::Path;
 
 use osq_core::FeatureError;
 use osq_core::event::{DeadData, DeadReason, Envelope, Event, event_line};
+use osq_kernel_config::Config;
 
-use super::{text, time};
+use super::{commit, text, time};
+
+/// What a death needs to be committed in the change's osq worktree.
+pub(crate) struct Death<'a> {
+    /// The root of the tree the change lives in.
+    pub(crate) root: &'a Path,
+    /// The config with the author and the git timeouts.
+    pub(crate) config: &'a Config,
+    /// Whether the change lives in a worktree rather than the checkout.
+    pub(crate) commits: bool,
+}
 
 /// Writes the dead marker and appends the task's `dead` event.
 ///
@@ -29,19 +40,35 @@ pub(crate) fn record(
 
 /// Records a task's death and returns the failed ending it leaves.
 ///
+/// In an osq worktree it also saves the agent's patch, discards its files
+/// outside the change folder and commits the dead records.
+///
 /// # Errors
 ///
-/// Returns the failure from `record`, or the ending that names the death.
+/// Returns the failure from `record`, the ending that names the death, or the
+/// ending that adds a failed dead commit.
 ///
 /// Implements: rust-run/dead-record
+/// Implements: rust-run/dead-task-commit
 pub(crate) fn kill<T>(
     folder: &Path,
     name: &str,
     task: &str,
     reason: DeadReason,
     marker: &str,
+    death: &Death<'_>,
 ) -> Result<T, FeatureError> {
     record(folder, task, reason, marker)?;
+    if death.commits {
+        if let Err(error) = commit::dead(death.root, folder, task, reason.as_str(), death.config) {
+            return Err(failed_text(text::commit_failed_dead(
+                task,
+                name,
+                reason.as_str(),
+                error,
+            )));
+        }
+    }
     Err(failed_text(text::died(task, name, reason.as_str())))
 }
 

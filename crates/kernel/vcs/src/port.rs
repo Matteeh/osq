@@ -339,6 +339,29 @@ pub trait Vcs {
         extra_parents: &[&str],
     ) -> Result<String, VcsError>;
 
+    /// A binary diff of the whole working tree, untracked files included,
+    /// against `base`, or HEAD without one, leaving the index and the working
+    /// tree as they were.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when `add` or `diff` fails, and
+    /// [`VcsError::Spawn`] when the git program cannot start.
+    ///
+    /// Implements: rust-vcs/patch-and-discard
+    fn patch(&self, base: Option<&str>) -> Result<String, VcsError>;
+
+    /// Returns `paths` to HEAD's state in an osq worktree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VcsError::Failed`] when a tree or branch precondition fails or
+    /// a command git refuses fails, and [`VcsError::Spawn`] when the git
+    /// program cannot start.
+    ///
+    /// Implements: rust-vcs/patch-and-discard
+    fn discard(&self, paths: &[&str]) -> Result<(), VcsError>;
+
     /// Merges `rev`, squashed or not, leaving the result staged and not
     /// committed.
     ///
