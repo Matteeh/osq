@@ -6,18 +6,6 @@ use osq_kernel_storage::{ChangeSnapshot, Location};
 
 use super::{compare_numeric_prefix, leading_number};
 
-/// The fewest measured tasks a record needs before it prints counts.
-const MIN_MEASURED_TASKS: usize = 5;
-
-/// The most archived snapshots the record's window holds.
-const MAX_ARCHIVED_CHANGES: usize = 20;
-
-/// The most dead outcomes the record lists.
-const MAX_DEAD_OUTCOMES: usize = 10;
-
-/// The whole body when the window measures too few tasks.
-const TOO_SMALL: &str = "This repository's measured record is too small (fewer than 5 tasks).";
-
 /// One measured task of the record's window.
 struct Measured {
     /// The change folder.
@@ -41,11 +29,18 @@ struct Measured {
 /// Builds the record section's body from the archived and rejected snapshots.
 ///
 /// Implements: rust-plan/repository-record-section
-pub(super) fn body(snapshots: &[ChangeSnapshot]) -> String {
-    let window = window(snapshots);
+pub(super) fn body(
+    snapshots: &[ChangeSnapshot],
+    minimum_tasks: usize,
+    recent_changes: usize,
+    dead_outcomes: usize,
+) -> String {
+    let window = window(snapshots, recent_changes);
     let measured = measured_tasks(&window);
-    if measured.len() < MIN_MEASURED_TASKS {
-        return TOO_SMALL.to_owned();
+    if measured.len() < minimum_tasks {
+        return format!(
+            "This repository's measured record is too small (fewer than {minimum_tasks} tasks)."
+        );
     }
     let passed = measured
         .iter()
@@ -55,7 +50,7 @@ pub(super) fn body(snapshots: &[ChangeSnapshot]) -> String {
     lines.push(largest_line(&measured));
     lines.push(median_line(&measured));
     lines.push(String::from("Dead outcomes:"));
-    let dead = dead_outcomes(&window);
+    let dead = dead_lines(&window, dead_outcomes);
     if dead.is_empty() {
         lines.push(String::from("  (none)"));
     } else {
@@ -65,7 +60,7 @@ pub(super) fn body(snapshots: &[ChangeSnapshot]) -> String {
 }
 
 /// The archived snapshots by newest number first, capped at the window size.
-fn window(snapshots: &[ChangeSnapshot]) -> Vec<&ChangeSnapshot> {
+fn window(snapshots: &[ChangeSnapshot], recent_changes: usize) -> Vec<&ChangeSnapshot> {
     let mut window: Vec<&ChangeSnapshot> = snapshots
         .iter()
         .filter(|snapshot| snapshot.location == Location::Archived)
@@ -78,7 +73,7 @@ fn window(snapshots: &[ChangeSnapshot]) -> Vec<&ChangeSnapshot> {
             (None, None) => left.folder.cmp(&right.folder),
         }
     });
-    window.truncate(MAX_ARCHIVED_CHANGES);
+    window.truncate(recent_changes);
     window
 }
 
@@ -200,8 +195,8 @@ fn format_duration(millis: u128) -> String {
     }
 }
 
-/// The first ten dead outcome lines of the window, in task and line order.
-fn dead_outcomes(window: &[&ChangeSnapshot]) -> Vec<String> {
+/// The first `dead_outcomes` dead event lines of the window, in order.
+fn dead_lines(window: &[&ChangeSnapshot], dead_outcomes: usize) -> Vec<String> {
     let mut lines = Vec::new();
     for snapshot in window {
         let Some(facts) = snapshot.facts.as_ref() else {
@@ -218,7 +213,7 @@ fn dead_outcomes(window: &[&ChangeSnapshot]) -> Vec<String> {
                     task.title,
                     dead.reason.as_str()
                 ));
-                if lines.len() == MAX_DEAD_OUTCOMES {
+                if lines.len() == dead_outcomes {
                     return lines;
                 }
             }

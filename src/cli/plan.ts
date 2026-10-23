@@ -61,7 +61,7 @@ export async function buildOpeningPrompt(options: OpeningPromptOptions): Promise
   const base = await buildBaseOpeningPrompt({ ...options, config });
   const recordBody =
     options.recordBody ??
-    formatRepositoryRecordBody(await getRepositoryRecord(options.projectRoot, config));
+    formatRepositoryRecordBody(await getRepositoryRecord(options.projectRoot, config), config);
   let prompt = `${base}\n\n${REPOSITORY_RECORD_HEADING}\n\n${recordBody}`;
 
   const { history, disclosures } = await formatPlanHintSections(options.projectRoot, config);

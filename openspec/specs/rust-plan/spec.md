@@ -522,10 +522,14 @@ new folder.
 
 ### Requirement: Repository record section
 The body of the prompt's `## This repository's record` section SHALL be
-the one TypeScript's `formatRepositoryRecordBody(getRepositoryRecord(root))`
-in `src/core/report/report.ts` gives.
+the one TypeScript's
+`formatRepositoryRecordBody(getRepositoryRecord(root, config), config)` in
+`src/core/report/report.ts` gives, with every size taken from the
+`Config.planning.record` that `load_config(root)` returns:
+`minimum_tasks`, `recent_changes` and `dead_outcomes`, by default 5, 20
+and 10. The plan feature writes none of these numbers itself.
 
-- The window is the 20 archived snapshots with the highest leading
+- The window is the `recent_changes` archived snapshots with the highest leading
   number, ties by folder name, folders with no leading number after the
   numbered ones by name.
 - A measured task is a task of a window snapshot, in window order and
@@ -534,8 +538,8 @@ in `src/core/report/report.ts` gives.
   `start_scope_files`; its acceptance lines are the task plan's
   `acceptance` count; its generation is legacy without
   `start_scope_resolver`, resolver 2 when it is 2, and neither otherwise.
-- With fewer than 5 measured tasks the body is
-  `This repository's measured record is too small (fewer than 5 tasks).`
+- With fewer than `minimum_tasks` measured tasks the body is
+  `This repository's measured record is too small (fewer than <minimum_tasks> tasks).`
 - Otherwise it is these lines joined by `\n`:
   - `First-attempt passes: <passed>/<measured>`, counting the measured
     tasks whose `first_attempt_passed` is true.
@@ -555,7 +559,7 @@ in `src/core/report/report.ts` gives.
     `Median task duration: unavailable`.
   - `Dead outcomes:`, then one line `- <folder>, <task title>, <reason>`
     per dead event of a window snapshot's task streams, in window order,
-    task order and line order, the first 10, `<reason>` trimmed or
+    task order and line order, the first `dead_outcomes`, `<reason>` trimmed or
     `unknown` when blank; or the one line `  (none)` without any.
 
 #### Scenario: Repository record bodies
@@ -571,15 +575,27 @@ in `src/core/report/report.ts` gives.
 | 5 measured passing legacy tasks of `001-a`, all with 2 scope files and one acceptance line, measured 1, 2, 3 and 4 seconds | `First-attempt passes: 5/5\nLargest first-attempt pass: 001-a/1 "T1" (scope files: 2, acceptance lines: 1) [legacy scope]\nMedian task duration: 3s\nDead outcomes:\n  (none)` |
 | 21 archived changes `001-a` to `021-a`, each one measured task that died with `timeout`, plus 12 dead events in `021-a` | `First-attempt passes: 0/20` first, and exactly 10 dead lines, all of `021-a` |
 
+#### Scenario: Configured record sizes
+- **WHEN** `plan --next` runs on a root built under `CARGO_TARGET_TMPDIR` whose `osq.toml` holds the row's `[planning.record]` table, over the archive of the row
+- **THEN** the record section's body is the row's:
+
+| `[planning.record]` | Archive | Body |
+|---|---|---|
+| `minimumTasks = 6` | 5 measured legacy tasks, none passing | `This repository's measured record is too small (fewer than 6 tasks).` |
+| `minimumTasks = 1` | 1 measured legacy task, not passing, no `end` measure, no dead event | `First-attempt passes: 0/1\nLargest first-attempt pass: unavailable\nMedian task duration: unavailable\nDead outcomes:\n  (none)` |
+| `minimumTasks = 1`, `recentChanges = 2` | 3 archived changes `001-a` to `003-a`, each one measured task that died with `timeout` | `First-attempt passes: 0/2` first, and exactly two dead lines, of `003-a` then `002-a` |
+| `deadOutcomes = 1` | the 21-change archive of "Repository record bodies" | exactly 1 dead line, of `021-a` |
+
 ### Requirement: History hints section
 The body of the prompt's `## What history says` section SHALL be the one
 TypeScript's `formatHistoryHints` in `src/core/report/history-hints.ts`
-gives under `DEFAULT_PLANNING_HISTORY` (`minimumTasks` 30, `recentTasks`
-100, `maxCharacters` 1500), over the `task_outcomes` rows whose `attempts`
-is at least 1.
+gives under the `Config.planning.history` that `load_config(root)` returns
+(`minimum_tasks`, `recent_tasks` and `max_characters`, by default 30, 100
+and 1500, TypeScript's `DEFAULT_PLANNING_HISTORY`), over the
+`task_outcomes` rows whose `attempts` is at least 1.
 
-- With fewer than 30 such rows there is no body and no section.
-- The window is the 100 newest rows: the higher change leading number
+- With fewer than `minimum_tasks` such rows there is no body and no section.
+- The window is the `recent_tasks` newest rows: the higher change leading number
   first, numbered changes before the others, which go by change name from
   the last; then the higher task number, and tasks that are not numbers by
   task text.
@@ -598,7 +614,7 @@ is at least 1.
   name, or `none` without any (always present).
 - Lines are kept in order while their length, counted in UTF-16 code
   units as JavaScript counts it, with one `\n` between kept lines, stays
-  within 1500; the body is the kept lines joined by `\n`, and none when
+  within `max_characters`; the body is the kept lines joined by `\n`, and none when
   even the first line does not fit.
 
 #### Scenario: History hint bodies
@@ -612,13 +628,26 @@ is at least 1.
 | 101 tasks in changes `001-a` to `101-a`, one each, where `001-a`'s task alone has 9 scope files | the counts line names `the last 100`, and the scope line holds no `over 8` group |
 | 30 tasks whose dead reasons are `timeout` 2, `blocked` 2, `verify_red` 2 and `crashed` 1 | the last line is `Most common last dead reasons: blocked 2, timeout 2, verify_red 2` |
 
+#### Scenario: Configured history sizes
+- **WHEN** `plan --next` runs on a root built under `CARGO_TARGET_TMPDIR` whose `osq.toml` holds the row's `[planning.history]` table, over an archive of 3 tasks that ran, every row in change `001-a` and passing
+- **THEN** the history section is the row's:
+
+| `[planning.history]` | History section |
+|---|---|
+| none | none |
+| `minimumTasks = 3` | present, its counts line naming `the last 3` |
+| `minimumTasks = 3`, `recentTasks = 2` | present, its counts line naming `the last 2` |
+| `minimumTasks = 3`, `maxCharacters = 148` | only the counts line, which is 148 code units long |
+
 ### Requirement: Disclosures section
 The body of the prompt's `## Recent executor disclosures` section SHALL be
 the one TypeScript's `formatRecentDisclosures` in
-`src/core/report/recent-disclosures.ts` gives under
-`DEFAULT_PLANNING_DISCLOSURES` (`recentChanges` 3, `maxCharacters` 4000).
+`src/core/report/recent-disclosures.ts` gives under the
+`Config.planning.disclosures` that `load_config(root)` returns
+(`recent_changes` and `max_characters`, by default 3 and 4000,
+TypeScript's `DEFAULT_PLANNING_DISCLOSURES`).
 
-- The changes are the 3 archived snapshots the record's window puts
+- The changes are the `recent_changes` archived snapshots the record's window puts
   first. Each disclosure of each, in their order, gives one entry per
   non-empty section, in the order `deviated`, `missing_context` and
   `outside_scope`, shown as `deviated`, `missing context` and
@@ -627,7 +656,7 @@ the one TypeScript's `formatRecentDisclosures` in
   on `\n` or `\r\n`, each prefixed `> ` and joined by `\n`.
 - Without any entry there is no body and no section.
 - Entries are kept while their total length, in UTF-16 code units and not
-  counting separators, stays within 4000. The first entry that does not
+  counting separators, stays within `max_characters`. The first entry that does not
   fit is cut to the larger of what is left and 11, and nothing follows
   it: when it is longer than that limit, its first `limit - 11` code
   units with trailing `\n` removed, then `[truncated]`, or `[truncated]`
@@ -646,6 +675,15 @@ the one TypeScript's `formatRecentDisclosures` in
 | `001-a` with `.run/results/2.md` holding `## Deviated\n\nUsed a map.\nSecond line.\n\n## Outside scope\n\nA bug.\n` | `<claim>\n\n001-a task 2, deviated:\n> Used a map.\n> Second line.\n\n001-a task 2, outside scope:\n> A bug.` |
 | `001-a` to `004-a`, each with `.run/results/1.md` holding `## Missing context\n\nNo <folder>.\n` | `<claim>\n\n004-a task 1, missing context:\n> No 004-a.\n\n003-a task 1, missing context:\n> No 003-a.\n\n002-a task 1, missing context:\n> No 002-a.` |
 | `001-a` with `.run/results/1.md` holding a `## Deviated` section of 5000 `x` | `<claim>\n\n001-a task 1, deviated:\n> ` then `x` up to 3989 code units in all, then `[truncated]` |
+
+#### Scenario: Configured disclosure sizes
+- **WHEN** `plan --next` runs on a root built under `CARGO_TARGET_TMPDIR` whose `osq.toml` holds the row's `[planning.disclosures]` table, over the archive of the row
+- **THEN** the disclosures section is the row's, where `<claim>` is the claim sentence above:
+
+| `[planning.disclosures]` | Archive | Disclosures section |
+|---|---|---|
+| `recentChanges = 1` | `001-a` to `004-a`, each with `.run/results/1.md` holding `## Missing context\n\nNo <folder>.\n` | `<claim>\n\n004-a task 1, missing context:\n> No 004-a.` |
+| `maxCharacters = 20` | `001-a` with `.run/results/1.md` holding a `## Deviated` section of 5000 `x` | `<claim>\n\n001-a tas[truncated]` |
 
 ### Requirement: Manual edits section
 The body of the prompt's `## Manual edits` section SHALL be the one

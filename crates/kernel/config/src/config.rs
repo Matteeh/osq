@@ -4,7 +4,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use crate::blocks::{self, BannedWord, Gates, Limits, PiConfig, Timeouts, VcsConfig};
+use crate::blocks::{self, BannedWord, Gates, Limits, PiConfig, Planning, Timeouts, VcsConfig};
 use crate::error::ConfigError;
 use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
 
@@ -22,6 +22,7 @@ const TOP_LEVEL_KEYS: &[&str] = &[
     "pi",
     "limits",
     "gates",
+    "planning",
     "bannedWords",
 ];
 
@@ -46,6 +47,8 @@ pub struct Config {
     pub limits: Limits,
     /// The gates a run applies.
     pub gates: Gates,
+    /// The plan report's measurement settings.
+    pub planning: Planning,
     /// The words the project bans from its code.
     pub banned_words: Vec<BannedWord>,
 }
@@ -63,6 +66,7 @@ impl Default for Config {
             pi: PiConfig::default(),
             limits: Limits::default(),
             gates: Gates::default(),
+            planning: Planning::default(),
             banned_words: Vec::new(),
         }
     }
@@ -137,6 +141,10 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         Some(table) => blocks::gates::read_gates(table)?,
         None => Gates::default(),
     };
+    let planning = match blocks::value::table(&table, "planning")? {
+        Some(table) => blocks::planning::read_planning(table)?,
+        None => Planning::default(),
+    };
     let banned_words = blocks::banned_words::read_banned_words(table.get("bannedWords"))?;
     Ok(Config {
         max_concurrency,
@@ -148,6 +156,7 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         pi,
         limits,
         gates,
+        planning,
         banned_words,
     })
 }

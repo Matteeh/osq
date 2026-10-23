@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:db6c3c01adb7be5f89d930c76fc0418a9ee4d1208901242cd66d1ab3b847aa08"
+build_stamp: "4b9a2af8"
+project_commit: "14e46d11"
+exit_code: 0
+scope_files: {"crates/features/plan/src/next/report.rs":"sha256:6a8446a44b492e78729de4de4adb88192546a471da53736c1d7c49bf59ed21ab","crates/features/plan/src/next/report/disclosures.rs":"sha256:0e4e42ae34e4b66b102c6d059cfb6e3f73ff175f90dc0958af1b1d8f10c968fd","crates/features/plan/src/next/report/hints.rs":"sha256:bdbbbc2c38670c7fdbb4b4fd76448fa3fde82e15d194a76d810465b07da58965","crates/features/plan/src/next/report/record.rs":"sha256:7e26e0f5fa0433136aaece37fa2132cab9ec0ed77d00e6d7d531dcb4cd52bfc1","crates/features/plan/tests/prompt_config.rs":"sha256:52efc951bc9821b073df83313979f4dfbf915a5718ea5eeac6e6c3ebd5167c40"}
+---
+2026-10-23T15:22:33.185Z

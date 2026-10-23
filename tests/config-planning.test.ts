@@ -13,6 +13,7 @@ import type { PlanningConfig, PlanningPrice } from '../src/index.js';
 const OPUS: PlanningPrice = { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 };
 const DISCLOSURES = { recentChanges: 3, maxCharacters: 4000 };
 const HISTORY = { minimumTasks: 30, recentTasks: 100, maxCharacters: 1500 };
+const RECORD = { minimumTasks: 5, recentChanges: 20, deadOutcomes: 10 };
 
 describe('planning configuration', () => {
   let tmpDir: string;
@@ -30,16 +31,19 @@ describe('planning configuration', () => {
       idleGapMinutes: 10,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
     });
     assert.deepEqual(DEFAULT_CONFIG.planning, {
       idleGapMinutes: 10,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
     });
     assert.deepEqual(defineConfig({}).planning, {
       idleGapMinutes: 10,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
     });
     assert.equal(validatePlanningConfig(undefined).idleGapMinutes, 10);
   });
@@ -50,6 +54,7 @@ describe('planning configuration', () => {
       idleGapMinutes: 10,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
       prices: { 'claude-opus-5-5': OPUS },
     });
   });
@@ -59,6 +64,7 @@ describe('planning configuration', () => {
       idleGapMinutes: 3,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
     });
   });
 
@@ -130,6 +136,7 @@ describe('planning configuration', () => {
       idleGapMinutes: 4,
       disclosures: DISCLOSURES,
       history: HISTORY,
+      record: RECORD,
       prices: { m: { input: 1, output: 2, cacheRead: 0, cacheWrite: 0 } },
     });
   });

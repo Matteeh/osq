@@ -36,7 +36,19 @@ export interface PlanningConfig {
   readonly disclosures: PlanningDisclosuresConfig;
   /** Optional so hand-built configs still typecheck; readers fall back to the default. */
   readonly history?: PlanningHistoryConfig;
+  /** Optional so hand-built configs still typecheck; readers fall back to the default. */
+  readonly record?: PlanningRecordConfig;
   readonly prices?: Readonly<Record<string, PlanningPrice>>;
+}
+
+/** Bounds on the shared repository record in the plan prompt. */
+export interface PlanningRecordConfig {
+  /** Fewest measured tasks before the record prints its lines. */
+  readonly minimumTasks: number;
+  /** Most archived changes the record's window holds. */
+  readonly recentChanges: number;
+  /** Most dead outcome rows the record keeps. */
+  readonly deadOutcomes: number;
 }
 
 export const DEFAULT_PLANNING_DISCLOSURES: PlanningDisclosuresConfig = {
@@ -50,10 +62,17 @@ export const DEFAULT_PLANNING_HISTORY: PlanningHistoryConfig = {
   maxCharacters: 1500,
 };
 
+export const DEFAULT_PLANNING_RECORD: PlanningRecordConfig = {
+  minimumTasks: 5,
+  recentChanges: 20,
+  deadOutcomes: 10,
+};
+
 export const DEFAULT_PLANNING_CONFIG: PlanningConfig = {
   idleGapMinutes: 10,
   disclosures: DEFAULT_PLANNING_DISCLOSURES,
   history: DEFAULT_PLANNING_HISTORY,
+  record: DEFAULT_PLANNING_RECORD,
 };
 
 const PRICE_KINDS = ['input', 'output', 'cacheRead', 'cacheWrite'] as const;
@@ -64,6 +83,7 @@ const PRICE_KINDS = ['input', 'output', 'cacheRead', 'cacheWrite'] as const;
  * finite, non-negative price entries. Every rejection names the offending key.
  *
  * @scenario metrics-and-reporting: Invalid history configuration
+ * @scenario metrics-and-reporting: Invalid record configuration
  * @adr 008
  */
 export function validatePlanningConfig(planning: unknown): PlanningConfig {
@@ -85,10 +105,11 @@ export function validatePlanningConfig(planning: unknown): PlanningConfig {
   }
   const disclosures = validatePlanningDisclosures(record.disclosures);
   const history = validatePlanningHistory(record.history);
+  const repositoryRecord = validatePlanningRecord(record.record);
   const prices = validatePlanningPrices(record.prices);
   return prices === undefined
-    ? { idleGapMinutes, disclosures, history }
-    : { idleGapMinutes, disclosures, history, prices };
+    ? { idleGapMinutes, disclosures, history, record: repositoryRecord }
+    : { idleGapMinutes, disclosures, history, record: repositoryRecord, prices };
 }
 
 /** A partial `history` block keeps defaults; every value is a positive integer. */
@@ -118,6 +139,37 @@ function validatePlanningHistory(history: unknown): PlanningHistoryConfig {
       'maxCharacters',
       record.maxCharacters,
       DEFAULT_PLANNING_HISTORY.maxCharacters,
+    ),
+  };
+}
+
+/** A partial `record` block keeps defaults; every value is a positive integer. */
+function validatePlanningRecord(record: unknown): PlanningRecordConfig {
+  if (record === undefined) return DEFAULT_PLANNING_RECORD;
+  if (typeof record !== 'object' || record === null || Array.isArray(record)) {
+    throw new Error(
+      'planning.record must be an object with minimumTasks, recentChanges and deadOutcomes',
+    );
+  }
+  const values = record as Record<string, unknown>;
+  return {
+    minimumTasks: validateCount(
+      'planning.record',
+      'minimumTasks',
+      values.minimumTasks,
+      DEFAULT_PLANNING_RECORD.minimumTasks,
+    ),
+    recentChanges: validateCount(
+      'planning.record',
+      'recentChanges',
+      values.recentChanges,
+      DEFAULT_PLANNING_RECORD.recentChanges,
+    ),
+    deadOutcomes: validateCount(
+      'planning.record',
+      'deadOutcomes',
+      values.deadOutcomes,
+      DEFAULT_PLANNING_RECORD.deadOutcomes,
     ),
   };
 }

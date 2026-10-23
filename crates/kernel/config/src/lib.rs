@@ -7,7 +7,10 @@ mod config;
 mod error;
 mod roles;
 
-pub use blocks::{BannedWord, Gates, Limits, ManualEdits, PiConfig, Timeouts, VcsConfig};
+pub use blocks::{
+    BannedWord, Gates, Limits, ManualEdits, PiConfig, Planning, PlanningDisclosures,
+    PlanningHistory, PlanningRecord, Timeouts, VcsConfig,
+};
 pub use config::{Config, load_config, parse_config};
 pub use error::ConfigError;
 pub use roles::{ExecutorConfig, Harness, PlannerConfig, ValidatorConfig};

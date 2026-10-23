@@ -6,12 +6,6 @@ use osq_kernel_storage::{ChangeSnapshot, Location};
 
 use super::leading_number;
 
-/// The newest archived changes whose result files the section quotes.
-const RECENT_CHANGES: usize = 3;
-
-/// The most UTF-16 code units the kept entries may hold.
-const MAX_CHARACTERS: usize = 4000;
-
 /// The marker appended to the last entry when the budget cuts it.
 const TRUNCATION_MARKER: &str = "[truncated]";
 
@@ -34,9 +28,13 @@ const SECTIONS: [Section; 3] = [
 /// Builds the disclosures section's body, or none without a real disclosure.
 ///
 /// Implements: rust-plan/disclosures-section
-pub(super) fn body(snapshots: &[ChangeSnapshot]) -> Option<String> {
+pub(super) fn body(
+    snapshots: &[ChangeSnapshot],
+    recent_changes: usize,
+    max_characters: usize,
+) -> Option<String> {
     let mut entries = Vec::new();
-    for snapshot in recent_archived(snapshots) {
+    for snapshot in recent_archived(snapshots, recent_changes) {
         for task in &snapshot.disclosures {
             for (display, text) in SECTIONS {
                 if let Some(text) = text(task) {
@@ -58,7 +56,7 @@ pub(super) fn body(snapshots: &[ChangeSnapshot]) -> Option<String> {
     let mut used = 0_usize;
     for entry in entries {
         let length = utf16_len(&entry);
-        let remaining = MAX_CHARACTERS.saturating_sub(used);
+        let remaining = max_characters.saturating_sub(used);
         if length <= remaining {
             used += length;
             parts.push(entry);
@@ -71,8 +69,8 @@ pub(super) fn body(snapshots: &[ChangeSnapshot]) -> Option<String> {
     Some(format!("{CLAIM}\n\n{}", parts.join("\n\n")))
 }
 
-/// The newest archived snapshots of the record's window, first three only.
-fn recent_archived(snapshots: &[ChangeSnapshot]) -> Vec<&ChangeSnapshot> {
+/// The newest archived snapshots of the record's window, first few only.
+fn recent_archived(snapshots: &[ChangeSnapshot], recent_changes: usize) -> Vec<&ChangeSnapshot> {
     let mut archived: Vec<&ChangeSnapshot> = snapshots
         .iter()
         .filter(|snapshot| snapshot.location == Location::Archived)
@@ -85,7 +83,7 @@ fn recent_archived(snapshots: &[ChangeSnapshot]) -> Vec<&ChangeSnapshot> {
             (None, None) => left.folder.cmp(&right.folder),
         }
     });
-    archived.truncate(RECENT_CHANGES);
+    archived.truncate(recent_changes);
     archived
 }
 

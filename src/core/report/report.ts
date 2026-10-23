@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { DEFAULT_PLANNING_RECORD } from '../foundation/config-planning.js';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { readManifestApprovedAt } from '../run/manifest-approval.js';
 import { livingSidecarPath } from '../spec/capability-sidecar.js';
@@ -1602,10 +1603,6 @@ export interface RepositoryRecord {
   readonly deadOutcomes: readonly RepositoryDeadOutcome[];
 }
 
-export const REPOSITORY_RECORD_MIN_MEASURED_TASKS = 5;
-export const REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES = 20;
-export const REPOSITORY_RECORD_MAX_DEAD_OUTCOMES = 10;
-
 function numericPrefix(name: string): number | null {
   const match = name.match(/^(\d+)/);
   return match ? Number.parseInt(match[1], 10) : null;
@@ -1664,17 +1661,22 @@ async function collectDeadOutcomes(folders: readonly string[]): Promise<Reposito
 }
 
 /**
- * Shared bounded repository record: at most the 20 newest canonical archived
- * changes by numeric id, with measured outcomes and up to ten dead rows.
+ * Shared bounded repository record: the newest canonical archived changes by
+ * numeric id, with measured outcomes and dead rows sized from `planning.record`.
+ *
+ * @scenario metrics-and-reporting: Default record sizes
+ * @scenario metrics-and-reporting: Configured record sizes
+ * @adr 008
  */
 export async function getRepositoryRecord(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
 ): Promise<RepositoryRecord> {
+  const limits = config.planning?.record ?? DEFAULT_PLANNING_RECORD;
   const archived = await listChanges(projectRoot, config, ['archived']);
   const folders = listRecentArchiveFolders(
     archived.map((change) => change.folderPath),
-    REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES,
+    limits.recentChanges,
   );
   const measured = await projectMeasuredTasks(folders);
   const deadOutcomes = await collectDeadOutcomes(folders);
@@ -1699,17 +1701,26 @@ export async function getRepositoryRecord(
     medianDurationSeconds: medianSeconds(durations),
     largestFirstAttemptPass: selectLargestFirstAttemptPass(scopeTasks),
     scopeFileResolver,
-    deadOutcomes: deadOutcomes.slice(0, REPOSITORY_RECORD_MAX_DEAD_OUTCOMES),
+    deadOutcomes: deadOutcomes.slice(0, limits.deadOutcomes),
   };
 }
 
 /**
  * Body of the planning prompt's repository-record section. The caller owns the
- * heading. Fewer than five measured tasks print only the too-small sentence.
+ * heading. Fewer measured tasks than `planning.record.minimumTasks` print only
+ * the too-small sentence.
+ *
+ * @scenario metrics-and-reporting: Default record sizes
+ * @scenario metrics-and-reporting: Configured record sizes
+ * @adr 008
  */
-export function formatRepositoryRecordBody(record: RepositoryRecord): string {
-  if (record.measuredTasks < REPOSITORY_RECORD_MIN_MEASURED_TASKS) {
-    return `This repository's measured record is too small (fewer than ${REPOSITORY_RECORD_MIN_MEASURED_TASKS} tasks).`;
+export function formatRepositoryRecordBody(
+  record: RepositoryRecord,
+  config: OsqConfig = DEFAULT_CONFIG,
+): string {
+  const { minimumTasks } = config.planning?.record ?? DEFAULT_PLANNING_RECORD;
+  if (record.measuredTasks < minimumTasks) {
+    return `This repository's measured record is too small (fewer than ${minimumTasks} tasks).`;
   }
 
   const lines: string[] = [];

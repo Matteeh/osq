@@ -7,15 +7,6 @@ use osq_kernel_storage::TaskOutcome;
 
 use super::leading_number;
 
-/// The fewest rows that ran before the history shows.
-const MINIMUM_TASKS: usize = 30;
-
-/// The newest rows the counts cover.
-const RECENT_TASKS: usize = 100;
-
-/// The most UTF-16 code units the body may hold.
-const MAX_CHARACTERS: usize = 1500;
-
 /// One counted group of the history lines.
 struct Group {
     /// The group's label.
@@ -29,14 +20,19 @@ struct Group {
 /// Builds the history section's body, or none when too little history ran.
 ///
 /// Implements: rust-plan/history-hints-section
-pub(super) fn body(rows: &[TaskOutcome]) -> Option<String> {
+pub(super) fn body(
+    rows: &[TaskOutcome],
+    minimum_tasks: usize,
+    recent_tasks: usize,
+    max_characters: usize,
+) -> Option<String> {
     let ran: Vec<&TaskOutcome> = rows.iter().filter(|row| row.attempts >= 1).collect();
-    if ran.len() < MINIMUM_TASKS {
+    if ran.len() < minimum_tasks {
         return None;
     }
     let mut window = ran;
     window.sort_by(|left, right| newest_first(left, right));
-    window.truncate(RECENT_TASKS);
+    window.truncate(recent_tasks);
 
     let mut lines = vec![counts_line(window.len())];
     if let Some(line) = groups_line("First attempt by scope files", &scope_groups(&window)) {
@@ -53,7 +49,7 @@ pub(super) fn body(rows: &[TaskOutcome]) -> Option<String> {
         }
     }
     lines.push(dead_reason_line(&window));
-    fit_lines(&lines, MAX_CHARACTERS)
+    fit_lines(&lines, max_characters)
 }
 
 /// Newest change number first, then newest task number, then task text.
