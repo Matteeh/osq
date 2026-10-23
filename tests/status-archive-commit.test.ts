@@ -56,6 +56,7 @@ const deltaSource = path.join(
   REPO_ROOT,
   'openspec',
   'changes',
+  'archive',
   CHANGE_DIR,
   'specs',
   'status-inspection',

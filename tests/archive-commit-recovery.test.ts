@@ -43,6 +43,7 @@ const deltaSource = path.join(
   REPO_ROOT,
   'openspec',
   'changes',
+  'archive',
   CHANGE_DIR,
   'specs',
   'watcher-and-harness',

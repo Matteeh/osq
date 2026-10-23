@@ -4,382 +4,372 @@ The remaining work on osq itself, as an osq brief queue.
 
 Each item's body becomes that change's `brief.md` word for word. Drive the run with `osq plan --next`, then plan the change in a Claude Code session, review it, and `osq approve`.
 
-Landed items are taken out of this file. Each one's text is kept as `brief.md` in its archived change folder, and each finished queue has a summary in Notion under OSQ > Archive. The latest queues drove 237 to 268; earlier queues drove 220 to 236, 189 to 197, 166 to 188, 156 to 165, 145 to 155, 136 to 144, 132 to 135 and 103 to 131.
+Landed items are taken out of this file. Each one's text is kept as `brief.md` in its archived change folder, and each finished queue has a summary in Notion under OSQ > Archive. The latest queues drove 237 to 303; earlier queues drove 220 to 236, 189 to 197, 166 to 188, 156 to 165, 145 to 155, 136 to 144, 132 to 135 and 103 to 131.
 
-This queue serves the Rust rewrite, which is designed by hand in Notion (OSQ > Rust Rebuild, with its roadmap database) and built in this repository. Core, every kernel, the CLI dispatch, worktree listing, and the query, inbox, plan, archive, approve, land and report features have landed, with the run feature's prompt and verify pieces. This queue finishes running one task on pi, then ports the commands a human runs around it: show, lint, doctor, retry, reject, plan steering and after-land.
+This queue serves the Rust rewrite, which is designed by hand in Notion (OSQ > Rust Rebuild, with its roadmap database) and built in this repository. Core, every kernel, the CLI dispatch, worktree listing, and the query, inbox, plan, archive, approve, land and report features have landed, with the run feature's prompt and verify pieces. Show, lint, doctor, retry, reject, plan steering, after-land, running one task on pi, `osq spec`, land sync, doctor's setup checks and worktree approve and archive have landed too. The items already planned finish the worktree paths for reject and run, the planner lint rules, archive-commit recovery and land's config tails. The new items port `osq sync`, `osq message` and the first part of `osq report`, close run's remaining worktree gaps, carry archive-commit recovery to Rust, and fix two planning frictions. The loop still needs a design session first, and the server waits.
 
-Items run in parallel. The watcher runs up to `maxConcurrency` approved changes at once when their scopes do not overlap, so an item's `Depends on` line names only what it really needs. Each item works in its own crate. `rust-feature-scaffolds` adds the four new crates in one change, so the items after it never share the root `Cargo.toml` or the CLI registry. Since 262 land rebuilds a conflicting `Cargo.lock`, so tasks do not scope it. Land each change as it archives.
+Items run in parallel. The watcher runs up to `maxConcurrency` approved changes at once when their scopes do not overlap, so an item's `Depends on` line names only what it really needs. Each Rust item works in its own crate, and every feature crate it needs already exists, so no item edits the root `Cargo.toml` or the CLI registry. Items in one crate share scope, so the watcher runs them one after another whatever their `Depends on` line says. Since 262 land rebuilds a conflicting `Cargo.lock`, so tasks do not scope it. Land each change as it archives.
 
 osq reads only the `## [slug]` items below. Everything above the first item is for people.
 
-## [rust-scope-audit] Rust core decides which changed paths a task's scope allows
+## [rust-lint-proposal-rules] Rust osq lint checks a proposal's assumptions, human steps, decisions and banned words
 
 Depends on: nothing
 
 ### Goal
 
-The run feature must kill a task that writes outside its scope or changes a frozen test. That decision is pure, so it belongs in core, where the run feature and the scheduler can share it.
+Rust `osq lint` runs the specs validation and link gates (275), but none of TypeScript's planner rules. Port the proposal rules first, since every plan hits them.
 
 ### Context
 
-As of 2026-10-21:
+As of 2026-10-22:
 
-- TypeScript decides in `scopeCoversPath` and `scopeCoversChangedPath` in `src/core/run/scope.ts`, with the lockfile rule from 235 (`lockfileFollowsManifest`) and the gated test rule from 201 (`tests.modify`).
-- `scope_files` in the loop kernel resolves globs against the tree (237); core does no IO.
+- TypeScript checks them in `src/core/spec/assumptions.ts`, `human-steps.ts`, `decisions-lint.ts` and `banned-word-lint.ts`, collected by `src/core/spec/linter.ts`.
+- 275 built `crates/features/lint`: one finding per line, then `<folder>: valid` or a count, non-zero on a blocking finding.
+- `rust-config-lint-settings` gives `bannedWords`. The specs kernel parses ADRs (229).
 
 ### Requirements
 
-- A pure core function takes a task's scope patterns, its `tests.modify`, the result file path, the manifests in scope, the language test-path rules and the changed paths, and gives each disallowed path with its reason, matching TypeScript on the same inputs.
-- Table tests cover a glob, a lockfile beside a scoped manifest, a frozen test, a new test and the result file.
+- Rust `osq lint <id>` reports each of these rules' findings with TypeScript's text and severity, in TypeScript's order next to the existing findings.
+- Tests run it on fixture changes that pass and that break each rule.
 
 ### Non-goals
 
-- Reading git status or the tree; the caller passes the changed paths.
+- The task, scope and verify rules; later items port them.
 
-## [rust-inbox-archived] The Rust inbox lists archived-not-landed changes and archived steering
+## [rust-reject-worktree] Rust osq reject rejects a change in its worktree
 
 Depends on: nothing
 
 ### Goal
 
-The Rust inbox left out the archived-not-landed and archived steering cards, because TypeScript shows them only when `vcs.enabled` is on and Rust could not read config or worktrees then.
+With git on, a change that fails runs in its own worktree. TypeScript reject commits the move there and removes the worktree. Rust reject (272) works only in the checkout with vcs off.
 
 ### Context
 
-As of 2026-10-21:
+As of 2026-10-22:
 
-- Left out of 244. TypeScript builds these cards in `src/core/status/dispatch-cards.ts` and `status.ts`.
-- The config kernel gives `VcsConfig` (252); `rust-worktree-changes` makes the storage listing read worktrees.
+- TypeScript does it in `src/core/lifecycle/reject-vcs.ts`: commit the rejected move in the worktree, then remove the worktree, keeping it and saying why when the commit fails or leaves changes.
+- 272 built reject in `crates/features/approve`. `rust-approve-worktree` creates the worktrees this item rejects in.
 
 ### Requirements
 
-- With vcs enabled, the inbox shows the archived-not-landed and archived steering cards TypeScript shows, with the same text and order; with vcs off it shows neither.
-- Tests use scratch repositories with worktrees.
+- With vcs on, Rust `osq reject <id> "<reason>"` on a worktree change writes the rejection files there, commits them on `osq/<folder>` and removes the worktree, as TypeScript does, with its text.
+- Each case where TypeScript keeps the worktree keeps it, with TypeScript's reason.
+- Tests use scratch repositories and compare with TypeScript's `dist`.
 
 ### Non-goals
 
-- Acting on the cards.
+- Stacked changes.
 
-## [rust-run-one-task] The Rust run feature runs one task end to end on pi
+## [rust-lint-task-rules] Rust osq lint checks tasks' scope, verify and verify_starts
 
-Depends on: rust-scope-audit
+Depends on: rust-lint-proposal-rules
 
 ### Goal
 
-Join the run feature's pieces so Rust can run one approved task the way the watcher does: start the executor, check its result and scope, run the task and change verify, and record the outcome in the `.run/` files TypeScript reads.
+After the proposal rules, the lint rules that catch most planning mistakes are the task rules: scope patterns, verify commands that name files and the `verify_starts` claim.
 
 ### Context
 
-As of 2026-10-21:
+As of 2026-10-22:
 
-- The pieces come from `rust-run-task-prompt`, `rust-verify-command`, `rust-scope-audit` and `rust-pi-config`. The runner and pi harness landed in 246, 251 and 254.
-- TypeScript runs a task in `runTask` in `src/watcher/runner.ts`, with the attempt, outcome and dead-marker files in `src/watcher/`.
-- ADR 025: Rust writes today's `.run` markers and event JSONL as they are, so TypeScript can read what Rust wrote.
+- TypeScript checks them in `src/core/spec/verify-starts.ts`, `verify-paths.ts`, `brace-scope-lint.ts` and `entry-lint.ts`, plus the task checks in `linter.ts`, using the `limits` block.
+- `rust-config-lint-settings` gives the limits; `rust-lint-proposal-rules` adds the first planner rules to `crates/features/lint`.
+- `rust-lint-proposal-rules` (299) left out the `## Surface` rule (`readSurfaceSection` in `linter.ts`) to port here with the task rules. 299 also gives no finding when `proposal.md`'s frontmatter does not parse, where TypeScript reports a frontmatter error.
 
 ### Requirements
 
-- `osq run <id> <n>` in Rust runs one task once and writes the running, done or dead markers and the events TypeScript writes for that outcome.
-- A task is done only when osq's own task verify and change verify pass and the scope audit finds nothing.
-- Tests run the committed fake pi from 260 on a fixture change, for a done, a verify-red and a scope-violation outcome.
+- Rust `osq lint <id>` reports these rules' findings with TypeScript's text and severity, in TypeScript's order next to the existing findings.
+- It also reports TypeScript's `## Surface` finding and its proposal frontmatter error.
+- Tests run it on fixture changes that pass and that break each rule.
 
 ### Non-goals
 
-- Retries, baseline verify, mutation testing, worktrees, commits and the watcher loop; each is a later item.
+- Traceability, sidecar, impact and generated-move rules; later items port them.
 
-## [rust-feature-scaffolds] Rust gains empty show, lint, doctor and retry feature crates, registered in the CLI
+## [rust-run-worktree] The Rust run feature runs a task in its change's worktree and commits it
 
 Depends on: nothing
 
 ### Goal
 
-Every new feature crate edits the root `Cargo.toml` and the CLI's `features()` registry, so changes that each add a crate overlap and run one at a time. One small change should add the four crates the next items need, empty, so those items each touch only their own crate and run side by side.
+With git on, TypeScript runs each task in the change's osq worktree and commits a verified task there, so parallel changes never share a tree. The Rust run (273) runs only in the checkout.
 
 ### Context
 
 As of 2026-10-22:
 
-- The workspace lists each crate in `members` and `[workspace.dependencies]` in the root `Cargo.toml`. `crates/apps/cli/src/lib.rs` registers each `Feature` in `features()`, and `crates/apps/cli/Cargo.toml` depends on each feature crate.
-- 239 split capabilities into one per crate. Each Rust capability's spec holds a `Code ownership` requirement and an `osq.yml` with `group: rust`.
-- The TypeScript commands these crates will port are `osq show` (`src/cli/show.ts`), `osq lint` (`src/cli/lint.ts`), `osq doctor` (`src/cli/doctor.ts`) and `osq retry` (`src/cli/retry.ts`).
+- TypeScript commits in `commitWorktreeVerifiedTask` and `commitWorktreeDeadTask` in `src/watcher/worktree-commit.ts`, with the worktree found by the runner in `src/watcher/runner.ts`.
+- 273, 281 and `rust-run-usage-pause` built `crates/features/run`. The vcs kernel lists worktrees and commits.
 
 ### Requirements
 
-- New crates `osq-feature-show`, `osq-feature-lint`, `osq-feature-doctor` and `osq-feature-retry` under `crates/features/`, each with one capability (`rust-show`, `rust-lint`, `rust-doctor`, `rust-retry`) that owns the crate.
-- Each exposes one `Feature` with its name and no commands, registered in the CLI, so the binary's help is unchanged.
-- Tests prove each feature's name and empty command list, and that the CLI registry holds it.
+- With vcs on, Rust `osq run <id> <n>` runs the executor, verify and scope audit in the change's worktree, and commits a done or dead task on `osq/<folder>` with TypeScript's message.
+- With vcs off, run behaves as today.
+- Tests use scratch repositories and the committed fake pi.
 
 ### Non-goals
 
-- Any command; each is its own item.
+- Stacked changes and the baseline verify.
 
-## [rust-show] The Rust osq show prints one change as TypeScript does
+## [rust-run-baseline-verify] The Rust run feature checks a task's verify_starts before the first attempt
 
-Depends on: rust-feature-scaffolds
+Depends on: rust-run-worktree
 
 ### Goal
 
-`osq show <id>` is the command a human runs most after the inbox, and Rust lacks it. The show feature should print one change's details with TypeScript's text.
+TypeScript runs a task's verify once before the first attempt and kills the task when the result contradicts its `verify_starts`, so a verify that proves nothing never certifies a task. The Rust run skips that check.
 
 ### Context
 
 As of 2026-10-22:
 
-- TypeScript builds the text in `getSpecDetails` and `formatShowText` in `src/core/status/show.ts`, called from `src/cli/show.ts`.
-- The storage kernel's `read_change` gives the snapshot; 270 gives the inbox the tree listing with vcs on.
-- `rust-feature-scaffolds` gives an empty `osq-feature-show` crate.
+- TypeScript runs it in `src/watcher/runner.ts`, keyed by `src/watcher/baseline-key.ts`, with the dead reason from `src/watcher/failure-reason.ts`.
+- `run_verify` in the harnesses kernel runs the verify (268). `rust-run-worktree` gives the tree the verify runs in.
 
 ### Requirements
 
-- `osq show <id>` in Rust prints the same text as TypeScript for active, approved, running, dead, archived and rejected changes of a fixture, with vcs off.
-- Unknown or missing ids give TypeScript's error text.
-- Goldens are printed by TypeScript's built `dist` from the fixture and committed in the change folder.
+- Before a task's first attempt, Rust `osq run <id> <n>` runs its verify once, records the baseline as TypeScript does, and writes TypeScript's dead marker and event when the result contradicts `verify_starts`.
+- A later attempt reuses the recorded baseline.
+- Tests cover red, green and any for both outcomes.
 
 ### Non-goals
 
-- `--json`, and the worktree and landed lines that need vcs on.
+- Running the change-level baseline.
 
-## [rust-lint-command] The Rust osq lint reports a change's spec and link gate findings
-
-Depends on: rust-feature-scaffolds
-
-### Goal
-
-The specs kernel validates deltas and the linter kernel runs the link gates, but no Rust command runs them on a change. `osq lint <id>` in Rust should run both and print the findings, so the Rust gates can be used before TypeScript's lint is ported in full.
-
-### Context
-
-As of 2026-10-22:
-
-- TypeScript's lint is `src/cli/lint.ts` over `src/core/spec/lint*.ts`. It checks proposals, tasks, scopes and verifies, and runs the Rust link gates through `rust-linter`.
-- The specs kernel validates a change's deltas (217). The linter kernel gives `change_link_gates` (232, 238, 263).
-- `rust-feature-scaffolds` gives an empty `osq-feature-lint` crate.
-
-### Requirements
-
-- `osq lint <id>` in Rust prints each specs-validation and link-gate finding of the change, one per line, then `<folder>: valid` or a count, and fails with a non-zero exit when any finding blocks.
-- Tests run it on fixture changes with no findings, a delta error and a link-gate error.
-
-### Non-goals
-
-- The TypeScript planner rules about proposals, tasks, scopes and verifies; later items port them.
-- `--repository`.
-
-## [rust-doctor-pi] The Rust osq doctor checks pi as TypeScript does
-
-Depends on: rust-feature-scaffolds
-
-### Goal
-
-The executor runs on pi, and a wrong pi version or a missing provider key fails every task. Rust should give TypeScript's `osq doctor` pi checks, from the pi settings in `osq.toml`.
-
-### Context
-
-As of 2026-10-22:
-
-- TypeScript checks pi in `diagnosePi` and `assessPiVersion` in `src/core/foundation/config-pi.ts`, against the tested range `PI_TESTED_RANGE`, and prints through `src/cli/doctor.ts`.
-- 266 gives `PiConfig` and `PiHarness::from_config`. 251 gives the pi preflight that reads `pi --version`.
-- `rust-feature-scaffolds` gives an empty `osq-feature-doctor` crate.
-
-### Requirements
-
-- `osq doctor` in Rust prints the pi lines TypeScript prints for a pi in range, out of range, missing, and with or without the provider's key, and exits non-zero when a check fails.
-- Tests use the committed fake pi from 260.
-
-### Non-goals
-
-- Doctor's checks for other harnesses, git, Node or the watcher.
-
-## [rust-retry] The Rust osq retry clears a dead or regressed task or change as TypeScript does
-
-Depends on: rust-feature-scaffolds
-
-### Goal
-
-A human retries a task or a change after it dies or regresses. Rust has no retry, so a Rust run could not be retried without TypeScript.
-
-### Context
-
-As of 2026-10-22:
-
-- TypeScript retries in `retrySpec` in `src/core/lifecycle/retry.ts`, called from `src/cli/retry.ts`. It checks approval, running state and failure before writing, keeps each cleared marker as history, and appends a `retry` event that `readRetryContext` in `src/watcher/attempt.ts` reads.
-- ADR 025: Rust writes the `.run` markers and events TypeScript reads.
-- `rust-feature-scaffolds` gives an empty `osq-feature-retry` crate.
-
-### Requirements
-
-- `osq retry <id> <n>` and `osq retry <id> change` in Rust make the same file and event changes TypeScript makes, and refuse what TypeScript refuses, with its text.
-- Tests compare the `.run` tree after a Rust retry with the tree TypeScript's `dist` leaves on the same fixture.
-
-### Non-goals
-
-- Retrying an after-land command, and stale-lock recovery of a killed watcher.
-
-## [rust-reject] The Rust osq reject moves a change into rejected history as TypeScript does
+## [archive-commit-recovery] A failed archive commit in a worktree is retried and shown, not swallowed
 
 Depends on: nothing
 
 ### Goal
 
-A human rejects a plan or a failed change with a reason. Rust's approve feature approves but cannot reject.
+When the archive commit in an osq worktree fails, the watcher logs a warning and carries on, leaving the change archived on disk with the move uncommitted. Nothing records the failure, the inbox says `osq land <id>`, and land refuses with a list of uncommitted paths that doesn't say why. A human must then run git by hand, which goes against ADR 003. This happened to 289 on 2026-10-22.
 
 ### Context
 
 As of 2026-10-22:
 
-- TypeScript rejects in `rejectSpec` in `src/core/lifecycle/reject.ts`, called from `src/cli/reject.ts`. An unapproved active change is eligible. An approved one is eligible only with an active failure and no running task. Every refusal happens before the first write.
-- `crates/features/approve` holds the approve command (250); reject is the same capability in TypeScript (`spec-lint-and-approve`).
+- `commitWorktreeArchive` in `src/watcher/worktree-commit.ts` catches the error from `commitArchive` (`src/core/run/task-commit.ts`) and only calls `logger.warn`. It is called from `archiveCompletedSpec` in `src/watcher/archive-change.ts`.
+- Verified tasks already recover from the same failure: `commitPendingVerifiedTasks` commits every done marker the branch lacks on each watcher pass, called from `src/watcher/loop.ts`, and a failed commit returns a `commit_failed` halt.
+- Land refuses a dirty worktree in `assertWorktreeClean` in `src/core/vcs/land-checks.ts`.
 
 ### Requirements
 
-- `osq reject <id> "<reason>"` in Rust moves the folder and writes the rejection files TypeScript writes, and refuses each case TypeScript refuses, with its text.
-- Tests run it on fixture changes for each eligible and refused case, with vcs off.
+- When the archive commit fails, the watcher records the failure where the inbox and `osq show` read it, with git's error.
+- On a later pass, the watcher makes the missing archive commit for an archived change whose worktree holds the uncommitted move, as it does for pending verified tasks. Success clears the record.
+- `osq land <id>` on such a change says the archive commit is missing and what to run, instead of listing paths.
+- Tests use scratch repositories with a commit made to fail, for example with a failing pre-commit hook.
 
 ### Non-goals
 
-- Rejections with vcs on, and steering a rejected plan.
+- The Rust archive; `rust-archive-worktree` already fails loudly.
+- Finding why git failed for 289.
 
-## [rust-plan-steer] The Rust osq plan builds the steering prompt for a change that needs steering
+## [rust-land-limits] Rust land reads its output tail sizes from the config limits
 
 Depends on: nothing
 
 ### Goal
 
-When a change needs steering, `osq plan <id>` hands the planner a prompt naming each trigger, its evidence and the requirements that changed. Rust's plan feature plans new changes only.
+Every limit comes from config. Rust land still holds TypeScript's tail sizes as constants: `OUTPUT_TAIL_LINES = 20` in `crates/features/land/src/land/after.rs` (279), and the 20-line command tail and 40-line, 400-character verify excerpt that `rust-land-sync` added. 289 has since given the Rust config the `limits` block they belong to.
 
 ### Context
 
-As of 2026-10-22:
+As of 2026-10-23:
 
-- TypeScript builds the steering prompt in `src/cli/plan-steer.ts` and `src/cli/plan-steer-prompt.ts`, finding the change with `findSteeringChange` in `src/core/status/steering-change.ts`.
-- The Rust inbox derives the same triggers (244, 270). The plan feature writes `plan-prompt.md` for new changes (249, 255).
+- TypeScript reads `limits.cardOutputLines` in `src/core/vcs/land-after.ts`, `sync-verify.ts` and `sync-lockfiles.ts`, and `limits.markerOutputLines` and `limits.markerLineChars` in `src/core/run/verify-excerpt.ts`.
+- 289 added `card_output_lines`, `marker_output_lines` and `marker_line_chars` to `Config.limits` in `crates/kernel/config/src/blocks/limits.rs`, with TypeScript's defaults 20, 40 and 400.
 
 ### Requirements
 
-- `osq plan <id>` on an active or archived change that needs steering writes the same prompt TypeScript writes, for blocked, stuck, regression, conflict and requirement-changed triggers.
-- Goldens are printed by TypeScript's `dist` from fixture changes and committed in the change folder.
+- Rust land takes every output tail size from `config.limits`, and no tail size is a constant in the land crate.
+- The living rust-land requirements that name 20, 40 or 400 name the limits keys instead, keeping their scenarios.
+- A test sets each key to a small value in `osq.toml` and sees the shorter tail.
 
 ### Non-goals
 
-- Starting the planner, auto-steer, and the default-branch requirement text when vcs is off.
+- Tail sizes in other crates.
 
-## [rust-land-after-land] Rust land runs the configured after-land command and records a failure
+## [rust-sync-message-commands] Rust osq sync and osq message
 
 Depends on: nothing
 
 ### Goal
 
-`vcs.afterLand` runs a command in the checkout after each land, such as a rebuild. Rust land skips it, so a Rust land leaves the checkout stale.
+`osq sync <id>` merges a newer default branch into a change's branch without landing it, and `osq message <id>` prints the land commit message an archived change will get. Rust has neither. 294 already merges the default branch inside land, and 256 already builds the land message, so both commands mostly expose code the land crate has.
 
 ### Context
 
-As of 2026-10-22:
+As of 2026-10-23:
 
-- TypeScript runs it in `runAfterLand` in `src/core/vcs/land-after.ts`, records a failure under `~/.osq`, and `retryAfterLand` reruns it. The inbox shows the failure as an `after-land-failed` item.
-- The config kernel reads `vcs.afterLand` (252). The harnesses kernel runs shell commands with a timeout (268).
-
-### Requirements
-
-- After a successful Rust land, the configured command runs in the checkout, and a failure is recorded in the file TypeScript reads, with its output, while the land itself still succeeds.
-- An unset command leaves land's output as it is today.
-- Tests use scratch repositories and commands that pass and fail.
-
-### Non-goals
-
-- Retrying the command; the inbox item for it is `rust-inbox-pending-items`.
-
-## [rust-inbox-pending-items] The Rust inbox lists paused tasks, after-land failures and autopilot stops
-
-Depends on: rust-inbox-archived
-
-### Goal
-
-The Rust inbox still leaves out three cards TypeScript shows: a task paused by a usage limit, a failed after-land command, and an autopilot stop.
-
-### Context
-
-As of 2026-10-22:
-
-- TypeScript builds them in `src/core/status/inbox-paused.ts` (`projectPaused`), `afterLandFailedItem` and `autopilotStoppedItem` in `src/core/status/inbox-projection.ts`, reading `.run/paused.md`, the after-land failure record and the autopilot stop record.
-- 270 adds the archived cards and reads every tree with vcs on.
+- TypeScript: `syncCommand` in `src/cli/sync.ts` calls `syncChange` in `src/core/vcs/sync-change.ts`, which refuses with `OSQ_SYNC_NEEDS_GIT` when vcs is off. `src/cli/message.ts` prints `buildSquashMessage` from `src/core/run/squash-message.ts` and exits one when the change is not archived.
+- Rust: `crates/features/land/src/land/sync.rs` (294) runs the merge, with spec and `Cargo.lock` rebuilds and the land-stop record. `crates/features/land/src/land/message.rs` (256) builds the squash message. A feature never depends on another feature, so both commands go on `LandFeature`, as 298 put `spec` on `ShowFeature`.
 
 ### Requirements
 
-- The Rust inbox shows the three cards with TypeScript's text, in its order, and none when no record exists.
-- Tests write each record on a fixture and compare with TypeScript's text.
+- Rust `osq sync <id>` merges the default branch into `osq/<folder>` as land's sync does, and prints TypeScript's text for a clean merge, a rebuilt conflict, a stop and vcs off.
+- Rust `osq message <id>` prints the message TypeScript prints for an archived change, and TypeScript's refusal and exit code otherwise.
+- Goldens are printed by TypeScript's `dist` from scratch repositories and committed in the change folder.
 
 ### Non-goals
 
-- Acting on the cards.
+- The bridge commit for stacked changes.
 
-## [rust-run-attempts] The Rust run feature counts attempts and hands the prior failure to a retried task
-
-Depends on: rust-run-one-task, rust-retry
-
-### Goal
-
-A retried task should know which attempt it is and why the last one failed, as TypeScript's executor prompt says. The first Rust run reads neither.
-
-### Context
-
-As of 2026-10-22:
-
-- TypeScript reads them in `readRetryContext` in `src/watcher/attempt.ts`, from the `retry` and `recertification` events, and hands them to the prompt.
-- 267's `executor_prompt` takes a `PriorAttempt` from its caller. `rust-retry` writes the `retry` event.
-
-### Requirements
-
-- `osq run <id> <n>` in Rust reads the attempt and prior failure from the task's events as TypeScript does, and passes them to the executor prompt.
-- Tests cover a first run, a run after a retry, and a run after a requeued recertification.
-
-### Non-goals
-
-- Automatic retries and the usage-limit pause.
-
-## [rust-cli-run] The Rust CLI registers the run feature, so osq run works from the binary
-
-Depends on: rust-run-one-task
-
-### Goal
-
-`rust-run-one-task` adds `RunFeature` but leaves it out of the CLI registry, because 271 was editing that registry at the same time. Until it is registered, the Rust binary has no `osq run`.
-
-### Context
-
-As of 2026-10-22:
-
-- `features()` in `crates/apps/cli/src/lib.rs` registers every feature in order; 271 appended show, lint, doctor and retry after report. `crates/apps/cli/Cargo.toml` already depends on `osq-feature-run`.
-- `RunFeature` is a unit struct in `crates/features/run/src/feature.rs` with one `run` command (273). The CLI's dispatch tests are in `crates/apps/cli/tests/dispatch.rs`.
-
-### Requirements
-
-- `features()` registers `RunFeature`, and the binary's top-level help lists `run` with its summary.
-- `osq run <id> <task>` through the CLI reaches the run feature: a test runs it on a root with no `openspec/` folder and gets the feature's own error, not an unknown-command error.
-
-### Non-goals
-
-- Any change to how the run feature runs a task.
-
-## [planner-scripted-edits] The planner rule bans shell-written file contents, not scripted edits that lint checks
+## [rust-report-summary] Rust osq report prints the summary and current task counts
 
 Depends on: nothing
 
 ### Goal
 
-The planner rule "Write files with the file tool, never through a shell echo." bans every scripted write. It came from 029, when task files written through a shell echo held control characters and fused acceptance lines. 029 also made `osq lint` and `osq approve` reject exactly that damage, so lint now guards the result whatever wrote it. The rule adds friction without adding safety: 273's planner narrowed the scopes of two task files with a script, broke the rule, and lint passed on the text it meant.
+`osq report` is how a human sees how osq is doing, and Rust has no `osq report`. TypeScript's report is large, so port it in slices, starting with the header, `Specs Summary:` and `Now:` sections, which read only the current change files.
 
 ### Context
 
-As of 2026-10-22:
+As of 2026-10-23:
 
-- The rule lives in the managed planner block, `MANAGED_PLANNER_BLOCK` in `src/core/foundation/init-blocks.ts`, copied into `PLANNER.md` and `templates/PLANNER.md`.
-- cli-foundation's scenario "Managed block includes file tool instruction" pins the exact sentence. So do `tests/init-planner.test.ts`, `tests/plan.test.ts` and `tests/architecture-first-docs.test.ts`; the last uses it as the bullet before the architecture-ADR bullet.
+- TypeScript builds the report in `buildMetricsReport` and prints it in `formatMetricsReport`, both in `src/core/report/report.ts`, called from `src/cli/report.ts`. `--json` prints the sorted report object through `serializeSortedJson`.
+- Rust: `crates/features/report` holds `osq query` (243, 286). The storage kernel reads every change's marker files.
 
 ### Requirements
 
-- The rule reads: "Write file contents with the file tool, never through a shell echo or heredoc. A script may make mechanical edits, such as one scope change across several task files; `osq lint` checks the result."
-- The block, both PLANNER.md copies, the scenario and the tests that pin the sentence all carry the new text.
+- Rust `osq report` prints `osq Delivery Metrics Report`, then the `Specs Summary:` and `Now:` sections with TypeScript's text and counts, including the completion rate.
+- Rust `osq report --json` prints the same fields under TypeScript's keys, sorted as TypeScript sorts them.
+- Goldens are printed by TypeScript's `dist` from fixture projects and committed in the change folder.
 
 ### Non-goals
 
-- Changing what `osq lint` checks.
-- An osq command that edits scopes. A scope inspector that shows facts is an idea on Notion (Tools for AI and tools for humans, 2026-10-22), not queued.
+- The `History:` section and every later section; later items port them.
+- `--since` and `--until`.
+
+## [rust-run-verify-tail] The Rust run feature cuts verify output by the config limits
+
+Depends on: nothing
+
+### Goal
+
+Every limit comes from config. The Rust run verdict cuts verify output to a hard-coded 2000-byte tail, where TypeScript uses the line and character limits that 289 gave the Rust config.
+
+### Context
+
+As of 2026-10-23:
+
+- Rust: `OUTPUT_TAIL_BYTES` in `crates/features/run/src/feature/verdict.rs`.
+- TypeScript: `tailVerifyOutput` and `excerptVerifyOutput` in `src/core/run/verify-excerpt.ts`, using `limits.markerOutputLines` and `limits.markerLineChars`.
+- 289 added `marker_output_lines` and `marker_line_chars` to `Config.limits` in `crates/kernel/config/src/blocks/limits.rs`, with TypeScript's defaults 40 and 400. `rust-land-limits` (303) makes the same fix in land.
+
+### Requirements
+
+- The Rust run cuts verify output in dead markers and events as TypeScript does, with the sizes from `config.limits`, and no tail size is a constant in the run crate.
+- A test sets each key to a small value in `osq.toml` and sees the shorter excerpt.
+
+### Non-goals
+
+- Tail sizes in other crates.
+
+## [rust-run-worktree-checks] The Rust run feature refuses a bad worktree and halts when its commit fails
+
+Depends on: rust-run-worktree
+
+### Goal
+
+`rust-run-worktree` (301) runs tasks in the change's worktree but left out TypeScript's safety checks: it doesn't refuse a worktree that is off its branch or dirty, and a failed task commit just fails the run. TypeScript halts the change with a reason a human can retry.
+
+### Context
+
+As of 2026-10-23:
+
+- TypeScript names the halts `worktree_off_branch`, `worktree_dirty` and `commit_failed` in `src/watcher/worktree-run.ts`. `src/watcher/commit-catch-up.ts` makes the missing commits on a later pass within `gates.commitRetries`.
+- 301 built the worktree run in `crates/features/run`, with `patch` and `discard` in the vcs kernel.
+- `gates.commitRetries` (default 2) is in `src/core/foundation/config-gates.ts`. The Rust config has no `gates` block yet, so this item adds one with only that key.
+
+### Requirements
+
+- Before spawning the executor, Rust `osq run <id> <n>` halts the change with TypeScript's marker, event and text when its worktree is off `osq/<folder>` or has uncommitted changes.
+- When a task commit fails, the run writes TypeScript's `commit_failed` halt with git's error, and a later `osq run` of that change first makes the missing commit and clears the halt, within `gates.commitRetries` tries, as the catch-up does.
+- Tests use scratch repositories, with the commit made to fail by a failing pre-commit hook.
+
+### Non-goals
+
+- Regressed and recertification commits, and stacked changes.
+
+## [rust-archive-commit-failed] Rust archive and land handle a failed archive commit as TypeScript does
+
+Depends on: archive-commit-recovery
+
+### Goal
+
+`archive-commit-recovery` makes TypeScript record a failed archive commit, make it later, and have land say what to run. Rust archive (295) fails loudly but records nothing, and Rust land lists the uncommitted paths. Both must write and read the same files as TypeScript, so either language can pick up the other's change.
+
+### Context
+
+As of 2026-10-23:
+
+- `archive-commit-recovery` defines the record, the `osq retry <id> change` path and land's refusal. Read its archived change folder once it lands, not this brief.
+- Rust: `crates/features/archive` commits the move with `osq: <id> archived` (295). `crates/features/land/src/land/checks.rs` refuses a dirty worktree. `crates/features/retry` handles `change` retries (277, 290).
+
+### Requirements
+
+- When the archive commit fails, Rust `osq archive <id>` writes TypeScript's failure record with git's error and exits non-zero.
+- Rust `osq retry <id> change` on that record makes the archive commit and clears the record, with TypeScript's text.
+- Rust `osq land <id>` on such a change refuses with TypeScript's text instead of listing paths.
+- Tests use scratch repositories with a failing pre-commit hook and compare the files with TypeScript's `dist`.
+
+### Non-goals
+
+- The watcher's catch-up pass; that belongs to the loop.
+
+## [plan-queue-slug] osq plan can plan one queue item out of order
+
+Depends on: nothing
+
+### Goal
+
+`osq plan --next` always takes the first eligible queue item, so planning a later item means planning every eligible item before it. `osq plan <slug> -p` for a queue slug ignores the queue brief and makes an empty scaffold. Planning 303 forced planning 300 to 302 first.
+
+### Context
+
+As of 2026-10-23:
+
+- `planCommand` in `src/cli/plan.ts` takes `--next`, handled by `prepareQueueSelection` and `createQueueChange` in `src/cli/plan-queue.ts`. Without `--next` it steers an existing change or creates an empty one.
+- The queue parser sits in `src/core/status/queue-parser.ts`, and `osq queue` prints which items are eligible and which have unmet dependencies.
+
+### Requirements
+
+- `osq plan --next <slug>` plans that queue item as `--next` plans the first one: same brief, same queue hash and same handoff.
+- It refuses, with a line naming the reason, an unknown slug, an item that already has a change, and an item whose `Depends on` is unmet.
+- `osq plan --next` with no slug behaves as today.
+
+### Non-goals
+
+- The Rust plan feature; a later item ports it.
+- Reordering `queue.md`.
+
+## [plan-report-limits] The plan report takes its sizes from config in both languages
+
+Depends on: nothing
+
+### Goal
+
+Every limit comes from config, but the report that opens each plan prompt still hard-codes sizes. TypeScript reads most of them from the `planning` block but keeps the repository record's three sizes as constants. Rust reads none of them: its config has no `planning` block, so the plan feature hard-codes all eight.
+
+### Context
+
+As of 2026-10-23:
+
+- TypeScript: `planning.disclosures` (`recentChanges` 3, `maxCharacters` 4000) and `planning.history` (`minimumTasks` 30, `recentTasks` 100, `maxCharacters` 1500) in `src/core/foundation/config-planning.ts`. The record sizes `REPOSITORY_RECORD_MIN_MEASURED_TASKS` (5), `REPOSITORY_RECORD_MAX_ARCHIVED_CHANGES` (20) and `REPOSITORY_RECORD_MAX_DEAD_OUTCOMES` (10) are constants in `src/core/report/report.ts`.
+- Rust: `crates/features/plan/src/next/report/hints.rs` (30, 100, 1500), `record.rs` (5, 20, 10, and the "too small" text with 5 in it) and `disclosures.rs` (3, 4000). ADR 029 and 252 give the config kernel one module per block under `crates/kernel/config/src/blocks/`.
+
+### Requirements
+
+- TypeScript gains a `planning.record` block with the three record sizes and today's values as defaults, and `report.ts` reads it.
+- The Rust config kernel reads the `planning` block's `disclosures`, `history` and `record` tables with TypeScript's keys, defaults and refusals, and the Rust plan report takes every size from it.
+- The record's "too small" text names the configured value in both languages.
+- With the defaults, every plan prompt and golden stays byte for byte the same.
+- Tests in both languages set a key to a small value and see the shorter section.
+
+### Non-goals
+
+- Changing any default.
+- `planning.idleGapMinutes` and `planning.prices` in Rust.
+
