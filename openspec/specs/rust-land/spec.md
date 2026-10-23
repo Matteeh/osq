@@ -337,8 +337,8 @@ none, as TypeScript's `watchStateDir` computes it.
   creating its folders. `<time>` is the current time in ISO 8601 UTC to
   the millisecond. `land` then fails with `FeatureError::failed` with the
   command `land`. The message is "Land commit"'s output lines, then
-  `After-land command failed: <command>`, then the last 20 lines of the
-  outcome's output after its trailing blank lines are dropped, then
+  `After-land command failed: <command>`, then the last
+  `limits.cardOutputLines` lines of the outcome's output after its trailing blank lines are dropped, then
   `run osq land <id> again to retry it`, joined by newlines. The land
   commit and the checkout's fast-forward stay. A start error of
   `run_verify` counts as exit code 1 with its display as the output.
@@ -362,6 +362,10 @@ reruns the command only as "Land after-land retry" says.
 #### Scenario: A passing command clears the record
 - **WHEN** the record for the repository's checkout holds `{"change":"001-alpha-orders","command":"false","exitCode":1,"failedAt":"2026-10-01T10:00:00.000Z"}` and `land` runs with the query `1` with `afterLand = "true"` under `[vcs]`
 - **THEN** the output ends with `After-land command passed: true` and a newline, and the record no longer exists
+
+#### Scenario: After-land tail from the config
+- **WHEN** `land` runs with the query `1` on a land repository holding the fixture change, whose `osq.toml` also holds `afterLand = "echo one; echo two; echo three; exit 3"` under `[vcs]` and `cardOutputLines = 2` under `[limits]`
+- **THEN** it fails with "Land commit"'s output lines followed by `After-land command failed: echo one; echo two; echo three; exit 3`, `two`, `three` and `run osq land 001 again to retry it`, each line written here without its newline
 
 ### Requirement: Land after-land retry
 For a landed change, after the checks of "Land refusals" that apply to a
@@ -493,8 +497,8 @@ Each command this requirement runs SHALL go through rust-harnesses
 `run_verify` as "Land after-land command" runs its command, with the
 worktree or the lock file's folder as the working folder, and a start
 error counts as exit code 1 with its display as the output. A command's
-output tail is its last 20 lines after its trailing blank lines are
-dropped, joined by newlines.
+output tail is its last `limits.cardOutputLines` lines after its
+trailing blank lines are dropped, joined by newlines.
 
 A stop SHALL fail `land` with `FeatureError::failed` for the command
 `land` and the stop's message, after "Land stop record" when it records
@@ -537,6 +541,10 @@ In the scenarios, the orders spec with the requirement `<R>` is `# orders Specif
 |---|---|
 | none | `Failed` with `001-alpha-orders: main changed requirements this change rewrites since it was approved: orders: Order totals; run osq plan 001 to revise the plan against main`, the branch's tip the stop record's commit with reason `requirement_changed` |
 | `C` | output that begins `Landed 001-alpha-orders as ` |
+
+#### Scenario: Sync stop tail from the config
+- **WHEN** `land` runs with the query `1` on a land repository holding the worktree change `001-alpha-orders`, whose archived folder holds the fixture change's files with `proposal.md` holding `---\ntitle: A\nverify: echo one; echo two; echo three; exit 1\n---\n## Verify\n\nx\n`, after `main` gained a commit that adds `other.txt`, and whose `osq.toml` also holds `cardOutputLines = 2` under `[limits]`
+- **THEN** it gives a `Failed` error for the command `land` whose message ends with `:\ntwo\nthree`, written with `\n` escapes
 
 ### Requirement: Land stop record
 When "Land sync" or "Land sync verify" stops with the reason
@@ -588,12 +596,14 @@ append a `verify_ran` event to `.run/events/change.jsonl` whose data is
 `command`, `exitCode` 0, `duration` in whole milliseconds, `log`
 `.run/logs/change-<k>.log`, and `output`, the output's tail, left out when
 that tail is empty. The tail is the output itself when its text with
-trailing whitespace dropped is not empty and has at most 40 lines, each
-at most 400 characters; otherwise it is the last 40 lines of that text,
-each line over 400 characters cut to its first 400 followed by `… (<m>
-more characters)`, joined by newlines; and it is empty when that text is
-empty. These are TypeScript's `writeVerifyLog` and `tailVerifyOutput` with
-`limits.markerOutputLines` 40 and `limits.markerLineChars` 400.
+trailing whitespace dropped is not empty and has at most
+`limits.markerOutputLines` lines, each at most `limits.markerLineChars`
+characters; otherwise it is the last `limits.markerOutputLines` lines of
+that text, each line over `limits.markerLineChars` characters cut to its
+first `limits.markerLineChars` followed by `… (<m> more characters)`,
+joined by newlines; and it is empty when that text is empty. These are
+TypeScript's `writeVerifyLog` and `tailVerifyOutput` with those limits,
+40 and 400 by default.
 
 #### Scenario: Sync verify outcomes
 - **WHEN** `land` runs with the query `1` on a land repository holding the worktree change `001-alpha-orders`, whose archived folder holds the fixture change's files with `proposal.md` holding `---\ntitle: A\n<frontmatter>---\n## Verify\n\nx\n`, after `main` gained a commit that adds `other.txt`, with the row's frontmatter lines
@@ -607,3 +617,7 @@ empty. These are TypeScript's `writeVerifyLog` and `tailVerifyOutput` with
 | `verify: true` and `check: echo smoke` | lands | `verify_ran` with `command` `true` and no `output`, `verify_ran` with `command` `echo smoke` and `output` `smoke\n`, then `synced` |
 | `verify: echo broken; exit 1` | `Failed` with `001-alpha-orders: verify failed on osq/001-alpha-orders merged with main:\nbroken` | `regressed` with `reason` `sync_verify_red`, after the events the branch held before `land` ran |
 | `verify: true` and `check: echo smoke failed; exit 1` | `Failed` with `001-alpha-orders: check failed on osq/001-alpha-orders merged with main:\nsmoke failed` | `regressed` with `reason` `sync_verify_red`, after the events the branch held before `land` ran, with no `verify_ran` |
+
+#### Scenario: Sync verify tail from the config
+- **WHEN** `land` runs as "Sync verify outcomes" runs it with the frontmatter line `verify: echo one; echo two; echo abcdefgh` and an `osq.toml` that also holds `markerOutputLines = 2` and `markerLineChars = 5` under `[limits]`
+- **THEN** the change lands, and the `verify_ran` event's `output` is `two\nabcde… (3 more characters)`, written with `\n` escapes

@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use osq_core::FeatureError;
-use osq_kernel_config::{Timeouts, VcsConfig};
+use osq_kernel_config::{Limits, Timeouts, VcsConfig};
 use osq_kernel_vcs::{GitVcs, MergeOutcome, Vcs};
 
 use super::failed;
@@ -45,6 +45,8 @@ struct Sync<'a> {
     settings: &'a VcsConfig,
     /// Every timeout the sync applies.
     timeouts: &'a Timeouts,
+    /// Every output limit the sync applies.
+    limits: &'a Limits,
 }
 
 /// Syncs the default branch into the change's branch, giving its commit.
@@ -64,6 +66,7 @@ pub(crate) fn run(
     default_branch: &str,
     settings: &VcsConfig,
     timeouts: &Timeouts,
+    limits: &Limits,
 ) -> Result<Option<String>, FeatureError> {
     let vcs = GitVcs::new(worktree).with_timeouts(timeouts);
     let head = vcs.head().map_err(|error| failed(error.to_string()))?.sha;
@@ -97,6 +100,7 @@ pub(crate) fn run(
         author: settings.author.clone().unwrap_or_default(),
         settings,
         timeouts,
+        limits,
     };
     if let Some(stop) = check::run(&context.vcs, &context.archived, default_branch)? {
         return Err(context.finish(stop));
@@ -149,6 +153,7 @@ impl Sync<'_> {
             self.default_branch,
             conflicts,
             self.timeouts,
+            self.limits,
         )?;
         prepare::run(
             self.worktree,
@@ -162,6 +167,7 @@ impl Sync<'_> {
             self.folder,
             self.default_branch,
             self.timeouts,
+            self.limits,
         )?;
         event::synced(
             &self.vcs,

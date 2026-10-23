@@ -8,7 +8,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_config::Timeouts;
+use osq_kernel_config::{Limits, Timeouts};
 use osq_kernel_harnesses::{VerifyRequest, run_verify};
 use osq_kernel_storage::read_after_land_failure;
 use serde_json::json;
@@ -18,8 +18,6 @@ use super::{failed, text, time};
 
 /// The record's file under the project's watch state folder.
 const AFTER_LAND_FILE: &str = "after-land.json";
-/// How many non-blank output lines a failure keeps.
-const OUTPUT_TAIL_LINES: usize = 20;
 
 /// How one after-land run ended: its passing line or its failure lines.
 pub(crate) enum Outcome {
@@ -42,12 +40,13 @@ pub(crate) fn finish(
     folder: &str,
     command: Option<&str>,
     timeouts: &Timeouts,
+    limits: &Limits,
     output: String,
 ) -> Result<String, FeatureError> {
     let Some(command) = command else {
         return Ok(output);
     };
-    match run(root, folder, command, timeouts)? {
+    match run(root, folder, command, timeouts, limits)? {
         Outcome::Passed(line) => Ok(format!("{output}{line}\n")),
         Outcome::Failed(lines) => Err(failed(format!("{output}{}", lines.join("\n")))),
     }
@@ -66,6 +65,7 @@ pub(crate) fn retry(
     folder: &str,
     command: Option<&str>,
     timeouts: &Timeouts,
+    limits: &Limits,
     landed: String,
 ) -> Result<String, FeatureError> {
     let Some(command) = command else {
@@ -78,7 +78,7 @@ pub(crate) fn retry(
     if record.change != folder {
         return Ok(landed);
     }
-    match run(root, folder, command, timeouts)? {
+    match run(root, folder, command, timeouts, limits)? {
         Outcome::Passed(line) => Ok(format!("{line}\n{landed}")),
         Outcome::Failed(lines) => Err(failed(format!(
             "{}\n{}",
@@ -101,6 +101,7 @@ fn run(
     folder: &str,
     command: &str,
     timeouts: &Timeouts,
+    limits: &Limits,
 ) -> Result<Outcome, FeatureError> {
     let request = VerifyRequest {
         command: command.to_owned(),
@@ -125,15 +126,18 @@ fn run(
         )));
     }
     write_record(root, folder, command, exit_code)?;
-    Ok(Outcome::Failed(failure_lines(folder, command, &output)))
+    let max_lines = usize::try_from(limits.card_output_lines).unwrap_or(usize::MAX);
+    Ok(Outcome::Failed(failure_lines(
+        folder, command, &output, max_lines,
+    )))
 }
 
 /// The failed lines: the command, its output tail and the retry line.
 ///
 /// Implements: rust-land/land-after-land-command
-fn failure_lines(folder: &str, command: &str, output: &str) -> Vec<String> {
+fn failure_lines(folder: &str, command: &str, output: &str, max_lines: usize) -> Vec<String> {
     let mut lines = vec![format!("After-land command failed: {command}")];
-    let tail = output_tail(output);
+    let tail = output_tail(output, max_lines);
     if !tail.is_empty() {
         lines.extend(tail.lines().map(str::to_owned));
     }
@@ -144,15 +148,15 @@ fn failure_lines(folder: &str, command: &str, output: &str) -> Vec<String> {
     lines
 }
 
-/// The last twenty lines after dropping the output's trailing blank lines.
+/// The last `max_lines` lines after dropping the output's trailing blank lines.
 ///
 /// Implements: rust-land/land-after-land-command
-fn output_tail(output: &str) -> String {
+fn output_tail(output: &str, max_lines: usize) -> String {
     let mut lines: Vec<&str> = output.lines().collect();
     while lines.last().is_some_and(|line| line.trim().is_empty()) {
         lines.pop();
     }
-    let start = lines.len().saturating_sub(OUTPUT_TAIL_LINES);
+    let start = lines.len().saturating_sub(max_lines);
     lines[start..].join("\n")
 }
 

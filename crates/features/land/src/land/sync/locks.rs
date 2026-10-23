@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use osq_kernel_config::Timeouts;
+use osq_kernel_config::{Limits, Timeouts};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
 use super::{command, files, stop::Stop, text};
@@ -24,7 +24,9 @@ pub(crate) fn rebuild(
     default_branch: &str,
     conflicts: &[String],
     timeouts: &Timeouts,
+    limits: &Limits,
 ) -> Result<(), Stop> {
+    let max_lines = usize::try_from(limits.card_output_lines).unwrap_or(usize::MAX);
     let mut locks: Vec<&str> = conflicts
         .iter()
         .filter(|path| text::is_lockfile(path))
@@ -32,7 +34,15 @@ pub(crate) fn rebuild(
         .collect();
     locks.sort_unstable();
     for lockfile in locks {
-        rebuild_one(vcs, worktree, folder, default_branch, lockfile, timeouts)?;
+        rebuild_one(
+            vcs,
+            worktree,
+            folder,
+            default_branch,
+            lockfile,
+            timeouts,
+            max_lines,
+        )?;
     }
     Ok(())
 }
@@ -47,6 +57,7 @@ fn rebuild_one(
     default_branch: &str,
     lockfile: &str,
     timeouts: &Timeouts,
+    max_lines: usize,
 ) -> Result<(), Stop> {
     let target = worktree.join(lockfile);
     let content = vcs
@@ -60,7 +71,7 @@ fn rebuild_one(
         let prefix = text::rebuild_failed(folder, lockfile, default_branch);
         return Err(Stop::failed(format!(
             "{prefix}\n{}",
-            text::output_tail(&output)
+            text::output_tail(&output, max_lines)
         )));
     }
     vcs.stage(&[lockfile]).map_err(|error| Stop::vcs(&error))

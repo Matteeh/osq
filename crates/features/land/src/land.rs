@@ -13,7 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_config::{ManualEdits, Timeouts, VcsConfig, load_config};
+use osq_kernel_config::{Limits, ManualEdits, Timeouts, VcsConfig, load_config};
 use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
 use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree};
 
@@ -39,7 +39,7 @@ const LAND: &str = "land";
 /// Implements: rust-land/land-after-land-retry
 pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let (timeouts, settings) = (config.timeouts, config.vcs);
+    let (timeouts, settings, limits) = (config.timeouts, config.vcs, config.limits);
     if !settings.enabled {
         return Err(failed(text::NEEDS_GIT));
     }
@@ -50,10 +50,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
     let default_branch = land_default_branch(&vcs, &settings)?;
     let worktrees = worktree_changes(&vcs, root)?;
     let located = locate(root, &vcs, &worktrees, &default_branch, query)?;
-    let facts = located
-        .worktree
-        .as_ref()
-        .map(|change| read_land_facts(&change_archive(change, &located.folder)));
+    let facts = land_facts(&located);
     check_refusals(
         &vcs,
         &timeouts,
@@ -63,7 +60,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         &default_branch,
     )?;
     if located.landed {
-        return landed_output(&repo_root, &located, &settings, &timeouts);
+        return landed_output(&repo_root, &located, &settings, &timeouts, &limits);
     }
     let change = located
         .worktree
@@ -78,6 +75,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         &default_branch,
         &settings,
         &timeouts,
+        &limits,
     )?;
     let Some(tip) = worktree_head(change, &timeouts)? else {
         return Err(moved(&default_branch, &located.folder));
@@ -99,7 +97,7 @@ pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError>
         .map_err(|error| failed(error.to_string()))?;
     match vcs.fast_forward(&commit) {
         Ok(FastForward::Done { changed }) => finish(
-            &repo_root, &located, &settings, &timeouts, &commit, &changed,
+            &repo_root, &located, &settings, &timeouts, &limits, &commit, &changed,
         ),
         Ok(FastForward::Blocked { paths }) => {
             let block = settings.manual_edits == ManualEdits::Block;
@@ -134,6 +132,7 @@ fn finish(
     located: &Located,
     settings: &VcsConfig,
     timeouts: &Timeouts,
+    limits: &Limits,
     commit: &str,
     changed: &[String],
 ) -> Result<String, FeatureError> {
@@ -142,6 +141,7 @@ fn finish(
         &located.folder,
         settings.after_land.as_deref(),
         timeouts,
+        limits,
         text::landed(&located.folder, commit, root, changed),
     )
 }
@@ -160,6 +160,7 @@ fn landed_output(
     located: &Located,
     settings: &VcsConfig,
     timeouts: &Timeouts,
+    limits: &Limits,
 ) -> Result<String, FeatureError> {
     let landed = if located.worktree.is_some() {
         text::landed_worktree(&located.folder)
@@ -171,6 +172,7 @@ fn landed_output(
         &located.folder,
         settings.after_land.as_deref(),
         timeouts,
+        limits,
         landed,
     )
 }
@@ -261,6 +263,16 @@ fn locate(
         }),
         None => Err(failed(text::no_archived(query))),
     }
+}
+
+/// The land facts of the located change, or none when it has no worktree.
+///
+/// Implements: rust-land/land-refusals
+fn land_facts(located: &Located) -> Option<LandFacts> {
+    located
+        .worktree
+        .as_ref()
+        .map(|change| read_land_facts(&change_archive(change, &located.folder)))
 }
 
 /// The first archived change of the checkout's listing that matches `query`.

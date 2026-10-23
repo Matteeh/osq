@@ -7,9 +7,6 @@ use osq_core::event::SyncStopReason;
 use super::super::text::change_id;
 use super::stop::Stop;
 
-/// How many lines a command's output tail keeps.
-const OUTPUT_TAIL_LINES: usize = 20;
-
 /// Whether a conflicting path a living spec or an archived folder owns.
 ///
 /// Implements: rust-land/land-sync
@@ -98,14 +95,14 @@ pub(crate) fn rebuild_failed(folder: &str, lockfile: &str, default_branch: &str)
     format!("{folder}: rebuilding {lockfile} failed on osq/{folder} merged with {default_branch}:")
 }
 
-/// The last twenty lines after dropping trailing blank lines.
+/// The last `max_lines` lines after dropping trailing blank lines.
 ///
 /// Implements: rust-land/land-sync
-pub(crate) fn output_tail(output: &str) -> String {
+pub(crate) fn output_tail(output: &str, max_lines: usize) -> String {
     let mut lines: Vec<&str> = output.lines().collect();
     while lines.last().is_some_and(|line| line.trim().is_empty()) {
         lines.pop();
     }
-    let start = lines.len().saturating_sub(OUTPUT_TAIL_LINES);
+    let start = lines.len().saturating_sub(max_lines);
     lines[start..].join("\n")
 }

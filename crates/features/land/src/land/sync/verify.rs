@@ -6,15 +6,10 @@ use std::path::Path;
 use std::time::Duration;
 
 use osq_core::event::{Envelope, Event, SyncStopReason, VerifyRanData, event_line};
-use osq_kernel_config::Timeouts;
+use osq_kernel_config::{Limits, Timeouts};
 use osq_kernel_specs::{Frontmatter, js_trim, parse_frontmatter, parse_proposal};
 
 use super::{super::time, command, stop::Stop, text};
-
-/// The most lines a `verify_ran` output tail keeps.
-const MARKER_OUTPUT_LINES: usize = 40;
-/// The most characters a kept line keeps.
-const MARKER_LINE_CHARS: usize = 400;
 
 /// The archived proposal's commands.
 #[derive(Default)]
@@ -23,6 +18,16 @@ struct Commands {
     verify: String,
     /// The proposal's `check`, when its frontmatter holds one.
     check: Option<String>,
+}
+
+/// The sizes a stop tail and a `verify_ran` excerpt keep.
+struct Tails {
+    /// The most lines a stop tail keeps.
+    output: usize,
+    /// The most lines a `verify_ran` excerpt keeps.
+    marker: usize,
+    /// The most characters a kept excerpt line keeps.
+    chars: usize,
 }
 
 /// Runs the archived proposal's verify and check, recording each pass.
@@ -38,29 +43,30 @@ pub(crate) fn run(
     folder: &str,
     default_branch: &str,
     timeouts: &Timeouts,
+    limits: &Limits,
 ) -> Result<(), Stop> {
     let commands = commands(archived);
+    let tails = Tails {
+        output: usize::try_from(limits.card_output_lines).unwrap_or(usize::MAX),
+        marker: usize::try_from(limits.marker_output_lines).unwrap_or(usize::MAX),
+        chars: usize::try_from(limits.marker_line_chars).unwrap_or(usize::MAX),
+    };
     if !commands.verify.is_empty() {
+        let prefix =
+            format!("{folder}: verify failed on osq/{folder} merged with {default_branch}:");
         one(
             worktree,
             archived,
-            folder,
-            default_branch,
             &commands.verify,
-            "verify",
+            &prefix,
             timeouts,
+            &tails,
         )?;
     }
     if let Some(check) = commands.check.as_deref() {
-        one(
-            worktree,
-            archived,
-            folder,
-            default_branch,
-            check,
-            "check",
-            timeouts,
-        )?;
+        let prefix =
+            format!("{folder}: check failed on osq/{folder} merged with {default_branch}:");
+        one(worktree, archived, check, &prefix, timeouts, &tails)?;
     }
     Ok(())
 }
@@ -71,22 +77,16 @@ pub(crate) fn run(
 fn one(
     worktree: &Path,
     archived: &Path,
-    folder: &str,
-    default_branch: &str,
     command: &str,
-    kind: &str,
+    stop_prefix: &str,
     timeouts: &Timeouts,
+    tails: &Tails,
 ) -> Result<(), Stop> {
     let (exit_code, output, duration) = command::run_timed(worktree, command, timeouts);
     if exit_code != 0 {
-        let subject = if kind == "check" {
-            "check failed"
-        } else {
-            "verify failed"
-        };
         let message = format!(
-            "{folder}: {subject} on osq/{folder} merged with {default_branch}:\n{}",
-            text::output_tail(&output)
+            "{stop_prefix}\n{}",
+            text::output_tail(&output, tails.output)
         );
         return Err(Stop::new(SyncStopReason::SyncVerifyRed, message));
     }
@@ -97,6 +97,8 @@ fn one(
         duration,
         log,
         &output,
+        tails.marker,
+        tails.chars,
     )
 }
 
@@ -166,12 +168,14 @@ fn append_event(
     duration: Duration,
     log: String,
     output: &str,
+    max_lines: usize,
+    max_chars: usize,
 ) -> Result<(), Stop> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|error| Stop::failed(error.to_string()))?;
     }
     let millis = u64::try_from(duration.as_millis()).unwrap_or(u64::MAX);
-    let tail = tail_verify_output(output);
+    let tail = tail_verify_output(output, max_lines, max_chars);
     let data = VerifyRanData {
         command: command.to_owned(),
         exit_code: Some(0),
@@ -202,37 +206,35 @@ fn append_event(
 /// The tail a `verify_ran` event keeps of a command's output.
 ///
 /// Implements: rust-land/land-sync-verify
-fn tail_verify_output(output: &str) -> String {
+fn tail_verify_output(output: &str, max_lines: usize, max_chars: usize) -> String {
     let trimmed = output.trim_end();
     if trimmed.is_empty() {
         return String::new();
     }
     let lines: Vec<&str> = trimmed.split('\n').collect();
-    let within = lines.len() <= MARKER_OUTPUT_LINES
-        && lines
-            .iter()
-            .all(|line| line.chars().count() <= MARKER_LINE_CHARS);
+    let within =
+        lines.len() <= max_lines && lines.iter().all(|line| line.chars().count() <= max_chars);
     if within {
         return output.to_owned();
     }
-    let start = lines.len().saturating_sub(MARKER_OUTPUT_LINES);
+    let start = lines.len().saturating_sub(max_lines);
     lines[start..]
         .iter()
-        .map(|line| cut_line(line))
+        .map(|line| cut_line(line, max_chars))
         .collect::<Vec<_>>()
         .join("\n")
 }
 
-/// Keeps the first 400 characters of a line and counts the rest.
+/// Keeps the first `max_chars` characters of a line and counts the rest.
 ///
 /// Implements: rust-land/land-sync-verify
-fn cut_line(line: &str) -> String {
+fn cut_line(line: &str, max_chars: usize) -> String {
     let length = line.chars().count();
-    if length <= MARKER_LINE_CHARS {
+    if length <= max_chars {
         return (*line).to_owned();
     }
-    let kept: String = line.chars().take(MARKER_LINE_CHARS).collect();
-    format!("{kept}… ({} more characters)", length - MARKER_LINE_CHARS)
+    let kept: String = line.chars().take(max_chars).collect();
+    format!("{kept}… ({} more characters)", length - max_chars)
 }
 
 /// Reads the trimmed `check` field of a proposal's frontmatter.
