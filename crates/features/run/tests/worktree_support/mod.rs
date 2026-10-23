@@ -30,6 +30,8 @@ pub fn build(name: &str) -> Repo {
     support::copy_tree(&support::fixture("run-project"), &checkout);
     support::remove(&checkout, ".gitignore");
     support::git(&checkout, &["init", "-q"]);
+    support::git(&checkout, &["config", "user.name", "Osq Test"]);
+    support::git(&checkout, &["config", "user.email", "osq@example.com"]);
     support::write(&checkout, ".git/info/exclude", "fake-pi-mode\n");
     support::git(&checkout, &["add", "-A"]);
     support::git(&checkout, &["commit", "-q", "-m", "fixture"]);

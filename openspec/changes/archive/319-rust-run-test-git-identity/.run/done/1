@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:35a0a36ff1524a9448337dc631ec34f2b8b41df2d283811b5dc3cf00bb90d1d0"
+build_stamp: "4b9a2af8"
+project_commit: "3fa48f7f"
+exit_code: 0
+scope_files: {"crates/features/run/tests/run_worktree_identity.rs":"sha256:ddf80eca0f28f45be56d674c0a500a5acc0db13d4c3e144443c179f664288bc2","crates/features/run/tests/worktree_support/mod.rs":"sha256:1fd67a1ffcfab2116f744ae6c6c8a50791aad79ad0f9b6461525609b34dd5681"}
+---
+2026-10-23T20:09:11.195Z

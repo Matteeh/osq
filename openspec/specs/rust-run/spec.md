@@ -390,9 +390,17 @@ folder, the prompt, the scope audit's status, the verify runs and the
 paths they write use it. With git off, and for a change in the root, `run`
 behaves as the other run requirements say and makes no commit.
 
+The scratch repository the run tests build for a worktree run SHALL carry
+its own git identity in its local config, so `run`'s commits get a
+committer on a machine with no global or system git config.
+
 #### Scenario: Worktree run finds its tree
 - **WHEN** a test builds a scratch git repository from the run fixture whose `osq.toml` turns git on with the author `Osq Bot <bot@example.com>`, adds the worktree `<scratch>/trees/001-a` on a new branch `osq/001-a` holding the change, approved there with its seal and committed, removes the change from the checkout, runs the fake pi in the `done` mode, and runs `run` with `1` and `1`
 - **THEN** it gives the output `Task 1 of 001-a done\n`, the worktree holds `src/a.txt` and `openspec/changes/001-a/.run/done/1`, and the checkout holds neither
+
+#### Scenario: Worktree test repository identity
+- **WHEN** a test builds the scratch repository "Worktree run finds its tree" builds
+- **THEN** `git config --local` run in the checkout and in the worktree gives `Osq Test` for `user.name` and `osq@example.com` for `user.email`
 
 ### Requirement: Verified task commit
 When a task of a change in an osq worktree passes its verdict, `run`
