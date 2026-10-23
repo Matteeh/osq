@@ -1,4 +1,5 @@
 import { ConfigLoadError } from '../core/foundation/config.js';
+import { NestedRootError } from '../core/vcs/select.js';
 import { CommandError } from './command-error.js';
 import { processStderr, processStdout } from './command-inputs.js';
 import { createProgram, resolvePackageVersion } from './index.js';
@@ -9,12 +10,14 @@ import { readServerSetting } from './remote-transport.js';
  * Parse the command line and run the selected command. A `CommandError` is
  * reported as its non-empty message on stderr, then its `Next: <next>` line on
  * stdout when set, and sets `process.exitCode` to its exit code. A
- * `ConfigLoadError` is reported as `Error: <message>` on stderr and sets
- * `process.exitCode` to 1. Neither ends the process; every other error
- * propagates to the caller unchanged.
+ * `ConfigLoadError` or `NestedRootError` is reported as `Error: <message>` on
+ * stderr and sets `process.exitCode` to 1. Neither ends the process; every
+ * other error propagates to the caller unchanged.
  * @scenario cli-foundation: Same command from a laptop
  * @scenario cli-foundation: Local-only commands name the alternative
  * @scenario cli-foundation: Server values
+ * @scenario cli-foundation: Doctor below the repository root with git on
+ * @scenario version-control: Commands below the root with git on
  * @adr 014
  */
 export async function runCli(argv: readonly string[]): Promise<void> {
@@ -34,7 +37,7 @@ export async function runCli(argv: readonly string[]): Promise<void> {
       process.exitCode = error.exitCode;
       return;
     }
-    if (error instanceof ConfigLoadError) {
+    if (error instanceof ConfigLoadError || error instanceof NestedRootError) {
       processStderr(`Error: ${error.message}\n`);
       process.exitCode = 1;
       return;

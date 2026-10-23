@@ -299,9 +299,9 @@ fn assert_stacked_lookup() {
     assert_eq!(output.lines().next(), Some("Spec: 020-stacked (020)"));
 }
 
-/// Proves git is off when the root is a folder below the repository's top.
+/// Proves show refuses a root below its repository's top level.
 ///
-/// Covers: rust-show/show-land-lines-equal-typescript-s
+/// Covers: rust-vcs/every-git-command-refuses-a-nested-root
 #[test]
 fn show_git_on_requires_the_repository_root() {
     let repo = Repo::new("show-land-subdir", false);
@@ -316,8 +316,18 @@ fn show_git_on_requires_the_repository_root() {
         "[vcs]\nenabled = true\nauthor = \"osq <osq@example.com>\"\n",
     );
     repo.commit_all(&outer, "all");
-    let output = run(&sub, "10").expect("the change is shown");
-    assert_eq!(line(&output, "Land: "), Some("Land: git is off".to_owned()));
+    let root = fs::canonicalize(&sub).expect("the sub folder resolves");
+    let top = fs::canonicalize(&outer).expect("the outer folder resolves");
+    let error = run(&sub, "10").expect_err("the nested root is refused");
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "show failed: {} is inside the git repository at {} but is not its top level; run osq from {} or set vcs.enabled to false",
+            root.display(),
+            top.display(),
+            top.display()
+        )
+    );
 }
 
 /// Proves which sync stops print after malformed and reordered sync events.

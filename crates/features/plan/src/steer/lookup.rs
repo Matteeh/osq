@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::{Config, load_config};
 use osq_kernel_storage::{ChangeEntry, ChangeTree, list_changes, list_tree_changes};
+use osq_kernel_vcs::project_git_root;
 
 use crate::trees;
 
@@ -18,17 +19,23 @@ pub(super) struct Found {
     pub(super) named: bool,
 }
 
-/// Reads the root's config and lists every change the lookup may steer.
+/// Reads the root's config and lists every change the lookup may steer, with
+/// the repository's top level when git is on.
 ///
 /// # Errors
 ///
-/// Returns the display of the first config or git error.
+/// Returns the display of the first config or git error, and the nested-root
+/// refusal when the root is not its repository's top level.
 ///
 /// Implements: rust-plan/steering-lookup
-pub(super) fn candidates(root: &Path) -> Result<(Config, Vec<Found>), FeatureError> {
+pub(super) fn candidates(
+    root: &Path,
+) -> Result<(Config, Option<PathBuf>, Vec<Found>), FeatureError> {
     let config =
         load_config(root).map_err(|error| FeatureError::failed("plan", error.to_string()))?;
-    if !config.vcs.enabled {
+    let git_root = project_git_root(root, &config)
+        .map_err(|error| FeatureError::failed("plan", error.to_string()))?;
+    let Some(repo) = git_root.as_deref() else {
         let found = list_changes(root)
             .into_iter()
             .map(|entry| Found {
@@ -37,11 +44,11 @@ pub(super) fn candidates(root: &Path) -> Result<(Config, Vec<Found>), FeatureErr
                 named: false,
             })
             .collect();
-        return Ok((config, found));
-    }
-    let tree_set = trees::list(root, &config, false)
+        return Ok((config, None, found));
+    };
+    let tree_set = trees::list(repo, &config, false)
         .map_err(|message| FeatureError::failed("plan", message))?;
-    Ok((config, found_in(&tree_set.trees)))
+    Ok((config, git_root, found_in(&tree_set.trees)))
 }
 
 /// Every change of every tree, each with the tree that holds it.

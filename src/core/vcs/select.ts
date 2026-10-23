@@ -17,9 +17,26 @@ async function realpath(target: string): Promise<string> {
 }
 
 /**
+ * A project root inside a git repository but not at its top level, which git
+ * writes would otherwise reach the enclosing repository through.
+ */
+export class NestedRootError extends Error {
+  constructor(root: string, top: string) {
+    super(
+      `${root} is inside the git repository at ${top} but is not its top level; ` +
+        `run osq from ${top} or set vcs.enabled to false`,
+    );
+    this.name = 'NestedRootError';
+  }
+}
+
+/**
  * Select the one `Vcs` the watcher and doctor read through. `GitVcs` wins only
  * when the git binary runs and the project root, symlinks resolved, is the top
- * level of a git repository.
+ * level of a git repository. With `vcs.enabled` on, a root below the top level
+ * throws a `NestedRootError` instead of selecting `NoVcs`.
+ * @scenario version-control: Folder below the root with git on
+ * @scenario version-control: Commands below the root with git on
  */
 export async function selectVcs(
   projectRoot: string,
@@ -37,7 +54,10 @@ export async function selectVcs(
   if (top.code !== 0 || topPath === '') return new NoVcs(VCS_REASONS.notRepository);
 
   const [rootReal, topReal] = await Promise.all([realpath(projectRoot), realpath(topPath)]);
-  if (rootReal !== topReal) return new NoVcs(VCS_REASONS.notRoot);
+  if (rootReal !== topReal) {
+    if (config.vcs?.enabled === true) throw new NestedRootError(rootReal, topReal);
+    return new NoVcs(VCS_REASONS.notRoot);
+  }
 
   return new RecordingGitVcs(projectRoot, config, binary);
 }

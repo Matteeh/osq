@@ -366,7 +366,7 @@ fn lint_entry_git_edges() {
     prove(rows_extra(), "lint_entry_git_edges");
 }
 
-/// Proves git is off when the project root is not the repository's top folder.
+/// Proves a project root below the repository's top level is refused.
 ///
 /// Covers: rust-lint/entry-paths-with-git-on
 #[test]
@@ -378,15 +378,19 @@ fn lint_entry_git_nested_project() {
     write(&repo.root, "top.rs", "x\n");
     repo.commit("top");
     write(&repo.root.join("nested"), TASK, task("top.rs"));
-    let error = run(&repo.root.join("nested"), "1").expect_err("the entry is missing");
+    let root = fs::canonicalize(repo.root.join("nested")).expect("the nested root canonicalizes");
+    let top = fs::canonicalize(&repo.root).expect("the repository root canonicalizes");
+    let error = run(&root, "1").expect_err("the nested root is refused");
     let FeatureError::Failed { message, .. } = error else {
         panic!("expected a failed error");
     };
     assert_eq!(
         message,
-        "001-clean: 1 finding\n001-clean: error \
-         openspec/changes/001-clean/tasks/1.md: Task 1 entry names top.rs, which is not in the \
-         project and no task up to this one creates"
+        format!(
+            "{0} is inside the git repository at {1} but is not its top level; run osq from {1} or set vcs.enabled to false",
+            root.display(),
+            top.display()
+        )
     );
 }
 

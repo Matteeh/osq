@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::{Limits, ManualEdits, Timeouts, VcsConfig, load_config};
 use osq_kernel_storage::{LandFacts, Location, list_changes, read_land_facts};
-use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree};
+use osq_kernel_vcs::{FastForward, GitVcs, Vcs, Worktree, project_git_root};
 
 use find::{Located, WorktreeChange};
 
@@ -39,16 +39,15 @@ const LAND: &str = "land";
 /// Implements: rust-land/land-git-limits
 /// Implements: rust-land/land-after-land-command
 /// Implements: rust-land/land-after-land-retry
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn run_land(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
+    let repo_root = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
     let (timeouts, settings, limits) = (config.timeouts, config.vcs, config.limits);
-    if !settings.enabled {
-        return Err(failed(text::NEEDS_GIT));
-    }
-    let vcs = git_vcs(root, &timeouts);
-    let Some(repo_root) = vcs.root().map_err(|error| failed(error.to_string()))? else {
+    let Some(repo_root) = repo_root else {
         return Err(failed(text::NEEDS_GIT));
     };
+    let vcs = git_vcs(root, &timeouts);
     let default_branch = land_default_branch(&vcs, &settings, LAND)?;
     let worktrees = worktree_changes(&vcs, root, LAND)?;
     let located = locate(root, &vcs, &worktrees, &default_branch, query)?;

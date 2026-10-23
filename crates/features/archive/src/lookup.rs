@@ -26,8 +26,13 @@ pub(crate) struct Found {
 /// active folder equals the argument or leads with its digits.
 ///
 /// Implements: rust-archive/change-lookup
-pub(crate) fn find(root: &Path, config: &Config, argument: &str) -> Result<Found, String> {
-    if !config.vcs.enabled {
+pub(crate) fn find(
+    root: &Path,
+    config: &Config,
+    git_on: bool,
+    argument: &str,
+) -> Result<Found, String> {
+    if !git_on {
         return find_root(root, argument);
     }
     let trees = trees(root, config)?;

@@ -268,10 +268,10 @@ the UTC time as `YYYY-MM-DDTHH:MM:SS.mmmZ`, each as a JSON string. It prints
 ### Requirement: Worktree approval
 `approve` SHALL read `osq.toml` with rust-config `load_config` after it
 checks its arguments and before it reads any change, failing with the
-`ConfigError`'s display when it cannot. Git is on when `vcs.enabled` is
-true and rust-vcs `GitVcs::root`, run in the root with the config's
-`timeouts`, gives a folder that is the root itself once both are
-canonicalized. With git on, once every check the other approve
+`ConfigError`'s display when it cannot. Right after it, `approve` SHALL
+call rust-vcs `project_git_root` on the root and fail with the `NestedRoot`'s
+display when it gives one, as rust-vcs "Project root check" says. Git is on
+when `project_git_root` gives a folder. With git on, once every check the other approve
 requirements name has passed, `approve` SHALL approve the change into its
 own branch and worktree as TypeScript's `approveIntoNewWorktree` in
 `src/core/spec/approve-worktree.ts` does, instead of writing the
@@ -280,7 +280,7 @@ git cannot start, it SHALL approve in the checkout as "Approval marker"
 says, as TypeScript does when `selectVcs` gives no git.
 
 Here `<seal>` is the seal rust-storage `change_folder_seal` gives for the
-checkout's change folder; `<repo>` is the folder `GitVcs::root` gives;
+checkout's change folder; `<repo>` is the folder `project_git_root` gives;
 `<worktree>` is the parent of rust-vcs `stacked_root` for `vcs`, `<repo>`
 and the `HOME` variable, empty when unset, joined with `<folder>`;
 `<branch>` is `osq/<folder>`; `<base>` is HEAD's commit from rust-vcs
@@ -350,7 +350,7 @@ lines, and runs prepare with the verify role's environment.
 - **THEN** the first run gives a `Failed` error whose message, trailing whitespace dropped, is the message of `tests/fixtures/approve-worktree/prepare-fails-001.txt`, `prepare failed in worktree <root>/worktrees/repo/001-alpha-twice on branch osq/001-alpha-twice:\nprepare said no`, written with `\n` escapes; after it there is no `osq/` branch, no osq worktree and no folder `<root>/worktrees/repo/001-alpha-twice`, the checkout's copy exists, and the tree record's lines are `{"at":"<at>","op":"worktree-add","root":"<root>/repo"}` and `{"at":"<at>","op":"worktree-prune","root":"<root>/repo"}`, where TypeScript's golden keeps the branch and the worktree; the second run gives an `Output`, and its golden text equals `prepare-passes-001.txt` except that its record section starts with those two lines
 
 #### Scenario: Git off approves in the checkout
-- **WHEN** `approve` runs with the query `1` on a scratch copy of `tests/fixtures/approve-repo` under `CARGO_TARGET_TMPDIR`, which sits inside this repository's git work tree but is not its top level, with an `osq.toml` whose `[vcs]` table sets `enabled = true` and `author = "Osq Bot <bot@example.com>"`
+- **WHEN** `approve` runs with the query `1` on a scratch copy of `tests/fixtures/approve-repo` under `CARGO_TARGET_TMPDIR`, which sits inside this repository's git work tree but is not its top level, with an `osq.toml` whose `[vcs]` table sets `enabled = false` and `author = "Osq Bot <bot@example.com>"`
 - **THEN** it gives the output `Approved 001 (001-alpha-twice)\n  Hash: sha256:9aee5f041660ed83152089fd3d7880dd5fb428427af3e27e1aa995cd95b34ad1\n`, written with `\n` escapes, and the copy's `openspec/changes/001-alpha-twice/.run/approved` holds that seal and a newline
 
 #### Scenario: Stacked copy removed

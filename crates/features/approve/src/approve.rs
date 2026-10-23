@@ -8,15 +8,15 @@ pub(crate) mod text;
 mod worktree;
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use osq_core::FeatureError;
-use osq_kernel_config::{Config, load_config};
+use osq_kernel_config::load_config;
 use osq_kernel_specs::{SpecFinding, validate_change, validate_merged_change};
 use osq_kernel_storage::{
     ChangeEntry, StorageError, change_folder_seal, list_changes, read_change,
 };
-use osq_kernel_vcs::{GitVcs, Vcs};
+use osq_kernel_vcs::project_git_root;
 
 /// The two flags an `approve` invocation may carry anywhere.
 ///
@@ -34,9 +34,10 @@ pub(crate) struct ApproveOptions {
 /// # Errors
 ///
 /// Returns a `Failed` error with the command `approve` when `osq.toml` cannot be
-/// read, when no active change matches, when the change cannot be read or
-/// sealed, when it needs steering, when its delta specs fail validation, when a
-/// git or file write fails, or when its marker cannot be written.
+/// read, when the root sits below its repository's top level, when no active
+/// change matches, when the change cannot be read or sealed, when it needs
+/// steering, when its delta specs fail validation, when a git or file write
+/// fails, or when its marker cannot be written.
 ///
 /// Implements: rust-approve/approve-lookup
 /// Implements: rust-approve/steering-refusal
@@ -51,6 +52,7 @@ pub(crate) fn run_approve(
     options: ApproveOptions,
 ) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(&error.to_string()))?;
+    let repo = project_git_root(root, &config).map_err(|error| failed(&error.to_string()))?;
     let changes = list_changes(root);
     let entry = find::find_change(&changes, query).ok_or_else(|| {
         FeatureError::failed(
@@ -67,7 +69,6 @@ pub(crate) fn run_approve(
         ));
     }
     validate(entry, &root.join("openspec").join("specs"))?;
-    let repo = git_repo(root, &config);
     let kept = match &repo {
         Some(repo) => refuse::check(repo, &config, &snapshot, &entry.folder, options)?,
         None => None,
@@ -78,23 +79,6 @@ pub(crate) fn run_approve(
     }
     write_marker(&entry.path, seal.as_str()).map_err(|error| failed(&error.to_string()))?;
     Ok(text::approved(&entry.folder, seal.as_str()))
-}
-
-/// The repository root when git is on, meaning git's top level is `root` itself.
-///
-/// Implements: rust-approve/worktree-approval
-pub(crate) fn git_repo(root: &Path, config: &Config) -> Option<PathBuf> {
-    if !config.vcs.enabled {
-        return None;
-    }
-    let found = GitVcs::new(root)
-        .with_timeouts(&config.timeouts)
-        .root()
-        .ok()
-        .flatten()?;
-    let root = fs::canonicalize(root).ok()?;
-    let repo = fs::canonicalize(&found).ok()?;
-    (root == repo).then_some(found)
 }
 
 /// Validates the change's delta specs, refusing any finding the specs kernel gives.

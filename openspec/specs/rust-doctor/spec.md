@@ -282,6 +282,12 @@ After its change lines, `doctor` SHALL print the git lines TypeScript's
 `checkGit` prints. None of them fails. Each is `[ok]` or `[warn]`, so
 none changes whether `doctor` fails.
 
+Before any line, when `osq.toml` loads, `doctor` SHALL call rust-vcs
+`project_git_root` on the root and fail with the `NestedRoot`'s display
+when it gives one, as rust-vcs "Project root check" says and as
+TypeScript's doctor fails on a `NestedRootError`. So case 3 below prints
+only with `vcs.enabled` off.
+
 `doctor` asks a `GitVcs` on the root, with the config's timeouts, through
 rust-vcs's reads. The first matching case gives the `git` line:
 

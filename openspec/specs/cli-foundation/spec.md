@@ -1589,11 +1589,12 @@ config file SHALL load the defaults as before.
 - **THEN** its `config` check fails with `failed to load: ` followed by the `ConfigLoadError` message
 
 ### Requirement: Config error exit
-When any command rejects with a `ConfigLoadError`, the command line SHALL print
-`Error: <message>` to stderr, without a stack trace, and set the exit code to
-1 without ending the process. `osq init` SHALL load config like every other
-command and SHALL NOT fall back to the defaults. Any other error that is not a
-`CommandError` SHALL propagate as before.
+When any command rejects with a `ConfigLoadError` or a version-control
+`NestedRootError`, the command line SHALL print `Error: <message>` to stderr,
+without a stack trace, and set the exit code to 1 without ending the process.
+`osq init` SHALL load config like every other command and SHALL NOT fall back
+to the defaults. Any other error that is not a `CommandError` SHALL propagate
+as before.
 
 #### Scenario: Status with a broken config
 - **WHEN** `osq status` runs in a project whose config fails to validate
@@ -1602,6 +1603,10 @@ command and SHALL NOT fall back to the defaults. Any other error that is not a
 #### Scenario: Init with a broken config
 - **WHEN** `osq init` runs in that project
 - **THEN** it prints the same error, exits 1, and scaffolds nothing
+
+#### Scenario: Doctor below the repository root with git on
+- **WHEN** `osq doctor` runs through `runCli` in the folder `<outer>/sub` of version-control "Commands below the root with git on"
+- **THEN** stderr is exactly `Error: ` followed by the message of version-control "Folder below the root with git on" and a newline, and the exit code is 1
 
 ### Requirement: OpenCode diagnostics
 The opencode catalog entry SHALL declare a `diagnose` hook adding a

@@ -19,7 +19,9 @@ use std::path::Path;
 
 use osq_core::FeatureError;
 use osq_core::event::FailureReason;
+use osq_kernel_config::load_config;
 use osq_kernel_storage::list_changes;
+use osq_kernel_vcs::project_git_root;
 
 /// Runs `retry <id> <target>` after the argument count was checked.
 ///
@@ -34,11 +36,13 @@ use osq_kernel_storage::list_changes;
 /// Implements: rust-retry/archived-retry
 pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, FeatureError> {
     let target = args::target(raw_target)?;
+    let config = load_config(root).map_err(|error| text::failed(error.to_string()))?;
+    let repo = project_git_root(root, &config).map_err(|error| text::failed(error.to_string()))?;
     let changes = list_changes(root);
     if let Some(entry) = find::find_change(&changes, id) {
         return finish(root, &entry.path, &entry.folder, target).map(|(recorded, _)| recorded.text);
     }
-    let Some(archived) = find::find_archived(root, id)? else {
+    let Some(archived) = find::find_archived(root, &config, repo.as_deref(), id)? else {
         let changes_dir = root.join("openspec").join("changes");
         return Err(text::not_found(id, &changes_dir));
     };

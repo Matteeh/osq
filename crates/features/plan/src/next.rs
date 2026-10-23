@@ -12,7 +12,9 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use osq_core::FeatureError;
+use osq_kernel_config::load_config;
 use osq_kernel_storage::ChangeSnapshot;
+use osq_kernel_vcs::project_git_root;
 
 use crate::queue::{self, Groups};
 
@@ -25,6 +27,10 @@ use crate::queue::{self, Groups};
 /// Implements: rust-plan/plan-handoff
 /// Implements: rust-plan/plan-prompt
 pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String, FeatureError> {
+    let config =
+        load_config(root).map_err(|error| FeatureError::failed("plan", error.to_string()))?;
+    let git_root = project_git_root(root, &config)
+        .map_err(|error| FeatureError::failed("plan", error.to_string()))?;
     let failures = select::failures(&active_changes(root));
     if !failures.is_empty() {
         return Err(FeatureError::failed(
@@ -35,7 +41,8 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
     let state = queue::read_state(root, "plan")?;
     let (item, _) =
         select::choose(&state, replan).map_err(|message| FeatureError::failed("plan", message))?;
-    let number = number::next(root).map_err(|message| FeatureError::failed("plan", message))?;
+    let number = number::next(root, &config, git_root.as_deref())
+        .map_err(|message| FeatureError::failed("plan", message))?;
     let folder = format!("{number}-{}", item.slug);
     let dependencies = select::landed_ids(&item.dependencies, &state.groups);
     let fixes = select::landed_ids(&item.fixes, &state.groups);

@@ -21,6 +21,7 @@ use osq_kernel_specs::{
     validate_change, validate_merged_change,
 };
 use osq_kernel_storage::{ChangeEntry, list_changes};
+use osq_kernel_vcs::project_git_root;
 
 use finding::{Finding, Severity};
 use text::{finding_line, merge_line, spec_line};
@@ -54,12 +55,13 @@ const SPEC_FILE: &str = "spec.md";
 /// Implements: rust-lint/lint-findings
 /// Implements: rust-lint/lint-errors
 pub(crate) fn run_lint(root: &Path, query: &str) -> Result<String, FeatureError> {
+    let config = load_config(root).map_err(|error| failed(error.to_string()))?;
+    let git_root = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
     let changes = list_changes(root);
     let entry = find::find_change(&changes, query)
         .ok_or_else(|| failed(text::not_found(query, &root.join(OPENSPEC).join("changes"))))?;
-    let config = load_config(root).map_err(|error| failed(error.to_string()))?;
     let change = root.join(OPENSPEC).join("changes").join(&entry.folder);
-    let findings = rule_findings(root, &change, &entry.folder, &config);
+    let findings = rule_findings(root, &change, &entry.folder, &config, git_root.as_deref());
     let mut lines = rule_lines(&entry.folder, &findings);
     lines.extend(error_lines(spec_findings(root, entry)?));
     lines.extend(error_lines(link_findings(root, &entry.folder)?));
@@ -67,7 +69,13 @@ pub(crate) fn run_lint(root: &Path, query: &str) -> Result<String, FeatureError>
 }
 
 /// The proposal, task and banned word findings for a change, in TypeScript's order.
-fn rule_findings(root: &Path, change: &Path, folder: &str, config: &Config) -> Vec<Finding> {
+fn rule_findings(
+    root: &Path,
+    change: &Path,
+    folder: &str,
+    config: &Config,
+    git_root: Option<&Path>,
+) -> Vec<Finding> {
     let file = format!("{OPENSPEC}/changes/{folder}/{PROPOSAL}");
     match read_proposal(change) {
         ProposalRead::Missing => vec![Finding::new(Severity::Error, file, None, MISSING_PROPOSAL)],
@@ -83,11 +91,11 @@ fn rule_findings(root: &Path, change: &Path, folder: &str, config: &Config) -> V
                 ),
             )];
             findings.extend(tasks::findings(root, change, folder, config));
-            findings.extend(entry_lines(root, change, folder, config));
+            findings.extend(entry_lines(root, change, folder, config, git_root));
             findings
         }
         ProposalRead::Parsed(proposal) => {
-            parsed_findings(root, change, folder, config, &file, &proposal)
+            parsed_findings(root, change, folder, config, git_root, &file, &proposal)
         }
     }
 }
@@ -98,6 +106,7 @@ fn parsed_findings(
     change: &Path,
     folder: &str,
     config: &Config,
+    git_root: Option<&Path>,
     file: &str,
     proposal: &ProposalDoc,
 ) -> Vec<Finding> {
@@ -116,7 +125,9 @@ fn parsed_findings(
         written: &written,
         project: &project,
     });
-    findings.extend(task_and_entry_findings(root, change, folder, config));
+    findings.extend(task_and_entry_findings(
+        root, change, folder, config, git_root,
+    ));
     findings.extend(banned::findings(change, folder, &config.banned_words));
     findings
 }
@@ -128,6 +139,7 @@ fn task_and_entry_findings(
     change: &Path,
     folder: &str,
     config: &Config,
+    git_root: Option<&Path>,
 ) -> Vec<Finding> {
     let mut findings = tasks::findings(root, change, folder, config);
     let split = findings
@@ -135,14 +147,20 @@ fn task_and_entry_findings(
         .position(|finding| finding.severity == Severity::Warning)
         .unwrap_or(findings.len());
     let warnings = findings.split_off(split);
-    findings.extend(entry_lines(root, change, folder, config));
+    findings.extend(entry_lines(root, change, folder, config, git_root));
     findings.extend(warnings);
     findings
 }
 
 /// The entry findings for one change.
-fn entry_lines(root: &Path, change: &Path, folder: &str, config: &Config) -> Vec<Finding> {
-    entry::findings(root, change, folder, config)
+fn entry_lines(
+    root: &Path,
+    change: &Path,
+    folder: &str,
+    config: &Config,
+    git_root: Option<&Path>,
+) -> Vec<Finding> {
+    entry::findings(root, change, folder, config, git_root)
 }
 
 /// A proposal document once it reads and its frontmatter parses.

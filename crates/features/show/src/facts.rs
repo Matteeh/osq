@@ -7,7 +7,7 @@ use osq_kernel_config::{Config, VcsConfig, load_config};
 use osq_kernel_storage::{
     ChangeEntry, Location, TreeCandidate, change_trees, list_changes, list_tree_changes,
 };
-use osq_kernel_vcs::{DiffStat, GitVcs, Vcs, Worktree, stacked_root};
+use osq_kernel_vcs::{DiffStat, GitVcs, Vcs, Worktree, project_git_root, stacked_root};
 
 use crate::lookup::Found;
 
@@ -56,17 +56,18 @@ pub(crate) struct LandFacts {
 ///
 /// Implements: rust-show/show-git-state
 /// Implements: rust-show/show-lookup
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn read(root: &Path) -> Result<Facts, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
+    let repo_root = git_root(root, &config)?;
     let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let repo_root = git_root(&vcs, root);
     let git = match repo_root {
         Some(repo_root) => Some(open_git(vcs, repo_root, &config)?),
         None => None,
     };
-    let entries = match (&git, config.vcs.enabled) {
-        (Some(git), true) => across_trees(root, &config, git)?,
-        _ => list_changes(root),
+    let entries = match &git {
+        Some(git) => across_trees(root, &config, git)?,
+        None => list_changes(root),
     };
     Ok(Facts {
         config,
@@ -75,12 +76,27 @@ pub(crate) fn read(root: &Path) -> Result<Facts, FeatureError> {
     })
 }
 
-/// The repository root when git is on, as TypeScript's `selectVcs` decides.
-fn git_root(vcs: &GitVcs, root: &Path) -> Option<PathBuf> {
-    let repo_root = vcs.root().ok().flatten()?;
-    let root = real(root);
-    let repo = real(&repo_root);
-    (root == repo).then_some(repo)
+/// The repository root show reads, which it also reads with `vcs.enabled` off.
+///
+/// # Errors
+///
+/// Returns [`FeatureError::failed`] for a root inside a repository but not at
+/// its top level while `vcs.enabled` is on.
+///
+/// Implements: rust-show/show-git-state
+/// Implements: rust-vcs/project-root-check
+fn git_root(root: &Path, config: &Config) -> Result<Option<PathBuf>, FeatureError> {
+    if config.vcs.enabled {
+        return project_git_root(root, config).map_err(|error| failed(error.to_string()));
+    }
+    let enabled = Config {
+        vcs: VcsConfig {
+            enabled: true,
+            ..config.vcs.clone()
+        },
+        ..config.clone()
+    };
+    Ok(project_git_root(root, &enabled).ok().flatten())
 }
 
 /// Opens the git reader and reads the configured default branch.
@@ -197,11 +213,6 @@ fn stacked_folders(repo_root: &Path, config: &VcsConfig) -> Vec<PathBuf> {
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .map(|entry| entry.path())
         .collect()
-}
-
-/// Resolves a path's symlinks, falling back to the path as given.
-fn real(path: &Path) -> PathBuf {
-    std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// Builds the failed error for a show read.

@@ -29,20 +29,19 @@ struct Git {
 /// Returns [`FeatureError::failed`] when a git-backed listing fails.
 ///
 /// Implements: rust-report/report-changes
-pub(crate) fn entries(root: &Path, config: &Config) -> Result<Vec<ChangeEntry>, FeatureError> {
-    match git(root, config) {
-        Some(git) if config.vcs.enabled => across_trees(root, config, &git),
-        _ => Ok(list_changes(root)),
-    }
-}
-
-/// Opens git when it is on, as rust-show "Show git state" decides it.
-fn git(root: &Path, config: &Config) -> Option<Git> {
-    let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let repo_root = vcs.root().ok().flatten()?;
-    let root = real(root);
-    let repo_root = real(&repo_root);
-    (root == repo_root).then_some(Git { vcs, repo_root })
+pub(crate) fn entries(
+    root: &Path,
+    config: &Config,
+    repo_root: Option<PathBuf>,
+) -> Result<Vec<ChangeEntry>, FeatureError> {
+    let Some(repo_root) = repo_root else {
+        return Ok(list_changes(root));
+    };
+    let git = Git {
+        vcs: GitVcs::new(root).with_timeouts(&config.timeouts),
+        repo_root,
+    };
+    across_trees(root, config, &git)
 }
 
 /// Lists the changes across the root, its worktrees and its stacked folders.
@@ -86,9 +85,4 @@ fn stacked_folders(repo_root: &Path, config: &VcsConfig) -> Vec<PathBuf> {
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .map(|entry| entry.path())
         .collect()
-}
-
-/// Resolves a path's symlinks, falling back to the path as given.
-fn real(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }

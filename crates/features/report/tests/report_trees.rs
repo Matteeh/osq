@@ -140,9 +140,9 @@ fn report_reads_stacked_approvals() {
     assert_eq!(field(&text, "Completion rate"), "100%");
 }
 
-/// Proves git is off when the root is a folder below the repository's top.
+/// Proves report refuses a root below its repository's top level.
 ///
-/// Covers: rust-report/report-across-worktrees
+/// Covers: rust-vcs/every-git-command-refuses-a-nested-root
 #[test]
 fn report_git_off_below_the_repository_top() {
     if std::env::var_os(HOME_MARKER).is_none() {
@@ -181,9 +181,18 @@ fn report_git_off_below_the_repository_top() {
     write(&sub.join("osq.toml"), enabled_config());
     write_change(&sub, "001-local", 1, false, None);
 
-    let text = run(&sub, &[]).expect("report prints the sub folder's changes");
-    assert_eq!(field(&text, "Total specs"), "1 (1 active, 0 archived)");
-    assert_eq!(field(&text, "Total tasks"), "1");
+    let root = fs::canonicalize(&sub).expect("the sub folder resolves");
+    let top = fs::canonicalize(&outer).expect("the outer folder resolves");
+    let error = run(&sub, &[]).expect_err("the nested root is refused");
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "report failed: {} is inside the git repository at {} but is not its top level; run osq from {} or set vcs.enabled to false",
+            root.display(),
+            top.display(),
+            top.display()
+        )
+    );
 }
 
 /// Proves an unset `HOME` adds no stacked approvals to the count.

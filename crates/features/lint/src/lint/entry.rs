@@ -52,23 +52,17 @@ struct Tree {
 }
 
 impl Tree {
-    /// Reads whether git is on and names the tree an entry must be in.
-    fn read(root: &Path, config: &Config) -> Self {
+    /// Names the tree an entry must be in from the kernel's repository top level.
+    fn read(config: &Config, git_root: Option<&Path>) -> Self {
         let off = Self {
             vcs: None,
             branch: None,
             name: PROJECT_TREE.to_owned(),
         };
-        if !config.vcs.enabled {
-            return off;
-        }
-        let vcs = GitVcs::new(root);
-        let Some(found) = vcs.root().ok().flatten() else {
+        let Some(repo) = git_root else {
             return off;
         };
-        if !same_root(root, &found) {
-            return off;
-        }
+        let vcs = GitVcs::new(repo);
         let fallback = config
             .vcs
             .default_branch
@@ -99,8 +93,14 @@ impl Tree {
 /// The entry findings for one change, in task and entry order.
 ///
 /// Implements: rust-lint/lint-entry-paths
-pub(crate) fn findings(root: &Path, change: &Path, folder: &str, config: &Config) -> Vec<Finding> {
-    let tree = Tree::read(root, config);
+pub(crate) fn findings(
+    root: &Path,
+    change: &Path,
+    folder: &str,
+    config: &Config,
+    git_root: Option<&Path>,
+) -> Vec<Finding> {
+    let tree = Tree::read(config, git_root);
     let mut findings = Vec::new();
     let mut earlier: Vec<Vec<String>> = Vec::new();
     for task in read_tasks(change, folder) {
@@ -352,12 +352,4 @@ fn change_tasks_cover(change: &Path, entry: &str) -> bool {
             let scope = parse_task_file(&text).map_or_else(|_| Vec::new(), |file| file.scope);
             scope_covers_path(&scope, entry)
         })
-}
-
-/// True when two roots name the same folder once both resolve.
-fn same_root(root: &Path, found: &Path) -> bool {
-    match (fs::canonicalize(root), fs::canonicalize(found)) {
-        (Ok(left), Ok(right)) => left == right,
-        _ => false,
-    }
 }

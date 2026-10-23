@@ -11,6 +11,7 @@ use std::path::Path;
 
 use osq_core::{FeatureError, Output};
 use osq_kernel_config::load_config;
+use osq_kernel_vcs::project_git_root;
 
 /// Runs `report` over one root with its already-read arguments.
 ///
@@ -23,10 +24,12 @@ use osq_kernel_config::load_config;
 /// Implements: rust-report/report-changes
 /// Implements: rust-report/report-counts
 /// Implements: rust-report/report-summary
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> {
     let json = arguments::parse(args)?;
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let entries = entries::entries(root, &config)?;
+    let repo_root = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
+    let entries = entries::entries(root, &config, repo_root)?;
     let counts = counts::count(&entries);
     let text = if json {
         output::json(&counts)

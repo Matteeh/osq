@@ -1,12 +1,11 @@
 //! Everything `run` refuses before it writes anything.
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
 use osq_kernel_config::{Config, Harness, load_config};
 use osq_kernel_storage::{ChangeEntry, list_changes};
-use osq_kernel_vcs::{GitVcs, Vcs};
+use osq_kernel_vcs::project_git_root;
 
 use super::{catch_up, checks, find, text, worktree};
 
@@ -26,7 +25,8 @@ pub(crate) type Checked = (ChangeEntry, Config, PathBuf);
 /// Implements: rust-run/worktree-run
 pub(crate) fn check(root: &Path, id: &str, task: &str) -> Result<Checked, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let found = find_change(root, &config, id)?;
+    let git_on = worktree::git_on(root, &config)?;
+    let found = find_change(root, &config, git_on, id)?;
     let (entry, tree_root) = (found.entry, found.root);
     if !task_file(&entry, task).is_file() {
         return Err(failed(text::missing_task(task, &entry.folder)));
@@ -36,11 +36,7 @@ pub(crate) fn check(root: &Path, id: &str, task: &str) -> Result<Checked, Featur
             config.executor.harness.as_str(),
         )));
     }
-    let repository = GitVcs::new(&tree_root)
-        .root()
-        .map_err(|error| failed(error.to_string()))?;
-    let expected = fs::canonicalize(&tree_root).unwrap_or_else(|_| tree_root.clone());
-    if repository.as_deref() != Some(expected.as_path()) {
+    if !has_repository(&tree_root, &config) {
         return Err(failed(text::no_git(&tree_root)));
     }
     if worktree::is_worktree(root, &tree_root) {
@@ -60,8 +56,13 @@ pub(crate) fn check(root: &Path, id: &str, task: &str) -> Result<Checked, Featur
 ///
 /// Implements: rust-run/run-refusals
 /// Implements: rust-run/worktree-run
-fn find_change(root: &Path, config: &Config, id: &str) -> Result<worktree::Found, FeatureError> {
-    if worktree::git_on(root, config)? {
+fn find_change(
+    root: &Path,
+    config: &Config,
+    git_on: bool,
+    id: &str,
+) -> Result<worktree::Found, FeatureError> {
+    if git_on {
         return worktree::find(root, config, id);
     }
     let changes = list_changes(root);
@@ -72,6 +73,15 @@ fn find_change(root: &Path, config: &Config, id: &str) -> Result<worktree::Found
             root: root.to_path_buf(),
         })
         .ok_or_else(|| failed(text::not_found(id, &root.join("openspec").join("changes"))))
+}
+
+/// Whether `root` is a git repository's top level, asking git even with vcs off.
+///
+/// Implements: rust-run/run-refusals
+fn has_repository(root: &Path, config: &Config) -> bool {
+    let mut enabled = config.clone();
+    enabled.vcs.enabled = true;
+    matches!(project_git_root(root, &enabled), Ok(Some(_)))
 }
 
 /// The `tasks/<task>.md` path of one change folder.

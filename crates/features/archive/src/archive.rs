@@ -9,6 +9,7 @@ use osq_core::{Change, FeatureError, Seal};
 use osq_kernel_config::load_config;
 use osq_kernel_specs::{MergeChangeError, MergedSpec, merge_change};
 use osq_kernel_storage::{ChangeEntry, ChangeSnapshot, change_folder_seal, read_change};
+use osq_kernel_vcs::project_git_root;
 
 use crate::{apply, commit, lookup, record, regress, relocate};
 
@@ -36,7 +37,8 @@ const APPROVED: &str = ".run/approved";
 /// Implements: rust-archive/worktree-archive
 pub(crate) fn run(root: &Path, argument: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let found = lookup::find(root, &config, argument).map_err(failed)?;
+    let repo = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
+    let found = lookup::find(root, &config, repo.is_some(), argument).map_err(failed)?;
     let entry = &found.entry;
     let snapshot = read_change(entry).map_err(failed)?;
     pass_gates(entry, &snapshot)?;

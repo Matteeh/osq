@@ -8,7 +8,7 @@ use osq_kernel_config::Config;
 use osq_kernel_storage::{
     ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_tree_changes,
 };
-use osq_kernel_vcs::{GitVcs, Vcs, Worktree};
+use osq_kernel_vcs::{GitVcs, Vcs, Worktree, project_git_root};
 
 use super::{find, text};
 
@@ -20,22 +20,16 @@ pub(crate) struct Found {
     pub(crate) root: PathBuf,
 }
 
-/// Whether git is on at `root`: `vcs.enabled`, in a repository rooted there.
+/// Whether git is on at `root`, as the vcs kernel decides for the root.
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the display of the first git error.
+/// Returns a `Failed` error for a root below its repository's top level.
 ///
 /// Implements: rust-run/worktree-run
 pub(crate) fn git_on(root: &Path, config: &Config) -> Result<bool, FeatureError> {
-    if !config.vcs.enabled {
-        return Ok(false);
-    }
-    let repository = GitVcs::new(root)
-        .root()
-        .map_err(|error| failed(error.to_string()))?;
-    let expected = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
-    Ok(repository.as_deref() == Some(expected.as_path()))
+    let repo = project_git_root(root, config).map_err(|error| failed(error.to_string()))?;
+    Ok(repo.is_some())
 }
 
 /// Finds the first active change the id names in the root's trees.

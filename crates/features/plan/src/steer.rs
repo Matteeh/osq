@@ -24,11 +24,11 @@ use self::prompt::Steer;
 /// Implements: rust-plan/steering-handoff
 /// Implements: rust-plan/steering-in-worktrees
 pub(crate) fn run_steer(root: &Path, id: &str) -> Result<String, FeatureError> {
-    let (config, found) = lookup::candidates(root)?;
+    let (config, git_root, found) = lookup::candidates(root)?;
     if let Some(found) = found.iter().find(|found| active(found, id)) {
         return steer(root, &config, found, id);
     }
-    if config.vcs.enabled {
+    if git_root.is_some() {
         return steer_archived(root, &config, &found, id);
     }
     Err(nothing(id))

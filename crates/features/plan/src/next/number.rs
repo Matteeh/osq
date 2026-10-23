@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use osq_kernel_config::{Config, load_config};
+use osq_kernel_config::Config;
 use osq_kernel_storage::list_tree_changes;
 use osq_kernel_vcs::Vcs;
 
@@ -12,19 +12,23 @@ use crate::trees;
 /// The branch prefix every osq change branch carries.
 const BRANCH_PREFIX: &str = "osq/";
 
-/// The highest leading number of the checkout's entries and, with vcs enabled,
-/// every worktree, stacked approval and `osq/` branch, plus one, padded.
+/// The highest leading number of the checkout's entries and, with a repository
+/// top level, every worktree, stacked approval and `osq/` branch, plus one,
+/// padded.
 ///
 /// # Errors
 ///
-/// Returns the display of the first config or git error.
+/// Returns the display of the first git error.
 ///
 /// Implements: rust-plan/next-change-number
-pub(super) fn next(root: &Path) -> Result<String, String> {
-    let config = load_config(root).map_err(|error| error.to_string())?;
+pub(super) fn next(
+    root: &Path,
+    config: &Config,
+    git_root: Option<&Path>,
+) -> Result<String, String> {
     let mut highest = checkout_highest(root);
-    if config.vcs.enabled {
-        highest = highest.max(trees_highest(root, &config)?);
+    if let Some(repo) = git_root {
+        highest = highest.max(trees_highest(repo, config)?);
     }
     Ok(format!("{:03}", highest + 1))
 }
@@ -57,8 +61,8 @@ fn checkout_highest(root: &Path) -> u128 {
 /// The highest leading number of the trees and branches git knows.
 ///
 /// Implements: rust-plan/next-change-number
-fn trees_highest(root: &Path, config: &Config) -> Result<u128, String> {
-    let tree_set = trees::list(root, config, true)?;
+fn trees_highest(repo: &Path, config: &Config) -> Result<u128, String> {
+    let tree_set = trees::list(repo, config, true)?;
     let branches = tree_set
         .vcs
         .list_branches(BRANCH_PREFIX)

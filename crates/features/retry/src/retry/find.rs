@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use osq_core::FeatureError;
-use osq_kernel_config::{Config, load_config};
+use osq_kernel_config::Config;
 use osq_kernel_storage::{
     ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_tree_changes,
 };
@@ -17,7 +17,7 @@ pub(crate) struct Archived {
     pub(crate) entry: ChangeEntry,
     /// The worktree tree that holds it.
     pub(crate) tree: ChangeTree,
-    /// The root's config, loaded only because no active change matched.
+    /// The root's config.
     pub(crate) config: Config,
 }
 
@@ -34,22 +34,20 @@ pub(crate) fn find_change<'a>(changes: &'a [ChangeEntry], query: &str) -> Option
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the command `retry` when the config, git root
-/// or worktree list cannot be read.
+/// Returns a `Failed` error with the command `retry` when the worktree list
+/// cannot be read.
 ///
 /// Implements: rust-retry/archived-retry
-pub(crate) fn find_archived(root: &Path, query: &str) -> Result<Option<Archived>, FeatureError> {
-    let config = load_config(root).map_err(|error| text::failed(error.to_string()))?;
-    if !config.vcs.enabled {
+pub(crate) fn find_archived(
+    root: &Path,
+    config: &Config,
+    repo: Option<&Path>,
+    query: &str,
+) -> Result<Option<Archived>, FeatureError> {
+    if repo.is_none() {
         return Ok(None);
     }
     let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let in_git = vcs
-        .root()
-        .map_err(|error| text::failed(error.to_string()))?;
-    if in_git.is_none() {
-        return Ok(None);
-    }
     let worktrees = vcs
         .worktree_list()
         .map_err(|error| text::failed(error.to_string()))?;
@@ -68,7 +66,7 @@ pub(crate) fn find_archived(root: &Path, query: &str) -> Result<Option<Archived>
     Ok(found.map(|(entry, tree)| Archived {
         entry,
         tree,
-        config,
+        config: config.clone(),
     }))
 }
 

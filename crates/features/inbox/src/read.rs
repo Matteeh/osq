@@ -9,7 +9,7 @@ use osq_kernel_storage::{
     ChangeEntry, ChangeSnapshot, ChangeTree, Location, PauseRecord, TreeCandidate, change_trees,
     list_changes, list_tree_changes, read_change, read_usage_pause,
 };
-use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
+use osq_kernel_vcs::{GitVcs, Vcs, Worktree, project_git_root, stacked_root};
 
 /// The changes the inbox reads across its trees.
 pub(crate) struct Changes {
@@ -37,21 +37,21 @@ pub(crate) struct ArchivedChange {
 ///
 /// Returns [`FeatureError::failed`] when the config, git or a change folder
 /// cannot be read.
+///
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn changes(root: &Path) -> Result<Changes, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    if !config.vcs.enabled {
+    let Some(repo_root) =
+        project_git_root(root, &config).map_err(|error| failed(error.to_string()))?
+    else {
         return root_only(root);
-    }
+    };
     let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
-    let in_git = vcs.root().map_err(|error| failed(error.to_string()))?;
-    if in_git.is_none() {
-        return root_only(root);
-    }
     let worktrees = vcs
         .worktree_list()
         .map_err(|error| failed(error.to_string()))?;
     let candidates: Vec<TreeCandidate> = worktrees.iter().map(candidate).collect();
-    let stacked = stacked_folders(&vcs, root, &config.vcs)?;
+    let stacked = stacked_folders(&repo_root, &config.vcs);
     let trees = change_trees(root, &candidates, &stacked);
     let entries = list_tree_changes(&trees);
     let (snapshots, pauses) = read_entries(&entries)?;
@@ -108,27 +108,21 @@ fn candidate(worktree: &Worktree) -> TreeCandidate {
 
 /// The folders directly under the stacked approvals root, or none when the
 /// home is unset or the root cannot be read.
-fn stacked_folders(
-    vcs: &GitVcs,
-    root: &Path,
-    config: &VcsConfig,
-) -> Result<Vec<PathBuf>, FeatureError> {
+///
+/// Implements: rust-inbox/inbox-trees
+fn stacked_folders(repo_root: &Path, config: &VcsConfig) -> Vec<PathBuf> {
     let Some(home) = std::env::var_os("HOME") else {
-        return Ok(Vec::new());
+        return Vec::new();
     };
-    let repo_root = vcs
-        .root()
-        .map_err(|error| failed(error.to_string()))?
-        .unwrap_or_else(|| root.to_path_buf());
-    let stacked = stacked_root(config, &repo_root, Path::new(&home));
+    let stacked = stacked_root(config, repo_root, Path::new(&home));
     let Ok(entries) = std::fs::read_dir(&stacked) else {
-        return Ok(Vec::new());
+        return Vec::new();
     };
-    Ok(entries
+    entries
         .flatten()
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .map(|entry| entry.path())
-        .collect())
+        .collect()
 }
 
 /// The archived changes of worktree trees with their git facts.

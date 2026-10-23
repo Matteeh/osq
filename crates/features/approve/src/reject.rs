@@ -16,10 +16,9 @@ use osq_kernel_config::{Config, load_config};
 use osq_kernel_storage::{
     ChangeEntry, ChangeTree, Location, TreeCandidate, change_trees, list_changes, list_tree_changes,
 };
-use osq_kernel_vcs::{GitVcs, Vcs, Worktree};
+use osq_kernel_vcs::{GitVcs, Vcs, Worktree, project_git_root};
 
 use crate::approve::find::{find_change, matches};
-use crate::approve::git_repo;
 use crate::approve::text::not_found;
 
 /// The command every rejection failure names.
@@ -41,8 +40,9 @@ struct Found {
 ///
 /// Returns a `Usage` error before reading any file when the arguments do not
 /// hold one id and one non-empty reason, a `Failed` error with the command
-/// `reject` when `osq.toml` does not load, and every refusal, git failure and
-/// filesystem failure the reject requirements name.
+/// `reject` when `osq.toml` does not load or the root sits below its
+/// repository's top level, and every refusal, git failure and filesystem
+/// failure the reject requirements name.
 ///
 /// Implements: rust-approve/reject-arguments
 /// Implements: rust-approve/reject-refusals
@@ -52,7 +52,8 @@ struct Found {
 pub(crate) fn run_reject(root: &Path, arguments: &[String]) -> Result<String, FeatureError> {
     let parsed = args::parse(arguments)?;
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
-    let found = locate(root, &config, &parsed.id)?;
+    let repo = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
+    let found = locate(root, &config, repo.as_deref(), &parsed.id)?;
     let entry = &found.entry;
     let destination = found
         .tree_root
@@ -94,8 +95,13 @@ pub(crate) fn run_reject(root: &Path, arguments: &[String]) -> Result<String, Fe
 /// worktrees, or when no active change matches the query.
 ///
 /// Implements: rust-approve/worktree-rejection
-fn locate(root: &Path, config: &Config, query: &str) -> Result<Found, FeatureError> {
-    if git_repo(root, config).is_some() {
+fn locate(
+    root: &Path,
+    config: &Config,
+    repo: Option<&Path>,
+    query: &str,
+) -> Result<Found, FeatureError> {
+    if repo.is_some() {
         return locate_trees(root, config, query);
     }
     let changes = list_changes(root);

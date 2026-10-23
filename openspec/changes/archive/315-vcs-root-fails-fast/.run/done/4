@@ -1,0 +1,75 @@
+---
+scope_resolver: 2
+scope_hash: sha256:85a89239f1cc737fe500155d9428c608daa2502efcfe30d3c89a889d162c0544
+build_stamp: 4b9a2af8
+project_commit: d46cb3ab
+exit_code: 0
+scope_files:
+  crates/features/archive/src/apply.rs: sha256:a264accddc1d6ff97743c4d3a762cb257c3e067dee5be5bd241739ef5a44c6a3
+  crates/features/archive/src/archive.rs: sha256:3826fb3e1991777416c33d6fceb9b96a981741e69db5a28abc6a80e867ba7bd7
+  crates/features/archive/src/commit.rs: sha256:1ef6615dfd8d1e1adf2422fe8aafb8659a7682d9fdc60d6e9dbb14a5204f8a4a
+  crates/features/archive/src/excerpt.rs: sha256:18aee27589614198b8e8a23840392bfc80ab2a862452eced240fa7ee006cd14b
+  crates/features/archive/src/feature.rs: sha256:1698e00d87e41021aadc35e1da3ac6cdb84542cc00aa4c7827741e3cbc853e10
+  crates/features/archive/src/lib.rs: sha256:0d196e9ccb04c7a610d63db7805b80afee4eb42ef38296aab1ac40116cf1abd0
+  crates/features/archive/src/lookup.rs: sha256:63962acfa40eb50a7c39137e018ee30b4a5b6a10f405f0839f1fe16ea1f5d571
+  crates/features/archive/src/record.rs: sha256:324e10f25bda33b7e0f9425e3bedb0f0f8bbc70ab892f6cd53624282c946c4e2
+  crates/features/archive/src/regress.rs: sha256:954e9ff3109b6096010402870acefb0157158c79370247d2da4332a0b365f6f0
+  crates/features/archive/src/relocate.rs: sha256:03e39575378dffb2abf51245a9a97c1bfa6a62a7696720e1b11222c37e6c3bb1
+  crates/features/archive/src/tick.rs: sha256:47a27d890f8ee0ec1eda494d9b20e96b72049a58b2729883110283ac89b05018
+  crates/features/archive/src/time.rs: sha256:b1fb597a1ff7f092a6619778b44e70bbb8d46b0b44dcb54f6b8417b00360f514
+  crates/features/archive/tests/archive_nested_root.rs: sha256:5aef35fc70f42f84b58cf008e778bdfb690e6a5657b2174fe1775f1aa5206071
+  crates/features/retry/src/feature.rs: sha256:78fc82664571d57bcff96560db9e57f39e393f24775b4fa918323e648473c541
+  crates/features/retry/src/lib.rs: sha256:9e7bdb4bb97000dd5e27f0ecaef77dd84076305ba7368e7af23f3be0d391421f
+  crates/features/retry/src/retry.rs: sha256:3c6890b3faa11a504c5a09f41ff9f4ae476094b59b429c5d85b4afc50260c3ab
+  crates/features/retry/src/retry/approval.rs: sha256:1016071ec7ba10629bba918df3e12227df0ce7d07373d492880eb39e9f927a1d
+  crates/features/retry/src/retry/archive_commit.rs: sha256:3928fb6bdb93a0b48393615576417fafc2f43d5f9e5e631a6ee9e704cc28543e
+  crates/features/retry/src/retry/args.rs: sha256:8ce9b0497c0c7fb2808efaf68781419a095c3822c7a816b7a1c7c335a77b7b73
+  crates/features/retry/src/retry/excerpt.rs: sha256:63debc553d3858ffe0633d3c6e69de83cebcf9bee39126fb7eb8147abf76483a
+  crates/features/retry/src/retry/find.rs: sha256:dbc0e057f1d8f97549e5eb77cc1c183024177e1e1a600cec85eae155c9d16f0f
+  crates/features/retry/src/retry/marker.rs: sha256:4d8068173b49a1c8b113c23526f5748dacff8f5304267e409a1d4e9d379d5b9e
+  crates/features/retry/src/retry/recertify.rs: sha256:1b252fcecfc7971062affe517b00de600f772ddd922c03b0cc185771d8b13491
+  crates/features/retry/src/retry/recertify/done.rs: sha256:70b53581e5fa032f7a01b0a23205c7c1e85cef97d7c02448c099b15e5cc924f7
+  crates/features/retry/src/retry/recertify/fields.rs: sha256:7d13ee180c385b472a6a0b130b89db8de262e3840805e192b8f668e8ab276db2
+  crates/features/retry/src/retry/record.rs: sha256:ee0fcd3103fcf0aba675294f7b49bd08365f94bc5d7347c17adc6231a6ea409e
+  crates/features/retry/src/retry/running.rs: sha256:05f7cf0e71ee8ef269f57d3b55e27d0516f24e6f187d1496114079e00d49afa1
+  crates/features/retry/src/retry/scope.rs: sha256:596b1be87343bf1daa28cdfdb0542a4ca34a90529ca4f8313449b9d940274d0d
+  crates/features/retry/src/retry/text.rs: sha256:96669c1fc8d574b6ba38e0f2a32c8b50836651a1fe1687cf6fe4299662173b07
+  crates/features/retry/src/retry/time.rs: sha256:20050b1bdd5ef3902194065a25dfbf25af5009bc872e79bd0655c69ba1a76caf
+  crates/features/retry/src/retry/vcs_detail.rs: sha256:c4fd56afd70929e175efb34eae9f91606f197bb000b7a7227cbb797e3adf2791
+  crates/features/retry/src/retry/yaml.rs: sha256:2abccdcdca4d9bf2268e0d9f62bcc19959e4962233e7a7e7e2a4a4a001570f04
+  crates/features/retry/tests/retry_nested_root.rs: sha256:5a6d40f3e293c554307e376ee47d42f3450cf443c6adc396c5339ac73b511754
+  crates/features/run/src/feature.rs: sha256:340563fe6034c151bdbf895d990ac445683132d2017eb457c68ae763c9ae05c7
+  crates/features/run/src/feature/catch_up.rs: sha256:dde79416834143f9ae335c4fc583ac167659eb65335165ff10478b6eef159064
+  crates/features/run/src/feature/checks.rs: sha256:b74be26e811b7fca1e2778d1f25234abb5aa69fe751ff6900e72054a51d8faca
+  crates/features/run/src/feature/commit.rs: sha256:b0bf65279ddd4fb2d5459dbb9b2f7a762cddede259278406a904298bf21eb351
+  crates/features/run/src/feature/dead.rs: sha256:1574dc9765c6ee5e70519daa32e241a7ff52c6baccf3196bc6f2633aa91c41de
+  crates/features/run/src/feature/done.rs: sha256:e3f241681c4b27e67d4dccc9c07d6e86b09f2cd28496e7ac5ec70fa9b9a532a6
+  crates/features/run/src/feature/events.rs: sha256:ebaf312afd897501db52cecf4a19ed25783c6b56a7a71e5069684fcd888113b3
+  crates/features/run/src/feature/find.rs: sha256:72142b55f781daf4ad0a8ca44e49f969022aa3426ee6f819c8507a1d633d5a17
+  crates/features/run/src/feature/halt.rs: sha256:8c383930da11ce9b246fcbce586e2a41afb79597f4fb6c69bafc3b2109fa9af1
+  crates/features/run/src/feature/lock.rs: sha256:e9dcdab622feb25a0e75998e24fdb331227a8d5e2ea27aa484cf68033ff5071c
+  crates/features/run/src/feature/log.rs: sha256:4d20e028fbeb6e77b50eba34d6b1cbaf4df6e208f865056d78f3aecb18d23d75
+  crates/features/run/src/feature/message.rs: sha256:a1206f172abb54739f3ae05d294547afaced2d632bd60184d555ad6c8c8e04ab
+  crates/features/run/src/feature/named.rs: sha256:82992ffc82c5af2a7ca20c78aba469b2bade26c4fe5efb8d7d4c4afee7267fc3
+  crates/features/run/src/feature/output.rs: sha256:d24682d1558f03f12193b7bc4774cff063ffcbe8df7e8e7c55e97073f7c95a66
+  crates/features/run/src/feature/pause.rs: sha256:321741d886bde4824eedc9ef8aa9a0ed38bf3a7fd79dfc44e6f3b72078528d0c
+  crates/features/run/src/feature/pre_spawn.rs: sha256:db3134f142006123154b7d7d18e4c3b4d0db89a60f633a1d0637cc5e4d3e3e2a
+  crates/features/run/src/feature/refusals.rs: sha256:7313b9b3b2529a9f960dd27ba4ed6e96e6d940b437be5e3b076ede12655eb9ad
+  crates/features/run/src/feature/run.rs: sha256:5277aefb754df6162c4ee1b1b87eb32bbe4d7aeeda4ef1ffdab67f76d25f8aea
+  crates/features/run/src/feature/scope.rs: sha256:e35073b87b248a84cbaf2b8c9dc5aa2d099016791ee400de74a6676fc5a1c9f4
+  crates/features/run/src/feature/start.rs: sha256:20c2b38baa6d7cdbf69c608c4cb5e9f263d98a78499447ead5bb62f14a3bc1f6
+  crates/features/run/src/feature/text.rs: sha256:dff39e28accd376be6e9812551e18cda2abd7947f8244a8ca9a6fd7970f27099
+  crates/features/run/src/feature/time.rs: sha256:b1c8515b5480fabe14caca8d00f72cf75b63d5e9821e6db7644436bce8e0aa8b
+  crates/features/run/src/feature/verdict.rs: sha256:fe258a31f4b68374420b2c21e1623955ddbfcf355a747db3a0e2368bcf0b5e98
+  crates/features/run/src/feature/worktree.rs: sha256:f89482a18702392772e5e7cafc63fdef1986d1ebad159aaa3e9cad67045e4a6f
+  crates/features/run/src/lib.rs: sha256:e93c26fbf655492338633ee9f099ed91d8918e499711a78f93616811bbdd5028
+  crates/features/run/src/prompt.rs: sha256:6d9f4ed20fe188049cf19f439bafdc58c9b4c90ae62a7581673c4edd379c1488
+  crates/features/run/src/prompt/lines.rs: sha256:6e1417424be02158d3a9c5a309ea280a260de76c1b200a7b3d5bd8830cd84c03
+  crates/features/run/src/prompt/statements.rs: sha256:3fbe7efbb2271af91a40f385f19899b2114245809ef5f00e75d99d6e80e3db18
+  crates/features/run/src/tick.rs: sha256:966acd8cc18b68af51ccbcecd8f51e12249a40de96828d8316729bce51e34c9a
+  crates/features/run/tests/run_nested_root.rs: sha256:2c8aefb61b0942331328a2c426bb707221bc4ceb9cfbc6b29604a7bd235d66b1
+original_scope_hash: sha256:563749853a0f6dac48b7f16034d6232f192616139be93f7ddde963b3a3898f90
+recertified_at: 2026-10-23T16:47:42.644Z
+recertification_count: 1
+---
+2026-10-23T15:58:51.233Z

@@ -18,6 +18,7 @@ use osq_kernel_harnesses::{
     PiPreflight, PiPreflightError, PiVersionRange, assess_pi_version, preflight_pi,
     resolve_pi_binary,
 };
+use osq_kernel_vcs::project_git_root;
 
 use changes::change_lines;
 use decisions::decisions_line;
@@ -41,7 +42,7 @@ const PI_TESTED_RANGE: PiVersionRange = PiVersionRange {
 /// Implements: rust-doctor/doctor-pi-checks
 pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
     let env: BTreeMap<String, String> = std::env::vars().collect();
-    let (mut lines, config) = collect_lines(root, &env);
+    let (mut lines, config) = collect_lines(root, &env)?;
     lines.push(managed_blocks_line(root, &config));
     if let Some(line) = decisions_line(root, &config) {
         lines.push(line);
@@ -63,17 +64,22 @@ pub(crate) fn run_doctor(root: &Path) -> Result<String, FeatureError> {
 /// environment, along with the config the change checks use.
 ///
 /// Implements: rust-doctor/doctor-pi-checks
-fn collect_lines(root: &Path, env: &BTreeMap<String, String>) -> (Vec<String>, Config) {
+fn collect_lines(
+    root: &Path,
+    env: &BTreeMap<String, String>,
+) -> Result<(Vec<String>, Config), FeatureError> {
     match load_config(root) {
         Ok(config) => {
+            project_git_root(root, &config)
+                .map_err(|error| FeatureError::failed("doctor", error.to_string()))?;
             let mut lines = vec![config_line(&config)];
             lines.extend(pi_lines(root, env, &config));
-            (lines, config)
+            Ok((lines, config))
         }
-        Err(error) => (
+        Err(error) => Ok((
             vec![format!("[fail] config: failed to load: {error}")],
             Config::default(),
-        ),
+        )),
     }
 }
 

@@ -6,7 +6,7 @@ use std::path::Path;
 use osq_core::FeatureError;
 use osq_kernel_config::load_config;
 use osq_kernel_storage::read_land_facts;
-use osq_kernel_vcs::Vcs;
+use osq_kernel_vcs::project_git_root;
 
 use super::{change_archive, checks, failed_in, find, git_vcs, message, text, worktree_changes};
 
@@ -21,20 +21,16 @@ const MESSAGE: &str = "message";
 /// "Message command" names.
 ///
 /// Implements: rust-land/message-command
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed_in(MESSAGE, error.to_string()))?;
+    let repo =
+        project_git_root(root, &config).map_err(|error| failed_in(MESSAGE, error.to_string()))?;
     let timeouts = config.timeouts;
-    if !config.vcs.enabled {
+    if repo.is_none() {
         return Err(failed_in(MESSAGE, text::MESSAGE_NEEDS_GIT));
     }
     let vcs = git_vcs(root, &timeouts);
-    if vcs
-        .root()
-        .map_err(|error| failed_in(MESSAGE, error.to_string()))?
-        .is_none()
-    {
-        return Err(failed_in(MESSAGE, text::MESSAGE_NEEDS_GIT));
-    }
     let worktrees = worktree_changes(&vcs, root, MESSAGE)?;
     if let Some(change) = find::active_change(&worktrees, query) {
         return Err(failed_in(MESSAGE, text::not_archived(&change.folder)));

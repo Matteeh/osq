@@ -6,7 +6,7 @@ use std::path::Path;
 use osq_core::FeatureError;
 use osq_kernel_config::load_config;
 use osq_kernel_storage::read_land_facts;
-use osq_kernel_vcs::Vcs;
+use osq_kernel_vcs::{Vcs, project_git_root};
 
 use super::sync::{self, Caller};
 use super::{
@@ -24,20 +24,16 @@ const SYNC: &str = "sync";
 /// command" names.
 ///
 /// Implements: rust-land/sync-command
+/// Implements: rust-vcs/project-root-check
 pub(crate) fn run(root: &Path, query: &str) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed_in(SYNC, error.to_string()))?;
+    let repo =
+        project_git_root(root, &config).map_err(|error| failed_in(SYNC, error.to_string()))?;
     let (timeouts, settings, limits) = (config.timeouts, config.vcs, config.limits);
-    if !settings.enabled {
+    if repo.is_none() {
         return Err(failed_in(SYNC, text::SYNC_NEEDS_GIT));
     }
     let vcs = git_vcs(root, &timeouts);
-    if vcs
-        .root()
-        .map_err(|error| failed_in(SYNC, error.to_string()))?
-        .is_none()
-    {
-        return Err(failed_in(SYNC, text::SYNC_NEEDS_GIT));
-    }
     let worktrees = worktree_changes(&vcs, root, SYNC)?;
     let Some(change) = find::archived_change(&worktrees, query) else {
         return Err(refusal(&worktrees, query));

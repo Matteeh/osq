@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:96a88c791d4fb48de37da04cf141bf9a37b7a3810f0e96a123e621d90cfc8ed3"
+build_stamp: "4b9a2af8"
+project_commit: "7e9f2139"
+exit_code: 0
+scope_files: {"src/cli/run.ts":"sha256:7950a71193d704319b68e68af7ed6bdf5a0cc0b65091fa9328d9be6940529817","src/core/vcs/select.ts":"sha256:0182dcf52a8da0ca05ea478801f5ade5ea3771ac60bc35afdd43b345d09f0627","tests/vcs-root-refusal.test.ts":"sha256:a308ff77b8a8a075b3921260ee25166d4a8d1b5ca1a7ab58680361a7c1dac45d"}
+---
+2026-10-23T15:12:24.462Z

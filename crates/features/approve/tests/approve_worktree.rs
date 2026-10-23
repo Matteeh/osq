@@ -106,7 +106,11 @@ fn with_rolled_back_record(golden: &str) -> String {
 #[test]
 fn git_off_approves_in_the_checkout() {
     let root = scratch_copy("git-off");
-    write_config(&root, &root.join("worktrees"), &[]);
+    fs::write(
+        root.join("osq.toml"),
+        "[vcs]\nenabled = false\nauthor = \"Osq Bot <bot@example.com>\"\n",
+    )
+    .expect("osq.toml is written");
     let result = approve(&root, &["1"]).expect("git off approves in the checkout");
     assert_eq!(
         result.text,
