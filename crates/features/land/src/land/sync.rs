@@ -18,11 +18,24 @@ use osq_core::FeatureError;
 use osq_kernel_config::{Limits, Timeouts, VcsConfig};
 use osq_kernel_vcs::{GitVcs, MergeOutcome, Vcs};
 
-use super::failed;
+use super::failed_in;
 use stop::Stop;
+
+/// Who runs the sync: the command its errors name and whether a stop is recorded.
+///
+/// Implements: rust-land/land-sync
+#[derive(Clone, Copy)]
+pub(super) struct Caller<'a> {
+    /// The command every failure names.
+    pub(super) command: &'a str,
+    /// Whether a stop writes the land stop record.
+    pub(super) records: bool,
+}
 
 /// One started sync, with everything its stops need to restore the branch.
 struct Sync<'a> {
+    /// The command and record rules of the sync's caller.
+    caller: Caller<'a>,
     /// The git reads and writes the sync makes in the change's worktree.
     vcs: GitVcs,
     /// The change's worktree.
@@ -56,8 +69,8 @@ struct Sync<'a> {
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the command `land` for every stop "Land sync"
-/// and "Land stop record" name.
+/// Returns a `Failed` error with the caller's command for every stop "Land
+/// sync" and "Land stop record" name.
 ///
 /// Implements: rust-land/land-sync
 pub(crate) fn run(
@@ -67,13 +80,17 @@ pub(crate) fn run(
     settings: &VcsConfig,
     timeouts: &Timeouts,
     limits: &Limits,
+    caller: Caller<'_>,
 ) -> Result<Option<String>, FeatureError> {
     let vcs = GitVcs::new(worktree).with_timeouts(timeouts);
-    let head = vcs.head().map_err(|error| failed(error.to_string()))?.sha;
+    let head = vcs
+        .head()
+        .map_err(|error| failed_in(caller.command, error.to_string()))?
+        .sha;
     if let Some(head) = head.as_deref() {
         let ancestor = vcs
             .is_ancestor(default_branch, head)
-            .map_err(|error| failed(error.to_string()))?;
+            .map_err(|error| failed_in(caller.command, error.to_string()))?;
         if ancestor {
             return Ok(None);
         }
@@ -87,8 +104,9 @@ pub(crate) fn run(
     let kept_events = files::read(&events);
     let commits = vcs
         .count_commits(head.as_deref().unwrap_or("HEAD"), default_branch)
-        .map_err(|error| failed(error.to_string()))?;
+        .map_err(|error| failed_in(caller.command, error.to_string()))?;
     let context = Sync {
+        caller,
         vcs,
         worktree,
         folder,
@@ -102,7 +120,9 @@ pub(crate) fn run(
         timeouts,
         limits,
     };
-    if let Some(stop) = check::run(&context.vcs, &context.archived, default_branch)? {
+    let checked = check::run(&context.vcs, &context.archived, default_branch)
+        .map_err(|error| failed_in(caller.command, error.to_string()))?;
+    if let Some(stop) = checked {
         return Err(context.finish(stop));
     }
     context.run()
@@ -190,13 +210,16 @@ impl Sync<'_> {
     fn finish(&self, stop: Stop) -> FeatureError {
         let _ = self.vcs.merge_abort();
         let _ = files::restore(&self.events, self.kept_events.as_deref());
-        if stop::records(stop.reason) {
+        if self.caller.records && stop::records(stop.reason) {
             if let Err(message) =
                 stop::record(&self.vcs, &self.archived, self.folder, &self.author, &stop)
             {
-                return failed(format!("{}\n{}", stop.message, message));
+                return failed_in(
+                    self.caller.command,
+                    format!("{}\n{}", stop.message, message),
+                );
             }
         }
-        failed(stop.message)
+        failed_in(self.caller.command, stop.message)
     }
 }

@@ -18,36 +18,60 @@ impl Feature for LandFeature {
         "land"
     }
 
-    /// The feature's one command, `land <id>`.
+    /// The feature's three commands, `land <id>`, `sync <id>` and `message <id>`.
     ///
     /// Implements: rust-land/land-feature
     fn commands(&self) -> Vec<Command> {
-        vec![Command::new(
-            "land",
-            "land an archived change onto the default branch",
-            "<id>",
-        )]
+        vec![
+            Command::new(
+                "land",
+                "land an archived change onto the default branch",
+                "<id>",
+            ),
+            Command::new(
+                "sync",
+                "merge the default branch into a change's branch",
+                "<id>",
+            ),
+            Command::new(
+                "message",
+                "print an archived change's land commit message",
+                "<id>",
+            ),
+        ]
     }
 
-    /// Runs `land` with one change id.
+    /// Runs `land`, `sync` or `message` with one change id.
     ///
     /// # Errors
     ///
     /// Returns `UnknownCommand` for another command, `Usage` for an argument
-    /// count other than one, and `Failed` with the command `land` for every
-    /// failure the other land requirements name.
+    /// count other than one, and `Failed` with the invocation's command for
+    /// every failure the other land requirements name.
     ///
     /// Implements: rust-land/land-arguments
+    /// Implements: rust-land/sync-command
+    /// Implements: rust-land/message-command
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError> {
-        if invocation.command != "land" {
-            return Err(FeatureError::unknown_command(invocation.command.as_str()));
+        let command = invocation.command.as_str();
+        if !matches!(command, "land" | "sync" | "message") {
+            return Err(FeatureError::unknown_command(command));
         }
         if invocation.args.len() != 1 {
             return Err(FeatureError::usage(
-                "land",
+                command,
                 format!("expected one change id, got {}", invocation.args.len()),
             ));
         }
-        land::run_land(&invocation.root, &invocation.args[0]).map(Output::text)
+        match command {
+            "sync" => {
+                land::sync_command::run(&invocation.root, &invocation.args[0]).map(Output::text)
+            }
+            "message" => {
+                land::message_command::run(&invocation.root, &invocation.args[0]).map(Output::text)
+            }
+            "land" => land::run_land(&invocation.root, &invocation.args[0]).map(Output::text),
+            _ => unreachable!("the command was validated above"),
+        }
     }
 }

@@ -1,6 +1,6 @@
 //! The pure refusals a land makes before it reports or writes anything.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::Path;
 
 use osq_kernel_storage::LandFacts;
@@ -28,6 +28,32 @@ pub(crate) fn stacked(folder: &str, facts: &LandFacts) -> Option<String> {
     }
     Some(format!(
         "{folder} is stacked on {}; Rust land does not land stacked changes yet",
+        facts.stacked_on.join(", ")
+    ))
+}
+
+/// The stacked-change refusal for `sync`, unless the change names no base.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn stacked_sync(folder: &str, facts: &LandFacts) -> Option<String> {
+    if facts.stacked_on.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "{folder} is stacked on {}; Rust sync does not sync stacked changes yet",
+        facts.stacked_on.join(", ")
+    ))
+}
+
+/// The stacked-change refusal for `message`, unless the change names no base.
+///
+/// Implements: rust-land/message-command
+pub(crate) fn stacked_message(folder: &str, facts: &LandFacts) -> Option<String> {
+    if facts.stacked_on.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "{folder} is stacked on {}; Rust message does not build stacked changes' messages yet",
         facts.stacked_on.join(", ")
     ))
 }
@@ -60,6 +86,39 @@ pub(crate) fn unclean_worktree(path: &Path, status: &[StatusEntry]) -> Option<St
         path.display(),
         paths.join(", ")
     ))
+}
+
+/// The sync's unclean-worktree refusal, unless no status path counts.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn unclean_sync(path: &Path, status: &[StatusEntry], archived: &str) -> Option<String> {
+    let dirt = sync_dirt(status, archived);
+    if dirt.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "{} has uncommitted changes: {}; commit or discard them first",
+        path.display(),
+        dirt.join(", ")
+    ))
+}
+
+/// Every status path a sync counts, without repeats and in byte order.
+///
+/// Implements: rust-land/sync-command
+fn sync_dirt(status: &[StatusEntry], archived: &str) -> Vec<String> {
+    let tasks = format!("{archived}/tasks.md");
+    let run = format!("{archived}/.run/");
+    let mut dirt = BTreeSet::new();
+    for entry in status {
+        for candidate in std::iter::once(&entry.path).chain(entry.from.iter()) {
+            if candidate == &tasks || candidate.starts_with(&run) {
+                continue;
+            }
+            dirt.insert(candidate.clone());
+        }
+    }
+    dirt.into_iter().collect()
 }
 
 /// The first earlier change sharing a capability, unless none refuses.

@@ -4,6 +4,10 @@ use std::fmt::Write;
 
 /// The refusal when `vcs` or git is unavailable.
 pub(crate) const NEEDS_GIT: &str = "osq land needs vcs.enabled and git";
+/// The refusal `sync` makes when `vcs` or git is unavailable.
+pub(crate) const SYNC_NEEDS_GIT: &str = "osq sync needs vcs.enabled and git";
+/// The refusal `message` makes when `vcs` or git is unavailable.
+pub(crate) const MESSAGE_NEEDS_GIT: &str = "osq message needs vcs.enabled and git";
 /// The default branch when `vcs.defaultBranch` is unset.
 pub(crate) const DEFAULT_BRANCH: &str = "main";
 
@@ -40,6 +44,34 @@ pub(crate) fn not_archived(folder: &str) -> String {
 /// Implements: rust-land/land-lookup
 pub(crate) fn no_archived(query: &str) -> String {
     format!("No archived change \"{query}\" in an osq worktree")
+}
+
+/// The sync's refusal for a worktree change that has not archived.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn sync_not_archived(folder: &str) -> String {
+    format!("{folder} has not archived; Rust sync does not sync an active change yet")
+}
+
+/// The sync's refusal when no osq worktree change matches `query`.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn no_change(query: &str) -> String {
+    format!("No change \"{query}\" runs in an osq worktree")
+}
+
+/// The sync's line after it commits the default branch into the branch.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn synced(folder: &str, default_branch: &str) -> String {
+    format!("Synced osq/{folder} with {default_branch}\n")
+}
+
+/// The sync's line when the branch already holds the default branch.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn already_has(folder: &str, default_branch: &str) -> String {
+    format!("osq/{folder} already has {default_branch}\n")
 }
 
 /// The refusal when the default branch moved under the land.

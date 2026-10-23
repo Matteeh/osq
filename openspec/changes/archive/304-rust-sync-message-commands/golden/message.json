@@ -1,0 +1,37 @@
+[
+  {
+    "name": "fixture-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "osq: 001 alpha orders\n\nOrders gain alpha.\n\n[manual] task 1: When one, two\n[verified] task 2: When three, four\n\nOsq-Change: 001-alpha-orders\nOsq-Base: abc123\nOsq-Head: <head>\nOsq-Approved: sha256:aaaa\nOsq-Approved-By: Mathias <m@example.invalid>\nOsq-Model: pi deepseek/flash\nOsq-Version: 0.3.0\nOsq-Version: 0.3.1\n",
+    "error": null
+  },
+  {
+    "name": "bare-001",
+    "query": "001",
+    "exit": 0,
+    "stdout": "osq: 001 \n\n\n\n\nOsq-Change: 001\nOsq-Head: <head>\n",
+    "error": null
+  },
+  {
+    "name": "vcs-off-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "osq message needs vcs.enabled and git"
+  },
+  {
+    "name": "active-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders has not archived on osq/001-alpha-orders"
+  },
+  {
+    "name": "missing-2",
+    "query": "2",
+    "exit": 1,
+    "stdout": "",
+    "error": "No archived change \"2\" in an osq worktree"
+  }
+]

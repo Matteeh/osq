@@ -24,6 +24,19 @@ const EMAIL: &str = "osq@example.com";
 const OSQ_TOML: &str = "[vcs]\nenabled = true\nauthor = \"osq <osq@example.invalid>\"\n";
 /// The fixture change's folder.
 pub const FIXTURE_FOLDER: &str = "001-alpha-orders";
+/// The alpha change's proposal, as the sync and message goldens write it.
+pub const ALPHA_PROPOSAL: &str = "---\ntitle: A\n---\n## Verify\n\nx\n";
+/// The alpha change's delta, as the sync and message goldens write it.
+pub const ALPHA_DELTA: &str = "## ADDED Requirements\n\n### Requirement: Alpha\nThe system SHALL alpha.\n\n#### Scenario: Alpha works\n- **WHEN** alpha\n- **THEN** alpha\n";
+
+/// The orders spec with one requirement `name` and its lowercase body.
+#[must_use]
+pub fn orders_spec(name: &str) -> String {
+    let lower = name.to_lowercase();
+    format!(
+        "# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: {name}\nThe system SHALL {lower}.\n\n#### Scenario: {name} works\n- **WHEN** {lower}\n- **THEN** {lower}\n"
+    )
+}
 
 /// One worktree change: its folder and the worktree it lives in.
 #[derive(Clone, Debug)]
@@ -197,6 +210,68 @@ impl LandRepo {
         copy_tree(&fixture(&format!("land-change/{FIXTURE_FOLDER}")), &archive);
         self.commit_all(&change.path, "work on the fixture change");
         change
+    }
+
+    /// Adds a worktree change holding the fixture change's archive, committed
+    /// as `work on <folder>` as the goldens commit it.
+    pub fn add_fixture_change_committed(&self) -> ChangeTree {
+        let change = self.add_worktree(FIXTURE_FOLDER);
+        self.write(&change.path, "src/one.txt", "two\n");
+        let archive = change
+            .path
+            .join("openspec/changes/archive")
+            .join(FIXTURE_FOLDER);
+        copy_tree(&fixture(&format!("land-change/{FIXTURE_FOLDER}")), &archive);
+        self.commit_all(&change.path, &format!("work on {FIXTURE_FOLDER}"));
+        change
+    }
+
+    /// Adds the alpha change the sync goldens build: its archived proposal and
+    /// delta, and the living orders spec its branch wrote.
+    pub fn add_alpha_change(&self, folder: &str) -> ChangeTree {
+        let change = self.add_worktree(folder);
+        self.write(&change.path, "src/one.txt", "two\n");
+        let archived = format!("openspec/changes/archive/{folder}");
+        self.write(
+            &change.path,
+            &format!("{archived}/proposal.md"),
+            ALPHA_PROPOSAL,
+        );
+        self.write(
+            &change.path,
+            &format!("{archived}/specs/orders/spec.md"),
+            ALPHA_DELTA,
+        );
+        self.write(
+            &change.path,
+            "openspec/specs/orders/spec.md",
+            orders_spec("Alpha"),
+        );
+        self.commit_all(&change.path, &format!("work on {folder}"));
+        change
+    }
+
+    /// Adds a worktree change whose one commit writes `src/one.txt` and the
+    /// given paths under the worktree.
+    pub fn add_change_files(&self, folder: &str, files: &[(&str, &[u8])]) -> ChangeTree {
+        let change = self.add_worktree(folder);
+        self.write(&change.path, "src/one.txt", "two\n");
+        for (relative, contents) in files {
+            self.write(&change.path, relative, contents);
+        }
+        self.commit_all(&change.path, &format!("work on {folder}"));
+        change
+    }
+
+    /// Writes one checkout file and commits it as `message`.
+    pub fn main_file(&self, relative: &str, contents: impl AsRef<[u8]>, message: &str) {
+        self.write(&self.root, relative, contents);
+        self.commit(&self.root, message, &[relative]);
+    }
+
+    /// Turns version control off in the checkout's `osq.toml`.
+    pub fn disable_vcs(&self) {
+        self.write(&self.root, "osq.toml", "[vcs]\nenabled = false\n");
     }
 
     /// Adds a worktree change that holds an active folder, not an archived one.

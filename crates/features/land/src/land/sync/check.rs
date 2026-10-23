@@ -3,12 +3,11 @@
 use std::fs;
 use std::path::Path;
 
-use osq_core::FeatureError;
 use osq_core::event::SyncStopReason;
 use osq_kernel_specs::{Delta, LivingSpec, parse_delta, parse_living_spec};
 use osq_kernel_vcs::{GitVcs, Vcs, VcsError};
 
-use super::{super::failed, stop::Stop, text};
+use super::{stop::Stop, text};
 
 /// One requirement the change rewrites whose text the default branch moved.
 struct Changed {
@@ -22,17 +21,16 @@ struct Changed {
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the command `land` when a git read fails.
+/// Returns a `VcsError` when a git read fails.
 ///
 /// Implements: rust-land/land-sync
 pub(crate) fn run(
     vcs: &GitVcs,
     archived: &Path,
     default_branch: &str,
-) -> Result<Option<Stop>, FeatureError> {
+) -> Result<Option<Stop>, VcsError> {
     let base = requirements_base(archived);
-    let changed = changed(vcs, archived, base.as_deref(), default_branch)
-        .map_err(|error| failed(error.to_string()))?;
+    let changed = changed(vcs, archived, base.as_deref(), default_branch)?;
     if changed.is_empty() {
         return Ok(None);
     }
