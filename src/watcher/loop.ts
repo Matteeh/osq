@@ -33,7 +33,7 @@ import {
   handleStaleBuild,
   startStaleCheck,
 } from './stale-pass.js';
-import { checkSync } from './sync-run.js';
+import { checkSync, syncBeforeSpawn } from './sync-run.js';
 import { findActivePause, removePassedPauses } from './usage-pause.js';
 import { commitPendingVerifiedTasks, commitWorktreeDeadTask } from './worktree-commit.js';
 import { approvalCommitted, checkWorktree, haltWorktreeChange } from './worktree-run.js';
@@ -271,7 +271,7 @@ async function startNextTask(
     return;
   }
   const worktree = change.tree.worktreeFolder !== undefined;
-  if (worktree && specState.tasks.every((task) => task.status !== 'done')) {
+  if (worktree && (await syncBeforeSpawn(change, specState))) {
     const syncHalt = await checkSync(context.projectRoot, change, config, logger);
     if (syncHalt) {
       await haltWorktreeChange(change, specState.id, syncHalt, logger, config.limits);

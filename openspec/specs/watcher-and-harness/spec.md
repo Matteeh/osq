@@ -2583,7 +2583,10 @@ callback that logs each line, at two points and no others:
 
 - Before it spawns a task, after the worktree check of "Worktree run" passes
   and before the scope audit, when no task of the change has a
-  `.run/done/<n>` marker.
+  `.run/done/<n>` marker, or when the next task's attempt, as
+  `readRetryContext` counts it from the task's events, is above 1: an
+  attempt after an automatic retry, an `osq retry`, or a requeued
+  recertification.
 - Before it archives, after that worktree check passes and before
   `checkAndArchiveSpec`.
 
@@ -2622,6 +2625,19 @@ state again before it picks the task.
 #### Scenario: Red verify before archive needs steering
 - **WHEN** the default branch gains a commit that makes the only task's `verify` exit 1, after the task is verified and before archive
 - **THEN** `.run/regressed/change.md` has reason `sync_verify_red`, and later cycles write no commit and spawn nothing for the change
+
+#### Scenario: Sync before a retried attempt
+- **WHEN** a two-task change approved into a worktree has task 1 verified, task 2's first attempt reads `src/tool.txt` as `broken\n` and dies with `verify_red`, the default branch then gains a commit changing `src/tool.txt` to `fixed\n`, and task 2 is retried the row's way
+- **THEN** task 2's second attempt reads `src/tool.txt` as `fixed\n`, the branch's subjects after `osq: <id> task 1 verified` are, in order, `osq: <id> task 2 dead, reason verify_red`, `osq: <id> sync main`, `osq: <id> task 2 verified` and `osq: <id> archived`, and the archived folder holds `.run/done/2`
+
+| Retry | gates.autoRetries |
+|---|---|
+| automatic | 1 |
+| `osq retry <id> 2` | 0 |
+
+#### Scenario: Sync stop before a retried attempt
+- **WHEN** a two-task change approved into a worktree has task 1 verified, task 2's first attempt dies with `verify_red`, the default branch then gains a commit writing task 1's file with other content than task 1 wrote, and `gates.autoRetries` is 1
+- **THEN** `.run/regressed/change.md` has reason `sync_conflict` and names that file, task 2 spawned once, and later cycles spawn nothing for the change
 
 ### Requirement: Test gate paths
 `src/core/run/test-gate.ts` SHALL export `TEST_GATE_DIR`, `tests`, and
