@@ -138,7 +138,7 @@ export async function readBriefInput(briefOption?: string): Promise<string> {
 export function validatePlanModeOptions(
   name: string,
   options: {
-    next?: boolean;
+    next?: boolean | string;
     replan?: boolean;
     brief?: string;
     print?: boolean;
@@ -162,16 +162,20 @@ export function validatePlanModeOptions(
  * Run the read-only next-item preparation with the explicit config the caller
  * already loaded. Refusals and the incomplete-cost notice are reported here and
  * nothing is written; `null` tells the caller to stop before mutation.
+ *
+ * @scenario cli-foundation: Named queue item
+ * @scenario cli-foundation: Named queue item refused
  */
 export async function prepareQueueSelection(
   projectRoot: string,
   config: OsqConfig,
-  options: { replan?: boolean; print?: boolean },
+  options: { next?: boolean | string; replan?: boolean; print?: boolean },
   stderr: Writer = processStderr,
 ): Promise<QueuePlanSelection | null> {
   const preparation = await prepareQueuePlan(projectRoot, config, {
     replan: options.replan,
     enforceBudget: !options.print,
+    ...(typeof options.next === 'string' ? { slug: options.next } : {}),
   });
   if (preparation.kind === 'refused') {
     throw new CommandError(preparation.message);

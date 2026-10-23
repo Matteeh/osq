@@ -34,7 +34,7 @@ function validateRunOptions(options: PlanCommandOptions): void {
     ['--print', options.print === true],
     ['--session', options.session === true],
     ['--brief', options.brief !== undefined],
-    ['--next', options.next === true],
+    ['--next', options.next !== undefined && options.next !== false],
   ];
   for (const [flag, set] of conflicts) {
     if (set) throw new CommandError(`Error: \`--run\` cannot be combined with \`${flag}\``);

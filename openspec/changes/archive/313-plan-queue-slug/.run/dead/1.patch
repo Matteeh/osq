@@ -1,0 +1,745 @@
+diff --git a/openspec/changes/313-plan-queue-slug/.run/dead/1.md b/openspec/changes/313-plan-queue-slug/.run/dead/1.md
+new file mode 100644
+index 00000000..7d5fc909
+--- /dev/null
++++ b/openspec/changes/313-plan-queue-slug/.run/dead/1.md
+@@ -0,0 +1,47 @@
++---
++reason: change_verify_red
++command: "pnpm verify"
++exit_code: 1
++fingerprint: sha256:0680c65b5486bd34b0e08e96a0fa71763461a11f9cd0f6e3cac42acf8216a65a
++---
++Change-level verification failed after task verification passed.
++✖ failing tests:
++
++test at tests/vcs-doctor.test.ts:1:2308
++✖ warns that git is not found without failing (43.729535ms)
++  Error: spawn EIO
++      at ChildProcess.spawn (node:internal/child_process:458:11)
++      at spawn (node:child_process:813:9)
++      at execFile (node:child_process:349:17)
++      at <anonymous> (src/core/vcs/git-vcs.ts:57:5)
++      at new Promise (<anonymous>)
++      at runGit (src/core/vcs/git-vcs.ts:56:10)
++      at selectVcs (src/core/vcs/select.ts:32:25)
++      at gitCheck (src/core/vcs/doctor-git.ts:53:21)
++      at checkGit (src/core/vcs/doctor-git.ts:147:32)
++      at TestContext.<anonymous> (tests/vcs-doctor.test.ts:86:26) {
++    errno: -5,
++    code: 'EIO',
++    syscall: 'spawn'
++  }
++
++test at tests/vcs-doctor.test.ts:1:3535
++✖ keeps doctor exit code 0 with only the git warnings (135.211068ms)
++  Error: spawn EIO
++      at ChildProcess.spawn (node:internal/child_process:458:11)
++      at spawn (node:child_process:813:9)
++      at execFile (node:child_process:349:17)
++      at <anonymous> (src/core/vcs/git-vcs.ts:57:5)
++      at new Promise (<anonymous>)
++      at runGit (src/core/vcs/git-vcs.ts:56:10)
++      at selectVcs (src/core/vcs/select.ts:32:25)
++      at gitCheck (src/core/vcs/doctor-git.ts:53:21)
++      at checkGit (src/core/vcs/doctor-git.ts:147:32)
++      at TestContext.<anonymous> (tests/vcs-doctor.test.ts:130:28) {
++    errno: -5,
++    code: 'EIO',
++    syscall: 'spawn'
++  }
++ ELIFECYCLE  Test failed. See above for more details.
++ ELIFECYCLE  Command failed with exit code 1.
++Full output: .run/logs/change-1.log
+diff --git a/openspec/changes/313-plan-queue-slug/.run/events/1.jsonl b/openspec/changes/313-plan-queue-slug/.run/events/1.jsonl
+new file mode 100644
+index 00000000..9d507cce
+--- /dev/null
++++ b/openspec/changes/313-plan-queue-slug/.run/events/1.jsonl
+@@ -0,0 +1,108 @@
++{"type":"verify_ran","timestamp":"2026-10-23T13:18:43.794Z","data":{"command":"node --import tsx --test tests/queue-plan-slug.test.ts tests/queue-plan.test.ts","exitCode":0,"duration":1.44,"log":".run/logs/1-1.log","output":"▶ queue brief and prompt seeding\n  ✔ writes only the item body plus planner, date, and queue metadata (8.103848ms)\n  ✔ identifies landed dependency archive paths in the change context only when supplied (148.168022ms)\n✔ queue brief and prompt seeding (157.358306ms)\n▶ createNewSpec queue seeding\n  ✔ uses an explicit slug, title, and numeric dependency ids while keeping the body (6.336976ms)\n  ✔ numbers across active, archived, and rejected folders (4.081427ms)\n✔ createNewSpec queue seeding (10.713949ms)\n▶ queue next-item preparation\n  ✔ selects the first unplanned item with landed dependencies and records archive paths (9.684404ms)\n  ✔ skips active items and waits until a dependency lands (24.989547ms)\n  ✔ refuses when every item is landed or active (15.473227ms)\n✔ queue next-item preparation (50.63312ms)\n▶ queue active failure gate\n  ✔ halts before mutation on every dead, regressed, and change-level target (23.904808ms)\n  ✔ treats attempt-suffixed history as inactive (8.747087ms)\n✔ queue active failure gate (32.915221ms)\n▶ queue rejection gate\n  ✔ refuses a rejected first eligible item without replan and preserves history (11.882002ms)\n  ✔ replans through the real command into one active attempt without touching rejected history (160.544695ms)\n✔ queue rejection gate (172.752845ms)\n▶ plan command modes\n  ✔ registers the plan command with --next, --replan, and --session (4.879511ms)\n  ✔ rejects missing and conflicting modes before any file is written (1.506411ms)\n  ✔ plan --next --print creates the change and prints its prompt without spawning (156.247665ms)\n  ✔ default plan --next hands off the prompt file and marks exactly one item planned (293.288502ms)\n  ✔ rejects session combined with print before any mutation (0.944987ms)\n✔ plan command modes (457.356826ms)\nℹ tests 16\nℹ suites 6\nℹ pass 16\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1321.188234\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/queue-plan-slug.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-23T13:18:47.168Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":6,"scopeLines":1359,"repoFiles":6715,"repoLines":664981,"importFanIn":9,"proposalWords":492,"taskWords":335,"deltaRequirements":2,"deltaScenarios":7,"functionHashes":{"src/cli/index.ts#createProgram":"sha256:2ae5a3efef83a761b73ee7baaec84f078f0c715e28d20ce92c384d8b8fbb067c","src/cli/plan-queue.ts#buildBaseOpeningPrompt":"sha256:eb9a6c686a3c4b53604e61cfbf97dccbd09e1c2df452893f9375a1611c48ef55","src/cli/plan.ts#buildOpeningPrompt":"sha256:7250881f468bb2b9e3643494ca920b1b16ee554110c12997ef5c9777b1208db7","src/cli/remote-commands.ts#createForwardedCommands":"sha256:e80919599366410db09fd509fa955706ff30859492fcf6fc81a19de510d2e7dc","src/cli/remote-commands.ts#createForwardedRunner":"sha256:ec1b197422b2104b278e7e091c96e74264bfb8d61ab3337327c66458e278b5a2"}}}
++{"type":"started","timestamp":"2026-10-23T13:18:47.468Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"f1594274","pid":3574438,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"4b9a2af8"}}
++{"type":"text","timestamp":"2026-10-23T13:18:50.612Z","data":{"text":"I'll start by reading the task file, proposal, and delta specs."}}
++{"type":"tokens","timestamp":"2026-10-23T13:18:50.612Z","data":{"promptTokens":5365,"candidateTokens":328,"totalTokens":6205,"cachedTokens":512,"reasoningTokens":0,"cost":0.0020061719999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:50.613Z","data":{"tool":"read","summary":"openspec/changes/313-plan-queue-slug/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:50.614Z","data":{"tool":"read","summary":"openspec/changes/313-plan-queue-slug/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:50.614Z","data":{"tool":"read","summary":"openspec/changes/313-plan-queue-slug/specs/cli-foundation/sp"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:50.614Z","data":{"tool":"read","summary":"openspec/changes/313-plan-queue-slug/specs/status-inspection"}}
++{"type":"tokens","timestamp":"2026-10-23T13:18:52.179Z","data":{"promptTokens":2705,"candidateTokens":279,"totalTokens":9128,"cachedTokens":6144,"reasoningTokens":6,"cost":0.0011831639999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:52.180Z","data":{"tool":"read","summary":"src/core/status/queue-planning.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:52.180Z","data":{"tool":"read","summary":"src/cli/plan.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:52.181Z","data":{"tool":"read","summary":"src/cli/plan-queue.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:52.181Z","data":{"tool":"read","summary":"src/core/status/queue-state.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:18:54.385Z","data":{"promptTokens":8608,"candidateTokens":237,"totalTokens":17933,"cachedTokens":9088,"reasoningTokens":30,"cost":0.002921328,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:54.385Z","data":{"tool":"read","summary":"tests/queue-plan.test.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:54.386Z","data":{"tool":"bash","summary":"cd . && w"}}
++{"type":"tokens","timestamp":"2026-10-23T13:18:56.255Z","data":{"promptTokens":6107,"candidateTokens":303,"totalTokens":24330,"cachedTokens":17920,"reasoningTokens":34,"cost":0.00230322,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:56.256Z","data":{"tool":"read","summary":"src/core/status/queue.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:56.256Z","data":{"tool":"read","summary":"src/cli/index.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:56.257Z","data":{"tool":"read","summary":"src/cli/plan-run.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:18:56.257Z","data":{"tool":"read","summary":"src/cli/remote-commands.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:00.970Z","data":{"promptTokens":6468,"candidateTokens":763,"totalTokens":31551,"cachedTokens":24320,"reasoningTokens":450,"cost":0.00300192,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:00.971Z","data":{"tool":"bash","summary":"cd . && s"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:00.971Z","data":{"tool":"bash","summary":"cd . && g"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:00.971Z","data":{"tool":"bash","summary":"cd . && l"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:10.577Z","data":{"promptTokens":1809,"candidateTokens":1677,"totalTokens":34974,"cachedTokens":31488,"reasoningTokens":1382,"cost":0.002744028,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:10.578Z","data":{"tool":"bash","summary":"cd . && g"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:10.578Z","data":{"tool":"bash","summary":"cd . && g"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:10.578Z","data":{"tool":"bash","summary":"cd . && s"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:18.075Z","data":{"promptTokens":3055,"candidateTokens":1126,"totalTokens":39125,"cachedTokens":34944,"reasoningTokens":922,"cost":0.002477364,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:18.075Z","data":{"tool":"bash","summary":"cd . && g"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:18.076Z","data":{"tool":"bash","summary":"cd . && l"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:20.282Z","data":{"promptTokens":1506,"candidateTokens":232,"totalTokens":40778,"cachedTokens":39040,"reasoningTokens":44,"cost":0.00096444,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:20.283Z","data":{"tool":"bash","summary":"cd . && s"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:20.283Z","data":{"tool":"bash","summary":"cd . && s"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:26.643Z","data":{"promptTokens":3618,"candidateTokens":1187,"totalTokens":45509,"cachedTokens":40704,"reasoningTokens":988,"cost":0.002754024,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:26.644Z","data":{"tool":"bash","summary":"cd . && c"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:26.644Z","data":{"tool":"bash","summary":"cd . && s"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:32.571Z","data":{"promptTokens":2654,"candidateTokens":744,"totalTokens":48838,"cachedTokens":45440,"reasoningTokens":641,"cost":0.0019616399999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:32.572Z","data":{"tool":"bash","summary":"cd . && c"}}
++{"type":"text","timestamp":"2026-10-23T13:19:52.575Z","data":{"text":"Now I'll implement the new pick module and wire it through."}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:52.575Z","data":{"promptTokens":808,"candidateTokens":3936,"totalTokens":53512,"cachedTokens":48768,"reasoningTokens":3170,"cost":0.0052582079999999995,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:52.576Z","data":{"tool":"write","summary":"src/core/status/queue-pick.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:19:52.577Z","data":{"path":"src/core/status/queue-pick.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:19:56.465Z","data":{"promptTokens":161,"candidateTokens":970,"totalTokens":54507,"cachedTokens":53376,"reasoningTokens":0,"cost":0.001532556,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:19:56.465Z","data":{"tool":"edit","summary":"src/core/status/queue-planning.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:19:56.470Z","data":{"path":"src/core/status/queue-planning.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:00.057Z","data":{"promptTokens":137,"candidateTokens":876,"totalTokens":55413,"cachedTokens":54400,"reasoningTokens":31,"cost":0.0014187000000000002,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:00.057Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:00.058Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:00.058Z","data":{"tool":"edit","summary":"src/cli/index.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:00.059Z","data":{"tool":"edit","summary":"src/cli/plan-run.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:00.059Z","data":{"tool":"edit","summary":"src/cli/remote-commands.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:00.060Z","data":{"path":"src/cli/plan-queue.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:00.060Z","data":{"path":"src/cli/plan.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:00.060Z","data":{"path":"src/cli/index.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:00.061Z","data":{"path":"src/cli/plan-run.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:00.061Z","data":{"path":"src/cli/remote-commands.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:02.416Z","data":{"promptTokens":240,"candidateTokens":155,"totalTokens":55691,"cachedTokens":55296,"reasoningTokens":9,"cost":0.000589776,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:02.417Z","data":{"tool":"bash","summary":"cd . && w"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:10.241Z","data":{"promptTokens":765,"candidateTokens":1319,"totalTokens":57764,"cachedTokens":55680,"reasoningTokens":947,"cost":0.00214638,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:10.241Z","data":{"tool":"edit","summary":"src/cli/plan.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:10.241Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:10.242Z","data":{"path":"src/cli/plan.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:10.242Z","data":{"path":"src/cli/plan-queue.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:11.822Z","data":{"promptTokens":216,"candidateTokens":163,"totalTokens":57979,"cachedTokens":57600,"reasoningTokens":36,"cost":0.000606,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:11.824Z","data":{"tool":"bash","summary":"cd . && w"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:14.633Z","data":{"promptTokens":507,"candidateTokens":300,"totalTokens":58663,"cachedTokens":57856,"reasoningTokens":216,"cost":0.000859236,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:14.633Z","data":{"tool":"bash","summary":"cd . && c"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:25.402Z","data":{"promptTokens":615,"candidateTokens":2763,"totalTokens":62002,"cachedTokens":58624,"reasoningTokens":413,"cost":0.003851844,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:25.403Z","data":{"tool":"write","summary":"tests/queue-plan-slug.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:25.403Z","data":{"path":"tests/queue-plan-slug.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:27.620Z","data":{"promptTokens":202,"candidateTokens":174,"totalTokens":62200,"cachedTokens":61824,"reasoningTokens":78,"cost":0.0006403439999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:27.621Z","data":{"tool":"bash","summary":"cd . && n"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:34.123Z","data":{"promptTokens":1049,"candidateTokens":867,"totalTokens":63996,"cachedTokens":62080,"reasoningTokens":177,"cost":0.0017275799999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:34.124Z","data":{"tool":"edit","summary":"tests/queue-plan-slug.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:34.125Z","data":{"path":"tests/queue-plan-slug.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:35.645Z","data":{"promptTokens":153,"candidateTokens":96,"totalTokens":64121,"cachedTokens":63872,"reasoningTokens":0,"cost":0.000544332,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:35.645Z","data":{"tool":"bash","summary":"cd . && n"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:41.598Z","data":{"promptTokens":818,"candidateTokens":517,"totalTokens":65335,"cachedTokens":64000,"reasoningTokens":436,"cost":0.0012498000000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:41.598Z","data":{"tool":"bash","summary":"cd . && p"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:50.762Z","data":{"promptTokens":256,"candidateTokens":181,"totalTokens":65717,"cachedTokens":65280,"reasoningTokens":29,"cost":0.0006856799999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:50.763Z","data":{"tool":"edit","summary":"src/cli/plan-queue.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:20:50.767Z","data":{"path":"src/cli/plan-queue.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:20:53.204Z","data":{"promptTokens":210,"candidateTokens":123,"totalTokens":65869,"cachedTokens":65536,"reasoningTokens":23,"cost":0.000603816,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:20:53.204Z","data":{"tool":"bash","summary":"cd . && w"}}
++{"type":"tokens","timestamp":"2026-10-23T13:21:13.730Z","data":{"promptTokens":169,"candidateTokens":111,"totalTokens":66072,"cachedTokens":65792,"reasoningTokens":32,"cost":0.000578652,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:21:13.730Z","data":{"tool":"bash","summary":"cd . && p"}}
++{"type":"tokens","timestamp":"2026-10-23T13:24:59.805Z","data":{"promptTokens":13327,"candidateTokens":576,"totalTokens":79951,"cachedTokens":66048,"reasoningTokens":129,"cost":0.005085588,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:24:59.805Z","data":{"tool":"edit","summary":"src/core/status/queue-planning.ts"}}
++{"type":"tool","timestamp":"2026-10-23T13:24:59.806Z","data":{"tool":"edit","summary":"tests/queue-plan-slug.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:24:59.806Z","data":{"path":"src/core/status/queue-planning.ts"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:24:59.807Z","data":{"path":"tests/queue-plan-slug.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-23T13:25:01.608Z","data":{"promptTokens":134,"candidateTokens":141,"totalTokens":80147,"cachedTokens":79872,"reasoningTokens":19,"cost":0.000688632,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:25:01.612Z","data":{"tool":"bash","summary":"cd . && p"}}
++{"type":"tokens","timestamp":"2026-10-23T13:25:04.548Z","data":{"promptTokens":221,"candidateTokens":190,"totalTokens":80411,"cachedTokens":80000,"reasoningTokens":89,"cost":0.0007743,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:25:04.548Z","data":{"tool":"bash","summary":"cd . && n"}}
++{"type":"tokens","timestamp":"2026-10-23T13:27:40.568Z","data":{"promptTokens":13318,"candidateTokens":716,"totalTokens":94418,"cachedTokens":80384,"reasoningTokens":282,"cost":0.005336904,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-23T13:27:40.569Z","data":{"tool":"write","summary":"openspec/changes/313-plan-queue-slug/.run/results/1.md"}}
++{"type":"file_changed","timestamp":"2026-10-23T13:27:40.569Z","data":{"path":"openspec/changes/313-plan-queue-slug/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-23T13:27:44.094Z","data":{"text":"Implemented and verified.\n\nKey changes:\n- Added `src/core/status/queue-pick.ts` for row selection with named-item refusals.\n- Added `slug` support to `prepareQueuePlan` and wired `osq plan --next [slug]` through the CLI.\n- Updated `--run` and remote plan guards for slug-bearing next mode.\n- Added `tests/queue-plan-slug.test.ts` covering the named plan, all refusal rows, landed dependencies, and guards.\n\nBoth the task verify and `pnpm verify` pass. Result written to `openspec/changes/313-plan-queue-slug/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-23T13:27:44.094Z","data":{"promptTokens":244,"candidateTokens":386,"totalTokens":94838,"cachedTokens":94208,"reasoningTokens":249,"cost":0.001101648,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-23T13:27:44.165Z","data":{"exitCode":0,"pid":3574438,"timedOut":false,"elapsedSeconds":536.7}}
++{"type":"format_ran","timestamp":"2026-10-23T13:27:45.566Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/cli/index.ts' 'src/cli/plan-queue.ts' 'src/cli/plan-run.ts' 'src/cli/plan.ts' 'src/cli/remote-commands.ts' 'src/core/status/queue-pick.ts' 'src/core/status/queue-planning.ts' 'tests/queue-plan-slug.test.ts'","files":["src/cli/index.ts","src/cli/plan-queue.ts","src/cli/plan-run.ts","src/cli/plan.ts","src/cli/remote-commands.ts","src/core/status/queue-pick.ts","src/core/status/queue-planning.ts","tests/queue-plan-slug.test.ts"],"exitCode":0,"duration":0.29,"timedOut":false,"output":"Checked 8 files in 4ms. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-23T13:27:47.288Z","data":{"command":"node --import tsx --test tests/queue-plan-slug.test.ts tests/queue-plan.test.ts","exitCode":0,"duration":1.17,"log":".run/logs/1-2.log","output":"▶ next mode guards\n  ✔ keeps --run refusing --next with and without a slug (1.216198ms)\n  ✔ treats a forwarded slug as next mode instead of demanding a brief (129.72277ms)\n✔ next mode guards (131.332108ms)\n▶ queue brief and prompt seeding\n  ✔ writes only the item body plus planner, date, and queue metadata (7.910638ms)\n  ✔ identifies landed dependency archive paths in the change context only when supplied (109.188835ms)\n✔ queue brief and prompt seeding (117.899522ms)\n▶ createNewSpec queue seeding\n  ✔ uses an explicit slug, title, and numeric dependency ids while keeping the body (5.458949ms)\n  ✔ numbers across active, archived, and rejected folders (3.592845ms)\n✔ createNewSpec queue seeding (9.29911ms)\n▶ queue next-item preparation\n  ✔ selects the first unplanned item with landed dependencies and records archive paths (8.747688ms)\n  ✔ skips active items and waits until a dependency lands (22.418807ms)\n  ✔ refuses when every item is landed or active (12.888465ms)\n✔ queue next-item preparation (44.402998ms)\n▶ queue active failure gate\n  ✔ halts before mutation on every dead, regressed, and change-level target (19.842976ms)\n  ✔ treats attempt-suffixed history as inactive (8.049402ms)\n✔ queue active failure gate (28.091242ms)\n▶ queue rejection gate\n  ✔ refuses a rejected first eligible item without replan and preserves history (8.493512ms)\n  ✔ replans through the real command into one active attempt without touching rejected history (151.789502ms)\n✔ queue rejection gate (160.51278ms)\n▶ plan command modes\n  ✔ registers the plan command with --next, --replan, and --session (3.075859ms)\n  ✔ rejects missing and conflicting modes before any file is written (1.09839ms)\n  ✔ plan --next --print creates the change and prints its prompt without spawning (96.977496ms)\n  ✔ default plan --next hands off the prompt file and marks exactly one item planned (229.593053ms)\n  ✔ rejects session combined with print before any mutation (0.929653ms)\n✔ plan command modes (332.06486ms)\nℹ tests 23\nℹ suites 9\nℹ pass 23\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1079.165002"}}
++{"type":"measures","timestamp":"2026-10-23T13:30:59.113Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":6,"scopeLines":1359,"repoFiles":6715,"repoLines":664981,"importFanIn":9,"proposalWords":492,"taskWords":335,"deltaRequirements":2,"deltaScenarios":7,"functionHashes":{"src/cli/index.ts#createProgram":"sha256:2ae5a3efef83a761b73ee7baaec84f078f0c715e28d20ce92c384d8b8fbb067c","src/cli/plan-queue.ts#buildBaseOpeningPrompt":"sha256:eb9a6c686a3c4b53604e61cfbf97dccbd09e1c2df452893f9375a1611c48ef55","src/cli/plan.ts#buildOpeningPrompt":"sha256:7250881f468bb2b9e3643494ca920b1b16ee554110c12997ef5c9777b1208db7","src/cli/remote-commands.ts#createForwardedCommands":"sha256:e80919599366410db09fd509fa955706ff30859492fcf6fc81a19de510d2e7dc","src/cli/remote-commands.ts#createForwardedRunner":"sha256:ec1b197422b2104b278e7e091c96e74264bfb8d61ab3337327c66458e278b5a2"},"changedFiles":8,"changedLines":371,"scopeHashes":{"src/cli/index.ts":{"before":"sha256:09a58b50aedbc93936df985e30a974678bf727d8c244043b68c22706a0cafd31","after":"sha256:d96c8b12fa559db2e8cf1234143fcfce74cd5f7fc74f7e3ace5eba14c2fcb415"},"src/cli/plan-queue.ts":{"before":"sha256:f6c0eed76b66135d71733013fed0b1f93c533945c6a575046abe5c2bfe0dbbe3","after":"sha256:37e60bf21c2b38667afd68fcb7099a07f4ad3ae12ceae2e6f91f75bff709cd3d"},"src/cli/plan-run.ts":{"before":"sha256:364e6cd21051ef605832026b215cedeb8ab61d1d50b831b8ed8f40f315671c00","after":"sha256:dd57bf2ec44719dc8532eea3dc0ec3c6fe56e85963f024f1a73474caee7a2b72"},"src/cli/plan.ts":{"before":"sha256:3f3a4fd461f4416e612b69170ac008b362bade486a12d89a7778a39b430a09d2","after":"sha256:8006b6aefb5a83f877c07ced85e282b26113999774506d52fbf90597b99ba3ef"},"src/cli/remote-commands.ts":{"before":"sha256:3ef0c04e5040e36182d97c803f9bcf6438329b8711e6c0ae9ad9eefee2c669f4","after":"sha256:d4c162c9911adc2781afb0ef355d9811e9db6e554085d0b1b4bfd533e07c43cf"},"src/core/status/queue-pick.ts":{"before":null,"after":"sha256:9663e7b7f903a3aec7042ad070b33814ab845e358b4b7d969f81adab0a1fd27e"},"src/core/status/queue-planning.ts":{"before":"sha256:17d2653e2f7bd6332a80f6317fd6d00ca1591cc4f3a30105fb9e9b68ac3ccaeb","after":"sha256:26ef21f84b935f389c9eb653329b4d7f0091f0f67931a999ccfead552e242f09"},"tests/queue-plan-slug.test.ts":{"before":null,"after":"sha256:3a82ae941c4b42e06ae2b62c49dc651e686bd2bfefb31754e84204272edb3552"}}}}
++{"type":"dead","timestamp":"2026-10-23T13:30:59.114Z","data":{"task":"1","reason":"change_verify_red"}}
+diff --git a/openspec/changes/313-plan-queue-slug/.run/events/change.jsonl b/openspec/changes/313-plan-queue-slug/.run/events/change.jsonl
+new file mode 100644
+index 00000000..b522de25
+--- /dev/null
++++ b/openspec/changes/313-plan-queue-slug/.run/events/change.jsonl
+@@ -0,0 +1,2 @@
++{"type":"baseline_ran","timestamp":"2026-10-23T13:18:42.347Z","data":{"outcome":"passed","command":"pnpm verify","commit":"f1594274d1cbcce48fe1b30368e0aff4f48ef735","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":249.4}}
++{"type":"verify_ran","timestamp":"2026-10-23T13:30:58.560Z","data":{"command":"pnpm verify","exitCode":1,"duration":191.27,"log":".run/logs/change-1.log","output":"\n✖ failing tests:\n\ntest at tests/vcs-doctor.test.ts:1:2308\n✖ warns that git is not found without failing (43.729535ms)\n  Error: spawn EIO\n      at ChildProcess.spawn (node:internal/child_process:458:11)\n      at spawn (node:child_process:813:9)\n      at execFile (node:child_process:349:17)\n      at <anonymous> (src/core/vcs/git-vcs.ts:57:5)\n      at new Promise (<anonymous>)\n      at runGit (src/core/vcs/git-vcs.ts:56:10)\n      at selectVcs (src/core/vcs/select.ts:32:25)\n      at gitCheck (src/core/vcs/doctor-git.ts:53:21)\n      at checkGit (src/core/vcs/doctor-git.ts:147:32)\n      at TestContext.<anonymous> (tests/vcs-doctor.test.ts:86:26) {\n    errno: -5,\n    code: 'EIO',\n    syscall: 'spawn'\n  }\n\ntest at tests/vcs-doctor.test.ts:1:3535\n✖ keeps doctor exit code 0 with only the git warnings (135.211068ms)\n  Error: spawn EIO\n      at ChildProcess.spawn (node:internal/child_process:458:11)\n      at spawn (node:child_process:813:9)\n      at execFile (node:child_process:349:17)\n      at <anonymous> (src/core/vcs/git-vcs.ts:57:5)\n      at new Promise (<anonymous>)\n      at runGit (src/core/vcs/git-vcs.ts:56:10)\n      at selectVcs (src/core/vcs/select.ts:32:25)\n      at gitCheck (src/core/vcs/doctor-git.ts:53:21)\n      at checkGit (src/core/vcs/doctor-git.ts:147:32)\n      at TestContext.<anonymous> (tests/vcs-doctor.test.ts:130:28) {\n    errno: -5,\n    code: 'EIO',\n    syscall: 'spawn'\n  }\n ELIFECYCLE  Test failed. See above for more details.\n ELIFECYCLE  Command failed with exit code 1."}}
+diff --git a/openspec/changes/313-plan-queue-slug/.run/results/1.md b/openspec/changes/313-plan-queue-slug/.run/results/1.md
+new file mode 100644
+index 00000000..bdb8be99
+--- /dev/null
++++ b/openspec/changes/313-plan-queue-slug/.run/results/1.md
+@@ -0,0 +1,17 @@
++## Changed
++
++- Added `src/core/status/queue-pick.ts`, which chooses the queue row to plan: the first eligible row without a slug, or the named row after the not-in-queue, already-has-change, and waiting refusals. It owns the no-eligible message rows too.
++- `prepareQueuePlan` now takes optional `slug`, keeps the active-failure gate first, calls `pickQueueRow`, and then runs the unchanged rejected-item and spend gates.
++- `osq plan --next [slug]` parses an optional queue slug; `PlanCommandOptions.next` is `boolean | string` and is passed through `prepareQueueSelection` into `prepareQueuePlan`.
++- `--run` refuses `--next` whether it is a bare flag or carries a slug, and the remote plan check treats a slug as next mode.
++- Added `tests/queue-plan-slug.test.ts` covering the named-item plan, landed dependencies, every refusal row, the `--run` guard, and a forwarded slug.
++
++## Deviated
++
++- `prepareQueueSelection` accepts the `next` option (`boolean | string`) and derives the slug itself instead of taking a `slug`. This keeps `plan.ts` at the same 249 lines while still passing next mode through the selection helper; `prepareQueuePlan` still takes the optional `slug` as the task requires.
++
++## Missing context
++
++None.
++
++Touched: src/cli/index.ts, src/cli/plan.ts, src/cli/plan-queue.ts, src/cli/plan-run.ts, src/cli/remote-commands.ts, src/core/status/queue-planning.ts, src/core/status/queue-pick.ts, tests/queue-plan-slug.test.ts
+diff --git a/src/cli/index.ts b/src/cli/index.ts
+index f7ca0426..9f27d105 100644
+--- a/src/cli/index.ts
++++ b/src/cli/index.ts
+@@ -86,7 +86,7 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
+     .option('--brief <file>', 'brief file path or - for stdin')
+     .option('-p, --print', 'output opening prompt strictly to stdout without launching session')
+     .option('--session', 'launch the configured interactive planner session instead of handing off')
+-    .option('--next', 'plan the next eligible brief-queue item')
++    .option('--next [slug]', 'plan the next eligible queue item, or the queue item with this slug')
+     .option('--replan', 'allow replanning a rejected first eligible queue item')
+     .option('--run', 'start a detached planner for the change and return')
+     .option('--notes <text>', 'notes from the human, added to the planner prompt')
+diff --git a/src/cli/plan-queue.ts b/src/cli/plan-queue.ts
+index e9a59eff..51180f48 100644
+--- a/src/cli/plan-queue.ts
++++ b/src/cli/plan-queue.ts
+@@ -138,7 +138,7 @@ export async function readBriefInput(briefOption?: string): Promise<string> {
+ export function validatePlanModeOptions(
+   name: string,
+   options: {
+-    next?: boolean;
++    next?: boolean | string;
+     replan?: boolean;
+     brief?: string;
+     print?: boolean;
+@@ -162,16 +162,21 @@ export function validatePlanModeOptions(
+  * Run the read-only next-item preparation with the explicit config the caller
+  * already loaded. Refusals and the incomplete-cost notice are reported here and
+  * nothing is written; `null` tells the caller to stop before mutation.
++ *
++ * @scenario cli-foundation: Named queue item
++ * @scenario cli-foundation: Named queue item refused
+  */
+ export async function prepareQueueSelection(
+   projectRoot: string,
+   config: OsqConfig,
+-  options: { replan?: boolean; print?: boolean },
++  options: { replan?: boolean; print?: boolean; next?: boolean | string },
+   stderr: Writer = processStderr,
+ ): Promise<QueuePlanSelection | null> {
++  const slug = typeof options.next === 'string' ? options.next : undefined;
+   const preparation = await prepareQueuePlan(projectRoot, config, {
+     replan: options.replan,
+     enforceBudget: !options.print,
++    slug,
+   });
+   if (preparation.kind === 'refused') {
+     throw new CommandError(preparation.message);
+diff --git a/src/cli/plan-run.ts b/src/cli/plan-run.ts
+index 01331fd6..b825ad47 100644
+--- a/src/cli/plan-run.ts
++++ b/src/cli/plan-run.ts
+@@ -34,7 +34,7 @@ function validateRunOptions(options: PlanCommandOptions): void {
+     ['--print', options.print === true],
+     ['--session', options.session === true],
+     ['--brief', options.brief !== undefined],
+-    ['--next', options.next === true],
++    ['--next', options.next !== undefined && options.next !== false],
+   ];
+   for (const [flag, set] of conflicts) {
+     if (set) throw new CommandError(`Error: \`--run\` cannot be combined with \`${flag}\``);
+diff --git a/src/cli/plan.ts b/src/cli/plan.ts
+index a4b5134a..a845f9d4 100644
+--- a/src/cli/plan.ts
++++ b/src/cli/plan.ts
+@@ -75,7 +75,7 @@ export interface PlanCommandOptions extends CommandInputs {
+   brief?: string;
+   print?: boolean;
+   session?: boolean;
+-  next?: boolean;
++  next?: boolean | string;
+   replan?: boolean;
+   adapter?: HarnessAdapter;
+   run?: boolean;
+@@ -113,7 +113,7 @@ export async function planCommand(
+     const selection = await prepareQueueSelection(
+       cwd,
+       config,
+-      { replan: options.replan, print: options.print },
++      { replan: options.replan, print: options.print, next: options.next },
+       inputs.stderr,
+     );
+     if (!selection) return;
+diff --git a/src/cli/remote-commands.ts b/src/cli/remote-commands.ts
+index d612ce4a..c6e29e30 100644
+--- a/src/cli/remote-commands.ts
++++ b/src/cli/remote-commands.ts
+@@ -97,7 +97,7 @@ async function planReady(cwd: string, name: string | undefined): Promise<boolean
+ /** A forwarded plan, refused before `planCommand` unless the server holds a brief. */
+ async function planCall(request: ForwardedCommand, inputs: Inputs): Promise<void> {
+   const name = argOf(request, 0);
+-  if (request.options.next !== true && !(await planReady(inputs.cwd, name))) {
++  if (!request.options.next && !(await planReady(inputs.cwd, name))) {
+     throw new CommandError(
+       `osq plan ${name ?? ''} on a server needs an unapproved change with a brief; queue the brief and run osq plan --next`,
+     );
+diff --git a/src/core/status/queue-pick.ts b/src/core/status/queue-pick.ts
+new file mode 100644
+index 00000000..2a36ab82
+--- /dev/null
++++ b/src/core/status/queue-pick.ts
+@@ -0,0 +1,71 @@
++import type { QueueItem } from './queue-parser.js';
++import type { QueueRow, QueueStateSnapshot } from './queue-state.js';
++
++/** The queue item and projected row chosen for planning. */
++export interface QueueRowChoice {
++  readonly item: QueueItem;
++  readonly row: QueueRow;
++}
++
++/** The row choice: one picked row, or the refusal that explains why none fits. */
++export type QueueRowPick =
++  | { readonly kind: 'picked'; readonly choice: QueueRowChoice }
++  | { readonly kind: 'refused'; readonly message: string };
++
++/** Render every row for the message that explains why nothing is eligible. */
++function summarizeRows(rows: readonly QueueRow[]): string {
++  return rows
++    .map((row) => {
++      const waiting =
++        row.unmetDependencies.length > 0 ? ` (waiting on ${row.unmetDependencies.join(', ')})` : '';
++      return `  - ${row.slug}: ${row.state}${waiting}`;
++    })
++    .join('\n');
++}
++
++/** The named row's refusal in not-in-queue, already-has-change, waiting order. */
++function namedRefusal(state: QueueStateSnapshot, slug: string): string | null {
++  const index = state.rows.findIndex((row) => row.slug === slug);
++  if (index === -1) return `Queue item "${slug}" is not in the queue.`;
++  const row = state.rows[index];
++  if (row.state !== 'unplanned' && row.state !== 'rejected') {
++    return `Queue item "${slug}" already has change ${row.changeId} (${row.state}).`;
++  }
++  if (row.unmetDependencies.length > 0) {
++    return `Queue item "${slug}" is waiting on ${row.unmetDependencies.join(', ')}.`;
++  }
++  return null;
++}
++
++/**
++ * Choose the queue row to plan: the first eligible row, or the row a slug names
++ * after the named-row refusals. Read only; the caller decides replan and spend.
++ * @scenario cli-foundation: Named queue item
++ * @scenario cli-foundation: Named queue item refused
++ */
++export function pickQueueRow(state: QueueStateSnapshot, slug?: string): QueueRowPick {
++  if (slug === undefined) {
++    const index = state.rows.findIndex(
++      (row) =>
++        (row.state === 'unplanned' || row.state === 'rejected') &&
++        row.unmetDependencies.length === 0,
++    );
++    if (index === -1) {
++      return {
++        kind: 'refused',
++        message: `No queue item is eligible to plan.\n${summarizeRows(state.rows)}`,
++      };
++    }
++    return {
++      kind: 'picked',
++      choice: { item: state.items[index], row: state.rows[index] },
++    };
++  }
++  const message = namedRefusal(state, slug);
++  if (message !== null) return { kind: 'refused', message };
++  const index = state.rows.findIndex((row) => row.slug === slug);
++  return {
++    kind: 'picked',
++    choice: { item: state.items[index], row: state.rows[index] },
++  };
++}
+diff --git a/src/core/status/queue-planning.ts b/src/core/status/queue-planning.ts
+index 3fa2c767..3419dbf9 100644
+--- a/src/core/status/queue-planning.ts
++++ b/src/core/status/queue-planning.ts
+@@ -2,10 +2,10 @@ import path from 'node:path';
+ import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
+ import { type PlanRecord, readPlanRecords } from '../report/planning.js';
+ import type { QueueItem } from './queue-parser.js';
++import { pickQueueRow } from './queue-pick.js';
+ import {
+   type QueueAssociationGroups,
+   type QueueRow,
+-  type QueueStateSnapshot,
+   findActiveQueueFailures,
+   readQueueState,
+   scanQueueAssociations,
+@@ -144,16 +144,6 @@ export function evaluateQueueBudget(
+   return { kind: 'ok' };
+ }
+ 
+-function summarizeRows(rows: readonly QueueRow[]): string {
+-  return rows
+-    .map((row) => {
+-      const waiting =
+-        row.unmetDependencies.length > 0 ? ` (waiting on ${row.unmetDependencies.join(', ')})` : '';
+-      return `  - ${row.slug}: ${row.state}${waiting}`;
+-    })
+-    .join('\n');
+-}
+-
+ /** Resolve the landed archived associations of queue slugs, in the given order. */
+ function resolveLanded(
+   slugs: readonly string[],
+@@ -176,14 +166,17 @@ function resolveLanded(
+ 
+ /**
+  * Read-only next-item preparation: halt on any active failure, then select the
+- * first unplanned or rejected item whose queue dependencies are landed. A
+- * rejected first eligible item refuses unless `replan` is set. Nothing is
+- * written here.
++ * first unplanned or rejected item whose queue dependencies are landed, or the
++ * item a slug names. A rejected selected item refuses unless `replan` is set.
++ * Nothing is written here.
++ *
++ * @scenario cli-foundation: Named queue item
++ * @scenario cli-foundation: Named queue item refused
+  */
+ export async function prepareQueuePlan(
+   projectRoot: string,
+   config: OsqConfig = DEFAULT_CONFIG,
+-  options: { replan?: boolean; enforceBudget?: boolean } = {},
++  options: { replan?: boolean; enforceBudget?: boolean; slug?: string } = {},
+ ): Promise<QueuePlanPreparation> {
+   const failures = await findActiveQueueFailures(projectRoot, config);
+   if (failures.length > 0) {
+@@ -195,19 +188,10 @@ export async function prepareQueuePlan(
+       message: `Queue planning is blocked by active failures:\n${lines.join('\n')}`,
+     };
+   }
+-  const state: QueueStateSnapshot = await readQueueState(projectRoot, config);
+-  const { items, groups, rows } = state;
+-  const index = rows.findIndex(
+-    (row) =>
+-      (row.state === 'unplanned' || row.state === 'rejected') && row.unmetDependencies.length === 0,
+-  );
+-  if (index === -1) {
+-    return {
+-      kind: 'refused',
+-      message: `No queue item is eligible to plan.\n${summarizeRows(rows)}`,
+-    };
+-  }
+-  const row = rows[index];
++  const state = await readQueueState(projectRoot, config);
++  const pick = pickQueueRow(state, options.slug);
++  if (pick.kind === 'refused') return { kind: 'refused', message: pick.message };
++  const { item, row } = pick.choice;
+   if (row.state === 'rejected' && !options.replan) {
+     return {
+       kind: 'refused',
+@@ -223,9 +207,8 @@ export async function prepareQueuePlan(
+     if (evaluation.kind === 'refused') return { kind: 'refused', message: evaluation.message };
+     notice = evaluation.notice;
+   }
+-  const item = items[index];
+-  const landedDependencies = resolveLanded(item.dependsOn, groups, projectRoot);
+-  const landedFixes = resolveLanded(item.fixes, groups, projectRoot);
++  const landedDependencies = resolveLanded(item.dependsOn, state.groups, projectRoot);
++  const landedFixes = resolveLanded(item.fixes, state.groups, projectRoot);
+   return {
+     kind: 'ready',
+     selection: {
+diff --git a/tests/queue-plan-slug.test.ts b/tests/queue-plan-slug.test.ts
+new file mode 100644
+index 00000000..8f3ea940
+--- /dev/null
++++ b/tests/queue-plan-slug.test.ts
+@@ -0,0 +1,276 @@
++import assert from 'node:assert/strict';
++import { createHash } from 'node:crypto';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, beforeEach, describe, it } from 'node:test';
++import { CommandError } from '../src/cli/command-error.js';
++import { planCommand } from '../src/cli/plan.js';
++import { createForwardedCommands } from '../src/cli/remote-commands.js';
++import { DEFAULT_CONFIG } from '../src/core/foundation/config.js';
++import { parseFrontmatter } from '../src/core/spec/parser.js';
++import { projectQueue } from '../src/core/status/queue.js';
++
++const OPENSPEC = 'openspec';
++const QUEUE_PATH = 'openspec/queue.md';
++
++interface ItemSpec {
++  slug: string;
++  title: string;
++  depends?: string;
++}
++
++function queueContent(items: ItemSpec[]): string {
++  return items
++    .map((item) =>
++      [
++        `## [${item.slug}] ${item.title}`,
++        `Depends on: ${item.depends ?? 'nothing'}`,
++        '',
++        `Brief body for ${item.slug}.`,
++        '',
++      ].join('\n'),
++    )
++    .join('\n');
++}
++
++function sectionHash(content: string, slug: string): string {
++  const marker = `## [${slug}] `;
++  const start = content.indexOf(marker);
++  assert.ok(start >= 0, `missing queue marker for ${slug}`);
++  const next = content.indexOf('## [', start + marker.length);
++  const raw = content.slice(start, next === -1 ? content.length : next);
++  return `sha256:${createHash('sha256').update(raw, 'utf8').digest('hex')}`;
++}
++
++function proposalMd(title: string): string {
++  return [
++    '---',
++    `title: ${title}`,
++    'depends_on: []',
++    'verify: node -e "process.exit(0)"',
++    'features:',
++    '  reads: []',
++    '---',
++    '## Goal',
++    `${title} goal.`,
++    '',
++  ].join('\n');
++}
++
++function taskMd(): string {
++  return [
++    '---',
++    'title: Task 1',
++    'verify: node -e "process.exit(0)"',
++    'scope: []',
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] done',
++    '',
++  ].join('\n');
++}
++
++async function writeAt(root: string, rel: string, content: string): Promise<void> {
++  const target = path.join(root, rel);
++  await fs.mkdir(path.dirname(target), { recursive: true });
++  await fs.writeFile(target, content, 'utf8');
++}
++
++async function writeQueue(root: string, content: string): Promise<void> {
++  await writeAt(root, QUEUE_PATH, content);
++}
++
++async function createActiveChange(root: string, folderName: string, slug: string): Promise<void> {
++  const base = path.join(root, OPENSPEC, 'changes', folderName);
++  await fs.mkdir(path.join(base, 'tasks'), { recursive: true });
++  await fs.writeFile(path.join(base, 'proposal.md'), proposalMd(folderName), 'utf8');
++  await fs.writeFile(path.join(base, 'tasks', '1.md'), taskMd(), 'utf8');
++  await fs.writeFile(
++    path.join(base, 'brief.md'),
++    ['---', `queue_item: ${slug}`, '---', `Brief body for ${slug}.`, ''].join('\n'),
++    'utf8',
++  );
++}
++
++async function activeFolders(root: string): Promise<string[]> {
++  const activeRoot = path.join(root, OPENSPEC, 'changes');
++  const entries = await fs.readdir(activeRoot, { withFileTypes: true }).catch(() => []);
++  return entries
++    .filter((entry) => entry.isDirectory() && entry.name !== 'archive' && entry.name !== 'rejected')
++    .map((entry) => entry.name)
++    .sort();
++}
++
++let tmpDir: string;
++
++beforeEach(async () => {
++  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-queue-plan-slug-'));
++});
++
++afterEach(async () => {
++  await fs.rm(tmpDir, { recursive: true, force: true });
++});
++
++describe('named queue item', () => {
++  it('plans the item the slug names and leaves earlier items unplanned', async () => {
++    const content = queueContent([
++      { slug: 'first', title: 'First' },
++      { slug: 'second', title: 'Second' },
++    ]);
++    await writeQueue(tmpDir, content);
++    let stdout = '';
++
++    await planCommand(undefined, {
++      next: 'second',
++      print: true,
++      cwd: tmpDir,
++      stdout: (text) => {
++        stdout += text;
++      },
++    });
++
++    assert.deepEqual(await activeFolders(tmpDir), ['001-second']);
++    const folder = path.join(tmpDir, OPENSPEC, 'changes', '001-second');
++    const brief = parseFrontmatter(await fs.readFile(path.join(folder, 'brief.md'), 'utf8'));
++    assert.equal(brief.data.queue_item, 'second');
++    assert.equal(brief.data.queue_hash, sectionHash(content, 'second'));
++
++    assert.match(stdout, /# Change: 001 - Second/);
++    assert.ok(stdout.includes('Brief body for second.'), 'prompt carries the named brief');
++    assert.ok(!stdout.includes('Brief body for first.'), 'prompt must not carry another brief');
++    assert.ok(!stdout.includes('queue.md'), 'prompt must not embed the queue file');
++
++    const projection = await projectQueue(tmpDir, DEFAULT_CONFIG);
++    assert.equal(projection.items.find((item) => item.slug === 'first')?.state, 'unplanned');
++    assert.equal(projection.items.find((item) => item.slug === 'second')?.state, 'planned');
++  });
++
++  it('plans a named item whose dependencies landed', async () => {
++    const content = queueContent([
++      { slug: 'first', title: 'First' },
++      { slug: 'second', title: 'Second', depends: 'first' },
++      { slug: 'third', title: 'Third', depends: 'second' },
++    ]);
++    await writeQueue(tmpDir, content);
++    await writeAt(
++      tmpDir,
++      'openspec/changes/archive/020-first/brief.md',
++      ['---', 'queue_item: first', '---', 'Brief body for first.', ''].join('\n'),
++    );
++    await writeAt(
++      tmpDir,
++      'openspec/changes/archive/021-second/brief.md',
++      ['---', 'queue_item: second', '---', 'Brief body for second.', ''].join('\n'),
++    );
++    let stdout = '';
++
++    await planCommand(undefined, {
++      next: 'third',
++      print: true,
++      cwd: tmpDir,
++      stdout: (text) => {
++        stdout += text;
++      },
++    });
++
++    assert.deepEqual(await activeFolders(tmpDir), ['022-third']);
++    const folder = path.join(tmpDir, OPENSPEC, 'changes', '022-third');
++    const proposal = await fs.readFile(path.join(folder, 'proposal.md'), 'utf8');
++    assert.match(proposal, /^depends_on: \["021"\]$/m);
++    assert.ok(
++      stdout.includes('Landed dependencies:\n- openspec/changes/archive/021-second'),
++      'prompt carries the landed dependency archive path',
++    );
++  });
++});
++
++describe('named queue item refused', () => {
++  const rows = [
++    {
++      name: 'a missing slug',
++      slug: 'missing',
++      text: 'Queue item "missing" is not in the queue.',
++      setup: async () => writeQueue(tmpDir, queueContent([{ slug: 'first', title: 'First' }])),
++    },
++    {
++      name: 'an item that already has a change',
++      slug: 'first',
++      text: 'Queue item "first" already has change 001 (planned).',
++      setup: async () => {
++        await writeQueue(tmpDir, queueContent([{ slug: 'first', title: 'First' }]));
++        await createActiveChange(tmpDir, '001-first', 'first');
++      },
++    },
++    {
++      name: 'an item waiting on a dependency',
++      slug: 'second',
++      text: 'Queue item "second" is waiting on first.',
++      setup: async () =>
++        writeQueue(
++          tmpDir,
++          queueContent([
++            { slug: 'first', title: 'First' },
++            { slug: 'second', title: 'Second', depends: 'first' },
++          ]),
++        ),
++    },
++  ];
++
++  for (const row of rows) {
++    it(`refuses ${row.name} and creates no change folder`, async () => {
++      await row.setup();
++      const before = await activeFolders(tmpDir);
++
++      await assert.rejects(
++        () =>
++          planCommand(undefined, {
++            next: row.slug,
++            print: true,
++            cwd: tmpDir,
++          }),
++        (error: unknown) =>
++          error instanceof CommandError &&
++          error.name === 'CommandError' &&
++          error.exitCode === 1 &&
++          error.message === row.text,
++      );
++
++      assert.deepEqual(await activeFolders(tmpDir), before);
++    });
++  }
++});
++
++describe('next mode guards', () => {
++  it('keeps --run refusing --next with and without a slug', async () => {
++    await assert.rejects(
++      () => planCommand(undefined, { next: true, run: true, cwd: tmpDir }),
++      /--run.*--next/,
++    );
++    await assert.rejects(
++      () => planCommand(undefined, { next: 'second', run: true, cwd: tmpDir }),
++      /--run.*--next/,
++    );
++    assert.deepEqual(await activeFolders(tmpDir), []);
++  });
++
++  it('treats a forwarded slug as next mode instead of demanding a brief', async () => {
++    const content = queueContent([
++      { slug: 'first', title: 'First' },
++      { slug: 'second', title: 'Second' },
++    ]);
++    await writeQueue(tmpDir, content);
++    const handler = createForwardedCommands().plan;
++    assert.ok(handler, 'the server forwards plan');
++
++    await handler(
++      { command: 'plan', args: [], options: { next: 'second', print: true } },
++      () => {},
++      { cwd: tmpDir },
++    );
++
++    assert.deepEqual(await activeFolders(tmpDir), ['001-second']);
++  });
++});

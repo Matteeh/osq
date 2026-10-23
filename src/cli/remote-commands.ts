@@ -97,7 +97,8 @@ async function planReady(cwd: string, name: string | undefined): Promise<boolean
 /** A forwarded plan, refused before `planCommand` unless the server holds a brief. */
 async function planCall(request: ForwardedCommand, inputs: Inputs): Promise<void> {
   const name = argOf(request, 0);
-  if (request.options.next !== true && !(await planReady(inputs.cwd, name))) {
+  const next = request.options.next;
+  if (next !== true && typeof next !== 'string' && !(await planReady(inputs.cwd, name))) {
     throw new CommandError(
       `osq plan ${name ?? ''} on a server needs an unapproved change with a brief; queue the brief and run osq plan --next`,
     );

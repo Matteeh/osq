@@ -75,7 +75,7 @@ export interface PlanCommandOptions extends CommandInputs {
   brief?: string;
   print?: boolean;
   session?: boolean;
-  next?: boolean;
+  next?: boolean | string;
   replan?: boolean;
   adapter?: HarnessAdapter;
   run?: boolean;
@@ -113,7 +113,7 @@ export async function planCommand(
     const selection = await prepareQueueSelection(
       cwd,
       config,
-      { replan: options.replan, print: options.print },
+      { next: options.next, replan: options.replan, print: options.print },
       inputs.stderr,
     );
     if (!selection) return;

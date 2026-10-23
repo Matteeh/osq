@@ -2,6 +2,7 @@ import path from 'node:path';
 import { DEFAULT_CONFIG, type OsqConfig } from '../foundation/config.js';
 import { type PlanRecord, readPlanRecords } from '../report/planning.js';
 import type { QueueItem } from './queue-parser.js';
+import { pickQueueRow } from './queue-pick.js';
 import {
   type QueueAssociationGroups,
   type QueueRow,
@@ -144,16 +145,6 @@ export function evaluateQueueBudget(
   return { kind: 'ok' };
 }
 
-function summarizeRows(rows: readonly QueueRow[]): string {
-  return rows
-    .map((row) => {
-      const waiting =
-        row.unmetDependencies.length > 0 ? ` (waiting on ${row.unmetDependencies.join(', ')})` : '';
-      return `  - ${row.slug}: ${row.state}${waiting}`;
-    })
-    .join('\n');
-}
-
 /** Resolve the landed archived associations of queue slugs, in the given order. */
 function resolveLanded(
   slugs: readonly string[],
@@ -176,14 +167,18 @@ function resolveLanded(
 
 /**
  * Read-only next-item preparation: halt on any active failure, then select the
- * first unplanned or rejected item whose queue dependencies are landed. A
- * rejected first eligible item refuses unless `replan` is set. Nothing is
- * written here.
+ * named queue item or the first unplanned or rejected item whose queue
+ * dependencies are landed. A rejected item refuses unless `replan` is set.
+ * Nothing is written here.
+ *
+ * @scenario cli-foundation: Named queue item
+ * @scenario cli-foundation: Named queue item refused
+ * @adr 016
  */
 export async function prepareQueuePlan(
   projectRoot: string,
   config: OsqConfig = DEFAULT_CONFIG,
-  options: { replan?: boolean; enforceBudget?: boolean } = {},
+  options: { replan?: boolean; enforceBudget?: boolean; slug?: string } = {},
 ): Promise<QueuePlanPreparation> {
   const failures = await findActiveQueueFailures(projectRoot, config);
   if (failures.length > 0) {
@@ -196,18 +191,10 @@ export async function prepareQueuePlan(
     };
   }
   const state: QueueStateSnapshot = await readQueueState(projectRoot, config);
-  const { items, groups, rows } = state;
-  const index = rows.findIndex(
-    (row) =>
-      (row.state === 'unplanned' || row.state === 'rejected') && row.unmetDependencies.length === 0,
-  );
-  if (index === -1) {
-    return {
-      kind: 'refused',
-      message: `No queue item is eligible to plan.\n${summarizeRows(rows)}`,
-    };
-  }
-  const row = rows[index];
+  const { items, groups } = state;
+  const picked = pickQueueRow(state, options.slug);
+  if (picked.kind === 'refused') return { kind: 'refused', message: picked.message };
+  const { row, index } = picked.pick;
   if (row.state === 'rejected' && !options.replan) {
     return {
       kind: 'refused',

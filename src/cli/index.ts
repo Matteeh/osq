@@ -86,7 +86,7 @@ export function createProgram(version?: string, slices: readonly Slice[] = SLICE
     .option('--brief <file>', 'brief file path or - for stdin')
     .option('-p, --print', 'output opening prompt strictly to stdout without launching session')
     .option('--session', 'launch the configured interactive planner session instead of handing off')
-    .option('--next', 'plan the next eligible brief-queue item')
+    .option('--next [slug]', 'plan the next eligible brief-queue item, or the named one')
     .option('--replan', 'allow replanning a rejected first eligible queue item')
     .option('--run', 'start a detached planner for the change and return')
     .option('--notes <text>', 'notes from the human, added to the planner prompt')
