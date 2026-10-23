@@ -12,7 +12,9 @@ workspace = true
 
 [dependencies]
 osq-core.workspace = true
+osq-kernel-config.workspace = true
 osq-kernel-storage.workspace = true
+osq-kernel-vcs.workspace = true
 rusqlite = { workspace = true, features = ["hooks"] }
 
 [dev-dependencies]

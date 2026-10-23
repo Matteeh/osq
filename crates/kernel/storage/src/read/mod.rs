@@ -31,12 +31,14 @@
 //! Implements: rust-storage/queue-item-titles
 //! Implements: rust-storage/retry-context
 //! Implements: rust-storage/change-folder-files
+//! Implements: rust-storage/now-facts
 
 mod change_files;
 mod error;
 mod land;
 mod listing;
 mod manual;
+mod now;
 mod pending;
 mod queue;
 mod results;
@@ -52,6 +54,7 @@ pub use error::StorageError;
 pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
+pub use now::{NowFacts, NowTask, read_now_facts};
 pub use pending::{
     AfterLandFailure, AutopilotStop, PauseRecord, read_after_land_failure, read_autopilot_stop,
     read_usage_pause, watch_state_dir,
