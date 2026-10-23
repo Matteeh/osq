@@ -238,9 +238,13 @@ describe('cli-foundation scenario lookup', () => {
     await fs.mkdir(specsDir, { recursive: true });
     await fs.mkdir(changeDir, { recursive: true });
     await fs.writeFile(path.join(specsDir, 'spec.md'), deduped, 'utf8');
-    const source = process.env.OSQ_CHANGE
-      ? path.resolve(process.env.OSQ_CHANGE)
-      : path.join(REPO_ROOT, 'openspec', 'changes', '315-vcs-root-fails-fast');
+    const source = path.join(
+      REPO_ROOT,
+      'openspec',
+      'changes',
+      'archive',
+      '315-vcs-root-fails-fast',
+    );
     await fs.copyFile(
       path.join(source, 'specs', 'cli-foundation', 'spec.md'),
       path.join(changeDir, 'spec.md'),
