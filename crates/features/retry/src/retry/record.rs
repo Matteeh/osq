@@ -14,6 +14,41 @@ use super::marker::Failure;
 use super::text;
 use super::time;
 
+/// The archived folder's record files as they were before the retry.
+pub(crate) struct Snapshot {
+    /// Every file in `.run/regressed/`, by name and bytes.
+    pub(crate) regressed: Vec<(String, Vec<u8>)>,
+    /// `.run/events/change.jsonl`, or none when it was absent.
+    pub(crate) events: Option<Vec<u8>>,
+}
+
+/// Reads the record files a failed archive retry must put back.
+///
+/// Implements: rust-retry/archived-retry
+pub(crate) fn snapshot(folder: &Path) -> Snapshot {
+    let regressed = folder.join(".run").join("regressed");
+    let mut files = Vec::new();
+    if let Ok(entries) = fs::read_dir(&regressed) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().into_string();
+            if let (Ok(name), Ok(contents)) = (name, fs::read(entry.path())) {
+                files.push((name, contents));
+            }
+        }
+    }
+    let events = fs::read(
+        folder
+            .join(".run")
+            .join("events")
+            .join(format!("{CHANGE}.jsonl")),
+    )
+    .ok();
+    Snapshot {
+        regressed: files,
+        events,
+    }
+}
+
 /// The printed retry and the files the record retained.
 pub(crate) struct Recorded {
     /// The text the retry prints.

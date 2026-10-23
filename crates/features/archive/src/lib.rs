@@ -5,10 +5,13 @@
 mod apply;
 mod archive;
 mod commit;
+mod excerpt;
 mod feature;
 mod lookup;
 mod record;
+mod regress;
 mod relocate;
 mod tick;
+mod time;
 
 pub use feature::ArchiveFeature;

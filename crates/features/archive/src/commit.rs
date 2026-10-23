@@ -6,7 +6,9 @@ use std::path::Path;
 
 use osq_core::FeatureError;
 use osq_kernel_config::Config;
-use osq_kernel_vcs::{GitVcs, StatusEntry, Vcs};
+use osq_kernel_vcs::{GitVcs, StatusEntry, Vcs, VcsError};
+
+use crate::{excerpt, regress};
 
 /// The archive folder under a tree's `openspec/changes/`.
 const ARCHIVE: &str = "openspec/changes/archive";
@@ -14,12 +16,23 @@ const ARCHIVE: &str = "openspec/changes/archive";
 /// The living specs folder under a tree's root.
 const SPECS: &str = "openspec/specs";
 
+/// A failed archive commit: the command's error and, when git refused the
+/// commit, the detail its record keeps.
+///
+/// Implements: rust-archive/worktree-archive
+pub(crate) struct Failure {
+    /// The `Failed` error the archive returns.
+    pub(crate) error: FeatureError,
+    /// The detail to record, or none when status failed before the commit.
+    pub(crate) detail: Option<String>,
+}
+
 /// Commits the archive move in `tree_root`.
 ///
 /// # Errors
 ///
-/// Returns a `Failed` error with the command `archive` when git status or the
-/// commit fails.
+/// Returns a `Failure` naming the `archive` command when git status or the
+/// commit fails, with the commit's detail when there is one to record.
 ///
 /// Implements: rust-archive/worktree-archive
 pub(crate) fn run(
@@ -29,9 +42,11 @@ pub(crate) fn run(
     folder: &str,
     title: Option<&str>,
     archive_path: &str,
-) -> Result<(), FeatureError> {
+) -> Result<(), Failure> {
     let vcs = GitVcs::new(tree_root).with_timeouts(&config.timeouts);
-    let status = vcs.status().map_err(|error| failed(folder, &error))?;
+    let status = vcs
+        .status()
+        .map_err(|error| Failure::plain(folder, &error))?;
     let old = relative(tree_root, change);
     let selected = paths(&status, &[&old, ARCHIVE, SPECS]);
     let refs: Vec<&str> = selected.iter().map(String::as_str).collect();
@@ -39,7 +54,34 @@ pub(crate) fn run(
     let message = message(&id(folder), title, archive_path, folder);
     vcs.commit(&refs, &message, author)
         .map(|_| ())
-        .map_err(|error| failed(folder, &error))
+        .map_err(|error| Failure::recorded(folder, &error, config))
+}
+
+impl Failure {
+    /// A failure before the commit, which records nothing.
+    ///
+    /// Implements: rust-archive/worktree-archive
+    fn plain(folder: &str, error: &VcsError) -> Self {
+        Self {
+            error: failed(folder, error),
+            detail: None,
+        }
+    }
+
+    /// A failed commit, with its tail-cut detail to record.
+    ///
+    /// Implements: rust-archive/worktree-archive
+    fn recorded(folder: &str, error: &VcsError, config: &Config) -> Self {
+        let detail = excerpt::tail_verify_output(
+            &regress::detail(error),
+            config.limits.marker_output_lines,
+            config.limits.marker_line_chars,
+        );
+        Self {
+            error: failed(folder, error),
+            detail: Some(detail),
+        }
+    }
 }
 
 /// The failure for an archive commit git refused.

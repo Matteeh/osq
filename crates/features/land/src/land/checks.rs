@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::Path;
 
+use osq_kernel_specs::parse_frontmatter;
 use osq_kernel_storage::LandFacts;
 use osq_kernel_vcs::StatusEntry;
 
@@ -71,6 +72,25 @@ pub(crate) fn checkout_branch(default_branch: &str, branch: Option<&str>) -> Opt
             "osq land runs on {default_branch}; the checkout is on a detached HEAD"
         )),
     }
+}
+
+/// The failed-archive-commit refusal, unless the marker names no commit failure.
+///
+/// Implements: rust-land/land-refusals
+pub(crate) fn failed_archive_commit(folder: &str, marker: Option<&str>) -> Option<String> {
+    let frontmatter = parse_frontmatter(marker?).ok()?;
+    let reason = frontmatter
+        .data
+        .iter()
+        .find(|(name, _)| name.as_str() == Some("reason"))
+        .and_then(|(_, value)| value.as_str())?;
+    if reason.trim() != "commit_failed" {
+        return None;
+    }
+    let id = folder.split_once('-').map_or(folder, |(id, _)| id);
+    Some(format!(
+        "{folder}'s archive commit failed; fix the cause, then run osq retry {id} change"
+    ))
 }
 
 /// The unclean-worktree refusal, unless its status lists no entries.

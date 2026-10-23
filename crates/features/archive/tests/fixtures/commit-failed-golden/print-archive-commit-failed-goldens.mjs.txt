@@ -1,0 +1,167 @@
+// Prints what TypeScript leaves after a failed worktree archive commit, for
+// rust-archive "Worktree archive commit fails".
+// Run from the repository root after `pnpm build`:
+//   node print-archive-commit-failed-goldens.mjs <fixture project> <golden folder>
+// <fixture project> is crates/features/archive/tests/fixtures/project.
+// Each case builds a fresh scratch git repository as the `hook-fails` case of
+// openspec/changes/archive/295-rust-archive-worktree/golden/print-archive-worktree-goldens.mjs.txt
+// does, with `osq.config.mjs` beside `osq.toml`, both naming git on with the
+// author `osq <osq@example.com>`: `<scratch>/repo` on `main`, a worktree at
+// `<scratch>/trees/007-sample` on `osq/007-sample` holding the fixture's
+// `openspec/changes/007-sample/`, committed as `osq: 007 approved`, and an
+// executable `<scratch>/repo/.git/hooks/pre-commit` that prints
+// `refused by hook` to stderr and exits 1.
+// The archive runs as `archiveCompletedSpec` in src/watcher/archive-change.ts
+// runs it: the proposal's title, `archiveSpecFolder`, `newArchiveName`, the
+// archived folder's `.run/events/change.jsonl` deleted, since Rust appends no
+// `archived` event, `commitWorktreeArchive`, and `haltWorktreeChange` on the
+// archived change with the halt it gives.
+// TypeScript's `osq retry 007 change` on this state fails on git's pathspec
+// for the deleted living spec files, so no retry golden is printed.
+// The golden holds `name:` and the archive name, then `tree:` and every file under the
+// archived folder's `.run/`, sorted by path, each event line parsed, its
+// `timestamp` replaced by `<timestamp>` and written back with sorted keys;
+// then `tip:` and the full message of `osq/007-sample`'s tip, `commit:` and
+// each line of `git show --no-renames --name-status --format=` of that tip,
+// and `status:` and each line of `git status --porcelain --untracked-files=all`
+// in the worktree.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const DIST = path.resolve('dist');
+const { defineConfig } = await import(path.join(DIST, 'index.js'));
+const { archiveSpecFolder } = await import(path.join(DIST, 'watcher', 'archiver.js'));
+const { commitWorktreeArchive, newArchiveName, readArchiveNames } = await import(
+  path.join(DIST, 'watcher', 'worktree-commit.js')
+);
+const { haltWorktreeChange } = await import(path.join(DIST, 'watcher', 'worktree-run.js'));
+const { parseSpecMdFromFolder } = await import(path.join(DIST, 'core', 'spec', 'parser.js'));
+
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.com>';
+const FOLDER = '007-sample';
+const BRANCH = `osq/${FOLDER}`;
+
+const cases = [{ name: 'archive-fails-007' }];
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sorted(value[key])]),
+    );
+  }
+  return value;
+}
+
+function eventLine(line) {
+  const parsed = JSON.parse(line);
+  if ('timestamp' in parsed) parsed.timestamp = '<timestamp>';
+  return JSON.stringify(sorted(parsed));
+}
+
+function files(base, dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    const relative = path.relative(base, full).split(path.sep).join('/');
+    if (entry.isDirectory()) files(base, full, out);
+    else out.push(relative);
+  }
+  return out;
+}
+
+function tree(folder) {
+  const lines = [];
+  for (const relative of files(folder, path.join(folder, '.run'), []).sort()) {
+    const text = fs.readFileSync(path.join(folder, relative), 'utf8');
+    lines.push(`--- ${relative}`);
+    if (relative.endsWith('.jsonl')) {
+      for (const line of text.split('\n')) if (line !== '') lines.push(eventLine(line));
+    } else {
+      lines.push(text.endsWith('\n') ? text.slice(0, -1) : text);
+    }
+  }
+  return lines.join('\n');
+}
+
+function repository(scratch) {
+  const repo = path.join(scratch, 'repo');
+  fs.mkdirSync(repo, { recursive: true });
+  git(repo, ['init', '-q', '-b', 'main']);
+  git(repo, ['config', 'user.name', 'osq']);
+  git(repo, ['config', 'user.email', 'osq@example.com']);
+  git(repo, ['config', 'commit.gpgsign', 'false']);
+  fs.writeFileSync(path.join(repo, 'README.md'), 'fixture\n');
+  fs.writeFileSync(
+    path.join(repo, 'osq.config.mjs'),
+    `export default { vcs: { enabled: true, author: '${AUTHOR}' } };\n`,
+  );
+  fs.writeFileSync(path.join(repo, 'osq.toml'), `[vcs]\nenabled = true\nauthor = "${AUTHOR}"\n`);
+  fs.cpSync(path.join(fixture, 'openspec', 'specs'), path.join(repo, 'openspec', 'specs'), {
+    recursive: true,
+  });
+  git(repo, ['add', '-A']);
+  git(repo, ['commit', '-q', '-m', 'init']);
+  const root = path.join(scratch, 'trees', FOLDER);
+  git(repo, ['worktree', 'add', '-q', '-b', BRANCH, root, 'main']);
+  fs.cpSync(
+    path.join(fixture, 'openspec', 'changes', FOLDER),
+    path.join(root, 'openspec', 'changes', FOLDER),
+    { recursive: true },
+  );
+  git(root, ['add', '-A']);
+  git(root, ['commit', '-q', '-m', 'osq: 007 approved']);
+  return { repo, root };
+}
+
+function located(root, folderPath) {
+  const changesDir = path.join(root, 'openspec', 'changes');
+  return {
+    folderName: path.basename(folderPath),
+    folderPath,
+    location: folderPath.includes(`${path.sep}archive${path.sep}`) ? 'archived' : 'active',
+    tree: {
+      root,
+      worktreeFolder: FOLDER,
+      changesDir,
+      archiveDir: path.join(changesDir, 'archive'),
+      rejectedDir: path.join(changesDir, 'rejected'),
+    },
+  };
+}
+
+for (const c of cases) {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-archive-failed-')));
+  const { repo, root } = repository(scratch);
+  const config = defineConfig({ vcs: { enabled: true, author: AUTHOR } });
+  const hook = path.join(repo, '.git', 'hooks', 'pre-commit');
+  fs.writeFileSync(hook, '#!/bin/sh\necho refused by hook >&2\nexit 1\n', { mode: 0o755 });
+  const change = located(root, path.join(root, 'openspec', 'changes', FOLDER));
+  const title = (await parseSpecMdFromFolder(change.folderPath))?.title ?? '';
+  const before = await readArchiveNames(change.tree.archiveDir);
+  await archiveSpecFolder(root, change.folderPath, config);
+  const name = await newArchiveName(change.tree.archiveDir, before);
+  if (name === null) throw new Error(`${c.name}: no new archive folder`);
+  const archived = path.join(change.tree.archiveDir, name);
+  fs.rmSync(path.join(archived, '.run', 'events', 'change.jsonl'));
+  const quiet = { info() {}, warn() {} };
+  const halt = await commitWorktreeArchive(change, config, name, title, quiet);
+  if (halt === null) throw new Error(`${c.name}: the archive commit did not fail`);
+  await haltWorktreeChange(located(root, archived), '007', halt, quiet, config.limits);
+  const tip = git(root, ['log', '-1', '--format=%B', BRANCH]);
+  const commit = git(root, ['show', '--no-renames', '--name-status', '--format=', BRANCH]);
+  const status = git(root, ['status', '--porcelain', '--untracked-files=all']);
+  const body = `name: ${name}\ntree:\n${tree(archived)}\ntip:\n${tip}commit:\n${commit}status:\n${status}`;
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), body);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}

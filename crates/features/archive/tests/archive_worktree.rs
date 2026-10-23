@@ -196,26 +196,6 @@ fn body(repo: &Repo, name: &str) -> String {
     format!("name: {name}\ntip:\n{tip}commit:\n{commit}status:\n{status}")
 }
 
-/// The executable `pre-commit` hook that refuses every commit.
-fn refusing_hook(repo: &Path) {
-    let hook = repo.join(".git").join("hooks").join("pre-commit");
-    write(&hook, "#!/bin/sh\necho refused by hook >&2\nexit 1\n");
-    set_executable(&hook);
-}
-
-/// Makes a hook executable.
-#[cfg(unix)]
-fn set_executable(path: &Path) {
-    use std::os::unix::fs::PermissionsExt;
-    fs::set_permissions(path, fs::Permissions::from_mode(0o755)).expect("the hook is executable");
-}
-
-/// Makes a hook executable on a platform without Unix modes.
-#[cfg(not(unix))]
-fn set_executable(path: &Path) {
-    let _ = path;
-}
-
 /// Proves every row of "Worktree archive equals TypeScript's".
 ///
 /// Covers: rust-archive/worktree-archive-equals-typescript-s
@@ -292,39 +272,6 @@ fn archived_change_is_not_an_active_change() {
     git(&repo, &["commit", "-q", "-m", "init"]);
     let error = run(&repo, &["007"]).expect_err("only an archived change has that name");
     assert_eq!(error.to_string(), "archive failed: no active change 007");
-}
-
-/// Proves a refused archive commit fails with its prefix and leaves the branch.
-///
-/// Covers: rust-archive/worktree-archive-commit-fails
-#[test]
-fn worktree_archive_commit_fails() {
-    let case = Case {
-        name: "hook-fails-007",
-        worktree: true,
-        taken: false,
-        output: "",
-    };
-    let root = scratch(case.name);
-    let repo = repository(&root, &case);
-    refusing_hook(&repo.root);
-    let error = run(&repo.root, &["007"]).expect_err("the commit fails");
-    let message = error.to_string();
-    assert!(
-        message.starts_with("archive failed: osq could not commit the archive of 007-sample: "),
-        "the failure names the commit: {message}"
-    );
-    assert!(
-        message.contains("refused by hook"),
-        "the failure carries git's output"
-    );
-    let expected = golden(case.name);
-    assert_eq!(
-        body(&repo, golden_name(&expected)),
-        expected,
-        "{}: golden",
-        case.name
-    );
 }
 
 /// Proves a config that does not load fails first and writes nothing else.

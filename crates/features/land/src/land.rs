@@ -233,6 +233,14 @@ fn check_refusals(
     }
 
     if let Some(change) = &located.worktree {
+        let marker = change_archive(change, &located.folder)
+            .join(".run")
+            .join("regressed")
+            .join("change.md");
+        let marker = fs::read_to_string(marker).ok();
+        if let Some(message) = checks::failed_archive_commit(&located.folder, marker.as_deref()) {
+            return Err(failed(message));
+        }
         let status = git_vcs(&change.path, timeouts)
             .status()
             .map_err(|error| failed(error.to_string()))?;

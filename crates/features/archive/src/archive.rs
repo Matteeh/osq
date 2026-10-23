@@ -10,7 +10,7 @@ use osq_kernel_config::load_config;
 use osq_kernel_specs::{MergeChangeError, MergedSpec, merge_change};
 use osq_kernel_storage::{ChangeEntry, ChangeSnapshot, change_folder_seal, read_change};
 
-use crate::{apply, commit, lookup, record, relocate};
+use crate::{apply, commit, lookup, record, regress, relocate};
 
 /// The command's name, as its errors and invocation spell it.
 const COMMAND: &str = "archive";
@@ -57,14 +57,19 @@ pub(crate) fn run(root: &Path, argument: &str) -> Result<String, FeatureError> {
     record::remove(&entry.path);
     let archived = relocate::run(&found.tree_root, &entry.path).map_err(failed)?;
     if found.worktree {
-        commit::run(
+        if let Err(failure) = commit::run(
             &found.tree_root,
             &config,
             &entry.path,
             &entry.folder,
             snapshot.title.as_deref(),
             &archived,
-        )?;
+        ) {
+            if let Some(detail) = &failure.detail {
+                let _ = regress::record(&found.tree_root.join(&archived), detail);
+            }
+            return Err(failure.error);
+        }
         return Ok(format!("{archived} on osq/{}", entry.folder));
     }
     Ok(archived)

@@ -258,6 +258,12 @@ as TypeScript's `landChange` and `buildSquashMessage` refuse:
 - When the checkout's HEAD branch is not the default branch: `osq land
   runs on <default branch>; the checkout is on <branch>`, or `the checkout
   is on a detached HEAD` when HEAD names no branch.
+- When the change has a worktree and its archived folder there,
+  `openspec/changes/archive/<folder>`, holds `.run/regressed/change.md`
+  whose frontmatter `reason`, trimmed, is `commit_failed`, as TypeScript's
+  `assertLandableWorktree` reads it: `<folder>'s archive commit failed; fix
+  the cause, then run osq retry <id> change`, where `<id>` is the folder's
+  text before its first `-`, or the whole name without one.
 - When the change has a worktree and its `status` lists any entry: `<path>
   has uncommitted changes: <paths joined by ", ">; commit or discard them
   first`, where `<path>` is the worktree's path as `worktree_list` gives it.
@@ -312,6 +318,16 @@ stops only for those in files the land writes.
 | `002-beta-orders` holding `specs/orders/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T12:00:00.000Z` and `.run/stacked-on` holding `001-alpha-orders sha256:x\n` |
 | `002-beta-orders` holding `specs/billing/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T14:00:00.000Z` and `.run/stacked-on` holding `001-alpha-orders sha256:x\n`, and `003-gamma-orders` holding `specs/orders/spec.md`, `.run/approved`, an `archived` event at `2026-10-20T12:00:00.000Z` and `.run/stacked-on` holding `002-beta-orders sha256:y\n` |
 | `002-beta-orders` holding `specs/orders/spec.md`, `.run/approved` and an `archived` event at `2026-10-20T12:00:00.000Z`, with the fixture change's `.run/events/change.jsonl` removed on its branch |
+
+#### Scenario: Land on a failed archive commit
+- **WHEN** `land` runs with the query `1` on a land repository holding the fixture change whose archived folder in its worktree also holds, uncommitted, `.run/regressed/change.md` holding the row's text
+- **THEN** it gives a `Failed` error for the command `land` with the row's message, where `<wt>` is the fixture change's worktree path, `main` is at the commit it was at before `land` ran, and the worktree's files and `git status --porcelain` are as they were before:
+
+| Marker | Message |
+|---|---|
+| `---\nreason: commit_failed\n---\nrefused by hook\n` | `001-alpha-orders's archive commit failed; fix the cause, then run osq retry 001 change` |
+| `---\nreason:  commit_failed \n---\n` | `001-alpha-orders's archive commit failed; fix the cause, then run osq retry 001 change` |
+| `---\nreason: sync_conflict\n---\nconflict\n` | `<wt> has uncommitted changes: openspec/changes/archive/001-alpha-orders/.run/regressed/change.md; commit or discard them first` |
 
 ### Requirement: Land git limits
 `land` SHALL build every `GitVcs` it runs, at the root and in a change's

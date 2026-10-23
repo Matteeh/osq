@@ -1,6 +1,7 @@
 //! One retry: refuse before writing, otherwise retain the markers and record it.
 
 mod approval;
+mod archive_commit;
 mod args;
 mod excerpt;
 mod find;
@@ -11,11 +12,13 @@ mod running;
 mod scope;
 mod text;
 mod time;
+mod vcs_detail;
 mod yaml;
 
 use std::path::Path;
 
 use osq_core::FeatureError;
+use osq_core::event::FailureReason;
 use osq_kernel_storage::list_changes;
 
 /// Runs `retry <id> <target>` after the argument count was checked.
@@ -33,7 +36,7 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
     let target = args::target(raw_target)?;
     let changes = list_changes(root);
     if let Some(entry) = find::find_change(&changes, id) {
-        return finish(root, &entry.path, &entry.folder, target).map(|recorded| recorded.text);
+        return finish(root, &entry.path, &entry.folder, target).map(|(recorded, _)| recorded.text);
     }
     let Some(archived) = find::find_archived(root, id)? else {
         let changes_dir = root.join("openspec").join("changes");
@@ -45,14 +48,26 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
     if target != args::CHANGE {
         return Err(text::archived_task(folder_name, spec_id));
     }
-    let recorded = finish(root, folder, folder_name, target)?;
-    record::commit(
-        &archived.tree.root,
-        folder,
-        spec_id,
-        &archived.config,
-        &recorded.retained,
-    )?;
+    let snapshot = record::snapshot(folder);
+    let (recorded, reason) = finish(root, folder, folder_name, target)?;
+    if reason == FailureReason::CommitFailed {
+        archive_commit::run(
+            &archived.tree.root,
+            folder,
+            &archived.entry,
+            spec_id,
+            &archived.config,
+            &snapshot,
+        )?;
+    } else {
+        record::commit(
+            &archived.tree.root,
+            folder,
+            spec_id,
+            &archived.config,
+            &recorded.retained,
+        )?;
+    }
     Ok(recorded.text)
 }
 
@@ -70,13 +85,14 @@ fn finish(
     folder: &Path,
     folder_name: &str,
     target: &str,
-) -> Result<record::Recorded, FeatureError> {
+) -> Result<(record::Recorded, FailureReason), FeatureError> {
     let spec_id = args::id(folder_name);
     approval::check(folder, spec_id)?;
     running::check(folder, spec_id, target)?;
     let failure = marker::read(folder, folder_name, target)?;
     if let Some(recertified) = marker::recertification(folder, target, &failure) {
-        return recertify::run(root, folder, spec_id, target, &failure, &recertified);
+        return recertify::run(root, folder, spec_id, target, &failure, &recertified)
+            .map(|recorded| (recorded, failure.reason));
     }
-    record::record(folder, spec_id, target, &failure)
+    record::record(folder, spec_id, target, &failure).map(|recorded| (recorded, failure.reason))
 }
