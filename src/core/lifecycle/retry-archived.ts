@@ -1,17 +1,46 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { commitArchive } from '../run/task-commit.js';
+import { parseSpecMdFromFolder } from '../spec/parser.js';
 import {
   type LocatedChange,
   findChange,
   listChanges,
   matchesFolder,
 } from '../status/change-locations.js';
-import { getEventsPath, getRegressedMarkerPath } from '../status/layout.js';
+import { getEventsPath, getRegressedMarkerPath, getSpecsDir } from '../status/layout.js';
 import { selectVcs } from '../vcs/select.js';
+import type { Vcs } from '../vcs/vcs.js';
 import type { RetryResult } from './retry.js';
 
 const CHANGE_TARGET = 'change';
+
+/** Files a refused archive retry puts back exactly as they were before it. */
+export interface Rollback {
+  /** Every file in `.run/regressed/` before the retry, keyed by file name. */
+  readonly regressed: Readonly<Record<string, string>>;
+  /** `.run/events/change.jsonl` before the retry, or null when it was absent. */
+  readonly events: string | null;
+}
+
+/** Snapshot the archive files only a `commit_failed` retry may need to restore. */
+export async function readRollback(
+  folderPath: string,
+  target: string,
+  reason: string,
+): Promise<Rollback | undefined> {
+  if (target !== CHANGE_TARGET || reason !== 'commit_failed') return undefined;
+  const dir = path.join(folderPath, '.run', 'regressed');
+  const regressed: Record<string, string> = {};
+  for (const name of await fs.readdir(dir).catch(() => [])) {
+    regressed[name] = await fs.readFile(path.join(dir, name), 'utf8');
+  }
+  const events = await fs
+    .readFile(getEventsPath(folderPath, CHANGE_TARGET), 'utf8')
+    .catch(() => null);
+  return { regressed, events };
+}
 
 /** A change folder's canonical id: its numeric prefix, or the whole name. */
 function changeId(folderName: string): string {
@@ -72,6 +101,60 @@ function relativeTo(root: string, target: string): string {
   return path.relative(root, target).split(path.sep).join('/');
 }
 
+/** Unstage and rewrite the archived folder's regressions and event stream. */
+async function restoreRollback(vcs: Vcs, change: LocatedChange, rollback: Rollback): Promise<void> {
+  const root = (await vcs.root()) ?? change.tree.root;
+  const regressedDir = path.join(change.folderPath, '.run', 'regressed');
+  const events = getEventsPath(change.folderPath, CHANGE_TARGET);
+  const paths = [relativeTo(root, regressedDir), relativeTo(root, events)];
+  await vcs.discard(paths).catch(() => undefined);
+  await fs.rm(regressedDir, { recursive: true, force: true });
+  await fs.mkdir(regressedDir, { recursive: true });
+  for (const [name, content] of Object.entries(rollback.regressed)) {
+    await fs.writeFile(path.join(regressedDir, name), content, 'utf8');
+  }
+  await restore(events, rollback.events);
+}
+
+/**
+ * Restore the moved-away original folder from HEAD, then remove it again, so
+ * its deletion is unstaged and `git add` can stage it on the next attempt.
+ */
+async function unstageOriginalFolder(vcs: Vcs, change: LocatedChange): Promise<void> {
+  const root = (await vcs.root()) ?? change.tree.root;
+  const originalFolder = path.join(change.tree.changesDir, change.folderName);
+  await vcs.discard([relativeTo(root, originalFolder)]).catch(() => undefined);
+  await fs.rm(originalFolder, { recursive: true, force: true });
+}
+
+/** Commit the whole archive for a human retry; on failure restore the retry files. */
+async function commitFailedArchive(
+  change: LocatedChange,
+  config: OsqConfig,
+  result: RetryResult,
+): Promise<void> {
+  const vcs = await selectVcs(change.tree.root, config);
+  const root = (await vcs.root()) ?? change.tree.root;
+  const title = (await parseSpecMdFromFolder(change.folderPath).catch(() => null))?.title ?? '';
+  const originalFolder = path.join(change.tree.changesDir, change.folderName);
+  try {
+    await unstageOriginalFolder(vcs, change);
+    await commitArchive(
+      vcs,
+      config,
+      originalFolder,
+      change.tree.archiveDir,
+      getSpecsDir(config.paths.openspecRoot, root),
+      relativeTo(root, change.folderPath),
+      title,
+    );
+  } catch (error) {
+    if (result.rollback !== undefined) await restoreRollback(vcs, change, result.rollback);
+    const output = error instanceof Error ? error.message : String(error);
+    throw new Error(`osq could not commit the archive: ${output}`);
+  }
+}
+
 /**
  * Commit the retry on the archived change's branch: the retained marker, the
  * removed `change.md` and `change.jsonl`, as `osq: <id> land retry`. A failed
@@ -88,6 +171,10 @@ export async function commitArchivedRetry(
     (candidate) => candidate.folderPath === result.folderPath,
   );
   if (change === undefined) return;
+  if (result.target === CHANGE_TARGET && result.reason === 'commit_failed') {
+    await commitFailedArchive(change, config, result);
+    return;
+  }
   const root = change.tree.root;
   const vcs = await selectVcs(root, config);
   const author = config.vcs?.author;

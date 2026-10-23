@@ -13,16 +13,14 @@ import { hashChangeFolder } from '../spec/hasher.js';
 import { parseFrontmatter, parseTaskMd } from '../spec/parser.js';
 import { getChangeRunDir } from '../status/layout.js';
 import { refreshRecertifiedDoneMarker } from './recertify.js';
-import { findRetryChange as findRetry } from './retry-archived.js';
+import { type Rollback, findRetryChange as findRetry, readRollback } from './retry-archived.js';
 import { appendTargetEvent, retainFailureMarkers } from './retry-transition.js';
 
-// Retry renames active failure markers into attempt-suffixed history; a numeric
-// scope regression is recertified by re-running its verify without an agent.
+// Retry renames active failure markers into history; scope regressions are recertified.
 
 const CHANGE_TARGET = 'change';
 const NUMERIC_TARGET = /^\d+$/;
 const SCOPE_REGRESSION = 'scope_regression';
-
 export interface RetryResult {
   readonly specId: string;
   readonly folderName: string;
@@ -33,8 +31,8 @@ export interface RetryResult {
   readonly attempt: number;
   readonly retainedMarkers: string[];
   readonly recertification?: 'passed' | 'requeued';
+  readonly rollback?: Rollback;
 }
-
 export interface RetryOptions {
   /** True when the watcher, rather than a human, requested this retry. */
   readonly automatic?: boolean;
@@ -159,6 +157,7 @@ export async function retrySpec(
       retainedOrdinal(deadEntries, rawTarget),
       retainedOrdinal(regressedEntries, rawTarget),
     ) + 1;
+  const rollback = await readRollback(folderPath, rawTarget, reason);
 
   // A scope regression with an automated done marker is recertified from core
   // rather than handing the trusted completion back to an agent.
@@ -245,5 +244,6 @@ export async function retrySpec(
     attempt,
     retainedMarkers,
     ...(recertification ? { recertification } : {}),
+    ...(rollback ? { rollback } : {}),
   };
 }

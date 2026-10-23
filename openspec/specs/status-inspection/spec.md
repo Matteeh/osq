@@ -417,8 +417,10 @@ command, detail }` for an active or archived change. Unapproved, it SHALL be
 `unplanned` when its verify is missing or the placeholder, else
 `ready-for-approval`. Approved, it SHALL be `dead` for a dead or regressed task
 or change, `blocked` for unmet dependencies, else `running`. Archived, it SHALL
-be `dead` when its derived state has `steering`, else as "Landed next step
-reads the default branch" says.
+be `dead` when its derived state has `steering`, else `dead` when its
+`.run/regressed/change.md` has reason `commit_failed`, as "Archived change
+with a failed archive commit" says, else as "Landed next step reads the
+default branch" says.
 
 #### Scenario: Fresh template
 - **WHEN** a change created by `osq plan` still has the placeholder verify
@@ -460,7 +462,8 @@ dependency; `osq land <id>` for `archived`; and null for `landed`.
 `detail` SHALL be `do the steps before approval first` for a
 `ready-for-approval` change with steps before approval, `waiting for <ids>` for
 `blocked`, `needs steering` for a `dead` change whose derived state has
-`steering`, `not landed` for `archived`, `paused until <time>` for a `running`
+`steering`, `archive commit failed` for a `dead` archived change
+whose archive commit failed, `not landed` for `archived`, `paused until <time>` for a `running`
 change whose `readActivePause` returns a pause, with `<time>` from
 `formatPauseUntil`, and null otherwise. `formatNextStep`
 SHALL render the state with spaces for hyphens, then ` (<detail>)` when set,
@@ -2108,3 +2111,25 @@ nothing.
 | --- | --- |
 | reason `land_stopped`, item `orders`, change `003`, command `osq land 003` | `Autopilot stopped at orders (change 003): land_stopped — osq land 003` |
 | reason `not_approved`, item `orders`, no change, command `osq queue approve` | `Autopilot stopped at orders: not_approved — osq queue approve` |
+
+### Requirement: Archived change with a failed archive commit
+An archived change in an osq worktree whose `.run/regressed/change.md`
+has reason `commit_failed` SHALL have, when it needs no steering, the next
+step `{ state: 'dead', command: 'osq retry <id> change', detail: 'archive
+commit failed' }`, so `osq show` and `osq status` print it and it is not
+among the changes waiting to land. `readInbox` SHALL add, after the
+archived steering items, one `change-regressed` needs-you item with no
+task and the command `osq retry <id> change` for each such change, in
+numeric order, so its text row is
+`  <id>: <title> — change regressed — osq retry <id> change`.
+`readDispatchItems` SHALL give such a change one `halt` item with no task
+and the commands `osq retry <id> change` and `osq show <id>`, and no
+`land` item.
+
+#### Scenario: Failed archive commit in show and the inbox
+- **WHEN** change 002, titled `Orders`, archived in its worktree, and its archived folder's `.run/regressed/change.md` has reason `commit_failed`
+- **THEN** its next step formats as `dead (archive commit failed) — osq retry 002 change`, `osq --json` holds one needs-you `change-regressed` item for it with command `osq retry 002 change` and no `change-archived` item, its inbox text row is `  002: Orders — change regressed — osq retry 002 change`, and `readDispatchItems` holds one `halt` item for 002 with the commands `osq retry 002 change` and `osq show 002` and no `land` item
+
+#### Scenario: Other archived halts unchanged
+- **WHEN** change 002 archived in its worktree with a recorded `sync_conflict` stop
+- **THEN** its next step command is still `osq plan 002` and its inbox row is still the steering row

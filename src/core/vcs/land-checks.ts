@@ -5,6 +5,7 @@ import { parseStackedOn } from '../spec/stack-dependencies.js';
 import type { LocatedChange } from '../status/change-locations.js';
 import { type LandCandidate, findLandCandidates } from '../status/dispatch-land.js';
 import { deriveSpecState } from '../status/state.js';
+import { hasFailedArchiveCommit } from '../status/steering-change.js';
 import { describeTrigger } from '../status/steering.js';
 import { readLandedAt } from '../web/web-data-lifecycle.js';
 import { listDeltaCapabilities } from './sync-specs.js';
@@ -35,6 +36,27 @@ export function assertWorktreeClean(worktree: string, status: readonly VcsStatus
   if (status.length === 0) return;
   const paths = status.map((entry) => entry.path).join(', ');
   throw new Error(`${worktree} has uncommitted changes: ${paths}; commit or discard them first`);
+}
+
+/**
+ * Refuse an archived change whose own worktree recorded a failed archive
+ * commit, naming the retry, before refusing a worktree with any status entry.
+ *
+ * @scenario version-control: Land on a failed archive commit
+ * @adr 003
+ */
+export async function assertLandableWorktree(
+  worktree: string,
+  change: LocatedChange,
+  status: readonly VcsStatusEntry[],
+): Promise<void> {
+  if (await hasFailedArchiveCommit(change.folderPath)) {
+    const id = change.folderName.split('-')[0] ?? change.folderName;
+    throw new Error(
+      `${change.folderName}'s archive commit failed; fix the cause, then run osq retry ${id} change`,
+    );
+  }
+  assertWorktreeClean(worktree, status);
 }
 
 /**

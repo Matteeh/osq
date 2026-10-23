@@ -4,7 +4,7 @@ import { parseSpecMdFromFolder } from '../spec/parser.js';
 import { findLandCandidates } from './dispatch-land.js';
 import { type SpecState, type TaskState, compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
-import { listArchivedSteering } from './steering-change.js';
+import { listArchivedCommitFailed, listArchivedSteering } from './steering-change.js';
 import type { SteeringTrigger } from './steering.js';
 
 /** The three things that can need a human. */
@@ -131,6 +131,17 @@ async function haltItems(spec: SpecState): Promise<DispatchItem[]> {
   return items;
 }
 
+/** The one halt item an archived change whose archive commit failed contributes. */
+function failedCommitHaltItem(spec: SpecState): DispatchItem {
+  const id = spec.id;
+  return {
+    kind: 'halt',
+    change: changeRef(spec),
+    task: null,
+    commands: [`osq retry ${id} change`, `osq show ${id}`],
+  };
+}
+
 async function readTitle(folderPath: string, fallback: string): Promise<string> {
   const spec = await parseSpecMdFromFolder(folderPath).catch(() => null);
   return spec?.title || fallback;
@@ -139,11 +150,11 @@ async function readTitle(folderPath: string, fallback: string): Promise<string> 
 async function landItems(
   projectRoot: string,
   config: OsqConfig,
-  steeredFolders: ReadonlySet<string>,
+  haltedFolders: ReadonlySet<string>,
 ): Promise<DispatchItem[]> {
   const items: DispatchItem[] = [];
   for (const candidate of await findLandCandidates(projectRoot, config)) {
-    if (steeredFolders.has(candidate.folder)) continue;
+    if (haltedFolders.has(candidate.folder)) continue;
     const id = changeId(candidate.folder);
     items.push({
       kind: 'land',
@@ -181,6 +192,7 @@ function compareItems(a: DispatchItem, b: DispatchItem): number {
  *
  * @scenario status-inspection: Ready plan offers approve
  * @scenario status-inspection: Automatic planner left lint red
+ * @scenario status-inspection: Failed archive commit in show and the inbox
  * @adr 018
  */
 export async function readDispatchItems(
@@ -190,7 +202,11 @@ export async function readDispatchItems(
   const overview = await getStatusOverview(projectRoot, config);
   const nextSteps = overview.nextSteps ?? {};
   const archivedSteering = await listArchivedSteering(projectRoot, config);
-  const steeredFolders = new Set(archivedSteering.map((entry) => entry.change.folderName));
+  const failedCommit = await listArchivedCommitFailed(projectRoot, config);
+  const haltedFolders = new Set([
+    ...archivedSteering.map((entry) => entry.change.folderName),
+    ...failedCommit.map((entry) => entry.change.folderName),
+  ]);
   const items: DispatchItem[] = [];
   for (const spec of overview.specs) {
     const approval = approvalItem(spec, nextSteps[spec.folderName]?.state);
@@ -201,7 +217,8 @@ export async function readDispatchItems(
     const halt = await steeringHaltItem(entry.state);
     if (halt !== null) items.push(halt);
   }
-  items.push(...(await landItems(projectRoot, config, steeredFolders)));
+  for (const entry of failedCommit) items.push(failedCommitHaltItem(entry.state));
+  items.push(...(await landItems(projectRoot, config, haltedFolders)));
   items.sort(compareItems);
   return {
     watcherIdle: !Object.values(nextSteps).some((next) => next.state === 'running'),

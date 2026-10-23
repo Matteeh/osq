@@ -17,7 +17,11 @@ import {
 import { readQueue } from './queue-parser.js';
 import { compareNumericPrefix } from './state.js';
 import { getStatusOverview } from './status.js';
-import { type SteeringChange, listArchivedSteering } from './steering-change.js';
+import {
+  type SteeringChange,
+  listArchivedCommitFailed,
+  listArchivedSteering,
+} from './steering-change.js';
 import { type ValidatorFailing, readValidatorFailing } from './validator-failing.js';
 
 /** Injectable clock, config, and home root for the read-only projection. */
@@ -48,6 +52,16 @@ function archivedSteeringItem(entry: SteeringChange): NeedsYouItem | null {
     task: null,
     command: `osq plan ${entry.state.id}`,
     steering: { trigger: first.trigger, reason: first.reason },
+  };
+}
+
+/** The one needs-you item an archived change whose archive commit failed contributes. */
+function failedCommitItem(entry: SteeringChange): NeedsYouItem {
+  return {
+    kind: 'change-regressed',
+    change: { id: entry.state.id, title: entry.state.title || entry.change.folderName },
+    task: null,
+    command: `osq retry ${entry.state.id} change`,
   };
 }
 
@@ -137,6 +151,7 @@ async function autopilotStoppedItem(
  * @scenario status-inspection: Stop with a change in the inbox
  * @scenario status-inspection: Stop before a change in the inbox
  * @scenario status-inspection: No stop in the inbox
+ * @scenario status-inspection: Failed archive commit in show and the inbox
  * @adr 021
  * @adr 010
  */
@@ -159,6 +174,7 @@ export async function readInbox(
   const steered = (await listArchivedSteering(projectRoot, config))
     .map(archivedSteeringItem)
     .filter((item): item is NeedsYouItem => item !== null);
+  const failedCommit = (await listArchivedCommitFailed(projectRoot, config)).map(failedCommitItem);
   const failure = await readAfterLandFailure(projectRoot, options.home);
   const afterLand = failure === null ? [] : [await afterLandFailedItem(tree.archiveDir, failure)];
   const failing = await readValidatorFailing(projectRoot, config);
@@ -170,6 +186,7 @@ export async function readInbox(
   const needsYou = [
     ...(await applySteeringItems(overview, inbox.needsYou)),
     ...steered,
+    ...failedCommit,
     ...afterLand,
     ...validatorFailing,
     ...autopilotStopped,

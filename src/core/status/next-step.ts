@@ -11,6 +11,7 @@ import { readDependencyState } from '../spec/stack-dependencies.js';
 import { selectVcs } from '../vcs/select.js';
 import { type LocatedChange, locateFolder } from './change-locations.js';
 import { deriveSpecState, readChangeFolder } from './state.js';
+import { hasFailedArchiveCommit } from './steering-change.js';
 
 /** What one change folder needs next. */
 export type NextStepState =
@@ -107,6 +108,13 @@ async function readArchivedNextStep(
   if ((state.steering?.length ?? 0) > 0) {
     return { state: 'dead', command: `osq plan ${state.id}`, detail: 'needs steering' };
   }
+  if (await hasFailedArchiveCommit(located.folderPath)) {
+    return {
+      state: 'dead',
+      command: `osq retry ${state.id} change`,
+      detail: 'archive commit failed',
+    };
+  }
   if (config.vcs?.enabled === true) {
     const vcs = await selectVcs(projectRoot, config);
     if (vcs.kind === 'git') {
@@ -128,6 +136,8 @@ async function readArchivedNextStep(
  * @scenario status-inspection: Archived change the default branch holds
  * @scenario status-inspection: Archived change without version control
  * @scenario status-inspection: Archived change that needs steering
+ * @scenario status-inspection: Failed archive commit in show and the inbox
+ * @scenario status-inspection: Other archived halts unchanged
  * @scenario status-inspection: Ready plan offers approve
  * @scenario status-inspection: Record for an earlier trigger
  * @scenario status-inspection: Planning format
@@ -156,6 +166,7 @@ export async function readNextStep(
  * @scenario status-inspection: Steering format
  * @scenario status-inspection: Failed verification
  * @scenario status-inspection: Not landed format
+ * @scenario status-inspection: Failed archive commit in show and the inbox
  * @scenario status-inspection: Planning format
  */
 export function formatNextStep(step: NextStep): string {

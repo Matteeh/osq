@@ -14,6 +14,7 @@ import {
 import { deriveSpecState, readChangeFolder } from '../core/status/state.js';
 import type { SpecState } from '../core/status/state.js';
 import type { HarnessAdapter } from '../harness/types.js';
+import { catchUpWorktreeArchiveCommits } from './archive-catch-up.js';
 import { archiveCompletedSpec } from './archive-change.js';
 import { restoreArchiveSpecs } from './archive-specs.js';
 import { runAutomaticRetries } from './auto-retry.js';
@@ -419,6 +420,7 @@ export async function runWatcherCycle(
   if (kept !== undefined) throw kept.value;
 
   await runStackedChanges(projectRoot, config, logger);
+  await catchUpWorktreeArchiveCommits(projectRoot, config, logger);
 
   const activeChanges = await listChanges(projectRoot, config, ['active']);
 
