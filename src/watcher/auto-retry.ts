@@ -30,6 +30,7 @@ export const ELIGIBLE_AUTO_RETRY_REASONS = [
   'denied_dependency',
   'vcs_violation',
   'scope_violation',
+  'own_folder_path',
   'no_result',
   'crashed',
   'timeout',

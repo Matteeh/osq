@@ -21,4 +21,5 @@ export type RunTaskFailureReason =
   | 'baseline_red'
   | 'regressed'
   | 'vcs_violation'
-  | 'scope_violation';
+  | 'scope_violation'
+  | 'own_folder_path';

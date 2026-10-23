@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:77b296d3510c8dc7f9542b1645f7f40037bb7b6138e9a19489394ad4bdcabf0e"
+build_stamp: "4b9a2af8"
+project_commit: "4317567b"
+exit_code: 0
+scope_files: {"src/watcher/auto-retry.ts":"sha256:3bdde528e1df2e0d0fa8ef7e301fce3e8c8af85e618abd3f33933a508e565d27","src/watcher/failure-reason.ts":"sha256:e743138274d18d0ff0ab50748b84783e85a4a08987d30e552dd8141488c886ed","src/watcher/own-folder-gate.ts":"sha256:a5dc64d553a85fc6edd6bcf64dedf853cd00a5a8a7288c461d94355b77e46874","src/watcher/runner.ts":"sha256:60db7998e3c1db1c433ffe3c05d69913913980fdf7495a7ebb52ee6db7100058","tests/own-folder-gate.test.ts":"sha256:86c5917607a2b9f50f3398ff2e90a2bbfa7f29342d7125130a289c10e863b6b2","tests/vcs-stacked-land.test.ts":"sha256:9f381f363c4feafa8b981c484882580af3f306a92431fac4de894cd8fc0704ca"}
+---
+2026-10-23T19:58:09.751Z

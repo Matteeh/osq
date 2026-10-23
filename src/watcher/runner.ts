@@ -25,6 +25,7 @@ import {
   writeDeadMarker,
   writeDoneMarker,
 } from './outcome.js';
+import { checkOwnFolderGate } from './own-folder-gate.js';
 import { buildDoneMetadata, guardScopeRegression } from './regression.js';
 import { ensureTaskResult, spawnTaskAgent } from './spawn.js';
 import { readApprovedTaskFile } from './task-file.js';
@@ -174,6 +175,10 @@ export async function runTask(
     if (!verifyResult.passed) {
       return verifyRedFailure(taskData.verify, taskNumber, config, verifyResult, fail);
     }
+
+    const changed = await measures.changedScopeFiles();
+    const own = await checkOwnFolderGate(projectRoot, changed, path.basename(specFolderPath));
+    if (own) return fail(own.reason, own.marker, own.error);
 
     const rerun = { taskNumber, scope: taskData.scope, testSnapshot: testGate.snapshot };
     const gate = await runChangeVerifyGate(projectRoot, specFolderPath, config, rerun);

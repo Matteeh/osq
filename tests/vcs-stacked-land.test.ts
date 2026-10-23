@@ -239,7 +239,7 @@ async function makeProject(changes: readonly ChangeDef[]): Promise<Project> {
   return { repo, worktrees, config, vcs };
 }
 
-/** Fake adapter whose spawn writes `<change folder> task <n>` into the one scope. */
+/** Fake adapter whose spawn writes `<change id> task <n>` into the one scope. */
 class ActingAdapter implements HarnessAdapter {
   readonly name = 'acting';
 
@@ -247,10 +247,11 @@ class ActingAdapter implements HarnessAdapter {
 
   async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
     const folder = path.basename(options.specFolderPath);
+    const id = folder.match(/^(\d+)/)?.[1] ?? folder;
     const target = options.scope[0] ?? IN_SCOPE;
     await fs.writeFile(
       path.join(options.projectRoot, target),
-      `${folder} task ${options.taskNumber}\n`,
+      `${id} task ${options.taskNumber}\n`,
       'utf8',
     );
     const resultsDir = path.join(options.specFolderPath, '.run', 'results');
@@ -367,7 +368,7 @@ describe('Stacked land', () => {
       await git(['rev-parse', `${twoBranch}:${ARCHIVE}/${ONE.folder}`], project.repo),
       oneArchive,
     );
-    assert.equal(await git(['show', `${twoBranch}:${IN_SCOPE}`], project.repo), '002-b task 1');
+    assert.equal(await git(['show', `${twoBranch}:${IN_SCOPE}`], project.repo), '002 task 1');
     const ordersTwo = await git(['show', `${twoBranch}:${ORDERS}`], project.repo);
     assert.ok(ordersTwo.includes('Order 001'));
     assert.ok(ordersTwo.includes('Order 002'));
@@ -378,7 +379,7 @@ describe('Stacked land', () => {
 
     await land(project, '003');
 
-    assert.equal(await git(['show', `main:${IN_SCOPE}`], project.repo), '003-c task 1');
+    assert.equal(await git(['show', `main:${IN_SCOPE}`], project.repo), '003 task 1');
     const landCommits = (await git(['rev-list', `${seed}..main`], project.repo)).split('\n');
     assert.equal(landCommits.length, 3);
     for (const commit of landCommits) {
