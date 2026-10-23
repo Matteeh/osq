@@ -1,11 +1,14 @@
 //! Running `lint`: find the active change, load the config, run the proposal,
-//! banned word, spec and link gate checks, and print their findings.
+//! task, banned word, spec and link gate checks, and print their findings.
 
 mod banned;
+mod entry;
 pub(crate) mod find;
 mod finding;
 mod proposal;
+mod tasks;
 mod text;
+mod verify;
 
 use std::fs;
 use std::path::Path;
@@ -14,13 +17,14 @@ use osq_core::FeatureError;
 use osq_kernel_config::{Config, load_config};
 use osq_kernel_linter::change_link_gates;
 use osq_kernel_specs::{
-    DecisionRecords, MergeChangeError, parse_frontmatter, read_decisions, validate_change,
-    validate_merged_change,
+    MergeChangeError, SyntaxError, parse_frontmatter, parse_proposal, read_decisions,
+    validate_change, validate_merged_change,
 };
 use osq_kernel_storage::{ChangeEntry, list_changes};
 
 use finding::{Finding, Severity};
 use text::{finding_line, merge_line, spec_line};
+use verify::Project;
 
 /// The folder of the link gates' decisions.
 const DECISIONS: &str = "decisions";
@@ -30,6 +34,8 @@ const OPENSPEC: &str = "openspec";
 const GROUP: &str = "rust";
 /// The file that holds a change's proposal.
 const PROPOSAL: &str = "proposal.md";
+/// The error for a change folder without a proposal.
+const MISSING_PROPOSAL: &str = "proposal.md (or legacy spec.md) not found in change folder";
 /// The file that holds the project rules block.
 const AGENTS: &str = "AGENTS.md";
 /// The folder of a change's delta specs.
@@ -60,47 +66,124 @@ pub(crate) fn run_lint(root: &Path, query: &str) -> Result<String, FeatureError>
     finish(&entry.folder, lines)
 }
 
-/// The proposal and banned word findings for a change, in TypeScript's order.
+/// The proposal, task and banned word findings for a change, in TypeScript's order.
 fn rule_findings(root: &Path, change: &Path, folder: &str, config: &Config) -> Vec<Finding> {
-    let Some(body) = proposal_body(change) else {
-        return Vec::new();
-    };
-    let records = read_decisions(root, Path::new(DECISIONS), Path::new(OPENSPEC));
-    some_rules(root, change, folder, config, &records, &body)
+    let file = format!("{OPENSPEC}/changes/{folder}/{PROPOSAL}");
+    match read_proposal(change) {
+        ProposalRead::Missing => vec![Finding::new(Severity::Error, file, None, MISSING_PROPOSAL)],
+        ProposalRead::Unreadable => Vec::new(),
+        ProposalRead::Invalid(error) => {
+            let mut findings = vec![Finding::new(
+                Severity::Error,
+                file,
+                None,
+                format!(
+                    "proposal.md frontmatter is not valid YAML at line {}: {}",
+                    error.line, error.message
+                ),
+            )];
+            findings.extend(tasks::findings(root, change, folder, config));
+            findings.extend(entry_lines(root, change, folder, config));
+            findings
+        }
+        ProposalRead::Parsed(proposal) => {
+            parsed_findings(root, change, folder, config, &file, &proposal)
+        }
+    }
 }
 
-/// The proposal rules, then the banned words, once `proposal.md` has a body.
-fn some_rules(
+/// The findings once `proposal.md` reads and its frontmatter parses.
+fn parsed_findings(
     root: &Path,
     change: &Path,
     folder: &str,
     config: &Config,
-    records: &DecisionRecords,
-    body: &str,
+    file: &str,
+    proposal: &ProposalDoc,
 ) -> Vec<Finding> {
-    let file = format!("{OPENSPEC}/changes/{folder}/{PROPOSAL}");
+    let records = read_decisions(root, Path::new(DECISIONS), Path::new(OPENSPEC));
     let agents = agents_text(root);
     let written = written_capabilities(change);
-    let mut findings = proposal::findings(
-        body,
-        &file,
-        records,
-        &agents,
-        config.limits.max_project_rules,
-        &written,
-    );
+    let project = Project::read(root);
+    let mut findings = proposal::findings(&proposal::Input {
+        root,
+        body: &proposal.body,
+        file,
+        verify: &proposal.verify,
+        records: &records,
+        agents: &agents,
+        max_project_rules: config.limits.max_project_rules,
+        written: &written,
+        project: &project,
+    });
+    findings.extend(task_and_entry_findings(root, change, folder, config));
     findings.extend(banned::findings(change, folder, &config.banned_words));
     findings
 }
 
-/// Reads `proposal.md`'s body, or none when it cannot be read or its frontmatter
-/// does not parse.
-fn proposal_body(change: &Path) -> Option<String> {
-    let bytes = fs::read(change.join(PROPOSAL)).ok()?;
-    let text = String::from_utf8(bytes).ok()?;
-    parse_frontmatter(&text)
-        .ok()
-        .map(|frontmatter| frontmatter.body)
+/// The task findings with the entry findings between the per-task errors and
+/// the cross-task warnings.
+fn task_and_entry_findings(
+    root: &Path,
+    change: &Path,
+    folder: &str,
+    config: &Config,
+) -> Vec<Finding> {
+    let mut findings = tasks::findings(root, change, folder, config);
+    let split = findings
+        .iter()
+        .position(|finding| finding.severity == Severity::Warning)
+        .unwrap_or(findings.len());
+    let warnings = findings.split_off(split);
+    findings.extend(entry_lines(root, change, folder, config));
+    findings.extend(warnings);
+    findings
+}
+
+/// The entry findings for one change.
+fn entry_lines(root: &Path, change: &Path, folder: &str, config: &Config) -> Vec<Finding> {
+    entry::findings(root, change, folder, config)
+}
+
+/// A proposal document once it reads and its frontmatter parses.
+struct ProposalDoc {
+    /// The text after the frontmatter.
+    body: String,
+    /// The frontmatter's `verify`, as `parse_proposal` reads it.
+    verify: String,
+}
+
+/// What reading a change's `proposal.md` found.
+enum ProposalRead {
+    /// The file does not exist.
+    Missing,
+    /// The file cannot be read as UTF-8.
+    Unreadable,
+    /// The frontmatter is not valid YAML.
+    Invalid(SyntaxError),
+    /// The proposal reads and its frontmatter parses.
+    Parsed(ProposalDoc),
+}
+
+/// Reads `proposal.md` once, distinguishing the states its rules need.
+fn read_proposal(change: &Path) -> ProposalRead {
+    let Ok(bytes) = fs::read(change.join(PROPOSAL)) else {
+        return ProposalRead::Missing;
+    };
+    let Ok(text) = String::from_utf8(bytes) else {
+        return ProposalRead::Unreadable;
+    };
+    match parse_frontmatter(&text) {
+        Ok(frontmatter) => {
+            let verify =
+                parse_proposal(&text).map_or_else(|_| String::new(), |parsed| parsed.verify);
+            ProposalRead::Parsed(ProposalDoc {
+                body: frontmatter.body,
+                verify,
+            })
+        }
+        Err(error) => ProposalRead::Invalid(error),
+    }
 }
 
 /// Reads `AGENTS.md` as text, with invalid UTF-8 replaced, or the empty text.

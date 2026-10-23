@@ -1,16 +1,28 @@
-//! TypeScript's proposal rules: the `## Assumptions` and `## Decisions` sections
-//! and the `AGENTS.md` project rules block.
+//! TypeScript's proposal rules: the declared verify, the `## Surface`,
+//! `## Assumptions` and `## Decisions` sections, the `AGENTS.md` project rules
+//! block and the change's verify analysis.
+
+use std::path::Path;
 
 use osq_kernel_specs::{AppliesTo, DecisionRecords, js_trim, project_rules_errors};
 
 use super::finding::{Finding, Severity};
+use super::verify::{self, Project};
 
+/// The section whose blank text the surface rule refuses.
+const SURFACE: &str = "Surface";
 /// The section whose blank text the assumptions rule refuses.
 const ASSUMPTIONS: &str = "Assumptions";
 /// The section that must name the accepted ADRs governing the change.
 const DECISIONS: &str = "Decisions";
 /// The file that holds the project rules block.
 const AGENTS_FILE: &str = "AGENTS.md";
+/// The error for a proposal without a verify command.
+const MISSING_VERIFY: &str = "proposal.md must declare a verify command in frontmatter";
+/// The error for a missing or blank surface section.
+const MISSING_SURFACE: &str = "proposal.md needs a ## Surface section: list the commands, flags, \
+                              config keys, frontmatter fields, document sections, dead reasons, and \
+                              event types this change adds, changes, or removes, or write None";
 /// The error for an assumptions section holding only comments and whitespace.
 const EMPTY_ASSUMPTIONS: &str =
     "proposal.md's ## Assumptions section is empty: write None or one line per assumption";
@@ -18,39 +30,118 @@ const EMPTY_ASSUMPTIONS: &str =
 const MISSING_DECISIONS: &str = "proposal.md needs a ## Decisions section: name each accepted \
                                    ADR that governs a capability this change writes, or write None";
 
+/// Every input one proposal rule pass reads.
+pub(crate) struct Input<'a> {
+    /// The project root.
+    pub(crate) root: &'a Path,
+    /// The text after the proposal's frontmatter.
+    pub(crate) body: &'a str,
+    /// The proposal's path from the root.
+    pub(crate) file: &'a str,
+    /// The frontmatter's `verify`.
+    pub(crate) verify: &'a str,
+    /// The project's ADR records.
+    pub(crate) records: &'a DecisionRecords,
+    /// The text of `AGENTS.md`.
+    pub(crate) agents: &'a str,
+    /// `limits.maxProjectRules`.
+    pub(crate) max_project_rules: u64,
+    /// The change's capabilities in byte order.
+    pub(crate) written: &'a [String],
+    /// The project facts the verify analysis reads.
+    pub(crate) project: &'a Project,
+}
+
 /// Every proposal rule finding for one proposal body, in TypeScript's order.
 ///
-/// `written` names the change's capabilities in byte order, `agents` is the
-/// text of `AGENTS.md`, and `max_project_rules` is `limits.maxProjectRules`.
-pub(crate) fn findings(
-    body: &str,
-    proposal_file: &str,
-    records: &DecisionRecords,
-    agents: &str,
-    max_project_rules: u64,
-    written: &[String],
-) -> Vec<Finding> {
+/// Implements: rust-lint/lint-proposal-rules
+pub(crate) fn findings(input: &Input) -> Vec<Finding> {
     let mut findings = Vec::new();
-    if read_section(body, ASSUMPTIONS).is_some_and(|section| is_blank(&section)) {
+    if input.verify.is_empty() {
         findings.push(Finding::new(
             Severity::Error,
-            proposal_file,
+            input.file,
+            None,
+            MISSING_VERIFY,
+        ));
+    }
+    if read_section(input.body, SURFACE).is_none_or(|section| is_blank(&section)) {
+        findings.push(Finding::new(
+            Severity::Error,
+            input.file,
+            Some(SURFACE),
+            MISSING_SURFACE,
+        ));
+    }
+    if read_section(input.body, ASSUMPTIONS).is_some_and(|section| is_blank(&section)) {
+        findings.push(Finding::new(
+            Severity::Error,
+            input.file,
             Some(ASSUMPTIONS),
             EMPTY_ASSUMPTIONS,
         ));
     }
-    if records.adrs.iter().any(|adr| adr.status == "accepted") {
+    if input
+        .records
+        .adrs
+        .iter()
+        .any(|adr| adr.status == "accepted")
+    {
         add_decisions(
             &mut findings,
-            body,
-            proposal_file,
-            records,
-            agents,
-            max_project_rules,
-            written,
+            input.body,
+            input.file,
+            input.records,
+            input.agents,
+            input.max_project_rules,
+            input.written,
+        );
+    }
+    if !input.verify.is_empty() {
+        add_verify(
+            &mut findings,
+            input.root,
+            input.file,
+            input.verify,
+            input.project,
         );
     }
     findings
+}
+
+/// Adds the change-level verify analysis findings.
+fn add_verify(
+    findings: &mut Vec<Finding>,
+    root: &Path,
+    proposal_file: &str,
+    verify: &str,
+    project: &Project,
+) {
+    let analysis = verify::analyze(root, verify, project);
+    if analysis.placeholder {
+        findings.push(Finding::new(
+            Severity::Error,
+            proposal_file,
+            None,
+            verify::placeholder_error("proposal.md"),
+        ));
+    } else if !verify::chains(verify) {
+        if let Some(script) = analysis.missing_script {
+            findings.push(Finding::new(
+                Severity::Error,
+                proposal_file,
+                None,
+                verify::missing_script_error("proposal.md", &script),
+            ));
+        } else if analysis.unresolved {
+            findings.push(Finding::new(
+                Severity::Warning,
+                proposal_file,
+                None,
+                verify::unresolved_warning("proposal.md", verify),
+            ));
+        }
+    }
 }
 
 /// Adds the project rules errors and the decisions section findings.

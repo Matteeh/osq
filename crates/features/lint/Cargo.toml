@@ -16,3 +16,7 @@ osq-kernel-config.workspace = true
 osq-kernel-specs.workspace = true
 osq-kernel-linter.workspace = true
 osq-kernel-storage.workspace = true
+osq-kernel-loop.workspace = true
+osq-kernel-vcs.workspace = true
+serde_json.workspace = true
+yaml-rust2.workspace = true

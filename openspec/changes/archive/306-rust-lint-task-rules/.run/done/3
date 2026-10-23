@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:69f50b9eb5697847c3b2f30f5759c6b5fe1be679b25d9e6d8e39e50acab914f2"
+build_stamp: "ed155511"
+project_commit: "13c0db74"
+exit_code: 0
+scope_files: {"crates/features/lint/src/lint.rs":"sha256:fd34fa66832d3c686746ed3590e6e639435309126a613416beae87447d5a93e2","crates/features/lint/src/lint/entry.rs":"sha256:558290ed9d91852d5bc1fe95ffab30b8ab7d18581a4cc4b6ff38f7a7298f5023","crates/features/lint/tests/lint_entry_git.rs":"sha256:73887288b45078cceb525869dc1ce7c71b54d28c6f504042f6f15c9fcede280d","crates/features/lint/tests/lint_entry_paths.rs":"sha256:b169a46d56a331b5abbc0dafc75993a931c350c35d31da2b2cdcdc792b8bb1ff"}
+---
+2026-10-23T09:25:57.989Z

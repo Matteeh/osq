@@ -147,7 +147,13 @@ fn rows_b() -> Vec<Row> {
                 ),
             ],
             result: Err(format!(
-                "001-clean: 2 findings\n\
+                "001-clean: 4 findings\n\
+                 001-clean: error openspec/changes/001-clean/proposal.md: proposal.md must declare \
+                 a verify command in frontmatter\n\
+                 001-clean: error openspec/changes/001-clean/proposal.md (Surface): proposal.md \
+                 needs a ## Surface section: list the commands, flags, config keys, frontmatter \
+                 fields, document sections, dead reasons, and event types this change adds, \
+                 changes, or removes, or write None\n\
                  001-clean: error openspec/changes/001-clean/proposal.md (Assumptions): \
                  proposal.md's ## Assumptions section is empty: write None or one line per \
                  assumption\n\

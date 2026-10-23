@@ -389,8 +389,12 @@ dependencies = [
  "osq-core",
  "osq-kernel-config",
  "osq-kernel-linter",
+ "osq-kernel-loop",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
+ "yaml-rust2",
 ]
 
 [[package]]
