@@ -3,11 +3,14 @@ import type { Dirent } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { SCOPE_RESOLVER_VERSION, resolveScope } from '../core/run/scope.js';
-import { IGNORED_DIRS, buildImportGraph } from '../core/spec/import-graph.js';
+import { buildImportGraph } from '../core/spec/import-graph.js';
 import { type TaskData, resolveChangeDoc } from '../core/spec/parser.js';
 import { readScopedFunctionHashes } from '../core/trace/function-ranges.js';
 import { type MeasuresEventData, appendHarnessEvent } from '../harness/types.js';
 import { readScopedDependencies } from './dependencies.js';
+import { gatherRepoCounts } from './repo-counts.js';
+
+export { gatherRepoCounts } from './repo-counts.js';
 
 function countLines(content: string): number {
   return content.split('\n').length;
@@ -43,31 +46,6 @@ export async function gatherScopeCounts(
   const files = Object.values(hashes).filter((hash) => hash !== null).length;
   const total = Object.values(lines).reduce((sum, count) => sum + count, 0);
   return { files, lines: total };
-}
-
-/** Recursively total all text files and their lines, skipping ignored directories. */
-export async function gatherRepoCounts(
-  projectRoot: string,
-): Promise<{ files: number; lines: number }> {
-  let files = 0;
-  let lines = 0;
-  const walk = async (dir: string): Promise<void> => {
-    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => [] as Dirent[]);
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (!IGNORED_DIRS.has(entry.name)) await walk(fullPath);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const content = await fs.readFile(fullPath, 'utf8').catch(() => null);
-      if (content === null || content.includes('\u0000')) continue;
-      files += 1;
-      lines += countLines(content);
-    }
-  };
-  await walk(projectRoot);
-  return { files, lines };
 }
 
 /** Count of non-scoped `src/**` TypeScript files that import at least one resolved scoped file. */
@@ -151,6 +129,7 @@ export async function gatherStartMeasures(
   projectRoot: string,
   specFolderPath: string,
   taskData: TaskData,
+  gitSeconds?: number,
 ): Promise<MeasuresEventData> {
   const proposalDoc = await resolveChangeDoc(specFolderPath);
   const proposalContent = proposalDoc
@@ -159,7 +138,7 @@ export async function gatherStartMeasures(
   const [scopeCounts, repoCounts, importFanIn, delta, dependencies, functionHashes] =
     await Promise.all([
       gatherScopeCounts(projectRoot, taskData.scope),
-      gatherRepoCounts(projectRoot),
+      gatherRepoCounts(projectRoot, gitSeconds),
       countImportFanIn(projectRoot, taskData.scope),
       countDeltaRequirementsAndScenarios(specFolderPath),
       readScopedDependencies(projectRoot, taskData.scope),
@@ -216,6 +195,7 @@ export function createTaskMeasures(
   specFolderPath: string,
   taskNumber: string,
   taskData: TaskData,
+  gitSeconds?: number,
 ): {
   emitStart(): Promise<void>;
   emitEnd(): Promise<void>;
@@ -226,7 +206,7 @@ export function createTaskMeasures(
   return {
     async emitStart(): Promise<void> {
       before = await snapshotScope(projectRoot, taskData.scope);
-      start = await gatherStartMeasures(projectRoot, specFolderPath, taskData);
+      start = await gatherStartMeasures(projectRoot, specFolderPath, taskData, gitSeconds);
       await emitMeasures(specFolderPath, taskNumber, start);
     },
     async emitEnd(): Promise<void> {

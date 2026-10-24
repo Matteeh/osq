@@ -72,12 +72,16 @@ function initializeSchema(db: Database): void {
 }
 
 /** Opens the WAL database with a zero busy timeout, or null when that fails. */
-function openDatabase(dbPath: string, DatabaseSync: DatabaseConstructor): Database | null {
+function openDatabase(
+  dbPath: string,
+  DatabaseSync: DatabaseConstructor,
+  initialize: (db: Database) => void,
+): Database | null {
   let db: Database | null = null;
   try {
     db = new DatabaseSync(dbPath, { timeout: 0 });
     db.exec('PRAGMA journal_mode = WAL');
-    initializeSchema(db);
+    initialize(db);
     return db;
   } catch {
     try {
@@ -88,9 +92,13 @@ function openDatabase(dbPath: string, DatabaseSync: DatabaseConstructor): Databa
 }
 
 /** Deletes a corrupt database and opens it once more, or null when that fails. */
-function recreateDatabase(dbPath: string, DatabaseSync: DatabaseConstructor): Database | null {
+function recreateDatabase(
+  dbPath: string,
+  DatabaseSync: DatabaseConstructor,
+  initialize: (db: Database) => void,
+): Database | null {
   removeDatabase(dbPath);
-  return openDatabase(dbPath, DatabaseSync);
+  return openDatabase(dbPath, DatabaseSync, initialize);
 }
 
 /** Builds the failure-tolerant `StreamIndex` over an open connection. */
@@ -144,14 +152,15 @@ function createIndex(db: Database, archiveRoot: string): StreamIndex {
 }
 
 /**
- * Opens the derived index under `<projectRoot>/.osq/`, covering `archiveDir`.
- * Resolves to null when `node:sqlite` is unavailable or the index cannot be
- * opened and recreated; callers then read the files as today.
+ * Opens the shared read index under `<projectRoot>/.osq/`, running `initialize`
+ * after the WAL database opens. Recreates a database that cannot open or
+ * initialize, and resolves to null when `node:sqlite` is unavailable or the
+ * folder cannot be prepared.
  */
-export async function openStreamIndex(
+export async function openIndexDatabase(
   projectRoot: string,
-  archiveDir: string,
-): Promise<StreamIndex | null> {
+  initialize: (db: Database) => void = () => {},
+): Promise<Database | null> {
   let DatabaseSync: DatabaseConstructor;
   try {
     ({ DatabaseSync } = await import('node:sqlite'));
@@ -166,7 +175,22 @@ export async function openStreamIndex(
     return null;
   }
 
-  const db = openDatabase(dbPath, DatabaseSync) ?? recreateDatabase(dbPath, DatabaseSync);
+  return (
+    openDatabase(dbPath, DatabaseSync, initialize) ??
+    recreateDatabase(dbPath, DatabaseSync, initialize)
+  );
+}
+
+/**
+ * Opens the derived index under `<projectRoot>/.osq/`, covering `archiveDir`.
+ * Resolves to null when `node:sqlite` is unavailable or the index cannot be
+ * opened and recreated; callers then read the files as today.
+ */
+export async function openStreamIndex(
+  projectRoot: string,
+  archiveDir: string,
+): Promise<StreamIndex | null> {
+  const db = await openIndexDatabase(projectRoot, initializeSchema);
   if (!db) return null;
   try {
     return createIndex(db, path.resolve(archiveDir));

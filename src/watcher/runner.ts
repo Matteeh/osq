@@ -48,6 +48,7 @@ export async function runTask(
   const useSymbols = logger?.symbols === true;
   const interactive = logger?.interactive === true;
   const heartbeatIntervalMs = (config.log?.heartbeatSeconds ?? 60) * 1000;
+  const gitSeconds = config.timeouts.gitSeconds;
   let heartbeatTimer: NodeJS.Timeout | null = null;
   let heartbeatActive = true;
   let lastHeartbeatLogAt = startTime;
@@ -104,7 +105,6 @@ export async function runTask(
   const taskRead = await readApprovedTaskFile(projectRoot, specFolderPath, taskNumber, fail);
   if (!taskRead.ok) return taskRead.result;
   const taskData = taskRead.taskData;
-
   const regression = await guardScopeRegression(projectRoot, specFolderPath, taskNumber, config);
   if (regression) {
     logOutcome(false, 'regressed', regression.error);
@@ -145,7 +145,7 @@ export async function runTask(
     if (!baseline.ok) return fail('baseline_red', baseline.marker, baseline.error, baseline.extra);
     const preSpawn = await runPreSpawnVerify(verifyCtx);
     if (!preSpawn.ok) return fail('verify_precondition', preSpawn.marker, preSpawn.error);
-    measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData);
+    measures = createTaskMeasures(projectRoot, specFolderPath, taskNumber, taskData, gitSeconds);
     await measures.emitStart();
     const gitGuard = await beginGitGuard({ ...verifyCtx, scope: taskData.scope });
     const spawnOutcome = await spawnTaskAgent({ ...verifyCtx, adapter, logOutcome });
