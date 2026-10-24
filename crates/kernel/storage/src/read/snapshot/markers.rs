@@ -37,6 +37,8 @@ pub struct HaltMarker {
     pub stuck: bool,
     /// Whether the frontmatter's `verification_passed` is the boolean `true`.
     pub verification_passed: bool,
+    /// The frontmatter `fingerprint` when it is a string, else `None`.
+    pub fingerprint: Option<String>,
     /// The trimmed `- ` body lines whose text is not empty, in order.
     pub entries: Vec<String>,
 }
@@ -81,6 +83,7 @@ fn halt_marker(text: &str) -> HaltMarker {
         reason: string_field(&data, "reason").unwrap_or_default(),
         stuck: bool_field(&data, "stuck"),
         verification_passed: bool_field(&data, "verification_passed"),
+        fingerprint: string_field(&data, "fingerprint"),
         entries: body
             .lines()
             .filter_map(marker_entry)

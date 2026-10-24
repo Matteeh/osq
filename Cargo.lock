@@ -366,6 +366,7 @@ dependencies = [
  "osq-kernel-config",
  "osq-kernel-storage",
  "osq-kernel-vcs",
+ "serde_json",
 ]
 
 [[package]]

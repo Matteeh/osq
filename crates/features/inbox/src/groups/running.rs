@@ -1,4 +1,4 @@
-//! The Running group's lines.
+//! The Running group's items.
 
 use std::collections::HashSet;
 use std::num::NonZeroU64;
@@ -10,23 +10,73 @@ use osq_kernel_storage::{
 };
 
 use super::{change_id, compare_ids};
+use crate::needs::TaskRef;
 
-/// One Running group item before it is rendered.
-struct Item {
-    /// The change id.
-    id: String,
-    /// The task id as written.
-    task: String,
-    /// The item's one rendered line.
-    line: String,
+/// How a Running group item waits.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum State {
+    /// A live running task, with its lock facts.
+    Running {
+        /// The lock's pid.
+        pid: u64,
+        /// The lock's start time, epoch milliseconds.
+        started_at_ms: i64,
+        /// The rounded seconds since the start.
+        elapsed_seconds: i64,
+    },
+    /// A paused task, with the time it may run again as written.
+    Paused {
+        /// The pause's `until`.
+        until: String,
+    },
 }
 
-/// The running and paused lines, sorted by change id then task id.
-pub(crate) fn lines(
+/// One Running group item: the facts both its line and its JSON object print.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Item {
+    /// The change id.
+    pub(crate) id: String,
+    /// The change title.
+    pub(crate) title: String,
+    /// The task the item names.
+    pub(crate) task: TaskRef,
+    /// How the item waits.
+    pub(crate) state: State,
+}
+
+impl Item {
+    /// The item's one rendered line.
+    pub(crate) fn line(&self) -> String {
+        let head = format!(
+            "  {}: {} — task {}: {}",
+            self.id, self.title, self.task.number, self.task.title
+        );
+        match &self.state {
+            State::Running {
+                elapsed_seconds, ..
+            } => format!(
+                "{head} — {} — osq show {}",
+                duration(*elapsed_seconds),
+                self.id
+            ),
+            State::Paused { until } => format!(
+                "{head} — paused until {} UTC — osq show {}",
+                pause_until(until),
+                self.id
+            ),
+        }
+    }
+}
+
+/// The running and paused items, sorted by change id then task id.
+///
+/// Implements: rust-inbox/running-items
+/// Implements: rust-inbox/paused-items
+pub(crate) fn items(
     snapshots: &[ChangeSnapshot],
     pauses: &[Option<PauseRecord>],
     now_ms: i64,
-) -> Vec<String> {
+) -> Vec<Item> {
     let mut items = Vec::new();
     let mut running_keys = HashSet::new();
     for snapshot in snapshots {
@@ -45,8 +95,13 @@ pub(crate) fn lines(
             running_keys.insert((id.clone(), task.id.as_str().to_owned()));
             items.push(Item {
                 id: id.clone(),
-                task: task.id.as_str().to_owned(),
-                line: running_line(&id, &title, task, now_ms, lock.started_at_ms),
+                title: title.clone(),
+                task: task_ref(task),
+                state: State::Running {
+                    pid: lock.pid,
+                    started_at_ms: lock.started_at_ms,
+                    elapsed_seconds: elapsed_seconds(now_ms, lock.started_at_ms),
+                },
             });
         }
     }
@@ -71,18 +126,20 @@ pub(crate) fn lines(
         if running_keys.contains(&(id.clone(), task.id.as_str().to_owned())) {
             continue;
         }
-        let title = snapshot.title.clone().unwrap_or_default();
-        let rendered = paused_line(&id, &title, task, &pause.until);
         items.push(Item {
             id,
-            task: task.id.as_str().to_owned(),
-            line: rendered,
+            title: snapshot.title.clone().unwrap_or_default(),
+            task: task_ref(task),
+            state: State::Paused {
+                until: pause.until.clone(),
+            },
         });
     }
     items.sort_by(|left, right| {
-        compare_ids(&left.id, &right.id).then_with(|| compare_ids(&left.task, &right.task))
+        compare_ids(&left.id, &right.id)
+            .then_with(|| compare_ids(&left.task.number, &right.task.number))
     });
-    items.into_iter().map(|item| item.line).collect()
+    items
 }
 
 /// A task's lock when the fold says it is running.
@@ -98,33 +155,16 @@ fn running_lock<'a>(snapshot: &'a ChangeSnapshot, task: &'a TaskFile) -> Option<
     task.markers.lock.as_ref()
 }
 
-/// One running task's line, with its rounded elapsed time.
-fn running_line(id: &str, title: &str, task: &TaskFile, now_ms: i64, started_at_ms: i64) -> String {
-    let seconds = elapsed_seconds(now_ms, started_at_ms);
-    format!(
-        "{} — {} — osq show {id}",
-        head(id, title, task),
-        duration(seconds)
-    )
-}
-
-/// One paused task's line, with its fixed-form resume time.
-fn paused_line(id: &str, title: &str, task: &TaskFile, until: &str) -> String {
-    format!(
-        "{} — paused until {} UTC — osq show {id}",
-        head(id, title, task),
-        pause_until(until)
-    )
-}
-
-/// A running or paused item's change and task head.
-fn head(id: &str, title: &str, task: &TaskFile) -> String {
-    let task_title = if task.title.is_empty() {
-        format!("{}.md", task.id)
-    } else {
-        task.title.clone()
-    };
-    format!("  {id}: {title} — task {}: {task_title}", task.id)
+/// A task's id and the title the item prints for it.
+fn task_ref(task: &TaskFile) -> TaskRef {
+    TaskRef {
+        number: task.id.as_str().to_owned(),
+        title: if task.title.is_empty() {
+            format!("{}.md", task.id)
+        } else {
+            task.title.clone()
+        },
+    }
 }
 
 /// A fixed-form timestamp as `<day> <time>`, both in UTC.

@@ -93,6 +93,7 @@ fn markers_of_a_halted_change() {
             reason: String::from("blocked"),
             stuck: false,
             verification_passed: false,
+            fingerprint: None,
             entries: Vec::new(),
         })
     );
@@ -106,6 +107,7 @@ fn markers_of_a_halted_change() {
             reason: String::from("timeout"),
             stuck: true,
             verification_passed: false,
+            fingerprint: Some(String::from("sha256:2")),
             entries: vec![String::from("a.rs"), String::from("b.rs")],
         })
     );
@@ -115,6 +117,7 @@ fn markers_of_a_halted_change() {
             reason: String::from("scope_regression"),
             stuck: false,
             verification_passed: true,
+            fingerprint: None,
             entries: Vec::new(),
         })
     );
@@ -132,6 +135,7 @@ fn markers_of_a_halted_change() {
             reason: String::new(),
             stuck: false,
             verification_passed: false,
+            fingerprint: None,
             entries: Vec::new(),
         })
     );
@@ -142,6 +146,7 @@ fn markers_of_a_halted_change() {
             reason: String::from("verify_red"),
             stuck: false,
             verification_passed: false,
+            fingerprint: None,
             entries: Vec::new(),
         })
     );
@@ -181,6 +186,7 @@ fn markers_that_do_not_read() {
             reason: String::new(),
             stuck: false,
             verification_passed: false,
+            fingerprint: None,
             entries: Vec::new(),
         })
     );

@@ -1,0 +1,195 @@
+{
+  "needsYou": [
+    {
+      "kind": "planning",
+      "change": {
+        "id": "001",
+        "title": "Unplanned with a brief"
+      },
+      "task": null,
+      "command": "osq plan 001"
+    },
+    {
+      "kind": "planning",
+      "change": {
+        "id": "002",
+        "title": "Unplanned without a brief"
+      },
+      "task": null,
+      "command": "osq lint 002"
+    },
+    {
+      "kind": "approval",
+      "change": {
+        "id": "003",
+        "title": "Ready plan"
+      },
+      "task": null,
+      "command": "osq approve 003"
+    },
+    {
+      "kind": "approval",
+      "change": {
+        "id": "004",
+        "title": "Steps first"
+      },
+      "task": null,
+      "command": "osq approve 004",
+      "beforeApproval": true
+    },
+    {
+      "kind": "change-regressed",
+      "change": {
+        "id": "005",
+        "title": "Plain halts"
+      },
+      "task": null,
+      "command": "osq retry 005 change"
+    },
+    {
+      "kind": "task-dead",
+      "change": {
+        "id": "005",
+        "title": "Plain halts"
+      },
+      "task": {
+        "number": "2",
+        "title": "When two runs, it crashes"
+      },
+      "command": "osq retry 005 2"
+    },
+    {
+      "kind": "task-dead",
+      "change": {
+        "id": "006",
+        "title": "Blocked task"
+      },
+      "task": {
+        "number": "1",
+        "title": "When the key is missing, the task blocks"
+      },
+      "command": "osq plan 006",
+      "steering": {
+        "trigger": "blocked",
+        "reason": "blocked"
+      },
+      "blocked": {
+        "need": "The task needs the API key\nfrom the human."
+      }
+    },
+    {
+      "kind": "task-dead",
+      "change": {
+        "id": "007",
+        "title": "Missing entry files"
+      },
+      "task": {
+        "number": "1",
+        "title": "When the entry is read, it exists"
+      },
+      "command": "osq plan 007",
+      "steering": {
+        "trigger": "blocked",
+        "reason": "entry_missing"
+      },
+      "blocked": {
+        "need": "missing entry files src/missing.rs, lib/gone.rs"
+      }
+    },
+    {
+      "kind": "task-dead",
+      "change": {
+        "id": "008",
+        "title": "Stuck task"
+      },
+      "task": {
+        "number": "1",
+        "title": "When it runs, it times out"
+      },
+      "command": "osq plan 008",
+      "stuck": {
+        "fingerprint": "sha256:0008"
+      },
+      "steering": {
+        "trigger": "stuck",
+        "reason": "timeout"
+      }
+    },
+    {
+      "kind": "change-regressed",
+      "change": {
+        "id": "009",
+        "title": "Change regression to steer"
+      },
+      "task": null,
+      "command": "osq plan 009",
+      "steering": {
+        "trigger": "regression",
+        "reason": "verify_red"
+      }
+    },
+    {
+      "kind": "task-regressed",
+      "change": {
+        "id": "010",
+        "title": "Passing scope regression"
+      },
+      "task": {
+        "number": "1",
+        "title": "When its files change, it recertifies"
+      },
+      "command": "osq retry 010 1"
+    },
+    {
+      "kind": "validator-failing",
+      "change": {
+        "id": "021",
+        "title": "Second landed"
+      },
+      "task": null,
+      "command": "osq show 021",
+      "validatorFailing": {
+        "outcome": "timed_out",
+        "runs": 2,
+        "error": "Validator timed out"
+      }
+    }
+  ],
+  "running": [],
+  "landed": [
+    {
+      "change": {
+        "id": "021",
+        "title": "Second landed"
+      },
+      "archivedAt": "2026-10-02T10:00:00.000Z",
+      "command": "osq show 021",
+      "disclosures": {
+        "deviated": 0,
+        "missingContext": 1,
+        "outsideScope": 1
+      }
+    },
+    {
+      "change": {
+        "id": "020",
+        "title": "First landed"
+      },
+      "archivedAt": "2026-10-01T10:00:00.000Z",
+      "command": "osq show 020",
+      "disclosures": {
+        "deviated": 1,
+        "missingContext": 0,
+        "outsideScope": 0
+      }
+    },
+    {
+      "change": {
+        "id": "023",
+        "title": "Early landed"
+      },
+      "archivedAt": "2026-09-30T10:00:00.000Z",
+      "command": "osq show 023"
+    }
+  ]
+}

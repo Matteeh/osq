@@ -1,0 +1,117 @@
+// Prints TypeScript's inbox text and JSON for each row of rust-inbox
+// "Inbox cursor equals TypeScript's" and "Inbox JSON equals TypeScript's".
+// Run from the repository root after `pnpm build`:
+//   node print-inbox-goldens.mjs <inbox crate tests folder> <json-records fixture> <golden folder>
+// Each case makes a fresh scratch base folder holding `checkout`, a copy of the
+// case's fixture, and `home`, an empty home folder. The inbox is
+// `readInbox(checkout, { config, now: 2026-10-24T12:00:00.000Z, home })` with
+// `DEFAULT_CONFIG`, or with `vcs.enabled` and `vcs.author`
+// `osq <osq@example.com>` for the records case. The text is `formatInboxText`
+// of it and the JSON is `JSON.stringify(inbox, null, 2)`, each followed by one
+// newline, as `osq` and `osq --json` print them; the running lock's pid is
+// replaced by `<pid>`.
+//
+// The `cursor` case writes `<home>/.osq/last-look/<sha256 of the checkout's
+// real path>.json` holding `{"lastLook":"2026-10-01T10:00:00.000Z"}` first.
+//
+// The `records` setup, in order: `git init -b main` in the checkout, commits by
+// `osq <osq@example.com>` of every file but
+// `openspec/changes/archive/033-wait`, a worktree `<base>/worktree` on a new
+// branch `osq/033-wait` that adds that folder in one commit, then
+// `openspec/changes/030-run/.run/running/1.pid` holding
+// `{"pid":<a live pid>,"startedAt":1792843075000}` (125 seconds before now) and
+// `<home>/.osq/watch/<sha256 of the checkout's real path>/after-land.json`
+// holding `{"change":"035-gone","command":"pnpm build","exitCode":1,"failedAt":"2026-10-24T11:00:00.000Z"}`.
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const dist = (file) => pathToFileURL(path.resolve('dist', file)).href;
+const { DEFAULT_CONFIG } = await import(dist('core/foundation/config.js'));
+const { readInbox } = await import(dist('core/status/inbox-projection.js'));
+const { formatInboxText } = await import(dist('core/status/inbox-text.js'));
+
+const [tests, records, golden] = process.argv.slice(2);
+const NOW = new Date('2026-10-24T12:00:00.000Z');
+const WAIT = path.join('openspec', 'changes', 'archive', '033-wait');
+const GIT_ENV = {
+  GIT_AUTHOR_NAME: 'osq',
+  GIT_AUTHOR_EMAIL: 'osq@example.com',
+  GIT_COMMITTER_NAME: 'osq',
+  GIT_COMMITTER_EMAIL: 'osq@example.com',
+};
+
+function git(cwd, ...args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8', env: { ...process.env, ...GIT_ENV } });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+}
+
+function write(file, text) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, text);
+}
+
+function rootHash(root) {
+  return createHash('sha256').update(fs.realpathSync(root), 'utf8').digest('hex');
+}
+
+function cursor(base) {
+  const root = path.join(base, 'checkout');
+  write(
+    path.join(base, 'home', '.osq', 'last-look', `${rootHash(root)}.json`),
+    '{"lastLook":"2026-10-01T10:00:00.000Z"}\n',
+  );
+}
+
+function recordsSetup(base) {
+  const root = path.join(base, 'checkout');
+  const wt = path.join(base, 'worktree');
+  const keep = path.join(base, 'keep');
+  fs.renameSync(path.join(root, WAIT), keep);
+  git(root, 'init', '-q', '-b', 'main');
+  git(root, 'add', '-A');
+  git(root, 'commit', '-q', '-m', 'all');
+  git(root, 'worktree', 'add', '-q', '-b', 'osq/033-wait', wt);
+  fs.cpSync(keep, path.join(wt, WAIT), { recursive: true });
+  fs.rmSync(keep, { recursive: true, force: true });
+  git(wt, 'add', '-A');
+  git(wt, 'commit', '-q', '-m', 'archive 033');
+  write(
+    path.join(root, 'openspec', 'changes', '030-run', '.run', 'running', '1.pid'),
+    `{"pid":${process.pid},"startedAt":1792843075000}`,
+  );
+  write(
+    path.join(base, 'home', '.osq', 'watch', rootHash(root), 'after-land.json'),
+    '{"change":"035-gone","command":"pnpm build","exitCode":1,"failedAt":"2026-10-24T11:00:00.000Z"}\n',
+  );
+}
+
+const VCS = {
+  ...DEFAULT_CONFIG,
+  vcs: { ...DEFAULT_CONFIG.vcs, enabled: true, author: 'osq <osq@example.com>' },
+};
+
+const cases = [
+  { name: 'repo', fixture: path.join(tests, 'golden', 'repo'), setup: () => {}, config: DEFAULT_CONFIG },
+  { name: 'repo-cursor', fixture: path.join(tests, 'golden', 'repo'), setup: cursor, config: DEFAULT_CONFIG },
+  { name: 'records', fixture: records, setup: recordsSetup, config: VCS },
+];
+
+for (const c of cases) {
+  const base = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-inbox-json-')));
+  const root = path.join(base, 'checkout');
+  const home = path.join(base, 'home');
+  fs.mkdirSync(home);
+  fs.cpSync(c.fixture, root, { recursive: true });
+  c.setup(base);
+  const inbox = await readInbox(root, { config: c.config, now: NOW, home });
+  const pid = (text) => text.split(`"pid": ${process.pid}`).join('"pid": <pid>');
+  const json = pid(`${JSON.stringify(inbox, null, 2)}\n`);
+  if (json.includes(base)) throw new Error(`${c.name}: JSON names the scratch base`);
+  fs.writeFileSync(path.join(golden, `${c.name}.json`), json);
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), `${formatInboxText(inbox)}\n`);
+  fs.rmSync(base, { recursive: true, force: true });
+}

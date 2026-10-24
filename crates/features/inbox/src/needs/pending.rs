@@ -4,9 +4,11 @@
 
 use osq_kernel_storage::{AfterLandFailure, AutopilotStop, ChangeSnapshot, Location, QueueTitle};
 
-use super::Item;
+use super::{AutopilotFacts, Item, Kind};
 
 /// The one item a failed after-land command contributes.
+///
+/// Implements: rust-inbox/after-land-failed-item
 pub(crate) fn after_land(snapshots: &[ChangeSnapshot], failure: &AfterLandFailure) -> Item {
     let id = match leading_digits(&failure.change) {
         Some(digits) => digits.to_owned(),
@@ -20,13 +22,18 @@ pub(crate) fn after_land(snapshots: &[ChangeSnapshot], failure: &AfterLandFailur
         .and_then(|snapshot| snapshot.title.clone())
         .filter(|title| !title.is_empty())
         .unwrap_or_else(|| failure.change.clone());
-    Item {
-        line: format!("  {id}: {title} — after-land command failed — osq land {id}"),
-        id,
-    }
+    Item::new(
+        &id,
+        &title,
+        None,
+        Kind::AfterLandFailed,
+        format!("osq land {id}"),
+    )
 }
 
 /// The one item an autopilot stop contributes.
+///
+/// Implements: rust-inbox/autopilot-stopped-item
 pub(crate) fn autopilot_stopped(
     snapshots: &[ChangeSnapshot],
     queue: &[QueueTitle],
@@ -37,17 +44,19 @@ pub(crate) fn autopilot_stopped(
         Some(change) => change_title(snapshots, change),
         None => queue_title(queue, &stop.item),
     };
-    let detail = stop
-        .detail
-        .as_ref()
-        .map_or_else(String::new, |detail| format!(": {}", squash(detail)));
-    Item {
-        line: format!(
-            "  {id}: {title} — autopilot stopped: {}{detail} — {}",
-            stop.reason, stop.command
-        ),
-        id,
-    }
+    let facts = AutopilotFacts {
+        reason: stop.reason.clone(),
+        item: stop.item.clone(),
+        change: stop.change.clone(),
+        detail: stop.detail.clone(),
+    };
+    Item::new(
+        &id,
+        &title,
+        None,
+        Kind::AutopilotStopped(facts),
+        stop.command.clone(),
+    )
 }
 
 /// The title of the first listed change whose folder matches `change`.
@@ -101,9 +110,4 @@ fn leading_digits(text: &str) -> Option<&str> {
         .map(|(index, character)| index + character.len_utf8())
         .last()?;
     Some(&text[..end])
-}
-
-/// Has every run of whitespace read as one space.
-fn squash(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }

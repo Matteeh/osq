@@ -14,6 +14,20 @@ fn project(name: &str) -> PathBuf {
     root
 }
 
+/// A fresh empty scratch home under `CARGO_TARGET_TMPDIR`, named after `root`.
+fn home_for(root: &Path) -> PathBuf {
+    let base = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let name = root
+        .strip_prefix(base)
+        .unwrap_or(root)
+        .to_string_lossy()
+        .replace(['/', '\\'], "_");
+    let home = base.join(format!("{name}_home"));
+    let _ = fs::remove_dir_all(&home);
+    fs::create_dir_all(&home).unwrap();
+    home
+}
+
 /// Writes a file, creating its parent folders.
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -24,6 +38,7 @@ fn write(path: &Path, text: &str) {
 fn inbox_text_at(root: &Path, now_ms: i64) -> String {
     let invocation = Invocation::new(root, "inbox", Vec::new());
     InboxFeature::at(now_ms)
+        .with_home(home_for(root))
         .run(&invocation)
         .expect("inbox succeeds")
         .text
@@ -31,8 +46,14 @@ fn inbox_text_at(root: &Path, now_ms: i64) -> String {
 
 /// Runs the inbox command on a root with the system clock.
 fn inbox_text(root: &Path) -> String {
+    inbox_text_with_home(root, &home_for(root))
+}
+
+/// Runs the inbox command on a root with `home`.
+fn inbox_text_with_home(root: &Path, home: &Path) -> String {
     let invocation = Invocation::new(root, "inbox", Vec::new());
     InboxFeature::new()
+        .with_home(home)
         .run(&invocation)
         .expect("inbox succeeds")
         .text
@@ -156,10 +177,9 @@ impl Drop for WatchFolder {
     }
 }
 
-/// Writes an `after-land.json` under the real home's watch state folder.
-fn after_land(root: &Path, text: &str) -> WatchFolder {
-    let home = PathBuf::from(std::env::var_os("HOME").expect("HOME is set"));
-    let folder = watch_state_dir(root, &home);
+/// Writes an `after-land.json` under `home`'s watch state folder.
+fn after_land(root: &Path, home: &Path, text: &str) -> WatchFolder {
+    let folder = watch_state_dir(root, home);
     write(&folder.join("after-land.json"), text);
     WatchFolder(folder)
 }
@@ -296,13 +316,14 @@ fn failed_after_land_commands() {
     ];
     for (name, record, line) in cases {
         let root = project(&format!("inbox_pending_after_land_{name}"));
+        let home = home_for(&root);
         archived(&root, "030-shipped", "Shipped");
-        let _guard = record.map(|record| after_land(&root, record));
+        let _guard = record.map(|record| after_land(&root, &home, record));
         let expected = line.map_or_else(
             || String::from("Inbox empty.\n"),
             |line| text(&[line], &[], &[]),
         );
-        assert_eq!(inbox_text(&root), expected, "{name}");
+        assert_eq!(inbox_text_with_home(&root, &home), expected, "{name}");
     }
 }
 
@@ -410,6 +431,7 @@ fn autopilot_stop_folder_matches() {
 #[test]
 fn items_of_one_change_in_typescripts_order() {
     let root = project("inbox_pending_items_of_one_change");
+    let home = home_for(&root);
     active(&root, "049-draft", "Draft", false, &[]);
     let all = archived(&root, "050-all", "All");
     write(
@@ -418,6 +440,7 @@ fn items_of_one_change_in_typescripts_order() {
     );
     let _guard = after_land(
         &root,
+        &home,
         "{\"change\":\"050-all\",\"command\":\"pnpm build\",\"exitCode\":1,\"failedAt\":\"2026-10-22T10:00:00.000Z\"}",
     );
     stop(
@@ -426,7 +449,7 @@ fn items_of_one_change_in_typescripts_order() {
         "",
     );
     assert_eq!(
-        inbox_text(&root),
+        inbox_text_with_home(&root, &home),
         text(
             &[
                 "  049: Draft — osq approve 049",

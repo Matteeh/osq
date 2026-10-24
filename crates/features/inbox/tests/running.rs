@@ -14,6 +14,20 @@ fn temp_root(name: &str) -> PathBuf {
     root
 }
 
+/// A fresh empty scratch home under `CARGO_TARGET_TMPDIR`, named after `root`.
+fn home_for(root: &Path) -> PathBuf {
+    let base = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let name = root
+        .strip_prefix(base)
+        .unwrap_or(root)
+        .to_string_lossy()
+        .replace(['/', '\\'], "_");
+    let home = base.join(format!("{name}_home"));
+    let _ = fs::remove_dir_all(&home);
+    fs::create_dir_all(&home).unwrap();
+    home
+}
+
 /// Writes a file, creating its parent folders.
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -24,6 +38,7 @@ fn write(path: &Path, text: &str) {
 fn inbox_text(root: &Path, now_ms: i64) -> String {
     let invocation = Invocation::new(root, "inbox", Vec::new());
     InboxFeature::at(now_ms)
+        .with_home(home_for(root))
         .run(&invocation)
         .expect("inbox succeeds")
         .text
@@ -33,6 +48,7 @@ fn inbox_text(root: &Path, now_ms: i64) -> String {
 fn inbox_text_now(root: &Path) -> String {
     let invocation = Invocation::new(root, "inbox", Vec::new());
     InboxFeature::new()
+        .with_home(home_for(root))
         .run(&invocation)
         .expect("inbox succeeds")
         .text

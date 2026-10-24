@@ -781,10 +781,12 @@ SHALL hold `markers: TaskMarkers`, and the `ChangeSnapshot` SHALL hold
   `<n>` is the task id. A task with none of these files holds the
   `Default` markers: all four `None`.
 - `HaltMarker` holds `reason: String`, `stuck: bool`,
-  `verification_passed: bool` and `entries: Vec<String>`. A marker file
-  that exists always gives a `HaltMarker`, even when it cannot be read or
-  parsed. `reason` is the frontmatter's `reason` when it is a string, else
-  empty text. `stuck` and `verification_passed` are true only when the
+  `verification_passed: bool`, `fingerprint: Option<String>` and
+  `entries: Vec<String>`. A marker file that exists always gives a
+  `HaltMarker`, even when it cannot be read or parsed. `reason` is the
+  frontmatter's `reason` when it is a string, else empty text.
+  `fingerprint` is the frontmatter's `fingerprint` when it is a string, else
+  `None`. `stuck` and `verification_passed` are true only when the
   frontmatter's `stuck` and `verification_passed` are the boolean `true`.
   `entries` holds, in order, the text after a leading `-` and whitespace on
   each line of the body after the frontmatter, trimmed, for every such line
@@ -820,6 +822,10 @@ committed.
 #### Scenario: Markers that do not read
 - **WHEN** `read_change` reads an active change folder `051-odd` with task files `1.md` to `4.md` and these files: `.run/dead/1.md` with frontmatter `reason: 7` and `stuck: "yes"`; `.run/running/2.pid` holding `not json`; `.run/running/3.pid` holding `{"pid":"9","startedAt":1}`; and `.run/running/4.pid` holding `{"pid":9,"startedAt":1.5}`
 - **THEN** task `1`'s dead marker has reason empty and stuck false, tasks `2`, `3` and `4` have no lock, task `1` has no lock and no blocked section, and the change has no regressed marker
+
+#### Scenario: Marker fingerprint
+- **WHEN** `read_change` reads an active change folder `052-stuck` with task files `1.md` to `3.md` and these files: `.run/dead/1.md` with frontmatter `reason: timeout`, `fingerprint: sha256:0008` and `stuck: true`; `.run/dead/2.md` with frontmatter `reason: timeout` and `fingerprint: 8`; and `.run/regressed/3.md` with frontmatter `reason: verify_red`
+- **THEN** task `1`'s dead marker has the fingerprint `sha256:0008` and stuck true, task `2`'s dead marker has no fingerprint, and task `3`'s regressed marker has no fingerprint
 
 ### Requirement: Planning facts
 `read_change(entry)` SHALL also say whether the folder holds a proposal and

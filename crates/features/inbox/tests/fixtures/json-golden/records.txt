@@ -1,0 +1,9 @@
+Needs you
+  031: Waiting change — autopilot stopped: halted: task 2 died: verify_red — osq retry 031 2
+  033: Archived waiting change — archived, not landed — osq land 033
+  035: 035-gone — after-land command failed — osq land 035
+Running
+  030: Running change — task 1: When one runs, it works — 2m 5s — osq show 030
+  031: Waiting change — task 2: When two waits, it pauses — paused until 2026-10-24 13:00 UTC — osq show 031
+Landed since last look
+  (none)

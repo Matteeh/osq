@@ -1,0 +1,61 @@
+---
+scope_resolver: 2
+scope_hash: sha256:f676c164a7d4839636ce12f09d8ad2f4cd230be5d64428e81d82ae065b12a243
+build_stamp: 81b56593
+project_commit: 0a6e3ca4
+exit_code: 0
+scope_files:
+  crates/features/inbox/src/cursor.rs: sha256:f7607af7b9cc20ba473214668695377057d40ad97745caefefe2db0a1a901ec8
+  crates/features/inbox/src/groups/landed.rs: sha256:dcd10d36b35614e1e614dc4b13085133239b45789c19294b8bbf5db1b21ffe7a
+  crates/features/inbox/src/groups/mod.rs: sha256:a1ecf1987e7317bf125017a47b2d2ac24f6cda57e6576bc5dceb036ac92d5d97
+  crates/features/inbox/src/groups/running.rs: sha256:be285cd87d0ed1fe731afa7a981447faf109f086e8103bcff20b33828f7c1cec
+  crates/features/inbox/src/groups/validator.rs: sha256:81494ff4484f7db63fa64699f0c31a626907f9be6f622259de9eba60e4eac357
+  crates/features/inbox/src/json.rs: sha256:54b2a33f2160bb76030550d241319a1845915f78a28dfa1b047188bba99bd9b8
+  crates/features/inbox/src/json/inbox.rs: sha256:89b974d1eeadca2fa9a78f27c62094d41ccf8c666834496b2a937e3a65cecc03
+  crates/features/inbox/src/lib.rs: sha256:919b7195ead93bb51c693edb6f616345d71cc5b5dde068fcc51cfc5835ead576
+  crates/features/inbox/src/needs/entry.rs: sha256:e7ab97f3c94eece1ac7e550b31c85aa7cac78c4543a23483f7ff80f74e43985c
+  crates/features/inbox/src/needs/line.rs: sha256:0c85787150e6ed1b1c3286cd3d4682ef8fafc02e515b45dca8000026e96ce815
+  crates/features/inbox/src/needs/mod.rs: sha256:f19be1eb18db2c71efd4e590f8ea1a68a705c89bc4545afac32a5aa7316f3a6e
+  crates/features/inbox/src/needs/pending.rs: sha256:2b5cd7a8305948b51e4669b2f8993038daaff3d54065fd92ed19a9b6862f9b7d
+  crates/features/inbox/src/needs/placeholder.rs: sha256:ad4eeb10eb221f86ce11173569e2aa99256641bc2d3c31a39b81a18dce1ea5fb
+  crates/features/inbox/src/needs/steering.rs: sha256:7fc7010ddd64b64f1df282674b5fd09b4a7b6dbdddae5eb799c8cd1a69dbc1d0
+  crates/features/inbox/src/read.rs: sha256:9b23608cd0343fe72166b05c24956bc91863b43ea25c7ea9bd8c59f5b5794aaf
+  crates/features/inbox/src/text.rs: sha256:775c8298b67da085932f77c9afdf919e602653555dcba787b8f2b38684ac06b5
+  crates/features/inbox/tests/fixtures/json-golden/print-inbox-goldens.mjs.txt: sha256:5fa7db22785b093162dbfdc3df618f528c8e9e9b6f6a23c2987a924855fd55f6
+  crates/features/inbox/tests/fixtures/json-golden/records.json: sha256:7d416eb3c0ebe10415f995987ac86cf83887d4779be35bfbb3f01f31ecaeca09
+  crates/features/inbox/tests/fixtures/json-golden/records.txt: sha256:97112615798a8c4d82e5c9bbf37b0814298e4f5759ec03f268783c0da6bcbbb8
+  crates/features/inbox/tests/fixtures/json-golden/repo-cursor.json: sha256:b4591098e11be87dc6008bbd8583ba0174d7c230997704fabb884e68db6378bc
+  crates/features/inbox/tests/fixtures/json-golden/repo-cursor.txt: sha256:870afc8aa73a22d4bffdfa975011b793f6bceda658d7bce13bf2eca0a81b391b
+  crates/features/inbox/tests/fixtures/json-golden/repo.json: sha256:f3386dc21466436d64ed04d67387968b98241a11b500b9394f7917856196e693
+  crates/features/inbox/tests/fixtures/json-golden/repo.txt: sha256:f0d80afb000fc55a857730f5b4f95395b5b44116a2cec2f0567d125777b11cc6
+  crates/features/inbox/tests/fixtures/json-records/openspec/.run/autopilot-stop.md: sha256:02e7dc8b2af1b1661ebb63705b5d4538821d3e12310235509aabd9d5b0e8c0a2
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/030-run/.run/approved: sha256:7762507d8e91297cad22237fa29bf47eca6d1e165cfeb539e35a337010ab328e
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/030-run/.run/events/1.jsonl: sha256:6e737099ad7877676c5ed46a1efd26969250f0364a0f29845dc3ff51c9340307
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/030-run/proposal.md: sha256:a12e64f7ee55914226fef9acae254ac442a597d13af56960c51568c48114f3ec
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/030-run/tasks/1.md: sha256:4bd2d7e65677aed735bf4098a929b528f93b99a59560def57db99f4c4ceb455b
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/.run/approved: sha256:99f33159933f404fd4382e883d3d7031a221f4329b8008ae2d2495e3ff880b89
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/.run/done/1: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/.run/paused.md: sha256:bab53cd5c6763a3589010bfb9df9fcc8cd40c318cd10899e67658b97fdca985a
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/proposal.md: sha256:74b00d187a77dc986d6f9a044732d25ac429a0fc92b51307aea6f6dd61f6bfde
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/tasks/1.md: sha256:252fa3f133c8a2eb6d4138cd121652a79e886fcaa2378520aaac937bfe1ccce3
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/031-wait/tasks/2.md: sha256:c84fb68eddced22e84ff74a84b2bee847e651bfff26f66abbbdf3dd9c60f8324
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/archive/033-wait/.run/approved: sha256:213b790d9ae531aa24c3c210beedcedc349596b01c19ba16080f31f8e7457470
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/archive/033-wait/.run/done/1: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/archive/033-wait/.run/events/change.jsonl: sha256:176663b2584d9ab5dea581482c8307fce87dc4117a463e8191164a1f487f303a
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/archive/033-wait/proposal.md: sha256:75b0b42c3fee8dbfd02386641506a1c94408d973297cb25b8a7f48c639af2523
+  crates/features/inbox/tests/fixtures/json-records/openspec/changes/archive/033-wait/tasks/1.md: sha256:19cc43c10512c509255cd796666e958c8ac96beb2094af71c817d4c6ac773243
+  crates/features/inbox/tests/golden.rs: sha256:f9361d752371e21569c268d57ee98d581e70079a9c175e6f03600d0b3d28a488
+  crates/features/inbox/tests/inbox_command.rs: sha256:8d79d1f16a75a5131600952ac23621bd1fc073eaf04a403a5fb9b4778ae5c95e
+  crates/features/inbox/tests/inbox_cursor.rs: sha256:c2f878430fe61a21597c42f98d40328893d657290fd8c820775ad786f1603cd9
+  crates/features/inbox/tests/inbox_json.rs: sha256:5b37d41b59ecd77a7ae321a627020048ce3426781520565160310f6334029daf
+  crates/features/inbox/tests/inbox_nested_root.rs: sha256:eafeb33bbc9dcfbc53fdbed6b72cb2785ff7699e161b91ae04c6b35a059cb8e2
+  crates/features/inbox/tests/inbox_pending.rs: sha256:608fc74762eea487d570027a694d8e8cf2e976a4316e572f954e3453bd69d400
+  crates/features/inbox/tests/inbox_trees.rs: sha256:098728407fc3845b28e85f82748666c226f479f90e65a321c5e29362887c0531
+  crates/features/inbox/tests/landed.rs: sha256:6f0617f983cc70c44206fdb5e006ae39dcac1c4ffeb12a80b06b4cf7dc40ebfe
+  crates/features/inbox/tests/running.rs: sha256:5ce68ecadcae0ac895615632e1acaa48a6268f7a6142475b1bb0069611d72f64
+  crates/features/inbox/tests/validator.rs: sha256:0364f2f91146125844d18489f3979631c6fc883acfc6a71080c64fb248f4e77a
+original_scope_hash: sha256:1ef38de2644dd7ee1460ac2b955122e8e71db7eaade47076394ba33a8d81f707
+recertified_at: 2026-10-24T20:04:56.932Z
+recertification_count: 1
+---
+2026-10-24T19:26:52.305Z

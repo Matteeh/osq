@@ -15,3 +15,4 @@ osq-core.workspace = true
 osq-kernel-config.workspace = true
 osq-kernel-storage.workspace = true
 osq-kernel-vcs.workspace = true
+serde_json.workspace = true

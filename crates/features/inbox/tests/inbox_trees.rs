@@ -18,6 +18,20 @@ fn scratch(name: &str) -> PathBuf {
     root
 }
 
+/// A fresh empty scratch home under `CARGO_TARGET_TMPDIR`, named after `root`.
+fn home_for(root: &Path) -> PathBuf {
+    let base = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let name = root
+        .strip_prefix(base)
+        .unwrap_or(root)
+        .to_string_lossy()
+        .replace(['/', '\\'], "_");
+    let home = base.join(format!("{name}_home"));
+    let _ = fs::remove_dir_all(&home);
+    fs::create_dir_all(&home).unwrap();
+    home
+}
+
 /// Writes a file, creating its parent folders.
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -180,6 +194,7 @@ fn stacked_change(worktrees: &Path, repo: &Path, folder: &str) {
 fn inbox_text(root: &Path) -> String {
     let invocation = Invocation::new(root, "inbox", Vec::new());
     InboxFeature::new()
+        .with_home(home_for(root))
         .run(&invocation)
         .expect("inbox succeeds")
         .text
@@ -215,6 +230,7 @@ fn config_that_does_not_load() {
     let root = scratch("inbox_config_that_does_not_load");
     write(&root.join("osq.toml"), "[vcs]\nenabled = \"yes\"\n");
     let error = InboxFeature::new()
+        .with_home(home_for(&root))
         .run(&Invocation::new(&root, "inbox", Vec::new()))
         .expect_err("the config does not load");
     assert!(matches!(error, FeatureError::Failed { .. }));

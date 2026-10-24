@@ -13,6 +13,20 @@ fn temp_root(name: &str) -> PathBuf {
     root
 }
 
+/// A fresh empty scratch home under `CARGO_TARGET_TMPDIR`, named after `root`.
+fn home_for(root: &Path) -> PathBuf {
+    let base = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let name = root
+        .strip_prefix(base)
+        .unwrap_or(root)
+        .to_string_lossy()
+        .replace(['/', '\\'], "_");
+    let home = base.join(format!("{name}_home"));
+    let _ = fs::remove_dir_all(&home);
+    fs::create_dir_all(&home).unwrap();
+    home
+}
+
 /// Writes a file, creating its parent folders.
 fn write(path: &Path, text: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -31,6 +45,7 @@ fn invocation(root: &Path, command: &str, args: &[&str]) -> Invocation {
 /// Runs the inbox command on a root and returns its output text.
 fn inbox_text(root: &Path) -> String {
     InboxFeature::new()
+        .with_home(home_for(root))
         .run(&invocation(root, "inbox", &[]))
         .expect("inbox succeeds")
         .text
@@ -120,7 +135,7 @@ fn inbox_feature_description() {
         [Command::new(
             "inbox",
             "List the changes that need you, what runs, and what landed",
-            "",
+            "[--json]",
         )]
     );
     assert_ne!(InboxFeature::new(), InboxFeature::at(0));
@@ -134,12 +149,18 @@ fn inbox_feature_description() {
 #[test]
 fn inbox_calls_that_are_refused() {
     let root = temp_root("inbox_calls_that_are_refused");
-    let cases: [(&str, &[&str], &str); 2] = [
-        ("inbox", &["--json"], "usage of inbox: takes no arguments"),
+    let cases: [(&str, &[&str], &str); 3] = [
+        ("inbox", &["--yaml"], "usage of inbox: takes no arguments"),
+        (
+            "inbox",
+            &["--json", "extra"],
+            "usage of inbox: takes no arguments",
+        ),
         ("status", &[], "unknown command: status"),
     ];
     for (command, args, text) in cases {
         let error = InboxFeature::new()
+            .with_home(home_for(&root))
             .run(&invocation(&root, command, args))
             .expect_err("the call is refused");
         assert_eq!(error.to_string(), text, "{command}");
@@ -174,6 +195,7 @@ fn change_folder_that_does_not_read() {
     write(&dir.join("tasks/1.md"), "---\ntitle: When read\n---\n");
     write(&dir.join(".run/events/1.jsonl"), "not json");
     let error = InboxFeature::new()
+        .with_home(home_for(&root))
         .run(&invocation(&root, "inbox", &[]))
         .expect_err("the change does not read");
     assert!(matches!(error, FeatureError::Failed { .. }));

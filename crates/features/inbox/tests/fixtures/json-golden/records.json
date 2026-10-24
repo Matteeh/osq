@@ -1,0 +1,66 @@
+{
+  "needsYou": [
+    {
+      "kind": "autopilot-stopped",
+      "change": {
+        "id": "031",
+        "title": "Waiting change"
+      },
+      "task": null,
+      "command": "osq retry 031 2",
+      "autopilotStopped": {
+        "reason": "halted",
+        "item": "waiting-item",
+        "change": "031",
+        "detail": "task 2 died:\n  verify_red"
+      }
+    },
+    {
+      "kind": "change-archived",
+      "change": {
+        "id": "033",
+        "title": "Archived waiting change"
+      },
+      "task": null,
+      "command": "osq land 033"
+    },
+    {
+      "kind": "after-land-failed",
+      "change": {
+        "id": "035",
+        "title": "035-gone"
+      },
+      "task": null,
+      "command": "osq land 035"
+    }
+  ],
+  "running": [
+    {
+      "change": {
+        "id": "030",
+        "title": "Running change"
+      },
+      "task": {
+        "number": "1",
+        "title": "When one runs, it works"
+      },
+      "pid": <pid>,
+      "startedAt": "2026-10-24T11:57:55.000Z",
+      "elapsedSeconds": 125,
+      "command": "osq show 030"
+    },
+    {
+      "change": {
+        "id": "031",
+        "title": "Waiting change"
+      },
+      "task": {
+        "number": "2",
+        "title": "When two waits, it pauses"
+      },
+      "pausedUntil": "2026-10-24T13:00:00.000Z",
+      "command": "osq show 031"
+    }
+  ],
+  "landed": []
+}

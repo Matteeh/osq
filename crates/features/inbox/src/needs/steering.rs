@@ -2,7 +2,7 @@
 
 use osq_kernel_storage::{ChangeSnapshot, TaskFile};
 
-use super::{Entry, Kind};
+use super::{Item, Kind};
 
 /// One active steering trigger: what it targets, its name and marker reason.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -58,7 +58,7 @@ pub(crate) fn first(snapshot: &ChangeSnapshot) -> Option<Trigger> {
 }
 
 /// Keeps only the first trigger's item, with `osq plan` and the trigger.
-pub(crate) fn apply(snapshot: &ChangeSnapshot, entries: &mut Vec<Entry>) {
+pub(crate) fn apply(snapshot: &ChangeSnapshot, entries: &mut Vec<Item>) {
     let Some(first) = first(snapshot) else {
         return;
     };
@@ -140,17 +140,17 @@ fn task_trigger(task: &TaskFile) -> Option<Trigger> {
 }
 
 /// Removes and returns the entry a trigger targets, if it exists.
-fn take_target(entries: &mut Vec<Entry>, trigger: &Trigger) -> Option<Entry> {
+fn take_target(entries: &mut Vec<Item>, trigger: &Trigger) -> Option<Item> {
     let index = entries.iter().position(|entry| targets(entry, trigger))?;
     Some(entries.remove(index))
 }
 
 /// Whether an entry is the halt item a trigger targets.
-fn targets(entry: &Entry, trigger: &Trigger) -> bool {
+fn targets(entry: &Item, trigger: &Trigger) -> bool {
     match &trigger.target {
         Target::Change => entry.kind == Kind::ChangeRegressed,
         Target::Task(number) => {
-            entry.kind == Kind::Task
+            matches!(entry.kind, Kind::TaskDead | Kind::TaskRegressed)
                 && entry
                     .task
                     .as_ref()
@@ -159,7 +159,7 @@ fn targets(entry: &Entry, trigger: &Trigger) -> bool {
     }
 }
 
-/// The need a blocked trigger states, with every whitespace run as one space.
+/// The need a blocked trigger states, with its whitespace as read.
 fn need(snapshot: &ChangeSnapshot, trigger: &Trigger) -> String {
     let Target::Task(number) = &trigger.target else {
         return String::from("(not stated)");
@@ -168,7 +168,7 @@ fn need(snapshot: &ChangeSnapshot, trigger: &Trigger) -> String {
         .tasks
         .iter()
         .find(|task| task.id.as_str() == number);
-    let text = if trigger.reason == "entry_missing" {
+    if trigger.reason == "entry_missing" {
         match task.and_then(|task| task.markers.dead.as_ref()) {
             Some(marker) if !marker.entries.is_empty() => {
                 format!("missing entry files {}", marker.entries.join(", "))
@@ -178,6 +178,5 @@ fn need(snapshot: &ChangeSnapshot, trigger: &Trigger) -> String {
     } else {
         task.and_then(|task| task.markers.blocked.clone())
             .unwrap_or_else(|| String::from("(not stated)"))
-    };
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
+    }
 }
