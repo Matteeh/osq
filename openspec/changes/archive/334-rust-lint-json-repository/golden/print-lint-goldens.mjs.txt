@@ -1,0 +1,111 @@
+// Prints the `osq lint --json` goldens of change 334 with TypeScript's own
+// document builder, `buildLintJson` from `dist`, so the key order, nulls and
+// string escapes are TypeScript's.
+//
+// TypeScript's findings come from the OpenSpec CLI, which Rust never runs
+// (ADR 026), so the findings below are the ones the Rust lint feature gives
+// on the lint fixture project, written in TypeScript's finding shape.
+//
+// After `pnpm build`, copy this file to a scratch `.mjs` file and run it with
+// the repository root as its argument:
+//   node <scratch>/print-lint-goldens.mjs "$PWD"
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const repo = process.argv[2] ?? process.cwd();
+const { buildLintJson } = await import(
+  pathToFileURL(path.join(repo, 'dist/core/spec/lint-output.js')).href
+);
+const out = path.join(repo, 'openspec/changes/334-rust-lint-json-repository/golden');
+
+const error = (file, requirement, section, message) => ({
+  severity: 'error',
+  file,
+  requirement,
+  section,
+  message,
+});
+const warning = (file, message) => ({
+  severity: 'warning',
+  file,
+  requirement: null,
+  section: null,
+  message,
+});
+
+const ghost = error(
+  'openspec/changes/002-bad-delta/specs/delta/spec.md:12',
+  'Ghost',
+  null,
+  'the delta names `Ghost`, which the living spec has no requirement for',
+);
+const phantom = error(
+  'openspec/changes/002-bad-delta/specs/delta/spec.md:21',
+  'Phantom',
+  null,
+  'the delta names `Phantom`, which the living spec has no requirement for',
+);
+const noDelta = error(
+  'openspec/changes/005-no-delta/proposal.md:1',
+  null,
+  null,
+  'the change holds no delta spec',
+);
+const dangling = error(
+  'crates/delta/src/lib.rs:12',
+  null,
+  null,
+  'Implements: tag names requirement:delta/sums-lists, which does not exist',
+);
+const merge = error(
+  'openspec/changes/004-merge-conflict/specs/delta/spec.md',
+  null,
+  null,
+  'delta ADDED failed for header "### Requirement: Adds numbers" - already exists',
+);
+const proposal = 'openspec/changes/001-clean/proposal.md';
+const rules = [
+  error(proposal, null, null, 'proposal.md must declare a verify command in frontmatter'),
+  error(
+    proposal,
+    null,
+    'Surface',
+    'proposal.md needs a ## Surface section: list the commands, flags, config keys, frontmatter fields, document sections, dead reasons, and event types this change adds, changes, or removes, or write None',
+  ),
+  error(
+    proposal,
+    null,
+    'Assumptions',
+    "proposal.md's ## Assumptions section is empty: write None or one line per assumption",
+  ),
+  warning(
+    'openspec/changes/001-clean/tasks/1.md',
+    'Banned word "legacy" in "legacyMode": bannedWords[0] bans it in crates/**; name it another way',
+  ),
+];
+
+const entry = (change, findings, repository) => ({
+  change,
+  valid: findings.every((finding) => finding.severity !== 'error'),
+  findings,
+  repository,
+});
+const documents = {
+  'json-clean.json': [entry('001-clean', [], [ghost, phantom, noDelta])],
+  'json-dangling.json': [entry('003-dangling-tag', [dangling], [ghost, phantom, noDelta])],
+  'json-merge.json': [entry('004-merge-conflict', [merge], [ghost, phantom, noDelta])],
+  'json-bad-delta.json': [entry('002-bad-delta', [ghost, phantom], [noDelta])],
+  'json-several.json': [
+    entry('001-clean', [], [ghost, phantom, noDelta]),
+    entry('005-no-delta', [noDelta, dangling], [ghost, phantom]),
+  ],
+  'json-rules.json': [entry('001-clean', rules, [ghost, phantom, noDelta])],
+  'json-empty.json': [],
+};
+
+for (const [name, entries] of Object.entries(documents)) {
+  const valid = entries.every((one) => one.valid);
+  fs.writeFileSync(path.join(out, name), `${JSON.stringify(buildLintJson(valid, entries))}\n`);
+}

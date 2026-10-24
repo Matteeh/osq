@@ -976,9 +976,14 @@ a `name`, `summary` and `usage`; `run` takes an `Invocation` of the project
 variant SHALL be `#[non_exhaustive]`, so a field or variant added later
 touches no feature crate. Code outside `osq-core` SHALL build them through
 `Command::new(name, summary, usage)`, `Invocation::new(root, command, args)`,
-`Output::text(text)`, `FeatureError::unknown_command(name)`,
+`Output::text(text)`, `Output::with_code(text, code)`,
+`FeatureError::unknown_command(name)`,
 `FeatureError::usage(command, message)` and
 `FeatureError::failed(command, message)`, and SHALL read their public fields.
+`Output` holds the `text` to print and the `code: i32` the process exits
+with: `Output::text` gives the code 0, and `Output::with_code` the code it
+is given, for a command that prints its text on stdout and still fails,
+as a JSON document of findings does.
 
 #### Scenario: Constructors fill every field
 - **WHEN** the constructor call in the row runs in a test outside `osq-core`
@@ -992,6 +997,16 @@ touches no feature crate. Code outside `osq-core` SHALL build them through
 | `FeatureError::unknown_command("nope")` | `UnknownCommand` with name `nope` |
 | `FeatureError::usage("say", "needs words")` | `Usage` with `command` `say`, `message` `needs words` |
 | `FeatureError::failed("fail", "it always fails")` | `Failed` with `command` `fail`, `message` `it always fails` |
+
+#### Scenario: Output exit codes
+- **WHEN** the `Output` constructor call in the row runs in a test outside `osq-core`
+- **THEN** the output's `text` and `code` hold the row's values:
+
+| Call | `text` | `code` |
+|---|---|---|
+| `Output::text("a b")` | `a b` | 0 |
+| `Output::with_code("bad", 1)` | `bad` | 1 |
+| `Output::with_code("odd", 3)` | `odd` | 3 |
 
 ### Requirement: Feature errors
 A `FeatureError` SHALL be `UnknownCommand` with the command name, `Usage` with

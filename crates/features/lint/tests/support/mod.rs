@@ -36,9 +36,46 @@ pub fn write(root: &Path, relative: &str, contents: impl AsRef<[u8]>) {
     fs::write(path, contents).expect("the file is written");
 }
 
-/// Runs the lint feature's `lint` with one query at `root`.
+/// Runs the lint feature's `lint` with one query at `root`, removing the
+/// repository lines that every change-block scenario ignores.
 pub fn run(root: &Path, query: &str) -> Result<Output, FeatureError> {
-    run_args(root, "lint", &[query])
+    run_args_without_repository(root, "lint", &[query])
+}
+
+/// Runs the lint feature's `command` with `args`, removing repository lines.
+pub fn run_args_without_repository(
+    root: &Path,
+    command: &str,
+    args: &[&str],
+) -> Result<Output, FeatureError> {
+    without_repository(run_args(root, command, args))
+}
+
+/// Removes every line that starts with `repository: ` from a result.
+fn without_repository(result: Result<Output, FeatureError>) -> Result<Output, FeatureError> {
+    match result {
+        Ok(output) => Ok(Output::text(without_repository_lines(&output.text))),
+        Err(FeatureError::Failed {
+            command, message, ..
+        }) => Err(FeatureError::failed(
+            command,
+            without_repository_lines(&message),
+        )),
+        Err(other) => Err(other),
+    }
+}
+
+/// Drops every line that starts with `repository: `, keeping the final newline.
+fn without_repository_lines(text: &str) -> String {
+    let kept: Vec<&str> = text
+        .lines()
+        .filter(|line| !line.starts_with("repository: "))
+        .collect();
+    let mut output = kept.join("\n");
+    if text.ends_with('\n') && !output.is_empty() {
+        output.push('\n');
+    }
+    output
 }
 
 /// Runs the lint feature's `command` with literal `args` at `root`.

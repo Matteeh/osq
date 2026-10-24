@@ -102,7 +102,7 @@ fn dispatch(features: &[Box<dyn Feature>], root: &Path, name: &str, args: &[Stri
         Ok(output) => CliResult {
             stdout: output.text,
             stderr: String::new(),
-            code: 0,
+            code: output.code,
         },
         Err(error) => failure(&format!("{error}\n")),
     }

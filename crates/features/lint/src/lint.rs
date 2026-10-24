@@ -5,6 +5,7 @@ mod banned;
 mod entry;
 pub(crate) mod find;
 mod finding;
+mod json;
 mod proposal;
 mod tasks;
 mod text;
@@ -13,18 +14,17 @@ mod verify;
 use std::fs;
 use std::path::Path;
 
-use osq_core::FeatureError;
+use osq_core::{FeatureError, Output};
 use osq_kernel_config::{Config, load_config};
 use osq_kernel_linter::change_link_gates;
 use osq_kernel_specs::{
     MergeChangeError, SyntaxError, parse_frontmatter, parse_proposal, read_decisions,
-    validate_change, validate_merged_change,
+    validate_change, validate_living_specs, validate_merged_change,
 };
-use osq_kernel_storage::{ChangeEntry, list_changes};
+use osq_kernel_storage::{ChangeEntry, Location, list_changes};
 use osq_kernel_vcs::project_git_root;
 
-use finding::{Finding, Severity};
-use text::{finding_line, merge_line, spec_line};
+use finding::{Finding, ReportFinding, Severity};
 use verify::Project;
 
 /// The folder of the link gates' decisions.
@@ -44,28 +44,198 @@ const SPECS: &str = "specs";
 /// The file that holds a capability's delta spec.
 const SPEC_FILE: &str = "spec.md";
 
-/// Runs `lint` for one query, returning the finding text or `valid`.
+/// Runs `lint` over `ids` and the repository, returning the text or JSON
+/// output.
 ///
 /// # Errors
 ///
 /// Returns a `Failed` error with the command `lint` when no active change
-/// matches, when a check cannot run, or when the change has any error finding.
+/// matches, when a check cannot run, or when text output has any error
+/// finding.
 ///
+/// Implements: rust-lint/lint-arguments
 /// Implements: rust-lint/lint-lookup
 /// Implements: rust-lint/lint-findings
-/// Implements: rust-lint/lint-errors
-pub(crate) fn run_lint(root: &Path, query: &str) -> Result<String, FeatureError> {
+/// Implements: rust-lint/lint-repository-findings
+/// Implements: rust-lint/lint-json
+pub(crate) fn run_lint(
+    root: &Path,
+    ids: &[&str],
+    show_repository: bool,
+    json: bool,
+) -> Result<Output, FeatureError> {
     let config = load_config(root).map_err(|error| failed(error.to_string()))?;
     let git_root = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
     let changes = list_changes(root);
-    let entry = find::find_change(&changes, query)
-        .ok_or_else(|| failed(text::not_found(query, &root.join(OPENSPEC).join("changes"))))?;
+    let selected = select_changes(root, &changes, ids)?;
+    let mut checked = Vec::new();
+    for entry in &selected {
+        checked.push(check_change(root, entry, &config, git_root.as_deref())?);
+    }
+    let repository = repository_findings(root, &changes, &selected)?;
+    if json {
+        return Ok(json::output(&checked, &repository));
+    }
+    render(root, &checked, &repository, show_repository).map(Output::text)
+}
+
+/// The changes the ids name, or every active change when there is no id.
+fn select_changes<'a>(
+    root: &Path,
+    changes: &'a [ChangeEntry],
+    ids: &[&str],
+) -> Result<Vec<&'a ChangeEntry>, FeatureError> {
+    if ids.is_empty() {
+        return Ok(changes
+            .iter()
+            .filter(|entry| entry.location == Location::Active)
+            .collect());
+    }
+    let folder = root.join(OPENSPEC).join("changes");
+    ids.iter()
+        .map(|query| {
+            find::find_change(changes, query).ok_or_else(|| failed(text::not_found(query, &folder)))
+        })
+        .collect()
+}
+
+/// One checked change's block, as findings rather than only as lines.
+struct ChangeReport {
+    /// The change folder's name.
+    folder: String,
+    /// The change's findings, in the order the checks give them.
+    findings: Vec<ReportFinding>,
+}
+
+impl ChangeReport {
+    /// Whether the change has no error finding.
+    fn valid(&self) -> bool {
+        !self
+            .findings
+            .iter()
+            .any(|finding| finding.severity == Severity::Error)
+    }
+
+    /// The block: each warning then `valid`, or the count then every line.
+    fn lines(&self, root: &Path) -> Vec<String> {
+        let mut lines = Vec::new();
+        if !self.valid() {
+            lines.push(text::count(&self.folder, self.findings.len()));
+        }
+        lines.extend(
+            self.findings
+                .iter()
+                .map(|finding| text::report_line(&self.folder, root, finding)),
+        );
+        if self.valid() {
+            lines.push(text::valid(&self.folder));
+        }
+        lines
+    }
+}
+
+/// Checks one change's own findings in the order "Lint findings" gives them.
+fn check_change(
+    root: &Path,
+    entry: &ChangeEntry,
+    config: &Config,
+    git_root: Option<&Path>,
+) -> Result<ChangeReport, FeatureError> {
     let change = root.join(OPENSPEC).join("changes").join(&entry.folder);
-    let findings = rule_findings(root, &change, &entry.folder, &config, git_root.as_deref());
-    let mut lines = rule_lines(&entry.folder, &findings);
-    lines.extend(error_lines(spec_findings(root, entry)?));
-    lines.extend(error_lines(link_findings(root, &entry.folder)?));
-    finish(&entry.folder, lines)
+    let mut findings: Vec<ReportFinding> =
+        rule_findings(root, &change, &entry.folder, config, git_root)
+            .into_iter()
+            .map(ReportFinding::rule)
+            .collect();
+    findings.extend(spec_findings(root, entry)?);
+    findings.extend(link_findings(root, &entry.folder)?);
+    Ok(ChangeReport {
+        folder: entry.folder.clone(),
+        findings,
+    })
+}
+
+/// The repository findings of a run, deduplicated by every reported field.
+fn repository_findings(
+    root: &Path,
+    changes: &[ChangeEntry],
+    selected: &[&ChangeEntry],
+) -> Result<Vec<ReportFinding>, FeatureError> {
+    let specs = root.join(OPENSPEC).join(SPECS);
+    let mut per_change: Vec<(&str, Vec<ReportFinding>)> = Vec::new();
+    for entry in changes
+        .iter()
+        .filter(|entry| entry.location == Location::Active)
+    {
+        let findings = validate_change(&entry.path, &specs)
+            .map_err(|error| failed(error.to_string()))?
+            .into_iter()
+            .map(|finding| ReportFinding::spec(root, finding))
+            .collect();
+        per_change.push((entry.folder.as_str(), findings));
+    }
+    let living: Vec<ReportFinding> = validate_living_specs(&specs)
+        .map_err(|error| failed(error.to_string()))?
+        .into_iter()
+        .map(|finding| ReportFinding::spec(root, finding))
+        .collect();
+    let mut all = Vec::new();
+    for entry in selected {
+        for (folder, findings) in &per_change {
+            if *folder != entry.folder.as_str() {
+                all.extend(findings.iter().cloned());
+            }
+        }
+        all.extend(living.iter().cloned());
+    }
+    let mut unique: Vec<ReportFinding> = Vec::new();
+    for finding in all {
+        if !unique.contains(&finding) {
+            unique.push(finding);
+        }
+    }
+    Ok(unique)
+}
+
+/// The lines of every change block, then the repository lines, as text or failure.
+fn render(
+    root: &Path,
+    checked: &[ChangeReport],
+    repository: &[ReportFinding],
+    show_repository: bool,
+) -> Result<String, FeatureError> {
+    let invalid = checked.iter().any(|change| !change.valid());
+    let mut lines = Vec::new();
+    for change in checked {
+        lines.extend(change.lines(root));
+    }
+    lines.extend(repository_lines(root, repository, show_repository));
+    if invalid {
+        return Err(failed(lines.join("\n")));
+    }
+    if lines.is_empty() {
+        return Ok(String::new());
+    }
+    let mut output = lines.join("\n");
+    output.push('\n');
+    Ok(output)
+}
+
+/// The repository count line, or the header and every repository finding.
+fn repository_lines(root: &Path, findings: &[ReportFinding], show_repository: bool) -> Vec<String> {
+    if findings.is_empty() {
+        return Vec::new();
+    }
+    if !show_repository {
+        return vec![text::repository_count(findings.len())];
+    }
+    let mut lines = vec![text::REPOSITORY_HEADER.to_owned()];
+    lines.extend(
+        findings
+            .iter()
+            .map(|finding| text::report_line("repository", root, finding)),
+    );
+    lines
 }
 
 /// The proposal, task and banned word findings for a change, in TypeScript's order.
@@ -228,67 +398,26 @@ fn written_capabilities(change: &Path) -> Vec<String> {
     names
 }
 
-/// The line for every proposal rule and banned word finding.
-fn rule_lines(folder: &str, findings: &[Finding]) -> Vec<Line> {
-    findings
-        .iter()
-        .map(|finding| Line {
-            severity: finding.severity,
-            text: text::rule_line(folder, finding),
-        })
-        .collect()
-}
-
-/// Wraps spec and link gate lines as errors.
-fn error_lines(lines: Vec<String>) -> Vec<Line> {
-    lines
-        .into_iter()
-        .map(|line| Line {
-            severity: Severity::Error,
-            text: line,
-        })
-        .collect()
-}
-
-/// One finding's line and whether it is an error.
-struct Line {
-    /// Whether the finding fails the change.
-    severity: Severity,
-    /// The line `text` writes.
-    text: String,
-}
-
-/// Returns `valid` output for warnings only, or the count and finding lines.
-fn finish(folder: &str, lines: Vec<Line>) -> Result<String, FeatureError> {
-    if lines.iter().any(|line| line.severity == Severity::Error) {
-        let texts: Vec<String> = lines.into_iter().map(|line| line.text).collect();
-        return Err(failed(text::findings(folder, &texts)));
-    }
-    let texts: Vec<String> = lines.into_iter().map(|line| line.text).collect();
-    Ok(text::warnings(folder, &texts))
-}
-
 /// Validates the change's delta specs, then their merge when the deltas are clean.
 ///
 /// Implements: rust-lint/lint-findings
-/// Implements: rust-lint/lint-errors
-fn spec_findings(root: &Path, entry: &ChangeEntry) -> Result<Vec<String>, FeatureError> {
+fn spec_findings(root: &Path, entry: &ChangeEntry) -> Result<Vec<ReportFinding>, FeatureError> {
     let specs = root.join(OPENSPEC).join(SPECS);
     let findings =
         validate_change(&entry.path, &specs).map_err(|error| failed(error.to_string()))?;
     if !findings.is_empty() {
         return Ok(findings
-            .iter()
-            .map(|finding| spec_line(&entry.folder, root, finding))
+            .into_iter()
+            .map(|finding| ReportFinding::spec(root, finding))
             .collect());
     }
     match validate_merged_change(&entry.path, &specs) {
         Ok(findings) => Ok(findings
-            .iter()
-            .map(|finding| spec_line(&entry.folder, root, finding))
+            .into_iter()
+            .map(|finding| ReportFinding::spec(root, finding))
             .collect()),
         Err(MergeChangeError::Merge { path, error }) => {
-            Ok(vec![merge_line(&entry.folder, root, &path, &error)])
+            Ok(vec![ReportFinding::merge(root, path, error)])
         }
         Err(MergeChangeError::Read(error)) => Err(failed(error.to_string())),
     }
@@ -297,8 +426,7 @@ fn spec_findings(root: &Path, entry: &ChangeEntry) -> Result<Vec<String>, Featur
 /// Runs the link gates over the project with the change in flight.
 ///
 /// Implements: rust-lint/lint-findings
-/// Implements: rust-lint/lint-errors
-fn link_findings(root: &Path, folder: &str) -> Result<Vec<String>, FeatureError> {
+fn link_findings(root: &Path, folder: &str) -> Result<Vec<ReportFinding>, FeatureError> {
     let change = Path::new(OPENSPEC).join("changes").join(folder);
     let findings = change_link_gates(
         root,
@@ -308,10 +436,7 @@ fn link_findings(root: &Path, folder: &str) -> Result<Vec<String>, FeatureError>
         &change,
     )
     .map_err(|error| failed(error.to_string()))?;
-    Ok(findings
-        .iter()
-        .map(|finding| finding_line(folder, finding))
-        .collect())
+    Ok(findings.into_iter().map(ReportFinding::link).collect())
 }
 
 /// Builds the failed error for a check that cannot run.

@@ -1,4 +1,4 @@
-//! Proves the lint feature's argument errors.
+//! Proves the lint feature's argument errors and an empty run.
 
 mod support;
 
@@ -13,11 +13,11 @@ use support::{run_args, scratch};
 fn lint_argument_errors() {
     let root = scratch("lint_argument_errors");
     let rows: [(&str, &[&str], &str); 3] = [
-        ("lint", &[], "usage of lint: expected one change id, got 0"),
+        ("lint", &["--yaml"], "usage of lint: unknown flag --yaml"),
         (
             "lint",
-            &["1", "2"],
-            "usage of lint: expected one change id, got 2",
+            &["1", "--json", "--fix"],
+            "usage of lint: unknown flag --fix",
         ),
         ("approve", &["1"], "unknown command: approve"),
     ];
@@ -31,5 +31,19 @@ fn lint_argument_errors() {
             (FeatureError::UnknownCommand { .. }, "approve") => {}
             other => panic!("{command} {args:?}: unexpected error {other:?}"),
         }
+    }
+}
+
+/// Proves every row of "Lint with no change".
+///
+/// Covers: rust-lint/lint-with-no-change
+#[test]
+fn lint_with_no_change() {
+    let rows: [(&str, &[&str]); 2] = [("none", &[]), ("repository", &["--repository"])];
+    for (name, args) in rows {
+        let root = scratch(&format!("lint_with_no_change/{name}"));
+        let output = run_args(&root, "lint", args).expect("an empty root lints no change");
+        assert_eq!(output.text, "", "{name}: text");
+        assert_eq!(output.code, 0, "{name}: code");
     }
 }

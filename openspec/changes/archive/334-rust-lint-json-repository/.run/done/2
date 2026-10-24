@@ -1,0 +1,32 @@
+---
+scope_resolver: 2
+scope_hash: sha256:15b2c1fc402974ebf30be7e7ca91dc925bcc59d720549eec7cef8205a1386680
+build_stamp: 81b56593
+project_commit: ba991d7a
+exit_code: 0
+scope_files:
+  crates/features/lint/src/feature.rs: sha256:fa8ed27ce4a17381d951d463f4af3fcc8c2723d8dad5ca9105355bedf6d4a426
+  crates/features/lint/src/lib.rs: sha256:41e72be6074fbced52995f5462175f4da279f95c5ad9ee68a5953bd9dc712c1e
+  crates/features/lint/src/lint.rs: sha256:a215362180400efefafb13221187a4347d0cf14ca534ac0161c50a5d54c821d5
+  crates/features/lint/src/lint/banned.rs: sha256:983890ba8f1914ca7b5826462868ccd081df26666ce0b9d7f1c1e0e3aae646a5
+  crates/features/lint/src/lint/entry.rs: sha256:93d2707d8a08424428053b6a75599b82a7aa368c538428ff4c9bd4cc30aa8a84
+  crates/features/lint/src/lint/find.rs: sha256:3239f27ff430eeb4e7a2e91c642f829a364755e1ddd9dc4625189995eeba9e89
+  crates/features/lint/src/lint/finding.rs: sha256:d7aea174d1d08b9e84f63ecc3981ce25618e6d5af967282d0eb183664072f59f
+  crates/features/lint/src/lint/json.rs: sha256:9db5a63d9f9775d01a96e980f72916ee41e5aa4ea139be9d3c842157fb559e00
+  crates/features/lint/src/lint/proposal.rs: sha256:66b5243054b4652ea07c18812465ec875ef2552f95ed9a7d2b534a86fd664465
+  crates/features/lint/src/lint/tasks.rs: sha256:743622ab99da7fae33d840923573437b3a672d07b802b53998ae083e6caa67aa
+  crates/features/lint/src/lint/tasks/checks.rs: sha256:20f4d75197448f1ab127e3745d4a5db1939699c0108f74ca81191a04d17caa3f
+  crates/features/lint/src/lint/tasks/named.rs: sha256:38aa65b61661133517f69a5836eff59701b23bad9644f2d3f63e54c5b57b9371
+  crates/features/lint/src/lint/tasks/warnings.rs: sha256:20cfbb4a0de28739b3ab8cf1350d023675d2248c240eb284f6257a00f9b365b7
+  crates/features/lint/src/lint/text.rs: sha256:1ca9655bbc62a89ea3482d4f88b2103a4bd2ab8345a2ed230731b721340355f0
+  crates/features/lint/src/lint/verify.rs: sha256:5923862aef26df7066fae79cbdb3eabdee892926c586bd00c5422be740fe2044
+  crates/features/lint/tests/feature.rs: sha256:a2a6dd895b9967b2db57b51616a3dbdc34474dc3e4e8567b8c930cb355d2a25d
+  crates/features/lint/tests/lint_arguments.rs: sha256:fd28c41a2c574997bb56d094f44090787afb6aef4505a2f8f8d96eaca50e93c7
+  crates/features/lint/tests/lint_repository.rs: sha256:c6a3bb01ea4fd3eb7e9c0cc6c155788cfc4f73f2a625710d8af8d4ef63ee3dbd
+  crates/features/lint/tests/lint_several_changes.rs: sha256:84cbb4ef3f13edd3c40fa23e9310132d89de9256f30ec61e1773df6d24d88c93
+  crates/features/lint/tests/support/mod.rs: sha256:780063d5cd7fd1e609a5aadbda3840acb33db4b6a4329ec4794b60a194505781
+original_scope_hash: sha256:f0a61d480063725de741ebe77098c4d266931ea728802cd05d9f3ebe06aa3fb0
+recertified_at: 2026-10-24T12:31:10.308Z
+recertification_count: 1
+---
+2026-10-24T12:20:37.514Z

@@ -15,7 +15,7 @@ fn lint_feature_commands() {
         vec![Command::new(
             "lint",
             "validate a change's delta specs and the Rust link gates",
-            "<id>",
+            "[--json] [--repository] [ids...]",
         )]
     );
 }

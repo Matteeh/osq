@@ -98,9 +98,9 @@ impl Invocation {
     }
 }
 
-/// What a successful command prints.
+/// What a command prints: its text and the code the process exits with.
 ///
-/// Build it with [`Output::text`].
+/// Build it with [`Output::text`] or [`Output::with_code`].
 ///
 /// Implements: rust-core/feature-trait
 #[non_exhaustive]
@@ -108,15 +108,31 @@ impl Invocation {
 pub struct Output {
     /// The text to print.
     pub text: String,
+    /// The process exit code.
+    pub code: i32,
 }
 
 impl Output {
-    /// Builds output from its text.
+    /// Builds output from its text, with the exit code 0.
     ///
     /// Implements: rust-core/feature-constructors
     #[must_use]
     pub fn text(text: impl Into<String>) -> Self {
-        Self { text: text.into() }
+        Self {
+            text: text.into(),
+            code: 0,
+        }
+    }
+
+    /// Builds output from its text and the exit code it is given.
+    ///
+    /// Implements: rust-core/feature-constructors
+    #[must_use]
+    pub fn with_code(text: impl Into<String>, code: i32) -> Self {
+        Self {
+            text: text.into(),
+            code,
+        }
     }
 }
 

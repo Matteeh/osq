@@ -71,8 +71,8 @@ text comes from `Command` data.
 ### Requirement: Command dispatch
 `run_cli` SHALL call `run` on the first feature whose `commands()` lists
 the name, with `Invocation::new(root, name, <the other arguments>)`. An
-`Output` gives its `text` on stdout and code 0. A `FeatureError` gives its
-display and `\n` on stderr and code 1. A name no feature lists gives
+`Output` gives its `text` on stdout and its `code`. A `FeatureError` gives
+its display and `\n` on stderr and code 1. A name no feature lists gives
 `unknown command: <name>\n` on stderr and code 1 and calls no feature. The
 other stream is empty.
 
@@ -97,6 +97,16 @@ other stream is empty.
 #### Scenario: First feature wins
 - **WHEN** `run_cli` runs with two test features that both list `same`, the first returning `Output::text("first")` and the second `Output::text("second")`, and the argument `same`
 - **THEN** stdout is `first`, and the second feature's `run` is not called
+
+#### Scenario: Output code through run_cli
+- **WHEN** `run_cli` runs with one test feature listing `check`, whose `run` returns the row's output, and the argument `check`
+- **THEN** it returns the row's stdout and code and an empty stderr:
+
+| Output | Stdout | Code |
+|---|---|---|
+| `Output::text("fine\n")` | `fine\n` | 0 |
+| `Output::with_code("bad\n", 1)` | `bad\n` | 1 |
+| `Output::with_code("odd\n", 3)` | `odd\n` | 3 |
 
 ### Requirement: CLI entry point
 The `osq-rs` binary's `main` SHALL call `run_cli` with `features()`, the
