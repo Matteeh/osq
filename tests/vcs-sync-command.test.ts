@@ -12,6 +12,12 @@ import { DEFAULT_GATES_CONFIG } from '../src/core/foundation/config-gates.js';
 import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
 import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
 import { scaffoldProject } from '../src/core/foundation/init.js';
+import {
+  type ServiceRecord,
+  type WatcherRecord,
+  writeServiceRecord,
+  writeWatcherRecord,
+} from '../src/core/run/watch-state.js';
 import { approveSpec } from '../src/core/spec/approve.js';
 import { OSQ_SYNC_NEEDS_GIT, syncChange } from '../src/core/vcs/sync-change.js';
 import { worktreeBranch } from '../src/core/vcs/worktree.js';
@@ -78,6 +84,21 @@ function statusLines(cwd: string): Promise<string[]> {
     output.split('\n').filter((line) => line.trim().length > 0),
   );
 }
+
+const SERVICE: ServiceRecord = {
+  pid: 0,
+  startedAt: '2026-01-01T00:00:00.000Z',
+  log: '/tmp/osq/watch.log',
+};
+
+const WATCHER: WatcherRecord = {
+  pid: 0,
+  mode: 'terminal',
+  version: '0.2.4',
+  commit: 'f532410',
+  startedAt: '2026-01-01T00:00:00.000Z',
+  waiting: null,
+};
 
 const ORDERS_SPEC = `# orders Specification
 
@@ -375,6 +396,75 @@ describe('syncChange on request', () => {
       /001-order-flow has a task running; run osq sync 001 after it ends/,
     );
     assert.equal(await git(['rev-parse', 'HEAD'], worktree), before);
+  });
+
+  it('Watcher running', async () => {
+    const refusal = (pid: number): string =>
+      `a watcher runs for this project (pid ${pid}); it syncs 001-order-flow before the change's next attempt, or stop it and run osq sync 001 again`;
+    const rows: Array<{
+      readonly name: string;
+      readonly records: (home: string, repo: string) => Promise<void>;
+      readonly pid?: number;
+    }> = [
+      {
+        name: 'a live watcher record',
+        records: async (home, repo) => {
+          await writeWatcherRecord(repo, { ...WATCHER, pid: process.pid }, home);
+        },
+        pid: process.pid,
+      },
+      {
+        name: 'a live service record naming its pid',
+        records: async (home, repo) => {
+          await writeServiceRecord(repo, { ...SERVICE, pid: process.pid }, home);
+          await writeWatcherRecord(repo, { ...WATCHER, pid: process.ppid }, home);
+        },
+        pid: process.pid,
+      },
+      {
+        name: 'a dead watcher record',
+        records: async (home, repo) => {
+          await writeWatcherRecord(repo, { ...WATCHER, pid: 999999999 }, home);
+        },
+      },
+      {
+        name: 'no record',
+        records: async () => {},
+      },
+    ];
+
+    for (const row of rows) {
+      const project = await setupProject([PAIR]);
+      const worktree = worktreeOf(project, PAIR.folder);
+      await markDone(worktree, PAIR.folder, '1');
+      const doneRel = path.posix.join(CHANGES, PAIR.folder, '.run', 'done', '1');
+      await commitOnBranch(worktree, doneRel, 'done\n');
+      await landOnMain(project.repo, 'src/main.txt', 'main\n');
+      const home = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-sync-home-'));
+      tmpDirs.push(home);
+      await row.records(home, project.repo);
+      const before = await git(['rev-parse', 'HEAD'], worktree);
+
+      if (row.pid === undefined) {
+        assert.equal(
+          await syncChange(project.repo, project.config, '001', undefined, home),
+          'Synced osq/001-order-flow with main',
+          row.name,
+        );
+        continue;
+      }
+
+      await assert.rejects(
+        () => syncChange(project.repo, project.config, '001', undefined, home),
+        (error: unknown) => {
+          assert.ok(error instanceof Error, row.name);
+          assert.equal(error.message, refusal(row.pid as number), row.name);
+          return true;
+        },
+      );
+      assert.equal(await git(['rev-parse', 'HEAD'], worktree), before, row.name);
+      assert.deepEqual(await statusLines(worktree), [], row.name);
+    }
   });
 
   it('refuses when no change matches the id', async () => {

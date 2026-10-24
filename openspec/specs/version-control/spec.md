@@ -724,15 +724,21 @@ push.
 | `block` | `The checkout has uncommitted changes in files this land writes: src/one.txt; commit or stash them, then run osq land 001 again` |
 
 ### Requirement: Sync on request
-`syncChange(projectRoot, config, id, progress)` in
+`syncChange(projectRoot, config, id, progress, home)` in
 `src/core/vcs/sync-change.ts` SHALL find the change the id matches, as
 `matchesFolder` does, among the active and archived changes of the osq
-worktree trees `listChanges` reports. It SHALL refuse, writing nothing, in
-this order:
+worktree trees `listChanges` reports. `home` is optional and defaults to the
+user's home folder, as `readWatchState` takes it. It SHALL refuse, writing
+nothing, in this order:
 
 - With `vcs.enabled` off or `NoVcs` selected: `osq sync needs vcs.enabled and
   git`.
 - When no such change exists: `No change "<id>" runs in an osq worktree`.
+- When `readWatchState(projectRoot, home)` reports a live service or watcher
+  record: `a watcher runs for this project (pid <pid>); it syncs <folder>
+  before the change's next attempt, or stop it and run osq sync <id> again`,
+  where `<pid>` is the service's pid when a service record is live and the
+  watcher's pid otherwise, as the status watcher line names it.
 - When `deriveSpecState` reports a task of the change as running: `<folder>
   has a task running; run osq sync <id> after it ends`.
 - When `awaitedDependencies` lists any entry for the change: `<folder> is
@@ -775,6 +781,17 @@ SHALL write no marker under `.run/`; halting belongs to the watcher.
 #### Scenario: Archived change stop leaves the worktree clean
 - **WHEN** the sync of an archived change stops on a code conflict
 - **THEN** `syncChange` throws the stop's message, and the worktree's `status` is empty
+
+#### Scenario: Watcher running
+- **WHEN** the default branch has moved, the change `001-order-flow` has one verified task, and `syncChange(project, config, '001', undefined, home)` runs with the row's records written for the project under a scratch `home`
+- **THEN** the row's outcome holds:
+
+| Records under `home` | Outcome |
+|---|---|
+| a watcher record whose pid is the test's own process | refuses with `a watcher runs for this project (pid <the test's pid>); it syncs 001-order-flow before the change's next attempt, or stop it and run osq sync 001 again`; the branch tip is unchanged and the worktree's `status` is empty |
+| a service record whose pid is the test's own process, and a watcher record whose pid is the test's parent process | refuses with the same message naming the test's pid, not its parent's; the branch tip is unchanged and the worktree's `status` is empty |
+| a watcher record whose pid is 999999999 | returns `Synced osq/001-order-flow with main` |
+| none | returns `Synced osq/001-order-flow with main` |
 
 ### Requirement: Land reports changed paths
 `landChange` SHALL return, beside its lines and code, `changed`: the absolute

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:f31e0df07e25de293157da41ba2a2438988800e31b906eff5c8211addd8a7e1d"
+build_stamp: "4b9a2af8"
+project_commit: "bd5ba9b6"
+exit_code: 0
+scope_files: {"src/core/vcs/sync-change.ts":"sha256:e9473733ab2febd986d82c9f0202ab0689ede29e298a179e760b24109af23595","tests/vcs-sync-command.test.ts":"sha256:554467c299980bf7d19ec80435c32b4cc5d504bb8669d82af1496ff46b519fe3"}
+---
+2026-10-23T23:42:14.240Z

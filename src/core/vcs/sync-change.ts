@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { OsqConfig } from '../foundation/config.js';
+import { readWatchState } from '../run/watch-state.js';
 import { awaitedDependencies } from '../spec/stack-dependencies.js';
 import { type LocatedChange, listChanges, matchesFolder } from '../status/change-locations.js';
 import { deriveSpecState, readChangeFolder } from '../status/state.js';
@@ -83,7 +84,15 @@ async function refuseSync(
   vcs: Vcs,
   id: string,
   change: LocatedChange,
+  home: string | undefined,
 ): Promise<void> {
+  const watch = await readWatchState(projectRoot, home);
+  const pid = watch.service?.pid ?? watch.watcher?.pid;
+  if (pid !== undefined) {
+    throw new Error(
+      `a watcher runs for this project (pid ${pid}); it syncs ${change.folderName} before the change's next attempt, or stop it and run osq sync ${id} again`,
+    );
+  }
   const state = deriveSpecState(await readChangeFolder(projectRoot, change.folderPath));
   if (state.tasks.some((task) => task.status === 'running')) {
     throw new Error(`${change.folderName} has a task running; run osq sync ${id} after it ends`);
@@ -107,15 +116,18 @@ async function refuseSync(
 
 /**
  * Take the default branch into a change's branch on request. Refuses while a
- * task runs, a dependency has not landed, or the worktree is dirty; otherwise
- * runs the sync and reports whether it merged. A stop of an active change is
- * recorded as a `sync_stopped` event and never halts anything.
+ * watcher runs, a task runs, a dependency has not landed, or the worktree is
+ * dirty; otherwise runs the sync and reports whether it merged. A stop of an
+ * active change is recorded as a `sync_stopped` event and never halts anything.
+ * @scenario version-control: Watcher running
+ * @adr 012
  */
 export async function syncChange(
   projectRoot: string,
   config: OsqConfig,
   id: string,
   progress?: (line: string) => void,
+  home?: string,
 ): Promise<string> {
   if (config.vcs?.enabled !== true) throw new Error(OSQ_SYNC_NEEDS_GIT);
   const rootVcs = await selectVcs(projectRoot, config);
@@ -124,7 +136,7 @@ export async function syncChange(
   const change = await resolveChange(projectRoot, config, id);
   if (change === null) throw new Error(`No change "${id}" runs in an osq worktree`);
 
-  await refuseSync(projectRoot, config, rootVcs, id, change);
+  await refuseSync(projectRoot, config, rootVcs, id, change, home);
 
   const defaultBranch = await (await selectVcs(change.tree.root, config)).defaultBranch();
   try {
