@@ -1,0 +1,16 @@
+{"type":"started","timestamp":"2026-10-20T09:00:00.000Z","data":{"task":"2"}}
+{"type":"started","timestamp":"2026-10-20T09:05:00.000Z","data":{"task":"2"}}
+{"type":"dead","timestamp":"2026-10-20T09:06:00.000Z","data":{"task":"2","reason":"  "}}
+{"type":"stuck","timestamp":"2026-10-20T09:07:00.000Z","data":{"task":"2"}}
+{"type":"retry","timestamp":"2026-10-20T09:10:00.000Z","data":{"target":"2","automatic":false}}
+{"type":"started","timestamp":"2026-10-20T09:11:00.000Z","data":{"task":"2","cost":"3"}}
+{"type":"verify_ran","timestamp":"2026-10-20T09:15:00.000Z","data":{"task":"2"}}
+{"type":"regressed","timestamp":"2026-10-20T09:20:00.000Z","data":{"task":"2","reason":"scope_regression","exitCode":0}}
+{"type":"recertification","timestamp":"2026-10-20T09:21:00.000Z","data":{"task":"2","outcome":"passed","automatic":true}}
+{"type":"regressed","timestamp":"2026-10-20T09:30:00.000Z","data":{"task":"2","reason":"scope_regression","exitCode":2}}
+{"type":"recertification","timestamp":"2026-10-20T09:31:00.000Z","data":{"task":"2","outcome":"requeued"}}
+{"type":"regressed","timestamp":"2026-10-20T09:40:00.000Z","data":{"task":"2","reason":"scope_regression"}}
+{"type":"recertification","timestamp":"2026-10-20T09:41:00.000Z","data":{"task":"2","outcome":"passed"}}
+{"type":"regressed","timestamp":"2026-10-20T09:45:00.000Z","data":{"task":"2","reason":"verify_red","exitCode":1}}
+{"type":"started","timestamp":"2026-10-20T09:50:00.000Z","data":{"task":"2"}}
+{"type":"done","timestamp":"2026-10-20T09:55:00.000Z","data":{"task":"2"}}

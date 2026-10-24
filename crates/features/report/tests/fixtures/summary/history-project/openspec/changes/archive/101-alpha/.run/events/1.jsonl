@@ -1,0 +1,11 @@
+{"type":"verify_ran","timestamp":"2026-10-20T08:00:00.000Z","data":{"task":"1","phase":"pre_spawn","expected":"red","exitCode":1,"mismatch":false,"missingPaths":[]}}
+{"type":"started","timestamp":"2026-10-20T08:01:00.000Z","data":{"task":"1","cost":0.5}}
+{"type":"verify_ran","timestamp":"2026-10-20T08:05:00.000Z","data":{"task":"1","exitCode":1}}
+{"type":"dead","timestamp":"2026-10-20T08:06:00.000Z","data":{"task":"1","reason":"verify_red","cost":1.25}}
+{"type":"retry","timestamp":"2026-10-20T08:10:00.000Z","data":{"target":"1","automatic":true}}
+{"type":"verify_ran","timestamp":"2026-10-20T08:11:00.000Z","data":{"task":"1","phase":"pre_spawn","expected":"red","exitCode":0,"mismatch":true,"missingPaths":["src/alpha.ts"]}}
+{"type":"started","timestamp":"2026-10-20T08:12:00.000Z","data":{"task":"1"}}
+{"type":"verify_ran","timestamp":"2026-10-20T08:20:00.000Z","data":{"task":"1","exitCode":0}}
+{"type":"done","timestamp":"2026-10-20T08:21:00.000Z","data":{"task":"1","cost":2}}
+{"type":"done","timestamp":"2026-10-20T08:22:00.000Z","data":{"task":"1","cost":0.25}}
+not json

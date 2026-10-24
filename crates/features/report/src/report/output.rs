@@ -3,11 +3,14 @@
 //! Implements: rust-report/report-summary
 
 use super::counts::Counts;
+use super::history::History;
+use super::{history_json, history_text};
 
-/// Writes the header, `Specs Summary:` and `Now:` sections TypeScript prints.
+/// Writes the header, `Specs Summary:`, `Now:` and `History:` sections.
 ///
 /// Implements: rust-report/report-summary
-pub(crate) fn text(counts: &Counts) -> String {
+/// Implements: rust-report/report-history
+pub(crate) fn text(counts: &Counts, history: &History) -> String {
     format!(
         concat!(
             "osq Delivery Metrics Report\n",
@@ -25,7 +28,10 @@ pub(crate) fn text(counts: &Counts) -> String {
             "  Running: {running}\n",
             "  Pending: {pending}\n",
             "  Unmarked: {unmarked}\n",
-            "  Completion rate: {rate}%",
+            "  Completion rate: {rate}%\n",
+            "\n",
+            "History:\n",
+            "{history}",
         ),
         total_specs = counts.total_specs,
         active_specs = counts.active_specs,
@@ -40,49 +46,16 @@ pub(crate) fn text(counts: &Counts) -> String {
         pending = counts.pending,
         unmarked = counts.unmarked,
         rate = rate(counts.completion),
+        history = history_text::text(history),
     )
 }
 
-/// Writes the `completionRate`, `now` and `specs` members as sorted JSON.
+/// Writes the `completionRate`, `history`, `now` and `specs` members as JSON.
 ///
 /// Implements: rust-report/report-summary
-pub(crate) fn json(counts: &Counts) -> String {
-    format!(
-        concat!(
-            "{{\n",
-            "  \"completionRate\": {rate},\n",
-            "  \"now\": {{\n",
-            "    \"dead\": {dead},\n",
-            "    \"done\": {done},\n",
-            "    \"manual\": {manual},\n",
-            "    \"pending\": {pending},\n",
-            "    \"regressed\": {regressed},\n",
-            "    \"running\": {running},\n",
-            "    \"total\": {total_tasks},\n",
-            "    \"unmarked\": {unmarked},\n",
-            "    \"verified\": {verified}\n",
-            "  }},\n",
-            "  \"specs\": {{\n",
-            "    \"active\": {active_specs},\n",
-            "    \"archived\": {archived_specs},\n",
-            "    \"total\": {total_specs}\n",
-            "  }}\n",
-            "}}",
-        ),
-        rate = rate(counts.completion),
-        dead = counts.dead,
-        done = counts.done,
-        manual = counts.manual,
-        pending = counts.pending,
-        regressed = counts.regressed,
-        running = counts.running,
-        total_tasks = counts.total_tasks,
-        unmarked = counts.unmarked,
-        verified = counts.verified,
-        active_specs = counts.active_specs,
-        archived_specs = counts.archived_specs,
-        total_specs = counts.total_specs,
-    )
+/// Implements: rust-report/report-history
+pub(crate) fn json(counts: &Counts, history: &History) -> String {
+    history_json::document(counts, history)
 }
 
 /// Writes hundredths of a percent as JavaScript writes the same number.

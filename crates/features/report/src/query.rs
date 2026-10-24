@@ -1,7 +1,7 @@
 //! Running one read-only query over the read model.
 
 mod authorize;
-mod json;
+pub(crate) mod json;
 mod text;
 
 use std::env;

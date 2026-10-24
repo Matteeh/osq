@@ -1,0 +1,33 @@
+diff --git a/openspec/changes/323-rust-report-history-counts/.run/dead/1.md b/openspec/changes/323-rust-report-history-counts/.run/dead/1.1.md
+similarity index 100%
+rename from openspec/changes/323-rust-report-history-counts/.run/dead/1.md
+rename to openspec/changes/323-rust-report-history-counts/.run/dead/1.1.md
+diff --git a/openspec/changes/323-rust-report-history-counts/.run/dead/2.md b/openspec/changes/323-rust-report-history-counts/.run/dead/2.md
+new file mode 100644
+index 00000000..a6969a8e
+--- /dev/null
++++ b/openspec/changes/323-rust-report-history-counts/.run/dead/2.md
+@@ -0,0 +1,7 @@
++---
++reason: entry_missing
++fingerprint: sha256:715d0a2f01b3b9f9aa6c6391fe460cb0e92ecdff39b2f63825d4788f1527821a
++---
++The task's entry names files that do not exist:
++- crates/kernel/storage/src/read/task_history.rs
++Revise the plan with osq plan 323, then approve it again.
+diff --git a/openspec/changes/323-rust-report-history-counts/.run/events/2.jsonl b/openspec/changes/323-rust-report-history-counts/.run/events/2.jsonl
+new file mode 100644
+index 00000000..b929563b
+--- /dev/null
++++ b/openspec/changes/323-rust-report-history-counts/.run/events/2.jsonl
+@@ -0,0 +1 @@
++{"type":"dead","timestamp":"2026-10-24T00:22:30.586Z","data":{"task":"2","reason":"entry_missing"}}
+diff --git a/openspec/changes/323-rust-report-history-counts/.run/events/change.jsonl b/openspec/changes/323-rust-report-history-counts/.run/events/change.jsonl
+index 5ff1c186..3ddd6f5d 100644
+--- a/openspec/changes/323-rust-report-history-counts/.run/events/change.jsonl
++++ b/openspec/changes/323-rust-report-history-counts/.run/events/change.jsonl
+@@ -1,3 +1,4 @@
+ {"type":"baseline_ran","timestamp":"2026-10-23T23:28:06.074Z","data":{"outcome":"passed","command":"pnpm verify","commit":"ac2d036d5cf6a340846702619c78c1e91f0af596","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":247.65}}
+ {"type":"verify_ran","timestamp":"2026-10-23T23:56:42.723Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":3,"duration":654.31,"log":".run/logs/change-1.log","output":"\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 115 mutants to test\nok       Unmutated baseline in 9s build + 5s test\n INFO Auto-set test timeout to 29s\nTIMEOUT  crates/kernel/storage/src/read/task_history/pre_spawn.rs:20:39: replace += with *= in count in 2s build + 29s test\nTIMEOUT  crates/kernel/storage/src/read/task_history/pre_spawn.rs:26:20: replace += with -= in count in 4s build + 29s test\nTIMEOUT  crates/kernel/storage/src/read/task_history/pre_spawn.rs:26:20: replace += with *= in count in 3s build + 29s test\nTIMEOUT  crates/kernel/storage/src/read/task_history/pre_spawn.rs:27:37: replace == with != in count in 6s build + 29s test\nTIMEOUT  crates/kernel/storage/src/read/task_history/pre_spawn.rs:28:26: replace += with -= in count in 4s build + 29s test\n115 mutants tested in 9m: 107 caught, 3 unviable, 5 timeouts"}}
+ {"type":"synced","timestamp":"2026-10-23T23:56:48.314Z","data":{"defaultBranch":"main","commits":2,"duration":1148}}
++{"type":"verify_ran","timestamp":"2026-10-24T00:22:19.595Z","data":{"command":"sh scripts/verify-rust.sh","exitCode":0,"duration":484.96,"log":".run/logs/change-2.log","output":"   Doc-tests osq_kernel_linter\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_loop\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_runners\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_specs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_storage\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests osq_kernel_vcs\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nFound 115 mutants to test\nok       Unmutated baseline in 8s build + 3s test\n INFO Auto-set test timeout to 20s\n115 mutants tested in 7m: 112 caught, 3 unviable"}}

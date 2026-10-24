@@ -5,6 +5,10 @@
 mod arguments;
 mod counts;
 mod entries;
+mod history;
+mod history_json;
+mod history_text;
+mod js_number;
 mod output;
 
 use std::path::Path;
@@ -24,6 +28,7 @@ use osq_kernel_vcs::project_git_root;
 /// Implements: rust-report/report-changes
 /// Implements: rust-report/report-counts
 /// Implements: rust-report/report-summary
+/// Implements: rust-report/report-history
 /// Implements: rust-vcs/project-root-check
 pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> {
     let json = arguments::parse(args)?;
@@ -31,10 +36,11 @@ pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> 
     let repo_root = project_git_root(root, &config).map_err(|error| failed(error.to_string()))?;
     let entries = entries::entries(root, &config, repo_root)?;
     let counts = counts::count(&entries);
+    let history = history::read(&entries);
     let text = if json {
-        output::json(&counts)
+        output::json(&counts, &history)
     } else {
-        output::text(&counts)
+        output::text(&counts, &history)
     };
     Ok(Output::text(text))
 }

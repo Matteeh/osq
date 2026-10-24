@@ -16,6 +16,6 @@ osq-kernel-config.workspace = true
 osq-kernel-storage.workspace = true
 osq-kernel-vcs.workspace = true
 rusqlite = { workspace = true, features = ["hooks"] }
+serde_json.workspace = true
 
 [dev-dependencies]
-serde_json.workspace = true

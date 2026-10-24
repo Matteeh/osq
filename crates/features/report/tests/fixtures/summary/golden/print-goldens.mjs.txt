@@ -1,14 +1,16 @@
-// Prints TypeScript's `osq report` summary goldens for rust-report
-// "Report summary equals TypeScript's".
+// Prints TypeScript's `osq report` goldens for rust-report "Report summary
+// equals TypeScript's", through the History counts.
 // Run from the repository root after `pnpm build`:
 //   node print-goldens.mjs <fixture folder> <golden folder>
-// Each case runs the built CLI on a fresh copy of its fixture project, with the
-// copy as the working directory, a fresh empty HOME and no osq config. git
-// ignores `.run/running/`, so the script writes a case's lock files into its
-// copy. `<case>.txt` holds `osq report`'s text from its first line through the
-// `  Completion rate:` line; `<case>.json` holds the `completionRate`, `now`
-// and `specs` members of `osq report --json`, written as `serializeSortedJson`
-// writes them. Neither file ends with a newline.
+// <fixture folder> holds the crate's `tests/fixtures/summary/` projects plus
+// `history-project`. Each case runs the built CLI on a fresh copy of its
+// fixture project, with the copy as the working directory, a fresh empty HOME
+// and no osq config. git ignores `.run/running/`, so the script writes a
+// case's lock files into its copy. `<case>.txt` holds `osq report`'s text from
+// its first line through the `    Requeued for agent:` line; `<case>.json`
+// holds the `completionRate`, `now` and `specs` members of `osq report --json`
+// and its `history` member cut to the keys in HISTORY_KEYS, written as
+// `serializeSortedJson` writes them. Neither file ends with a newline.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -16,6 +18,17 @@ import path from 'node:path';
 
 const BIN = path.resolve('dist', 'cli', 'bin.js');
 const [fixture, golden] = process.argv.slice(2);
+const HISTORY_KEYS = [
+  'attempts',
+  'cost',
+  'deadByReason',
+  'preSpawnVerify',
+  'rejections',
+  'retries',
+  'scopeRegressions',
+  'unexplainedReruns',
+  'verifyRuns',
+];
 
 const cases = [
   { name: 'empty', project: null },
@@ -30,6 +43,7 @@ const cases = [
   },
   { name: 'all-done', project: 'all-done' },
   { name: 'thirds', project: 'thirds' },
+  { name: 'history-project', project: 'history-project' },
 ];
 
 function run(root, home, args) {
@@ -42,18 +56,34 @@ function run(root, home, args) {
   return result.stdout;
 }
 
-function summaryText(stdout) {
+function historyText(stdout) {
   const lines = stdout.split('\n');
-  const last = lines.findIndex((line) => line.startsWith('  Completion rate: '));
-  if (last < 0) throw new Error('no completion rate line');
+  const last = lines.findIndex((line) => line.startsWith('    Requeued for agent: '));
+  if (last < 0) throw new Error('no requeued line');
   return lines.slice(0, last + 1).join('\n');
 }
 
-function summaryJson(stdout) {
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, sorted(value[key])]),
+  );
+}
+
+function historyJson(stdout) {
   const report = JSON.parse(stdout);
-  const picked = {};
-  for (const key of ['completionRate', 'now', 'specs']) picked[key] = report[key];
-  return JSON.stringify(picked, null, 2);
+  const history = {};
+  for (const key of HISTORY_KEYS) history[key] = report.history[key];
+  const picked = {
+    completionRate: report.completionRate,
+    history,
+    now: report.now,
+    specs: report.specs,
+  };
+  return JSON.stringify(sorted(picked), null, 2);
 }
 
 for (const c of cases) {
@@ -65,10 +95,10 @@ for (const c of cases) {
     fs.mkdirSync(running, { recursive: true });
     fs.writeFileSync(path.join(running, `${task}.pid`), text);
   }
-  fs.writeFileSync(path.join(golden, `${c.name}.txt`), summaryText(run(root, home, ['report'])));
+  fs.writeFileSync(path.join(golden, `${c.name}.txt`), historyText(run(root, home, ['report'])));
   fs.writeFileSync(
     path.join(golden, `${c.name}.json`),
-    summaryJson(run(root, home, ['report', '--json'])),
+    historyJson(run(root, home, ['report', '--json'])),
   );
   fs.rmSync(root, { recursive: true, force: true });
   fs.rmSync(home, { recursive: true, force: true });

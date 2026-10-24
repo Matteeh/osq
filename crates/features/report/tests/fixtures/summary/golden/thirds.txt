@@ -14,3 +14,30 @@ Now:
   Pending: 1
   Unmarked: 0
   Completion rate: 66.67%
+
+History:
+  Total attempts: 0
+  Tasks with multiple attempts: 0
+  Unexplained re-runs: 0
+  Verification runs: 0
+  Verification runs missing exit code: 0
+  Pre-spawn verify mismatches: 0 of 0 runs
+  Pre-spawn verify with missing paths: 0 of 0 runs
+  Pre-spawn verify by declared start: red 0 of 0 passed, green 0 of 0 passed, any 0 of 0 passed
+  Automatic retries:
+  automatic: 0 retries, 0 reached done, cost not reported (0 of 0 attempts reported cost)
+  manual: 0 retries, 0 reached done, cost not reported (0 of 0 attempts reported cost)
+  Stuck: 0
+  Harness-reported cost: not reported (0 of 0 attempts reported cost)
+  Dead by reason:
+    (none)
+  Rejections: 0
+  Rejections by planner model:
+    (none)
+  Scope regressions:
+    Detected: 0
+    Verification passed at detection: 0
+    Verification failed at detection: 0
+    Recertified by human: 0
+    Recertified automatically: 0
+    Requeued for agent: 0

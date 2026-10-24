@@ -1,5 +1,81 @@
 {
   "completionRate": 100,
+  "history": {
+    "attempts": {
+      "byTask": {
+        "001-one/1": 0
+      },
+      "multipleAttempts": [],
+      "total": 0
+    },
+    "cost": {
+      "coverage": {
+        "reportedAttempts": 0,
+        "totalAttempts": 0
+      },
+      "formattedTotal": "not reported",
+      "perSpec": {},
+      "provenance": "harness-reported",
+      "total": 0
+    },
+    "deadByReason": {},
+    "preSpawnVerify": {
+      "byStart": {
+        "any": {
+          "passed": 0,
+          "runs": 0
+        },
+        "green": {
+          "passed": 0,
+          "runs": 0
+        },
+        "red": {
+          "passed": 0,
+          "runs": 0
+        }
+      },
+      "mismatchedTasks": [],
+      "mismatches": 0,
+      "missingPathRuns": 0,
+      "runs": 0
+    },
+    "rejections": {
+      "byPlannerModel": {},
+      "total": 0
+    },
+    "retries": {
+      "automatic": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "manual": {
+        "cost": 0,
+        "costReportedAttempts": 0,
+        "count": 0,
+        "reachedDone": 0
+      },
+      "stuck": 0
+    },
+    "scopeRegressions": {
+      "detected": 0,
+      "recertifiedAutomatically": 0,
+      "recertifiedByHuman": 0,
+      "requeuedForAgent": 0,
+      "verificationFailedAtDetection": 0,
+      "verificationPassedAtDetection": 0
+    },
+    "unexplainedReruns": {
+      "byTask": {},
+      "total": 0
+    },
+    "verifyRuns": {
+      "byTask": {},
+      "missingExitCode": 0,
+      "total": 0
+    }
+  },
   "now": {
     "dead": 0,
     "done": 1,

@@ -85,7 +85,7 @@ fn array_index(name: &str) -> Option<u32> {
 /// One real as ECMAScript's `Number::toString` writes it.
 ///
 /// Implements: rust-report/query-json-reals
-fn real_text(value: f64) -> String {
+pub(crate) fn real_text(value: f64) -> String {
     if !value.is_finite() {
         return "null".to_owned();
     }
@@ -141,7 +141,7 @@ fn real_text(value: f64) -> String {
 /// One JSON string as `JSON.stringify` writes it.
 ///
 /// Implements: rust-report/query-json-strings
-fn string_text(text: &str) -> String {
+pub(crate) fn string_text(text: &str) -> String {
     let mut out = String::with_capacity(text.len() + 2);
     out.push('"');
     for character in text.chars() {

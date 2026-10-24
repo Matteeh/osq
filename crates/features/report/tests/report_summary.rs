@@ -20,7 +20,7 @@ struct Case {
     locks: &'static [(&'static str, &'static str, &'static str)],
 }
 
-/// The five cases TypeScript's golden script prints.
+/// The six cases TypeScript's golden script prints.
 const CASES: &[Case] = &[
     Case {
         name: "empty",
@@ -48,6 +48,11 @@ const CASES: &[Case] = &[
     Case {
         name: "thirds",
         project: Some("thirds"),
+        locks: &[],
+    },
+    Case {
+        name: "history-project",
+        project: Some("history-project"),
         locks: &[],
     },
 ];

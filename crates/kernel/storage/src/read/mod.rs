@@ -34,6 +34,8 @@
 //! Implements: rust-storage/now-facts
 //! Implements: rust-storage/watch-state-records
 //! Implements: rust-storage/validator-failing-record
+//! Implements: rust-storage/task-history
+//! Implements: rust-storage/rejection-planner
 
 mod change_files;
 mod error;
@@ -43,11 +45,13 @@ mod manual;
 mod now;
 mod pending;
 mod queue;
+mod rejection;
 mod results;
 mod retry;
 mod seal;
 mod sections;
 mod snapshot;
+mod task_history;
 mod text;
 mod trees;
 mod validator;
@@ -64,6 +68,7 @@ pub use pending::{
     read_usage_pause, watch_state_dir,
 };
 pub use queue::{QueueTitle, read_queue_titles};
+pub use rejection::read_rejection_planner;
 pub use results::TaskDisclosure;
 pub use retry::{RetryContext, read_retry_context};
 pub use seal::change_folder_seal;
@@ -72,6 +77,9 @@ pub use snapshot::{
     CapabilityDelta, ChangeSnapshot, DeadAttempt, EventFacts, HaltMarker, LinkEntry,
     ManifestNotices, Notice, PlanRecord, RunningLock, TableEvent, TaskFile, TaskMarkers,
     TaskOutcomeFacts, read_archive, read_change, read_history,
+};
+pub use task_history::{
+    PreSpawnHistory, RetryGroup, ScopeHistory, StartCount, TaskHistory, read_task_history,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};
