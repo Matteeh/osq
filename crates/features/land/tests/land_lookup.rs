@@ -2,7 +2,49 @@
 
 mod support;
 
-use support::LandRepo;
+use std::fs;
+use std::path::PathBuf;
+
+use support::{FIXTURE_FOLDER, LandRepo, copy_tree, fixture};
+
+/// Adds the fixture change in a worktree at its configured cleanup path.
+fn configured_change(repo: &LandRepo) -> PathBuf {
+    repo.write(
+        repo.checkout(),
+        "osq.toml",
+        format!(
+            "[vcs]\nenabled = true\nauthor = \"osq <osq@example.invalid>\"\nworktreeRoot = \"{}\"\n",
+            repo.scratch().join("wt").display()
+        ),
+    );
+    let path = repo
+        .scratch()
+        .join("wt")
+        .join("checkout")
+        .join(FIXTURE_FOLDER);
+    fs::create_dir_all(path.parent().expect("the worktree has a parent"))
+        .expect("the worktree's folder is created");
+    let branch = format!("osq/{FIXTURE_FOLDER}");
+    repo.git(
+        repo.checkout(),
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "-b",
+            &branch,
+            path.to_str().expect("the worktree path is text"),
+            "main",
+        ],
+    );
+    repo.write(&path, "src/one.txt", "two\n");
+    copy_tree(
+        &fixture(&format!("land-change/{FIXTURE_FOLDER}")),
+        &path.join("openspec/changes/archive").join(FIXTURE_FOLDER),
+    );
+    repo.commit_all(&path, "work on the fixture change");
+    path
+}
 
 /// What one lookup row expects.
 enum Expected {
@@ -118,7 +160,7 @@ fn already_landed() {
         (
             "worktree remains",
             false,
-            "001-alpha-orders has already landed; Rust land does not remove worktrees yet\n",
+            "001-alpha-orders has already landed\nRemoved worktree {path}\n",
         ),
         (
             "worktree removed",
@@ -126,9 +168,9 @@ fn already_landed() {
             "001-alpha-orders has already landed; nothing to clean up\n",
         ),
     ];
-    for (index, (name, remove, expected)) in rows.into_iter().enumerate() {
+    for (index, (name, remove, template)) in rows.into_iter().enumerate() {
         let repo = LandRepo::new(&format!("landed-{index}"));
-        let change = repo.add_fixture_change();
+        let path = configured_change(&repo);
         repo.write(
             repo.checkout(),
             "openspec/changes/archive/001-alpha-orders/proposal.md",
@@ -140,12 +182,21 @@ fn already_landed() {
             &["openspec/changes/archive/001-alpha-orders/proposal.md"],
         );
         if remove {
-            repo.remove_worktree(&change);
+            repo.git(
+                repo.checkout(),
+                &[
+                    "worktree",
+                    "remove",
+                    "--force",
+                    path.to_str().expect("the worktree path is text"),
+                ],
+            );
         }
         let before = repo.head(repo.checkout());
         let output = repo
             .run("1")
             .unwrap_or_else(|error| panic!("{name}: {error}"));
+        let expected = template.replace("{path}", &path.display().to_string());
         assert_eq!(output.text, expected, "{name}");
         assert_eq!(
             repo.head(repo.checkout()),

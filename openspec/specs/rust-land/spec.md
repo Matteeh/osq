@@ -115,13 +115,15 @@ which matches the query. When the default branch holds the path
 `openspec/changes/archive/<folder>`, as the vcs kernel's `path_exists`
 reads it, the change has landed. `land` SHALL then make no commit and,
 after the checks of "Land refusals" that apply to a landed change, run
-"Land after-land retry", which writes only the after-land record and what
-its command writes. Its landed line is
-`<folder> has already landed; nothing to clean up` and a newline when no
-worktree change is `<folder>`, or
-`<folder> has already landed; Rust land does not remove worktrees yet`
-and a newline when one is. Without a retry, `land` SHALL return the
-landed line as its output.
+"Land cleanup" and then "Land after-land retry", which writes only the
+after-land record and what its command writes. Its landed lines are
+`<folder> has already landed` and a newline followed by the cleanup's line
+and a newline when "Land cleanup" attempted a removal, or
+`<folder> has already landed; nothing to clean up` and a newline when it
+did not. Without a retry, `land` SHALL return the landed lines as its
+output, or, when the cleanup failed, fail with `FeatureError::failed` with
+the command `land` and those lines without the last newline as the
+message.
 
 Otherwise `land` SHALL fail, writing nothing, in this order: with
 `<x> has not archived on osq/<x>` for the first worktree change matching
@@ -153,7 +155,7 @@ in its worktree.
 
 | Worktrees | Output |
 |---|---|
-| the fixture change's worktree remains | `001-alpha-orders has already landed; Rust land does not remove worktrees yet\n` |
+| the fixture change's worktree remains at its "Land cleanup" path `<path>`, under a `vcs.worktreeRoot` set in `osq.toml` | `001-alpha-orders has already landed\nRemoved worktree <path>\n` |
 | the fixture change's worktree was removed with `git worktree remove --force`, and the checkout holds `openspec/changes/archive/001-alpha-orders/proposal.md` | `001-alpha-orders has already landed; nothing to clean up\n` |
 
 ### Requirement: Land message
@@ -204,16 +206,23 @@ writes: <paths>; commit or stash them, then run osq land <id> again`, with
 the paths joined by `, `. When `fast_forward` fails and the checkout's
 HEAD is no longer the base, it SHALL fail with the moved message, and
 otherwise with the `VcsError`'s display. It SHALL push nothing and remove
-no worktree or branch; the only commands it runs are those "Land sync",
-"Land sync verify" and "Land after-land command" name.
+no branch; it removes only the worktree "Land cleanup" names, and the only
+commands it runs are those "Land sync", "Land sync verify", "Land cleanup"
+and "Land after-land command" name.
 
-On success `land` SHALL return the output `Landed <folder> as <commit>`, a
-newline, `Kept branch osq/<folder>` and a newline, as TypeScript's
-`landChange` prints them, followed by `Changed <path>` and a newline for
-each path in `fast_forward`'s `changed` list, in its order, where
-`<path>` is the checkout's repository root joined with the path, shown
-with `display()`, as TypeScript's "Land reports changed paths" builds
-them, then the lines "Land after-land command" adds.
+After `fast_forward` gives `Done`, `land` SHALL run "Land cleanup" and
+then "Land after-land command". On success `land` SHALL return the output
+`Landed <folder> as <commit>` and a newline, then the cleanup's line and a
+newline when it attempted a removal, then `Kept branch osq/<folder>` and a
+newline, as TypeScript's `landChange` prints them, followed by
+`Changed <path>` and a newline for each path in `fast_forward`'s
+`changed` list, in its order, where `<path>` is the checkout's repository
+root joined with the path, shown with `display()`, as TypeScript's "Land
+reports changed paths" builds them, then the lines "Land after-land
+command" adds. When the cleanup failed, `land` SHALL instead fail with
+`FeatureError::failed` with the command `land` and all those lines without
+the last newline as the message; the land commit and the checkout's
+fast-forward stay.
 
 #### Scenario: Land from the branch tip
 - **WHEN** `land` runs with the query `1` on a land repository holding the fixture change, whose checkout also has a modified `notes.txt`, a staged new `staged.txt` and an untracked `drafts/x`
@@ -302,7 +311,7 @@ stops only for those in files the land writes.
 |---|---|
 | the checkout is on a new branch `feature` cut from `main` | `osq land runs on main; the checkout is on feature` |
 | the fixture change's worktree has an untracked `notes.txt` | `<wt> has uncommitted changes: notes.txt; commit or discard them first`, where `<wt>` is its worktree path |
-| the fixture change's archived folder also holds `.run/stacked-on` holding `000-base sha256:x\n`, committed on its branch | output `001-alpha-orders has already landed; Rust land does not remove worktrees yet\n` |
+| the fixture change's archived folder also holds `.run/stacked-on` holding `000-base sha256:x\n`, committed on its branch | output `001-alpha-orders has already landed; nothing to clean up\n` |
 
 #### Scenario: Earlier changes that do not refuse
 - **WHEN** `land` runs with the query `1` on a land repository holding the fixture change and the row's other worktree changes, each with an archived folder whose files the row gives
@@ -412,21 +421,21 @@ that requirement says, with the new exit code and time.
 
 - When the command exits 0, `land` SHALL return the line
   `After-land command passed: <command>` and a newline, followed by "Land
-  lookup"'s landed line.
+  lookup"'s landed lines.
 - Otherwise `land` SHALL fail with `FeatureError::failed` with the command
   `land`, whose message is `After-land command failed: <command>`, the
   output tail "Land after-land command" names, `run osq land <id> again to
-  retry it` and "Land lookup"'s landed line without its newline, joined by
+  retry it` and "Land lookup"'s landed lines without the last newline, joined by
   newlines, as TypeScript's `cleanupLanded` orders its lines.
 
 With `vcs.afterLand` unset, with no record, with a record that does not
 parse, or with one that names another change, `land` SHALL run nothing,
 leave the record's bytes as they are, and return "Land lookup"'s landed
-line. A refusal of "Land refusals" runs nothing and leaves the record.
+lines. A refusal of "Land refusals" runs nothing and leaves the record.
 
 #### Scenario: Retry on a landed change
 - **WHEN** `land` runs with the query `1` on a land repository holding the fixture change whose worktree remains, after `main` gained a commit that adds `openspec/changes/archive/001-alpha-orders/proposal.md`, with the row's record for the repository's checkout and the row's `afterLand` under `[vcs]`
-- **THEN** `main` gains no commit, and `land` returns the row's output or fails with the row's message, written with `\n` escapes, where `<landed>` is `001-alpha-orders has already landed; Rust land does not remove worktrees yet`, and the checkout's `built.txt` and the record are as the row says:
+- **THEN** `main` gains no commit, and `land` returns the row's output or fails with the row's message, written with `\n` escapes, where `<landed>` is `001-alpha-orders has already landed; nothing to clean up`, since the worktree is not at its "Land cleanup" path, and the checkout's `built.txt` and the record are as the row says:
 
 | Record | `afterLand` | Result | `built.txt` | Record after |
 |---|---|---|---|---|
@@ -765,3 +774,53 @@ line on stderr is not part of the output.
 #### Scenario: Message for a stacked change
 - **WHEN** `message` runs with the query `1` on a land repository holding the fixture change, whose archived folder also holds `.run/stacked-on` holding `000-base sha256:x\n`, committed
 - **THEN** it gives a `Failed` error for the command `message` with the message `001-alpha-orders is stacked on 000-base; Rust message does not build stacked changes' messages yet`
+
+### Requirement: Land cleanup
+The cleanup SHALL remove the change's worktree as TypeScript's
+`cleanupChange` removes it. Its path `<path>` is
+`<vcs.worktreeRoot>/<repo>/<folder>`, as version-control "Worktree
+location" gives it: a leading `~` in `vcs.worktreeRoot` expands to `HOME`,
+empty when unset, `<repo>` is the last component of the checkout's
+repository root, and `<folder>` is the change folder. It attempts a removal
+only when a folder is at `<path>` or the root's `worktree_list` lists an
+entry whose path is `<path>`; otherwise it does nothing and gives no line.
+It SHALL run these steps in order and stop at the first that fails:
+
+1. When the checkout holds `openspec/changes/archive/<folder>` and the
+   folder `<path>/openspec/changes/archive/<folder>/.run/logs` exists, copy
+   every file under it, with its folders, into the checkout's
+   `openspec/changes/archive/<folder>/.run/logs`, leaving every file that
+   is already there as it is.
+2. Delete `<path>` with every file in it, ignored files included, when it
+   exists, with no time limit.
+3. Run the vcs kernel's `worktree_prune` at the root, bounded by the
+   config's git timeouts.
+
+When every step passes, its line is `Removed worktree <path>`. When a step
+fails, its line is `Could not remove worktree <path>: <cause>`, where
+`<cause>` is the failing step's error display, and the cleanup failed.
+`<path>` is shown with `display()`. The cleanup SHALL neither read nor
+remove `openspec/changes/<folder>` in the checkout.
+
+#### Scenario: Cleanup outcomes
+- **WHEN** a land repository whose `osq.toml` sets `vcs.worktreeRoot` to `<scratch>/wt` and whose `main` commits git ignore rules for `node_modules/`, `target/` and `.run/logs/` holds the fixture change in a worktree at `<path>`, `<scratch>/wt/checkout/001-alpha-orders`, with the row's state, and `land` runs with the query `1`
+- **THEN** the row's outcome holds, where `<commit>` is the land commit and `<lines>` are "Land commit"'s lines from `Kept branch` on:
+
+| State | Outcome |
+|---|---|
+| the worktree holds the ignored file `node_modules/pkg/index.js` | output `Landed 001-alpha-orders as <commit>\nRemoved worktree <path>\n<lines>`; no folder is at `<path>`, and `git worktree list` does not list `<path>` |
+| the worktree's archived folder holds the ignored `.run/logs/probe.log` holding `probe` | the checkout's `openspec/changes/archive/001-alpha-orders/.run/logs/probe.log` holds `probe`, and `git status --porcelain` in the checkout prints nothing |
+| as the row above, and the checkout already holds that log holding `kept` before `land` runs | the checkout's log still holds `kept` |
+| the checkout holds the untracked file `openspec/changes/001-alpha-orders/notes.md` | the change lands and that file keeps its bytes |
+| the worktree holds the folder `node_modules/locked` holding one file, with the folder's write permission removed | a `Failed` error for the command `land` whose message begins `Landed 001-alpha-orders as <commit>\nCould not remove worktree <path>: ` and ends with `\nKept branch osq/001-alpha-orders` followed by the `Changed` lines; `main`'s HEAD is `<commit>` |
+
+#### Scenario: Cleanup of a landed change
+- **WHEN** such a land repository's `main` gained a commit adding `openspec/changes/archive/001-alpha-orders/proposal.md`, the row's state holds, and `land` runs with the query `1`
+- **THEN** it gives the row's output, written with `\n` escapes, and `main` gains no commit:
+
+| State | Output |
+|---|---|
+| the worktree remains at `<path>` | `001-alpha-orders has already landed\nRemoved worktree <path>\n` |
+| the worktree remains at `<path>`, and `land` already ran once for the change | `001-alpha-orders has already landed; nothing to clean up\n` |
+| git no longer lists `<path>`, and a folder at `<path>` holds `target/big` | `001-alpha-orders has already landed\nRemoved worktree <path>\n`, and no folder is at `<path>` |
+| git still lists `<path>`, but its folder was deleted | `001-alpha-orders has already landed\nRemoved worktree <path>\n`, and `git worktree list` does not list `<path>` |

@@ -25,13 +25,6 @@ pub(crate) fn landed_nothing(folder: &str) -> String {
     format!("{folder} has already landed; nothing to clean up\n")
 }
 
-/// The line for a landed change whose worktree still exists.
-///
-/// Implements: rust-land/land-lookup
-pub(crate) fn landed_worktree(folder: &str) -> String {
-    format!("{folder} has already landed; Rust land does not remove worktrees yet\n")
-}
-
 /// The refusal for a worktree change that has not archived.
 ///
 /// Implements: rust-land/land-lookup
@@ -96,7 +89,7 @@ pub(crate) fn blocked(paths: &[String], block: bool, id: &str) -> String {
     )
 }
 
-/// The success lines and one `Changed` line per path.
+/// The success lines, the cleanup's line and one `Changed` line per path.
 ///
 /// Implements: rust-land/land-commit
 pub(crate) fn landed(
@@ -104,8 +97,13 @@ pub(crate) fn landed(
     commit: &str,
     root: &std::path::Path,
     changed: &[String],
+    cleanup: Option<&str>,
 ) -> String {
-    let mut lines = format!("Landed {folder} as {commit}\nKept branch osq/{folder}\n");
+    let mut lines = format!("Landed {folder} as {commit}\n");
+    if let Some(line) = cleanup {
+        writeln!(lines, "{line}").expect("a string writes");
+    }
+    writeln!(lines, "Kept branch osq/{folder}").expect("a string writes");
     for path in changed {
         writeln!(lines, "Changed {}", root.join(path).display()).expect("a string writes");
     }

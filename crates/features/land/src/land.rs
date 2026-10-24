@@ -3,6 +3,7 @@
 
 mod after;
 mod checks;
+mod cleanup;
 mod find;
 mod message;
 pub(crate) mod message_command;
@@ -157,6 +158,7 @@ fn sync_land(
 /// fails or its record cannot be written.
 ///
 /// Implements: rust-land/land-commit
+/// Implements: rust-land/land-cleanup
 /// Implements: rust-land/land-after-land-command
 fn finish(
     root: &Path,
@@ -167,14 +169,26 @@ fn finish(
     commit: &str,
     changed: &[String],
 ) -> Result<String, FeatureError> {
-    after::finish(
+    let cleanup = cleanup::run(root, settings, timeouts, &located.folder);
+    let output = text::landed(
+        &located.folder,
+        commit,
+        root,
+        changed,
+        cleanup.line.as_deref(),
+    );
+    let output = after::finish(
         root,
         &located.folder,
         settings.after_land.as_deref(),
         timeouts,
         limits,
-        text::landed(&located.folder, commit, root, changed),
-    )
+        output,
+    )?;
+    if cleanup.failed {
+        return Err(failed(output.trim_end_matches('\n')));
+    }
+    Ok(output)
 }
 
 /// The output for a change that already landed, with a retry when configured.
@@ -185,6 +199,7 @@ fn finish(
 /// fails or its record cannot be written.
 ///
 /// Implements: rust-land/land-lookup
+/// Implements: rust-land/land-cleanup
 /// Implements: rust-land/land-after-land-retry
 fn landed_output(
     root: &Path,
@@ -193,19 +208,23 @@ fn landed_output(
     timeouts: &Timeouts,
     limits: &Limits,
 ) -> Result<String, FeatureError> {
-    let landed = if located.worktree.is_some() {
-        text::landed_worktree(&located.folder)
-    } else {
-        text::landed_nothing(&located.folder)
+    let cleanup = cleanup::run(root, settings, timeouts, &located.folder);
+    let landed = match cleanup.line {
+        Some(line) => format!("{} has already landed\n{line}\n", located.folder),
+        None => text::landed_nothing(&located.folder),
     };
-    after::retry(
+    let output = after::retry(
         root,
         &located.folder,
         settings.after_land.as_deref(),
         timeouts,
         limits,
-        landed,
-    )
+        landed.clone(),
+    )?;
+    if cleanup.failed && output == landed {
+        return Err(failed(landed.trim_end_matches('\n')));
+    }
+    Ok(output)
 }
 
 /// Runs every refusal before a land reports or writes, in its required order.

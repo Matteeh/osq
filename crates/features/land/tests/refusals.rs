@@ -174,8 +174,7 @@ fn refusals_for_a_landed_change() {
         .run("1")
         .expect("a landed stacked change reports the landed output");
     assert_eq!(
-        output.text,
-        "001-alpha-orders has already landed; Rust land does not remove worktrees yet\n",
+        output.text, "001-alpha-orders has already landed; nothing to clean up\n",
         "landed stacked change output"
     );
     assert_eq!(

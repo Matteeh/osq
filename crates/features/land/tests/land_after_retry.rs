@@ -16,7 +16,7 @@ use support::{FIXTURE_FOLDER, LandRepo};
 /// The record's file name under the project's watch state folder.
 const AFTER_LAND: &str = "after-land.json";
 /// The landed line for a change whose worktree remains.
-const LANDED: &str = "001-alpha-orders has already landed; Rust land does not remove worktrees yet";
+const LANDED: &str = "001-alpha-orders has already landed; nothing to clean up";
 /// The passing command every successful row configures.
 const PASSING_COMMAND: &str = r"printf 'built\n' > built.txt";
 /// The failing command the failing row configures.
