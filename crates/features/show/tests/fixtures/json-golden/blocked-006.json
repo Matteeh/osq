@@ -1,0 +1,49 @@
+{
+  "id": "006",
+  "folderName": "006-blocked",
+  "folderPath": "<base>/checkout/openspec/changes/006-blocked",
+  "isArchived": false,
+  "location": "active",
+  "title": "Beta waits for formatting",
+  "status": "blocked",
+  "approvedHash": "sha256:approved-006",
+  "dependsOn": [
+    "004",
+    "010"
+  ],
+  "features": {
+    "reads": [],
+    "writes": []
+  },
+  "goal": "Beta uses the formatted count.",
+  "contract": "",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When beta prints, it uses the formatter",
+      "status": "pending",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Beta calls the formatter."
+      ],
+      "events": []
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [],
+  "next": {
+    "state": "blocked",
+    "command": "osq show 004",
+    "detail": "waiting for 004"
+  },
+  "digest": null
+}

@@ -12,21 +12,25 @@ use crate::model::Change;
 use super::values::{number, text, time, trimmed};
 
 /// One recertification decision, in display order.
-struct Row {
+///
+/// Implements: rust-show/show-json
+pub(crate) struct Row {
     /// The task number the decision names.
-    task: String,
+    pub(crate) task: String,
     /// The recorded timestamp, when it parses.
-    timestamp: Option<String>,
+    pub(crate) timestamp: Option<String>,
     /// The recorded outcome.
-    outcome: Option<String>,
+    pub(crate) outcome: Option<String>,
     /// The trimmed verify command.
-    verify: Option<String>,
+    pub(crate) verify: Option<String>,
     /// The finite exit code.
-    exit_code: Option<f64>,
+    pub(crate) exit_code: Option<f64>,
     /// The recorded timeout flag.
-    timed_out: Option<bool>,
+    pub(crate) timed_out: Option<bool>,
+    /// The sorted unique differing paths.
+    pub(crate) differing_paths: Vec<String>,
     /// Each differing path with its attribution.
-    attribution: Vec<(String, String)>,
+    pub(crate) attribution: Vec<(String, String)>,
 }
 
 /// A typed recertification event with its stream's task name.
@@ -41,6 +45,20 @@ struct Typed {
 ///
 /// Implements: rust-show/show-text
 pub(super) fn lines(change: &Change) -> Vec<String> {
+    let rows = rows(change);
+    if rows.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![String::new(), "Recertifications:".to_owned()];
+    for row in &rows {
+        lines.extend(row_lines(row));
+    }
+    lines
+}
+
+/// The recertification rows of an archived change, in display order.
+/// Implements: rust-show/show-json
+pub(crate) fn rows(change: &Change) -> Vec<Row> {
     if !change.archived {
         return Vec::new();
     }
@@ -58,14 +76,7 @@ pub(super) fn lines(change: &Change) -> Vec<String> {
     }
     let mut rows: Vec<Row> = typed.iter().map(row).collect();
     rows.sort_by(compare_rows);
-    if rows.is_empty() {
-        return Vec::new();
-    }
-    let mut lines = vec![String::new(), "Recertifications:".to_owned()];
-    for row in &rows {
-        lines.extend(row_lines(row));
-    }
-    lines
+    rows
 }
 
 /// The numbered event streams, in TypeScript's file order.
@@ -124,6 +135,7 @@ fn row(typed: &Typed) -> Row {
         .collect();
     let timestamp = event.timestamp.trim();
     Row {
+        differing_paths: differing.clone(),
         task: numeric_task(event).unwrap_or_else(|| typed.stream.clone()),
         timestamp: (!timestamp.is_empty() && time(timestamp).is_some())
             .then(|| timestamp.to_owned()),

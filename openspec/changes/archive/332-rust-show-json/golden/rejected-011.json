@@ -1,0 +1,72 @@
+{
+  "id": "011",
+  "folderName": "011-rejected",
+  "folderPath": "<base>/checkout/openspec/changes/rejected/011-rejected",
+  "isArchived": false,
+  "location": "rejected",
+  "title": "Alpha counts twice",
+  "status": "unapproved",
+  "approvedHash": null,
+  "dependsOn": [],
+  "features": {
+    "reads": [],
+    "writes": []
+  },
+  "goal": "Alpha counts every call twice. Nobody wanted that. It was rejected.",
+  "contract": "",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When alpha is called, it counts twice",
+      "status": "pending",
+      "verify": "node --test tests/alpha.test.ts",
+      "scope": [
+        "src/alpha.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "One call counts two."
+      ],
+      "events": []
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [
+    {
+      "taskNumber": "change",
+      "type": "rejected",
+      "timestamp": "2026-10-06T09:00:00.000Z",
+      "data": {
+        "reason": "Nobody wants double counting."
+      }
+    }
+  ],
+  "digest": {
+    "change": "011-rejected",
+    "goal": "Alpha counts every call twice. Nobody wanted that.",
+    "tasks": [
+      {
+        "number": "1",
+        "title": "When alpha is called, it counts twice",
+        "scopeFiles": 1,
+        "testsModify": false,
+        "existingTests": []
+      }
+    ],
+    "capabilities": [],
+    "decisions": [
+      {
+        "number": "001",
+        "rule": "Every change keeps the test suite green."
+      }
+    ],
+    "humanSteps": "### Before approval\n\n- Ask whether anyone wants double counting.\n\n### After landing\n\nNone",
+    "beforeApproval": "- Ask whether anyone wants double counting.",
+    "flags": []
+  }
+}

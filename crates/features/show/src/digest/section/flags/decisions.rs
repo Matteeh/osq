@@ -33,7 +33,11 @@ fn departures(section: &str) -> Vec<Flag> {
         let Some(number) = departure_number(text) else {
             continue;
         };
-        flags.push(Flag::new(format!("departs from ADR {number}"), text));
+        flags.push(Flag::new(
+            "adr_departure",
+            format!("departs from ADR {number}"),
+            text,
+        ));
     }
     flags
 }
@@ -82,6 +86,7 @@ fn checks(adrs: &[Adr], tasks: &[TaskView]) -> Vec<Flag> {
                     continue;
                 }
                 flags.push(Flag::new(
+                    "adr_check_modified",
                     format!(
                         "task {} may modify a check of ADR {}",
                         task.number, adr.number

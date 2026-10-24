@@ -18,25 +18,30 @@ mod verify;
 /// The living specs folder TypeScript's default config names.
 const OPENSPEC: &str = "openspec";
 
-/// One `Flag:` line's label and excerpt.
-pub(super) struct Flag {
+/// One `Flag:` line's id, label and excerpt.
+///
+/// Implements: rust-show/show-json
+pub(crate) struct Flag {
+    /// The flag's TypeScript id.
+    pub(crate) id: &'static str,
     /// The text after `Flag: ` and before the em dash.
-    label: String,
+    pub(crate) label: String,
     /// The text after the em dash.
-    excerpt: String,
+    pub(crate) excerpt: String,
 }
 
 impl Flag {
-    /// Builds one flag from its label and excerpt.
-    fn new(label: impl Into<String>, excerpt: impl Into<String>) -> Self {
+    /// Builds one flag from its id, label and excerpt.
+    fn new(id: &'static str, label: impl Into<String>, excerpt: impl Into<String>) -> Self {
         Self {
+            id,
             label: label.into(),
             excerpt: excerpt.into(),
         }
     }
 
     /// Formats the flag as TypeScript's `formatApprovalFlags` does.
-    fn line(&self) -> String {
+    pub(super) fn line(&self) -> String {
         format!("Flag: {} \u{2014} {}", self.label, self.excerpt)
     }
 }
@@ -65,8 +70,9 @@ struct Proposal {
     decisions: String,
 }
 
-/// The `Flag:` lines in TypeScript's fixed order.
-pub(super) fn lines(change: &Change, digest: &Digest) -> Vec<String> {
+/// The flags in TypeScript's fixed order.
+/// Implements: rust-show/show-json
+pub(crate) fn flags(change: &Change, digest: &Digest) -> Vec<Flag> {
     let Some(root) = super::project_root(change) else {
         return Vec::new();
     };
@@ -89,7 +95,7 @@ pub(super) fn lines(change: &Change, digest: &Digest) -> Vec<String> {
         &views,
         OPENSPEC,
     ));
-    flags.into_iter().map(|flag| flag.line()).collect()
+    flags
 }
 
 /// Reads the proposal's verify command and decisions section, or empty text.

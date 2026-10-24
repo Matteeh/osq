@@ -1,0 +1,77 @@
+{
+  "id": "007",
+  "folderName": "007-unplanned",
+  "folderPath": "<base>/checkout/openspec/changes/007-unplanned",
+  "isArchived": false,
+  "location": "active",
+  "title": "Alpha resets at midnight",
+  "status": "unapproved",
+  "approvedHash": null,
+  "dependsOn": [],
+  "features": {
+    "reads": [],
+    "writes": []
+  },
+  "goal": "What problem this change solves and why.",
+  "contract": "",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When initial condition, expected outcome",
+      "status": "pending",
+      "verify": "node -e \"process.exit(0)\"",
+      "scope": [],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Acceptance criterion 1"
+      ],
+      "events": []
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [],
+  "next": {
+    "state": "unplanned",
+    "command": "osq plan 007",
+    "detail": null
+  },
+  "digest": {
+    "change": "007-unplanned",
+    "goal": "What problem this change solves and why.",
+    "tasks": [
+      {
+        "number": "1",
+        "title": "When initial condition, expected outcome",
+        "scopeFiles": 0,
+        "testsModify": false,
+        "existingTests": []
+      }
+    ],
+    "capabilities": [],
+    "decisions": [
+      {
+        "number": "001",
+        "rule": "Every change keeps the test suite green."
+      }
+    ],
+    "humanSteps": "None",
+    "beforeApproval": "",
+    "flags": [
+      {
+        "id": "verify_without_test",
+        "label": "verify without a test in task 1",
+        "excerpt": "node -e \"process.exit(0)\""
+      },
+      {
+        "id": "verify_without_test",
+        "label": "verify without a test in the proposal",
+        "excerpt": "node -e \"process.exit(0)\""
+      }
+    ]
+  }
+}

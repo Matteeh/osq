@@ -99,6 +99,8 @@ pub(crate) struct Event {
     pub(crate) timestamp: String,
     /// The event's object or array data.
     pub(crate) data: Option<Data>,
+    /// The trimmed JSON line the event was parsed from.
+    pub(crate) raw: Option<String>,
 }
 
 impl Event {
@@ -125,7 +127,7 @@ struct RawEvent {
 
 impl RawEvent {
     /// Applies TypeScript's fallbacks and `String()` conversion to one event.
-    fn into_event(self, stream: &str) -> Event {
+    fn into_event(self, stream: &str, raw: Option<String>) -> Event {
         let task_number = self
             .task_number
             .filter(truthy)
@@ -147,11 +149,13 @@ impl RawEvent {
             kind,
             timestamp,
             data,
+            raw,
         }
     }
 }
 
 /// Parses one non-empty event line, or `None` when it is not JSON.
+/// Implements: rust-show/show-json
 pub(crate) fn parse(line: &str, stream: &str) -> Option<Event> {
     let raw = if line.starts_with('{') {
         serde_json::from_str::<RawEvent>(line).ok()?
@@ -159,7 +163,7 @@ pub(crate) fn parse(line: &str, stream: &str) -> Option<Event> {
         serde_json::from_str::<Value>(line).ok()?;
         RawEvent::default()
     };
-    Some(raw.into_event(stream))
+    Some(raw.into_event(stream, Some(line.to_owned())))
 }
 
 /// Whether JavaScript treats a JSON value as true.

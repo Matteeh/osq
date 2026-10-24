@@ -8,20 +8,24 @@ use crate::events::{Event, js_number};
 
 use super::super::values::{number, render_nullish, round, text, time};
 
-/// One gate line of the land view.
-pub(super) struct Gate {
-    /// The gate's display name, such as `task 1` or `validator`.
-    pub(super) name: String,
+/// One gate run of the land view.
+pub(crate) struct Gate {
+    /// The gate's kind, such as `task` or `validator`.
+    pub(crate) kind: &'static str,
+    /// The task number for a `task` gate.
+    pub(crate) task: Option<String>,
     /// The recorded outcome.
-    pub(super) outcome: String,
+    pub(crate) outcome: String,
     /// The finite exit code, if any.
-    pub(super) exit_code: Option<f64>,
-    /// The rounded duration in seconds.
-    pub(super) seconds: f64,
+    pub(crate) exit_code: Option<f64>,
+    /// The recorded duration in seconds, before rounding.
+    pub(crate) duration: Option<f64>,
     /// The command the gate ran.
-    pub(super) command: String,
+    pub(crate) command: String,
     /// The finding count, only for the validator gate.
-    pub(super) findings: Option<usize>,
+    pub(crate) findings: Option<usize>,
+    /// The event's timestamp as written.
+    pub(crate) timestamp: String,
 }
 
 impl Gate {
@@ -29,7 +33,7 @@ impl Gate {
     ///
     /// Implements: rust-show/show-text
     pub(super) fn line(&self) -> String {
-        let seconds = js_number(self.seconds);
+        let seconds = js_number(round(self.duration.unwrap_or(0.0)));
         let outcome = if self.outcome == "failed" {
             self.exit_code.map_or_else(
                 || self.outcome.clone(),
@@ -43,8 +47,16 @@ impl Gate {
             .map_or_else(String::new, |count| format!(", {count} findings"));
         format!(
             "    {}: {outcome} in {seconds}s ({}){findings}",
-            self.name, self.command
+            self.name(),
+            self.command
         )
+    }
+
+    /// The gate's display name, such as `task 1` or `validator`.
+    fn name(&self) -> String {
+        self.task
+            .as_ref()
+            .map_or_else(|| self.kind.to_owned(), |task| format!("task {task}"))
     }
 }
 
@@ -146,26 +158,22 @@ fn command_of(event: &Event) -> String {
         .to_owned()
 }
 
-/// A duration in whole seconds as the gate line prints it.
-fn seconds(duration: Option<f64>) -> f64 {
-    duration.map_or(0.0, round)
-}
-
 /// One `verify_ran`-derived gate, its outcome read from the exit code.
-fn run_gate(kind: &str, task: Option<&str>, event: &Event) -> Gate {
+fn run_gate(kind: &'static str, task: Option<&str>, event: &Event) -> Gate {
     let exit_code = number(event.field("exitCode"));
-    let name = task.map_or_else(|| kind.to_owned(), |task| format!("task {task}"));
     Gate {
-        name,
+        kind,
+        task: task.map(ToOwned::to_owned),
         outcome: if exit_code == Some(0.0) {
             "passed".to_owned()
         } else {
             "failed".to_owned()
         },
         exit_code,
-        seconds: seconds(number(event.field("duration"))),
+        duration: number(event.field("duration")),
         command: command_of(event),
         findings: None,
+        timestamp: event.timestamp.clone(),
     }
 }
 
@@ -176,15 +184,17 @@ fn validator_gate(event: &Event) -> Gate {
         _ => 0,
     };
     Gate {
-        name: "validator".to_owned(),
+        kind: "validator",
+        task: None,
         outcome: text(event.field("outcome")).unwrap_or("unknown").to_owned(),
         exit_code: number(event.field("exitCode")),
-        seconds: seconds(number(event.field("duration"))),
+        duration: number(event.field("duration")),
         command: format!(
             "{}/{}",
             render_nullish(event.field("harness"), "?"),
             render_nullish(event.field("model"), "?")
         ),
         findings: Some(findings),
+        timestamp: event.timestamp.clone(),
     }
 }

@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::Path;
 
-use osq_kernel_specs::{parse_delta, parse_frontmatter, read_proposal};
+use osq_kernel_specs::{Rename, parse_delta, parse_frontmatter, read_proposal};
 use serde_json::Value;
 use yaml_rust2::Yaml;
 
@@ -19,44 +19,65 @@ pub(super) struct Commands {
     pub(super) check: Option<String>,
 }
 
-/// One delta capability and its requirement counts.
-pub(super) struct Capability {
+/// One delta capability and its requirement names.
+pub(crate) struct Capability {
     /// The capability folder's name.
-    pub(super) name: String,
-    /// The added requirement count.
-    pub(super) added: usize,
-    /// The modified requirement count.
-    pub(super) modified: usize,
-    /// The removed requirement count.
-    pub(super) removed: usize,
-    /// The renamed requirement count.
-    pub(super) renamed: usize,
+    pub(crate) name: String,
+    /// The added requirement names.
+    pub(crate) added: Vec<String>,
+    /// The modified requirement names.
+    pub(crate) modified: Vec<String>,
+    /// The removed requirement names.
+    pub(crate) removed: Vec<String>,
+    /// The renamed requirements.
+    pub(crate) renamed: Vec<Rename>,
 }
 
 /// One result file with a real deviated or outside-scope section.
-pub(super) struct Disclosure {
+pub(crate) struct Disclosure {
     /// The result file's task name.
-    pub(super) task: String,
-    /// Whether the result holds a real `## Deviated` section.
-    pub(super) deviated: bool,
-    /// Whether the result holds a real `## Outside scope` section.
-    pub(super) outside_scope: bool,
+    pub(crate) task: String,
+    /// The real `## Deviated` text, when the result holds one.
+    pub(crate) deviated: Option<String>,
+    /// The real `## Outside scope` text, when the result holds one.
+    pub(crate) outside_scope: Option<String>,
 }
 
 /// One change-level halt marker's facts.
-pub(super) struct Halt {
+pub(crate) struct Halt {
     /// The trimmed `reason` string, when non-empty.
-    pub(super) reason: Option<String>,
+    pub(crate) reason: Option<String>,
     /// The trimmed body.
-    pub(super) message: String,
+    pub(crate) message: String,
+}
+
+/// The last `synced` event a change's stream recorded.
+pub(crate) struct LastSync {
+    /// The event's timestamp.
+    pub(crate) timestamp: String,
+    /// The synced default branch.
+    pub(crate) default_branch: String,
+    /// The synced commit count.
+    pub(crate) commits: f64,
 }
 
 /// The last sync that stopped after the last completed sync.
-pub(super) struct SyncStop {
+pub(crate) struct SyncStop {
+    /// The event's timestamp.
+    pub(crate) timestamp: String,
     /// The event's `reason` string.
-    pub(super) reason: String,
+    pub(crate) reason: String,
     /// The event's `message` string, as written.
-    pub(super) message: String,
+    pub(crate) message: String,
+}
+
+/// A change's last sync and any stop that came after it.
+#[derive(Default)]
+pub(crate) struct SyncState {
+    /// The last completed sync, when the stream holds one.
+    pub(crate) last_sync: Option<LastSync>,
+    /// The stop recorded after the last sync, or with no sync before it.
+    pub(crate) stop: Option<SyncStop>,
 }
 
 /// The proposal's change-level verify and declared check command.
@@ -102,10 +123,10 @@ pub(super) fn capabilities(change: &Change) -> Vec<Capability> {
             let delta = parse_delta(&text);
             Some(Capability {
                 name,
-                added: delta.added.len(),
-                modified: delta.modified.len(),
-                removed: delta.removed.len(),
-                renamed: delta.renamed.len(),
+                added: delta.added.into_iter().map(|item| item.name).collect(),
+                modified: delta.modified.into_iter().map(|item| item.name).collect(),
+                removed: delta.removed,
+                renamed: delta.renamed,
             })
         })
         .collect()
@@ -153,21 +174,24 @@ fn disclosure(folder: &Path, name: &str) -> Option<Disclosure> {
     }
     Some(Disclosure {
         task: name.strip_suffix(".md").unwrap_or(name).to_owned(),
-        deviated: sections.deviated.is_some(),
-        outside_scope: sections.outside_scope.is_some(),
+        deviated: sections.deviated,
+        outside_scope: sections.outside_scope,
     })
 }
 
-/// The last `sync_stopped` event recorded after the last `synced` event.
+/// The last completed sync and the stop recorded after it.
 ///
 /// Malformed lines and events with missing string or number fields are passed
 /// over, as TypeScript's `readLastSync` does.
 ///
-/// Implements: rust-show/show-land-lines
-pub(super) fn sync_stop(change: &Change) -> Option<SyncStop> {
+/// Implements: rust-show/show-json
+pub(super) fn sync(change: &Change) -> SyncState {
     let path = change.path.join(".run").join("events").join("change.jsonl");
-    let text = fs::read_to_string(path).ok()?;
+    let Ok(text) = fs::read_to_string(path) else {
+        return SyncState::default();
+    };
     let mut sync_index = None;
+    let mut last_sync = None;
     let mut stop = None;
     for (index, line) in text.split('\n').enumerate() {
         let trimmed = line.trim();
@@ -178,7 +202,12 @@ pub(super) fn sync_stop(change: &Change) -> Option<SyncStop> {
             continue;
         };
         match event.get("type").and_then(Value::as_str) {
-            Some("synced") if is_sync(&event) => sync_index = Some(index),
+            Some("synced") => {
+                if let Some(found) = sync_event(&event) {
+                    sync_index = Some(index);
+                    last_sync = Some(found);
+                }
+            }
             Some("sync_stopped") => {
                 if let Some(found) = stop_event(&event) {
                     stop = Some((index, found));
@@ -187,8 +216,21 @@ pub(super) fn sync_stop(change: &Change) -> Option<SyncStop> {
             _ => {}
         }
     }
-    let (index, found) = stop?;
-    stop_after(sync_index, index).then_some(found)
+    let stop = stop
+        .filter(|(index, _)| stop_after(sync_index, *index))
+        .map(|(_, found)| found);
+    SyncState { last_sync, stop }
+}
+
+/// One `synced` event's timestamp, default branch and commit count.
+fn sync_event(event: &serde_json::Map<String, Value>) -> Option<LastSync> {
+    let timestamp = event.get("timestamp")?.as_str()?;
+    let data = data(event)?;
+    Some(LastSync {
+        timestamp: timestamp.to_owned(),
+        default_branch: data.get("defaultBranch")?.as_str()?.to_owned(),
+        commits: data.get("commits")?.as_f64()?,
+    })
 }
 
 /// Whether a stop comes after the last completed sync, or there is none.
@@ -197,20 +239,12 @@ fn stop_after(sync_index: Option<usize>, stop_index: usize) -> bool {
     sync_index.is_none_or(|sync| stop_index > sync)
 }
 
-/// Whether one `synced` event holds a timestamp, default branch and commit count.
-fn is_sync(event: &serde_json::Map<String, Value>) -> bool {
-    event.get("timestamp").is_some_and(Value::is_string)
-        && data(event).is_some_and(|data| {
-            data.get("defaultBranch").is_some_and(Value::is_string)
-                && data.get("commits").is_some_and(Value::is_number)
-        })
-}
-
 /// One `sync_stopped` event's reason and message, or none when either is missing.
 fn stop_event(event: &serde_json::Map<String, Value>) -> Option<SyncStop> {
-    event.get("timestamp").filter(|value| value.is_string())?;
+    let timestamp = event.get("timestamp")?.as_str()?;
     let data = data(event)?;
     Some(SyncStop {
+        timestamp: timestamp.to_owned(),
         reason: data.get("reason")?.as_str()?.to_owned(),
         message: data.get("message")?.as_str()?.to_owned(),
     })

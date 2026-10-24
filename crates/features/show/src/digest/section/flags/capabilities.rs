@@ -15,6 +15,7 @@ pub(super) fn removed(capabilities: &[DigestCapability]) -> Vec<Flag> {
         .into_iter()
         .map(|capability| {
             Flag::new(
+                "removed_requirement",
                 format!(
                     "removes {} requirements from {}",
                     capability.removed.len(),
@@ -49,6 +50,7 @@ pub(super) fn unknown(
             },
         );
         flags.push(Flag::new(
+            "unknown_capability",
             label,
             format!(
                 "no living spec at {openspec}/specs/{}/spec.md",

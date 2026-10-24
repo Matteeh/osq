@@ -1,0 +1,267 @@
+{
+  "id": "002",
+  "folderName": "002-approved",
+  "folderPath": "<base>/checkout/openspec/changes/002-approved",
+  "isArchived": false,
+  "location": "active",
+  "title": "Beta prints the count",
+  "status": "pending",
+  "approvedHash": "sha256:approved-002",
+  "dependsOn": [],
+  "features": {
+    "reads": [
+      "alpha"
+    ],
+    "writes": [
+      "beta"
+    ]
+  },
+  "goal": "Beta prints alpha's count.",
+  "contract": "### Requirement: Beta prints\nBeta SHALL print the count.\n\n#### Scenario: Beta prints\n- **WHEN** beta runs\n- **THEN** it prints the count",
+  "nonGoals": "- Formatting.",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When beta runs, it prints the count",
+      "status": "done",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts",
+        "tests/beta.test.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Beta prints the count."
+      ],
+      "resultContent": "## Changed\n\n- Beta prints the count.\n\nTouched: src/beta.ts, tests/beta.test.ts",
+      "events": [
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-02T09:00:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 1,
+            "duration": 0.25,
+            "phase": "pre_spawn",
+            "expected": "red",
+            "missingPaths": [
+              "tests/beta.test.ts"
+            ]
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "started",
+          "timestamp": "2026-10-02T09:00:01.000Z",
+          "data": {
+            "harness": "pi",
+            "model": "deepseek-flash",
+            "attempt": 1
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "dependencies_added",
+          "timestamp": "2026-10-02T09:05:00.000Z",
+          "data": {
+            "added": [
+              {
+                "file": "package.json",
+                "name": "left-pad"
+              },
+              {
+                "file": "package.json",
+                "name": "left-pad"
+              },
+              {
+                "file": "Cargo.toml",
+                "name": "serde"
+              },
+              {
+                "file": "",
+                "name": "ignored"
+              }
+            ]
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-02T09:06:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "duration": 1.5,
+            "ok": true,
+            "tags": [
+              "fast",
+              null,
+              7,
+              [
+                "nested"
+              ]
+            ],
+            "note": null
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "done",
+          "timestamp": "2026-10-02T09:06:01.000Z"
+        }
+      ]
+    },
+    {
+      "taskNumber": "2",
+      "fileName": "2.md",
+      "title": "When beta prints, it adds a newline",
+      "status": "pending",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "The printed count ends with a newline."
+      ],
+      "events": [
+        {
+          "taskNumber": "2",
+          "type": "instructions_changed",
+          "timestamp": "2026-10-02T10:00:00.000Z",
+          "data": {
+            "changed": [
+              "scope",
+              "verify"
+            ]
+          }
+        },
+        {
+          "taskNumber": "2",
+          "type": "verify_ran",
+          "timestamp": "2026-10-02T10:00:05.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "duration": 0.5,
+            "phase": "pre_spawn",
+            "expected": "red"
+          }
+        }
+      ]
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-02T09:00:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 1,
+        "duration": 0.25,
+        "phase": "pre_spawn",
+        "expected": "red",
+        "missingPaths": [
+          "tests/beta.test.ts"
+        ]
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "started",
+      "timestamp": "2026-10-02T09:00:01.000Z",
+      "data": {
+        "harness": "pi",
+        "model": "deepseek-flash",
+        "attempt": 1
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "dependencies_added",
+      "timestamp": "2026-10-02T09:05:00.000Z",
+      "data": {
+        "added": [
+          {
+            "file": "package.json",
+            "name": "left-pad"
+          },
+          {
+            "file": "package.json",
+            "name": "left-pad"
+          },
+          {
+            "file": "Cargo.toml",
+            "name": "serde"
+          },
+          {
+            "file": "",
+            "name": "ignored"
+          }
+        ]
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-02T09:06:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 1.5,
+        "ok": true,
+        "tags": [
+          "fast",
+          null,
+          7,
+          [
+            "nested"
+          ]
+        ],
+        "note": null
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "done",
+      "timestamp": "2026-10-02T09:06:01.000Z"
+    },
+    {
+      "taskNumber": "2",
+      "type": "instructions_changed",
+      "timestamp": "2026-10-02T10:00:00.000Z",
+      "data": {
+        "changed": [
+          "scope",
+          "verify"
+        ]
+      }
+    },
+    {
+      "taskNumber": "2",
+      "type": "verify_ran",
+      "timestamp": "2026-10-02T10:00:05.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 0.5,
+        "phase": "pre_spawn",
+        "expected": "red"
+      }
+    }
+  ],
+  "next": {
+    "state": "running",
+    "command": "osq show 002",
+    "detail": null
+  },
+  "digest": null
+}

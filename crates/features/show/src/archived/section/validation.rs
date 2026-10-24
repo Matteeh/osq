@@ -39,7 +39,9 @@ pub(super) fn lines(change: &Change) -> Vec<String> {
 }
 
 /// The latest change-stream `validator_ran` event, later events winning ties.
-fn latest(timeline: &[Event]) -> Option<&Event> {
+///
+/// Implements: rust-show/show-json
+pub(super) fn latest(timeline: &[Event]) -> Option<&Event> {
     let mut latest = None;
     let mut latest_time = None;
     for event in timeline {

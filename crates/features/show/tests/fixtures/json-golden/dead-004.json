@@ -1,0 +1,203 @@
+{
+  "id": "004",
+  "folderName": "004-dead",
+  "folderPath": "<base>/checkout/openspec/changes/004-dead",
+  "isArchived": false,
+  "location": "active",
+  "title": "Beta formats the count",
+  "status": "dead",
+  "approvedHash": "sha256:approved-004",
+  "dependsOn": [
+    "002"
+  ],
+  "features": {
+    "reads": [],
+    "writes": []
+  },
+  "goal": "Beta formats the count with commas.",
+  "contract": "",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When beta formats, it adds commas",
+      "status": "dead",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "A thousand prints as 1,000."
+      ],
+      "deadReason": "verify_red",
+      "deadDiagnostic": "Task verification failed.\nexpected 1,000\nreceived 1000",
+      "resultContent": "## Changed\n\n- Beta formats with commas.\n\n## Deviated\n\n- Used a regular expression instead of Intl.\n\n## Missing context\n\nNone\n\n## Outside scope\n\n- `src/alpha.ts` returns a string.\n\nTouched: src/beta.ts",
+      "events": [
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-04T09:00:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "duration": 0.2,
+            "phase": "pre_spawn",
+            "expected": "green",
+            "missingPaths": [
+              "tests/beta.test.ts",
+              ""
+            ]
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "started",
+          "timestamp": "2026-10-04T09:00:01.000Z",
+          "data": {
+            "attempt": 1
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "stuck",
+          "timestamp": "2026-10-04T09:01:00.000Z",
+          "data": {
+            "fingerprint": " "
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "retry",
+          "timestamp": "2026-10-04T09:02:00.000Z",
+          "data": {}
+        },
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-04T09:03:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 1,
+            "duration": 0.7
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "dead",
+          "timestamp": "2026-10-04T09:03:01.000Z",
+          "data": {
+            "reason": "verify_red"
+          }
+        }
+      ]
+    },
+    {
+      "taskNumber": "2",
+      "fileName": "2.md",
+      "title": "When beta formats a negative count, it keeps the sign",
+      "status": "pending",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Minus a thousand prints as -1,000."
+      ],
+      "events": [
+        {
+          "taskNumber": "2",
+          "type": "verify_ran",
+          "timestamp": "2026-10-04T08:59:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "phase": "pre_spawn",
+            "expected": "red"
+          }
+        }
+      ]
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [
+    {
+      "taskNumber": "2",
+      "type": "verify_ran",
+      "timestamp": "2026-10-04T08:59:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "phase": "pre_spawn",
+        "expected": "red"
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-04T09:00:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 0.2,
+        "phase": "pre_spawn",
+        "expected": "green",
+        "missingPaths": [
+          "tests/beta.test.ts",
+          ""
+        ]
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "started",
+      "timestamp": "2026-10-04T09:00:01.000Z",
+      "data": {
+        "attempt": 1
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "stuck",
+      "timestamp": "2026-10-04T09:01:00.000Z",
+      "data": {
+        "fingerprint": " "
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "retry",
+      "timestamp": "2026-10-04T09:02:00.000Z",
+      "data": {}
+    },
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-04T09:03:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 1,
+        "duration": 0.7
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "dead",
+      "timestamp": "2026-10-04T09:03:01.000Z",
+      "data": {
+        "reason": "verify_red"
+      }
+    }
+  ],
+  "next": {
+    "state": "dead",
+    "command": "osq retry 004 1",
+    "detail": null
+  },
+  "afterLanding": "Check the output by hand.",
+  "digest": null
+}

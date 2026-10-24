@@ -67,6 +67,7 @@ pub(super) fn shared_files(tasks: &[TaskView]) -> Vec<Flag> {
                 .collect::<Vec<_>>()
                 .join(", ");
             flags.push(Flag::new(
+                "shared_file",
                 format!(
                     "shared files in tasks {} and {}",
                     first.number, second.number
@@ -109,7 +110,11 @@ pub(super) fn sensitive_paths(tasks: &[TaskView], openspec: &str) -> Vec<Flag> {
             .iter()
             .map(|(path, numbers)| format!("{path} in {}", task_phrase(numbers)))
             .collect();
-        flags.push(Flag::new(format!("{kind} in scope"), entries.join("; ")));
+        flags.push(Flag::new(
+            "sensitive_path",
+            format!("{kind} in scope"),
+            entries.join("; "),
+        ));
     }
     flags
 }

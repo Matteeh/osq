@@ -81,6 +81,10 @@ pub(crate) struct Task {
     pub(crate) verify: String,
     /// The scope entries.
     pub(crate) scope: Vec<String>,
+    /// The task's entry paths.
+    pub(crate) entry: Vec<String>,
+    /// The task's skills.
+    pub(crate) skills: Vec<String>,
     /// The acceptance lines.
     pub(crate) acceptance: Vec<String>,
     /// The dead marker, when the file exists.
@@ -141,6 +145,10 @@ pub(crate) struct Change {
     pub(crate) goal: String,
     /// The proposal's contract.
     pub(crate) contract: String,
+    /// The proposal's non-goals.
+    pub(crate) non_goals: String,
+    /// The proposal's delta.
+    pub(crate) delta: String,
     /// The `### Before approval` steps, when non-empty.
     pub(crate) before_approval: Option<String>,
     /// The `### After landing` steps, when non-empty.
@@ -220,6 +228,8 @@ pub(crate) fn read(
         writes,
         goal: proposal.goal,
         contract: proposal.contract,
+        non_goals: proposal.non_goals,
+        delta: proposal.delta,
         before_approval,
         after_landing,
         tasks,
@@ -242,6 +252,10 @@ struct ProposalFields {
     goal: String,
     /// The trimmed contract.
     contract: String,
+    /// The trimmed non-goals.
+    non_goals: String,
+    /// The trimmed delta.
+    delta: String,
 }
 
 /// Reads a proposal, falling back to the folder when it has no proposal.
@@ -254,6 +268,8 @@ fn proposal(path: &Path) -> Result<ProposalFields, String> {
             verify: String::new(),
             goal: String::new(),
             contract: String::new(),
+            non_goals: String::new(),
+            delta: String::new(),
         });
     }
     let parsed = read_proposal(path).map_err(|error| error.to_string())?;
@@ -264,6 +280,8 @@ fn proposal(path: &Path) -> Result<ProposalFields, String> {
         verify: parsed.verify,
         goal: parsed.goal,
         contract: parsed.contract,
+        non_goals: parsed.non_goals,
+        delta: parsed.delta,
     })
 }
 
@@ -361,6 +379,8 @@ fn read_task(folder: &Path, number: &str, path: &Path) -> Result<Task, String> {
         state_status,
         verify: plan.verify.clone(),
         scope: plan.scope.clone(),
+        entry: plan.entry.clone(),
+        skills: plan.skills.clone(),
         acceptance: plan.acceptance.clone(),
         dead,
         regressed,

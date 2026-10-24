@@ -1,0 +1,49 @@
+{
+  "id": "005",
+  "folderName": "005-steering",
+  "folderPath": "<base>/checkout/openspec/changes/005-steering",
+  "isArchived": false,
+  "location": "active",
+  "title": "Gamma reads a file it cannot find",
+  "status": "dead",
+  "approvedHash": "sha256:approved-005",
+  "dependsOn": [],
+  "features": {
+    "reads": [],
+    "writes": []
+  },
+  "goal": "Gamma reads its store from disk.",
+  "contract": "",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When gamma starts, it reads its store",
+      "status": "dead",
+      "verify": "node --test tests/gamma.test.ts",
+      "scope": [
+        "src/gamma.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Gamma reads `store.json`."
+      ],
+      "deadReason": "blocked",
+      "deadDiagnostic": "The executor reported the task blocked.",
+      "resultContent": "## Blocked\n\n- `store.json` does not exist and the scope does not let me create it.\n\nTouched: none",
+      "events": []
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [],
+  "timeline": [],
+  "next": {
+    "state": "dead",
+    "command": "osq plan 005",
+    "detail": "needs steering"
+  },
+  "digest": null
+}

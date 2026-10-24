@@ -1,28 +1,36 @@
 //! The `Verification:` section of an archived change.
 
-use crate::events::{js_number, read};
+use crate::events::{Event, js_number, read};
 use crate::model::Change;
 
 use super::values::{number, text, time, trimmed};
 
 /// One recorded `check_ran` row.
-struct Check {
+pub(crate) struct Check {
     /// The event's timestamp, or `unavailable`.
-    time: String,
+    pub(crate) time: String,
     /// The trimmed command, or `unavailable`.
-    command: String,
+    pub(crate) command: String,
     /// The finite exit code, if any.
-    exit: Option<f64>,
+    pub(crate) exit: Option<f64>,
 }
 
 /// One recorded `verification_recorded` row.
-struct RecordedOutcome {
+pub(crate) struct RecordedOutcome {
     /// The event's timestamp, or `unavailable`.
-    time: String,
+    pub(crate) time: String,
     /// The recorded `passed` or `failed` outcome.
-    outcome: Option<String>,
+    pub(crate) outcome: Option<String>,
     /// The trimmed note, if any.
-    note: Option<String>,
+    pub(crate) note: Option<String>,
+}
+
+/// One archived change's recorded checks and outcomes.
+pub(crate) struct History {
+    /// The `check_ran` rows, in timeline order.
+    pub(crate) checks: Vec<Check>,
+    /// The `verification_recorded` rows, in timeline order.
+    pub(crate) outcomes: Vec<RecordedOutcome>,
 }
 
 /// The `Verification:` lines, or none for a change without a history.
@@ -33,26 +41,33 @@ pub(super) fn lines(change: &Change) -> Vec<String> {
         return Vec::new();
     }
     let events = read(change);
+    let Some(history) = history(&events.timeline) else {
+        return Vec::new();
+    };
+    let mut lines = vec!["Verification:".to_owned()];
+    lines.extend(history.checks.iter().map(check_line));
+    lines.extend(history.outcomes.iter().map(outcome_line));
+    lines
+}
+
+/// The check and outcome rows of one timeline, or none when it holds neither.
+///
+/// Implements: rust-show/show-json
+pub(super) fn history(timeline: &[Event]) -> Option<History> {
     let mut checks = Vec::new();
     let mut outcomes = Vec::new();
-    for event in &events.timeline {
+    for event in timeline {
         match event.kind.as_str() {
             "check_ran" => checks.push(check(event)),
             "verification_recorded" => outcomes.push(recorded_outcome(event)),
             _ => {}
         }
     }
-    if checks.is_empty() && outcomes.is_empty() {
-        return Vec::new();
-    }
-    let mut lines = vec!["Verification:".to_owned()];
-    lines.extend(checks.iter().map(check_line));
-    lines.extend(outcomes.iter().map(outcome_line));
-    lines
+    (!checks.is_empty() || !outcomes.is_empty()).then_some(History { checks, outcomes })
 }
 
 /// One `check_ran` event's row.
-fn check(event: &crate::events::Event) -> Check {
+fn check(event: &Event) -> Check {
     Check {
         time: shown_time(&event.timestamp),
         command: trimmed(event.field("command")).unwrap_or_else(|| "unavailable".to_owned()),
@@ -61,7 +76,7 @@ fn check(event: &crate::events::Event) -> Check {
 }
 
 /// One `verification_recorded` event's row.
-fn recorded_outcome(event: &crate::events::Event) -> RecordedOutcome {
+fn recorded_outcome(event: &Event) -> RecordedOutcome {
     let recorded = text(event.field("outcome"));
     RecordedOutcome {
         time: shown_time(&event.timestamp),

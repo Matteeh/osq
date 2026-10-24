@@ -87,6 +87,24 @@ impl NextStep {
         }
     }
 
+    /// The state word, with hyphens.
+    /// Implements: rust-show/show-json
+    pub(crate) fn state(&self) -> &'static str {
+        self.state
+    }
+
+    /// The detail text, when there is one.
+    /// Implements: rust-show/show-json
+    pub(crate) fn detail(&self) -> Option<&str> {
+        self.detail.as_deref()
+    }
+
+    /// The command, when there is one.
+    /// Implements: rust-show/show-json
+    pub(crate) fn command(&self) -> Option<&str> {
+        self.command.as_deref()
+    }
+
     /// The line TypeScript prints after `Next: `.
     pub(crate) fn line(&self) -> String {
         let mut text = self.state.replace('-', " ");

@@ -27,7 +27,7 @@ fn show_feature_commands() {
             Command::new(
                 "show",
                 "show detailed change information, tasks, and event timeline",
-                "<id>",
+                "[--json] <id>",
             ),
             Command::new(
                 "spec",

@@ -1,0 +1,527 @@
+{
+  "id": "010",
+  "folderName": "010-archived",
+  "folderPath": "<base>/worktree/openspec/changes/archive/010-archived",
+  "isArchived": true,
+  "location": "archived",
+  "title": "Beta reads alpha's count",
+  "status": "done",
+  "approvedHash": "sha256:approved-010",
+  "dependsOn": [],
+  "features": {
+    "reads": [
+      "alpha"
+    ],
+    "writes": [
+      "beta"
+    ]
+  },
+  "goal": "Beta reads alpha's count through the alpha module.",
+  "contract": "### Requirement: Beta reads\nBeta SHALL read alpha's count.",
+  "nonGoals": "",
+  "delta": "",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When beta runs, it reads alpha's count",
+      "status": "done",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Beta reads the count from alpha."
+      ],
+      "events": [
+        {
+          "taskNumber": "1",
+          "type": "started",
+          "timestamp": "2026-10-05T09:00:00.000Z",
+          "data": {
+            "attempt": 1
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-05T09:05:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 1,
+            "duration": 0.4
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "verify_ran",
+          "timestamp": "2026-10-05T09:06:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "duration": 0.6
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "done",
+          "timestamp": "2026-10-05T09:06:01.000Z"
+        },
+        {
+          "taskNumber": "1",
+          "type": "recertification",
+          "timestamp": "2026-10-05T09:30:00.000Z",
+          "data": {
+            "task": "1",
+            "outcome": "passed",
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "timedOut": false,
+            "differingPaths": [
+              "src/beta.ts",
+              "src/beta.ts"
+            ],
+            "attribution": [
+              {
+                "path": "src/beta.ts",
+                "attribution": 2
+              },
+              {
+                "path": "src/extra.ts",
+                "attribution": "ambiguous"
+              }
+            ]
+          }
+        },
+        {
+          "taskNumber": "1",
+          "type": "recertification",
+          "timestamp": "bad time",
+          "data": {
+            "outcome": "maybe",
+            "differingPaths": [
+              "src/zeta.ts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "taskNumber": "2",
+      "fileName": "2.md",
+      "title": "When beta reads twice, it caches the count",
+      "status": "done",
+      "verify": "node --test tests/beta.test.ts",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "The second read uses the cache."
+      ],
+      "resultContent": "## Changed\n\n- Beta caches the count.\n\n## Deviated\n\n- The cache lives in a module variable.\n\nTouched: src/beta.ts",
+      "events": [
+        {
+          "taskNumber": "2",
+          "type": "started",
+          "timestamp": "2026-10-05T09:10:00.000Z",
+          "data": {
+            "attempt": 1
+          }
+        },
+        {
+          "taskNumber": "2",
+          "type": "verify_ran",
+          "timestamp": "2026-10-05T09:15:00.000Z",
+          "data": {
+            "command": "node --test tests/beta.test.ts",
+            "exitCode": 0,
+            "duration": 12.5
+          }
+        },
+        {
+          "taskNumber": "2",
+          "type": "done",
+          "timestamp": "2026-10-05T09:15:01.000Z"
+        }
+      ]
+    }
+  ],
+  "planningSessions": [],
+  "recertifications": [
+    {
+      "taskNumber": "1",
+      "timestamp": "2026-10-05T09:30:00.000Z",
+      "outcome": "passed",
+      "differingPaths": [
+        "src/beta.ts"
+      ],
+      "attribution": [
+        {
+          "path": "src/beta.ts",
+          "attribution": "2"
+        },
+        {
+          "path": "src/extra.ts",
+          "attribution": "ambiguous"
+        }
+      ],
+      "verify": "node --test tests/beta.test.ts",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "taskNumber": "1",
+      "timestamp": null,
+      "outcome": null,
+      "differingPaths": [
+        "src/zeta.ts"
+      ],
+      "attribution": [
+        {
+          "path": "src/zeta.ts",
+          "attribution": "unknown"
+        }
+      ],
+      "verify": null,
+      "exitCode": null,
+      "timedOut": null
+    }
+  ],
+  "timeline": [
+    {
+      "taskNumber": "1",
+      "type": "started",
+      "timestamp": "2026-10-05T09:00:00.000Z",
+      "data": {
+        "attempt": 1
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T09:05:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 1,
+        "duration": 0.4
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T09:06:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 0.6
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "done",
+      "timestamp": "2026-10-05T09:06:01.000Z"
+    },
+    {
+      "taskNumber": "2",
+      "type": "started",
+      "timestamp": "2026-10-05T09:10:00.000Z",
+      "data": {
+        "attempt": 1
+      }
+    },
+    {
+      "taskNumber": "2",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T09:15:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 12.5
+      }
+    },
+    {
+      "taskNumber": "2",
+      "type": "done",
+      "timestamp": "2026-10-05T09:15:01.000Z"
+    },
+    {
+      "taskNumber": "change",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T09:20:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "duration": 3.2
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T09:21:00.000Z",
+      "data": {
+        "command": "node scripts/check.mjs",
+        "exitCode": 2,
+        "duration": 0.4
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "check_ran",
+      "timestamp": "2026-10-05T09:21:00.000Z",
+      "data": {
+        "command": "node scripts/check.mjs",
+        "exitCode": 2
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "check_ran",
+      "timestamp": "2026-10-05T09:22:00.000Z",
+      "data": {
+        "command": " "
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "validator_ran",
+      "timestamp": "2026-10-05T09:25:00.000Z",
+      "data": {
+        "outcome": "validated",
+        "harness": "claude",
+        "model": "claude-opus-5-5",
+        "duration": 42.6,
+        "exitCode": 0,
+        "scenarios": 3,
+        "findings": [
+          {
+            "kind": "scenario",
+            "capability": "beta",
+            "requirement": "Beta caches",
+            "scenario": "Beta caches",
+            "problem": "no_test",
+            "detail": "No test reads twice."
+          }
+        ],
+        "restored": [
+          "tests/beta.test.ts"
+        ]
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "recertification",
+      "timestamp": "2026-10-05T09:30:00.000Z",
+      "data": {
+        "task": "1",
+        "outcome": "passed",
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 0,
+        "timedOut": false,
+        "differingPaths": [
+          "src/beta.ts",
+          "src/beta.ts"
+        ],
+        "attribution": [
+          {
+            "path": "src/beta.ts",
+            "attribution": 2
+          },
+          {
+            "path": "src/extra.ts",
+            "attribution": "ambiguous"
+          }
+        ]
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "verification_recorded",
+      "timestamp": "2026-10-05T09:40:00.000Z",
+      "data": {
+        "outcome": "passed",
+        "note": "Looked fine by hand."
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "verification_recorded",
+      "timestamp": "2026-10-05T09:41:00.000Z",
+      "data": {
+        "outcome": "unsure"
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "archived",
+      "timestamp": "2026-10-05T09:45:00.000Z",
+      "data": {
+        "commit": "abc1234"
+      }
+    },
+    {
+      "taskNumber": "change",
+      "type": "verify_ran",
+      "timestamp": "2026-10-05T10:00:00.000Z",
+      "data": {
+        "command": "node --test tests/beta.test.ts",
+        "exitCode": 1,
+        "duration": 9
+      }
+    },
+    {
+      "taskNumber": "1",
+      "type": "recertification",
+      "timestamp": "bad time",
+      "data": {
+        "outcome": "maybe",
+        "differingPaths": [
+          "src/zeta.ts"
+        ]
+      }
+    }
+  ],
+  "next": {
+    "state": "archived",
+    "command": "osq land 010",
+    "detail": "not landed"
+  },
+  "afterLanding": "Restart the beta service.",
+  "validation": {
+    "outcome": "validated",
+    "harness": "claude",
+    "model": "claude-opus-5-5",
+    "duration": 42.6,
+    "exitCode": 0,
+    "scenarios": 3,
+    "findings": [
+      {
+        "kind": "scenario",
+        "capability": "beta",
+        "requirement": "Beta caches",
+        "scenario": "Beta caches",
+        "problem": "no_test",
+        "detail": "No test reads twice."
+      }
+    ],
+    "restored": [
+      "tests/beta.test.ts"
+    ]
+  },
+  "land": {
+    "folderName": "010-archived",
+    "landed": false,
+    "defaultBranch": "main",
+    "mainCommits": 2,
+    "gates": [
+      {
+        "kind": "task",
+        "task": "1",
+        "command": "node --test tests/beta.test.ts",
+        "outcome": "passed",
+        "exitCode": 0,
+        "durationSeconds": 0.6,
+        "timestamp": "2026-10-05T09:06:00.000Z",
+        "findings": null
+      },
+      {
+        "kind": "task",
+        "task": "2",
+        "command": "node --test tests/beta.test.ts",
+        "outcome": "passed",
+        "exitCode": 0,
+        "durationSeconds": 12.5,
+        "timestamp": "2026-10-05T09:15:00.000Z",
+        "findings": null
+      },
+      {
+        "kind": "verify",
+        "task": null,
+        "command": "node --test tests/beta.test.ts",
+        "outcome": "passed",
+        "exitCode": 0,
+        "durationSeconds": 3.2,
+        "timestamp": "2026-10-05T09:20:00.000Z",
+        "findings": null
+      },
+      {
+        "kind": "check",
+        "task": null,
+        "command": "node scripts/check.mjs",
+        "outcome": "failed",
+        "exitCode": 2,
+        "durationSeconds": 0.4,
+        "timestamp": "2026-10-05T09:21:00.000Z",
+        "findings": null
+      },
+      {
+        "kind": "validator",
+        "task": null,
+        "command": "claude/claude-opus-5-5",
+        "outcome": "validated",
+        "exitCode": 0,
+        "durationSeconds": 42.6,
+        "timestamp": "2026-10-05T09:25:00.000Z",
+        "findings": 1
+      }
+    ],
+    "diff": {
+      "files": 1,
+      "added": 1,
+      "removed": 0
+    },
+    "capabilities": [
+      {
+        "name": "beta",
+        "added": [
+          "Beta caches"
+        ],
+        "modified": [
+          "Beta reads"
+        ],
+        "removed": [],
+        "renamed": []
+      }
+    ],
+    "disclosures": [
+      {
+        "task": "2",
+        "deviated": "- The cache lives in a module variable.",
+        "outsideScope": null
+      }
+    ],
+    "halt": null,
+    "lastSync": null,
+    "lastSyncStop": null
+  },
+  "verification": {
+    "checks": [
+      {
+        "time": "2026-10-05T09:21:00.000Z",
+        "command": "node scripts/check.mjs",
+        "exitCode": 2
+      },
+      {
+        "time": "2026-10-05T09:22:00.000Z",
+        "command": "unavailable",
+        "exitCode": null
+      }
+    ],
+    "outcomes": [
+      {
+        "time": "2026-10-05T09:40:00.000Z",
+        "outcome": "passed",
+        "note": "Looked fine by hand."
+      },
+      {
+        "time": "2026-10-05T09:41:00.000Z",
+        "outcome": null,
+        "note": null
+      }
+    ]
+  },
+  "digest": null
+}

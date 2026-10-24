@@ -8,19 +8,23 @@ use serde_json::Value;
 use crate::model::Change;
 
 /// One correlated planning session with the values the line prints.
-struct Session {
+///
+/// Implements: rust-show/show-json
+pub(crate) struct Session {
+    /// The planning session identifier.
+    pub(crate) id: String,
     /// The start record's timestamp.
-    start: String,
+    pub(crate) start: String,
     /// The start record's harness, or empty text.
-    harness: String,
+    pub(crate) harness: String,
     /// The start record's model, when non-empty.
-    model: Option<String>,
+    pub(crate) model: Option<String>,
     /// The start record's agent, when non-empty.
-    agent: Option<String>,
+    pub(crate) agent: Option<String>,
     /// The exit record's exit code, when recorded.
-    exit_code: Option<String>,
+    pub(crate) exit_code: Option<f64>,
     /// The exit record's wall seconds, when an exit exists.
-    wall_seconds: Option<f64>,
+    pub(crate) wall_seconds: Option<f64>,
 }
 
 /// One lifecycle record that correlates into a session.
@@ -39,7 +43,7 @@ struct Record {
     /// The start record's agent, when non-empty.
     agent: Option<String>,
     /// The exit record's exit code, when recorded.
-    exit_code: Option<String>,
+    exit_code: Option<f64>,
     /// The exit record's wall seconds, when recorded.
     wall_seconds: Option<f64>,
 }
@@ -69,7 +73,8 @@ pub(crate) fn section(change: &Change) -> Vec<String> {
 }
 
 /// Reads and correlates a change's `.run/plan.jsonl` into start-ordered sessions.
-fn sessions(folder: &Path) -> Vec<Session> {
+/// Implements: rust-show/show-json
+pub(crate) fn sessions(folder: &Path) -> Vec<Session> {
     let Ok(text) = fs::read_to_string(folder.join(".run").join("plan.jsonl")) else {
         return Vec::new();
     };
@@ -117,7 +122,7 @@ fn record(line: &str) -> Option<Record> {
         harness: String::new(),
         model: None,
         agent: None,
-        exit_code: number_text(data.get("exitCode")),
+        exit_code: finite(data.get("exitCode")),
         wall_seconds: Some(non_negative(data.get("wallSeconds")).unwrap_or(0.0)),
     })
 }
@@ -133,11 +138,6 @@ fn text_or_null(value: Option<&Value>) -> Option<String> {
         .and_then(Value::as_str)
         .filter(|text| !text.is_empty())
         .map(ToOwned::to_owned)
-}
-
-/// A finite number's JavaScript text, or `None`.
-fn number_text(value: Option<&Value>) -> Option<String> {
-    Some(format!("{}", finite(value)?))
 }
 
 /// A finite JSON number, or `None`.
@@ -182,14 +182,12 @@ fn correlate(records: &[Record]) -> Vec<Session> {
         .filter_map(|draft| {
             let started = draft.started?;
             Some(Session {
+                id: started.session_id,
                 start: started.timestamp,
                 harness: started.harness,
                 model: started.model,
                 agent: started.agent,
-                exit_code: draft
-                    .exited
-                    .as_ref()
-                    .and_then(|exit| exit.exit_code.clone()),
+                exit_code: draft.exited.as_ref().and_then(|exit| exit.exit_code),
                 wall_seconds: draft.exited.as_ref().and_then(|exit| exit.wall_seconds),
             })
         })
@@ -206,7 +204,9 @@ fn format_session(session: &Session) -> String {
         .as_deref()
         .map(|agent| format!(" agent: {agent}"))
         .unwrap_or_default();
-    let exit = session.exit_code.as_deref().unwrap_or("unavailable");
+    let exit = session
+        .exit_code
+        .map_or_else(|| "unavailable".to_owned(), crate::events::js_number);
     let wall = session
         .wall_seconds
         .map_or_else(|| "unavailable".to_owned(), format_duration);

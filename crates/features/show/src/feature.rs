@@ -2,7 +2,7 @@
 
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
-use crate::{facts, lookup, model, spec, status, text};
+use crate::{facts, json, lookup, model, spec, status, text};
 
 /// The show feature: a unit struct with no state (ADR 028).
 ///
@@ -26,7 +26,7 @@ impl Feature for ShowFeature {
             Command::new(
                 "show",
                 "show detailed change information, tasks, and event timeline",
-                "<id>",
+                "[--json] <id>",
             ),
             Command::new(
                 "spec",
@@ -53,6 +53,7 @@ impl Feature for ShowFeature {
     ///
     /// Implements: rust-show/show-command
     /// Implements: rust-show/show-arguments
+    /// Implements: rust-show/show-json
     /// Implements: rust-show/spec-command
     /// Implements: rust-show/spec-arguments
     /// Implements: rust-show/status-command
@@ -69,7 +70,16 @@ impl Feature for ShowFeature {
         if invocation.command != "show" {
             return Err(FeatureError::unknown_command(invocation.command.as_str()));
         }
-        let [id] = invocation.args.as_slice() else {
+        let mut json_output = false;
+        let mut positional = Vec::new();
+        for argument in &invocation.args {
+            if argument == "--json" {
+                json_output = true;
+            } else {
+                positional.push(argument.clone());
+            }
+        }
+        let [id] = positional.as_slice() else {
             return Err(FeatureError::usage("show", "expected <id>"));
         };
         if id.trim().is_empty() {
@@ -83,9 +93,11 @@ impl Feature for ShowFeature {
         let land = facts.land(&found)?;
         let change = model::read(&found, &facts, land.as_ref())
             .map_err(|message| FeatureError::failed("show", message))?;
-        Ok(Output::text(format!(
-            "{}\n",
+        let body = if json_output {
+            json::format(&change, land.as_ref())
+        } else {
             text::format(&change, land.as_ref())
-        )))
+        };
+        Ok(Output::text(format!("{body}\n")))
     }
 }

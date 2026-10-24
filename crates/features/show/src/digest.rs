@@ -2,4 +2,6 @@
 
 mod section;
 
-pub(crate) use section::lines;
+pub(crate) use section::{
+    Digest, DigestCapability, DigestDecision, DigestTask, Flag, build, lines,
+};

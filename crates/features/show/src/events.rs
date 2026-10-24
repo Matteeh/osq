@@ -7,5 +7,5 @@ mod read;
 mod timeline;
 
 pub(crate) use model::{Event, js_number};
-pub(crate) use read::read;
+pub(crate) use read::{Events, read};
 pub(crate) use timeline::section;

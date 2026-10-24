@@ -29,13 +29,18 @@ pub(super) fn without_test(tasks: &[TaskView], proposal: &str) -> Vec<Flag> {
     for task in ordered {
         if lacks_test(&task.verify) {
             flags.push(Flag::new(
+                "verify_without_test",
                 format!("verify without a test in task {}", task.number),
                 task.verify.clone(),
             ));
         }
     }
     if lacks_test(proposal) {
-        flags.push(Flag::new("verify without a test in the proposal", proposal));
+        flags.push(Flag::new(
+            "verify_without_test",
+            "verify without a test in the proposal",
+            proposal,
+        ));
     }
     flags
 }
@@ -152,6 +157,7 @@ pub(super) fn starts_conflicts(root: &Path, tasks: &[TaskView]) -> Vec<Flag> {
         .into_iter()
         .map(|(number, named, start)| {
             Flag::new(
+                "verify_starts_conflict",
                 format!("verify starts conflict in task {number}"),
                 format!(
                     "{named} is named by the verify but created by this task, which declares verify_starts: {start}"

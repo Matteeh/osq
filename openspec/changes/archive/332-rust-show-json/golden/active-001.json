@@ -1,0 +1,226 @@
+{
+  "id": "001",
+  "folderName": "001-active",
+  "folderPath": "<base>/checkout/openspec/changes/001-active",
+  "isArchived": false,
+  "location": "active",
+  "title": "Alpha learns to count",
+  "status": "unapproved",
+  "approvedHash": null,
+  "dependsOn": [],
+  "features": {
+    "reads": [
+      "beta"
+    ],
+    "writes": [
+      "alpha",
+      "alpha-extra",
+      "gamma"
+    ]
+  },
+  "goal": "Alpha counts its calls. Beta reads the count!\nGamma stores nothing yet.",
+  "contract": "### Requirement: Alpha counts\nAlpha SHALL count its calls.\n\n#### Scenario: Alpha counts\n- **WHEN** alpha is called twice\n- **THEN** its count is two",
+  "nonGoals": "- Persisting the count.",
+  "delta": "- `specs/alpha/spec.md`, `specs/gamma/spec.md` and `specs/alpha-extra/spec.md`.",
+  "tasks": [
+    {
+      "taskNumber": "1",
+      "fileName": "1.md",
+      "title": "When alpha is called, it counts",
+      "status": "pending",
+      "verify": "node --test tests/alpha.test.ts",
+      "scope": [
+        "src/alpha.ts",
+        "tests/alpha.test.ts",
+        "package.json"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Alpha counts each call.",
+        "The count starts at zero."
+      ],
+      "events": []
+    },
+    {
+      "taskNumber": "2",
+      "fileName": "2.md",
+      "title": "When gamma is new, it stores the count",
+      "status": "pending",
+      "verify": "node --test tests/gamma.test.ts",
+      "scope": [
+        "src/alpha.ts",
+        "src/gamma/**",
+        "tests/gamma.test.ts",
+        "tests/everything.test.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Gamma stores the count alpha gives it."
+      ],
+      "events": []
+    },
+    {
+      "taskNumber": "3",
+      "fileName": "3.md",
+      "title": "When beta reads the count, it prints it",
+      "status": "pending",
+      "verify": "node scripts/print-count.mjs",
+      "scope": [
+        "src/beta.ts"
+      ],
+      "entry": [],
+      "skills": [],
+      "acceptance": [
+        "Beta prints the count."
+      ],
+      "events": []
+    }
+  ],
+  "planningSessions": [
+    {
+      "sessionId": "s-1",
+      "startTime": "2026-10-01T09:00:00.000Z",
+      "harness": "claude",
+      "model": "claude-opus-5-5",
+      "exitCode": 0,
+      "wallSeconds": 750
+    },
+    {
+      "sessionId": "s-2",
+      "startTime": "2026-10-01T10:00:00.000Z",
+      "harness": "pi",
+      "model": null,
+      "agent": "planner",
+      "exitCode": null,
+      "wallSeconds": null
+    }
+  ],
+  "recertifications": [],
+  "timeline": [],
+  "next": {
+    "state": "ready-for-approval",
+    "command": "osq approve 001",
+    "detail": "do the steps before approval first"
+  },
+  "afterLanding": "- Tell the beta team.\n- Remove the backup.",
+  "digest": {
+    "change": "001-active",
+    "goal": "Alpha counts its calls. Beta reads the count!",
+    "tasks": [
+      {
+        "number": "1",
+        "title": "When alpha is called, it counts",
+        "scopeFiles": 3,
+        "testsModify": true,
+        "existingTests": [
+          "tests/alpha.test.ts"
+        ]
+      },
+      {
+        "number": "2",
+        "title": "When gamma is new, it stores the count",
+        "scopeFiles": 2,
+        "testsModify": true,
+        "existingTests": [
+          "tests/everything.test.ts"
+        ]
+      },
+      {
+        "number": "3",
+        "title": "When beta reads the count, it prints it",
+        "scopeFiles": 1,
+        "testsModify": false,
+        "existingTests": []
+      }
+    ],
+    "capabilities": [
+      {
+        "name": "alpha",
+        "added": [
+          "Alpha counts"
+        ],
+        "modified": [
+          "Alpha starts"
+        ],
+        "removed": [
+          "Alpha sleeps"
+        ],
+        "creates": false
+      },
+      {
+        "name": "alpha-extra",
+        "added": [
+          "Alpha extra"
+        ],
+        "modified": [],
+        "removed": [],
+        "creates": false
+      },
+      {
+        "name": "gamma",
+        "added": [
+          "Gamma stores"
+        ],
+        "modified": [],
+        "removed": [],
+        "creates": true
+      }
+    ],
+    "decisions": [
+      {
+        "number": "001",
+        "rule": "Every change keeps the test suite green."
+      },
+      {
+        "number": "002",
+        "rule": "Alpha writes go through the alpha module."
+      }
+    ],
+    "humanSteps": "### Before approval\n\n- Back up the alpha data.\n\n### After landing\n\n- Tell the beta team.\n- Remove the backup.",
+    "beforeApproval": "- Back up the alpha data.",
+    "flags": [
+      {
+        "id": "shared_file",
+        "label": "shared files in tasks 1 and 2",
+        "excerpt": "src/alpha.ts; when task 2 changes them, the watcher re-runs task 1's verify and halts only if it fails"
+      },
+      {
+        "id": "sensitive_path",
+        "label": "package manifest in scope",
+        "excerpt": "package.json in task 1"
+      },
+      {
+        "id": "verify_without_test",
+        "label": "verify without a test in task 3",
+        "excerpt": "node scripts/print-count.mjs"
+      },
+      {
+        "id": "removed_requirement",
+        "label": "removes 1 requirements from alpha",
+        "excerpt": "Alpha sleeps"
+      },
+      {
+        "id": "unknown_capability",
+        "label": "unknown capability alpha-extra resembles alpha",
+        "excerpt": "no living spec at openspec/specs/alpha-extra/spec.md"
+      },
+      {
+        "id": "verify_starts_conflict",
+        "label": "verify starts conflict in task 2",
+        "excerpt": "tests/gamma.test.ts is named by the verify but created by this task, which declares verify_starts: green"
+      },
+      {
+        "id": "adr_departure",
+        "label": "departs from ADR 001",
+        "excerpt": "Departs from ADR 001: the count test is rewritten while the suite is red."
+      },
+      {
+        "id": "adr_check_modified",
+        "label": "task 2 may modify a check of ADR 001",
+        "excerpt": "tests/everything.test.ts enforces ADR 001: Every change keeps the test suite green. Record it as Departs from ADR 001: in ## Decisions."
+      }
+    ]
+  }
+}
