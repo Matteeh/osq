@@ -24,7 +24,7 @@ The site is its own pnpm workspace (`docs/pnpm-workspace.yaml`), so its dependen
 ```
 src/styles/tokens.css   theme colors for light and dark; every color on the site comes from here
 src/styles/global.css   base type, layout wrapper, pills, cards, buttons
-src/data/               links, supported agents, and the feature cards
+src/data/               links and supported agents
 src/components/         one component per section; Hero and DemoCard hold the interactive parts
 src/scripts/            circuit.ts (hero background) and demo.ts (the demo card loop)
 src/layouts/Base.astro  page shell, fonts, meta tags
@@ -39,7 +39,7 @@ Each page under `src/content/docs/docs/` is a Markdown file served at `/docs/<pa
 
 The CLI reference is generated. `pnpm dev` and `pnpm build` regenerate it from `createProgram` in `src/cli` first, so it lists exactly what the CLI parses. That step needs the osq package's dependencies installed at the repository root. Without them it keeps the committed page and prints a warning, so commit the regenerated page whenever a command changes.
 
-Feature cards live in `src/data/features.ts`. `available` lists only what ships in the current npm release and `roadmap` what the Rust rebuild adds. Move a card when it ships, never before.
+The feature list lives in the docs, in `src/content/docs/docs/index.md`. "What you get" lists only what ships in the current npm release and "Coming in the rebuild" what the Rust rebuild adds. Move an item when it ships, never before.
 
 ## Later
 
