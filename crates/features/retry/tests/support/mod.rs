@@ -145,13 +145,13 @@ pub fn dump(folder: &Path) -> String {
 /// One event line parsed, its timestamp blanked and its keys sorted.
 fn event_line(line: &str) -> String {
     let mut value: Value = serde_json::from_str(line).expect("the event line is JSON");
-    if let Value::Object(object) = &mut value {
-        if object.contains_key("timestamp") {
-            object.insert(
-                "timestamp".to_owned(),
-                Value::String("<timestamp>".to_owned()),
-            );
-        }
+    if let Value::Object(object) = &mut value
+        && object.contains_key("timestamp")
+    {
+        object.insert(
+            "timestamp".to_owned(),
+            Value::String("<timestamp>".to_owned()),
+        );
     }
     sorted(value).to_string()
 }

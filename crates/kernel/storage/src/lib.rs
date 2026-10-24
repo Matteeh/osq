@@ -5,6 +5,7 @@
 pub mod model;
 pub mod read;
 pub mod scope;
+pub mod write;
 
 pub use model::{
     TaskOutcome, TrialLabels, build_read_model, read_trial_labels, replace_read_model,
@@ -30,3 +31,4 @@ pub use scope::{
     DoneMarkerError, DoneScope, ScopeFile, ScopeHash, differing_scope_paths, read_done_scope,
     refresh_done_marker, task_scope_hash,
 };
+pub use write::write_durable;

@@ -93,14 +93,14 @@ pub(super) fn derive(snapshot: &ChangeSnapshot) -> Vec<Trigger> {
         return Vec::new();
     }
     let mut triggers = Vec::new();
-    if let Some(marker) = &snapshot.change_regressed {
-        if let Some(kind) = change_kind(&marker.reason) {
-            triggers.push(Trigger {
-                target: Target::Change,
-                kind,
-                reason: marker.reason.clone(),
-            });
-        }
+    if let Some(marker) = &snapshot.change_regressed
+        && let Some(kind) = change_kind(&marker.reason)
+    {
+        triggers.push(Trigger {
+            target: Target::Change,
+            kind,
+            reason: marker.reason.clone(),
+        });
     }
     for task in &snapshot.tasks {
         if let Some(trigger) = task_trigger(task) {

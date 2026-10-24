@@ -72,10 +72,10 @@ pub fn run_cli(features: &[Box<dyn Feature>], root: &Path, args: &[String]) -> C
     if is_help(first) {
         return help(&top_help(features));
     }
-    if args.get(1).is_some_and(|argument| is_help(argument)) {
-        if let Some(command) = find_command(features, first) {
-            return help(&command_help(&command));
-        }
+    if args.get(1).is_some_and(|argument| is_help(argument))
+        && let Some(command) = find_command(features, first)
+    {
+        return help(&command_help(&command));
     }
     dispatch(features, root, first, &args[1..])
 }
@@ -89,40 +89,28 @@ fn help(text: &str) -> CliResult {
     }
 }
 
-/// Runs one command through the first feature that lists it.
+/// Runs one command through the loop's entry point and prints its reports.
 fn dispatch(features: &[Box<dyn Feature>], root: &Path, name: &str, args: &[String]) -> CliResult {
-    let Some(feature) = features
-        .iter()
-        .find(|feature| lists(feature.as_ref(), name))
-    else {
-        return failure(&format!("unknown command: {name}\n"));
-    };
     let invocation = Invocation::new(root, name, args.to_vec());
-    match feature.run(&invocation) {
-        Ok(output) => CliResult {
-            stdout: output.text,
-            stderr: String::new(),
-            code: output.code,
-        },
-        Err(error) => failure(&format!("{error}\n")),
+    let run = osq_kernel_loop::run_command(features, &invocation);
+    let (stdout, mut stderr, mut code) = match run.result {
+        Ok(output) => (output.text, String::new(), output.code),
+        Err(error) => (String::new(), format!("{error}\n"), 1),
+    };
+    for warning in &run.warnings {
+        stderr.push_str(warning);
+        stderr.push('\n');
     }
-}
-
-/// A failed result with text on stderr.
-fn failure(text: &str) -> CliResult {
+    for failure in &run.failures {
+        stderr.push_str(&failure.to_string());
+        stderr.push('\n');
+        code = 1;
+    }
     CliResult {
-        stdout: String::new(),
-        stderr: text.to_owned(),
-        code: 1,
+        stdout,
+        stderr,
+        code,
     }
-}
-
-/// Whether a feature lists a command name.
-fn lists(feature: &dyn Feature, name: &str) -> bool {
-    feature
-        .commands()
-        .iter()
-        .any(|command| command.name == name)
 }
 
 /// Finds the command a name belongs to, in registry and command order.

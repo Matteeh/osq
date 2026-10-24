@@ -181,17 +181,16 @@ pub fn worktrees(repo: &Path) -> Vec<String> {
         if let Some(path) = line.strip_prefix("worktree ") {
             current = Some((path.to_owned(), String::new()));
         }
-        if let Some(branch) = line.strip_prefix("branch refs/heads/") {
-            if let Some((_, found)) = current.as_mut() {
-                branch.clone_into(found);
-            }
+        if let Some(branch) = line.strip_prefix("branch refs/heads/")
+            && let Some((_, found)) = current.as_mut()
+        {
+            branch.clone_into(found);
         }
-        if line.is_empty() {
-            if let Some((path, branch)) = current.take() {
-                if branch.starts_with("osq/") {
-                    lines.push(format!("{path} {branch}"));
-                }
-            }
+        if line.is_empty()
+            && let Some((path, branch)) = current.take()
+            && branch.starts_with("osq/")
+        {
+            lines.push(format!("{path} {branch}"));
         }
     }
     lines.sort();

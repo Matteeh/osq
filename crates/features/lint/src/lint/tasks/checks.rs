@@ -51,16 +51,16 @@ pub(super) fn findings(input: &Input, name: &str, path: &str, content: &str) -> 
             task: None,
         };
     };
-    if let Some(value) = tests_modify(&frontmatter.data) {
-        if !matches!(value, Yaml::Boolean(_)) {
-            findings.push(error(
-                path,
-                format!(
-                    "Task in {name} tests.modify must be a boolean (got {})",
-                    json(value)
-                ),
-            ));
-        }
+    if let Some(value) = tests_modify(&frontmatter.data)
+        && !matches!(value, Yaml::Boolean(_))
+    {
+        findings.push(error(
+            path,
+            format!(
+                "Task in {name} tests.modify must be a boolean (got {})",
+                json(value)
+            ),
+        ));
     }
     let existing = existing_paths(input.root, &file.scope);
     add_gated(&mut findings, input, name, path, &file, &existing);
@@ -127,10 +127,10 @@ fn checkbox_after(rest: &str) -> bool {
 
 /// The declared `tests.modify` value, nested first, then the flat key.
 fn tests_modify(mapping: &Hash) -> Option<&Yaml> {
-    if let Some(Yaml::Hash(tests)) = lookup(mapping, "tests") {
-        if let Some(value) = lookup(tests, "modify") {
-            return Some(value);
-        }
+    if let Some(Yaml::Hash(tests)) = lookup(mapping, "tests")
+        && let Some(value) = lookup(tests, "modify")
+    {
+        return Some(value);
     }
     lookup(mapping, "tests.modify")
 }

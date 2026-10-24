@@ -7,10 +7,10 @@ use super::GitVcs;
 /// Splits `Name <email>` into its name and email, keeping the whole string as
 /// the name when it does not end in `<...>`.
 fn parse_author(author: &str) -> (&str, &str) {
-    if let Some(rest) = author.strip_suffix('>') {
-        if let Some((name, email)) = rest.split_once('<') {
-            return (name.trim_end(), email);
-        }
+    if let Some(rest) = author.strip_suffix('>')
+        && let Some((name, email)) = rest.split_once('<')
+    {
+        return (name.trim_end(), email);
     }
     (author, "")
 }

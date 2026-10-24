@@ -85,10 +85,10 @@ fn refuse_dirty(
         if scope_covers_path(&scopes, &entry.path) {
             dirty.insert(entry.path);
         }
-        if let Some(from) = entry.from {
-            if scope_covers_path(&scopes, &from) {
-                dirty.insert(from);
-            }
+        if let Some(from) = entry.from
+            && scope_covers_path(&scopes, &from)
+        {
+            dirty.insert(from);
         }
     }
     if dirty.is_empty() {

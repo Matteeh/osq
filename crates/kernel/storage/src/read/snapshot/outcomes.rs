@@ -89,11 +89,11 @@ impl OutcomeAccumulator {
                 self.pending_start_ms = timestamp;
             }
             "end" => {
-                if let (Some(start), Some(end)) = (self.pending_start_ms, timestamp) {
-                    if end >= start {
-                        self.covered_ms += end - start;
-                        self.has_duration = true;
-                    }
+                if let (Some(start), Some(end)) = (self.pending_start_ms, timestamp)
+                    && end >= start
+                {
+                    self.covered_ms += end - start;
+                    self.has_duration = true;
                 }
                 self.pending_start_ms = None;
                 self.facts.changed_files = data.changed_files;

@@ -59,16 +59,16 @@ pub(crate) fn kill<T>(
     death: &Death<'_>,
 ) -> Result<T, FeatureError> {
     record(folder, task, reason, marker)?;
-    if death.commits {
-        if let Err(error) = commit::dead(death.root, folder, task, reason.as_str(), death.config) {
-            halt::record(folder, RegressionReason::CommitFailed, &error, death.config)?;
-            return Err(failed_text(text::commit_failed_dead(
-                task,
-                name,
-                reason.as_str(),
-                error,
-            )));
-        }
+    if death.commits
+        && let Err(error) = commit::dead(death.root, folder, task, reason.as_str(), death.config)
+    {
+        halt::record(folder, RegressionReason::CommitFailed, &error, death.config)?;
+        return Err(failed_text(text::commit_failed_dead(
+            task,
+            name,
+            reason.as_str(),
+            error,
+        )));
     }
     Err(failed_text(text::died(task, name, reason.as_str())))
 }

@@ -103,7 +103,7 @@ Each of these joins the trait in the change that first needs it, with its
 own test:
 
 - Server routes, when the server app is built.
-- Loop hooks, the events a feature reacts to, when the loop calls features.
+- Loop hooks, the events a feature reacts to: ADR 030 adds them.
 - Structured output such as JSON, as a new `Output` field, when the server
   or the dashboard needs it.
 - `Send` and `Sync` bounds, when a feature runs off the main thread; section

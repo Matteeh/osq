@@ -30,10 +30,10 @@ pub fn parse_task_file(text: &str) -> Result<TaskFile, SyntaxError> {
 
 /// Whether the task may change preexisting tests.
 fn tests_modify(mapping: &Hash) -> bool {
-    if let Some(Yaml::Hash(tests)) = lookup(mapping, "tests") {
-        if let Some(Yaml::Boolean(flag)) = lookup(tests, "modify") {
-            return *flag;
-        }
+    if let Some(Yaml::Hash(tests)) = lookup(mapping, "tests")
+        && let Some(Yaml::Boolean(flag)) = lookup(tests, "modify")
+    {
+        return *flag;
     }
     matches!(lookup(mapping, "tests.modify"), Some(Yaml::Boolean(true)))
 }

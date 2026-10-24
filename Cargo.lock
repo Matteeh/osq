@@ -308,6 +308,7 @@ dependencies = [
  "osq-feature-retry",
  "osq-feature-run",
  "osq-feature-show",
+ "osq-kernel-loop",
 ]
 
 [[package]]
@@ -513,8 +514,11 @@ name = "osq-kernel-loop"
 version = "0.0.0"
 dependencies = [
  "osq-core",
+ "osq-kernel-config",
  "osq-kernel-specs",
  "osq-kernel-storage",
+ "osq-kernel-vcs",
+ "serde_json",
 ]
 
 [[package]]

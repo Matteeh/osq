@@ -38,10 +38,10 @@ pub(super) fn real_root(root: &Path) -> PathBuf {
 ///
 /// Implements: rust-doctor/doctor-change-checks
 pub(super) fn list_folders(root: &Path, config: &Config) -> Vec<ChangeEntry> {
-    if config.vcs.enabled {
-        if let Some(entries) = tree_folders(root, config) {
-            return entries;
-        }
+    if config.vcs.enabled
+        && let Some(entries) = tree_folders(root, config)
+    {
+        return entries;
     }
     list_changes(root)
 }

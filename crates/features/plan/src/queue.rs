@@ -56,10 +56,10 @@ pub(crate) fn read_state(root: &Path, command: &str) -> Result<QueueState, Featu
     let mut groups = scan_folders(root);
     let mut choices = BTreeMap::new();
     for item in &items {
-        if let Some(group) = groups.get(&item.slug) {
-            if let Some(message) = links::ambiguity(&item.slug, group) {
-                return Err(FeatureError::failed(command, message));
-            }
+        if let Some(group) = groups.get(&item.slug)
+            && let Some(message) = links::ambiguity(&item.slug, group)
+        {
+            return Err(FeatureError::failed(command, message));
         }
         if let Some(folder) = groups
             .get_mut(&item.slug)

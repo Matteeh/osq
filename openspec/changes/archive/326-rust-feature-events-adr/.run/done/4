@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:13b6b8b1fd1d2b683f702b92571c7c16cc0d90e8dc8849e4c0aba35659065724"
+build_stamp: "81b56593"
+project_commit: "807c212f"
+exit_code: 0
+scope_files: {"crates/apps/cli/Cargo.toml":"sha256:8327fac5dfbd8986b9fca03d02faefdd4c645983c58f0c92ecfdda4b1a3cad31","crates/apps/cli/src/lib.rs":"sha256:a6505eeed53a5937d0e1bce1f43042cd4780b299b1bd2795e776500d721a5724","crates/apps/cli/tests/reactions.rs":"sha256:39477c157a2ad03527db2ac1500b8f2f1eb4ec855535ba4393e57d652948809c"}
+---
+2026-10-24T20:27:46.049Z

@@ -45,10 +45,10 @@ pub(super) fn notice_rows(snapshot: &ChangeSnapshot) -> Vec<NoticeRow> {
         }
         return rows;
     }
-    if snapshot.location == Location::Rejected {
-        if let Some(last) = snapshot.plan_records.last() {
-            push_record(&mut rows, &snapshot.folder, last, "rejected");
-        }
+    if snapshot.location == Location::Rejected
+        && let Some(last) = snapshot.plan_records.last()
+    {
+        push_record(&mut rows, &snapshot.folder, last, "rejected");
     }
     rows
 }

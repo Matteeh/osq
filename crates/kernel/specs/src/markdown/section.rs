@@ -6,10 +6,10 @@ use super::text::{is_js_whitespace, js_trim};
 fn section_end(capture: &str) -> Option<usize> {
     for (index, _) in capture.match_indices('\n') {
         let rest = &capture[index.saturating_add(1)..];
-        if let Some(after) = rest.strip_prefix("##") {
-            if after.chars().next().is_some_and(is_js_whitespace) {
-                return Some(index);
-            }
+        if let Some(after) = rest.strip_prefix("##")
+            && after.chars().next().is_some_and(is_js_whitespace)
+        {
+            return Some(index);
         }
     }
     None

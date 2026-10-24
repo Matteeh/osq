@@ -12,8 +12,8 @@ pub mod scope;
 pub mod seal;
 
 pub use change::{ApproveError, Approved, ArchiveError, Archived, Change, Draft};
-pub use event::{Envelope, Event, EventError, event_line, parse_event_line};
-pub use feature::{Command, Feature, FeatureError, Invocation, Output};
+pub use event::{Envelope, Event, EventError, EventKind, event_line, parse_event_line};
+pub use feature::{Command, Feature, FeatureError, Invocation, Output, Reaction};
 pub use fold::{
     ChangeRecord, ChangeState, ChangeStatus, Stream, TaskId, TaskState, TaskStatus, apply,
     apply_change, apply_task, change_status,

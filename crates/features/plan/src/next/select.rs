@@ -82,19 +82,19 @@ pub(super) fn failures(changes: &[(String, ChangeSnapshot)]) -> Vec<Failure> {
                     target,
                     reason: "regressed".to_owned(),
                 });
-            } else if !task.done {
-                if let Some(dead) = &task.markers.dead {
-                    let reason = if dead.reason.is_empty() {
-                        "dead"
-                    } else {
-                        dead.reason.as_str()
-                    };
-                    failures.push(Failure {
-                        change_id: id.clone(),
-                        target,
-                        reason: reason.to_owned(),
-                    });
-                }
+            } else if !task.done
+                && let Some(dead) = &task.markers.dead
+            {
+                let reason = if dead.reason.is_empty() {
+                    "dead"
+                } else {
+                    dead.reason.as_str()
+                };
+                failures.push(Failure {
+                    change_id: id.clone(),
+                    target,
+                    reason: reason.to_owned(),
+                });
             }
         }
     }

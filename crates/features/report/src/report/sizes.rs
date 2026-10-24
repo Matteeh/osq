@@ -197,7 +197,7 @@ fn median_seconds(values: &mut [f64]) -> Option<f64> {
     }
     values.sort_by(f64::total_cmp);
     let middle = values.len() / 2;
-    let median = if values.len() % 2 == 0 {
+    let median = if values.len().is_multiple_of(2) {
         f64::midpoint(values[middle - 1], values[middle])
     } else {
         values[middle]

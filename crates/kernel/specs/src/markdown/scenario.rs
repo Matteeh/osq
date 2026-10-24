@@ -61,14 +61,12 @@ pub fn parse_scenario(block: &str) -> Scenario {
                 rows,
             });
             then_seen = true;
-        } else if then_seen {
-            if let Some(text) = bullet_text(line, "**AND**") {
-                let rows = read_rows(&lines, index.saturating_add(1));
-                outcomes.push(Outcome {
-                    text: text.to_string(),
-                    rows,
-                });
-            }
+        } else if then_seen && let Some(text) = bullet_text(line, "**AND**") {
+            let rows = read_rows(&lines, index.saturating_add(1));
+            outcomes.push(Outcome {
+                text: text.to_string(),
+                rows,
+            });
         }
     }
 

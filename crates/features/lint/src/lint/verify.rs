@@ -192,10 +192,9 @@ fn project_paths(root: &Path) -> Vec<String> {
         .ok()
         .flatten()
         .is_some_and(|found| same_root(root, &found))
+        && let Ok(endings) = vcs.line_endings()
     {
-        if let Ok(endings) = vcs.line_endings() {
-            paths.extend(endings.into_iter().map(|entry| entry.path));
-        }
+        paths.extend(endings.into_iter().map(|entry| entry.path));
     }
     for manifest in ROOT_MANIFESTS {
         if root.join(manifest).is_file() {

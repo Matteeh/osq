@@ -86,10 +86,10 @@ pub fn parse_result_sections(text: &str) -> ResultSections {
 
 /// One section's cleaned text, preferring the inline `touched:` text.
 fn section(buffers: &[Vec<String>; 7], key: SectionKey, inline: Option<&str>) -> Option<String> {
-    if key == SectionKey::Touched {
-        if let Some(inline) = inline {
-            return clean_section(inline);
-        }
+    if key == SectionKey::Touched
+        && let Some(inline) = inline
+    {
+        return clean_section(inline);
     }
     clean_section(&buffers[key as usize].join("\n"))
 }
@@ -199,10 +199,10 @@ fn clean_section(text: &str) -> Option<String> {
 /// Drops a leading `-`, `*`, `+` or number-and-`.` list marker and its spaces.
 fn strip_list_marker(line: &str) -> &str {
     let trimmed = line.trim_start();
-    if let Some(character) = trimmed.chars().next() {
-        if matches!(character, '-' | '*' | '+') {
-            return trimmed[character.len_utf8()..].trim_start();
-        }
+    if let Some(character) = trimmed.chars().next()
+        && matches!(character, '-' | '*' | '+')
+    {
+        return trimmed[character.len_utf8()..].trim_start();
     }
     let digits = trimmed.chars().take_while(char::is_ascii_digit).count();
     let after_number = if digits == 0 {

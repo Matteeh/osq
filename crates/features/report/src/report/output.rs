@@ -92,7 +92,7 @@ fn rate(hundredths: u64) -> String {
     if fraction == 0 {
         return whole.to_string();
     }
-    if fraction % 10 == 0 {
+    if fraction.is_multiple_of(10) {
         return format!("{whole}.{}", fraction / 10);
     }
     format!("{whole}.{fraction:02}")

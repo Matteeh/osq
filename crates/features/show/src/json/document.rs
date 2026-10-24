@@ -72,10 +72,10 @@ fn tail(change: &Change, facts: Option<&LandFacts>, events: &Events) -> Vec<(&'s
     if !change.archived {
         return fields;
     }
-    if let Some(event) = crate::archived::validation_event(&events.timeline) {
-        if let Some(data) = event::data(event) {
-            fields.push(("validation", data));
-        }
+    if let Some(event) = crate::archived::validation_event(&events.timeline)
+        && let Some(data) = event::data(event)
+    {
+        fields.push(("validation", data));
     }
     if let Some(view) = crate::archived::land_view(change, facts, &events.timeline) {
         fields.push(("land", land::value(&view)));

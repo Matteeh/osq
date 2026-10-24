@@ -116,10 +116,10 @@ pub fn lock_unit(path: &str) -> String {
     if path.starts_with("crates/core/") {
         return "crates/core".to_owned();
     }
-    if let Some(rest) = path.strip_prefix("crates/kernel/") {
-        if let Some((name, _)) = rest.split_once('/') {
-            return format!("crates/kernel/{name}");
-        }
+    if let Some(rest) = path.strip_prefix("crates/kernel/")
+        && let Some((name, _)) = rest.split_once('/')
+    {
+        return format!("crates/kernel/{name}");
     }
     path.to_owned()
 }

@@ -48,10 +48,10 @@ fn checkout_highest(root: &Path) -> u128 {
             continue;
         };
         for entry in entries.flatten() {
-            if let Some(name) = entry.file_name().to_str() {
-                if let Some(number) = leading_number(name) {
-                    highest = highest.max(number);
-                }
+            if let Some(name) = entry.file_name().to_str()
+                && let Some(number) = leading_number(name)
+            {
+                highest = highest.max(number);
             }
         }
     }

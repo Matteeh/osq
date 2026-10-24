@@ -101,16 +101,16 @@ fn names_package_script(command: &str) -> bool {
             continue;
         };
         tail = after_space.trim_start_matches(char::is_whitespace);
-        if let Some(after_run) = tail.strip_prefix("run") {
-            if let Some(after_run_space) = after_run.strip_prefix(char::is_whitespace) {
-                tail = after_run_space.trim_start_matches(char::is_whitespace);
-            }
+        if let Some(after_run) = tail.strip_prefix("run")
+            && let Some(after_run_space) = after_run.strip_prefix(char::is_whitespace)
+        {
+            tail = after_run_space.trim_start_matches(char::is_whitespace);
         }
         for script in ["test", "verify"] {
-            if let Some(remainder) = tail.strip_prefix(script) {
-                if remainder.chars().next().is_none_or(|next| !is_word(next)) {
-                    return true;
-                }
+            if let Some(remainder) = tail.strip_prefix(script)
+                && remainder.chars().next().is_none_or(|next| !is_word(next))
+            {
+                return true;
             }
         }
     }

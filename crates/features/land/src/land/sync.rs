@@ -348,15 +348,15 @@ impl Sync<'_> {
         let _ = self.vcs.merge_abort();
         let _ = files::restore(&self.events, self.kept_events.as_deref());
         restore_recertified(&self.backups);
-        if self.caller.records && stop::records(stop.reason) {
-            if let Err(message) =
+        if self.caller.records
+            && stop::records(stop.reason)
+            && let Err(message) =
                 stop::record(&self.vcs, &self.change, self.folder, &self.author, stop)
-            {
-                return Failure {
-                    reason: stop.reason,
-                    message: format!("{}\n{}", stop.message, message),
-                };
-            }
+        {
+            return Failure {
+                reason: stop.reason,
+                message: format!("{}\n{}", stop.message, message),
+            };
         }
         Failure::stop(stop)
     }

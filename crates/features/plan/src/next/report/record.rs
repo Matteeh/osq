@@ -169,7 +169,7 @@ fn median_millis(durations: &mut [u64]) -> Option<u128> {
     }
     durations.sort_unstable();
     let middle = durations.len() / 2;
-    let doubled = if durations.len() % 2 == 0 {
+    let doubled = if durations.len().is_multiple_of(2) {
         u128::from(durations[middle - 1]) + u128::from(durations[middle])
     } else {
         2 * u128::from(durations[middle])

@@ -69,12 +69,11 @@ pub fn find_usage_limit(events: &[Event]) -> Option<&UsageLimitData> {
 /// Implements: rust-runners/usage-limit-pause-time
 #[must_use]
 pub fn pause_until(limit: &UsageLimitData, now_ms: i64, wait: Duration) -> (String, PauseSource) {
-    if let Some(resets_at) = &limit.resets_at {
-        if let Some(reset_ms) = parse_timestamp_ms(resets_at) {
-            if reset_ms > now_ms {
-                return (format_timestamp_ms(reset_ms), PauseSource::Harness);
-            }
-        }
+    if let Some(resets_at) = &limit.resets_at
+        && let Some(reset_ms) = parse_timestamp_ms(resets_at)
+        && reset_ms > now_ms
+    {
+        return (format_timestamp_ms(reset_ms), PauseSource::Harness);
     }
     let wait_ms = i64::try_from(wait.as_millis()).unwrap_or(i64::MAX);
     (

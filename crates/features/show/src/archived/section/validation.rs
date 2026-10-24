@@ -30,10 +30,10 @@ pub(super) fn lines(change: &Change) -> Vec<String> {
     };
     let mut lines = vec![String::new(), headline(latest)];
     lines.extend(finding_lines(latest));
-    if let Some(Value::Array(items)) = latest.field("restored") {
-        if !items.is_empty() {
-            lines.push(format!("  Restored: {}", join(items)));
-        }
+    if let Some(Value::Array(items)) = latest.field("restored")
+        && !items.is_empty()
+    {
+        lines.push(format!("  Restored: {}", join(items)));
     }
     lines
 }

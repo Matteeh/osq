@@ -84,10 +84,10 @@ fn directory_names(dir: &Path) -> Vec<String> {
     };
     let mut names = Vec::new();
     for entry in entries.flatten() {
-        if entry.file_type().is_ok_and(|kind| kind.is_dir()) {
-            if let Ok(name) = entry.file_name().into_string() {
-                names.push(name);
-            }
+        if entry.file_type().is_ok_and(|kind| kind.is_dir())
+            && let Ok(name) = entry.file_name().into_string()
+        {
+            names.push(name);
         }
     }
     names

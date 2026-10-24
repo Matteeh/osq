@@ -9,6 +9,7 @@
 //! Implements: rust-core/event-lines-round-trip
 //! Implements: rust-core/event-read-errors
 
+pub mod kind;
 pub mod outcomes;
 pub mod payload;
 pub mod reasons;
@@ -17,6 +18,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 
+pub use kind::EventKind;
 pub use outcomes::{
     AutoSteerOutcome, BaselineOutcome, FocusedOutcome, MutationOutcome, RecertificationOutcome,
     ValidatorOutcome, VerificationOutcome,
@@ -113,46 +115,54 @@ pub enum Event {
 }
 
 impl Event {
+    /// The kind of this event, without its payload.
+    ///
+    /// Implements: rust-core/event-kinds
+    #[must_use]
+    pub fn kind(&self) -> EventKind {
+        match self {
+            Self::Tool(_) => EventKind::Tool,
+            Self::Tokens(_) => EventKind::Tokens,
+            Self::Text(_) => EventKind::Text,
+            Self::FileChanged(_) => EventKind::FileChanged,
+            Self::Started(_) => EventKind::Started,
+            Self::VerifyRan(_) => EventKind::VerifyRan,
+            Self::ResultWritten(_) => EventKind::ResultWritten,
+            Self::Exited(_) => EventKind::Exited,
+            Self::ExitContinued(_) => EventKind::ExitContinued,
+            Self::Measures(_) => EventKind::Measures,
+            Self::DependenciesAdded(_) => EventKind::DependenciesAdded,
+            Self::Done(_) => EventKind::Done,
+            Self::DoneManual(_) => EventKind::DoneManual,
+            Self::Dead(_) => EventKind::Dead,
+            Self::Regressed(_) => EventKind::Regressed,
+            Self::Retry(_) => EventKind::Retry,
+            Self::Stuck(_) => EventKind::Stuck,
+            Self::HarnessRetry(_) => EventKind::HarnessRetry,
+            Self::Recertification(_) => EventKind::Recertification,
+            Self::Rejected(_) => EventKind::Rejected,
+            Self::InstructionsChanged(_) => EventKind::InstructionsChanged,
+            Self::BaselineRan(_) => EventKind::BaselineRan,
+            Self::FocusedRan(_) => EventKind::FocusedRan,
+            Self::FormatRan(_) => EventKind::FormatRan,
+            Self::MutationRan(_) => EventKind::MutationRan,
+            Self::ValidatorRan(_) => EventKind::ValidatorRan,
+            Self::AutoSteerRan(_) => EventKind::AutoSteerRan,
+            Self::VcsViolation(_) => EventKind::VcsViolation,
+            Self::ScopeViolation(_) => EventKind::ScopeViolation,
+            Self::UsageLimit(_) => EventKind::UsageLimit,
+            Self::Paused(_) => EventKind::Paused,
+            Self::ChangeVerifyRerun(_) => EventKind::ChangeVerifyRerun,
+            Self::Archived(_) => EventKind::Archived,
+            Self::Synced(_) => EventKind::Synced,
+            Self::SyncStopped(_) => EventKind::SyncStopped,
+            Self::VerificationRecorded(_) => EventKind::VerificationRecorded,
+        }
+    }
+
     /// The `type` string this event writes.
     fn type_name(&self) -> &'static str {
-        match self {
-            Self::Tool(_) => "tool",
-            Self::Tokens(_) => "tokens",
-            Self::Text(_) => "text",
-            Self::FileChanged(_) => "file_changed",
-            Self::Started(_) => "started",
-            Self::VerifyRan(_) => "verify_ran",
-            Self::ResultWritten(_) => "result_written",
-            Self::Exited(_) => "exited",
-            Self::ExitContinued(_) => "exit_continued",
-            Self::Measures(_) => "measures",
-            Self::DependenciesAdded(_) => "dependencies_added",
-            Self::Done(_) => "done",
-            Self::DoneManual(_) => "done_manual",
-            Self::Dead(_) => "dead",
-            Self::Regressed(_) => "regressed",
-            Self::Retry(_) => "retry",
-            Self::Stuck(_) => "stuck",
-            Self::HarnessRetry(_) => "harness_retry",
-            Self::Recertification(_) => "recertification",
-            Self::Rejected(_) => "rejected",
-            Self::InstructionsChanged(_) => "instructions_changed",
-            Self::BaselineRan(_) => "baseline_ran",
-            Self::FocusedRan(_) => "focused_ran",
-            Self::FormatRan(_) => "format_ran",
-            Self::MutationRan(_) => "mutation_ran",
-            Self::ValidatorRan(_) => "validator_ran",
-            Self::AutoSteerRan(_) => "auto_steer_ran",
-            Self::VcsViolation(_) => "vcs_violation",
-            Self::ScopeViolation(_) => "scope_violation",
-            Self::UsageLimit(_) => "usage_limit",
-            Self::Paused(_) => "paused",
-            Self::ChangeVerifyRerun(_) => "change_verify_rerun",
-            Self::Archived(_) => "archived",
-            Self::Synced(_) => "synced",
-            Self::SyncStopped(_) => "sync_stopped",
-            Self::VerificationRecorded(_) => "verification_recorded",
-        }
+        self.kind().name()
     }
 
     /// The `data` value this event writes.

@@ -69,12 +69,15 @@ text comes from `Command` data.
 - **THEN** stdout has one command line for each `Command` the registered features list, in registry and `commands()` order, and no other command line
 
 ### Requirement: Command dispatch
-`run_cli` SHALL call `run` on the first feature whose `commands()` lists
-the name, with `Invocation::new(root, name, <the other arguments>)`. An
-`Output` gives its `text` on stdout and its `code`. A `FeatureError` gives
-its display and `\n` on stderr and code 1. A name no feature lists gives
-`unknown command: <name>\n` on stderr and code 1 and calls no feature. The
-other stream is empty.
+`run_cli` SHALL run a command only through rust-loop `run_command`, with
+`Invocation::new(root, name, <the other arguments>)`, so its events are
+delivered as ADR 030 says. An `Output` gives its `text` on stdout and its
+`code`. A `FeatureError` gives its display and `\n` on stderr and code 1. A name
+no feature lists gives `unknown command: <name>\n` on stderr and code 1 and
+calls no feature. After any error, each delivery warning then adds its text
+and `\n` on stderr and leaves the code as it is, and each `ReactionFailure`
+then adds its display and `\n` on stderr and makes the code 1, whichever
+change it names. A stream with nothing to show is empty.
 
 #### Scenario: Commands through the binary
 - **WHEN** the built `osq-rs` binary runs in a copy of the crate's fixture project, made in a new folder under `CARGO_TARGET_TMPDIR`, with the row's arguments
@@ -107,6 +110,14 @@ other stream is empty.
 | `Output::text("fine\n")` | `fine\n` | 0 |
 | `Output::with_code("bad\n", 1)` | `bad\n` | 1 |
 | `Output::with_code("odd\n", 3)` | `odd\n` | 3 |
+
+#### Scenario: Reaction failure through the CLI
+- **WHEN** `run_cli` runs the argument `make` on a scratch root holding an active change `001-a`, with a test feature `make` whose `run` appends a `rejected` line to `001-a`'s `.run/events/change.jsonl` and returns `Output::text("made")`, and a test feature `watch` reacting to `rejected` whose `react` returns `FeatureError::failed("watch", "no")`
+- **THEN** stdout is `made`, stderr is `watch could not handle rejected for 001-a: watch failed: no\n`, and the code is 1
+
+#### Scenario: Delivery warning through the CLI
+- **WHEN** `run_cli` runs the argument `make` on a scratch root holding an active change `001-a`, with a test feature `make` whose `run` appends the line `not json` and `\n` to `001-a`'s `.run/events/change.jsonl` and returns `Output::text("made")`, and a test feature `watch` reacting to `rejected`
+- **THEN** stdout is `made`, stderr is `watch passed over byte 0 of change.jsonl in 001-a: line is not one JSON object\n`, and the code is 0
 
 ### Requirement: CLI entry point
 The `osq-rs` binary's `main` SHALL call `run_cli` with `features()`, the

@@ -192,10 +192,11 @@ fn attribution_entry(value: &Value) -> Option<(String, String)> {
 /// The task number the event's data names, or none.
 fn numeric_task(event: &Event) -> Option<String> {
     let value = event.field("task")?;
-    if let Some(number) = value.as_f64() {
-        if number >= 0.0 && number.fract() == 0.0 {
-            return Some(js_number(number));
-        }
+    if let Some(number) = value.as_f64()
+        && number >= 0.0
+        && number.fract() == 0.0
+    {
+        return Some(js_number(number));
     }
     let text = value.as_str()?.trim();
     (!text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit())).then(|| text.to_owned())
@@ -205,19 +206,18 @@ fn numeric_task(event: &Event) -> Option<String> {
 fn compare_rows(left: &Row, right: &Row) -> Ordering {
     let left_time = left.timestamp.as_deref().and_then(time);
     let right_time = right.timestamp.as_deref().and_then(time);
-    if let (Some(left_time), Some(right_time)) = (left_time, right_time) {
-        if left_time != right_time {
-            return left_time.cmp(&right_time);
-        }
+    if let (Some(left_time), Some(right_time)) = (left_time, right_time)
+        && left_time != right_time
+    {
+        return left_time.cmp(&right_time);
     }
     if let (Some(left_task), Some(right_task)) =
         (leading_number(&left.task), leading_number(&right.task))
+        && left_task.partial_cmp(&right_task) != Some(Ordering::Equal)
     {
-        if left_task.partial_cmp(&right_task) != Some(Ordering::Equal) {
-            return left_task
-                .partial_cmp(&right_task)
-                .unwrap_or(Ordering::Equal);
-        }
+        return left_task
+            .partial_cmp(&right_task)
+            .unwrap_or(Ordering::Equal);
     }
     Ordering::Equal
 }

@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:524d6c8e7ff32b6b6b49ea4a6e622b2e0b4766aeb8d3b1739a1af02427f91bd9"
+build_stamp: "81b56593"
+project_commit: "94d1cdc0"
+exit_code: 0
+scope_files: {"decisions/028-rust-feature-trait.md":"sha256:c24bea554b25693262a40e5e59b41a2a2b9b85db8044796abb4ac47d74eb80f5","decisions/030-rust-feature-events.md":"sha256:e325852b23a6f2ed85a3a0f2190afa4e1ba96f618d4c1b98a01dbd2c611149f6","decisions/README.md":"sha256:e0e065007ba26e6ef620c470985f0dd06df55133cab505366b552c3df2bf6758","tests/rust-adrs.test.ts":"sha256:ac26d87c47709d6c86c6add85df809b8029c8ad0401e640705196f9e392ef723"}
+---
+2026-10-24T20:54:01.353Z

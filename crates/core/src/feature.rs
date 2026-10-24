@@ -7,7 +7,9 @@
 //! first feature that lists it.
 
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+use crate::event::{Envelope, EventKind};
 
 /// One feature: its name, its commands and how it runs one.
 ///
@@ -32,6 +34,28 @@ pub trait Feature {
     ///
     /// Implements: rust-core/feature-trait
     fn run(&self, invocation: &Invocation) -> Result<Output, FeatureError>;
+
+    /// The event kinds the feature reacts to, empty by default.
+    ///
+    /// Implements: rust-core/feature-trait
+    // Returning no kinds is also what cargo-mutants' replacement would return,
+    // so the two are equivalent and only docs.rs marks the default skipped.
+    #[cfg_attr(docsrs, mutants::skip)]
+    fn reacts_to(&self) -> Vec<EventKind> {
+        Vec::new()
+    }
+
+    /// Handles one event, returning nothing by default.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`FeatureError`] when the feature cannot handle the event.
+    ///
+    /// Implements: rust-core/feature-trait
+    fn react(&self, reaction: &Reaction<'_>) -> Result<Output, FeatureError> {
+        let _ = reaction;
+        Ok(Output::text(""))
+    }
 }
 
 /// One command a feature offers: its name, a one-line summary and its usage.
@@ -94,6 +118,36 @@ impl Invocation {
             root: root.into(),
             command: command.into(),
             args,
+        }
+    }
+}
+
+/// One event to react to: the project root, the change folder and the event.
+///
+/// Build it with [`Reaction::new`].
+///
+/// Implements: rust-core/reaction
+#[non_exhaustive]
+#[derive(Clone, Copy, Debug)]
+pub struct Reaction<'a> {
+    /// The project root the event belongs to.
+    pub root: &'a Path,
+    /// The change folder the event belongs to.
+    pub change: &'a Path,
+    /// The event to react to.
+    pub envelope: &'a Envelope,
+}
+
+impl<'a> Reaction<'a> {
+    /// Builds a reaction from its root, change folder and event.
+    ///
+    /// Implements: rust-core/reaction
+    #[must_use]
+    pub fn new(root: &'a Path, change: &'a Path, envelope: &'a Envelope) -> Self {
+        Self {
+            root,
+            change,
+            envelope,
         }
     }
 }

@@ -52,13 +52,13 @@ pub(crate) fn approve(
     }
     create(&worktree, &branch, base.as_deref(), &checkout)?;
     recorder.record("worktree-add", root);
-    if let Some(command) = &config.vcs.prepare {
-        if let Err(output) = prepare::run(&worktree, command, &timeouts) {
-            let message = text::prepare_failed(&worktree, &branch, &output);
-            return Err(rollback_error(
-                root, &worktree, &branch, &recorder, &timeouts, &message,
-            ));
-        }
+    if let Some(command) = &config.vcs.prepare
+        && let Err(output) = prepare::run(&worktree, command, &timeouts)
+    {
+        let message = text::prepare_failed(&worktree, &branch, &output);
+        return Err(rollback_error(
+            root, &worktree, &branch, &recorder, &timeouts, &message,
+        ));
     }
     seal_worktree(entry, seal, base.as_deref(), &worktree, &checkout)?;
     commit(&worktree, folder, config, &timeouts, &recorder)?;

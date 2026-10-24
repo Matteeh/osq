@@ -172,11 +172,11 @@ fn duration_ms(events: &[Event]) -> Option<i64> {
         match event.text("phase") {
             Some("start") => open_start = event.timestamp_ms(),
             Some("end") => {
-                if let (Some(start), Some(end)) = (open_start, event.timestamp_ms()) {
-                    if end >= start {
-                        total += end - start;
-                        measured = true;
-                    }
+                if let (Some(start), Some(end)) = (open_start, event.timestamp_ms())
+                    && end >= start
+                {
+                    total += end - start;
+                    measured = true;
                 }
                 open_start = None;
             }
