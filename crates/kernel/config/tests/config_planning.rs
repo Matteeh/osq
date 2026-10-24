@@ -1,9 +1,11 @@
 //! Planning tests: every row of "Planning values" and "Planning errors", the
 //! defaults and the partial tables that keep them.
 
+use std::collections::BTreeMap;
+
 use osq_kernel_config::{
-    Config, ConfigError, Planning, PlanningDisclosures, PlanningHistory, PlanningRecord,
-    parse_config,
+    Config, ConfigError, Planning, PlanningDisclosures, PlanningHistory, PlanningPrice,
+    PlanningRecord, parse_config,
 };
 
 /// The `Planning` value whose every field is its default.
@@ -23,6 +25,17 @@ fn defaults() -> Planning {
             recent_changes: 20,
             dead_outcomes: 10,
         },
+        prices: BTreeMap::new(),
+    }
+}
+
+/// One model's USD prices per million tokens.
+fn price(input: f64, output: f64, cache_read: f64, cache_write: f64) -> PlanningPrice {
+    PlanningPrice {
+        input,
+        output,
+        cache_read,
+        cache_write,
     }
 }
 
@@ -41,6 +54,111 @@ fn planning_defaults() {
         parse_config("").expect("empty text is valid").planning,
         expected
     );
+}
+
+/// Proves every row of the "Planning prices" table.
+///
+/// Covers: rust-config/planning-prices
+#[test]
+fn planning_prices() {
+    let rows = [
+        ("", Ok(defaults())),
+        (
+            "[planning.prices.\"claude-opus-5-5\"]\ninput = 5\noutput = 25.5\n\
+             cacheRead = 0.5\ncacheWrite = 0",
+            Ok(Planning {
+                prices: BTreeMap::from([(
+                    "claude-opus-5-5".to_owned(),
+                    price(5.0, 25.5, 0.5, 0.0),
+                )]),
+                ..defaults()
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = 1\noutput = 1\ncacheRead = 1\ncacheWrite = 1\n\
+             [planning.history]\nminimumTasks = 3",
+            Ok(Planning {
+                history: PlanningHistory {
+                    minimum_tasks: 3,
+                    ..defaults().history
+                },
+                prices: BTreeMap::from([("m".to_owned(), price(1.0, 1.0, 1.0, 1.0))]),
+                ..defaults()
+            }),
+        ),
+    ];
+    for (text, expected) in rows {
+        assert_eq!(
+            parse_config(text).map(|config| config.planning),
+            expected,
+            "for {text:?}"
+        );
+    }
+}
+
+/// Proves every error row of the "Planning prices" table.
+///
+/// Covers: rust-config/planning-prices
+#[test]
+fn planning_price_errors() {
+    let rows = [
+        (
+            "[planning]\nprices = 1",
+            Err(ConfigError::WrongType {
+                key: "planning.prices".to_owned(),
+                expected: "a table",
+            }),
+        ),
+        (
+            "[planning.prices]\nm = 1",
+            Err(ConfigError::WrongType {
+                key: "planning.prices.m".to_owned(),
+                expected: "a table",
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = 1\noutput = 1\ncacheRead = 1",
+            Err(ConfigError::InvalidValue {
+                key: "planning.prices.m.cacheWrite".to_owned(),
+                reason: "must be a finite non-negative number".to_owned(),
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = -1\noutput = 1\ncacheRead = 1\ncacheWrite = 1",
+            Err(ConfigError::InvalidValue {
+                key: "planning.prices.m.input".to_owned(),
+                reason: "must be a finite non-negative number".to_owned(),
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = 1\noutput = \"1\"\ncacheRead = 1\ncacheWrite = 1",
+            Err(ConfigError::InvalidValue {
+                key: "planning.prices.m.output".to_owned(),
+                reason: "must be a finite non-negative number".to_owned(),
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = 1\noutput = 1\ncacheRead = inf\ncacheWrite = 1",
+            Err(ConfigError::InvalidValue {
+                key: "planning.prices.m.cacheRead".to_owned(),
+                reason: "must be a finite non-negative number".to_owned(),
+            }),
+        ),
+        (
+            "[planning.prices.m]\ninput = 1\noutput = 1\ncacheRead = 1\ncacheWrite = 1\n\
+             reasoning = 1",
+            Err(ConfigError::UnknownKey {
+                key: "planning.prices.m.reasoning".to_owned(),
+            }),
+        ),
+    ];
+    for (text, expected) in rows {
+        assert_eq!(
+            parse_config(text).map(|config| config.planning),
+            expected,
+            "for {text:?}"
+        );
+    }
 }
 
 /// Proves every row of the "Planning values" table, whole values compared.

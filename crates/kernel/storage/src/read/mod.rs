@@ -11,6 +11,7 @@
 //! Implements: rust-storage/archive-replay
 //! Implements: rust-storage/table-events
 //! Implements: rust-storage/plan-records
+//! Implements: rust-storage/planning-token-models
 //! Implements: rust-storage/manifest-notices
 //! Implements: rust-storage/history-reading
 //! Implements: rust-storage/result-sections
@@ -49,6 +50,7 @@ mod listing;
 mod manual;
 mod now;
 mod pending;
+mod planning_models;
 mod queue;
 mod rejection;
 mod results;
@@ -73,6 +75,7 @@ pub use pending::{
     AfterLandFailure, AutopilotStop, PauseRecord, read_after_land_failure, read_autopilot_stop,
     read_usage_pause, watch_state_dir,
 };
+pub use planning_models::planning_token_models;
 pub use queue::{QueueTitle, read_queue_titles};
 pub use rejection::read_rejection_planner;
 pub use results::{TaskDisclosure, read_result_disclosures};

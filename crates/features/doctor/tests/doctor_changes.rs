@@ -37,7 +37,9 @@ const ROWS: &[Row] = &[
         name: "empty",
         files: &[],
         expected: Expected::Output(concat!(
-            "[ok] config: loaded (harness: agy)\n",
+            "[ok] config: loaded (harness: mock)\n",
+            "[ok] harness: no external executable required\n",
+            "[ok] harness-containment: no agent process\n",
             "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
@@ -49,7 +51,9 @@ const ROWS: &[Row] = &[
         name: "live-lock",
         files: &[("001-a/.run/running/1.pid", LIVE)],
         expected: Expected::Output(concat!(
-            "[ok] config: loaded (harness: agy)\n",
+            "[ok] config: loaded (harness: mock)\n",
+            "[ok] harness: no external executable required\n",
+            "[ok] harness-containment: no agent process\n",
             "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
@@ -70,7 +74,9 @@ const ROWS: &[Row] = &[
             ("rejected/004-d/.run/running/1.pid", DEAD),
         ],
         expected: Expected::Failed(concat!(
-            "[ok] config: loaded (harness: agy)\n",
+            "[ok] config: loaded (harness: mock)\n",
+            "[ok] harness: no external executable required\n",
+            "[ok] harness-containment: no agent process\n",
             "[ok] managed-blocks: managed blocks valid\n",
             "[fail] locks: orphaned lock(s): ",
             "openspec/changes/001-a/.run/running/1.pid, ",
@@ -91,7 +97,9 @@ const ROWS: &[Row] = &[
             ("rejected/005-e/x.md", "x"),
         ],
         expected: Expected::Failed(concat!(
-            "[ok] config: loaded (harness: agy)\n",
+            "[ok] config: loaded (harness: mock)\n",
+            "[ok] harness: no external executable required\n",
+            "[ok] harness-containment: no agent process\n",
             "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[fail] archives: invalid archive(s): ",
@@ -114,7 +122,9 @@ const ROWS: &[Row] = &[
             ("archive/002-b/.run/done/1.md", "done\n"),
         ],
         expected: Expected::Failed(concat!(
-            "[ok] config: loaded (harness: agy)\n",
+            "[ok] config: loaded (harness: mock)\n",
+            "[ok] harness: no external executable required\n",
+            "[ok] harness-containment: no agent process\n",
             "[ok] managed-blocks: managed blocks valid\n",
             "[ok] locks: no orphaned locks\n",
             "[ok] archives: all archives valid\n",
@@ -208,7 +218,7 @@ fn repository(base: &Path, worktrees: &Path) -> PathBuf {
     write(
         &repo.join("osq.toml"),
         &format!(
-            "[vcs]\nenabled = true\nauthor = \"osq <osq@example.com>\"\nworktreeRoot = \"{}\"\n",
+            "[executor]\nharness = \"mock\"\n\n[vcs]\nenabled = true\nauthor = \"osq <osq@example.com>\"\nworktreeRoot = \"{}\"\n",
             worktrees.display()
         ),
     );
@@ -259,6 +269,7 @@ fn doctor_change_lines() {
     let git = git_line();
     for row in ROWS {
         let root = scratch(row.name);
+        write(&root.join("osq.toml"), "[executor]\nharness = \"mock\"\n");
         managed_files(&root);
         git_init(&root);
         for (path, text) in row.files {
@@ -309,7 +320,9 @@ fn doctor_reads_every_worktree() {
             assert_eq!("doctor", command);
             assert_eq!(
                 concat!(
-                    "[ok] config: loaded (harness: agy)\n",
+                    "[ok] config: loaded (harness: mock)\n",
+                    "[ok] harness: no external executable required\n",
+                    "[ok] harness-containment: no agent process\n",
                     "[ok] managed-blocks: managed blocks valid\n",
                     "[fail] locks: orphaned lock(s): ",
                     "../worktrees/002-run/openspec/changes/002-run/.run/running/1.pid\n",
@@ -349,7 +362,9 @@ fn doctor_reads_stacked_changes() {
             assert_eq!("doctor", command);
             assert_eq!(
                 concat!(
-                    "[ok] config: loaded (harness: agy)\n",
+                    "[ok] config: loaded (harness: mock)\n",
+                    "[ok] harness: no external executable required\n",
+                    "[ok] harness-containment: no agent process\n",
                     "[ok] managed-blocks: managed blocks valid\n",
                     "[fail] locks: orphaned lock(s): ",
                     "../worktrees/repo/.stacked/040-stack/openspec/changes/040-stack/",

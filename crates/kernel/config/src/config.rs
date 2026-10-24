@@ -4,7 +4,10 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use crate::blocks::{self, BannedWord, Gates, Limits, PiConfig, Planning, Timeouts, VcsConfig};
+use crate::blocks::{
+    self, AgyConfig, BannedWord, ClaudeConfig, CodexConfig, Gates, Limits, OpencodeConfig,
+    PiConfig, Planning, Timeouts, VcsConfig,
+};
 use crate::error::ConfigError;
 use crate::roles::{self, ExecutorConfig, PlannerConfig, ValidatorConfig};
 
@@ -20,6 +23,10 @@ const TOP_LEVEL_KEYS: &[&str] = &[
     "planner",
     "validator",
     "pi",
+    "agy",
+    "opencode",
+    "codex",
+    "claude",
     "limits",
     "gates",
     "planning",
@@ -27,7 +34,7 @@ const TOP_LEVEL_KEYS: &[&str] = &[
 ];
 
 /// The settings `osq.toml` holds.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     /// How many tasks osq runs at once.
     pub max_concurrency: u64,
@@ -43,6 +50,14 @@ pub struct Config {
     pub validator: Option<ValidatorConfig>,
     /// The pi harness's settings.
     pub pi: PiConfig,
+    /// The agy harness's settings.
+    pub agy: AgyConfig,
+    /// The opencode harness's settings.
+    pub opencode: OpencodeConfig,
+    /// The codex harness's settings.
+    pub codex: CodexConfig,
+    /// The claude harness's settings.
+    pub claude: ClaudeConfig,
     /// Every lint limit osq applies.
     pub limits: Limits,
     /// The gates a run applies.
@@ -64,6 +79,10 @@ impl Default for Config {
             executor,
             validator: None,
             pi: PiConfig::default(),
+            agy: AgyConfig::default(),
+            opencode: OpencodeConfig::default(),
+            codex: CodexConfig::default(),
+            claude: ClaudeConfig::default(),
             limits: Limits::default(),
             gates: Gates::default(),
             planning: Planning::default(),
@@ -133,6 +152,22 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         Some(table) => blocks::pi::read_pi(table)?,
         None => PiConfig::default(),
     };
+    let agy = match blocks::value::table(&table, "agy")? {
+        Some(table) => blocks::harnesses::read_agy(table)?,
+        None => AgyConfig::default(),
+    };
+    let opencode = match blocks::value::table(&table, "opencode")? {
+        Some(table) => blocks::harnesses::read_opencode(table)?,
+        None => OpencodeConfig::default(),
+    };
+    let codex = match blocks::value::table(&table, "codex")? {
+        Some(table) => blocks::harnesses::read_codex(table)?,
+        None => CodexConfig::default(),
+    };
+    let claude = match blocks::value::table(&table, "claude")? {
+        Some(table) => blocks::harnesses::read_claude(table)?,
+        None => ClaudeConfig::default(),
+    };
     let limits = match blocks::value::table(&table, "limits")? {
         Some(table) => blocks::limits::read_limits(table)?,
         None => Limits::default(),
@@ -154,6 +189,10 @@ pub fn parse_config(text: &str) -> Result<Config, ConfigError> {
         planner,
         validator,
         pi,
+        agy,
+        opencode,
+        codex,
+        claude,
         limits,
         gates,
         planning,

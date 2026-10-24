@@ -1,13 +1,15 @@
 //! The `[planning]` table and its TypeScript defaults.
 
-use toml::Table;
+use std::collections::BTreeMap;
+
+use toml::{Table, Value};
 
 use crate::error::ConfigError;
 
-use super::value;
+use super::value::{self, A_TABLE};
 
 /// The `planning` keys `osq.toml` may hold, in reading order.
-const KEYS: &[&str] = &["disclosures", "history", "record"];
+const KEYS: &[&str] = &["disclosures", "history", "record", "prices"];
 
 /// The `planning.disclosures` keys `osq.toml` may hold, in reading order.
 const DISCLOSURE_KEYS: &[&str] = &["recentChanges", "maxCharacters"];
@@ -17,6 +19,9 @@ const HISTORY_KEYS: &[&str] = &["minimumTasks", "recentTasks", "maxCharacters"];
 
 /// The `planning.record` keys `osq.toml` may hold, in reading order.
 const RECORD_KEYS: &[&str] = &["minimumTasks", "recentChanges", "deadOutcomes"];
+
+/// The `planning.prices` entry keys `osq.toml` may hold, in reading order.
+const PRICE_KEYS: &[&str] = &["input", "output", "cacheRead", "cacheWrite"];
 
 /// TypeScript's default for `planning.disclosures.recentChanges`.
 const DEFAULT_DISCLOSURES_RECENT_CHANGES: u64 = 3;
@@ -38,7 +43,7 @@ const DEFAULT_RECORD_DEAD_OUTCOMES: u64 = 10;
 /// The plan report's measurement settings, as `[planning]` holds them.
 ///
 /// Implements: rust-config/planning-settings
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Planning {
     /// The executor disclosures the plan prompt quotes.
     pub disclosures: PlanningDisclosures,
@@ -46,6 +51,23 @@ pub struct Planning {
     pub history: PlanningHistory,
     /// The shared repository record the plan prompt prints.
     pub record: PlanningRecord,
+    /// The USD prices per million tokens, by model id.
+    pub prices: BTreeMap<String, PlanningPrice>,
+}
+
+/// One model's USD prices per million tokens, as `planning.prices` holds them.
+///
+/// Implements: rust-config/planning-settings
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PlanningPrice {
+    /// The price of an input token.
+    pub input: f64,
+    /// The price of an output token.
+    pub output: f64,
+    /// The price of a cache-read token.
+    pub cache_read: f64,
+    /// The price of a cache-write token.
+    pub cache_write: f64,
 }
 
 /// The bounds on the executor disclosures quoted in the plan prompt.
@@ -135,10 +157,57 @@ pub(crate) fn read_planning(table: &Table) -> Result<Planning, ConfigError> {
         Some(inner) => read_record(inner)?,
         None => PlanningRecord::default(),
     };
+    let prices = read_prices(value::table(table, "planning.prices")?)?;
     Ok(Planning {
         disclosures,
         history,
         record,
+        prices,
+    })
+}
+
+/// Reads `osq.toml`'s `[planning.prices]` table, absent while unset.
+///
+/// # Errors
+///
+/// Returns the first wrong type, refused value or unknown key in reading
+/// order.
+///
+/// Implements: rust-config/planning-settings
+fn read_prices(table: Option<&Table>) -> Result<BTreeMap<String, PlanningPrice>, ConfigError> {
+    let Some(table) = table else {
+        return Ok(BTreeMap::new());
+    };
+    table
+        .iter()
+        .map(|(model, value)| {
+            let Value::Table(entry) = value else {
+                return Err(ConfigError::WrongType {
+                    key: format!("planning.prices.{model}"),
+                    expected: A_TABLE,
+                });
+            };
+            let price = read_price(model, entry)?;
+            Ok((model.clone(), price))
+        })
+        .collect()
+}
+
+/// Reads one model's entry in `osq.toml`'s `[planning.prices]` table.
+///
+/// # Errors
+///
+/// Returns the first unknown key, wrong type or refused value in reading order.
+///
+/// Implements: rust-config/planning-settings
+fn read_price(model: &str, table: &Table) -> Result<PlanningPrice, ConfigError> {
+    let prefix = format!("planning.prices.{model}");
+    value::check_keys(table, PRICE_KEYS, &prefix)?;
+    Ok(PlanningPrice {
+        input: value::finite_non_negative(table, &format!("{prefix}.input"))?,
+        output: value::finite_non_negative(table, &format!("{prefix}.output"))?,
+        cache_read: value::finite_non_negative(table, &format!("{prefix}.cacheRead"))?,
+        cache_write: value::finite_non_negative(table, &format!("{prefix}.cacheWrite"))?,
     })
 }
 

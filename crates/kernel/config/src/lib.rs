@@ -8,8 +8,9 @@ mod error;
 mod roles;
 
 pub use blocks::{
-    BannedWord, Gates, Limits, ManualEdits, PiConfig, Planning, PlanningDisclosures,
-    PlanningHistory, PlanningRecord, Timeouts, VcsConfig,
+    AgyConfig, BannedWord, ClaudeConfig, CodexConfig, Gates, Limits, ManualEdits, OpencodeConfig,
+    PiConfig, Planning, PlanningDisclosures, PlanningHistory, PlanningPrice, PlanningRecord,
+    Timeouts, VcsConfig,
 };
 pub use config::{Config, load_config, parse_config};
 pub use error::ConfigError;

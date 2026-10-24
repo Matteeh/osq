@@ -17,7 +17,7 @@ use osq_kernel_vcs::{GitVcs, Vcs, Worktree, stacked_root};
 ///
 /// Implements: rust-doctor/doctor-change-checks
 pub(super) fn change_lines(root: &Path, config: &Config) -> Vec<String> {
-    let real = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    let real = real_root(root);
     let folders = list_folders(&real, config);
     vec![
         locks_line(&orphaned_locks(&real, &folders)),
@@ -26,11 +26,18 @@ pub(super) fn change_lines(root: &Path, config: &Config) -> Vec<String> {
     ]
 }
 
+/// The root's real path, or the root as given when it cannot be read.
+///
+/// Implements: rust-doctor/doctor-change-checks
+pub(super) fn real_root(root: &Path) -> PathBuf {
+    fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf())
+}
+
 /// Lists the change folders, across worktrees and stacked approvals when git
 /// works, else those of the root alone.
 ///
 /// Implements: rust-doctor/doctor-change-checks
-fn list_folders(root: &Path, config: &Config) -> Vec<ChangeEntry> {
+pub(super) fn list_folders(root: &Path, config: &Config) -> Vec<ChangeEntry> {
     if config.vcs.enabled {
         if let Some(entries) = tree_folders(root, config) {
             return entries;

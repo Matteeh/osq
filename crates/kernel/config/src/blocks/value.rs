@@ -22,6 +22,8 @@ pub(crate) const MUST_BE_POSITIVE: &str = "must be a positive integer";
 pub(crate) const MUST_BE_NON_NEGATIVE: &str = "must be a non-negative integer";
 /// The `reason` text for a string that is empty after trimming.
 pub(crate) const MUST_BE_NON_EMPTY: &str = "must be a non-empty string";
+/// The `reason` text for a price that is missing, not a number or out of range.
+pub(crate) const MUST_BE_FINITE_NON_NEGATIVE: &str = "must be a finite non-negative number";
 
 /// The name `path`'s table holds its key under, the last dotted segment.
 fn key_of(path: &str) -> &str {
@@ -131,6 +133,31 @@ pub(crate) fn non_negative_integer(table: &Table, path: &str) -> Result<Option<u
             key: path.to_owned(),
             reason: MUST_BE_NON_NEGATIVE.to_owned(),
         })
+}
+
+/// Reads the required finite non-negative number at the dotted `path`.
+///
+/// A TOML integer and a TOML float are both numbers here.
+///
+/// # Errors
+///
+/// Returns `ConfigError::InvalidValue` when the key is missing, is not a TOML
+/// integer or float, or is negative, infinite or NaN.
+///
+/// Implements: rust-config/planning-settings
+pub(crate) fn finite_non_negative(table: &Table, path: &str) -> Result<f64, ConfigError> {
+    let number = match table.get(key_of(path)) {
+        Some(Value::Float(value)) => Some(*value),
+        Some(Value::Integer(value)) => value.to_string().parse::<f64>().ok(),
+        _ => None,
+    };
+    match number {
+        Some(value) if value.is_finite() && value >= 0.0 => Ok(value),
+        _ => Err(ConfigError::InvalidValue {
+            key: path.to_owned(),
+            reason: MUST_BE_FINITE_NON_NEGATIVE.to_owned(),
+        }),
+    }
 }
 
 /// Reads the boolean at the dotted `path`, absent when it is unset.

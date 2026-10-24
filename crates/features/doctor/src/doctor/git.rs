@@ -8,7 +8,7 @@ use std::fs;
 use std::path::Path;
 
 use osq_kernel_config::Config;
-use osq_kernel_vcs::{GitVcs, Vcs};
+use osq_kernel_vcs::{GitVcs, LineEnding, Vcs};
 
 /// Environment variables that would redirect osq's own git reads.
 const GIT_ENV_VARS: [&str; 3] = ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"];
@@ -38,25 +38,37 @@ const NOT_A_REPOSITORY: &str = "[warn] git: not a git repository; git checks off
 /// The line when the root lies below the repository's top level.
 const NOT_THE_ROOT: &str = "[warn] git: not the repository root; git checks off";
 
+/// The git check's lines and, when git is usable, its tracked paths.
+pub(super) struct GitLines {
+    /// The `git` line and every warning after it.
+    pub(super) lines: Vec<String>,
+    /// Every tracked path, in git's order, or none outside the usable case.
+    pub(super) tracked: Option<Vec<String>>,
+}
+
 /// Builds the `git` line and every warning after the change lines.
 ///
 /// Implements: rust-doctor/doctor-git-checks
-pub(super) fn git_lines(
-    root: &Path,
-    config: &Config,
-    env: &BTreeMap<String, String>,
-) -> Vec<String> {
+pub(super) fn git_lines(root: &Path, config: &Config, env: &BTreeMap<String, String>) -> GitLines {
     let real = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     let vcs = GitVcs::new(root).with_timeouts(&config.timeouts);
     let (line, usable) = git_line(&vcs, &real);
+    let endings = if usable {
+        vcs.line_endings().ok()
+    } else {
+        None
+    };
+    let tracked = endings
+        .as_ref()
+        .map(|entries| entries.iter().map(|entry| entry.path.clone()).collect());
     let mut lines = vec![line];
     if usable && config.vcs.enabled {
-        lines.extend(vcs_warnings(root, config, &vcs));
+        lines.extend(vcs_warnings(root, config, &vcs, endings.as_deref()));
     }
     if let Some(line) = git_env_line(env) {
         lines.push(line);
     }
-    lines
+    GitLines { lines, tracked }
 }
 
 /// The `git` line and whether git is usable for the warnings after it.
@@ -76,7 +88,12 @@ fn git_line(vcs: &GitVcs, real: &Path) -> (String, bool) {
 /// The warnings shown only with `vcs.enabled` and a usable git.
 ///
 /// Implements: rust-doctor/doctor-git-checks
-fn vcs_warnings(root: &Path, config: &Config, vcs: &GitVcs) -> Vec<String> {
+fn vcs_warnings(
+    root: &Path,
+    config: &Config,
+    vcs: &GitVcs,
+    endings: Option<&[LineEnding]>,
+) -> Vec<String> {
     let mut warnings = Vec::new();
     if let Some(line) = prepare_line(root, config) {
         warnings.push(line);
@@ -90,7 +107,7 @@ fn vcs_warnings(root: &Path, config: &Config, vcs: &GitVcs) -> Vec<String> {
     if let Some(line) = attributes_line(root) {
         warnings.push(line);
     }
-    if let Some(line) = endings_line(vcs, config) {
+    if let Some(line) = endings_line(endings.unwrap_or_default(), config) {
         warnings.push(line);
     }
     warnings
@@ -175,13 +192,11 @@ fn attributes_line(root: &Path) -> Option<String> {
 /// The `git-line-endings` warning for CRLF or mixed index line endings.
 ///
 /// Implements: rust-doctor/doctor-git-checks
-fn endings_line(vcs: &GitVcs, config: &Config) -> Option<String> {
-    let offenders: Vec<String> = vcs
-        .line_endings()
-        .unwrap_or_default()
-        .into_iter()
+fn endings_line(endings: &[LineEnding], config: &Config) -> Option<String> {
+    let offenders: Vec<String> = endings
+        .iter()
         .filter(|entry| entry.index == "crlf" || entry.index == "mixed")
-        .map(|entry| entry.path)
+        .map(|entry| entry.path.clone())
         .collect();
     let count = offenders.len();
     if count == 0 {
