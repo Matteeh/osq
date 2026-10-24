@@ -36,9 +36,14 @@
 //! Implements: rust-storage/validator-failing-record
 //! Implements: rust-storage/task-history
 //! Implements: rust-storage/rejection-planner
+//! Implements: rust-storage/task-sizes
+//! Implements: rust-storage/dependencies-added
+//! Implements: rust-storage/change-fixes
+//! Implements: rust-storage/result-disclosure-reader
 
 mod change_files;
 mod error;
+mod fixes;
 mod land;
 mod listing;
 mod manual;
@@ -59,6 +64,7 @@ mod watch;
 
 pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
 pub use error::StorageError;
+pub use fixes::read_change_fixes;
 pub use land::{LandFacts, LandTask, read_land_facts};
 pub use listing::{ChangeEntry, Location, list_changes};
 pub use manual::{ManualEdit, read_manual_edits};
@@ -69,7 +75,7 @@ pub use pending::{
 };
 pub use queue::{QueueTitle, read_queue_titles};
 pub use rejection::read_rejection_planner;
-pub use results::TaskDisclosure;
+pub use results::{TaskDisclosure, read_result_disclosures};
 pub use retry::{RetryContext, read_retry_context};
 pub use seal::change_folder_seal;
 pub use sections::{ResultSections, parse_result_sections};
@@ -79,7 +85,8 @@ pub use snapshot::{
     TaskOutcomeFacts, read_archive, read_change, read_history,
 };
 pub use task_history::{
-    PreSpawnHistory, RetryGroup, ScopeHistory, StartCount, TaskHistory, read_task_history,
+    DependencyPair, PreSpawnHistory, RetryGroup, ScopeHistory, ScopeResolver, StartCount,
+    TaskHistory, TaskSize, read_dependencies_added, read_task_history, read_task_sizes,
 };
 pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
 pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};

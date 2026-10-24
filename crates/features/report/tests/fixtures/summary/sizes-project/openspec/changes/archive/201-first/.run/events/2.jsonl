@@ -1,0 +1,9 @@
+{"type":"measures","timestamp":"2026-10-20T08:00:00.000Z","data":{"task":"2","phase":"start","scopeFiles":5}}
+{"type":"started","timestamp":"2026-10-20T08:00:01.000Z","data":{"task":"2"}}
+{"type":"dead","timestamp":"2026-10-20T08:02:00.000Z","data":{"task":"2","reason":"verify_red"}}
+{"type":"measures","timestamp":"2026-10-20T08:02:00.000Z","data":{"task":"2","phase":"end"}}
+not json
+{"type":"started","timestamp":"2026-10-20T08:10:00.000Z","data":{"task":"2"}}
+{"type":"measures","timestamp":"2026-10-20T08:10:00.000Z","data":{"task":"2","phase":"start","scopeFiles":6}}
+{"type":"done","timestamp":"2026-10-20T08:12:00.000Z","data":{"task":"2"}}
+{"type":"measures","timestamp":"2026-10-20T08:12:30.000Z","data":{"task":"2","phase":"end"}}

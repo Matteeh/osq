@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-10-22T08:00:00.000Z","data":{"task":"1","phase":"start","scopeFiles":20,"scopeResolver":2}}
+{"type":"started","timestamp":"2026-10-22T08:00:01.000Z","data":{"task":"1"}}
+{"type":"dependencies_added","timestamp":"2026-10-22T08:01:00.000Z","data":{"task":"1","added":[{"file":"package.json","name":"left-pad"}]}}
+{"type":"done","timestamp":"2026-10-22T08:02:00.000Z","data":{"task":"1"}}

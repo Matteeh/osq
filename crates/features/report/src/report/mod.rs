@@ -3,13 +3,17 @@
 //! Implements: rust-report/report-summary
 
 mod arguments;
+mod blocks;
 mod counts;
 mod entries;
 mod history;
 mod history_json;
 mod history_text;
 mod js_number;
+mod order;
 mod output;
+mod sizes;
+mod sizes_text;
 
 use std::path::Path;
 
@@ -37,10 +41,12 @@ pub(crate) fn run(root: &Path, args: &[String]) -> Result<Output, FeatureError> 
     let entries = entries::entries(root, &config, repo_root)?;
     let counts = counts::count(&entries);
     let history = history::read(&entries);
+    let blocks = blocks::read(&entries);
+    let sizes = sizes::read(&entries);
     let text = if json {
-        output::json(&counts, &history)
+        output::json(&counts, &history, &blocks, &sizes)
     } else {
-        output::text(&counts, &history)
+        output::text(&counts, &history, &blocks, &sizes, &config.limits)
     };
     Ok(Output::text(text))
 }

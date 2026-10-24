@@ -41,3 +41,26 @@ History:
     Recertified by human: 0
     Recertified automatically: 0
     Requeued for agent: 0
+Rework:
+  (none)
+Executor disclosures:
+  (none)
+  Size by scope files (legacy):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable
+  Size by scope files (resolver-2):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable
+  Resolver 2 starts at: unavailable
+  Size by acceptance lines:
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        0      0                       0              unavailable
+    5-8        0      0                       0              unavailable
+    over-8     0      0                       0              unavailable

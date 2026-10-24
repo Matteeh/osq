@@ -1,6 +1,8 @@
 //! Reading a task stream's history as TypeScript's report counts it.
 //!
 //! Implements: rust-storage/task-history
+//! Implements: rust-storage/task-sizes
+//! Implements: rust-storage/dependencies-added
 
 use std::fs;
 use std::path::Path;
@@ -8,11 +10,16 @@ use std::path::Path;
 mod attempts;
 mod costs;
 mod dead_reasons;
+mod dependencies;
 mod pre_spawn;
 mod retries;
 mod scope;
+mod sizes;
 mod stream;
 mod verify_codes;
+
+pub use dependencies::{DependencyPair, read_dependencies_added};
+pub use sizes::{ScopeResolver, TaskSize, read_task_sizes};
 
 /// The attempts, verify runs, retries, costs and scope regressions of one task stream.
 ///

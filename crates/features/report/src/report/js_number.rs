@@ -1,6 +1,21 @@
-//! Writing costs as JavaScript's `toFixed` and `formatReportedCost` write them.
+//! Writing numbers as JavaScript's `Number::toString` and costs as `toFixed`.
 //!
 //! Implements: rust-report/report-cost-text
+//! Implements: rust-report/report-sizes
+
+/// One number as JavaScript's `Number::toString` writes it.
+///
+/// Implements: rust-report/report-sizes
+pub(crate) fn number(value: f64) -> String {
+    crate::query::json::real_text(value)
+}
+
+/// One number as the JSON value JavaScript writes.
+///
+/// Implements: rust-report/report-sizes
+pub(crate) fn json_number(value: f64) -> serde_json::Value {
+    serde_json::from_str(&number(value)).expect("a JavaScript number is JSON")
+}
 
 /// A cost's reported text: `not reported` only when nothing reported a cost.
 ///

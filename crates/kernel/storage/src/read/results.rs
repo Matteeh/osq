@@ -25,6 +25,14 @@ pub struct TaskDisclosure {
 
 /// Reads a change folder's result files into its disclosures, in numeric order.
 ///
+/// Implements: rust-storage/result-disclosure-reader
+#[must_use]
+pub fn read_result_disclosures(folder: &Path) -> Vec<TaskDisclosure> {
+    read_disclosures(folder)
+}
+
+/// Reads a change folder's result files into its disclosures, in numeric order.
+///
 /// Implements: rust-storage/result-disclosures
 #[must_use]
 pub(crate) fn read_disclosures(folder: &Path) -> Vec<TaskDisclosure> {

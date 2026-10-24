@@ -1,0 +1,73 @@
+osq Delivery Metrics Report
+
+Specs Summary:
+  Total specs: 3 (1 active, 2 archived)
+
+Now:
+  Total tasks: 7
+  Done: 0
+  Verified done: 0
+  Manual done: 0
+  Dead: 0
+  Regressed: 0
+  Running: 0
+  Pending: 3
+  Unmarked: 4
+  Completion rate: 0%
+
+History:
+  Total attempts: 7
+  Tasks with multiple attempts: 1
+  Unexplained re-runs: 0
+  Verification runs: 0
+  Verification runs missing exit code: 0
+  Pre-spawn verify mismatches: 0 of 0 runs
+  Pre-spawn verify with missing paths: 0 of 0 runs
+  Pre-spawn verify by declared start: red 0 of 0 passed, green 0 of 0 passed, any 0 of 0 passed
+  Automatic retries:
+  automatic: 0 retries, 0 reached done, cost not reported (0 of 0 attempts reported cost)
+  manual: 0 retries, 0 reached done, cost not reported (0 of 0 attempts reported cost)
+  Stuck: 0
+  Harness-reported cost: not reported (0 of 7 attempts reported cost)
+  Dead by reason:
+    verify_red: 1
+  Rejections: 0
+  Rejections by planner model:
+    (none)
+  Scope regressions:
+    Detected: 0
+    Verification passed at detection: 0
+    Verification failed at detection: 0
+    Recertified by human: 0
+    Recertified automatically: 0
+    Requeued for agent: 0
+Rework:
+  001: fixed by 203
+  201: fixed by 202
+  abc: fixed by 203
+Executor disclosures:
+  201: deviated 1, missing context 0, outside scope 0
+  202: deviated 0, missing context 1, outside scope 1
+  203: deviated 1, missing context 0, outside scope 1
+Dependencies added:
+  202-second: anyhow (Cargo.toml), serde (Cargo.toml), zod (package.json)
+  Size by scope files (legacy):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        1      1                       1              1m
+    3-4        0      0                       0              unavailable
+    5-8        1      0                       2              4m 30s
+    over-8     0      0                       0              unavailable
+  Size by scope files (resolver-2):
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        0      0                       0              unavailable
+    3-4        1      0                       1              46s
+    5-8        0      0                       0              unavailable
+    over-8     1      1                       1              30m
+  Resolver 2 starts at: 202-second
+  Size by acceptance lines:
+    bucket     tasks  first-attempt pass rate  mean attempts  median duration
+    1-2        1      1                       1              unavailable
+    3-4        2      0.5                     1              53s
+    5-8        1      1                       1              30m
+    over-8     1      0                       2              4m 30s
+  Size hint: largest first-attempt pass 202-second/1 — scope files 9 is within 1 of configured maxScopeFiles 8; acceptance lines 7 is within 1 of configured maxAcceptanceLines 7

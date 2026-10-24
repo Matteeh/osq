@@ -1,0 +1,5 @@
+{"type":"measures","timestamp":"2026-10-20T09:00:00.000Z","data":{"task":"1","phase":"start","scopeFiles":3,"scopeResolver":2}}
+{"type":"started","timestamp":"2026-10-20T09:00:05.000Z","data":{"task":"1"}}
+{"type":"dependencies_added","timestamp":"2026-10-20T09:10:00.000Z","data":{"task":"1","added":[{"file":"package.json","name":"zod"},{"file":"package.json","name":"zod"},{"file":" Cargo.toml ","name":" serde "},{"file":"","name":"empty-file"},{"file":"Cargo.toml","name":7},"bad"]}}
+{"type":"done","timestamp":"2026-10-20T09:30:00.000Z","data":{"task":"1"}}
+{"type":"measures","timestamp":"2026-10-20T09:30:00.000Z","data":{"task":"1","phase":"end","scopeHashes":{"src/second/a.ts":"1","src/second/b.ts":"2","src/second/c.ts":"3","src/second/d.ts":"4","src/second/e.ts":"5","src/second/f.ts":"6","src/second/g.ts":"7","src/second/h.ts":"8","src/second/i.ts":"9"}}}

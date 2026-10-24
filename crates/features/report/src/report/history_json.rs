@@ -7,21 +7,29 @@ use std::collections::BTreeMap;
 use osq_kernel_storage::{RetryGroup, StartCount};
 use serde_json::{Map, Value, json};
 
-use crate::query::json::real_text;
-
+use super::blocks::{self, Blocks};
 use super::counts::Counts;
 use super::history::History;
+use super::js_number;
+use super::sizes::{self, SizeMetrics};
 
 /// Writes the `completionRate`, `history`, `now` and `specs` members as JSON.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
-pub(crate) fn document(counts: &Counts, history: &History) -> String {
+/// Implements: rust-report/report-history-blocks
+/// Implements: rust-report/report-sizes
+pub(crate) fn document(
+    counts: &Counts,
+    history: &History,
+    blocks: &Blocks,
+    sizes: &SizeMetrics,
+) -> String {
     let rate =
         f64::from(u32::try_from(counts.completion).expect("a completion rate fits in a u32"));
     let report = json!({
         "completionRate": number(rate / 100.0),
-        "history": value(history),
+        "history": value(history, blocks, sizes),
         "now": {
             "dead": counts.dead,
             "done": counts.done,
@@ -42,9 +50,9 @@ pub(crate) fn document(counts: &Counts, history: &History) -> String {
     serde_json::to_string_pretty(&report).expect("a report JSON value writes")
 }
 
-/// Writes the nine `history` members this change ports.
-fn value(history: &History) -> Value {
-    json!({
+/// Writes the `history` members this report ports.
+fn value(history: &History, blocks: &Blocks, sizes: &SizeMetrics) -> Value {
+    let mut report = json!({
         "attempts": {
             "byTask": count_map(&history.attempts_by_task),
             "multipleAttempts": history.multiple_attempts,
@@ -89,6 +97,7 @@ fn value(history: &History) -> Value {
             "verificationFailedAtDetection": history.scope.failed_at_detection,
             "verificationPassedAtDetection": history.scope.passed_at_detection,
         },
+        "sizes": sizes::json(sizes),
         "unexplainedReruns": {
             "byTask": count_map(&history.unexplained_by_task),
             "total": history.unexplained_total,
@@ -98,7 +107,11 @@ fn value(history: &History) -> Value {
             "missingExitCode": history.verify_missing_exit_code,
             "total": history.verify_total,
         },
-    })
+    });
+    if let Some(members) = report.as_object_mut() {
+        members.extend(blocks::json(blocks));
+    }
+    report
 }
 
 /// Writes one counts table as a JSON object.
@@ -158,5 +171,5 @@ fn start(start: &StartCount) -> Value {
 
 /// One number as JavaScript's `Number::toString` writes it.
 fn number(value: f64) -> Value {
-    serde_json::from_str(&real_text(value)).expect("a JavaScript number is JSON")
+    js_number::json_number(value)
 }

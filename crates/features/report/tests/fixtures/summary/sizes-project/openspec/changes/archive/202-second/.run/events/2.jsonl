@@ -1,0 +1,4 @@
+{"type":"measures","timestamp":"2026-10-20T10:00:00.000Z","data":{"task":"2","phase":"start","scopeFiles":1,"scopeResolver":3}}
+{"type":"started","timestamp":"2026-10-20T10:00:01.000Z","data":{"task":"2"}}
+{"type":"dependencies_added","timestamp":"2026-10-20T10:05:00.000Z","data":{"task":"2","added":[{"file":"Cargo.toml","name":"anyhow"}]}}
+{"type":"done","timestamp":"2026-10-20T10:06:00.000Z","data":{"task":"2"}}

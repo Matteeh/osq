@@ -1,0 +1,1432 @@
+diff --git a/crates/kernel/storage/src/lib.rs b/crates/kernel/storage/src/lib.rs
+index e61ae6097..38932249a 100644
+--- a/crates/kernel/storage/src/lib.rs
++++ b/crates/kernel/storage/src/lib.rs
+@@ -11,15 +11,16 @@ pub use model::{
+ };
+ pub use read::{
+     AfterLandFailure, AutopilotStop, CapabilityDelta, ChangeEntry, ChangeFiles, ChangeSnapshot,
+-    ChangeTree, DeadAttempt, DoneMarker, EventFacts, HaltMarker, LandFacts, LandTask, LinkEntry,
+-    Location, LockFile, ManifestNotices, ManualEdit, Notice, NowFacts, NowTask, PauseRecord,
+-    PlanRecord, PreSpawnHistory, QueueTitle, ResultSections, RetryContext, RetryGroup, RunningLock,
+-    ScopeHistory, ServiceRecord, StartCount, StorageError, TableEvent, TaskDisclosure, TaskFile,
+-    TaskHistory, TaskMarkers, TaskOutcomeFacts, TreeCandidate, ValidatorFailing, WatchState,
+-    WatcherMode, WatcherRecord, change_folder_seal, change_trees, frontmatter_string, goal_section,
+-    list_changes, list_tree_changes, markdown_body, parse_result_sections, read_after_land_failure,
+-    read_archive, read_autopilot_stop, read_change, read_change_files, read_history,
+-    read_land_facts, read_manual_edits, read_now_facts, read_queue_titles, read_rejection_planner,
+-    read_retry_context, read_task_history, read_usage_pause, read_watch_state, timestamp_ms,
+-    validator_failing, watch_state_dir,
++    ChangeTree, DeadAttempt, DependencyPair, DoneMarker, EventFacts, HaltMarker, LandFacts,
++    LandTask, LinkEntry, Location, LockFile, ManifestNotices, ManualEdit, Notice, NowFacts,
++    NowTask, PauseRecord, PlanRecord, PreSpawnHistory, QueueTitle, ResultSections, RetryContext,
++    RetryGroup, RunningLock, ScopeHistory, ScopeResolver, ServiceRecord, StartCount, StorageError,
++    TableEvent, TaskDisclosure, TaskFile, TaskHistory, TaskMarkers, TaskOutcomeFacts, TaskSize,
++    TreeCandidate, ValidatorFailing, WatchState, WatcherMode, WatcherRecord, change_folder_seal,
++    change_trees, frontmatter_string, goal_section, list_changes, list_tree_changes, markdown_body,
++    parse_result_sections, read_after_land_failure, read_archive, read_autopilot_stop, read_change,
++    read_change_files, read_change_fixes, read_dependencies_added, read_history, read_land_facts,
++    read_manual_edits, read_now_facts, read_queue_titles, read_rejection_planner,
++    read_result_disclosures, read_retry_context, read_task_history, read_task_sizes,
++    read_usage_pause, read_watch_state, timestamp_ms, validator_failing, watch_state_dir,
+ };
+diff --git a/crates/kernel/storage/src/read/fixes.rs b/crates/kernel/storage/src/read/fixes.rs
+new file mode 100644
+index 000000000..7faaae582
+--- /dev/null
++++ b/crates/kernel/storage/src/read/fixes.rs
+@@ -0,0 +1,25 @@
++//! Reading the change ids a change folder's document names in `fixes`.
++//!
++//! Implements: rust-storage/change-fixes
++
++use std::fs;
++use std::path::Path;
++
++use osq_kernel_specs::parse_proposal;
++
++/// Reads the fix ids of one change folder, preferring `proposal.md`.
++///
++/// Implements: rust-storage/change-fixes
++#[must_use]
++pub fn read_change_fixes(folder: &Path) -> Vec<String> {
++    let proposal = folder.join("proposal.md");
++    let path = if proposal.exists() {
++        proposal
++    } else {
++        folder.join("spec.md")
++    };
++    let Ok(text) = fs::read_to_string(path) else {
++        return Vec::new();
++    };
++    parse_proposal(&text).map_or_else(|_| Vec::new(), |parsed| parsed.fixes)
++}
+diff --git a/crates/kernel/storage/src/read/mod.rs b/crates/kernel/storage/src/read/mod.rs
+index f62d8224f..f23c3bb07 100644
+--- a/crates/kernel/storage/src/read/mod.rs
++++ b/crates/kernel/storage/src/read/mod.rs
+@@ -36,9 +36,14 @@
+ //! Implements: rust-storage/validator-failing-record
+ //! Implements: rust-storage/task-history
+ //! Implements: rust-storage/rejection-planner
++//! Implements: rust-storage/task-sizes
++//! Implements: rust-storage/dependencies-added
++//! Implements: rust-storage/change-fixes
++//! Implements: rust-storage/result-disclosure-reader
+ 
+ mod change_files;
+ mod error;
++mod fixes;
+ mod land;
+ mod listing;
+ mod manual;
+@@ -59,6 +64,7 @@ mod watch;
+ 
+ pub use change_files::{ChangeFiles, DoneMarker, LockFile, read_change_files};
+ pub use error::StorageError;
++pub use fixes::read_change_fixes;
+ pub use land::{LandFacts, LandTask, read_land_facts};
+ pub use listing::{ChangeEntry, Location, list_changes};
+ pub use manual::{ManualEdit, read_manual_edits};
+@@ -69,7 +75,7 @@ pub use pending::{
+ };
+ pub use queue::{QueueTitle, read_queue_titles};
+ pub use rejection::read_rejection_planner;
+-pub use results::TaskDisclosure;
++pub use results::{TaskDisclosure, read_result_disclosures};
+ pub use retry::{RetryContext, read_retry_context};
+ pub use seal::change_folder_seal;
+ pub use sections::{ResultSections, parse_result_sections};
+@@ -79,7 +85,8 @@ pub use snapshot::{
+     TaskOutcomeFacts, read_archive, read_change, read_history,
+ };
+ pub use task_history::{
+-    PreSpawnHistory, RetryGroup, ScopeHistory, StartCount, TaskHistory, read_task_history,
++    DependencyPair, PreSpawnHistory, RetryGroup, ScopeHistory, ScopeResolver, StartCount,
++    TaskHistory, TaskSize, read_dependencies_added, read_task_history, read_task_sizes,
+ };
+ pub use text::{frontmatter_string, goal_section, markdown_body, timestamp_ms};
+ pub use trees::{ChangeTree, TreeCandidate, change_trees, list_tree_changes};
+diff --git a/crates/kernel/storage/src/read/results.rs b/crates/kernel/storage/src/read/results.rs
+index f17c3fad9..105b7ce36 100644
+--- a/crates/kernel/storage/src/read/results.rs
++++ b/crates/kernel/storage/src/read/results.rs
+@@ -23,6 +23,14 @@ pub struct TaskDisclosure {
+     pub outside_scope: Option<String>,
+ }
+ 
++/// Reads a change folder's result files into its disclosures, in numeric order.
++///
++/// Implements: rust-storage/result-disclosure-reader
++#[must_use]
++pub fn read_result_disclosures(folder: &Path) -> Vec<TaskDisclosure> {
++    read_disclosures(folder)
++}
++
+ /// Reads a change folder's result files into its disclosures, in numeric order.
+ ///
+ /// Implements: rust-storage/result-disclosures
+diff --git a/crates/kernel/storage/src/read/task_history/dependencies.rs b/crates/kernel/storage/src/read/task_history/dependencies.rs
+new file mode 100644
+index 000000000..cfc2140ac
+--- /dev/null
++++ b/crates/kernel/storage/src/read/task_history/dependencies.rs
+@@ -0,0 +1,93 @@
++//! Reading the packages a change folder's tasks added to manifests.
++//!
++//! Implements: rust-storage/dependencies-added
++
++use std::fs;
++use std::path::Path;
++
++use osq_kernel_specs::js_trim;
++use serde_json::Value;
++
++use super::compare_names;
++use super::stream;
++
++/// One package added to one manifest.
++///
++/// Implements: rust-storage/dependencies-added
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct DependencyPair {
++    /// The manifest's path, trimmed.
++    pub file: String,
++    /// The package's name, trimmed.
++    pub name: String,
++}
++
++/// Reads the distinct packages one change folder's tasks added, sorted.
++///
++/// Implements: rust-storage/dependencies-added
++#[must_use]
++pub fn read_dependencies_added(folder: &Path) -> Vec<DependencyPair> {
++    let dir = folder.join(".run").join("events");
++    let Ok(entries) = fs::read_dir(&dir) else {
++        return Vec::new();
++    };
++    let mut names: Vec<String> = entries
++        .flatten()
++        .filter_map(|entry| {
++            let name = entry.file_name().into_string().ok()?;
++            is_event_file(&name).then_some(name)
++        })
++        .collect();
++    names.sort_by(|left, right| compare_names(left, right));
++    let mut pairs: Vec<DependencyPair> = names
++        .into_iter()
++        .flat_map(|name| stream_pairs(&dir.join(name)))
++        .collect();
++    pairs.sort_by(|left, right| {
++        left.file
++            .cmp(&right.file)
++            .then_with(|| left.name.cmp(&right.name))
++    });
++    pairs.dedup();
++    pairs
++}
++
++/// Whether a file name is digits then `.jsonl`.
++fn is_event_file(name: &str) -> bool {
++    name.strip_suffix(".jsonl")
++        .is_some_and(|stem| !stem.is_empty() && stem.bytes().all(|byte| byte.is_ascii_digit()))
++}
++
++/// One stream's valid added pairs, in file order.
++fn stream_pairs(path: &Path) -> Vec<DependencyPair> {
++    let Ok(content) = fs::read_to_string(path) else {
++        return Vec::new();
++    };
++    stream::parse(&content)
++        .into_iter()
++        .filter(|event| event.kind() == Some("dependencies_added"))
++        .flat_map(|event| added_pairs(event.value("added")))
++        .collect()
++}
++
++/// The valid pairs of one `added` value, or none when it is not an array.
++fn added_pairs(value: Option<&Value>) -> Vec<DependencyPair> {
++    let Some(Value::Array(items)) = value else {
++        return Vec::new();
++    };
++    items.iter().filter_map(pair).collect()
++}
++
++/// One `{file, name}` entry with both strings non-blank after trimming.
++fn pair(value: &Value) -> Option<DependencyPair> {
++    let object = value.as_object()?;
++    let file = js_trim(object.get("file")?.as_str()?);
++    let name = js_trim(object.get("name")?.as_str()?);
++    if file.is_empty() || name.is_empty() {
++        return None;
++    }
++    Some(DependencyPair {
++        file: file.to_owned(),
++        name: name.to_owned(),
++    })
++}
+diff --git a/crates/kernel/storage/src/read/task_history/mod.rs b/crates/kernel/storage/src/read/task_history/mod.rs
+index b62528d84..5cd3ffa75 100644
+--- a/crates/kernel/storage/src/read/task_history/mod.rs
++++ b/crates/kernel/storage/src/read/task_history/mod.rs
+@@ -2,18 +2,24 @@
+ //!
+ //! Implements: rust-storage/task-history
+ 
++use std::cmp::Ordering;
+ use std::fs;
+ use std::path::Path;
+ 
+ mod attempts;
+ mod costs;
+ mod dead_reasons;
++mod dependencies;
+ mod pre_spawn;
+ mod retries;
+ mod scope;
++mod sizes;
+ mod stream;
+ mod verify_codes;
+ 
++pub use dependencies::{DependencyPair, read_dependencies_added};
++pub use sizes::{ScopeResolver, TaskSize, read_task_sizes};
++
+ /// The attempts, verify runs, retries, costs and scope regressions of one task stream.
+ ///
+ /// Implements: rust-storage/task-history
+@@ -149,3 +155,21 @@ pub(super) fn has_rejected_line(content: &str) -> bool {
+         .iter()
+         .any(|event| event.kind() == Some("rejected"))
+ }
++
++/// Orders two names by leading number first, then by their bytes.
++pub(super) fn compare_names(left: &str, right: &str) -> Ordering {
++    match (leading_number(left), leading_number(right)) {
++        (Some(a), Some(b)) => a.cmp(&b).then_with(|| left.cmp(right)),
++        _ => left.cmp(right),
++    }
++}
++
++/// The number a name leads with, or `None` when it leads with no digit.
++fn leading_number(name: &str) -> Option<u128> {
++    let digits: String = name.chars().take_while(char::is_ascii_digit).collect();
++    if digits.is_empty() {
++        None
++    } else {
++        digits.parse().ok()
++    }
++}
+diff --git a/crates/kernel/storage/src/read/task_history/sizes.rs b/crates/kernel/storage/src/read/task_history/sizes.rs
+new file mode 100644
+index 000000000..25f0e2ee5
+--- /dev/null
++++ b/crates/kernel/storage/src/read/task_history/sizes.rs
+@@ -0,0 +1,219 @@
++//! Measuring one change folder's tasks as TypeScript's report measures them.
++//!
++//! Implements: rust-storage/task-sizes
++
++use std::fs;
++use std::path::Path;
++
++use osq_kernel_specs::parse_task_file;
++use serde_json::Value;
++
++use super::compare_names;
++use super::stream::{self, Event};
++use crate::read::text::timestamp_ms;
++
++/// One measured task of a change folder.
++///
++/// Implements: rust-storage/task-sizes
++#[derive(Clone, Debug, PartialEq)]
++pub struct TaskSize {
++    /// The task id, the task file's name without `.md`.
++    pub task: String,
++    /// The task file's title, or empty text without one.
++    pub title: String,
++    /// The number of acceptance items in the task file.
++    pub acceptance_lines: usize,
++    /// The files in the last measured end's `scopeHashes`, else the start's size.
++    pub scope_files: f64,
++    /// The scope resolver generation the first start measure names.
++    pub resolver: ScopeResolver,
++    /// The number of `started` events.
++    pub attempts: u64,
++    /// Whether a `done` event resolved the first attempt.
++    pub first_attempt_pass: bool,
++    /// The summed measured start-to-end lengths, or `None` without one.
++    pub duration_ms: Option<i64>,
++}
++
++/// The scope resolver generation a start measure names.
++///
++/// Implements: rust-storage/task-sizes
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum ScopeResolver {
++    /// No `scopeResolver` member.
++    Legacy,
++    /// The number 2.
++    Second,
++    /// Any other value.
++    Other,
++}
++
++/// Reads the measured tasks of one change folder, in task-file order.
++///
++/// Implements: rust-storage/task-sizes
++#[must_use]
++pub fn read_task_sizes(folder: &Path) -> Vec<TaskSize> {
++    let dir = folder.join("tasks");
++    let Ok(entries) = fs::read_dir(dir) else {
++        return Vec::new();
++    };
++    let mut names: Vec<String> = entries
++        .flatten()
++        .filter_map(|entry| {
++            let name = entry.file_name().into_string().ok()?;
++            name.strip_suffix(".md").is_some().then_some(name)
++        })
++        .collect();
++    names.sort_by(|left, right| compare_names(left, right));
++    names
++        .into_iter()
++        .filter_map(|name| task_size(folder, &name))
++        .collect()
++}
++
++/// One task file's measured size, or `None` without a readable measured stream.
++fn task_size(folder: &Path, name: &str) -> Option<TaskSize> {
++    let task = name.strip_suffix(".md").unwrap_or(name);
++    let path = folder
++        .join(".run")
++        .join("events")
++        .join(format!("{task}.jsonl"));
++    let content = fs::read_to_string(path).ok()?;
++    let events = stream::parse(&content);
++    let measured = measure(&events)?;
++    let (title, acceptance_lines) = task_metadata(folder, task);
++    let (attempts, first_attempt_pass) = observe_attempts(&events);
++    Some(TaskSize {
++        task: task.to_owned(),
++        title,
++        acceptance_lines,
++        scope_files: measured.scope_files,
++        resolver: measured.resolver,
++        attempts,
++        first_attempt_pass,
++        duration_ms: measured.duration_ms,
++    })
++}
++
++/// The measures a task's stream yields, or `None` without a valid start.
++struct Measure {
++    /// The first valid start's `scopeFiles`.
++    scope_files: f64,
++    /// The start's resolver generation.
++    resolver: ScopeResolver,
++    /// The summed measured lengths, or `None` without a valid pair.
++    duration_ms: Option<i64>,
++}
++
++/// Folds the stream's measures into its scope size, resolver and duration.
++fn measure(events: &[Event]) -> Option<Measure> {
++    let mut start_scope_files = None;
++    let mut resolver = ScopeResolver::Legacy;
++    let mut latest_hashes = None;
++    let mut pending_start = None;
++    let mut covered = 0;
++    let mut has_duration = false;
++    for event in events {
++        if event.kind() != Some("measures") {
++            continue;
++        }
++        match event.text("phase") {
++            Some("start") => {
++                if start_scope_files.is_none() {
++                    if let Some(scope_files) =
++                        event.number("scopeFiles").filter(|size| *size >= 0.0)
++                    {
++                        start_scope_files = Some(scope_files);
++                        resolver = resolver_of(event);
++                    }
++                }
++                pending_start = event.timestamp().and_then(timestamp_ms);
++            }
++            Some("end") => {
++                let end = event.timestamp().and_then(timestamp_ms);
++                if let (Some(start), Some(end)) = (pending_start, end)
++                    && end >= start
++                {
++                    covered += end - start;
++                    has_duration = true;
++                }
++                pending_start = None;
++                if let Some(keys) = scope_hashes(event) {
++                    latest_hashes = Some(keys);
++                }
++            }
++            _ => {}
++        }
++    }
++    let start_scope_files = start_scope_files?;
++    Some(Measure {
++        scope_files: latest_hashes.map_or(start_scope_files, |keys| {
++            f64::from(u32::try_from(keys).unwrap_or(u32::MAX))
++        }),
++        resolver,
++        duration_ms: has_duration.then_some(covered),
++    })
++}
++
++/// The number of keys of an end measure's object `scopeHashes`, or `None`.
++fn scope_hashes(event: &Event) -> Option<usize> {
++    match event.value("scopeHashes") {
++        Some(Value::Object(hashes)) => Some(hashes.len()),
++        _ => None,
++    }
++}
++
++/// The resolver generation a valid start measure names.
++fn resolver_of(event: &Event) -> ScopeResolver {
++    match event.value("scopeResolver") {
++        None => ScopeResolver::Legacy,
++        Some(_) if event.number("scopeResolver") == Some(2.0) => ScopeResolver::Second,
++        Some(_) => ScopeResolver::Other,
++    }
++}
++
++/// Counts attempts and whether a `done` resolved the first one.
++fn observe_attempts(events: &[Event]) -> (u64, bool) {
++    let mut attempts = 0;
++    let mut first_active = false;
++    let mut first_resolved = false;
++    let mut first_pass = false;
++    for event in events {
++        match event.kind() {
++            Some("started") => {
++                attempts += 1;
++                if first_active {
++                    first_resolved = true;
++                    first_active = false;
++                } else if !first_resolved {
++                    first_active = true;
++                }
++            }
++            Some("done") => {
++                if first_active && !first_resolved {
++                    first_pass = true;
++                    first_resolved = true;
++                    first_active = false;
++                }
++            }
++            Some("dead" | "regressed") if first_active && !first_resolved => {
++                first_resolved = true;
++                first_active = false;
++            }
++            _ => {}
++        }
++    }
++    (attempts, first_pass)
++}
++
++/// A task file's title and acceptance count, or empty values without one.
++fn task_metadata(folder: &Path, task: &str) -> (String, usize) {
++    let path = folder.join("tasks").join(format!("{task}.md"));
++    let Ok(text) = fs::read_to_string(path) else {
++        return (String::new(), 0);
++    };
++    parse_task_file(&text).map_or_else(
++        |_| (String::new(), 0),
++        |file| (file.title, file.acceptance.len()),
++    )
++}
+diff --git a/crates/kernel/storage/src/read/task_history/stream.rs b/crates/kernel/storage/src/read/task_history/stream.rs
+index 4af1c0f29..11d013eeb 100644
+--- a/crates/kernel/storage/src/read/task_history/stream.rs
++++ b/crates/kernel/storage/src/read/task_history/stream.rs
+@@ -4,13 +4,15 @@
+ 
+ use serde_json::{Map, Value};
+ 
+-/// One parsed event line: its `type` and its object `data`.
++/// One parsed event line: its `type`, its object `data` and its timestamp.
+ #[derive(Clone, Debug, Default, PartialEq)]
+ pub(super) struct Event {
+     /// The event's `type` member when it is a string.
+     kind: Option<String>,
+     /// The event's `data` member when it is a JSON object.
+     data: Option<Map<String, Value>>,
++    /// The event's `timestamp` member when it is a string.
++    timestamp: Option<String>,
+ }
+ 
+ impl Event {
+@@ -19,35 +21,36 @@ impl Event {
+         self.kind.as_deref()
+     }
+ 
++    /// The event's `timestamp` string, or `None` without one.
++    pub(super) fn timestamp(&self) -> Option<&str> {
++        self.timestamp.as_deref()
++    }
++
++    /// A data member's raw value, or `None` without one.
++    pub(super) fn value(&self, key: &str) -> Option<&Value> {
++        self.data.as_ref()?.get(key)
++    }
++
+     /// A data member's string value, or `None` without one.
+     pub(super) fn text(&self, key: &str) -> Option<&str> {
+-        self.data.as_ref()?.get(key)?.as_str()
++        self.value(key)?.as_str()
+     }
+ 
+     /// A data member's finite numeric value, or `None` without one.
+     pub(super) fn number(&self, key: &str) -> Option<f64> {
+-        self.data
+-            .as_ref()?
+-            .get(key)?
++        self.value(key)?
+             .as_f64()
+             .filter(|number| number.is_finite())
+     }
+ 
+     /// Whether a data member is exactly the boolean `true`.
+     pub(super) fn is_true(&self, key: &str) -> bool {
+-        self.data
+-            .as_ref()
+-            .and_then(|data| data.get(key))
+-            .and_then(Value::as_bool)
+-            == Some(true)
++        self.value(key).and_then(Value::as_bool) == Some(true)
+     }
+ 
+     /// Whether a data member is a non-empty array.
+     pub(super) fn is_non_empty_array(&self, key: &str) -> bool {
+-        matches!(
+-            self.data.as_ref().and_then(|data| data.get(key)),
+-            Some(Value::Array(items)) if !items.is_empty()
+-        )
++        matches!(self.value(key), Some(Value::Array(items)) if !items.is_empty())
+     }
+ }
+ 
+@@ -66,5 +69,9 @@ fn parse_line(line: &str) -> Option<Event> {
+             .and_then(Value::as_str)
+             .map(ToOwned::to_owned),
+         data: object.get("data").and_then(Value::as_object).cloned(),
++        timestamp: object
++            .get("timestamp")
++            .and_then(Value::as_str)
++            .map(ToOwned::to_owned),
+     })
+ }
+diff --git a/crates/kernel/storage/tests/reading_change_records.rs b/crates/kernel/storage/tests/reading_change_records.rs
+new file mode 100644
+index 000000000..014e38b95
+--- /dev/null
++++ b/crates/kernel/storage/tests/reading_change_records.rs
+@@ -0,0 +1,134 @@
++//! Proves reading change fixes and result disclosures from change folders.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_storage::{TaskDisclosure, read_change_fixes, read_result_disclosures};
++
++/// A fresh change folder under `CARGO_TARGET_TMPDIR`.
++fn scratch(test: &str, name: &str) -> PathBuf {
++    let folder = Path::new(env!("CARGO_TARGET_TMPDIR"))
++        .join("reading_change_records")
++        .join(test)
++        .join(name);
++    let _ = fs::remove_dir_all(&folder);
++    fs::create_dir_all(&folder).expect("the scratch change folder is created");
++    folder
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    if let Some(parent) = path.parent() {
++        fs::create_dir_all(parent).expect("the parent folder is created");
++    }
++    fs::write(path, text).expect("the file is written");
++}
++
++/// The fixture project holding the result files.
++fn files_fixture() -> PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/files")
++}
++
++/// One row of the "Fixes of change folders" table.
++struct Row {
++    /// The scratch folder's name.
++    name: &'static str,
++    /// The files, by name and text.
++    files: Vec<(&'static str, &'static str)>,
++    /// The ids the row expects.
++    expected: Vec<String>,
++}
++
++/// Every "Fixes of change folders" row, in the table's order.
++fn rows() -> Vec<Row> {
++    vec![
++        Row {
++            name: "numeric-and-string",
++            files: vec![("proposal.md", "---\nfixes: [201, \"201\"]\n---\n")],
++            expected: vec![String::from("201"), String::from("201")],
++        },
++        Row {
++            name: "pads-numbers",
++            files: vec![("proposal.md", "---\nfixes: [1, abc]\n---\n")],
++            expected: vec![String::from("001"), String::from("abc")],
++        },
++        Row {
++            name: "no-fixes",
++            files: vec![("proposal.md", "---\ntitle: Quiet\n---\n")],
++            expected: Vec::new(),
++        },
++        Row {
++            name: "legacy-spec",
++            files: vec![("spec.md", "---\nfixes: [7]\n---\n")],
++            expected: vec![String::from("007")],
++        },
++        Row {
++            name: "proposal-wins",
++            files: vec![
++                ("proposal.md", "---\ntitle: Quiet\n---\n"),
++                ("spec.md", "---\nfixes: [7]\n---\n"),
++            ],
++            expected: Vec::new(),
++        },
++        Row {
++            name: "broken-proposal",
++            files: vec![("proposal.md", "---\nfixes: [\n---\n")],
++            expected: Vec::new(),
++        },
++        Row {
++            name: "no-file",
++            files: Vec::new(),
++            expected: Vec::new(),
++        },
++    ]
++}
++
++/// Proves every row of the "Fixes of change folders" table.
++///
++/// Covers: rust-storage/fixes-of-change-folders
++#[test]
++fn fixes_of_change_folders() {
++    for row in rows() {
++        let folder = scratch("fixes_of_change_folders", row.name);
++        for (name, text) in &row.files {
++            write(&folder.join(name), text);
++        }
++        assert_eq!(read_change_fixes(&folder), row.expected, "{}", row.name);
++    }
++}
++
++/// Proves the disclosures the files fixture holds and the silent folder's none.
++///
++/// Covers: rust-storage/disclosure-reader-on-the-files-fixture
++#[test]
++fn disclosure_reader_on_the_files_fixture() {
++    let changes = files_fixture().join("openspec").join("changes");
++    let told = read_result_disclosures(&changes.join("archive").join("001-told"));
++    let expected = vec![
++        TaskDisclosure {
++            task: String::from("1"),
++            deviated: Some(String::from(
++                "- Kept the old name.\n  It reads better.\n\n- Split one file.",
++            )),
++            missing_context: None,
++            outside_scope: Some(String::from("The listing skips hidden folders.")),
++        },
++        TaskDisclosure {
++            task: String::from("2"),
++            deviated: Some(String::from("Used a map.\n\nAnd a second deviation.")),
++            missing_context: None,
++            outside_scope: None,
++        },
++        TaskDisclosure {
++            task: String::from("10"),
++            deviated: None,
++            missing_context: Some(String::from("Nonexistent file named in the task.")),
++            outside_scope: Some(String::from("None\nThe second line keeps this section.")),
++        },
++    ];
++    assert_eq!(told, expected);
++    assert_eq!(
++        read_result_disclosures(&changes.join("archive").join("002-silent")),
++        Vec::<TaskDisclosure>::new()
++    );
++}
+diff --git a/crates/kernel/storage/tests/reading_dependencies_added.rs b/crates/kernel/storage/tests/reading_dependencies_added.rs
+new file mode 100644
+index 000000000..82f5f55b9
+--- /dev/null
++++ b/crates/kernel/storage/tests/reading_dependencies_added.rs
+@@ -0,0 +1,140 @@
++//! Proves reading the dependencies that a change folder's task streams add.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_storage::{DependencyPair, read_dependencies_added};
++
++/// A fresh change folder under `CARGO_TARGET_TMPDIR`.
++fn scratch(test: &str, name: &str) -> PathBuf {
++    let folder = Path::new(env!("CARGO_TARGET_TMPDIR"))
++        .join("reading_dependencies_added")
++        .join(test)
++        .join(name);
++    let _ = fs::remove_dir_all(&folder);
++    fs::create_dir_all(&folder).expect("the scratch change folder is created");
++    folder
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    if let Some(parent) = path.parent() {
++        fs::create_dir_all(parent).expect("the parent folder is created");
++    }
++    fs::write(path, text).expect("the file is written");
++}
++
++/// One `dependencies_added` event line with the given `added` JSON value.
++fn added(value: &str) -> String {
++    format!(
++        "{{\"type\":\"dependencies_added\",\"timestamp\":\"2026-10-20T08:00:00.000Z\",\
++         \"data\":{{\"added\":{value}}}}}"
++    )
++}
++
++/// One pair written as `<name> (<file>)`, as the table names it.
++fn pair(name: &str, file: &str) -> DependencyPair {
++    DependencyPair {
++        file: file.to_owned(),
++        name: name.to_owned(),
++    }
++}
++
++/// One row of the "Dependencies of task streams" table.
++struct Row {
++    /// The scratch folder's name.
++    name: &'static str,
++    /// The event files, by name and lines.
++    files: Vec<(&'static str, Vec<String>)>,
++    /// The pairs the row expects, in order.
++    expected: Vec<DependencyPair>,
++}
++
++/// Every "Dependencies of task streams" row, in the table's order.
++fn rows() -> Vec<Row> {
++    vec![
++        Row {
++            name: "two-files",
++            files: vec![
++                (
++                    "1.jsonl",
++                    vec![added(
++                        r#"[{"file":"package.json","name":"zod"},{"file":"package.json","name":"zod"},{"file":" Cargo.toml ","name":" serde "},{"file":"","name":"empty-file"},{"file":"Cargo.toml","name":7},"bad"]"#,
++                    )],
++                ),
++                (
++                    "2.jsonl",
++                    vec![added(r#"[{"file":"Cargo.toml","name":"anyhow"}]"#)],
++                ),
++            ],
++            expected: vec![
++                pair("anyhow", "Cargo.toml"),
++                pair("serde", "Cargo.toml"),
++                pair("zod", "package.json"),
++            ],
++        },
++        Row {
++            name: "not-an-array",
++            files: vec![(
++                "1.jsonl",
++                vec![added(r#"{"file":"Cargo.toml","name":"serde"}"#)],
++            )],
++            expected: Vec::new(),
++        },
++        Row {
++            name: "other-names",
++            files: vec![
++                (
++                    "change.jsonl",
++                    vec![added(r#"[{"file":"Cargo.toml","name":"serde"}]"#)],
++                ),
++                (
++                    "1.json",
++                    vec![added(r#"[{"file":"Cargo.toml","name":"serde"}]"#)],
++                ),
++            ],
++            expected: Vec::new(),
++        },
++        Row {
++            name: "sorted-and-loose",
++            files: vec![(
++                "1.jsonl",
++                vec![
++                    String::from("not json"),
++                    added(r#"[{"file":"b","name":"x"},{"file":"a","name":"y"}]"#),
++                ],
++            )],
++            expected: vec![pair("y", "a"), pair("x", "b")],
++        },
++        Row {
++            name: "no-events-folder",
++            files: Vec::new(),
++            expected: Vec::new(),
++        },
++    ]
++}
++
++/// Writes a row's event files into its folder.
++fn write_row(folder: &Path, files: &[(&str, Vec<String>)]) {
++    for (name, lines) in files {
++        let content = lines.join("\n") + "\n";
++        write(&folder.join(".run").join("events").join(name), &content);
++    }
++}
++
++/// Proves every row of the "Dependencies of task streams" table.
++///
++/// Covers: rust-storage/dependencies-of-task-streams
++#[test]
++fn dependencies_of_task_streams() {
++    for row in rows() {
++        let folder = scratch("dependencies_of_task_streams", row.name);
++        write_row(&folder, &row.files);
++        assert_eq!(
++            read_dependencies_added(&folder),
++            row.expected,
++            "{}",
++            row.name
++        );
++    }
++}
+diff --git a/crates/kernel/storage/tests/reading_task_sizes.rs b/crates/kernel/storage/tests/reading_task_sizes.rs
+new file mode 100644
+index 000000000..fc1433160
+--- /dev/null
++++ b/crates/kernel/storage/tests/reading_task_sizes.rs
+@@ -0,0 +1,362 @@
++//! Proves measuring change folders against TypeScript's report rows.
++
++use std::fs;
++use std::path::{Path, PathBuf};
++
++use osq_kernel_storage::{ScopeResolver, TaskSize, read_task_sizes};
++
++/// A fresh change folder under `CARGO_TARGET_TMPDIR`.
++fn scratch(test: &str, name: &str) -> PathBuf {
++    let folder = Path::new(env!("CARGO_TARGET_TMPDIR"))
++        .join("reading_task_sizes")
++        .join(test)
++        .join(name);
++    let _ = fs::remove_dir_all(&folder);
++    fs::create_dir_all(&folder).expect("the scratch change folder is created");
++    folder
++}
++
++/// Writes a file, creating its parent folders.
++fn write(path: &Path, text: &str) {
++    if let Some(parent) = path.parent() {
++        fs::create_dir_all(parent).expect("the parent folder is created");
++    }
++    fs::write(path, text).expect("the file is written");
++}
++
++/// One event line with the given type, timestamp and data.
++fn line(kind: &str, timestamp: &str, data: &str) -> String {
++    format!("{{\"type\":\"{kind}\",\"timestamp\":\"2026-10-20T{timestamp}\",\"data\":{data}}}")
++}
++
++/// The task file every row writes.
++const TASK_FILE: &str = "---\ntitle: When one runs, it passes\n---\n\n\
++## Acceptance\n- [ ] first\n- [ ] second\n- [ ] third\n";
++
++/// One row of the "Task sizes of task streams" table.
++struct Row {
++    /// The scratch folder's name.
++    name: &'static str,
++    /// The event lines, in order. A line starting with `not` stays raw.
++    lines: Vec<String>,
++    /// The one task the row expects, or `None` for no entry.
++    expected: Option<TaskSize>,
++}
++
++/// The task size every row expects unless it says otherwise.
++fn expected(
++    scope_files: f64,
++    resolver: ScopeResolver,
++    attempts: u64,
++    first_attempt_pass: bool,
++    duration_ms: Option<i64>,
++) -> TaskSize {
++    TaskSize {
++        task: String::from("1"),
++        title: String::from("When one runs, it passes"),
++        acceptance_lines: 3,
++        scope_files,
++        resolver,
++        attempts,
++        first_attempt_pass,
++        duration_ms,
++    }
++}
++
++/// The lines of the first row, reused by the task-file ordering scenario.
++fn measured_lines() -> Vec<String> {
++    vec![
++        line(
++            "measures",
++            "08:00:00.000Z",
++            r#"{"phase":"start","scopeFiles":2}"#,
++        ),
++        line("started", "08:00:01.000Z", "{}"),
++        line("done", "08:01:00.000Z", "{}"),
++        line("measures", "08:01:00.000Z", r#"{"phase":"end"}"#),
++    ]
++}
++
++/// The rows naming each resolver generation.
++fn resolver_rows() -> Vec<Row> {
++    vec![
++        Row {
++            name: "legacy",
++            lines: measured_lines(),
++            expected: Some(expected(2.0, ScopeResolver::Legacy, 1, true, Some(60_000))),
++        },
++        Row {
++            name: "resolver-2",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":3,"scopeResolver":2}"#,
++                ),
++                line("started", "08:00:05.000Z", "{}"),
++                line("done", "08:30:00.000Z", "{}"),
++                line(
++                    "measures",
++                    "08:30:00.000Z",
++                    r#"{"phase":"end","scopeHashes":{"a":"1","b":"2","c":"3","d":"4","e":"5","f":"6","g":"7","h":"8","i":"9"}}"#,
++                ),
++            ],
++            expected: Some(expected(
++                9.0,
++                ScopeResolver::Second,
++                1,
++                true,
++                Some(1_800_000),
++            )),
++        },
++        Row {
++            name: "resolver-3",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":1,"scopeResolver":3}"#,
++                ),
++                line("started", "08:00:01.000Z", "{}"),
++                line("done", "08:06:00.000Z", "{}"),
++            ],
++            expected: Some(expected(1.0, ScopeResolver::Other, 1, true, None)),
++        },
++        Row {
++            name: "resolver-null",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":1,"scopeResolver":null}"#,
++                ),
++                line("started", "08:00:01.000Z", "{}"),
++            ],
++            expected: Some(expected(1.0, ScopeResolver::Other, 1, false, None)),
++        },
++    ]
++}
++
++/// The rows measuring durations and the first attempt's fate.
++fn duration_rows() -> Vec<Row> {
++    vec![
++        Row {
++            name: "retry",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":5}"#,
++                ),
++                line("started", "08:00:01.000Z", "{}"),
++                line("dead", "08:02:00.000Z", "{}"),
++                line("measures", "08:02:00.000Z", r#"{"phase":"end"}"#),
++                String::from("not json"),
++                line("started", "08:10:00.000Z", "{}"),
++                line(
++                    "measures",
++                    "08:10:00.000Z",
++                    r#"{"phase":"start","scopeFiles":6}"#,
++                ),
++                line("done", "08:12:00.000Z", "{}"),
++                line("measures", "08:12:30.000Z", r#"{"phase":"end"}"#),
++            ],
++            expected: Some(expected(
++                5.0,
++                ScopeResolver::Legacy,
++                2,
++                false,
++                Some(270_000),
++            )),
++        },
++        Row {
++            name: "negative-start",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":-1}"#,
++                ),
++                line(
++                    "measures",
++                    "08:00:01.000Z",
++                    r#"{"phase":"start","scopeFiles":4}"#,
++                ),
++                line("started", "08:00:02.000Z", "{}"),
++                line("regressed", "08:00:03.000Z", "{}"),
++                line("done", "08:00:04.000Z", "{}"),
++            ],
++            expected: Some(expected(4.0, ScopeResolver::Legacy, 1, false, None)),
++        },
++        Row {
++            name: "zero-duration",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":2}"#,
++                ),
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"end","scopeHashes":["a"]}"#,
++                ),
++                line("started", "08:00:01.000Z", "{}"),
++                line("done", "08:00:02.000Z", "{}"),
++            ],
++            expected: Some(expected(2.0, ScopeResolver::Legacy, 1, true, Some(0))),
++        },
++    ]
++}
++
++/// The rows that pass over a bad timestamp, missing start or bad scope size.
++fn missing_rows() -> Vec<Row> {
++    vec![
++        Row {
++            name: "bad-timestamps",
++            lines: vec![
++                line(
++                    "measures",
++                    "08:05:00.000Z",
++                    r#"{"phase":"start","scopeFiles":2}"#,
++                ),
++                line("measures", "08:04:00.000Z", r#"{"phase":"end"}"#),
++                line("measures", "bad", r#"{"phase":"start","scopeFiles":2}"#),
++                line("measures", "08:06:00.000Z", r#"{"phase":"end"}"#),
++            ],
++            expected: Some(expected(2.0, ScopeResolver::Legacy, 0, false, None)),
++        },
++        Row {
++            name: "no-start-measure",
++            lines: vec![
++                line("started", "08:00:00.000Z", "{}"),
++                line("done", "08:01:00.000Z", "{}"),
++            ],
++            expected: None,
++        },
++        Row {
++            name: "string-scope-files",
++            lines: vec![line(
++                "measures",
++                "08:00:00.000Z",
++                r#"{"phase":"start","scopeFiles":"2"}"#,
++            )],
++            expected: None,
++        },
++    ]
++}
++
++/// Every "Task sizes of task streams" row, in the table's order.
++fn rows() -> Vec<Row> {
++    let mut rows = resolver_rows();
++    rows.extend(duration_rows());
++    rows.extend(missing_rows());
++    rows
++}
++
++/// Writes a row's task file and event lines into its folder.
++fn write_row(folder: &Path, lines: &[String]) {
++    write(&folder.join("tasks").join("1.md"), TASK_FILE);
++    if lines.is_empty() {
++        return;
++    }
++    let content = lines.join("\n") + "\n";
++    write(
++        &folder.join(".run").join("events").join("1.jsonl"),
++        &content,
++    );
++}
++
++/// Proves every row of the "Task sizes of task streams" table.
++///
++/// Covers: rust-storage/task-sizes-of-task-streams
++#[test]
++fn task_sizes_of_task_streams() {
++    for row in rows() {
++        let folder = scratch("task_sizes_of_task_streams", row.name);
++        write_row(&folder, &row.lines);
++        let expected = row.expected.into_iter().collect::<Vec<_>>();
++        assert_eq!(read_task_sizes(&folder), expected, "{}", row.name);
++    }
++}
++
++/// Proves task-file order, unreadable metadata and a missing tasks folder.
++///
++/// Covers: rust-storage/task-files-without-a-measured-stream
++#[test]
++fn task_files_without_a_measured_stream() {
++    let folder = scratch("task_files_without_a_measured_stream", "mixed");
++    write(&folder.join("tasks").join("2.md"), TASK_FILE);
++    write(&folder.join("tasks").join("3.md"), TASK_FILE);
++    write(&folder.join("tasks").join("10.md"), "not a task");
++    write(&folder.join("tasks").join("notes.txt"), TASK_FILE);
++    let content = measured_lines().join("\n") + "\n";
++    write(
++        &folder.join(".run").join("events").join("2.jsonl"),
++        &content,
++    );
++    write(
++        &folder.join(".run").join("events").join("10.jsonl"),
++        &content,
++    );
++    let tasks = read_task_sizes(&folder);
++    assert_eq!(
++        tasks
++            .iter()
++            .map(|task| task.task.as_str())
++            .collect::<Vec<_>>(),
++        vec!["2", "10"]
++    );
++    assert_eq!(tasks[0].title, "When one runs, it passes");
++    assert_eq!(tasks[0].acceptance_lines, 3);
++    assert_eq!(tasks[0].scope_files, 2.0);
++    assert_eq!(tasks[1].title, "");
++    assert_eq!(tasks[1].acceptance_lines, 0);
++    assert_eq!(tasks[1].scope_files, 2.0);
++
++    let empty = scratch("task_files_without_a_measured_stream", "no-tasks");
++    assert_eq!(read_task_sizes(&empty), Vec::<TaskSize>::new());
++}
++
++/// Proves a resolution before the first start does not decide the first attempt.
++///
++/// Covers: rust-storage/task-sizes-of-task-streams
++#[test]
++fn first_attempt_edges() {
++    let cases = [
++        (
++            "regressed-before-start",
++            vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":2}"#,
++                ),
++                line("regressed", "08:00:01.000Z", "{}"),
++                line("started", "08:00:02.000Z", "{}"),
++                line("done", "08:00:03.000Z", "{}"),
++            ],
++            true,
++        ),
++        (
++            "done-before-start",
++            vec![
++                line(
++                    "measures",
++                    "08:00:00.000Z",
++                    r#"{"phase":"start","scopeFiles":2}"#,
++                ),
++                line("done", "08:00:01.000Z", "{}"),
++                line("started", "08:00:02.000Z", "{}"),
++            ],
++            false,
++        ),
++    ];
++    for (name, lines, expected) in cases {
++        let folder = scratch("first_attempt_edges", name);
++        write_row(&folder, &lines);
++        let tasks = read_task_sizes(&folder);
++        assert_eq!(tasks.len(), 1, "{name}");
++        assert_eq!(tasks[0].first_attempt_pass, expected, "{name}");
++    }
++}
+diff --git a/openspec/changes/330-rust-report-history-sizes/.run/dead/1.md b/openspec/changes/330-rust-report-history-sizes/.run/dead/1.md
+new file mode 100644
+index 000000000..943a2d3c7
+--- /dev/null
++++ b/openspec/changes/330-rust-report-history-sizes/.run/dead/1.md
+@@ -0,0 +1,8 @@
++---
++reason: crashed
++pid: 478203
++started_at: 2026-10-24T10:52:17.144Z
++reaped_at: 2026-10-24T11:35:06.231Z
++fingerprint: sha256:c0d7f94d6155e0a95721649b815b7052f5ccdb9af12f765c07fa491acffa8f0e
++---
++Task execution terminated by watcher reaper (crashed).
+diff --git a/openspec/changes/330-rust-report-history-sizes/.run/events/1.jsonl b/openspec/changes/330-rust-report-history-sizes/.run/events/1.jsonl
+new file mode 100644
+index 000000000..904956e9f
+--- /dev/null
++++ b/openspec/changes/330-rust-report-history-sizes/.run/events/1.jsonl
+@@ -0,0 +1,143 @@
++{"type":"verify_ran","timestamp":"2026-10-24T10:59:12.096Z","data":{"command":"cargo test -p osq-kernel-storage --test reading_task_sizes --test reading_dependencies_added --test reading_change_records","exitCode":101,"duration":0.27,"log":".run/logs/1-1.log","output":"    change_trees\n    files_corpus\n    golden_cases\n    history_corpus\n    read_model\n    read_model_atomic\n    read_model_files\n    read_model_history\n    read_model_specs\n    read_model_specs_cases\n    reading_change_files\n    reading_events\n    reading_files\n    reading_files_records\n    reading_files_sections\n    reading_frontmatter\n    reading_history\n    reading_land_facts\n    reading_listing\n    reading_manifest\n    reading_markers\n    reading_measured\n    reading_now_facts\n    reading_pending_records\n    reading_planning\n    reading_queue_titles\n    reading_rejection_planner\n    reading_retry_context\n    reading_seal\n    reading_snapshot\n    reading_specs\n    reading_specs_edges\n    reading_specs_outcomes\n    reading_task_history\n    reading_text\n    reading_validator_failing\n    reading_watch_state\n    seal_corpus\n    specs_corpus\n    task_outcome_query","phase":"pre_spawn","expected":"red","mismatch":false}}
++{"type":"measures","timestamp":"2026-10-24T10:59:15.787Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":12,"scopeLines":727,"repoFiles":7069,"repoLines":694181,"importFanIn":0,"proposalWords":706,"taskWords":581,"deltaRequirements":7,"deltaScenarios":10}}
++{"type":"instructions_changed","timestamp":"2026-10-24T10:59:15.904Z","data":{"changed":["AGENTS.md","ADR 003 added","ADR 006 added","ADR 007 added","ADR 014 added","ADR 016 added","ADR 017 added","ADR 022 added","ADR 023 added","ADR 024 added","ADR 025 added","ADR 026 added","ADR 027 added","ADR 028 added","ADR 029 added"]}}
++{"type":"started","timestamp":"2026-10-24T10:59:16.138Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"b08856f1","pid":3923651,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"921e4b4e"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:18.170Z","data":{"promptTokens":7769,"candidateTokens":332,"totalTokens":8613,"cachedTokens":512,"reasoningTokens":15,"cost":0.0027321719999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:18.181Z","data":{"tool":"read","summary":"openspec/changes/330-rust-report-history-sizes/tasks/1.md"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:18.183Z","data":{"tool":"read","summary":"openspec/changes/330-rust-report-history-sizes/proposal.md"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:18.183Z","data":{"tool":"read","summary":"openspec/changes/330-rust-report-history-sizes/specs/rust-st"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:18.184Z","data":{"tool":"read","summary":"openspec/changes/330-rust-report-history-sizes/specs/rust-re"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:20.687Z","data":{"promptTokens":8981,"candidateTokens":145,"totalTokens":17702,"cachedTokens":8576,"reasoningTokens":10,"cost":0.002919756,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:20.687Z","data":{"tool":"bash","summary":"find crates/kernel/storage -type f | sort"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:20.688Z","data":{"tool":"bash","summary":"cat crates/kernel/storage/src/lib.rs; echo ====; cat crates/"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:22.379Z","data":{"promptTokens":7080,"candidateTokens":265,"totalTokens":25009,"cachedTokens":17664,"reasoningTokens":0,"cost":0.002547984,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:22.380Z","data":{"tool":"bash","summary":"cat crates/kernel/storage/src/read/task_history/mod.rs; echo"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:22.380Z","data":{"tool":"bash","summary":"cat crates/kernel/storage/src/read/task_history/attempts.rs;"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:22.380Z","data":{"tool":"bash","summary":"cat crates/kernel/storage/src/read/results.rs; echo ====; ca"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:23.911Z","data":{"promptTokens":5806,"candidateTokens":162,"totalTokens":30928,"cachedTokens":24960,"reasoningTokens":11,"cost":0.00208596,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:23.911Z","data":{"tool":"bash","summary":"sed -n '1,260p' src/core/report/report.ts"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:23.912Z","data":{"tool":"bash","summary":"cat src/core/report/report-events.ts; echo =====; cat src/co"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:25.406Z","data":{"promptTokens":5179,"candidateTokens":116,"totalTokens":36143,"cachedTokens":30848,"reasoningTokens":19,"cost":0.0018779879999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:25.407Z","data":{"tool":"bash","summary":"grep -n \"deriveMeasuredTask\\|projectMeasuredTasks\\|readTaskM"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:27.013Z","data":{"promptTokens":1017,"candidateTokens":69,"totalTokens":37182,"cachedTokens":36096,"reasoningTokens":0,"cost":0.0006044760000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:27.013Z","data":{"tool":"bash","summary":"sed -n '500,760p' src/core/report/report.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:28.749Z","data":{"promptTokens":2546,"candidateTokens":246,"totalTokens":39912,"cachedTokens":37120,"reasoningTokens":42,"cost":0.0012817199999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:28.749Z","data":{"tool":"bash","summary":"grep -rn \"pub fn parse_task_file\\|pub struct.*Task\\|pub fn p"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:28.749Z","data":{"tool":"bash","summary":"cat crates/kernel/storage/Cargo.toml; echo ====; cat crates/"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:30.446Z","data":{"promptTokens":6805,"candidateTokens":175,"totalTokens":46788,"cachedTokens":39808,"reasoningTokens":15,"cost":0.002490348,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:30.446Z","data":{"tool":"bash","summary":"cat crates/kernel/specs/src/document/task_file.rs; echo ===="}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:32.264Z","data":{"promptTokens":4088,"candidateTokens":232,"totalTokens":51040,"cachedTokens":46720,"reasoningTokens":35,"cost":0.0017851199999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:32.292Z","data":{"tool":"bash","summary":"grep -n \"fn change_ids\" -A60 crates/kernel/specs/src/documen"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:32.294Z","data":{"tool":"bash","summary":"grep -rn \"read_disclosures\\|disclosures\" crates/kernel/stora"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:34.490Z","data":{"promptTokens":845,"candidateTokens":207,"totalTokens":51996,"cachedTokens":50944,"reasoningTokens":0,"cost":0.000807564,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:34.490Z","data":{"tool":"bash","summary":"cat crates/core/src/fold/stream.rs; echo ====; grep -rn \"Num"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:34.491Z","data":{"tool":"bash","summary":"grep -rn \"read_dir\\|sort_by\\|compare\" crates/kernel/storage/"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:35.962Z","data":{"promptTokens":1340,"candidateTokens":119,"totalTokens":53427,"cachedTokens":51968,"reasoningTokens":0,"cost":0.000856608,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:35.962Z","data":{"tool":"bash","summary":"sed -n '90,130p' crates/kernel/storage/src/read/listing.rs; "}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:37.613Z","data":{"promptTokens":1643,"candidateTokens":130,"totalTokens":55149,"cachedTokens":53376,"reasoningTokens":28,"cost":0.000969156,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:37.614Z","data":{"tool":"bash","summary":"sed -n '1,260p' crates/kernel/storage/tests/reading_measured"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:41.733Z","data":{"promptTokens":2530,"candidateTokens":450,"totalTokens":58020,"cachedTokens":55040,"reasoningTokens":364,"cost":0.0016292400000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:41.733Z","data":{"tool":"bash","summary":"sed -n '1,180p' tests/line-budget.test.ts; sed -n '1,160p' t"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:43.725Z","data":{"promptTokens":2238,"candidateTokens":149,"totalTokens":60371,"cachedTokens":57984,"reasoningTokens":20,"cost":0.001198104,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:43.725Z","data":{"tool":"bash","summary":"grep -n \"\\[workspace.lints\" -A80 Cargo.toml; echo ====; sed "}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:45.498Z","data":{"promptTokens":865,"candidateTokens":128,"totalTokens":61281,"cachedTokens":60288,"reasoningTokens":9,"cost":0.000774828,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:45.499Z","data":{"tool":"bash","summary":"sed -n '1,60p' crates/kernel/specs/src/lib.rs; echo ====; ca"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:49.767Z","data":{"promptTokens":1130,"candidateTokens":596,"totalTokens":62910,"cachedTokens":61184,"reasoningTokens":487,"cost":0.001421304,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:49.769Z","data":{"tool":"bash","summary":"grep -n \"function compareNumericPrefix\" -A40 src/core/status"}}
++{"type":"tokens","timestamp":"2026-10-24T10:59:51.837Z","data":{"promptTokens":2143,"candidateTokens":177,"totalTokens":65168,"cachedTokens":62848,"reasoningTokens":74,"cost":0.0012323879999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T10:59:51.837Z","data":{"tool":"bash","summary":"ls -la openspec/changes/330-rust-report-history-sizes/.run/r"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:01.354Z","data":{"promptTokens":539,"candidateTokens":1586,"totalTokens":67277,"cachedTokens":65152,"reasoningTokens":1510,"cost":0.002455812,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:01.355Z","data":{"tool":"bash","summary":"grep -rn \"function parseSpecMdFromFolder\\|parseSpecMdFromFol"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:03.284Z","data":{"promptTokens":725,"candidateTokens":85,"totalTokens":68010,"cachedTokens":67200,"reasoningTokens":0,"cost":0.0007227,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:03.284Z","data":{"tool":"bash","summary":"grep -n \"parseSpecMdFromFolder\\|resolveChangeDoc\" -A35 -B5 s"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:04.948Z","data":{"promptTokens":708,"candidateTokens":105,"totalTokens":68781,"cachedTokens":67968,"reasoningTokens":9,"cost":0.0007462079999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:04.948Z","data":{"tool":"bash","summary":"grep -n \"function fileExists\" -A15 src/core/spec/parser.ts; "}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:16.275Z","data":{"promptTokens":1036,"candidateTokens":1939,"totalTokens":71711,"cachedTokens":68736,"reasoningTokens":1865,"cost":0.003050016,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:16.276Z","data":{"tool":"bash","summary":"cat scripts/verify-rust.sh; command -v cargo-mutants || true"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:34.817Z","data":{"promptTokens":521,"candidateTokens":3940,"totalTokens":76141,"cachedTokens":71680,"reasoningTokens":3131,"cost":0.00531438,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:34.817Z","data":{"tool":"bash","summary":"cat > /tmp/stream_new.rs <<'EOF'\n//! Parsing one task event "}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:41.532Z","data":{"promptTokens":251,"candidateTokens":1795,"totalTokens":77950,"cachedTokens":75904,"reasoningTokens":22,"cost":0.002684724,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:41.542Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/task_history/sizes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:41.542Z","data":{"path":"crates/kernel/storage/src/read/task_history/sizes.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:44.509Z","data":{"promptTokens":157,"candidateTokens":379,"totalTokens":78360,"cachedTokens":77824,"reasoningTokens":239,"cost":0.000968844,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:44.511Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/task_history/sizes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:44.528Z","data":{"path":"crates/kernel/storage/src/read/task_history/sizes.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:48.759Z","data":{"promptTokens":188,"candidateTokens":817,"totalTokens":79213,"cachedTokens":78208,"reasoningTokens":3,"cost":0.001506048,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:48.760Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/task_history/dependencies.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:48.760Z","data":{"path":"crates/kernel/storage/src/read/task_history/dependencies.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:50.579Z","data":{"promptTokens":140,"candidateTokens":261,"totalTokens":79505,"cachedTokens":79104,"reasoningTokens":3,"cost":0.000829824,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:50.580Z","data":{"tool":"write","summary":"crates/kernel/storage/src/read/fixes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:50.580Z","data":{"path":"crates/kernel/storage/src/read/fixes.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:53.042Z","data":{"promptTokens":173,"candidateTokens":273,"totalTokens":79806,"cachedTokens":79360,"reasoningTokens":4,"cost":0.0008556600000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:53.042Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/results.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:53.044Z","data":{"path":"crates/kernel/storage/src/read/results.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:56.815Z","data":{"promptTokens":223,"candidateTokens":579,"totalTokens":80418,"cachedTokens":79616,"reasoningTokens":6,"cost":0.0012393959999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:56.816Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/task_history/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:56.817Z","data":{"path":"crates/kernel/storage/src/read/task_history/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:00:59.096Z","data":{"promptTokens":197,"candidateTokens":387,"totalTokens":80840,"cachedTokens":80256,"reasoningTokens":18,"cost":0.001005036,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:00:59.096Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/mod.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:00:59.097Z","data":{"path":"crates/kernel/storage/src/read/mod.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:02.256Z","data":{"promptTokens":232,"candidateTokens":738,"totalTokens":81610,"cachedTokens":80640,"reasoningTokens":5,"cost":0.00143904,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:02.257Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/lib.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:01:02.258Z","data":{"path":"crates/kernel/storage/src/lib.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:03.930Z","data":{"promptTokens":232,"candidateTokens":103,"totalTokens":81743,"cachedTokens":81408,"reasoningTokens":31,"cost":0.000681648,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:03.930Z","data":{"tool":"bash","summary":"cargo check -p osq-kernel-storage 2>&1 | tail -80"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:13.341Z","data":{"promptTokens":893,"candidateTokens":114,"totalTokens":82671,"cachedTokens":81664,"reasoningTokens":3,"cost":0.000894684,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:13.341Z","data":{"tool":"edit","summary":"crates/kernel/storage/src/read/task_history/dependencies.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:01:13.343Z","data":{"path":"crates/kernel/storage/src/read/task_history/dependencies.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:28.768Z","data":{"promptTokens":147,"candidateTokens":3842,"totalTokens":86549,"cachedTokens":82560,"reasoningTokens":1165,"cost":0.00514986,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:28.768Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_task_sizes.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:01:28.769Z","data":{"path":"crates/kernel/storage/tests/reading_task_sizes.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:34.068Z","data":{"promptTokens":179,"candidateTokens":1193,"totalTokens":87772,"cachedTokens":86400,"reasoningTokens":4,"cost":0.0020036999999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:34.069Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_dependencies_added.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:01:34.069Z","data":{"path":"crates/kernel/storage/tests/reading_dependencies_added.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:38.872Z","data":{"promptTokens":251,"candidateTokens":1237,"totalTokens":89040,"cachedTokens":87552,"reasoningTokens":4,"cost":0.002085012,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:38.873Z","data":{"tool":"write","summary":"crates/kernel/storage/tests/reading_change_records.rs"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:01:38.874Z","data":{"path":"crates/kernel/storage/tests/reading_change_records.rs"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:40.622Z","data":{"promptTokens":238,"candidateTokens":96,"totalTokens":89166,"cachedTokens":88832,"reasoningTokens":5,"cost":0.000719592,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:40.622Z","data":{"tool":"bash","summary":"cargo test -p osq-kernel-storage --test reading_task_sizes -"}}
++{"type":"tokens","timestamp":"2026-10-24T11:01:48.262Z","data":{"promptTokens":858,"candidateTokens":211,"totalTokens":90157,"cachedTokens":89088,"reasoningTokens":129,"cost":0.001045128,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:01:48.262Z","data":{"tool":"bash","summary":"cargo fmt --all && cargo clippy --workspace --all-targets --"}}
++{"type":"tokens","timestamp":"2026-10-24T11:02:01.971Z","data":{"promptTokens":1699,"candidateTokens":1084,"totalTokens":92895,"cachedTokens":90112,"reasoningTokens":754,"cost":0.002351172,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:02:01.972Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/ker"}}
++{"type":"tokens","timestamp":"2026-10-24T11:02:07.939Z","data":{"promptTokens":1178,"candidateTokens":231,"totalTokens":94209,"cachedTokens":92800,"reasoningTokens":155,"cost":0.0011874,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:02:07.940Z","data":{"tool":"bash","summary":"sed -n '38,180p' crates/kernel/storage/tests/reading_task_si"}}
++{"type":"tokens","timestamp":"2026-10-24T11:02:14.882Z","data":{"promptTokens":1288,"candidateTokens":1854,"totalTokens":97350,"cachedTokens":94208,"reasoningTokens":35,"cost":0.0031764479999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:02:14.883Z","data":{"tool":"bash","summary":"python3 - <<'PY'\nfrom pathlib import Path\np=Path('crates/ker"}}
++{"type":"tokens","timestamp":"2026-10-24T11:02:18.114Z","data":{"promptTokens":148,"candidateTokens":98,"totalTokens":97526,"cachedTokens":97280,"reasoningTokens":7,"cost":0.0007456800000000001,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:02:18.115Z","data":{"tool":"bash","summary":"cargo test -p osq-kernel-storage --test reading_task_sizes -"}}
++{"type":"tokens","timestamp":"2026-10-24T11:02:20.784Z","data":{"promptTokens":468,"candidateTokens":85,"totalTokens":97961,"cachedTokens":97408,"reasoningTokens":7,"cost":0.000826848,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:02:20.784Z","data":{"tool":"bash","summary":"cargo test -p osq-kernel-storage -- --include-ignored 2>&1 |"}}
++{"type":"tokens","timestamp":"2026-10-24T11:03:09.431Z","data":{"promptTokens":1393,"candidateTokens":1679,"totalTokens":100992,"cachedTokens":97920,"reasoningTokens":1611,"cost":0.0030202199999999997,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:03:09.431Z","data":{"tool":"bash","summary":"cargo mutants --help | sed -n '1,220p'"}}
++{"type":"tokens","timestamp":"2026-10-24T11:03:11.350Z","data":{"promptTokens":1663,"candidateTokens":160,"totalTokens":102815,"cachedTokens":100992,"reasoningTokens":26,"cost":0.0012968519999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:03:11.350Z","data":{"tool":"bash","summary":"cargo mutants -p osq-kernel-storage -f 'crates/kernel/storag"}}
++{"type":"tokens","timestamp":"2026-10-24T11:03:25.511Z","data":{"promptTokens":2027,"candidateTokens":2019,"totalTokens":106830,"cachedTokens":102784,"reasoningTokens":1836,"cost":0.0036476039999999996,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:03:25.511Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-kernel-storage -f 'cr"}}
++{"type":"tokens","timestamp":"2026-10-24T11:05:44.350Z","data":{"promptTokens":304,"candidateTokens":923,"totalTokens":107979,"cachedTokens":106752,"reasoningTokens":483,"cost":0.001839312,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:05:44.350Z","data":{"tool":"bash","summary":"cat >> crates/kernel/storage/tests/reading_task_sizes.rs <<'"}}
++{"type":"tokens","timestamp":"2026-10-24T11:05:47.910Z","data":{"promptTokens":153,"candidateTokens":214,"totalTokens":108271,"cachedTokens":107904,"reasoningTokens":29,"cost":0.0009501239999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:05:47.910Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-kernel-storage -f 'cr"}}
++{"type":"tokens","timestamp":"2026-10-24T11:08:30.264Z","data":{"promptTokens":192,"candidateTokens":310,"totalTokens":108662,"cachedTokens":108160,"reasoningTokens":114,"cost":0.00107856,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:08:30.265Z","data":{"tool":"bash","summary":"out=$(mktemp -d); cargo mutants -p osq-kernel-storage -f 'cr"}}
++{"type":"tokens","timestamp":"2026-10-24T11:10:54.882Z","data":{"promptTokens":330,"candidateTokens":455,"totalTokens":109329,"cachedTokens":108544,"reasoningTokens":345,"cost":0.001296264,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:10:54.882Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/330-rust-report-history-sizes sh"}}
++{"type":"tokens","timestamp":"2026-10-24T11:17:19.600Z","data":{"promptTokens":1040,"candidateTokens":264,"totalTokens":110616,"cachedTokens":109312,"reasoningTokens":154,"cost":0.001284672,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:17:19.601Z","data":{"tool":"bash","summary":"find crates/kernel/storage/src crates/kernel/storage/tests -"}}
++{"type":"tokens","timestamp":"2026-10-24T11:17:28.459Z","data":{"promptTokens":7292,"candidateTokens":1352,"totalTokens":119236,"cachedTokens":110592,"reasoningTokens":1261,"cost":0.004473552,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:17:28.460Z","data":{"tool":"bash","summary":"cargo test -p osq-kernel-storage --test reading_task_sizes -"}}
++{"type":"tokens","timestamp":"2026-10-24T11:17:31.578Z","data":{"promptTokens":427,"candidateTokens":256,"totalTokens":119851,"cachedTokens":119168,"reasoningTokens":144,"cost":0.001150308,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:17:31.579Z","data":{"tool":"bash","summary":"OSQ_CHANGE=openspec/changes/330-rust-report-history-sizes sh"}}
++{"type":"tokens","timestamp":"2026-10-24T11:22:08.256Z","data":{"promptTokens":410,"candidateTokens":488,"totalTokens":120706,"cachedTokens":119808,"reasoningTokens":368,"cost":0.001427448,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:22:08.257Z","data":{"tool":"bash","summary":"stat -c '%y %n' crates/kernel/storage/src/read/snapshot.rs c"}}
++{"type":"tokens","timestamp":"2026-10-24T11:22:10.184Z","data":{"promptTokens":171,"candidateTokens":130,"totalTokens":121005,"cachedTokens":120704,"reasoningTokens":42,"cost":0.000931524,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:22:10.185Z","data":{"tool":"bash","summary":"find crates -type f -newermt '2026-10-24 14:00:00' -not -pat"}}
++{"type":"tokens","timestamp":"2026-10-24T11:22:14.628Z","data":{"promptTokens":214,"candidateTokens":622,"totalTokens":121796,"cachedTokens":120960,"reasoningTokens":118,"cost":0.00153636,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T11:22:14.709Z","data":{"tool":"write","summary":"openspec/changes/330-rust-report-history-sizes/.run/results/"}}
++{"type":"file_changed","timestamp":"2026-10-24T11:22:14.728Z","data":{"path":"openspec/changes/330-rust-report-history-sizes/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-24T11:22:16.500Z","data":{"text":"Implemented task 1.\n\nAdded storage readers for measured task sizes, added dependencies, change fixes, and result disclosures, with public exports and scenario tests.\n\nVerification passed:\n- `cargo test -p osq-kernel-storage --test reading_task_sizes --test reading_dependencies_added --test reading_change_records`\n- `OSQ_CHANGE=openspec/changes/330-rust-report-history-sizes sh scripts/verify-rust.sh`\n- Targeted `cargo-mutants` runs reported no missed mutants in the new readers.\n\nResult written to `openspec/changes/330-rust-report-history-sizes/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-24T11:22:16.500Z","data":{"promptTokens":231,"candidateTokens":153,"totalTokens":121984,"cachedTokens":121600,"reasoningTokens":15,"cost":0.0009824999999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-24T11:22:16.539Z","data":{"exitCode":0,"pid":3923651,"timedOut":false,"elapsedSeconds":1380.4}}
++{"type":"format_ran","timestamp":"2026-10-24T11:22:20.751Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'crates/kernel/storage/src/lib.rs' 'crates/kernel/storage/src/read/fixes.rs' 'crates/kernel/storage/src/read/mod.rs' 'crates/kernel/storage/src/read/results.rs' 'crates/kernel/storage/src/read/task_history/dependencies.rs' 'crates/kernel/storage/src/read/task_history/mod.rs' 'crates/kernel/storage/src/read/task_history/sizes.rs' 'crates/kernel/storage/src/read/task_history/stream.rs' 'crates/kernel/storage/tests/reading_change_records.rs' 'crates/kernel/storage/tests/reading_dependencies_added.rs' 'crates/kernel/storage/tests/reading_task_sizes.rs'","files":["crates/kernel/storage/src/lib.rs","crates/kernel/storage/src/read/fixes.rs","crates/kernel/storage/src/read/mod.rs","crates/kernel/storage/src/read/results.rs","crates/kernel/storage/src/read/task_history/dependencies.rs","crates/kernel/storage/src/read/task_history/mod.rs","crates/kernel/storage/src/read/task_history/sizes.rs","crates/kernel/storage/src/read/task_history/stream.rs","crates/kernel/storage/tests/reading_change_records.rs","crates/kernel/storage/tests/reading_dependencies_added.rs","crates/kernel/storage/tests/reading_task_sizes.rs"],"exitCode":0,"duration":1.47,"timedOut":false,"output":"Checked 0 files in 1487µs. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-24T11:22:31.785Z","data":{"command":"cargo test -p osq-kernel-storage --test reading_task_sizes --test reading_dependencies_added --test reading_change_records","exitCode":0,"duration":1.16,"log":".run/logs/1-2.log","output":"    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s\n     Running tests/reading_change_records.rs (target/debug/deps/reading_change_records-0a20358c4da28a9b)\n\nrunning 2 tests\ntest disclosure_reader_on_the_files_fixture ... ok\ntest fixes_of_change_folders ... ok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/reading_dependencies_added.rs (target/debug/deps/reading_dependencies_added-3a300407d1a0c0b4)\n\nrunning 1 test\ntest dependencies_of_task_streams ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/reading_task_sizes.rs (target/debug/deps/reading_task_sizes-528016c6906d059f)\n\nrunning 3 tests\ntest task_files_without_a_measured_stream ... ok\ntest first_attempt_edges ... ok\ntest task_sizes_of_task_streams ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n"}}
++{"type":"dead","timestamp":"2026-10-24T11:35:06.232Z","data":{"task":"1","reason":"crashed"}}
+diff --git a/openspec/changes/330-rust-report-history-sizes/.run/events/change.jsonl b/openspec/changes/330-rust-report-history-sizes/.run/events/change.jsonl
+new file mode 100644
+index 000000000..c6511cd03
+--- /dev/null
++++ b/openspec/changes/330-rust-report-history-sizes/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-24T10:59:11.823Z","data":{"outcome":"passed","command":"pnpm verify","commit":"b08856f149ef72dcabf797fa1224c725093033a5","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":408.77}}
+diff --git a/openspec/changes/330-rust-report-history-sizes/.run/results/1.md b/openspec/changes/330-rust-report-history-sizes/.run/results/1.md
+new file mode 100644
+index 000000000..38682d657
+--- /dev/null
++++ b/openspec/changes/330-rust-report-history-sizes/.run/results/1.md
+@@ -0,0 +1,18 @@
++## Changed
++
++Added the storage readers and their typed values:
++
++- `read_task_sizes`, `TaskSize` and `ScopeResolver` under `src/read/task_history/sizes.rs`, exported from the crate root.
++- `read_dependencies_added` and `DependencyPair` under `src/read/task_history/dependencies.rs`, exported from the crate root.
++- `read_change_fixes` under `src/read/fixes.rs`, exported from the crate root.
++- `read_result_disclosures` in `src/read/results.rs`, calling the existing private disclosure reader so `snapshot.rs` is unchanged.
++
++Extended the task-stream `Event` with its timestamp and a raw data-member accessor, and added a local leading-number comparator for task and event file names. Added `tests/reading_task_sizes.rs`, `tests/reading_dependencies_added.rs` and `tests/reading_change_records.rs` proving every scenario row, plus focused first-attempt edge cases that kill the surviving observers' mutants.
++
++`cargo fmt --all`, the task verify and `OSQ_CHANGE=openspec/changes/330-rust-report-history-sizes sh scripts/verify-rust.sh` pass. Targeted cargo-mutants runs over the new touched readers report no missed mutants.
++
++## Missing context
++
++None.
++
++Touched: crates/kernel/storage/src/lib.rs, crates/kernel/storage/src/read/mod.rs, crates/kernel/storage/src/read/fixes.rs, crates/kernel/storage/src/read/results.rs, crates/kernel/storage/src/read/task_history/mod.rs, crates/kernel/storage/src/read/task_history/stream.rs, crates/kernel/storage/src/read/task_history/sizes.rs, crates/kernel/storage/src/read/task_history/dependencies.rs, crates/kernel/storage/tests/reading_task_sizes.rs, crates/kernel/storage/tests/reading_dependencies_added.rs, crates/kernel/storage/tests/reading_change_records.rs

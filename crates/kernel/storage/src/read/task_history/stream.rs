@@ -4,11 +4,15 @@
 
 use serde_json::{Map, Value};
 
-/// One parsed event line: its `type` and its object `data`.
+use crate::read::text::timestamp_ms;
+
+/// One parsed event line: its `type`, its `timestamp` and its object `data`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(super) struct Event {
     /// The event's `type` member when it is a string.
     kind: Option<String>,
+    /// The event's `timestamp` member when it is a string.
+    timestamp: Option<String>,
     /// The event's `data` member when it is a JSON object.
     data: Option<Map<String, Value>>,
 }
@@ -17,6 +21,16 @@ impl Event {
     /// The event's `type` string, or `None` without one.
     pub(super) fn kind(&self) -> Option<&str> {
         self.kind.as_deref()
+    }
+
+    /// The event's timestamp in epoch milliseconds, or `None` without one.
+    pub(super) fn timestamp_ms(&self) -> Option<i64> {
+        timestamp_ms(self.timestamp.as_deref()?)
+    }
+
+    /// A data member's raw JSON value, or `None` without one.
+    pub(super) fn raw(&self, key: &str) -> Option<&Value> {
+        self.data.as_ref()?.get(key)
     }
 
     /// A data member's string value, or `None` without one.
@@ -63,6 +77,10 @@ fn parse_line(line: &str) -> Option<Event> {
     Some(Event {
         kind: object
             .get("type")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned),
+        timestamp: object
+            .get("timestamp")
             .and_then(Value::as_str)
             .map(ToOwned::to_owned),
         data: object.get("data").and_then(Value::as_object).cloned(),

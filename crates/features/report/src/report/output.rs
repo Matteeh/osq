@@ -2,16 +2,28 @@
 //!
 //! Implements: rust-report/report-summary
 
+use osq_kernel_config::Limits;
+
+use super::blocks::Blocks;
 use super::counts::Counts;
 use super::history::History;
-use super::{history_json, history_text};
+use super::sizes::SizeMetrics;
+use super::{blocks, history_json, history_text, sizes_text};
 
 /// Writes the header, `Specs Summary:`, `Now:` and `History:` sections.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
-pub(crate) fn text(counts: &Counts, history: &History) -> String {
-    format!(
+/// Implements: rust-report/report-history-blocks
+/// Implements: rust-report/report-sizes
+pub(crate) fn text(
+    counts: &Counts,
+    history: &History,
+    blocks: &Blocks,
+    sizes: &SizeMetrics,
+    limits: &Limits,
+) -> String {
+    let mut text = format!(
         concat!(
             "osq Delivery Metrics Report\n",
             "\n",
@@ -47,15 +59,30 @@ pub(crate) fn text(counts: &Counts, history: &History) -> String {
         unmarked = counts.unmarked,
         rate = rate(counts.completion),
         history = history_text::text(history),
-    )
+    );
+    for line in blocks::text(blocks)
+        .iter()
+        .chain(sizes_text::text(sizes, limits).iter())
+    {
+        text.push('\n');
+        text.push_str(line);
+    }
+    text
 }
 
 /// Writes the `completionRate`, `history`, `now` and `specs` members as JSON.
 ///
 /// Implements: rust-report/report-summary
 /// Implements: rust-report/report-history
-pub(crate) fn json(counts: &Counts, history: &History) -> String {
-    history_json::document(counts, history)
+/// Implements: rust-report/report-history-blocks
+/// Implements: rust-report/report-sizes
+pub(crate) fn json(
+    counts: &Counts,
+    history: &History,
+    blocks: &Blocks,
+    sizes: &SizeMetrics,
+) -> String {
+    history_json::document(counts, history, blocks, sizes)
 }
 
 /// Writes hundredths of a percent as JavaScript writes the same number.
