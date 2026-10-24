@@ -102,33 +102,28 @@ async function appendEvent(
   await fs.appendFile(path.join(eventsDir, 'change.jsonl'), `${JSON.stringify(event)}\n`, 'utf8');
 }
 
-/** Run one verify command, stopping on failure and recording a pass. */
-async function runOne(
+/** Run a step-5 command once in the worktree. */
+function runCommand(
   options: SyncVerifyOptions,
   command: string,
   changeFolder: string | null,
-  task: string | undefined,
-  kind: 'verify' | 'check' = 'verify',
-): Promise<void> {
-  const result = await runVerificationCommand(
+): ReturnType<typeof runVerificationCommand> {
+  return runVerificationCommand(
     options.worktreeRoot,
     command,
     options.config.timeouts.verifyTimeoutSeconds,
     changeFolder,
     { config: options.config },
   );
-  if (result.exitCode !== 0) {
-    const subject =
-      kind === 'check'
-        ? `check failed on ${worktreeBranch(options.change.folderName)}`
-        : task === undefined
-          ? `verify failed on ${worktreeBranch(options.change.folderName)}`
-          : `verify of task ${task} failed on ${worktreeBranch(options.change.folderName)}`;
-    throw new SyncStop(
-      'sync_verify_red',
-      `${options.change.folderName}: ${subject} merged with ${options.defaultBranch}:\n${outputTail(result.output, options.config.limits.cardOutputLines)}`,
-    );
-  }
+}
+
+/** Write one run's log and append its `verify_ran` event. */
+async function recordRun(
+  options: SyncVerifyOptions,
+  command: string,
+  result: Awaited<ReturnType<typeof runVerificationCommand>>,
+  task: string | undefined,
+): Promise<void> {
   const log = await writeVerifyLog(options.change.folderPath, 'change', result.output);
   const tail = tailVerifyOutput(result.output, options.config.limits);
   await appendEvent(options.change.folderPath, 'verify_ran', {
@@ -141,6 +136,44 @@ async function runOne(
   });
 }
 
+/** The stop a command raises when both of its runs fail. */
+function redStop(
+  options: SyncVerifyOptions,
+  task: string | undefined,
+  kind: 'verify' | 'check',
+  output: string,
+): SyncStop {
+  const subject =
+    kind === 'check'
+      ? `check failed on ${worktreeBranch(options.change.folderName)}`
+      : task === undefined
+        ? `verify failed on ${worktreeBranch(options.change.folderName)}`
+        : `verify of task ${task} failed on ${worktreeBranch(options.change.folderName)}`;
+  return new SyncStop(
+    'sync_verify_red',
+    `${options.change.folderName}: ${subject} merged with ${options.defaultBranch}:\n${outputTail(output, options.config.limits.cardOutputLines)}`,
+  );
+}
+
+/** Run one verify command, once more when it fails, and record every pass. */
+async function runOne(
+  options: SyncVerifyOptions,
+  command: string,
+  changeFolder: string | null,
+  task: string | undefined,
+  kind: 'verify' | 'check' = 'verify',
+): Promise<void> {
+  const first = await runCommand(options, command, changeFolder);
+  if (first.exitCode !== 0) {
+    const second = await runCommand(options, command, changeFolder);
+    if (second.exitCode !== 0) throw redStop(options, task, kind, second.output);
+    await recordRun(options, command, first, task);
+    await recordRun(options, command, second, task);
+    return;
+  }
+  await recordRun(options, command, first, task);
+}
+
 /** The proposal's `check` command in the change folder, else null. */
 async function readCheck(changeFolderPath: string): Promise<string | null> {
   const proposal = await parseSpecMdFromFolder(changeFolderPath).catch(() => null);
@@ -148,12 +181,6 @@ async function readCheck(changeFolderPath: string): Promise<string | null> {
   return readCheckCommand(parseFrontmatter(proposal.raw).data);
 }
 
-/**
- * Step 5 of the sync: run the proposal's verify for an archived change, or
- * the done tasks' verifies for an active one, record each pass, then append
- * the `synced` event. Every failure is a `SyncStop` with reason
- * `sync_verify_red`. With `skipVerify` set no command runs at all.
- */
 /** The kept step-1 tasks, as the recertification's own inputs. */
 function recertifyInputs(tasks: readonly SyncVerifyTask[]): SyncRecertifyTask[] {
   const inputs: SyncRecertifyTask[] = [];
@@ -169,6 +196,15 @@ function recertifyInputs(tasks: readonly SyncVerifyTask[]): SyncRecertifyTask[] 
   return inputs;
 }
 
+/**
+ * Step 5 of the sync: run the proposal's verify for an archived change, or
+ * the done tasks' verifies for an active one, record each pass, then append
+ * the `synced` event. Every failure is a `SyncStop` with reason
+ * `sync_verify_red`. With `skipVerify` set no command runs at all.
+ *
+ * @scenario version-control: Verify passes on its second run
+ * @scenario version-control: Verify red on both runs
+ */
 export async function runSyncVerify(options: SyncVerifyOptions): Promise<void> {
   if (!options.skipVerify) {
     if (options.archived) {

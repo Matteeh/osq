@@ -20,6 +20,9 @@ struct Commands {
     check: Option<String>,
 }
 
+/// One command run: its exit code, output and duration.
+type Run = (i32, String, Duration);
+
 /// The sizes a stop tail and a `verify_ran` excerpt keep.
 struct Tails {
     /// The most lines a stop tail keeps.
@@ -71,7 +74,7 @@ pub(crate) fn run(
     Ok(())
 }
 
-/// Runs one command, stopping on a red one and recording a passing one.
+/// Runs one command, once more when it fails, and records every pass.
 ///
 /// Implements: rust-land/land-sync-verify
 fn one(
@@ -82,23 +85,33 @@ fn one(
     timeouts: &Timeouts,
     tails: &Tails,
 ) -> Result<(), Stop> {
-    let (exit_code, output, duration) = command::run_timed(worktree, command, timeouts);
-    if exit_code != 0 {
-        let message = format!(
-            "{stop_prefix}\n{}",
-            text::output_tail(&output, tails.output)
-        );
-        return Err(Stop::new(SyncStopReason::SyncVerifyRed, message));
+    let first = command::run_timed(worktree, command, timeouts);
+    if first.0 == 0 {
+        return record(archived, command, &first, tails);
     }
-    let log = write_log(archived, &output)?;
+    let second = command::run_timed(worktree, command, timeouts);
+    if second.0 == 0 {
+        record(archived, command, &first, tails)?;
+        return record(archived, command, &second, tails);
+    }
+    let message = format!(
+        "{stop_prefix}\n{}",
+        text::output_tail(&second.1, tails.output)
+    );
+    Err(Stop::new(SyncStopReason::SyncVerifyRed, message))
+}
+
+/// Writes one run's log and appends its `verify_ran` event.
+///
+/// Implements: rust-land/land-sync-verify
+fn record(archived: &Path, command: &str, run: &Run, tails: &Tails) -> Result<(), Stop> {
+    let log = write_log(archived, &run.1)?;
     append_event(
         &archived.join(".run").join("events").join("change.jsonl"),
         command,
-        duration,
+        run,
         log,
-        &output,
-        tails.marker,
-        tails.chars,
+        tails,
     )
 }
 
@@ -159,26 +172,24 @@ fn is_log_name(name: &str) -> bool {
         })
 }
 
-/// Appends the `verify_ran` event for a passing command.
+/// Appends the `verify_ran` event for one run.
 ///
 /// Implements: rust-land/land-sync-verify
 fn append_event(
     path: &Path,
     command: &str,
-    duration: Duration,
+    run: &Run,
     log: String,
-    output: &str,
-    max_lines: usize,
-    max_chars: usize,
+    tails: &Tails,
 ) -> Result<(), Stop> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|error| Stop::failed(error.to_string()))?;
     }
-    let millis = u64::try_from(duration.as_millis()).unwrap_or(u64::MAX);
-    let tail = tail_verify_output(output, max_lines, max_chars);
+    let millis = u64::try_from(run.2.as_millis()).unwrap_or(u64::MAX);
+    let tail = tail_verify_output(&run.1, tails.marker, tails.chars);
     let data = VerifyRanData {
         command: command.to_owned(),
-        exit_code: Some(0),
+        exit_code: Some(i64::from(run.0)),
         duration: Some(serde_json::Number::from(millis)),
         log: Some(log),
         verify_command: None,

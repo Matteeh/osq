@@ -387,7 +387,11 @@ not committed before the sync then survive a stop:
    and the same bound. A failure SHALL abort the merge and stop with
    `<folder>: verify of task <n> failed on osq/<folder> merged with <default
    branch>:` and the same tail. With `skipVerify` set it SHALL run no command.
-   For each passing command, it SHALL write the command's log and append to
+   A command whose run fails SHALL run once more at once on the same tree;
+   only when that second run also fails does the command fail as above, and
+   the stop's tail is the second run's output. For each run that passes, and
+   for a failed run followed by a passing one, it SHALL write the run's log
+   and append to
    the change folder's `.run/events/change.jsonl` a `verify_ran` event whose
    data holds `command`, `exitCode`, `duration` in milliseconds, `log`, the
    output's tail as `output` when that tail is not blank, and `task` for a
@@ -481,6 +485,14 @@ not committed before the sync then survive a stop:
 #### Scenario: Lock file that cannot be rebuilt
 - **WHEN** `002` is active, the merge conflicts only in `Cargo.lock`, and `002`'s new crate depends on `osq-no-such-crate = "1"`, which no offline registry holds
 - **THEN** the sync throws a `SyncStop` with reason `sync_failed` whose message starts `002-<words>: rebuilding Cargo.lock failed on osq/002-<words> merged with main:`, and the worktree's HEAD and status are unchanged
+
+#### Scenario: Verify passes on its second run
+- **WHEN** the merged tree makes an archived change's proposal `verify` fail on its first run after printing `first`, and pass on its second after printing `second`, through a marker file outside the worktree
+- **THEN** the sync commits `osq: <id> sync main`, and its `.run/events/change.jsonl` ends with a `verify_ran` event with a non-zero `exitCode` whose `output` holds `first`, a `verify_ran` event with `exitCode` 0 whose `output` holds `second`, each with its own `log`, then a `synced` event
+
+#### Scenario: Verify red on both runs
+- **WHEN** the merged tree makes an archived change's proposal `verify` print `run 1` on its first run and `run 2` on its second, failing both times
+- **THEN** the sync throws a `SyncStop` with reason `sync_verify_red` whose message holds `run 2` and not `run 1`, the verify ran exactly twice, and the worktree's HEAD and status are unchanged
 
 ### Requirement: Land refusals
 `landChange` in `src/core/vcs/land.ts` SHALL refuse, writing nothing, in this

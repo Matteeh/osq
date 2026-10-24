@@ -629,13 +629,17 @@ A verify that does not exit 0 SHALL stop the sync with the reason
 `sync_verify_red` and the message `<folder>: verify failed on
 osq/<folder> merged with <default branch>:`, a newline, and the output
 tail "Land sync" names; a check that does not exit 0 SHALL stop the same
-way with `check failed` in place of `verify failed`. For each command that
-exits 0, it SHALL write the whole output to the archived folder's
+way with `check failed` in place of `verify failed`. A command whose run
+does not exit 0 SHALL run once more at once in the same worktree, as
+TypeScript's `runSyncVerify` does; only when that second run also does not
+exit 0 does the command stop the sync as above, with the second run's
+output tail. For each run that exits 0, and for a run that did not exit 0
+followed by one that does, it SHALL write the whole output to the archived folder's
 `.run/logs/change-<k>.log`, where `<k>` is one more than the number of
 files in `.run/logs/` named `change-<digits>.log`, creating the folder and,
 when it is absent, `.run/logs/.gitignore` holding `*\n`. It SHALL then
 append a `verify_ran` event to `.run/events/change.jsonl` whose data is
-`command`, `exitCode` 0, `duration` in whole milliseconds, `log`
+`command`, `exitCode`, the run's exit code, `duration` in whole milliseconds, `log`
 `.run/logs/change-<k>.log`, and `output`, the output's tail, left out when
 that tail is empty. The tail is the output itself when its text with
 trailing whitespace dropped is not empty and has at most
@@ -663,6 +667,15 @@ TypeScript's `writeVerifyLog` and `tailVerifyOutput` with those limits,
 #### Scenario: Sync verify tail from the config
 - **WHEN** `land` runs as "Sync verify outcomes" runs it with the frontmatter line `verify: echo one; echo two; echo abcdefgh` and an `osq.toml` that also holds `markerOutputLines = 2` and `markerLineChars = 5` under `[limits]`
 - **THEN** the change lands, and the `verify_ran` event's `output` is `two\nabcde… (3 more characters)`, written with `\n` escapes
+
+#### Scenario: Sync verify runs twice
+- **WHEN** `land` runs as "Sync verify outcomes" runs it with the row's frontmatter line, where `<marker>` is a path in the test's scratch folder outside the worktree and absent before `land` runs
+- **THEN** `land` gives the row's result, and the archived folder's `.run/events/change.jsonl` on the branch's tip ends with the row's events:
+
+| Frontmatter | Result | Events |
+|---|---|---|
+| `verify: if [ -e <marker> ]; then echo second; else touch <marker>; echo first; exit 1; fi` | lands | `verify_ran` with `exitCode` 1, `log` `.run/logs/change-1.log` and `output` `first\n`, `verify_ran` with `exitCode` 0, `log` `.run/logs/change-2.log` and `output` `second\n`, then `synced` |
+| `verify: if [ -e <marker> ]; then echo run 2; exit 1; else touch <marker>; echo run 1; exit 1; fi` | `Failed` with `001-alpha-orders: verify failed on osq/001-alpha-orders merged with main:\nrun 2` | `regressed` with `reason` `sync_verify_red`, after the events the branch held before `land` ran |
 
 ### Requirement: Sync command
 `sync <id>` SHALL take the default branch into an archived change's
