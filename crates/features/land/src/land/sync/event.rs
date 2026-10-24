@@ -12,6 +12,8 @@ use super::{super::time, stop::Stop};
 
 /// Appends and stages the `synced` event, then gives nothing.
 ///
+/// `change_rel` is the change folder's worktree-relative path.
+///
 /// # Errors
 ///
 /// Returns a `sync_failed` stop when the event or its staging fails.
@@ -20,7 +22,7 @@ use super::{super::time, stop::Stop};
 pub(crate) fn synced(
     vcs: &GitVcs,
     path: &Path,
-    folder: &str,
+    change_rel: &str,
     default_branch: &str,
     commits: u64,
     start: Instant,
@@ -46,7 +48,7 @@ pub(crate) fn synced(
     let line = format!("{}\n", event_line(&envelope));
     file.write_all(line.as_bytes())
         .map_err(|error| Stop::failed(error.to_string()))?;
-    let relative = format!("openspec/changes/archive/{folder}/.run/events/change.jsonl");
+    let relative = format!("{change_rel}/.run/events/change.jsonl");
     vcs.stage(&[relative.as_str()])
         .map_err(|error| Stop::vcs(&error))
 }

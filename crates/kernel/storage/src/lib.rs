@@ -4,6 +4,7 @@
 
 pub mod model;
 pub mod read;
+pub mod scope;
 
 pub use model::{
     TaskOutcome, TrialLabels, build_read_model, read_trial_labels, replace_read_model,
@@ -23,4 +24,8 @@ pub use read::{
     read_manual_edits, read_now_facts, read_queue_titles, read_rejection_planner,
     read_result_disclosures, read_retry_context, read_task_history, read_task_sizes,
     read_usage_pause, read_watch_state, timestamp_ms, validator_failing, watch_state_dir,
+};
+pub use scope::{
+    DoneMarkerError, DoneScope, ScopeFile, ScopeHash, differing_scope_paths, read_done_scope,
+    refresh_done_marker, task_scope_hash,
 };

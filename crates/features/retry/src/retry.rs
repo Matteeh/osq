@@ -10,11 +10,9 @@ mod plan_edits;
 mod recertify;
 mod record;
 mod running;
-mod scope;
 mod text;
 mod time;
 mod vcs_detail;
-mod yaml;
 
 use std::path::Path;
 

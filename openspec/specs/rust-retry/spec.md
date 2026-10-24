@@ -273,56 +273,14 @@ characters followed by `… (<n> more characters)`, joined with a newline.
 - **THEN** it gives a `Failed` error for the command `retry` with the message `bogus is not an osq.toml key`, and every file in the copy apart from `osq.toml` is unchanged
 
 ### Requirement: Recertified done marker
-A recertification SHALL take the task's scope files as TypeScript's
-`resolveScope` does. Each `scope` entry is trimmed, its `\` turned into
-`/` and its leading `./` removed, repeatedly. An entry holding `*` or `?`,
-or ending in `/`, is a pattern; any other entry is exact.
-
-- A pattern searches below its root: the part before its first `*` or `?`
-  up to its last `/`, or the project when that part has no `/`, or for an
-  entry with neither the entry without its trailing `/`. A root that is
-  `..`, starts with `../` or is absolute gives nothing. Otherwise the
-  pattern gives every regular file below the root, symbolic links not
-  followed, whose project-relative path rust-specs `scope_covers_path`
-  matches with the entry, and a pattern that matches no file gives nothing.
-- An exact entry that starts with `/` or `../`, or is `..`, gives itself
-  with no hash. Otherwise it gives itself with the hash of the regular
-  file at that path, or no hash when that path is not a regular file or
-  is a symbolic link.
-
-The first result for a path wins, and the results are sorted by bytes. A
-file's hash is `sha256:` and the lowercase hex SHA-256 of its text read as
-UTF-8 with invalid bytes replaced, or no hash when it cannot be read. The
-scope hash is `sha256:` and the lowercase hex SHA-256 of one line
-`<path>:<hash>` per result, with an empty hash for no hash, joined with a
-newline.
-
-The rewrite SHALL keep the done marker's body and every frontmatter key in
-its place, as TypeScript's `refreshRecertifiedDoneMarker` does. It sets
-`original_scope_hash` to the recorded hash when that key is not a non-empty
-string, then `scope_hash` to the current scope hash, `scope_files` to a
-mapping of each result's path to its hash or null, `scope_resolver` to 2,
-`recertified_at` to the current time as an ISO 8601 UTC timestamp to the
-millisecond, and `recertification_count` to one more than its value when
-that is an integer above 0, or 1. A key the marker lacks is added at the
-end in that order. The marker is written as `---`, a newline, the
-frontmatter, `---`, a newline and the body.
-
-The frontmatter SHALL be written as the `yaml` package's `stringify`
-writes it: one `<key>: <value>` line per key; a non-empty mapping or list
-as a block on the lines below its key, indented two more spaces; a list
-item as `- ` and its value, where a mapping or list item starts on the
-dash's line and its later lines are indented two past the dash; `{}` for
-an empty mapping, `[]` for an empty list, `null`, `true`, `false`, an
-integer in decimal and a float as its source text. A key is written as a
-string, an integer key as its decimal text. A string is written plain
-when it is not empty, starts with an ASCII letter or digit, `.`, `_` or
-`/`, holds only ASCII letters and digits and `.`, `_`, `/`, `-`, `+`, `:`
-and `@`, does not end with `:`, and is not `null`, `Null`, `NULL`, `true`,
-`True`, `TRUE`, `false`, `False`, `FALSE`, an integer, a `0o` octal or
-`0x` hex integer, a float such as `1.5`, `.5` or `12e45`, `.inf`, `.Inf`,
-`.INF`, `.nan`, `.NaN` or `.NAN`; any other string is written as a JSON
-string.
+A recertification SHALL take the task's scope hash from rust-storage
+`task_scope_hash` of the tree root with the task file's `scope`, and, when
+the verify passes, rewrite the done marker with rust-storage
+`refresh_done_marker`, passing the recorded hash, that scope hash and the
+current time as an ISO 8601 UTC timestamp to the millisecond. A
+`DoneMarkerError` SHALL fail `retry` with a `Failed` error for the command
+`retry` whose message is its display. The retry crate SHALL keep no scope
+resolver, scope hash or frontmatter writer of its own.
 
 #### Scenario: Recertified scope files
 - **WHEN** a new copy of `crates/features/retry/tests/fixtures/recert-project/` has `openspec/changes/001-recert/tasks/4.md` rewritten to `---`, `title: t`, `verify: sh checks/pass.sh`, `scope:` and one `  - <entry as a JSON string>` line per row entry, then `---`, each line followed by a newline, and `.run/approved` rewritten to rust-storage `change_folder_seal` of that folder and a newline, and `retry` runs with `1`, `4`

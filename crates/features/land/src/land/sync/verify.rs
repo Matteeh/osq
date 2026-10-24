@@ -9,7 +9,7 @@ use osq_core::event::{Envelope, Event, SyncStopReason, VerifyRanData, event_line
 use osq_kernel_config::{Limits, Timeouts};
 use osq_kernel_specs::{Frontmatter, js_trim, parse_frontmatter, parse_proposal};
 
-use super::{super::time, command, stop::Stop, text};
+use super::{super::time, active::Picked, command, stop::Stop, text};
 
 /// The archived proposal's commands.
 #[derive(Default)]
@@ -22,6 +22,16 @@ struct Commands {
 
 /// One command run: its exit code, output and duration.
 type Run = (i32, String, Duration);
+
+/// The change folder one run records into, and its task and change env.
+struct Target<'a> {
+    /// The change folder holding `.run/logs` and `.run/events`.
+    folder: &'a Path,
+    /// The task the run belongs to, or none for an archived change.
+    task: Option<&'a str>,
+    /// The absolute change folder the run's `OSQ_CHANGE` holds.
+    change_env: Option<String>,
+}
 
 /// The sizes a stop tail and a `verify_ran` excerpt keep.
 struct Tails {
@@ -59,7 +69,11 @@ pub(crate) fn run(
             format!("{folder}: verify failed on osq/{folder} merged with {default_branch}:");
         one(
             worktree,
-            archived,
+            &Target {
+                folder: archived,
+                task: None,
+                change_env: None,
+            },
             &commands.verify,
             &prefix,
             timeouts,
@@ -69,7 +83,64 @@ pub(crate) fn run(
     if let Some(check) = commands.check.as_deref() {
         let prefix =
             format!("{folder}: check failed on osq/{folder} merged with {default_branch}:");
-        one(worktree, archived, check, &prefix, timeouts, &tails)?;
+        one(
+            worktree,
+            &Target {
+                folder: archived,
+                task: None,
+                change_env: None,
+            },
+            check,
+            &prefix,
+            timeouts,
+            &tails,
+        )?;
+    }
+    Ok(())
+}
+
+/// Runs each done task's verify on the merged tree, recording every pass.
+///
+/// # Errors
+///
+/// Returns a `sync_verify_red` stop when both runs of a task's verify fail.
+///
+/// Implements: rust-land/active-sync-verify
+pub(crate) fn run_active(
+    worktree: &Path,
+    change: &Path,
+    folder: &str,
+    default_branch: &str,
+    timeouts: &Timeouts,
+    limits: &Limits,
+    tasks: &[Picked],
+) -> Result<(), Stop> {
+    let tails = Tails {
+        output: usize::try_from(limits.card_output_lines).unwrap_or(usize::MAX),
+        marker: usize::try_from(limits.marker_output_lines).unwrap_or(usize::MAX),
+        chars: usize::try_from(limits.marker_line_chars).unwrap_or(usize::MAX),
+    };
+    let change_folder = change
+        .canonicalize()
+        .unwrap_or_else(|_| change.to_path_buf());
+    let change_folder = change_folder.to_string_lossy().into_owned();
+    for task in tasks {
+        let prefix = format!(
+            "{folder}: verify of task {} failed on osq/{folder} merged with {default_branch}:",
+            task.id
+        );
+        one(
+            worktree,
+            &Target {
+                folder: change,
+                task: Some(task.id.as_str()),
+                change_env: Some(change_folder.clone()),
+            },
+            &task.verify,
+            &prefix,
+            timeouts,
+            &tails,
+        )?;
     }
     Ok(())
 }
@@ -79,20 +150,20 @@ pub(crate) fn run(
 /// Implements: rust-land/land-sync-verify
 fn one(
     worktree: &Path,
-    archived: &Path,
+    target: &Target<'_>,
     command: &str,
     stop_prefix: &str,
     timeouts: &Timeouts,
     tails: &Tails,
 ) -> Result<(), Stop> {
-    let first = command::run_timed(worktree, command, timeouts);
+    let first = command::run_timed_with(worktree, command, timeouts, target.change_env.clone());
     if first.0 == 0 {
-        return record(archived, command, &first, tails);
+        return record(target, command, &first, tails);
     }
-    let second = command::run_timed(worktree, command, timeouts);
+    let second = command::run_timed_with(worktree, command, timeouts, target.change_env.clone());
     if second.0 == 0 {
-        record(archived, command, &first, tails)?;
-        return record(archived, command, &second, tails);
+        record(target, command, &first, tails)?;
+        return record(target, command, &second, tails);
     }
     let message = format!(
         "{stop_prefix}\n{}",
@@ -104,14 +175,19 @@ fn one(
 /// Writes one run's log and appends its `verify_ran` event.
 ///
 /// Implements: rust-land/land-sync-verify
-fn record(archived: &Path, command: &str, run: &Run, tails: &Tails) -> Result<(), Stop> {
-    let log = write_log(archived, &run.1)?;
+fn record(target: &Target<'_>, command: &str, run: &Run, tails: &Tails) -> Result<(), Stop> {
+    let log = write_log(target.folder, &run.1)?;
     append_event(
-        &archived.join(".run").join("events").join("change.jsonl"),
+        &target
+            .folder
+            .join(".run")
+            .join("events")
+            .join("change.jsonl"),
         command,
         run,
         log,
         tails,
+        target.task,
     )
 }
 
@@ -181,6 +257,7 @@ fn append_event(
     run: &Run,
     log: String,
     tails: &Tails,
+    task: Option<&str>,
 ) -> Result<(), Stop> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|error| Stop::failed(error.to_string()))?;
@@ -198,7 +275,7 @@ fn append_event(
         expected: None,
         mismatch: None,
         missing_paths: None,
-        task: None,
+        task: task.map(str::to_owned),
     };
     let envelope = Envelope {
         timestamp: time::format_utc(time::now_ms()),

@@ -7,12 +7,15 @@ use std::path::Path;
 use osq_kernel_specs::{MergedSpec, merge_change};
 use osq_kernel_vcs::{GitVcs, Vcs};
 
-use super::{files, stop::Stop, text};
+use super::{Kind, files, stop::Stop, text};
 
 /// The living specs folder under the worktree.
 const SPECS: &str = "openspec/specs";
 
-/// Resolves archive conflicts and reapplies the change's deltas.
+/// Resolves archive conflicts and writes the default branch's living specs.
+///
+/// An archived change then reapplies its deltas; an active change leaves the
+/// living specs with the default branch's text.
 ///
 /// # Errors
 ///
@@ -22,14 +25,15 @@ const SPECS: &str = "openspec/specs";
 pub(crate) fn rebuild(
     vcs: &GitVcs,
     worktree: &Path,
-    archived: &Path,
+    change: &Path,
+    kind: Kind,
     default_branch: &str,
     conflicts: &[String],
 ) -> Result<(), Stop> {
     let mut staged = BTreeSet::new();
     archive_conflicts(vcs, worktree, default_branch, conflicts, &mut staged)?;
     let mut capabilities = folders(&worktree.join(SPECS));
-    capabilities.extend(folders(&archived.join("specs")));
+    capabilities.extend(folders(&change.join("specs")));
     capabilities.sort();
     capabilities.dedup();
     for capability in capabilities {
@@ -46,7 +50,10 @@ pub(crate) fn rebuild(
         staged.insert(relative);
     }
     stage(vcs, &staged)?;
-    let merged = merge_change(archived, &worktree.join(SPECS))
+    if kind == Kind::Active {
+        return Ok(());
+    }
+    let merged = merge_change(change, &worktree.join(SPECS))
         .map_err(|error| Stop::failed(error.to_string()))?;
     for spec in &merged {
         apply(worktree, spec)?;

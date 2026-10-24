@@ -50,6 +50,28 @@ pub(crate) fn active_change<'a>(
         .find(|change| change.active && matches_folder(&change.folder, query))
 }
 
+/// The first matching active worktree change whose folder holds an approval.
+///
+/// Implements: rust-land/sync-command
+pub(crate) fn approved_change<'a>(
+    changes: &'a [WorktreeChange],
+    query: &str,
+) -> Option<&'a WorktreeChange> {
+    changes.iter().find(|change| {
+        change.active
+            && matches_folder(&change.folder, query)
+            && change
+                .path
+                .join("openspec")
+                .join("changes")
+                .join(&change.folder)
+                .join(".run")
+                .join("approved")
+                .symlink_metadata()
+                .is_ok()
+    })
+}
+
 /// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
 ///
 /// Implements: rust-land/land-lookup

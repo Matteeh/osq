@@ -140,9 +140,11 @@ fn sync_land(
         &change.path,
         folder,
         default_branch,
-        settings,
-        timeouts,
-        limits,
+        &sync::Controls {
+            settings,
+            timeouts,
+            limits,
+        },
         sync::Caller {
             command: LAND,
             records: true,

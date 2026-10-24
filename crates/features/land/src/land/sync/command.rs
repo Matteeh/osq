@@ -24,13 +24,28 @@ pub(crate) fn run(cwd: &Path, command: &str, timeouts: &Timeouts) -> (i32, Strin
 ///
 /// Implements: rust-land/land-sync-verify
 pub(crate) fn run_timed(cwd: &Path, command: &str, timeouts: &Timeouts) -> (i32, String, Duration) {
+    run_timed_with(cwd, command, timeouts, None)
+}
+
+/// Runs `command` in `cwd` with a change folder set, giving its run.
+///
+/// A start error counts as exit code 1 with its display as the output and no
+/// duration.
+///
+/// Implements: rust-land/active-sync-verify
+pub(crate) fn run_timed_with(
+    cwd: &Path,
+    command: &str,
+    timeouts: &Timeouts,
+    change: Option<String>,
+) -> (i32, String, Duration) {
     let request = VerifyRequest {
         command: command.to_owned(),
         cwd: cwd.to_path_buf(),
         source_env: std::env::vars().collect::<BTreeMap<_, _>>(),
         configured_env: Vec::new(),
         agent_env: Vec::new(),
-        change: None,
+        change,
         diff: None,
         extra_env: BTreeMap::new(),
         timeout: Some(timeouts.verify_timeout),

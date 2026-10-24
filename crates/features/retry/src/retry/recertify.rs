@@ -1,6 +1,5 @@
 //! Rerunning a scope regressed task's verify without an agent.
 
-mod done;
 mod fields;
 
 use std::collections::BTreeMap;
@@ -12,11 +11,12 @@ use osq_core::event::{Event, RecertificationData, RecertificationOutcome, Requeu
 use osq_kernel_config::load_config;
 use osq_kernel_harnesses::{VerifyRequest, run_verify};
 use osq_kernel_specs::read_task_file;
+use osq_kernel_storage::{refresh_done_marker, task_scope_hash};
 
 use super::marker::{Failure, Recertified};
 use super::record::{self, Recorded};
 use super::time::{format_utc, now_ms};
-use super::{excerpt, scope, text};
+use super::{excerpt, text};
 
 /// Reads the task, runs its verify, then recertifies or requeues it.
 ///
@@ -52,11 +52,12 @@ pub(crate) fn run(
         kill_grace: config.timeouts.harness_kill_grace,
     };
     let outcome = run_verify(&request).map_err(|error| text::failed(error.to_string()))?;
-    let current = scope::compute_hash(tree_root, &task_file.scope);
+    let current = task_scope_hash(tree_root, &task_file.scope);
     let passed = outcome.exit_code == 0;
     let now = format_utc(now_ms());
     if passed {
-        done::rewrite(folder, task, &recertified.recorded_hash, &current, &now)?;
+        refresh_done_marker(folder, task, &recertified.recorded_hash, &current, &now)
+            .map_err(|error| text::failed(error.to_string()))?;
     }
     let marker = fs::read_to_string(folder.join(".run/regressed").join(format!("{task}.md")))
         .map_err(|error| text::failed(format!("cannot read the regressed marker: {error}")))?;

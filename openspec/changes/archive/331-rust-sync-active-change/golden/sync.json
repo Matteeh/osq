@@ -1,0 +1,410 @@
+[
+  {
+    "name": "clean-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "current-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "osq/001-alpha-orders already has main\n",
+    "error": null,
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "spec-conflict-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "spec": "# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: Beta\nThe system SHALL beta.\n\n#### Scenario: Beta works\n- **WHEN** beta\n- **THEN** beta\n\n### Requirement: Alpha\nThe system SHALL alpha.\n\n#### Scenario: Alpha works\n- **WHEN** alpha\n- **THEN** alpha\n"
+  },
+  {
+    "name": "code-conflict-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "vcs-off-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "osq sync needs vcs.enabled and git",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "dirty-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "<wt> has uncommitted changes: notes.txt; commit or discard them first",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": " M notes.txt\n",
+    "regressed": false
+  },
+  {
+    "name": "run-dirt-001",
+    "query": "001",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/archive/001-alpha-orders/.run/extra\n",
+    "regressed": false
+  },
+  {
+    "name": "renamed-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "<wt> has uncommitted changes: moved.txt, notes.txt; commit or discard them first",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "R  notes.txt -> moved.txt\n",
+    "regressed": false
+  },
+  {
+    "name": "tasks-dirt-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/archive/001-alpha-orders/tasks.md\n",
+    "regressed": false
+  },
+  {
+    "name": "missing-2",
+    "query": "2",
+    "exit": 1,
+    "stdout": "",
+    "error": "No change \"2\" runs in an osq worktree",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "watcher-archived-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "a watcher runs for this project (pid <pid>); it syncs 001-alpha-orders before the change's next attempt, or stop it and run osq sync 1 again",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "active-recert-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "changeEvents": [
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo one",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-1.log",
+          "output": "one\n",
+          "task": "1"
+        }
+      },
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo three",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-2.log",
+          "output": "three\n",
+          "task": "3"
+        }
+      },
+      {
+        "type": "synced",
+        "timestamp": "<ts>",
+        "data": {
+          "defaultBranch": "main",
+          "commits": 1,
+          "duration": "<ms>"
+        }
+      }
+    ],
+    "taskEvents": [
+      {
+        "type": "recertification",
+        "timestamp": "<ts>",
+        "data": {
+          "task": "1",
+          "outcome": "passed",
+          "differingPaths": [
+            "src/three.txt (added)"
+          ],
+          "attribution": [
+            {
+              "path": "src/three.txt (added)",
+              "attribution": "sync"
+            }
+          ],
+          "command": "echo one",
+          "exitCode": 0,
+          "timedOut": false,
+          "recordedHash": "sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d",
+          "currentHash": "sha256:abd06aad734c595d9ca453314c581dd6103e868facbf06b6a39300d0cb11999a",
+          "automatic": true
+        }
+      }
+    ],
+    "done": "---\nscope_hash: sha256:abd06aad734c595d9ca453314c581dd6103e868facbf06b6a39300d0cb11999a\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\n  src/three.txt: sha256:f6936912184481f5edd4c304ce27c5a1a827804fc7f329f43d273b8621870776\nscope_resolver: 2\noriginal_scope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nrecertified_at: <ts>\nrecertification_count: 1\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-clean-001",
+    "query": "001",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "changeEvents": [
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo one",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-1.log",
+          "output": "one\n",
+          "task": "1"
+        }
+      },
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo three",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-2.log",
+          "output": "three\n",
+          "task": "3"
+        }
+      },
+      {
+        "type": "synced",
+        "timestamp": "<ts>",
+        "data": {
+          "defaultBranch": "main",
+          "commits": 1,
+          "duration": "<ms>"
+        }
+      }
+    ],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-current-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "osq/001-alpha-orders already has main\n",
+    "error": null,
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "changeEvents": [],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-red-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders: verify of task 3 failed on osq/001-alpha-orders merged with main:\nbroken",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/001-alpha-orders/.run/events/change.jsonl\n",
+    "regressed": false,
+    "changeEvents": [
+      {
+        "type": "sync_stopped",
+        "timestamp": "<ts>",
+        "data": {
+          "reason": "sync_verify_red",
+          "message": "001-alpha-orders: verify of task 3 failed on osq/001-alpha-orders merged with main:\nbroken",
+          "defaultBranch": "main"
+        }
+      }
+    ],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-code-conflict-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/001-alpha-orders/.run/events/change.jsonl\n",
+    "regressed": false,
+    "changeEvents": [
+      {
+        "type": "sync_stopped",
+        "timestamp": "<ts>",
+        "data": {
+          "reason": "sync_conflict",
+          "message": "001-alpha-orders: src/one.txt conflict with main; run osq plan 001, and approving the revised plan restarts osq/001-alpha-orders from main",
+          "defaultBranch": "main"
+        }
+      }
+    ],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-spec-001",
+    "query": "1",
+    "exit": 0,
+    "stdout": "Synced osq/001-alpha-orders with main\n",
+    "error": null,
+    "tip": "osq: 001 sync main\n\nOsq-Change: 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "spec": "# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: Beta\nThe system SHALL beta.\n\n#### Scenario: Beta works\n- **WHEN** beta\n- **THEN** beta\n",
+    "changeEvents": [
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo one",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-1.log",
+          "output": "one\n",
+          "task": "1"
+        }
+      },
+      {
+        "type": "verify_ran",
+        "timestamp": "<ts>",
+        "data": {
+          "command": "echo three",
+          "exitCode": 0,
+          "duration": "<ms>",
+          "log": ".run/logs/change-2.log",
+          "output": "three\n",
+          "task": "3"
+        }
+      },
+      {
+        "type": "synced",
+        "timestamp": "<ts>",
+        "data": {
+          "defaultBranch": "main",
+          "commits": 1,
+          "duration": "<ms>"
+        }
+      }
+    ],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-running-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "001-alpha-orders has a task running; run osq sync 1 after it ends",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/001-alpha-orders/.run/running/4.pid\n",
+    "regressed": false,
+    "changeEvents": [],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-dirty-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "<wt> has uncommitted changes: notes.txt; commit or discard them first",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": " M notes.txt\n?? openspec/changes/001-alpha-orders/.run/extra\n?? openspec/changes/001-alpha-orders/tasks.md\n",
+    "regressed": false,
+    "changeEvents": [],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-prepare-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "prepare failed in worktree <wt> on branch osq/001-alpha-orders:\nnope\n",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "?? openspec/changes/001-alpha-orders/.run/events/change.jsonl\n",
+    "regressed": false,
+    "changeEvents": [
+      {
+        "type": "sync_stopped",
+        "timestamp": "<ts>",
+        "data": {
+          "reason": "sync_failed",
+          "message": "prepare failed in worktree <wt> on branch osq/001-alpha-orders:\nnope\n",
+          "defaultBranch": "main"
+        }
+      }
+    ],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  },
+  {
+    "name": "active-unapproved-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "No change \"1\" runs in an osq worktree",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false
+  },
+  {
+    "name": "active-watcher-001",
+    "query": "1",
+    "exit": 1,
+    "stdout": "",
+    "error": "a watcher runs for this project (pid <pid>); it syncs 001-alpha-orders before the change's next attempt, or stop it and run osq sync 1 again",
+    "tip": "work on 001-alpha-orders\n\n",
+    "status": "",
+    "regressed": false,
+    "changeEvents": [],
+    "taskEvents": [],
+    "done": "---\nscope_hash: sha256:bcf9ceadb6fd71887cd9924852f82d36b559475e12a0bfcc6992681ed4fbe75d\nscope_files:\n  src/one.txt: sha256:27dd8ed44a83ff94d557f9fd0412ed5a8cbca69ea04922d88c01184a07300a5a\nscope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n"
+  }
+]

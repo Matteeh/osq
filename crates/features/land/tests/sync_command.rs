@@ -3,13 +3,18 @@
 mod support;
 
 use std::fs;
+use std::path::Path;
+use std::process::Command;
 
 use osq_core::FeatureError;
+use osq_kernel_storage::watch_state_dir;
 use serde_json::Value;
 use support::{ChangeTree, FIXTURE_FOLDER, LandRepo, fixture, orders_spec, run_args, scratch};
 
 /// The sync goldens' path.
 const SYNC_GOLDEN: &str = "sync-message-golden/sync.json";
+/// The marker that says the test runs in its own home.
+const HOME_MARKER: &str = "OSQ_SYNC_HOME";
 
 /// The archived folder of the fixture change.
 fn archived() -> String {
@@ -80,14 +85,97 @@ fn build(repo: &LandRepo, name: &str) -> ChangeTree {
             repo.main_file("other.txt", "other\n", "main adds other");
             change
         }
+        "watcher-archived-001" => {
+            let change = repo.add_fixture_change_committed();
+            repo.main_file("other.txt", "other\n", "main adds other");
+            change
+        }
         other => panic!("the sync golden names no repository for {other}"),
     }
 }
 
-/// Replaces the golden's worktree and head placeholders.
+/// Replaces the golden's worktree, head and pid placeholders.
 fn placeholders(text: &str, change: &ChangeTree, head: &str) -> String {
     text.replace("<wt>", &change.path.display().to_string())
         .replace("<head>", head)
+        .replace("<pid>", &std::process::id().to_string())
+}
+
+/// Writes a live watcher record for the checkout under `home`.
+fn write_watcher(root: &Path, home: &Path) {
+    let state = watch_state_dir(root, home);
+    fs::create_dir_all(&state).expect("the watch state folder is created");
+    fs::write(
+        state.join("watcher.json"),
+        format!(
+            "{{\"pid\":{},\"mode\":\"terminal\",\"version\":\"0.3.0\",\"commit\":\"abc1234\",\"startedAt\":\"2026-10-24T08:00:00.000Z\",\"waiting\":null}}\n",
+            std::process::id()
+        ),
+    )
+    .expect("the watcher record writes");
+}
+
+/// Checks one golden row and its branch tip, status and events.
+fn check_row(row: &Value, home: Option<&Path>) {
+    let name = row["name"].as_str().expect("a row has a name");
+    let query = row["query"].as_str().expect("a row has a query");
+    let repo = LandRepo::new(&format!("sync-{name}"));
+    let change = build(&repo, name);
+    if name.contains("watcher") {
+        write_watcher(
+            repo.checkout(),
+            home.expect("a watcher row has its own home"),
+        );
+    }
+    let head = repo.branch_head(&format!("osq/{FIXTURE_FOLDER}"));
+    let result = run_args(repo.checkout(), "sync", &[query]);
+    let expected = |key: &str| {
+        placeholders(
+            row[key].as_str().unwrap_or_else(|| panic!("{name}: {key}")),
+            &change,
+            &head,
+        )
+    };
+    if row["exit"].as_u64() == Some(0) {
+        let output = result
+            .unwrap_or_else(|error| panic!("{name}: {error}"))
+            .text;
+        assert_eq!(output, expected("stdout"), "{name}: stdout");
+    } else {
+        let error = result.expect_err(name);
+        match &error {
+            FeatureError::Failed {
+                command, message, ..
+            } => {
+                assert_eq!(command, "sync", "{name}: command");
+                assert_eq!(message, &expected("error"), "{name}: error");
+            }
+            other => panic!("{name}: expected a failed error, got {other:?}"),
+        }
+    }
+    let tip = repo.git(
+        repo.checkout(),
+        &["log", "-1", "--format=%B", &format!("osq/{FIXTURE_FOLDER}")],
+    );
+    assert_eq!(tip, expected("tip"), "{name}: tip");
+    let status = repo.git(
+        &change.path,
+        &["status", "--porcelain", "--untracked-files=all"],
+    );
+    assert_eq!(status, expected("status"), "{name}: status");
+    let regressed = repo.exists(
+        &change.path,
+        &format!("{}/.run/regressed/change.md", archived()),
+    );
+    assert_eq!(
+        regressed,
+        row["regressed"].as_bool().expect("a row says regressed"),
+        "{name}: regressed"
+    );
+    if let Some(spec) = row.get("spec").and_then(Value::as_str) {
+        let merged = repo.read(&change.path, "openspec/specs/orders/spec.md");
+        assert_eq!(merged, spec, "{name}: spec");
+    }
 }
 
 /// Proves every row of "Sync equals TypeScript's".
@@ -95,61 +183,36 @@ fn placeholders(text: &str, change: &ChangeTree, head: &str) -> String {
 /// Covers: rust-land/sync-equals-typescript-s
 #[test]
 fn sync_equals_typescript() {
+    if let Some(home) = std::env::var_os(HOME_MARKER).map(std::path::PathBuf::from) {
+        for row in rows().iter().filter(|row| {
+            row["name"]
+                .as_str()
+                .is_some_and(|name| name.contains("watcher") && !name.starts_with("active-"))
+        }) {
+            check_row(row, Some(&home));
+        }
+        return;
+    }
     for row in rows() {
         let name = row["name"].as_str().expect("a row has a name");
-        let query = row["query"].as_str().expect("a row has a query");
-        let repo = LandRepo::new(&format!("sync-{name}"));
-        let change = build(&repo, name);
-        let head = repo.branch_head(&format!("osq/{FIXTURE_FOLDER}"));
-        let result = run_args(repo.checkout(), "sync", &[query]);
-        let expected = |key: &str| {
-            placeholders(
-                row[key].as_str().unwrap_or_else(|| panic!("{name}: {key}")),
-                &change,
-                &head,
-            )
-        };
-        if row["exit"].as_u64() == Some(0) {
-            let output = result
-                .unwrap_or_else(|error| panic!("{name}: {error}"))
-                .text;
-            assert_eq!(output, expected("stdout"), "{name}: stdout");
-        } else {
-            let error = result.expect_err(name);
-            match &error {
-                FeatureError::Failed {
-                    command, message, ..
-                } => {
-                    assert_eq!(command, "sync", "{name}: command");
-                    assert_eq!(message, &expected("error"), "{name}: error");
-                }
-                other => panic!("{name}: expected a failed error, got {other:?}"),
-            }
+        if name.starts_with("active-") || name.contains("watcher") {
+            continue;
         }
-        let tip = repo.git(
-            repo.checkout(),
-            &["log", "-1", "--format=%B", &format!("osq/{FIXTURE_FOLDER}")],
-        );
-        assert_eq!(tip, expected("tip"), "{name}: tip");
-        let status = repo.git(
-            &change.path,
-            &["status", "--porcelain", "--untracked-files=all"],
-        );
-        assert_eq!(status, expected("status"), "{name}: status");
-        let regressed = repo.exists(
-            &change.path,
-            &format!("{}/.run/regressed/change.md", archived()),
-        );
-        assert_eq!(
-            regressed,
-            row["regressed"].as_bool().expect("a row says regressed"),
-            "{name}: regressed"
-        );
-        if let Some(spec) = row.get("spec").and_then(Value::as_str) {
-            let merged = repo.read(&change.path, "openspec/specs/orders/spec.md");
-            assert_eq!(merged, spec, "{name}: spec");
-        }
+        check_row(&row, None);
     }
+    spawn_home_child();
+}
+
+/// Runs the watcher rows in a child whose HOME is a fresh scratch folder.
+fn spawn_home_child() {
+    let home = scratch("sync-watcher-home");
+    let status = Command::new(std::env::current_exe().expect("the test binary is known"))
+        .args(["--exact", "sync_equals_typescript", "--nocapture"])
+        .env(HOME_MARKER, &home)
+        .env("HOME", &home)
+        .status()
+        .expect("the child starts");
+    assert!(status.success(), "the isolated-home child fails");
 }
 
 /// Proves every row of "Sync refusals Rust adds".
@@ -157,18 +220,19 @@ fn sync_equals_typescript() {
 /// Covers: rust-land/sync-refusals-rust-adds
 #[test]
 fn sync_refusals_rust_adds() {
-    let stacked = "000-base sha256:x\n000-more sha256:y\n";
     let rows = [
         (
-            "active",
-            "001-alpha-orders has not archived; Rust sync does not sync an active change yet",
-        ),
-        (
-            "stacked",
+            "archived",
+            "000-base sha256:x\n000-more sha256:y\n",
             "001-alpha-orders is stacked on 000-base, 000-more; Rust sync does not sync stacked changes yet",
         ),
+        (
+            "active",
+            "000-base sha256:x\n",
+            "001-alpha-orders is stacked on 000-base; Rust sync does not sync stacked changes yet",
+        ),
     ];
-    for (name, message) in rows {
+    for (name, stacked, message) in rows {
         let repo = LandRepo::new(&format!("sync-refusal-{name}"));
         let change = if name == "active" {
             repo.add_change_files(
@@ -181,6 +245,10 @@ fn sync_refusals_rust_adds() {
                     (
                         "openspec/changes/001-alpha-orders/.run/approved",
                         b"sha256:aaaa\n",
+                    ),
+                    (
+                        "openspec/changes/001-alpha-orders/.run/stacked-on",
+                        stacked.as_bytes(),
                     ),
                 ],
             )

@@ -1,0 +1,498 @@
+// Prints what TypeScript's `osq sync <id>` and `osq message <id>` give for
+// each row of rust-land "Sync equals TypeScript's", "Active sync equals
+// TypeScript's" and "Message equals TypeScript's".
+// Run from the repository root after `pnpm build`, as an .mjs copy:
+//   node print-sync-message-goldens.mjs <land change fixture> <golden folder>
+// <land change fixture> is
+// crates/features/land/tests/fixtures/land-change/001-alpha-orders.
+//
+// Each case builds a fresh scratch repository laid out as the land crate's
+// `LandRepo` lays one out: `<scratch>/checkout` on `main` with `src/one.txt`
+// holding `one\n` and `notes.txt` holding `notes\n`, committed as `initial`,
+// and an untracked `osq.toml` holding the case's `[vcs]` table. A worktree
+// change `<folder>` is a branch `osq/<folder>` cut from `main` with a worktree
+// at `<scratch>/worktrees/<folder>`, whose one more commit, `work on
+// <folder>`, writes `src/one.txt` holding `two\n` and its folder: the fixture
+// copied to `openspec/changes/archive/001-alpha-orders`, or the case's files
+// (the alpha change, the active change, or the files the case lists).
+// Every git command runs with GIT_CONFIG_GLOBAL=/dev/null and
+// GIT_CONFIG_NOSYSTEM=1, and HOME is a fresh `<scratch>/home`. The command
+// runs as `syncCommand` or `messageCommand` with `cwd` the checkout and the
+// config `defineConfig` gives for the case's `vcs` table, stdout captured;
+// stderr (the sync's progress line and the message's `Branch:` line) is not
+// recorded. A case's `prepare` is written as `prepare = <JSON string>` under
+// `[vcs]` too.
+//
+// The active change is `openspec/changes/001-alpha-orders` in the worktree
+// with `proposal.md`, `.run/approved` holding `sha256:aaaa\n`, and four
+// tasks, each `tasks/<n>.md` holding `---`, `title: Task <n>`,
+// `verify: <verify>`, `scope:`, `  - <scope>`, `---`, `## Acceptance`, a blank
+// line and `- [ ] Task <n> works.`. Task 1 (`echo one`, `src/**`) is done with
+// a marker recording the scope hash of the branch's tree, task 2 (`echo two`,
+// `src/one.txt`) is done with a manual marker, task 3 (`echo three`,
+// `src/one.txt`) is done with a marker that records no scope hash, and task 4
+// (`echo four`, `src/one.txt`) is pending. A case may replace a task's verify.
+//
+// Each golden row holds: `name`, `query`, `exit` (0, or 1 for a thrown
+// `CommandError`), `stdout`, `error` (the `CommandError` message, or null),
+// and for sync rows `tip` (the full message of `osq/<folder>`'s tip, as
+// `git log -1 --format=%B` prints it), `status` (`git status --porcelain
+// --untracked-files=all` in the worktree), `regressed`
+// (whether the archived folder holds `.run/regressed/change.md`) and, when the
+// case names one, `spec` (the worktree's `openspec/specs/orders/spec.md`).
+// An active row also holds `changeEvents` and `taskEvents`, the lines the
+// command added to the active folder's `.run/events/change.jsonl` and
+// `.run/events/1.jsonl`, each parsed with its `timestamp` written as `<ts>`
+// and a `data.duration` written as `<ms>`, and `done`, the worktree's
+// `.run/done/1` with a `recertified_at` value written as `<ts>`.
+// The worktree path is written as `<wt>`, the branch tip `osq/<folder>` had
+// before the command as `<head>`, and a watcher record's pid as `<pid>`.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+process.env.GIT_CONFIG_GLOBAL = '/dev/null';
+process.env.GIT_CONFIG_NOSYSTEM = '1';
+
+const DIST = path.resolve('dist');
+const { defineConfig } = await import(path.join(DIST, 'index.js'));
+const { syncCommand } = await import(path.join(DIST, 'cli', 'sync.js'));
+const { messageCommand } = await import(path.join(DIST, 'cli', 'message.js'));
+const { computeTaskScopeHash } = await import(path.join(DIST, 'core', 'run', 'scope-hash.js'));
+const { watchStateDir } = await import(path.join(DIST, 'core', 'run', 'watch-state.js'));
+
+const [fixture, golden] = process.argv.slice(2);
+const AUTHOR = 'osq <osq@example.invalid>';
+const FIXTURE = '001-alpha-orders';
+const ON = { enabled: true, author: AUTHOR };
+const OFF = { enabled: false };
+
+const PROPOSAL = '---\ntitle: A\n---\n## Verify\n\nx\n';
+const ALPHA_DELTA =
+  '## ADDED Requirements\n\n### Requirement: Alpha\nThe system SHALL alpha.\n\n#### Scenario: Alpha works\n- **WHEN** alpha\n- **THEN** alpha\n';
+
+/** The orders spec with one requirement, as the land sync tests write it. */
+function ordersSpec(name) {
+  const lower = name.toLowerCase();
+  return `# orders Specification\n\n## Purpose\n\nOrders.\n\n## Requirements\n\n### Requirement: ${name}\nThe system SHALL ${lower}.\n\n#### Scenario: ${name} works\n- **WHEN** ${lower}\n- **THEN** ${lower}\n`;
+}
+
+function git(cwd, args) {
+  const run = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  if (run.status !== 0) throw new Error(`git ${args.join(' ')}: ${run.stderr}`);
+  return run.stdout;
+}
+
+function write(dir, relative, text) {
+  const target = path.join(dir, relative);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, text);
+}
+
+function vcsToml(vcs) {
+  if (!vcs.enabled) return '[vcs]\nenabled = false\n';
+  const prepare = vcs.prepare === undefined ? '' : `prepare = ${JSON.stringify(vcs.prepare)}\n`;
+  return `[vcs]\nenabled = true\nauthor = "${AUTHOR}"\n${prepare}`;
+}
+
+function checkout(scratch, vcs) {
+  const root = path.join(scratch, 'checkout');
+  fs.mkdirSync(root, { recursive: true });
+  git(root, ['init', '-q', '-b', 'main']);
+  git(root, ['config', 'user.name', 'Osq Test']);
+  git(root, ['config', 'user.email', 'osq@example.com']);
+  git(root, ['config', 'commit.gpgSign', 'false']);
+  write(root, 'src/one.txt', 'one\n');
+  write(root, 'notes.txt', 'notes\n');
+  git(root, ['add', '--', 'src/one.txt', 'notes.txt']);
+  git(root, ['commit', '-q', '-m', 'initial']);
+  write(root, 'osq.toml', vcsToml(vcs));
+  return root;
+}
+
+/**
+ * Adds a worktree change; `files` maps paths under the worktree to text, and
+ * `before(tree)` writes more files after them, before the commit.
+ */
+async function worktreeChange(scratch, root, folder, files, before) {
+  const tree = path.join(scratch, 'worktrees', folder);
+  fs.mkdirSync(path.dirname(tree), { recursive: true });
+  git(root, ['worktree', 'add', '-q', '-b', `osq/${folder}`, tree, 'main']);
+  write(tree, 'src/one.txt', 'two\n');
+  if (files === null) {
+    fs.cpSync(fixture, path.join(tree, 'openspec', 'changes', 'archive', FIXTURE), {
+      recursive: true,
+    });
+  } else {
+    for (const [relative, text] of Object.entries(files)) write(tree, relative, text);
+  }
+  if (before) await before(tree);
+  git(tree, ['add', '-A']);
+  git(tree, ['commit', '-q', '-m', `work on ${folder}`]);
+  return tree;
+}
+
+function mainCommit(root, relative, text, message) {
+  write(root, relative, text);
+  git(root, ['add', '--', relative]);
+  git(root, ['commit', '-q', '-m', message]);
+}
+
+const archive = (folder, relative) => `openspec/changes/archive/${folder}/${relative}`;
+const active = (relative) => `openspec/changes/${FIXTURE}/${relative}`;
+
+// The alpha change: an archived change whose delta adds `Alpha` to `orders`,
+// with the living spec archive wrote on its branch.
+const ALPHA_CHANGE = {
+  [archive(FIXTURE, 'proposal.md')]: PROPOSAL,
+  [archive(FIXTURE, 'specs/orders/spec.md')]: ALPHA_DELTA,
+  'openspec/specs/orders/spec.md': ordersSpec('Alpha'),
+};
+
+/** One task file of the active change. */
+function taskFile(n, verify, scope) {
+  return `---\ntitle: Task ${n}\nverify: ${verify}\nscope:\n  - ${scope}\n---\n## Acceptance\n\n- [ ] Task ${n} works.\n`;
+}
+
+const ACTIVE_VERIFIES = { 1: 'echo one', 2: 'echo two', 3: 'echo three', 4: 'echo four' };
+const ACTIVE_SCOPES = { 1: 'src/**', 2: 'src/one.txt', 3: 'src/one.txt', 4: 'src/one.txt' };
+
+/** The active change's files, with `verifies` replacing task verifies. */
+function activeChange(verifies = {}, extra = {}) {
+  const files = {
+    [active('proposal.md')]: '---\ntitle: A\nverify: echo change\n---\n## Verify\n\nx\n',
+    [active('.run/approved')]: 'sha256:aaaa\n',
+    [active('.run/done/2')]: '---\nmanual: true\n---\n2026-10-20T08:00:00.000Z\n',
+    [active('.run/done/3')]: '---\nverified_by: watcher\n---\n2026-10-20T08:00:00.000Z\n',
+    ...extra,
+  };
+  for (const n of [1, 2, 3, 4]) {
+    files[active(`tasks/${n}.md`)] = taskFile(n, verifies[n] ?? ACTIVE_VERIFIES[n], ACTIVE_SCOPES[n]);
+  }
+  return files;
+}
+
+/** Writes task 1's done marker with the scope hash of the tree as it is. */
+async function markTaskOneDone(tree) {
+  const hash = await computeTaskScopeHash(tree, [ACTIVE_SCOPES[1]]);
+  const files = Object.entries(hash.fileHashes)
+    .map(([file, value]) => `  ${file}: ${value}\n`)
+    .join('');
+  write(
+    tree,
+    active('.run/done/1'),
+    `---\nscope_hash: ${hash.hash}\nscope_files:\n${files}scope_resolver: 2\n---\n2026-10-20T08:00:00.000Z\n`,
+  );
+}
+
+/** Writes a live watcher record for the checkout under the case's HOME. */
+async function liveWatcher(root, home) {
+  const dir = await watchStateDir(root, home);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'watcher.json'),
+    `${JSON.stringify({ pid: process.pid, mode: 'terminal', version: '0.3.0', commit: 'abc1234', startedAt: '2026-10-24T08:00:00.000Z', waiting: null })}\n`,
+  );
+}
+
+const syncCases = [
+  {
+    name: 'clean-001',
+    query: '1',
+    files: ALPHA_CHANGE,
+    setup(root, tree) {
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  { name: 'current-001', query: '1', setup() {} },
+  {
+    name: 'spec-conflict-001',
+    query: '1',
+    files: ALPHA_CHANGE,
+    spec: true,
+    setup(root) {
+      mainCommit(root, 'openspec/specs/orders/spec.md', ordersSpec('Beta'), 'main adds beta');
+    },
+  },
+  {
+    name: 'code-conflict-001',
+    query: '1',
+    setup(root) {
+      mainCommit(root, 'src/one.txt', 'main\n', 'main edits one');
+    },
+  },
+  { name: 'vcs-off-001', query: '1', vcs: OFF, setup() {} },
+  {
+    name: 'dirty-001',
+    query: '1',
+    setup(root, tree) {
+      write(tree, 'notes.txt', 'dirty\n');
+    },
+  },
+  {
+    name: 'run-dirt-001',
+    query: '001',
+    files: ALPHA_CHANGE,
+    setup(root, tree) {
+      write(tree, archive(FIXTURE, '.run/extra'), 'extra\n');
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'renamed-001',
+    query: '1',
+    setup(root, tree) {
+      git(tree, ['mv', 'notes.txt', 'moved.txt']);
+    },
+  },
+  {
+    name: 'tasks-dirt-001',
+    query: '1',
+    files: ALPHA_CHANGE,
+    setup(root, tree) {
+      write(tree, archive(FIXTURE, 'tasks.md'), '# Tasks\n');
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  { name: 'missing-2', query: '2', setup() {} },
+  {
+    name: 'watcher-archived-001',
+    query: '1',
+    async setup(root, tree, home) {
+      await liveWatcher(root, home);
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-recert-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'src/three.txt', 'three\n', 'main adds three');
+    },
+  },
+  {
+    name: 'active-clean-001',
+    query: '001',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-current-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup() {},
+  },
+  {
+    name: 'active-red-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange({ 3: 'echo broken; exit 1' }),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'src/three.txt', 'three\n', 'main adds three');
+    },
+  },
+  {
+    name: 'active-code-conflict-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'src/one.txt', 'main\n', 'main edits one');
+    },
+  },
+  {
+    name: 'active-spec-001',
+    query: '1',
+    activeRow: true,
+    spec: true,
+    files: activeChange({}, { [active('specs/orders/spec.md')]: ALPHA_DELTA }),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'openspec/specs/orders/spec.md', ordersSpec('Beta'), 'main adds beta');
+    },
+  },
+  {
+    name: 'active-running-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root, tree) {
+      write(tree, active('.run/running/4.pid'), '{"pid":1,"startedAt":1}\n');
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-dirty-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root, tree) {
+      write(tree, active('tasks.md'), '# Tasks\n');
+      write(tree, active('.run/extra'), 'extra\n');
+      write(tree, 'notes.txt', 'dirty\n');
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-prepare-001',
+    query: '1',
+    activeRow: true,
+    vcs: { ...ON, prepare: 'echo nope; exit 1' },
+    files: activeChange(),
+    before: markTaskOneDone,
+    setup(root) {
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-unapproved-001',
+    query: '1',
+    files: { [active('proposal.md')]: PROPOSAL },
+    setup(root) {
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+  {
+    name: 'active-watcher-001',
+    query: '1',
+    activeRow: true,
+    files: activeChange(),
+    before: markTaskOneDone,
+    async setup(root, tree, home) {
+      await liveWatcher(root, home);
+      mainCommit(root, 'other.txt', 'other\n', 'main adds other');
+    },
+  },
+];
+
+const messageCases = [
+  { name: 'fixture-001', query: '1' },
+  { name: 'bare-001', query: '001', folder: '001', files: { [archive('001', 'proposal.md')]: PROPOSAL } },
+  { name: 'vcs-off-001', query: '1', vcs: OFF },
+  {
+    name: 'active-001',
+    query: '1',
+    files: {
+      [`openspec/changes/${FIXTURE}/proposal.md`]: '---\ntitle: A\n---\n',
+      [`openspec/changes/${FIXTURE}/.run/approved`]: 'sha256:aaaa\n',
+    },
+  },
+  { name: 'missing-2', query: '2' },
+];
+
+async function capture(run) {
+  let stdout = '';
+  try {
+    await run({ stdout: (text) => (stdout += text), stderr: () => {} });
+    return { exit: 0, stdout, error: null };
+  } catch (error) {
+    if (error?.name !== 'CommandError') throw error;
+    return { exit: error.exitCode, stdout, error: error.message };
+  }
+}
+
+function scratchFolder() {
+  return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'osq-sync-message-')));
+}
+
+function placeholders(text, tree, head) {
+  if (typeof text !== 'string') return text;
+  let out = text;
+  if (tree !== null) out = out.split(tree).join('<wt>');
+  if (head !== null) out = out.split(head).join('<head>');
+  return out.split(`pid ${process.pid}`).join('pid <pid>');
+}
+
+function readText(file) {
+  return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+}
+
+/** The lines `after` adds to `before`, parsed, with run-specific values replaced. */
+function addedEvents(before, after, tree) {
+  return after
+    .slice(before.length)
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const event = JSON.parse(placeholders(line, tree, null));
+      event.timestamp = '<ts>';
+      if (event.data && typeof event.data.duration === 'number') event.data.duration = '<ms>';
+      return event;
+    });
+}
+
+const syncRows = [];
+for (const c of syncCases) {
+  const scratch = scratchFolder();
+  const home = path.join(scratch, 'home');
+  fs.mkdirSync(home, { recursive: true });
+  process.env.HOME = home;
+  const vcs = c.vcs ?? ON;
+  const root = checkout(scratch, vcs);
+  const folder = FIXTURE;
+  const tree = await worktreeChange(scratch, root, folder, c.files ?? null, c.before);
+  await c.setup(root, tree, home);
+  const head = git(root, ['rev-parse', `osq/${folder}`]).trim();
+  const changeEventsPath = path.join(tree, active('.run/events/change.jsonl'));
+  const taskEventsPath = path.join(tree, active('.run/events/1.jsonl'));
+  const changeBefore = readText(changeEventsPath);
+  const taskBefore = readText(taskEventsPath);
+  const config = defineConfig({ vcs });
+  const result = await capture((io) => syncCommand(c.query, { cwd: root, config, ...io }));
+  const row = {
+    name: c.name,
+    query: c.query,
+    ...result,
+    tip: git(root, ['log', '-1', '--format=%B', `osq/${folder}`]),
+    status: git(tree, ['status', '--porcelain', '--untracked-files=all']),
+    regressed: fs.existsSync(path.join(tree, archive(folder, '.run/regressed/change.md'))),
+  };
+  if (c.spec) row.spec = fs.readFileSync(path.join(tree, 'openspec/specs/orders/spec.md'), 'utf8');
+  if (c.activeRow) {
+    row.changeEvents = addedEvents(changeBefore, readText(changeEventsPath), tree);
+    row.taskEvents = addedEvents(taskBefore, readText(taskEventsPath), tree);
+    row.done = readText(path.join(tree, active('.run/done/1'))).replace(
+      /^recertified_at: .*$/m,
+      'recertified_at: <ts>',
+    );
+  }
+  for (const key of ['stdout', 'error', 'tip', 'status']) row[key] = placeholders(row[key], tree, head);
+  syncRows.push(row);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}
+
+const messageRows = [];
+for (const c of messageCases) {
+  const scratch = scratchFolder();
+  const home = path.join(scratch, 'home');
+  fs.mkdirSync(home, { recursive: true });
+  process.env.HOME = home;
+  const vcs = c.vcs ?? ON;
+  const root = checkout(scratch, vcs);
+  const folder = c.folder ?? FIXTURE;
+  const tree = await worktreeChange(scratch, root, folder, c.files ?? null);
+  const head = git(root, ['rev-parse', `osq/${folder}`]).trim();
+  const config = defineConfig({ vcs });
+  const result = await capture((io) => messageCommand(c.query, { cwd: root, config, ...io }));
+  const row = { name: c.name, query: c.query, ...result };
+  for (const key of ['stdout', 'error']) row[key] = placeholders(row[key], tree, head);
+  messageRows.push(row);
+  fs.rmSync(scratch, { recursive: true, force: true });
+}
+
+fs.writeFileSync(path.join(golden, 'sync.json'), `${JSON.stringify(syncRows, null, 2)}\n`);
+fs.writeFileSync(path.join(golden, 'message.json'), `${JSON.stringify(messageRows, null, 2)}\n`);

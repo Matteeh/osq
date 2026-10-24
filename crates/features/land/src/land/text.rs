@@ -39,13 +39,6 @@ pub(crate) fn no_archived(query: &str) -> String {
     format!("No archived change \"{query}\" in an osq worktree")
 }
 
-/// The sync's refusal for a worktree change that has not archived.
-///
-/// Implements: rust-land/sync-command
-pub(crate) fn sync_not_archived(folder: &str) -> String {
-    format!("{folder} has not archived; Rust sync does not sync an active change yet")
-}
-
 /// The sync's refusal when no osq worktree change matches `query`.
 ///
 /// Implements: rust-land/sync-command
