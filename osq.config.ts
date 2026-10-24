@@ -24,7 +24,7 @@ export default defineConfig({
     agent: 'osq-coder',
     variant: 'high',
   },
-  validator: { harness: 'claude', model: 'claude-opus-5-5' },
+  validator: { harness: 'claude', model: 'claude-sonnet-5-5' },
   notices: {
     rulePaths: ['src/harness/prompt.ts', 'src/core/foundation/init-blocks.ts'],
   },
