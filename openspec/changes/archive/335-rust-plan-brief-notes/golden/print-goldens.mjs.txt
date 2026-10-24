@@ -1,0 +1,54 @@
+// Prints the `osq plan <name> --brief <file>` goldens of change 335 with
+// TypeScript's built CLI, `dist/cli/bin.js`, on scratch copies of the plan
+// crate's fixture `crates/features/plan/tests/fixtures/plan-repo`.
+//
+// After `pnpm build`, copy this file to a scratch `.mjs` file and run it with
+// the repository root as its argument:
+//   node <scratch>/print-goldens.mjs "$PWD"
+//
+// It writes into this golden folder:
+// - `005-add-dark-mode/`: the folder `osq plan "Add dark mode!" --brief
+//   brief-in.md` creates, without its `.run/` folder, with `tasks.md` renamed
+//   to `tasks-md.txt` so the change folder holds no nested `tasks.md`;
+// - `handoff.txt`: that command's stdout, the scratch root written `<root>`;
+// - `print.txt`: the stdout of the same command with `--print` added.
+// TypeScript dates `brief.md` with the day it runs; these were printed on
+// 2026-10-24.
+
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const repo = process.argv[2] ?? process.cwd();
+const bin = path.join(repo, 'dist/cli/bin.js');
+const fixture = path.join(repo, 'crates/features/plan/tests/fixtures/plan-repo');
+const golden = path.join(repo, 'openspec/changes/335-rust-plan-brief-notes/golden');
+const brief = path.join(golden, 'brief-in.md');
+
+/** Runs the plan command on a fresh scratch copy and returns its root and stdout. */
+function run(extra) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'osq-335-'));
+  fs.cpSync(fixture, root, { recursive: true });
+  fs.copyFileSync(brief, path.join(root, 'brief-in.md'));
+  const stdout = execFileSync(
+    process.execPath,
+    [bin, 'plan', 'Add dark mode!', '--brief', 'brief-in.md', ...extra],
+    { cwd: root, encoding: 'utf8' },
+  );
+  return { root, stdout: stdout.split(root).join('<root>') };
+}
+
+const plain = run([]);
+fs.writeFileSync(path.join(golden, 'handoff.txt'), plain.stdout);
+const created = path.join(plain.root, 'openspec/changes/005-add-dark-mode');
+const out = path.join(golden, '005-add-dark-mode');
+fs.rmSync(out, { recursive: true, force: true });
+fs.cpSync(created, out, {
+  recursive: true,
+  filter: (source) => path.basename(source) !== '.run',
+});
+fs.renameSync(path.join(out, 'tasks.md'), path.join(out, 'tasks-md.txt'));
+
+const printed = run(['--print']);
+fs.writeFileSync(path.join(golden, 'print.txt'), printed.stdout);

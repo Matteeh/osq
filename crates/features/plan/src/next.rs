@@ -1,9 +1,9 @@
 //! The `plan --next` command: choose an item, write its change folder and hand off.
 
-mod date;
-mod files;
+pub(crate) mod date;
+pub(crate) mod files;
 pub(crate) mod handoff;
-mod number;
+pub(crate) mod number;
 mod prompt;
 mod report;
 mod select;
@@ -26,7 +26,12 @@ use crate::queue::{self, Groups};
 /// Implements: rust-plan/change-folder-files
 /// Implements: rust-plan/plan-handoff
 /// Implements: rust-plan/plan-prompt
-pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String, FeatureError> {
+pub(crate) fn run_next(
+    root: &Path,
+    now_ms: i64,
+    replan: bool,
+    print: bool,
+) -> Result<String, FeatureError> {
     let config =
         load_config(root).map_err(|error| FeatureError::failed("plan", error.to_string()))?;
     let git_root = project_git_root(root, &config)
@@ -54,10 +59,11 @@ pub(crate) fn run_next(root: &Path, now_ms: i64, replan: bool) -> Result<String,
     let prompt = opening_prompt(root, &number, title.as_deref(), &folder, &paths, &brief);
     let change = root.join("openspec").join("changes").join(&folder);
     write_folder(&change, &proposal, &brief)?;
-    write(
-        &change.join("plan-prompt.md"),
-        &format!("{prompt}\n\n{sections}"),
-    )?;
+    let text = format!("{prompt}\n\n{sections}");
+    if print {
+        return Ok(format!("{text}\n"));
+    }
+    write(&change.join("plan-prompt.md"), &text)?;
     let command = root
         .join(".claude")
         .join("commands")
@@ -88,7 +94,7 @@ fn active_changes(root: &Path) -> Vec<(String, ChangeSnapshot)> {
 /// Writes a new change folder's proposal, tasks, first task and brief.
 ///
 /// Implements: rust-plan/change-folder-files
-fn write_folder(change: &Path, proposal: &str, brief: &str) -> Result<(), FeatureError> {
+pub(crate) fn write_folder(change: &Path, proposal: &str, brief: &str) -> Result<(), FeatureError> {
     let tasks = change.join("tasks");
     std::fs::create_dir_all(&tasks).map_err(|source| write_error(&tasks, &source))?;
     write(&change.join("proposal.md"), proposal)?;
@@ -100,7 +106,7 @@ fn write_folder(change: &Path, proposal: &str, brief: &str) -> Result<(), Featur
 /// Writes one file, naming it when the write fails.
 ///
 /// Implements: rust-plan/change-folder-files
-fn write(path: &Path, text: &str) -> Result<(), FeatureError> {
+pub(crate) fn write(path: &Path, text: &str) -> Result<(), FeatureError> {
     std::fs::write(path, text).map_err(|source| write_error(path, &source))
 }
 

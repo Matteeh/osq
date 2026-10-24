@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use osq_core::{Command, Feature, FeatureError, Invocation, Output};
 
 use crate::arguments::{Arguments, parse};
-use crate::{next, queue, steer};
+use crate::{new, next, queue, steer};
 
 /// The plan feature.
 ///
@@ -53,7 +53,7 @@ impl Feature for PlanFeature {
             Command::new(
                 "plan",
                 "prepare a change and hand off its opening prompt to your planning tool",
-                "--next [--replan] | <id>",
+                "--next [--replan] [--print] | <id> [--print] | <name> --brief <file> [--print]",
             ),
         ]
     }
@@ -81,10 +81,15 @@ impl Feature for PlanFeature {
         }
         let now_ms = self.now_ms.unwrap_or_else(system_now_ms);
         match parse(&invocation.args)? {
-            Arguments::Next { replan } => {
-                next::run_next(&invocation.root, now_ms, replan).map(Output::text)
+            Arguments::Next { replan, print } => {
+                next::run_next(&invocation.root, now_ms, replan, print).map(Output::text)
             }
-            Arguments::Steer(id) => steer::run_steer(&invocation.root, &id).map(Output::text),
+            Arguments::Steer { name, brief, print } => match brief {
+                Some(brief) => {
+                    new::run_new(&invocation.root, &name, &brief, now_ms, print).map(Output::text)
+                }
+                None => steer::run_steer(&invocation.root, &name, print).map(Output::text),
+            },
         }
     }
 }

@@ -3,7 +3,7 @@
 use crate::queue::QueueItem;
 
 /// The proposal template TypeScript's `FALLBACK_PROPOSAL_MD` holds.
-pub(super) const PROPOSAL: &str = r#"---
+pub(crate) const PROPOSAL: &str = r#"---
 title: Change title
 depends_on: []
 verify: node -e "process.exit(0)"
@@ -85,11 +85,11 @@ The <capability> capability SHALL own <subsystems>.
 "#;
 
 /// The tasks template TypeScript's `FALLBACK_TASKS_MD` holds.
-pub(super) const TASKS_MD: &str =
+pub(crate) const TASKS_MD: &str =
     "# Tasks\n\n## 1. Section title\n\n- [ ] 1. When initial condition, expected outcome\n";
 
 /// The first task TypeScript's `FALLBACK_TASK_1_MD` holds.
-pub(super) const TASK_1_MD: &str = r#"---
+pub(crate) const TASK_1_MD: &str = r#"---
 title: When initial condition, expected outcome
 verify: node -e "process.exit(0)"
 scope: []

@@ -4,6 +4,7 @@
 
 mod arguments;
 mod feature;
+mod new;
 mod next;
 mod queue;
 mod steer;

@@ -1,0 +1,6 @@
+<root>/openspec/changes/005-add-dark-mode: ask your planning tool to plan change 005-add-dark-mode — next: unplanned — osq plan 005
+
+Paste this into a new agent session to plan it:
+
+You are the planner for osq change 005-add-dark-mode.
+Read <root>/openspec/changes/005-add-dark-mode/plan-prompt.md and follow it exactly; it is your complete prompt.

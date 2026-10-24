@@ -10,13 +10,13 @@ use osq_kernel_vcs::project_git_root;
 use crate::trees;
 
 /// One change the lookup may steer, with the root of the tree it sits in.
-pub(super) struct Found {
+pub(crate) struct Found {
     /// The change folder.
-    pub(super) entry: ChangeEntry,
+    pub(crate) entry: ChangeEntry,
     /// The root of the tree the change sits in.
-    pub(super) tree_root: PathBuf,
+    pub(crate) tree_root: PathBuf,
     /// Whether the tree names the change folder.
-    pub(super) named: bool,
+    pub(crate) named: bool,
 }
 
 /// Reads the root's config and lists every change the lookup may steer, with
@@ -28,7 +28,7 @@ pub(super) struct Found {
 /// refusal when the root is not its repository's top level.
 ///
 /// Implements: rust-plan/steering-lookup
-pub(super) fn candidates(
+pub(crate) fn candidates(
     root: &Path,
 ) -> Result<(Config, Option<PathBuf>, Vec<Found>), FeatureError> {
     let config =
@@ -72,7 +72,7 @@ fn found_in(trees: &[ChangeTree]) -> Vec<Found> {
 /// Whether a folder name matches a query as TypeScript's `matchesFolder` does.
 ///
 /// Implements: rust-plan/steering-lookup
-pub(super) fn matches(folder: &str, query: &str) -> bool {
+pub(crate) fn matches(folder: &str, query: &str) -> bool {
     let trimmed = query.trim();
     let padded = padded(trimmed);
     matches_prefix(folder, trimmed) || matches_prefix(folder, &padded)

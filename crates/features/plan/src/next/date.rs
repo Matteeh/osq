@@ -3,7 +3,7 @@
 /// The `YYYY-MM-DD` UTC date of an epoch-millisecond time.
 ///
 /// Implements: rust-plan/change-folder-files
-pub(super) fn utc_date(now_ms: i64) -> String {
+pub(crate) fn utc_date(now_ms: i64) -> String {
     let days = now_ms.div_euclid(86_400_000);
     let (year, month, day) = civil_from_days(days);
     format!("{year:04}-{month:02}-{day:02}")

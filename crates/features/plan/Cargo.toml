@@ -17,3 +17,4 @@ osq-kernel-specs.workspace = true
 osq-kernel-storage.workspace = true
 osq-kernel-vcs.workspace = true
 sha2.workspace = true
+yaml-rust2.workspace = true

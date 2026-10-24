@@ -1,6 +1,6 @@
 //! The `plan <id>` command: write a steered change's prompt and hand it off.
 
-mod lookup;
+pub(crate) mod lookup;
 mod prompt;
 mod requirements;
 mod triggers;
@@ -23,13 +23,13 @@ use self::prompt::Steer;
 /// Implements: rust-plan/steering-prompt
 /// Implements: rust-plan/steering-handoff
 /// Implements: rust-plan/steering-in-worktrees
-pub(crate) fn run_steer(root: &Path, id: &str) -> Result<String, FeatureError> {
+pub(crate) fn run_steer(root: &Path, id: &str, print: bool) -> Result<String, FeatureError> {
     let (config, git_root, found) = lookup::candidates(root)?;
     if let Some(found) = found.iter().find(|found| active(found, id)) {
-        return steer(root, &config, found, id);
+        return steer(root, &config, found, id, print);
     }
     if git_root.is_some() {
-        return steer_archived(root, &config, &found, id);
+        return steer_archived(root, &config, &found, id, print);
     }
     Err(nothing(id))
 }
@@ -37,7 +37,13 @@ pub(crate) fn run_steer(root: &Path, id: &str) -> Result<String, FeatureError> {
 /// Steers an active change, or refuses it for having no trigger.
 ///
 /// Implements: rust-plan/steering-lookup
-fn steer(root: &Path, config: &Config, found: &Found, id: &str) -> Result<String, FeatureError> {
+fn steer(
+    root: &Path,
+    config: &Config,
+    found: &Found,
+    id: &str,
+    print: bool,
+) -> Result<String, FeatureError> {
     let snapshot = read(found)?;
     let triggers = triggers::derive(&snapshot);
     if triggers.is_empty() {
@@ -47,7 +53,7 @@ fn steer(root: &Path, config: &Config, found: &Found, id: &str) -> Result<String
             nothing(id)
         });
     }
-    finish(root, config, found, &snapshot, &triggers, id)
+    finish(root, config, found, &snapshot, &triggers, id, print)
 }
 
 /// Steers the first archived change in a naming tree that needs steering.
@@ -58,12 +64,13 @@ fn steer_archived(
     config: &Config,
     found: &[Found],
     id: &str,
+    print: bool,
 ) -> Result<String, FeatureError> {
     for found in found.iter().filter(|found| archived(found, id)) {
         let snapshot = read(found)?;
         let triggers = triggers::derive(&snapshot);
         if !triggers.is_empty() {
-            return finish(root, config, found, &snapshot, &triggers, id);
+            return finish(root, config, found, &snapshot, &triggers, id, print);
         }
     }
     Err(nothing(id))
@@ -108,6 +115,7 @@ fn finish(
     snapshot: &ChangeSnapshot,
     triggers: &[triggers::Trigger],
     id: &str,
+    print: bool,
 ) -> Result<String, FeatureError> {
     let text = prompt::build(&Steer {
         root,
@@ -118,6 +126,9 @@ fn finish(
         triggers,
         config,
     })?;
+    if print {
+        return Ok(format!("{text}\n"));
+    }
     let path = found.entry.path.join("plan-prompt.md");
     std::fs::write(&path, text).map_err(|source| {
         FeatureError::failed("plan", format!("Cannot write {}: {source}", path.display()))

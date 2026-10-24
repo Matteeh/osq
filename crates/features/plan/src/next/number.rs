@@ -21,7 +21,7 @@ const BRANCH_PREFIX: &str = "osq/";
 /// Returns the display of the first git error.
 ///
 /// Implements: rust-plan/next-change-number
-pub(super) fn next(
+pub(crate) fn next(
     root: &Path,
     config: &Config,
     git_root: Option<&Path>,

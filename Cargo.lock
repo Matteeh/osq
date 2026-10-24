@@ -414,6 +414,7 @@ dependencies = [
  "osq-kernel-storage",
  "osq-kernel-vcs",
  "sha2",
+ "yaml-rust2",
 ]
 
 [[package]]
