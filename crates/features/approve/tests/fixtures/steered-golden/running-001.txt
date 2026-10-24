@@ -1,0 +1,15 @@
+outcome: failed
+001-alpha-twice has a task running; approve it after the task ends
+commit:
+none
+record:
+tree:
+--- .run/approved
+sha256:0000000000000000000000000000000000000000000000000000000000000000
+--- .run/regressed/change.md
+---
+reason: verify_red
+---
+change verify failed
+--- .run/running/1.pid
+{"pid":999999,"startedAt":0}

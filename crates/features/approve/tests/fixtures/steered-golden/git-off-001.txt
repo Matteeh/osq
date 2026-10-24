@@ -1,0 +1,17 @@
+outcome: output
+Approved 001 (001-alpha-twice)
+  Hash: sha256:9fc5af745b866fa28310ee519616fa73f206ea4530f7cb14faad23f8fb0361dc
+  Continues from task 1
+commit:
+none
+record:
+tree:
+--- .run/approved
+sha256:9fc5af745b866fa28310ee519616fa73f206ea4530f7cb14faad23f8fb0361dc
+--- .run/dead/1.1.md
+---
+reason: blocked
+---
+- needs a port
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"blocked","target":"1"},"timestamp":"<timestamp>","type":"retry"}

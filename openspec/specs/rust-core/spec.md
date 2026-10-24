@@ -51,7 +51,11 @@ types today's osq writes to `.run/events/<task>.jsonl`, `change.jsonl` and
 `validator.jsonl`. Each variant's data SHALL hold the fields below by their
 JSON names, the required ones always and the optional ones only when the line
 has them. A field marked `or null` SHALL also accept `null`. A nested object,
-or an array of objects, SHALL keep its JSON value as written.
+or an array of objects, SHALL keep its JSON value as written. Only Rust osq
+writes `approved`, to `change.jsonl`, when it approves a steered change; its
+`hash` is the new seal and its `targets` are the steering triggers' targets
+in order, each a task id or `change`, as rust-approve "Steered approval"
+says.
 
 | Type | Required data fields | Optional data fields |
 |---|---|---|
@@ -91,6 +95,7 @@ or an array of objects, SHALL keep its JSON value as written.
 | `synced` | `defaultBranch`, `commits`, `duration` | |
 | `sync_stopped` | `reason`, `message`, `defaultBranch` | |
 | `verification_recorded` | `outcome` | `note` (or null) |
+| `approved` | `hash`, `targets` | |
 
 Each field below SHALL hold its enum, not a string. The enum's variants are
 exactly the values in the table of "Reason and outcome values", the codes
@@ -179,6 +184,17 @@ The `reason` of `done_manual` and `rejected` stays free text.
 | `ValidatorOutcome` | `validated`, `failed`, `timed_out`, `unreadable`, `not_run` |
 | `AutoSteerOutcome` | `running`, `ready`, `unchanged`, `lint_red`, `failed`, `timed_out` |
 | `VerificationOutcome` | `passed`, `failed` |
+
+#### Scenario: Approved event lines
+- **WHEN** the line `{"type":"approved","timestamp":"2026-10-25T10:00:00.000Z","data":{"hash":"sha256:ab","targets":["change","2"]}}` is parsed, and then the same line with the row's data
+- **THEN** the first gives `Event::Approved` whose `ApprovedData` holds the `hash` `sha256:ab` and the `targets` `change` and `2`, its `kind()` is `EventKind::Approved` named `approved`, and writing it back gives a JSON value equal to the line; each row's line gives the row's result:
+
+| Data | Result |
+|---|---|
+| `{"hash":"sha256:ab","targets":[]}` | `Event::Approved` with no targets |
+| `{"hash":"sha256:ab"}` | `EventError` |
+| `{"targets":["1"]}` | `EventError` |
+| `{"hash":"sha256:ab","targets":["1"],"extra":1}` | `EventError` |
 
 ### Requirement: Event lines round-trip
 `parse_event_line` SHALL read one JSON line with exactly the keys `type`,

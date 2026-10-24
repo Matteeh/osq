@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use osq_core::FeatureError;
 use osq_kernel_config::{Config, Timeouts, VcsConfig};
 use osq_kernel_storage::ChangeEntry;
-use osq_kernel_vcs::{GitVcs, Vcs, stacked_root};
+use osq_kernel_vcs::{GitVcs, Vcs, VcsError, stacked_root};
 
 use self::record::Recorder;
 use super::failed;
@@ -61,7 +61,8 @@ pub(crate) fn approve(
         ));
     }
     seal_worktree(entry, seal, base.as_deref(), &worktree, &checkout)?;
-    commit(&worktree, folder, config, &timeouts, &recorder)?;
+    commit(&worktree, folder, config, &timeouts, &recorder)
+        .map_err(|error| failed(&error.to_string()))?;
     remove_stacked(&config.vcs, repo, folder)?;
     remove_checkout(&checkout, &entry.path, &relative(folder))?;
     Ok(text::approved(folder, seal, kept, &worktree, &branch))
@@ -111,15 +112,33 @@ fn commit(
     config: &Config,
     timeouts: &Timeouts,
     recorder: &Recorder,
-) -> Result<(), FeatureError> {
+) -> Result<(), VcsError> {
     let vcs = GitVcs::new(worktree).with_timeouts(timeouts);
     let author = config.vcs.author.as_deref().unwrap_or_default();
     let message = format!("osq: {} approved", text::change_id(folder));
     let relative = relative(folder);
-    vcs.commit(&[relative.as_str()], &message, author)
-        .map_err(|error| failed(&error.to_string()))?;
+    vcs.commit(&[relative.as_str()], &message, author)?;
     recorder.record("commit", worktree);
     Ok(())
+}
+
+/// Commits a steered worktree change and records the commit for its root.
+///
+/// # Errors
+///
+/// Returns the display of the git error that cannot name the tree record or
+/// commit the change.
+///
+/// Implements: rust-approve/steered-approval
+pub(super) fn commit_recorded(
+    checkout: &Path,
+    worktree: &Path,
+    folder: &str,
+    config: &Config,
+) -> Result<(), String> {
+    let timeouts = &config.timeouts;
+    let recorder = Recorder::new(checkout, timeouts)?;
+    commit(worktree, folder, config, timeouts, &recorder).map_err(|error| error.to_string())
 }
 
 /// Removes the stacked approval's folder for `folder` when it exists.

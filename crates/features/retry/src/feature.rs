@@ -1,6 +1,6 @@
 //! The retry feature's `Feature` implementation.
 
-use osq_core::{Command, Feature, FeatureError, Invocation, Output};
+use osq_core::{Command, EventKind, Feature, FeatureError, Invocation, Output, Reaction};
 
 use crate::retry;
 
@@ -27,6 +27,25 @@ impl Feature for RetryFeature {
             "clear a dead or regressed task or change so it runs again",
             "<id> <task|change>",
         )]
+    }
+
+    /// Reacts only to an `approved` event.
+    ///
+    /// Implements: rust-retry/approval-reaction
+    fn reacts_to(&self) -> Vec<EventKind> {
+        vec![EventKind::Approved]
+    }
+
+    /// Retires the steering triggers an `approved` event names, and nothing
+    /// for any other event.
+    ///
+    /// # Errors
+    ///
+    /// Returns the first refusal or write error a target's retry gives.
+    ///
+    /// Implements: rust-retry/approval-reaction
+    fn react(&self, reaction: &Reaction<'_>) -> Result<Output, FeatureError> {
+        retry::react(reaction.root, reaction.change, reaction.envelope).map(|()| Output::text(""))
     }
 
     /// Runs `retry` with a change id and a task or `change`.

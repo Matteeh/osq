@@ -2,7 +2,9 @@
 
 pub(crate) mod find;
 mod lint;
+mod lookup;
 mod refuse;
+mod steered;
 mod steering;
 pub(crate) mod text;
 mod worktree;
@@ -13,9 +15,7 @@ use std::path::Path;
 use osq_core::FeatureError;
 use osq_kernel_config::load_config;
 use osq_kernel_specs::{SpecFinding, validate_change, validate_merged_change};
-use osq_kernel_storage::{
-    ChangeEntry, StorageError, change_folder_seal, list_changes, read_change,
-};
+use osq_kernel_storage::{ChangeEntry, StorageError, change_folder_seal, read_change};
 use osq_kernel_vcs::project_git_root;
 
 /// The two flags an `approve` invocation may carry anywhere.
@@ -53,20 +53,37 @@ pub(crate) fn run_approve(
 ) -> Result<String, FeatureError> {
     let config = load_config(root).map_err(|error| failed(&error.to_string()))?;
     let repo = project_git_root(root, &config).map_err(|error| failed(&error.to_string()))?;
-    let changes = list_changes(root);
-    let entry = find::find_change(&changes, query).ok_or_else(|| {
-        FeatureError::failed(
-            "approve",
-            text::not_found(query, &root.join("openspec").join("changes")),
-        )
-    })?;
+    let located = lookup::list(root, &config, repo.as_deref())?;
+    let found = located
+        .iter()
+        .find(|candidate| {
+            candidate.entry.location == osq_kernel_storage::Location::Active
+                && find::matches(&candidate.entry.folder, query)
+        })
+        .ok_or_else(|| {
+            FeatureError::failed(
+                "approve",
+                text::not_found(query, &root.join("openspec").join("changes")),
+            )
+        })?;
+    let entry = &found.entry;
     let snapshot = read_change(entry).map_err(|error| failed(&error.to_string()))?;
-    let triggers = steering::triggers(&snapshot);
+    let in_worktree = found
+        .tree
+        .as_ref()
+        .is_some_and(|tree| tree.folder.is_some());
+    let triggers = steering::human_triggers(&snapshot, in_worktree);
     if !triggers.is_empty() {
-        return Err(FeatureError::failed(
-            "approve",
-            text::steering(&entry.folder, &triggers),
-        ));
+        refuse_steering(entry, &snapshot, &triggers, in_worktree, repo.is_some())?;
+        validate(entry, &root.join("openspec").join("specs"))?;
+        return steered::approve(
+            entry,
+            &snapshot,
+            &triggers,
+            &config,
+            repo.as_deref(),
+            found.tree.as_ref(),
+        );
     }
     validate(entry, &root.join("openspec").join("specs"))?;
     let kept = match &repo {
@@ -79,6 +96,45 @@ pub(crate) fn run_approve(
     }
     write_marker(&entry.path, seal.as_str()).map_err(|error| failed(&error.to_string()))?;
     Ok(text::approved(&entry.folder, seal.as_str()))
+}
+
+/// Refuses a steered change that a running task, the default branch or git stops.
+///
+/// Implements: rust-approve/steering-refusal
+fn refuse_steering(
+    entry: &ChangeEntry,
+    snapshot: &osq_kernel_storage::ChangeSnapshot,
+    triggers: &[steering::Trigger],
+    in_worktree: bool,
+    git_on: bool,
+) -> Result<(), FeatureError> {
+    if task_running(entry, snapshot) {
+        return Err(failed(&text::running(&entry.folder)));
+    }
+    if triggers.iter().any(steering::Trigger::is_default_branch) {
+        return Err(failed(&text::default_branch(&entry.folder, triggers)));
+    }
+    if git_on && !in_worktree {
+        return Err(failed(&text::checkout_steering(&entry.folder, triggers)));
+    }
+    Ok(())
+}
+
+/// Whether one task holds a lock marker and has no regressed, done or dead marker.
+///
+/// Implements: rust-approve/steering-refusal
+fn task_running(entry: &ChangeEntry, snapshot: &osq_kernel_storage::ChangeSnapshot) -> bool {
+    snapshot.tasks.iter().any(|task| {
+        entry
+            .path
+            .join(".run")
+            .join("running")
+            .join(format!("{}.pid", task.id))
+            .exists()
+            && task.markers.regressed.is_none()
+            && !task.done
+            && task.markers.dead.is_none()
+    })
 }
 
 /// Validates the change's delta specs, refusing any finding the specs kernel gives.

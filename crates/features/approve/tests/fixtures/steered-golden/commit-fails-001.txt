@@ -1,0 +1,20 @@
+outcome: failed
+the approved commit failed in <root>/worktrees/repo/001-alpha-twice: fatal: Unable to create '<root>/repo/.git/worktrees/001-alpha-twice/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+. The approval seal is undone and the plan edits are kept; run osq approve 001 again.
+commit:
+none
+record:
+tree:
+--- .run/approved
+sha256:0000000000000000000000000000000000000000000000000000000000000000
+--- .run/dead/1.md
+---
+reason: blocked
+---
+- needs a port

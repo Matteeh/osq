@@ -24,7 +24,7 @@ pub use outcomes::{
     ValidatorOutcome, VerificationOutcome,
 };
 pub use payload::{
-    ArchivedData, AutoSteerRanData, BaselineRanData, ChangeVerifyRerunData, DeadData,
+    ApprovedData, ArchivedData, AutoSteerRanData, BaselineRanData, ChangeVerifyRerunData, DeadData,
     DependenciesAddedData, DoneData, DoneManualData, ExitContinuedData, ExitedData,
     FileChangedData, FocusedRanData, FormatRanData, HarnessRetryData, InstructionsChangedData,
     MeasuresData, MutationRanData, Nullable, PausedData, RecertificationData, RegressedData,
@@ -112,6 +112,8 @@ pub enum Event {
     SyncStopped(SyncStoppedData),
     /// A `verification_recorded` event.
     VerificationRecorded(VerificationRecordedData),
+    /// An `approved` event.
+    Approved(ApprovedData),
 }
 
 impl Event {
@@ -157,6 +159,7 @@ impl Event {
             Self::Synced(_) => EventKind::Synced,
             Self::SyncStopped(_) => EventKind::SyncStopped,
             Self::VerificationRecorded(_) => EventKind::VerificationRecorded,
+            Self::Approved(_) => EventKind::Approved,
         }
     }
 
@@ -204,6 +207,7 @@ impl Event {
             Self::Synced(data) => payload_value(data),
             Self::SyncStopped(data) => payload_value(data),
             Self::VerificationRecorded(data) => payload_value(data),
+            Self::Approved(data) => payload_value(data),
         }
     }
 }
@@ -345,6 +349,7 @@ fn event_from_data(kind: &str, data: Value) -> Result<Event, EventError> {
         "synced" => Event::Synced(parse_data(kind, data)?),
         "sync_stopped" => Event::SyncStopped(parse_data(kind, data)?),
         "verification_recorded" => Event::VerificationRecorded(parse_data(kind, data)?),
+        "approved" => Event::Approved(parse_data(kind, data)?),
         other => {
             return Err(EventError::UnknownType {
                 kind: other.to_owned(),

@@ -7,6 +7,7 @@ mod excerpt;
 mod find;
 mod marker;
 mod plan_edits;
+mod reaction;
 mod recertify;
 mod record;
 mod running;
@@ -16,8 +17,8 @@ mod vcs_detail;
 
 use std::path::Path;
 
-use osq_core::FeatureError;
 use osq_core::event::FailureReason;
+use osq_core::{Envelope, FeatureError};
 use osq_kernel_config::load_config;
 use osq_kernel_vcs::project_git_root;
 
@@ -88,6 +89,17 @@ pub(crate) fn run(root: &Path, id: &str, raw_target: &str) -> Result<String, Fea
         )?;
     }
     Ok(recorded.text)
+}
+
+/// Retries each still-failing target an `approved` event names.
+///
+/// # Errors
+///
+/// Returns the first refusal or write error the target's retry gives.
+///
+/// Implements: rust-retry/approval-reaction
+pub(crate) fn react(root: &Path, change: &Path, envelope: &Envelope) -> Result<(), FeatureError> {
+    reaction::run(root, change, envelope)
 }
 
 /// Checks approval, running state and the marker, then records the retry.

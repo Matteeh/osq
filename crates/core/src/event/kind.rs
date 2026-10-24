@@ -85,6 +85,8 @@ pub enum EventKind {
     SyncStopped,
     /// A `verification_recorded` event.
     VerificationRecorded,
+    /// An `approved` event.
+    Approved,
 }
 
 impl EventKind {
@@ -130,6 +132,7 @@ impl EventKind {
             Self::Synced => "synced",
             Self::SyncStopped => "sync_stopped",
             Self::VerificationRecorded => "verification_recorded",
+            Self::Approved => "approved",
         }
     }
 }

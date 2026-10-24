@@ -478,6 +478,16 @@ pub struct RejectedData {
     pub reason: String,
 }
 
+/// Payload of an `approved` event.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ApprovedData {
+    /// The seal of the plan the approval seals.
+    pub hash: String,
+    /// The steering targets the approval clears, in order.
+    pub targets: Vec<String>,
+}
+
 /// Payload of an `instructions_changed` event.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

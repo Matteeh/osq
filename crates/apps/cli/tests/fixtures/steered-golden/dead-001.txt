@@ -1,0 +1,23 @@
+outcome: output
+Approved 001 (001-alpha-twice)
+  Hash: sha256:9fc5af745b866fa28310ee519616fa73f206ea4530f7cb14faad23f8fb0361dc
+  Worktree: <root>/worktrees/repo/001-alpha-twice
+  Branch: osq/001-alpha-twice
+  Continues from task 1
+commit:
+osq: 001 approved
+Osq Bot <bot@example.com>
+M	openspec/changes/001-alpha-twice/.run/approved
+M	openspec/changes/001-alpha-twice/tasks/1.md
+record:
+{"at":"<at>","op":"commit","root":"<root>/worktrees/repo/001-alpha-twice"}
+tree:
+--- .run/approved
+sha256:9fc5af745b866fa28310ee519616fa73f206ea4530f7cb14faad23f8fb0361dc
+--- .run/dead/1.1.md
+---
+reason: verify_red
+---
+error: one
+--- .run/events/1.jsonl
+{"data":{"attempt":2,"reason":"verify_red","target":"1"},"timestamp":"<timestamp>","type":"retry"}
