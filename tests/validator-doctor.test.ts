@@ -116,7 +116,7 @@ describe("osq's own validator", () => {
     assert.deepEqual(config.validator, {
       enabled: true,
       harness: 'claude',
-      model: 'claude-opus-5-5',
+      model: 'claude-sonnet-5-5',
       timeoutSeconds: 900,
     });
   });
