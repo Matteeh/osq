@@ -2347,9 +2347,11 @@ dependency through "Stack dependency state", and decide:
 - a declared line whose dependency is `unapproved`, or `approved` or
   `archived` with a hash other than the recorded one, halts the change with
   `dependency_changed`;
-- an overlap line whose change is `unapproved`, or `approved` or `archived`
-  with a hash other than the recorded one, is left out of the rest of the
-  decision, because the conflict it guarded against is gone;
+- an overlap line whose change is `unapproved` is left out of the rest of
+  the decision, because the conflict it guarded against is gone; an overlap
+  line whose change is `approved` or `archived` stays in the decision
+  whatever hash it records, because a re-approved change still rewrites
+  what it shares until it lands;
 - otherwise any `approved` dependency means the change waits, unchanged;
 - otherwise, when every remaining dependency is `landed`, or none remains,
   the base is the default branch;
@@ -2410,11 +2412,15 @@ the step SHALL do nothing.
 | Overlap lines and their changes | Outcome |
 |---|---|
 | `001-a`, rejected on its branch | cut from the default branch, no halt |
-| `001-a`, approved again under another hash | cut from the default branch, no halt |
+| `001-a`, approved again under another hash | waits; no branch `osq/003-c`, no halt |
 | `001-a`, still approved | waits; no branch `osq/003-c` |
 | `001-a` and `002-b`, archived on separate branches | waits; no branch `osq/003-c`, no halt |
 | `001-a` landed after `003-c` was approved, `002-b` archived on a branch without `001-a`'s archive | waits; no branch `osq/003-c` |
 | `001-a` and `002-b`, both landed | cut from the default branch |
+
+#### Scenario: Overlapped change approved again before it lands
+- **WHEN** in a temporary repository `001-a`, writing `orders`, is approved into its worktree, `002-b`, also writing `orders`, is approved and stacked with an overlap line on `001-a`, then `001-a`'s approved hash changes as a steer and re-approval leave it, and `runWatcherOnce` runs with an adapter that leaves `001-a`'s task pending
+- **THEN** after that cycle no branch `osq/002-b` exists, `002-b`'s stacked approval remains and `002-b` has no regression marker; once `001-a` is archived on its branch and squash-merged into `main` by hand, the next cycle cuts `osq/002-b` from `main`'s tip
 
 ### Requirement: Stacked halt
 To halt a stacked change, the watcher SHALL write `.run/regressed/change.md`

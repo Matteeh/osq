@@ -6,6 +6,7 @@ import { type AutopilotStop, readAutopilotStop } from './autopilot-stop.js';
 import { applySteeringItems } from './blocked-item.js';
 import { changeTrees, listChanges, matchesFolder } from './change-locations.js';
 import { readLastLook } from './inbox-cursor.js';
+import { readOverlapReapproved } from './inbox-overlap.js';
 import { type PausedItem, projectPaused } from './inbox-paused.js';
 import {
   type Inbox,
@@ -152,6 +153,7 @@ async function autopilotStoppedItem(
  * @scenario status-inspection: Stop before a change in the inbox
  * @scenario status-inspection: No stop in the inbox
  * @scenario status-inspection: Failed archive commit in show and the inbox
+ * @scenario status-inspection: Overlap approved again in the inbox
  * @adr 021
  * @adr 010
  */
@@ -183,6 +185,7 @@ export async function readInbox(
   const stop = await readAutopilotStop(projectRoot, config);
   const autopilotStopped =
     stop === null ? [] : [await autopilotStoppedItem(projectRoot, config, stop)];
+  const overlapReapproved = await readOverlapReapproved(projectRoot, config);
   const needsYou = [
     ...(await applySteeringItems(overview, inbox.needsYou)),
     ...steered,
@@ -190,6 +193,7 @@ export async function readInbox(
     ...afterLand,
     ...validatorFailing,
     ...autopilotStopped,
+    ...overlapReapproved,
   ].sort((a, b) => compareNumericPrefix(a.change.id, b.change.id));
   return { ...inbox, needsYou, running };
 }

@@ -1,0 +1,652 @@
+diff --git a/openspec/changes/340-overlap-wait-survives-reapproval/.run/dead/1.md b/openspec/changes/340-overlap-wait-survives-reapproval/.run/dead/1.md
+new file mode 100644
+index 00000000..3088b6d9
+--- /dev/null
++++ b/openspec/changes/340-overlap-wait-survives-reapproval/.run/dead/1.md
+@@ -0,0 +1,7 @@
++---
++reason: own_folder_path
++fingerprint: sha256:ded88f47a9b6f37846b99170afc8c8343aaa27645751e0236fd7a441adf606e9
++---
++These files name this change's folder, 340-overlap-wait-survives-reapproval, whose path changes when the change archives:
++- tests/stack-overlap-reapproved.test.ts:29
++Reach the change folder through the OSQ_CHANGE environment variable.
+diff --git a/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/1.jsonl b/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/1.jsonl
+new file mode 100644
+index 00000000..def0a074
+--- /dev/null
++++ b/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/1.jsonl
+@@ -0,0 +1,87 @@
++{"type":"verify_ran","timestamp":"2026-10-24T23:28:34.886Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/stack-overlap-reapproved.test.ts","exitCode":1,"duration":0.63,"log":".run/logs/1-1.log","output":"Could not find 'tests/stack-overlap-reapproved.test.ts'\n","phase":"pre_spawn","expected":"red","missingPaths":["tests/stack-overlap-reapproved.test.ts"],"mismatch":false}}
++{"type":"measures","timestamp":"2026-10-24T23:28:40.319Z","data":{"phase":"start","scopeResolver":2,"scopeFiles":4,"scopeLines":1352,"repoFiles":7341,"repoLines":732639,"importFanIn":17,"proposalWords":972,"taskWords":485,"deltaRequirements":6,"deltaScenarios":20,"functionHashes":{"src/core/spec/stack-cut.ts#decideStackCut":"sha256:e85d7af8cab4c8f552b5c2e9e56be41a7c29b2c6a22ebaaf7c4cb016c2689d1b","src/core/spec/stack-dependencies.ts#awaitedDependencies":"sha256:b1f28ca95ca24d094a7e76323f08fca8bdfc6f37c6a883d86a87b24397aacf4d","src/core/spec/stack-dependencies.ts#formatStackedOn":"sha256:bb461a81c7373c2420a058607f251a30fc0336b6e77dc29e7543b93270eaf96b","src/core/spec/stack-dependencies.ts#parseStackedOn":"sha256:49b42179321e57992499f22f8d063a92ec60d0551baa2b2d8b8eaa83691124b7"}}}
++{"type":"instructions_changed","timestamp":"2026-10-24T23:28:40.554Z","data":{"changed":["AGENTS.md","ADR 002 added","ADR 003 added","ADR 004 added","ADR 005 added","ADR 006 added","ADR 007 added","ADR 010 added","ADR 012 added","ADR 013 added","ADR 014 added","ADR 016 added","ADR 017 added","ADR 018 added","ADR 019 added","ADR 020 added","ADR 021 added"]}}
++{"type":"started","timestamp":"2026-10-24T23:28:40.874Z","data":{"harness":"pi","model":"deepseek-flash","osqVersion":"0.3.0","attempt":1,"projectCommit":"64db89e4","pid":553737,"timeoutSeconds":3600,"harnessVersion":"0.87.0","version":"0.3.0","commit":"81b56593"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:43.034Z","data":{"promptTokens":6731,"candidateTokens":341,"totalTokens":7584,"cachedTokens":512,"reasoningTokens":0,"cost":0.002431572,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:43.035Z","data":{"tool":"read","summary":"openspec/changes/340-overlap-wait-survives-reapproval/tasks/"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:43.037Z","data":{"tool":"read","summary":"openspec/changes/340-overlap-wait-survives-reapproval/propos"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:43.037Z","data":{"tool":"read","summary":"openspec/changes/340-overlap-wait-survives-reapproval/specs/"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:43.037Z","data":{"tool":"read","summary":"openspec/changes/340-overlap-wait-survives-reapproval/specs/"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:44.945Z","data":{"promptTokens":5019,"candidateTokens":283,"totalTokens":12854,"cachedTokens":7552,"reasoningTokens":8,"cost":0.001890612,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:44.946Z","data":{"tool":"read","summary":"src/core/spec/stack-dependencies.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:44.947Z","data":{"tool":"read","summary":"src/core/spec/stack-cut.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:44.947Z","data":{"tool":"read","summary":"tests/approve-overlap.test.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:44.947Z","data":{"tool":"read","summary":"tests/stack-overlap-cut.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:47.088Z","data":{"promptTokens":14119,"candidateTokens":260,"totalTokens":27179,"cachedTokens":12800,"reasoningTokens":44,"cost":0.0046245,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:47.089Z","data":{"tool":"read","summary":"tests/stack-run.test.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:47.090Z","data":{"tool":"read","summary":"tests/languages-lockfiles.test.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:47.090Z","data":{"tool":"bash","summary":"ls tests | head -50; echo ---; sed -n '1,200p' src/testing/*"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:48.611Z","data":{"promptTokens":7157,"candidateTokens":151,"totalTokens":34444,"cachedTokens":27136,"reasoningTokens":48,"cost":0.002491116,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:48.612Z","data":{"tool":"bash","summary":"sed -n '1,240p' src/core/trace/scenario-lookup.ts; echo ---;"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:50.584Z","data":{"promptTokens":3139,"candidateTokens":207,"totalTokens":37778,"cachedTokens":34432,"reasoningTokens":94,"cost":0.001396692,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:50.584Z","data":{"tool":"bash","summary":"grep -rn \"watcher-and-harness\" tests/*.test.ts | head -40; e"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:52.182Z","data":{"promptTokens":3134,"candidateTokens":138,"totalTokens":41032,"cachedTokens":37760,"reasoningTokens":46,"cost":0.0013323599999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:52.182Z","data":{"tool":"bash","summary":"sed -n '1,80p' tests/archive-commit-recovery.test.ts; echo -"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:55.714Z","data":{"promptTokens":1911,"candidateTokens":466,"totalTokens":43337,"cachedTokens":40960,"reasoningTokens":399,"cost":0.0013782599999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:55.715Z","data":{"tool":"bash","summary":"sed -n '200,380p' src/testing/scenario.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:57.214Z","data":{"promptTokens":271,"candidateTokens":117,"totalTokens":43652,"cachedTokens":43264,"reasoningTokens":0,"cost":0.000481284,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:57.214Z","data":{"tool":"bash","summary":"sed -n '160,220p' src/testing/scenario.ts; echo ---; grep -n"}}
++{"type":"tokens","timestamp":"2026-10-24T23:28:58.898Z","data":{"promptTokens":1392,"candidateTokens":69,"totalTokens":45109,"cachedTokens":43648,"reasoningTokens":0,"cost":0.0007622879999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:28:58.899Z","data":{"tool":"bash","summary":"sed -n '380,520p' src/watcher/loop.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:00.671Z","data":{"promptTokens":1206,"candidateTokens":95,"totalTokens":46357,"cachedTokens":45056,"reasoningTokens":25,"cost":0.0007461359999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:00.671Z","data":{"tool":"bash","summary":"sed -n '1,240p' src/watcher/stack-run.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:03.811Z","data":{"promptTokens":785,"candidateTokens":482,"totalTokens":47603,"cachedTokens":46336,"reasoningTokens":361,"cost":0.001091916,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:03.811Z","data":{"tool":"bash","summary":"cat biome.json 2>/dev/null || cat biome.jsonc 2>/dev/null; e"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:27.984Z","data":{"promptTokens":382,"candidateTokens":4531,"totalTokens":52401,"cachedTokens":47488,"reasoningTokens":4379,"cost":0.005836728,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:27.985Z","data":{"tool":"bash","summary":"grep -n '^#### Scenario:' openspec/specs/watcher-and-harness"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:30.555Z","data":{"promptTokens":320,"candidateTokens":312,"totalTokens":52984,"cachedTokens":52352,"reasoningTokens":173,"cost":0.000784512,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:30.555Z","data":{"tool":"bash","summary":"grep -n '^#### Scenario: Flag off\\|^#### Scenario: Captured "}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:37.974Z","data":{"promptTokens":1329,"candidateTokens":1128,"totalTokens":55321,"cachedTokens":52864,"reasoningTokens":1039,"cost":0.002069484,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:37.974Z","data":{"tool":"bash","summary":"sed -n '1,180p' tests/line-budget.test.ts; echo ---; sed -n "}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:39.643Z","data":{"promptTokens":1979,"candidateTokens":104,"totalTokens":57379,"cachedTokens":55296,"reasoningTokens":32,"cost":0.001050276,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:39.644Z","data":{"tool":"bash","summary":"grep -n \"export.*installFakeValidator\" -A30 tests/helpers.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:43.472Z","data":{"promptTokens":266,"candidateTokens":965,"totalTokens":58575,"cachedTokens":57344,"reasoningTokens":20,"cost":0.001581864,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:43.472Z","data":{"tool":"edit","summary":"src/core/spec/stack-dependencies.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:43.473Z","data":{"tool":"edit","summary":"src/core/spec/stack-cut.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:29:43.478Z","data":{"path":"src/core/spec/stack-dependencies.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:29:43.479Z","data":{"path":"src/core/spec/stack-cut.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:44.869Z","data":{"promptTokens":134,"candidateTokens":90,"totalTokens":58720,"cachedTokens":58496,"reasoningTokens":6,"cost":0.000499176,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:44.869Z","data":{"tool":"bash","summary":"wc -l src/core/spec/stack-dependencies.ts; sed -n '160,210p'"}}
++{"type":"tokens","timestamp":"2026-10-24T23:29:48.253Z","data":{"promptTokens":554,"candidateTokens":789,"totalTokens":59967,"cachedTokens":58624,"reasoningTokens":7,"cost":0.0014647439999999998,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:48.254Z","data":{"tool":"edit","summary":"tests/approve-overlap.test.ts"}}
++{"type":"tool","timestamp":"2026-10-24T23:29:48.254Z","data":{"tool":"edit","summary":"tests/stack-overlap-cut.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:29:48.261Z","data":{"path":"tests/approve-overlap.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:29:48.261Z","data":{"path":"tests/stack-overlap-cut.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:10.956Z","data":{"promptTokens":245,"candidateTokens":5757,"totalTokens":65778,"cachedTokens":59776,"reasoningTokens":2219,"cost":0.007340555999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:10.956Z","data":{"tool":"write","summary":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:30:10.957Z","data":{"path":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:12.445Z","data":{"promptTokens":139,"candidateTokens":83,"totalTokens":65886,"cachedTokens":65664,"reasoningTokens":4,"cost":0.000535284,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:12.445Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:18.640Z","data":{"promptTokens":628,"candidateTokens":407,"totalTokens":66827,"cachedTokens":65792,"reasoningTokens":165,"cost":0.001071552,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:18.640Z","data":{"tool":"edit","summary":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:30:18.642Z","data":{"path":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:20.295Z","data":{"promptTokens":169,"candidateTokens":82,"totalTokens":66939,"cachedTokens":66688,"reasoningTokens":3,"cost":0.0005492279999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:20.296Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:25.285Z","data":{"promptTokens":208,"candidateTokens":229,"totalTokens":67253,"cachedTokens":66816,"reasoningTokens":88,"cost":0.0007380959999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:25.285Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:25.286Z","data":{"tool":"bash","summary":"pnpm typecheck:cli"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:54.120Z","data":{"promptTokens":997,"candidateTokens":132,"totalTokens":68329,"cachedTokens":67200,"reasoningTokens":76,"cost":0.0008607,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:54.121Z","data":{"tool":"bash","summary":"pnpm lint"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:56.729Z","data":{"promptTokens":468,"candidateTokens":95,"totalTokens":68787,"cachedTokens":68224,"reasoningTokens":2,"cost":0.000663744,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:56.729Z","data":{"tool":"edit","summary":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:30:56.731Z","data":{"path":"tests/stack-overlap-reapproved.test.ts"}}
++{"type":"tokens","timestamp":"2026-10-24T23:30:58.654Z","data":{"promptTokens":209,"candidateTokens":186,"totalTokens":69003,"cachedTokens":68608,"reasoningTokens":61,"cost":0.0006975479999999999,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:58.655Z","data":{"tool":"bash","summary":"node --import tsx --import ./tests/git-test-env.ts --test te"}}
++{"type":"tool","timestamp":"2026-10-24T23:30:58.655Z","data":{"tool":"bash","summary":"pnpm lint"}}
++{"type":"tokens","timestamp":"2026-10-24T23:31:03.495Z","data":{"promptTokens":167,"candidateTokens":70,"totalTokens":69229,"cachedTokens":68992,"reasoningTokens":13,"cost":0.000548052,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:31:03.496Z","data":{"tool":"bash","summary":"pnpm verify"}}
++{"type":"tokens","timestamp":"2026-10-24T23:33:50.683Z","data":{"promptTokens":13409,"candidateTokens":708,"totalTokens":83237,"cachedTokens":69120,"reasoningTokens":319,"cost":0.00528702,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"tool","timestamp":"2026-10-24T23:33:50.683Z","data":{"tool":"write","summary":"openspec/changes/340-overlap-wait-survives-reapproval/.run/r"}}
++{"type":"file_changed","timestamp":"2026-10-24T23:33:50.684Z","data":{"path":"openspec/changes/340-overlap-wait-survives-reapproval/.run/results/1.md"}}
++{"type":"text","timestamp":"2026-10-24T23:33:54.020Z","data":{"text":"Implemented task 1.\n\n- `src/core/spec/stack-dependencies.ts`: overlap lines now stay awaited under any recorded hash and carry `reapproved: true` when the approved hash differs.\n- `src/core/spec/stack-cut.ts`: re-approved overlap lines now keep the stacked change waiting; only `unapproved` overlap lines are dropped.\n- Updated the affected tests in `tests/approve-overlap.test.ts` and `tests/stack-overlap-cut.test.ts`.\n- Added `tests/stack-overlap-reapproved.test.ts` covering the new watcher scenario through `runWatcherOnce`.\n\nVerification:\n- Task verify passed.\n- `pnpm verify` passed.\n- Result written to `openspec/changes/340-overlap-wait-survives-reapproval/.run/results/1.md`."}}
++{"type":"tokens","timestamp":"2026-10-24T23:33:54.020Z","data":{"promptTokens":204,"candidateTokens":422,"totalTokens":83698,"cachedTokens":83072,"reasoningTokens":251,"cost":0.001066032,"provider":"deepseek","model":"deepseek-flash"}}
++{"type":"exited","timestamp":"2026-10-24T23:33:54.041Z","data":{"exitCode":0,"pid":553737,"timedOut":false,"elapsedSeconds":313.2}}
++{"type":"format_ran","timestamp":"2026-10-24T23:33:55.634Z","data":{"command":"pnpm exec biome check --linter-enabled=false --write --no-errors-on-unmatched 'src/core/spec/stack-cut.ts' 'src/core/spec/stack-dependencies.ts' 'tests/approve-overlap.test.ts' 'tests/stack-overlap-cut.test.ts' 'tests/stack-overlap-reapproved.test.ts'","files":["src/core/spec/stack-cut.ts","src/core/spec/stack-dependencies.ts","tests/approve-overlap.test.ts","tests/stack-overlap-cut.test.ts","tests/stack-overlap-reapproved.test.ts"],"exitCode":0,"duration":0.34,"timedOut":false,"output":"Checked 5 files in 8ms. No fixes applied.\n"}}
++{"type":"verify_ran","timestamp":"2026-10-24T23:33:58.592Z","data":{"command":"node --import tsx --import ./tests/git-test-env.ts --test tests/stack-overlap-reapproved.test.ts","exitCode":0,"duration":2.16,"log":".run/logs/1-2.log","output":"✔ Scenario: Overlapped change approved again before it lands (1471.575655ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1935.557943\n"}}
++{"type":"measures","timestamp":"2026-10-24T23:33:58.607Z","data":{"phase":"end","scopeResolver":2,"scopeFiles":4,"scopeLines":1352,"repoFiles":7341,"repoLines":732639,"importFanIn":17,"proposalWords":972,"taskWords":485,"deltaRequirements":6,"deltaScenarios":20,"functionHashes":{"src/core/spec/stack-cut.ts#decideStackCut":"sha256:e85d7af8cab4c8f552b5c2e9e56be41a7c29b2c6a22ebaaf7c4cb016c2689d1b","src/core/spec/stack-dependencies.ts#awaitedDependencies":"sha256:b1f28ca95ca24d094a7e76323f08fca8bdfc6f37c6a883d86a87b24397aacf4d","src/core/spec/stack-dependencies.ts#formatStackedOn":"sha256:bb461a81c7373c2420a058607f251a30fc0336b6e77dc29e7543b93270eaf96b","src/core/spec/stack-dependencies.ts#parseStackedOn":"sha256:49b42179321e57992499f22f8d063a92ec60d0551baa2b2d8b8eaa83691124b7"},"changedFiles":5,"changedLines":398,"scopeHashes":{"src/core/spec/stack-cut.ts":{"before":"sha256:7c8c1f3f7e953452be260f2a9edfffbef3a806a402a6f15dc7bdac590521e1b4","after":"sha256:427a02e3828d45799fa0cd5a34eda662f44d75bcf776fbc0d16df6f8cb40e46f"},"src/core/spec/stack-dependencies.ts":{"before":"sha256:1da23f743ff8950befb21c2b55583d54c14c6714de4df2fc74018ec136246f72","after":"sha256:c74abdd6239721d78349779fe144813d45383e486d0464f283dd2114f4ff953d"},"tests/approve-overlap.test.ts":{"before":"sha256:c6e2dfd83010b289d09d8846043433920e0c2f180e559309e809a0219767f694","after":"sha256:1d1ee4137ebde9e762f1efe002208cb84ca7b952bd5908cfab9e66ce19bb98c3"},"tests/stack-overlap-cut.test.ts":{"before":"sha256:7aa4d0eff2a80a62aa1c9e9098f965bd049e256bec1eb8e997c32dad38692070","after":"sha256:21bdc80e1dad455e1aa982c419103e637f662e0092f0c01ed61f6c372eab5c72"},"tests/stack-overlap-reapproved.test.ts":{"before":null,"after":"sha256:36228ed4958d02ddbbc9c3698cc0b0e08f5a15ecd666a6811bf83ea50128ad70"}}}}
++{"type":"dead","timestamp":"2026-10-24T23:33:58.609Z","data":{"task":"1","reason":"own_folder_path"}}
+diff --git a/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/change.jsonl b/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/change.jsonl
+new file mode 100644
+index 00000000..243daa94
+--- /dev/null
++++ b/openspec/changes/340-overlap-wait-survives-reapproval/.run/events/change.jsonl
+@@ -0,0 +1 @@
++{"type":"baseline_ran","timestamp":"2026-10-24T23:28:34.249Z","data":{"outcome":"passed","command":"pnpm verify","commit":"64db89e42085c703cf5981e99f4d2007ce2ab0db","treeDigest":"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","exitCode":0,"durationSeconds":607.03}}
+diff --git a/openspec/changes/340-overlap-wait-survives-reapproval/.run/results/1.md b/openspec/changes/340-overlap-wait-survives-reapproval/.run/results/1.md
+new file mode 100644
+index 00000000..822a9e9d
+--- /dev/null
++++ b/openspec/changes/340-overlap-wait-survives-reapproval/.run/results/1.md
+@@ -0,0 +1,16 @@
++## Changed
++
++- `AwaitedDependency` now carries optional `reapproved?: true`; `awaitedDependencies` keeps an overlap line whatever hash it records and marks it only when the change's approved hash differs. `formatStackedOn` still writes no mark.
++- `decideStackCut` now drops an overlap line only when its change is `unapproved`; a re-approved overlap keeps the change waiting.
++- Updated the two table-row tests in `tests/approve-overlap.test.ts` and `tests/stack-overlap-cut.test.ts` to the new expectations.
++- Added `tests/stack-overlap-reapproved.test.ts`, proving "Overlapped change approved again before it lands" through `runWatcherOnce`.
++
++## Deviated
++
++The new scenario test copies this change's watcher-and-harness delta into a temporary lookup root with a minimal `Stacked cut` living requirement, as `tests/archive-commit-recovery.test.ts` does. The real living watcher-and-harness spec repeats scenario names, so the scenario helper's normal lookup cannot read it.
++
++## Missing context
++
++The task did not mention that the living watcher-and-harness spec has duplicate scenario names, which forces the temporary lookup root for the new scenario test.
++
++Touched: src/core/spec/stack-dependencies.ts, src/core/spec/stack-cut.ts, tests/approve-overlap.test.ts, tests/stack-overlap-cut.test.ts, tests/stack-overlap-reapproved.test.ts
+diff --git a/src/core/spec/stack-cut.ts b/src/core/spec/stack-cut.ts
+index e06b3a5b..7b772988 100644
+--- a/src/core/spec/stack-cut.ts
++++ b/src/core/spec/stack-cut.ts
+@@ -73,7 +73,7 @@ interface CutEntry {
+   readonly status: DependencyStatus;
+ }
+ 
+-/** Whether a line's recorded hash still matches its change's approved hash. */
++/** Whether a declared line's recorded hash still matches its change's approved hash. */
+ function hashChanged(status: DependencyStatus, entry: AwaitedDependency): boolean {
+   return (status.state === 'approved' || status.state === 'archived') && status.hash !== entry.hash;
+ }
+@@ -117,10 +117,11 @@ async function resolveArchivedBase(
+ }
+ 
+ /**
+- * Decide what to do with one stacked change: wait while a dependency is
+- * approved, halt when a declared dependency is unapproved or re-approved, drop
+- * an overlap line whose conflict is gone, or cut at the default branch or the
+- * archived dependency branch that holds every other archive.
++ * Decide what to do with one stacked change: wait while any dependency,
++ * including a re-approved overlap, is approved, halt when a declared dependency
++ * is unapproved or re-approved, drop an overlap line whose conflict is gone, or
++ * cut at the default branch or the archived dependency branch that holds every
++ * other archive.
+  *
+  * @scenario watcher-and-harness: Overlapping changes approved at once
+  * @scenario watcher-and-harness: Overlap lines in the cut
+@@ -134,9 +135,9 @@ export async function decideStackCut(input: StackCutInput): Promise<StackCutDeci
+   for (const entry of entries) {
+     const status = await readDependencyState(projectRoot, config, vcs, entry.folder);
+     if (entry.overlap !== undefined) {
+-      // An overlap is softer: its change being unapproved or carrying another
+-      // hash means the conflict it guarded against is gone, so leave it out.
+-      if (status.state === 'unapproved' || hashChanged(status, entry)) continue;
++      // An overlap is softer: its change being unapproved means the conflict it
++      // guarded against is gone, so leave it out. A re-approval keeps it waiting.
++      if (status.state === 'unapproved') continue;
+     } else {
+       if (status.state === 'unapproved') return changedHalt(entry.folder, id, true);
+       if (hashChanged(status, entry)) return changedHalt(entry.folder, id, false);
+diff --git a/src/core/spec/stack-dependencies.ts b/src/core/spec/stack-dependencies.ts
+index 260e0716..baef8b9f 100644
+--- a/src/core/spec/stack-dependencies.ts
++++ b/src/core/spec/stack-dependencies.ts
+@@ -26,6 +26,8 @@ export interface DependencyStatus {
+ export interface AwaitedDependency {
+   readonly folder: string;
+   readonly hash: string;
++  /** Whether the change was approved again after this line was written. */
++  readonly reapproved?: true;
+   /** The shared capabilities of an overlap line; absent for a declared entry. */
+   readonly overlap?: readonly string[];
+ }
+@@ -112,7 +114,7 @@ export async function resolveDependencyFolder(
+ /**
+  * The awaited entries of a change folder: its `depends_on` entries that read
+  * `approved` or `archived`, in order, then each `.run/stacked-on` overlap line
+- * no entry names that still reads approved or archived with the recorded hash.
++ * no entry names that reads approved or archived, marked reapproved if its hash differs.
+  *
+  * @scenario spec-lint-and-approve: Overlap lines count while their change waits to land
+  * @adr 003
+@@ -139,9 +141,9 @@ export async function awaitedDependencies(
+     if (line.overlap === undefined || named.has(line.folder)) continue;
+     const state = await readDependencyState(projectRoot, config, vcs, line.folder);
+     if (state.state !== 'approved' && state.state !== 'archived') continue;
+-    if ((state.hash ?? '') !== line.hash) continue;
++    const reapproved = (state.hash ?? '') !== line.hash ? { reapproved: true as const } : {};
+     named.add(line.folder);
+-    awaited.push({ folder: line.folder, hash: line.hash, overlap: line.overlap });
++    awaited.push({ folder: line.folder, hash: line.hash, overlap: line.overlap, ...reapproved });
+   }
+   return awaited;
+ }
+diff --git a/tests/approve-overlap.test.ts b/tests/approve-overlap.test.ts
+index cb1344e0..26f79852 100644
+--- a/tests/approve-overlap.test.ts
++++ b/tests/approve-overlap.test.ts
+@@ -352,12 +352,19 @@ describe('Awaited dependencies', () => {
+     ]);
+   });
+ 
+-  it('drops an overlap line whose change carries another hash', async () => {
++  it('keeps and marks an overlap line whose change carries another hash', async () => {
+     const { p, two, three } = await setup();
+     await approve(p, two);
+     await overrideStackedOn(three, `${two.folderName} sha256:elsewhere overlap orders`);
+     const vcs = await selectVcs(p.repo, p.config);
+-    assert.deepEqual(await awaitedDependencies(p.repo, p.config, vcs, three.folderPath), []);
++    assert.deepEqual(await awaitedDependencies(p.repo, p.config, vcs, three.folderPath), [
++      {
++        folder: two.folderName,
++        hash: 'sha256:elsewhere',
++        overlap: ['orders'],
++        reapproved: true,
++      },
++    ]);
+   });
+ 
+   it('drops an overlap line whose change is unapproved after a rejection', async () => {
+diff --git a/tests/stack-overlap-cut.test.ts b/tests/stack-overlap-cut.test.ts
+index d6cad170..64b8d2d6 100644
+--- a/tests/stack-overlap-cut.test.ts
++++ b/tests/stack-overlap-cut.test.ts
+@@ -355,7 +355,7 @@ describe('Overlap lines in the cut', () => {
+     assert.equal(await branchExists(project, worktreeBranch(THREE.folder)), false);
+   });
+ 
+-  it('cuts from the default branch when the overlapped change carries another hash', async () => {
++  it('waits when the overlapped change was approved again under another hash', async () => {
+     const project = await makeProject([ONE, TWO, THREE]);
+     await approveIntoWorktree(project, ONE.folder);
+     const hash = await stateHash(project, ONE.folder);
+@@ -363,7 +363,7 @@ describe('Overlap lines in the cut', () => {
+     await reapproveHash(project, ONE.folder);
+ 
+     const decision = await decide(project);
+-    assert.deepEqual(decision, { kind: 'cut', base: 'main' });
++    assert.deepEqual(decision, { kind: 'wait' });
+     assert.equal(await hasChangeRegression(project), false);
+     assert.equal(await branchExists(project, worktreeBranch(THREE.folder)), false);
+   });
+diff --git a/tests/stack-overlap-reapproved.test.ts b/tests/stack-overlap-reapproved.test.ts
+new file mode 100644
+index 00000000..afe0fc35
+--- /dev/null
++++ b/tests/stack-overlap-reapproved.test.ts
+@@ -0,0 +1,387 @@
++import assert from 'node:assert/strict';
++import { execFile } from 'node:child_process';
++import fsSync from 'node:fs';
++import fs from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import { after, afterEach } from 'node:test';
++import { fileURLToPath } from 'node:url';
++import { promisify } from 'node:util';
++import { scenario } from '@matteeh/osq/testing';
++import { DEFAULT_GATES_CONFIG } from '../src/core/foundation/config-gates.js';
++import type { VcsConfig } from '../src/core/foundation/config-vcs.js';
++import { type OsqConfig, defineConfig } from '../src/core/foundation/config.js';
++import { scaffoldProject } from '../src/core/foundation/init.js';
++import type { Logger } from '../src/core/foundation/logger.js';
++import { approveSpec } from '../src/core/spec/approve.js';
++import { stackedPath, worktreeBranch, worktreePath } from '../src/core/vcs/worktree.js';
++import type { HarnessAdapter, SpawnResult, SpawnTaskOptions } from '../src/harness/types.js';
++import { runWatcherOnce } from '../src/watcher/loop.js';
++import { installFakeValidator } from './helpers.js';
++
++const execFileAsync = promisify(execFile);
++
++const CHANGES = path.join('openspec', 'changes');
++const ARCHIVE = path.join('openspec', 'changes', 'archive');
++const IN_SCOPE = 'src/one.txt';
++const OUT_SCOPE = 'src/out.txt';
++const REPO_ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
++const CHANGE_DIR = '340-overlap-wait-survives-reapproval';
++
++// The living watcher-and-harness spec repeats scenario names, so prove this
++// change's delta over a clean spec instead of the helper's global lookup.
++const LOOKUP_ROOT = fsSync.mkdtempSync(path.join(os.tmpdir(), 'osq-stack-reapproved-spec-'));
++const livingSpec = path.join(LOOKUP_ROOT, 'openspec', 'specs', 'watcher-and-harness', 'spec.md');
++fsSync.mkdirSync(path.dirname(livingSpec), { recursive: true });
++fsSync.writeFileSync(
++  livingSpec,
++  [
++    '# watcher-and-harness Specification',
++    '',
++    '## Purpose',
++    '',
++    'Stacked cuts.',
++    '',
++    '## Requirements',
++    '',
++    '### Requirement: Stacked cut',
++    '',
++    'The watcher cuts stacked changes.',
++    '',
++  ].join('\n'),
++  'utf8',
++);
++const deltaSource = path.join(
++  REPO_ROOT,
++  'openspec',
++  'changes',
++  CHANGE_DIR,
++  'specs',
++  'watcher-and-harness',
++  'spec.md',
++);
++const deltaTarget = path.join(
++  LOOKUP_ROOT,
++  'openspec',
++  'changes',
++  CHANGE_DIR,
++  'specs',
++  'watcher-and-harness',
++  'spec.md',
++);
++fsSync.mkdirSync(path.dirname(deltaTarget), { recursive: true });
++fsSync.copyFileSync(deltaSource, deltaTarget);
++process.chdir(LOOKUP_ROOT);
++process.env.OSQ_CHANGE = path.join(LOOKUP_ROOT, 'openspec', 'changes', CHANGE_DIR);
++
++const tmpDirs: string[] = [];
++
++afterEach(async () => {
++  for (const dir of tmpDirs.splice(0)) {
++    await fs.rm(dir, { recursive: true, force: true });
++  }
++});
++
++after(() => {
++  process.chdir(REPO_ROOT);
++  fsSync.rmSync(LOOKUP_ROOT, { recursive: true, force: true });
++});
++
++/** The test's own git calls ignore redirecting variables, like osq's reads. */
++function cleanGitEnv(): NodeJS.ProcessEnv {
++  const env = { ...process.env };
++  for (const key of ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE']) {
++    Reflect.deleteProperty(env, key);
++  }
++  return env;
++}
++
++async function git(args: string[], cwd: string): Promise<string> {
++  const { stdout } = await execFileAsync('git', args, { cwd, env: cleanGitEnv() });
++  return stdout.trim();
++}
++
++async function exists(target: string): Promise<boolean> {
++  return fs.access(target).then(
++    () => true,
++    () => false,
++  );
++}
++
++async function branchExists(project: Project, branch: string): Promise<boolean> {
++  return (
++    (await git(['branch', '--format=%(refname:short)', '--list', branch], project.repo)) !== ''
++  );
++}
++
++async function findCommit(cwd: string, subject: string, ref: string): Promise<string> {
++  return git(['log', '--format=%H', '-1', '--fixed-strings', `--grep=${subject}`, ref], cwd);
++}
++
++interface ChangeDef {
++  readonly folder: string;
++  readonly title: string;
++  readonly caps: readonly string[];
++}
++
++const ONE: ChangeDef = { folder: '001-a', title: 'One', caps: ['orders'] };
++const TWO: ChangeDef = { folder: '002-b', title: 'Two', caps: ['orders'] };
++
++function deltaSpec(capability: string): string {
++  return [
++    `# Spec Delta: ${capability}`,
++    '',
++    '## Purpose',
++    '',
++    `The ${capability} capability for the test.`,
++    '',
++    '## ADDED Requirements',
++    '',
++    `### Requirement: ${capability} works`,
++    '',
++    `The ${capability} capability SHALL work.`,
++    '',
++    `#### Scenario: ${capability} runs`,
++    '- **WHEN** it runs',
++    '- **THEN** it works',
++    '',
++  ].join('\n');
++}
++
++function proposalMarkdown(change: ChangeDef): string {
++  return [
++    '---',
++    `title: ${change.title}`,
++    'depends_on: []',
++    'verify: node verify.cjs',
++    'features:',
++    '  reads: []',
++    '---',
++    '## Goal',
++    'Run the task.',
++    '',
++    '## Surface',
++    'None.',
++    '',
++    '## Human steps',
++    'None',
++    '',
++  ].join('\n');
++}
++
++function taskMarkdown(change: ChangeDef): string {
++  return [
++    '---',
++    `title: ${change.title} task`,
++    'verify: node verify.cjs',
++    `scope: ${JSON.stringify([IN_SCOPE])}`,
++    'entry: []',
++    'skills: []',
++    '---',
++    '## Acceptance',
++    '- [ ] does the thing',
++    '',
++  ].join('\n');
++}
++
++async function writeChange(folderPath: string, change: ChangeDef): Promise<void> {
++  await fs.mkdir(path.join(folderPath, 'tasks'), { recursive: true });
++  await fs.writeFile(path.join(folderPath, 'proposal.md'), proposalMarkdown(change), 'utf8');
++  await fs.writeFile(
++    path.join(folderPath, 'tasks.md'),
++    `# Tasks\n\n- [ ] 1. ${change.title}\n`,
++    'utf8',
++  );
++  await fs.writeFile(path.join(folderPath, 'tasks', '1.md'), taskMarkdown(change), 'utf8');
++  for (const capability of change.caps) {
++    const dir = path.join(folderPath, 'specs', capability);
++    await fs.mkdir(dir, { recursive: true });
++    await fs.writeFile(path.join(dir, 'spec.md'), deltaSpec(capability), 'utf8');
++  }
++}
++
++interface Project {
++  readonly root: string;
++  readonly repo: string;
++  readonly worktrees: string;
++  readonly config: OsqConfig;
++  readonly vcs: VcsConfig;
++}
++
++async function makeProject(changes: readonly ChangeDef[]): Promise<Project> {
++  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'osq-stack-reapproved-'));
++  tmpDirs.push(root);
++  const repo = path.join(root, 'repo');
++  const worktrees = path.join(root, 'worktrees');
++  await fs.mkdir(repo, { recursive: true });
++  await installFakeValidator(repo);
++  await scaffoldProject(repo);
++  await fs.writeFile(path.join(repo, '.gitignore'), 'node_modules/\n.run/running/\n', 'utf8');
++  await fs.writeFile(path.join(repo, 'verify.cjs'), 'process.exit(0);\n', 'utf8');
++  await fs.mkdir(path.join(repo, 'src'), { recursive: true });
++  await fs.writeFile(path.join(repo, IN_SCOPE), 'seed\n', 'utf8');
++  await fs.writeFile(path.join(repo, OUT_SCOPE), 'out\n', 'utf8');
++  await git(['init', '-q', '-b', 'main'], repo);
++  await git(['config', 'user.name', 'osq'], repo);
++  await git(['config', 'user.email', 'osq@example.invalid'], repo);
++  await git(['add', '-A'], repo);
++  await git(['commit', '-qm', 'seed'], repo);
++
++  for (const change of changes) {
++    await writeChange(path.join(repo, CHANGES, change.folder), change);
++  }
++
++  const vcs: VcsConfig = {
++    enabled: true,
++    author: 'Osq <osq@example.invalid>',
++    worktreeRoot: worktrees,
++  };
++  const config = defineConfig({
++    vcs,
++    gates: { ...DEFAULT_GATES_CONFIG, preSpawnVerify: 'off', autoRetries: 0 },
++  });
++  return { root, repo, worktrees, config, vcs };
++}
++
++/** Fake adapter whose spawn edits one scoped file under the spawn's project root. */
++class ActingAdapter implements HarnessAdapter {
++  readonly name = 'acting';
++
++  async setup(): Promise<void> {}
++
++  async spawn(options: SpawnTaskOptions): Promise<SpawnResult> {
++    await fs.mkdir(path.dirname(path.join(options.projectRoot, IN_SCOPE)), { recursive: true });
++    await fs.writeFile(
++      path.join(options.projectRoot, IN_SCOPE),
++      `task ${options.taskNumber}\n`,
++      'utf8',
++    );
++    const resultsDir = path.join(options.specFolderPath, '.run', 'results');
++    await fs.mkdir(resultsDir, { recursive: true });
++    await fs.writeFile(
++      path.join(resultsDir, `${options.taskNumber}.md`),
++      '# Agent result\n',
++      'utf8',
++    );
++    return { exitCode: 0 };
++  }
++}
++
++/** A logger that keeps every info line. */
++class CaptureLogger implements Logger {
++  readonly infos: string[] = [];
++  readonly errors: string[] = [];
++  readonly symbols = false;
++
++  info(msg: string): void {
++    this.infos.push(msg);
++  }
++  verbose(): void {}
++  warn(): void {}
++  error(msg: string): void {
++    this.errors.push(msg);
++  }
++  status(): void {}
++  clearStatus(): void {}
++}
++
++function stackedRoot(project: Project, folder: string): string {
++  return stackedPath(project.vcs, project.repo, folder);
++}
++
++/** The stacked copy of `folder`. */
++function stackedCopy(project: Project, folder: string): string {
++  return path.join(stackedRoot(project, folder), CHANGES, folder);
++}
++
++/** Approve `folder` into its worktree and return that worktree's path. */
++async function approveIntoWorktree(project: Project, folder: string): Promise<string> {
++  const result = await approveSpec(project.repo, folder, project.config);
++  assert.ok(result.worktreePath, `expected a worktree for ${folder}`);
++  return result.worktreePath;
++}
++
++/** Move a freshly approved change into its branch's archive directory. */
++async function archiveOnBranch(project: Project, folder: string): Promise<void> {
++  const wtPath = worktreePath(project.vcs, project.repo, folder);
++  await fs.mkdir(path.join(wtPath, ARCHIVE), { recursive: true });
++  await git(['mv', path.join(CHANGES, folder), path.join(ARCHIVE, folder)], wtPath);
++  await git(['commit', '-qm', `archive ${folder}`], wtPath);
++}
++
++/** Squash-merge a change's archived branch onto `main`. */
++async function landOnMain(project: Project, folder: string): Promise<void> {
++  await git(['merge', '--squash', worktreeBranch(folder)], project.repo);
++  await git(['commit', '-qm', `land ${folder}`], project.repo);
++}
++
++/** Give an approved change a different approved hash at its branch tip. */
++async function reapproveHash(project: Project, folder: string): Promise<void> {
++  const wtPath = worktreePath(project.vcs, project.repo, folder);
++  await fs.writeFile(
++    path.join(wtPath, CHANGES, folder, '.run', 'approved'),
++    'sha256:changed\n',
++    'utf8',
++  );
++  await git(['add', '-A'], wtPath);
++  await git(['commit', '-qm', `reapprove ${folder}`], wtPath);
++}
++
++scenario(
++  'watcher-and-harness',
++  'Overlapped change approved again before it lands',
++  {
++    covers: (project: Project, logger: Logger) =>
++      runWatcherOnce(project.repo, project.config, new ActingAdapter(), logger),
++  },
++  async ({ run, then }) => {
++    const project = await makeProject([ONE, TWO]);
++    const oneWorktree = await approveIntoWorktree(project, ONE.folder);
++    await approveSpec(project.repo, TWO.folder, project.config);
++    await reapproveHash(project, ONE.folder);
++    // Dirty the dependency worktree so its pending task cannot finish.
++    await fs.writeFile(path.join(oneWorktree, OUT_SCOPE), 'dirty\n', 'utf8');
++
++    await run(project, new CaptureLogger());
++
++    const branchAfterFirst = await branchExists(project, worktreeBranch(TWO.folder));
++    const stackedAfterFirst = await exists(stackedRoot(project, TWO.folder));
++    const regressedAfterFirst = await exists(
++      path.join(stackedCopy(project, TWO.folder), '.run', 'regressed', 'change.md'),
++    );
++
++    await fs.writeFile(path.join(oneWorktree, OUT_SCOPE), 'out\n', 'utf8');
++    await archiveOnBranch(project, ONE.folder);
++    await landOnMain(project, ONE.folder);
++    const mainTip = await git(['rev-parse', 'main'], project.repo);
++
++    const logger = new CaptureLogger();
++    await run(project, logger);
++
++    await then(
++      "after that cycle no branch `osq/002-b` exists, `002-b`'s stacked approval remains and `002-b` has no regression marker; once `001-a` is archived on its branch and squash-merged into `main` by hand, the next cycle cuts `osq/002-b` from `main`'s tip",
++      async () => {
++        assert.equal(branchAfterFirst, false);
++        assert.equal(stackedAfterFirst, true);
++        assert.equal(regressedAfterFirst, false);
++        assert.equal(await branchExists(project, worktreeBranch(TWO.folder)), true);
++        const approved = await findCommit(
++          project.repo,
++          'osq: 002 approved',
++          worktreeBranch(TWO.folder),
++        );
++        assert.equal(await git(['rev-parse', `${approved}^`], project.repo), mainTip);
++        assert.ok(
++          logger.infos.includes(
++            `stacked ${TWO.folder} on main: worktree ${worktreePath(
++              project.vcs,
++              project.repo,
++              TWO.folder,
++            )}`,
++          ),
++          logger.infos.join('\n'),
++        );
++      },
++    );
++  },
++);

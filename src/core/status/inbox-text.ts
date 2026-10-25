@@ -32,6 +32,11 @@ function needsYouLine(item: NeedsYouItem): string {
   if (item.kind === 'after-land-failed') {
     return `${head} — after-land command failed — ${item.command}`;
   }
+  if (item.kind === 'overlap-reapproved') {
+    const overlap = item.overlapReapproved;
+    if (overlap === undefined) return `${head} — ${item.command}`;
+    return `${head} — waits for ${overlap.folder} (also writes ${overlap.capabilities.join(', ')}), approved again since — ${item.command}`;
+  }
   if (item.kind === 'validator-failing') {
     const failing = item.validatorFailing ?? { outcome: '', runs: 0, error: '' };
     return `${head} — validator ${failing.outcome} ${failing.runs}× in a row: ${failing.error} — ${item.command}`;
@@ -89,6 +94,7 @@ function landedLine(item: LandedItem): string {
  * @scenario status-inspection: Archived change waiting to land
  * @scenario status-inspection: Failed after-land command waiting
  * @scenario status-inspection: Validator failing
+ * @scenario status-inspection: Overlap approved again in the inbox
  * @scenario status-inspection: Ready plan in the inbox
  * @scenario status-inspection: Automatic planner left lint red
  * @scenario status-inspection: Paused task

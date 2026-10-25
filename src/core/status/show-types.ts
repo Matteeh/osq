@@ -124,22 +124,25 @@ export interface VerificationHistory {
 export interface RunsAfterEntry {
   folder: string;
   capabilities: string[] | null;
+  /** Set when the awaited change was approved again after the wait began. */
+  reapproved?: true;
 }
 
 /**
  * Render `Runs after` entries as `osq show` prints them: each
  * `<folder> (depends_on)` or `<folder> (also writes <capabilities>)`, joined
- * with `, `.
+ * with `, `, with an overlap approved again ending `; approved again since`.
  *
  * @scenario status-inspection: Show a change that runs after another
+ * @scenario status-inspection: Show an overlap approved again since
  */
 export function formatRunsAfter(entries: readonly RunsAfterEntry[]): string {
   return entries
-    .map((entry) =>
-      entry.capabilities === null
-        ? `${entry.folder} (depends_on)`
-        : `${entry.folder} (also writes ${entry.capabilities.join(', ')})`,
-    )
+    .map((entry) => {
+      if (entry.capabilities === null) return `${entry.folder} (depends_on)`;
+      const suffix = entry.reapproved === true ? '; approved again since' : '';
+      return `${entry.folder} (also writes ${entry.capabilities.join(', ')}${suffix})`;
+    })
     .join(', ');
 }
 

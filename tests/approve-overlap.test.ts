@@ -352,12 +352,19 @@ describe('Awaited dependencies', () => {
     ]);
   });
 
-  it('drops an overlap line whose change carries another hash', async () => {
+  it('keeps an overlap line whose change carries another hash and marks it reapproved', async () => {
     const { p, two, three } = await setup();
     await approve(p, two);
     await overrideStackedOn(three, `${two.folderName} sha256:elsewhere overlap orders`);
     const vcs = await selectVcs(p.repo, p.config);
-    assert.deepEqual(await awaitedDependencies(p.repo, p.config, vcs, three.folderPath), []);
+    assert.deepEqual(await awaitedDependencies(p.repo, p.config, vcs, three.folderPath), [
+      {
+        folder: two.folderName,
+        hash: 'sha256:elsewhere',
+        overlap: ['orders'],
+        reapproved: true,
+      },
+    ]);
   });
 
   it('drops an overlap line whose change is unapproved after a rejection', async () => {

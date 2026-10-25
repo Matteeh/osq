@@ -1,0 +1,57 @@
+{
+  "hashes": {
+    "AGENTS.md": null,
+    "PLANNER.md": null,
+    "config": null,
+    "version-control": null,
+    "version-control/osq.yml": null,
+    "cli-foundation": null,
+    "cli-foundation/osq.yml": null,
+    "metrics-and-reporting": null,
+    "metrics-and-reporting/osq.yml": null,
+    "traceability": null,
+    "traceability/osq.yml": null,
+    "spec-lint-and-approve": null,
+    "spec-lint-and-approve/osq.yml": null,
+    "status-inspection": null,
+    "status-inspection/osq.yml": null,
+    "watcher-and-harness": null,
+    "watcher-and-harness/osq.yml": null,
+    "web-inspection": null,
+    "web-inspection/osq.yml": null
+  },
+  "osqVersion": "0.3.0",
+  "harness": "pi",
+  "model": "deepseek-flash",
+  "planner": "claude-opus-5-5",
+  "effort": "high",
+  "createdAt": "2026-10-24T22:40:15.320Z",
+  "planningSessions": 1,
+  "createdAtSource": "created",
+  "approvedAt": "2026-10-24T23:06:13.347Z",
+  "approvalFlags": {
+    "ids": [],
+    "mode": "shown"
+  },
+  "notices": {
+    "items": [
+      {
+        "id": "assumptions",
+        "severity": "amber",
+        "folded": false
+      },
+      {
+        "id": "tests_modify",
+        "severity": "grey",
+        "folded": false
+      },
+      {
+        "id": "plan_revised",
+        "severity": "grey",
+        "folded": false
+      }
+    ],
+    "opened": null
+  },
+  "decisions": {}
+}

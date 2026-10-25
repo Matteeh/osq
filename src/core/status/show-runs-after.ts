@@ -14,6 +14,7 @@ import type { RunsAfterEntry } from './show-types.js';
  *
  * @scenario status-inspection: Show a change that runs after another
  * @scenario status-inspection: Runs after in show JSON
+ * @scenario status-inspection: Show an overlap approved again since
  */
 export async function readRunsAfter(
   projectRoot: string,
@@ -34,5 +35,6 @@ export async function readRunsAfter(
   return awaited.map((entry) => ({
     folder: entry.folder,
     capabilities: entry.overlap === undefined ? null : [...entry.overlap],
+    ...(entry.reapproved === true ? { reapproved: true as const } : {}),
   }));
 }

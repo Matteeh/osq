@@ -355,7 +355,7 @@ describe('Overlap lines in the cut', () => {
     assert.equal(await branchExists(project, worktreeBranch(THREE.folder)), false);
   });
 
-  it('cuts from the default branch when the overlapped change carries another hash', async () => {
+  it('waits when the overlapped change carries another hash', async () => {
     const project = await makeProject([ONE, TWO, THREE]);
     await approveIntoWorktree(project, ONE.folder);
     const hash = await stateHash(project, ONE.folder);
@@ -363,7 +363,7 @@ describe('Overlap lines in the cut', () => {
     await reapproveHash(project, ONE.folder);
 
     const decision = await decide(project);
-    assert.deepEqual(decision, { kind: 'cut', base: 'main' });
+    assert.deepEqual(decision, { kind: 'wait' });
     assert.equal(await hasChangeRegression(project), false);
     assert.equal(await branchExists(project, worktreeBranch(THREE.folder)), false);
   });

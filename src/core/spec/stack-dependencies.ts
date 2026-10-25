@@ -28,6 +28,8 @@ export interface AwaitedDependency {
   readonly hash: string;
   /** The shared capabilities of an overlap line; absent for a declared entry. */
   readonly overlap?: readonly string[];
+  /** Set when the change was approved again after the line recorded its hash. */
+  readonly reapproved?: true;
 }
 
 /** The project root tree's changes and archive directories, relative to its root. */
@@ -110,9 +112,9 @@ export async function resolveDependencyFolder(
 }
 
 /**
- * The awaited entries of a change folder: its `depends_on` entries that read
- * `approved` or `archived`, in order, then each `.run/stacked-on` overlap line
- * no entry names that still reads approved or archived with the recorded hash.
+ * The awaited entries: each approved or archived `depends_on` entry in order,
+ * then each `.run/stacked-on` overlap line no entry names that still waits,
+ * marked `reapproved` when the change's hash differs from the line's.
  *
  * @scenario spec-lint-and-approve: Overlap lines count while their change waits to land
  * @adr 003
@@ -139,9 +141,9 @@ export async function awaitedDependencies(
     if (line.overlap === undefined || named.has(line.folder)) continue;
     const state = await readDependencyState(projectRoot, config, vcs, line.folder);
     if (state.state !== 'approved' && state.state !== 'archived') continue;
-    if ((state.hash ?? '') !== line.hash) continue;
     named.add(line.folder);
-    awaited.push({ folder: line.folder, hash: line.hash, overlap: line.overlap });
+    const mark = (state.hash ?? '') !== line.hash ? { reapproved: true as const } : {};
+    awaited.push({ folder: line.folder, hash: line.hash, overlap: line.overlap, ...mark });
   }
   return awaited;
 }

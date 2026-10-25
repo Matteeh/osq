@@ -1,0 +1,9 @@
+---
+scope_resolver: 2
+scope_hash: "sha256:18f91a6b4587a630cdcaef71f1082182b13dc7880bdcebf8277fbf740a77a159"
+build_stamp: "81b56593"
+project_commit: "62971193"
+exit_code: 0
+scope_files: {"packages/ui/src/home/labels.ts":"sha256:1042a1dbf5913203da7fdcb122425e9a9d50ddc3ccd5168c9b5881483d28fe7a","src/core/status/inbox-overlap.ts":"sha256:a6965c6f80c1dec7496c60c38bf16d4eff32a891128f2f13ded60a9818d88177","src/core/status/inbox-projection.ts":"sha256:2913247b3195c91a5bd9a597c9951496b4428e479e398b296dd36ded21b4c381","src/core/status/inbox-text.ts":"sha256:56102893eee858b0b7b349355075d40fa3c3ec527741c280b883b0f0c3c712fd","src/core/status/inbox.ts":"sha256:d670325e91aff4d7a41b8827440781ba7e71addedb47d3f737a059ad1cdd518b","tests/inbox-overlap-reapproved.test.ts":"sha256:4475315f240df07bba4cdf75a16257c7325a1466441da7ac1ddb1efa42d267ee","tests/ui-overlap-label.test.tsx":"sha256:5a53b14369616fcfc543b694ef38a7b092c5c5247d6f06aa25c0936d31f8e3c8"}
+---
+2026-10-25T00:15:15.993Z

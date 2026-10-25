@@ -118,9 +118,9 @@ async function resolveArchivedBase(
 
 /**
  * Decide what to do with one stacked change: wait while a dependency is
- * approved, halt when a declared dependency is unapproved or re-approved, drop
- * an overlap line whose conflict is gone, or cut at the default branch or the
- * archived dependency branch that holds every other archive.
+ * approved, halt when a declared dependency is unapproved or carries another
+ * hash, drop only an overlap line whose conflict is gone, or cut at the
+ * default branch or the archived dependency branch that holds every archive.
  *
  * @scenario watcher-and-harness: Overlapping changes approved at once
  * @scenario watcher-and-harness: Overlap lines in the cut
@@ -134,9 +134,9 @@ export async function decideStackCut(input: StackCutInput): Promise<StackCutDeci
   for (const entry of entries) {
     const status = await readDependencyState(projectRoot, config, vcs, entry.folder);
     if (entry.overlap !== undefined) {
-      // An overlap is softer: its change being unapproved or carrying another
-      // hash means the conflict it guarded against is gone, so leave it out.
-      if (status.state === 'unapproved' || hashChanged(status, entry)) continue;
+      // An overlap is softer: only its change being unapproved means the
+      // conflict it guarded against is gone; a re-approval still rewrites it.
+      if (status.state === 'unapproved') continue;
     } else {
       if (status.state === 'unapproved') return changedHalt(entry.folder, id, true);
       if (hashChanged(status, entry)) return changedHalt(entry.folder, id, false);

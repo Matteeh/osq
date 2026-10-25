@@ -9,7 +9,7 @@ import type { StatusOverview } from './status.js';
 import type { SteeringTriggerName } from './steering.js';
 export { formatInboxText } from './inbox-text.js';
 /* biome-ignore format: keeps the file inside the 250-line source budget */ export type NeedsYouKind =
-  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed' | 'validator-failing' | 'autopilot-stopped';
+  'planning' | 'approval' | 'task-dead' | 'task-regressed' | 'change-regressed' | 'change-archived' | 'after-land-failed' | 'validator-failing' | 'autopilot-stopped' | 'overlap-reapproved';
 export interface InboxChangeRef {
   readonly id: string;
   readonly title: string;
@@ -36,6 +36,8 @@ export interface NeedsYouItem {
   /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly validatorFailing?: { readonly outcome: string; readonly runs: number; readonly error: string };
   /** Present only for an autopilot-stopped item. */
   /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly autopilotStopped?: { readonly reason: string; readonly item: string; readonly change: string | null; readonly detail: string | null };
+  /** Present only for an overlap-reapproved item. */
+  /* biome-ignore format: keeps the file inside the 250-line source budget */ readonly overlapReapproved?: { readonly folder: string; readonly capabilities: readonly string[] };
 }
 export interface RunningItem {
   readonly change: InboxChangeRef;
@@ -59,7 +61,6 @@ export interface Inbox {
 }
 /** Fallback number of archives surfaced when the per-project cursor is unusable. */
 export const LANDED_FALLBACK_LIMIT = 10;
-
 function changeRef(spec: SpecState): InboxChangeRef {
   return { id: spec.id, title: spec.title };
 }
